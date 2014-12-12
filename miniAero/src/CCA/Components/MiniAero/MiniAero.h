@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Task.h>
 
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
@@ -109,58 +110,71 @@ namespace Uintah {
                                DataWarehouse* new_dw);
 
 
-    void schedPrimitives(const LevelP& level,SchedulerP& sched);
+    void schedPrimitives(const LevelP& level,SchedulerP& sched,  const int RK_step);
 
-    void schedCellCenteredFlux(const LevelP& level,SchedulerP& sched);
+    void schedCellCenteredFlux(const LevelP& level,SchedulerP& sched,  const int RK_step);
     
-    void schedFaceCenteredFlux(const LevelP& level,SchedulerP& sched);
+    void schedFaceCenteredFlux(const LevelP& level,SchedulerP& sched,  const int RK_step);
     
-    void schedDissipativeFaceFlux(const LevelP& level,SchedulerP& sched);
+    void schedDissipativeFaceFlux(const LevelP& level,SchedulerP& sched,  const int RK_step);
     
-    void schedUpdateResidual(const LevelP& level,SchedulerP& sched);
+    void schedUpdateResidual(const LevelP& level,SchedulerP& sched,  const int RK_step);
     
-    void schedUpdateState(const LevelP& level, SchedulerP& sched, const int RK_step);
+    void schedUpdate_RK_State(const LevelP& level, SchedulerP& sched, const int RK_step);
 
     void schedGradients(const LevelP& level,SchedulerP& sched);
 
-    void schedViscousFaceFlux(const LevelP& level,SchedulerP& sched);
+    void schedViscousFaceFlux(const LevelP& level,SchedulerP& sched, const int RK_step);
+
+    void schedUpdateSolution(const LevelP& level, SchedulerP& sched);
     
     void Primitives(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
+                    DataWarehouse* new_dw,
+                    const int RK_step);
 
     void cellCenteredFlux(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+                          DataWarehouse* new_dw,
+                          const int RK_step);
 
     void faceCenteredFlux(const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw);
+                          DataWarehouse* new_dw,
+                          const int RK_step);
 
     void dissipativeFaceFlux(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                     DataWarehouse* new_dw,
+                     const int RK_step);
 
     void updateResidual(const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
-                        DataWarehouse* new_dw);
+                        DataWarehouse* new_dw,
+                        const int RK_step);
 
-    void updateState(const ProcessorGroup*,
-                     const PatchSubset* patches,
-                     const MaterialSubset* matls,
-                     DataWarehouse* old_dw,
-                     DataWarehouse* new_dw,
-                     const int RK_step);
+    void update_RK_State(const ProcessorGroup*,
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw,
+                         const int RK_step);
+                         
+    void updateSolution(const ProcessorGroup*,
+                        const PatchSubset*,
+                        const MaterialSubset*,
+                        DataWarehouse*,
+                        DataWarehouse*);
 
     void Gradients(const ProcessorGroup*,
                     const PatchSubset* patches,
@@ -172,7 +186,8 @@ namespace Uintah {
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
-                     DataWarehouse* new_dw);
+                     DataWarehouse* new_dw,
+                     const int RK_step);
                      
     void compute_roe_dissipative_flux(const double * primitives_left, 
                                       const double * primitives_right,
@@ -180,6 +195,14 @@ namespace Uintah {
                                       double * face_normal, 
                                       double * face_tangent, 
                                       double * face_binormal);
+
+    //__________________________________
+    // Utilities
+    Task::WhichDW getRK_DW( const int RK_step );
+     
+    DataWarehouse* getRK_DW( const int RK_step,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw  );
 
     const VarLabel* conserved_label;
     const VarLabel* rho_CClabel;
@@ -210,6 +233,7 @@ namespace Uintah {
     const VarLabel* dissipative_flux_mom_FCZlabel;
     const VarLabel* dissipative_flux_energy_FCZlabel;
     const VarLabel* residual_CClabel;
+    const VarLabel* sum_residual_CClabel;
     const VarLabel* machlabel;
     const VarLabel* grad_rho_CClabel;
     const VarLabel* grad_vel_CClabel;
@@ -232,9 +256,8 @@ namespace Uintah {
     
     // For Runge-Kutta
     int d_RKSteps;                    // number or RK stages
-    double d_alpha[3];
-    double d_beta[3];
-    double d_time_factor[3];
+    double d_alpha[4];
+    double d_beta[4];
         
     SimpleMaterial* mymat_;
     std::vector<GeometryObject*> d_geom_objs;
