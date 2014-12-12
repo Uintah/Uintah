@@ -87,7 +87,7 @@
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
     <DataArchiver>
-      <filebase>shockTube.uda</filebase>
+      <filebase>shockTube_RK1.uda</filebase>
       <outputInitTimestep/>
       <outputTimestepInterval> 1 </outputTimestepInterval>
       <save label="velocity"/>
@@ -114,7 +114,7 @@
            <R>                287.0                     </R>
            <CFL>                0.5                     </CFL>
            <Is_visc_flow>      false                    </Is_visc_flow>
-           <RKSteps>            2                       </RKSteps>
+           <RKSteps>            1                       </RKSteps>
            <geom_object>
              <difference>
                 <box label="wholegrid">

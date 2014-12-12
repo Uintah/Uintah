@@ -58,6 +58,8 @@
 #include <iostream>
 
 using namespace Uintah;
+using std::cout;
+using std::endl;
 
 //__________________________________
 //  To turn on internal debugging code
@@ -190,8 +192,8 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
   ps->require("Is_visc_flow", d_viscousFlow);
   ps->require("RKSteps",      d_RKSteps);
   
-  if(d_RKSteps < 1 || d_RKSteps  >= 4){
-    throw ProblemSetupException("\nERROR: Currently only RKStep must be 1, 2, 3 or 4\n",__FILE__, __LINE__);
+  if(d_RKSteps != 1 && d_RKSteps  != 4){
+    throw ProblemSetupException("\nERROR: Currently only RKStep = 1 and 4 is supported\n",__FILE__, __LINE__);
   }
   
   
@@ -200,8 +202,7 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
 
   //__________________________________
   //  Define Runge-Kutta coefficients
-  if (d_RKSteps == 0){
-    
+  if (d_RKSteps == 1){
     d_alpha[0] = 0.0;
     d_alpha[1] = 0.0;
     d_alpha[2] = 0.0;
@@ -211,28 +212,16 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
     d_beta[1]  = 0.0;
     d_beta[2]  = 0.0;
     d_beta[3]  = 0.0;
-  } else if (d_RKSteps == 1) {
-
-    d_alpha[0]= 0.0;
-    d_alpha[1]= 0.5;
-    d_alpha[2]= 0.0;
-    d_alpha[3]= 0.0;
-
-    d_beta[0]  = 1.0;
-    d_beta[1]  = 0.5;
-    d_beta[2]  = 0.0;
-    d_beta[3]  = 0.0;
-  } else if (d_RKSteps == 2) {
+  } else if (d_RKSteps == 4) {
     d_alpha[0] = 0.0;
-    d_alpha[1] = 0.75;
-    d_alpha[2] = 1.0/3.0;
-    d_alpha[3] = 0.0;
+    d_alpha[1] = 0.5;
+    d_alpha[2] = 0.5;
+    d_alpha[3] = 1.0;
 
-    d_beta[0]  = 1.0;
-    d_beta[1]  = 0.25;
-    d_beta[2]  = 2.0/3.0;
-    d_beta[3]  = 0.0;
-
+    d_beta[0]  = 1.0/6.0;
+    d_beta[1]  = 1.0/3.0;
+    d_beta[2]  = 1.0/3.0;
+    d_beta[3]  = 1.0/6.0;
   }
 }
 
@@ -843,12 +832,11 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
                           DataWarehouse* new_dw,
                           const int RK_step)
 {
-#if 0  // optimization. turn on once the answers are correct -Todd
   // Don't execute on the last RK intermediate stage
-  if(RK_step == d_RKSteps -1) {
+  if( RK_step == d_RKSteps -1 ) {
+    dbg << " MiniAero::Primitives NOT Running " << endl;
     return;
   }
-#endif
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -863,7 +851,7 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
     CCVariable<double> rho_CC, pressure_CC, Temp_CC, speedSound, mach, viscosity;
     CCVariable<Vector> vel_CC;
 
-    if ( RK_step == 0 || d_RKSteps ) {
+    if ( RK_step == 0 || RK_step == d_RKSteps) {  // on first intermediate RK stage and last RK stage
       new_dw->allocateAndPut( rho_CC,      rho_CClabel,        0, patch );
       new_dw->allocateAndPut( pressure_CC, press_CClabel,      0, patch );
       new_dw->allocateAndPut( Temp_CC,     temp_CClabel,       0, patch );
@@ -925,7 +913,25 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
 	viscosity[c] = getViscosity(Temp_CC[c]);
       }
     }
+    
+    //____ B U L L E T   P R O O F I N G----
+    IntVector neg_cell;
 
+    std::ostringstream base, warn;
+    base <<"ERROR Primitives cell: RK_step "<< RK_step<< " at cell: ";
+    if (!areAllValuesPositive(rho_CC, neg_cell) ) {
+      warn << base.str() << neg_cell << " negative/nan rho_CC (" << rho_CC[neg_cell] << ")";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
+    if (!areAllValuesPositive(Temp_CC, neg_cell) ) {
+      warn << base.str() << neg_cell << " negative/nan temp_CC (" << Temp_CC[neg_cell] << ")";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
+    if (!areAllValuesPositive(pressure_CC, neg_cell) ) {
+      warn << base.str() << neg_cell << " negative/nan pressuree_CC (" << pressure_CC[neg_cell] << ")";
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
+    
   }//Patch loop
 }
 
@@ -989,7 +995,7 @@ void MiniAero::cellCenteredFlux(const ProcessorGroup* /*pg*/,
     const Patch* patch = patches->get(p);
     
     std::ostringstream message;
-    message << "Doing MiniAero::cellCenteredFlux: RK step:" << RK_step << std::endl;
+    message << "Doing MiniAero::cellCenteredFlux: RK step:" << RK_step;
     printTask(patches, patch, dbg, message.str() );
     
     Ghost::GhostType  gn  = Ghost::None;
@@ -1375,7 +1381,9 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, dbg, "Doing MiniAero::updateResidual" );
+    std::ostringstream msg;
+    msg << "Doing MiniAero::updateResidual RK_step: " << RK_step << " beta: " << d_beta[RK_step];
+    printTask(patches, patch, dbg, msg.str() );
 
     constSFCXVariable<double> flux_mass_FCX;
     constSFCXVariable<Vector> flux_mom_FCX;
@@ -1505,6 +1513,7 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
       // accumulate the residual from each RK step 
       
       const double beta  = d_beta[RK_step];
+      
       for(unsigned k = 0; k < 5; k++) {
         sum_residual_CC[c][k]  += beta * residual_CC[c][k];
       }
@@ -1527,12 +1536,14 @@ void MiniAero::update_RK_State(const ProcessorGroup* /*pg*/,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, dbg, "Doing MiniAero::update_RK_State" );
+    std::ostringstream msg;
+    msg <<"Doing MiniAero::update_RK_State RK_step: " << RK_step << " alpha: " << d_alpha[RK_step];
+    printTask(patches, patch, dbg, msg.str() );
     
     const double cell_volume = patch->cellVolume();
     const double dtVol = dt/cell_volume;
-    
     const double alpha = d_alpha[RK_step];  // for readability
+
     constCCVariable<Vector5> residual_CC;
     constCCVariable<Vector5> oldState_CC;
     CCVariable<Vector5> state_CC;
