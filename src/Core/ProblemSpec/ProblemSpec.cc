@@ -77,10 +77,6 @@ ProblemSpec::findBlock(const string& name) const
     //    string child_name(to_char_ptr(child->name));
     string child_name((const char *)(child->name));
     if (name == child_name) {
-      xmlNode* dbl_child = child->children;
-      while (dbl_child != 0) {
-        dbl_child = dbl_child->next;
-      }
       return scinew ProblemSpec( child, false );
     }
     child = child->next;
