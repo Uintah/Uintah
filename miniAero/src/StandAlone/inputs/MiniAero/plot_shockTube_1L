@@ -75,7 +75,7 @@ echo "Generating the postscript file shockTube.ps"
 rm -f gp
 
 cat > gp << fin
-set terminal postscript color solid "Times-Roman" 9 portrait
+set terminal postscript color solid "Times-Roman" 12 portrait
 set output "shockTube.ps"
 fin
 endif
@@ -138,7 +138,10 @@ fin
 # plot it up
 gnuplot -geometry 900x900 gp
 
+if ( -e shockTube.ps ) then
+  ps2pdf shockTube.ps
+endif
 
 #__________________________________
 # clean up
-#/bin/rm -f gp temp.dat vel.dat press.dat rho.dat
+/bin/rm -f gp temp.dat vel.dat press.dat rho.dat

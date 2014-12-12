@@ -66,7 +66,7 @@ void printTask(const PatchSubset* patches,
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << left;
-    dbg.width(50);
+    dbg.width(70);
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()
         << " patch " << patch->getGridIndex()<< endl;
@@ -81,7 +81,7 @@ void printTask(const PatchSubset* patches,
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << left;
-    dbg.width(50);
+    dbg.width(70);
     dbg << where << "  \tL-"
         << getLevel(patches)->getIndex()<< endl;
   }  
@@ -95,7 +95,7 @@ void printTask(const Patch* patch,
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank()  << " ";
     dbg << left;
-    dbg.width(50);
+    dbg.width(70);
     dbg << where << " \tL-"
         << patch->getLevel()->getIndex()
         << " patch " << patch->getGridIndex()<< endl;
@@ -110,7 +110,7 @@ void printTask(SCIRun::DebugStream& dbg,
   if (dbg.active()){
     dbg << Uintah::Parallel::getMPIRank()  << " ";
     dbg << left;
-    dbg.width(50);
+    dbg.width(70);
     dbg << where << " \tAll Patches" << endl;
   }  
 }
