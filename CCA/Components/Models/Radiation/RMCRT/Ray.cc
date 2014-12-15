@@ -364,11 +364,18 @@ Ray::sched_rayTrace( const LevelP& level,
 {
   std::string taskname = "Ray::rayTrace";
   Task *tsk;
-  if (Parallel::usingDevice()) {
-    tsk = scinew Task( taskname, this, &Ray::rayTraceGPU,
+  
+  if (Parallel::usingDevice()) {          // G P U
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    } else {
+      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,
+                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    
+    }
     tsk->usesDevice(true);
-  } else {
+  } else {                                // C P U
   
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
       tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
@@ -1157,8 +1164,16 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
 {
 
   std::string taskname = "Ray::setBoundaryConditions";
-  Task* tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions,
-                          temp_dw, radCalc_freq, backoutTemp );
+  
+  Task* tsk;
+  if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+  
+    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< double >,
+                      temp_dw, radCalc_freq, backoutTemp );
+  } else {
+    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< float >,
+                      temp_dw, radCalc_freq, backoutTemp );
+  }
 
   printSchedule(level,dbg,taskname);
 
@@ -1173,15 +1188,15 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 //---------------------------------------------------------------------------
-void
-Ray::setBoundaryConditions( const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset*,
-                            DataWarehouse*,
-                            DataWarehouse* new_dw,
-                            Task::WhichDW temp_dw,
-                            const int radCalc_freq,
-                            const bool backoutTemp )
+template<class T>
+void Ray::setBoundaryConditions( const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset*,
+                                 DataWarehouse*,
+                                 DataWarehouse* new_dw,
+                                 Task::WhichDW temp_dw,
+                                 const int radCalc_freq,
+                                 const bool backoutTemp )
 {
   // Only run if it's time
   if ( doCarryForward( radCalc_freq ) ) {
@@ -1206,7 +1221,7 @@ Ray::setBoundaryConditions( const ProcessorGroup*,
 
       CCVariable<double> temp;
       CCVariable<double> abskg;
-      CCVariable<double> sigmaT4OverPi;
+      CCVariable< T > sigmaT4OverPi;
       CCVariable<int> cellType;
 
       new_dw->allocateTemporary(temp,  patch);
@@ -1934,7 +1949,25 @@ Ray::filter( const ProcessorGroup*,
 
 template void Ray::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
 template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<float>(  CCVariable<float>&  Q_CC, const string& desc, const Patch* patch, const int mat_id);
 
+template void Ray::setBoundaryConditions< double >( const ProcessorGroup*,
+                                                    const PatchSubset* ,
+                                                    const MaterialSubset*,
+                                                    DataWarehouse*,
+                                                    DataWarehouse* ,
+                                                    Task::WhichDW ,
+                                                    const int ,
+                                                    const bool );
+                                               
+template void Ray::setBoundaryConditions< float >( const ProcessorGroup*,
+                                                   const PatchSubset* ,
+                                                   const MaterialSubset*,
+                                                   DataWarehouse*,
+                                                   DataWarehouse* ,
+                                                   Task::WhichDW ,
+                                                   const int ,
+                                                   const bool );
 
 template void  Ray::updateSumI_ML< double> ( Vector&,
                                              Vector&,

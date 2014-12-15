@@ -109,20 +109,22 @@ enum DIR {X=0, Y=1, Z=2, NONE=-9};
 //           -x      +x       -y       +y     -z     +z
 enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
 
-void launchRayTraceKernel(dim3 dimGrid,
-                          dim3 dimBlock,
-                          int matlIndex,
-                          patchParams patch,
-                          cudaStream_t* stream,
-                          RMCRT_flags RT_flags,                               
-                          varLabelNames labelNames,
-                          GPUDataWarehouse* abskg_gdw,
-                          GPUDataWarehouse* sigmaT4_gdw,
-                          GPUDataWarehouse* celltype_gdw,
-                          GPUDataWarehouse* old_gdw,
-                          GPUDataWarehouse* new_gdw);
+template< class T>
+__host__ void launchRayTraceKernel(dim3 dimGrid,
+                                   dim3 dimBlock,
+                                   int matlIndex,
+                                   patchParams patch,
+                                   cudaStream_t* stream,
+                                   RMCRT_flags RT_flags,                               
+                                   varLabelNames labelNames,
+                                   GPUDataWarehouse* abskg_gdw,
+                                   GPUDataWarehouse* sigmaT4_gdw,
+                                   GPUDataWarehouse* celltype_gdw,
+                                   GPUDataWarehouse* old_gdw,
+                                   GPUDataWarehouse* new_gdw);
 
 
+template< class T>
 __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matlIndex,
@@ -179,12 +181,12 @@ __device__ void reflect(double& fs,
                         int& step,
                         bool& sign,
                         double& ray_direction);
-                                                          
+template<class T>                                                          
 __device__ void updateSumIDevice ( gpuVector& ray_direction,
                                    gpuVector& ray_location,
                                    const gpuIntVector& origin,
                                    const gpuVector& Dx,
-                                   const GPUGridVariable<double>&  sigmaT4OverPi,
+                                   const GPUGridVariable< T >&  sigmaT4OverPi,
                                    const GPUGridVariable<double>& abskg,
                                    const GPUGridVariable<int>& celltype,
                                    double& sumI,

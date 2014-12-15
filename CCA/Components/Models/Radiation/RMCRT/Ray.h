@@ -204,6 +204,7 @@ namespace Uintah{
                      const int radCalc_freq );
 
       //__________________________________
+      template<class T>
       void rayTraceGPU( Task::CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -302,6 +303,7 @@ namespace Uintah{
                           std::vector<int> &boundaryFaces);
       //______________________________________________________________________
       //   Boundary Conditions
+      template< class T >
       void setBoundaryConditions( const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset*,

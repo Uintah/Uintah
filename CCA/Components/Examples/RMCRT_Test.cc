@@ -67,19 +67,16 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
 //  d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );
 //  d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );
-//  d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel = VarLabel::create( "cellType", CCVariable<int>::getTypeDescription() );
 
 /*`==========TESTING==========*/
     #ifdef USINGFLOATRMCRT
       proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
       d_colorLabel  = VarLabel::create( "color",    CCVariable<float>::getTypeDescription() );
-      d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<float>::getTypeDescription() );
       d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<float>::getTypeDescription() );
     #else
       proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
       d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
-      d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
       d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );
     #endif
 /*===========TESTING==========`*/
@@ -106,7 +103,6 @@ RMCRT_Test::~RMCRT_Test ( void )
   VarLabel::destroy(d_colorLabel);
   VarLabel::destroy(d_divQLabel);
   VarLabel::destroy(d_abskgLabel);
-  VarLabel::destroy(d_sigmaT4Label);
   VarLabel::destroy(d_cellTypeLabel);
 
   if( d_old_uda){
