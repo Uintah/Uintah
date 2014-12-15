@@ -23,7 +23,6 @@
  */
 
 #include <CCA/Components/MPM/ReactiveFlow/ScalarDiffusion.h>
-#include <CCA/Components/MPM/ReactiveFlow/ReactiveFlowLabel.h>
 #include <Core/Math/Short27.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -42,8 +41,8 @@ using namespace std;
 using namespace Uintah;
 
 
-ScalarDiffusion::ScalarDiffusion(SimulationStateP& sS, MPMFlags* flags) {
-  d_lb = scinew ReactiveFlowLabel;
+ScalarDiffusion::ScalarDiffusion(SimulationStateP& sS, MPMLabel* lb, MPMFlags* flags) {
+	d_lb = lb;
   d_flag = flags;
   d_sharedState = sS;
 
@@ -57,9 +56,4 @@ ScalarDiffusion::ScalarDiffusion(SimulationStateP& sS, MPMFlags* flags) {
 }
 
 ScalarDiffusion::~ScalarDiffusion() {
-  delete d_lb;
-}
-
-const VarLabel* ScalarDiffusion::get_pConcentrationLabel(){
-  return d_lb->pConcentrationLabel;
 }

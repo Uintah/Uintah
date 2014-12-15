@@ -137,6 +137,7 @@
                  <res>               [2,2,2]         </res>
                  <velocity>          [0.0,0.0,0.0]   </velocity>
                  <temperature>       0               </temperature>
+                 <concentration>     0               </concentration>
               </geom_object>
          </material>
 

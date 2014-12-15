@@ -81,6 +81,7 @@ namespace Uintah {
     geomvols d_object_vols;
     geomvols d_object_temps;
     geomvols d_object_colors;
+    geomvols d_object_concentrations;
     geomvecs d_object_forces;
     geomvecs d_object_fibers;  
     geomvecs d_object_velocity; // gcd add
@@ -104,6 +105,7 @@ namespace Uintah {
     ParticleVariable<double> pExternalHeatFlux;
     //MembraneParticleCreator
     ParticleVariable<Vector> pTang1, pTang2, pNorm;
+		ParticleVariable<double> pconcentration;
     } ParticleVars;
 
   protected:
