@@ -284,6 +284,10 @@ namespace Uintah {
       const VarLabel* czIDLabel; 
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
+
+
+			//******** Reactive Flow Section***********
+      const VarLabel* pConcentrationLabel;
     };
 } // End namespace Uintah
 

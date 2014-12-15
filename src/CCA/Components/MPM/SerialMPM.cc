@@ -246,7 +246,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   
   // ScalarDiffusion subcomponent setup
 	if(flags->d_doScalarDiffusion){
-    scalarDiffusionModel = scinew ScalarDiffusion(sharedState, flags);
+    scalarDiffusionModel = scinew ScalarDiffusion(sharedState, lb, flags);
 	}
 
 
@@ -368,8 +368,9 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->p_qLabel);
   }
 
+	// Reactive Flow component
 	if (flags->d_doScalarDiffusion){
-		t->computes(scalarDiffusionModel->get_pConcentrationLabel());
+		t->computes(lb->pConcentrationLabel);
 	}
 
   // artificial damping coeff initialized to 0.0

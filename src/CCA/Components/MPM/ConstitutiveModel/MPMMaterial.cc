@@ -133,6 +133,12 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   if(flags->d_with_color){
     geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
   } 
+
+	// ReactiveFlow Diffusion Component
+	if(flags->d_doScalarDiffusion){
+    geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
+	}
+
   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
        geom_obj_ps != 0; 
        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
