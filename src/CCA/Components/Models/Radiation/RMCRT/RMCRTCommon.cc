@@ -75,6 +75,7 @@ RMCRTCommon::RMCRTCommon()
 {
  /*`==========TESTING==========*/               // HARDWIRED 
   RMCRTCommon::d_FLT_DBL = TypeDescription::double_type; 
+//  RMCRTCommon::d_FLT_DBL = TypeDescription::float_type;
 /*===========TESTING==========`*/
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
     d_sigmaT4_label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
