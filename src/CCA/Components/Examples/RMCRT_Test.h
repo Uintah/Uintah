@@ -35,8 +35,6 @@
 
 using SCIRun::DebugStream;
 
-//#define USINGFLOATRMCRT
-
 namespace Uintah
 {
   class SimpleMaterial;
@@ -143,11 +141,7 @@ WARNING
    protected:
     const ProcessorGroup* d_myworld;
     
-    #ifdef USINGFLOATRMCRT
-      floatRay* d_RMCRT;
-    #else
-      Ray* d_RMCRT;
-    #endif
+    Ray* d_RMCRT;
     
     SimulationStateP d_sharedState;
     SimpleMaterial*  d_material;
