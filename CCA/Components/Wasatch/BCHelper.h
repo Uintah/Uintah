@@ -74,7 +74,7 @@ namespace Wasatch {
   /* 
      Hi. This class is based on the following assumptions:
    1. We distinguish between boundaries and boundary conditions. 
-   2. We associate boundaries with physical domain contraints. 
+   2. We associate boundaries with physical domain constraints.
    3. Boundaries include Walls, Inlets, Velocity inlets, mass flow inlets, outflows, pressure outlets... or
      any physically relevant constraint on the flow-field. Boundaries do NOT include DIRICHLET, NEUMANN,
      or ROBIN conditions.
@@ -373,21 +373,21 @@ namespace Wasatch {
   {
   public:
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type DirichletX;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
   };
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<YVolField>::YFace>
   {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type DirichletY;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
   };
   //
   template<>
   struct BCOpTypeSelector<FaceTypes<ZVolField>::ZFace>
   {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type DirichletZ;
-    typedef SpatialOps::OperatorTypeBuilder<Divergence, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
+    typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
   };
 
   //****************************************************************************
@@ -430,14 +430,14 @@ namespace Wasatch {
   class BCHelper {
     
   private:
-    typedef SpatialOps::IntVec                IntVecT          ;  // SpatialOps IntVec
-    typedef std::map <int, BoundaryIterators            > patchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
-    typedef std::map <std::string, patchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
+    typedef SpatialOps::IntVec                            IntVecT          ;  // SpatialOps IntVec
+    typedef std::map <int, BoundaryIterators            > PatchIDBndItrMapT;  // temporary typedef map that stores boundary iterators per patch id: Patch ID -> Bnd Iterators
+    typedef std::map <std::string, PatchIDBndItrMapT    > MaskMapT         ;  // boundary name -> (patch ID -> Boundary iterators )
     
     const Uintah::PatchSet*    const localPatches_;
     const Uintah::MaterialSet* const materials_   ;
     const PatchInfoMap&        patchInfoMap_      ;
-    BCFunctorMap&        bcFunctorMap_      ;
+    BCFunctorMap&              bcFunctorMap_      ;
     GraphCategories&           grafCat_           ;
     
     // This map stores the iterators associated with each boundary condition name.
@@ -494,7 +494,7 @@ namespace Wasatch {
     // add the new patchID to the list of patches that this boundary lives on
     void add_boundary( const std::string&      bndName,
                        Uintah::Patch::FaceType face,
-                       const BndTypeEnum& bndType,
+                       const BndTypeEnum&      bndType,
                        const int               patchID,
                        const Uintah::BCGeomBase::ParticleBndSpec);
     
@@ -535,9 +535,9 @@ namespace Wasatch {
      *  \param newBCType The type (DIRICHLET/NEUMANN) of the auxiliary bc.
      */
     void add_auxiliary_boundary_condition( const std::string& srcVarName,
-                                          const std::string& newVarName,
-                                          const double& newValue,
-                                          const BndCondTypeEnum newBCType );    
+                                           const std::string& newVarName,
+                                           const double newValue,
+                                           const BndCondTypeEnum newBCType );
     /**
      *  \brief Adds a boundary condition on a specified boundary
      */
@@ -600,19 +600,19 @@ namespace Wasatch {
      */
     template<typename FieldT>
     void apply_boundary_condition( const Expr::Tag& varTag,
-                                  const Category& taskCat,
-                                  bool setOnExtraOnly=false );
+                                   const Category& taskCat,
+                                   const bool setOnExtraOnly=false );
     
     /**
      *  \brief Retrieve a reference to the boundary and boundary condition information stored in this
      *  BCHelper
      */
-    BndMapT& get_boundary_information();
+    const BndMapT& get_boundary_information() const;
 
     /**
      *  \brief Returns true of the BCHelper on this patch has any physical boundaries
      */
-    bool has_boundaries();
+    bool has_boundaries() const;
     
     /**
      *  \brief Allows one to inject dummy dependencies to help with boundary condition expressions.

@@ -456,8 +456,7 @@ namespace Wasatch {
   void BCHelper::add_boundary_condition( const BndCondSpec& bcSpec )
   {
     using namespace std;
-    BOOST_FOREACH( BndMapT::value_type& bndPair, bndNameBndSpecMap_)
-    {
+    BOOST_FOREACH( BndMapT::value_type& bndPair, bndNameBndSpecMap_){
       add_boundary_condition(bndPair.first, bcSpec);
     }
   }
@@ -496,7 +495,7 @@ namespace Wasatch {
   
   void BCHelper::add_auxiliary_boundary_condition( const std::string& srcVarName,
                                                    const std::string& newVarName,
-                                                   const double& newValue,
+                                                   const double newValue,
                                                    const BndCondTypeEnum newBCType )
   {
     BndCondSpec newBCSpec = {newVarName, "none", newValue, newBCType, DOUBLE_TYPE};
@@ -529,9 +528,9 @@ namespace Wasatch {
       (*bndNamePatchIDMaskMap_.find(bndName)).second.insert(pair<int, BoundaryIterators>(patchID, myIters));
     } else {
       DBGBC << "BC " << bndName << " does NOT Exist in list of Iterators. Adding new iterator for " << bndName << " on patchID " << patchID << std::endl;
-      patchIDBndItrMapT patchIDIterMap;
+      PatchIDBndItrMapT patchIDIterMap;
       patchIDIterMap.insert(pair<int, BoundaryIterators>(patchID, myIters));
-      bndNamePatchIDMaskMap_.insert( pair< string, patchIDBndItrMapT >(bndName, patchIDIterMap ) );
+      bndNamePatchIDMaskMap_.insert( pair< string, PatchIDBndItrMapT >(bndName, patchIDIterMap ) );
     }
   }
 
@@ -542,7 +541,7 @@ namespace Wasatch {
   {
     const std::string bndName = myBndSpec.name;
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         return &(myIters.interiorEdgeCells);
@@ -559,7 +558,7 @@ namespace Wasatch {
   {
     const std::string bndName = myBndSpec.name;
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         return myIters.particleIdx;
@@ -579,7 +578,7 @@ namespace Wasatch {
     const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         if (isStagNorm && isPlusSide) {
@@ -603,7 +602,7 @@ namespace Wasatch {
     const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         if (isStagNorm && isPlusSide) {
@@ -629,7 +628,7 @@ namespace Wasatch {
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
     
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         if (isStagNorm && isPlusSide) {
@@ -654,7 +653,7 @@ namespace Wasatch {
     const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
     
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         if (isStagNorm && isPlusSide) {
@@ -676,7 +675,7 @@ namespace Wasatch {
     const std::string bndName = myBndSpec.name;
     
     if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      patchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
       if ( myMap.find(patchID) != myMap.end() ) {
         BoundaryIterators& myIters = (*myMap.find(patchID)).second;
         return myIters.extraBndCellsUintah;
@@ -949,14 +948,14 @@ namespace Wasatch {
 
   //------------------------------------------------------------------------------------------------
   
-  BndMapT& BCHelper::get_boundary_information()
+  const BndMapT& BCHelper::get_boundary_information() const
   {
     return bndNameBndSpecMap_;
   }
 
   //------------------------------------------------------------------------------------------------
   
-  bool BCHelper::has_boundaries()
+  bool BCHelper::has_boundaries() const
   {
     return !bndNameBndSpecMap_.empty();
   }
@@ -1059,8 +1058,7 @@ namespace Wasatch {
             const int patchID = patch->getID();
             //_____________________________________________________________________________________
             // check if we have this patchID in the list of patchIDs
-            if (myBndSpec.has_patch(patchID))
-            {
+            if( myBndSpec.has_patch(patchID) ){
               //____________________________________________________________________________________
               // get the patch info from which we can get the operators database
               const PatchInfoMap::const_iterator ipi = patchInfoMap_.find( patchID );
@@ -1342,12 +1340,12 @@ namespace Wasatch {
   #include <spatialops/structured/FVStaggered.h>
 
 #define INSTANTIATE_BC_TYPES(VOLT) \
-  template void BCHelper::apply_boundary_condition< VOLT >( const Expr::Tag& varTag, \
-                                                            const Category& taskCat, \
-                                                            bool setOnExtraOnly);    \
+  template void BCHelper::apply_boundary_condition< VOLT >( const Expr::Tag& varTag,            \
+                                                            const Category& taskCat,            \
+                                                            const bool setOnExtraOnly);         \
   template void BCHelper::create_dummy_dependency< VOLT >( const Expr::Tag& attachDepToThisTag, \
-                                                          const Expr::TagList dependencies,     \
-                                                          const Category taskCat );             
+                                                           const Expr::TagList dependencies,    \
+                                                           const Category taskCat );
   INSTANTIATE_BC_TYPES(ParticleField);
   INSTANTIATE_BC_TYPES(SpatialOps::SVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::XVolField);
