@@ -214,7 +214,6 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     }
   }
  
-  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 
 
   // Require DQMOM labels if needed 
@@ -245,6 +244,8 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     if (_particlesOn )  
       _ocalc->problemSetup(tsk, time_substep);
   }
+
+  sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials()); 
 }
 
 //---------------------------------------------------------------------------
@@ -284,24 +285,26 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       which_dw = old_dw; 
       new_dw->getModifiable( absk_tot, _prop_label, matlIndex, patch ); 
       new_dw->allocateAndPut( abskg, _calc->get_abskg_label(), matlIndex, patch );
+      old_dw->get( temperature, _temperature_label, matlIndex, patch, Ghost::None, 0 ); 
+
       if ( _particlesOn ){ 
         new_dw->allocateAndPut( abskpt, _ocalc->get_abskp_label(), matlIndex, patch );
         for( int i=0; i< _nQn_part; i++){
           new_dw->allocateAndPut( abskp[i], _ocalc->get_abskp_label_vector()[i], matlIndex, patch );
         }
       } 
-      old_dw->get( temperature, _temperature_label, matlIndex, patch, Ghost::None, 0 ); 
     } else { 
       which_dw = new_dw; 
       new_dw->getModifiable( absk_tot, _prop_label, matlIndex, patch ); 
       new_dw->getModifiable( abskg, _calc->get_abskg_label(), matlIndex, patch );
+      new_dw->get( temperature, _temperature_label, matlIndex, patch, Ghost::None, 0 );  
+
       if ( _particlesOn ){ 
         new_dw->getModifiable( abskpt, _ocalc->get_abskp_label(), matlIndex, patch );
         for( int i=0; i< _nQn_part; i++){
           new_dw->getModifiable( abskp[i], _ocalc->get_abskp_label_vector()[i], matlIndex, patch );
         }
       }  
-      new_dw->get( temperature, _temperature_label, matlIndex, patch, Ghost::None, 0 ); 
     }
 
 
@@ -332,121 +335,120 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //copy the gas portion to the total: 
     absk_tot.copyData(abskg); 
 
+
     //sum in the particle contribution if needed
+    if ( _particlesOn  ){ 
+      // Create containers to be passed to function that populates abskp
+      DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
+      CCCV pWeight;      // particle weights
+      CCCV pSize;        // particle sizes
+      CCCV pTemperature; // particle Temperatures
+      typedef std::vector<const VarLabel*> CCCVL; // object used for iterating over quadrature nodes
 
-      if ( _particlesOn){ 
-        // Create containers to be passed to function that populates abskp
-        DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
-        CCCV pWeight;      // particle weights
-        CCCV pSize;        // particle sizes
-        CCCV pTemperature; // particle Temperatures
-        typedef std::vector<const VarLabel*> CCCVL; // object used for iterating over quadrature nodes
 
+      // Get labels and scaling constants for DQMOM size, temperature and weights
+      std::vector<const VarLabel*> s_varlabels;     // DQMOM size label
+      std::vector<const VarLabel*> w_varlabels;     // DQMOM weight label
+      std::vector<const VarLabel*> t_varlabels;     // DQMOM Temperature label
+      s_varlabels.resize(0);
+      w_varlabels.resize(0);
+      t_varlabels.resize(0);
+      double s_scaling_constant; // scaling constant for sizes
+      double w_scaling_constant; // scaling constant for weights
 
-        // Get labels and scaling constants for DQMOM size, temperature and weights
-        std::vector<const VarLabel*> s_varlabels;     // DQMOM size label
-        std::vector<const VarLabel*> w_varlabels;     // DQMOM weight label
-        std::vector<const VarLabel*> t_varlabels;     // DQMOM Temperature label
-        s_varlabels.resize(0);
-        w_varlabels.resize(0);
-        t_varlabels.resize(0);
-        double s_scaling_constant; // scaling constant for sizes
-        double w_scaling_constant; // scaling constant for weights
-
-        for ( int i = 0; i < _nQn_part; i++ ){
-          std::string label_name_s = _base_size_label_name + "_qn"; 
-          std::string label_name_t = _base_temperature_label_name + "_qn"; 
-          std::string label_name_w =   "w_qn"; 
-          std::stringstream out; 
-          out << i; 
-          label_name_s += out.str(); 
-          label_name_t += out.str(); 
-          label_name_w += out.str(); 
-          if (i == 0){
-            s_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_s).getScalingConstant();
-            w_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_w).getScalingConstant();
-          }
-          s_varlabels.push_back(VarLabel::find( label_name_s ));
-          t_varlabels.push_back(VarLabel::find( label_name_t ) );
-          w_varlabels.push_back(VarLabel::find( label_name_w ) );
+      for ( int i = 0; i < _nQn_part; i++ ){
+        std::string label_name_s = _base_size_label_name + "_qn"; 
+        std::string label_name_t = _base_temperature_label_name + "_qn"; 
+        std::string label_name_w =   "w_qn"; 
+        std::stringstream out; 
+        out << i; 
+        label_name_s += out.str(); 
+        label_name_t += out.str(); 
+        label_name_w += out.str(); 
+        if (i == 0){
+          s_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_s).getScalingConstant();
+          w_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_w).getScalingConstant();
         }
+        s_varlabels.push_back(VarLabel::find( label_name_s ));
+        t_varlabels.push_back(VarLabel::find( label_name_t ) );
+        w_varlabels.push_back(VarLabel::find( label_name_w ) );
+      }
 
-        ////size
-        for ( CCCVL::iterator iterx = s_varlabels.begin(); iterx != s_varlabels.end(); iterx++ ){ 
-          constCCVariable<double> var; 
-          which_dw->get( var,*iterx, matlIndex, patch, Ghost::None, 0 ); 
-          pSize.push_back( var ); 
+      ////size
+      for ( CCCVL::iterator iterx = s_varlabels.begin(); iterx != s_varlabels.end(); iterx++ ){ 
+        constCCVariable<double> var; 
+        which_dw->get( var,*iterx, matlIndex, patch, Ghost::None, 0 ); 
+        pSize.push_back( var ); 
+      }
+      /////--temperature
+      for ( CCCVL::iterator iterx = t_varlabels.begin(); iterx != t_varlabels.end(); iterx++ ){ 
+        constCCVariable<double> var; 
+        which_dw->get( var, *iterx, matlIndex, patch, Ghost::None, 0 ); 
+        pTemperature.push_back( var ); 
+      } 
+
+      //////--weight--
+      for ( CCCVL::iterator iterx = w_varlabels.begin(); iterx != w_varlabels.end(); iterx++ ){ 
+        constCCVariable<double> var; 
+        which_dw->get( var, *iterx, matlIndex, patch, Ghost::None, 0 ); 
+        pWeight.push_back( var ); 
+      } 
+
+      /////--Other required scalars needed to compute optical props
+      std::vector< const VarLabel*> requiredLabels;
+      requiredLabels =  _ocalc->getRequiresLabels();  
+      StaticArray< constCCVariable<double> > RequiredScalars(requiredLabels.size());
+      for (unsigned int i=0; i<requiredLabels.size(); i++){ // unsigned avoids compiler warning
+        new_dw->get( RequiredScalars[i] , requiredLabels[i], matlIndex,patch, Ghost::None, 0);// This should be WhichDW, but I'm getting an error BEN??
+      }
+      ////--compute the complex index of refraction
+      StaticArray<CCVariable<double> >complexIndexReal(_nQn_part);
+      if(_ocalc->get_complexIndexBool()){
+        if(time_substep==0) {
+          for ( int i=0; i<_nQn_part; i++){ 
+            new_dw->allocateAndPut(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
+            complexIndexReal[i].initialize(0.0);
+          }
         }
-        /////--temperature
-        for ( CCCVL::iterator iterx = t_varlabels.begin(); iterx != t_varlabels.end(); iterx++ ){ 
-          constCCVariable<double> var; 
-          which_dw->get( var, *iterx, matlIndex, patch, Ghost::None, 0 ); 
-          pTemperature.push_back( var ); 
-        } 
+        else{
 
-        //////--weight--
-        for ( CCCVL::iterator iterx = w_varlabels.begin(); iterx != w_varlabels.end(); iterx++ ){ 
-          constCCVariable<double> var; 
-          which_dw->get( var, *iterx, matlIndex, patch, Ghost::None, 0 ); 
-          pWeight.push_back( var ); 
-        } 
-
-        /////--Other required scalars needed to compute optical props
-        std::vector< const VarLabel*> requiredLabels;
-        requiredLabels =  _ocalc->getRequiresLabels();  
-        StaticArray< constCCVariable<double> > RequiredScalars(requiredLabels.size());
-        for (unsigned int i=0; i<requiredLabels.size(); i++){ // unsigned avoids compiler warning
-          new_dw->get( RequiredScalars[i] , requiredLabels[i], matlIndex,patch, Ghost::None, 0);// This should be WhichDW, but I'm getting an error BEN??
-        }
-          ////--compute the complex index of refraction
-          StaticArray<CCVariable<double> >complexIndexReal(_nQn_part);
-          if(_ocalc->get_complexIndexBool()){
-            if(time_substep==0) {
-              for ( int i=0; i<_nQn_part; i++){ 
-                new_dw->allocateAndPut(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
-                complexIndexReal[i].initialize(0.0);
-              }
-            }
-            else{
-
-              for ( int i=0; i<_nQn_part; i++){ 
-                new_dw->getModifiable(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
-              }
-            }
+          for ( int i=0; i<_nQn_part; i++){ 
+            new_dw->getModifiable(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
           }
-
-
-
-          _ocalc->computeComplexIndex(patch, vol_fraction,RequiredScalars, complexIndexReal);
-
-        _ocalc->compute_abskp( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
-            w_scaling_constant, pWeight, _nQn_part,  abskpt,abskp, complexIndexReal);
-
-        _calc->sum_abs( absk_tot, abskpt, patch ); 
-
-        if (_scatteringOn){
-          //-----------------scattering props---------//
-          StaticArray<CCVariable<double> >scatktQuad(_nQn_part);
-          CCVariable<double> asymmetryParam;
-          if(time_substep==0) {
-            new_dw->allocateAndPut( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
-            new_dw->allocateAndPut(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
-            scatkt.initialize(0.0);  
-            asymmetryParam.initialize(0.0);  
-          }
-          else{
-            new_dw->getModifiable( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
-            new_dw->getModifiable(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
-          }
-          _ocalc->compute_scatkt( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
-              w_scaling_constant, pWeight, _nQn_part,  scatkt, scatktQuad, complexIndexReal);
-
-          _ocalc->computeAsymmetryFactor(patch,vol_fraction, scatktQuad, RequiredScalars, scatkt, asymmetryParam);
-
-          _calc->sum_abs( absk_tot, scatkt, patch ); 
-  //----------end of scattering props----------//
         }
       }
+
+
+
+      _ocalc->computeComplexIndex(patch, vol_fraction,RequiredScalars, complexIndexReal);
+
+      _ocalc->compute_abskp( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
+          w_scaling_constant, pWeight, _nQn_part,  abskpt,abskp, complexIndexReal);
+
+      _calc->sum_abs( absk_tot, abskpt, patch ); 
+
+      if (_scatteringOn){  //----scattering props---//
+        StaticArray<CCVariable<double> >scatktQuad(_nQn_part);
+        CCVariable<double> asymmetryParam;
+        if(time_substep==0) {
+          new_dw->allocateAndPut( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
+          new_dw->allocateAndPut(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
+          scatkt.initialize(0.0);  
+          asymmetryParam.initialize(0.0);  
+        }
+        else{
+          new_dw->getModifiable( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
+          new_dw->getModifiable(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
+        }
+        _ocalc->compute_scatkt( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
+            w_scaling_constant, pWeight, _nQn_part,  scatkt, scatktQuad, complexIndexReal);
+
+        _ocalc->computeAsymmetryFactor(patch,vol_fraction, scatktQuad, RequiredScalars, scatkt, asymmetryParam);
+
+        _calc->sum_abs( absk_tot, scatkt, patch ); 
+        
+      }//----------end of scattering props----------//
+    } // Finish computing particle absorption coefficient
 
     // update absk_tot at the walls
     _boundaryCond->setScalarValueBC( pc, patch, absk_tot, _prop_name );
