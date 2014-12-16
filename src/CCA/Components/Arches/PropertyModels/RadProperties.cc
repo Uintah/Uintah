@@ -81,20 +81,27 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 
  _particlesOn = db_calc->findBlock("particles");
 
-  bool complete; 
-  complete = _calc->problemSetup( db_calc );
-  if ( _particlesOn ){ 
-    //------------ check to see if scattering is turned on --//
-    std::string radiation_model;
-    db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->getAttribute("type",radiation_model) ; 
+ bool complete; 
+ complete = _calc->problemSetup( db_calc );
 
-    if (radiation_model == "do_radiation"){
-      db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
-    }
-    else if ( radiation_model == "rmcrt_radiation"){
-      db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources")->findBlock("src")->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
-    }
-    //-------------------------------------------------------//
+ if ( _particlesOn ){ 
+   _scatteringOn = false;
+   //------------ check to see if scattering is turned on --//
+   ProblemSpecP db_source = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ; 
+   for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != 0; 
+       db_src = db_src->findNextBlock("src")){
+     std::string radiation_model;
+     db_src->getAttribute("type", radiation_model);
+     if (radiation_model == "do_radiation"){
+       db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+       break;
+     }
+     else if ( radiation_model == "rmcrt_radiation"){
+       db->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+       break;
+     }
+   }
+   //-------------------------------------------------------//
     
 
     std::string particle_calculator_type; 
@@ -169,8 +176,6 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       }
     } 
 
-
-
     //participating species from property calculator
     std::vector<std::string> part_sp = _calc->get_sp(); 
 
@@ -198,8 +203,6 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
         tsk->modifies( _ocalc->get_scatkt_label() ); 
       }
     } 
-      
-    
 
     //participating species from property calculator
     std::vector<std::string> part_sp = _calc->get_sp(); 
@@ -213,8 +216,6 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       }
     }
   }
- 
-
 
   // Require DQMOM labels if needed 
   if (  _particlesOn){
@@ -231,13 +232,32 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       label_name_t += out.str();  // temperature
       label_name_w += out.str();  // weight
 
+      // requires size
+      const VarLabel* label_s = VarLabel::find( label_name_s );
+      if ( label_s != 0 ){ 
+        tsk->requires( Task::OldDW, label_s , Ghost::None, 0 ); 
+        tsk->requires( Task::NewDW, label_s , Ghost::None, 0 ); 
+      } else { 
+        throw ProblemSetupException("Error: Could not find labels for:"+label_name_s,__FILE__, __LINE__);
+      }
 
-      tsk->requires( Task::OldDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
-      tsk->requires( Task::OldDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
-      tsk->requires( Task::OldDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
+      // requires temperature  (not all particle models need temperature, add if statement?)
+      const VarLabel* label_t = VarLabel::find( label_name_t );
+      if ( label_t != 0 ){ 
+        tsk->requires( Task::OldDW, label_t  , Ghost::None, 0 ); 
+        tsk->requires( Task::NewDW, label_t  , Ghost::None, 0 ); 
+      } else { 
+        throw ProblemSetupException("Error: Could not find labels for:"+label_name_t,__FILE__, __LINE__);
+      }
+
+      // requires weights 
+      const VarLabel* label_w = VarLabel::find( label_name_w );
+      if ( label_w != 0 ){ 
+        tsk->requires( Task::OldDW, label_w  , Ghost::None, 0 ); 
+        tsk->requires( Task::NewDW, label_w  , Ghost::None, 0 ); 
+      } else { 
+        throw ProblemSetupException("Error: Could not find labels for:"+label_name_w,__FILE__, __LINE__);
+      }
 
     }
 
