@@ -751,10 +751,9 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         // Radiation part: -------------------------
         Q_radiation = 0.0;
         if ( d_radiation) { 
-          double Apsc = abskp[c];
           double Eb = 4.0*sigma*pow(gas_temperature,4.0);
           FSum = radiationVolqIN[c];    
-          Q_radiation = Apsc*(FSum - Eb);
+          Q_radiation = abskp[c]*(FSum - Eb);
         } 
 
         double hc = get_hc(particle_temperature);
@@ -764,9 +763,9 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
         } else {
           Q_reaction = charoxi_temp_source[c];
-          heat_rate_ = ((Q_convection + Q_radiation)*unscaled_weight + ksi*Q_reaction - devol_gas_source[c]*hc - chargas_source[c]*hh)/
+          heat_rate_ = (Q_convection*unscaled_weight+ Q_radiation + ksi*Q_reaction - devol_gas_source[c]*hc - chargas_source[c]*hh)/
                        (d_pe_scaling_constant*d_w_scaling_constant);
-          gas_heat_rate_ = -unscaled_weight*(Q_convection+1.0*Q_radiation) - ksi*Q_reaction + devol_gas_source[c]*hc + chargas_source[c]*hh;
+          gas_heat_rate_ = -unscaled_weight*Q_convection +Q_radiation - ksi*Q_reaction + devol_gas_source[c]*hc + chargas_source[c]*hh;
         }
       }
   
