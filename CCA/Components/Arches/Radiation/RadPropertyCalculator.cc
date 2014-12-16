@@ -361,16 +361,15 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch
 { 
 
   int N = species.size(); 
+  double plankCff = 0.0;
+  double rossCff  = 0.0; 
+  double effCff   = 0.0; 
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
     IntVector c = *iter; 
 
-    double plankCff = 0.0;
-    double rossCff  = 0.0; 
-    double effCff   = 0.0; 
     std::vector<double> mol_frac; 
-    double T        = mixT[c];
     double VolFraction = VolFractionBC[c];
 
     //convert mass frac to mol frac
@@ -394,9 +393,9 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch
 
     if ( VolFraction > 1.e-16 ){
 
-      _gg_radprops->mixture_coeffs(plankCff, rossCff, effCff, mol_frac, T);
+      _gg_radprops->mixture_coeffs(plankCff, rossCff, effCff, mol_frac, mixT[c]);
 
-      abskg[c] = effCff*100; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
+      abskg[c] = effCff*100.0; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
 
     } else { 
 
