@@ -123,8 +123,11 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   db->getWithDefault("ScatteringOn",_scatteringOn,false); //  using the previous solve as initial guess, is off by default
 
   if (db) {
+    bool ordinates_specified =db->findBlock("ordinates");
     db->getWithDefault("ordinates",d_sn,2);
-    proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
+    if (ordinates_specified == false){
+      proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
+    }
   } else {
     throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
   }
@@ -485,7 +488,7 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
       continue;
 
     for (int i=0; i < d_totalOrds ; i++) {                                    
- double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])* solidAngleQuad[direction][i];      
+      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])* solidAngleQuad[direction][i];      
       scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
 
     }
