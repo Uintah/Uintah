@@ -795,6 +795,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   if (execout.active()) {
     static int count = 0;
 
+    // only output the exec times every 10 timesteps
     if (++count % 10 == 0) {
       ofstream fout;
       char filename[100];
@@ -802,7 +803,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
       fout.open(filename);
 
       for (map<string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
-        fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:" << iter->first << std::endl;
+        fout << fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
       // exectimes.clear();

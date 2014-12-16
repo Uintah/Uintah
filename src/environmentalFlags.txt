@@ -7,11 +7,17 @@ Set these like this:
 Name              type               Description
 ______________________________________________________________________
 
-ExecTimes         SCI_DEBUG     outputs the time for execution on each task.
+ExecTimes         SCI_DEBUG     Outputs the time for execution on each task
+                                NOTE: TaskExecTimes are: 
+                                        1) Represented in seconds
+                                        2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps
+                                        3) Cumulative over the number for worker threads for multi-threaded runs
                                 To view the top 10 tasks use:
                                 sort -t: -k 2 -k 3 -g -r exectimes.?.? | head
                                 To get a summary of all exectimes files run the script src/scripts/execsummary
-                                (NOTE: this only works with MPI and you must run your input file for more than 10 timesteps)
+                                NOTE: This only works with MPI and you must run your input file for more than 10 timesteps
+                                
+                                
 
 ReductionTasks    SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
 RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring
@@ -31,12 +37,17 @@ ComponentTimings  SCI_DEBUG     output overall mpi and cpu times
 BCR_dbg           SCI_DEBUG     print out some information regarding the BC setup
 
 
-Schedulers:                     NOTE: The default is "UnifiedScheduler"
+Schedulers:                              NOTE: The default is "UnifiedScheduler"
 __________________________________
 SingleProcessor            SCI_DEBUG     Use SingleProcessorScheduler
-MPIScheduler               SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
-DynamicMPIScheduler        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
-UnifiedScheduler           SCI_DEBUG     Use UnifiedScheduler - De-centralized Multi-threaded, with GPU support
+MPI                        SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
+DynamicMPI                 SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
+
+Scheduler Debugging Information:
+__________________________________
+MPIScheduler               SCI_DEBUG     Prints debugging information for the MPIScheduler
+DynamicMPIScheduler        SCI_DEBUG     Prints debugging information for the DynamicMPIScheduler
+UnifiedScheduler           SCI_DEBUG     Prints debugging information for the UnifiedScheduler
 
 
 GPU related variables
