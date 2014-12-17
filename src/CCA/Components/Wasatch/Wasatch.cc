@@ -701,10 +701,9 @@ namespace Wasatch{
     // get the variable density mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP VarDenMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
-    if (VarDenMMSParams) {
+    if( VarDenMMSParams ){
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-        parse_var_den_mms(wasatchSpec_, VarDenMMSParams, computeContinuityResidual, graphCategories_);
-
+      parse_var_den_mms(wasatchSpec_, VarDenMMSParams, computeContinuityResidual, graphCategories_);
     }
     
     // radiation

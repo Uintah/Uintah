@@ -43,7 +43,7 @@ VarDen1DMMSDensity<FieldT>::evaluate()
   const double t = (*t_)[0];
 
   const double bcValue = -1 / ( (5/(exp(1125/( t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125 / (t + 10)) * (2 * t + 5)));
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
@@ -69,7 +69,7 @@ VarDen1DMMSMixtureFraction<FieldT>::evaluate()
   
   const double t = (*t_)[0];  // this breaks GPU.
   
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     const double bcValue = ( (5. / (2. * t +5.)) * exp(-1125 / (10. + t)) );
