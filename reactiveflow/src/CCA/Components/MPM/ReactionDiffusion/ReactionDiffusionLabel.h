@@ -22,18 +22,18 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_REACTIVEFLOWLABEL_H
-#define UINTAH_REACTIVEFLOWLABEL_H
+#ifndef UINTAH_REACTIONDIFFUSIONLABEL_H
+#define UINTAH_REACTIONDIFFUSIONLABEL_H
 
 namespace Uintah {
 
   class VarLabel;
   
-  class ReactiveFlowLabel {
+  class ReactionDiffusionLabel {
   public:
     
-    ReactiveFlowLabel();
-    ~ReactiveFlowLabel();
+    ReactionDiffusionLabel();
+    ~ReactionDiffusionLabel();
 
     const VarLabel* pConcentrationLabel;
   };

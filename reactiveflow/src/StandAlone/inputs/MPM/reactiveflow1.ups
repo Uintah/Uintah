@@ -80,7 +80,7 @@
            <Box label="1">
               <lower>       [0,0,0]          </lower>
               <upper>       [1.0,0.75,1.00]  </upper>
-           		<resolution>  [20,20,20]     </resolution>
+              <resolution>  [20,20,20]     </resolution>
               <extraCells> [1,1,1]            </extraCells>
               <patches>    [1,1,1]            </patches>
            </Box>
@@ -91,12 +91,12 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>reactiveflow2.uda</filebase>
+      <filebase>reactiveflow1.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label="p.x"/>
       <save label="p.volume"/>
       <save label="p.velocity"/>
-			<save label="p.temperature" />
+      <save label="p.temperature" />
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
@@ -104,7 +104,7 @@
     <MPM>
         <time_integrator>explicit</time_integrator>
         <interpolator>gimp</interpolator>
-				<scalar_diffusion>concentration</scalar_diffusion>
+        <scalar_diffusion>explicit</scalar_diffusion>
     </MPM>
 
     <!--____________________________________________________________________-->
@@ -129,6 +129,9 @@
               <!--<thermal_conductivity>  427.0  </thermal_conductivity>-->
               <thermal_conductivity>  3427.0  </thermal_conductivity>
               <specific_heat>         234.0  </specific_heat>
+	      <diffusion_model type = "linear">
+	          <diffusivity>       300   </diffusivity>
+	      </diffusion_model>
               <geom_object>
                 <box label="gpmpm">
                   <min>           [0.25,0.00,0.25]   </min>

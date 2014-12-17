@@ -27,7 +27,7 @@
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
-#include <CCA/Components/MPM/ReactiveFlow/ScalarDiffusion.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
@@ -130,7 +130,6 @@ SerialMPM::~SerialMPM()
   delete contactModel;
   delete thermalContactModel;
   delete heatConductionModel;
-  delete scalarDiffusionModel;
   MPMPhysicalBCFactory::clean();
   
   if(d_analysisModules.size() != 0){
@@ -244,12 +243,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
   
-  // ScalarDiffusion subcomponent setup
-	if(flags->d_doScalarDiffusion){
-    scalarDiffusionModel = scinew ScalarDiffusion(sharedState, lb, flags);
-	}
-
-
   //__________________________________
   //  create analysis modules
   // call problemSetup  
@@ -368,11 +361,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->p_qLabel);
   }
 
-	// Reactive Flow component
-	if (flags->d_doScalarDiffusion){
-		t->computes(lb->pConcentrationLabel);
-	}
-
   // artificial damping coeff initialized to 0.0
   if (cout_dbg.active())
     cout_dbg << "Artificial Damping Coeff = " << flags->d_artificialDampCoeff 
@@ -383,6 +371,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
+    if (flags->d_doScalarDiffusion){
+    }
   }
 
   sched->addTask(t, patches, d_sharedState->allMPMMaterials());

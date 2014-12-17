@@ -28,9 +28,10 @@
 # Makefile fragment for this subdirectory 
 
 
-SRCDIR   := CCA/Components/MPM/ReactiveFlow
+SRCDIR   := CCA/Components/MPM/ReactionDiffusion
 
 SRCS     += \
-	$(SRCDIR)/ReactiveFlowLabel.cc \
-	$(SRCDIR)/ScalarDiffusion.cc
+	$(SRCDIR)/ReactionDiffusionLabel.cc \
+	$(SRCDIR)/ScalarDiffusionModel.cc \
+	$(SRCDIR)/ScalarDiffusionModelFactory.cc
 

@@ -110,8 +110,9 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
 
+  //******* Reactive Flow Component
   d_doScalarDiffusion = false; //for diffusion component found in ReactiveFlow
-  d_scalarDiffusion_type = "concentration";
+  d_scalarDiffusion_type = Explicit;
 
 // MMS
 if(d_mms_type=="AxisAligned"){

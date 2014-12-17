@@ -22,19 +22,45 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactiveFlow/ReactiveFlowLabel.h>
-#include <Core/Grid/Variables/ParticleVariable.h>
-#include <Core/Grid/Variables/VarLabel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/MPMFlags.h>
+#include <Core/Labels/MPMLabel.h>
 
 using namespace std;
 using namespace Uintah;
 
 
-ReactiveFlowLabel::ReactiveFlowLabel() {
-  pConcentrationLabel = VarLabel::create( "p.concentration",
-                         ParticleVariable<double>::getTypeDescription() );
+ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, MPMFlags* Mflag){
+  d_Mflag = Mflag;
+
+  d_lb = scinew MPMLabel;
+  d_rdlb = scinew ReactionDiffusionLabel();
+
+  if(d_Mflag->d_8or27==8){
+    NGP=1;
+    NGN=1;
+  } else {
+    NGP=2;
+    NGN=2;
+  }
+
+  if(d_Mflag->d_scalarDiffusion_type == "explicit"){
+    do_explicit = true;
+    std::cout << "doing explicit" << std::endl;
+  }else{
+    do_explicit = false;
+    std::cout << "doing implicit" << std::endl;
+  }
 }
 
-ReactiveFlowLabel::~ReactiveFlowLabel() {
-  VarLabel::destroy(pConcentrationLabel);
+ScalarDiffusionModel::~ScalarDiffusionModel() {
+  delete d_lb;
+  delete d_rdlb;
+}
+
+void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
+                                              const MPMMaterial* matl,
+                                              const PatchSet* patch) const{
 }

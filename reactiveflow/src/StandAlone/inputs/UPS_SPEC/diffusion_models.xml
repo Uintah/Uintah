@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+  <diffusion_model              spec="REQUIRED NO_DATA"
+                                attribute1="type REQUIRED STRING 'linear, reaflow1'">
+
+    <diffusivity                spec="OPTIONAL DOUBLE" />
+  
+  </diffusion_model>
+
+</Uintah_Include>

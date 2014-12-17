@@ -29,6 +29,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
@@ -75,11 +77,14 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   // Follow the layout of the input file
   // Steps:
   // 1.  Determine the type of constitutive model and create it.
-  // 2.  Get the general properties of the material such as
+  // 2.  Determine if scalar diffusion is used and the type of
+  //     scalar diffusion model and create it.
+  //     Added for reactive flow component.
+  // 3.  Get the general properties of the material such as
   //     density, thermal_conductivity, specific_heat.
-  // 3.  Loop through all of the geometry pieces that make up a single
+  // 4.  Loop through all of the geometry pieces that make up a single
   //     geometry object.
-  // 4.  Within the geometry object, assign the boundary conditions
+  // 5.  Within the geometry object, assign the boundary conditions
   //     to the object.
   // 5.  Assign the velocity field.
 
@@ -91,6 +96,12 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
          << " slipped through the existing bullet proofing. Please tell \n"
          << " either Jim, John or Todd "<< endl; 
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
+  }
+
+  // Step 2 -- check if scalar diffusion is used and
+  // create the scalar diffusion model.
+  if(flags->d_doScalarDiffusion){
+    d_sdm = ScalarDiffusionModelFactory::create(ps,flags);
   }
 
   // Step 2 -- get the general material properties
@@ -134,10 +145,10 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
     geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
   } 
 
-	// ReactiveFlow Diffusion Component
-	if(flags->d_doScalarDiffusion){
+  // ReactiveFlow Diffusion Component
+  if(flags->d_doScalarDiffusion){
     geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
-	}
+  }
 
   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
        geom_obj_ps != 0; 

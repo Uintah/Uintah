@@ -22,38 +22,45 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MPM/ReactiveFlow/ScalarDiffusion.h>
-#include <Core/Math/Short27.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Grid/Variables/NCVariable.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <CCA/Components/MPM/MPMBoundCond.h>
-#include <CCA/Components/MPM/MPMFlags.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Labels/MPMLabel.h>
-#include <Core/Grid/Task.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <CCA/Ports/Scheduler.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Util/DebugStream.h>
+#ifndef UINTAH_RF_SCALARDIFFUSIONMODEL_H
+#define UINTAH_RF_SCALARDIFFUSIONMODEL_H
 
-using namespace std;
-using namespace Uintah;
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
+namespace Uintah {
 
-ScalarDiffusion::ScalarDiffusion(SimulationStateP& sS, MPMLabel* lb, MPMFlags* flags) {
-	d_lb = lb;
-  d_flag = flags;
-  d_sharedState = sS;
+  class Task;
+  class MPMFlags;
+  class MPMLabel;
+  class MPMMaterial;
+  class ReactionDiffusionLabel;
+  class DataWarehouse;
+  class ProcessorGroup;
 
-  if(d_flag->d_8or27==8){
-    NGP=1;
-    NGN=1;
-  } else {
-    NGP=2;
-    NGN=2;
-  }
-}
+  
+  class ScalarDiffusionModel {
+  public:
+    
+    ScalarDiffusionModel(ProblemSpecP& ps, MPMFlags* Mflag);
+    ~ScalarDiffusionModel();
 
-ScalarDiffusion::~ScalarDiffusion() {
-}
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patch) const;
+
+  private:
+    MPMLabel* d_lb;
+    MPMFlags* d_Mflag;
+    ReactionDiffusionLabel* d_rdlb;
+    int NGP, NGN;
+    bool do_explicit;
+
+    ScalarDiffusionModel(const ScalarDiffusionModel&);
+    ScalarDiffusionModel& operator=(const ScalarDiffusionModel&);
+    
+  };
+  
+} // end namespace Uintah
+#endif
