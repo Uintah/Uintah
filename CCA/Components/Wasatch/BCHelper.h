@@ -39,29 +39,22 @@
 #include <set>
 #include <list>
 #include <string>
-#include <iostream>
 
 //-- SpatialOps includes --//
-#include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/FVStaggered.h>
 
 //-- ExprLib Includes --//
-#include <expression/Expression.h>
+#include <expression/ExprLib.h>
 
 //-- Uintah Includes --//
 #include <Core/Grid/Variables/ComputeSet.h> // used for Uintah::PatchSet
 #include <Core/Grid/BoundaryConditions/BCGeomBase.h>
+
 //-- Wasatch Includes --//
 #include "PatchInfo.h"
 #include "GraphHelperTools.h"
 #include "Operators/OperatorTypes.h"
 
-//-- Debug Stream --//
-#include <Core/Util/DebugStream.h>
-
-static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
-#define DBC_BC_ON  dbgbc.active()
-#define DBGBC  if( DBC_BC_ON  ) dbgbc
 
 /**
  * \file BCHelper.h
@@ -181,35 +174,16 @@ namespace Wasatch {
     BCValueTypeEnum  bcValType;   // value type: DOUBLE, FUNCTOR    
     
     // compare based on ALL the members of this struct
-    bool operator==(const BndCondSpec& l) const
-    {
-      return (   l.varName == varName
-              && l.functorName == functorName
-              && l.value == value
-              && l.bcType == bcType
-              && l.bcValType == bcValType);
-    };
+    bool operator==(const BndCondSpec& l) const;
 
     // compare based on the varname only
-    bool operator==(const std::string& varNameNew) const
-    {
-      return ( varNameNew == varName);
-    };
+    bool operator==(const std::string& varNameNew) const;
 
     // print
-    void print() const
-    {
-      using namespace std;
-      cout << "  var:   " << varName << endl
-           << "  type:  " << bcType << endl
-           << "  value: " << value << endl;
-    };
+    void print() const;
 
     // check if the user is applying a functor in this boundary condition
-    bool is_functor() const
-    {
-      return (bcValType == FUNCTOR_TYPE);
-    };
+    bool is_functor() const;
   };
 
   //****************************************************************************
@@ -232,53 +206,19 @@ namespace Wasatch {
     std::vector<BndCondSpec> bcSpecVec; // List of ALL the BCs applied at this boundary
 
     // returns true if this Boundary has parts of it on patchID
-    bool has_patch(const int& patchID) const
-    {
-      return std::find(patchIDs.begin(), patchIDs.end(), patchID) != patchIDs.end();
-    };
+    bool has_patch(const int& patchID) const;
     
     // find the BCSpec associated with a given variable name
-    const BndCondSpec* find(const std::string& varName) const
-    {
-      std::vector<BndCondSpec>::const_iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
-      if (it != bcSpecVec.end()) {
-        return &(*it);
-      } else {
-        return NULL;
-      }
-    };
+    const BndCondSpec* find(const std::string& varName) const;
     
     // find the BCSpec associated with a given variable name - non-const version
-    const BndCondSpec* find(const std::string& varName)
-    {
-      std::vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
-      if (it != bcSpecVec.end()) {
-        return &(*it);
-      } else {
-        return NULL;
-      }
-    };
+    const BndCondSpec* find(const std::string& varName);
     
     // check whether this boundary has any bcs specified for varName
-    bool has_field(const std::string& varName) const
-    {
-      std::vector<BndCondSpec>::const_iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
-      if (it != bcSpecVec.end()) {
-        return true;
-      } else {
-        return false;
-      }
-    };
+    bool has_field(const std::string& varName) const;
     
     // print information about this boundary
-    void print() const
-    {
-      using namespace std;
-      cout << "Boundary: " << name << " face: " << face << " BndType: " << type << endl;
-      for (vector<BndCondSpec>::const_iterator it=bcSpecVec.begin(); it != bcSpecVec.end(); ++it) {
-        (*it).print();
-      }
-    };
+    void print() const;
   };
   
   typedef std::map <std::string, BndSpec> BndMapT;
