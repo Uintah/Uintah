@@ -61,7 +61,7 @@ SUBDIRS := \
 	$(SRCDIR)/CohesiveZone      \
 	$(SRCDIR)/HeatConduction    \
 	$(SRCDIR)/MMS               \
-	$(SRCDIR)/ReactiveFlow
+	$(SRCDIR)/ReactionDiffusion
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

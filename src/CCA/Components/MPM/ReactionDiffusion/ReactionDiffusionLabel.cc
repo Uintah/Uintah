@@ -22,36 +22,19 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_RF_SCALARDIFFUSION_H
-#define UINTAH_RF_SCALARDIFFUSION_H
+#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
-#include <CCA/Ports/SchedulerP.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Grid/SimulationStateP.h>
+using namespace std;
+using namespace Uintah;
 
-namespace Uintah {
 
-  class MPMLabel;
-  class MPMFlags;
-  class DataWarehouse;
-  class ProcessorGroup;
-  
-  class ScalarDiffusion {
-  public:
-    
-    ScalarDiffusion(SimulationStateP& ss, MPMLabel* lb, MPMFlags* mflags);
-    ~ScalarDiffusion();
+ReactionDiffusionLabel::ReactionDiffusionLabel() {
+  pConcentrationLabel = VarLabel::create( "p.concentration",
+                         ParticleVariable<double>::getTypeDescription() );
+}
 
-  private:
-    MPMLabel* d_lb;
-    MPMFlags* d_flag;
-    SimulationStateP d_sharedState;
-    int NGP, NGN;
-
-    ScalarDiffusion(const ScalarDiffusion&);
-    ScalarDiffusion& operator=(const ScalarDiffusion&);
-    
-  };
-  
-} // end namespace Uintah
-#endif
+ReactionDiffusionLabel::~ReactionDiffusionLabel() {
+  VarLabel::destroy(pConcentrationLabel);
+}

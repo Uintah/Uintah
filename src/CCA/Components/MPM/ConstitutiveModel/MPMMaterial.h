@@ -53,6 +53,7 @@ using namespace SCIRun;
  class ConstitutiveModel;
  class MPMLabel;
  class ParticleCreator;
+ class ScalarDiffusionModel;
 
       
 /**************************************
@@ -154,6 +155,7 @@ WARNING
 
    MPMLabel* d_lb;
    ConstitutiveModel* d_cm;
+   ScalarDiffusionModel* d_sdm;
    ParticleCreator* d_particle_creator;
 
    double d_density;

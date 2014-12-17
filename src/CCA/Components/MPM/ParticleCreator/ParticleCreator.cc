@@ -114,9 +114,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Vector>* pvelocities   = 0;    // gcd adds and new change name
     vector<Matrix3>* psizes       = 0;
 		
-		// Reactive Flow component
-		vector<double>* concentrations = 0;
-
     if (sgp){
       volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
@@ -128,9 +125,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if(d_with_color){
         colors      = sgp->getColors();
       }
-			if(d_flags->d_doScalarDiffusion){
-				//concentrations = sgp->getConcentration();
-		  }
     }
 
     // For getting particle volumes (if they exist)
@@ -175,13 +169,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     if (colors) {
       if (!colors->empty()) coloriter = vars.d_object_colors[*obj].begin();
     }
-
-    // Reactive Flow component
-		// For getting particle concentrations (if they exist)
-    vector<double>::const_iterator conciter;
-    if (concentrations) {
-      if (!concentrations->empty()) conciter = vars.d_object_concentrations[*obj].begin();
-		}
 
     vector<Point>::const_iterator itr;
     for(itr=vars.d_object_points[*obj].begin();itr!=vars.d_object_points[*obj].end();++itr){
@@ -275,13 +262,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++coloriter;
         }
       }
-
-      if (concentrations) {
-        if (!concentrations->empty()) {
-          pvars.pconcentration[pidx] = *conciter;
-          ++coloriter;
-        }
-			}
 
       // If the particle is on the surface and if there is
       // a physical BC attached to it then mark with the 
@@ -421,11 +401,6 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,         d_lb->p_qLabel,            subset);
   }
-
-	if(d_flags->d_doScalarDiffusion){
-		new_dw->allocateAndPut(pvars.pconcentration, d_lb->pConcentrationLabel, subset);
-	}
-
   return subset;
 }
 
@@ -622,10 +597,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
     pvars.p_q[i] = 0.;
   }
 
-	if(d_flags->d_doScalarDiffusion){
-    pvars.pconcentration[i] = (*obj)->getInitialData_double("concentration");
-	}
-  
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
 
   Vector pExtForce(0,0,0);

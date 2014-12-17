@@ -664,10 +664,6 @@ MPMLabel::MPMLabel()
   pCellNACZIDLabel =
     VarLabel::create("cellNACZID", CCVariable<short int>::getTypeDescription());
 		
-	//******** Reactive Flow Section***********
-  pConcentrationLabel = VarLabel::create("p.concentration",
-	                         ParticleVariable<double>::getTypeDescription());
-
 } 
 
 MPMLabel::~MPMLabel()
@@ -907,7 +903,4 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(czBotMatLabel_preReloc);
   VarLabel::destroy(czFailedLabel);
   VarLabel::destroy(czFailedLabel_preReloc);
-
-	//******** Reactive Flow Section***********
-	VarLabel::destroy(pConcentrationLabel);
 }

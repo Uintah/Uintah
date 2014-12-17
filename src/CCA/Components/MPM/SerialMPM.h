@@ -94,7 +94,6 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
-  ScalarDiffusion* scalarDiffusionModel;
  
   //////////
   // Insert Documentation Here:
