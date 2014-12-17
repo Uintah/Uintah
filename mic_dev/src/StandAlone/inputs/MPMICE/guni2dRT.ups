@@ -1,0 +1,350 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+    <!-- First crack at the tuna can problem -->
+
+   <Meta>
+       <title>Pressurization of a container via burning w/o fracture</title>
+   </Meta>
+
+   <SimulationComponent type="mpmice" />
+
+    <!--____________________________________________________________________-->
+    <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            8.00e-6     </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           1.0e-12     </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          2.1e-8      </delt_init>
+       <max_Timesteps>      61          </max_Timesteps>
+       <timestep_multiplier>0.3         </timestep_multiplier>
+   </Time>    
+    <!--____________________________________________________________________-->
+    <!--   G  R  I  D     V  A  R  I  A  B  L  E  S                         -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0" label = "Pressure"      var = "Neumann">
+                              <value>  0.0 </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"    var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol" var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"   var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "all" label = "Velocity"   var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>        [ 0.0,     0.0,     0.0      ]    </lower>
+              <upper>        [ 0.08636, 0.08636, 0.0016933]    </upper>
+              <extraCells>   [1,1,1]    </extraCells>
+              <patches>      [2,2,1]    </patches>
+              <resolution>   [51, 51, 1]                 </resolution>
+           </Box>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>guni2dRT.uda</filebase>
+      <outputTimestepInterval> 20 </outputTimestepInterval>
+      <save label = "rho_CC"/>
+      <save label = "press_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "vol_frac_CC"/>
+      <save label = "vel_CC"/>
+      <save label = "g.mass"/>
+      <save label = "p.x"/>
+      <save label = "p.mass"/>
+      <save label = "p.temperature"/>
+      <save label = "p.porosity"/>
+      <save label = "p.particleID"/>
+      <save label = "p.velocity"/>
+      <save label = "p.stress"/>
+      <save label = "p.damage" material = "0"/>
+      <save label = "p.plasticStrain" material = "0"/>
+      <save label = "p.strainRate" material = "0"/>
+      <save label = "g.stressFS"/>
+      <save label = "delP_Dilatate"/>
+      <save label = "delP_MassX"/>
+<!--
+      <save label = "p.localized"/>
+-->
+
+      <checkpoint cycle = "2" timestepInterval = "20"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.3</cfl>
+       <ICE>
+        <advection type = "SecondOrder"/>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
+      </ICE>        
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+
+    <MPM>
+        <time_integrator>explicit</time_integrator>
+        <interpolator>                   gimp       </interpolator>
+        <minimum_particle_mass>3.e-15</minimum_particle_mass>
+        <maximum_particle_velocity>3.e4</maximum_particle_velocity>
+        <artificial_damping_coeff>       0.0        </artificial_damping_coeff>
+        <artificial_viscosity>           true       </artificial_viscosity>
+        <use_load_curves>                false      </use_load_curves>
+        <erosion algorithm = "none"/>
+    </MPM>
+
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <MPM>
+        <material name = "Steel Ring">
+       
+        <density>7830.0</density>
+        <thermal_conductivity>38</thermal_conductivity>
+        <specific_heat>477</specific_heat>
+        <room_temp>294.0</room_temp>
+        <melt_temp>1793.0</melt_temp>
+
+        <constitutive_model type = "elastic_plastic_hp">
+          <useModifiedEOS> true </useModifiedEOS>
+          <tolerance>1.0e-10</tolerance>
+          <plastic_convergence_algo> biswajit </plastic_convergence_algo>
+       
+          <shear_modulus>80.0e9</shear_modulus>
+          <bulk_modulus>173.33e9</bulk_modulus>
+          
+          <equation_of_state type = "mie_gruneisen">
+            <C_0>3574</C_0>
+            <Gamma_0>1.69</Gamma_0>
+            <S_alpha>1.92</S_alpha>
+          </equation_of_state>
+
+          <flow_model type = "johnson_cook">
+            <A>792.0e6</A>
+            <B>510.0e6</B>
+            <C>0.014</C>
+            <n>0.26</n>
+            <m>1.03</m>
+          </flow_model>
+
+          <yield_condition type = "gurson">
+            <q1> 1.5 </q1>
+            <q2> 1.0 </q2>
+            <q3> 2.25 </q3>
+            <k> 4.0 </k>
+            <f_c> 0.05 </f_c>
+          </yield_condition>
+
+          <stability_check type = "drucker_becker">
+          </stability_check>
+
+          <damage_model type = "johnson_cook">
+            <D1>0.05</D1>
+            <D2>3.44</D2>
+            <D3>-2.12</D3>
+            <D4>0.002</D4>
+            <D5>0.61</D5>
+          </damage_model>
+
+          <initial_material_temperature>  294.0 </initial_material_temperature>
+          <initial_mean_porosity>         0.005 </initial_mean_porosity>
+          <initial_std_porosity>          0.001 </initial_std_porosity>
+          <critical_porosity>             0.5   </critical_porosity>
+          <frac_nucleation>               0.1   </frac_nucleation>
+          <meanstrain_nucleation>         0.3   </meanstrain_nucleation>
+          <stddevstrain_nucleation>       0.1   </stddevstrain_nucleation>
+          <initial_porosity_distrib>      constant </initial_porosity_distrib>
+          <initial_mean_scalar_damage>    0.01  </initial_mean_scalar_damage>
+          <initial_std_scalar_damage>     0.005 </initial_std_scalar_damage>
+          <critical_scalar_damage>        1.0   </critical_scalar_damage>
+          <initial_scalar_damage_distrib> constant </initial_scalar_damage_distrib>
+        </constitutive_model>
+         <geom_object>
+            <difference>
+             <cylinder label = "outer cylinder">
+              <bottom>           [0.0,0.0,-.05715]   </bottom>
+              <top>              [0.0,0.0, .05715]   </top>
+              <radius>           0.05715             </radius>
+            </cylinder>
+            <cylinder label = "inner cylinder">
+              <bottom>           [0.0,0.0,-.0508]   </bottom>
+              <top>              [0.0,0.0, .0508]   </top>
+              <radius>           0.0508             </radius>
+            </cylinder>
+            </difference>
+          <res>                 [2,2,2]         </res>
+          <velocity>            [0.0,0.0,0.0]   </velocity>
+          <temperature>         600             </temperature>
+         </geom_object>
+       </material>
+       <material name = "reactant">
+         <density>   1840.0   </density>
+         <constitutive_model type = "visco_scram">
+             <useModifiedEOS>     true             </useModifiedEOS>
+             <PR>0.3</PR>
+             <CrackParameterA>1.e-3</CrackParameterA>
+             <CrackPowerValue>10.0</CrackPowerValue>
+             <CrackMaxGrowthRate>300.0</CrackMaxGrowthRate>
+             <StressIntensityF>500.0</StressIntensityF>
+             <CrackFriction>0.35</CrackFriction>
+             <InitialCrackRadius>3.e-5</InitialCrackRadius>
+             <CrackGrowthRate>12.</CrackGrowthRate>
+             <G1>3.5e8</G1>
+             <G2>1.739e8</G2>
+             <G3>5.212e8</G3>
+             <G4>9.085e8</G4>
+             <G5>6.875e8</G5>
+             <RTau1>0.0</RTau1>
+             <RTau2>7.32e3</RTau2>
+             <RTau3>7.32e4</RTau3>
+             <RTau4>7.32e5</RTau4>
+             <RTau5>2.e6</RTau5>
+             <Beta>1.5e-4</Beta>
+             <Gamma>1.0</Gamma>
+             <DCp_DTemperature>3.30773</DCp_DTemperature>
+         </constitutive_model>
+         
+         <thermal_conductivity>  .452            </thermal_conductivity>
+         <specific_heat>        996.0            </specific_heat>
+         
+         <geom_object>
+            <cylinder label = "inner cylinder"> </cylinder>
+           <res>                 [2,2,2]         </res>
+           <velocity>            [0.0,0.0,0.0]   </velocity>
+           <temperature>         600.0           </temperature>
+         </geom_object>
+       </material>
+
+        <contact>
+          <type>approach</type>
+          <materials>              [0,1]         </materials>
+          <mu> 0.0 </mu>
+        </contact>
+      </MPM>
+
+       <ICE>
+         <material name = "product">
+           <EOS type = "ideal_gas">
+           </EOS>
+           <dynamic_viscosity>          0.0            </dynamic_viscosity>
+           <thermal_conductivity>       0.0            </thermal_conductivity>
+           <specific_heat>              716.0          </specific_heat>
+           <gamma>                      1.4            </gamma>
+           <geom_object>
+             <box>                                          
+               <min>           [ 1.0, 1.0, 1.0]        </min>  
+               <max>           [ 2.0, 2.0, 2.0]        </max>  
+             </box>                                         
+             <res>                      [2,2,2]        </res>
+             <velocity>           [0.0,0.0,0.0]        </velocity>
+             <temperature>        300.0                </temperature>
+             <density>    1.1792946927374306000e+00    </density>
+             <pressure>           101325.0             </pressure>
+           </geom_object>
+         </material>
+
+         <material>
+           <EOS type = "ideal_gas">
+           </EOS>
+           <dynamic_viscosity>          0.0            </dynamic_viscosity>
+           <thermal_conductivity>       0.0            </thermal_conductivity>
+           <specific_heat>              716.0          </specific_heat>
+           <gamma>                      1.4            </gamma>
+           <geom_object>
+             <difference>
+                  <box>
+                    <min>           [-0.254,-0.254,-0.254] </min>
+                    <max>           [ 0.254, 0.254, 0.254] </max>
+                  </box>
+                 <cylinder label = "outer cylinder"> </cylinder>
+               </difference>
+             <res>                      [2,2,2]        </res>
+             <velocity>           [0.0,0.0,0.0]        </velocity>
+             <temperature>        300.0                </temperature>
+             <density>    1.1792946927374306000e+00    </density>
+             <pressure>           101325.0             </pressure>
+           </geom_object>
+         </material>
+      </ICE>       
+
+      <exchange_properties>  
+         <exchange_coefficients>
+              <momentum>  [0, 1e15, 1e15, 1e15, 1e15, 1e15]     </momentum>
+              <heat>      [0, 1e10, 1e10, 1e10, 1e10, 1e10]     </heat>
+        </exchange_coefficients>
+      </exchange_properties> 
+    </MaterialProperties>
+
+    <Models>
+      <Model type="Simple_Burn">
+        <fromMaterial> reactant     </fromMaterial>
+        <toMaterial>  product       </toMaterial>
+        <ThresholdTemp>       450.0 </ThresholdTemp>
+        <ThresholdPressure> 50000.0 </ThresholdPressure>
+        <Enthalpy>        2000000.0 </Enthalpy>
+        <BurnCoeff>            75.3 </BurnCoeff>
+        <refPressure>      101325.0 </refPressure>
+      </Model>
+    </Models>
+
+
+</Uintah_specification>
+

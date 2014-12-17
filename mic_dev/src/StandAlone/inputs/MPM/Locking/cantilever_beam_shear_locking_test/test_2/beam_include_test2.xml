@@ -1,0 +1,6406 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+
+	<geom_object>
+		<box label="particle_0" >
+			<min> [ 0.0, 0.0, 0.0 ] </min>
+			<max> [ 0.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0146425150122, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_1" >
+			<min> [ 0.0, 0.0, 0.25 ] </min>
+			<max> [ 0.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0146425150122, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_2" >
+			<min> [ 0.0, 0.0, 0.5 ] </min>
+			<max> [ 0.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0146425150122, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_3" >
+			<min> [ 0.0, 0.0, 0.75 ] </min>
+			<max> [ 0.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0146425150122, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_4" >
+			<min> [ 0.0, 0.25, 0.0 ] </min>
+			<max> [ 0.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0439275450365, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_5" >
+			<min> [ 0.0, 0.25, 0.25 ] </min>
+			<max> [ 0.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0439275450365, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_6" >
+			<min> [ 0.0, 0.25, 0.5 ] </min>
+			<max> [ 0.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0439275450365, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_7" >
+			<min> [ 0.0, 0.25, 0.75 ] </min>
+			<max> [ 0.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0439275450365, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_8" >
+			<min> [ 0.0, 0.5, 0.0 ] </min>
+			<max> [ 0.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0732125750609, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_9" >
+			<min> [ 0.0, 0.5, 0.25 ] </min>
+			<max> [ 0.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0732125750609, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_10" >
+			<min> [ 0.0, 0.5, 0.5 ] </min>
+			<max> [ 0.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0732125750609, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_11" >
+			<min> [ 0.0, 0.5, 0.75 ] </min>
+			<max> [ 0.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0732125750609, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_12" >
+			<min> [ 0.0, 0.75, 0.0 ] </min>
+			<max> [ 0.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.102497605085, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_13" >
+			<min> [ 0.0, 0.75, 0.25 ] </min>
+			<max> [ 0.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.102497605085, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_14" >
+			<min> [ 0.0, 0.75, 0.5 ] </min>
+			<max> [ 0.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.102497605085, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_15" >
+			<min> [ 0.0, 0.75, 0.75 ] </min>
+			<max> [ 0.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.102497605085, 0.00733664505287, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_16" >
+			<min> [ 0.25, 0.0, 0.0 ] </min>
+			<max> [ 0.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0433735934032, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_17" >
+			<min> [ 0.25, 0.0, 0.25 ] </min>
+			<max> [ 0.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0433735934032, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_18" >
+			<min> [ 0.25, 0.0, 0.5 ] </min>
+			<max> [ 0.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0433735934032, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_19" >
+			<min> [ 0.25, 0.0, 0.75 ] </min>
+			<max> [ 0.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0433735934032, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_20" >
+			<min> [ 0.25, 0.25, 0.0 ] </min>
+			<max> [ 0.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.13012078021, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_21" >
+			<min> [ 0.25, 0.25, 0.25 ] </min>
+			<max> [ 0.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.13012078021, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_22" >
+			<min> [ 0.25, 0.25, 0.5 ] </min>
+			<max> [ 0.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.13012078021, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_23" >
+			<min> [ 0.25, 0.25, 0.75 ] </min>
+			<max> [ 0.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.13012078021, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_24" >
+			<min> [ 0.25, 0.5, 0.0 ] </min>
+			<max> [ 0.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.216867967016, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_25" >
+			<min> [ 0.25, 0.5, 0.25 ] </min>
+			<max> [ 0.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.216867967016, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_26" >
+			<min> [ 0.25, 0.5, 0.5 ] </min>
+			<max> [ 0.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.216867967016, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_27" >
+			<min> [ 0.25, 0.5, 0.75 ] </min>
+			<max> [ 0.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.216867967016, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_28" >
+			<min> [ 0.25, 0.75, 0.0 ] </min>
+			<max> [ 0.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.303615153822, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_29" >
+			<min> [ 0.25, 0.75, 0.25 ] </min>
+			<max> [ 0.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.303615153822, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_30" >
+			<min> [ 0.25, 0.75, 0.5 ] </min>
+			<max> [ 0.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.303615153822, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_31" >
+			<min> [ 0.25, 0.75, 0.75 ] </min>
+			<max> [ 0.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.303615153822, 0.0654758538156, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_32" >
+			<min> [ 0.5, 0.0, 0.0 ] </min>
+			<max> [ 0.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0713660701374, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_33" >
+			<min> [ 0.5, 0.0, 0.25 ] </min>
+			<max> [ 0.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0713660701374, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_34" >
+			<min> [ 0.5, 0.0, 0.5 ] </min>
+			<max> [ 0.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0713660701374, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_35" >
+			<min> [ 0.5, 0.0, 0.75 ] </min>
+			<max> [ 0.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0713660701374, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_36" >
+			<min> [ 0.5, 0.25, 0.0 ] </min>
+			<max> [ 0.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.214098210412, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_37" >
+			<min> [ 0.5, 0.25, 0.25 ] </min>
+			<max> [ 0.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.214098210412, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_38" >
+			<min> [ 0.5, 0.25, 0.5 ] </min>
+			<max> [ 0.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.214098210412, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_39" >
+			<min> [ 0.5, 0.25, 0.75 ] </min>
+			<max> [ 0.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.214098210412, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_40" >
+			<min> [ 0.5, 0.5, 0.0 ] </min>
+			<max> [ 0.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.356830350687, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_41" >
+			<min> [ 0.5, 0.5, 0.25 ] </min>
+			<max> [ 0.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.356830350687, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_42" >
+			<min> [ 0.5, 0.5, 0.5 ] </min>
+			<max> [ 0.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.356830350687, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_43" >
+			<min> [ 0.5, 0.5, 0.75 ] </min>
+			<max> [ 0.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.356830350687, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_44" >
+			<min> [ 0.5, 0.75, 0.0 ] </min>
+			<max> [ 0.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.499562490962, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_45" >
+			<min> [ 0.5, 0.75, 0.25 ] </min>
+			<max> [ 0.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.499562490962, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_46" >
+			<min> [ 0.5, 0.75, 0.5 ] </min>
+			<max> [ 0.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.499562490962, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_47" >
+			<min> [ 0.5, 0.75, 0.75 ] </min>
+			<max> [ 0.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.499562490962, 0.180338617533, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_48" >
+			<min> [ 0.75, 0.0, 0.0 ] </min>
+			<max> [ 1.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0986199470341, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_49" >
+			<min> [ 0.75, 0.0, 0.25 ] </min>
+			<max> [ 1.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0986199470341, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_50" >
+			<min> [ 0.75, 0.0, 0.5 ] </min>
+			<max> [ 1.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0986199470341, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_51" >
+			<min> [ 0.75, 0.0, 0.75 ] </min>
+			<max> [ 1.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.0986199470341, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_52" >
+			<min> [ 0.75, 0.25, 0.0 ] </min>
+			<max> [ 1.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.295859841102, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_53" >
+			<min> [ 0.75, 0.25, 0.25 ] </min>
+			<max> [ 1.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.295859841102, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_54" >
+			<min> [ 0.75, 0.25, 0.5 ] </min>
+			<max> [ 1.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.295859841102, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_55" >
+			<min> [ 0.75, 0.25, 0.75 ] </min>
+			<max> [ 1.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.295859841102, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_56" >
+			<min> [ 0.75, 0.5, 0.0 ] </min>
+			<max> [ 1.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.49309973517, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_57" >
+			<min> [ 0.75, 0.5, 0.25 ] </min>
+			<max> [ 1.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.49309973517, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_58" >
+			<min> [ 0.75, 0.5, 0.5 ] </min>
+			<max> [ 1.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.49309973517, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_59" >
+			<min> [ 0.75, 0.5, 0.75 ] </min>
+			<max> [ 1.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.49309973517, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_60" >
+			<min> [ 0.75, 0.75, 0.0 ] </min>
+			<max> [ 1.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.690339629239, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_61" >
+			<min> [ 0.75, 0.75, 0.25 ] </min>
+			<max> [ 1.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.690339629239, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_62" >
+			<min> [ 0.75, 0.75, 0.5 ] </min>
+			<max> [ 1.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.690339629239, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_63" >
+			<min> [ 0.75, 0.75, 0.75 ] </min>
+			<max> [ 1.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.690339629239, 0.350447734426, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_64" >
+			<min> [ 1.0, 0.0, 0.0 ] </min>
+			<max> [ 1.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.125135228022, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_65" >
+			<min> [ 1.0, 0.0, 0.25 ] </min>
+			<max> [ 1.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.125135228022, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_66" >
+			<min> [ 1.0, 0.0, 0.5 ] </min>
+			<max> [ 1.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.125135228022, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_67" >
+			<min> [ 1.0, 0.0, 0.75 ] </min>
+			<max> [ 1.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.125135228022, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_68" >
+			<min> [ 1.0, 0.25, 0.0 ] </min>
+			<max> [ 1.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.375405684066, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_69" >
+			<min> [ 1.0, 0.25, 0.25 ] </min>
+			<max> [ 1.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.375405684066, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_70" >
+			<min> [ 1.0, 0.25, 0.5 ] </min>
+			<max> [ 1.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.375405684066, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_71" >
+			<min> [ 1.0, 0.25, 0.75 ] </min>
+			<max> [ 1.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.375405684066, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_72" >
+			<min> [ 1.0, 0.5, 0.0 ] </min>
+			<max> [ 1.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.62567614011, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_73" >
+			<min> [ 1.0, 0.5, 0.25 ] </min>
+			<max> [ 1.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.62567614011, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_74" >
+			<min> [ 1.0, 0.5, 0.5 ] </min>
+			<max> [ 1.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.62567614011, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_75" >
+			<min> [ 1.0, 0.5, 0.75 ] </min>
+			<max> [ 1.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.62567614011, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_76" >
+			<min> [ 1.0, 0.75, 0.0 ] </min>
+			<max> [ 1.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.875946596154, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_77" >
+			<min> [ 1.0, 0.75, 0.25 ] </min>
+			<max> [ 1.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.875946596154, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_78" >
+			<min> [ 1.0, 0.75, 0.5 ] </min>
+			<max> [ 1.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.875946596154, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_79" >
+			<min> [ 1.0, 0.75, 0.75 ] </min>
+			<max> [ 1.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.875946596154, 0.574326008332, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_80" >
+			<min> [ 1.25, 0.0, 0.0 ] </min>
+			<max> [ 1.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.150911919946, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_81" >
+			<min> [ 1.25, 0.0, 0.25 ] </min>
+			<max> [ 1.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.150911919946, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_82" >
+			<min> [ 1.25, 0.0, 0.5 ] </min>
+			<max> [ 1.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.150911919946, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_83" >
+			<min> [ 1.25, 0.0, 0.75 ] </min>
+			<max> [ 1.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.150911919946, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_84" >
+			<min> [ 1.25, 0.25, 0.0 ] </min>
+			<max> [ 1.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.452735759838, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_85" >
+			<min> [ 1.25, 0.25, 0.25 ] </min>
+			<max> [ 1.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.452735759838, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_86" >
+			<min> [ 1.25, 0.25, 0.5 ] </min>
+			<max> [ 1.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.452735759838, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_87" >
+			<min> [ 1.25, 0.25, 0.75 ] </min>
+			<max> [ 1.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.452735759838, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_88" >
+			<min> [ 1.25, 0.5, 0.0 ] </min>
+			<max> [ 1.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.75455959973, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_89" >
+			<min> [ 1.25, 0.5, 0.25 ] </min>
+			<max> [ 1.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.75455959973, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_90" >
+			<min> [ 1.25, 0.5, 0.5 ] </min>
+			<max> [ 1.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.75455959973, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_91" >
+			<min> [ 1.25, 0.5, 0.75 ] </min>
+			<max> [ 1.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.75455959973, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_92" >
+			<min> [ 1.25, 0.75, 0.0 ] </min>
+			<max> [ 1.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.05638343962, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_93" >
+			<min> [ 1.25, 0.75, 0.25 ] </min>
+			<max> [ 1.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.05638343962, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_94" >
+			<min> [ 1.25, 0.75, 0.5 ] </min>
+			<max> [ 1.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.05638343962, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_95" >
+			<min> [ 1.25, 0.75, 0.75 ] </min>
+			<max> [ 1.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.05638343962, 0.850496253723, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_96" >
+			<min> [ 1.5, 0.0, 0.0 ] </min>
+			<max> [ 1.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.175950033352, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_97" >
+			<min> [ 1.5, 0.0, 0.25 ] </min>
+			<max> [ 1.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.175950033352, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_98" >
+			<min> [ 1.5, 0.0, 0.5 ] </min>
+			<max> [ 1.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.175950033352, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_99" >
+			<min> [ 1.5, 0.0, 0.75 ] </min>
+			<max> [ 1.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.175950033352, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_100" >
+			<min> [ 1.5, 0.25, 0.0 ] </min>
+			<max> [ 1.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.527850100056, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_101" >
+			<min> [ 1.5, 0.25, 0.25 ] </min>
+			<max> [ 1.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.527850100056, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_102" >
+			<min> [ 1.5, 0.25, 0.5 ] </min>
+			<max> [ 1.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.527850100056, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_103" >
+			<min> [ 1.5, 0.25, 0.75 ] </min>
+			<max> [ 1.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.527850100056, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_104" >
+			<min> [ 1.5, 0.5, 0.0 ] </min>
+			<max> [ 1.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.87975016676, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_105" >
+			<min> [ 1.5, 0.5, 0.25 ] </min>
+			<max> [ 1.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.87975016676, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_106" >
+			<min> [ 1.5, 0.5, 0.5 ] </min>
+			<max> [ 1.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.87975016676, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_107" >
+			<min> [ 1.5, 0.5, 0.75 ] </min>
+			<max> [ 1.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.87975016676, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_108" >
+			<min> [ 1.5, 0.75, 0.0 ] </min>
+			<max> [ 1.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23165023346, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_109" >
+			<min> [ 1.5, 0.75, 0.25 ] </min>
+			<max> [ 1.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23165023346, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_110" >
+			<min> [ 1.5, 0.75, 0.5 ] </min>
+			<max> [ 1.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23165023346, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_111" >
+			<min> [ 1.5, 0.75, 0.75 ] </min>
+			<max> [ 1.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23165023346, 1.17748130234, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_112" >
+			<min> [ 1.75, 0.0, 0.0 ] </min>
+			<max> [ 2.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.20024958325, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_113" >
+			<min> [ 1.75, 0.0, 0.25 ] </min>
+			<max> [ 2.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.20024958325, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_114" >
+			<min> [ 1.75, 0.0, 0.5 ] </min>
+			<max> [ 2.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.20024958325, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_115" >
+			<min> [ 1.75, 0.0, 0.75 ] </min>
+			<max> [ 2.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.20024958325, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_116" >
+			<min> [ 1.75, 0.25, 0.0 ] </min>
+			<max> [ 2.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.600748749751, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_117" >
+			<min> [ 1.75, 0.25, 0.25 ] </min>
+			<max> [ 2.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.600748749751, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_118" >
+			<min> [ 1.75, 0.25, 0.5 ] </min>
+			<max> [ 2.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.600748749751, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_119" >
+			<min> [ 1.75, 0.25, 0.75 ] </min>
+			<max> [ 2.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.600748749751, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_120" >
+			<min> [ 1.75, 0.5, 0.0 ] </min>
+			<max> [ 2.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.00124791625, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_121" >
+			<min> [ 1.75, 0.5, 0.25 ] </min>
+			<max> [ 2.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.00124791625, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_122" >
+			<min> [ 1.75, 0.5, 0.5 ] </min>
+			<max> [ 2.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.00124791625, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_123" >
+			<min> [ 1.75, 0.5, 0.75 ] </min>
+			<max> [ 2.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.00124791625, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_124" >
+			<min> [ 1.75, 0.75, 0.0 ] </min>
+			<max> [ 2.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.40174708275, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_125" >
+			<min> [ 1.75, 0.75, 0.25 ] </min>
+			<max> [ 2.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.40174708275, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_126" >
+			<min> [ 1.75, 0.75, 0.5 ] </min>
+			<max> [ 2.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.40174708275, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_127" >
+			<min> [ 1.75, 0.75, 0.75 ] </min>
+			<max> [ 2.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.40174708275, 1.55380401134, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_128" >
+			<min> [ 2.0, 0.0, 0.0 ] </min>
+			<max> [ 2.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.223810589857, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_129" >
+			<min> [ 2.0, 0.0, 0.25 ] </min>
+			<max> [ 2.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.223810589857, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_130" >
+			<min> [ 2.0, 0.0, 0.5 ] </min>
+			<max> [ 2.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.223810589857, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_131" >
+			<min> [ 2.0, 0.0, 0.75 ] </min>
+			<max> [ 2.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.223810589857, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_132" >
+			<min> [ 2.0, 0.25, 0.0 ] </min>
+			<max> [ 2.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.67143176957, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_133" >
+			<min> [ 2.0, 0.25, 0.25 ] </min>
+			<max> [ 2.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.67143176957, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_134" >
+			<min> [ 2.0, 0.25, 0.5 ] </min>
+			<max> [ 2.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.67143176957, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_135" >
+			<min> [ 2.0, 0.25, 0.75 ] </min>
+			<max> [ 2.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.67143176957, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_136" >
+			<min> [ 2.0, 0.5, 0.0 ] </min>
+			<max> [ 2.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.11905294928, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_137" >
+			<min> [ 2.0, 0.5, 0.25 ] </min>
+			<max> [ 2.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.11905294928, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_138" >
+			<min> [ 2.0, 0.5, 0.5 ] </min>
+			<max> [ 2.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.11905294928, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_139" >
+			<min> [ 2.0, 0.5, 0.75 ] </min>
+			<max> [ 2.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.11905294928, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_140" >
+			<min> [ 2.0, 0.75, 0.0 ] </min>
+			<max> [ 2.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.566674129, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_141" >
+			<min> [ 2.0, 0.75, 0.25 ] </min>
+			<max> [ 2.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.566674129, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_142" >
+			<min> [ 2.0, 0.75, 0.5 ] </min>
+			<max> [ 2.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.566674129, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_143" >
+			<min> [ 2.0, 0.75, 0.75 ] </min>
+			<max> [ 2.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.566674129, 1.97798727301, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_144" >
+			<min> [ 2.25, 0.0, 0.0 ] </min>
+			<max> [ 2.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.246633079312, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_145" >
+			<min> [ 2.25, 0.0, 0.25 ] </min>
+			<max> [ 2.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.246633079312, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_146" >
+			<min> [ 2.25, 0.0, 0.5 ] </min>
+			<max> [ 2.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.246633079312, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_147" >
+			<min> [ 2.25, 0.0, 0.75 ] </min>
+			<max> [ 2.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.246633079312, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_148" >
+			<min> [ 2.25, 0.25, 0.0 ] </min>
+			<max> [ 2.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.739899237937, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_149" >
+			<min> [ 2.25, 0.25, 0.25 ] </min>
+			<max> [ 2.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.739899237937, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_150" >
+			<min> [ 2.25, 0.25, 0.5 ] </min>
+			<max> [ 2.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.739899237937, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_151" >
+			<min> [ 2.25, 0.25, 0.75 ] </min>
+			<max> [ 2.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.739899237937, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_152" >
+			<min> [ 2.25, 0.5, 0.0 ] </min>
+			<max> [ 2.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23316539656, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_153" >
+			<min> [ 2.25, 0.5, 0.25 ] </min>
+			<max> [ 2.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23316539656, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_154" >
+			<min> [ 2.25, 0.5, 0.5 ] </min>
+			<max> [ 2.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23316539656, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_155" >
+			<min> [ 2.25, 0.5, 0.75 ] </min>
+			<max> [ 2.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.23316539656, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_156" >
+			<min> [ 2.25, 0.75, 0.0 ] </min>
+			<max> [ 2.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.72643155519, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_157" >
+			<min> [ 2.25, 0.75, 0.25 ] </min>
+			<max> [ 2.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.72643155519, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_158" >
+			<min> [ 2.25, 0.75, 0.5 ] </min>
+			<max> [ 2.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.72643155519, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_159" >
+			<min> [ 2.25, 0.75, 0.75 ] </min>
+			<max> [ 2.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.72643155519, 2.44855402586, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_160" >
+			<min> [ 2.5, 0.0, 0.0 ] </min>
+			<max> [ 2.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.268717084381, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_161" >
+			<min> [ 2.5, 0.0, 0.25 ] </min>
+			<max> [ 2.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.268717084381, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_162" >
+			<min> [ 2.5, 0.0, 0.5 ] </min>
+			<max> [ 2.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.268717084381, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_163" >
+			<min> [ 2.5, 0.0, 0.75 ] </min>
+			<max> [ 2.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.268717084381, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_164" >
+			<min> [ 2.5, 0.25, 0.0 ] </min>
+			<max> [ 2.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.806151253143, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_165" >
+			<min> [ 2.5, 0.25, 0.25 ] </min>
+			<max> [ 2.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.806151253143, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_166" >
+			<min> [ 2.5, 0.25, 0.5 ] </min>
+			<max> [ 2.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.806151253143, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_167" >
+			<min> [ 2.5, 0.25, 0.75 ] </min>
+			<max> [ 2.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.806151253143, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_168" >
+			<min> [ 2.5, 0.5, 0.0 ] </min>
+			<max> [ 2.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3435854219, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_169" >
+			<min> [ 2.5, 0.5, 0.25 ] </min>
+			<max> [ 2.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3435854219, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_170" >
+			<min> [ 2.5, 0.5, 0.5 ] </min>
+			<max> [ 2.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3435854219, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_171" >
+			<min> [ 2.5, 0.5, 0.75 ] </min>
+			<max> [ 2.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3435854219, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_172" >
+			<min> [ 2.5, 0.75, 0.0 ] </min>
+			<max> [ 2.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.88101959067, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_173" >
+			<min> [ 2.5, 0.75, 0.25 ] </min>
+			<max> [ 2.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.88101959067, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_174" >
+			<min> [ 2.5, 0.75, 0.5 ] </min>
+			<max> [ 2.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.88101959067, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_175" >
+			<min> [ 2.5, 0.75, 0.75 ] </min>
+			<max> [ 2.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.88101959067, 2.96402726718, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_176" >
+			<min> [ 2.75, 0.0, 0.0 ] </min>
+			<max> [ 3.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.290062645124, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_177" >
+			<min> [ 2.75, 0.0, 0.25 ] </min>
+			<max> [ 3.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.290062645124, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_178" >
+			<min> [ 2.75, 0.0, 0.5 ] </min>
+			<max> [ 3.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.290062645124, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_179" >
+			<min> [ 2.75, 0.0, 0.75 ] </min>
+			<max> [ 3.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.290062645124, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_180" >
+			<min> [ 2.75, 0.25, 0.0 ] </min>
+			<max> [ 3.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.870187935371, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_181" >
+			<min> [ 2.75, 0.25, 0.25 ] </min>
+			<max> [ 3.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.870187935371, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_182" >
+			<min> [ 2.75, 0.25, 0.5 ] </min>
+			<max> [ 3.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.870187935371, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_183" >
+			<min> [ 2.75, 0.25, 0.75 ] </min>
+			<max> [ 3.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.870187935371, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_184" >
+			<min> [ 2.75, 0.5, 0.0 ] </min>
+			<max> [ 3.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.45031322562, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_185" >
+			<min> [ 2.75, 0.5, 0.25 ] </min>
+			<max> [ 3.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.45031322562, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_186" >
+			<min> [ 2.75, 0.5, 0.5 ] </min>
+			<max> [ 3.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.45031322562, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_187" >
+			<min> [ 2.75, 0.5, 0.75 ] </min>
+			<max> [ 3.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.45031322562, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_188" >
+			<min> [ 2.75, 0.75, 0.0 ] </min>
+			<max> [ 3.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.03043851587, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_189" >
+			<min> [ 2.75, 0.75, 0.25 ] </min>
+			<max> [ 3.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.03043851587, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_190" >
+			<min> [ 2.75, 0.75, 0.5 ] </min>
+			<max> [ 3.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.03043851587, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_191" >
+			<min> [ 2.75, 0.75, 0.75 ] </min>
+			<max> [ 3.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.03043851587, 3.52293006699, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_192" >
+			<min> [ 3.0, 0.0, 0.0 ] </min>
+			<max> [ 3.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.310669809555, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_193" >
+			<min> [ 3.0, 0.0, 0.25 ] </min>
+			<max> [ 3.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.310669809555, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_194" >
+			<min> [ 3.0, 0.0, 0.5 ] </min>
+			<max> [ 3.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.310669809555, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_195" >
+			<min> [ 3.0, 0.0, 0.75 ] </min>
+			<max> [ 3.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.310669809555, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_196" >
+			<min> [ 3.0, 0.25, 0.0 ] </min>
+			<max> [ 3.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.932009428665, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_197" >
+			<min> [ 3.0, 0.25, 0.25 ] </min>
+			<max> [ 3.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.932009428665, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_198" >
+			<min> [ 3.0, 0.25, 0.5 ] </min>
+			<max> [ 3.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.932009428665, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_199" >
+			<min> [ 3.0, 0.25, 0.75 ] </min>
+			<max> [ 3.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.932009428665, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_200" >
+			<min> [ 3.0, 0.5, 0.0 ] </min>
+			<max> [ 3.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.55334904778, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_201" >
+			<min> [ 3.0, 0.5, 0.25 ] </min>
+			<max> [ 3.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.55334904778, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_202" >
+			<min> [ 3.0, 0.5, 0.5 ] </min>
+			<max> [ 3.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.55334904778, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_203" >
+			<min> [ 3.0, 0.5, 0.75 ] </min>
+			<max> [ 3.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.55334904778, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_204" >
+			<min> [ 3.0, 0.75, 0.0 ] </min>
+			<max> [ 3.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17468866689, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_205" >
+			<min> [ 3.0, 0.75, 0.25 ] </min>
+			<max> [ 3.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17468866689, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_206" >
+			<min> [ 3.0, 0.75, 0.5 ] </min>
+			<max> [ 3.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17468866689, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_207" >
+			<min> [ 3.0, 0.75, 0.75 ] </min>
+			<max> [ 3.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17468866689, 4.12378558327, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_208" >
+			<min> [ 3.25, 0.0, 0.0 ] </min>
+			<max> [ 3.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.330538634273, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_209" >
+			<min> [ 3.25, 0.0, 0.25 ] </min>
+			<max> [ 3.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.330538634273, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_210" >
+			<min> [ 3.25, 0.0, 0.5 ] </min>
+			<max> [ 3.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.330538634273, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_211" >
+			<min> [ 3.25, 0.0, 0.75 ] </min>
+			<max> [ 3.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.330538634273, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_212" >
+			<min> [ 3.25, 0.25, 0.0 ] </min>
+			<max> [ 3.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.991615902819, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_213" >
+			<min> [ 3.25, 0.25, 0.25 ] </min>
+			<max> [ 3.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.991615902819, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_214" >
+			<min> [ 3.25, 0.25, 0.5 ] </min>
+			<max> [ 3.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.991615902819, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_215" >
+			<min> [ 3.25, 0.25, 0.75 ] </min>
+			<max> [ 3.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.991615902819, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_216" >
+			<min> [ 3.25, 0.5, 0.0 ] </min>
+			<max> [ 3.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.65269317136, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_217" >
+			<min> [ 3.25, 0.5, 0.25 ] </min>
+			<max> [ 3.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.65269317136, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_218" >
+			<min> [ 3.25, 0.5, 0.5 ] </min>
+			<max> [ 3.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.65269317136, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_219" >
+			<min> [ 3.25, 0.5, 0.75 ] </min>
+			<max> [ 3.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.65269317136, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_220" >
+			<min> [ 3.25, 0.75, 0.0 ] </min>
+			<max> [ 3.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31377043991, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_221" >
+			<min> [ 3.25, 0.75, 0.25 ] </min>
+			<max> [ 3.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31377043991, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_222" >
+			<min> [ 3.25, 0.75, 0.5 ] </min>
+			<max> [ 3.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31377043991, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_223" >
+			<min> [ 3.25, 0.75, 0.75 ] </min>
+			<max> [ 3.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31377043991, 4.76511707853, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_224" >
+			<min> [ 3.5, 0.0, 0.0 ] </min>
+			<max> [ 3.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.349669185069, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_225" >
+			<min> [ 3.5, 0.0, 0.25 ] </min>
+			<max> [ 3.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.349669185069, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_226" >
+			<min> [ 3.5, 0.0, 0.5 ] </min>
+			<max> [ 3.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.349669185069, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_227" >
+			<min> [ 3.5, 0.0, 0.75 ] </min>
+			<max> [ 3.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.349669185069, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_228" >
+			<min> [ 3.5, 0.25, 0.0 ] </min>
+			<max> [ 3.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.04900755521, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_229" >
+			<min> [ 3.5, 0.25, 0.25 ] </min>
+			<max> [ 3.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.04900755521, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_230" >
+			<min> [ 3.5, 0.25, 0.5 ] </min>
+			<max> [ 3.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.04900755521, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_231" >
+			<min> [ 3.5, 0.25, 0.75 ] </min>
+			<max> [ 3.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.04900755521, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_232" >
+			<min> [ 3.5, 0.5, 0.0 ] </min>
+			<max> [ 3.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74834592535, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_233" >
+			<min> [ 3.5, 0.5, 0.25 ] </min>
+			<max> [ 3.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74834592535, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_234" >
+			<min> [ 3.5, 0.5, 0.5 ] </min>
+			<max> [ 3.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74834592535, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_235" >
+			<min> [ 3.5, 0.5, 0.75 ] </min>
+			<max> [ 3.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74834592535, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_236" >
+			<min> [ 3.5, 0.75, 0.0 ] </min>
+			<max> [ 3.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44768429549, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_237" >
+			<min> [ 3.5, 0.75, 0.25 ] </min>
+			<max> [ 3.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44768429549, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_238" >
+			<min> [ 3.5, 0.75, 0.5 ] </min>
+			<max> [ 3.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44768429549, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_239" >
+			<min> [ 3.5, 0.75, 0.75 ] </min>
+			<max> [ 3.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44768429549, 5.44544793753, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_240" >
+			<min> [ 3.75, 0.0, 0.0 ] </min>
+			<max> [ 4.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.368061537519, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_241" >
+			<min> [ 3.75, 0.0, 0.25 ] </min>
+			<max> [ 4.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.368061537519, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_242" >
+			<min> [ 3.75, 0.0, 0.5 ] </min>
+			<max> [ 4.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.368061537519, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_243" >
+			<min> [ 3.75, 0.0, 0.75 ] </min>
+			<max> [ 4.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.368061537519, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_244" >
+			<min> [ 3.75, 0.25, 0.0 ] </min>
+			<max> [ 4.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.10418461256, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_245" >
+			<min> [ 3.75, 0.25, 0.25 ] </min>
+			<max> [ 4.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.10418461256, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_246" >
+			<min> [ 3.75, 0.25, 0.5 ] </min>
+			<max> [ 4.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.10418461256, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_247" >
+			<min> [ 3.75, 0.25, 0.75 ] </min>
+			<max> [ 4.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.10418461256, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_248" >
+			<min> [ 3.75, 0.5, 0.0 ] </min>
+			<max> [ 4.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.8403076876, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_249" >
+			<min> [ 3.75, 0.5, 0.25 ] </min>
+			<max> [ 4.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.8403076876, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_250" >
+			<min> [ 3.75, 0.5, 0.5 ] </min>
+			<max> [ 4.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.8403076876, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_251" >
+			<min> [ 3.75, 0.5, 0.75 ] </min>
+			<max> [ 4.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.8403076876, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_252" >
+			<min> [ 3.75, 0.75, 0.0 ] </min>
+			<max> [ 4.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.57643076263, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_253" >
+			<min> [ 3.75, 0.75, 0.25 ] </min>
+			<max> [ 4.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.57643076263, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_254" >
+			<min> [ 3.75, 0.75, 0.5 ] </min>
+			<max> [ 4.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.57643076263, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_255" >
+			<min> [ 3.75, 0.75, 0.75 ] </min>
+			<max> [ 4.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.57643076263, 6.16330168634, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_256" >
+			<min> [ 4.0, 0.0, 0.0 ] </min>
+			<max> [ 4.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.385715777546, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_257" >
+			<min> [ 4.0, 0.0, 0.25 ] </min>
+			<max> [ 4.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.385715777546, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_258" >
+			<min> [ 4.0, 0.0, 0.5 ] </min>
+			<max> [ 4.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.385715777546, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_259" >
+			<min> [ 4.0, 0.0, 0.75 ] </min>
+			<max> [ 4.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.385715777546, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_260" >
+			<min> [ 4.0, 0.25, 0.0 ] </min>
+			<max> [ 4.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.15714733264, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_261" >
+			<min> [ 4.0, 0.25, 0.25 ] </min>
+			<max> [ 4.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.15714733264, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_262" >
+			<min> [ 4.0, 0.25, 0.5 ] </min>
+			<max> [ 4.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.15714733264, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_263" >
+			<min> [ 4.0, 0.25, 0.75 ] </min>
+			<max> [ 4.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.15714733264, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_264" >
+			<min> [ 4.0, 0.5, 0.0 ] </min>
+			<max> [ 4.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.92857888773, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_265" >
+			<min> [ 4.0, 0.5, 0.25 ] </min>
+			<max> [ 4.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.92857888773, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_266" >
+			<min> [ 4.0, 0.5, 0.5 ] </min>
+			<max> [ 4.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.92857888773, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_267" >
+			<min> [ 4.0, 0.5, 0.75 ] </min>
+			<max> [ 4.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.92857888773, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_268" >
+			<min> [ 4.0, 0.75, 0.0 ] </min>
+			<max> [ 4.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70001044282, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_269" >
+			<min> [ 4.0, 0.75, 0.25 ] </min>
+			<max> [ 4.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70001044282, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_270" >
+			<min> [ 4.0, 0.75, 0.5 ] </min>
+			<max> [ 4.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70001044282, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_271" >
+			<min> [ 4.0, 0.75, 0.75 ] </min>
+			<max> [ 4.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70001044282, 6.91720201242, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_272" >
+			<min> [ 4.25, 0.0, 0.0 ] </min>
+			<max> [ 4.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.402632001965, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_273" >
+			<min> [ 4.25, 0.0, 0.25 ] </min>
+			<max> [ 4.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.402632001965, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_274" >
+			<min> [ 4.25, 0.0, 0.5 ] </min>
+			<max> [ 4.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.402632001965, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_275" >
+			<min> [ 4.25, 0.0, 0.75 ] </min>
+			<max> [ 4.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.402632001965, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_276" >
+			<min> [ 4.25, 0.25, 0.0 ] </min>
+			<max> [ 4.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.2078960059, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_277" >
+			<min> [ 4.25, 0.25, 0.25 ] </min>
+			<max> [ 4.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.2078960059, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_278" >
+			<min> [ 4.25, 0.25, 0.5 ] </min>
+			<max> [ 4.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.2078960059, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_279" >
+			<min> [ 4.25, 0.25, 0.75 ] </min>
+			<max> [ 4.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.2078960059, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_280" >
+			<min> [ 4.25, 0.5, 0.0 ] </min>
+			<max> [ 4.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.01316000983, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_281" >
+			<min> [ 4.25, 0.5, 0.25 ] </min>
+			<max> [ 4.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.01316000983, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_282" >
+			<min> [ 4.25, 0.5, 0.5 ] </min>
+			<max> [ 4.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.01316000983, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_283" >
+			<min> [ 4.25, 0.5, 0.75 ] </min>
+			<max> [ 4.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.01316000983, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_284" >
+			<min> [ 4.25, 0.75, 0.0 ] </min>
+			<max> [ 4.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81842401376, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_285" >
+			<min> [ 4.25, 0.75, 0.25 ] </min>
+			<max> [ 4.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81842401376, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_286" >
+			<min> [ 4.25, 0.75, 0.5 ] </min>
+			<max> [ 4.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81842401376, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_287" >
+			<min> [ 4.25, 0.75, 0.75 ] </min>
+			<max> [ 4.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81842401376, 7.70567278587, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_288" >
+			<min> [ 4.5, 0.0, 0.0 ] </min>
+			<max> [ 4.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.418810319012, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_289" >
+			<min> [ 4.5, 0.0, 0.25 ] </min>
+			<max> [ 4.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.418810319012, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_290" >
+			<min> [ 4.5, 0.0, 0.5 ] </min>
+			<max> [ 4.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.418810319012, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_291" >
+			<min> [ 4.5, 0.0, 0.75 ] </min>
+			<max> [ 4.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.418810319012, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_292" >
+			<min> [ 4.5, 0.25, 0.0 ] </min>
+			<max> [ 4.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.25643095703, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_293" >
+			<min> [ 4.5, 0.25, 0.25 ] </min>
+			<max> [ 4.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.25643095703, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_294" >
+			<min> [ 4.5, 0.25, 0.5 ] </min>
+			<max> [ 4.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.25643095703, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_295" >
+			<min> [ 4.5, 0.25, 0.75 ] </min>
+			<max> [ 4.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.25643095703, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_296" >
+			<min> [ 4.5, 0.5, 0.0 ] </min>
+			<max> [ 4.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.09405159506, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_297" >
+			<min> [ 4.5, 0.5, 0.25 ] </min>
+			<max> [ 4.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.09405159506, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_298" >
+			<min> [ 4.5, 0.5, 0.5 ] </min>
+			<max> [ 4.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.09405159506, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_299" >
+			<min> [ 4.5, 0.5, 0.75 ] </min>
+			<max> [ 4.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.09405159506, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_300" >
+			<min> [ 4.5, 0.75, 0.0 ] </min>
+			<max> [ 4.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93167223308, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_301" >
+			<min> [ 4.5, 0.75, 0.25 ] </min>
+			<max> [ 4.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93167223308, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_302" >
+			<min> [ 4.5, 0.75, 0.5 ] </min>
+			<max> [ 4.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93167223308, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_303" >
+			<min> [ 4.5, 0.75, 0.75 ] </min>
+			<max> [ 4.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93167223308, 8.52723808177, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_304" >
+			<min> [ 4.75, 0.0, 0.0 ] </min>
+			<max> [ 5.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.434250848834, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_305" >
+			<min> [ 4.75, 0.0, 0.25 ] </min>
+			<max> [ 5.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.434250848834, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_306" >
+			<min> [ 4.75, 0.0, 0.5 ] </min>
+			<max> [ 5.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.434250848834, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_307" >
+			<min> [ 4.75, 0.0, 0.75 ] </min>
+			<max> [ 5.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.434250848834, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_308" >
+			<min> [ 4.75, 0.25, 0.0 ] </min>
+			<max> [ 5.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3027525465, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_309" >
+			<min> [ 4.75, 0.25, 0.25 ] </min>
+			<max> [ 5.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3027525465, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_310" >
+			<min> [ 4.75, 0.25, 0.5 ] </min>
+			<max> [ 5.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3027525465, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_311" >
+			<min> [ 4.75, 0.25, 0.75 ] </min>
+			<max> [ 5.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.3027525465, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_312" >
+			<min> [ 4.75, 0.5, 0.0 ] </min>
+			<max> [ 5.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17125424417, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_313" >
+			<min> [ 4.75, 0.5, 0.25 ] </min>
+			<max> [ 5.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17125424417, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_314" >
+			<min> [ 4.75, 0.5, 0.5 ] </min>
+			<max> [ 5.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17125424417, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_315" >
+			<min> [ 4.75, 0.5, 0.75 ] </min>
+			<max> [ 5.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.17125424417, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_316" >
+			<min> [ 4.75, 0.75, 0.0 ] </min>
+			<max> [ 5.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.03975594184, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_317" >
+			<min> [ 4.75, 0.75, 0.25 ] </min>
+			<max> [ 5.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.03975594184, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_318" >
+			<min> [ 4.75, 0.75, 0.5 ] </min>
+			<max> [ 5.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.03975594184, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_319" >
+			<min> [ 4.75, 0.75, 0.75 ] </min>
+			<max> [ 5.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.03975594184, 9.38042220349, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_320" >
+			<min> [ 5.0, 0.0, 0.0 ] </min>
+			<max> [ 5.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.448953723978, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_321" >
+			<min> [ 5.0, 0.0, 0.25 ] </min>
+			<max> [ 5.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.448953723978, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_322" >
+			<min> [ 5.0, 0.0, 0.5 ] </min>
+			<max> [ 5.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.448953723978, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_323" >
+			<min> [ 5.0, 0.0, 0.75 ] </min>
+			<max> [ 5.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.448953723978, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_324" >
+			<min> [ 5.0, 0.25, 0.0 ] </min>
+			<max> [ 5.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.34686117193, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_325" >
+			<min> [ 5.0, 0.25, 0.25 ] </min>
+			<max> [ 5.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.34686117193, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_326" >
+			<min> [ 5.0, 0.25, 0.5 ] </min>
+			<max> [ 5.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.34686117193, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_327" >
+			<min> [ 5.0, 0.25, 0.75 ] </min>
+			<max> [ 5.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.34686117193, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_328" >
+			<min> [ 5.0, 0.5, 0.0 ] </min>
+			<max> [ 5.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.24476861989, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_329" >
+			<min> [ 5.0, 0.5, 0.25 ] </min>
+			<max> [ 5.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.24476861989, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_330" >
+			<min> [ 5.0, 0.5, 0.5 ] </min>
+			<max> [ 5.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.24476861989, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_331" >
+			<min> [ 5.0, 0.5, 0.75 ] </min>
+			<max> [ 5.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.24476861989, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_332" >
+			<min> [ 5.0, 0.75, 0.0 ] </min>
+			<max> [ 5.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.14267606784, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_333" >
+			<min> [ 5.0, 0.75, 0.25 ] </min>
+			<max> [ 5.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.14267606784, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_334" >
+			<min> [ 5.0, 0.75, 0.5 ] </min>
+			<max> [ 5.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.14267606784, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_335" >
+			<min> [ 5.0, 0.75, 0.75 ] </min>
+			<max> [ 5.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.14267606784, 10.263749707, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_336" >
+			<min> [ 5.25, 0.0, 0.0 ] </min>
+			<max> [ 5.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.462919089841, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_337" >
+			<min> [ 5.25, 0.0, 0.25 ] </min>
+			<max> [ 5.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.462919089841, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_338" >
+			<min> [ 5.25, 0.0, 0.5 ] </min>
+			<max> [ 5.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.462919089841, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_339" >
+			<min> [ 5.25, 0.0, 0.75 ] </min>
+			<max> [ 5.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.462919089841, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_340" >
+			<min> [ 5.25, 0.25, 0.0 ] </min>
+			<max> [ 5.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.38875726952, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_341" >
+			<min> [ 5.25, 0.25, 0.25 ] </min>
+			<max> [ 5.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.38875726952, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_342" >
+			<min> [ 5.25, 0.25, 0.5 ] </min>
+			<max> [ 5.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.38875726952, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_343" >
+			<min> [ 5.25, 0.25, 0.75 ] </min>
+			<max> [ 5.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.38875726952, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_344" >
+			<min> [ 5.25, 0.5, 0.0 ] </min>
+			<max> [ 5.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31459544921, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_345" >
+			<min> [ 5.25, 0.5, 0.25 ] </min>
+			<max> [ 5.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31459544921, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_346" >
+			<min> [ 5.25, 0.5, 0.5 ] </min>
+			<max> [ 5.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31459544921, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_347" >
+			<min> [ 5.25, 0.5, 0.75 ] </min>
+			<max> [ 5.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.31459544921, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_348" >
+			<min> [ 5.25, 0.75, 0.0 ] </min>
+			<max> [ 5.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.24043362889, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_349" >
+			<min> [ 5.25, 0.75, 0.25 ] </min>
+			<max> [ 5.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.24043362889, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_350" >
+			<min> [ 5.25, 0.75, 0.5 ] </min>
+			<max> [ 5.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.24043362889, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_351" >
+			<min> [ 5.25, 0.75, 0.75 ] </min>
+			<max> [ 5.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.24043362889, 11.1757454262, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_352" >
+			<min> [ 5.5, 0.0, 0.0 ] </min>
+			<max> [ 5.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.476147105112, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_353" >
+			<min> [ 5.5, 0.0, 0.25 ] </min>
+			<max> [ 5.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.476147105112, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_354" >
+			<min> [ 5.5, 0.0, 0.5 ] </min>
+			<max> [ 5.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.476147105112, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_355" >
+			<min> [ 5.5, 0.0, 0.75 ] </min>
+			<max> [ 5.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.476147105112, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_356" >
+			<min> [ 5.5, 0.25, 0.0 ] </min>
+			<max> [ 5.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.42844131534, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_357" >
+			<min> [ 5.5, 0.25, 0.25 ] </min>
+			<max> [ 5.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.42844131534, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_358" >
+			<min> [ 5.5, 0.25, 0.5 ] </min>
+			<max> [ 5.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.42844131534, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_359" >
+			<min> [ 5.5, 0.25, 0.75 ] </min>
+			<max> [ 5.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.42844131534, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_360" >
+			<min> [ 5.5, 0.5, 0.0 ] </min>
+			<max> [ 5.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.38073552556, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_361" >
+			<min> [ 5.5, 0.5, 0.25 ] </min>
+			<max> [ 5.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.38073552556, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_362" >
+			<min> [ 5.5, 0.5, 0.5 ] </min>
+			<max> [ 5.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.38073552556, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_363" >
+			<min> [ 5.5, 0.5, 0.75 ] </min>
+			<max> [ 5.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.38073552556, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_364" >
+			<min> [ 5.5, 0.75, 0.0 ] </min>
+			<max> [ 5.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.33302973578, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_365" >
+			<min> [ 5.5, 0.75, 0.25 ] </min>
+			<max> [ 5.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.33302973578, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_366" >
+			<min> [ 5.5, 0.75, 0.5 ] </min>
+			<max> [ 5.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.33302973578, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_367" >
+			<min> [ 5.5, 0.75, 0.75 ] </min>
+			<max> [ 5.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.33302973578, 12.114934499, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_368" >
+			<min> [ 5.75, 0.0, 0.0 ] </min>
+			<max> [ 6.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.488637942177, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_369" >
+			<min> [ 5.75, 0.0, 0.25 ] </min>
+			<max> [ 6.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.488637942177, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_370" >
+			<min> [ 5.75, 0.0, 0.5 ] </min>
+			<max> [ 6.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.488637942177, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_371" >
+			<min> [ 5.75, 0.0, 0.75 ] </min>
+			<max> [ 6.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.488637942177, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_372" >
+			<min> [ 5.75, 0.25, 0.0 ] </min>
+			<max> [ 6.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.46591382653, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_373" >
+			<min> [ 5.75, 0.25, 0.25 ] </min>
+			<max> [ 6.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.46591382653, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_374" >
+			<min> [ 5.75, 0.25, 0.5 ] </min>
+			<max> [ 6.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.46591382653, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_375" >
+			<min> [ 5.75, 0.25, 0.75 ] </min>
+			<max> [ 6.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.46591382653, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_376" >
+			<min> [ 5.75, 0.5, 0.0 ] </min>
+			<max> [ 6.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44318971089, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_377" >
+			<min> [ 5.75, 0.5, 0.25 ] </min>
+			<max> [ 6.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44318971089, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_378" >
+			<min> [ 5.75, 0.5, 0.5 ] </min>
+			<max> [ 6.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44318971089, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_379" >
+			<min> [ 5.75, 0.5, 0.75 ] </min>
+			<max> [ 6.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.44318971089, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_380" >
+			<min> [ 5.75, 0.75, 0.0 ] </min>
+			<max> [ 6.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.42046559524, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_381" >
+			<min> [ 5.75, 0.75, 0.25 ] </min>
+			<max> [ 6.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.42046559524, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_382" >
+			<min> [ 5.75, 0.75, 0.5 ] </min>
+			<max> [ 6.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.42046559524, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_383" >
+			<min> [ 5.75, 0.75, 0.75 ] </min>
+			<max> [ 6.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.42046559524, 13.0798423942, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_384" >
+			<min> [ 6.0, 0.0, 0.0 ] </min>
+			<max> [ 6.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.50039178752, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_385" >
+			<min> [ 6.0, 0.0, 0.25 ] </min>
+			<max> [ 6.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.50039178752, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_386" >
+			<min> [ 6.0, 0.0, 0.5 ] </min>
+			<max> [ 6.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.50039178752, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_387" >
+			<min> [ 6.0, 0.0, 0.75 ] </min>
+			<max> [ 6.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.50039178752, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_388" >
+			<min> [ 6.0, 0.25, 0.0 ] </min>
+			<max> [ 6.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.50117536256, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_389" >
+			<min> [ 6.0, 0.25, 0.25 ] </min>
+			<max> [ 6.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.50117536256, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_390" >
+			<min> [ 6.0, 0.25, 0.5 ] </min>
+			<max> [ 6.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.50117536256, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_391" >
+			<min> [ 6.0, 0.25, 0.75 ] </min>
+			<max> [ 6.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.50117536256, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_392" >
+			<min> [ 6.0, 0.5, 0.0 ] </min>
+			<max> [ 6.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.5019589376, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_393" >
+			<min> [ 6.0, 0.5, 0.25 ] </min>
+			<max> [ 6.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.5019589376, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_394" >
+			<min> [ 6.0, 0.5, 0.5 ] </min>
+			<max> [ 6.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.5019589376, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_395" >
+			<min> [ 6.0, 0.5, 0.75 ] </min>
+			<max> [ 6.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.5019589376, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_396" >
+			<min> [ 6.0, 0.75, 0.0 ] </min>
+			<max> [ 6.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.50274251264, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_397" >
+			<min> [ 6.0, 0.75, 0.25 ] </min>
+			<max> [ 6.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.50274251264, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_398" >
+			<min> [ 6.0, 0.75, 0.5 ] </min>
+			<max> [ 6.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.50274251264, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_399" >
+			<min> [ 6.0, 0.75, 0.75 ] </min>
+			<max> [ 6.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.50274251264, 14.0689949396, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_400" >
+			<min> [ 6.25, 0.0, 0.0 ] </min>
+			<max> [ 6.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.511408842086, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_401" >
+			<min> [ 6.25, 0.0, 0.25 ] </min>
+			<max> [ 6.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.511408842086, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_402" >
+			<min> [ 6.25, 0.0, 0.5 ] </min>
+			<max> [ 6.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.511408842086, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_403" >
+			<min> [ 6.25, 0.0, 0.75 ] </min>
+			<max> [ 6.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.511408842086, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_404" >
+			<min> [ 6.25, 0.25, 0.0 ] </min>
+			<max> [ 6.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.53422652626, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_405" >
+			<min> [ 6.25, 0.25, 0.25 ] </min>
+			<max> [ 6.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.53422652626, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_406" >
+			<min> [ 6.25, 0.25, 0.5 ] </min>
+			<max> [ 6.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.53422652626, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_407" >
+			<min> [ 6.25, 0.25, 0.75 ] </min>
+			<max> [ 6.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.53422652626, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_408" >
+			<min> [ 6.25, 0.5, 0.0 ] </min>
+			<max> [ 6.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.55704421043, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_409" >
+			<min> [ 6.25, 0.5, 0.25 ] </min>
+			<max> [ 6.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.55704421043, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_410" >
+			<min> [ 6.25, 0.5, 0.5 ] </min>
+			<max> [ 6.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.55704421043, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_411" >
+			<min> [ 6.25, 0.5, 0.75 ] </min>
+			<max> [ 6.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.55704421043, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_412" >
+			<min> [ 6.25, 0.75, 0.0 ] </min>
+			<max> [ 6.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.5798618946, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_413" >
+			<min> [ 6.25, 0.75, 0.25 ] </min>
+			<max> [ 6.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.5798618946, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_414" >
+			<min> [ 6.25, 0.75, 0.5 ] </min>
+			<max> [ 6.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.5798618946, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_415" >
+			<min> [ 6.25, 0.75, 0.75 ] </min>
+			<max> [ 6.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.5798618946, 15.0809183501, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_416" >
+			<min> [ 6.5, 0.0, 0.0 ] </min>
+			<max> [ 6.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.52168932163, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_417" >
+			<min> [ 6.5, 0.0, 0.25 ] </min>
+			<max> [ 6.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.52168932163, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_418" >
+			<min> [ 6.5, 0.0, 0.5 ] </min>
+			<max> [ 6.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.52168932163, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_419" >
+			<min> [ 6.5, 0.0, 0.75 ] </min>
+			<max> [ 6.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.52168932163, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_420" >
+			<min> [ 6.5, 0.25, 0.0 ] </min>
+			<max> [ 6.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.56506796489, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_421" >
+			<min> [ 6.5, 0.25, 0.25 ] </min>
+			<max> [ 6.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.56506796489, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_422" >
+			<min> [ 6.5, 0.25, 0.5 ] </min>
+			<max> [ 6.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.56506796489, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_423" >
+			<min> [ 6.5, 0.25, 0.75 ] </min>
+			<max> [ 6.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.56506796489, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_424" >
+			<min> [ 6.5, 0.5, 0.0 ] </min>
+			<max> [ 6.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.60844660815, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_425" >
+			<min> [ 6.5, 0.5, 0.25 ] </min>
+			<max> [ 6.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.60844660815, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_426" >
+			<min> [ 6.5, 0.5, 0.5 ] </min>
+			<max> [ 6.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.60844660815, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_427" >
+			<min> [ 6.5, 0.5, 0.75 ] </min>
+			<max> [ 6.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.60844660815, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_428" >
+			<min> [ 6.5, 0.75, 0.0 ] </min>
+			<max> [ 6.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.65182525141, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_429" >
+			<min> [ 6.5, 0.75, 0.25 ] </min>
+			<max> [ 6.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.65182525141, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_430" >
+			<min> [ 6.5, 0.75, 0.5 ] </min>
+			<max> [ 6.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.65182525141, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_431" >
+			<min> [ 6.5, 0.75, 0.75 ] </min>
+			<max> [ 6.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.65182525141, 16.1141392576, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_432" >
+			<min> [ 6.75, 0.0, 0.0 ] </min>
+			<max> [ 7.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.531233457046, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_433" >
+			<min> [ 6.75, 0.0, 0.25 ] </min>
+			<max> [ 7.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.531233457046, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_434" >
+			<min> [ 6.75, 0.0, 0.5 ] </min>
+			<max> [ 7.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.531233457046, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_435" >
+			<min> [ 6.75, 0.0, 0.75 ] </min>
+			<max> [ 7.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.531233457046, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_436" >
+			<min> [ 6.75, 0.25, 0.0 ] </min>
+			<max> [ 7.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.59370037114, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_437" >
+			<min> [ 6.75, 0.25, 0.25 ] </min>
+			<max> [ 7.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.59370037114, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_438" >
+			<min> [ 6.75, 0.25, 0.5 ] </min>
+			<max> [ 7.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.59370037114, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_439" >
+			<min> [ 6.75, 0.25, 0.75 ] </min>
+			<max> [ 7.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.59370037114, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_440" >
+			<min> [ 6.75, 0.5, 0.0 ] </min>
+			<max> [ 7.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.65616728523, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_441" >
+			<min> [ 6.75, 0.5, 0.25 ] </min>
+			<max> [ 7.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.65616728523, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_442" >
+			<min> [ 6.75, 0.5, 0.5 ] </min>
+			<max> [ 7.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.65616728523, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_443" >
+			<min> [ 6.75, 0.5, 0.75 ] </min>
+			<max> [ 7.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.65616728523, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_444" >
+			<min> [ 6.75, 0.75, 0.0 ] </min>
+			<max> [ 7.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.71863419932, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_445" >
+			<min> [ 6.75, 0.75, 0.25 ] </min>
+			<max> [ 7.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.71863419932, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_446" >
+			<min> [ 6.75, 0.75, 0.5 ] </min>
+			<max> [ 7.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.71863419932, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_447" >
+			<min> [ 6.75, 0.75, 0.75 ] </min>
+			<max> [ 7.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.71863419932, 17.1671847402, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_448" >
+			<min> [ 7.0, 0.0, 0.0 ] </min>
+			<max> [ 7.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.54004149467, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_449" >
+			<min> [ 7.0, 0.0, 0.25 ] </min>
+			<max> [ 7.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.54004149467, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_450" >
+			<min> [ 7.0, 0.0, 0.5 ] </min>
+			<max> [ 7.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.54004149467, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_451" >
+			<min> [ 7.0, 0.0, 0.75 ] </min>
+			<max> [ 7.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.54004149467, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_452" >
+			<min> [ 7.0, 0.25, 0.0 ] </min>
+			<max> [ 7.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.62012448401, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_453" >
+			<min> [ 7.0, 0.25, 0.25 ] </min>
+			<max> [ 7.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.62012448401, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_454" >
+			<min> [ 7.0, 0.25, 0.5 ] </min>
+			<max> [ 7.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.62012448401, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_455" >
+			<min> [ 7.0, 0.25, 0.75 ] </min>
+			<max> [ 7.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.62012448401, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_456" >
+			<min> [ 7.0, 0.5, 0.0 ] </min>
+			<max> [ 7.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70020747335, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_457" >
+			<min> [ 7.0, 0.5, 0.25 ] </min>
+			<max> [ 7.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70020747335, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_458" >
+			<min> [ 7.0, 0.5, 0.5 ] </min>
+			<max> [ 7.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70020747335, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_459" >
+			<min> [ 7.0, 0.5, 0.75 ] </min>
+			<max> [ 7.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.70020747335, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_460" >
+			<min> [ 7.0, 0.75, 0.0 ] </min>
+			<max> [ 7.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.78029046269, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_461" >
+			<min> [ 7.0, 0.75, 0.25 ] </min>
+			<max> [ 7.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.78029046269, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_462" >
+			<min> [ 7.0, 0.75, 0.5 ] </min>
+			<max> [ 7.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.78029046269, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_463" >
+			<min> [ 7.0, 0.75, 0.75 ] </min>
+			<max> [ 7.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.78029046269, 18.2385823536, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_464" >
+			<min> [ 7.25, 0.0, 0.0 ] </min>
+			<max> [ 7.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.548113696561, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_465" >
+			<min> [ 7.25, 0.0, 0.25 ] </min>
+			<max> [ 7.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.548113696561, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_466" >
+			<min> [ 7.25, 0.0, 0.5 ] </min>
+			<max> [ 7.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.548113696561, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_467" >
+			<min> [ 7.25, 0.0, 0.75 ] </min>
+			<max> [ 7.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.548113696561, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_468" >
+			<min> [ 7.25, 0.25, 0.0 ] </min>
+			<max> [ 7.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.64434108968, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_469" >
+			<min> [ 7.25, 0.25, 0.25 ] </min>
+			<max> [ 7.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.64434108968, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_470" >
+			<min> [ 7.25, 0.25, 0.5 ] </min>
+			<max> [ 7.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.64434108968, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_471" >
+			<min> [ 7.25, 0.25, 0.75 ] </min>
+			<max> [ 7.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.64434108968, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_472" >
+			<min> [ 7.25, 0.5, 0.0 ] </min>
+			<max> [ 7.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.74056848281, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_473" >
+			<min> [ 7.25, 0.5, 0.25 ] </min>
+			<max> [ 7.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.74056848281, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_474" >
+			<min> [ 7.25, 0.5, 0.5 ] </min>
+			<max> [ 7.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.74056848281, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_475" >
+			<min> [ 7.25, 0.5, 0.75 ] </min>
+			<max> [ 7.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.74056848281, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_476" >
+			<min> [ 7.25, 0.75, 0.0 ] </min>
+			<max> [ 7.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.83679587593, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_477" >
+			<min> [ 7.25, 0.75, 0.25 ] </min>
+			<max> [ 7.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.83679587593, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_478" >
+			<min> [ 7.25, 0.75, 0.5 ] </min>
+			<max> [ 7.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.83679587593, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_479" >
+			<min> [ 7.25, 0.75, 0.75 ] </min>
+			<max> [ 7.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.83679587593, 19.3268601614, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_480" >
+			<min> [ 7.5, 0.0, 0.0 ] </min>
+			<max> [ 7.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.555450340765, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_481" >
+			<min> [ 7.5, 0.0, 0.25 ] </min>
+			<max> [ 7.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.555450340765, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_482" >
+			<min> [ 7.5, 0.0, 0.5 ] </min>
+			<max> [ 7.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.555450340765, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_483" >
+			<min> [ 7.5, 0.0, 0.75 ] </min>
+			<max> [ 7.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.555450340765, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_484" >
+			<min> [ 7.5, 0.25, 0.0 ] </min>
+			<max> [ 7.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.66635102229, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_485" >
+			<min> [ 7.5, 0.25, 0.25 ] </min>
+			<max> [ 7.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.66635102229, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_486" >
+			<min> [ 7.5, 0.25, 0.5 ] </min>
+			<max> [ 7.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.66635102229, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_487" >
+			<min> [ 7.5, 0.25, 0.75 ] </min>
+			<max> [ 7.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.66635102229, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_488" >
+			<min> [ 7.5, 0.5, 0.0 ] </min>
+			<max> [ 7.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.77725170382, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_489" >
+			<min> [ 7.5, 0.5, 0.25 ] </min>
+			<max> [ 7.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.77725170382, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_490" >
+			<min> [ 7.5, 0.5, 0.5 ] </min>
+			<max> [ 7.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.77725170382, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_491" >
+			<min> [ 7.5, 0.5, 0.75 ] </min>
+			<max> [ 7.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.77725170382, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_492" >
+			<min> [ 7.5, 0.75, 0.0 ] </min>
+			<max> [ 7.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.88815238535, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_493" >
+			<min> [ 7.5, 0.75, 0.25 ] </min>
+			<max> [ 7.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.88815238535, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_494" >
+			<min> [ 7.5, 0.75, 0.5 ] </min>
+			<max> [ 7.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.88815238535, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_495" >
+			<min> [ 7.5, 0.75, 0.75 ] </min>
+			<max> [ 7.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.88815238535, 20.4305467677, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_496" >
+			<min> [ 7.75, 0.0, 0.0 ] </min>
+			<max> [ 8.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.562051721549, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_497" >
+			<min> [ 7.75, 0.0, 0.25 ] </min>
+			<max> [ 8.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.562051721549, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_498" >
+			<min> [ 7.75, 0.0, 0.5 ] </min>
+			<max> [ 8.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.562051721549, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_499" >
+			<min> [ 7.75, 0.0, 0.75 ] </min>
+			<max> [ 8.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.562051721549, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_500" >
+			<min> [ 7.75, 0.25, 0.0 ] </min>
+			<max> [ 8.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.68615516465, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_501" >
+			<min> [ 7.75, 0.25, 0.25 ] </min>
+			<max> [ 8.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.68615516465, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_502" >
+			<min> [ 7.75, 0.25, 0.5 ] </min>
+			<max> [ 8.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.68615516465, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_503" >
+			<min> [ 7.75, 0.25, 0.75 ] </min>
+			<max> [ 8.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.68615516465, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_504" >
+			<min> [ 7.75, 0.5, 0.0 ] </min>
+			<max> [ 8.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81025860775, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_505" >
+			<min> [ 7.75, 0.5, 0.25 ] </min>
+			<max> [ 8.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81025860775, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_506" >
+			<min> [ 7.75, 0.5, 0.5 ] </min>
+			<max> [ 8.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81025860775, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_507" >
+			<min> [ 7.75, 0.5, 0.75 ] </min>
+			<max> [ 8.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.81025860775, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_508" >
+			<min> [ 7.75, 0.75, 0.0 ] </min>
+			<max> [ 8.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.93436205084, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_509" >
+			<min> [ 7.75, 0.75, 0.25 ] </min>
+			<max> [ 8.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.93436205084, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_510" >
+			<min> [ 7.75, 0.75, 0.5 ] </min>
+			<max> [ 8.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.93436205084, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_511" >
+			<min> [ 7.75, 0.75, 0.75 ] </min>
+			<max> [ 8.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.93436205084, 21.5481713485, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_512" >
+			<min> [ 8.0, 0.0, 0.0 ] </min>
+			<max> [ 8.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.567918149624, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_513" >
+			<min> [ 8.0, 0.0, 0.25 ] </min>
+			<max> [ 8.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.567918149624, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_514" >
+			<min> [ 8.0, 0.0, 0.5 ] </min>
+			<max> [ 8.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.567918149624, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_515" >
+			<min> [ 8.0, 0.0, 0.75 ] </min>
+			<max> [ 8.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.567918149624, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_516" >
+			<min> [ 8.0, 0.25, 0.0 ] </min>
+			<max> [ 8.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.70375444887, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_517" >
+			<min> [ 8.0, 0.25, 0.25 ] </min>
+			<max> [ 8.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.70375444887, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_518" >
+			<min> [ 8.0, 0.25, 0.5 ] </min>
+			<max> [ 8.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.70375444887, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_519" >
+			<min> [ 8.0, 0.25, 0.75 ] </min>
+			<max> [ 8.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.70375444887, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_520" >
+			<min> [ 8.0, 0.5, 0.0 ] </min>
+			<max> [ 8.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.83959074812, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_521" >
+			<min> [ 8.0, 0.5, 0.25 ] </min>
+			<max> [ 8.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.83959074812, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_522" >
+			<min> [ 8.0, 0.5, 0.5 ] </min>
+			<max> [ 8.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.83959074812, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_523" >
+			<min> [ 8.0, 0.5, 0.75 ] </min>
+			<max> [ 8.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.83959074812, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_524" >
+			<min> [ 8.0, 0.75, 0.0 ] </min>
+			<max> [ 8.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.97542704737, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_525" >
+			<min> [ 8.0, 0.75, 0.25 ] </min>
+			<max> [ 8.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.97542704737, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_526" >
+			<min> [ 8.0, 0.75, 0.5 ] </min>
+			<max> [ 8.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.97542704737, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_527" >
+			<min> [ 8.0, 0.75, 0.75 ] </min>
+			<max> [ 8.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -3.97542704737, 22.678263685, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_528" >
+			<min> [ 8.25, 0.0, 0.0 ] </min>
+			<max> [ 8.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.573049952338, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_529" >
+			<min> [ 8.25, 0.0, 0.25 ] </min>
+			<max> [ 8.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.573049952338, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_530" >
+			<min> [ 8.25, 0.0, 0.5 ] </min>
+			<max> [ 8.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.573049952338, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_531" >
+			<min> [ 8.25, 0.0, 0.75 ] </min>
+			<max> [ 8.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.573049952338, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_532" >
+			<min> [ 8.25, 0.25, 0.0 ] </min>
+			<max> [ 8.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.71914985701, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_533" >
+			<min> [ 8.25, 0.25, 0.25 ] </min>
+			<max> [ 8.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.71914985701, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_534" >
+			<min> [ 8.25, 0.25, 0.5 ] </min>
+			<max> [ 8.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.71914985701, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_535" >
+			<min> [ 8.25, 0.25, 0.75 ] </min>
+			<max> [ 8.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.71914985701, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_536" >
+			<min> [ 8.25, 0.5, 0.0 ] </min>
+			<max> [ 8.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.86524976169, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_537" >
+			<min> [ 8.25, 0.5, 0.25 ] </min>
+			<max> [ 8.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.86524976169, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_538" >
+			<min> [ 8.25, 0.5, 0.5 ] </min>
+			<max> [ 8.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.86524976169, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_539" >
+			<min> [ 8.25, 0.5, 0.75 ] </min>
+			<max> [ 8.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.86524976169, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_540" >
+			<min> [ 8.25, 0.75, 0.0 ] </min>
+			<max> [ 8.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.01134966636, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_541" >
+			<min> [ 8.25, 0.75, 0.25 ] </min>
+			<max> [ 8.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.01134966636, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_542" >
+			<min> [ 8.25, 0.75, 0.5 ] </min>
+			<max> [ 8.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.01134966636, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_543" >
+			<min> [ 8.25, 0.75, 0.75 ] </min>
+			<max> [ 8.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.01134966636, 23.8193541964, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_544" >
+			<min> [ 8.5, 0.0, 0.0 ] </min>
+			<max> [ 8.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.577447473846, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_545" >
+			<min> [ 8.5, 0.0, 0.25 ] </min>
+			<max> [ 8.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.577447473846, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_546" >
+			<min> [ 8.5, 0.0, 0.5 ] </min>
+			<max> [ 8.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.577447473846, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_547" >
+			<min> [ 8.5, 0.0, 0.75 ] </min>
+			<max> [ 8.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.577447473846, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_548" >
+			<min> [ 8.5, 0.25, 0.0 ] </min>
+			<max> [ 8.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.73234242154, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_549" >
+			<min> [ 8.5, 0.25, 0.25 ] </min>
+			<max> [ 8.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.73234242154, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_550" >
+			<min> [ 8.5, 0.25, 0.5 ] </min>
+			<max> [ 8.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.73234242154, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_551" >
+			<min> [ 8.5, 0.25, 0.75 ] </min>
+			<max> [ 8.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.73234242154, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_552" >
+			<min> [ 8.5, 0.5, 0.0 ] </min>
+			<max> [ 8.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.88723736923, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_553" >
+			<min> [ 8.5, 0.5, 0.25 ] </min>
+			<max> [ 8.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.88723736923, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_554" >
+			<min> [ 8.5, 0.5, 0.5 ] </min>
+			<max> [ 8.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.88723736923, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_555" >
+			<min> [ 8.5, 0.5, 0.75 ] </min>
+			<max> [ 8.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.88723736923, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_556" >
+			<min> [ 8.5, 0.75, 0.0 ] </min>
+			<max> [ 8.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.04213231692, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_557" >
+			<min> [ 8.5, 0.75, 0.25 ] </min>
+			<max> [ 8.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.04213231692, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_558" >
+			<min> [ 8.5, 0.75, 0.5 ] </min>
+			<max> [ 8.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.04213231692, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_559" >
+			<min> [ 8.5, 0.75, 0.75 ] </min>
+			<max> [ 8.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.04213231692, 24.9699739732, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_560" >
+			<min> [ 8.75, 0.0, 0.0 ] </min>
+			<max> [ 9.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.581111075269, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_561" >
+			<min> [ 8.75, 0.0, 0.25 ] </min>
+			<max> [ 9.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.581111075269, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_562" >
+			<min> [ 8.75, 0.0, 0.5 ] </min>
+			<max> [ 9.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.581111075269, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_563" >
+			<min> [ 8.75, 0.0, 0.75 ] </min>
+			<max> [ 9.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.581111075269, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_564" >
+			<min> [ 8.75, 0.25, 0.0 ] </min>
+			<max> [ 9.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74333322581, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_565" >
+			<min> [ 8.75, 0.25, 0.25 ] </min>
+			<max> [ 9.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74333322581, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_566" >
+			<min> [ 8.75, 0.25, 0.5 ] </min>
+			<max> [ 9.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74333322581, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_567" >
+			<min> [ 8.75, 0.25, 0.75 ] </min>
+			<max> [ 9.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.74333322581, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_568" >
+			<min> [ 8.75, 0.5, 0.0 ] </min>
+			<max> [ 9.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.90555537634, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_569" >
+			<min> [ 8.75, 0.5, 0.25 ] </min>
+			<max> [ 9.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.90555537634, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_570" >
+			<min> [ 8.75, 0.5, 0.5 ] </min>
+			<max> [ 9.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.90555537634, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_571" >
+			<min> [ 8.75, 0.5, 0.75 ] </min>
+			<max> [ 9.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.90555537634, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_572" >
+			<min> [ 8.75, 0.75, 0.0 ] </min>
+			<max> [ 9.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.06777752688, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_573" >
+			<min> [ 8.75, 0.75, 0.25 ] </min>
+			<max> [ 9.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.06777752688, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_574" >
+			<min> [ 8.75, 0.75, 0.5 ] </min>
+			<max> [ 9.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.06777752688, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_575" >
+			<min> [ 8.75, 0.75, 0.75 ] </min>
+			<max> [ 9.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.06777752688, 26.1286548113, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_576" >
+			<min> [ 9.0, 0.0, 0.0 ] </min>
+			<max> [ 9.25, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.584041134819, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_577" >
+			<min> [ 9.0, 0.0, 0.25 ] </min>
+			<max> [ 9.25, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.584041134819, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_578" >
+			<min> [ 9.0, 0.0, 0.5 ] </min>
+			<max> [ 9.25, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.584041134819, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_579" >
+			<min> [ 9.0, 0.0, 0.75 ] </min>
+			<max> [ 9.25, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.584041134819, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_580" >
+			<min> [ 9.0, 0.25, 0.0 ] </min>
+			<max> [ 9.25, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75212340446, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_581" >
+			<min> [ 9.0, 0.25, 0.25 ] </min>
+			<max> [ 9.25, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75212340446, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_582" >
+			<min> [ 9.0, 0.25, 0.5 ] </min>
+			<max> [ 9.25, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75212340446, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_583" >
+			<min> [ 9.0, 0.25, 0.75 ] </min>
+			<max> [ 9.25, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75212340446, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_584" >
+			<min> [ 9.0, 0.5, 0.0 ] </min>
+			<max> [ 9.25, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.92020567409, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_585" >
+			<min> [ 9.0, 0.5, 0.25 ] </min>
+			<max> [ 9.25, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.92020567409, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_586" >
+			<min> [ 9.0, 0.5, 0.5 ] </min>
+			<max> [ 9.25, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.92020567409, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_587" >
+			<min> [ 9.0, 0.5, 0.75 ] </min>
+			<max> [ 9.25, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.92020567409, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_588" >
+			<min> [ 9.0, 0.75, 0.0 ] </min>
+			<max> [ 9.25, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.08828794373, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_589" >
+			<min> [ 9.0, 0.75, 0.25 ] </min>
+			<max> [ 9.25, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.08828794373, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_590" >
+			<min> [ 9.0, 0.75, 0.5 ] </min>
+			<max> [ 9.25, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.08828794373, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_591" >
+			<min> [ 9.0, 0.75, 0.75 ] </min>
+			<max> [ 9.25, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.08828794373, 27.293929246, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_592" >
+			<min> [ 9.25, 0.0, 0.0 ] </min>
+			<max> [ 9.5, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.586238047908, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_593" >
+			<min> [ 9.25, 0.0, 0.25 ] </min>
+			<max> [ 9.5, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.586238047908, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_594" >
+			<min> [ 9.25, 0.0, 0.5 ] </min>
+			<max> [ 9.5, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.586238047908, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_595" >
+			<min> [ 9.25, 0.0, 0.75 ] </min>
+			<max> [ 9.5, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.586238047908, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_596" >
+			<min> [ 9.25, 0.25, 0.0 ] </min>
+			<max> [ 9.5, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75871414373, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_597" >
+			<min> [ 9.25, 0.25, 0.25 ] </min>
+			<max> [ 9.5, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75871414373, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_598" >
+			<min> [ 9.25, 0.25, 0.5 ] </min>
+			<max> [ 9.5, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75871414373, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_599" >
+			<min> [ 9.25, 0.25, 0.75 ] </min>
+			<max> [ 9.5, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.75871414373, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_600" >
+			<min> [ 9.25, 0.5, 0.0 ] </min>
+			<max> [ 9.5, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93119023954, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_601" >
+			<min> [ 9.25, 0.5, 0.25 ] </min>
+			<max> [ 9.5, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93119023954, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_602" >
+			<min> [ 9.25, 0.5, 0.5 ] </min>
+			<max> [ 9.5, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93119023954, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_603" >
+			<min> [ 9.25, 0.5, 0.75 ] </min>
+			<max> [ 9.5, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93119023954, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_604" >
+			<min> [ 9.25, 0.75, 0.0 ] </min>
+			<max> [ 9.5, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.10366633536, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_605" >
+			<min> [ 9.25, 0.75, 0.25 ] </min>
+			<max> [ 9.5, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.10366633536, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_606" >
+			<min> [ 9.25, 0.75, 0.5 ] </min>
+			<max> [ 9.5, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.10366633536, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_607" >
+			<min> [ 9.25, 0.75, 0.75 ] </min>
+			<max> [ 9.5, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.10366633536, 28.4643305859, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_608" >
+			<min> [ 9.5, 0.0, 0.0 ] </min>
+			<max> [ 9.75, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.587702227239, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_609" >
+			<min> [ 9.5, 0.0, 0.25 ] </min>
+			<max> [ 9.75, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.587702227239, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_610" >
+			<min> [ 9.5, 0.0, 0.5 ] </min>
+			<max> [ 9.75, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.587702227239, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_611" >
+			<min> [ 9.5, 0.0, 0.75 ] </min>
+			<max> [ 9.75, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.587702227239, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_612" >
+			<min> [ 9.5, 0.25, 0.0 ] </min>
+			<max> [ 9.75, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76310668172, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_613" >
+			<min> [ 9.5, 0.25, 0.25 ] </min>
+			<max> [ 9.75, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76310668172, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_614" >
+			<min> [ 9.5, 0.25, 0.5 ] </min>
+			<max> [ 9.75, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76310668172, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_615" >
+			<min> [ 9.5, 0.25, 0.75 ] </min>
+			<max> [ 9.75, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76310668172, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_616" >
+			<min> [ 9.5, 0.5, 0.0 ] </min>
+			<max> [ 9.75, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93851113619, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_617" >
+			<min> [ 9.5, 0.5, 0.25 ] </min>
+			<max> [ 9.75, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93851113619, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_618" >
+			<min> [ 9.5, 0.5, 0.5 ] </min>
+			<max> [ 9.75, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93851113619, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_619" >
+			<min> [ 9.5, 0.5, 0.75 ] </min>
+			<max> [ 9.75, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.93851113619, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_620" >
+			<min> [ 9.5, 0.75, 0.0 ] </min>
+			<max> [ 9.75, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11391559067, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_621" >
+			<min> [ 9.5, 0.75, 0.25 ] </min>
+			<max> [ 9.75, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11391559067, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_622" >
+			<min> [ 9.5, 0.75, 0.5 ] </min>
+			<max> [ 9.75, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11391559067, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_623" >
+			<min> [ 9.5, 0.75, 0.75 ] </min>
+			<max> [ 9.75, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11391559067, 29.638392948, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_624" >
+			<min> [ 9.75, 0.0, 0.0 ] </min>
+			<max> [ 10.0, 0.25, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.588434102864, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_625" >
+			<min> [ 9.75, 0.0, 0.25 ] </min>
+			<max> [ 10.0, 0.25, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.588434102864, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_626" >
+			<min> [ 9.75, 0.0, 0.5 ] </min>
+			<max> [ 10.0, 0.25, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.588434102864, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_627" >
+			<min> [ 9.75, 0.0, 0.75 ] </min>
+			<max> [ 10.0, 0.25, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -0.588434102864, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_628" >
+			<min> [ 9.75, 0.25, 0.0 ] </min>
+			<max> [ 10.0, 0.5, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76530230859, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_629" >
+			<min> [ 9.75, 0.25, 0.25 ] </min>
+			<max> [ 10.0, 0.5, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76530230859, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_630" >
+			<min> [ 9.75, 0.25, 0.5 ] </min>
+			<max> [ 10.0, 0.5, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76530230859, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_631" >
+			<min> [ 9.75, 0.25, 0.75 ] </min>
+			<max> [ 10.0, 0.5, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -1.76530230859, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_632" >
+			<min> [ 9.75, 0.5, 0.0 ] </min>
+			<max> [ 10.0, 0.75, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.94217051432, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_633" >
+			<min> [ 9.75, 0.5, 0.25 ] </min>
+			<max> [ 10.0, 0.75, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.94217051432, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_634" >
+			<min> [ 9.75, 0.5, 0.5 ] </min>
+			<max> [ 10.0, 0.75, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.94217051432, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_635" >
+			<min> [ 9.75, 0.5, 0.75 ] </min>
+			<max> [ 10.0, 0.75, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -2.94217051432, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_636" >
+			<min> [ 9.75, 0.75, 0.0 ] </min>
+			<max> [ 10.0, 1.0, 0.25 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11903872005, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_637" >
+			<min> [ 9.75, 0.75, 0.25 ] </min>
+			<max> [ 10.0, 1.0, 0.5 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11903872005, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_638" >
+			<min> [ 9.75, 0.75, 0.5 ] </min>
+			<max> [ 10.0, 1.0, 0.75 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11903872005, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+	<geom_object>
+		<box label="particle_639" >
+			<min> [ 9.75, 0.75, 0.75 ] </min>
+			<max> [ 10.0, 1.0, 1.0 ] </max>
+		</box>
+		<res> [ 2, 2, 2 ] </res>
+		<velocity> [ -4.11903872005, 30.814651292, 0.0 ] </velocity>
+		<temperature> 294.0 </temperature>
+		<color> 1 </color>
+	</geom_object>
+
+
+</Uintah_Include>

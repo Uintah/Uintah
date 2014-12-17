@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+    <!--____________________________________________________________________-->
+    <!--      Description                                                   -->
+    <!--  This input file reproduces the "Explosion" and "Implosion" test   -->
+    <!-- problem described in E.F. Toro, "Riemann Solvers and Numerical     -->
+    <!-- Methods for Fluid Dynamics, pgs 553 & 555.                                    -->
+    <!--____________________________________________________________________-->
+
+   <Meta>
+       <title>Explosion/Implosion</title>
+   </Meta>    
+   <SimulationComponent type="ice" />
+   <doAMR>true</doAMR>
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            .25         </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-5      </delt_init>
+       <max_delt_increase>  2.0         </max_delt_increase>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <end_on_max_time_exactly>true</end_on_max_time_exactly>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--   B O U N D A R Y   C O N D I T I O N S                            -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>                
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"   var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"   var = "Neumann">
+                              <value> [0.0,0.0,0.0] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0.0 </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+       <Level>
+           <Box label="2D">
+              <lower>        [-1, -1,  -0.05]       </lower>
+              <upper>        [ 1,  1,   0.05]      </upper>
+              <extraCells>   [1,1,1]               </extraCells>
+              <patches>      [8,8,1]               </patches>
+              <resolution>   [32,32,1]           </resolution>
+           </Box>
+        </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>Explosion_AMR.uda</filebase>
+      <outputInterval>0.05</outputInterval>
+      <save label="vel_CC"/>
+      <save label="rho_CC"/>
+      <save label="temp_CC"/>
+      <save label="press_CC"/>
+      <save label="mag_grad_rho_CC"/>
+      <save label="mag_grad_temp_CC"/>
+      <save label="mag_grad_press_CC"/>
+      <save label="refineFlag"/>
+      <outputInitTimestep/>
+      <checkpoint timestepInterval="50" cycle="2"/>
+   </DataArchiver>
+   
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+       <cfl>0.2</cfl>
+       <ICE>
+        <advection type = "SecondOrder" />
+      </ICE>        
+    </CFD>
+    <!--____________________________________________________________________-->
+    <!--    A M R   G R I D                                                 -->
+    <!--____________________________________________________________________--> 
+    <AMR>
+      <ICE>
+        <orderOfInterpolation>1  </orderOfInterpolation>
+        <do_Refluxing>  false    </do_Refluxing>
+        <Refinement_Criteria_Thresholds>
+          <Variable name = "press_CC" value = "1" matl = "0" />
+          <Variable name = "rho_CC"   value = "1" matl = "0" />
+          <Variable name = "temp_CC"  value = "1" matl = "0" />
+        </Refinement_Criteria_Thresholds>
+      </ICE>  
+      <Regridder type="Tiled">
+        <max_levels>3</max_levels>
+        <cell_refinement_ratio>    [[4,4,1]]    </cell_refinement_ratio>
+        <min_boundary_cells>       [1,1,0]      </min_boundary_cells>        
+        <min_patch_size>           [[8,8,1]]    </min_patch_size>
+        <cell_stability_dilation>   [1,1,0]      </cell_stability_dilation>
+      </Regridder>
+    </AMR>
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+       <reference_pressure> 1  </reference_pressure>
+    </PhysicalConstants>
+    <!--____________________________________________________________________-->
+    <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
+    <!--                Explosion                                           -->
+    <!--____________________________________________________________________-->
+
+    <MaterialProperties>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          1.0                 </specific_heat>
+           <gamma>                  1.4                 </gamma>
+           
+           <geom_object>
+             <difference>
+                <box label="Whole grid">
+                    <min>[ -1, -1, -1 ]           </min>
+                    <max>[  1, 1,   1 ]              </max>
+                </box>
+                <sphere label="driverGas">
+                    <origin>    [.0,.0,.0]              </origin>
+                    <radius>    0.4                    </radius>
+                </sphere>
+             </difference>
+               <res>           [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
+               <density>       0.125                    </density>
+               <pressure>      0.1                      </pressure>
+               <temperature>   2.0                      </temperature>
+           </geom_object>
+           
+           <geom_object>
+               <sphere label="driverGas"/>
+               <res>           [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
+               <density>       1.0                      </density>
+               <pressure>      1.0                      </pressure>
+               <temperature>   2.5                      </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties>
+
+    <!--______________________________________________________________________-->
+    <!--                Implosion                                             -->
+    <!--  Uncomment this section and comment out the above before you run.     -->
+    <!--______________________________________________________________________-->
+<!--
+    <MaterialProperties>
+       <ICE>
+         <material>
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>      0.0                 </dynamic_viscosity>
+           <thermal_conductivity>   0.0                 </thermal_conductivity>
+           <specific_heat>          1.0                 </specific_heat>
+           <gamma>                  1.4                 </gamma>
+           
+           <geom_object>
+             <difference>
+                <box label="Whole grid">
+                    <min>[ -1, -1, -1 ]           </min>
+                    <max>[  1, 1,   1 ]              </max>
+                </box>
+                <sphere label="collapsedRegion">
+                    <origin>    [.0,.0,.0]              </origin>
+                    <radius>    0.4                    </radius>
+                </sphere>
+             </difference>
+               <res>           [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
+               <density>       1.0                      </density>
+               <pressure>      1.0                      </pressure>
+               <temperature>   2.5                      </temperature>
+           </geom_object>
+           
+           <geom_object>
+               <sphere label="collapsedRegion"/>
+               <res>           [2,2,2]                  </res>
+               <velocity>      [0.0,0.0,0.0]            </velocity>
+               <density>       0.125                    </density>
+               <pressure>      0.1                      </pressure>
+               <temperature>   2.0                      </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties>
+-->
+</Uintah_specification>
