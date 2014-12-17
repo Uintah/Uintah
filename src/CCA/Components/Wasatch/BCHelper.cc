@@ -26,6 +26,8 @@
 
 //-- C++ Includes --//
 #include <vector>
+#include <iostream>
+
 #include <boost/foreach.hpp>
 
 //-- Uintah Includes --//
@@ -40,9 +42,8 @@
 #include <CCA/Components/Wasatch/Expressions/Pressure.h>
 #include <CCA/Components/Wasatch/Expressions/NullExpression.h>
 
-//-- ExprLib Includes --//
-#include <expression/ExprLib.h>
-#include <expression/ExpressionFactory.h>
+//-- SpatialOps includes --//
+#include <spatialops/OperatorDatabase.h>
 
 //-- Wasatch Includes --//
 #include <CCA/Components/Wasatch/FieldTypes.h>
@@ -50,6 +51,13 @@
 #include <CCA/Components/Wasatch/ParticlesHelper.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditionBase.h>
+
+//-- Debug Stream --//
+#include <Core/Util/DebugStream.h>
+
+static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
+#define DBC_BC_ON  dbgbc.active()
+#define DBGBC  if( DBC_BC_ON  ) dbgbc
 
 /**
  * \file    BCHelper.cc
@@ -159,6 +167,91 @@ namespace Wasatch {
     }
     return false;
   }
+
+  //============================================================================
+
+  bool BndCondSpec::operator==(const BndCondSpec& l) const
+  {
+    return (   l.varName == varName
+            && l.functorName == functorName
+            && l.value == value
+            && l.bcType == bcType
+            && l.bcValType == bcValType);
+  };
+
+  bool BndCondSpec::operator==(const std::string& varNameNew) const
+  {
+    return ( varNameNew == varName);
+  };
+
+  void BndCondSpec::print() const
+  {
+    using namespace std;
+    cout << "  var:     " << varName << endl
+         << "  type:    " << bcType << endl
+         << "  value:   " << value << endl;
+    if( !functorName.empty() )
+      cout << "  functor: " << functorName << endl;
+  };
+
+  bool BndCondSpec::is_functor() const
+  {
+    return (bcValType == FUNCTOR_TYPE);
+  };
+
+  //============================================================================
+
+  // returns true if this Boundary has parts of it on patchID
+  bool BndSpec::has_patch(const int& patchID) const
+  {
+    return std::find(patchIDs.begin(), patchIDs.end(), patchID) != patchIDs.end();
+  }
+
+  // find the BCSpec associated with a given variable name
+  const BndCondSpec* BndSpec::find(const std::string& varName) const
+  {
+    std::vector<BndCondSpec>::const_iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
+    if (it != bcSpecVec.end()) {
+      return &(*it);
+    } else {
+      return NULL;
+    }
+  }
+
+  // find the BCSpec associated with a given variable name - non-const version
+  const BndCondSpec* BndSpec::find(const std::string& varName)
+  {
+    std::vector<BndCondSpec>::iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
+    if (it != bcSpecVec.end()) {
+      return &(*it);
+    } else {
+      return NULL;
+    }
+  }
+
+  // check whether this boundary has any bcs specified for varName
+  bool BndSpec::has_field(const std::string& varName) const
+  {
+    std::vector<BndCondSpec>::const_iterator it = std::find(bcSpecVec.begin(), bcSpecVec.end(), varName);
+    if (it != bcSpecVec.end()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  // print information about this boundary
+  void BndSpec::print() const
+  {
+    using namespace std;
+    cout << "Boundary: " << name << " face: " << face << " BndType: " << type << endl;
+    for (vector<BndCondSpec>::const_iterator it=bcSpecVec.begin(); it != bcSpecVec.end(); ++it) {
+      (*it).print();
+    }
+  }
+
+
+  //============================================================================
 
 
   //****************************************************************************
