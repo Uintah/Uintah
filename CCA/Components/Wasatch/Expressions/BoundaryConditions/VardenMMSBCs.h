@@ -48,11 +48,11 @@ class VarDen1DMMSDensity : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSDensity( const Expr::Tag& indepVarTag,
-                     const double rho0,
-                     const double rho1 )
+                      const double rho0,
+                      const double rho1 )
   : indepVarTag_ (indepVarTag),
-    rho0_ (rho0),
-    rho1_ (rho1)
+    rho0_(rho0),
+    rho1_(rho1)
   {
     this->set_gpu_runnable(false);
   }
@@ -71,11 +71,11 @@ public:
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& indepVarTag,
              const double rho0,
-             const double rho1) :
-    ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag),
-    rho0_ (rho0),
-    rho1_ (rho1)
+             const double rho1 )
+    : ExpressionBuilder(resultTag),
+      indepVarTag_ (indepVarTag),
+      rho0_ (rho0),
+      rho1_ (rho1)
     {}
     Expr::ExpressionBase* build() const{ return new VarDen1DMMSDensity(indepVarTag_, rho0_, rho1_); }
   private:
@@ -84,9 +84,11 @@ public:
   };
   
   ~VarDen1DMMSDensity(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){
+    exprDeps.requires_expression( indepVarTag_ );
+  }
   void bind_fields( const Expr::FieldManagerList& fml ){
-    t_    = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
+    t_ = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
   }
   void evaluate();
 private:
@@ -112,8 +114,8 @@ class VarDen1DMMSMixtureFraction
 : public BoundaryConditionBase<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
-  VarDen1DMMSMixtureFraction( const Expr::Tag& indepVarTag ) :
-  indepVarTag_ (indepVarTag)
+  VarDen1DMMSMixtureFraction( const Expr::Tag& indepVarTag )
+  : indepVarTag_(indepVarTag)
   {
     this->set_gpu_runnable(false);
   }
@@ -127,10 +129,9 @@ public:
      *
      *  \param indepVarTag the Expr::Tag for holding the time variable.
      */
-    Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& indepVarTag) :
-    ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag)
+    Builder( const Expr::Tag& resultTag, const Expr::Tag& indepVarTag )
+    : ExpressionBuilder(resultTag),
+      indepVarTag_(indepVarTag)
     {}
     Expr::ExpressionBase* build() const{ return new VarDen1DMMSMixtureFraction(indepVarTag_); }
   private:
@@ -138,9 +139,11 @@ public:
   };
   
   ~VarDen1DMMSMixtureFraction(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){  exprDeps.requires_expression( indepVarTag_ );}
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){
+    exprDeps.requires_expression( indepVarTag_ );
+  }
   void bind_fields( const Expr::FieldManagerList& fml ){
-    t_    = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
+    t_ = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
   }
   void evaluate();
 private:
