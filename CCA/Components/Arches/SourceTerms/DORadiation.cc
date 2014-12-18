@@ -266,7 +266,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel                 , matlIndex , patch );
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
 
-      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
+      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(0), patch->getExtraCellHighIndex(0) );  
       radiation_vars.ESRCG.initialize(0.0); 
 
       // copy old solution into new
