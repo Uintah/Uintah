@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+
+<Uintah_specification>
+
+   <Meta>
+       <title>MD LJ 2 Component Test</title>
+   </Meta>
+
+   <SimulationComponent type="md" />
+
+   <!--____________________________________________________________________-->
+   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+   <!--____________________________________________________________________-->
+
+   <Time>
+       <maxTime>25000.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>1.00</delt_min>
+       <delt_max>1.00</delt_max>
+       <delt_init>1.00</delt_init>
+       <max_Timesteps>25000</max_Timesteps>
+       <timestep_multiplier>1</timestep_multiplier>
+
+   </Time>
+   
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    
+   <DataArchiver>
+       <filebase>2_component_liquid_trace.uda</filebase>
+       <outputInterval>1000</outputInterval>
+       <!--outputInterval>1</outputInterval-->
+       <save label = "p.x"/>
+       <save label = "p.ID"/>
+       <save label = "p.v"/>
+       <!--checkpoint cycle = "2" interval = "1"/-->
+       <checkpoint cycle = "0" interval = "0"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--   L O A D - B A L A N C E R     O P T I O N S                      -->
+    <!--____________________________________________________________________-->
+    
+    <!--
+   <LoadBalancer type="PLB">
+     <timestepInterval>10</timestepInterval>
+     <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
+   </LoadBalancer>
+   -->
+
+
+    <!--____________________________________________________________________-->
+    <!--   S I M U LA T I O N     O P T I O N S                             -->
+    <!--____________________________________________________________________-->
+    
+   <MD>
+     <Forcefield type="Lucretius">
+       <coordinateFile>2Component_SiLike_Amorphous.coords</coordinateFile>
+       <forcefieldFile>2Component_SiLike_Amorphous.ff</forcefieldFile>
+     </Forcefield>
+
+     <System ensemble="NVE">
+       <unitCell format="Isotropic">
+         <boxSize>58.3500952380444</boxSize>
+       </unitCell>
+       <cutoffRadius>12.0</cutoffRadius>
+     </System>
+
+     <Integrator type="velocity">
+       <timestep>1.00</timestep>
+       <numberSteps>25000</numberSteps>
+     </Integrator>
+
+     <Electrostatics type="none">
+       <ewaldBeta>0.25</ewaldBeta>
+       <kGrids>[64,64,64]</kGrids>
+       <splineOrder>16</splineOrder>
+       <cutoffRadius>12.0</cutoffRadius>
+       <polarizable enabled="true">
+         <polarizationTolerance>1.0e-9</polarizationTolerance>
+          <maxIterations>100</maxIterations>
+       </polarizable>
+     </Electrostatics>
+   </MD>
+
+
+    <!--____________________________________________________________________-->
+    <!--   G R I D     S P E C I F I C A T I O N                            -->
+    <!--____________________________________________________________________-->
+    
+    <Grid>
+       <Level>
+           <Box label = "1">
+              <lower>[0,0,0]</lower>
+              <upper>[58.3500952380444,58.3500952380444,58.3500952380444]</upper>
+              <resolution>[59,59,59]</resolution>
+              <patches>[4,4,4]</patches>
+           </Box>
+           <periodic>[1,1,1]</periodic>
+       </Level>
+    </Grid>
+
+</Uintah_specification>
+
