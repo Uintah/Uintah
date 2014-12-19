@@ -148,7 +148,7 @@ WARNING
 
     VarLabel* d_colorLabel;
     VarLabel* d_divQLabel;
-    VarLabel* d_abskgLabel;
+    VarLabel* d_compAbskgLabel;
     VarLabel* d_sigmaT4Label;
     VarLabel* d_cellTypeLabel; 
     

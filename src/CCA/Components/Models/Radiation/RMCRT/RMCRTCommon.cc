@@ -58,32 +58,27 @@ bool   RMCRTCommon::d_isSeedRandom;
 bool   RMCRTCommon::d_allowReflect;
 int    RMCRTCommon::d_matl;
 
-//const TypeDescription::Type RMCRTCommon::d_FLT_DBL;
-
 MaterialSet* RMCRTCommon::d_matlSet = 0;
-const VarLabel* RMCRTCommon::d_sigmaT4_label;
+const VarLabel* RMCRTCommon::d_sigmaT4Label;
 const VarLabel* RMCRTCommon::d_abskgLabel;
-const VarLabel* RMCRTCommon::d_temperatureLabel;
-const VarLabel* RMCRTCommon::d_cellTypeLabel;
 const VarLabel* RMCRTCommon::d_divQLabel;
+const VarLabel* RMCRTCommon::d_compAbskgLabel;
+const VarLabel* RMCRTCommon::d_compTempLabel;
+const VarLabel* RMCRTCommon::d_cellTypeLabel;
 
 //______________________________________________________________________
 // Class: Constructor.
 //______________________________________________________________________
 //
-RMCRTCommon::RMCRTCommon()
+RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
+    : d_FLT_DBL(FLT_DBL)
 {
-
-/*`==========TESTING==========*/               // HARDWIRED
-  RMCRTCommon::d_FLT_DBL = TypeDescription::double_type;
-//  RMCRTCommon::d_FLT_DBL = TypeDescription::float_type;
-/*===========TESTING==========`*/
-
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
-    d_sigmaT4_label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
+    d_sigmaT4Label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
     proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
   } else {
-    d_sigmaT4_label = VarLabel::create( "sigmaT4",  CCVariable<float>::getTypeDescription() );
+    d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
+    d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<float>::getTypeDescription() );
     proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
   }
 
@@ -97,7 +92,8 @@ RMCRTCommon::RMCRTCommon()
 //
 RMCRTCommon::~RMCRTCommon()
 {
-  VarLabel::destroy( d_sigmaT4_label );
+  VarLabel::destroy( d_sigmaT4Label );
+  VarLabel::destroy( d_abskgLabel );
 
   // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
   if( d_matlSet ) {
@@ -111,7 +107,6 @@ RMCRTCommon::~RMCRTCommon()
 //______________________________________________________________________
 // Register the material index and label names
 //______________________________________________________________________
-//
 void
 RMCRTCommon::registerVarLabels(int   matlIndex,
                                const VarLabel* abskg,
@@ -119,11 +114,18 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
                                const VarLabel* celltype,
                                const VarLabel* divQ )
 {
-  d_matl             = matlIndex;
-  d_abskgLabel       = abskg;
-  d_temperatureLabel = temperature;
-  d_cellTypeLabel    = celltype;
-  d_divQLabel        = divQ;
+  d_matl            = matlIndex;
+  d_compAbskgLabel  = abskg;
+  d_compTempLabel   = temperature;
+  d_cellTypeLabel   = celltype;
+  d_divQLabel       = divQ;
+
+  // If using RMCRT:DBL
+  const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
+  const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type && subtype == TypeDescription::double_type ){
+    d_abskgLabel = d_compAbskgLabel;
+  }
 
   //__________________________________
   //  define the materialSet
@@ -134,6 +136,76 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
     m.push_back(matlIndex);
     d_matlSet->addAll(m);
     d_matlSet->addReference();
+  }
+}
+
+//______________________________________________________________________
+//  This task will convert the CCVariable abskg from double -> float
+//  If abskg is of type double and the component has                  
+//  specified that RMCRT communicate the all-to-all variables (abskg & sigmaT4)  
+//  as a float then convert abskg to float                      
+//______________________________________________________________________
+void
+RMCRTCommon::sched_DoubleToFloat( const LevelP& level,
+                                  SchedulerP& sched,
+                                  Task::WhichDW myDW,
+                                  const int radCalc_freq )
+{
+  const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
+  const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
+
+  // only run task if a conversion is needed.
+  Task* tsk = NULL;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::float_type &&  subtype == TypeDescription::double_type ){
+    tsk = scinew Task( "RMCRTCommon::DoubleToFloat", this, &RMCRTCommon::DoubleToFloat, myDW, radCalc_freq);
+  } else {
+    return;
+  }
+
+  printSchedule(level, dbg, "RMCRTCommon::DoubleToFloat");
+
+  tsk->requires( myDW,       d_compAbskgLabel, d_gn, 0 );
+  tsk->requires( Task::OldDW, d_abskgLabel,    d_gn, 0 );  // for carryforward
+  tsk->computes(d_abskgLabel);
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void
+RMCRTCommon::DoubleToFloat( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            Task::WhichDW which_dw,
+                            const int radCalc_freq )
+{
+  //__________________________________
+  //  Carry Forward
+  if ( doCarryForward( radCalc_freq ) ) {
+    printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::DoubleToFloat carryForward (abskgRMCRT)" );
+    new_dw->transferFrom( old_dw, d_abskgLabel, patches, matls, true );
+    return;
+  }
+
+  //__________________________________
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing RMCRTCommon::DoubleToFloat");
+    
+    constCCVariable<double> abskg_D;
+    CCVariable< float > abskg_F; 
+
+    DataWarehouse* myDW = new_dw->getOtherDataWarehouse(which_dw);
+    myDW->get(abskg_D,             d_compAbskgLabel, d_matl, patch, Ghost::None, 0);
+    new_dw->allocateAndPut(abskg_F, d_abskgLabel, d_matl, patch);
+
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      const IntVector& c = *iter;
+      abskg_F[c] = (float)abskg_D[c];
+    }
   }
 }
 
@@ -149,7 +221,7 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 {
   std::string taskname = "RMCRTCommon::sigmaT4";
 
-  Task* tsk;
+  Task* tsk = NULL;
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
     tsk = scinew Task( taskname, this, &RMCRTCommon::sigmaT4<double>, temp_dw, radCalc_freq, includeEC );
   } else {
@@ -158,9 +230,9 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
-  tsk->requires( temp_dw, d_temperatureLabel,  d_gn, 0 );
-  tsk->requires( Task::OldDW, d_sigmaT4_label, d_gn, 0 );
-  tsk->computes(d_sigmaT4_label);
+  tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
+  tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
+  tsk->computes(d_sigmaT4Label);
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -183,7 +255,7 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
   if ( doCarryForward( radCalc_freq ) ) {
     printTask( patches, patches->get(0), dbg, "Doing RMCRTCommon::sigmaT4 carryForward (sigmaT4)" );
 
-    new_dw->transferFrom( old_dw, d_sigmaT4_label, patches, matls, true );
+    new_dw->transferFrom( old_dw, d_sigmaT4Label, patches, matls, true );
     return;
   }
 
@@ -200,8 +272,8 @@ RMCRTCommon::sigmaT4( const ProcessorGroup*,
     CCVariable< T > sigmaT4;             // sigma T ^4/pi
 
     DataWarehouse* temp_dw = new_dw->getOtherDataWarehouse(which_temp_dw);
-    temp_dw->get(temp,              d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
-    new_dw->allocateAndPut(sigmaT4, d_sigmaT4_label,      d_matl, patch);
+    temp_dw->get(temp,              d_compTempLabel,  d_matl, patch, Ghost::None, 0);
+    new_dw->allocateAndPut(sigmaT4, d_sigmaT4Label,   d_matl, patch);
 
     // set the cell iterator
     CellIterator iter = patch->getCellIterator();
@@ -320,7 +392,7 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
                          const IntVector& origin,
                          const Vector& Dx,
                          constCCVariable< T >& sigmaT4OverPi,
-                         constCCVariable<double>& abskg,
+                         constCCVariable< T >& abskg,
                          constCCVariable<int>& celltype,
                          unsigned long int& nRaySteps,
                          double& sumI,
@@ -382,8 +454,8 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
        prevCell = cur;
        double disMin = -9;          // Represents ray segment length.
 
-       double abskg_prev = abskg[prevCell];  // optimization
-       double sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
+       T abskg_prev = abskg[prevCell];  // optimization
+       T sigmaT4OverPi_prev = sigmaT4OverPi[prevCell];
        //__________________________________
        //  Determine which cell the ray will enter next
        if ( tMax[0] < tMax[1] ){        // X < Y
@@ -486,7 +558,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
 
      } //end domain while loop.  ++++++++++++++
 
-     double wallEmissivity = abskg[cur];
+     T wallEmissivity = abskg[cur];
 
      if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one.
        wallEmissivity = 1.0;
@@ -529,7 +601,7 @@ RMCRTCommon::sched_CarryForward_Var ( const LevelP& level,
                                      SchedulerP& sched,
                                      const VarLabel* variable)
 {
-  string taskname = "        carryForward_Var" + variable->getName();
+  string taskname = "        carryForward_Var: " + variable->getName();
   printSchedule(level, dbg, taskname);
 
   Task* tsk = scinew Task( taskname, this, &RMCRTCommon::carryForward_Var, variable );
@@ -600,5 +672,5 @@ template void
   RMCRTCommon::updateSumI ( Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< double >&, constCCVariable<double>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
 
 template void
-  RMCRTCommon::updateSumI ( Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< float >&, constCCVariable<double>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
+  RMCRTCommon::updateSumI ( Vector&, Vector&, const IntVector&, const Vector&, constCCVariable< float >&, constCCVariable<float>&, constCCVariable<int>&, unsigned long int&, double&, MTRand&);
 
