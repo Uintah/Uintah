@@ -87,7 +87,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   varLabelNames labelNames;
 #if 0
   labelNames->abskg    = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
-  labelNames.sigmaT4   = d_sigmaT4_label->getName().c_str();
+  labelNames.sigmaT4   = d_sigmaT4Label->getName().c_str();
   labelNames.divQ      = d_divQLabel->getName().c_str();
   labelNames.celltype  = d_cellTypeLabel->getName().c_str();
   labelNames.VRFlux    = d_VRFluxLabel->getName().c_str();
@@ -95,7 +95,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
   
   cout << " abskg:   " << d_abskgLabel->getName() << endl;
-  cout << " sigmaT4: " << d_sigmaT4_label->getName() << endl;
+  cout << " sigmaT4: " << d_sigmaT4Label->getName() << endl;
   cout << " divQ:    " << d_divQLabel->getName() << endl;
   cout << " cellType:" << d_cellTypeLabel->getName() << endl;
   cout << " VRFlux:  " << d_VRFluxLabel->getName() << endl;

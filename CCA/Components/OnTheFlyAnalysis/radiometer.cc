@@ -54,7 +54,7 @@ OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
   d_sharedState = sharedState;
 
 #ifdef USE_RADIOMETER
-  d_radiometer  = scinew Radiometer();
+  d_radiometer  = scinew Radiometer( TypeDescription::double_type );          // HARDWIRED: double;
 #endif
   d_module_ps   = module_spec;
   d_dataArchiver = dataArchiver;

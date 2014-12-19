@@ -29,6 +29,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -68,7 +69,7 @@ namespace Uintah{
 
     public:
 
-      Ray();
+      Ray( TypeDescription::Type FLT_DBL );         // This class can  Float or Double
       ~Ray();
 
       //__________________________________
@@ -246,7 +247,7 @@ namespace Uintah{
                             std::vector<IntVector>& regionLo,
                             std::vector<IntVector>& regionHi,
                             StaticArray< constCCVariable< T > >& sigmaT4Pi,
-                            StaticArray< constCCVariable<double> >& abskg,
+                            StaticArray< constCCVariable< T > >& abskg,
                             unsigned long int& size,
                             double& sumI,
                             MTRand& mTwister);
@@ -333,7 +334,8 @@ namespace Uintah{
                           const bool modifies,
                           const VarLabel* variable,
                           const int radCalc_freq);
-
+    
+    template< class T >
     void coarsen_Q ( const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
@@ -343,7 +345,15 @@ namespace Uintah{
                      const bool modifies,
                      Task::WhichDW this_dw,
                      const int radCalc_freq);
-
+                     
+    void coarsen_cellType( const ProcessorGroup*,
+                           const PatchSubset* patches,       
+                           const MaterialSubset*,      
+                           DataWarehouse*,            
+                           DataWarehouse* new_dw,            
+                           const int radCalc_freq );
+                     
+    template< class T >
     void ROI_Extents ( const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,

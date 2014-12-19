@@ -102,19 +102,26 @@ static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 //---------------------------------------------------------------------------
 // Class: Constructor.
 //---------------------------------------------------------------------------
-Ray::Ray() : RMCRTCommon()
-{  
-
-  d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
-  d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
-  d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
-  d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
-  d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
+Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
+{
+  // The outputput of RMCRT
   d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
-  d_cellTypeLabel        = VarLabel::create( "cellType",         CCVariable<int>::getTypeDescription() );
   d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
+
+  // internal variables for RMCRT
+  d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
+  d_ROI_LoCellLabel      = VarLabel::create( "ROI_loCell",       minvec_vartype::getTypeDescription() );
+  d_ROI_HiCellLabel      = VarLabel::create( "ROI_hiCell",       maxvec_vartype::getTypeDescription() );
+
+  if( d_FLT_DBL == TypeDescription::double_type ){
+    d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<double>::getTypeDescription() );
+    d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<double>::getTypeDescription() );
+  } else {
+    d_mag_grad_abskgLabel  = VarLabel::create( "mag_grad_abskg",   CCVariable<float>::getTypeDescription() );
+    d_mag_grad_sigmaT4Label= VarLabel::create( "mag_grad_sigmaT4", CCVariable<float>::getTypeDescription() );
+  }
 
   d_matlSet       = 0;
   d_isDbgOn       = dbg2.active();
@@ -123,7 +130,6 @@ Ray::Ray() : RMCRTCommon()
   d_gn            = Ghost::None;
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
-
   d_radiometer     = NULL;
 
   //_____________________________________________
@@ -166,7 +172,7 @@ Ray::Ray() : RMCRTCommon()
 //---------------------------------------------------------------------------
 Ray::~Ray()
 {
-  VarLabel::destroy( d_sigmaT4_label );
+  VarLabel::destroy( d_sigmaT4Label );
   VarLabel::destroy( d_mag_grad_abskgLabel );
   VarLabel::destroy( d_mag_grad_sigmaT4Label );
   VarLabel::destroy( d_flaggedCellsLabel );
@@ -214,7 +220,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  Radiometer setup
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
-    d_radiometer = scinew Radiometer();
+    d_radiometer = scinew Radiometer( d_FLT_DBL );
     bool getExtraInputs = false;
     d_radiometer->problemSetup( prob_spec, rad_ps, grid, sharedState, getExtraInputs );
   }
@@ -314,9 +320,9 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
   if(d_onOff_SetBCs == false ) {
    return;
   }
-  
+
   ProblemSpecP rmcrt_ps = rmcrtps;
-  
+
   //__________________________________
   // BC bulletproofing
   bool ignore_BC_bulletproofing  = false;
@@ -332,8 +338,8 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
     proc0cout << "______________________________________________________________________\n\n" << endl;
 
   } else {
-    is_BC_specified(root_ps, d_temperatureLabel->getName(), mss);
-    is_BC_specified(root_ps, d_abskgLabel->getName(),       mss);
+    is_BC_specified(root_ps, d_compTempLabel->getName(), mss);
+    is_BC_specified(root_ps, d_abskgLabel->getName(),    mss);
 
     Vector periodic;
     ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
@@ -363,8 +369,8 @@ Ray::sched_rayTrace( const LevelP& level,
                      const int radCalc_freq )
 {
   std::string taskname = "Ray::rayTrace";
-  Task *tsk;
-  
+  Task *tsk = NULL;
+
   if (Parallel::usingDevice()) {          // G P U
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
@@ -372,11 +378,11 @@ Ray::sched_rayTrace( const LevelP& level,
     } else {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-    
+
     }
     tsk->usesDevice(true);
   } else {                                // C P U
-  
+
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
       tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
@@ -400,10 +406,10 @@ Ray::sched_rayTrace( const LevelP& level,
     Ghost::GhostType  gac  = Ghost::AroundCells;
     dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl;
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-    tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
+    tsk->requires( sigma_dw ,    d_sigmaT4Label,  gac, SHRT_MAX);
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
-  
+
   // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
   if (!(Uintah::Parallel::usingDevice())) {
     // needed for carry Forward
@@ -430,11 +436,11 @@ Ray::sched_rayTrace( const LevelP& level,
       // needed for carry Forward                       CUDA HACK
       tsk->requires(Task::OldDW, VRFluxLabel, d_gn, 0);
     }
-    
+
     tsk->modifies( VRFluxLabel );
   }
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
-  
+
 }
 
 //---------------------------------------------------------------------------
@@ -455,7 +461,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
 {
 
   const Level* level = getLevel(patches);
-  
+
   // Control code to recompile the task graph
   // This provides temporal scheduling mechanism
   doRecompileTaskgraph( radCalc_freq );
@@ -485,11 +491,11 @@ Ray::rayTrace( const ProcessorGroup* pc,
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
   constCCVariable< T > sigmaT4OverPi;
-  constCCVariable<double> abskg;
+  constCCVariable< T > abskg;
   constCCVariable<int>    celltype;
 
   abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC);
-  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC);
+  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level, domainLo_EC, domainHi_EC);
   celltype_dw->getRegion( celltype ,     d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC);
 
   double start=clock();
@@ -615,7 +621,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
         Vector ray_location;
         rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);
 
-        updateSumI<T>( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI< T >( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
       }  // Ray loop
 
@@ -668,14 +674,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     return;
   }
   std::string taskname = "Ray::rayTrace_dataOnion";
-  
-#if 0  
-  Task* tsk= scinew Task( taskname, this, &Ray::rayTrace_dataOnion,
-                          modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
 
-#endif
-  Task* tsk;
-  
+  Task* tsk = NULL;
+
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
     tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<double>,
                         modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
@@ -700,10 +701,10 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
     int maxElem = Max( d_halo.x(), d_halo.y(), d_halo.z() );
     tsk->requires(abskg_dw, d_abskgLabel,     gac, maxElem);
-    tsk->requires(sigma_dw, d_sigmaT4_label,  gac, maxElem);
+    tsk->requires(sigma_dw, d_sigmaT4Label,   gac, maxElem);
   } else {                                        // we don't know the number of ghostCells so get everything
     tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
-    tsk->requires(sigma_dw, d_sigmaT4_label,  gac, SHRT_MAX);
+    tsk->requires(sigma_dw, d_sigmaT4Label,   gac, SHRT_MAX);
   }
 
   // needed for carry Forward
@@ -719,8 +720,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // coarser level
   int nCoarseLevels = maxLevels;
   for (int l=1; l<=nCoarseLevels; ++l){
-    tsk->requires(abskg_dw, d_abskgLabel,     allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
-    tsk->requires(sigma_dw, d_sigmaT4_label,  allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
+    tsk->requires(abskg_dw, d_abskgLabel,   allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
+    tsk->requires(sigma_dw, d_sigmaT4Label, allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
   }
 
   if( modifies_divQ ){
@@ -759,7 +760,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
    //__________________________________
   //  Carry Forward (old_dw -> new_dw)
   if ( doCarryForward( radCalc_freq ) ) {
-    printTask( fineLevel->getPatch(0), dbg, "Coing Ray::rayTrace_dataOnion carryForward ( divQ )" );
+    printTask( finePatches, dbg, "Doing Ray::rayTrace_dataOnion carryForward ( divQ )" );
 
     new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
     new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
@@ -776,9 +777,9 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   //__________________________________
   // retrieve the coarse level data
   // compute the level dependent variables that are constant
-  StaticArray< constCCVariable<double> > abskg(maxLevels);
+  StaticArray< constCCVariable< T > > abskg(maxLevels);
   StaticArray< constCCVariable< T > >sigmaT4OverPi(maxLevels);
-  constCCVariable<double> abskg_fine;
+  constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
 
   DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
@@ -795,8 +796,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       IntVector domainLo_EC, domainHi_EC;
       level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
 
-      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
-      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
+      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , level.get_rep(), domainLo_EC, domainHi_EC);
       dbg << " getting coarse level data L-" <<L<< endl;
     }
     Vector dx = level->dCell();
@@ -822,7 +823,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
     dbg << " getting fine level data across L-" <<L<< " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi<<endl;
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-    sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
   }
 
   abskg_fine         = abskg[maxLevels-1];
@@ -852,8 +853,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       int L = maxLevels - 1;
       dbg << " getting fine level data across L-" <<L<< endl;
 
-      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4_label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       abskg_fine         = abskg[L];
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
     }
@@ -1164,10 +1165,10 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
 {
 
   std::string taskname = "Ray::setBoundaryConditions";
-  
-  Task* tsk;
+
+  Task* tsk = NULL;
   if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-  
+
     tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< double >,
                       temp_dw, radCalc_freq, backoutTemp );
   } else {
@@ -1178,10 +1179,10 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   printSchedule(level,dbg,taskname);
 
   if(!backoutTemp){
-    tsk->requires( temp_dw, d_temperatureLabel, Ghost::None,0 );
+    tsk->requires( temp_dw, d_compTempLabel, Ghost::None,0 );
   }
 
-  tsk->modifies( d_sigmaT4_label );
+  tsk->modifies( d_sigmaT4Label );
   tsk->modifies( d_abskgLabel );
   tsk->modifies( d_cellTypeLabel );
 
@@ -1220,14 +1221,14 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
       double sigma_over_pi = d_sigma/M_PI;
 
       CCVariable<double> temp;
-      CCVariable<double> abskg;
+      CCVariable< T > abskg;
       CCVariable< T > sigmaT4OverPi;
       CCVariable<int> cellType;
 
       new_dw->allocateTemporary(temp,  patch);
-      new_dw->getModifiable( abskg,         d_abskgLabel,     d_matl, patch );
-      new_dw->getModifiable( sigmaT4OverPi, d_sigmaT4_label,  d_matl, patch );
-      new_dw->getModifiable( cellType,      d_cellTypeLabel,  d_matl, patch );
+      new_dw->getModifiable( abskg,         d_abskgLabel,    d_matl, patch );
+      new_dw->getModifiable( sigmaT4OverPi, d_sigmaT4Label,  d_matl, patch );
+      new_dw->getModifiable( cellType,      d_cellTypeLabel, d_matl, patch );
       //__________________________________
       // loop over boundary faces and backout the temperature
       // one cell from the boundary.  Note that the temperature
@@ -1250,16 +1251,16 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
         // on the copy and do not put it back in the DW.
         DataWarehouse* t_dw = new_dw->getOtherDataWarehouse( temp_dw );
         constCCVariable<double> varTmp;
-        t_dw->get(varTmp, d_temperatureLabel,   d_matl, patch, Ghost::None, 0);
+        t_dw->get(varTmp, d_compTempLabel,   d_matl, patch, Ghost::None, 0);
         temp.copyData(varTmp);
       }
 
 
       //__________________________________
       // set the boundary conditions
-      setBC(abskg,    d_abskgLabel->getName(),       patch, d_matl);
-      setBC(temp,     d_temperatureLabel->getName(), patch, d_matl);
-      setBC(cellType, d_cellTypeLabel->getName(),    patch, d_matl);
+      setBC(abskg,    d_abskgLabel->getName(),     patch, d_matl);
+      setBC(temp,     d_compTempLabel->getName(),  patch, d_matl);
+      setBC(cellType, d_cellTypeLabel->getName(),  patch, d_matl);
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
@@ -1467,11 +1468,15 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
 
   printSchedule(level,dbg,"Ray::ROI_Extents");
 
-  Task* tsk = scinew Task( "Ray::ROI_Extents", this,
-                           &Ray::ROI_Extents);
+  Task* tsk = NULL;
+  if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk= scinew Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< double >);
+  } else {
+    tsk= scinew Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< float >);
+  }
 
-  tsk->requires( Task::NewDW, d_abskgLabel,     d_gac, 1 );
-  tsk->requires( Task::NewDW, d_sigmaT4_label,  d_gac, 1 );
+  tsk->requires( Task::NewDW, d_abskgLabel,    d_gac, 1 );
+  tsk->requires( Task::NewDW, d_sigmaT4Label,  d_gac, 1 );
   tsk->computes( d_mag_grad_abskgLabel );
   tsk->computes( d_mag_grad_sigmaT4Label );
   tsk->computes( d_flaggedCellsLabel );
@@ -1484,6 +1489,7 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
 
 //______________________________________________________________________
 //
+template< class T >
 void Ray::ROI_Extents ( const ProcessorGroup*,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
@@ -1498,15 +1504,15 @@ void Ray::ROI_Extents ( const ProcessorGroup*,
     printTask(patches, patch,dbg,"Doing ROI_Extents");
 
     //__________________________________
-    constCCVariable<double> abskg;
-    constCCVariable<double> sigmaT4;
+    constCCVariable< T > abskg;
+    constCCVariable< T > sigmaT4;
 
-    CCVariable<double> mag_grad_abskg;
-    CCVariable<double> mag_grad_sigmaT4;
+    CCVariable< T > mag_grad_abskg;
+    CCVariable< T > mag_grad_sigmaT4;
     CCVariable<int> flaggedCells;
 
     new_dw->get(abskg,    d_abskgLabel ,     d_matl , patch, d_gac,1);
-    new_dw->get(sigmaT4,  d_sigmaT4_label ,  d_matl , patch, d_gac,1);
+    new_dw->get(sigmaT4,  d_sigmaT4Label ,  d_matl , patch, d_gac,1);
 
     new_dw->allocateAndPut(mag_grad_abskg,   d_mag_grad_abskgLabel,    0, patch);
     new_dw->allocateAndPut(mag_grad_sigmaT4, d_mag_grad_sigmaT4Label,  0, patch);
@@ -1557,8 +1563,18 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,   d_abskgLabel,    radCalc_freq );
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4, d_sigmaT4_label, radCalc_freq );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel,    radCalc_freq );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4,  d_sigmaT4Label, radCalc_freq );
+
+    //__________________________________
+    //  HACK: initialize cell type to 0 on coarse levels.
+    //  We don't yet know what to do
+    Task* tsk = scinew Task( "Ray::coarsen_cellType", this,
+                             &Ray::coarsen_cellType, radCalc_freq );
+    
+    tsk->requires(Task::OldDW, d_cellTypeLabel, d_gn, 0);  // needed for carryForward
+    tsk->computes( d_cellTypeLabel );
+    sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet );
   }
 }
 
@@ -1573,21 +1589,38 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
   string taskname = "        Coarsen_Q_" + variable->getName();
   printSchedule(coarseLevel,dbg,taskname);
 
-  Task* t = scinew Task( taskname, this, &Ray::coarsen_Q,
-                         variable, modifies, this_dw, radCalc_freq );
+  const Uintah::TypeDescription* td = variable->typeDescription();
+  const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();
 
-  if(modifies){
-    t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-    t->modifies(variable);
-  }else{
-    t->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
-    t->computes(variable);
+  Task* tsk = NULL;
+  switch( subtype ) {
+    case TypeDescription::double_type:
+      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >,
+                         variable, modifies, this_dw, radCalc_freq );
+      break;
+    case TypeDescription::float_type:
+      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< float >,
+                         variable, modifies, this_dw, radCalc_freq );
+      break;
+    default:
+      throw InternalError("Ray::sched_Coarsen_Q: (CCVariable) invalid data type", __FILE__, __LINE__); 
   }
 
-  sched->addTask( t, coarseLevel->eachPatch(), d_matlSet );
+  if(modifies){
+    tsk->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    tsk->modifies(variable);
+  }else{
+    tsk->requires(this_dw, variable, 0, Task::FineLevel, 0, Task::NormalDomain, d_gn, 0);
+    tsk->requires(Task::OldDW, variable, d_gn, 0);  // needed for carryForward
+    tsk->computes(variable);
+  }
+
+  sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet );
 }
 
 //______________________________________________________________________
+//
+template < class T >
 void Ray::coarsen_Q ( const ProcessorGroup*,
                       const PatchSubset* patches,
                       const MaterialSubset* matls,
@@ -1598,6 +1631,12 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                       Task::WhichDW which_dw,
                       const int radCalc_freq )
 {
+  if ( doCarryForward( radCalc_freq ) ) {
+    bool replaceVar = true;
+    new_dw->transferFrom( old_dw, variable, patches, matls, replaceVar );
+    printTask(patches,dbg,"Doing Ray::coarsen_Q carryForward : " + variable->getName());
+    return;
+  }
 
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
@@ -1616,7 +1655,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
 
-      CCVariable<double> Q_coarse;
+      CCVariable< T > Q_coarse;
       if(modifies){
         new_dw->getModifiable(Q_coarse,  variable, matl, coarsePatch);
       }else{
@@ -1631,6 +1670,34 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                            coarsePatch, coarseLevel, fineLevel);
     }
   }  // course patch loop
+}
+
+//______________________________________________________________________
+//    Initialize cellType on the coarser Levels
+void Ray::coarsen_cellType( const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
+                            const int radCalc_freq )
+{
+  // Only run if it's time
+  if ( doCarryForward( radCalc_freq ) ) {
+    bool replaceVar = true;
+    new_dw->transferFrom( old_dw, d_cellTypeLabel, patches, matls, replaceVar );
+    printTask(patches,dbg,"Doing Ray::coarsen_cellType carryForward "+ d_cellTypeLabel->getName());
+    return;
+  }
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing Ray::coarsen_cellType "+ d_cellTypeLabel->getName());
+
+    CCVariable< int > cellType;
+    new_dw->allocateAndPut( cellType, d_cellTypeLabel, d_matl, patch );
+    cellType.initialize( 0 );
+  }
 }
 
 //______________________________________________________________________
@@ -1650,7 +1717,7 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
                            vector<IntVector>& regionLo,
                            vector<IntVector>& regionHi,
                            StaticArray< constCCVariable< T > >& sigmaT4OverPi,
-                           StaticArray< constCCVariable<double> >& abskg,
+                           StaticArray< constCCVariable< T > >& abskg,
                            unsigned long int& nRaySteps,
                            double& sumI,
                            MTRand& mTwister)
@@ -1959,7 +2026,7 @@ template void Ray::setBoundaryConditions< double >( const ProcessorGroup*,
                                                     Task::WhichDW ,
                                                     const int ,
                                                     const bool );
-                                               
+
 template void Ray::setBoundaryConditions< float >( const ProcessorGroup*,
                                                    const PatchSubset* ,
                                                    const MaterialSubset*,
@@ -2002,7 +2069,7 @@ template void  Ray::updateSumI_ML< float> ( Vector&,
                                              vector<IntVector>&,
                                              vector<IntVector>&,
                                              StaticArray< constCCVariable< float > >& sigmaT4OverPi,
-                                             StaticArray< constCCVariable<double> >& abskg,
+                                             StaticArray< constCCVariable< float > >& abskg,
                                              unsigned long int& ,
                                              double& ,
                                              MTRand&);
