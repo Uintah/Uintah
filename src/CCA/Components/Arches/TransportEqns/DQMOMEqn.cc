@@ -118,6 +118,9 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   d_addSources = true; 
   d_addExtraSources = false; 
   db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0); 
+  if ( !d_weight ){ 
+    db->require( "nominal_value", d_nominal ); 
+  }
 
   // Models (source terms):
   for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
@@ -856,10 +859,10 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
           IntVector c = *iter;
  
           //if (w[c] > d_w_small){
-          if (w[c] > 0.0){
+          if (w[c] > d_w_small){
             ic[c] = (wa[c]/w[c])*d_scalingConstant;
           }  else {
-            ic[c] = 0.0;
+            ic[c] = d_nominal;
           }
         }
       }
