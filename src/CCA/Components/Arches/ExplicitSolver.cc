@@ -516,7 +516,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );
+        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
       }
 
 

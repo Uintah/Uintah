@@ -130,7 +130,6 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find gas phase specificheat.",__FILE__,__LINE__);
   }
 
-
   std::string modelName;
   std::string baseNameAbskp;
   std::string baseNameAbskg;
@@ -436,9 +435,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       //particle_velocity[0]=6.54863;
       //particle_velocity[1]=0.339306;
       //particle_velocity[2]=0.334942;
-
-
-
 
       double FSum = 0.0;
 

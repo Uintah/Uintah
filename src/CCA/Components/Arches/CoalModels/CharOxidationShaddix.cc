@@ -337,6 +337,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         gas_char_rate[c] = 0.0;
         particle_temp_rate[c] = 0.0;
         surface_rate[c] = 0.0;
+        //if (c==IntVector(2,25,25)){
+        //cout << "BEN 3 (small): char" << d_quadNode << " " << char_rate[c] << endl;
+        //}
       } else {
         double small = 1e-16;
 
@@ -485,6 +488,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         particle_temp_rate[c] = particle_temp_rate_*weightph;
         surface_rate[c] = _WC*q;  // in kg/s/m^2
         PO2surf_[c] = PO2_surf;
+        //if (c==IntVector(2,25,25)){
+        //cout << "BEN 3: char" << d_quadNode << " " << char_rate[c] << " " << gas_char_rate[c] << endl;
+        //}
       }
     }//end cell loop
   }//end patch loop

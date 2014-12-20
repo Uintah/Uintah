@@ -139,7 +139,6 @@ private:
   /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
   double props(double Tg, double Tp);
 
-
   // labels used for getting required variables later on in the calculation
   const VarLabel* _particle_temperature_varlabel;
   const VarLabel* _gas_temperature_varlabel;
