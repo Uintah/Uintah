@@ -33,7 +33,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       std::string name;
       std::string type; 
-      db_model->getAttribute("name", name);
+      db_model->getAttribute("label", name);
       db_model->getAttribute("type", type);
 
       if ( type == "coal_density" ){ 
@@ -42,7 +42,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk ); 
 
         _active_tasks.push_back(name); 
-        //add to a subgroup? 
+        _coal_models.push_back(name); 
       } else { 
         throw InvalidValue("Error: PropertyModel type not recognized.",__FILE__,__LINE__); 
       }
@@ -60,7 +60,7 @@ PropertyModelFactoryV2::build_all_tasks( ProblemSpecP& db )
 
     for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != 0; db_model=db_model->findNextBlock("model")){ 
       std::string name;
-      db_model->getAttribute("name", name);
+      db_model->getAttribute("label", name);
       TaskInterface* tsk = retrieve_task(name); 
       tsk->problemSetup(db_model); 
       tsk->create_local_labels(); 
