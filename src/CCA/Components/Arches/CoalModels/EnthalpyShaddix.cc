@@ -130,28 +130,6 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find gas phase specificheat.",__FILE__,__LINE__);
   }
 
-  if ( d_radiation ){
-    // get radation vol q label 
-    if (VarLabel::find("radiationVolq")) {
-      _volq_varlabel  = VarLabel::find("radiationVolq"); 
-    } else {
-      throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find radiationVolq.",__FILE__,__LINE__);
-    }
-    // get abskg label 
-    if (VarLabel::find("abskg")) {
-     _abskg_varlabel = VarLabel::find("abskg");
-    } else {
-      throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find abskg.",__FILE__,__LINE__);
-    }
-    // get abskp label 
-    if (VarLabel::find("abskp")) {
-     _abskp_varlabel = VarLabel::find("abskp");
-    } else {
-      throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find abskp.",__FILE__,__LINE__);
-    }
-  }
-
-  
 
   std::string modelName;
   std::string baseNameAbskp;
@@ -197,7 +175,12 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
         break;
       }
     }
-    std::string abskp_string = PropertyHelper::append_env(baseNameAbskp, d_quadNode); 
+    if (VarLabel::find("radiationVolq")) {
+      _volq_varlabel  = VarLabel::find("radiationVolq"); 
+    } else {
+      throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find radiationVolq.",__FILE__,__LINE__);
+    }
+    std::string abskp_string = PropertyHelper::append_env(baseNameAbskp, d_quadNode);
     _abskp_varlabel = VarLabel::find(abskp_string);
     _abskg_varlabel = VarLabel::find(baseNameAbskg);
   }
@@ -434,7 +417,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       Vector gas_velocity = gasVel[c];
       Vector particle_velocity = partVel[c];
 
-      //BENS verification
+      //Verification
       //temperatureph=1206.4;
       //specific_heatph=18356.4;
       //radiationVolqINph=0;
@@ -510,9 +493,9 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         double hc = _Hc0 + hint * _RdMW;
         double hh = _Hh0 + hint * _RdC;
         Q_reaction = charoxi_temp_sourceph;
-        heat_rate_ = ((Q_convection + Q_radiation)*weightph + _ksi*Q_reaction - devol_gas_sourceph*hc - chargas_sourceph*hh)/
+        heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - devol_gas_sourceph*hc - chargas_sourceph*hh)/
                      (_enthalpy_scaling_constant*_weight_scaling_constant);
-        gas_heat_rate_ = -weightph*(Q_convection + Q_radiation) - _ksi*Q_reaction + devol_gas_sourceph*hc + chargas_sourceph*hh;
+        gas_heat_rate_ = -weightph*Q_convection + Q_radiation - _ksi*Q_reaction + devol_gas_sourceph*hc + chargas_sourceph*hh;
       }
   
       heat_rate[c] = heat_rate_;

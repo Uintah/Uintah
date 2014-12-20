@@ -279,7 +279,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
         double conv_sourceph=conv_source[c];
         double diff_sourceph=diff_source[c];
 
-        // Bens verification
+        // Verification
         //denph=0.394622;
         //rho_pph=1300; 
         //l_pph=2e-05; 
@@ -321,10 +321,8 @@ DragModel::computeModel( const ProcessorGroup* pc,
           model[c] = weightph * ( f / t_p * (gas_vel[_dir]-part_vel[_dir])+_gravity[_dir]) / (_vel_scaling_constant*_weight_scaling_constant);
           gas_source[c] = -weightph * rho_pph / 6.0 * _pi * f / t_p * ( gas_vel[_dir]-part_vel[_dir] ) * pow(l_pph,3.0);
         } else {
-          model[c] = weightph * (gas_vel[_dir]-part_vel[_dir]) / dt + conv_sourceph - diff_sourceph; 
-          //gas_source[c] = -weightph * rho_pph / 6.0 * _pi * Drag_f * pow(l_pph,3.0);
+          model[c] = (weightph/(_vel_scaling_constant*_weight_scaling_constant)) * (gas_vel[_dir]-part_vel[_dir]) / dt + conv_sourceph - diff_sourceph; 
           gas_source[c] = 0.0;
-          cout << "BEN 3: dragclipped"<< _dir << " qn"<< d_quadNode << " c: " << c << " " << model[c] << " " << gas_source[c] << " timescale: " << tau << " rhop: " << rho_pph << endl;
         }
 
       } else {
@@ -333,9 +331,6 @@ DragModel::computeModel( const ProcessorGroup* pc,
           gas_source[c] = 0.0;
 
       }
-      //if (c==IntVector(2,25,25)){
-      //  cout << "BEN 3: drag"<< _dir << " qn"<< d_quadNode << " " << model[c] << " " << gas_source[c] << endl;
-      //}
     }
   }
 }

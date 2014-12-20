@@ -102,7 +102,6 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
      }
    }
    //-------------------------------------------------------//
-    
 
     std::string particle_calculator_type; 
     db_calc->findBlock("particles")->getAttribute("type",particle_calculator_type); 
@@ -224,7 +223,7 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     }
     for ( int i = 0; i < _nQn_part; i++ ){
       std::string label_name_s = _base_size_label_name + "_qn"; 
-      std::string label_name_t = _base_temperature_label_name + "_qn"; 
+      std::string label_name_t = _base_temperature_label_name + "_"; 
       std::string label_name_w =   "w_qn"; 
       std::stringstream out; 
       out << i; 

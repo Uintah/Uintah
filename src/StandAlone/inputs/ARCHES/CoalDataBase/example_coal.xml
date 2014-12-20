@@ -1,18 +1,14 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <Uintah_Include>
-  <CoalProperties>
-
-    <!-- pointers for the names -->
-    <raw_coal label="RCmass"/>
-    <char label="Charmass"/>
-    <density label="rho_coal"/>
-
+  <Coal>
+    <Properties>
 
 
     <!-- REQUIRED ARCHES/PYTHON INPUTS -->
 
     <diameter_distribution>[4e-05,6.3e-05,10e-05]</diameter_distribution><!-- [m] -->
     <density>1300.0</density><!-- [kg/m^3] -->
+    <temperature>300.0</temperature><!-- initial particle temperature [K] -->
     <ultimate_analysis>
       <C>0.683527840069441</C>
       <H>0.044220514926679</H>
@@ -33,11 +29,14 @@
     <Shaddix_char_coefficients>[0.153e-4,0.24e-4,0.219e-4,293,344.0,45.5e3,0.18,-393509.0,-110525.0]</Shaddix_char_coefficients>
     <!-- Shaddix char oxidation coefficients in the following order:  -->
     <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
-
+    <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
+    <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+    <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
 
 
     <!-- OPTIONAL INPUTS -->
     <ksi>0.5</ksi><!-- Optional Fraction of the heat released by char oxidation that goes to the particle (default=1.0) -->
 
-  </CoalProperties>
+    </Properties>
+  </Coal>
 </Uintah_Include>

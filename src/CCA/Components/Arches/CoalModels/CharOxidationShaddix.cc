@@ -241,6 +241,7 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   tsk->requires( which_dw, _H2O_varlabel, gn, 0 );
   tsk->requires( which_dw, _N2_varlabel, gn, 0 );
   tsk->requires( which_dw, _MW_varlabel, gn, 0 );
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
   
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
   tsk->requires( which_dw, _devolCharLabel, gn, 0);
@@ -267,6 +268,10 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    delt_vartype DT;
+    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    double dt = DT;
 
     CCVariable<double> char_rate;
     CCVariable<double> gas_char_rate; 
@@ -332,9 +337,6 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         gas_char_rate[c] = 0.0;
         particle_temp_rate[c] = 0.0;
         surface_rate[c] = 0.0;
-        //if (c==IntVector(2,25,25)){
-        //cout << "BEN 3 (small): char" << d_quadNode << " " << char_rate[c] << endl;
-        //}
       } else {
         double small = 1e-16;
 
@@ -352,7 +354,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         double MWmixph=MWmix[c];
         double devolCharph=devolChar[c];
         
-        //BEN VERIFICATION
+        //VERIFICATION
         //denph=0.394622;
         //temperatureph=1206.4;
         //particle_temperatureph=530.79;
@@ -475,8 +477,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         }
 
         char_production_rate_ = devolCharph;
-        char_reaction_rate_ = -(min(_pi*(pow(lengthph,2.0))*_WC*q, char_massph+rawcoal_massph+char_production_rate_/weightph));
-
+        char_reaction_rate_ = - 1.0 * min( _pi*( pow(lengthph,2.0))*_WC*q , char_massph+rawcoal_massph+char_production_rate_/weightph*dt );
         particle_temp_rate_ = char_reaction_rate_/_WC/(1.0+CO2CO)*(CO2CO*_HF_CO2 + _HF_CO); // in J/(s.#)
           
         char_rate[c] = (char_reaction_rate_*weightph + char_production_rate_)/(_char_scaling_constant*_weight_scaling_constant);
@@ -484,9 +485,6 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         particle_temp_rate[c] = particle_temp_rate_*weightph;
         surface_rate[c] = _WC*q;  // in kg/s/m^2
         PO2surf_[c] = PO2_surf;
-        //if (c==IntVector(2,25,25)){
-        //cout << "BEN 3: char" << d_quadNode << " " << char_rate[c] << " " << gas_char_rate[c] << endl;
-        //}
       }
     }//end cell loop
   }//end patch loop

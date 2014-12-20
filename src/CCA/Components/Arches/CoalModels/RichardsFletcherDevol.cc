@@ -194,6 +194,7 @@ RichardsFletcherDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
 
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
@@ -264,7 +265,7 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
         double charmassph=charmass[c];
         double weightph=weight[c];
 
-        //BEN VERIFICATION
+        //VERIFICATION
         //rcmassph=4.99019e-12;
         //temperatureph=530.79;
         //charmassph=-7.1393e-18;
@@ -298,9 +299,6 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
         gas_devol_rate[c] = 0;
         char_rate[c] = 0;
       }
-      //if (c==IntVector(2,25,25)){
-      //  cout << "BEN 3: devol" << d_quadNode << " " << devol_rate[c] << " " << gas_devol_rate[c] << " Tp: " << temperature[c] << " w: " << weight[c] << endl;
-      //}
     }//end cell loop
   }//end patch loop
 }
