@@ -151,6 +151,57 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     }
   }
 
+  
+
+  std::string modelName;
+  std::string baseNameAbskp;
+  std::string baseNameAbskg;
+
+  if (d_radiation ) {
+    ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
+        db_model = db_model->findNextBlock("model")){
+      db_model->getAttribute("type", modelName);
+      if (modelName=="radiation_properties"){
+        if  (db_model->findBlock("calculator") == 0){
+          if(qn ==0) {
+            proc0cout <<"\n///-------------------------------------------///\n";
+            proc0cout <<"WARNING: No radiation particle properties computed!\n";
+            proc0cout <<"Particles will not interact with radiation!\n";
+            proc0cout <<"///-------------------------------------------///\n";
+          }
+          d_radiation = false;
+          break;
+        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+          if(qn ==0) {
+            proc0cout <<"\n///-------------------------------------------///\n";
+            proc0cout <<"WARNING: No radiation particle properties computed!\n";
+            proc0cout <<"Particles will not interact with radiation!\n";
+            proc0cout <<"///-------------------------------------------///\n";
+          }
+          d_radiation = false;
+          break;
+        }
+        db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
+        db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",baseNameAbskg);
+        break;
+      }
+      if  (db_model== 0){
+          if(qn ==0) {
+            proc0cout <<"\n///-------------------------------------------///\n";
+            proc0cout <<"WARNING: No radiation particle properties computed!\n";
+            proc0cout <<"Particles will not interact with radiation!\n";
+            proc0cout <<"///-------------------------------------------///\n";
+          }
+        d_radiation = false;
+        break;
+      }
+    }
+    std::string abskp_string = PropertyHelper::append_env(baseNameAbskp, d_quadNode); 
+    _abskp_varlabel = VarLabel::find(abskp_string);
+    _abskg_varlabel = VarLabel::find(baseNameAbskg);
+  }
+
   // get computed rates from devolatilization model 
   DevolModelMap devolmodels_ = modelFactory.retrieve_devol_models();
   for( DevolModelMap::iterator iModel = devolmodels_.begin(); iModel != devolmodels_.end(); ++iModel ) {
@@ -332,9 +383,11 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     which_dw->get( specific_heat, _gas_cp_varlabel, matlIndex, patch, gn, 0 );  // in J/kg/K
     constCCVariable<double> radiationVolqIN;
     constCCVariable<double> abskgIN;
+    constCCVariable<double> abskp; 
     if ( d_radiation ){ 
       which_dw->get( radiationVolqIN, _volq_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskgIN, _abskg_varlabel, matlIndex, patch, gn, 0);
+      which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0);
     }
     constCCVariable<Vector> gasVel; 
     which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
@@ -344,8 +397,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     which_dw->get( devol_gas_source, _devolgas_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> chargas_source;
     which_dw->get( chargas_source, _chargas_varlabel, matlIndex, patch, gn, 0 );
-    constCCVariable<double> abskp; 
-    which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0); 
 
     // get particle phase variables 
     constCCVariable<double> length;
