@@ -89,18 +89,18 @@ void CoalModelFactory::problemSetup(const ProblemSpecP& params)
     d_unweighted = false; 
 
   // Grab coal properties from input file
-  ProblemSpecP db_coalProperties = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CoalProperties");
-  if( db_coalProperties ) {
-    db_coalProperties->require("C", yelem[0]);
-    db_coalProperties->require("H", yelem[1]);
-    db_coalProperties->require("N", yelem[2]);
-    db_coalProperties->require("O", yelem[3]);
-    db_coalProperties->require("S", yelem[4]);
-  } else {
-    // not a problem yet
-    //string err_msg="Missing <Coal_Properties> section in input file!";
-    //throw ProblemSetupException(err_msg,__FILE__,__LINE__);
-  }
+  //ProblemSpecP db_coalProperties = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CoalProperties");
+  //if( db_coalProperties ) {
+    //db_coalProperties->require("C", yelem[0]);
+    //db_coalProperties->require("H", yelem[1]);
+    //db_coalProperties->require("N", yelem[2]);
+    //db_coalProperties->require("O", yelem[3]);
+    //db_coalProperties->require("S", yelem[4]);
+  //} else {
+    //// not a problem yet
+    ////string err_msg="Missing <Coal_Properties> section in input file!";
+    ////throw ProblemSetupException(err_msg,__FILE__,__LINE__);
+  //}
 
   ProblemSpecP db_coalParticleCalculation = db->findBlock("coalParticleCalculation");
   if( !db_coalParticleCalculation ) {

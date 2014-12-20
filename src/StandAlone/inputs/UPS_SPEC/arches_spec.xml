@@ -20,6 +20,12 @@
                                                                           co2, h2o, soot, specific_heat'"/>
       </VarID>
 
+      <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
+        <model                          spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'coal_density'">
+        </model>
+      </PropertyModelsV2>
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
@@ -253,6 +259,42 @@
 
       </EfficiencyCalculator>
 
+      <Coal_Properties                  spec="OPTIONAL NO_DATA">
+
+        <raw_coal                       spec="OPTIONAL NO_DATA" 
+                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the raw coal internal coordinate -->
+        <char                           spec="OPTIONAL NO_DATA" 
+                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the char internal coordinate -->
+        <particle_sizes                 spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
+        <particle_density               spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
+        <as_received                    spec="REQUIRED MULTIPLE_DOUBLES"/>                                              
+        
+        <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
+        <ksi                            spec="OPTIONAL DOUBLE" /> <!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
+        <raw_coal_enthalpy              spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for raw coal at 298.15 K -->
+        <char_enthalpy                  spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for char at 298.15 K -->
+        <ash_enthalpy                   spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for ash at 298.15 K -->
+        <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+        <!-- Yamamto 1 step rate coefficients in the following order:  -->
+        <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
+        <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+        <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  --> 
+        <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+        <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
+        <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+        <!-- Shaddix char oxidation coefficients in the following order:  -->
+        <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
+       
+
+
+        <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
+        <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
+        <compute_scaling_const          spec="OPTIONAL STRING" /> <!-- used in python script only -->
+        <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
+        <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
+      </Coal_Properties>
       <CoalProperties                  spec="OPTIONAL NO_DATA">
 
         <raw_coal                       spec="OPTIONAL NO_DATA" 
@@ -1300,7 +1342,7 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
-                                                                          XDrag, YDrag, ZDrag, 
+                                                                          XDrag, YDrag, ZDrag, Drag,
                                                                           ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
@@ -1323,6 +1365,10 @@
 
             <!-- Constant Model -->
             <constant                   spec="OPTIONAL DOUBLE"/>
+
+            <!-- Drag -->
+            <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'" 
+                                        need_applies_to="Drag"/>
 
           </model>
         </Models>

@@ -18,12 +18,19 @@ namespace Uintah{
     void build_all_tasks( ProblemSpecP& db ); 
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) { 
-      throw InvalidValue("Error: No task subsets here yet. ", __FILE__,__LINE__);
+
+      if ( subset == "coal_models"){ 
+        return _coal_models; 
+      } else { 
+        throw InvalidValue("Error: No task subsets here yet. ", __FILE__,__LINE__);
+      }
     }
 
   protected: 
 
   private: 
+
+    std::vector<std::string> _coal_models; 
 
   };
 }

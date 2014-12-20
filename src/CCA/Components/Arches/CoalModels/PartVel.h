@@ -101,6 +101,15 @@ public:
 
 private:
 
+  std::string get_env_name( const std::string base, const int i ){
+    std::string name; 
+    name = base + "_"; 
+    std::stringstream env;
+    env << i; 
+    name += env.str(); 
+    return name;
+  }
+
   ArchesLabel* d_fieldLabels; 
   
   // velocity model paramters
@@ -131,6 +140,8 @@ private:
   bool d_bala;
   bool d_drag; 
   bool d_unweighted;
+
+  std::string _uname, _vname, _wname; 
 
  }; //end class PartVel
 

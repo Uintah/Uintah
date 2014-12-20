@@ -82,6 +82,7 @@
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
@@ -314,6 +315,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory()); 
   boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory()); 
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory()); 
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2()); 
 
   _boost_factory_map.clear(); 
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF)); 
@@ -321,6 +323,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("initialize_factory",InitF)); 
   _boost_factory_map.insert(std::make_pair("particle_model_factory",PartModF)); 
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
+  _boost_factory_map.insert(std::make_pair("property_models", PropModels)); 
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -1178,6 +1181,7 @@ Arches::scheduleInitialize(const LevelP& level,
   BFM::iterator i_init_fac = _boost_factory_map.find("initialize_factory"); 
   BFM::iterator i_partmod_fac = _boost_factory_map.find("particle_model_factory"); 
   BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
+  BFM::iterator i_property_models = _boost_factory_map.find("property_models"); 
 
   //utility factory
   TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
@@ -1312,6 +1316,9 @@ Arches::scheduleInitialize(const LevelP& level,
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       EqnBase* eqn = ieqn->second;
       eqn->sched_checkBCs( level, sched );
+      //as needed for the coal propery models
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second); 
+      dqmom_eqn->sched_getUnscaledValues( level, sched ); 
     }
 
   }
@@ -1333,6 +1340,18 @@ Arches::scheduleInitialize(const LevelP& level,
     //call the cqmom inversion so weights and abscissas are calculated at the start
     d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
   }
+
+  //=================================================================================
+  //NEW TASK INTERFACE 
+  //
+  //Initialization of COAL property models
+  std::vector<std::string> coal_property_tasks = i_property_models->second->retrieve_task_subset("coal_models"); 
+  for ( std::vector<std::string>::iterator i = coal_property_tasks.begin(); i != coal_property_tasks.end(); i++){ 
+    TaskInterface::TaskInterface* tsk = i_property_models->second->retrieve_task(*i); 
+    tsk->schedule_init(level, sched, matls ); 
+  }
+  //=================================================================================
+
   
   // check to make sure that all the scalar variables have BCs set and set intrusions:
   EqnFactory& eqnFactory = EqnFactory::self();
