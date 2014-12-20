@@ -314,7 +314,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       // if the temperature calculation is above or below reasonable values we will
       // assume the dqmom weights were too small and set the particle temperature
       // to the gas temperature
-      if (pT > 3500 || pT < 290)
+      if (pT > 3500 || pT < 273)
          pT=gT;
      
       temperature[c]=pT;
