@@ -253,10 +253,26 @@
 
       </EfficiencyCalculator>
 
-      <Coal_Properties                  spec="OPTIONAL NO_DATA">
-        <particle_sizes                 spec="REQUIRED MULTIPLE_DOUBLES" />
-        <particle_density               spec="REQUIRED DOUBLE" />
-        <as_received                    spec="REQUIRED MULTIPLE_DOUBLES" /> <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
+      <CoalProperties                  spec="OPTIONAL NO_DATA">
+
+        <raw_coal                       spec="OPTIONAL NO_DATA" 
+                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the raw coal internal coordinate -->
+        <char                           spec="OPTIONAL NO_DATA" 
+                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the char internal coordinate -->
+        <diameter_distribution          spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
+        <density                        spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
+        <ultimate_analysis              spec="REQUIRED NO_DATA">               <!-- Ultimate analysis. Specified as mass fractions. -->
+          <C                            spec="REQUIRED DOUBLE"/>            
+          <H                            spec="REQUIRED DOUBLE"/>            
+          <O                            spec="REQUIRED DOUBLE"/>            
+          <N                            spec="REQUIRED DOUBLE"/>            
+          <S                            spec="REQUIRED DOUBLE"/>            
+          <H2O                          spec="REQUIRED DOUBLE"/>            
+          <CHAR                         spec="REQUIRED DOUBLE"/>            
+          <ASH                          spec="REQUIRED DOUBLE"/>            
+        </ultimate_analysis>
+        
+        <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
         <ksi                            spec="OPTIONAL DOUBLE" /> <!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
         <raw_coal_enthalpy              spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for raw coal at 298.15 K -->
         <char_enthalpy                  spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for char at 298.15 K -->
