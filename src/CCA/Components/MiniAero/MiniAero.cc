@@ -266,11 +266,13 @@ void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
 void MiniAero::scheduleTimeAdvance(const LevelP& level,
                                    SchedulerP& sched)
 {
-  schedGradients(level,sched);        // should this be in the RK loop?  -Todd
+
   
   for(int k=0; k<d_RKSteps; k++ ){
     printSchedule(level,dbg, "    scheduleTimeAdvance" );
     
+    schedGradients(level, sched, k);
+
     schedCellCenteredFlux(level, sched, k);
     schedFaceCenteredFlux(level, sched, k);
     schedDissipativeFaceFlux(level, sched, k);
@@ -331,20 +333,29 @@ void MiniAero::schedPrimitives(const LevelP& level,
 //______________________________________________________________________
 //
 void MiniAero::schedGradients(const LevelP& level,
-                              SchedulerP& sched)
+                              SchedulerP& sched,
+			      const int RK_step)
 {
   Task* task = scinew Task("MiniAero::Gradients", this, 
-                           &MiniAero::Gradients);
+                           &MiniAero::Gradients, RK_step);
                            
   printSchedule(level,dbg,"schedGradients");
 
-  task->requires(Task::OldDW, rho_CClabel,Ghost::AroundCells, 1); //HK: I think we need one layer of Ghost cells
-  task->requires(Task::OldDW, vel_CClabel,Ghost::AroundCells, 1);
-  task->requires(Task::OldDW, temp_CClabel,Ghost::AroundCells, 1);
+  Task::WhichDW whichDW = getRK_DW(RK_step); 
 
-  task->computes(grad_rho_CClabel);
-  task->computes(grad_vel_CClabel);
-  task->computes(grad_temp_CClabel);
+  task->requires(whichDW, rho_CClabel,Ghost::AroundCells, 1); //HK: I think we need one layer of Ghost cells
+  task->requires(whichDW, vel_CClabel,Ghost::AroundCells, 1);
+  task->requires(whichDW, temp_CClabel,Ghost::AroundCells, 1);
+
+  if(RK_step == 0){
+    task->computes(grad_rho_CClabel);
+    task->computes(grad_vel_CClabel);
+    task->computes(grad_temp_CClabel);
+  } else {
+    task->modifies(grad_rho_CClabel);
+    task->modifies(grad_vel_CClabel);
+    task->modifies(grad_temp_CClabel);
+  }
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 }
@@ -473,19 +484,29 @@ void MiniAero::schedViscousFaceFlux(const LevelP& level,
 
   printSchedule(level,dbg,"schedViscousFaceFlux");
    
-  task->requires(Task::OldDW,vel_CClabel,   Ghost::AroundCells, 1);
-  task->requires(Task::OldDW,viscosityLabel,Ghost::AroundCells, 1);
+  Task::WhichDW whichDW = getRK_DW(RK_step);
+
+  task->requires(whichDW,vel_CClabel,   Ghost::AroundCells, 1);
+  task->requires(whichDW,temp_CCLabel,Ghost::AroundCells, 1);
 
   task->requires(Task::NewDW,grad_vel_CClabel,  Ghost::AroundCells, 1);
   task->requires(Task::NewDW,grad_temp_CClabel, Ghost::AroundCells, 1);
 
-
-  task->computes(viscous_flux_mom_FCXlabel);
-  task->computes(viscous_flux_energy_FCXlabel);
-  task->computes(viscous_flux_mom_FCYlabel);
-  task->computes(viscous_flux_energy_FCYlabel);
-  task->computes(viscous_flux_mom_FCZlabel);
-  task->computes(viscous_flux_energy_FCZlabel);
+  if(RK_step == 0 ){      
+    task->computes(viscous_flux_mom_FCXlabel);
+    task->computes(viscous_flux_energy_FCXlabel);
+    task->computes(viscous_flux_mom_FCYlabel);
+    task->computes(viscous_flux_energy_FCYlabel);
+    task->computes(viscous_flux_mom_FCZlabel);
+    task->computes(viscous_flux_energy_FCZlabel);
+  } else {
+    task->modifies(viscous_flux_mom_FCXlabel);
+    task->modifies(viscous_flux_energy_FCXlabel);
+    task->modifies(viscous_flux_mom_FCYlabel);
+    task->modifies(viscous_flux_energy_FCYlabel);
+    task->modifies(viscous_flux_mom_FCZlabel);
+    task->modifies(viscous_flux_energy_FCZlabel);
+  }
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 
@@ -941,27 +962,37 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
                           const PatchSubset* patches,
                           const MaterialSubset* /*matls*/,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw)
+			 DataWarehouse* new_dw,
+			 const int RK_step)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch, dbg, "Doing MiniAero::Gradients" );
     
     // Requires...
-    constCCVariable<double> rho, temp;
-    constCCVariable<Vector> vel;
+    constCCVariable<double> rho_CC, Temp_CC;
+    constCCVariable<Vector> vel_CC;
     Ghost::GhostType  gac  = Ghost::AroundCells;
-    old_dw->get( rho,  rho_CClabel, 0, patch, gac, 1 );
-    old_dw->get( vel,  vel_CClabel, 0, patch, gac, 1 );
-    old_dw->get( temp, temp_CClabel,0, patch, gac, 1 );
+
+    DataWarehouse* my_dw = getRK_DW(RK_step, old_dw, new_dw);
+
+    my_dw->get( rho_CC,  rho_CClabel, 0, patch, gac, 1 );
+    my_dw->get( vel_CC,  vel_CClabel, 0, patch, gac, 1 );
+    my_dw->get( Temp_CC, temp_CClabel,0, patch, gac, 1 );
 
     // Provides...
     CCVariable<Vector> grad_rho_CC, grad_temp_CC;
-    new_dw->allocateAndPut( grad_rho_CC,  grad_rho_CClabel,   0, patch );
-    new_dw->allocateAndPut( grad_temp_CC, grad_temp_CClabel,       0, patch );
- 
     CCVariable<Matrix3> grad_vel_CC;
-    new_dw->allocateAndPut( grad_vel_CC, grad_vel_CClabel,   0,patch );
+
+    if( RK_step == 0 ) { 
+      new_dw->allocateAndPut( grad_rho_CC,  grad_rho_CClabel,   0, patch );
+      new_dw->allocateAndPut( grad_temp_CC, grad_temp_CClabel,       0, patch );
+      new_dw->allocateAndPut( grad_vel_CC, grad_vel_CClabel,   0,patch );
+    } else {
+      new_dw->getModifiable( grad_rho_CC,  grad_rho_CClabel,   0, patch );
+      new_dw->getModifiable( grad_temp_CC, grad_temp_CClabel,       0, patch );
+      new_dw->getModifiable( grad_vel_CC, grad_vel_CClabel,   0,patch );
+    }
 
     //__________________________________
     // Compute cell centered gradients  
@@ -1295,9 +1326,11 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
                              DataWarehouse* new_dw,
                              const int RK_step)
 {
-  double visc_flux[5];
-  double primitives_l[5];
-  double primitives_r[5];
+  double visc_flux[4];
+  double primitives_l[4];
+  double primitives_r[4];
+  double grad_primitives_l[4][3];
+  double grad_primitives_r[4][3];
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1305,7 +1338,7 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
     
     Ghost::GhostType  gac  = Ghost::AroundCells;
 
-    constCCVariable<double> viscosity;
+    constCCVariable<double> Temp_CC;
     constCCVariable<Vector> vel_CC;
 
     constCCVariable<Vector> grad_temp;
@@ -1321,20 +1354,32 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
     SFCZVariable<double> visc_flux_energy_FCZ;
 
 
-    old_dw->get( vel_CC,       vel_CClabel,    0, patch, gac, 1 );
-    old_dw->get( viscosity,    viscosityLabel, 0, patch, gac, 1 );
+    DataWarehouse* my_dw = getRK_DW(RK_step, old_dw, new_dw);
+    my_dw->get( vel_CC,       vel_CClabel,    0, patch, gac, 1 );
+    my_dw->get( Temp_CC,    temp_CCLabel, 0, patch, gac, 1 );
 
     new_dw->get( grad_temp,  grad_temp_CClabel, 0, patch, gac, 1 );
     new_dw->get( grad_vel,   grad_vel_CClabel,  0, patch, gac, 1 );
 
-    new_dw->allocateAndPut( visc_flux_mom_FCX,    viscous_flux_mom_FCXlabel,    0,patch );
-    new_dw->allocateAndPut( visc_flux_energy_FCX, viscous_flux_energy_FCXlabel, 0,patch );
+    if( RK_step == 0 ) {
+      new_dw->allocateAndPut( visc_flux_mom_FCX,    viscous_flux_mom_FCXlabel,    0,patch );
+      new_dw->allocateAndPut( visc_flux_energy_FCX, viscous_flux_energy_FCXlabel, 0,patch );
 
-    new_dw->allocateAndPut( visc_flux_mom_FCY,    viscous_flux_mom_FCYlabel,    0,patch );
-    new_dw->allocateAndPut( visc_flux_energy_FCY, viscous_flux_energy_FCYlabel, 0,patch );
+      new_dw->allocateAndPut( visc_flux_mom_FCY,    viscous_flux_mom_FCYlabel,    0,patch );
+      new_dw->allocateAndPut( visc_flux_energy_FCY, viscous_flux_energy_FCYlabel, 0,patch );
 
-    new_dw->allocateAndPut( visc_flux_mom_FCZ,    viscous_flux_mom_FCZlabel,    0,patch );
-    new_dw->allocateAndPut( visc_flux_energy_FCZ, viscous_flux_energy_FCZlabel, 0,patch );
+      new_dw->allocateAndPut( visc_flux_mom_FCZ,    viscous_flux_mom_FCZlabel,    0,patch );
+      new_dw->allocateAndPut( visc_flux_energy_FCZ, viscous_flux_energy_FCZlabel, 0,patch );
+    } else {
+      new_dw->getModifiable( visc_flux_mom_FCX,    viscous_flux_mom_FCXlabel,    0,patch );
+      new_dw->getModifiable( visc_flux_energy_FCX, viscous_flux_energy_FCXlabel, 0,patch );
+
+      new_dw->getModifiable( visc_flux_mom_FCY,    viscous_flux_mom_FCYlabel,    0,patch );
+      new_dw->getModifiable( visc_flux_energy_FCY, viscous_flux_energy_FCYlabel, 0,patch );
+
+      new_dw->getModifiable( visc_flux_mom_FCZ,    viscous_flux_mom_FCZlabel,    0,patch );
+      new_dw->getModifiable( visc_flux_energy_FCZ, viscous_flux_energy_FCZlabel, 0,patch );
+    }
 
     //__________________________________
     //Compute Face Centered Fluxes from Cell Centered
@@ -1345,26 +1390,93 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
     //TO DO: For now setting all to zero. Add math in gradually
     for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      visc_flux_mom_FCX   [c][0] = 0.0;
-      visc_flux_mom_FCX   [c][1] = 0.0;
-      visc_flux_mom_FCX   [c][2] = 0.0;
-      visc_flux_energy_FCX[c]    = 0.0;
+      IntVector offset(-1,0,0);
+
+      for(int idim = 0; idim < 3; ++idim){
+	primitives_l[idim] = vel_CC[c][idim];
+	primitives_r[idim] = vel_CC[c+offset][idim];
+	for(int jdim = 0; jdim < 3; ++jdim){
+	  grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
+	  grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
+	}
+      }
+      primitives_l[3] = Temp_CC[c];
+      primitives_r[3] = Temp_CC[c+offset];
+      for(int jdim = 0; jdim < 3; ++jdim){
+	grad_primitives_l[4][jdim] = grad_temp[c](jdim);
+	grad_primitives_r[4][jdim] = grad_temp[c+offset](jdim);
+      }
+      double normal[] = {1.0, 0.0, 0.0};
+      for(int i=0; i<4; ++i)
+        visc_flux[i] = 0.0;
+
+
+      compute_viscous_flux(primitives_l, primitives_r, grad_primitives_l,
+			   grad_primitives_r, visc_flux, normal); 
+      visc_flux_mom_FCX   [c][0] = visc_flux[0];
+      visc_flux_mom_FCX   [c][1] = visc_flux[1];
+      visc_flux_mom_FCX   [c][2] = visc_flux[2];
+      visc_flux_energy_FCX[c]    = visc_flux[3];
     }
 
     for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      visc_flux_mom_FCY   [c][0] = 0.0;
-      visc_flux_mom_FCY   [c][1] = 0.0;
-      visc_flux_mom_FCY   [c][2] = 0.0;
-      visc_flux_energy_FCY[c]    = 0.0;
+      IntVector offset(0,-1,0);
+
+      for(int idim = 0; idim < 3; ++idim){
+	primitives_l[idim] = vel_CC[c][idim];
+	primitives_r[idim] = vel_CC[c+offset][idim];
+	for(int jdim = 0; jdim < 3; ++jdim){
+	  grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
+	  grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
+	}
+      }
+      primitives_l[3] = Temp_CC[c];
+      primitives_r[3] = Temp_CC[c+offset];
+      for(int jdim = 0; jdim < 3; ++jdim){
+	grad_primitives_l[4][jdim] = grad_temp[c](jdim);
+	grad_primitives_r[4][jdim] = grad_temp[c+offset](jdim);
+      }
+      double normal[] = {0.0, 1.0, 0.0};
+      for(int i=0; i<4; ++i)
+        visc_flux[i] = 0.0;
+
+      compute_viscous_flux(primitives_l, primitives_r, grad_primitives_l,
+			   grad_primitives_r, visc_flux, normal); 
+      visc_flux_mom_FCY   [c][0] = visc_flux[0];
+      visc_flux_mom_FCY   [c][1] = visc_flux[1];
+      visc_flux_mom_FCY   [c][2] = visc_flux[2];
+      visc_flux_energy_FCY[c]    = visc_flux[3];
     }
 
     for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
-      visc_flux_mom_FCZ   [c][0] = 0.0;
-      visc_flux_mom_FCZ   [c][1] = 0.0;
-      visc_flux_mom_FCZ   [c][2] = 0.0;
-      visc_flux_energy_FCZ[c]    = 0.0;
+      IntVector offset(0,0,-1);
+
+      for(int idim = 0; idim < 3; ++idim){
+	primitives_l[idim] = vel_CC[c][idim];
+	primitives_r[idim] = vel_CC[c+offset][idim];
+	for(int jdim = 0; jdim < 3; ++jdim){
+	  grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
+	  grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
+	}
+      }
+      primitives_l[3] = Temp_CC[c];
+      primitives_r[3] = Temp_CC[c+offset];
+      for(int jdim = 0; jdim < 3; ++jdim){
+	grad_primitives_l[4][jdim] = grad_temp[c](jdim);
+	grad_primitives_r[4][jdim] = grad_temp[c+offset](jdim);
+      }
+      double normal[] = {0.0, 0.0, 1.0};
+      for(int i=0; i<4; ++i)
+        visc_flux[i] = 0.0;
+
+      compute_viscous_flux(primitives_l, primitives_r, grad_primitives_l,
+			   grad_primitives_r, visc_flux, normal); 
+      visc_flux_mom_FCZ   [c][0] = visc_flux[0];
+      visc_flux_mom_FCZ   [c][1] = visc_flux[1];
+      visc_flux_mom_FCZ   [c][2] = visc_flux[2];
+      visc_flux_energy_FCZ[c]    = visc_flux[3];
     }
 
   } //patch loop
@@ -1808,6 +1920,58 @@ void MiniAero::compute_roe_dissipative_flux(const double * primitives_left,
       flux[icomp] -= 0.5*rlldq[icomp];
 }
 
+//______________________________________________________________________
+//
+void MiniAero::compute_viscous_flux(const double * primitives_left,
+				    const double * primitives_right,
+				    const double * grad_primitives_left,
+				    const double * grad_primitives_right,
+				    double * flux, 
+				    double * face_normal)
+{
+ 
+  //Left State
+  const double primitives[4];
+  const double grad_primitives[4][3];
+
+  //Get value on face as average of left/right cells
+  for(int icomp = 0; icomp < 4; ++icomp){
+    primitives[icomp] = 0.5 * 
+      ( primitives_left[icomp] + primitives_right[icomp]);
+    for(int jdim = 0; jdim < 3; ++jdim){
+      grad_primitives[icomp][jdim] = 0.5 * 
+      ( grad_primitives_left[icomp][jdim] + grad_primitives_right[icomp][jdim]);
+    }
+    flux[icomp] = 0.0; //Initialise flux value to zero before summing contributions
+  }
+
+  //Viscosity is polynomial of face averaged temperature 
+  //NOT average of viscosity of left/right cells
+  //This is how miniAero seems to do it
+  double viscosity = getViscosity(primitives[3]);
+  double thermal_conductivity = getConductivity(viscosity);
+  double divergence_velocity = 0;
+
+  for(int i=0; i<3; i++){
+    divergence_velocity += grad_primitives[i][i];
+  }
+
+
+  //Code below is identical to that in Viscous_Flux.h of miniAero
+  for (int i = 0; i < 3; ++i)
+    {
+      for (int j = 0; j < 3; ++j)
+	{
+	  const double delta_ij = (i == j ) ? 1 : 0;
+	  const double S_ij = 0.5*(grad_primitives[i][j] + grad_primitives[j][i]);
+	  const double t_ij = S_ij - divergence_velocity*delta_ij/3.;
+	  flux[i] += (2*viscosity*t_ij)*face_normal[j];
+	  flux[3] += (2*viscosity*t_ij)*primitives[i]*face_normal[j];
+	}
+      flux[3] += thermal_conductivity*grad_primitives[3][i]*face_normal[i];
+    }
+
+}
 //______________________________________________________________________
 //               U T I L I T I E S
 //______________________________________________________________________
