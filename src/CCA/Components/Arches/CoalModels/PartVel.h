@@ -32,9 +32,19 @@ public:
   /** @brief Interface to the input file */
   void problemSetup( const ProblemSpecP& inputdb ); 
   
+  /** @brief Schedules the initialization of the particle velocities */
+  void schedInitPartVel( const LevelP& level, SchedulerP& sched );
+  
   /** @brief Schedules the calculation of the particle velocities */
   void schedComputePartVel( const LevelP& level, SchedulerP& sched, const int rkStep );
   
+  /** @brief Actually computes the particle velocities */ 
+  void InitPartVel( const ProcessorGroup* pc, 
+                       const PatchSubset* patches, 
+                       const MaterialSubset* matls, 
+                       DataWarehouse* old_dw, 
+                       DataWarehouse* new_dw );
+
   /** @brief Actually computes the particle velocities */ 
   void ComputePartVel( const ProcessorGroup* pc, 
                        const PatchSubset* patches, 

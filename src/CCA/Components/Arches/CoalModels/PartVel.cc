@@ -87,6 +87,33 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
 
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of the particle velocities
+//---------------------------------------------------------------------------
+void 
+PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
+{
+ 
+  string taskname = "PartVel::InitPartVel";
+  Task* tsk = scinew Task(taskname, this, &PartVel::InitPartVel);
+
+  Ghost::GhostType gn = Ghost::None;
+
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+
+  // actual velocity we will compute
+  for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
+        i != d_fieldLabels->partVel.end(); i++){
+    tsk->computes( i->second );
+  }
+
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the particle velocities
 //---------------------------------------------------------------------------
@@ -256,7 +283,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(eqn2);
         constCCVariable<double> weight;  
         const VarLabel* mywLabel = weight_eqn.getTransportEqnLabel();  
-        double small_weight = weight_eqn.getSmallClip(); 
+        double small_weight = weight_eqn.getSmallClipCriteria(); 
         old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
 
         ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
@@ -350,10 +377,9 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         name = "vel_qn";
         name += node; 
         if ( d_gasBC )  // assume gas vel =  part vel on boundary 
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
-        else           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
+        else            // part vel set by user.  
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
-
       }
     } else if (d_drag) {
      
@@ -401,15 +427,49 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         // Now set boundary conditions after velocities are set.  
-        name = "vel_qn";
-        name += iqn;
-        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+        name = PropertyHelper::append_qn_env("vel", iqn);
+        if ( d_gasBC ){  // assume gas vel =  part vel on boundary 
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
-        else           // part vel set by user.  
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );
+        } else {           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
+        }
 
       } 
     }  
   } 
 } // end ComputePartVel()
 
+//---------------------------------------------------------------------------
+// Method: Initialized partvel 
+//---------------------------------------------------------------------------
+void PartVel::InitPartVel( const ProcessorGroup* pc, 
+                              const PatchSubset* patches, 
+                              const MaterialSubset* matls, 
+                              DataWarehouse* old_dw, 
+                              DataWarehouse* new_dw )
+{
+
+for (int p=0; p < patches->size(); p++){
+    
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+  Ghost::GhostType  gn  = Ghost::None;
+  const Patch* patch = patches->get(p);
+  int archIndex = 0;
+  int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+  int N = dqmomFactory.get_quad_nodes();
+  for ( int iqn = 0; iqn < N; iqn++){
+
+    ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
+
+    CCVariable<Vector> partVel;
+    new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );
+
+    partVel.initialize(Vector(0.,0.,0.));
+
+    // Now set boundary conditions after velocities are set.  
+    std::string name = PropertyHelper::append_qn_env("vel", iqn); 
+    d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
+    }
+  }  
+} // end ComputePartVel()

@@ -140,7 +140,7 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     *ratio <<= ( *cchar + *rc + _init_ash[i] ) / _denom[i]; 
 
     *rho <<= cond( *ratio > 1.0, _rhop_o )
-                 ( *ratio < 0.0, 0.0 )
+                 ( *ratio < _init_ash[i]/_denom[i], _init_ash[i]/_denom[i] * _rhop_o )
                  ( *ratio * _rhop_o ); 
 
 
@@ -207,7 +207,7 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     *ratio <<= ( *cchar + *rc + _init_ash[i] ) / _denom[i]; 
 
     *rho <<= cond( *ratio > 1.0, _rhop_o )
-                 ( *ratio < 0.0, 0.0 )
+                 ( *ratio < _init_ash[i]/_denom[i], _init_ash[i]/_denom[i] * _rhop_o )
                  ( *ratio * _rhop_o ); 
 
  //   SVolF::iterator it = ratio->interior_begin(); 

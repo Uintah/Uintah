@@ -23,7 +23,7 @@
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_density'">
+                                        attribute2="type REQUIRED STRING 'coal_density,coal_temperature,coal_temperature_nebo'">
         </model>
       </PropertyModelsV2>
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
@@ -263,7 +263,7 @@
       <EulerianParticles                   spec="OPTIONAL NO_DATA">
         <ParticleVariables                 spec="OPTIONAL NO_DATA">
           <variable                        spec="MULTIPLE NO_DATA"
-                                           attribute1="role REQUIRED STRING 'raw_coal, char, size, density, uvel, vvel, wvel'"
+                                           attribute1="role REQUIRED STRING 'raw_coal, char, size, density, uvel, vvel, wvel, enthalpy, temperature, dTdt'"
                                            attribute2="label REQUIRED STRING"/>
           
         </ParticleVariables>
@@ -276,6 +276,7 @@
         <Properties                     spec="REQUIRED NO_DATA">
           <diameter_distribution        spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
+          <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
           <ultimate_analysis            spec="REQUIRED NO_DATA">               <!-- Ultimate analysis. Specified as mass fractions. -->
             <C                          spec="REQUIRED DOUBLE"/>            
             <H                          spec="REQUIRED DOUBLE"/>            
@@ -1388,7 +1389,7 @@
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
-          <nominal_value                spec="REQUIRED DOUBLE"/> <!-- nominal value of the internal coordinate when the weight goes to zero -->
+          <nominal_values               spec="REQUIRED MULTIPLE_DOUBLES"/> <!-- nominal values for each of the internal coordinates when the weight goes to zero -->
 
           <!-- developer note: When you add a new descriptor here, make sure you add it in the 
                enum definition and the constructor of the DQMOMEqnFactory -->

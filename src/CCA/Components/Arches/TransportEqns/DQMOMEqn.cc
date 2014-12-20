@@ -106,7 +106,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(name);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
   d_weightLabel = eqn.getTransportEqnLabel();
-  d_w_small = eqn.getSmallClip();
+  d_w_small = eqn.getSmallClipCriteria();
   if( d_w_small == 0.0 ) {
     d_w_small = 1e-16;
   }
@@ -119,7 +119,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   d_addExtraSources = false; 
   db->getWithDefault( "molecular_diffusivity", d_mol_diff, 0.0); 
   if ( !d_weight ){ 
-    db->require( "nominal_value", d_nominal ); 
+    db->require( "nominal_values", d_nominal ); 
   }
 
   // Models (source terms):
@@ -135,7 +135,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
     model_name += "_qn";
     model_name += node; 
     // put it in the list
-    d_models.push_back(model_name); 
+    d_models.push_back(model_name);
   }  
 
   // Clipping:
@@ -172,7 +172,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 
       //By default, set the low value for this weight to 0 and run on low clipping
       clip.activated = true; 
-      clip.low = 0.0; 
+      clip.low = 1e-100; 
       clip.tol = 1e-10; 
       clip.do_low = true; 
 
@@ -182,7 +182,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
 
         //weights always have low clip values!  ie, negative weights not allowed
         clip.do_low = true; 
-        clip.low = 0; 
+        clip.low = 1e-100; 
 
       } 
     }
@@ -686,7 +686,6 @@ DQMOMEqn::addSources( const ProcessorGroup* pc,
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
         IntVector c = *iter; 
-
         if ( weight[c] > d_w_small )
           rhs[c] += src[c]*vol; 
         
@@ -695,7 +694,6 @@ DQMOMEqn::addSources( const ProcessorGroup* pc,
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
         IntVector c = *iter; 
-
         rhs[c] += src[c]*vol; 
         
       }
@@ -763,11 +761,13 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     double factor = d_timeIntegrator->time_factor[timeSubStep]; 
     curr_ssp_time = curr_time + factor * dt; 
 
-    if(d_weight)
-        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
-    else{
+    if(d_weight){
+        // weights being clipped inside this function call
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high );
+    }else{
         constCCVariable<double> w;
         new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
+        // weighted abscissa being clipped inside this function call 
         d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, w); 
     }
 
@@ -858,11 +858,10 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
   
           IntVector c = *iter;
  
-          //if (w[c] > d_w_small){
           if (w[c] > d_w_small){
             ic[c] = (wa[c]/w[c])*d_scalingConstant;
           }  else {
-            ic[c] = d_nominal;
+            ic[c] = d_nominal[d_quadNode];
           }
         }
       }

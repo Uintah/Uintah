@@ -95,12 +95,15 @@ public:
 
 private:
 
-  std::string _length_name; 
-  std::string _density_name;
-  std::string _weight_name; 
+  const VarLabel* _length_varlabel;
+  const VarLabel* _rhop_varlabel;
+  const VarLabel* _weight_varlabel;
+  const VarLabel* _conv_source_varlabel;
+  const VarLabel* _diff_source_varlabel;
 
-  double _vel_scaling_const; 
-  double _w_scaling_const; 
+  double _vel_scaling_constant; 
+  double _weight_scaling_constant; 
+  double _weight_small;   ///< small weight 
 
   Vector _gravity;
   double _kvisc;
@@ -111,4 +114,5 @@ private:
 };
 } // end namespace Uintah
 #endif
+
 
