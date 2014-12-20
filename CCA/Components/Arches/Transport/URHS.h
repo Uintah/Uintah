@@ -145,7 +145,7 @@ private:
 
     std::string _rhou_name; 
     std::string _Fconv_name;
-    std::string _S_name;
+    std::string _Tau_name;
     const std::string _u_name; 
     const std::string _v_name; 
     const std::string _w_name; 
@@ -171,7 +171,7 @@ private:
     register_new_variable( _u_name     , _U_type );
     register_new_variable( _rhou_name  , _U_type );
     register_new_variable( _Fconv_name , _U_type );
-    register_new_variable( _S_name , _U_type );
+    register_new_variable( _Tau_name , _U_type );
     
   }
 
@@ -184,7 +184,7 @@ private:
     _rhs_name = task_name + "_RHS";
     _rhou_name = task_name; 
     _Fconv_name = task_name +"_Fconv";
-    _S_name = task_name +"_Sij";
+    _Tau_name = task_name +"_Tauij";
 
     //set the type: 
     VarTypeHelper<UT> uhelper; 
@@ -285,7 +285,7 @@ private:
     register_variable( _rhou_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
     register_variable( _rhou_name, _U_type, REQUIRES, 0, OLDDW, variable_registry );
     register_variable( _Fconv_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
-    register_variable( _S_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
+    register_variable( _Tau_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
     register_variable( "density", CC_DOUBLE, REQUIRES, 1, OLDDW, variable_registry );
 
   }
@@ -305,13 +305,13 @@ private:
     UFieldTP rhou_new = tsk_info->get_so_field<UT>( _rhou_name );
     UFieldTP rhou_old = tsk_info->get_const_so_field<UT>( _rhou_name );
     UFieldTP Fconv    = tsk_info->get_so_field<UT>( _Fconv_name );
-    UFieldTP Sij      = tsk_info->get_so_field<UT>( _S_name );
+    UFieldTP Tauij    = tsk_info->get_so_field<UT>( _Tau_name );
     SVolFP rho        = tsk_info->get_const_so_field<SVolF>( "density" );
 
     *u_new <<= *u_old; 
     *rhou_new <<= *rhou_old;
     *Fconv <<= 0.0;
-    *Sij <<= 0.0;
+    *Tauij <<= 0.0;
 
     *u_new <<= *rhou_new / ((*isvol_to_uvol)(*rho));
 
@@ -321,13 +321,13 @@ private:
   template <typename UT>
   void URHS<UT>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
 
-    register_variable( _rhou_name  ,_U_type   ,MODIFIES ,0 ,NEWDW  ,variable_registry );
-    register_variable( _Fconv_name ,_U_type   ,MODIFIES ,0 ,NEWDW  ,variable_registry );
-    register_variable( _S_name     ,_U_type   ,MODIFIES ,0 ,NEWDW  ,variable_registry );
-    register_variable( _u_name     ,_U_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
-    register_variable( _v_name     ,_V_type   ,REQUIRES ,2 ,NEWDW  ,variable_registry );
-    register_variable( _w_name     ,_W_type   ,REQUIRES ,2 ,NEWDW  ,variable_registry );
     register_variable( _rhs_name   ,_U_type   ,COMPUTES ,0 ,NEWDW  ,variable_registry );
+    register_variable( _Fconv_name ,_U_type   ,MODIFIES ,0 ,NEWDW  ,variable_registry );
+    register_variable( _Tau_name   ,_U_type   ,MODIFIES ,0 ,NEWDW  ,variable_registry );
+    register_variable( _rhou_name  ,_U_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
+    register_variable( _u_name     ,_U_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
+    register_variable( _v_name     ,_V_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
+    register_variable( _w_name     ,_W_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
     register_variable( "density"   ,CC_DOUBLE ,REQUIRES ,1 ,LATEST ,variable_registry );
 
   }
@@ -347,10 +347,10 @@ private:
     const double dt = tsk_info->get_dt();  
 
     //fields
-    UFieldTP rhou  = tsk_info->get_so_field<UT>( _rhou_name );
     UFieldTP rhs   = tsk_info->get_so_field<UT>( _rhs_name ); 
     UFieldTP Fconv = tsk_info->get_so_field<UT>( _Fconv_name );
-    UFieldTP Sij   = tsk_info->get_so_field<UT>( _S_name ); 
+    UFieldTP Tauij   = tsk_info->get_so_field<UT>( _Tau_name ); 
+    UFieldTP rhou  = tsk_info->get_const_so_field<UT>( _rhou_name );
     UFieldTP u     = tsk_info->get_const_so_field<UT>( _u_name );
     VFieldTP v     = tsk_info->get_const_so_field<VT>( _v_name );
     WFieldTP w     = tsk_info->get_const_so_field<WT>( _w_name );
@@ -378,24 +378,16 @@ private:
     const SVolToFaceZ* const svol_to_facez = opr.retrieve_operator<SVolToFaceZ>(); 
 
     //------ work -----------
-
-    //*Fconv <<= (*divx)( (*uinterpx)(*rhou) * (*uinterpx)(*u) ); 
-
-    //*Fconv <<= *Fconv + (*divy)( (*uinterpy)(*rhou) * (*vinterpy)(*v) );
-
-    //*Fconv <<= *Fconv + (*divz)( (*uinterpz)(*rhou) * (*winterpz)(*w ));
-
     *Fconv <<= (*divx)( (*uinterpx)(*rhou) * (*uinterpx)(*u) ) +
                (*divy)( (*uinterpy)(*rhou) * (*vinterpy)(*v) ) +
                (*divz)( (*uinterpz)(*rhou) * (*winterpz)(*w) ); 
-    
+   
+    //need to move viscosity into div.
+    *Tauij <<= 1.0e-4 * (*divx)( (*svol_to_facex)(*rho) * 2.0 * (*ugradx)(*u) ) + 
+                        (*divy)( (*svol_to_facey)(*rho) * ((*ugrady)(*u) + (*vgradx)(*v)) ) + 
+                        (*divz)( (*svol_to_facez)(*rho) * ((*ugradz)(*u) + (*wgradx)(*w)) );
 
-    *Sij <<= 1.0e-1 * (*divx)( (*ugradx)(*u) ) + 
-                      (*divy)( 0.5 * ( (*ugrady)(*u) + (*vgradx)(*v)) ) + 
-                      (*divz)( 0.5 * ( (*ugradz)(*u) + (*wgradx)(*w)) );
-
-    //RHS update
-    *rhs <<= *rhou + dt * ( *Sij - *Fconv ); 
+    *rhs <<= *rhou + dt * ( *Tauij - *Fconv ); 
 
   }
 
