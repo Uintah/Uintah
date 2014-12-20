@@ -493,6 +493,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         double hc = _Hc0 + hint * _RdMW;
         double hh = _Hh0 + hint * _RdC;
         Q_reaction = charoxi_temp_sourceph;
+                                             // This needs to be made consistant with lagrangian particles!!! - derek 12/14
         heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - devol_gas_sourceph*hc - chargas_sourceph*hh)/
                      (_enthalpy_scaling_constant*_weight_scaling_constant);
         gas_heat_rate_ = -weightph*Q_convection + Q_radiation - _ksi*Q_reaction + devol_gas_sourceph*hc + chargas_sourceph*hh;
