@@ -55,9 +55,9 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
       double char_mf = coal.CHAR / coal_dry; 
       double ash_mf = coal.ASH / coal_dry; 
 
-      _MW_avg = (coal.C/coal_daf)/12.0107 + (coal.H/coal_daf)/1.00794 + (coal.O/coal_daf)/16 + (coal.N/coal_daf)/14.0067 + (coal.S/coal_daf)/32.065;
+      _MW_avg = (coal.C/coal_daf)/12.01 + (coal.H/coal_daf)/1.008 + (coal.O/coal_daf)/16 + (coal.N/coal_daf)/14.01 + (coal.S/coal_daf)/32.06;
       _MW_avg = 1/_MW_avg;
-      _RdC = _Rgas/12.0107;
+      _RdC = _Rgas/12.01;
       _RdMW = _Rgas/_MW_avg; 
 
       _init_char.clear(); 
@@ -307,7 +307,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         pT = pT - dT;    //to add an coefficient for steadness
         // check to see if tolernace has been met
         tol = abs(oldpT - pT);
-        if (tol < 0.01 ) 
+        if (tol < 0.1 ) 
           break;
       }
       // if the temperature calculation is above or below reasonable values we will
