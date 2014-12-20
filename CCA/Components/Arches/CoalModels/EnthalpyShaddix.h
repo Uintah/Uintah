@@ -129,13 +129,6 @@ public:
   double calcEnthalpyChangeParticle() {
     return 0; }
 
-
-  /////////////////////////////////////////////////
-  // Access methods
-
-  /** @brief  Access function for thermal conductivity of particles */
-  inline const VarLabel* getabskp(){
-    return d_abskp; };  
   
 private:
 
@@ -147,9 +140,6 @@ private:
   double props(double Tg, double Tp);
 
 
-  // labels of computed quantaties
-  const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
- 
   // labels used for getting required variables later on in the calculation
   const VarLabel* _particle_temperature_varlabel;
   const VarLabel* _gas_temperature_varlabel;
@@ -158,6 +148,7 @@ private:
   const VarLabel* _length_varlabel;
   const VarLabel* _weight_varlabel;
   const VarLabel* _abskg_varlabel;
+  const VarLabel* _abskp_varlabel;
   const VarLabel* _charoxiTemp_varlabel; 
   const VarLabel* _surfacerate_varlabel;
   const VarLabel* _chargas_varlabel;
