@@ -66,9 +66,13 @@ public:
   /** @brief not needed here. **/ 
   void assign_stage_to_sources(){};
   
-  /** @brief Schedule a transport equation to be built and solved */
+  /** @brief Schedule a transport equation to be built */
   void sched_evalTransportEqn( const LevelP&, 
                                SchedulerP& sched, int timeSubStep );
+
+  /** @brief Adds the DQMOM source to the RHS and time updates the eqn **/ 
+  void sched_updateTransportEqn( const LevelP&, 
+                                 SchedulerP& sched, int timeSubStep ); 
 
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
@@ -80,6 +84,17 @@ public:
                           DataWarehouse* old_dw, 
                           DataWarehouse* new_dw, 
                           const int timeSubStep );
+
+  /** @brief Schedule the addition of the sources from the linear system */ 
+  void sched_addSources( const LevelP& level, SchedulerP& sched, const int timeSubStep ); 
+
+  /** @brief Callback function for sched_addSources **/ 
+  void addSources( const ProcessorGroup*, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset*, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw, 
+                   const int timeSubStep );
 
   /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 

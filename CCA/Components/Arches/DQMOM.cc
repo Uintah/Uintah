@@ -317,18 +317,19 @@ void
 DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int timeSubStep )
 { 
   string taskname = "DQMOM::solveLinearSystem";
-  Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem);
+  Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem, timeSubStep);
 
   CoalModelFactory& model_factory = CoalModelFactory::self();
+  Task::WhichDW which_dw; 
 
   if (timeSubStep == 0) {
-    proc0cout << "Asking for norm labels" << endl; 
     tsk->computes(d_normBLabel); 
     tsk->computes(d_normXLabel);
     tsk->computes(d_normResLabel);
     tsk->computes(d_normResNormalizedLabelB);
     tsk->computes(d_normResNormalizedLabelX);
     tsk->computes(d_conditionNumberLabel);
+    which_dw = Task::NewDW; 
   } else {
     tsk->modifies(d_normBLabel); 
     tsk->modifies(d_normXLabel);
@@ -336,14 +337,18 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tsk->modifies(d_normResNormalizedLabelB);
     tsk->modifies(d_normResNormalizedLabelX);
     tsk->modifies(d_conditionNumberLabel);
+    which_dw = Task::OldDW; 
   }
 
+
+
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
+
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weights
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    tsk->requires( which_dw, tempLabel, Ghost::None, 0 );
 
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     if (timeSubStep == 0) {
@@ -358,7 +363,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weighted abscissas
-    tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->requires(which_dw, tempLabel, Ghost::None, 0);
 
     // compute or modify source terms
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
@@ -389,7 +394,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw )
+                          DataWarehouse* new_dw, 
+                          const int timeSubStep )
 {
   double start_solveLinearSystemTime = Time::currentSeconds();
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
@@ -404,6 +410,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 #endif
 
+
   CoalModelFactory& model_factory = CoalModelFactory::self();
 
   // patch loop
@@ -412,59 +419,36 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    DataWarehouse* which_dw; 
 
-    // get/allocate normB label
     CCVariable<double> normB; 
-    if (new_dw->exists(d_normBLabel, matlIndex, patch)) { 
-      new_dw->getModifiable(normB, d_normBLabel, matlIndex, patch);
-    } else {
+    CCVariable<double> normX; 
+    CCVariable<double> normRes;
+    CCVariable<double> normResNormalizedB;
+    CCVariable<double> normResNormalizedX;
+    CCVariable<double> conditionNumber;
+    if ( timeSubStep == 0 ){ 
+      which_dw = new_dw; 
       new_dw->allocateAndPut(normB, d_normBLabel, matlIndex, patch);
+      new_dw->allocateAndPut(normX, d_normXLabel, matlIndex, patch);
+      new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
+      new_dw->allocateAndPut( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
+      new_dw->allocateAndPut( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
+      new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
+    } else { 
+      which_dw = old_dw; 
+      new_dw->getModifiable(normB, d_normBLabel, matlIndex, patch);
+      new_dw->getModifiable(normX, d_normXLabel, matlIndex, patch);
+      new_dw->getModifiable( normRes, d_normResLabel, matlIndex, patch );
+      new_dw->getModifiable( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
+      new_dw->getModifiable( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
+      new_dw->getModifiable( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
     }
     normB.initialize(0.0);
-
-    // get/allocate normX label
-    CCVariable<double> normX; 
-    if (new_dw->exists(d_normXLabel, matlIndex, patch)) { 
-      new_dw->getModifiable(normX, d_normXLabel, matlIndex, patch);
-    } else {
-      new_dw->allocateAndPut(normX, d_normXLabel, matlIndex, patch);
-    }
     normX.initialize(0.0);
-
-    // get/allocate normRes label
-    CCVariable<double> normRes;
-    if( new_dw->exists(d_normResLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( normRes, d_normResLabel, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
-    }
     normRes.initialize(0.0);
-
-    // get/allocate normResNormalizedB label
-    CCVariable<double> normResNormalizedB;
-    if( new_dw->exists(d_normResNormalizedLabelB, matlIndex, patch) ) {
-      new_dw->getModifiable( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
-    }
     normResNormalizedB.initialize(0.0);
-
-    // get/allocate normResNormalizedX label
-    CCVariable<double> normResNormalizedX;
-    if( new_dw->exists(d_normResNormalizedLabelX, matlIndex, patch) ) {
-      new_dw->getModifiable( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
-    }
     normResNormalizedX.initialize(0.0);
-
-    // get/allocate condition number label
-    CCVariable<double> conditionNumber;
-    if( new_dw->exists(d_conditionNumberLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
-    }
     conditionNumber.initialize(0.0);
 
     // get/allocate weight source term labels
@@ -472,10 +456,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightEqns.end(); iEqn++) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if (new_dw->exists(source_label, matlIndex, patch)) {
-        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      } else {
+      if ( timeSubStep == 0 ) { 
         new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      } else { 
+        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
       }
       tempCCVar.initialize(0.0);
     }
@@ -485,10 +469,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightedAbscissaEqns.end(); ++iEqn) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if (new_dw->exists(source_label, matlIndex, patch)) {
-        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      } else {
+      if ( timeSubStep == 0 ){ 
         new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      } else { 
+        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
       }
       tempCCVar.initialize(0.0);
     }
@@ -501,7 +485,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       
       // instead of using a CCVariable, use a constCCVarWrapper struct
       constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+      which_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
 
       // put the wrapper into a vector
       weightCCVars.push_back(tempWrapper);
@@ -515,7 +499,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
       // instead of using a CCVariable, use a constCCVarWrapper struct
       constCCVarWrapper_withModels tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+      which_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
 
       // for a given weighted abscissa, get models from data warehouse and put into vector of constCCVarWrapper
       vector<constCCVarWrapper> modelCCVarsVec;

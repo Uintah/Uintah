@@ -368,6 +368,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
     tsk->schedule_timestep_init(level, sched, matls); 
   }
+  BFM::iterator i_property_models = _boost_fac_map.find("property_models"); 
+  TaskFactoryBase::TaskMap all_property_models = i_property_models->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_property_models.begin(); i != all_property_models.end(); i++){ 
+    i->second->schedule_timestep_init(level, sched, matls); 
+  }
   //===================END NEW STUFF=======================
 
   // --------> START RK LOOP <---------
@@ -401,6 +406,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       i->second->schedule_task(level, sched, matls, curr_level); 
     }
 
+    //Property Models
+    for ( TaskFactoryBase::TaskMap::iterator i = all_property_models.begin(); 
+          i != all_property_models.end(); i++ ){ 
+      i->second->schedule_task(level, sched, matls, curr_level); 
+    }
+
     //FE update
     SVec scalar_fe_up = i_transport->second->retrieve_task_subset("scalar_fe_update"); 
     SVec mom_fe_up = i_transport->second->retrieve_task_subset("mom_fe_update"); 
@@ -413,6 +424,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
       tsk->schedule_task(level, sched, matls, curr_level); 
     }
+
     //============== END NEW TASK STUFF ==============================
 
     // Create this timestep labels for properties
@@ -437,10 +449,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       // Compute the particle velocities
       d_partVel->schedComputePartVel( level, sched, curr_level );
 
-      // ---- schedule the solution of the transport equations ----
-
       // Evaluate DQMOM equations
-
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
             iEqn != weights_eqns.end(); iEqn++){
 
@@ -457,28 +466,41 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
       }
 
-      // Clean up after DQMOM equation evaluations & calculate unscaled DQMOM scalar values
-      // (also, putting this in its own separate loop makes sure you don't require() before you compute())
-      if (curr_level == numTimeIntegratorLevels-1){
-        for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
-             iEqn!=dqmom_eqns.end(); ++iEqn ) {
-
-          DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-          //also get the abscissa values
-          dqmom_eqn->sched_getUnscaledValues( level, sched );
-        }
-      }
-
       // schedule the models for evaluation
-      //CoalModelFactory::ModelMap allModels = modelFactory.retrieve_all_models();
-      //for (CoalModelFactory::ModelMap::iterator imodel = allModels.begin(); imodel != allModels.end(); imodel++){
-      //  imodel->second->sched_computeModel( level, sched, curr_level );
-      //}
       modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
 
       // schedule DQMOM linear solve
       d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
+
+      // Evaluate DQMOM equations
+      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
+            iEqn != weights_eqns.end(); iEqn++){
+
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );
+      }
+
+      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
+            iEqn != abscissas_eqns.end(); iEqn++){
+
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );
+      }
+
+
+      // ---- schedule the solution of the transport equations ----
+
+
+      for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
+           iEqn!=dqmom_eqns.end(); ++iEqn ) {
+
+        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
+
+        //also get the abscissa values
+        dqmom_eqn->sched_getUnscaledValues( level, sched );
+      }
 
       // calculate the moments
       bool saveMoments = d_dqmomSolver->getSaveMoments();
