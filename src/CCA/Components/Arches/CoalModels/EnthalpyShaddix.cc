@@ -184,8 +184,6 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     _abskg_varlabel = VarLabel::find(baseNameAbskg);
   }
 
-  
-
   std::string modelName;
   std::string baseNameAbskp;
   std::string baseNameAbskg;
@@ -230,7 +228,12 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
         break;
       }
     }
-    std::string abskp_string = PropertyHelper::append_env(baseNameAbskp, d_quadNode); 
+    if (VarLabel::find("radiationVolq")) {
+      _volq_varlabel  = VarLabel::find("radiationVolq"); 
+    } else {
+      throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find radiationVolq.",__FILE__,__LINE__);
+    }
+    std::string abskp_string = PropertyHelper::append_env(baseNameAbskp, d_quadNode);
     _abskp_varlabel = VarLabel::find(abskp_string);
     _abskg_varlabel = VarLabel::find(baseNameAbskg);
   }
