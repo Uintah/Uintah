@@ -96,11 +96,6 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
     _dir = 2; 
   }
   
-  vel_root = PropertyHelper::append_qn_env( vel_root, d_quadNode ); 
-  EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
-  DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
-  _vel_scaling_const = current_eqn.getScalingConstant();
-
   // Need a size IC: 
   std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
   std::string length_name = PropertyHelper::append_env( length_root, d_quadNode ); 
