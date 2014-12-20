@@ -210,12 +210,10 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                  ( *ratio < 0.0, 0.0 )
                  ( *ratio * _rhop_o ); 
 
-    SVolF::iterator it = ratio->interior_begin(); 
-    for (; it != ratio->interior_end(); it++){ 
-
+ //   SVolF::iterator it = ratio->interior_begin(); 
+ //   for (; it != ratio->interior_end(); it++){ 
  //     std::cout << "ratio= " << *it << std::endl;
-    
-    }
+ //   }
 
   }
 }
