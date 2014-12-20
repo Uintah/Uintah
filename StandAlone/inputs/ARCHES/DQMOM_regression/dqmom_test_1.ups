@@ -70,13 +70,7 @@
 
       <EulerianParticles>
         <ParticleVariables>
-          <variable label="RCmass" role="raw_coal" />
-          <variable label="Charmass" role="char" />
-          <variable label="pE" role="enthalpy" />
           <variable label="length" role="size" />
-          <variable label="rho_coal" role="density" />
-          <variable label="temperature_coal" role="temperature" />
-          <variable label="dTdt" role="dTdt" />
           <variable label="ux" role="uvel" />
           <variable label="uy" role="vvel" />
           <variable label="uz" role="wvel" />
