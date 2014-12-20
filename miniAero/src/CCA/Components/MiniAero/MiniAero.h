@@ -122,7 +122,7 @@ namespace Uintah {
     
     void schedUpdate_RK_State(const LevelP& level, SchedulerP& sched, const int RK_step);
 
-    void schedGradients(const LevelP& level,SchedulerP& sched);
+    void schedGradients(const LevelP& level,SchedulerP& sched, const int RK_step);
 
     void schedViscousFaceFlux(const LevelP& level,SchedulerP& sched, const int RK_step);
 
@@ -180,7 +180,8 @@ namespace Uintah {
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
-                    DataWarehouse* new_dw);
+                    DataWarehouse* new_dw,
+		   const int RK_step);
 
     void viscousFaceFlux(const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -195,6 +196,13 @@ namespace Uintah {
                                       double * face_normal, 
                                       double * face_tangent, 
                                       double * face_binormal);
+
+    void compute_viscous_flux(const double * primitives_left, 
+			      const double * primitives_right,
+			      const double * grad_primitives_left, 
+			      const double * grad_primitives_right,
+			      double * flux, 
+			      double * face_normal); 
 
     //__________________________________
     // Utilities
