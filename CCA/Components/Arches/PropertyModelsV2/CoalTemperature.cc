@@ -78,6 +78,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
                           _init_rawcoal[i] );
 
       }
+cout << "BEN!!! " << _init_ash[0] << " " << _init_ash[1] << " " << _init_ash[2] << endl;
     } else { 
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__); 
     }
@@ -307,14 +308,15 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         pT = pT - dT;    //to add an coefficient for steadness
         // check to see if tolernace has been met
         tol = abs(oldpT - pT);
-        if (tol < 0.1 ) 
+        if (tol < 0.01 ) 
           break;
       }
       // if the temperature calculation is above or below reasonable values we will
-      // assume the dqmom weights were too small and reset to the initial temperature
+      // assume the dqmom weights were too small and set the particle temperature
+      // to the gas temperature
       if (pT > 3500 || pT < 290)
-        pT=gT;
-
+         pT=gT;
+     
       temperature[c]=pT;
       dTdt[c]=(pT-pT_olddw)/dt;
     }

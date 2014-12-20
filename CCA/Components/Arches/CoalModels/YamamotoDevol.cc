@@ -253,27 +253,31 @@ YamamotoDevol::computeModel( const ProcessorGroup * pc,
         double weightph=weight[c];
 
         //VERIFICATION
-        //rcmassph=4.99019e-12;
-        //temperatureph=530.79;
-        //charmassph=-7.1393e-18;
-        //weightph=1.40781e+09;
+        //rcmassph=6.76312e-11;
+        //temperatureph=1434.86;
+        //charmassph=3.32801e-10;
+        //weightph=2.29063e+06;
         
         Xv = (rcmass_init-rcmassph)/rcmass_init;
         Xv = min(max(Xv,0.0),1.0);// make sure Xv is between 0 and 1
         Fv = _c5*pow(Xv,5.0) + _c4*pow(Xv,4.0) + _c3*pow(Xv,3.0) + _c2*pow(Xv,2.0) + _c1*Xv +_c0;
         kv = exp(Fv)*_Av*exp(-_Ev/(_R*temperatureph));
-
-        rateMax = max((0.2*(rcmassph + min(0.0,charmassph))*weightph/dt),0.0);
-        devol_rate[c] = -kv*(rcmassph + min(0.0,charmassph))*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
-        gas_devol_rate[c] = (_Yv*kv)*(rcmassph+ min(0.0,charmassph))*weightph; // rate of creation of coal off gas
-        char_rate[c] = (1.0-_Yv)*kv*(rcmassph + min(0.0,charmassph))*weightph; // rate of creation of char
+        //rateMax = max((0.2*(rcmassph + min(0.0,charmassph))*weightph/dt),0.0);
+        //devol_rate[c] = -kv*(rcmassph + min(0.0,charmassph))*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
+        //gas_devol_rate[c] = (_Yv*kv)*(rcmassph+ min(0.0,charmassph))*weightph; // rate of creation of coal off gas
+        //char_rate[c] = (1.0-_Yv)*kv*(rcmassph + min(0.0,charmassph))*weightph; // rate of creation of char
+        rateMax = max((0.2*rcmassph*weightph/dt),0.0);
+        devol_rate[c] = -kv*rcmassph*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
+        gas_devol_rate[c] = (_Yv*kv)*rcmassph*weightph; // rate of creation of coal off gas
+        char_rate[c] = (1.0-_Yv)*kv*rcmassph*weightph; // rate of creation of char
         if( devol_rate[c] < (-rateMax/(_rc_scaling_constant*_weight_scaling_constant))) {
           devol_rate[c] = -rateMax/(_rc_scaling_constant*_weight_scaling_constant);
           gas_devol_rate[c] = _Yv*rateMax;
           char_rate[c] = (1.0-_Yv)*rateMax;
         }
         //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
-        if( (devol_rate[c] > -1e-16) && ((rcmassph+min(0.0,charmassph)) < 1e-16)) {
+        //if( (devol_rate[c] > -1e-16) && ((rcmassph+min(0.0,charmassph)) < 1e-16)) {
+        if( (devol_rate[c] > -1e-16) && (rcmassph < 1e-16)) {
           devol_rate[c] = 0;
           gas_devol_rate[c] = 0;
           char_rate[c] = 0;
