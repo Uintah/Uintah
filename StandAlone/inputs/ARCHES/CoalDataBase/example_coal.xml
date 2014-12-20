@@ -3,7 +3,6 @@
   <Coal>
     <Properties>
 
-
     <!-- REQUIRED ARCHES/PYTHON INPUTS -->
 
     <diameter_distribution>[4e-05,6.3e-05,10e-05]</diameter_distribution><!-- [m] -->
