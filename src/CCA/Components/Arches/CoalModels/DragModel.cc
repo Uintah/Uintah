@@ -95,7 +95,11 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   } else { 
     _dir = 2; 
   }
-
+  
+  vel_root = PropertyHelper::append_qn_env( vel_root, d_quadNode ); 
+  EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
+  DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
+  _vel_scaling_const = current_eqn.getScalingConstant();
 
   // Need a size IC: 
   std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
@@ -262,11 +266,9 @@ DragModel::computeModel( const ProcessorGroup* pc,
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT;  
 
-
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
-
 
       if (weight[c]/_weight_scaling_constant > _weight_small) {
  

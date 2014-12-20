@@ -114,5 +114,3 @@ private:
 };
 } // end namespace Uintah
 #endif
-
-
