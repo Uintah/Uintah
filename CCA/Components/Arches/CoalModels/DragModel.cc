@@ -99,11 +99,13 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
 
   // Need a size IC: 
   std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
-  _length_name = PropertyHelper::append_env( length_root, d_quadNode ); 
+  std::string length_name = PropertyHelper::append_env( length_root, d_quadNode ); 
+  _length_varlabel = VarLabel::find(length_name); 
 
   // Need a density
   std::string density_root = PropertyHelper::parse_for_role_to_label(db, "density"); 
-  _density_name = PropertyHelper::append_env( density_root, d_quadNode ); 
+  std::string density_name = PropertyHelper::append_env( density_root, d_quadNode ); 
+  _rhop_varlabel = VarLabel::find(density_name); 
 
   // Need velocity scaling constant
   std::string vel_root; 
@@ -118,13 +120,20 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   vel_root = PropertyHelper::append_qn_env( vel_root, d_quadNode ); 
   EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
   DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
-  _vel_scaling_const = current_eqn.getScalingConstant();
+  _vel_scaling_constant = current_eqn.getScalingConstant();
+  std::string ic_convection = vel_root+"_Fconv";
+  std::string ic_diffusion = vel_root+"_Fdiff";
+  _conv_source_varlabel = VarLabel::find(ic_convection);
+  _diff_source_varlabel = VarLabel::find(ic_diffusion);
 
   // Need weight name and scaling constant
-  _weight_name = PropertyHelper::append_qn_env("w", d_quadNode); 
-  EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(_weight_name);
+  std::string weight_name = PropertyHelper::append_env("w", d_quadNode); 
+  _weight_varlabel = VarLabel::find(weight_name); 
+  std::string weightqn_name = PropertyHelper::append_qn_env("w", d_quadNode); 
+  EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
-  _w_scaling_const = current_eqn2.getScalingConstant();
+  _weight_small = current_eqn2.getSmallClipCriteria();
+  _weight_scaling_constant = current_eqn2.getScalingConstant();
 
 }
 
@@ -173,13 +182,11 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
     which_dw = Task::NewDW; 
   }
 
-  //density: 
-  const VarLabel* rhop_label = VarLabel::find(_density_name); 
-  const VarLabel* length_label = VarLabel::find(_length_name); 
-  const VarLabel* weight_label = VarLabel::find(_weight_name); 
-  tsk->requires( which_dw, rhop_label, gn, 0 ); 
-  tsk->requires( which_dw, length_label, gn, 0 );
-  tsk->requires( which_dw, weight_label, gn, 0 ); 
+  tsk->requires( which_dw, _rhop_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _length_varlabel, gn, 0 );
+  tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, _conv_source_varlabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, _diff_source_varlabel, gn, 0 ); 
 
   //EqnFactory& eqn_factory = EqnFactory::self();
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
@@ -191,6 +198,8 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
   tsk->requires( Task::NewDW, i->second, gn, 0 );
 
+  // get time step size for model clipping
+  tsk->requires( Task::OldDW,d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);  
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -233,75 +242,100 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
     constCCVariable<Vector> gasVel;
     which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
-
     constCCVariable<double> den;
     which_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
-
     constCCVariable<double> rho_p; 
+    which_dw->get( rho_p  , _rhop_varlabel   , matlIndex , patch , gn , 0 );
     constCCVariable<double> l_p; 
+    which_dw->get( l_p    , _length_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> weight; 
-
-    const VarLabel* rhop_label   = VarLabel::find(_density_name);
-    const VarLabel* length_label = VarLabel::find(_length_name);
-    const VarLabel* weight_label = VarLabel::find(_weight_name);
-
-    which_dw->get( rho_p  , rhop_label   , matlIndex , patch , gn , 0 );
-    which_dw->get( l_p    , length_label , matlIndex , patch , gn , 0 );
-    which_dw->get( weight , weight_label , matlIndex , patch , gn , 0 );
-
+    which_dw->get( weight , _weight_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
+    constCCVariable<double> conv_source; 
+    new_dw->get( conv_source , _conv_source_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> diff_source; 
+    new_dw->get( diff_source , _diff_source_varlabel , matlIndex , patch , gn , 0 );
+
+    delt_vartype DT;    
+    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    double dt = DT;  
+
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
 
-      double gasMag = gasVel[c].x() * gasVel[c].x() + 
-                      gasVel[c].y() * gasVel[c].y() + 
-                      gasVel[c].z() * gasVel[c].z();
 
-      gasMag = pow(gasMag,0.5);
+      if (weight[c]/_weight_scaling_constant > _weight_small) {
+ 
+        Vector gas_vel = gasVel[c];
+        Vector part_vel = partVel[c];
+        double denph=den[c];
+        double rho_pph=rho_p[c]; 
+        double l_pph=l_p[c]; 
+        double weightph=weight[c];
+        double conv_sourceph=conv_source[c];
+        double diff_sourceph=diff_source[c];
 
-      double partMag = partVel[c].x() * partVel[c].x() + 
-                       partVel[c].y() * partVel[c].y() + 
-                       partVel[c].z() * partVel[c].z(); 
+        // Bens verification
+        //denph=0.394622;
+        //rho_pph=1300; 
+        //l_pph=2e-05; 
+        //weightph=1.40781e+09;
+        //gas_vel[0]=7.56321;
+        //gas_vel[1]=0.663992;
+        //gas_vel[2]=0.654003;
+        //part_vel[0]=6.54863;
+        //part_vel[1]=0.339306;
+        //part_vel[2]=0.334942;
 
-      partMag = pow(partMag,0.5); 
+ 
+        double gasMag = gas_vel.x() * gas_vel.x() + 
+                        gas_vel.y() * gas_vel.y() + 
+                        gas_vel.z() * gas_vel.z();
 
-      double diff = std::abs(partMag - gasMag); 
-      double Re  = diff * l_p[c] / ( _kvisc / den[c] );  
-      double f;
+        gasMag = pow(gasMag,0.5);
 
-      if(Re < 1.0) {
+        double partMag = part_vel.x() * part_vel.x() + 
+                       part_vel.y() * part_vel.y() + 
+                       part_vel.z() * part_vel.z(); 
 
-        f = 1.0;
+        partMag = pow(partMag,0.5); 
 
-      } else if(Re>1000.0) {
+        double diff = std::abs(partMag - gasMag); 
+        double Re  = diff * l_pph / ( _kvisc / denph );  
+        double f;
 
-        f = 0.0183*Re;
+        if(Re < 994.0) {
+          f = 1.0 + 0.15*pow(Re, 0.687);
+        } else {
+          f = 0.0183*Re;
+        }
+
+        double t_p = ( rho_pph * l_pph * l_pph )/( 18.0 * _kvisc );
+        double tau=t_p/f;
+        // add rate clipping if drag time scale is smaller than dt..
+        if (tau > dt ){
+          model[c] = weightph * ( f / t_p * (gas_vel[_dir]-part_vel[_dir])+_gravity[_dir]) / (_vel_scaling_constant*_weight_scaling_constant);
+          gas_source[c] = -weightph * rho_pph / 6.0 * _pi * f / t_p * ( gas_vel[_dir]-part_vel[_dir] ) * pow(l_pph,3.0);
+        } else {
+          model[c] = weightph * (gas_vel[_dir]-part_vel[_dir]) / dt + conv_sourceph - diff_sourceph; 
+          //gas_source[c] = -weightph * rho_pph / 6.0 * _pi * Drag_f * pow(l_pph,3.0);
+          gas_source[c] = 0.0;
+          cout << "BEN 3: dragclipped"<< _dir << " qn"<< d_quadNode << " c: " << c << " " << model[c] << " " << gas_source[c] << " timescale: " << tau << " rhop: " << rho_pph << endl;
+        }
 
       } else {
-
-        f = 1. + .15*pow(Re, 0.687);
-
-      }
-
-      double t_p = ( rho_p[c] * l_p[c] * l_p[c] )/( 18.0 * _kvisc );
-
-      if ( t_p > 0 ){ 
-
-        model[c] = weight[c] * ( f / t_p * (gasVel[c][_dir]-partVel[c][_dir])+_gravity[_dir]) / _vel_scaling_const;
-        gas_source[c] = -weight[c] * _w_scaling_const * rho_p[c] / 6.0 * _pi * f / t_p * ( gasVel[c][_dir]-partVel[c][_dir] ) * pow(l_p[c],3.0);
-
-      } else { 
-
-        model[c] = 0.0;
-        gas_source[c] = 0.0;
+ 
+          model[c] = 0.0;
+          gas_source[c] = 0.0;
 
       }
-
-
+      //if (c==IntVector(2,25,25)){
+      //  cout << "BEN 3: drag"<< _dir << " qn"<< d_quadNode << " " << model[c] << " " << gas_source[c] << endl;
+      //}
     }
   }
 }

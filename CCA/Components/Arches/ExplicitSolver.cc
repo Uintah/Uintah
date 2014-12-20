@@ -446,7 +446,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       DQMOMEqnFactory::EqnMap& weights_eqns = dqmomFactory.retrieve_weights_eqns();
       DQMOMEqnFactory::EqnMap& abscissas_eqns = dqmomFactory.retrieve_abscissas_eqns();
 
-      // Compute the particle velocities
+      // Compute the particle velocities at time t w^tu^t/w^t
       d_partVel->schedComputePartVel( level, sched, curr_level );
 
       // Evaluate DQMOM equations
@@ -455,7 +455,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
       }
 
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
@@ -463,11 +463,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );
+        dqmom_eqn->sched_evalTransportEqn( level, sched, curr_level );//compute rhs
       }
 
       // schedule the models for evaluation
-      modelFactory.sched_coalParticleCalculation( level, sched, curr_level );
+      modelFactory.sched_coalParticleCalculation( level, sched, curr_level );// compute drag, devol, char, etc models..
 
       // schedule DQMOM linear solve
       d_dqmomSolver->sched_solveLinearSystem( level, sched, curr_level );
@@ -478,7 +478,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );
+        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
       }
 
       for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
@@ -486,7 +486,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );
+        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
       }
 
 

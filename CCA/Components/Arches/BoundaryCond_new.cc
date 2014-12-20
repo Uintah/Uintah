@@ -301,7 +301,6 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
     IntVector insideCellDir = patch->faceDirection(face);
     //get the number of children
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
-
     for (int child = 0; child < numChildren; child++){
       Vector bc_value = Vector(0.0, 0.0, 0.0);
       string bc_kind = "NotSet";

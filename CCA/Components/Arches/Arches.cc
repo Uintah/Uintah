@@ -1317,7 +1317,7 @@ Arches::scheduleInitialize(const LevelP& level,
       DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second); 
       dqmom_eqn->sched_getUnscaledValues( level, sched ); 
     }
-
+    d_partVel->schedInitPartVel(level, sched);
   }
 
 
@@ -2134,11 +2134,6 @@ Arches::sched_weightedAbsInit( const LevelP& level,
   }
 
   // Particle Velocities
-  for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin();
-        i != d_lab->partVel.end(); i++){
-    tsk->computes( i->second );
-  }
-  tsk->requires( Task::NewDW, d_lab->d_CCVelocityLabel, Ghost::None, 0 );
 
   // Models
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -2244,23 +2239,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       }
     }
 
-    constCCVariable<Vector> gasVel;
-    new_dw->get( gasVel, d_lab->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
      // --- PARTICLE VELS
-    for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin();
-          i != d_lab->partVel.end(); i++){
-
-      CCVariable<Vector> partVel;
-      new_dw->allocateAndPut( partVel, i->second, matlIndex, patch );
-      partVel.initialize(Vector(0.,0.,0.));
-
-      for (CellIterator iter=patch->getCellIterator();
-           !iter.done(); iter++){
-        IntVector c = *iter;
-        partVel[c] = gasVel[c];
-
-      }
-    }
 
 
     // --- MODELS VALUES

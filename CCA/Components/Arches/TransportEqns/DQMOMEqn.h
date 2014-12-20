@@ -173,14 +173,27 @@ public:
 
     if( clip.activated && clip.do_low ) {
 
-      double small = clip.low + clip.tol; 
-      return small; 
+      return clip.low;  
 
     } else {
 
       return 0.0; 
     } 
   }
+
+  /** @brief Get the small clipping value (for weights only). */
+  inline double getSmallClipCriteria(){
+
+    if( clip.activated && clip.do_low ) {
+
+      return clip.low+clip.tol; 
+
+    } else {
+
+      return 1e300;  // Infinity
+    } 
+  } 
+
 
   /** @brief Set this equation as a weight.
    this seems a little dangerous.  Is there a better way? */
@@ -207,7 +220,7 @@ private:
   std::vector<std::string> d_sources;
   bool d_addExtraSources; 
   double d_w_small;               ///< Value of "small" weights
-  double d_nominal;               ///< nominal value of the IC when weight -> zero
+  std::vector<double> d_nominal;               ///< nominal value for each IC when weight -> zero
   bool d_unweighted;
   DQMOMEqnFactory::NDF_DESCRIPTOR d_descriptor;    ///< This actor plays this role.  
   std::string d_ic_name; 

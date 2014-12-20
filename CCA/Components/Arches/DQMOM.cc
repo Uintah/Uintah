@@ -173,7 +173,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     EqnBase& temp_weightEqnE = eqn_factory.retrieve_scalar_eqn( weight_name );
     DQMOMEqn& temp_weightEqnD = dynamic_cast<DQMOMEqn&>(temp_weightEqnE);
     weightEqns.push_back( &temp_weightEqnD );
-    d_w_small = temp_weightEqnD.getSmallClip();
+    d_w_small = temp_weightEqnD.getSmallClipCriteria();
     d_weight_scaling_constant = temp_weightEqnD.getScalingConstant();
   }
 
@@ -496,6 +496,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
          iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+      std::string eqn_name = (*iEqn)->getEqnName(); 
 
       // instead of using a CCVariable, use a constCCVarWrapper struct
       constCCVarWrapper_withModels tempWrapper;
@@ -685,7 +686,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
  
       }else if( b_simplest == true ){
    
-
           double start_AXBConstructionTime = Time::currentSeconds();
 
           total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
@@ -694,35 +694,21 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
           
           int z=0; // equation loop counter
+          int z2=0; // equation loop counter
           
           // Weight equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
               iEqn != weightEqns.end(); ++iEqn ) {
-              
-              if (z >= dimension ) {
-                  stringstream err_msg;
-                  err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-                  throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-              } else {
                 (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-              }
+              ++z;
           }
           // Weighted abscissa equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
               iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-
-              // Make sure several critera are met for an acceptable solution
-              if (z >= dimension ) {
-                  stringstream err_msg;
-                  err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-                  throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-              } else {
-                (*(Source_weights_weightedAbscissas[z]))[c] = models[z];
-              }
+                (*(Source_weights_weightedAbscissas[z]))[c] = models[z2];
               ++z;
+              ++z2;
           }
-          
-      
       }else if( b_useLapack == false ) {
 
         ///////////////////////////////////////////////////////
@@ -1733,22 +1719,6 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
 
     (*BB)[k] = totalsumS;
   } // end moments
-}
-
-
-
-// **********************************************
-// Construct source terms directly for simplest linear type solver
-// **********************************************
-void
-DQMOM::construct_Simplest_XX( ColumnMatrix*  &XX,
-                         vector<double> &models)
-{
-    for ( unsigned int k = 0; k< N_; k++)
-        (*XX) [k] = 0.0;
-    for ( unsigned int k = 0; k < N_*N_xi; k++) {
-        (*XX) [k+N_] = models[k];
-    } // end moments
 }
 
 

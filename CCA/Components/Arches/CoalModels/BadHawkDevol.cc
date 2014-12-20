@@ -253,7 +253,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
-  d_w_small = weight_eqn.getSmallClip();
+  d_w_small = weight_eqn.getSmallClipCriteria();
   d_w_scaling_factor = weight_eqn.getScalingConstant();
   tsk->requires(Task::OldDW, d_weight_label, gn, 0);
 
