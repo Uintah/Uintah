@@ -194,7 +194,6 @@ public:
     } 
   } 
 
-
   /** @brief Set this equation as a weight.
    this seems a little dangerous.  Is there a better way? */
   inline void setAsWeight(){
