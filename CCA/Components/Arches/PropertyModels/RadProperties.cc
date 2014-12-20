@@ -223,7 +223,7 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     }
     for ( int i = 0; i < _nQn_part; i++ ){
       std::string label_name_s = _base_size_label_name + "_qn"; 
-      std::string label_name_t = _base_temperature_label_name + "_"; 
+      std::string label_name_t = _base_temperature_label_name + "_qn"; 
       std::string label_name_w =   "w_qn"; 
       std::stringstream out; 
       out << i; 
@@ -231,7 +231,6 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       label_name_t += out.str();  // temperature
       label_name_w += out.str();  // weight
 
-<<<<<<< HEAD
       // requires size
       const VarLabel* label_s = VarLabel::find( label_name_s );
       if ( label_s != 0 ){ 
@@ -258,14 +257,6 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       } else { 
         throw ProblemSetupException("Error: Could not find labels for:"+label_name_w,__FILE__, __LINE__);
       }
-=======
-      tsk->requires( Task::OldDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
-      tsk->requires( Task::OldDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
-      tsk->requires( Task::OldDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, VarLabel::find( label_name_s ) , Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, VarLabel::find( label_name_t ) , Ghost::None, 0 ); 
-      tsk->requires( Task::NewDW, VarLabel::find( label_name_w ) , Ghost::None, 0 ); 
->>>>>>> Removed Ben print statements. Added Yamamotodevol changes. Made
 
     }
 
@@ -422,7 +413,6 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
         pWeight.push_back( var ); 
       } 
 
-<<<<<<< HEAD
       /////--Other required scalars needed to compute optical props
       std::vector< const VarLabel*> requiredLabels;
       requiredLabels =  _ocalc->getRequiresLabels();  
@@ -437,39 +427,6 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
           for ( int i=0; i<_nQn_part; i++){ 
             new_dw->allocateAndPut(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
             complexIndexReal[i].initialize(0.0);
-=======
-      if ( _particlesOn){ 
-        // Create containers to be passed to function that populates abskp
-        DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
-        CCCV pWeight;      // particle weights
-        CCCV pSize;        // particle sizes
-        CCCV pTemperature; // particle Temperatures
-        typedef std::vector<const VarLabel*> CCCVL; // object used for iterating over quadrature nodes
-
-
-        // Get labels and scaling constants for DQMOM size, temperature and weights
-        std::vector<const VarLabel*> s_varlabels;     // DQMOM size label
-        std::vector<const VarLabel*> w_varlabels;     // DQMOM weight label
-        std::vector<const VarLabel*> t_varlabels;     // DQMOM Temperature label
-        s_varlabels.resize(0);
-        w_varlabels.resize(0);
-        t_varlabels.resize(0);
-        double s_scaling_constant; // scaling constant for sizes
-        double w_scaling_constant; // scaling constant for weights
-
-        for ( int i = 0; i < _nQn_part; i++ ){
-          std::string label_name_s = _base_size_label_name + "_qn"; 
-          std::string label_name_t = _base_temperature_label_name + "_"; 
-          std::string label_name_w =   "w_qn"; 
-          std::stringstream out; 
-          out << i; 
-          label_name_s += out.str(); 
-          label_name_t += out.str(); 
-          label_name_w += out.str(); 
-          if (i == 0){
-            s_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_s).getScalingConstant();
-            w_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_w).getScalingConstant();
->>>>>>> Removed Ben print statements. Added Yamamotodevol changes. Made
           }
         }
         else{

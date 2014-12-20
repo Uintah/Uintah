@@ -534,9 +534,10 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         // Radiation part: -------------------------
         Q_radiation = 0.0;
         if ( d_radiation) { 
+          double Apsc = abskp[c];
           double Eb = 4.0*_sigma*pow(temperatureph,4.0);
           FSum = radiationVolqIN[c];    
-          Q_radiation = abskp[c]*(FSum - Eb);
+          Q_radiation = Apsc*(FSum - Eb);
         } 
 
         double hint = -156.076 + 380/(-1 + exp(380 / particle_temperatureph)) + 3600/(-1 + exp(1800 / particle_temperatureph));
