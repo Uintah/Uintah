@@ -17,10 +17,7 @@ SRCS += \
   $(SRCDIR)/SimpleHeatTransfer.cc \
   $(SRCDIR)/ShaddixHeatTransfer.cc \
   $(SRCDIR)/EnthalpyShaddix.cc \
-  $(SRCDIR)/XDragModel.cc \
-  $(SRCDIR)/YDragModel.cc \
-  $(SRCDIR)/ZDragModel.cc \
-  $(SRCDIR)/DragModel.cc
+  $(SRCDIR)/DragModel.cc 
 
 $(SRCDIR)/ShaddixHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
 $(SRCDIR)/EnthalpyShaddix.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h

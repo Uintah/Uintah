@@ -90,11 +90,6 @@ private:
       double ASH; 
       double H2O; 
     };
-
-
-
-
-  
   };
 }
 #endif 

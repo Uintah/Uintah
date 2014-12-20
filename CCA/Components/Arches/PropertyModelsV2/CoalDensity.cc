@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/PropertyModelsV2/CoalDensity.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -20,9 +21,9 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
 
 
   const ProblemSpecP db_root = db->getRootNode(); 
-  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CoalProperties") ){ 
+  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties") ){ 
 
-    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CoalProperties");
+    ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
 
     db_coal_props->require("density",_rhop_o); 
     db_coal_props->require("diameter_distribution", _sizes); 
@@ -71,23 +72,8 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__); 
     }
 
-    if ( db_coal_props->findBlock("raw_coal") ){ 
-
-      _rawcoal_base_name = "NOTSPECIFIED";
-      db_coal_props->findBlock("raw_coal")->getAttribute("label",_rawcoal_base_name); 
-
-    } else { 
-      throw ProblemSetupException("Error: No <rawcoal> node (and label attribute) found in <CoalProperties>.", __FILE__, __LINE__);
-    }
-    if ( db_coal_props->findBlock("char") ){ 
-
-      _char_base_name = "NOTSPECIFIED";
-      db_coal_props->findBlock("char")->getAttribute("label",_char_base_name); 
-
-    } else { 
-      throw ProblemSetupException("Error: No <char> node (and label attribute) found in <CoalProperties>.", __FILE__, __LINE__);
-    }
-
+    _rawcoal_base_name = PropertyHelper::parse_for_role_to_label(db, "raw_coal"); 
+    _char_base_name = PropertyHelper::parse_for_role_to_label(db, "char"); 
 
   } else { 
     throw ProblemSetupException("Error: <CoalProperties> required in UPS file to compute a coal density.", __FILE__, __LINE__);

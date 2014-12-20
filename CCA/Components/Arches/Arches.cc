@@ -43,9 +43,7 @@
 #include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
-#include <CCA/Components/Arches/CoalModels/XDragModel.h>
-#include <CCA/Components/Arches/CoalModels/YDragModel.h>
-#include <CCA/Components/Arches/CoalModels/ZDragModel.h>
+#include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -908,7 +906,6 @@ Arches::problemSetup(const ProblemSpecP& params,
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
       weight.setAsWeight();
       weight.problemSetup( w_db );
-
     }
 
     // loop for all ic's
@@ -2115,12 +2112,12 @@ Arches::sched_weightedAbsInit( const LevelP& level,
 {
   Task* tsk = scinew Task( "Arches::weightedAbsInit",
                            this, &Arches::weightedAbsInit);
-    // DQMOM transport vars
+  // DQMOM transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-    EqnBase* temp_eqn = ieqn->second;
-    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second); 
 
     if (!eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
@@ -2176,15 +2173,6 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw )
 {
-  // ***************************************
-  // QUESTION: WHY DOES THIS FUNCTION GET CALLED ON THE FIRST TIMESTEP RATHER THAN THE ZEROTH TIMESTEP???
-  // This causes several problems:
-  // - The RHS/unweighted variables are unavailable until the first timestep
-  //      (not available at zeroth timestep because they're initialized here, and this isn't called until the first timestep)
-  // - DQMOM & other scalars are not initialized until the first timestep, so at the first timestep (if you output it) everything is 0.0!!!
-  //      (this means that if you initialize your scalar to be a step function, you never see the scalar as the actual step function;
-  //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
-  // ***************************************
 
   string msg = "Initializing all DQMOM weighted abscissa equations...";
   proc0cout << msg << std::endl;
@@ -2684,17 +2672,9 @@ void Arches::registerModels(ProblemSpecP& db)
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "XDrag" ) {
-          ModelBuilder* modelBuilder = scinew XDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+        } else if ( model_type == "Drag" ) {
+          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "YDrag" ) {
-          ModelBuilder* modelBuilder = scinew YDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "ZDrag" ) {
-          ModelBuilder* modelBuilder = scinew ZDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
-        //} else if (model_type == "Drag" ) {
-        //  ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
           proc0cout << "with type: " << model_type << endl;

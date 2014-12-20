@@ -43,7 +43,7 @@ public:
 private:
 
   std::string d_ic_name; 
-  const int d_quadNode;
+  int d_quadNode;
 
 }; 
 // End Builder
@@ -153,20 +153,20 @@ public:
 
   /** @brief Return the list of models associated with this equation. */
   inline const std::vector<std::string> getModelsList(){
-    return d_models; };
+    return d_models; }
 
   /** @brief Return the VarLabel for this equation's source term. */ 
   inline const VarLabel* getSourceLabel(){
-    return d_sourceLabel; };
+    return d_sourceLabel; }
 
   /** @brief  Return the VarLabel for the unweighted (and unscaled) value of this transport equation */
   inline const VarLabel* getUnscaledLabel(){
-    return d_icLabel; };
+    return d_icLabel; }
 
   /** @brief return a bool to tell if this equation is a weight.
    If false, this eqn is a weighted abscissa */
   inline bool weight(){
-    return d_weight; };
+    return d_weight; }
 
   /** @brief Get the small clipping value (for weights only). */
   inline double getSmallClip(){
@@ -180,16 +180,20 @@ public:
 
       return 0.0; 
     } 
-  }; 
+  }
 
   /** @brief Set this equation as a weight.
    this seems a little dangerous.  Is there a better way? */
   inline void setAsWeight(){
-    d_weight = true; }; 
+    d_weight = true; }
 
   /** @brief Get the quadrature node value. */
   inline int getQuadNode(){
-    return d_quadNode; };
+    return d_quadNode; }
+
+  /** @brief Get the IC name. */ 
+  inline std::string getICName(){ 
+    return d_ic_name; }
 
  
 private:

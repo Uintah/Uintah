@@ -1,15 +1,18 @@
+#include <CCA/Components/Arches/CoalModels/DragModel.h>
+#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/CoalModels/PartVel.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
+#include <CCA/Components/Arches/ArchesLabel.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-#include <CCA/Components/Arches/CoalModels/DragModel.h>
-#include <CCA/Components/Arches/CoalModels/PartVel.h>
-#include <CCA/Components/Arches/ArchesLabel.h>
-#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
-#include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
-#include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <Core/Exceptions/InvalidValue.h>
 
 //===========================================================================
@@ -19,6 +22,7 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
+
 DragModelBuilder::DragModelBuilder( const std::string         & modelName, 
                                     const vector<std::string> & reqICLabelNames,
                                     const vector<std::string> & reqScalarLabelNames,
@@ -33,6 +37,7 @@ DragModelBuilder::~DragModelBuilder(){}
 ModelBase* DragModelBuilder::build(){
   return scinew DragModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
+
 // End Builder
 //---------------------------------------------------------------------------
 
@@ -44,15 +49,16 @@ DragModel::DragModel( std::string modelName,
                       int qn ) 
 : ModelBase(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  pi = 3.141592653589793;
-  d_quadNode = qn;
-  
   // Create a label for this model
-  d_modelLabel = VarLabel::create( modelName, CCVariable<Vector>::getTypeDescription() );
+  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() );
 
   // Create the gas phase source term associated with this model
   std::string gasSourceName = modelName + "_gasSource";
-  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<Vector>::getTypeDescription() );
+  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
+
+  //constants
+  _pi = acos(-1.0);
+
 }
 
 DragModel::~DragModel()
@@ -61,408 +67,241 @@ DragModel::~DragModel()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 DragModel::problemSetup(const ProblemSpecP& params, int qn)
 {
 
-  ProblemSpecP db = params; 
+  ProblemSpecP db = params;
 
-  string label_name;
-  string role_name;
-  string temp_label_name;
-  string node;
-  std::stringstream out;
+  DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
-  // Look for required internal coordinates
-  ProblemSpecP db_icvars = params->findBlock("ICVars");
-  for (ProblemSpecP variable = db_icvars->findBlock("variable"); variable != 0; variable = variable->findNextBlock("variable") ) {
-
-    variable->getAttribute("label",label_name);
-    variable->getAttribute("role", role_name);
-
-    temp_label_name = label_name;
-    
-    out << qn;
-    node = out.str();
-    temp_label_name += "_qn";
-    temp_label_name += node;
-
-    // user specifies "role" of each internal coordinate
-    // if it isn't an internal coordinate or a scalar, it's required explicitly
-    // ( see comments in Arches::registerModels() for details )
-    if (role_name == "particle_length") {
-      LabelToRoleMap[temp_label_name] = role_name;
-    } else {
-      std::string errmsg;
-      errmsg = "Invalid variable role for Drag model: must be \"particle_length\", you specified \"" + role_name + "\".";
-      throw InvalidValue(errmsg,__FILE__,__LINE__);
-    }
-
-    // set model clipping (not used yet...)
-    db->getWithDefault( "low_clip", d_lowModelClip,   1.0e-6 );
-    db->getWithDefault( "high_clip", d_highModelClip, 999999 );  
- 
+  // check for gravity
+  const ProblemSpecP params_root = db->getRootNode();
+  if (params_root->findBlock("PhysicalConstants")) {
+    ProblemSpecP db_phys = params_root->findBlock("PhysicalConstants");
+    db_phys->require("gravity", _gravity);
+    db_phys->require("viscosity", _kvisc);
+  } else {
+    throw InvalidValue("Error: Missing <PhysicalConstants> section in input file required for drag model.",__FILE__,__LINE__);
   }
 
-  // Look for required scalars
-  //   ( Drag model doesn't use any extra scalars (yet)
-  //     but if it did, this "for" loop would have to be un-commented )
-  /*
-  ProblemSpecP db_scalarvars = params->findBlock("scalarVars");
-  for( ProblemSpecP variable = db_scalarvars->findBlock("variable");
-       variable != 0; variable = variable->findNextBlock("variable") ) {
+  std::string coord; 
+  db->require("direction",coord);
 
-    variable->getAttribute("label", label_name);
-    variable->getAttribute("role",  role_name);
-
-    temp_label_name = label_name;
-    out << qn;
-    node = out.str();
-    temp_label_name += "_qn";
-    temp_label_name += node;
-
-    // user specifies "role" of each scalar
-    // if it isn't an internal coordinate or a scalar, it's required explicitly
-    // ( see comments in Arches::registerModels() for details )
-    if ( role_name == "particle_length" ) {
-      LabelToRoleMap[temp_label_name] = role_name;
-    } else {
-      std::string errmsg;
-      errmsg = "Invalid variable role for Drag model: must be \"particle_length\", you specified \"" + role_name + "\".";
-      throw InvalidValue(errmsg,__FILE__,__LINE__);
-    }
-
-  }
-  */
-
-  string temp_ic_name;
-  string temp_ic_name_full;
-
-  // fix the d_icLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  for ( vector<std::string>::iterator iString = d_icLabels.begin(); 
-        iString != d_icLabels.end(); ++iString) {
-    temp_ic_name      = (*iString);
-    temp_ic_name_full = temp_ic_name;
-
-    out << qn;
-    node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
-
-    std::replace( d_icLabels.begin(), d_icLabels.end(), temp_ic_name, temp_ic_name_full);
+  if ( coord == "x" || coord == "X" ){ 
+    _dir = 0;
+  } else if ( coord == "y" || coord == "Y" ){ 
+    _dir = 1; 
+  } else { 
+    _dir = 2; 
   }
 
-  // fix the d_scalarLabels to point to the correct quadrature node (since there is 1 model per quad node)
-  // (Not needed for DragModel (yet)... If it is, uncomment the block below)
-  /*
-  for ( vector<std::string>::iterator iString = d_scalarLabels.begin(); 
-        iString != d_scalarLabels.end(); ++iString) {
-    temp_ic_name      = (*iString);
-    temp_ic_name_full = temp_ic_name;
 
-    out << qn;
-    node = out.str();
-    temp_ic_name_full += "_qn";
-    temp_ic_name_full += node;
+  // Need a size IC: 
+  std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
+  _length_name = PropertyHelper::append_env( length_root, d_quadNode ); 
 
-    std::replace( d_scalarLabels.begin(), d_scalarLabels.end(), temp_ic_name, temp_ic_name_full);
+  // Need a density
+  std::string density_root = PropertyHelper::parse_for_role_to_label(db, "density"); 
+  _density_name = PropertyHelper::append_env( density_root, d_quadNode ); 
+
+  // Need velocity scaling constant
+  std::string vel_root; 
+  if ( _dir == 0 ){ 
+    vel_root = PropertyHelper::parse_for_role_to_label(db, "uvel"); 
+  } else if ( _dir == 1){ 
+    vel_root = PropertyHelper::parse_for_role_to_label(db, "vvel"); 
+  } else { 
+    vel_root = PropertyHelper::parse_for_role_to_label(db, "wvel"); 
   }
-  */
+  
+  vel_root = PropertyHelper::append_qn_env( vel_root, d_quadNode ); 
+  EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
+  DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
+  _vel_scaling_const = current_eqn.getScalingConstant();
+
+  // Need weight name and scaling constant
+  _weight_name = PropertyHelper::append_qn_env("w", d_quadNode); 
+  EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(_weight_name);
+  DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
+  _w_scaling_const = current_eqn2.getScalingConstant();
 
 }
 
 //---------------------------------------------------------------------------
-// Method: Schedule the initialization of some variables 
+// Method: Schedule the initialization of special variables unique to model
 //---------------------------------------------------------------------------
 void 
 DragModel::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
-
-  std::string taskname = "DragModel::initVars";
-  Task* tsk = scinew Task(taskname, this, &DragModel::initVars);
-
-  // d_modelLabel and d_gasLabel are "required" in the ModelBase class...
-
-  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
 //-------------------------------------------------------------------------
-// Method: Initialize variables
+// Method: Initialize special variables unique to the model
 //-------------------------------------------------------------------------
 void
 DragModel::initVars( const ProcessorGroup * pc, 
-                     const PatchSubset    * patches, 
-                     const MaterialSubset * matls, 
-                     DataWarehouse        * old_dw, 
-                     DataWarehouse        * new_dw )
+                            const PatchSubset    * patches, 
+                            const MaterialSubset * matls, 
+                            DataWarehouse        * old_dw, 
+                            DataWarehouse        * new_dw )
 {
-  for( int p=0; p < patches->size(); p++ ) {  // Patch loop
-    
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    CCVariable<double> model;
-    CCVariable<double> gasSource;
-    
-    constCCVariable<double> oldModel;
-    constCCVariable<double> oldGasSource;
-
-    new_dw->allocateAndPut( model,     d_modelLabel, matlIndex, patch );
-    new_dw->allocateAndPut( gasSource, d_gasLabel,   matlIndex, patch ); 
-
-    old_dw->get( oldModel,     d_modelLabel, matlIndex, patch, gn, 0 );
-    old_dw->get( oldGasSource, d_gasLabel,   matlIndex, patch, gn, 0 );
-    
-    model.copyData(oldModel);
-    gasSource.copyData(oldGasSource);
-
-  }
 }
 
 
+
 //---------------------------------------------------------------------------
-// Method: Schedule the calculation of the Model 
+// Method: Schedule the calculation of the model 
 //---------------------------------------------------------------------------
 void 
 DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "DragModel::computeModel";
-  Task* tsk = scinew Task(taskname, this, &DragModel::computeModel);
+  Task* tsk = scinew Task( taskname, this, &DragModel::computeModel, timeSubStep );
 
   Ghost::GhostType  gn  = Ghost::None;
 
-  d_timeSubStep = timeSubStep; 
+  Task::WhichDW which_dw; 
 
-  if (d_timeSubStep == 0 ) { //&& !d_labelSchedInit) {
-    // Every model term needs to set this flag after the varLabel is computed. 
-    // transportEqn.cleanUp should reinitialize this flag at the end of the time step. 
-    d_labelSchedInit = true;
-
+  if (timeSubStep == 0 ) { 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
+    which_dw = Task::OldDW; 
   } else {
     tsk->modifies(d_modelLabel); 
-    tsk->modifies(d_gasLabel);
+    tsk->modifies(d_gasLabel); 
+    which_dw = Task::NewDW; 
   }
+
+  //density: 
+  const VarLabel* rhop_label = VarLabel::find(_density_name); 
+  const VarLabel* length_label = VarLabel::find(_length_name); 
+  const VarLabel* weight_label = VarLabel::find(_weight_name); 
+  tsk->requires( which_dw, rhop_label, gn, 0 ); 
+  tsk->requires( which_dw, length_label, gn, 0 );
+  tsk->requires( which_dw, weight_label, gn, 0 ); 
 
   //EqnFactory& eqn_factory = EqnFactory::self();
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
 
-  // construct the weight label corresponding to this quad node
-  std::string temp_weight_name = "w_qn";
-  std::string node;
-  std::stringstream out;
-  out << d_quadNode;
-  node = out.str();
-  temp_weight_name += node;
-  EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
-  DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
-  d_weight_label = weight_eqn.getTransportEqnLabel();
-  d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_factor = weight_eqn.getScalingConstant();
-  tsk->requires( Task::OldDW, d_weight_label, Ghost::None, 0);
-
-  // require gas velocity
-  tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+  tsk->requires(which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+  tsk->requires(which_dw, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
-  tsk->requires( Task::OldDW, i->second, gn, 0 );
+  tsk->requires( Task::NewDW, i->second, gn, 0 );
 
-  // For each required variable, determine what role it plays
-  // - "gas_velocity" - require the "NewCCVelocity" label (that's already done)
-  // - "particle_velocity" - require the "partVel" label from PartVel map (that's alrady done)
-  //                         (this could potentially be an internal coordinate... 
-  //                          so look for it in internal coordinate map if it's in the
-  //                          <ICVar> block!!!)
-  // - "particle_length" - look in DQMOMEqnFactory
-
-  // for each required internal coordinate:
-  for (vector<std::string>::iterator iter = d_icLabels.begin(); 
-      iter != d_icLabels.end(); iter++) { 
-
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-
-    if ( iMap != LabelToRoleMap.end() ) {
-      if ( iMap->second == "gas_velocity") {
-        // automatically using Arches' velocity label, so do nothing
-      } else if ( iMap->second == "particle_velocity" ) {
-        // particle_velocity is specified as an internal coordinate (found in <ICVar> block)
-        // so look for it in the DQMOMEqn map
-        if( dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_particle_velocity_label = current_eqn.getTransportEqnLabel();
-          d_pv_scaling_factor = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_particle_length_label, gn, 0);
-        } else {
-          std::string errmsg = "ARCHES: DragModel: Invalid variable given in <variable> tag for Drag model";
-          errmsg += "\nCould not find given particle velocity variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-
-      } else if ( iMap->second == "particle_length" ) {
-        if (dqmom_eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
-          DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
-          d_particle_length_label = current_eqn.getTransportEqnLabel();
-          d_pl_scaling_factor = current_eqn.getScalingConstant();
-          tsk->requires(Task::OldDW, d_particle_length_label, gn, 0);
-        } else {
-          std::string errmsg = "ARCHES: DragModel: Invalid variable given in <variable> tag for Drag model";
-          errmsg += "\nCould not find given particle length variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory or in DQMOMEqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      } //else... we don't need that variable!
-           
-     
-    } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: DragModel: You specified that the variable \"" + *iter + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue(errmsg,__FILE__,__LINE__);
-    }
-  }
-
-
-  // for each required scalar variable:
-  //  (but no scalar equation variables should be required for the Drag model, at least not for now...)
-  /*
-  for( vector<std::string>::iterator iter = d_scalarLabels.begin();
-       iter != d_scalarLabels.end(); ++iter) {
-    map<string, string>::iterator iMap = LabelToRoleMap.find(*iter);
-    
-    if( iMap != LabelToRoleMap.end() ) {
-      if( iMap->second == <insert role name here> ) {
-        if( eqn_factory.find_scalar_eqn(*iter) ) {
-          EqnBase& current_eqn = eqn_factory.retrieve_scalar_eqn(*iter);
-          d_<insert role name here>_label = current_eqn.getTransportEqnLabel();
-          tsk->requires(Task::OldDW, d_<insert role name here>_label, Ghost::None, 0);
-        } else {
-          std::string errmsg = "ARCHES: DragModel: Invalid variable given in <scalarVars> block for <variable> tag for DragModel model.";
-          errmsg += "\nCould not find given <insert role name here> variable \"";
-          errmsg += *iter;
-          errmsg += "\" in EqnFactory.";
-          throw InvalidValue(errmsg,__FILE__,__LINE__);
-        }
-      }
-    } else {
-      // can't find this required variable in the labels-to-roles map!
-      std::string errmsg = "ARCHES: DragModel: You specified that the variable \"" + *iter + 
-                           "\" was required, but you did not specify a role for it!\n";
-      throw InvalidValue( errmsg, __FILE__, __LINE__);
-    }
-
-  } //end for
-  */
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
+
 }
 //---------------------------------------------------------------------------
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
 DragModel::computeModel( const ProcessorGroup* pc, 
-                         const PatchSubset* patches, 
-                         const MaterialSubset* matls, 
-                         DataWarehouse* old_dw, 
-                         DataWarehouse* new_dw )
+                   const PatchSubset* patches, 
+                   const MaterialSubset* matls, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw, 
+                   const int timeSubStep )
 {
+  //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<Vector> drag_part;
-    if (new_dw->exists( d_modelLabel, matlIndex, patch )){
-      new_dw->getModifiable( drag_part, d_modelLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( drag_part, d_modelLabel, matlIndex, patch );
-      drag_part.initialize(Vector(0.,0.,0.));
+    CCVariable<double> model; 
+    CCVariable<double> gas_source;
+    DataWarehouse* which_dw; 
+
+    if ( timeSubStep == 0 ){ 
+      which_dw = old_dw; 
+      new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+      model.initialize(0.0);
+      new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
+      gas_source.initialize(0.0);
+    } else { 
+      which_dw = new_dw; 
+      new_dw->getModifiable( model, d_modelLabel, matlIndex, patch ); 
+      new_dw->getModifiable( gas_source, d_gasLabel, matlIndex, patch ); 
     }
 
-    CCVariable<Vector> drag_gas; 
-    if (new_dw->exists( d_gasLabel, matlIndex, patch )){
-      new_dw->getModifiable( drag_gas, d_gasLabel, matlIndex, patch ); 
-    } else {
-      new_dw->allocateAndPut( drag_gas, d_gasLabel, matlIndex, patch );
-      drag_gas.initialize(Vector(0.,0.,0.));
-    }
+    constCCVariable<Vector> gasVel;
+    which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
 
-    constCCVariable<Vector> gasVel; 
-    old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
+    constCCVariable<double> den;
+    which_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
 
-    constCCVariable<Vector> partVel; 
+    constCCVariable<double> rho_p; 
+    constCCVariable<double> l_p; 
+    constCCVariable<double> weight; 
+
+    const VarLabel* rhop_label   = VarLabel::find(_density_name);
+    const VarLabel* length_label = VarLabel::find(_length_name);
+    const VarLabel* weight_label = VarLabel::find(_weight_name);
+
+    which_dw->get( rho_p  , rhop_label   , matlIndex , patch , gn , 0 );
+    which_dw->get( l_p    , length_label , matlIndex , patch , gn , 0 );
+    which_dw->get( weight , weight_label , matlIndex , patch , gn , 0 );
+
+    constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
-    old_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
-
-    constCCVariable<double> w_particle_length; 
-    old_dw->get( w_particle_length, d_particle_length_label, matlIndex, patch, gn, 0 );
-
-    constCCVariable<double> weight;
-    old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
-    
+    new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
 
-      if( weight[c] < d_w_small ) {
-        drag_part[c] = Vector(0.,0.,0.);
-        drag_gas[c] = Vector(0.,0.,0.);
+      IntVector c = *iter;
+
+      double gasMag = gasVel[c].x() * gasVel[c].x() + 
+                      gasVel[c].y() * gasVel[c].y() + 
+                      gasVel[c].z() * gasVel[c].z();
+
+      gasMag = pow(gasMag,0.5);
+
+      double partMag = partVel[c].x() * partVel[c].x() + 
+                       partVel[c].y() * partVel[c].y() + 
+                       partVel[c].z() * partVel[c].z(); 
+
+      partMag = pow(partMag,0.5); 
+
+      double diff = std::abs(partMag - gasMag); 
+      double Re  = diff * l_p[c] / ( _kvisc / den[c] );  
+      double f;
+
+      if(Re < 1.0) {
+
+        f = 1.0;
+
+      } else if(Re>1000.0) {
+
+        f = 0.0183*Re;
+
       } else {
-        double length = w_particle_length[c]/weight[c]*d_pl_scaling_factor;   
-        Vector sphGas = Vector(0.,0.,0.);
-        Vector cartGas = gasVel[c]; 
-        
-        Vector sphPart = Vector(0.,0.,0.);
-        Vector cartPart = partVel[c]; 
 
-        sphGas = PartVel::cart2sph( cartGas ); 
-        sphPart = PartVel::cart2sph( cartPart ); 
-        double kvisc = 2.0e-5; 
-        double rhop = 1000.0;
-        double diff = sphGas.z() - sphPart.z(); 
-        double Re  = abs(diff)*length / kvisc;
-        double phi;
-        if(Re < 1) {
-          phi = 1;
-        } else {
-          phi = 1. + .15*pow(Re, 0.687);
-        }
-        double t_p = rhop/(18*kvisc)*pow(length,2); 
-        double part_src_mag = phi/t_p*diff;
-        sphPart = Vector(sphPart.x(), sphPart.y(), part_src_mag);
-        drag_part[c] = PartVel::sph2cart(sphPart);
-        double gas_src_mag = -weight[c]*d_w_scaling_factor*rhop*4/3*pi*phi/t_p*diff*pow(length,3);
-        sphGas = Vector(sphGas.x(), sphGas.y(), gas_src_mag);
-        drag_gas[c] = PartVel::sph2cart(sphGas);
+        f = 1. + .15*pow(Re, 0.687);
 
-        /*
-        cout << "quad_node " << d_quadNode << endl;
-        cout << "drag source " << drag_gas[c] << endl;
-        cout << "partvel " << partVel[c] << endl;
-        cout << "length " << length << endl;
-        cout << "w_scaling " << d_w_scaling_factor << endl;
-        cout << "phi " << phi << endl;
-        cout << "t_p " << t_p << endl;
-        cout << "pi " << pi << endl;
-        cout << "diff " << diff << endl;
-        */
-       }  
+      }
+
+      double t_p = ( rho_p[c] * l_p[c] * l_p[c] )/( 18.0 * _kvisc );
+
+      if ( t_p > 0 ){ 
+
+        model[c] = weight[c] * ( f / t_p * (gasVel[c][_dir]-partVel[c][_dir])+_gravity[_dir]) / _vel_scaling_const;
+        gas_source[c] = -weight[c] * _w_scaling_const * rho_p[c] / 6.0 * _pi * f / t_p * ( gasVel[c][_dir]-partVel[c][_dir] ) * pow(l_p[c],3.0);
+
+      } else { 
+
+        model[c] = 0.0;
+        gas_source[c] = 0.0;
+
+      }
+
+
     }
   }
 }

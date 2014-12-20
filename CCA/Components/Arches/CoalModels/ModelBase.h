@@ -7,6 +7,7 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 
 
 //===============================================================
