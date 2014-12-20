@@ -1344,7 +1344,7 @@ Arches::scheduleInitialize(const LevelP& level,
   //Initialization of COAL property models
   std::vector<std::string> coal_property_tasks = i_property_models->second->retrieve_task_subset("coal_models"); 
   for ( std::vector<std::string>::iterator i = coal_property_tasks.begin(); i != coal_property_tasks.end(); i++){ 
-    TaskInterface::TaskInterface* tsk = i_property_models->second->retrieve_task(*i); 
+    TaskInterface* tsk = i_property_models->second->retrieve_task(*i); 
     tsk->schedule_init(level, sched, matls ); 
   }
   //=================================================================================
