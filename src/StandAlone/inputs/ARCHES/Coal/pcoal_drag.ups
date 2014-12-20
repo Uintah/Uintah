@@ -91,7 +91,19 @@
 <!-- ARCHES specification -->
     <ARCHES>
 
-      <include href="inputs/ARCHES/CoalDataBase/example_coal_2.xml" section="CoalProperties" />
+      <include href="inputs/ARCHES/CoalDataBase/example_coal_2.xml" section="Coal" />
+
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable role="raw_coal" label="RCmass"/>
+          <variable role="char" label="Charmass"/>
+          <variable role="size" label="length"/>
+          <variable role="density" label="rho_coal"/>
+          <variable role="uvel" label="ux"/>
+          <variable role="vvel" label="uy"/>
+          <variable role="wvel" label="uz"/>
+        </ParticleVariables>
+      </EulerianParticles>
 
       <BoundaryConditions/>
 
@@ -143,13 +155,13 @@
 
         <Models>
 
-          <model label="xdragforce" type="XDrag">
+          <model label="xdragforce" type="Drag">
             <direction>x</direction>
           </model>
-          <model label="ydragforce" type="XDrag">
+          <model label="ydragforce" type="Drag">
             <direction>y</direction>
           </model>
-          <model label="zdragforce" type="XDrag">
+          <model label="zdragforce" type="Drag">
             <direction>z</direction>
           </model>
 

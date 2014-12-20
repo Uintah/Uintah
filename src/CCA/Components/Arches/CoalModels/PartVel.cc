@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -29,23 +30,12 @@ PartVel::~PartVel()
 void PartVel::problemSetup(const ProblemSpecP& inputdb)
 {
   ProblemSpecP db = inputdb; 
+  ProblemSpecP dqmom_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
 
-  ProblemSpecP db_root = db->getRootNode();
-  ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
-  if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CoalProperties") ){ 
+  _uname = PropertyHelper::parse_for_role_to_label(db, "uvel"); 
+  _vname = PropertyHelper::parse_for_role_to_label(db, "vvel"); 
+  _wname = PropertyHelper::parse_for_role_to_label(db, "wvel"); 
 
-    ProblemSpecP coal_prop_db =  db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("CoalProperties");
-    if ( coal_prop_db->findBlock("velocity") ){ 
-      coal_prop_db->findBlock("velocity")->getAttribute("ulabel", _uname); 
-      coal_prop_db->findBlock("velocity")->getAttribute("vlabel", _vname); 
-      coal_prop_db->findBlock("velocity")->getAttribute("wlabel", _wname); 
-    } else { 
-      throw InvalidValue("Error: Missing velocity spec for the particles",__FILE__,__LINE__); 
-    }
-
-  } else { 
-      throw InvalidValue("Error: Missing CoalPoperties. ",__FILE__,__LINE__); 
-  }
   std::string which_dqmom; 
   dqmom_db->getAttribute( "type", which_dqmom ); 
   if ( which_dqmom == "unweightedAbs" )

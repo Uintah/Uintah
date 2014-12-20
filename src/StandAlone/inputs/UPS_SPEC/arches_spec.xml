@@ -259,97 +259,71 @@
 
       </EfficiencyCalculator>
 
-      <Coal_Properties                  spec="OPTIONAL NO_DATA">
+      <!-- Gobal Information for eulerian particle methods -->
+      <EulerianParticles                   spec="OPTIONAL NO_DATA">
+        <ParticleVariables                 spec="OPTIONAL NO_DATA">
+          <variable                        spec="MULTIPLE NO_DATA"
+                                           attribute1="role REQUIRED STRING 'raw_coal, char, size, density, uvel, vvel, wvel'"
+                                           attribute2="label REQUIRED STRING"/>
+          
+        </ParticleVariables>
+      </EulerianParticles>
 
-        <raw_coal                       spec="OPTIONAL NO_DATA" 
-                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the raw coal internal coordinate -->
-        <char                           spec="OPTIONAL NO_DATA" 
-                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the char internal coordinate -->
-        <particle_sizes                 spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
-        <particle_density               spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
-        <as_received                    spec="REQUIRED MULTIPLE_DOUBLES"/>                                              
-        
-        <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
-        <ksi                            spec="OPTIONAL DOUBLE" /> <!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
-        <raw_coal_enthalpy              spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for raw coal at 298.15 K -->
-        <char_enthalpy                  spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for char at 298.15 K -->
-        <ash_enthalpy                   spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for ash at 298.15 K -->
-        <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" /> 
-        <!-- Yamamto 1 step rate coefficients in the following order:  -->
-        <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
-        <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
-        <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
-        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  --> 
-        <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
-        <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
-        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
-        <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
-        <!-- Shaddix char oxidation coefficients in the following order:  -->
-        <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
-       
+      <!-- Coal specifics -->
+      <Coal                             spec="OPTIONAL NO_DATA">
 
+        <!-- Coal Properties -->
+        <Properties                     spec="REQUIRED NO_DATA">
+          <diameter_distribution        spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
+          <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
+          <ultimate_analysis            spec="REQUIRED NO_DATA">               <!-- Ultimate analysis. Specified as mass fractions. -->
+            <C                          spec="REQUIRED DOUBLE"/>            
+            <H                          spec="REQUIRED DOUBLE"/>            
+            <O                          spec="REQUIRED DOUBLE"/>            
+            <N                          spec="REQUIRED DOUBLE"/>            
+            <S                          spec="REQUIRED DOUBLE"/>            
+            <H2O                        spec="REQUIRED DOUBLE"/>            
+            <CHAR                       spec="REQUIRED DOUBLE"/>            
+            <ASH                        spec="REQUIRED DOUBLE"/>            
+          </ultimate_analysis>
+          
+          <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
+          <ksi                            spec="OPTIONAL DOUBLE" /> <!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
+          <raw_coal_enthalpy              spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for raw coal at 298.15 K -->
+          <char_enthalpy                  spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for char at 298.15 K -->
+          <ash_enthalpy                   spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for ash at 298.15 K -->
+          <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+          <!-- Yamamto 1 step rate coefficients in the following order:  -->
+          <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
+          <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+          <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
+          <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  --> 
+          <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
+          <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
+          <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
+          <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
+          <!-- Shaddix char oxidation coefficients in the following order:  -->
+          <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
 
-        <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
-        <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
-        <compute_scaling_const          spec="OPTIONAL STRING" /> <!-- used in python script only -->
-        <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
-        <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
-      </Coal_Properties>
-      <CoalProperties                  spec="OPTIONAL NO_DATA">
+          <optics                       spec="OPTIONAL NO_DATA" >
+            <RawCoal_real            spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction --> 
+            <RawCoal_imag            spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction --> 
+            <Ash_real                spec="REQUIRED DOUBLE 'positive'"/> <!-- This is a range, the high and low applies to the real component --> 
+            <Ash_imag                spec="REQUIRED DOUBLE 'negative'"/>  
+          </optics>
 
-        <raw_coal                       spec="OPTIONAL NO_DATA" 
-                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the raw coal internal coordinate -->
-        <char                           spec="OPTIONAL NO_DATA" 
-                                        attribute1 = "label REQUIRED STRING"/> <!-- Root name for the char internal coordinate -->
-        <diameter_distribution          spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
-        <density                        spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
-        <ultimate_analysis              spec="REQUIRED NO_DATA">               <!-- Ultimate analysis. Specified as mass fractions. -->
-          <C                            spec="REQUIRED DOUBLE"/>            
-          <H                            spec="REQUIRED DOUBLE"/>            
-          <O                            spec="REQUIRED DOUBLE"/>            
-          <N                            spec="REQUIRED DOUBLE"/>            
-          <S                            spec="REQUIRED DOUBLE"/>            
-          <H2O                          spec="REQUIRED DOUBLE"/>            
-          <CHAR                         spec="REQUIRED DOUBLE"/>            
-          <ASH                          spec="REQUIRED DOUBLE"/>            
-        </ultimate_analysis>
-        
-        <!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
-        <ksi                            spec="OPTIONAL DOUBLE" /> <!-- Fraction of heat released by char oxidation that goes to the particle, default = 1.0 -->
-        <raw_coal_enthalpy              spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for raw coal at 298.15 K -->
-        <char_enthalpy                  spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for char at 298.15 K -->
-        <ash_enthalpy                   spec="REQUIRED DOUBLE" /> <!-- Enthalpy of formation for ash at 298.15 K -->
-        <Yamamoto_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" /> 
-        <!-- Yamamto 1 step rate coefficients in the following order:  -->
-        <!-- Av[1/s], Ev[J/mole], Yv[-], c0[-], c1[-], c2[-] c3[-], c4[-], c5[-]  -->
-        <KobayashiSarofim_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
-        <!-- KobayashiSarofim 2 step rate coefficients in the following order:  -->
-        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures]  --> 
-        <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
-        <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
-        <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
-        <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
-        <!-- Shaddix char oxidation coefficients in the following order:  -->
-        <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
-       
+        </Properties>
 
+        <!-- Helper python information -->
+        <Python                         spec="OPTIONAL NO_DATA">
+          <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
+          <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
+          <compute_scaling_const          spec="OPTIONAL STRING" /> <!-- used in python script only -->
+          <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
+          <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
+        </Python>
 
-        <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
-        <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
-        <compute_scaling_const          spec="OPTIONAL STRING" /> <!-- used in python script only -->
-        <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
-        <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
-
-
-        <optics                       spec="OPTIONAL NO_DATA" >
-          <RawCoal_real            spec="REQUIRED DOUBLE 'positive'"/> <!-- Real part of the complex index of refraction --> 
-          <RawCoal_imag            spec="REQUIRED DOUBLE 'negative'"/> <!-- Imaginary part of the complex index of refraction --> 
-          <Ash_real                spec="REQUIRED DOUBLE 'positive'"/> <!-- This is a range, the high and low applies to the real component --> 
-          <Ash_imag                spec="REQUIRED DOUBLE 'negative'"/>  
-        </optics>
-
-
-      </Coal_Properties>
+      </Coal>
       
       <Turbulence                       spec="OPTIONAL NO_DATA"
                                         attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, 
@@ -1342,7 +1316,7 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
-                                                                          XDrag, YDrag, ZDrag, Drag,
+                                                                          Drag,
                                                                           ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
@@ -1368,7 +1342,7 @@
 
             <!-- Drag -->
             <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'" 
-                                        need_applies_to="Drag"/>
+                                        need_applies_to="type Drag"/>
 
           </model>
         </Models>
