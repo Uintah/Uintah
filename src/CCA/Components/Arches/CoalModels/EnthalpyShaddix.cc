@@ -267,7 +267,7 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   if ( d_radiation ){ 
     tsk->requires( which_dw, _abskg_varlabel,  Ghost::None, 0);   
     tsk->requires( which_dw, _volq_varlabel, Ghost::None, 0);
-    tsk->requires( which_dw, _abskpLabel, Ghost::None, 0);
+    tsk->requires( which_dw, _abskp_varlabel, Ghost::None, 0);
   }
 
   // require particle phase variables
@@ -304,7 +304,6 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
     CCVariable<double> heat_rate;
     CCVariable<double> gas_heat_rate; 
-    CCVariable<double> abskp; 
     CCVariable<double> qconv;
     CCVariable<double> qrad;
     DataWarehouse* which_dw; 
@@ -313,7 +312,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
       heat_rate.initialize(0.0);
       new_dw->allocateAndPut( gas_heat_rate, d_gasLabel, matlIndex, patch );
-      gas_heat_rate.initialize(0.0);pdate the models to the non-time-lagged
+      gas_heat_rate.initialize(0.0);
       new_dw->allocateAndPut( qconv, d_qconvLabel, matlIndex, patch );
       qconv.initialize(0.0);
       new_dw->allocateAndPut( qrad, d_qradLabel, matlIndex, patch );
@@ -346,7 +345,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> chargas_source;
     which_dw->get( chargas_source, _chargas_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> abskp; 
-    which_dw->get( abskp, _abskpLabel, matlIndex, patch, gn, 0); 
+    which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0); 
 
     // get particle phase variables 
     constCCVariable<double> length;
@@ -451,7 +450,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         // Radiation part: -------------------------
         Q_radiation = 0.0;
         if ( d_radiation) { 
-          double Eb = 4.0*sigma*pow(gas_temperature,4.0);
+          double Eb = 4.0*_sigma*pow(temperatureph,4.0);
           FSum = radiationVolqIN[c];    
           Q_radiation = abskp[c]*(FSum - Eb);
         } 
