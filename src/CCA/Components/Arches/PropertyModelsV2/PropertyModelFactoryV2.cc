@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
+#include <CCA/Components/Arches/PropertyModelsV2/CoalDensity.h>
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 
 using namespace Uintah; 
@@ -37,10 +38,10 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "coal_density" ){ 
 
-        //TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(name,0); 
-        //register_task( name, tsk ); 
+        TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(name,0); 
+        register_task( name, tsk ); 
 
-        //_active_tasks.push_back(name); 
+        _active_tasks.push_back(name); 
         //add to a subgroup? 
       } else { 
         throw InvalidValue("Error: PropertyModel type not recognized.",__FILE__,__LINE__); 
