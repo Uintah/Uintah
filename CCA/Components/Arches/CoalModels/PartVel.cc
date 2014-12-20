@@ -153,7 +153,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
   if (d_bala) {
     //--Old
     // fluid velocity
-    tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+    tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
 
     // requires weighted legnth and weight (to back out length)
     for (int i = 0; i < N; i++){
@@ -251,8 +251,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
 
     if (d_bala) {
 
-      throw InvalidValue("Error: The BALA velocity model isnt working...please fix",__FILE__,__LINE__); 
-
       constCCVariable<Vector> gasVel; 
 
       which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 ); 
@@ -260,7 +258,6 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
       // now loop for all qn's
       int N = dqmomFactory.get_quad_nodes();  
       for ( int iqn = 0; iqn < N; iqn++){
-
         std::string name = "length_qn"; 
         std::string node; 
         std::stringstream out; 
@@ -374,8 +371,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         // set boundary conditions now that the velocity field is set.  
-        name = "vel_qn";
-        name += node; 
+        name = PropertyHelper::append_qn_env("vel", iqn);
         if ( d_gasBC )  // assume gas vel =  part vel on boundary 
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
         else            // part vel set by user.  

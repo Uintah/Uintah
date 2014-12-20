@@ -448,8 +448,8 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
   }
   //-----------------------------------------------------------------------------------//
   
- ProblemSpecP db_coal=db->findBlock("particles")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties");
-
+ ProblemSpecP db_coal=db->findBlock("particles")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+ 
  if (db_coal == 0){
    throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
  }else if (db_coal->findBlock("optics")==0){
@@ -507,19 +507,18 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
     }
   }
   double density;
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")->require( "particle_density", density ); 
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->require( "density", density ); 
 
   vector<double>  particle_sizes ;        /// particle sizes in diameters
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")->require( "particle_sizes", particle_sizes ); 
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->require( "diameter_distribution", particle_sizes ); 
 
-  // 0 1 2 3 4  5    6    7 
-  vector<double> as_received;  // C H O N S char ash moisture
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal_Properties")->require( "as_received", as_received  ); 
+  double ash_massfrac;  
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->findBlock("ultimate_analysis")->require("ASH", ash_massfrac); 
 
   _ash_mass = vector<double>(_nQn_part);        /// particle sizes in diameters
 
   for (int i=0; i< _nQn_part ; i++ ){
-    _ash_mass[i] = pow(particle_sizes[i], 3.0)/6*M_PI*density*as_received[6];
+    _ash_mass[i] = pow(particle_sizes[i], 3.0)/6*M_PI*density*ash_massfrac;
   }
 
 

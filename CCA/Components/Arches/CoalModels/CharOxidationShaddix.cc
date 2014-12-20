@@ -46,12 +46,6 @@ CharOxidationShaddix::CharOxidationShaddix( std::string modelName,
                                         int qn ) 
 : CharOxidation(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
-  // Create a label for this model 
-  d_modelLabel = VarLabel::create( modelName, CCVariable<double>::getTypeDescription() ); 
- 
-  // Create the gas phase source term associated with this model 
-  std::string gasSourceName = modelName + "_gasSource"; 
-  d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() ); 
   // Set constants
   _pi = acos(-1.0);
   _R = 8.314; // J/K/mol
