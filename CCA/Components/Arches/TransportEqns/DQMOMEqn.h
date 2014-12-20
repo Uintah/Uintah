@@ -203,6 +203,7 @@ private:
   std::vector<std::string> d_sources;
   bool d_addExtraSources; 
   double d_w_small;               ///< Value of "small" weights
+  double d_nominal;               ///< nominal value of the IC when weight -> zero
   bool d_unweighted;
   DQMOMEqnFactory::NDF_DESCRIPTOR d_descriptor;    ///< This actor plays this role.  
   std::string d_ic_name; 

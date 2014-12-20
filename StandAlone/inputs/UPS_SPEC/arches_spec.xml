@@ -1414,6 +1414,7 @@
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
+          <nominal_value                spec="REQUIRED DOUBLE"/> <!-- nominal value of the internal coordinate when the weight goes to zero -->
 
           <!-- developer note: When you add a new descriptor here, make sure you add it in the 
                enum definition and the constructor of the DQMOMEqnFactory -->
