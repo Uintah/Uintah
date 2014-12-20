@@ -184,59 +184,6 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     _abskg_varlabel = VarLabel::find(baseNameAbskg);
   }
 
-  std::string modelName;
-  std::string baseNameAbskp;
-  std::string baseNameAbskg;
-
-  if (d_radiation ) {
-    ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
-    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
-        db_model = db_model->findNextBlock("model")){
-      db_model->getAttribute("type", modelName);
-      if (modelName=="radiation_properties"){
-        if  (db_model->findBlock("calculator") == 0){
-          if(qn ==0) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-          d_radiation = false;
-          break;
-        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
-          if(qn ==0) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-          d_radiation = false;
-          break;
-        }
-        db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
-        db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",baseNameAbskg);
-        break;
-      }
-      if  (db_model== 0){
-          if(qn ==0) {
-            proc0cout <<"\n///-------------------------------------------///\n";
-            proc0cout <<"WARNING: No radiation particle properties computed!\n";
-            proc0cout <<"Particles will not interact with radiation!\n";
-            proc0cout <<"///-------------------------------------------///\n";
-          }
-        d_radiation = false;
-        break;
-      }
-    }
-    if (VarLabel::find("radiationVolq")) {
-      _volq_varlabel  = VarLabel::find("radiationVolq"); 
-    } else {
-      throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find radiationVolq.",__FILE__,__LINE__);
-    }
-    std::string abskp_string = PropertyHelper::append_env(baseNameAbskp, d_quadNode);
-    _abskp_varlabel = VarLabel::find(abskp_string);
-    _abskg_varlabel = VarLabel::find(baseNameAbskg);
-  }
 
   // get computed rates from devolatilization model 
   DevolModelMap devolmodels_ = modelFactory.retrieve_devol_models();
