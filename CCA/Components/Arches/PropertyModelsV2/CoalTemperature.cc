@@ -78,7 +78,6 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
                           _init_rawcoal[i] );
 
       }
-cout << "BEN!!! " << _init_ash[0] << " " << _init_ash[1] << " " << _init_ash[2] << endl;
     } else { 
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__); 
     }

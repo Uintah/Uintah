@@ -502,36 +502,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         dqmom_eqn->sched_getUnscaledValues( level, sched );
       }
 
-      // Evaluate DQMOM equations
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = weights_eqns.begin();
-            iEqn != weights_eqns.end(); iEqn++){
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );
-      }
-
-      for ( DQMOMEqnFactory::EqnMap::iterator iEqn = abscissas_eqns.begin();
-            iEqn != abscissas_eqns.end(); iEqn++){
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        dqmom_eqn->sched_updateTransportEqn( level, sched, curr_level );// add sources and solve equation
-      }
-
-
-      // ---- schedule the solution of the transport equations ----
-
-
-      for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
-           iEqn!=dqmom_eqns.end(); ++iEqn ) {
-
-        DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
-
-        //also get the abscissa values
-        dqmom_eqn->sched_getUnscaledValues( level, sched );
-      }
-
       // calculate the moments
       bool saveMoments = d_dqmomSolver->getSaveMoments();
       if( saveMoments ) {
