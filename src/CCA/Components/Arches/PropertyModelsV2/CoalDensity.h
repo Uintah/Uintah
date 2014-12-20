@@ -75,8 +75,8 @@ private:
     std::vector<double> _init_rawcoal;
     std::vector<double> _init_char;
     std::vector<double> _sizes;
+    std::vector<double> _denom; 
 
-    std::string _density_base_name; 
     std::string _rawcoal_base_name; 
     std::string _char_base_name; 
 

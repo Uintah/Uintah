@@ -51,6 +51,7 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
       _init_char.clear(); 
       _init_rawcoal.clear(); 
       _init_ash.clear(); 
+      _denom.clear(); 
 
       _Nenv = _sizes.size(); 
   
@@ -60,11 +61,14 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
         _init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)  
         _init_char.push_back(mass_dry * char_mf);                     // kg_char/particle (initial)
         _init_rawcoal.push_back(mass_dry * raw_coal_mf);              // kg_ash/particle (initial)
+        _denom.push_back( _init_ash[i] + 
+                          _init_char[i] + 
+                          _init_rawcoal[i] );
 
       }
       
     } else { 
-
+      throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__); 
     }
 
     if ( db_coal_props->findBlock("raw_coal") ){ 
@@ -97,7 +101,7 @@ CoalDensity::create_local_labels(){
 
   for ( int i = 0; i < _Nenv; i++ ){ 
 
-    const std::string rho_name = get_env_name( i, _density_base_name );
+    const std::string rho_name = get_env_name( i, _task_name );
     register_new_variable( rho_name, CC_DOUBLE ); 
 
   }
@@ -114,13 +118,13 @@ CoalDensity::register_initialize( std::vector<VariableInformation>& variable_reg
 
   for ( int i = 0; i < _Nenv; i++ ){ 
 
-    const std::string rho_name = get_env_name( i, _density_base_name );
-    const std::string char_name = get_env_name( i, _char_base_name ); 
-    const std::string rc_name = get_env_name( i, _rawcoal_base_name ); 
+    const std::string rho_name  = get_env_name( i, _task_name );
+    const std::string char_name = get_env_name( i, _char_base_name );
+    const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( char_name, CC_DOUBLE, REQUIRES, 0, NEWDW, variable_registry ); 
-    register_variable( rc_name, CC_DOUBLE, REQUIRES, 0, NEWDW, variable_registry ); 
-    register_variable( rho_name, CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( char_name , CC_DOUBLE , REQUIRES , 0                    , NEWDW , variable_registry );
+    register_variable( rc_name   , CC_DOUBLE , REQUIRES , 0                    , NEWDW , variable_registry );
+    register_variable( rho_name  , CC_DOUBLE , COMPUTES , variable_registry );
 
   }
 
@@ -137,19 +141,17 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   for ( int i = 0; i < _Nenv; i++ ){ 
 
-    const std::string rho_name = get_env_name( i, _density_base_name );
-    const std::string char_name = get_env_name( i, _char_base_name ); 
-    const std::string rc_name = get_env_name( i, _rawcoal_base_name ); 
+    const std::string rho_name  = get_env_name( i, _task_name );
+    const std::string char_name = get_env_name( i, _char_base_name );
+    const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    SVolFP rho = tsk_info->get_so_field<SVolF>( rho_name );   
-    SVolFP cchar = tsk_info->get_so_field<SVolF>( char_name ); 
-    SVolFP rc = tsk_info->get_so_field<SVolF>( rc_name ); 
+    SVolFP rho   = tsk_info->get_so_field<SVolF>( rho_name );
+    SVolFP cchar = tsk_info->get_const_so_field<SVolF>( char_name );
+    SVolFP rc    = tsk_info->get_const_so_field<SVolF>( rc_name );
 
     SpatialOps::SpatFldPtr<SVolF> ratio = SpatialFieldStore::get<SVolF>(*rho); 
 
-    double denom = ( _init_ash[i] + _init_rawcoal[i] + _init_char[i] ); 
-
-    *ratio <<= ( *cchar + *rc + _init_ash[i] ) / denom; 
+    *ratio <<= ( *cchar + *rc + _init_ash[i] ) / _denom[i]; 
 
     *rho <<= cond( *ratio > 1.0, _rhop_o )
                  ( *ratio < 0.0, 0.0 )
@@ -183,13 +185,13 @@ CoalDensity::register_timestep_eval( std::vector<VariableInformation>& variable_
 
   for ( int i = 0; i < _Nenv; i++ ){ 
 
-    const std::string rho_name = get_env_name( i, _density_base_name );
-    const std::string char_name = get_env_name( i, _char_base_name ); 
-    const std::string rc_name = get_env_name( i, _rawcoal_base_name ); 
+    const std::string rho_name  = get_env_name( i, _task_name );
+    const std::string char_name = get_env_name( i, _char_base_name );
+    const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( char_name, CC_DOUBLE, REQUIRES, 0, NEWDW, variable_registry ); 
-    register_variable( rc_name, CC_DOUBLE, REQUIRES, 0, NEWDW, variable_registry ); 
-    register_variable( rho_name, CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( char_name, CC_DOUBLE, REQUIRES, 0                    , LATEST, variable_registry );
+    register_variable( rc_name  , CC_DOUBLE, REQUIRES, 0                    , LATEST, variable_registry );
+    register_variable( rho_name , CC_DOUBLE, COMPUTES, variable_registry );
 
   }
 
@@ -206,23 +208,28 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   for ( int i = 0; i < _Nenv; i++ ){ 
 
-    const std::string rho_name  = get_env_name( i, _density_base_name );
+    const std::string rho_name  = get_env_name( i, _task_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    SVolFP rho = tsk_info->get_so_field<SVolF>( rho_name );   
-    SVolFP cchar = tsk_info->get_so_field<SVolF>( char_name ); 
-    SVolFP rc = tsk_info->get_so_field<SVolF>( rc_name ); 
+    SVolFP rho   = tsk_info->get_so_field<SVolF>( rho_name );
+    SVolFP cchar = tsk_info->get_const_so_field<SVolF>( char_name );
+    SVolFP rc    = tsk_info->get_const_so_field<SVolF>( rc_name );
 
     SpatialOps::SpatFldPtr<SVolF> ratio = SpatialFieldStore::get<SVolF>(*rho); 
 
-    double denom = ( _init_ash[i] + _init_rawcoal[i] + _init_char[i] ); 
-
-    *ratio <<= ( *cchar + *rc + _init_ash[i] ) / denom; 
+    *ratio <<= ( *cchar + *rc + _init_ash[i] ) / _denom[i]; 
 
     *rho <<= cond( *ratio > 1.0, _rhop_o )
                  ( *ratio < 0.0, 0.0 )
                  ( *ratio * _rhop_o ); 
+
+    SVolF::iterator it = ratio->interior_begin(); 
+    for (; it != ratio->interior_end(); it++){ 
+
+ //     std::cout << "ratio= " << *it << std::endl;
+    
+    }
 
   }
 }
