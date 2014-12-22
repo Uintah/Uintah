@@ -394,7 +394,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
       d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq);
 
-      if(level->hasFinerLevel() || maxLevels == 1){                                       // FIX ME:  Why maxLevels == 1?
+      if( level->hasFinerLevel() ){
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
         const bool modifies_divQ  = false;
@@ -429,14 +429,14 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     // convert abskg:dbl -> abskg:flt if needed
     d_RMCRT->sched_DoubleToFloat( level,sched, abskg_dw, d_radCalc_freq );
 
-    d_RMCRT->sched_sigmaT4( level,  sched, temp_dw, d_radCalc_freq, false );                    // FIX ME:  compute in extraCells
+    d_RMCRT->sched_sigmaT4( level,  sched, temp_dw, d_radCalc_freq, false );
                                                                    
     Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
     Task::WhichDW celltype_dw = Task::NewDW;
     const bool modifies_divQ  = false;
     const bool backoutTemp    = true;                                                                   
     
-    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp ); // FIX ME:  Do we need this?
+    d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
     
     if (radiometer ){
       radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
