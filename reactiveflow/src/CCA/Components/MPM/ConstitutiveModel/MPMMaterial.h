@@ -107,6 +107,8 @@ WARNING
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
 
+   ScalarDiffusionModel* getScalarDiffusionModel() const;
+
 
    particleIndex createParticles(
                         CCVariable<short int>& cellNAPID,

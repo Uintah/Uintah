@@ -109,11 +109,12 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<double>* volumes       = 0;
     vector<double>* temperatures  = 0;
     vector<double>* colors        = 0;
+    vector<double>* concentrations = 0;
     vector<Vector>* pforces       = 0;
     vector<Vector>* pfiberdirs    = 0;
     vector<Vector>* pvelocities   = 0;    // gcd adds and new change name
     vector<Matrix3>* psizes       = 0;
-		
+
     if (sgp){
       volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
@@ -401,6 +402,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,         d_lb->p_qLabel,            subset);
   }
+
   return subset;
 }
 

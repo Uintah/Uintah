@@ -86,7 +86,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   //     geometry object.
   // 5.  Within the geometry object, assign the boundary conditions
   //     to the object.
-  // 5.  Assign the velocity field.
+  // 6.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
   d_cm = ConstitutiveModelFactory::create(ps,flags);
@@ -104,7 +104,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
     d_sdm = ScalarDiffusionModelFactory::create(ps,flags);
   }
 
-  // Step 2 -- get the general material properties
+  // Step 3 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
@@ -129,7 +129,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   d_includeFlowWork = false;
   ps->get("includeFlowWork",d_includeFlowWork);
 
-  // Step 3 -- Loop through all of the pieces in this geometry object
+  // Step 4 -- Loop through all of the pieces in this geometry object
   //int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
   geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
@@ -181,6 +181,7 @@ MPMMaterial::~MPMMaterial()
 {
   delete d_lb;
   delete d_cm;
+	delete d_sdm;
   delete d_particle_creator;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
@@ -241,6 +242,11 @@ ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
   // with this material
 
   return d_cm;
+}
+
+ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const
+{
+  return d_sdm;
 }
 
 particleIndex MPMMaterial::createParticles(
