@@ -372,6 +372,8 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
     if (flags->d_doScalarDiffusion){
+      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+      sdm->addInitialComputesAndRequires(t, mpm_matl, patches);
     }
   }
 
@@ -1863,6 +1865,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
+			if(flags->d_doScalarDiffusion){
+				// to work on move initialization for from createParticles to here
+        mpm_matl->getScalarDiffusionModel()->initializeSDMData(patch,mpm_matl,new_dw);
+			}
 
     }
     IntVector num_extra_cells=patch->getExtraCells();

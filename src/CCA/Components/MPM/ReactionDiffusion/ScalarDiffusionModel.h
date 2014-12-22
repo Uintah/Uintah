@@ -49,6 +49,9 @@ namespace Uintah {
     virtual void addInitialComputesAndRequires(Task* task,
                                                const MPMMaterial* matl,
                                                const PatchSet* patch) const;
+    virtual void initializeSDMData(const Patch* patch,
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw);
 
   private:
     MPMLabel* d_lb;

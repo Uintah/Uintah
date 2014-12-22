@@ -27,7 +27,9 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/Task.h>
 
+#include <iostream>
 using namespace std;
 using namespace Uintah;
 
@@ -48,10 +50,8 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, MPMFlags* Mflag){
 
   if(d_Mflag->d_scalarDiffusion_type == "explicit"){
     do_explicit = true;
-    std::cout << "doing explicit" << std::endl;
   }else{
     do_explicit = false;
-    std::cout << "doing implicit" << std::endl;
   }
 }
 
@@ -63,4 +63,21 @@ ScalarDiffusionModel::~ScalarDiffusionModel() {
 void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
                                               const MPMMaterial* matl,
                                               const PatchSet* patch) const{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(d_rdlb->pConcentrationLabel,      matlset);
+}
+
+void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
+                                  const MPMMaterial* matl,
+                                  DataWarehouse* new_dw)
+{
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+
+  ParticleVariable<double>  pConcentration;
+
+  new_dw->allocateAndPut(pConcentration,   d_rdlb->pConcentrationLabel, pset);
+
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
+    pConcentration[*iter] = 0.0;
+  }
 }
