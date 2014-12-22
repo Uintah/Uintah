@@ -257,8 +257,8 @@ MPIScheduler::initiateReduction( DetailedTask          * task)
 //______________________________________________________________________
 //
 void
-MPIScheduler::runTask(DetailedTask* task,
-                      int iteration)
+MPIScheduler::runTask( DetailedTask * task,
+		       int            iteration )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask"); TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER);
 
@@ -273,16 +273,14 @@ MPIScheduler::runTask(DetailedTask* task,
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
   vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++)
+  for (int i = 0; i < (int)dws.size(); i++) {
     plain_old_dws[i] = dws[i].get_rep();
-  //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
-  {
-    MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask::doit(" + task->getName() + ")");
-    task->doit(d_myworld, dws, plain_old_dws);
   }
-  //AllocatorSetDefaultTag(tag);
+  
+  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask::doit(" + task->getName() + ")");
+  task->doit( d_myworld, dws, plain_old_dws );
 
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
+  if( trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC ) {
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
@@ -307,6 +305,7 @@ MPIScheduler::runTask(DetailedTask* task,
   }
 
   postMPISends(task, iteration);
+
   task->done(dws);  // should this be timed with taskstart? - BJW
   double teststart = Time::currentSeconds();
 
@@ -977,7 +976,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   finalizeTimestep();
-  
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler

@@ -175,10 +175,10 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
   TAU_PROFILE("TiledRegridder::regrid", " ", TAU_USER);
 
-  vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
+  vector< vector<IntVector> > tiles( min( (int)oldGrid->numLevels() + 1, d_maxLevels ) );
 
   //for each level fine to coarse 
-  for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
+  for( int l = min( (int)oldGrid->numLevels()-1, d_maxLevels-2); l >= 0; l-- )
   {
     //MPI_Barrier(d_myworld->getComm());
     rtimes[15+l]+=Time::currentSeconds()-start;
@@ -234,8 +234,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
 
-  for(int l=0;l<newGrid->numLevels();l++)
-  {
+  for( unsigned int l = 0;l < newGrid->numLevels(); l++ ) {
     LevelP level= newGrid->getLevel(l);
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     //level->assignBCS(grid_ps_,0);

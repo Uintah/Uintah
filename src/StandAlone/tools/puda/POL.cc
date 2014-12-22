@@ -168,7 +168,7 @@ Uintah::POL( DataArchive * da, CommandLineFlags & clf, char axis, int ortho1, in
       }
       
 
-      for(int l=0;l<grid->numLevels();l++){
+      for( unsigned int l = 0; l < grid->numLevels(); l++ ){
         LevelP level = grid->getLevel(l);
 
         // Find the patch on which the cell lives

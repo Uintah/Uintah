@@ -128,7 +128,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
 {
   MALLOC_TRACE_TAG_SCOPE("SingleLevelRegridder::regrid");
 
-  vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
+  vector< vector<IntVector> > tiles( min(oldGrid->numLevels()+1, (unsigned int)d_maxLevels) );
 
   //__________________________________
   //  compute tiles or patches based on user input 
@@ -185,7 +185,7 @@ Grid* SingleLevelRegridder::regrid(Grid* oldGrid)
   // Finalize the grid  
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
 
-  for(int l=0;l<newGrid->numLevels();l++){
+  for( unsigned int l = 0; l < newGrid->numLevels(); l++ ) {
     LevelP level= newGrid->getLevel(l);
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
   }

@@ -26,9 +26,10 @@
 #define UINTAH_HOMEBREW_LoadBalancerCommon_H
 
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 #include <set>
 #include <string>
@@ -119,6 +120,14 @@ public:
   // grid might have changed and need to create a new perProcessorPatchSet
   virtual bool possiblyDynamicallyReallocate(const GridP&, int state);
 
+  //! Assigns the patches to the processors they ended up on in the previous
+  //! Simulation.  Returns true if we need to re-load balance (if we have a 
+  //! different number of procs than were saved to disk
+  virtual void restartInitialize(       DataArchive  * archive,
+                                  const int            time_index,
+                                  const std::string  & ts_url,
+                                  const GridP        & grid );
+
   //! Returns n - data gets output every n procs.
   virtual int getNthProc() { return d_outputNthProc; }
 
@@ -132,6 +141,7 @@ public:
   virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) { return d_outputPatchSets[level->getIndex()].get_rep(); };
   
 private:
+
   LoadBalancerCommon(const LoadBalancerCommon&);
   LoadBalancerCommon& operator=(const LoadBalancerCommon&);
 
@@ -147,6 +157,17 @@ protected:
   virtual const PatchSet* createPerProcessorPatchSet( const LevelP & level );
   virtual const PatchSet* createPerProcessorPatchSet( const GridP  & grid );
   virtual const PatchSet* createOutputPatchSet(       const LevelP & level );
+
+  std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
+  std::vector<int> d_oldAssignment;       ///< stores which proc each patch used to be on
+  std::vector<int> d_tempAssignment;      ///< temp storage for checking to reallocate
+
+  // The assignment vectors are stored 0-n.  This stores the start patch number so we can
+  // detect if something has gone wrong when we go to look up what proc a patch is on.
+  int d_assignmentBasePatch;   
+  int d_oldAssignmentBasePatch;
+
+  bool d_checkAfterRestart;
 
   SimulationStateP d_sharedState; ///< to keep track of timesteps
   Scheduler* d_scheduler; ///< store the scheduler to not have to keep passing it in

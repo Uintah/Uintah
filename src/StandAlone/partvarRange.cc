@@ -139,7 +139,7 @@ int main(int argc, char** argv)
               GridP grid = da->queryGrid(t);
 
               // Level loop
-              for(int l=0;l<grid->numLevels();l++){
+              for( unsigned int l = 0; l < grid->numLevels(); l++ ){
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
               GridP grid = da->queryGrid(t);
 
               // Level loop
-              for(int l=0;l<grid->numLevels();l++){
+              for( unsigned int l = 0; l < grid->numLevels(); l++ ){
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
               GridP grid = da->queryGrid(t);
 
               // Level loop
-              for(int l=0;l<grid->numLevels();l++){
+              for( unsigned int l = 0; l < grid->numLevels(); l++ ){
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
@@ -286,7 +286,7 @@ int main(int argc, char** argv)
               GridP grid = da->queryGrid(t);
 
               // Level loop
-              for(int l=0;l<grid->numLevels();l++){
+              for( unsigned int l = 0; l < grid->numLevels(); l++ ){
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop
@@ -336,7 +336,7 @@ int main(int argc, char** argv)
               GridP grid = da->queryGrid(t);
 
               // Level loop
-              for(int l=0;l<grid->numLevels();l++){
+              for( unsigned int l = 0; l < grid->numLevels(); l++ ){
                 LevelP level = grid->getLevel(l);
 
                 // Patch loop

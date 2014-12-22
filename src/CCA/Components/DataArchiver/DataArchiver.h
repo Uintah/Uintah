@@ -105,25 +105,29 @@ using SCIRun::Mutex;
 
        //! Call this after problemSetup it will copy the data and checkpoint files ignore
        //! dumping reduction variables.
-       virtual void reduceUdaSetup(Dir& fromDir);
+       virtual void reduceUdaSetup( const Dir & fromDir );
 
        //! Copy a section between udas .
-       void copySection(Dir& fromDir, Dir& toDir, std::string file, std::string section);
+       void copySection( const Dir         & fromDir,
+                         const Dir         & toDir,
+                         const std::string & file,
+                         const std::string & section );
 
        //! Copy a section from another uda's to our index.xml.
-       void copySection(Dir& fromDir, std::string section)
-       { copySection(fromDir, d_dir, "index.xml", section); }
+       void copySection( Dir& fromDir, std::string section ) { copySection( fromDir, d_dir, "index.xml", section ); }
 
        //! Checks to see if this is an output timestep. 
        //! If it is, setup directories and xml files that we need to output.
        //! Call once per timestep, and if recompiling,
        //! after all the other tasks are scheduled.
-       virtual void finalizeTimestep(double t, double delt, const GridP&,
-                                     SchedulerP&, bool recompile=false );
+       virtual void finalizeTimestep( double t, double delt, const GridP&,
+                                      SchedulerP&, bool recompile = false );
            
-      //! schedule the output tasks if we are recompiling the taskgraph.  
-      virtual void sched_allOutputTasks(double delt, const GridP&,
-				            SchedulerP&, bool recompile = false );
+       //! Schedule the output tasks if we are recompiling the taskgraph.
+       virtual void sched_allOutputTasks( const double       delt, 
+                                          const GridP      & grid,
+                                                SchedulerP & sched,
+                                          const bool         recompile = false );
                                       
 
        //! Find the next times to output 
@@ -223,9 +227,8 @@ using SCIRun::Mutex;
        };
 
      private:
-       //! returns a ProblemSpecP reading the xml file xmlName.
-       //! You will need to that you need to call ProblemSpec::releaseDocument
-       ProblemSpecP loadDocument(std::string xmlName);     
+
+       ProblemSpecP loadDocument( const std::string & xmlName );
 
        //! creates the uda directory with a trailing version suffix
        void makeVersionedDir();
@@ -242,10 +245,10 @@ using SCIRun::Mutex;
                             std::string* pTimestepDir );
 
        //! helper for finalizeTimestep - schedules a task for each var's output
-       void scheduleOutputTimestep(std::vector<SaveItem>& saveLabels,
-                                   const GridP& grid, 
-                                   SchedulerP& sched,
-                                   bool isThisCheckpoint);
+       void scheduleOutputTimestep( const std::vector<SaveItem> & saveLabels,
+                                    const GridP                 & grid, 
+                                          SchedulerP            & sched,
+                                    const bool                  isThisCheckpoint );
 
        //! Helper for finalizeTimestep - determines if, based on the current
        //! time and timestep, this will be an output or checkpoint timestep.
@@ -260,9 +263,9 @@ using SCIRun::Mutex;
        void createIndexXML(Dir& dir);
 
        //! helper for restartSetup - adds the restart field to index.xml
-       void addRestartStamp( ProblemSpecP   indexDoc,
-                             Dir          & fromDir,
-                             int            timestep );
+       void addRestartStamp(       ProblemSpecP   indexDoc,
+                             const Dir          & fromDir,
+                             const int            timestep );
 
        //! helper for restartSetup - copies the timestep directories AND
        //! timestep entries in index.xml
@@ -275,11 +278,11 @@ using SCIRun::Mutex;
 
        //! helper for restartSetup - copies the reduction dat files to 
        //! new uda dir (from startTimestep to maxTimestep)
-       void copyDatFiles( Dir & fromDir,
-                          Dir & toDir,
-                          int   startTimestep,
-                          int   maxTimestep,
-                          bool  removeOld );
+       void copyDatFiles( const Dir  & fromDir,
+                          const Dir  & toDir,
+                          const int    startTimestep,
+                          const int    maxTimestep,
+                          const bool   removeOld );
 
        //! add saved global (reduction) variables to index.xml
        void indexAddGlobals();
@@ -453,7 +456,7 @@ using SCIRun::Mutex;
 
        //! The number of levels the DA knows about.  If this changes, we need to 
        //! redo output and Checkpoint tasks.
-       int d_numLevelsInOutput;
+       unsigned int d_numLevelsInOutput;
 
 #if SCI_ASSERTION_LEVEL >= 2
        //! double-check to make sure that DA::output is only called once per level per processor per type

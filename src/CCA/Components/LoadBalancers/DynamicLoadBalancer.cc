@@ -597,8 +597,8 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
       if(d_myworld->myrank()==proc)
       {
         Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
-	my_costs.push_back(patch_costs[l][patch->getLevelIndex()]);
-	my_gids.push_back(patch->getLevelIndex());
+        my_costs.push_back(patch_costs[l][patch->getLevelIndex()]);
+        my_gids.push_back(patch->getLevelIndex());
         for(int d=0;d<dim;d++)
         {
           positions.push_back(point[dimensions[d]]);
@@ -1238,36 +1238,39 @@ bool DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 
 
 int
-DynamicLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
+DynamicLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )
 {
-  // if on a copy-data timestep and we ask about an old patch, that could cause problems
-  if (d_sharedState->isCopyDataTimestep() && patch->getRealPatch()->getID() < d_assignmentBasePatch)
-    return -patch->getID();
- 
-  ASSERTRANGE(patch->getRealPatch()->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size());
-  int proc = d_processorAssignment[patch->getRealPatch()->getGridIndex()];
+  // If on a copy-data timestep and we ask about an old patch, that could cause problems...
 
-  ASSERTRANGE(proc, 0, d_myworld->size());
+  if (d_sharedState->isCopyDataTimestep() && patch->getRealPatch()->getID() < d_assignmentBasePatch) {
+    return -patch->getID();
+  }
+ 
+  ASSERTRANGE( patch->getRealPatch()->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size() );
+  int proc = d_processorAssignment[ patch->getRealPatch()->getGridIndex() ];
+
+  ASSERTRANGE( proc, 0, d_myworld->size() );
   return proc;
 }
 
 int
-DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var, 
-						const Patch* patch, 
-                                                const int /*matl*/)
+DynamicLoadBalancer::getOldProcessorAssignment( const VarLabel* var,
+                                                const Patch* patch, 
+                                                const int /*matl*/ )
 {
-
   if (var && var->typeDescription()->isReductionVariable()) {
     return d_myworld->myrank();
   }
 
-  // on an initial-regrid-timestep, this will get called from createNeighborhood
-  // and can have a patch with a higher index than we have
-  if ((int)patch->getRealPatch()->getID() < d_oldAssignmentBasePatch || patch->getRealPatch()->getID() >= d_oldAssignmentBasePatch + (int)d_oldAssignment.size())
+  // On an initial-regrid-timestep, this will get called from createNeighborhood
+  // and can have a patch with a higher index than we have.
+  if ((int)patch->getRealPatch()->getID() < d_oldAssignmentBasePatch || patch->getRealPatch()->getID() >= d_oldAssignmentBasePatch + (int)d_oldAssignment.size()) {
     return -9999;
+  }
   
-  if (patch->getGridIndex() >= (int) d_oldAssignment.size())
+  if (patch->getGridIndex() >= (int) d_oldAssignment.size()) {
     return -999;
+  }
 
   int proc = d_oldAssignment[patch->getRealPatch()->getGridIndex()];
   ASSERTRANGE(proc, 0, d_myworld->size());
@@ -1276,7 +1279,7 @@ DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
 
 bool 
 DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
-				    const GridP& grid)
+                                    const GridP& grid)
 {
   double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -1314,112 +1317,9 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   }
 } 
 
+// If it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches.
 void
-DynamicLoadBalancer::restartInitialize( DataArchive* archive, int time_index, ProblemSpecP& pspec,
-                                        string tsurl, const GridP& grid )
-{
-  // here we need to grab the uda data to reassign patch dat  a to the 
-  // processor that will get the data
-  int num_patches = 0;
-  const Patch* first_patch = *(grid->getLevel(0)->patchesBegin());
-  int startingID = first_patch->getID();
-  int prevNumProcs = 0;
-
-  for(int l=0;l<grid->numLevels();l++){
-    const LevelP& level = grid->getLevel(l);
-    num_patches += level->numPatches();
-  }
-
-  d_processorAssignment.resize(num_patches);
-  d_assignmentBasePatch = startingID;
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
-    d_processorAssignment[i]= -1;
-
-  if (archive->queryPatchwiseProcessor(first_patch, time_index) != -1) {
-    // for uda 1.1 - if proc is saved with the patches
-    for(int l=0;l<grid->numLevels();l++){
-      const LevelP& level = grid->getLevel(l);
-      for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
-        d_processorAssignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->size();
-      }
-    }
-  } // end queryPatchwiseProcessor
-  else {
-    // before uda 1.1
-    // strip off the timestep.xml
-    string dir = tsurl.substr(0, tsurl.find_last_of('/')+1);
-
-    ASSERT(pspec != 0);
-    ProblemSpecP datanode = pspec->findBlock("Data");
-    if(datanode == 0)
-      throw InternalError("Cannot find Data in timestep", __FILE__, __LINE__);
-    for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
-        n=n->getNextSibling()){
-      if(n->getNodeName() == "Datafile") {
-        map<string,string> attributes;
-        n->getAttributes(attributes);
-        string proc = attributes["proc"];
-        if (proc != "") {
-          int procnum = atoi(proc.c_str());
-          if (procnum+1 > prevNumProcs)
-            prevNumProcs = procnum+1;
-          string datafile = attributes["href"];
-          if(datafile == "")
-            throw InternalError("timestep href not found", __FILE__, __LINE__);
-          
-          string dataxml = dir + datafile;
-          // open the datafiles
-
-          ProblemSpecP dataDoc = ProblemSpecReader().readInputFile( dataxml );
-          if( !dataDoc ) {
-            throw InternalError( string( "Cannot open data file: " ) + dataxml, __FILE__, __LINE__);
-          }
-          for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
-            if(r->getNodeName() == "Variable") {
-              int patchid;
-              if(!r->get("patch", patchid) && !r->get("region", patchid))
-                throw InternalError("Cannot get patch id", __FILE__, __LINE__);
-              if (d_processorAssignment[patchid-startingID] == -1) {
-                // assign the patch to the processor
-                // use the grid index
-                d_processorAssignment[patchid - startingID] = procnum % d_myworld->size();
-              }
-            }
-          }            
-        }
-      }
-    }
-  } // end else...
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
-    if (d_processorAssignment[i] == -1)
-      cout << "index " << i << " == -1\n";
-    ASSERT(d_processorAssignment[i] != -1);
-  }
-  d_oldAssignment = d_processorAssignment;
-  d_oldAssignmentBasePatch = d_assignmentBasePatch;
-
-  if (prevNumProcs != d_myworld->size() || d_outputNthProc > 1) {
-    if (d_myworld->myrank() == 0) dbg << "  Original run had " << prevNumProcs << ", this has " << d_myworld->size() << endl;
-    d_checkAfterRestart = true;
-  }
-
-  if (d_myworld->myrank() == 0) {
-    dbg << d_myworld->myrank() << " check after restart: " << d_checkAfterRestart << "\n";
-#if 0
-    int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
-    if (lb.active()) {
-      for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
-        lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " 
-           << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " 
-           << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
-      }
-    }
-#endif
-  }
-}
-
-//if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
-void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&costs)
+DynamicLoadBalancer::getCosts( const Grid * grid, vector<vector<double> > & costs )
 {
   costs.clear();
     

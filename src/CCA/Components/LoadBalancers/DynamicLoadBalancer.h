@@ -78,8 +78,8 @@ namespace Uintah {
     static void zoltan_get_object_list( void *data, int sizeGID, int sizeLID,
                                         ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
                                         int wgt_dim, float *obj_wgts, int *ierr );
-    static int zoltan_get_number_of_objects( void *data, int *ierr );
-    static int zoltan_get_number_of_geometry( void *data, int *ierr );
+    static int  zoltan_get_number_of_objects( void *data, int *ierr );
+    static int  zoltan_get_number_of_geometry( void *data, int *ierr );
     static void zoltan_get_geometry_list( void *data, int sizeGID, int sizeLID,
                                           int num_obj,
                                           ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
@@ -93,7 +93,7 @@ namespace Uintah {
     ~DynamicLoadBalancer();
     virtual int getPatchwiseProcessorAssignment(const Patch* patch);
     virtual int getOldProcessorAssignment(const VarLabel* var,
-					  const Patch* patch, const int matl);
+                                          const Patch* patch, const int matl);
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
@@ -114,24 +114,23 @@ namespace Uintah {
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
-    //! Assigns the patches to the processors they ended up on in the previous
-    //! Simulation.  Returns true if we need to re-load balance (if we have a 
-    //! different number of procs than were saved to disk
-    virtual void restartInitialize( DataArchive* archive, int time_index,
-                                    ProblemSpecP& pspec,
-                                    std::string tsurl, const GridP& grid );
-   
-  //cost profiling functions
-    //update the contribution for this patch
+    ////////////////////////////////////////////////
+    // Cost profiling functions:
+
+    // Update the contribution for this patch.
     void addContribution(DetailedTask *task ,double cost) {d_costForecaster->addContribution(task,cost);}
-    //finalize the contributions (updates the weight, should be called once per timestep)
+
+    // Finalize the contributions (updates the weight, should be called once per timestep).
     void finalizeContributions(const GridP currentGrid);
-    //initializes the regions in the new level that are not in the old level
-    void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {
-            d_costForecaster->initializeWeights(oldgrid,newgrid); }
-    //resets the profiler counters to zero
+
+    // Initializes the regions in the new level that are not in the old level.
+    void initializeWeights(const Grid* oldgrid, const Grid* newgrid) { d_costForecaster->initializeWeights( oldgrid, newgrid ); }
+
+    // Resets the profiler counters to zero.
     void resetCostForecaster() {d_costForecaster->reset();}
-    
+    //
+    ////////////////////////////////////////////////
+
     // Helper for assignPatchesFactor.  Collects each patch's particles
     void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);
     // same, but can be called after a regrid when patches have not been load balanced yet
@@ -157,7 +156,7 @@ namespace Uintah {
 
     /// Helpers for possiblyDynamicallyRelocate.  These functions take care of setting 
     /// d_tempAssignment on all procs and dynamicReallocation takes care of maintaining 
-    /// the state
+    /// the state.
     bool assignPatchesFactor(const GridP& grid, bool force);
     bool assignPatchesRandom(const GridP& grid, bool force);
     bool assignPatchesCyclic(const GridP& grid, bool force);
@@ -170,15 +169,6 @@ namespace Uintah {
     //Assign costs to a list of patches
     void getCosts(const Grid* grid, std::vector<std::vector<double> >&costs);
 
-    std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
-    std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
-    std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
-
-    // the assignment vectors are stored 0-n.  This stores the start patch number so we can
-    // detect if something has gone wrong when we go to look up what proc a patch is on.
-    int d_assignmentBasePatch;   
-    int d_oldAssignmentBasePatch;
-
     double d_lbInterval;
     double d_lastLbTime;
 
@@ -190,25 +180,24 @@ namespace Uintah {
     bool d_do_AMR;
     ProblemSpecP d_pspec;
     
-    double d_lbThreshold; //< gain threshold to exceed to require lb'ing
+    double d_lbThreshold;   //< gain threshold to exceed to require lb'ing
     
-    double d_cellCost;      //cost weight per cell 
-    double d_extraCellCost; //cost weight per extra cell
-    double d_particleCost;  //cost weight per particle
-    double d_patchCost;     //cost weight per patch
+    double d_cellCost;      // cost weight per cell 
+    double d_extraCellCost; // cost weight per extra cell
+    double d_particleCost;  // cost weight per particle
+    double d_patchCost;     // cost weight per patch
     
     int d_dynamicAlgorithm;
     bool d_doSpaceCurve;
     bool d_collectParticles;
-    bool d_checkAfterRestart;
 
     SFC <double> sfc;
 
 #if defined( HAVE_ZOLTAN )    
     // Zoltan global vars
     Zoltan * zz;
-    std::string d_zoltanAlgorithm;  //This will be the algorithm that zoltan will use (HSFC, RCB, etc)
-    std::string d_zoltanIMBTol;     //This will be the amount of imalance should be acceptable
+    std::string d_zoltanAlgorithm;  // This will be the algorithm that zoltan will use (HSFC, RCB, etc).
+    std::string d_zoltanIMBTol;     // This will be the amount of imalance should be acceptable.
 #endif
   };
 } // End namespace Uintah

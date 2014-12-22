@@ -68,28 +68,28 @@ public:
   
   static Dir create(const std::string& name);
   
-  void remove(bool throwOnError = true);
+  void remove( bool throwOnError = true ) const;
     
-  // removes even if the directory has contents
-  void forceRemove(bool throwOnError = true);
+  // Removes even if the directory has contents.
+  void forceRemove( bool throwOnError = true );
 
-  // remove a file
-  void remove(const std::string& filename, bool throwOnError = true);
+  // Remove a file.
+  void remove( const std::string & filename, bool throwOnError = true ) const;
 
-  // copy this directory to under the destination directory
-  void copy(Dir& destDir);
+  // Copy this directory to under the destination directory.
+  void copy( const Dir & destDir ) const;
   void move(Dir& destDir);
 
-  // copy a file in this directory to the destination directory
-  void copy(const std::string& filename, Dir& destDir);
-  void move(const std::string& filename, Dir& destDir);
+  // Copy a file in this directory to the destination directory.
+  void copy( const std::string & filename, const Dir & destDir ) const;
+  void move( const std::string & filename, Dir& destDir );
   
-  Dir createSubdir(const std::string& name);
-  Dir getSubdir(const std::string& name);
+  Dir  createSubdir( const std::string & name );
+  Dir  getSubdir(    const std::string & name ) const;
   bool exists();
   
-  void getFilenamesBySuffix( const std::string& suffix,
-                             std::vector<std::string>& filenames );
+  void getFilenamesBySuffix( const std::string              & suffix,
+                                   std::vector<std::string> & filenames ) const;
 
   std::string getName() const {
     return name_;

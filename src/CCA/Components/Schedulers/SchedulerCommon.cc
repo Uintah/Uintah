@@ -473,7 +473,7 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt, int when )
       levelnum = grid->numLevels() - 1;
     } else {
       levelnum = trackingLevel_;
-      if (levelnum >= grid->numLevels()){
+      if (levelnum >= (int)grid->numLevels()){
         continue;
       }
     }
@@ -516,9 +516,9 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt, int when )
         continue;
       }
 
-      // don't print ghost patches (dw->get will yell at you)
-      if ((trackingDWs_[i] == Task::OldDW && lb->getOldProcessorAssignment(0,patch,0) != d_myworld->myrank()) ||
-          (trackingDWs_[i] == Task::NewDW && lb->getPatchwiseProcessorAssignment(patch) != d_myworld->myrank())) {
+      // Don't print ghost patches (dw->get will yell at you).
+      if ((trackingDWs_[i] == Task::OldDW && lb->getOldProcessorAssignment( patch )       != d_myworld->myrank()) ||
+          (trackingDWs_[i] == Task::NewDW && lb->getPatchwiseProcessorAssignment( patch ) != d_myworld->myrank())) {
         continue;
       }
 
@@ -528,8 +528,8 @@ SchedulerCommon::printTrackedVars( DetailedTask* dt, int when )
       IntVector start = Max(patch->getExtraLowIndex(basis, IntVector(0,0,0)), trackingStartIndex_);
       IntVector end   = Min(patch->getExtraHighIndex(basis, IntVector(0,0,0)), trackingEndIndex_);
 
-      // loop over matls too
-      for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+      // Loop over matls too...
+      for( int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
 
         if (!dw->exists(label, m, patch)) {
           ostringstream mesg;
@@ -1109,7 +1109,7 @@ void SchedulerCommon::compile()
   m_locallyComputedPatchVarMap->reset();
 
 #if 1
-  for (int i = 0; i < grid->numLevels(); i++) {
+  for( unsigned int i = 0; i < grid->numLevels(); i++ ) {
     const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
     if (patches->size() > 0) {
       m_locallyComputedPatchVarMap->addComputedPatchSet(patches);
@@ -1238,7 +1238,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           
           // we don't want data with an invalid level, or requiring from a different level (remember, we are
           // using an old task graph).  That willbe copied later (and chances are, it's to modify anyway).
-          if (level == -1 || level > grid->numLevels()-1 || dep->patches_dom == Task::CoarseLevel || 
+          if (level == -1 || level > ((int)grid->numLevels())-1 || dep->patches_dom == Task::CoarseLevel || 
               dep->patches_dom == Task::FineLevel) {
             continue;
           }
@@ -1293,18 +1293,17 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
 
   d_sharedState->setCopyDataTimestep(true);
 
-  for (int L = 0; L < grid->numLevels(); L++) {
+  for( unsigned int L = 0; L < grid->numLevels(); L++ ) {
     LevelP newLevel = grid->getLevel(L);
     //const PatchSubset  *patches = getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
-    if (L > 0) {
+    if( L > 0 ) {
     
-      if ( L >= oldGrid->numLevels() ) {
+      if( L >= oldGrid->numLevels() ) {
         // new level - refine everywhere
         refinePatchSets[L] = const_cast<PatchSet*>(newLevel->eachPatch());
         copyPatchSets[L] = scinew PatchSet;
       }
-      
-      // find patches with new space - but temporarily, refine everywhere... 
+      // Find patches with new space - but temporarily, refine everywhere... 
       else if ( L < oldGrid->numLevels() ) {
         refinePatchSets[L] = scinew PatchSet;
         copyPatchSets[L] = scinew PatchSet;
@@ -1483,10 +1482,10 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
       // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
       const Level* oldLevel = currentReductionVar.domain_;
       const Level* newLevel = NULL;
-      if (oldLevel && oldLevel->getIndex() < grid->numLevels() ) {
+      if( oldLevel && oldLevel->getIndex() < (int)grid->numLevels() ) {
 
-        if (oldLevel->getIndex() >= grid->numLevels()){
-          // the new grid no longer has this level
+        if( oldLevel->getIndex() >= (int)grid->numLevels() ) {
+          // The new grid no longer has this level.
           continue;
         }
         newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();

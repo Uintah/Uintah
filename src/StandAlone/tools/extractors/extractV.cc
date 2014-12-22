@@ -219,7 +219,7 @@ void printVelocity(DataArchive* da,
 	unsigned int numFound = 0;
 
         // Loop thru all the levels
-        for(int l=0;l<grid->numLevels();l++){
+        for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
           if (numFound == partID.size()-1) break;
 
           LevelP level = grid->getLevel(l);

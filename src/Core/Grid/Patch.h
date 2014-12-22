@@ -92,8 +92,7 @@ namespace Uintah {
    
    WARNING
    
-   ****************************************/
-  
+  ****************************************/
   
   class Patch {
   public:
@@ -1964,25 +1963,24 @@ namespace Uintah {
     struct PatchState
     {
       //The boundary conditions for each face
-      unsigned int xminus : 2;
-      unsigned int xplus : 2;
-      unsigned int yminus : 2;
-      unsigned int yplus : 2;
-      unsigned int zminus : 2;
-      unsigned int zplus : 2;
+      unsigned int xminus     : 2;
+      unsigned int xplus      : 2;
+      unsigned int yminus     : 2;
+      unsigned int yplus      : 2;
+      unsigned int zminus     : 2;
+      unsigned int zplus      : 2;
       unsigned int levelIndex : 3; //The level index for this patch (max of 8 levels)
     };
     
-    
-    /****************New Private Interface*********************
-     *Functions will slowly be moved into this block as it is verified
+    /**************** New Private Interface *********************
+     * Functions will slowly be moved into this block as it is verified
      ***********************************************************/
-    
     
     /**
      * The low index of the patch without extra or ghost cells
      */
     IntVector d_lowIndex;
+
     /**
      * The high index of the patch without extra or ghost cells
      */
@@ -1993,7 +1991,6 @@ namespace Uintah {
      * of the patch in a compact datastructure.
      */
     PatchState d_patchState;
-    
     
     /**
      * This stores a pointer to the grid grids.
@@ -2007,8 +2004,7 @@ namespace Uintah {
      */
     int d_id;
     
-    /**This section includes members that may be phased out in the future**/
-    
+    /** This section includes members that may be phased out in the future. **/
     
     /**
      * A pointer to the real patch

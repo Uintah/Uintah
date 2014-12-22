@@ -116,18 +116,18 @@ public:
   const_patchIterator allPatchesBegin() const;
   const_patchIterator allPatchesEnd() const;
       
-  Patch* addPatch(const IntVector& extraLowIndex,
-                  const IntVector& extraHighIndex,
-                  const IntVector& lowIndex,
-                  const IntVector& highIndex,
-                  Grid* grid);
+  void addPatch( const IntVector & extraLowIndex,
+                 const IntVector & extraHighIndex,
+                 const IntVector & lowIndex,
+                 const IntVector & highIndex,
+                       Grid      * grid );
       
-  Patch* addPatch(const IntVector& extraLowIndex,
-                  const IntVector& extraHighIndex,
-                  const IntVector& lowIndex,
-                  const IntVector& highIndex,
-                  Grid* grid,
-                  int ID);
+  void addPatch( const IntVector & extraLowIndex,
+                 const IntVector & extraHighIndex,
+                 const IntVector & lowIndex,
+                 const IntVector & highIndex,
+                       Grid      * grid,
+                       int         ID );
 
   // Move up and down the hierarchy
   const LevelP& getCoarserLevel() const;
@@ -150,19 +150,17 @@ public:
   void finalizeLevel();
   void finalizeLevel(bool periodicX, bool periodicY, bool periodicZ);
   void assignBCS(const ProblemSpecP& ps, LoadBalancer* lb);
-      
-  int numPatches() const;
+
+  int  numPatches() const;
   long totalCells() const;
 
   void getSpatialRange(BBox& b) const {b.extend(d_spatial_range);};
   void getInteriorSpatialRange(BBox& b) const {b.extend(d_int_spatial_range);};
-  void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const
-  { findNodeIndexRange(lowIndex, highIndex); }
+  void findIndexRange(IntVector& lowIndex, IntVector& highIndex) const { findNodeIndexRange(lowIndex, highIndex); }
   void findNodeIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
   void findCellIndexRange(IntVector& lowIndex, IntVector& highIndex) const;
 
-  void findInteriorIndexRange(IntVector& lowIndex, IntVector& highIndex) const
-  { findInteriorNodeIndexRange(lowIndex, highIndex);}
+  void findInteriorIndexRange(IntVector& lowIndex, IntVector& highIndex) const { findInteriorNodeIndexRange(lowIndex, highIndex);}
   void findInteriorNodeIndexRange(IntVector& lowIndex,
                                   IntVector& highIndex) const;
   void findInteriorCellIndexRange(IntVector& lowIndex,
@@ -233,8 +231,11 @@ public:
   typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
       
 
-  void selectPatches(const IntVector&, const IntVector&,
-                     selectType&, bool withExtraCells=false, bool cache=true) const;
+  void selectPatches( const IntVector  & low,
+                      const IntVector  & high,
+                            selectType & neighbors,
+                            bool         withExtraCells = false,
+                            bool         cache = true ) const;
 
   bool containsPointIncludingExtraCells(const Point&) const;
   bool containsPoint(const Point&) const;
@@ -242,8 +243,7 @@ public:
 
   // IntVector whose elements are each 1 or 0 specifying whether there
   // are periodic boundaries in each dimension (1 means periodic).
-  IntVector getPeriodicBoundaries() const
-  { return d_periodicBoundaries; }
+  IntVector getPeriodicBoundaries() const { return d_periodicBoundaries; }
 
   // The eachPatch() function returns a PatchSet containing patches on
   // this level with one patch per PatchSubSet.  Eg: { {1}, {2}, {3} }
@@ -253,21 +253,16 @@ public:
   const Patch* selectPatchForCellIndex( const IntVector& idx) const;
   const Patch* selectPatchForNodeIndex( const IntVector& idx) const;
   
-  //getID() returns a unique identifier so if the grid is rebuilt the new 
-  //levels will have different id numbers (like a  serial number).  
-  inline int getID() const {
-    return d_id;
-  }
+  // The getID() function returns a unique identifier so if the grid
+  // is rebuilt the new levels will have different id numbers (like a
+  // serial number).
+  inline int getID() const { return d_id; }
 
- //getIndex() returns the relative position of the level - 0 is coarsest, 1 is  
- //next and so forth.  
-  inline int getIndex() const {
-    return d_index;
-  }
-  inline IntVector getRefinementRatio() const {
-    return d_refinementRatio;
-  }
-  int getRefinementRatioMaxDim() const;
+  // The getindex() function returns the relative position of the level -
+  // 0 is coarsest, 1 is next and so forth.
+  inline int       getIndex() const { return d_index; }
+  inline IntVector getRefinementRatio() const { return d_refinementRatio; }
+  int              getRefinementRatioMaxDim() const;
 
 private:
   Level(const Level&);

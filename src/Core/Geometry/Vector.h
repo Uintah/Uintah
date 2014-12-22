@@ -68,6 +68,8 @@ public:
   inline Vector& operator=(const double&);
   inline Vector& operator=(const int&);
   
+  static Vector fromString( const std::string & source ); // Creates a Vector from a string that looksl like "[Num, Num, Num]".
+
 #ifdef COMMENT_OUT
   /* !!!
   () index from 0
