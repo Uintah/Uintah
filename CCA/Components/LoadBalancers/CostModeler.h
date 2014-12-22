@@ -76,13 +76,11 @@ namespace Uintah {
       void getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs)
       {
         costs.resize(grid->numLevels());
-        //for each level
-        for (int l=0; l<grid->numLevels();l++)
-        {
+        // For each level:
+        for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
           LevelP level=grid->getLevel(l);
           costs[l].resize(level->numPatches());
-          for(int p=0; p<level->numPatches();p++)
-          {
+          for( int p = 0; p < level->numPatches(); p++ ) {
             const Patch *patch=level->getPatch(p);
             costs[l][p]=d_patchCost+patch->getNumCells()*d_cellCost+(patch->getNumExtraCells()-patch->getNumCells())*d_extraCellCost+num_particles[l][p]*d_particleCost;
           }

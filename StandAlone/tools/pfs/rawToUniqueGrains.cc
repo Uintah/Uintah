@@ -394,7 +394,7 @@ int main(int argc, char *argv[])
     Point domain_hi = box.max();
     
     // loop over levels
-    for (int l = 0; l < grid->numLevels(); l++) {
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
       LevelP level = grid->getLevel(l);
 
       // calculate voxel size

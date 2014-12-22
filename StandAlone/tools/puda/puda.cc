@@ -187,7 +187,7 @@ gridstats( DataArchive* da,
     grid->getSpatialRange( box );
     cout << "Spatial Range:          " << box << "\n\n";
   
-    for(int l=0;l<grid->numLevels();l++){
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ){
       LevelP level = grid->getLevel(l);
       cout << "Level: index " << level->getIndex() << ", id " << level->getID() << "\n";
       
@@ -640,7 +640,7 @@ main(int argc, char** argv)
 	    const Uintah::TypeDescription* td = types[v];
 	    const Uintah::TypeDescription* subtype = td->getSubType();
 	    cout << "\tVariable: " << var << ", type " << td->getName() << "\n";
-	    for(int l=0;l<grid->numLevels();l++){
+	    for( unsigned int l = 0; l < grid->numLevels(); l++ ){
 	      LevelP level = grid->getLevel(l);
 	      for(Level::const_patchIterator iter = level->patchesBegin();
 		  iter != level->patchesEnd(); iter++){
@@ -763,7 +763,7 @@ printParticleVariable( DataArchive* da,
     GridP grid = da->queryGrid(t);
 
     // Loop thru all the levels
-    for(int l=0;l<grid->numLevels();l++){
+    for( int l = 0; l < grid->numLevels(); l++ ){
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches

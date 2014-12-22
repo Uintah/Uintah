@@ -22,12 +22,11 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Containers/StringUtil.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
 #include <Core/Thread/Thread.h>
+#include <Core/Util/StringUtil.h>
 
 #include <sci_values.h>
 #include <string>

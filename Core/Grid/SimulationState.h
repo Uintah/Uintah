@@ -210,24 +210,24 @@ public:
 
   inline int getMaxMatlIndex() { return max_matl_index; }
 
-  bool isCopyDataTimestep() { return d_isCopyDataTimestep; }
-  void setCopyDataTimestep(bool is_cdt) { d_isCopyDataTimestep = is_cdt; }
+  bool   isCopyDataTimestep() { return d_isCopyDataTimestep; }
+  void   setCopyDataTimestep(bool is_cdt) { d_isCopyDataTimestep = is_cdt; }
   
-  bool isRegridTimestep() { return d_isRegridTimestep; }
-  void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
+  bool   isRegridTimestep() { return d_isRegridTimestep; }
+  void   setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
-  bool isLockstepAMR() { return d_lockstepAMR; }
-  void setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
+  bool   isLockstepAMR() { return d_lockstepAMR; }
+  void   setIsLockstepAMR(bool ans) {d_lockstepAMR = ans;}
   
-  bool updateOutputInterval() { return d_updateOutputInterval; }
-  void updateOutputInterval(bool ans) { d_updateOutputInterval = ans; }
+  bool   updateOutputInterval() { return d_updateOutputInterval; }
+  void   updateOutputInterval(bool ans) { d_updateOutputInterval = ans; }
   
-  bool updateCheckpointInterval() { return d_updateCheckpointInterval; }
-  void updateCheckpointInterval(bool ans) { d_updateCheckpointInterval = ans; }
+  bool   updateCheckpointInterval() { return d_updateCheckpointInterval; }
+  void   updateCheckpointInterval( bool ans ) { d_updateCheckpointInterval = ans; }
 
-  int getNumDims() { return d_numDims; }
-  int* getActiveDims() { return d_activeDims; }
-  void setDimensionality(bool x, bool y, bool z);
+  int    getNumDims() { return d_numDims; }
+  int  * getActiveDims() { return d_activeDims; }
+  void   setDimensionality( bool x, bool y, bool z) ;
 
   std::vector<std::vector<const VarLabel* > > d_particleState;
   std::vector<std::vector<const VarLabel* > > d_particleState_preReloc;
@@ -235,7 +235,7 @@ public:
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState;
   std::vector<std::vector<const VarLabel* > > d_cohesiveZoneState_preReloc;
 
-  bool d_switchState;
+  bool   d_switchState;
   double d_prev_delt;
   double d_current_delt;
 
@@ -246,7 +246,7 @@ public:
   bool d_updateOutputInterval;
   bool d_recompileTaskGraph;
 
-  // timing statistics to test load balance
+  // Timing statistics to test load balance.
   void clearStats();
   double compilationTime;
   double regriddingTime;
@@ -260,11 +260,12 @@ public:
   double outputTime;
   double taskWaitThreadTime;
 
-  //percent time in overhead samples
+  // Percent time in overhead samples.
   double overhead[OVERHEAD_WINDOW];
   double overheadWeights[OVERHEAD_WINDOW];
-  //next sample to write to
-  int overheadIndex;
+
+  // Next sample to write to.
+  int    overheadIndex;
   double overheadAvg;
 
 private:

@@ -147,14 +147,14 @@ main( int argc, char *argv[], char *env[] )
     for (i = 0; i < n_udafiles-1; i++) { // each file except last
       DataArchive in_uda(udafile[i+1]);
       int old_timestep = timestep;
-      if (!in_uda.queryRestartTimestep(timestep)) {
-	cerr << endl << udafile[i+1] << " is not a restarted uda -- no \"restart\" tag found.\n";
-	exit(1);
+      if( !in_uda.queryRestartTimestep(timestep) ) {
+        cerr << "\n" << udafile[i+1] << " is not a restarted uda -- no '<restart ' tag found.\n";
+        exit(1);
       }
 
-      if (old_timestep > timestep) {
-	cerr << endl << udafile[i] << " does not preceed " << udafile[i+1] << " with respect to restart timestep order.\n\n";
-	usage("", argv[0]);
+      if( old_timestep > timestep ) {
+        cerr << "\n" << udafile[i] << " does not preceed " << udafile[i+1] << " with respect to restart timestep order.\n\n";
+        usage("", argv[0]);
       }
       
       Dir restartFromDir(udafile[i]);

@@ -325,7 +325,7 @@ getParticleStrains(DataArchive* da, int mat, long64 particleID, string flag) {
     double totVol = 0.0;
 
     // Loop thru all the levels
-    for(int l=0;l<grid->numLevels();l++){
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches
@@ -576,7 +576,7 @@ getParticleStresses(DataArchive* da, int mat, long64 particleID, string flag) {
     double totVol = 0.0;
 
     // Loop thru all the levels
-    for(int l=0;l<grid->numLevels();l++){
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches
@@ -767,7 +767,7 @@ void printParticleVariable(DataArchive* da,
     GridP grid = da->queryGrid(t);
 
     // Loop thru all the levels
-    for(int l=0;l<grid->numLevels();l++){
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ){
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches

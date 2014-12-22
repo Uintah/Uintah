@@ -185,22 +185,24 @@ RegridderCommon::needsToReGrid(const GridP &oldGrid)
     int result = false;
     DataWarehouse *dw = sched_->getLastDW();
     //for each level finest to coarsest
-    for (int l = oldGrid->numLevels() - 1; l >= 0; l--) {
-      //if on finest level skip
-      if (l == d_maxLevels - 1)
+    for( int l = oldGrid->numLevels() - 1; l >= 0; l-- ) {
+      // Skip the finest level.
+      if (l == d_maxLevels - 1) {
         continue;
+      }
 
       const LevelP coarse_level = oldGrid->getLevel(l);
       LevelP fine_level;
 
-      //get fine level if it exists
-      if (l < oldGrid->numLevels() - 1)
+      // Get fine level if it exists.
+      if (l < (int)(oldGrid->numLevels()) - 1) {
         fine_level = oldGrid->getLevel(l + 1);
+      }
 
-      //get coarse level patches
+      // Get coarse level patches.
       const PatchSubset *patches = lb_->getPerProcessorPatchSet(coarse_level)->getSubset(d_myworld->myrank());
 
-      //for each patch
+      // For each patch.
       for (int p = 0; p < patches->size(); p++) {
         const Patch *patch = patches->get(p);
         std::vector < Region > difference;
@@ -638,7 +640,7 @@ RegridderCommon::scheduleDilation(const LevelP& level)
 
   if (d_sharedState->d_lockstepAMR) {
     //scale regrid dilation according to level
-    int max_level = std::min(grid->numLevels() - 1, d_maxLevels - 2);   //finest level that is dilated
+    int max_level = std::min( (int)grid->numLevels() - 1, d_maxLevels - 2);   // The finest level that is dilated.
     int my_level = level->getIndex();
 
     Vector div(1, 1, 1);

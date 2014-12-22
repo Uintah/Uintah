@@ -126,10 +126,10 @@ Patch::~Patch()
 {
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)) {
-    if ( d_arrayBCS)
+    if ( d_arrayBCS ) {
       delete (*d_arrayBCS)[face];
-    
-    if (d_interiorBndArrayBCS) {
+    }
+    if( d_interiorBndArrayBCS ) {
       delete (*d_interiorBndArrayBCS)[face];
     }
   }
@@ -359,53 +359,59 @@ Patch::setInteriorBndArrayBCValues(Patch::FaceType face, BCDataArray* bc)
 
 //-----------------------------------------------------------------------------------------------
 
-const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
+const BCDataArray *
+Patch::getBCDataArray( Patch::FaceType face ) const
 {
   if (d_arrayBCS) {
     if ((*d_arrayBCS)[face]) {
       return (*d_arrayBCS)[face];
-    } else {
+    }
+    else {
       ostringstream msg;
       msg << "face = " << face << endl;
-      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
-                              __FILE__, __LINE__));
+      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated", __FILE__, __LINE__));
     }
-  } else {
-    SCI_THROW(InternalError("Error: d_arrayBCs not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
+  }
+  else {
+    SCI_THROW(InternalError("Error: d_arrayBCs not allocated. This means that no boundary conditions were found. "
+                            "If you are solving a periodic problem, please add a <periodic> tag to your input file "
+                            "to avoid this error. Otherwise, add a <BoundaryConditions> block.",
                             __FILE__, __LINE__));
   }
-
 }
 
 //-----------------------------------------------------------------------------------------------
 
-const BCDataArray* Patch::getInteriorBndBCDataArray(Patch::FaceType face) const
+const BCDataArray *
+Patch::getInteriorBndBCDataArray( Patch::FaceType face ) const
 {
   if (d_interiorBndArrayBCS) {
     if ((*d_interiorBndArrayBCS)[face]) {
       return (*d_interiorBndArrayBCS)[face];
-    } else {
+    }
+    else {
       ostringstream msg;
       msg << "face = " << face << endl;
-      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
-                              __FILE__, __LINE__));
+      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated", __FILE__, __LINE__));
     }
-  } else {
-    SCI_THROW(InternalError("Error: d_interiorBndArrayBCS not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
+  }
+  else {
+    SCI_THROW(InternalError("Error: d_interiorBndArrayBCS not allocated. This means that no boundary conditions were found. "
+                            "If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. "
+                            "Otherwise, add a <BoundaryConditions> block.",
                             __FILE__, __LINE__));
   }
-  
 }
 
 //-----------------------------------------------------------------------------------------------
 
 const BoundCondBase*
-Patch::getArrayBCValues(Patch::FaceType face,
-                        int mat_id,
-                        const string& type,
-                        Iterator& cell_ptr, 
-                        Iterator& node_ptr,
-                        int child) const
+Patch::getArrayBCValues( Patch::FaceType   face,
+                         int               mat_id,
+                         const string    & type,
+                         Iterator        & cell_ptr, 
+                         Iterator        & node_ptr,
+                         int               child) const
 {
   BCDataArray* bcd = (*d_arrayBCS)[face];
   if (bcd) {
@@ -1627,28 +1633,28 @@ void Patch::finalizePatch()
 
 /**
  * Returns the index that this patch would be
- * if all of the levels were taken into account
+ * if all of the levels were taken into account.
  * This query is O(L) where L is the number of levels.
  */
-int Patch::getGridIndex() const 
+int
+Patch::getGridIndex() const 
 {
-  int index = d_level_index;
-  int levelid = getLevel()->getIndex();
-  GridP grid = getLevel()->getGrid();
+  int   index   = d_level_index;
+  int   levelid = getLevel()->getIndex();
+  GridP grid    = getLevel()->getGrid();
 
-  // add up all the patches in the preceding levels
-  for ( int i = 0; i < levelid && i < grid->numLevels(); i++) {
+  // Add up all the patches in the preceding levels.
+  for( unsigned int i = 0; (int)i < levelid && i < grid->numLevels(); i++ ) {
     index += grid->getLevel(i)->numPatches();
   }
   return index;
-
 }
 
-
 /**
-* sets the vector cells equal to the list of cells that at the intersection of three faces extra cells
+* Sets the vector cells equal to the list of cells that at the intersection of three faces extra cells.
 */
-void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
+void
+Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
 {
   //set bounds for loops below
   int xstart=0,xend=2;
@@ -1771,7 +1777,9 @@ void Patch::initializeBoundaryConditions()
 //    for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
 //    }
 //  }
-void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
+
+void
+Patch::getFinestRegionsOnPatch( vector<Region> & difference ) const
 {
   const Level* level = getLevel();
   vector<Region> coarsePatch_q,finePatch_q;                                              
@@ -1792,9 +1800,9 @@ void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
     }                                                           
   }                                                                                                   
 
-  //add coarse patch to coarsePatch_q                                                                 
-  coarsePatch_q.push_back(Region(getCellLowIndex(),getCellHighIndex())); 
+  // Add coarse patch to coarsePatch_q.
+  coarsePatch_q.push_back( Region(getCellLowIndex(), getCellHighIndex()) ); 
 
-  //compute region of coarse patches that do not contain fine patches                                 
-  difference=Region::difference(coarsePatch_q, finePatch_q);                                                                                 
+  // Compute region of coarse patches that do not contain fine patches.
+  difference = Region::difference( coarsePatch_q, finePatch_q );
 }

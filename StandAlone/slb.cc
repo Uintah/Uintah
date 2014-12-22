@@ -321,7 +321,7 @@ main(int argc, char *argv[])
       
     grid->problemSetup(ups, world, false);  
     
-    for (int l = 0; l < grid->numLevels(); l++) {
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
       const LevelP &level = grid->getLevel(l);
       
       IntVector low, high;

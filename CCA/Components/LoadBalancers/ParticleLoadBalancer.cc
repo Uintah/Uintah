@@ -227,23 +227,26 @@ void ParticleLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const 
 
 }
 
-void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> >& particles)
+void
+ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> >& particles)
 {
   particles.resize(grid->numLevels());
-  for(int l=0;l<grid->numLevels();l++)
-  {
+  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
     particles[l].resize(grid->getLevel(l)->numPatches());
     particles[l].assign(grid->getLevel(l)->numPatches(),0);
   }
-  if (d_processorAssignment.size() == 0)
+  if( d_processorAssignment.size() == 0 ) {
     return; // if we haven't been through the LB yet, don't try this.
+  }
 
-  if (d_myworld->myrank() == 0)
+  if( d_myworld->myrank() == 0 ) {
     dbg << " DLB::collectParticles\n";
+  }
 
   int num_patches = 0;
-  for (int i = 0; i < grid->numLevels(); i++)
+  for( unsigned int i = 0; i < grid->numLevels(); i++ ) {
     num_patches += grid->getLevel(i)->numPatches();
+  }
 
   int numProcs = d_myworld->size();
   int myrank = d_myworld->myrank();
@@ -259,7 +262,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
 
   // find out how many particles per patch, and store that number
   // along with the patch number in particleList
-  for(int l=0;l<grid->numLevels();l++) {
+  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
     const LevelP& level = grid->getLevel(l);
     for (Level::const_patchIterator iter = level->patchesBegin(); 
         iter != level->patchesEnd(); iter++) {
@@ -354,7 +357,7 @@ void ParticleLoadBalancer::collectParticles(const Grid* grid, vector<vector<int>
   }
 
   // add the number of particles to the particles array
-  for (int l = 0, i=0; l < grid->numLevels(); l++) {
+  for( unsigned int l = 0, i=0; l < grid->numLevels(); l++ ) {
     unsigned num_patches=grid->getLevel(l)->numPatches();
     for(unsigned p =0; p<num_patches; p++,i++)
     {
@@ -666,9 +669,8 @@ bool ParticleLoadBalancer::loadBalanceGrid(const GridP& grid, bool force)
 
   getCosts(grid.get_rep(),particleCosts,cellCosts);
 
-  //for each level
-  for(int l=0;l<grid->numLevels();l++)
-  {
+  // For each level:
+  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
     const LevelP& level = grid->getLevel(l);
     int num_patches = level->numPatches();
 
@@ -938,112 +940,9 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   }
 } 
 
+// If it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches.
 void
-ParticleLoadBalancer::restartInitialize( DataArchive* archive, int time_index, ProblemSpecP& pspec,
-                                        string tsurl, const GridP& grid )
-{
-  // here we need to grab the uda data to reassign patch dat  a to the 
-  // processor that will get the data
-  int num_patches = 0;
-  const Patch* first_patch = *(grid->getLevel(0)->patchesBegin());
-  int startingID = first_patch->getID();
-  int prevNumProcs = 0;
-
-  for(int l=0;l<grid->numLevels();l++){
-    const LevelP& level = grid->getLevel(l);
-    num_patches += level->numPatches();
-  }
-
-  d_processorAssignment.resize(num_patches);
-  d_assignmentBasePatch = startingID;
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
-    d_processorAssignment[i]= -1;
-
-  if (archive->queryPatchwiseProcessor(first_patch, time_index) != -1) {
-    // for uda 1.1 - if proc is saved with the patches
-    for(int l=0;l<grid->numLevels();l++){
-      const LevelP& level = grid->getLevel(l);
-      for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
-        d_processorAssignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->size();
-      }
-    }
-  } // end queryPatchwiseProcessor
-  else {
-    // before uda 1.1
-    // strip off the timestep.xml
-    string dir = tsurl.substr(0, tsurl.find_last_of('/')+1);
-
-    ASSERT(pspec != 0);
-    ProblemSpecP datanode = pspec->findBlock("Data");
-    if(datanode == 0)
-      throw InternalError("Cannot find Data in timestep", __FILE__, __LINE__);
-    for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
-        n=n->getNextSibling()){
-      if(n->getNodeName() == "Datafile") {
-        map<string,string> attributes;
-        n->getAttributes(attributes);
-        string proc = attributes["proc"];
-        if (proc != "") {
-          int procnum = atoi(proc.c_str());
-          if (procnum+1 > prevNumProcs)
-            prevNumProcs = procnum+1;
-          string datafile = attributes["href"];
-          if(datafile == "")
-            throw InternalError("timestep href not found", __FILE__, __LINE__);
-          
-          string dataxml = dir + datafile;
-          // open the datafiles
-
-          ProblemSpecP dataDoc = ProblemSpecReader().readInputFile( dataxml );
-          if( !dataDoc ) {
-            throw InternalError( string( "Cannot open data file: " ) + dataxml, __FILE__, __LINE__);
-          }
-          for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
-            if(r->getNodeName() == "Variable") {
-              int patchid;
-              if(!r->get("patch", patchid) && !r->get("region", patchid))
-                throw InternalError("Cannot get patch id", __FILE__, __LINE__);
-              if (d_processorAssignment[patchid-startingID] == -1) {
-                // assign the patch to the processor
-                // use the grid index
-                d_processorAssignment[patchid - startingID] = procnum % d_myworld->size();
-              }
-            }
-          }            
-        }
-      }
-    }
-  } // end else...
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
-    if (d_processorAssignment[i] == -1)
-      cout << "index " << i << " == -1\n";
-    ASSERT(d_processorAssignment[i] != -1);
-  }
-  d_oldAssignment = d_processorAssignment;
-  d_oldAssignmentBasePatch = d_assignmentBasePatch;
-
-  if (prevNumProcs != d_myworld->size() || d_outputNthProc > 1) {
-    if (d_myworld->myrank() == 0) dbg << "  Original run had " << prevNumProcs << ", this has " << d_myworld->size() << endl;
-    d_checkAfterRestart = true;
-  }
-
-  if (d_myworld->myrank() == 0) {
-    dbg << d_myworld->myrank() << " check after restart: " << d_checkAfterRestart << "\n";
-#if 0
-    int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
-    if (lb.active()) {
-      for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
-        lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " 
-           << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " 
-           << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
-      }
-    }
-#endif
-  }
-}
-
-//if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
-void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&particle_costs, vector<vector<double> > &cell_costs)
+ParticleLoadBalancer::getCosts( const Grid* grid, vector<vector<double> >&particle_costs, vector<vector<double> > &cell_costs )
 {
   MALLOC_TRACE_TAG_SCOPE("ParticleLoadBalancer::getCosts");
   particle_costs.clear();
@@ -1059,7 +958,7 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
   {
     vector<vector<Region> > regions;
     // prepare the list of regions
-    for (int l = 0; l < grid->numLevels(); l++) {
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
       regions.push_back(vector<Region>());
       for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
         const Patch* patch = grid->getLevel(l)->getPatch(p);
@@ -1073,14 +972,12 @@ void ParticleLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&pa
     collectParticles(grid, num_particles);
   }
 
-  //for each patch set the costs equal to the number of cells and number of particles
-  for (int l = 0; l < grid->numLevels(); l++) 
-  {
+  // For each patch set the costs equal to the number of cells and number of particles.
+  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
     LevelP level=grid->getLevel(l);
     cell_costs.push_back(vector<double>());
     particle_costs.push_back(vector<double>());
-    for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) 
-    {
+    for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
       cell_costs[l].push_back(level->getPatch(p)->getNumCells()*d_cellCost);
       particle_costs[l].push_back(num_particles[l][p]*d_particleCost);
     }
@@ -1137,7 +1034,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     if(d_tempAssignment.empty())
     {
       int num_patches = 0;
-      for(int l=0;l<grid->numLevels();l++){
+      for( unsigned int l = 0; l < grid->numLevels(); l++ ){
         const LevelP& level = grid->getLevel(l);
         num_patches += level->numPatches();
       }
