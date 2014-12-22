@@ -32,11 +32,10 @@
 *    <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
 * </RMCRT>
 *
-* TO DO'S: 
-*  @todo Remove _bc from code.  But first must remove it from RMCRT_RadiationModel.cc
 *  
 */ 
-
+//______________________________________________________________________
+//
 namespace Uintah{
  
   class ArchesLabel; 
@@ -118,34 +117,18 @@ public:
   //
 private:
 
-
-  void sched_radProperties( const LevelP& level,
-                            SchedulerP& sched,
-                            const int time_sub_step );
-  
-  void radProperties( const ProcessorGroup* ,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* ,
-                      DataWarehouse* new_dw,
-                      const int time_sub_step );    
-
-
   //__________________________________
   //
-  int     _radiation_calc_freq;
-  int     _matl;
-  int     _archesLevelIndex;
+  int _radiation_calc_freq;    
+  int _matl;                   
+  int _archesLevelIndex;       
   MaterialSet* _matlSet;
   
 
   bool _all_rk; 
-  bool _using_prop_calculator;
   
   int  _whichAlgo;
   enum Algorithm{ dataOnion, coarseLevel, singleLevel};
-  
-  double _initAbskg; 
 
   Ray* _RMCRT;
   ArchesLabel*    _labels; 
@@ -155,18 +138,11 @@ private:
   SimulationStateP      _sharedState;
   ProblemSpecP          _ps;  // needed for extraSetup()
  
-  const VarLabel* _tempLabel;
-  const VarLabel* _sigmaT4Label;
-  const VarLabel* _cellTypeLabel; 
-  const VarLabel* _abskg_label; 
-
-  std::string _size_label_name; 
   std::string _abskg_label_name; 
   std::string _T_label_name; 
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
-  std::vector<const VarLabel*> _species_varlabels; 
 
 }; // end RMCRT
 } // end namespace Uintah
