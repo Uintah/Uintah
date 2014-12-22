@@ -294,7 +294,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       
       _RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq);
       
-      if(level->hasFinerLevel() || maxLevels == 1){               // FIX ME:  Why maxLevels == 1?
+      if( level->hasFinerLevel() ){
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
         
