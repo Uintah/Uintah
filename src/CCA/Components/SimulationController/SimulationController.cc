@@ -476,7 +476,10 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     }
     d_scheduler->get_dw(1)->finalize();
       
-    delete d_archive;
+    // This delete is an enigma... I think if it is called then memory is not leaked, but sometimes if it                                                                    
+    // it is called, then everything segfaults...                                                                                                                            
+    //                                                                                                                                                                       
+    // delete d_archive;                                                                                                                                                  
   }
 
   // Finalize the shared state/materials
