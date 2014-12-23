@@ -916,57 +916,59 @@ DataArchiver::copyDatFiles( const Dir & fromDir,
                             const int   maxTimestep,
                             const bool  removeOld )
 {
-   char buffer[1000];
+  // FIXME - Calling copyDatFiles will cause the ups file to be read into memory and thus leak memory...
+  //         Need to accept this (and show a warning), or fix this code too.
 
-   // find the dat file via the globals block in index.xml
-   string iname = fromDir.getName()+"/index.xml";
-   ProblemSpecP indexDoc = loadDocument(iname);
+  char buffer[1000];
 
-   ProblemSpecP globals = indexDoc->findBlock("globals");
-   if (globals != 0) {
-      ProblemSpecP variable = globals->findBlock("variable");
-      // copy data file associated with each variable
-      while (variable != 0) {
-         map<string,string> attributes;
-         variable->getAttributes(attributes);
+  // find the dat file via the globals block in index.xml
+  string iname = fromDir.getName()+"/index.xml";
+  ProblemSpecP indexDoc = loadDocument(iname);
 
-         string hrefNode = attributes["href"];
+  ProblemSpecP globals = indexDoc->findBlock("globals");
+  if (globals != 0) {
+    ProblemSpecP variable = globals->findBlock("variable");
+    // copy data file associated with each variable
+    while (variable != 0) {
+      map<string,string> attributes;
+      variable->getAttributes(attributes);
 
-         if (hrefNode == "")
-            throw InternalError("global variable href attribute not found", __FILE__, __LINE__);
-         const char* href = hrefNode.c_str();
+      string hrefNode = attributes["href"];
 
-         ifstream datFile((fromDir.getName()+"/"+href).c_str());
-         if (!datFile) {
-           throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
-                               (fromDir.getName()+"/"+href) + \
-                               "\" could not be opened for reading!", __FILE__, __LINE__);
-         }
-         ofstream copyDatFile((toDir.getName()+"/"+href).c_str(), ios::app);
-         if (!copyDatFile) {
-           throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
-                               (toDir.getName()+"/"+href) + \
-                               "\" could not be opened for writing!", __FILE__, __LINE__);
-         }
-
-         // copy up to maxTimestep lines of the old dat file to the copy
-         int timestep = startTimestep;
-         while (datFile.getline(buffer, 1000) &&
-                (timestep < maxTimestep || maxTimestep < 0)) {
-            copyDatFile << buffer << endl;
-            timestep++;
-         }
-         datFile.close();
-
-         if( removeOld ) {
-            fromDir.remove( href, false );
-         }
-         
-         variable = variable->findNextBlock("variable");
+      if (hrefNode == "") {
+        throw InternalError("global variable href attribute not found", __FILE__, __LINE__);
       }
-   }
-   // FIXME: The following releaseDocument may not be needed...
-   indexDoc->releaseDocument();
+      const char* href = hrefNode.c_str();
+
+      ifstream datFile((fromDir.getName()+"/"+href).c_str());
+      if (!datFile) {
+        throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
+                            (fromDir.getName()+"/"+href) +              \
+                            "\" could not be opened for reading!", __FILE__, __LINE__);
+      }
+      ofstream copyDatFile((toDir.getName()+"/"+href).c_str(), ios::app);
+      if (!copyDatFile) {
+        throw InternalError("DataArchiver::copyDatFiles(): The file \"" + \
+                            (toDir.getName()+"/"+href) +                \
+                            "\" could not be opened for writing!", __FILE__, __LINE__);
+      }
+
+      // Copy up to maxTimestep lines of the old dat file to the copy
+      int timestep = startTimestep;
+      while (datFile.getline(buffer, 1000) &&
+             (timestep < maxTimestep || maxTimestep < 0)) {
+        copyDatFile << buffer << endl;
+        timestep++;
+      }
+      datFile.close();
+
+      if( removeOld ) {
+        fromDir.remove( href, false );
+      }
+         
+      variable = variable->findNextBlock("variable");
+    }
+  }
 }
 
 //______________________________________________________________________

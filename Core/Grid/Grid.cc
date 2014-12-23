@@ -300,6 +300,9 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 
   bool      done_with_level  = false;
 
+  IntVector periodicBoundaries;
+  bool      foundPeriodicBoundaries = false;
+
   Point     anchor;
   bool      foundAnchor      = false;
 
@@ -410,6 +413,11 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
 
         throw InternalError( "Grid::getLine() fail - don't know how to handle StretchPositions yet.", __FILE__, __LINE__ );
       }
+      else if( pieces[0] == "<periodic>" ) {
+
+        periodicBoundaries = IntVector::fromString( pieces[1] );
+        foundPeriodicBoundaries = true;
+      }
       else {
         ostringstream msg;
         msg << "parseLevelFromFile(): Bad XML tag: " << pieces[0] << "\n";
@@ -418,7 +426,14 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
     }
   } // end while()
 
-  level->finalizeLevel(); // is this right? qwerty fixme
+  if( foundPeriodicBoundaries ){
+    level->finalizeLevel( periodicBoundaries.x() != 0,
+                          periodicBoundaries.y() != 0,
+                          periodicBoundaries.z() != 0 );
+  }
+  else {
+    level->finalizeLevel();
+  }
 
   if( numPatches != numPatchesRead ) {
     proc0cout << "numPatchesRead, numPatches: " << numPatchesRead << ", " << numPatches << "\n";
@@ -533,13 +548,6 @@ Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
 
   //          r->get("proc", pi.proc); // defaults to -1 if not available
   //          timedata.d_patchInfo[levelIndex].push_back(pi);
-
-  //    } else if(r->getNodeName() == "periodic") {
-  //
-  //      if(periodicBoundaries != IntVector(0, 0, 0)){
-  //        level->finalizeLevel(periodicBoundaries.x() != 0,
-  //                         periodicBoundaries.y() != 0,
-  //                         periodicBoundaries.z() != 0);
 
 
         // Ups only provided when queryGrid() is called for a restart.  The <Grid> is not necessary on non-restarts..
