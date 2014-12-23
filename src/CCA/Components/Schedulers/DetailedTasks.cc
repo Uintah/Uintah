@@ -300,12 +300,12 @@ DetailedTask::doit( const ProcessorGroup                 * pg,
 
 #ifdef HAVE_CUDA
   // determine if task will be executed on CPU or device, e.g. GPU or MIC
-  if (task->usesDevice()) {
+  if (task_->usesDevice()) {
     cudaError_t retVal;
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(deviceNum_));
-    task->doit(event, pg, patches, matls, dws, d_cudaStream, deviceNum_);
+    task_->doit(event, pg, patches_, matls_, dws, d_cudaStream, deviceNum_);
   } else {
-    task->doit(event, pg, patches, matls, dws, NULL, -1);
+    task_->doit(event, pg, patches_, matls_, dws, NULL, -1);
   }
 #else
   task_->doit( event, pg, patches_, matls_, dws, NULL, -1 );
