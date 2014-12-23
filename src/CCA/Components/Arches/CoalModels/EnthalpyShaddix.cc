@@ -483,12 +483,12 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         if ( d_radiation) { 
           double Eb;
           if (_radiateAtGasTemp){
-            Eb = 4.0*sigma*pow(gas_temperature,4.0); 
+            Eb = 4.0*_sigma*pow(temperatureph,4.0); 
           }else{
-            Eb = 4.0*sigma*pow(particle_temperature,4.0); 
+            Eb = 4.0*_sigma*pow(particle_temperatureph,4.0); 
           }
           FSum = radiationVolqIN[c];    
-          Q_radiation = Apsc*(FSum - Eb);
+          Q_radiation = abskp[c]*(FSum - Eb);
         } 
 
         double hint = -156.076 + 380/(-1 + exp(380 / particle_temperatureph)) + 3600/(-1 + exp(1800 / particle_temperatureph));
