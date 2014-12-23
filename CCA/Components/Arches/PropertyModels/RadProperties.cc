@@ -109,6 +109,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
       _ocalc = scinew RadPropertyCalculator::basic(db_calc,_scatteringOn); 
     }else if(particle_calculator_type == "coal"){
       _ocalc = scinew RadPropertyCalculator::coalOptics(db_calc,_scatteringOn); 
+    }else if(particle_calculator_type == "constantCIF"){
+      _ocalc = scinew RadPropertyCalculator::constantCIF(db_calc,_scatteringOn); 
     }else{
       throw InvalidValue("Particle radiative property model not found!! Name:"+particle_calculator_type,__FILE__, __LINE__); 
     }
@@ -343,6 +345,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //initializing properties here.  This needs to be made consistent with BCs
     if ( time_substep == 0 ){ 
       abskg.initialize(1.0);           //walls, bcs, etc, are fulling absorbing 
+      absk_tot.initialize(1.0);
       if ( _particlesOn ){
         abskpt.initialize(0.0); 
       }
@@ -351,9 +354,11 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //actually compute the properties
     _calc->compute_abskg( patch, vol_fraction, species, temperature, abskg ); 
 
+    // update absk_tot at the walls
+    _boundaryCond->setScalarValueBC( pc, patch, abskg, _prop_name );
+
     //copy the gas portion to the total: 
     absk_tot.copyData(abskg); 
-
 
     //sum in the particle contribution if needed
     if ( _particlesOn  ){ 
@@ -468,10 +473,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
         
       }//----------end of scattering props----------//
     } // Finish computing particle absorption coefficient
-
-    // update absk_tot at the walls
-    _boundaryCond->setScalarValueBC( pc, patch, absk_tot, _prop_name );
-  }
+  } // end patch loop
 }
 
 //---------------------------------------------------------------------------
