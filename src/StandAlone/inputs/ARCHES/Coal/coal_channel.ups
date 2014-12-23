@@ -843,6 +843,7 @@
         <Eqn label="mixture_fraction_2" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -859,6 +860,7 @@
        <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
+          <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
