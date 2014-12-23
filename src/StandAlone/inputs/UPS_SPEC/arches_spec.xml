@@ -23,7 +23,14 @@
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_density,coal_temperature,coal_temperature_nebo'">
+                                        attribute2="type REQUIRED STRING 'coal_density, 
+                                                                          coal_temperature,
+                                                                          coal_temperature_nebo,
+                                                                          const_environment'">
+
+          <constants                    spec="REQUIRED MULTIPLE_DOUBLES"
+                                        need_applies_to="type const_environment"/>
+
         </model>
       </PropertyModelsV2>
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
