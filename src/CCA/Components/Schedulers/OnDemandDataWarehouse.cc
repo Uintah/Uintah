@@ -101,7 +101,6 @@ struct ParticleSend : public RefCounted {
 //   if these messages are sent to different processors, they can get crossed in the mail
 //   or one can overwrite the other.
 #define PARTICLESET_TAG 0x4000|batch->messageTag
-#define DAV_DEBUG 0
 
 #define  BULLETPROOFING_FOR_CUBIC_DOMAINS  // comment out when running on non-cubic domains.
                                            // The getRegion() exceptions don't apply.
@@ -681,7 +680,7 @@ OnDemandDataWarehouse::recvMPI( DependencyBatch* batch,
       }
 
       if( recvset->numParticles() > 0 && 
-	  !(lb && lb->getOldProcessorAssignment( patch ) == d_myworld->myrank() && this == old_dw) ) {
+          !(lb && lb->getOldProcessorAssignment( patch ) == d_myworld->myrank() && this == old_dw) ) {
         var->getMPIBuffer( buffer, recvset );
       }
     }
@@ -1939,26 +1938,21 @@ OnDemandDataWarehouse::put(GridVariableBase& var,
   Patch::VariableBasis basis = Patch::translateTypeToBasis(label->typeDescription()->getType(), false);
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));    
 
- checkPutAccess(label, matlIndex, patch, replace);
+  checkPutAccess(label, matlIndex, patch, replace);
 
-#if DAV_DEBUG
-  cerr << "Putting: " << *label << " MI: " << matlIndex << " patch: " 
-       << *patch << " into DW: " << d_generation << "\n";
-#endif
-   // Put it in the database
-   IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
-   IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
-   if (Min(var.getLow(), low) != var.getLow() ||
-       Max(var.getHigh(), high) != var.getHigh()) {
-     ostringstream msg_str;
-     msg_str << "put: Variable's window (" << var.getLow() << " - " << var.getHigh() << ") must encompass patches extent (" << low << " - " << high;
-     SCI_THROW(InternalError(msg_str.str(), __FILE__, __LINE__));
-   }
-   USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
-   // error would have been thrown above if the any reallocation would be
-   // needed
-   ASSERT(no_realloc);
-   d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(),true);
+  // Put it in the database
+  IntVector low = patch->getExtraLowIndex(basis, label->getBoundaryLayer());
+  IntVector high = patch->getExtraHighIndex(basis, label->getBoundaryLayer());
+  if (Min(var.getLow(), low) != var.getLow() ||
+      Max(var.getHigh(), high) != var.getHigh()) {
+    ostringstream msg_str;
+    msg_str << "put: Variable's window (" << var.getLow() << " - " << var.getHigh() << ") must encompass patches extent (" << low << " - " << high;
+    SCI_THROW(InternalError(msg_str.str(), __FILE__, __LINE__));
+  }
+  USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
+  // Error would have been thrown above if any reallocation would be needed.
+  ASSERT(no_realloc);
+  d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(),true);
 }
 
 //______________________________________________________________________
@@ -2539,7 +2533,8 @@ OnDemandDataWarehouse::getGridVar( GridVariableBase& var,
 
   if( !d_varDB.exists( label, matlIndex, patch ) ) {
     cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: "
-         << patch->getID() << " matl: " << matlIndex << endl;
+         << patch->getID() << " matl: " << matlIndex << "\n";
+
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__) );
   }
   if( patch->isVirtual() ) {

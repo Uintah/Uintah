@@ -70,14 +70,12 @@ CostProfiler::getWeights(const Grid* grid, vector<vector<int> > num_particles, v
 {
   costs.resize(grid->numLevels());
   //for each level
-  for (int l=0; l<grid->numLevels();l++)
-  {
+  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
     LevelP level=grid->getLevel(l);
     vector<Region> regions(level->numPatches());
 
     costs[l].resize(level->numPatches());
-    for(int p=0; p<level->numPatches();p++)
-    {
+    for( int p = 0; p < level->numPatches(); p++) {
       const Patch *patch=level->getPatch(p);
       regions[p]=Region(patch->getCellLowIndex(),patch->getCellHighIndex());
     }

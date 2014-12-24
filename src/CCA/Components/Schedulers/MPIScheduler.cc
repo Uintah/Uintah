@@ -258,7 +258,7 @@ MPIScheduler::initiateReduction( DetailedTask          * task)
 //
 void
 MPIScheduler::runTask( DetailedTask * task,
-		       int            iteration )
+                       int            iteration )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask"); TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER);
 
@@ -776,8 +776,9 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
-  for (int i = 0; i < ntasks; i++)
+  for (int i = 0; i < ntasks; i++) {
     dts->localTask(i)->resetDependencyCounts();
+  }
 
   if(timeout.active()){
     d_labels.clear();
@@ -788,8 +789,9 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 
-  //if(timeout.active())
-    //emitTime("taskGraph output");
+  // if(timeout.active()) {
+  //   emitTime("taskGraph output");
+  // }
 
   mpi_info_.totalreduce = 0;
   mpi_info_.totalsend = 0;
@@ -810,17 +812,17 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     cerrLock.unlock();
   }
 
-  bool abort=false;
-  int abort_point = 987654;
+  bool abort       = false;
+  int  abort_point = 987654;
 
   int i = 0;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
+  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
+  }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", 
-                    "[MPIScheduler::execute() loop] ", TAU_USER); 
-  TAU_PROFILE_START(doittimer);
+  TAU_PROFILE_TIMER(doittimer, "Task execution", "[MPIScheduler::execute() loop] ", TAU_USER); 
+  TAU_PROFILE_START( doittimer );
 
   while( numTasksDone < ntasks) {
     i++;

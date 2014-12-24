@@ -1535,7 +1535,7 @@ SchedulerCommon::copyDataToNewGrid( const ProcessorGroup*,
     vector<ParticleSubset*> oldsubsets(d_sharedState->getNumMatls()), newsubsets(d_sharedState->getNumMatls());
 
     // If there is a level that didn't exist, we don't need to copy it
-    if ( newLevel->getIndex() >= oldDataWarehouse->getGrid()->numLevels() ) {
+    if ( newLevel->getIndex() >= (int)oldDataWarehouse->getGrid()->numLevels() ) {
       continue;
     }
     

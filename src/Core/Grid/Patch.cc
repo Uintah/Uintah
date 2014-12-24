@@ -61,27 +61,25 @@ Patch::Patch(const Level* level,
     d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
     d_arrayBCS(0), d_interiorBndArrayBCS(0)
 {
-  
-  if(d_id == -1){
+  if( d_id == -1 ) {
     d_id = ids++;
-
-  } else {
-    if(d_id >= ids)
-      ids.set(d_id+1);
+  }
+  else {
+    if( d_id >= ids ) {
+      ids.set( d_id + 1 );
+    }
   }
    
-  // DON'T call setBCType here     
-  d_patchState.xminus=None;
-  d_patchState.yminus=None;
-  d_patchState.zminus=None;
-  d_patchState.xplus=None;
-  d_patchState.yplus=None;
-  d_patchState.zplus=None;
+  // DON'T call setBCType here:
+  d_patchState.xminus = None;
+  d_patchState.yminus = None;
+  d_patchState.zminus = None;
+  d_patchState.xplus  = None;
+  d_patchState.yplus  = None;
+  d_patchState.zplus  = None;
 
-  
-  //set the level index
-  d_patchState.levelIndex=levelIndex;
-
+  // Set the level index.
+  d_patchState.levelIndex = levelIndex;
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
@@ -124,8 +122,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)) {
+  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face=Patch::nextFace(face)) {
     if ( d_arrayBCS ) {
       delete (*d_arrayBCS)[face];
     }
@@ -134,7 +131,7 @@ Patch::~Patch()
     }
   }
 
-  if (d_arrayBCS) {
+  if( d_arrayBCS ) {
     d_arrayBCS->clear();
     delete d_arrayBCS;
   }
@@ -354,6 +351,7 @@ Patch::setInteriorBndArrayBCValues(Patch::FaceType face, BCDataArray* bc)
   BCDataArray* bctmp = bc->clone();
   bctmp->determineInteriorBndIteratorLimits(face,this);
   (*d_interiorBndArrayBCS)[face] = bctmp->clone();
+
   delete bctmp;
 }
 
@@ -460,10 +458,6 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
   BCDataArray* itr = (*d_arrayBCS)[face];
 
   if ( itr ) {
-#if 0
-    cout << "Inside haveBC" << endl;
-    ubc->print();
-#endif
     BCDataArray::bcDataArrayType::const_iterator v_itr;
     vector<BCGeomBase*>::const_iterator it;
     
@@ -1350,12 +1344,11 @@ void Patch::getOtherLevelPatches(int levelOffset,
     low = low - IntVector(2,2,2);
   }
 
-  //cout << "  Patch:Golp: " << low-pc << " " << high+pc << endl;
   Level::selectType patches;
   otherLevel->selectPatches(low-pc, high+pc, patches); 
   
-  // based on the expanded range above to search for extra cells, we might
-  // have grabbed more patches than we wanted, so refine them here
+  // Based on the expanded range above to search for extra cells, we might
+  // have grabbed more patches than we wanted, so refine them here.
   for (int i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
@@ -1736,7 +1729,8 @@ Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
 
 //-----------------------------------------------------------------------------------------------
 
-void Patch::initializeBoundaryConditions()
+void
+Patch::initializeBoundaryConditions()
 {
   if (d_arrayBCS) {
     for (unsigned int i = 0; i< 6; ++i) {
@@ -1746,8 +1740,9 @@ void Patch::initializeBoundaryConditions()
     delete d_arrayBCS;
   }
   d_arrayBCS = scinew vector<BCDataArray*>(6);
-  for (unsigned int i = 0; i< 6; ++i)
+  for (unsigned int i = 0; i< 6; ++i) {
     (*d_arrayBCS)[i] = 0;
+  }
   
   if (d_interiorBndArrayBCS) {
     for (unsigned int i = 0; i< 6; ++i) {
@@ -1756,9 +1751,11 @@ void Patch::initializeBoundaryConditions()
     d_interiorBndArrayBCS->clear();
     delete d_interiorBndArrayBCS;
   }
+
   d_interiorBndArrayBCS = scinew vector<BCDataArray*>(6);
-  for (unsigned int i = 0; i< 6; ++i)
+  for( unsigned int i = 0; i< 6; ++i ) {
     (*d_interiorBndArrayBCS)[i] = 0;
+  }
 }
 
 //-----------------------------------------------------------------------------------------------
