@@ -312,6 +312,14 @@
           <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
+          <BTDevol                        spec="REQUIRED NO_DATA">
+            <v_hiT                        spec="REQUIRED DOUBLE" />
+            <Tig                          spec="REQUIRED DOUBLE" />
+            <c                            spec="REQUIRED DOUBLE" />
+            <A                            spec="REQUIRED DOUBLE" />
+            <Ta                           spec="REQUIRED DOUBLE" />
+            <d                            spec="REQUIRED DOUBLE" />
+          </BTDevol>
           <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
           <!-- Shaddix char oxidation coefficients in the following order:  -->
           <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
@@ -1325,7 +1333,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
+                                        attribute2="type REQUIRED STRING 'BTDevol, RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
                                                                           Drag,
                                                                           ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
