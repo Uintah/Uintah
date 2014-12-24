@@ -199,8 +199,8 @@ namespace Uintah {
 
     void compute_viscous_flux(const double * primitives_left, 
 			      const double * primitives_right,
-			      const double * grad_primitives_left, 
-			      const double * grad_primitives_right,
+                              double grad_primitives_left[4][3],
+                              double grad_primitives_right[4][3],
 			      double * flux, 
 			      double * face_normal); 
 

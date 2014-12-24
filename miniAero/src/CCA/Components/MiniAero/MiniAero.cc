@@ -487,7 +487,7 @@ void MiniAero::schedViscousFaceFlux(const LevelP& level,
   Task::WhichDW whichDW = getRK_DW(RK_step);
 
   task->requires(whichDW,vel_CClabel,   Ghost::AroundCells, 1);
-  task->requires(whichDW,temp_CCLabel,Ghost::AroundCells, 1);
+  task->requires(whichDW,temp_CClabel,Ghost::AroundCells, 1);
 
   task->requires(Task::NewDW,grad_vel_CClabel,  Ghost::AroundCells, 1);
   task->requires(Task::NewDW,grad_temp_CClabel, Ghost::AroundCells, 1);
@@ -997,18 +997,44 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
     //__________________________________
     // Compute cell centered gradients  
     // of primitive quantities 
-    // For now set all to zero. The math needs to be filled in
+
+    // uniform Cartesian mesh
+
+    const Vector& cellSize = patch->getLevel()->dCell();
+    const double dxdz = cellSize[0] * cellSize[2];
+    const double dydz = cellSize[1] * cellSize[2];
+    const double dydx = cellSize[0] * cellSize[1];
+    const double cell_volume = patch->cellVolume();
+
+    // normal is always aligned with axis
 
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+
       IntVector c = *iter;
-      for (int idim=0; idim < 3; ++idim) {
-        grad_rho_CC[c][idim] = 0.0;  
-	grad_temp_CC[c][idim]  = 0.0;
-        for (int jdim=0; jdim < 3; ++jdim) {
-          grad_vel_CC[c](idim,jdim) = 0.0;
-        } //jdim loop
-      } //idim loop
-    } //cell iterator loop
+      IntVector R = c + IntVector(1,0,0);   // Right
+      IntVector L = c + IntVector(-1,0,0);   // Left
+
+      IntVector Above = c + IntVector(0,1,0);   // Above
+      IntVector Below = c + IntVector(0,-1,0);   // Below
+
+      IntVector Front = c + IntVector(0,0,1);   // Front
+      IntVector Back = c + IntVector(0,0,-1);   // Back
+
+      grad_rho_CC[c][0] = 0.5*(rho_CC[R] - rho_CC[L])*dydz/cell_volume;
+      grad_rho_CC[c][1] = 0.5*(rho_CC[Above] - rho_CC[Below])*dxdz/cell_volume;
+      grad_rho_CC[c][2] = 0.5*(rho_CC[Front] - rho_CC[Back])*dydx/cell_volume;
+
+      for (int jdim=0; jdim < 3; ++jdim) {
+        grad_vel_CC[c](0,jdim) = 0.5*(vel_CC[R][jdim] - vel_CC[L][jdim])*dydz/cell_volume;
+        grad_vel_CC[c](1,jdim) = 0.5*(vel_CC[Above][jdim] - vel_CC[Below][jdim])*dxdz/cell_volume;
+        grad_vel_CC[c](2,jdim) = 0.5*(vel_CC[Front][jdim] - vel_CC[Front][jdim])*dydx/cell_volume;
+      }
+
+      grad_temp_CC[c][0] = 0.5*(Temp_CC[R] - Temp_CC[L])*dydz/cell_volume;
+      grad_temp_CC[c][1] = 0.5*(Temp_CC[Above] - Temp_CC[Below])*dxdz/cell_volume;
+      grad_temp_CC[c][2] = 0.5*(Temp_CC[Front] - Temp_CC[Back])*dydx/cell_volume;
+
+    } // Cell loop
   
   }//Patch loop
 }
@@ -1356,7 +1382,7 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
 
     DataWarehouse* my_dw = getRK_DW(RK_step, old_dw, new_dw);
     my_dw->get( vel_CC,       vel_CClabel,    0, patch, gac, 1 );
-    my_dw->get( Temp_CC,    temp_CCLabel, 0, patch, gac, 1 );
+    my_dw->get( Temp_CC,    temp_CClabel, 0, patch, gac, 1 );
 
     new_dw->get( grad_temp,  grad_temp_CClabel, 0, patch, gac, 1 );
     new_dw->get( grad_vel,   grad_vel_CClabel,  0, patch, gac, 1 );
@@ -1403,8 +1429,8 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
       primitives_l[3] = Temp_CC[c];
       primitives_r[3] = Temp_CC[c+offset];
       for(int jdim = 0; jdim < 3; ++jdim){
-	grad_primitives_l[4][jdim] = grad_temp[c](jdim);
-	grad_primitives_r[4][jdim] = grad_temp[c+offset](jdim);
+	grad_primitives_l[4][jdim] = grad_temp[c][jdim];
+	grad_primitives_r[4][jdim] = grad_temp[c+offset][jdim];
       }
       double normal[] = {1.0, 0.0, 0.0};
       for(int i=0; i<4; ++i)
@@ -1434,8 +1460,8 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
       primitives_l[3] = Temp_CC[c];
       primitives_r[3] = Temp_CC[c+offset];
       for(int jdim = 0; jdim < 3; ++jdim){
-	grad_primitives_l[4][jdim] = grad_temp[c](jdim);
-	grad_primitives_r[4][jdim] = grad_temp[c+offset](jdim);
+	grad_primitives_l[4][jdim] = grad_temp[c][jdim];
+	grad_primitives_r[4][jdim] = grad_temp[c+offset][jdim];
       }
       double normal[] = {0.0, 1.0, 0.0};
       for(int i=0; i<4; ++i)
@@ -1464,8 +1490,8 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
       primitives_l[3] = Temp_CC[c];
       primitives_r[3] = Temp_CC[c+offset];
       for(int jdim = 0; jdim < 3; ++jdim){
-	grad_primitives_l[4][jdim] = grad_temp[c](jdim);
-	grad_primitives_r[4][jdim] = grad_temp[c+offset](jdim);
+	grad_primitives_l[4][jdim] = grad_temp[c][jdim];
+	grad_primitives_r[4][jdim] = grad_temp[c+offset][jdim];
       }
       double normal[] = {0.0, 0.0, 1.0};
       for(int i=0; i<4; ++i)
@@ -1924,15 +1950,15 @@ void MiniAero::compute_roe_dissipative_flux(const double * primitives_left,
 //
 void MiniAero::compute_viscous_flux(const double * primitives_left,
 				    const double * primitives_right,
-				    const double * grad_primitives_left,
-				    const double * grad_primitives_right,
+				    double grad_primitives_left[4][3],
+				    double grad_primitives_right[4][3],
 				    double * flux, 
 				    double * face_normal)
 {
  
   //Left State
-  const double primitives[4];
-  const double grad_primitives[4][3];
+  double primitives[4];
+  double grad_primitives[4][3];
 
   //Get value on face as average of left/right cells
   for(int icomp = 0; icomp < 4; ++icomp){
