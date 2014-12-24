@@ -1036,7 +1036,7 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
 
     } // Cell loop
   
-  }//Patch loop
+  }// Patch loop
 }
 
 //______________________________________________________________________
