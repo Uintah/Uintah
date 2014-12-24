@@ -285,6 +285,7 @@
         <!-- Coal Properties -->
         <Properties                     spec="REQUIRED NO_DATA">
           <diameter_distribution        spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
+          <small_weights                spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- small value for each scaled weight (used in temperature calculation --> 
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
           <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
           <ultimate_analysis            spec="REQUIRED NO_DATA">               <!-- Ultimate analysis. Specified as mass fractions. -->
