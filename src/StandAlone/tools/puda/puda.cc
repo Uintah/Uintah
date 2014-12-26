@@ -45,6 +45,7 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Math/Matrix3.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <StandAlone/tools/puda/AA_MMS.h>
 #include <StandAlone/tools/puda/ER_MMS.h>
@@ -226,6 +227,9 @@ main(int argc, char** argv)
     // Print out the usage and die
     usage("", argv[0]);
   }
+
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
 
   CommandLineFlags clf;
 
@@ -763,7 +767,7 @@ printParticleVariable( DataArchive* da,
     GridP grid = da->queryGrid(t);
 
     // Loop thru all the levels
-    for( int l = 0; l < grid->numLevels(); l++ ){
+    for( unsigned int l = 0; l < grid->numLevels(); l++ ){
       LevelP level = grid->getLevel(l);
 
       // Loop thru all the patches
