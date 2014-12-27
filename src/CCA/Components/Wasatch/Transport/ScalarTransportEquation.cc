@@ -248,7 +248,7 @@ namespace Wasatch{
           infoStar_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
           infoStar_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
         }
-        const Expr::Tag solnVarTagNp1(solnVarTag_.name(), Expr::STATE_NONE);
+        const Expr::Tag solnVarTagNp1( solnVarTag_.name(), Expr::STATE_NONE );
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarTagNp1, densityStarTag ) );
         factory.register_expression( scinew RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
       }
