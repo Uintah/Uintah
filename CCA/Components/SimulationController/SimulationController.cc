@@ -247,8 +247,6 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
 
 SimulationController::~SimulationController()
 {
-  // FIXME: This is the other half of the enigma delete (see
-  // below)... The question to figure out is where to delete d_archive?
   delete d_archive;
   delete d_timeinfo;
 #ifdef USE_PAPI_COUNTERS
@@ -327,16 +325,15 @@ SimulationController::gridSetup( void )
 
     Dir restartFromDir(d_fromDir);
     Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
-    d_archive = scinew DataArchive( checkpointRestartDir.getName(),
-				    d_myworld->myrank(), d_myworld->size());
+    d_archive = scinew DataArchive(checkpointRestartDir.getName(),
+                                   d_myworld->myrank(), d_myworld->size());
 
     vector<int> indices;
     vector<double> times;
 
     try {
-      d_archive->queryTimesteps( indices, times );
-    }
-    catch( InternalError & ie ) {
+      d_archive->queryTimesteps(indices, times);
+    } catch( InternalError & ie ) {
       cerr << "\n";
       cerr << "An internal error was caught while trying to restart:\n";
       cerr << "\n";
@@ -348,7 +345,7 @@ SimulationController::gridSetup( void )
       Thread::exitAll(1);
     }
 
-    // Find the right time to query the grid
+    // find the right time to query the grid
     if (d_restartTimestep == 0) {
       d_restartIndex = 0; // timestep == 0 means use the first timestep
       // reset d_restartTimestep to what it really is
@@ -375,17 +372,16 @@ SimulationController::gridSetup( void )
     }
   }
 
-  if( !d_restarting ) {
+  if (!d_restarting) {
     grid = scinew Grid;
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
-    if( !d_sim ) {
+    if(!d_sim)
       throw InternalError("No simulation component", __FILE__, __LINE__);
-    }
     d_sim->preGridProblemSetup(d_ups, grid, d_sharedState);
     grid->problemSetup(d_ups, d_myworld, d_doAMR);
   }
   else {
-    grid = d_archive->queryGrid( d_restartIndex, d_ups );
+    grid = d_archive->queryGrid(d_restartIndex, d_ups.get_rep());
   }
   if(grid->numLevels() == 0){
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
@@ -416,43 +412,48 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   // do before sim - so that Switcher (being a sim) can reset the state of the regridder
   d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
   if (d_regridder) {
-    d_regridder->problemSetup( d_ups, grid, d_sharedState );
+    d_regridder->problemSetup(d_ups, grid, d_sharedState);
   }
     
   // Initialize load balancer.  Do here since we have the dimensionality in the shared state,
   // and we want that at initialization time. In addition do it after regridding since we need to 
   // know the minimum patch size that the regridder will create
   d_lb = d_scheduler->getLoadBalancer();
-  d_lb->problemSetup( d_ups, grid, d_sharedState );
+  d_lb->problemSetup(d_ups, grid, d_sharedState);
 
   // Initialize the CFD and/or MPM components
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
-  if( !d_sim ) {
+  if(!d_sim)
     throw InternalError("No simulation component", __FILE__, __LINE__);
+
+  ProblemSpecP restart_prob_spec = 0;
+
+  if (d_restarting) {
+    // do these before calling archive->restartInitialize, since problemSetup creates VarLabes the DA needs
+    restart_prob_spec = d_archive->getTimestepDoc(d_restartIndex);
   }
 
-  ProblemSpecP restart_prob_spec_for_component = 0;
+  // Pass the restart_prob_spec to the problemSetup.  For restarting, 
+  // pull the <MaterialProperties> from the restart_prob_spec.  If it is not
+  // available, then we will pull the properties from the d_ups instead.
+  // Needs to be done before DataArchive::restartInitialize
+  d_sim->problemSetup(d_ups, restart_prob_spec, grid, d_sharedState);
 
-  if( d_restarting ) {
-    // Do these before calling archive->restartInitialize, since problemSetup creates VarLabels the DA needs.
-    restart_prob_spec_for_component = d_archive->getTimestepDocForComponent( d_restartIndex );
-  }
-
-  // Pass the restart_prob_spec_for_component to the Component's
-  // problemSetup.  For restarting, pull the <MaterialProperties> from
-  // the restart_prob_spec.  If it is not available, then we will pull
-  // the properties from the d_ups instead.  Needs to be done before
-  // DataArchive::restartInitialize
-  d_sim->problemSetup(d_ups, restart_prob_spec_for_component, grid, d_sharedState);
-
-  if( d_restarting ) {
+  if (d_restarting) {
     simdbg << "Restarting... loading data\n";    
-    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t );
+    d_archive->restartInitialize(d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t);
       
-    // Set prevDelt to what it was in the last simulation.  If in the last 
+
+    // set prevDelt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
     // delt will be off if it doesn't match.
-    d_sharedState->d_prev_delt = d_archive->getOldDelt( d_restartIndex );
+    ProblemSpecP timeSpec = restart_prob_spec->findBlock("Time");
+    if (timeSpec) {
+      d_sharedState->d_prev_delt = 0.0;
+      if (!timeSpec->get("oldDelt", d_sharedState->d_prev_delt))
+        // the delt is deprecated since it is misleading, but older udas may have it...
+        timeSpec->get("delt", d_sharedState->d_prev_delt);
+    }
 
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
     // Tell the scheduler the generation of the re-started simulation.
@@ -463,26 +464,24 @@ SimulationController::postGridSetup( GridP& grid, double& t )
     // just in case you want to change the delt on a restart....
     if (d_timeinfo->override_restart_delt != 0) {
       double newdelt = d_timeinfo->override_restart_delt;
-      if (d_myworld->myrank() == 0) {
-        cout << "Overriding restart delt with " << newdelt << "\n";
-      }
-      d_scheduler->get_dw(1)->override(delt_vartype(newdelt), d_sharedState->get_delt_label());
-
+      if (d_myworld->myrank() == 0)
+        cout << "Overriding restart delt with " << newdelt << endl;
+      d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
+                                       d_sharedState->get_delt_label());
       double delt_fine = newdelt;
-      for( unsigned int i = 0; i < grid->numLevels(); i++ ) {
+      for(int i=0;i<grid->numLevels();i++){
         const Level* level = grid->getLevel(i).get_rep();
-        if( i != 0 && !d_sharedState->isLockstepAMR() ) {
+        if(i != 0 && !d_sharedState->isLockstepAMR()) {
           delt_fine /= level->getRefinementRatioMaxDim();
         }
-        d_scheduler->get_dw(1)->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
+        d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
+                                         level);
       }
     }
     d_scheduler->get_dw(1)->finalize();
       
-    // This delete is an enigma... I think if it is called then memory is not leaked, but sometimes if it
-    // it is called, then everything segfaults...
-    //
-    // delete d_archive;
+    // don't need it anymore...
+    //      delete d_archive; // This was moved to the destructor
   }
 
   // Finalize the shared state/materials
@@ -492,10 +491,12 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   // input.xml, which it writes along with index.xml
   d_output->initializeOutput(d_ups);
 
-  if( d_restarting ) {
+  if (d_restarting) {
     Dir dir(d_fromDir);
-    d_output->restartSetup(dir, 0, d_restartTimestep, t, d_restartFromScratch, d_restartRemoveOldDir);
+    d_output->restartSetup(dir, 0, d_restartTimestep, t,
+                           d_restartFromScratch, d_restartRemoveOldDir);
   }
+
 } // end postGridSetup()
 
 //______________________________________________________________________
@@ -550,7 +551,7 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
     }
     delt = d_timeinfo->delt_max;
   }
-  // Clamp timestep to output/checkpoint.
+  // clamp timestep to output/checkpoint
   if( d_timeinfo->timestep_clamping && d_output ) {
     double orig_delt = delt;
     double nextOutput = d_output->getNextOutputTime();
@@ -626,7 +627,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   unsigned long memuse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
 
-  // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
+  // get memory stats for each proc if MALLOC_PERPROC is in the environent
   if ( getenv( "MALLOC_PERPROC" ) ) {
     ostream* mallocPerProcStream = NULL;
     char* filenamePrefix = getenv( "MALLOC_PERPROC" );

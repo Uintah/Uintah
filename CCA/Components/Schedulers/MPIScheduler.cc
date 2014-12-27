@@ -257,8 +257,8 @@ MPIScheduler::initiateReduction( DetailedTask          * task)
 //______________________________________________________________________
 //
 void
-MPIScheduler::runTask( DetailedTask * task,
-                       int            iteration )
+MPIScheduler::runTask(DetailedTask* task,
+                      int iteration)
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask"); TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER);
 
@@ -273,14 +273,16 @@ MPIScheduler::runTask( DetailedTask * task,
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
   vector<DataWarehouseP> plain_old_dws(dws.size());
-  for (int i = 0; i < (int)dws.size(); i++) {
+  for (int i = 0; i < (int)dws.size(); i++)
     plain_old_dws[i] = dws[i].get_rep();
+  //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
+  {
+    MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask::doit(" + task->getName() + ")");
+    task->doit(d_myworld, dws, plain_old_dws);
   }
-  
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask::doit(" + task->getName() + ")");
-  task->doit( d_myworld, dws, plain_old_dws );
+  //AllocatorSetDefaultTag(tag);
 
-  if( trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC ) {
+  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_AFTER_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
@@ -305,7 +307,6 @@ MPIScheduler::runTask( DetailedTask * task,
   }
 
   postMPISends(task, iteration);
-
   task->done(dws);  // should this be timed with taskstart? - BJW
   double teststart = Time::currentSeconds();
 
@@ -776,9 +777,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
 
-  for (int i = 0; i < ntasks; i++) {
+  for (int i = 0; i < ntasks; i++)
     dts->localTask(i)->resetDependencyCounts();
-  }
 
   if(timeout.active()){
     d_labels.clear();
@@ -789,9 +789,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 
-  // if(timeout.active()) {
-  //   emitTime("taskGraph output");
-  // }
+  //if(timeout.active())
+    //emitTime("taskGraph output");
 
   mpi_info_.totalreduce = 0;
   mpi_info_.totalsend = 0;
@@ -812,17 +811,17 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     cerrLock.unlock();
   }
 
-  bool abort       = false;
-  int  abort_point = 987654;
+  bool abort=false;
+  int abort_point = 987654;
 
   int i = 0;
 
-  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0) {
+  if (reloc_new_posLabel_ && dws[dwmap[Task::OldDW]] != 0)
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
-  }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[MPIScheduler::execute() loop] ", TAU_USER); 
-  TAU_PROFILE_START( doittimer );
+  TAU_PROFILE_TIMER(doittimer, "Task execution", 
+                    "[MPIScheduler::execute() loop] ", TAU_USER); 
+  TAU_PROFILE_START(doittimer);
 
   while( numTasksDone < ntasks) {
     i++;
@@ -978,6 +977,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   finalizeTimestep();
+  
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler

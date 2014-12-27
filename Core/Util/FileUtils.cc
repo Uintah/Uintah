@@ -29,7 +29,7 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/sci_system.h>
-#include <Core/Util/StringUtil.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 #include <sstream>
@@ -268,7 +268,6 @@ validFile( const string & filename )
   string updatedFilename = substituteTilde(filename);
 
   int result = stat(updatedFilename.c_str(), &buf);
-
   if( result == 0 )
   {
     mode_t &m = buf.st_mode;

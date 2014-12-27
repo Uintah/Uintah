@@ -3,5 +3,4 @@ void rdomsrcscattering(IntVector idxlo, IntVector idxhi,
 	         CCVariable<double> esrcg,
            CCVariable<double> volq,
            CCVariable<double> src,
-           constCCVariable<double> scatkt,
-           CCVariable<double> scatSource);
+           constCCVariable<double> scatkt);

@@ -34,8 +34,6 @@
  */
 
 #include <Core/DataArchive/DataArchive.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -47,56 +45,50 @@
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Util/FileUtils.h>
 #include <Core/Util/ProgressiveWarning.h>
-
-#include <algorithm>
-#include <cmath>
-#include <iomanip>
-#include <iterator>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
-
+#include <sstream>
+#include <iterator>
+#include <algorithm>
+#include <iomanip>
+#include <cmath>
 using namespace SCIRun;
-using namespace Uintah;
 using namespace std;
+using namespace Uintah;
 
 // serr Vector specialization below
 template <class T>
-void
-print(std::ostream& out, const T& t)
+void print(std::ostream& out, const T& t)
 {
   out << t;
 }
 
 // must override Vector's output in order to use the ostream's precision
-void
-print(std::ostream& out, const SCIRun::Vector& t)
+void print(std::ostream& out, const SCIRun::Vector& t)
 {
   out << "[" << t.x() << ", " << t.y() << ", " << t.z() << "]";
 }
 
 // must override Vector's output in order to use the ostream's precision
-void
-print(std::ostream& out, const SCIRun::Point& t)
+void print(std::ostream& out, const SCIRun::Point& t)
 {
   out << "[" << t.x() << ", " << t.y() << ", " << t.z() << "]";
 }
 
-void
-usage(const std::string& badarg, const std::string& progname)
+void usage(const std::string& badarg, const std::string& progname)
 {
   if(badarg != "")
     cerr << "\nError parsing argument: " << badarg << '\n';
   cerr << "\nUsage: " << progname 
-       << " [options] <UDA archive directory 1> <UDA archive directory 2>\n\n";
+       << " [options] <archive file 1> <archive file 2>\n\n";
   cerr << "Valid options are:\n";
   cerr << "  -h[elp]\n";
   cerr << "  -abs_tolerance [double]  (Allowable absolute difference of any number, default: 1e-9)\n";
@@ -121,15 +113,13 @@ bool d_tolerance_error       = false;
 bool d_concise               = false; // If true (and d_tolerance_error), only print 1st error per var.
 bool d_strict_types          = true;
 
-void
-abort_uncomparable()
+void abort_uncomparable()
 {
   cerr << "\nThe uda directories may not be compared.\n";
   Thread::exitAll(5);
 }
 
-void
-tolerance_failure()
+void tolerance_failure()
 {
   if (d_tolerance_as_warnings) {
     d_tolerance_error = true;
@@ -139,26 +129,24 @@ tolerance_failure()
     Thread::exitAll(2);
 }
 
-void
-displayProblemLocation( const string& var, 
-			int matl,
-			const Patch* patch, 
-			double time)
+void displayProblemLocation(const string& var, 
+                            int matl,
+                            const Patch* patch, 
+                            double time)
 {
-  cerr << "Time: "     << time << "\n"
-       << "Variable: " << var  << "\n" 
-       << "Material: " << matl << "\n";
-  if (patch != 0) {
-    cerr << "Patch: " << patch->getID() << "\n";
-  }
+  cerr << "Time: " << time << endl <<
+    "Variable: " << var << endl <<
+    "Material: " << matl << endl;
+  if (patch != 0)
+    cerr << "Patch: " << patch->getID() <<endl;   
+
 }
 
-void
-displayProblemLocation( const string& var, 
-			int matl,
-			const Patch* patch, 
-			const Patch* patch2,
-			double time)
+void displayProblemLocation(const string& var, 
+                            int matl,
+                            const Patch* patch, 
+                            const Patch* patch2,
+                            double time)
 {
   cerr << "Time: " << time << " "<<
     "Level: " <<patch->getLevel()->getIndex() << " " << 
@@ -168,8 +156,7 @@ displayProblemLocation( const string& var,
     "Variable: " << var << endl;
 }
 
-bool
-compare( double a, double b, double abs_tolerance, double rel_tolerance )
+bool compare(double a, double b, double abs_tolerance, double rel_tolerance)
 {
   // Return false only if BOTH absolute and relative comparisons fail.
 
@@ -192,8 +179,7 @@ compare( double a, double b, double abs_tolerance, double rel_tolerance )
   }
 }
 
-bool
-compare(float a, float b, double abs_tolerance, double rel_tolerance)
+bool compare(float a, float b, double abs_tolerance, double rel_tolerance)
 {
   if(isnan(a) || isnan(b)){
     return false;
@@ -202,10 +188,8 @@ compare(float a, float b, double abs_tolerance, double rel_tolerance)
   return compare((double)a, (double)b, abs_tolerance, rel_tolerance);
 }
 
-bool
-compare( long64 a, long64 b, 
-	 double /* abs_tolerance */,
-	 double /* rel_tolerance */ )
+bool compare(long64 a, long64 b, double /* abs_tolerance */,
+             double /* rel_tolerance */)
 {
   if(isnan(a) || isnan(b)){
     return false;
@@ -214,10 +198,8 @@ compare( long64 a, long64 b,
   return (a == b); // longs should use an exact comparison
 }
 
-bool
-compare( int a, int b,
-	 double /* abs_tolerance */,
-	 double /* rel_tolerance */ )
+bool compare(int a, int b, double /* abs_tolerance */,
+             double /* rel_tolerance */)
 {
   if(isnan(a) || isnan(b)){
     return false;
@@ -226,8 +208,7 @@ compare( int a, int b,
   return (a == b); // int should use an exact comparison
 }
 
-bool
-compare( Vector a, Vector b, double abs_tolerance, double rel_tolerance )
+bool compare(Vector a, Vector b, double abs_tolerance, double rel_tolerance)
 {
   if(isnan(a.length()) || isnan(b.length())){
     return false;
@@ -238,15 +219,13 @@ compare( Vector a, Vector b, double abs_tolerance, double rel_tolerance )
          compare(a.z(), b.z(), abs_tolerance, rel_tolerance);
 }   
 
-bool
-compare( Point a, Point b, double abs_tolerance, double rel_tolerance )
+bool compare(Point a, Point b, double abs_tolerance, double rel_tolerance)
 { 
   return compare(a.asVector(), b.asVector(), abs_tolerance, rel_tolerance);
 }
 
 
-bool
-compare( Stencil7& a, Stencil7& b, double abs_tolerance, double rel_tolerance )
+bool compare(Stencil7& a, Stencil7& b, double abs_tolerance, double rel_tolerance)
 { 
   return compare(a.p, b.p, abs_tolerance, rel_tolerance)  &&
          compare(a.n, b.n, abs_tolerance, rel_tolerance)  &&
@@ -256,26 +235,21 @@ compare( Stencil7& a, Stencil7& b, double abs_tolerance, double rel_tolerance )
          compare(a.t, b.t, abs_tolerance, rel_tolerance)  &&
          compare(a.b, b.b, abs_tolerance, rel_tolerance);
 }
-
-bool
-compare( const Matrix3& a,
-	 const Matrix3& b, 
-	 double abs_tolerance,
-	 double rel_tolerance)
+bool compare(const Matrix3& a, const Matrix3& b, double abs_tolerance,
+             double rel_tolerance)
 {
   if(isnan(a.Norm()) || isnan(b.Norm())){
     return false;
   }
 
-  // for (int i = 0; i < 3; i++)
-  //   for (int j = 0; j < 3; j++)
-  //     if (!compare(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
+  //  for (int i = 0; i < 3; i++)
+  //    for (int j = 0; j < 3; j++)
+  //      if (!compare(a(i,j), b(i, j), abs_tolerance, rel_tolerance))
   // Comparing element by element is overly sensitive to code changes
   // The following is a hopefully more informative metric of agreement
-  if( !compare(a.Norm(), b.Norm(), abs_tolerance, rel_tolerance) ){
+  if(!compare(a.Norm(), b.Norm(), abs_tolerance, rel_tolerance)){
     return false;
-  }
-  else {
+  } else {
     return true;
   }
 }
@@ -644,7 +618,7 @@ MaterialParticleVarData::compare( MaterialParticleVarData & data2,
   // Assumes that the particleVariables are in corresponding order --
   // not necessarily by their particle set order.  This is what the
   // sort/gather achieves.
-  for( unsigned int i = 0; i < pset1->numParticles(); i++ ) {
+  for (int i = 0; i < pset1->numParticles(); i++) {
     if (!(::compare((*value1)[i], (*value2)[i], abs_tolerance, rel_tolerance))) {
       if (d_name != "p.particleID") {
         ASSERT(getParticleID(i) == data2.getParticleID(i));
@@ -1239,9 +1213,6 @@ buildPatchMap( LevelP                 level,
 int
 main(int argc, char** argv)
 {
-  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
-  Uintah::Parallel::initializeManager(argc, argv);
-
   Thread::setDefaultAbortMode("exit");
   double rel_tolerance  = 1e-6; // Default 
   double abs_tolerance  = 1e-9; //   values...
@@ -1294,30 +1265,18 @@ main(int argc, char** argv)
     }
     else {
       if (d_filebase1 != "") {
-        if (d_filebase2 != "") {
+        if (d_filebase2 != "")
           usage(s, argv[0]);
-	}
-        else {
+        else
           d_filebase2 = argv[i];
-	}
       }
-      else {
+      else
         d_filebase1 = argv[i];
-      }
     }
   }
 
   if( d_filebase2 == "" ){
     cerr << "\nYou must specify two archive directories.\n";
-    usage("", argv[0]);
-  }
-
-  if( !validDir( d_filebase1 ) ) {
-    cerr << "\nParameter '" << d_filebase1 << "' is not a valid directory.\n";
-    usage("", argv[0]);
-  }
-  if( !validDir( d_filebase2 ) ) {
-    cerr << "\nParameter '" << d_filebase2 << "' is not a valid directory.\n";
     usage("", argv[0]);
   }
 
@@ -1475,7 +1434,7 @@ main(int argc, char** argv)
           hasParticleData = true;
         }
 
-        for( unsigned int l = 0; l < grid->numLevels(); l++ ){
+        for(int l=0;l<grid->numLevels();l++){
           LevelP level = grid->getLevel(l);
           LevelP level2 = grid2->getLevel(l);
          
@@ -1578,7 +1537,7 @@ main(int argc, char** argv)
             continue;
           }
 
-          for( unsigned int l = 0; l < grid->numLevels(); l++ ){
+          for(int l=0;l<grid->numLevels();l++){
             LevelP level  = grid->getLevel(l);
             LevelP level2 = grid2->getLevel(l);
           
@@ -1673,7 +1632,7 @@ main(int argc, char** argv)
         // Compare Particle variables with p.particleID -- patches don't
         // need to be cosistent.  It will gather and sort the particles
         // so they can be compared in particleID order.
-        for( unsigned int  l = 0; l < grid->numLevels(); l++ ){
+        for(int l=0;l<grid->numLevels();l++){
         
           LevelP level = grid->getLevel(l);
           LevelP level2 = grid2->getLevel(l);
@@ -1730,7 +1689,7 @@ main(int argc, char** argv)
         
         Patch::VariableBasis basis=Patch::translateTypeToBasis(td->getType(),false);
         
-        for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
+        for(int l=0;l<grid->numLevels();l++){
           LevelP level  = grid->getLevel(l);
           LevelP level2 = grid2->getLevel(l);
          

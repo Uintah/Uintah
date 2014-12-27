@@ -219,8 +219,8 @@ void printDefGrad(DataArchive* da,
 	unsigned int numFound = 0;
 
         // Loop thru all the levels
-        for( unsigned int l = 0; l < grid->numLevels(); l++ ){
-          if (numFound == partID.size()-1) { break; }
+        for(int l=0;l<grid->numLevels();l++){
+          if (numFound == partID.size()-1) break;
 
           LevelP level = grid->getLevel(l);
           Level::const_patchIterator iter = level->patchesBegin(); 
@@ -228,18 +228,18 @@ void printDefGrad(DataArchive* da,
 
           // Loop thru all the patches
           for(; iter != level->patchesEnd(); iter++){
-            if (numFound == partID.size()-1) { break; }
+            if (numFound == partID.size()-1) break;
 
             const Patch* patch = *iter;
             ++patchIndex; 
-            if (patchIndex < startPatch) { continue; }
+            if (patchIndex < startPatch) continue;
 
             ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
             ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
 
             // loop thru all the materials
             for(; matlIter != matls.end(); matlIter++){
-              if (numFound == partID.size()-1) { break; }
+              if (numFound == partID.size()-1) break;
 
               int matl = *matlIter;
               if (matl == matID || matl == matID+1) {

@@ -107,7 +107,6 @@ namespace Uintah {
       constCCVariable<double> h2o;
       constCCVariable<double> co2;
       constCCVariable<double> ABSKG;           /// 
-      constCCVariable<double> ABSKT;           /// total absorption coefficient + scattering coefficient
       constCCVariable<double> cenint;          /// working intensity variable-space for DO-radiation
       constCCVariable<double> reactscalarSRC;  ///
       StencilMatrix<constCCVariable<double> > scalarCoeff; //7 point stencil

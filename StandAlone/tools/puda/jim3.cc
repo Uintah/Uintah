@@ -82,7 +82,7 @@ Uintah::jim3( DataArchive * da, CommandLineFlags & clf )
       num_in_bin[i]=0;
     }
 
-    for( unsigned int l = 0; l < grid->numLevels(); l++ ){
+    for(int l=0;l<grid->numLevels();l++){
       LevelP level = grid->getLevel(l);
       double min_eq_stress= 1e15;
       double max_eq_stress=-1e15;

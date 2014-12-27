@@ -105,7 +105,6 @@
 #  include <fenv.h>
 #endif
 
-#include <iomanip>
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -231,6 +230,7 @@ abortCleanupFunc()
   Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 }
 
+#include <iomanip>
 int
 main( int argc, char *argv[], char *env[] )
 {
@@ -590,22 +590,7 @@ main( int argc, char *argv[], char *env[] )
     }
     //__________________________________
     // Read input file
-    ProblemSpecP ups;
-    try {
-      ups = ProblemSpecReader().readInputFile( filename, validateUps );
-    }
-    catch( ... ) {
-      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
-      // instead of a UPS file.
-      proc0cout   << "\n";
-      proc0cout   << "ERROR - Failed to open UPS file: " << filename << ".\n";
-      if( validDir( filename ) ) {
-        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
-      }
-      proc0cout   << "\n";
-      Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
-    }
+    ProblemSpecP ups = ProblemSpecReader().readInputFile( filename, validateUps );
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
@@ -746,12 +731,12 @@ main( int argc, char *argv[], char *env[] )
   } catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     cerrLock.lock();
-    cout << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
+    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
     cerrLock.unlock();
     thrownException = true;
   } catch (Exception& e) {
     cerrLock.lock();
-    cout << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
+    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
     if(e.stackTrace())
       stackDebug << "Stack trace: " << e.stackTrace() << '\n';
     cerrLock.unlock();
@@ -789,7 +774,7 @@ main( int argc, char *argv[], char *env[] )
   }
   
   Uintah::TypeDescription::deleteAll();
-
+  
   /*
    * Finalize MPI
    */
@@ -812,3 +797,4 @@ main( int argc, char *argv[], char *env[] )
   return 0;
 
 } // end main()
+

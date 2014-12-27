@@ -92,9 +92,9 @@ namespace Uintah {
   class DataArchive {
     private:
 
-      std::map<std::string, VarLabel*> d_createdVarLabels;
-
-      // What we need to store on a per-variable basis, everything else can be retrieved from a higher level.
+    std::map<std::string, VarLabel*> d_createdVarLabels;
+      // what we need to store on a per-variable basis
+      // everything else can be retrieved from a higher level
       struct DataFileInfo {
         DataFileInfo(long s, long e, long np) : start(s), end(e), numParticles(np) {}
         DataFileInfo() {}
@@ -124,83 +124,85 @@ namespace Uintah {
       //! - containing data for each time step.
       class TimeData {
         public:    
-          TimeData( DataArchive * da, const std::string & timestepPathAndFilename );
+          TimeData(DataArchive* da, ProblemSpecP timestepDoc, std::string timestepURL);
           ~TimeData();
           VarData& findVariableInfo(const std::string& name, const Patch* patch, int matl);
 
-          // Reads timestep.xml and prepares the data xml files to be read.
+          // reads timestep.xml and prepares the data xml files to be read
           void init();
           void purgeCache(); // purge the cached data
 
           // makes sure that (if the patch data exists) then it is parsed.  Try logic to pick
           // the right file first, and if you can't, parse everything
-          void parsePatch( const Patch* patch );
+          void parsePatch(const Patch* patch);
 
           // parse an individual data file and load appropriate storage
-          void parseFile( const std::string & filename, int levelNum, int basePatch );
+          void parseFile(std::string file, int levelNum, int basePatch);
 
           // This would be private data, except we want DataArchive to have access,
           // so we would mark DataArchive as 'friend', but we're already a private
           // nested class of DataArchive...
 
-          // Info in the data file about the patch-matl-var
+          // info in the data file about the patch-matl-var
           VarHashMap d_datafileInfo;
 
           // Patch info (separate by levels) - proc, whether parsed, datafile, etc.
           // Gets expanded and proc is set during queryGrid.  Other fields are set
           // when parsed
           // Organized in a contiguous array, by patch-level-index
-          std::vector<std::vector<PatchData> >   d_patchInfo; 
+          std::vector<std::vector<PatchData> > d_patchInfo; 
 
-          // Wheter a material is active per level.
-          std::vector<std::vector<bool> >        d_matlInfo;
+          // Wheter a material is active per level
+          std::vector<std::vector<bool> > d_matlInfo;
 
-          // Var info - type, compression, and boundary layer.
-          std::map<std::string, VarData>         d_varInfo;
+          // var info - type, compression, and boundary layer
+          std::map<std::string, VarData> d_varInfo; 
 
-          // Xml filenames referred to in timestep.xml.
-          std::vector<std::vector<std::string> > d_xmlFilenames;
-          std::vector<std::vector<bool> >        d_xmlParsed;
+          // xml urls referred to in timestep.xml
+          std::vector<std::vector<std::string> > d_xmlUrls;
+          std::vector<std::vector<bool> > d_xmlParsed;
 
           std::string d_globaldata;
 
-          ConsecutiveRangeSet d_matls;          // Materials available this timestep.
+          ConsecutiveRangeSet matls;  // materials available this timestep
 
-          GridP        d_grid;
-          bool         d_initialized;
-
-          ProblemSpecP d_timestep_ps_for_component; // timestep.xml's xml for components.
-          std::string  d_ts_path_and_filename;  // Path to timestep.xml.
-          std::string  d_ts_directory;          // Directory that contains timestep.xml.
-          bool         d_swapBytes;
-          int          d_nBytes;
-          DataArchive* d_parent_da;             // Pointer to parent DA.  Needed for backward-compatibility with endianness, etc.
+          GridP d_grid;               // store the grid...
+          bool d_initialized;         // Flagged once this patch's init is called
+          ProblemSpecP d_tstop;       // ProblemSpecP of timestep.xml
+          std::string d_tsurl;        // path to timestep.xml
+          std::string d_tsurldir;     // dir that contains timestep.xml
+          bool d_swapBytes;
+          int d_nBytes;
+          DataArchive* da;            // pointer for parent DA.  Need for backward-compatibility with endianness, etc.
       };
 
     public:
-      DataArchive( const std::string  & filebase,            // <- Name to save UDA under.
-                   const int            processor     = 0,   // Use if you want different processors to read different parts of the archive.
-                   const int            numProcessors = 1,
-                   const bool           verbose       = true // If you want error messages printed to the screen.
-                 );
-    
+      DataArchive(const std::string& filebase,
+          int processor = 0 /* use if you want to different processors
+                               to read different parts of the archive */,
+          int numProcessors = 1,
+          bool verbose = true ); // If you want error messages printed to the screen.
+
       // GROUP: Destructors
       //////////
       // Destructor
       virtual ~DataArchive();
 
-      // Processor Information for Visualization
-      int queryPatchwiseProcessor( const Patch* patch, const int index );
+      TimeData& getTimeData(int index);
 
-      // Returns the name of the UDA (on disk).
-      std::string name() { return d_filebase; }
+
+      // Processor Information for Visualization
+      int queryPatchwiseProcessor( const Patch* patch, int index );
+      int queryNumProcs(int index);
+
+      std::string name(){ return d_filebase;}
 
       // return the name of the particle position variable if specified by the user. if not,
       // this will return p.x
-      std::string getParticlePositionName() const { return d_particlePositionName; }
+     std::string getParticlePositionName() const { return d_particlePositionName; }
 
       //! Set up data arachive for restarting a Uintah simulation
-      void restartInitialize( const int             timestep,
+      void restartInitialize(       int             timestep,
                               const GridP         & grid,
                                     DataWarehouse * dw,
                                     LoadBalancer  * lb,
@@ -211,20 +213,16 @@ namespace Uintah {
       //  This is used by reduceUda component
       //  it reads in the data and put it into the DW
       //  This is a specialization of restartInitialize()
-      void reduceUda_ReadUda( const ProcessorGroup * pg,
-                              const int              timestep,
-                              const GridP          & grid,
-                              const PatchSubset    * patches,
-                                    DataWarehouse  * dw,
-                                    LoadBalancer   * lb ); 
+      void reduceUda_ReadUda( const ProcessorGroup* pg,
+                              int timestep,
+                              const GridP& grid,
+                              const PatchSubset* patches,
+                              DataWarehouse* dw,
+                              LoadBalancer* lb ); 
 
-      static void queryEndiannessAndBits( ProblemSpecP   doc, std::string & endianness, int & numBits );
+      inline ProblemSpecP getTimestepDoc(int index) { return getTimeData(index).d_tstop; }
 
-      // Rewinds 'fp', thus starting at the top of the file.
-      static void queryEndiannessAndBits( FILE         * fp,  std::string & endianness, int & numBits );
-
-      // Sets d_particlePositionName if found. Note, rewinds 'xml_fp', thus starting at the top of the file.
-      void queryParticlePositionName( FILE * xml_fp ); 
+      static void queryEndiannessAndBits( ProblemSpecP doc, std::string & endianness, int & numBits );
 
       // GROUP:  Information Access
       //////////
@@ -239,22 +237,22 @@ namespace Uintah {
       void queryTimesteps( std::vector<int>                      & index,
                            std::vector<double>                   & times );
 
-      //! The ups is for the assignBCS that needs to happen
+      //! the ups is for the assignBCS that needs to happen
       //! if we are reading the simulation grid from the uda,
       //! and thus is only necessary on a true restart.
-      GridP queryGrid( int index, const ProblemSpecP ups = NULL );
+      GridP queryGrid( int index, const ProblemSpec* ups = 0 );
 
       //////////
       // Does a variable exist on a patch at this timestep?
-      bool exists( const std::string & varname,
-                   const Patch       * patch,
-                   const int           timeStep );
+      bool exists( const std::string& varname,
+                   const Patch* patch,
+                   const int timeStep );
       //////////
       // how long does a particle live?  Not variable specific.
       void queryLifetime( double & min, double & max, particleId id );
 
       //////////
-      // How long does a patch live?  Not variable specific.
+      // how long does a patch live?  Not variable specific
       void queryLifetime( double & min, double & max, const Patch * patch );
 
       ConsecutiveRangeSet queryMaterials( const std::string & varname,
@@ -265,29 +263,29 @@ namespace Uintah {
 
       // Queries a variable for a material, patch, and index in time.
       // Optionally pass in DataFileInfo if you're iterating over
-      // entries in the hash table (like restartInitialize does).
+      // entries in the hash table (like restartInitialize does)
       void query(       Variable     & var,
                   const std::string  & name,
-                  const int            matlIndex, 
+                        int            matlIndex, 
                   const Patch        * patch,
-                  const int            timeIndex,
+                        int            timeIndex,
                         DataFileInfo * dfi = 0 );
 
       void query(       Variable         & var,
                   const std::string      & name,
-                  const int                matlIndex, 
+                        int                matlIndex, 
                   const Patch            * patch,
-                  const int                timeIndex,
-                  const Ghost::GhostType   ghost_type,
-                  const int                ngc );
+                        int                timeIndex,
+                        Ghost::GhostType   ghost_type,
+                        int                ngc );
 
       void queryRegion(       Variable    & var,
                         const std::string & name,
-                        const int           matlIndex, 
+                              int           matlIndex, 
                         const Level       * level,
-                        const int           timeIndex,
-                        const IntVector   & low,
-                        const IntVector   & high );
+                              int           timeIndex,
+                              IntVector     low,
+                              IntVector     high );
 
       //////////
       // query the variable value for a particular particle  overtime;
@@ -342,13 +340,6 @@ namespace Uintah {
           const Patch* patch, cellIndex min, cellIndex max);
 #endif
 
-      // Reads the appropriate timestep.xml file and returns the <oldDelt>
-      double getOldDelt( int restart_index );
-
-      // Parses the timestep.xml file that corrensponds to the restart_index and creates
-      // a problem spec with the Component's portion (ie: the portion after </Data>).
-      ProblemSpecP getTimestepDocForComponent( int restart_index );
-
       // Only cache a single timestep
       void turnOnXMLCaching();
       // Cache the default number of timesteps
@@ -362,6 +353,7 @@ namespace Uintah {
       // match those found in Core/Datatypes/Datatype.h.
       int ref_cnt;
       Mutex lock;
+
 
       // This is added to allow simple geometric scaling of the entire domain
       void setCellScale( Vector& s ){ d_cell_scale = s; }
@@ -388,30 +380,27 @@ namespace Uintah {
 
     private:
       friend class DataArchive::TimeData;
-      DataArchive( const DataArchive& );
-      DataArchive& operator=( const DataArchive& );
+      DataArchive(const DataArchive&);
+      DataArchive& operator=(const DataArchive&);
 
-      void queryVariables( FILE                                * fp,
-                           std::vector<std::string>            & names,
-                           std::vector<const TypeDescription*> & types,
-                           bool                                  globals = false );
+      void queryVariables( const ProblemSpecP vars, std::vector<std::string>& names,
+          std::vector<const TypeDescription*>& types);
 
+      std::string  d_filebase;
+      ProblemSpecP d_indexDoc;
+      ProblemSpecP d_restartTimestepDoc;
+      std::string  d_restartTimestepURL;
 
-      TimeData & getTimeData( int index );
-
-      std::string   d_filebase;  // Name of the UDA
-      FILE        * d_indexFile; // File pointer to XML index document.
-
-      bool   d_simRestart;
-      Vector d_cell_scale; // Used for scaling the physical data size.
+      bool d_simRestart;
+      Vector d_cell_scale; //used for scaling the physical data size
 
       std::vector<TimeData> d_timeData;
-      std::vector<int>      d_ts_indices;
-      std::vector<double>   d_ts_times;
+      std::vector<int> d_tsindex;
+      std::vector<double> d_tstimes;
 
       // global bits and endianness - read from index.xml ONLY if not in timestep.xml
       std::string d_globalEndianness;
-      int         d_globalNumBits;
+      int d_globalNumBits;
 
       typedef std::map<std::pair<int, const Patch*>, Handle<ParticleSubset> > psetDBType;
       psetDBType d_psetDB;
@@ -423,8 +412,6 @@ namespace Uintah {
       Mutex d_lock;
     
       std::string d_particlePositionName;
-
-      LoadBalancer * d_lb;
 
       void findPatchAndIndex( const GridP            grid,
                                     Patch         *& patch,
@@ -439,131 +426,122 @@ namespace Uintah {
 
 
   template<class T>
-  void
-  DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
-                      const IntVector& index, double min, double max ) {
-    std::cerr << "DataArchive::query not finished\n";
-  }
+    void DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
+        const IntVector& index,
+        double min, double max)
+    {
+      std::cerr << "DataArchive::query not finished\n";
+    }
 
   template<class T>
-  void
-  DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
-                      const IntVector& index, double min, double max ) {
-    std::cerr << "DataArchive::query not finished\n";
-  }
+    void DataArchive::query( CCVariable< T >&, const std::string& name, int matlIndex,
+        const IntVector& index,
+        double min, double max)
+    {
+      std::cerr << "DataArchive::query not finished\n";
+    }
 
   template<class T>
-  void
-  DataArchive::query( ParticleVariable< T >& var, const std::string& name,
-                      int matlIndex, particleId id, double min, double max ) {
-    std::cerr << "DataArchive::query not finished\n";
-  }
+    void DataArchive::query(ParticleVariable< T >& var, const std::string& name,
+        int matlIndex, particleId id,
+        double min, double max)
+    {
+      std::cerr << "DataArchive::query not finished\n";
+    }
+
 
   template<class T>
-  void
-  DataArchive::query(       std::vector<T> & values,
-                      const std::string    & name,
-                            int              matlIndex,
-                            long64           particleID,
-                            int              levelIndex,
-                            double           startTime,
-                            double           endTime ) {
-    double call_start = SCIRun::Time::currentSeconds();
+    void DataArchive::query(std::vector<T>& values, const std::string& name,
+        int matlIndex, long64 particleID,
+        int levelIndex,
+        double startTime, double endTime)
+    {
+      double call_start = SCIRun::Time::currentSeconds();
 
-    std::vector<int> index;
-    std::vector<double> times;
-    queryTimesteps(index, times); // build timesteps if not already done
+      std::vector<int> index;
+      std::vector<double> times;
+      queryTimesteps(index, times); // build timesteps if not already done
 
-    // figure out what kind of variable we're looking for
-    std::vector<std::string> type_names;
-    std::vector<const TypeDescription*> type_descriptions;
-
-    // README FIXME qwerty ... who calls this?  We are now opening and reading a file
-    // every time queryVariables() is called, so if this happens a lot, we might need to rethink it...
-
-    queryVariables( type_names, type_descriptions );
-    const TypeDescription* type = NULL;
-    std::vector<std::string>::iterator name_iter = type_names.begin();
-    std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
-    for ( ; name_iter != type_names.end() && type == NULL; name_iter++, type_iter++) {
-      if (*name_iter == name) {
-        type = *type_iter;
+      // figure out what kind of variable we're looking for
+      std::vector<std::string> type_names;
+      std::vector<const TypeDescription*> type_descriptions;
+      queryVariables(type_names, type_descriptions);
+      const TypeDescription* type = NULL;
+      std::vector<std::string>::iterator name_iter = type_names.begin();
+      std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
+      for ( ; name_iter != type_names.end() && type == NULL;
+          name_iter++, type_iter++) {
+        if (*name_iter == name)
+          type = *type_iter;
       }
-    }
-    if (type == NULL) {
-      throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
-    }
-    if (type->getType() != TypeDescription::ParticleVariable) {
-      throw InternalError("Variable type is not ParticleVariable", __FILE__, __LINE__);
-    }
-    // find the first timestep
-    int ts = 0;
-    while( (ts < (int)d_ts_times.size()) && (startTime > d_ts_times[ts]) ) {
-      ts++;
-    }
-    // Idx needs to be initialized before it is used in findPatchAndIndex.
-    particleIndex idx = 0;
-    for ( ; (ts < (int)d_ts_times.size()) && (d_ts_times[ts] <= endTime); ts++) {
-      // figure out what patch contains the cell. As far as I can tell,
-      // nothing prevents this from changing between timesteps, so we have to
-      // do this every time -- if that can't actually happen we might be able
-      // to speed this up.
-      Patch* patch = NULL;
-      GridP grid = queryGrid( ts);
-      findPatchAndIndex(grid, patch, idx, particleID, matlIndex, levelIndex, ts);
-      //    std::cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
-      if (patch == NULL) {
-        throw VariableNotFoundInGrid( name, particleID, matlIndex, "DataArchive::query", __FILE__, __LINE__ );
-      }
-
-      ParticleVariable<T> var;
-      query( var, name, matlIndex, patch, ts );
-      // Now find the index that corresponds to the particleID
-      // std::cerr <<" time = "<<t<<",  value = "<<var[idx]<<std::endl;
-      values.push_back(var[idx]);
-
-    }
-    dbg << "DataArchive::query(values) completed in " << (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
-  }  
-
-  template<class T>
-  void
-  DataArchive::query(       std::vector<T> & values,
-                      const std::string    & name,
-                            int              matlIndex,
-                            IntVector        loc,
-                            double           startTime,
-                            double           endTime,
-                            int              levelIndex /* = -1 */ ) {
-    double call_start = SCIRun::Time::currentSeconds();
-
-    std::vector<int> index;
-    std::vector<double> times;
-    queryTimesteps(index, times); // build timesteps if not already done
-
-    // figure out what kind of variable we're looking for
-    std::vector<std::string> type_names;
-    std::vector<const TypeDescription*> type_descriptions;
-    queryVariables(type_names, type_descriptions);
-    const TypeDescription* type = NULL;
-    std::vector<std::string>::iterator name_iter = type_names.begin();
-    std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
-    for ( ; name_iter != type_names.end() && type == NULL; name_iter++, type_iter++) {
-      if (*name_iter == name) {
-        type = *type_iter;
-      }
-    }
-    if (type == NULL) {
-      throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
-    }
-
-    // Find the first timestep.
+      if (type == NULL)
+        throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
+      if (type->getType() != TypeDescription::ParticleVariable)    
+        throw InternalError("Variable type is not ParticleVariable", __FILE__, __LINE__);
+      // find the first timestep
       int ts = 0;
-      while( (ts < (int)d_ts_times.size()) && (startTime > d_ts_times[ts]) ) {
+      while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
         ts++;
-      }
 
-      for ( ; (ts < (int)d_ts_times.size()) && (d_ts_times[ts] <= endTime); ts++) {
+      // idx needs to be initialized before it is used in findPatchAndIndex.
+      particleIndex idx = 0;
+      for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
+        // figure out what patch contains the cell. As far as I can tell,
+        // nothing prevents this from changing between timesteps, so we have to
+        // do this every time -- if that can't actually happen we might be able
+        // to speed this up.
+        Patch* patch = NULL;
+        GridP grid = queryGrid( ts);
+        findPatchAndIndex(grid, patch, idx, particleID, matlIndex, levelIndex, ts);
+        //    std::cerr <<" Patch = 0x"<<hex<<patch<<dec<<", index = "<<idx;
+        if (patch == NULL)
+          throw VariableNotFoundInGrid(name,particleID,matlIndex,
+              "DataArchive::query", __FILE__, __LINE__);
+
+        ParticleVariable<T> var;
+        query(var, name, matlIndex, patch, ts);
+        //now find the index that corresponds to the particleID
+        //std::cerr <<" time = "<<t<<",  value = "<<var[idx]<<std::endl;
+        values.push_back(var[idx]);
+
+      }
+      dbg << "DataArchive::query(values) completed in "
+        << (SCIRun::Time::currentSeconds() - call_start) << " seconds\n";
+    }  
+
+  template<class T>
+    void DataArchive::query(std::vector<T>& values, const std::string& name,
+        int matlIndex, IntVector loc,
+        double startTime, double endTime,
+        int levelIndex /*=-1*/)
+    {
+      double call_start = SCIRun::Time::currentSeconds();
+
+      std::vector<int> index;
+      std::vector<double> times;
+      queryTimesteps(index, times); // build timesteps if not already done
+
+      // figure out what kind of variable we're looking for
+      std::vector<std::string> type_names;
+      std::vector<const TypeDescription*> type_descriptions;
+      queryVariables(type_names, type_descriptions);
+      const TypeDescription* type = NULL;
+      std::vector<std::string>::iterator name_iter = type_names.begin();
+      std::vector<const TypeDescription*>::iterator type_iter = type_descriptions.begin();
+      for ( ; name_iter != type_names.end() && type == NULL;
+          name_iter++, type_iter++) {
+        if (*name_iter == name)
+          type = *type_iter;
+      }
+      if (type == NULL)
+        throw InternalError("Unable to determine variable type", __FILE__, __LINE__);
+
+      // find the first timestep
+      int ts = 0;
+      while ((ts < (int)d_tstimes.size()) && (startTime > d_tstimes[ts]))
+        ts++;
+
+      for ( ; (ts < (int)d_tstimes.size()) && (d_tstimes[ts] <= endTime); ts++) {
         // figure out what patch contains the cell. As far as I can tell,
         // nothing prevents this from changing between timesteps, so we have to
         // do this every time -- if that can't actually happen we might be able

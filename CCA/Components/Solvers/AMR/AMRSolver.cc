@@ -211,10 +211,9 @@ AMRSolver::scheduleSolve(const LevelP& level, SchedulerP& sched,
       
   //__________________________________
   // computes and requires for A, X and rhs
-  for( unsigned int i = 0; i < level->getGrid()->numLevels(); i++ ) {
-
-    const LevelP        l      = level->getGrid()->getLevel( i );
-    const PatchSubset * subset = l->eachPatch()->getUnion();
+  for (int i = 0; i < level->getGrid()->numLevels(); i++) {
+    const LevelP l = level->getGrid()->getLevel(i);
+    const PatchSubset* subset = l->eachPatch()->getUnion();
     
     task->requires(which_A_dw, A, subset, Ghost::None, 0);
     

@@ -91,27 +91,15 @@ public:
                                   ArchesConstVariables* constvars, 
                                   CCVariable<double>& divQ,
                                   int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw);
-      int getIntOrdinates();
+             int getIntOrdinates();
 
-      bool reflectionsBool();
+             bool reflectionsBool();
+               
+             bool needIntensitiesBool();
 
-      bool needIntensitiesBool();
+             bool ScatteringOnBool();
 
-      bool ScatteringOnBool();
-
-      void setLabels() ;
-
-      inline std::vector< const VarLabel*> getAbskpLabels(){
-        return _abskp_label_vector;
-      }
-
-      inline std::vector< const VarLabel*> getPartTempLabels(){
-        return _temperature_label_vector;
-      }
-
-      inline int get_nQn_part(){
-        return _nQn_part;
-      }
+             void setLabels() ;
 
 private:
 
@@ -127,6 +115,9 @@ private:
       void computeOrdinatesOPL();
       int d_lambda;
       int ffield;
+
+      double d_wall_abskg; 
+      double d_intrusion_abskg; 
 
       OffsetArray1<double> fraction;
 
@@ -148,9 +139,7 @@ private:
       bool d_print_all_info; 
       bool reflectionsTurnedOn;
       bool _scatteringOn;
-      bool _usePreviousIntensity;
-      bool _zeroInitialGuess;
-      bool _radiateAtGasTemp; // this flag is arbitrary for no particles
+      bool usePreviousIntensity;
 
       const VarLabel* _scatktLabel;
       const VarLabel* _asymmetryLabel;
@@ -166,25 +155,7 @@ private:
   StaticArray< constCCVariable<double> > &Intensities,
               CCVariable<double> &scatIntensitySource,
               constCCVariable<double> &asymmetryFactor,
-                                    const Patch* patch,
-                   CCVariable<double> &b_sourceArray);
-
-
-
-      void computeIntensitySource( const Patch* patch,
-              StaticArray <constCCVariable<double> >&abskp,
-             StaticArray <constCCVariable<double> > &pTemp,
-                           constCCVariable<double>  &abskg,
-                           constCCVariable<double>  &gTemp,
-                         CCVariable<double> &b_sourceArray);
-
-      // variables needed for particles
-      std::vector<std::string> _temperature_name_vector;
-      std::vector<std::string> _abskp_name_vector;
-      std::vector< const VarLabel*> _abskp_label_vector;
-      std::vector< const VarLabel*> _temperature_label_vector;
-      int _nQn_part ;                                // number of quadrature nodes in DQMOM
-      double _sigma;
+                                   const Patch* patch);
 
 
 }; // end class RadiationModel

@@ -60,7 +60,7 @@ public:
   inline IntVector& operator=(const IntVector& copy) {
     for (int indx = 0; indx < 3; indx ++)
       value_[indx] = copy.value_[indx];
-    return *this;       
+    return *this;	
   }
   inline explicit IntVector(const Point& p)
   {
@@ -68,32 +68,41 @@ public:
     value_[1]=static_cast<int>(p.y());
     value_[2]=static_cast<int>(p.z());
   }
-
-  // Creates an IntVector from a string that looks like "[1, 2, 3]".
-  static IntVector fromString( const std::string & source ); 
-
   inline bool operator==(const IntVector& a) const {
     return value_[0] == a.value_[0] && value_[1] == a.value_[1] && value_[2] == a.value_[2];
   }
   
-  // Can test for equality - if this < a and a < this, they are equal
-  inline bool operator<(const IntVector& a) const {
-    if (value_[2] < a.value_[2]) {
-      return true;
-    }
-    else if (value_[2] > a.value_[2]) {
-      return false;
-    }
-    else if (value_[1] < a.value_[1]) {
-      return true;
-    }
-    else if (value_[1] > a.value_[1]) {
-      return false;
-    }
-    else {
-      return value_[0] < a.value_[0];
-    }
+
+
+  /* Do not use these operators,  STL require < operator in different manner
+  inline bool operator>=(const IntVector& a) const { 
+    return value_[0] >= a.value_[0] && value_[1] >= a.value_[1] && value_[2] >= a.value_[2]; 
+  } 
+
+  inline bool operator<=(const IntVector& a) const { 
+    return value_[0] <= a.value_[0] && value_[1] <= a.value_[1] && value_[2] <= a.value_[2]; 
+  } 
+
+  inline bool operator>(const IntVector& a) const { 
+    return value_[0] > a.value_[0] && value_[1] > a.value_[1] && value_[2] > a.value_[2]; 
   }
+
+  inline bool operator<(const IntVector& a) const { 
+    return value_[0] < a.value_[0] && value_[1] < a.value_[1] && value_[2] < a.value_[2]; 
+  }*/
+
+  // can test for equality - if this < a and a < this, they are equal
+     inline bool operator<(const IntVector& a) const {
+       if (value_[2] < a.value_[2])
+         return true;
+       if (value_[2] > a.value_[2])
+         return false;
+       if (value_[1] < a.value_[1])
+         return true;
+       if (value_[1] > a.value_[1])
+         return false;
+       return value_[0] < a.value_[0];
+     }
 
   inline bool operator!=(const IntVector& a) const {
     return value_[0] != a.value_[0] || value_[1] != a.value_[1] || value_[2] != a.value_[2];
@@ -107,7 +116,7 @@ public:
 
   inline IntVector operator*(const IntVector& v) const {
     return IntVector(value_[0]*v.value_[0], value_[1]*v.value_[1],
-                     value_[2]*v.value_[2]);
+		     value_[2]*v.value_[2]);
   }
   
   inline IntVector operator*(const int a) const {
@@ -117,18 +126,18 @@ public:
 
   inline IntVector operator/(const IntVector& v) const {
     return IntVector(value_[0]/v.value_[0], value_[1]/v.value_[1],
-                     value_[2]/v.value_[2]);
+		     value_[2]/v.value_[2]);
   }
   inline IntVector operator+(const IntVector& v) const {
     return IntVector(value_[0]+v.value_[0], value_[1]+v.value_[1], 
-                     value_[2]+v.value_[2]);
+		     value_[2]+v.value_[2]);
   }
   inline IntVector operator-() const {
     return IntVector(-value_[0], -value_[1], -value_[2]);
   }
   inline IntVector operator-(const IntVector& v) const {
     return IntVector(value_[0]-v.value_[0], value_[1]-v.value_[1], 
-                     value_[2]-v.value_[2]);
+		     value_[2]-v.value_[2]);
   }
 
   inline IntVector& operator+=(const IntVector& v) {
@@ -202,22 +211,19 @@ public:
   inline Point asPoint() const {
     return Point(value_[0], value_[1], value_[2]);
   }
-
   friend inline Vector operator*(const Vector&, const IntVector&);
   friend inline Vector operator*(const IntVector&, const Vector&);
   friend inline IntVector Abs(const IntVector& v);
 
-  //! support dynamic compilation
+   //! support dynamic compilation
   static const std::string& get_h_file_path();
 
-  friend void Pio( Piostream&, IntVector& );
+ friend void Pio( Piostream&, IntVector& );
 
-  friend std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
+ friend std::ostream& operator<<(std::ostream&, const SCIRun::IntVector&);
 
 private:
-
   int value_[3];
-
 }; // end class IntVector
 
 inline Vector operator*(const Vector& a, const IntVector& b) {

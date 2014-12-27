@@ -35,10 +35,8 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Primes.h>
 #include <Core/Math/UintahMiscMath.h>
-#include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/XMLUtils.h>
 
 #include <TauProfilerForSCIRun.h>
 
@@ -136,13 +134,13 @@ void StretchSpec::fillCells(int& start, int lowExtra, int highExtra, OffsetArray
 Grid::Grid()
 {
   // Initialize values that may be uses for the autoPatching calculations
-  af_   =  0;
-  bf_   =  0;
-  cf_   =  0;
-  nf_   = -1;
-  ares_ =  0;
-  bres_ =  0;
-  cres_ =  0;
+  af_ = 0;
+  bf_ = 0;
+  cf_ = 0;
+  nf_ = -1;
+  ares_ = 0;
+  bres_ = 0;
+  cres_ = 0;
   d_extraCells = IntVector(0,0,0);
 }
 
@@ -150,420 +148,21 @@ Grid::~Grid()
 {
 }
 
-const LevelP &
-Grid::getLevel( int l ) const
+int Grid::numLevels() const
 {
-  ASSERTRANGE( l, 0, (int)numLevels() );
+  return (int)d_levels.size();
+}
+
+const LevelP& Grid::getLevel( int l ) const
+{
+  ASSERTRANGE(l, 0, numLevels());
   return d_levels[ l ];
 }
 
-//
-// Parse in the <Patch> from the input file (most likely 'timestep.xml').  We should only need to parse
-// three tags: <id>, <proc>, <lowIndex>, <highIndex>, <interiorLowIndex>, <nnodes>, <lower>, <upper>, 
-// <totalCells>, and </Patch>
-// as the XML should look like this (and we've already parsed <Patch> to get here - and the Level parsing
-// will eat up </Patch>):
-//
-//      [Patch] <- eaten by caller
-//        <id>0</id>
-//        <proc>0</proc>
-//        <lowIndex>[-1, -1, -1]</lowIndex>
-//        <highIndex>[15, 31, 3]</highIndex>
-//        <interiorLowIndex>[0, 0, 0]</interiorLowIndex>
-//        <nnodes>2048</nnodes>
-//        <lower>[-0.01, -0.01, -0.10000000000000001]</lower>
-//        <upper>[0.14999999999999999, 0.31, 0.30000000000000004]</upper>
-//        <totalCells>2048</totalCells>
-//      </Patch>
-//
-bool
-Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel )
+Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
 {
-  bool      doneWithPatch   = false;
-
-  int       id               = -1;
-  bool      foundId          = false;
-
-  int       proc             = -1;
-  bool      foundProc        = false;
-
-  IntVector lowIndex, highIndex;
-  bool      foundLowIndex    = false;
-  bool      foundHighIndex   = false;
-
-  IntVector interiorLowIndex, interiorHighIndex;
-  bool      foundInteriorLowIndex = false;
-  bool      foundInteriorHighIndex = false;
-
-  // int       nnodes           = -1;
-  // bool      foundNNodes      = false;
-
-  // Vector    lower, upper;
-  // bool      foundLower       = false;
-  // bool      foundUpper       = false;
-
-
-  while( !doneWithPatch ) {
-    string line = UintahXML::getLine( fp );
-    //    proc0cout << "4) parsing: " << line << "\n";
-    
-    if( line == "</Patch>" ) {
-      doneWithPatch = true;
-    }
-    else if( line == "" ) {
-      return false; // end of file reached
-    }
-    else {
-      vector< string > pieces = UintahXML::splitXMLtag( line );
-      if( pieces[0] == "<id>" ) {
-        id = atoi( pieces[1].c_str() );
-        foundId = true;
-      }
-      else if( pieces[0] == "<proc>" ) {
-        proc = atoi( pieces[1].c_str() );
-        foundProc = true;
-      }
-      else if( pieces[0] == "<lowIndex>" ) {
-        lowIndex = IntVector::fromString( pieces[1] );
-        foundLowIndex = true;
-      }
-      else if( pieces[0] == "<highIndex>" ) {
-        highIndex = IntVector::fromString( pieces[1] );
-        foundHighIndex = true;
-      }
-      else if( pieces[0] == "<interiorLowIndex>" ) {
-        interiorLowIndex = IntVector::fromString( pieces[1] );
-        foundInteriorLowIndex = true;
-      }
-      else if( pieces[0] == "<interiorHighIndex>" ) {
-        interiorHighIndex = IntVector::fromString( pieces[1] );
-        foundInteriorHighIndex = true;
-      }
-      else if( pieces[0] == "<nnodes>" ) {
-        // FIXME: do I need to handle nnodes, totalCells, lower, and upper?
-      }
-      else if( pieces[0] == "<lower>" ) {
-      }
-      else if( pieces[0] == "<upper>" ) {
-      }
-      else if( pieces[0] == "<totalCells>" ) {
-      }
-      else {
-        ostringstream msg;
-        msg << "parsePatchFromFile(): Bad XML tag: " << pieces[0] << "\n";
-        throw InternalError( msg.str(), __FILE__, __LINE__ );
-      }
-    }
-  } // end while()
-
-  if( !foundId || !foundProc || !foundHighIndex ) {
-    cout << "I am here: " << foundId << ", " << foundProc << ", " << foundHighIndex << "\n";
-    throw InternalError("Grid::parsePatchFromFile() - Missing a <Patch> child tag...", __FILE__, __LINE__ );
-  }
-
-  if( !foundInteriorLowIndex ) { interiorLowIndex = lowIndex; }
-  if( !foundInteriorHighIndex ) { interiorHighIndex = highIndex; }
-
-  level->addPatch( lowIndex, highIndex, interiorLowIndex, interiorHighIndex, this, id );
-
-  procMapForLevel.push_back( proc ); // corresponds to DataArchive original timedata.d_patchInfo[levelIndex].push_back(pi);
-
-  return doneWithPatch;
-
-} // end parsePatchFromFile()
-
-
-//
-// Parse in the <Level> from the input file (most likely 'timestep.xml').  We should only need to parse
-// these tags: <numPatches>, <totalCells>, <extraCells>, <anchor>, <id>, <cellspacing>, <Patch>, and </Level>
-// as the XML should look like this (and we've already parsed <Level> to get here - and the Patch parsing
-// will eat up </Patch>):
-//
-//    <Level>
-//      <numPatches>8192</numPatches>
-//      <totalCells>13104208</totalCells>
-//      <extraCells>[1, 1, 1]</extraCells>
-//      <anchor>[0, 0, 0]</anchor>
-//      <id>0</id>
-//      <cellspacing>[0.01, 0.01, 0.10000000000000001]</cellspacing>
-//      <Patch>
-//         ...
-//      </Patch>
-//    </Level>
-//
-bool
-Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
-{
-  int       numPatches       = 0;
-  int       numPatchesRead   = 0;
-  int       totalCells       = -1;
-
-  bool      done_with_level  = false;
-
-  IntVector periodicBoundaries;
-  bool      foundPeriodicBoundaries = false;
-
-  Point     anchor;
-  bool      foundAnchor      = false;
-
-  Vector    dcell;
-  bool      foundCellSpacing = false;
-
-  int       id               = -1;
-  bool      foundId          = false;
-
-  IntVector extraCells(0,0,0);
-  bool      foundExtraCells  = false;
-
-  bool      foundStretch     = false;
-
-  bool      levelCreated     = false;
-
-  LevelP    level;
-
-  while( !done_with_level ) {
-    string line = UintahXML::getLine( fp );
-    //proc0cout << "3) parsing: " << line << "\n";
-    
-    if( line == "</Level>" ) {
-      done_with_level = true;
-      levelCreated = false;
-
-    }
-    else if( line == "" ) {
-      break; // end of file reached.
-    }
-    else if( line == "<Patch>" ) {
-
-      if( !levelCreated ) {
-
-        levelCreated = true;
-
-        //
-        // When we hit the first <Patch>, then all the Level data will have been
-        // read in, so we can go ahead and create the level... Also, we must create
-        // the level here as it is needed by parsePatchFromFile so that the patch
-        // can be added to the level.
-        //
-        
-        //if( !foundStretch ) {
-        //  dcell *= d_cell_scale;
-        //}
-
-        level = this->addLevel( anchor, dcell, id );
-
-        level->setExtraCells( extraCells );
-
-        //  if( foundStretch ) {
-        //    level->setStretched((Grid::Axis)0, faces[0]);
-        //    level->setStretched((Grid::Axis)1, faces[1]);
-        //    level->setStretched((Grid::Axis)2, faces[2]);
-        //  }
-      }
-
-      numPatchesRead++;
-
-      // At this point, we should be done reading in <Level> information, so we should go ahead and
-      // create the level... if for no other reason that the Patches have to be added to it...
-      if( !foundStretch && !foundCellSpacing ) {
-        throw InternalError("Grid::parseLevelFromFile() - Did not find <cellspacing> or <StretchPositions> point", __FILE__, __LINE__ );
-      }
-      else if( !foundAnchor ) {
-        throw InternalError("Grid::parseLevelFromFile() - Did not find level anchor point", __FILE__, __LINE__ );
-      }
-      else if( !foundId ) {
-        static bool warned_once = false;
-        if( !warned_once ){
-          cerr << "WARNING: Data archive does not have level ID.\n";
-          cerr << "This is okay, as long as you aren't trying to do AMR.\n";
-        }
-        warned_once = true;
-      }
-
-      parsePatchFromFile( fp, level, procMapForLevel );
-    }
-    else {
-      vector< string > pieces = UintahXML::splitXMLtag( line );
-      if( pieces[0] == "<numPatches>" ) {
-        numPatches = atoi( pieces[1].c_str() );
-      }
-      else if( pieces[0] == "<totalCells>" ) {
-        totalCells = atoi( pieces[1].c_str() );
-      }
-      else if( pieces[0] == "<extraCells>" ) {
-        extraCells = IntVector::fromString( pieces[1] );
-        foundExtraCells = true;
-      }
-      else if( pieces[0] == "<anchor>" ) {
-        Vector v = Vector::fromString( pieces[1] );
-        anchor = Point( v );
-        foundAnchor = true;
-      }
-      else if( pieces[0] == "<id>" ) {
-         id = atoi( pieces[1].c_str() );
-         foundId = true;
-      }
-      else if( pieces[0] == "<cellspacing>" ) {
-        dcell = Vector::fromString( pieces[1] );
-        foundCellSpacing = true;
-      }
-      else if( pieces[0] == "<StretchPositions>" ) {
-        foundStretch = true;
-        // FIXME - QWERTY - README - add in the code from original DataArchive.cc to handle <StretchPositions>
-
-        throw InternalError( "Grid::getLine() fail - don't know how to handle StretchPositions yet.", __FILE__, __LINE__ );
-      }
-      else if( pieces[0] == "<periodic>" ) {
-
-        periodicBoundaries = IntVector::fromString( pieces[1] );
-        foundPeriodicBoundaries = true;
-      }
-      else {
-        ostringstream msg;
-        msg << "parseLevelFromFile(): Bad XML tag: " << pieces[0] << "\n";
-        throw InternalError( msg.str(), __FILE__, __LINE__ );
-      }
-    }
-  } // end while()
-
-  if( foundPeriodicBoundaries ){
-    level->finalizeLevel( periodicBoundaries.x() != 0,
-                          periodicBoundaries.y() != 0,
-                          periodicBoundaries.z() != 0 );
-  }
-  else {
-    level->finalizeLevel();
-  }
-
-  if( numPatches != numPatchesRead ) {
-    proc0cout << "numPatchesRead, numPatches: " << numPatchesRead << ", " << numPatches << "\n";
-    throw InternalError( "XML file is corrupted, read different number of patches then it specifies.", __FILE__, __LINE__ );
-  }
-
-  return done_with_level;
-
-} // end parseLevelFromFile()
-            
-//
-// Parse in the <Grid> from the input file (most likely 'timestep.xml').  We should only need to parse
-// three tags: <numLevels>, <Level>, and </Grid> as the XML should look like this (and we've already
-// parsed <Grid> to get here - and the Level parsing will eat up </Level>):
-//
-//    <Grid>
-//      <numLevels>1</numLevels>
-//      <Level>
-//         ...
-//      </Level>
-//    </Grid>
-//
-bool
-Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
-{
-  int  numLevelsRead  = 0;
-  int  numLevels      = 0;
-  bool doneWithGrid   = false;
-  bool foundLevelTag  = false;
-
-  while( !doneWithGrid ) { 
-
-    // Parse all of the Grid...  When we are done with it, we are done parsing the file, hence the reason
-    // we can use "done" for both while loops.
-
-    string line = UintahXML::getLine( fp );
-    //proc0cout << "2) parsing: " << line << "\n";
-
-    if( line == "</Grid>" ) {
-      doneWithGrid = true;
-    }
-    else if( line == "<Level>" ) {
-      foundLevelTag = true;
-
-      procMap.push_back( vector<int>() );
-      vector<int> & procMapForLevel = procMap[ numLevelsRead ];
- 
-      numLevelsRead++;
-
-      parseLevelFromFile( fp, procMapForLevel );
-    }
-    else if( line == "" ) {
-      break; // end of file reached.
-    }
-    else {
-      vector< string > pieces = UintahXML::splitXMLtag( line );
-      if( pieces[0] == "<numLevels>" ) {
-        numLevels = atoi( pieces[1].c_str() );
-      }
-      else {
-        ostringstream msg;
-        msg << "parseGridFromFile(): Bad XML tag: " << pieces[0] << "\n";
-        throw InternalError( msg.str(), __FILE__, __LINE__ );
-      }
-    }
-  }
-  if( !foundLevelTag ) {
-    throw InternalError( "Grid.cc::parseGridFromFile(): Did not find '<Level>' tag in file.", __FILE__, __LINE__ );
-  }
-
-  // Verify that the <numLevels> tag matches the actual number of levels that we have parsed.
-  // If not, then there is an error in the xml file (most likely it was corrupted or written out incorrectly.
-  ASSERTEQ( numLevels, numLevelsRead );
-
-  return doneWithGrid;
-
-} // end parseGridFromFile()
-
-//
-// We are parsing the XML manually, line by line, because if we use the XML library function to read it into an XML tree
-// data structure, then for large number of patches, too much memory is used by that data structure.  It is unclear
-// whether the XML library frees up this memory when you "releaseDocument()", but it probably doesn't matter because
-// we are concerned about the highwater mark (max memory per node), which the XML structure may push us over.
-//
-void
-Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
-{
-  bool done      = false;
-  bool foundGrid = false;
-
-  while( !done ) { // Start at the very top of the file (most likely 'timestep.xml').
-
-    string line = UintahXML::getLine( fp );
-    //proc0cout << "1) parsing: " << line << "\n";
-
-    if( line == "<Grid>" ) {
-      foundGrid = parseGridFromFile( fp, procMap );
-      done = true;
-    }
-    else if( line == "" ) { // End of file reached.
-      done= true;
-    }
-  }
-
-  if( !foundGrid ) {
-    throw InternalError( "Grid.cc: readLevelsFromFile: Did not find '<Grid>' in file.", __FILE__, __LINE__ );
-  }
-
-
-  //      timedata.d_patchInfo.push_back(vector<PatchData>());
-  //      timedata.d_matlInfo.push_back(vector<bool>());
-
-  //          r->get("proc", pi.proc); // defaults to -1 if not available
-  //          timedata.d_patchInfo[levelIndex].push_back(pi);
-
-
-        // Ups only provided when queryGrid() is called for a restart.  The <Grid> is not necessary on non-restarts..
-  //ProblemSpecP grid_ps = ups->findBlock("Grid");
-  //    level->assignBCS( grid_ps, 0 );
-
-} // end readLevelsFromFile()
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Level *
-Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
-{
-  // Find the new level's refinement ratio.
-  // This should only be called when a new grid is created, so if this level index 
+  // find the new level's refinement ratio
+  // this should only be called when a new grid is created, so if this level index 
   // is > 0, then there is a coarse-fine relationship between this level and the 
   // previous one.
 
@@ -589,10 +188,7 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
   return level;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-void
-Grid::performConsistencyCheck() const
+void Grid::performConsistencyCheck() const
 {
 #if SCI_ASSERTION_LEVEL > 0
   TAU_PROFILE("Grid::performConsistencyCheck()", " ", TAU_USER);
@@ -672,16 +268,13 @@ Grid::performConsistencyCheck() const
 #endif
 }
 
-void
-Grid::printStatistics() const
+void Grid::printStatistics() const
 {
   cout << "Grid statistics:\n";
   cout << "Number of levels:\t\t" << numLevels() << '\n';
-
   unsigned long totalCells = 0;
   unsigned long totalPatches = 0;
-
-  for( unsigned int i = 0; i < numLevels(); i++ ) {
+  for(int i=0;i<numLevels();i++){
     LevelP l = getLevel(i);
     cout << "Level " << i << ":\n";
     if (l->getPeriodicBoundaries() != IntVector(0,0,0))
@@ -701,12 +294,11 @@ Grid::printStatistics() const
 
 //////////
 // Computes the physical boundaries for the grid
-void
-Grid::getSpatialRange( BBox & b ) const
+void Grid::getSpatialRange(BBox& b) const
 {
   // just call the same function for all the levels
-  for(unsigned int l = 0; l < numLevels(); l++ ) {
-    getLevel( l )->getSpatialRange( b );
+  for(int l=0; l < numLevels(); l++) {
+    getLevel(l)->getSpatialRange(b);
   }
 }
 
@@ -714,27 +306,26 @@ Grid::getSpatialRange( BBox & b ) const
 // Returns the boundary of the grid exactly (without
 // extra cells).  The value returned is the same value
 // as found in the .ups file.
-void
-Grid::getInteriorSpatialRange( BBox & b ) const
+void Grid::getInteriorSpatialRange(BBox& b) const
 {
-  // Just call the same function for all the levels.
-  for( unsigned int l = 0; l < numLevels(); l++ ) {
-    getLevel( l )->getInteriorSpatialRange( b );
+  // just call the same function for all the levels
+  for(int l=0; l < numLevels(); l++) {
+    getLevel(l)->getInteriorSpatialRange(b);
   }
 }
 
+
 //__________________________________
 // Computes the length in each direction of the grid
-void
-Grid::getLength( Vector & length, const string & flag ) const
+void Grid::getLength(Vector& length, const string flag) const
 {
   BBox b;
   // just call the same function for all the levels
-  for( unsigned int l = 0; l < numLevels(); l++ ) {
-    getLevel( l )->getSpatialRange( b );
+  for(int l=0; l < numLevels(); l++) {
+    getLevel(l)->getSpatialRange(b);
   }
   length = ( b.max() - b.min() );
-  if( flag == "minusExtraCells" ) {
+  if (flag == "minusExtraCells") {
     Vector dx = getLevel(0)->dCell();
     IntVector extraCells = getLevel(0)->getExtraCells();
     Vector ec_length = IntVector(2,2,2) * extraCells * dx;
@@ -838,7 +429,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       }  // boxes loop
 
       if (extraCells!=d_extraCells && d_extraCells!=IntVector(0,0,0)) {
-        proc0cout << "Warning:: Input file overrides extraCells specification, current extraCell: " << extraCells << "\n";
+          if(pg->myrank() == 0) {
+            cout << "Warning:: Input file overrides extraCells specification, current extraCell: " << extraCells << "\n";
+          }
       }
 
       // Look for stretched grid info
@@ -1187,7 +780,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
           patchAttributes.clear();
           box_ps->getAttributes(patchAttributes);
-          proc0cout << "Automatically performing patch layout.\n";
+          if(pg->myrank() == 0) {
+            cout << "Automatically performing patch layout.\n";
+          }
           
           int numProcs = pg->size();
           int targetPatches = (int)(numProcs * autoPatchValue);
@@ -1251,8 +846,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cout << "********************\n\n";
         }
   
-        proc0cout << "Patch layout: \t\t(" << patches.x() << ","
-                  << patches.y() << "," << patches.z() << ")\n";
+        if(pg->myrank() == 0) {
+          cout << "Patch layout: \t\t(" << patches.x() << ","
+               << patches.y() << "," << patches.z() << ")\n";
+        }
       
         IntVector refineRatio = level->getRefinementRatio();
         level->setPatchDistributionHint(patches);
@@ -1320,7 +917,7 @@ namespace Uintah
     out.setf(ios::floatfield);
     out.precision(6);
     out << "Grid has " << grid.numLevels() << " level(s)" << endl;
-    for ( unsigned int levelIndex = 0; levelIndex < grid.numLevels(); levelIndex++ ) {
+    for ( int levelIndex = 0; levelIndex < grid.numLevels(); levelIndex++ ) {
       LevelP level = grid.getLevel( levelIndex );
       out << "  Level " << level->getID() 
           << ", indx: "<< level->getIndex()
@@ -1334,14 +931,12 @@ namespace Uintah
   }
 }
 
-// This is O(p).
-bool
-Grid::operator==( const Grid & othergrid ) const
+//This is O(p).
+bool Grid::operator==(const Grid& othergrid) const
 {
-  if( numLevels() != othergrid.numLevels() ) {
+  if (numLevels() != othergrid.numLevels())
     return false;
-  }
-  for( unsigned int i = 0; i < numLevels(); i++ ) {
+  for (int i = 0; i < numLevels(); i++) {
     const Level* level = getLevel(i).get_rep();
     const Level* otherlevel = othergrid.getLevel(i).get_rep();
     if (level->numPatches() != otherlevel->numPatches())
@@ -1492,11 +1087,10 @@ void Grid::partition2D(std::list<int> primes, int a, int b)
   return;
 }
 
-const Patch *
-Grid::getPatchByID( int patchid, int startingLevel ) const
+const Patch* Grid::getPatchByID(int patchid, int startingLevel) const
 {
   const Patch* patch = NULL;
-  for( unsigned int i = startingLevel; i < numLevels(); i++ ) {
+  for (int i = startingLevel; i < numLevels(); i++) {
     LevelP checkLevel = getLevel(i);
     int levelBaseID = checkLevel->getPatch(0)->getID();
     if (patchid >= levelBaseID && patchid < levelBaseID+checkLevel->numPatches()) {
@@ -1511,7 +1105,7 @@ void
 Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
   TAU_PROFILE("Grid::assignBCS()", " ", TAU_USER);
-  for( unsigned int l = 0; l < numLevels(); l++ )
+  for( int l = 0; l < numLevels(); l++ )
   {
     LevelP level = getLevel( l );
     level->assignBCS( grid_ps, lb );

@@ -61,25 +61,27 @@ Patch::Patch(const Level* level,
     d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
     d_arrayBCS(0), d_interiorBndArrayBCS(0)
 {
-  if( d_id == -1 ) {
+  
+  if(d_id == -1){
     d_id = ids++;
-  }
-  else {
-    if( d_id >= ids ) {
-      ids.set( d_id + 1 );
-    }
+
+  } else {
+    if(d_id >= ids)
+      ids.set(d_id+1);
   }
    
-  // DON'T call setBCType here:
-  d_patchState.xminus = None;
-  d_patchState.yminus = None;
-  d_patchState.zminus = None;
-  d_patchState.xplus  = None;
-  d_patchState.yplus  = None;
-  d_patchState.zplus  = None;
+  // DON'T call setBCType here     
+  d_patchState.xminus=None;
+  d_patchState.yminus=None;
+  d_patchState.zminus=None;
+  d_patchState.xplus=None;
+  d_patchState.yplus=None;
+  d_patchState.zplus=None;
 
-  // Set the level index.
-  d_patchState.levelIndex = levelIndex;
+  
+  //set the level index
+  d_patchState.levelIndex=levelIndex;
+
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
@@ -122,16 +124,17 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
 
 Patch::~Patch()
 {
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face=Patch::nextFace(face)) {
-    if ( d_arrayBCS ) {
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)) {
+    if ( d_arrayBCS)
       delete (*d_arrayBCS)[face];
-    }
-    if( d_interiorBndArrayBCS ) {
+    
+    if (d_interiorBndArrayBCS) {
       delete (*d_interiorBndArrayBCS)[face];
     }
   }
 
-  if( d_arrayBCS ) {
+  if (d_arrayBCS) {
     d_arrayBCS->clear();
     delete d_arrayBCS;
   }
@@ -351,65 +354,58 @@ Patch::setInteriorBndArrayBCValues(Patch::FaceType face, BCDataArray* bc)
   BCDataArray* bctmp = bc->clone();
   bctmp->determineInteriorBndIteratorLimits(face,this);
   (*d_interiorBndArrayBCS)[face] = bctmp->clone();
-
   delete bctmp;
 }
 
 //-----------------------------------------------------------------------------------------------
 
-const BCDataArray *
-Patch::getBCDataArray( Patch::FaceType face ) const
+const BCDataArray* Patch::getBCDataArray(Patch::FaceType face) const
 {
   if (d_arrayBCS) {
     if ((*d_arrayBCS)[face]) {
       return (*d_arrayBCS)[face];
-    }
-    else {
+    } else {
       ostringstream msg;
       msg << "face = " << face << endl;
-      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated", __FILE__, __LINE__));
+      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
+                              __FILE__, __LINE__));
     }
-  }
-  else {
-    SCI_THROW(InternalError("Error: d_arrayBCs not allocated. This means that no boundary conditions were found. "
-                            "If you are solving a periodic problem, please add a <periodic> tag to your input file "
-                            "to avoid this error. Otherwise, add a <BoundaryConditions> block.",
+  } else {
+    SCI_THROW(InternalError("Error: d_arrayBCs not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
                             __FILE__, __LINE__));
   }
+
 }
 
 //-----------------------------------------------------------------------------------------------
 
-const BCDataArray *
-Patch::getInteriorBndBCDataArray( Patch::FaceType face ) const
+const BCDataArray* Patch::getInteriorBndBCDataArray(Patch::FaceType face) const
 {
   if (d_interiorBndArrayBCS) {
     if ((*d_interiorBndArrayBCS)[face]) {
       return (*d_interiorBndArrayBCS)[face];
-    }
-    else {
+    } else {
       ostringstream msg;
       msg << "face = " << face << endl;
-      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated", __FILE__, __LINE__));
+      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
+                              __FILE__, __LINE__));
     }
-  }
-  else {
-    SCI_THROW(InternalError("Error: d_interiorBndArrayBCS not allocated. This means that no boundary conditions were found. "
-                            "If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. "
-                            "Otherwise, add a <BoundaryConditions> block.",
+  } else {
+    SCI_THROW(InternalError("Error: d_interiorBndArrayBCS not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
                             __FILE__, __LINE__));
   }
+  
 }
 
 //-----------------------------------------------------------------------------------------------
 
 const BoundCondBase*
-Patch::getArrayBCValues( Patch::FaceType   face,
-                         int               mat_id,
-                         const string    & type,
-                         Iterator        & cell_ptr, 
-                         Iterator        & node_ptr,
-                         int               child) const
+Patch::getArrayBCValues(Patch::FaceType face,
+                        int mat_id,
+                        const string& type,
+                        Iterator& cell_ptr, 
+                        Iterator& node_ptr,
+                        int child) const
 {
   BCDataArray* bcd = (*d_arrayBCS)[face];
   if (bcd) {
@@ -458,6 +454,10 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
   BCDataArray* itr = (*d_arrayBCS)[face];
 
   if ( itr ) {
+#if 0
+    cout << "Inside haveBC" << endl;
+    ubc->print();
+#endif
     BCDataArray::bcDataArrayType::const_iterator v_itr;
     vector<BCGeomBase*>::const_iterator it;
     
@@ -1344,11 +1344,12 @@ void Patch::getOtherLevelPatches(int levelOffset,
     low = low - IntVector(2,2,2);
   }
 
+  //cout << "  Patch:Golp: " << low-pc << " " << high+pc << endl;
   Level::selectType patches;
   otherLevel->selectPatches(low-pc, high+pc, patches); 
   
-  // Based on the expanded range above to search for extra cells, we might
-  // have grabbed more patches than we wanted, so refine them here.
+  // based on the expanded range above to search for extra cells, we might
+  // have grabbed more patches than we wanted, so refine them here
   for (int i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
@@ -1626,28 +1627,28 @@ void Patch::finalizePatch()
 
 /**
  * Returns the index that this patch would be
- * if all of the levels were taken into account.
+ * if all of the levels were taken into account
  * This query is O(L) where L is the number of levels.
  */
-int
-Patch::getGridIndex() const 
+int Patch::getGridIndex() const 
 {
-  int   index   = d_level_index;
-  int   levelid = getLevel()->getIndex();
-  GridP grid    = getLevel()->getGrid();
+  int index = d_level_index;
+  int levelid = getLevel()->getIndex();
+  GridP grid = getLevel()->getGrid();
 
-  // Add up all the patches in the preceding levels.
-  for( unsigned int i = 0; (int)i < levelid && i < grid->numLevels(); i++ ) {
+  // add up all the patches in the preceding levels
+  for ( int i = 0; i < levelid && i < grid->numLevels(); i++) {
     index += grid->getLevel(i)->numPatches();
   }
   return index;
+
 }
 
+
 /**
-* Sets the vector cells equal to the list of cells that at the intersection of three faces extra cells.
+* sets the vector cells equal to the list of cells that at the intersection of three faces extra cells
 */
-void
-Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
+void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
 {
   //set bounds for loops below
   int xstart=0,xend=2;
@@ -1729,8 +1730,7 @@ Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) const
 
 //-----------------------------------------------------------------------------------------------
 
-void
-Patch::initializeBoundaryConditions()
+void Patch::initializeBoundaryConditions()
 {
   if (d_arrayBCS) {
     for (unsigned int i = 0; i< 6; ++i) {
@@ -1740,9 +1740,8 @@ Patch::initializeBoundaryConditions()
     delete d_arrayBCS;
   }
   d_arrayBCS = scinew vector<BCDataArray*>(6);
-  for (unsigned int i = 0; i< 6; ++i) {
+  for (unsigned int i = 0; i< 6; ++i)
     (*d_arrayBCS)[i] = 0;
-  }
   
   if (d_interiorBndArrayBCS) {
     for (unsigned int i = 0; i< 6; ++i) {
@@ -1751,11 +1750,9 @@ Patch::initializeBoundaryConditions()
     d_interiorBndArrayBCS->clear();
     delete d_interiorBndArrayBCS;
   }
-
   d_interiorBndArrayBCS = scinew vector<BCDataArray*>(6);
-  for( unsigned int i = 0; i< 6; ++i ) {
+  for (unsigned int i = 0; i< 6; ++i)
     (*d_interiorBndArrayBCS)[i] = 0;
-  }
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -1774,9 +1771,7 @@ Patch::initializeBoundaryConditions()
 //    for (CellIterator iter(region->getLow(), region->getHigh()); !iter.done(); iter++){
 //    }
 //  }
-
-void
-Patch::getFinestRegionsOnPatch( vector<Region> & difference ) const
+void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
 {
   const Level* level = getLevel();
   vector<Region> coarsePatch_q,finePatch_q;                                              
@@ -1797,9 +1792,9 @@ Patch::getFinestRegionsOnPatch( vector<Region> & difference ) const
     }                                                           
   }                                                                                                   
 
-  // Add coarse patch to coarsePatch_q.
-  coarsePatch_q.push_back( Region(getCellLowIndex(), getCellHighIndex()) ); 
+  //add coarse patch to coarsePatch_q                                                                 
+  coarsePatch_q.push_back(Region(getCellLowIndex(),getCellHighIndex())); 
 
-  // Compute region of coarse patches that do not contain fine patches.
-  difference = Region::difference( coarsePatch_q, finePatch_q );
+  //compute region of coarse patches that do not contain fine patches                                 
+  difference=Region::difference(coarsePatch_q, finePatch_q);                                                                                 
 }
