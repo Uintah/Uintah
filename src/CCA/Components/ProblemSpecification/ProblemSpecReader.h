@@ -33,6 +33,7 @@
 #include <string>
 #include <vector>
 
+
 namespace Uintah {
       
   struct Tag;
@@ -42,23 +43,8 @@ namespace Uintah {
     ProblemSpecReader();
     ~ProblemSpecReader();
 
-    // Reads in an XML problem spec file.  (See 2nd version below, too).
-
-    virtual ProblemSpecP readInputFile( const std::string      & filename,
-                                        const bool               validate = false );
-
-    // This function is designed to remove <Patch> sections of the xml input 'filename' before
-    // creating the XML DOM object, where the patches passed in are just the ones assigned to
-    // this processor and thus all other <Patch>s are excluded from the DOM.  However, I
-    // don't think anyone is using this at this point, and I'm not convinced it is the
-    // correct file for this 'fix', as most xml files read by readInputFile() are not the
-    // timestep.xml file which has the <Patch>s in it.  Once things settle down and the
-    // rest of the XML memory usage problems are fixed, this should be revisited and probably
-    // just remove the streaming parsing in this fucntion.
-
-    virtual ProblemSpecP readInputFile( const std::string      & filename,
-                                        const std::vector<int> & patches,
-                                        const bool               validate = false );
+    // Be sure to call releaseDocument on this ProblemSpecP.  Most users should not use the 'insertAfterThisNode' parameter. 
+    virtual ProblemSpecP readInputFile( const std::string & filename, bool validate = false );
 
     // Returns the main xml file name.
     virtual std::string getInputFile() { return *d_upsFilename[0]; }

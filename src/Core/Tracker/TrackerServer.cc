@@ -25,9 +25,9 @@
 
 #include <Core/Tracker/TrackerServer.h>
 
+#include <Core/Containers/StringUtil.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Util/StringUtil.h>
 
 #include <iostream>
 

@@ -29,8 +29,8 @@
 #include <Core/Parallel/UintahParallelPort.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
+
 #include <string>
-#include <vector>
 
 namespace Uintah {
 
@@ -67,14 +67,8 @@ WARNING
       ProblemSpecInterface();
       virtual ~ProblemSpecInterface();
 
-      virtual ProblemSpecP readInputFile( const std::string      & filename,
-                                          const bool               validate = false ) = 0;
-
-      virtual ProblemSpecP readInputFile( const std::string      & filename,
-                                          const std::vector<int> & patches_of_interest, 
-                                          const bool               validate = false ) = 0;
-
-      virtual std::string  getInputFile() = 0;
+      virtual ProblemSpecP readInputFile( const std::string & filename, bool validate = false ) = 0;
+      virtual std::string getInputFile() = 0;
       
    private:
       ProblemSpecInterface( const ProblemSpecInterface & );

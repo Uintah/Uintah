@@ -111,8 +111,6 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   std::string baseNameAbskp;
 
   if (d_radiation ) {
-    
-    _radiateAtGasTemp=true; // this flag is arbitrary for no radiation 
     ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
     for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
         db_model = db_model->findNextBlock("model")){
@@ -138,7 +136,6 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
           break;
         }
         db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
-        db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true ); 
         break;
       }
       if  (db_model== 0){

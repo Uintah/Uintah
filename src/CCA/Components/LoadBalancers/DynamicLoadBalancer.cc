@@ -260,27 +260,24 @@ void DynamicLoadBalancer::collectParticlesForRegrid(const Grid* oldGrid, const v
 void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> >& particles)
 {
   particles.resize(grid->numLevels());
-  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
+  for(int l=0;l<grid->numLevels();l++)
+  {
     particles[l].resize(grid->getLevel(l)->numPatches());
     particles[l].assign(grid->getLevel(l)->numPatches(),0);
   }
-  if (d_processorAssignment.size() == 0) {
+  if (d_processorAssignment.size() == 0)
     return; // if we haven't been through the LB yet, don't try this.
-  }
 
   //if we are not supposed to collect particles just return
-  if(!d_collectParticles || !d_scheduler->get_dw(0)) {
+  if(!d_collectParticles || !d_scheduler->get_dw(0))
     return;
-  }
 
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myrank() == 0)
     dbg << " DLB::collectParticles\n";
-  }
 
   int num_patches = 0;
-  for( unsigned int i = 0; i < grid->numLevels(); i++ ) {
+  for (int i = 0; i < grid->numLevels(); i++)
     num_patches += grid->getLevel(i)->numPatches();
-  }
 
   int num_procs = d_myworld->size();
   int myrank = d_myworld->myrank();
@@ -288,16 +285,15 @@ void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> 
   //   gather from each proc - based on the last location
 
   DataWarehouse* dw = d_scheduler->get_dw(0);
-  if( dw == 0 ) {
+  if (dw == 0)
     return;
-  }
 
   vector<PatchInfo> particleList;
   vector<int> num_particles(num_patches, 0);
 
   // find out how many particles per patch, and store that number
   // along with the patch number in particleList
-  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
+  for(int l=0;l<grid->numLevels();l++) {
     const LevelP& level = grid->getLevel(l);
     for (Level::const_patchIterator iter = level->patchesBegin(); 
         iter != level->patchesEnd(); iter++) {
@@ -392,9 +388,10 @@ void DynamicLoadBalancer::collectParticles(const Grid* grid, vector<vector<int> 
   }
 
   // add the number of particles to the particles array
-  for( unsigned int l = 0, i = 0; l < grid->numLevels(); l++ ) {
+  for (int l = 0, i=0; l < grid->numLevels(); l++) {
     unsigned num_patches=grid->getLevel(l)->numPatches();
-    for(unsigned p =0; p<num_patches; p++,i++) {
+    for(unsigned p =0; p<num_patches; p++,i++)
+    {
       particles[l][p]=num_particles[i];
     }
   }
@@ -576,7 +573,7 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
   int dim=d_sharedState->getNumDims();    //Number of dimensions
   int *dimensions=d_sharedState->getActiveDims(); //dimensions will store the active dimensions up to the number of dimensions
 
-  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
+  for(int l=0;l<grid->numLevels();l++){
 
     const LevelP& level = grid->getLevel(l);
     int num_patches = level->numPatches();
@@ -600,8 +597,8 @@ bool DynamicLoadBalancer::assignPatchesZoltanSFC(const GridP& grid, bool force)
       if(d_myworld->myrank()==proc)
       {
         Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
-        my_costs.push_back(patch_costs[l][patch->getLevelIndex()]);
-        my_gids.push_back(patch->getLevelIndex());
+	my_costs.push_back(patch_costs[l][patch->getLevelIndex()]);
+	my_gids.push_back(patch->getLevelIndex());
         for(int d=0;d<dim;d++)
         {
           positions.push_back(point[dimensions[d]]);
@@ -777,16 +774,15 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   vector<double> procCosts(num_procs,0);
   vector<double> previousProcCosts(num_procs,0);
   double previous_total_cost=0;
-  for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
+  for(int l=0;l<grid->numLevels();l++){
 
     const LevelP& level = grid->getLevel(l);
     int num_patches = level->numPatches();
     vector<int> order(num_patches);
     double total_cost = 0;
 
-    for (unsigned i = 0; i < patch_costs[l].size(); i++) {
+    for (unsigned i = 0; i < patch_costs[l].size(); i++)
       total_cost += patch_costs[l][i];
-    }
 
     if (d_doSpaceCurve) {
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
@@ -1087,8 +1083,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   return doLoadBalancing;
 }
 
-bool
-DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch_costs)
+bool DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch_costs)
 {
   // add up the costs each processor for the current assignment
   // and for the temp assignment, then calculate the standard deviation
@@ -1101,15 +1096,17 @@ DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch_cost
   vector<vector<double> > currentProcCosts(num_levels);
   vector<vector<double> > tempProcCosts(num_levels);
 
-  int i = 0;
-  for( int l = 0; l < num_levels; l++ ) {
+  int i=0;
+  for(int l=0;l<num_levels;l++)
+  {
     currentProcCosts[l].resize(num_procs);
     tempProcCosts[l].resize(num_procs);
 
     currentProcCosts[l].assign(num_procs,0);
     tempProcCosts[l].assign(num_procs,0);
     
-    for(int p=0;p<(int)patch_costs[l].size();p++,i++) {
+    for(int p=0;p<(int)patch_costs[l].size();p++,i++)
+    {
       currentProcCosts[l][d_processorAssignment[i]] += patch_costs[l][p];
       tempProcCosts[l][d_tempAssignment[i]] += patch_costs[l][p];
     }
@@ -1118,23 +1115,24 @@ DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch_cost
   double total_max_current=0, total_avg_current=0;
   double total_max_temp=0, total_avg_temp=0;
   
-  if(d_levelIndependent) {
+  if(d_levelIndependent)
+  {
     double avg_current = 0;
     double max_current = 0;
     double avg_temp = 0;
     double max_temp = 0;
-    for( int l = 0; l < num_levels; l++ ) {
+    for(int l=0;l<num_levels;l++)
+    {
       avg_current = 0;
       max_current = 0;
       avg_temp = 0;
       max_temp = 0;
-      for( int i = 0; i < d_myworld->size(); i++) {
-        if (currentProcCosts[l][i] > max_current) {
+      for (int i = 0; i < d_myworld->size(); i++) 
+      {
+        if (currentProcCosts[l][i] > max_current) 
           max_current = currentProcCosts[l][i];
-        }
-        if (tempProcCosts[l][i] > max_temp) {
+        if (tempProcCosts[l][i] > max_temp) 
           max_temp = tempProcCosts[l][i];
-        }
         avg_current += currentProcCosts[l][i];
         avg_temp += tempProcCosts[l][i];
       }
@@ -1148,19 +1146,20 @@ DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch_cost
       total_avg_temp+=avg_temp;
     }
   }
-  else {
-    for( int i = 0; i < d_myworld->size(); i++ ) {
+  else
+  {
+      for(int i=0;i<d_myworld->size();i++)
+      {
         double current_cost=0, temp_cost=0;
-        for( int l = 0; l < num_levels; l++ ) {
+        for(int l=0;l<num_levels;l++)
+        {
           current_cost+=currentProcCosts[l][i];
           temp_cost+=currentProcCosts[l][i];
         }
-        if(current_cost>total_max_current) {
+        if(current_cost>total_max_current)
           total_max_current=current_cost;
-        }
-        if(temp_cost>total_max_temp) {
+        if(temp_cost>total_max_temp)
           total_max_temp=temp_cost;
-        }
         total_avg_current+=current_cost;
         total_avg_temp+=temp_cost;
       }
@@ -1169,21 +1168,20 @@ DynamicLoadBalancer::thresholdExceeded(const vector<vector<double> >& patch_cost
   }
     
   
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myrank() == 0)
+  {
     stats << "Total:"  << " maxCur:" << total_max_current << " maxTemp:"  << total_max_temp << " avgCur:" << total_avg_current << " avgTemp:" << total_avg_temp <<endl;
   }
 
   // if tmp - cur is positive, it is an improvement
-  if( (total_max_current-total_max_temp)/total_max_current>d_lbThreshold) {
+  if( (total_max_current-total_max_temp)/total_max_current>d_lbThreshold)
     return true;
-  }
-  else {
+  else
     return false;
-  }
 }
 
-bool
-DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
+
+bool DynamicLoadBalancer::assignPatchesRandom(const GridP&, bool force)
 {
   // this assigns patches in a random form - every time we re-load balance
   // We get a random seed on the first proc and send it out (so all procs
@@ -1193,9 +1191,8 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
 
   int seed;
 
-  if (d_myworld->myrank() == 0) {
+  if (d_myworld->myrank() == 0)
     seed = (int) Time::currentSeconds();
-  }
  
   MPI_Bcast(&seed, 1, MPI_INT,0,d_myworld->getComm());
 
@@ -1241,39 +1238,36 @@ bool DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 
 
 int
-DynamicLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )
+DynamicLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 {
-  // If on a copy-data timestep and we ask about an old patch, that could cause problems...
-
-  if (d_sharedState->isCopyDataTimestep() && patch->getRealPatch()->getID() < d_assignmentBasePatch) {
+  // if on a copy-data timestep and we ask about an old patch, that could cause problems
+  if (d_sharedState->isCopyDataTimestep() && patch->getRealPatch()->getID() < d_assignmentBasePatch)
     return -patch->getID();
-  }
  
-  ASSERTRANGE( patch->getRealPatch()->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size() );
-  int proc = d_processorAssignment[ patch->getRealPatch()->getGridIndex() ];
+  ASSERTRANGE(patch->getRealPatch()->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size());
+  int proc = d_processorAssignment[patch->getRealPatch()->getGridIndex()];
 
-  ASSERTRANGE( proc, 0, d_myworld->size() );
+  ASSERTRANGE(proc, 0, d_myworld->size());
   return proc;
 }
 
 int
-DynamicLoadBalancer::getOldProcessorAssignment( const VarLabel* var,
-                                                const Patch* patch, 
-                                                const int /*matl*/ )
+DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var, 
+						const Patch* patch, 
+                                                const int /*matl*/)
 {
+
   if (var && var->typeDescription()->isReductionVariable()) {
     return d_myworld->myrank();
   }
 
-  // On an initial-regrid-timestep, this will get called from createNeighborhood
-  // and can have a patch with a higher index than we have.
-  if ((int)patch->getRealPatch()->getID() < d_oldAssignmentBasePatch || patch->getRealPatch()->getID() >= d_oldAssignmentBasePatch + (int)d_oldAssignment.size()) {
+  // on an initial-regrid-timestep, this will get called from createNeighborhood
+  // and can have a patch with a higher index than we have
+  if ((int)patch->getRealPatch()->getID() < d_oldAssignmentBasePatch || patch->getRealPatch()->getID() >= d_oldAssignmentBasePatch + (int)d_oldAssignment.size())
     return -9999;
-  }
   
-  if (patch->getGridIndex() >= (int) d_oldAssignment.size()) {
+  if (patch->getGridIndex() >= (int) d_oldAssignment.size())
     return -999;
-  }
 
   int proc = d_oldAssignment[patch->getRealPatch()->getGridIndex()];
   ASSERTRANGE(proc, 0, d_myworld->size());
@@ -1282,7 +1276,7 @@ DynamicLoadBalancer::getOldProcessorAssignment( const VarLabel* var,
 
 bool 
 DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
-                                    const GridP& grid)
+				    const GridP& grid)
 {
   double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -1320,9 +1314,112 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   }
 } 
 
-// If it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches.
 void
-DynamicLoadBalancer::getCosts( const Grid * grid, vector<vector<double> > & costs )
+DynamicLoadBalancer::restartInitialize( DataArchive* archive, int time_index, ProblemSpecP& pspec,
+                                        string tsurl, const GridP& grid )
+{
+  // here we need to grab the uda data to reassign patch dat  a to the 
+  // processor that will get the data
+  int num_patches = 0;
+  const Patch* first_patch = *(grid->getLevel(0)->patchesBegin());
+  int startingID = first_patch->getID();
+  int prevNumProcs = 0;
+
+  for(int l=0;l<grid->numLevels();l++){
+    const LevelP& level = grid->getLevel(l);
+    num_patches += level->numPatches();
+  }
+
+  d_processorAssignment.resize(num_patches);
+  d_assignmentBasePatch = startingID;
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
+    d_processorAssignment[i]= -1;
+
+  if (archive->queryPatchwiseProcessor(first_patch, time_index) != -1) {
+    // for uda 1.1 - if proc is saved with the patches
+    for(int l=0;l<grid->numLevels();l++){
+      const LevelP& level = grid->getLevel(l);
+      for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+        d_processorAssignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->size();
+      }
+    }
+  } // end queryPatchwiseProcessor
+  else {
+    // before uda 1.1
+    // strip off the timestep.xml
+    string dir = tsurl.substr(0, tsurl.find_last_of('/')+1);
+
+    ASSERT(pspec != 0);
+    ProblemSpecP datanode = pspec->findBlock("Data");
+    if(datanode == 0)
+      throw InternalError("Cannot find Data in timestep", __FILE__, __LINE__);
+    for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
+        n=n->getNextSibling()){
+      if(n->getNodeName() == "Datafile") {
+        map<string,string> attributes;
+        n->getAttributes(attributes);
+        string proc = attributes["proc"];
+        if (proc != "") {
+          int procnum = atoi(proc.c_str());
+          if (procnum+1 > prevNumProcs)
+            prevNumProcs = procnum+1;
+          string datafile = attributes["href"];
+          if(datafile == "")
+            throw InternalError("timestep href not found", __FILE__, __LINE__);
+          
+          string dataxml = dir + datafile;
+          // open the datafiles
+
+          ProblemSpecP dataDoc = ProblemSpecReader().readInputFile( dataxml );
+          if( !dataDoc ) {
+            throw InternalError( string( "Cannot open data file: " ) + dataxml, __FILE__, __LINE__);
+          }
+          for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
+            if(r->getNodeName() == "Variable") {
+              int patchid;
+              if(!r->get("patch", patchid) && !r->get("region", patchid))
+                throw InternalError("Cannot get patch id", __FILE__, __LINE__);
+              if (d_processorAssignment[patchid-startingID] == -1) {
+                // assign the patch to the processor
+                // use the grid index
+                d_processorAssignment[patchid - startingID] = procnum % d_myworld->size();
+              }
+            }
+          }            
+        }
+      }
+    }
+  } // end else...
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
+    if (d_processorAssignment[i] == -1)
+      cout << "index " << i << " == -1\n";
+    ASSERT(d_processorAssignment[i] != -1);
+  }
+  d_oldAssignment = d_processorAssignment;
+  d_oldAssignmentBasePatch = d_assignmentBasePatch;
+
+  if (prevNumProcs != d_myworld->size() || d_outputNthProc > 1) {
+    if (d_myworld->myrank() == 0) dbg << "  Original run had " << prevNumProcs << ", this has " << d_myworld->size() << endl;
+    d_checkAfterRestart = true;
+  }
+
+  if (d_myworld->myrank() == 0) {
+    dbg << d_myworld->myrank() << " check after restart: " << d_checkAfterRestart << "\n";
+#if 0
+    int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
+    if (lb.active()) {
+      for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
+        lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " 
+           << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " 
+           << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
+      }
+    }
+#endif
+  }
+}
+
+//if it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches
+void DynamicLoadBalancer::getCosts(const Grid* grid, vector<vector<double> >&costs)
 {
   costs.clear();
     
@@ -1335,7 +1432,7 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector<vector<double> > & cost
   {
     vector<vector<Region> > regions;
     // prepare the list of regions
-    for( unsigned int l = 0; l < grid->numLevels(); l++ ) {
+    for (int l = 0; l < grid->numLevels(); l++) {
       regions.push_back(vector<Region>());
       for (int p = 0; p < grid->getLevel(l)->numPatches(); p++) {
         const Patch* patch = grid->getLevel(l)->getPatch(p);
@@ -1400,7 +1497,7 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int s
     if(d_tempAssignment.empty())
     {
       int num_patches = 0;
-      for( unsigned int l = 0; l < grid->numLevels(); l++ ){
+      for(int l=0;l<grid->numLevels();l++){
         const LevelP& level = grid->getLevel(l);
         num_patches += level->numPatches();
       }

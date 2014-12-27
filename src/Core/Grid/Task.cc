@@ -22,17 +22,17 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
-#include <Core/Parallel/Parallel.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/StringUtil.h>
-
+#include <Core/Containers/StringUtil.h>
+#include <Core/Parallel/Parallel.h>
 #include <set>
+
 
 using namespace std;
 using namespace Uintah;
@@ -54,7 +54,7 @@ void Task::initialize()
   d_subpatchCapable = false;
   d_hasSubScheduler = false;
 
-  for( int i = 0; i < TotalDWs; i++ ) {
+  for(int i=0;i<TotalDWs;i++) {
     dwmap[i]=Task::InvalidDW;
   }
   sortedOrder    = -1;
@@ -175,192 +175,182 @@ Task::subpatchCapable(bool state)
 
 //__________________________________
 void
-Task::requires(       WhichDW              dw, 
-                const VarLabel           * var,
-                const PatchSubset        * patches,
-                      PatchDomainSpec      patches_dom,
-                      int                  level_offset,
-                const MaterialSubset     * matls,
-                      MaterialDomainSpec   matls_dom,
-                      Ghost::GhostType     gtype,
-                      int                  numGhostCells,
-                      bool                 oldTG )
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+	        const PatchSubset* patches,
+	        PatchDomainSpec patches_dom,
+	        int level_offset,
+	        const MaterialSubset* matls,
+	        MaterialDomainSpec matls_dom,
+	        Ghost::GhostType gtype,
+	        int numGhostCells,
+	        bool oldTG)
 {
-  if( matls == 0 && var->typeDescription()->isReductionVariable() ) {
+  if (matls == 0 && var->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
     matls = getGlobalMatlSubset();
     matls_dom = OutOfDomain;
   }
-  else if( matls != 0 && matls->size() == 0 ) {
+  else if (matls != 0 && matls->size() == 0) {
     return; // no materials, no dependency
   }
 
-  Dependency* dep = scinew Dependency( Requires, this, dw, var, oldTG, patches, matls,
-                                       patches_dom, matls_dom,
-                                       gtype, numGhostCells, level_offset );
+  Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, patches, matls,
+                                      patches_dom, matls_dom,
+                                      gtype, numGhostCells, level_offset);
 
-  if( numGhostCells > maxGhostCells ) {
+  if (numGhostCells > maxGhostCells) {
     maxGhostCells=numGhostCells;
   }
-  if( level_offset > maxLevelOffset ){
-    maxLevelOffset=level_offset;
+  if (level_offset > maxLevelOffset){
+   maxLevelOffset=level_offset;
   }
   
   dep->next=0;
-  if( req_tail ) {
+  if(req_tail) {
     req_tail->next=dep;
-  }
-  else {
+  }else{
     req_head=dep;
   }
   req_tail=dep;
   
-  if( dw == OldDW ){
+  if (dw == OldDW){
     d_requiresOldDW.insert(make_pair(var, dep));
-  }
-  else {
+  }else{
     d_requires.insert(make_pair(var, dep));
   }
 }
 
 //__________________________________
-
 void
-Task::requires(       WhichDW              dw, 
-                const VarLabel           * var,
-                const PatchSubset        * patches,
-                      PatchDomainSpec      patches_dom,
-                const MaterialSubset     * matls,
-                      MaterialDomainSpec   matls_dom,
-                      Ghost::GhostType     gtype,
-                      int                  numGhostCells,
-                      bool                 oldTG )
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+	        const PatchSubset* patches,
+	        PatchDomainSpec patches_dom,
+	        const MaterialSubset* matls,
+	        MaterialDomainSpec matls_dom,
+	        Ghost::GhostType gtype,
+	        int numGhostCells,
+	        bool oldTG)
 {
   int offset=0;
-  if( patches_dom == CoarseLevel || patches_dom == FineLevel ){
+  if (patches_dom == CoarseLevel || patches_dom == FineLevel){
     offset=1;
   }
   
-  requires( dw, var, patches, patches_dom, offset, matls, matls_dom,
-            gtype, numGhostCells, oldTG );
+  requires(dw, var, patches, patches_dom, offset, matls, matls_dom,
+           gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
 void
-Task::requires(       WhichDW            dw, 
-                const VarLabel         * var,
-                const PatchSubset      * patches,
-                const MaterialSubset   * matls,
-                      Ghost::GhostType   gtype,
-                      int                numGhostCells,
-                      bool               oldTG )
+Task::requires(WhichDW dw, 
+              const VarLabel* var,
+		const PatchSubset* patches,
+		const MaterialSubset* matls,
+		Ghost::GhostType gtype,
+		int numGhostCells,
+		bool oldTG)
 {
-  requires( dw, var, patches, ThisLevel, matls, NormalDomain, gtype, numGhostCells, oldTG );
+  requires(dw, var, patches, ThisLevel, matls, NormalDomain,
+           gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
-
 void
-Task::requires(       WhichDW            dw,
-                const VarLabel         * var,
-                      Ghost::GhostType   gtype,
-                      int                numGhostCells,
-                      bool               oldTG )
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+		 Ghost::GhostType gtype,
+		 int numGhostCells,
+		 bool oldTG)
 {
   requires(dw, var, 0, ThisLevel, 0, NormalDomain, gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
-
 void
-Task::requires(       WhichDW            dw, 
-                const VarLabel         * var,
-                const MaterialSubset   * matls,
-                      Ghost::GhostType   gtype,
-                      int                numGhostCells,
-                      bool               oldTG )
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+		 const MaterialSubset* matls,
+		 Ghost::GhostType gtype,
+		 int numGhostCells,
+		 bool oldTG)
 {
-  requires( dw, var, 0, ThisLevel, matls, NormalDomain, gtype, numGhostCells, oldTG );
+  requires(dw, var, 0, ThisLevel, matls, NormalDomain, gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
 void
-Task::requires(       WhichDW              dw,
-                const VarLabel           * var,
-                const MaterialSubset     * matls,
-                      MaterialDomainSpec   matls_dom,
-                      Ghost::GhostType     gtype,
-                      int                  numGhostCells,
-                      bool                 oldTG )
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+		 const MaterialSubset* matls,
+		 MaterialDomainSpec matls_dom,
+		 Ghost::GhostType gtype,
+		 int numGhostCells,
+		 bool oldTG)
 {
-  requires( dw, var, 0, ThisLevel, matls, matls_dom, gtype, numGhostCells, oldTG );
-}
-
-//__________________________________
-
-void
-Task::requires(       WhichDW            dw,
-                const VarLabel         * var,
-                const PatchSubset      * patches,
-                      Ghost::GhostType   gtype, 
-                      int                numGhostCells, 
-                      bool               oldTG )
-{
-  requires( dw, var, patches, ThisLevel, 0, NormalDomain, gtype, numGhostCells, oldTG );
+  requires(dw, var, 0, ThisLevel, matls, matls_dom, gtype, numGhostCells, oldTG);
 }
 
 //__________________________________
 void
-Task::requires(       WhichDW          dw, 
-                const VarLabel       * var,
-                const PatchSubset    * patches,
-                const MaterialSubset * matls)
+Task::requires(WhichDW dw,
+               const VarLabel* var,
+               const PatchSubset* patches,
+               Ghost::GhostType gtype, 
+               int numGhostCells, 
+               bool oldTG)
+{
+  requires(dw, var, patches, ThisLevel, 0, NormalDomain, gtype, numGhostCells, oldTG);
+}
+
+//__________________________________
+void
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+               const PatchSubset* patches,
+               const MaterialSubset * matls)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if( vartype == TypeDescription::SoleVariable ) {
+  if (vartype == TypeDescription::SoleVariable){
     requires(dw, var, (const Level*)0, matls);
-  }
-  else if( vartype == TypeDescription::PerPatch ) {
+  } else if(vartype == TypeDescription::PerPatch ){
     requires(dw,var,patches,ThisLevel,matls,NormalDomain,Ghost::None,0);
-  }
-  else {
+  }else{
     SCI_THROW(InternalError("Requires should specify ghost type or level for this variable", __FILE__, __LINE__));
   }
 }
 //__________________________________
 void
-Task::requires(       WhichDW          dw, 
-                const VarLabel       * var,
-                const MaterialSubset * matls,
-                      bool             oldTG )
+Task::requires(WhichDW dw, 
+               const VarLabel * var,
+               const MaterialSubset * matls,
+               bool oldTG)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
-  if( !(vartype == TypeDescription::PerPatch ||
-        vartype == TypeDescription::ReductionVariable ||
-        vartype == TypeDescription::SoleVariable) ) {
+  if(!(vartype == TypeDescription::PerPatch
+       || vartype == TypeDescription::ReductionVariable
+       || vartype == TypeDescription::SoleVariable)) {
     SCI_THROW(InternalError("Requires should specify ghost type for this variable", __FILE__, __LINE__));
   }
   
-  if( vartype == TypeDescription::ReductionVariable ) {
-    requires( dw, var, (const Level*)0, matls, NormalDomain, oldTG );
-  }
-  else if( vartype == TypeDescription::SoleVariable ) {
-    requires( dw, var, (const Level*)0, matls );
-  }
-  else {
-    requires( dw, var, 0, ThisLevel, matls, NormalDomain, Ghost::None, 0, oldTG );
+  if(vartype == TypeDescription::ReductionVariable) {
+    requires(dw, var, (const Level*)0, matls, NormalDomain, oldTG);
+  } else if(vartype == TypeDescription::SoleVariable) {
+    requires(dw, var, (const Level*)0, matls);
+  } else {
+    requires(dw, var, 0, ThisLevel, matls, NormalDomain, Ghost::None, 0, oldTG);
   }
 }
 
 //__________________________________
-
 void
-Task::requires(       WhichDW              dw, 
-                const VarLabel           * var,
-                const Level              * level,
-                const MaterialSubset     * matls,
-                      MaterialDomainSpec   matls_dom,
-                      bool                 oldTG )
+Task::requires(WhichDW dw, 
+               const VarLabel* var,
+		 const Level* level,
+		 const MaterialSubset * matls,
+		 MaterialDomainSpec matls_dom,
+		 bool oldTG)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if(!(vartype == TypeDescription::ReductionVariable ||
@@ -379,30 +369,27 @@ Task::requires(       WhichDW              dw,
   Dependency* dep = scinew Dependency(Requires, this, dw, var, oldTG, level, matls, matls_dom);
   dep->next=0;
   
-  if( req_tail ) {
+  if(req_tail){
     req_tail->next=dep;
-  }
-  else {
+  }else{
     req_head=dep;
   }
   req_tail=dep;
   
-  if( dw == OldDW ) {
+  if (dw == OldDW) {
     d_requiresOldDW.insert(make_pair(var, dep));
-  }
-  else {
+  }else{
     d_requires.insert(make_pair(var, dep));
   }
 }
 
 //__________________________________
-
 void
-Task::computes( const VarLabel           * var,
-                const PatchSubset        * patches,
-                      PatchDomainSpec      patches_dom,
-                const MaterialSubset     * matls,
-                      MaterialDomainSpec   matls_dom )
+Task::computes(const VarLabel * var,
+		 const PatchSubset * patches,
+		 PatchDomainSpec patches_dom,
+		 const MaterialSubset * matls,
+		 MaterialDomainSpec matls_dom)
 {
   if (var->typeDescription()->isReductionVariable()) {
     if (matls == 0) {
@@ -417,10 +404,9 @@ Task::computes( const VarLabel           * var,
                                       patches_dom, matls_dom);
   dep->next=0;
   
-  if( comp_tail ) {
+  if(comp_tail){
     comp_tail->next=dep;
-  }
-  else {
+  }else{
     comp_head=dep;
   }
   comp_tail=dep;
@@ -429,11 +415,10 @@ Task::computes( const VarLabel           * var,
 }
 
 //__________________________________
-
 void
 Task::computes(const VarLabel * var,
-                const PatchSubset * patches,
-                const MaterialSubset * matls)
+		const PatchSubset * patches,
+		const MaterialSubset * matls)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if (vartype == TypeDescription::ReductionVariable ||
@@ -445,7 +430,6 @@ Task::computes(const VarLabel * var,
 }
 
 //__________________________________
-
 void
 Task::computes(const VarLabel* var, const MaterialSubset* matls)
 {
@@ -453,7 +437,6 @@ Task::computes(const VarLabel* var, const MaterialSubset* matls)
 }
 
 //__________________________________
-
 void
 Task::computes(const VarLabel* var, const MaterialSubset* matls,
                MaterialDomainSpec matls_dom)
@@ -462,7 +445,6 @@ Task::computes(const VarLabel* var, const MaterialSubset* matls,
 }
 
 //__________________________________
-
 void
 Task::computes(const VarLabel* var, const PatchSubset* patches,
                PatchDomainSpec patches_dom)
@@ -471,12 +453,11 @@ Task::computes(const VarLabel* var, const PatchSubset* patches,
 }
 
 //__________________________________
-
 void
-Task::computes( const VarLabel* var,
-                const Level* level,
-                const MaterialSubset * matls,
-                MaterialDomainSpec matls_dom )
+Task::computes(const VarLabel* var,
+		const Level* level,
+		const MaterialSubset * matls,
+		MaterialDomainSpec matls_dom)
 {
   TypeDescription::Type vartype = var->typeDescription()->getType();
   if (!(vartype == TypeDescription::ReductionVariable ||
@@ -484,12 +465,11 @@ Task::computes( const VarLabel* var,
     SCI_THROW(InternalError("Computes should only be used for reduction variable", __FILE__, __LINE__));
   }
   
-  if( matls == 0 ) {
+  if (matls == 0) {
     // default material for a reduction variable is the global material (-1)
     matls     = getGlobalMatlSubset();
     matls_dom = OutOfDomain;
-  }
-  else if( matls->size() == 0 ){
+  } else if(matls->size() == 0){
     throw InternalError("Computes of an empty material set!", __FILE__, __LINE__);
   }
   
@@ -499,8 +479,7 @@ Task::computes( const VarLabel* var,
   
   if(comp_tail){
     comp_tail->next=dep;
-  }
-  else {
+  }else{
     comp_head=dep;
   }
   comp_tail=dep;
@@ -509,14 +488,13 @@ Task::computes( const VarLabel* var,
 }
 
 //__________________________________
-
 void
 Task::computesWithScratchGhost(const VarLabel* var,
-                               const MaterialSubset* matls,
-                               MaterialDomainSpec matls_dom,
-                               Ghost::GhostType gtype,
-                               int numGhostCells,
-                               bool oldTG)
+               const MaterialSubset* matls,
+               MaterialDomainSpec matls_dom,
+               Ghost::GhostType gtype,
+               int numGhostCells,
+               bool oldTG)
 {
   if (var->typeDescription()->isReductionVariable()) {
     SCI_THROW(InternalError("ComputeswithScratchGhost should not be used for reduction variable", __FILE__, __LINE__));
@@ -537,17 +515,17 @@ Task::computesWithScratchGhost(const VarLabel* var,
   d_computes.insert(make_pair(var, dep));
 }
 
-//__________________________________
 
+//__________________________________
 void
-Task::modifiesWithScratchGhost( const VarLabel* var,
-                                const PatchSubset* patches,
-                                PatchDomainSpec patches_dom,
-                                const MaterialSubset* matls,
-                                MaterialDomainSpec matls_dom,
-                                Ghost::GhostType gtype,
-                                int numGhostCells,
-                                bool oldTG )
+Task::modifiesWithScratchGhost(const VarLabel* var,
+               const PatchSubset* patches,
+               PatchDomainSpec patches_dom,
+               const MaterialSubset* matls,
+               MaterialDomainSpec matls_dom,
+               Ghost::GhostType gtype,
+               int numGhostCells,
+               bool oldTG)
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
@@ -572,7 +550,6 @@ Task::modifiesWithScratchGhost( const VarLabel* var,
 }
 
 //__________________________________
-
 void
 Task::modifies(const VarLabel* var,
                const PatchSubset* patches,
@@ -604,13 +581,12 @@ Task::modifies(const VarLabel* var,
 }
 
 //__________________________________
-
 void 
-Task::modifies( const VarLabel* var,
-                const Level* level,
-                const MaterialSubset* matls,
-                MaterialDomainSpec matls_domain,
-                bool oldTG )
+Task::modifies(const VarLabel* var,
+		 const Level* level,
+		 const MaterialSubset* matls,
+		 MaterialDomainSpec matls_domain,
+		 bool oldTG)
 {
   const TypeDescription* vartype = var->typeDescription();
   
@@ -640,18 +616,16 @@ Task::modifies( const VarLabel* var,
 }
 
 //__________________________________
-
 void
 Task::modifies(const VarLabel* var,
-                const PatchSubset* patches,
-                const MaterialSubset* matls,
-                bool oldTG)
+		const PatchSubset* patches,
+		const MaterialSubset* matls,
+		bool oldTG)
 {
   modifies(var, patches, ThisLevel, matls, NormalDomain, oldTG);
 }
 
 //__________________________________
-
 void
 Task::modifies(const VarLabel* var, bool oldTG)
 {
@@ -659,7 +633,6 @@ Task::modifies(const VarLabel* var, bool oldTG)
 }
 
 //__________________________________
-
 void
 Task::modifies(const VarLabel* var, const MaterialSubset* matls, bool oldTG)
 {
@@ -667,7 +640,6 @@ Task::modifies(const VarLabel* var, const MaterialSubset* matls, bool oldTG)
 }
 
 //__________________________________
-
 void
 Task::modifies(const VarLabel* var, const MaterialSubset* matls,
                MaterialDomainSpec matls_dom, bool oldTG)
@@ -676,24 +648,19 @@ Task::modifies(const VarLabel* var, const MaterialSubset* matls,
 }
 
 //__________________________________
-
-bool
-Task::hasComputes( const VarLabel * var,
-                         int        matlIndex,
-                   const Patch    * patch ) const
+bool Task::hasComputes(const VarLabel* var, int matlIndex,
+                       const Patch* patch) const
 {
-  return isInDepMap( d_computes, var, matlIndex, patch );
+  return isInDepMap(d_computes, var, matlIndex, patch);
 }
 
 //__________________________________
-
-bool
-Task::hasRequires( const VarLabel * var,
-                   int matlIndex,
-                   const Patch * patch,
-                   IntVector lowOffset,
-                   IntVector highOffset,
-                   WhichDW dw ) const
+bool Task::hasRequires(const VarLabel * var,
+		         int matlIndex,
+		         const Patch * patch,
+		         IntVector lowOffset,
+		         IntVector highOffset,
+		         WhichDW dw)const
 {
   DepMap depMap = d_requires;
   
@@ -719,22 +686,17 @@ Task::hasRequires( const VarLabel * var,
 }
 
 //__________________________________
-
-bool
-Task::hasModifies( const VarLabel * var,
-                         int        matlIndex,
-                   const Patch    * patch ) const
+bool Task::hasModifies(const VarLabel* var, int matlIndex,
+                       const Patch* patch) const
 {
-  return isInDepMap( d_modifies, var, matlIndex, patch );
+  return isInDepMap(d_modifies, var, matlIndex, patch);
 }
 
 //__________________________________
-
-Task::Dependency*
-Task::isInDepMap( const DepMap& depMap, 
-                  const VarLabel* var,
-                  int matlIndex, 
-                  const Patch* patch ) const
+Task::Dependency* Task::isInDepMap(const DepMap& depMap, 
+                                   const VarLabel* var,
+                                   int matlIndex, 
+                                   const Patch* patch) const
 {
   DepMap::const_iterator found_iter = depMap.find(var);
   
@@ -786,50 +748,47 @@ Task::isInDepMap( const DepMap& depMap,
 }
 //__________________________________
 //
-
-Task::Dependency::Dependency(       DepType              deptype, 
-                                    Task               * task, 
-                                    WhichDW              whichdw,
-                              const VarLabel           * var,
-                                    bool                 oldTG,
-                              const PatchSubset        * patches,
-                              const MaterialSubset     * matls,
-                                    PatchDomainSpec      patches_dom,
-                                    MaterialDomainSpec   matls_dom,
-                                    Ghost::GhostType     gtype,
-                                    int                  numGhostCells,
-                                    int                  level_offset ) :
-  deptype(deptype), task(task), var(var), lookInOldTG(oldTG), patches(patches), matls(matls),
+Task::Dependency::Dependency(DepType deptype, 
+                             Task* task, 
+                             WhichDW whichdw,
+			        const VarLabel* var,
+			        bool oldTG,
+			        const PatchSubset* patches,
+			        const MaterialSubset* matls,
+			        PatchDomainSpec patches_dom,
+			        MaterialDomainSpec matls_dom,
+			        Ghost::GhostType gtype,
+			        int numGhostCells,
+			        int level_offset)
+                             
+: deptype(deptype), task(task), var(var), lookInOldTG(oldTG), patches(patches), matls(matls),
   reductionLevel(0), patches_dom(patches_dom), matls_dom(matls_dom),
   gtype(gtype), whichdw(whichdw), numGhostCells(numGhostCells), level_offset(level_offset)
 {
-  if( var ){
+  if (var){
     var->addReference();
   }
-
   req_head=req_tail=comp_head=comp_tail=0;
   
-  if( patches ){
+  if(patches){
     patches->addReference();
   }
-
-  if( matls ){
+  if(matls){
     matls->addReference();
   }
 }
 
 //__________________________________
+Task::Dependency::Dependency(DepType deptype, 
+                             Task* task, 
+                             WhichDW whichdw,
+			        const VarLabel* var,
+			        bool oldTG,
+			        const Level* reductionLevel,
+			        const MaterialSubset* matls,
+			        MaterialDomainSpec matls_dom)
 
-Task::Dependency::Dependency( DepType deptype, 
-                              Task* task, 
-                              WhichDW whichdw,
-                              const VarLabel* var,
-                              bool oldTG,
-                              const Level* reductionLevel,
-                              const MaterialSubset* matls,
-                              MaterialDomainSpec matls_dom) :
-
-  deptype(deptype), task(task), var(var), lookInOldTG(oldTG), patches(0), matls(matls),
+: deptype(deptype), task(task), var(var), lookInOldTG(oldTG), patches(0), matls(matls),
   reductionLevel(reductionLevel), patches_dom(ThisLevel),
   matls_dom(matls_dom), gtype(Ghost::None), whichdw(whichdw), numGhostCells(0), level_offset(0)
 {
@@ -843,7 +802,6 @@ Task::Dependency::Dependency( DepType deptype,
   }
 }
 //__________________________________
-
 Task::Dependency::~Dependency()
 {
   VarLabel::destroy(var); // just remove the ref
@@ -883,7 +841,6 @@ getComputeSubsetUnderDomain(string domString, Task::MaterialDomainSpec dom,
 */
 
 //__________________________________
-
 constHandle<PatchSubset>
 Task::Dependency::getPatchesUnderDomain(const PatchSubset* domainPatches) const
 {
@@ -901,7 +858,6 @@ Task::Dependency::getPatchesUnderDomain(const PatchSubset* domainPatches) const
 }
 
 //__________________________________
-
 constHandle<MaterialSubset>
 Task::Dependency::getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const
 {
@@ -917,7 +873,6 @@ Task::Dependency::getMaterialsUnderDomain(const MaterialSubset* domainMaterials)
 }
 
 //__________________________________
-
 constHandle< PatchSubset > Task::Dependency::
 getOtherLevelPatchSubset(Task::PatchDomainSpec dom, 
                          int level_offset,
@@ -955,7 +910,6 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
 } // end namespace Uintah
 
 //__________________________________
-
 void
 Task::doit(CallBackEvent event,
            const ProcessorGroup* pg,
@@ -973,7 +927,6 @@ Task::doit(CallBackEvent event,
 }
 
 //__________________________________
-
 void
 Task::display( ostream & out ) const
 {
@@ -985,17 +938,14 @@ Task::display( ostream & out ) const
   out << ", ";
   out << *matl_set;
   out << ", DWs: ";
-  for( int i = 0; i < TotalDWs; i++ ) {
-    if(i != 0) {
+  for(int i=0;i<TotalDWs;i++){
+    if(i != 0)
       out << ", ";
-    }
     out << dwmap[i];
   }
   out << "]";
 }
-
 //__________________________________
-
 namespace Uintah {
   std::ostream &
   operator << ( std::ostream & out, const Uintah::Task::Dependency & dep )
@@ -1016,7 +966,7 @@ namespace Uintah {
       if( dep.patches ){
         out << " Level: " << getLevel(dep.patches)->getIndex();
         out << " Patches: ";
-        for( int i = 0; i < dep.patches->size(); i++ ) {
+        for(int i=0;i<dep.patches->size();i++){
           if(i > 0){
             out << ",";
           }
@@ -1050,10 +1000,9 @@ namespace Uintah {
 
     out << ", MI: ";
     if(dep.matls){
-      for( int i = 0; i < dep.matls->size(); i++ ) {
-        if(i>0) {
+      for(int i=0;i<dep.matls->size();i++){
+        if(i>0)
           out << ",";
-	}
         out << dep.matls->get(i);
       }
     } else {
@@ -1155,7 +1104,6 @@ namespace Uintah {
 } // end namespace Uintah
 
 //__________________________________
-
 void
 Task::displayAll(ostream& out) const
 {
@@ -1170,28 +1118,23 @@ Task::displayAll(ostream& out) const
 }
 
 //__________________________________
-
-void
-Task::setMapping( int dwmap[TotalDWs] )
+void Task::setMapping(int dwmap[TotalDWs])
 {
-  for( int i = 0; i < TotalDWs; i++ ) {
+  for(int i=0;i<TotalDWs;i++)
+  {
     this->dwmap[i]=dwmap[i];
   }
 }
 
 //__________________________________
-
-int
-Task::mapDataWarehouse( WhichDW dw ) const
+int Task::mapDataWarehouse(WhichDW dw) const
 {
   ASSERTRANGE(dw, 0, Task::TotalDWs);
   return dwmap[dw];
 }
 
 //__________________________________
-
-DataWarehouse*
-Task::mapDataWarehouse( WhichDW dw, vector<DataWarehouseP>& dws ) const
+DataWarehouse* Task::mapDataWarehouse(WhichDW dw, vector<DataWarehouseP>& dws) const
 {
   ASSERTRANGE(dw, 0, Task::TotalDWs);
   if(dwmap[dw] == Task::NoDW){

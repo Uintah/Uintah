@@ -373,51 +373,6 @@ SCIRun::StaticArray<constCCVariable<double> > &composition,
           double _Qabs ;  // This is a fudge factor for particle absorption coefficients, used by Julien in a coal model
       }; 
 
-      class constantCIF : public opticalPropertyCalculatorBase  { 
-
-        public: 
-          constantCIF(const ProblemSpecP& db, bool scatteringOn);
-          ~constantCIF(); 
-
-          bool problemSetup(Task* tsk, int time_substep );
-
-          void computeComplexIndex( const Patch* patch,
-                constCCVariable<double>& VolFractionBC,
-SCIRun::StaticArray<constCCVariable<double> > &composition, 
-   SCIRun::StaticArray < CCVariable<double> > &complexReal);
-
-
-          void computeAsymmetryFactor( const Patch* patch,
-                   constCCVariable<double>& VolFractionBC,
-   SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-   SCIRun::StaticArray < constCCVariable<double> > &composition,
-                               CCVariable<double>& scatkt,
-                      CCVariable<double>  &asymmetryParam);
-
-          virtual void compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                          const int Nqn, CCVariable<double>& abskpt, 
-                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                       SCIRun::StaticArray < CCVariable<double> >  &complexReal);
-
-          virtual void compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                          double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                          const int Nqn, CCVariable<double>& scatkt, 
-                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                        SCIRun::StaticArray < CCVariable<double> > &complexReal);
-
-
-
-        private: 
-
-          ParticleRadCoeffs* _part_radprops; 
-          double _constAsymmFact;
-          bool _p_planck_abskp; 
-          bool _p_ros_abskp; 
-      }; 
-
-
-
 
 
     private: 

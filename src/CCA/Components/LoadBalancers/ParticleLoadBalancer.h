@@ -95,6 +95,13 @@ namespace Uintah {
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
+    //! Assigns the patches to the processors they ended up on in the previous
+    //! Simulation.  Returns true if we need to re-load balance (if we have a 
+    //! different number of procs than were saved to disk
+    virtual void restartInitialize( DataArchive* archive, int time_index,
+                                    ProblemSpecP& pspec,
+                                    std::string tsurl, const GridP& grid );
+   
     //Collects each patch's particles
     void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);
     
@@ -143,6 +150,15 @@ namespace Uintah {
     //given the two cost arrays determine if the new load balance is better than the previous
     bool thresholdExceeded(const std::vector<std::vector<double> >& cellCosts, const std::vector<std::vector<double> >& particleCosts);
 
+    std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
+    std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
+    std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
+
+    // the assignment vectors are stored 0-n.  This stores the start patch number so we can
+    // detect if something has gone wrong when we go to look up what proc a patch is on.
+    int d_assignmentBasePatch;   
+    int d_oldAssignmentBasePatch;
+
     double d_lbInterval;
     double d_lastLbTime;
 
@@ -154,13 +170,18 @@ namespace Uintah {
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     
     bool d_doSpaceCurve;
+    bool d_checkAfterRestart;
 
     //the weighting factor placed on particles and cells, for example if d_particleCost is 2 
     //and d_cellCost is 1 then a particle has twice as much weight as a cell
     double d_particleCost,d_cellCost; 
+    
 
     SFC <double> sfc;
+
   };
 } // End namespace Uintah
 
+
 #endif
+

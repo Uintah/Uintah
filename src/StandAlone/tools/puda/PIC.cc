@@ -79,7 +79,7 @@ Uintah::PIC( DataArchive * da, CommandLineFlags & clf, int cx, int cy, int cz )
     // Cell to find
     IntVector cell(cx,cy,cz);
 
-    for( unsigned int l = 0; l < grid->numLevels(); l++ ){
+    for(int l=0;l<grid->numLevels();l++){
       LevelP level = grid->getLevel(l);
 
       // Find the patch on which the cell lives

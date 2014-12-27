@@ -98,10 +98,9 @@ void ProfileDriver::outputError(const GridP currentGrid)
   vector<vector<double> > predicted_sum(currentGrid->numLevels()), measured_sum(currentGrid->numLevels());
 
   double smape=0,max_error=0, smpe=0;
-  int    num_patches=0;
-
-  // For each level:
-  for( unsigned int l=0; l<currentGrid->numLevels();l++)
+  int num_patches=0;
+  //for each level
+  for (int l=0; l<currentGrid->numLevels();l++)
   {
     LevelP level=currentGrid->getLevel(l);
     num_patches+=level->numPatches();
@@ -404,26 +403,27 @@ void ProfileDriver::getWeights(int l, const vector<Region> &regions, vector<doub
  
 }
 
-void
-ProfileDriver::initializeWeights( const Grid * oldgrid, const Grid * newgrid )
+void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
 {
-  if( d_timesteps == 0 ) {
+  if( d_timesteps == 0 )
     return;
-  }
 
-  // For each level:
-  for( unsigned int l = 1; l < newgrid->numLevels(); l++ ) {
+  //for each level
+  for(int l=1;l<newgrid->numLevels();l++)
+  {
     vector<Region> old_level;
 
-    if( oldgrid && oldgrid->numLevels() > l ) {
-      // Create old_level vector.
-      for( int p=0; p<oldgrid->getLevel(l)->numPatches(); p++ ) {
+    if(oldgrid && oldgrid->numLevels()>l)
+    {
+      //create old_level vector
+      for(int p=0; p<oldgrid->getLevel(l)->numPatches(); p++) 
+      {
         const Patch* patch = oldgrid->getLevel(l)->getPatch(p);
         old_level.push_back(Region(patch->getCellLowIndex(), patch->getCellHighIndex()));
       }
     }
     
-    // Get weights on old_level.
+    //get weights on old_level
     vector<double> weights;
     getWeights(l,old_level,weights);
     

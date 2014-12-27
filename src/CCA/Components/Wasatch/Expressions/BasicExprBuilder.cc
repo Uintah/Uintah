@@ -1001,17 +1001,20 @@ namespace Wasatch{
   //------------------------------------------------------------------
   
   template<typename FieldT>
-  std::list<Expr::ExpressionBuilder*>
-  build_bc_expr( Uintah::ProblemSpecP params )
+  Expr::ExpressionBuilder*
+  build_bc_expr( Uintah::ProblemSpecP params,
+                 Uintah::ProblemSpecP wasatchSpec )
   {
-    std::list<Expr::ExpressionBuilder*> builders;
     const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
+    
+    Expr::ExpressionBuilder* builder = NULL;
+
     const TagNames& tagNames = TagNames::self();
     
     if( params->findBlock("Constant") ){
       double val;  params->get("Constant",val);
       typedef typename ConstantBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, val ) );
+      builder = scinew Builder( tag, val );
     }
     
     else if( params->findBlock("LinearFunction") ){
@@ -1021,7 +1024,7 @@ namespace Wasatch{
       valParams->getAttribute("intercept",intercept);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename LinearBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, indepVarTag, slope, intercept ) );
+      builder = scinew Builder( tag, indepVarTag, slope, intercept );
     }
     
     else if( params->findBlock("ParabolicFunction") ){
@@ -1050,7 +1053,7 @@ namespace Wasatch{
       }
       
       typedef typename ParabolicBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, indepVarTag, a, b, c, x0) );
+      builder = scinew Builder( tag, indepVarTag, a, b, c, x0);
     }
     
     else if( params->findBlock("PowerLawFunction") ) {
@@ -1062,7 +1065,7 @@ namespace Wasatch{
       valParams->getAttribute("n",n);
       const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("NameTag") );
       typedef typename PowerLawBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder( tag, indepVarTag,x0, phic, R, n) );
+      builder = scinew Builder( tag, indepVarTag,x0, phic, R, n);
     }
     
     else if( params->findBlock("VarDenMMSVelocity") ){
@@ -1081,7 +1084,7 @@ namespace Wasatch{
         << " is not supported in VarDen1DMMSVelocity expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builders.push_back( scinew typename VarDenMMSVExpr::Builder( tag, tagNames.time, bcSide ) );
+      builder = scinew typename VarDenMMSVExpr::Builder( tag, tagNames.time, bcSide );
     }
 
     else if( params->findBlock("VarDenMMSMomentum") ){
@@ -1102,13 +1105,13 @@ namespace Wasatch{
         << " is not supported in VarDen1DMMSMomentum expression." << std::endl;
         throw std::invalid_argument( msg.str() );
       }
-      builders.push_back( scinew typename VarDenMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide ) );
+      builder = scinew typename VarDenMMSMomExpr::Builder( tag, tagNames.time, rho0, rho1, bcSide );
     }
 
     else if( params->findBlock("VarDenMMSMixtureFraction") ){
       Uintah::ProblemSpecP valParams = params->findBlock("VarDenMMSMixtureFraction");      
       typedef VarDen1DMMSMixtureFraction<FieldT> VarDen1DMMSMixtureFractionExpr;
-      builders.push_back( scinew typename VarDen1DMMSMixtureFractionExpr::Builder( tag, tagNames.time ) );
+      builder = scinew typename VarDen1DMMSMixtureFractionExpr::Builder( tag, tagNames.time );
     }
 
     else if( params->findBlock("VarDenMMSDensity") ){
@@ -1118,7 +1121,7 @@ namespace Wasatch{
       valParams->get("rho1",rho1);
 
       typedef VarDen1DMMSDensity<FieldT> VarDen1DMMSDensityExpr;
-      builders.push_back( scinew typename VarDen1DMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
+      builder = scinew typename VarDen1DMMSDensityExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
 
     else if( params->findBlock("VarDenMMSSolnVar") ){
@@ -1128,7 +1131,7 @@ namespace Wasatch{
       valParams->get("rho1",rho1);
 
       typedef VarDen1DMMSSolnVar<FieldT> VarDen1DMMSSolnVarExpr;
-      builders.push_back( scinew typename VarDen1DMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 ) );
+      builder = scinew typename VarDen1DMMSSolnVarExpr::Builder( tag, tagNames.time, rho0, rho1 );
     }
     
     else if( params->findBlock("TurbulentInlet") ){
@@ -1151,10 +1154,10 @@ namespace Wasatch{
       }
       
       typedef typename TurbulentInletBC<FieldT>::Builder Builder;
-      builders.push_back( scinew Builder(tag,inputFileName, velDir,period, timePeriod) );
+      builder = scinew Builder(tag,inputFileName, velDir,period, timePeriod);
     }
     
-    return builders;
+    return builder;
   }
   
   //------------------------------------------------------------------
@@ -1284,12 +1287,12 @@ namespace Wasatch{
       // iterate through the list of tasks to which this expression is to be added
       while( taskNameIter != taskNamesList.end() ){
         std::string taskName = *taskNameIter;
-        std::list<Expr::ExpressionBuilder*> builders;
+        
         switch( get_field_type(fieldType) ){
-          case SVOL : builders = build_bc_expr< SVolField >( exprParams );  break;
-          case XVOL : builders = build_bc_expr< XVolField >( exprParams );  break;
-          case YVOL : builders = build_bc_expr< YVolField >( exprParams );  break;
-          case ZVOL : builders = build_bc_expr< ZVolField >( exprParams );  break;
+          case SVOL : builder = build_bc_expr< SVolField >( exprParams, parser );  break;
+          case XVOL : builder = build_bc_expr< XVolField >( exprParams, parser );  break;
+          case YVOL : builder = build_bc_expr< YVolField >( exprParams, parser );  break;
+          case ZVOL : builder = build_bc_expr< ZVolField >( exprParams, parser );  break;
           default:
             std::ostringstream msg;
             msg << "ERROR: unsupported field type '" << fieldType << "' while trying to register BC expression.." << std::endl;
@@ -1306,9 +1309,7 @@ namespace Wasatch{
         }
         
         GraphHelper* const graphHelper = gc[cat];
-        BOOST_FOREACH( Expr::ExpressionBuilder* builder, builders ){
-          graphHelper->exprFactory->register_expression( builder );
-        }
+        graphHelper->exprFactory->register_expression( builder );
         
         ++taskNameIter;
       }

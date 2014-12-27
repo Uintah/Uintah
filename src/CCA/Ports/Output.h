@@ -92,10 +92,11 @@ class SimulationState;
 			      int timestep, double time, bool fromScratch,
 			      bool removeOldDir) = 0;
     //////////
-    // Set time info flags, etc. 
-    virtual void reduceUdaSetup( const Dir & fromDir ) = 0;
+    // set timeinfoFlags and 
+    virtual void reduceUdaSetup(Dir& fromDir) = 0;
 
-    virtual bool needRecompile( double time, double delt, const GridP & grid ) = 0;
+    virtual bool needRecompile(double time, double delt,
+			       const GridP& grid) = 0;
 
     //////////
     // Call this after all other tasks have been added to the scheduler

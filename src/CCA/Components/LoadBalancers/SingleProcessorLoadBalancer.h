@@ -69,12 +69,6 @@ namespace Uintah {
 
     virtual bool inNeighborhood( const PatchSubset* );
     virtual bool inNeighborhood( const Patch * );
-
-    //! This doesn't do anything right now...
-    virtual void restartInitialize(       DataArchive  * archive,
-                                    const int            time_index,
-                                    const std::string  & ts_url,
-                                    const GridP        & grid ) {}
     
     virtual const PatchSet* createPerProcessorPatchSet( const LevelP & level );
 

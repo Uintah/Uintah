@@ -23,14 +23,12 @@
  */
 
 #include <Core/ProblemSpec/ProblemSpec.h>
-
-#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ParameterNotFound.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/XMLUtils.h>
 
 #include <iostream>
 #include <iterator>
@@ -45,16 +43,8 @@
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
-
-ProblemSpec::ProblemSpec( const string & buffer ) : d_documentNode( true )
-{
-  xmlDocPtr doc = xmlReadMemory( buffer.c_str(), buffer.length(), NULL, NULL, 0 );
-  d_node = xmlDocGetRootElement( doc );
-}
-
 //______________________________________________________________________
 //
-
 ProblemSpecP
 ProblemSpec::findBlock() const
 {
@@ -75,31 +65,8 @@ ProblemSpec::findBlock() const
 
 //______________________________________________________________________
 //
-// Searchs through the given XML file 'fp' for a matching 'block'.
-// Returns false if not found.  'fp' is updated to point to the line
-// after the 'block'.
-
-bool
-ProblemSpec::findBlock( const string & name, FILE *& fp )
-{
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlock(string,FILE)");
-
-  while( true ) {
-    string line = UintahXML::getLine( fp );
-    if( line == name ) {
-      return true;
-    }
-    else if( line == "" ) {
-      return false;
-    }
-  }
-}
-
-//______________________________________________________________________
-//
-
 ProblemSpecP 
-ProblemSpec::findBlock( const string & name ) const 
+ProblemSpec::findBlock(const string& name) const 
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlock(string)");
   if (d_node == 0) {
@@ -147,16 +114,15 @@ ProblemSpec::findBlockWithOutAttribute(const string& name) const
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithOutAttribute(string)");
   
-  for( ProblemSpecP ps = this->findBlock(name); ps != 0; ps = ps->findNextBlock(name) ) {
+  for (ProblemSpecP ps = this->findBlock(name); ps != 0;
+       ps = ps->findNextBlock(name) ) {
 
     map<string,string> attributes;
     ps->getAttributes(attributes);
-    if( attributes.empty() ) {
+    if (attributes.empty()) 
       return ps;
-    }
-    else {
+    else
       continue;
-    }
   }
 
   return 0;
@@ -301,6 +267,51 @@ ProblemSpec::removeChild(ProblemSpecP child)
 
 //______________________________________________________________________
 //
+void
+ProblemSpec::checkForInputError( const string & stringValue, 
+                                 ProblemSpec::CheckType type )
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::checkForInputError()");
+  //__________________________________
+  //  Make sure stringValue only contains valid characters
+  switch( type ) {
+  case INT_TYPE :
+    {
+      string validChars(" -0123456789");
+      string::size_type  pos = stringValue.find_first_not_of(validChars);
+      if (pos != string::npos){
+        ostringstream warn;
+        warn << "Bad Integer string: Found '"<< stringValue[pos]
+             << "' in the string \""<< stringValue<< "\" at position " << pos << ".\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__,true);
+      }
+    }
+    break;
+  case FLOAT_TYPE :
+    {
+      string validChars(" -+.0123456789eE");
+      string::size_type  pos = stringValue.find_first_not_of(validChars);
+      if (pos != string::npos){
+        ostringstream warn;
+        warn << "Bad Float string: Found '"<< stringValue[pos]
+             << "' inside of \""<< stringValue << "\" at position " << pos << "\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__,true);
+      }
+      //__________________________________
+      // check for two or more "."
+      string::size_type p1 = stringValue.find_first_of(".");    
+      string::size_type p2 = stringValue.find_last_of(".");     
+      if (p1 != p2){
+        ostringstream warn;
+        warn << "Input file error: I found two (..) "
+             << "inside of "<< stringValue << "\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__,true);
+      }
+    }
+    break;
+  } // end switch( type )
+} 
+
 //______________________________________________________________________
 //
 ProblemSpecP
@@ -315,7 +326,7 @@ ProblemSpec::get(const string& name, double &value)
     return ps;
   }
   else {
-    UintahXML::validateType( stringValue, UintahXML::FLOAT_TYPE ); 
+    checkForInputError( stringValue, FLOAT_TYPE ); 
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -341,7 +352,7 @@ ProblemSpec::get(const string& name, unsigned int &value)
     return ps;
   }
   else {
-    UintahXML::validateType( stringValue, UintahXML::INT_TYPE ); 
+    checkForInputError( stringValue, INT_TYPE ); 
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -368,7 +379,7 @@ ProblemSpec::get(const string& name, int &value)
     return ps;
   }
   else {
-    UintahXML::validateType( stringValue, UintahXML::INT_TYPE );
+    checkForInputError( stringValue, INT_TYPE );
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -394,7 +405,7 @@ ProblemSpec::get(const string& name, long &value)
     return ps;
   }
   else {
-    UintahXML::validateType( stringValue, UintahXML::INT_TYPE );
+    checkForInputError( stringValue, INT_TYPE );
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -510,8 +521,22 @@ ProblemSpec::get(const string& name, Vector &value)
   else {
     // Parse out the [num,num,num]
     // Now pull apart the stringValue
-
-    value = Vector::fromString( stringValue );
+    string::size_type i1 = stringValue.find("[");
+    string::size_type i2 = stringValue.find_first_of(",");
+    string::size_type i3 = stringValue.find_last_of(",");
+    string::size_type i4 = stringValue.find("]");
+    
+    string x_val(stringValue,i1+1,i2-i1-1);
+    string y_val(stringValue,i2+1,i3-i2-1);
+    string z_val(stringValue,i3+1,i4-i3-1);
+    
+    checkForInputError( x_val, FLOAT_TYPE ); 
+    checkForInputError( y_val, FLOAT_TYPE );
+    checkForInputError( z_val, FLOAT_TYPE );
+    
+    value.x(atof(x_val.c_str()));
+    value.y(atof(y_val.c_str()));
+    value.z(atof(z_val.c_str()));   
   }
           
   return ps;
@@ -555,7 +580,7 @@ ProblemSpec::get(const string& name, vector<double>& value)
       vit!=string_values.end();vit++) {
     const string v(*vit);
     
-    UintahXML::validateType( v, UintahXML::FLOAT_TYPE ); 
+    checkForInputError( v, FLOAT_TYPE ); 
     value.push_back( atof(v.c_str()) );
   }
   
@@ -578,7 +603,7 @@ ProblemSpec::get(const string& name, vector<double>& value, const int nItems)
       vit!=string_values.end();vit++) {
     const string v(*vit);
     
-    UintahXML::validateType( v, UintahXML::FLOAT_TYPE );
+    checkForInputError( v, FLOAT_TYPE );
     value.push_back( atof(v.c_str()) );
   }
   
@@ -597,10 +622,11 @@ ProblemSpec::get(const string& name, vector<int>& value)
     return 0;
   }
   
-  for( vector<string>::const_iterator vit(string_values.begin()); vit!=string_values.end();vit++ ) {
+  for(vector<string>::const_iterator vit(string_values.begin());
+      vit!=string_values.end();vit++) {
     const string v(*vit);
     
-    UintahXML::validateType( v, UintahXML::FLOAT_TYPE ); 
+    checkForInputError( v, FLOAT_TYPE ); 
     value.push_back( atoi(v.c_str()) );
   }
   
@@ -683,14 +709,15 @@ ProblemSpecP
 ProblemSpec::get(const string& name, IntVector &value)
 {
   MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
-
   ProblemSpecP ps;
-  string       stringValue;
 
-  ps = get( name, stringValue );
-
-  if( ps != 0 ) {
-    value = IntVector::fromString( stringValue );
+  string stringValue;
+  ps = get(name, stringValue);
+  if (ps == 0) {
+    return ps;
+  }
+  else {
+    parseIntVector(stringValue, value);
   }
 
   return ps;
@@ -737,7 +764,7 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
           IntVector val;
           result += c;
           // it should be [num,num,num] by now
-          val = IntVector::fromString( result );
+          parseIntVector(result, val);
           value.push_back(val);
           result.erase();
           inner_bracket = false;
@@ -756,7 +783,32 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
 
 //______________________________________________________________________
 //
+void ProblemSpec::parseIntVector(const string& string_value, IntVector& value)
+{
+  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
+  // Parse out the [num,num,num]
+  // Now pull apart the string_value
+  string::size_type i1 = string_value.find("[");
+  string::size_type i2 = string_value.find_first_of(",");
+  string::size_type i3 = string_value.find_last_of(",");
+  string::size_type i4 = string_value.find("]");
+  
+  string x_val(string_value,i1+1,i2-i1-1);
+  string y_val(string_value,i2+1,i3-i2-1);
+  string z_val(string_value,i3+1,i4-i3-1);
 
+  checkForInputError( x_val, INT_TYPE );
+  checkForInputError( y_val, INT_TYPE );
+  checkForInputError( z_val, INT_TYPE );
+          
+  value.x(atoi(x_val.c_str()));
+  value.y(atoi(y_val.c_str()));
+  value.z(atoi(z_val.c_str())); 
+
+}
+
+//______________________________________________________________________
+//
 bool
 ProblemSpec::get(int &value)
 {
@@ -828,9 +880,9 @@ ProblemSpec::get(Vector &value)
   string y_val(stringValue,i2+1,i3-i2-1);
   string z_val(stringValue,i3+1,i4-i3-1);
   
-  UintahXML::validateType( x_val, UintahXML::FLOAT_TYPE );
-  UintahXML::validateType( y_val, UintahXML::FLOAT_TYPE );
-  UintahXML::validateType( z_val, UintahXML::FLOAT_TYPE );
+  checkForInputError( x_val, FLOAT_TYPE );
+  checkForInputError( y_val, FLOAT_TYPE );
+  checkForInputError( z_val, FLOAT_TYPE );
   
   value.x(atof(x_val.c_str()));
   value.y(atof(y_val.c_str()));
@@ -1399,7 +1451,7 @@ ProblemSpec::getAttribute(const string& name, vector<double>& value) const
   for(vector<string>::const_iterator vit(stringValues.begin());
       vit!=stringValues.end();vit++) {
     const string v(*vit);
-    UintahXML::validateType( v, UintahXML::FLOAT_TYPE );
+    checkForInputError( v, FLOAT_TYPE );
     value.push_back( atof(v.c_str()) );
   }  
   return true;
@@ -1425,9 +1477,9 @@ ProblemSpec::getAttribute(const string& name, Vector& value) const
   string y_val(stringValue,i2+1,i3-i2-1);
   string z_val(stringValue,i3+1,i4-i3-1);
   
-  UintahXML::validateType( x_val, UintahXML::FLOAT_TYPE );
-  UintahXML::validateType( y_val, UintahXML::FLOAT_TYPE );
-  UintahXML::validateType( z_val, UintahXML::FLOAT_TYPE );
+  checkForInputError( x_val, FLOAT_TYPE );
+  checkForInputError( y_val, FLOAT_TYPE );
+  checkForInputError( z_val, FLOAT_TYPE );
   
   value.x(atof(x_val.c_str()));
   value.y(atof(y_val.c_str()));
@@ -1445,7 +1497,7 @@ ProblemSpec::getAttribute(const string& name, double &value) const
   if(!getAttribute(name, stringValue)) {
     return false;
   }
-  UintahXML::validateType( stringValue, UintahXML::FLOAT_TYPE ); 
+  checkForInputError( stringValue, FLOAT_TYPE ); 
   istringstream ss(stringValue);
   ss >> value;
   if( !ss ) {
@@ -1464,7 +1516,7 @@ ProblemSpec::getAttribute(const string& name, int &value) const
   if(!getAttribute(name, stringValue)) {
     return false;
   }
-  UintahXML::validateType( stringValue, UintahXML::INT_TYPE );
+  checkForInputError( stringValue, INT_TYPE );
   istringstream ss(stringValue);
   ss >> value;
   if( !ss ) {
@@ -1625,14 +1677,15 @@ ProblemSpec::appendChild( ProblemSpecP pspec )
 
 //______________________________________________________________________
 //
+// filename is a default param (NULL)
+//   call with no parameters or NULL to output
+//   to stdout
 void
-ProblemSpec::output( const char * filename ) const 
+ProblemSpec::output(const char* filename) const 
 {
-  xmlKeepBlanksDefault(0);
-  int bytes_written = xmlSaveFormatFileEnc( filename, d_node->doc, "UTF-8", 1 );
-
-  if( bytes_written == -1 ) {
-    throw InternalError( string( "ProblemSpec::output failed for " ) + filename , __FILE__, __LINE__ );
+  if (filename) {
+    xmlKeepBlanksDefault(0);
+    xmlSaveFormatFileEnc(filename, d_node->doc, "UTF-8", 1);
   }
 }
 
@@ -1641,7 +1694,7 @@ ProblemSpec::output( const char * filename ) const
 void
 ProblemSpec::releaseDocument() 
 {
-  xmlFreeDoc( d_node->doc );
+  xmlFreeDoc(d_node->doc);
 }
 
 //______________________________________________________________________

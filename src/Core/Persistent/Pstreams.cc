@@ -39,7 +39,7 @@
 
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/StringUtil.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <sci_defs/teem_defs.h>
 

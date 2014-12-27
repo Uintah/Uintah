@@ -37,7 +37,7 @@
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Util/StringUtil.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <fstream>
 #include <iostream>

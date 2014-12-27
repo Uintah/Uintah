@@ -105,7 +105,6 @@ private:
   bool _using_prop_calculator; 
 
   std::string _T_label_name; 
-  std::string _abskt_label_name; 
   std::string _abskg_label_name; 
 
   DORadiationModel* _DO_model; 
@@ -123,7 +122,6 @@ private:
   const VarLabel* _scatktLabel;
   const VarLabel* _asymmetryLabel;
   const VarLabel* _T_label; 
-  const VarLabel* _abskt_label;
   const VarLabel* _abskg_label;
   const VarLabel* _radiationSRCLabel;
   const VarLabel* _radiationFluxELabel;

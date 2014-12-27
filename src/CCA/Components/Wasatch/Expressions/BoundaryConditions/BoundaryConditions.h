@@ -41,7 +41,8 @@
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class ConstantBC : public BoundaryConditionBase<FieldT>
+class ConstantBC
+: public BoundaryConditionBase<FieldT>
 {
 public:
   ConstantBC( const double bcValue) :
@@ -55,9 +56,10 @@ public:
      * @param result Tag of the resulting expression.
      * @param bcValue   constant boundary condition value.
      */
-    Builder( const Expr::Tag& resultTag, const double bcValue )
-    : ExpressionBuilder(resultTag),
-      bcValue_(bcValue)
+    Builder( const Expr::Tag& resultTag,
+            const double bcValue ) :
+    ExpressionBuilder(resultTag),
+    bcValue_(bcValue)
     {}
     Expr::ExpressionBase* build() const{ return new ConstantBC(bcValue_); }
   private:
@@ -85,7 +87,8 @@ private:
  */
 
 template< typename FieldT >
-class OneSidedDirichletBC : public BoundaryConditionBase<FieldT>
+class OneSidedDirichletBC
+: public BoundaryConditionBase<FieldT>
 {
 public:
   OneSidedDirichletBC( const double bcValue) :
@@ -100,9 +103,9 @@ public:
      * @param bcValue   constant boundary condition value.
      */
     Builder( const Expr::Tag& resultTag,
-            const double bcValue )
-    : ExpressionBuilder(resultTag),
-      bcValue_(bcValue)
+            const double bcValue ) :
+    ExpressionBuilder(resultTag),
+    bcValue_(bcValue)
     {}
     Expr::ExpressionBase* build() const{ return new OneSidedDirichletBC(bcValue_); }
   private:
@@ -129,25 +132,26 @@ private:
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class LinearBC : public BoundaryConditionBase<FieldT>
+class LinearBC
+: public BoundaryConditionBase<FieldT>
 {
   LinearBC( const Expr::Tag& indepVarTag,
-            const double a,
-            const double b )
-  : indepVarTag_ (indepVarTag),
-    a_(a), b_(b)
+           const double a,
+           const double b ) :
+  indepVarTag_ (indepVarTag),
+  a_(a), b_(b)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& indepVarTag,
-             const double a,
-             const double b )
-    : ExpressionBuilder(resultTag),
-      indepVarTag_ (indepVarTag),
-      a_(a), b_(b)
+            const Expr::Tag& indepVarTag,
+            const double a,
+            const double b) :
+    ExpressionBuilder(resultTag),
+    indepVarTag_ (indepVarTag),
+    a_(a), b_(b)
     {}
     Expr::ExpressionBase* build() const{ return new LinearBC(indepVarTag_, a_, b_); }
   private:
@@ -178,25 +182,30 @@ private:
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class ParabolicBC : public BoundaryConditionBase<FieldT>
+class ParabolicBC
+: public BoundaryConditionBase<FieldT>
 {
   ParabolicBC( const Expr::Tag& indepVarTag,
-               const double a, const double b,
-               const double c, const double x0 )
-  : indepVarTag_ (indepVarTag),
-    a_(a), b_(b), c_(c), x0_(x0)
+              const double a,
+              const double b,
+              const double c,
+              const double x0) :
+  indepVarTag_ (indepVarTag),
+  a_(a), b_(b), c_(c), x0_(x0)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& indepVarTag,
-            const double a, const double b,
-            const double c, const double x0 )
-    : ExpressionBuilder(resultTag),
-      indepVarTag_ (indepVarTag),
-      a_(a), b_(b), c_(c), x0_(x0)
+            const Expr::Tag& indepVarTag,
+            const double a,
+            const double b,
+            const double c,
+            const double x0) :
+    ExpressionBuilder(resultTag),
+    indepVarTag_ (indepVarTag),
+    a_(a), b_(b), c_(c), x0_(x0)
     {}
     Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_, x0_); }
   private:
@@ -226,25 +235,30 @@ private:
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class PowerLawBC : public BoundaryConditionBase<FieldT>
+class PowerLawBC
+: public BoundaryConditionBase<FieldT>
 {
   PowerLawBC( const Expr::Tag& indepVarTag,
-              const double x0, const double phiCenter,
-             const double halfHeight, const double n )
-  : indepVarTag_ (indepVarTag),
-    x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
+             const double x0,
+             const double phiCenter,
+             const double halfHeight,
+             const double n) :
+  indepVarTag_ (indepVarTag),
+  x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& indepVarTag,
-             const double x0, const double phiCenter,
-             const double halfHeight, const double n)
-    : ExpressionBuilder(resultTag),
-      indepVarTag_ (indepVarTag),
-      x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
+            const Expr::Tag& indepVarTag,
+            const double x0,
+            const double phiCenter,
+            const double halfHeight,
+            const double n) :
+    ExpressionBuilder(resultTag),
+    indepVarTag_ (indepVarTag),
+    x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
     {}
     Expr::ExpressionBase* build() const{ return new PowerLawBC(indepVarTag_, x0_, phic_, R_, n_); }
   private:
@@ -274,7 +288,8 @@ private:
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class BCCopier : public BoundaryConditionBase<FieldT>
+class BCCopier
+: public BoundaryConditionBase<FieldT>
 {
   BCCopier( const Expr::Tag& srcTag ) : srcTag_(srcTag){}
 public:

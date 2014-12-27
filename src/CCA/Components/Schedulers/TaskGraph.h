@@ -135,9 +135,9 @@ WARNING
      DetailedTasks* createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
                                          const GridP& grid, const GridP& oldGrid);
 
-     inline DetailedTasks* getDetailedTasks() { return d_dts; }
+     inline DetailedTasks* getDetailedTasks() { return dts_; }
 
-     inline Scheduler::tgType getType() const { return d_type; }
+     inline Scheduler::tgType getType() const { return type_; }
 
      /// This will go through the detailed tasks and create the 
      /// dependencies need to communicate data across separate
@@ -166,13 +166,17 @@ WARNING
      /// the same id number.
      void assignUniqueMessageTags();
 
-     /// Sets the iteration of the current taskgraph in a multi-TG environment
-     /// starting with 0.
-     void setIteration( int iter ) { d_currentIteration = iter; }
+     /// sets the iteration of the current taskgraph in a multi-TG environment
+     /// starting with 0
+     void setIteration(int iter) {currentIteration = iter;}
 
-     int  getNumTaskPhases(){ return d_numtaskphases; }
+     int getNumTaskPhases(){
+         return d_numtaskphases;
+     }
      
-     std::vector<Task*>& getTasks() { return d_tasks; }
+     std::vector<Task*>& getTasks() {
+       return d_tasks;
+     }
 
      /// Makes and returns a map that associates VarLabel names with
      /// the materials the variable is computed for.
@@ -193,7 +197,7 @@ WARNING
      /// Will call processTask (recursively, as this is a helper for 
      /// processTask) for each dependent task.
      void processDependencies(Task* task, Task::Dependency* req,
-                              std::vector<Task*>& sortedTasks,
+			      std::vector<Task*>& sortedTasks,
                               GraphSortInfoMap& sortinfo) const;
      
      /// Helper function for setupTaskConnections, adding dependency edges
@@ -207,7 +211,7 @@ WARNING
      /// Used by (the public) createDetailedDependencies to store comps
      /// in a ComputeTable (See TaskGraph.cc).
      void remembercomps(DetailedTask* task, Task::Dependency* comp,
-                        CompTable& ct);
+			CompTable& ct);
 
      /// This is the "detailed" version of addDependencyEdges.  It does for
      /// the public createDetailedDependencies member function essentially
@@ -220,13 +224,13 @@ WARNING
      /// Makes a DetailedTask from task with given PatchSubset and 
      /// MaterialSubset.
      void createDetailedTask(Task* task,
-                             const PatchSubset* patches,
-                             const MaterialSubset* matls);
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls);
      
      /// find the processor that a variable (req) is on given patch and 
      /// material.
      int findVariableLocation(Task::Dependency* req,
-                              const Patch* patch, int matl, int iteration);
+			      const Patch* patch, int matl, int iteration);
 
      TaskGraph(const TaskGraph&);
      TaskGraph& operator=(const TaskGraph&);
@@ -245,22 +249,23 @@ WARNING
      void processTask(Task* task, std::vector<Task*>& sortedTasks,
                       GraphSortInfoMap& sortinfo) const;
       
-     std::vector<Task*>         d_tasks;
-     std::vector<Task::Edge*>   d_edges;
+     std::vector<Task*>        d_tasks;
+     std::vector<Task::Edge*> edges;
 
-     SchedulerCommon          * d_sc;
-     LoadBalancer             * d_lb;
-     const ProcessorGroup     * d_myworld;
-     Scheduler::tgType          d_type;
-     DetailedTasks            * d_dts;
+     SchedulerCommon* sc;
+     LoadBalancer* lb;
+     const ProcessorGroup* d_myworld;
+     Scheduler::tgType type_;
+     DetailedTasks* dts_;
 
-     // Number of times this taskgraph has executed this timestep.
-     int d_currentIteration;
+     // how many times this taskgraph has executed this timestep
+     int currentIteration;
      
-     // Number of task phases this taskgraph has.
+     // how many task phases this taskgraph has
      int d_numtaskphases;
 
-     typedef std::map<const VarLabel*, DetailedTask*, VarLabel::Compare> DetailedReductionTasksMap;
+     typedef std::map<const VarLabel*, DetailedTask*, VarLabel::Compare>
+     DetailedReductionTasksMap;
      DetailedReductionTasksMap d_reductionTasks;
    };
 
