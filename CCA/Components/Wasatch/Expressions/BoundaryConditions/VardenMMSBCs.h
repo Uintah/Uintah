@@ -181,15 +181,15 @@ public:
      *  \param side an enum for specifying the side of the boundary, whether it is on the left or the right side
      */
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& indepVarTag,
-            const double rho0,
-            const double rho1,
-            const SpatialOps::BCSide side )
+             const Expr::Tag& indepVarTag,
+             const double rho0,
+             const double rho1,
+             const SpatialOps::BCSide side )
     : ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag),
-    rho0_( rho0 ),
-    rho1_( rho1 ),
-    side_( side )
+      indepVarTag_ (indepVarTag),
+      rho0_( rho0 ),
+      rho1_( rho1 ),
+      side_( side )
     {}
     Expr::ExpressionBase* build() const{ return new VarDen1DMMSMomentum(indepVarTag_, rho0_, rho1_, side_); }
   private:
@@ -204,13 +204,13 @@ public:
   void evaluate();
 private:
   VarDen1DMMSMomentum( const Expr::Tag& indepVarTag,
-                     const double rho0,
-                     const double rho1,
-                     const SpatialOps::BCSide side )
+                       const double rho0,
+                       const double rho1,
+                       const SpatialOps::BCSide side )
   : indepVarTag_( indepVarTag ),
-  rho0_( rho0 ),
-  rho1_( rho1 ),
-  side_( side )
+    rho0_( rho0 ),
+    rho1_( rho1 ),
+    side_( side )
   {
     this->set_gpu_runnable(false);
   }
@@ -238,11 +238,11 @@ class VarDen1DMMSSolnVar
 {
   typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSSolnVar( const Expr::Tag& indepVarTag,
-                    const double rho0,
-                    const double rho1  )
-  : indepVarTag_ (indepVarTag),
-  rho0_ (rho0),
-  rho1_ (rho1)
+                     const double rho0,
+                     const double rho1  )
+  : indepVarTag_( indepVarTag ),
+    rho0_( rho0 ),
+    rho1_( rho1 )
   {
     this->set_gpu_runnable(false);
   }
@@ -257,13 +257,13 @@ public:
      *  \param indepVarTag the Expr::Tag for holding the time variable.
      */
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& indepVarTag,
-            const double rho0,
-            const double rho1 ) :
-    ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag),
-    rho0_ (rho0),
-    rho1_ (rho1)
+             const Expr::Tag& indepVarTag,
+             const double rho0,
+             const double rho1 )
+   : ExpressionBuilder(resultTag),
+     indepVarTag_ (indepVarTag),
+     rho0_ (rho0),
+     rho1_ (rho1)
     {}
     Expr::ExpressionBase* build() const{ return new VarDen1DMMSSolnVar(indepVarTag_, rho0_, rho1_); }
   private:
@@ -272,9 +272,8 @@ public:
   };
   
   ~VarDen1DMMSSolnVar(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
-  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ );
-  }
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ ); }
+  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ ); }
   void evaluate();
 private:
   const TimeField* t_;
@@ -312,11 +311,11 @@ public:
      *  \param side an enum for specifying the side of the boundary, wether it is on the left or the right side
      */
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& indepVarTag,
-            const SpatialOps::BCSide side ) :
-    ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag),
-    side_ (side)
+             const Expr::Tag& indepVarTag,
+             const SpatialOps::BCSide side )
+    : ExpressionBuilder(resultTag),
+      indepVarTag_ (indepVarTag),
+      side_ (side)
     {}
     Expr::ExpressionBase* build() const{ return new VarDen1DMMSVelocity(indepVarTag_, side_); }
   private:
@@ -330,9 +329,9 @@ public:
   void evaluate();
 private:
   VarDen1DMMSVelocity( const Expr::Tag& indepVarTag,
-                     const SpatialOps::BCSide side )
-  : indepVarTag_ (indepVarTag),
-  side_ (side)
+                       const SpatialOps::BCSide side )
+  : indepVarTag_(indepVarTag),
+    side_(side)
   {
     this->set_gpu_runnable(false);
   }
