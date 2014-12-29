@@ -17,28 +17,35 @@ namespace Uintah{
       inline static std::string parse_for_role_to_label( ProblemSpecP& db, const std::string role ){ 
 
         const ProblemSpecP params_root = db->getRootNode();
-        if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles")->findBlock("ParticleVariables") ){ 
+        if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles") ){ 
 
-          const ProblemSpecP db_pvar = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles")->findBlock("ParticleVariables");
+          if ( params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles")->findBlock("ParticleVariables") ){ 
 
-          for ( ProblemSpecP db_var = db_pvar->findBlock("variable"); db_var != 0; db_var = db_var->findNextBlock("variable")){ 
+            const ProblemSpecP db_pvar = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("EulerianParticles")->findBlock("ParticleVariables");
 
-            std::string label;
-            std::string role_found; 
-            db_var->getAttribute("label", label);
-            db_var->getAttribute("role", role_found); 
+            for ( ProblemSpecP db_var = db_pvar->findBlock("variable"); db_var != 0; db_var = db_var->findNextBlock("variable")){ 
 
-            if ( role_found == role ){ 
-              return label; 
+              std::string label;
+              std::string role_found; 
+              db_var->getAttribute("label", label);
+              db_var->getAttribute("role", role_found); 
+
+              if ( role_found == role ){ 
+                return label; 
+              }
+
             }
 
+            throw ProblemSetupException("Error: This Eulerian particle role not found: "+role, __FILE__, __LINE__); 
+
+          } else { 
+
+            throw ProblemSetupException("Error: No <EulerianParticles><ParticleVariables> section found.",__FILE__,__LINE__);      
+
           }
-
-          throw ProblemSetupException("Error: This Eulerian particle role not found: "+role, __FILE__, __LINE__); 
-
         } else { 
 
-          throw ProblemSetupException("Error: No <EulerianParticles><ParticleVariables> section found.",__FILE__,__LINE__);      
+          throw ProblemSetupException("Error: No <EulerianParticles> section found in input file.",__FILE__,__LINE__);      
 
         }
 
