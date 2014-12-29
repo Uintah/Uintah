@@ -406,6 +406,11 @@ WARNING
       //////////
       // to output the document
       //friend std::ostream& operator<<(std::ostream& out, const Uintah::ProblemSpecP pspec);
+      
+       //////////
+      // Is this label in the DataArchive section of a ups file.
+      bool isLabelSaved(const std::string& label );
+      
    private:
 
       //////////
