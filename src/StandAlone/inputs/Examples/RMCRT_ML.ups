@@ -102,7 +102,7 @@
          <lower>      [ 0,0,0]    </lower>           
          <upper>      [1, 1, 1]   </upper>           
          <resolution> [80,80,80]  </resolution>          
-         <patches>    [2,2,2]     </patches>        
+         <patches>    [2,2,2]     </patches>
          <extraCells> [1,1,1]     </extraCells>           
       </Box>                                         
     </Level>
@@ -117,11 +117,10 @@
   <filebase>RMCRT_ML.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
       <save label = "color"   levels="-1"/>
-      <save label = "divQ"  />
-      <save label = "abskg" />
-      <save label = "sigmaT4" levels="1"/>
-      
-      <!--<save label = "refineFlag"/> -->
+      <save label = "divQ" />
+      <!--<save label = "abskgRMCRT"/>        floats -->
+      <save label = "abskg"/>             <!--<doubles-->
+      <save label = "sigmaT4"/>
       <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>
   
@@ -132,7 +131,7 @@
   <benchmark>         1          </benchmark>
   <calc_frequency>    1          </calc_frequency>
 
-  <RMCRT>
+  <RMCRT type = "double">
     <randomSeed>         false     </randomSeed>
     <nDivQRays>          3         </nDivQRays>
     <Threshold>         0.05       </Threshold>
