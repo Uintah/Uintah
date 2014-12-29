@@ -91,6 +91,9 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   std::string temperature_root = PropertyHelper::parse_for_role_to_label(db, "temperature"); 
   std::string temperature_name = PropertyHelper::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
+  if(_particle_temperature_varlabel == 0){
+    throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__); 
+  }
  
   // check for length  
   std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
@@ -223,7 +226,6 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     tsk->modifies(d_PO2surfLabel);
     which_dw = Task::NewDW; 
   }
-
   tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
