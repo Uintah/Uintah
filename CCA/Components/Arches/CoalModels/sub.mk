@@ -10,6 +10,7 @@ SRCS += \
   $(SRCDIR)/CharOxidation.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \
   $(SRCDIR)/RichardsFletcherDevol.cc \
+  $(SRCDIR)/BT.cc \
   $(SRCDIR)/YamamotoDevol.cc \
   $(SRCDIR)/CharOxidationShaddix.cc \
   $(SRCDIR)/ConstantModel.cc  \

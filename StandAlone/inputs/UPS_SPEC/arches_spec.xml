@@ -23,7 +23,14 @@
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_density,coal_temperature,coal_temperature_nebo'">
+                                        attribute2="type REQUIRED STRING 'coal_density, 
+                                                                          coal_temperature,
+                                                                          coal_temperature_nebo,
+                                                                          const_environment'">
+
+          <constants                    spec="REQUIRED MULTIPLE_DOUBLES"
+                                        need_applies_to="type const_environment"/>
+
         </model>
       </PropertyModelsV2>
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
@@ -207,10 +214,13 @@
                                           attribute1="label REQUIRED STRING"/> <!-- The name of the abskp variable (most likely from a property model) --> 
               <part_temp_label            spec="REQUIRED STRING"                                />    <!--base label used for particle temp in DQMOM-->                      
               <part_size_label            spec="REQUIRED STRING"                                />    <!--base label used for particle size in DQMOM-->                     
-              <model_type                 spec="REQUIRED STRING 'planck, rossland'" need_applies_to="type coal"/> <!-- Type of absorption coefficient --> 
-              <complex_ir_real            spec="REQUIRED DOUBLE 'positive'" need_applies_to="type xxx"/> <!-- Real part of the complex index of refraction --> 
-              <complex_ir_imag            spec="REQUIRED DOUBLE 'negative'" need_applies_to="type xxx"/> <!-- Imaginary part of the complex index of refraction --> 
+              <model_type                 spec="REQUIRED STRING 'planck, rossland'" need_applies_to="type coal constantCIF"/> <!-- Type of absorption coefficient model--> 
+              <complex_ir_real            spec="REQUIRED DOUBLE 'positive'" need_applies_to="type constantCIF"/> <!-- Real part of the complex index of refraction --> 
+              <complex_ir_imag            spec="REQUIRED DOUBLE 'negative'" need_applies_to="type constantCIF"/> <!-- Imaginary part of the complex index of refraction --> 
+              <const_asymmFact            spec="OPTIONAL DOUBLE " need_applies_to="type constantCIF"/> <!-- assymetry parameter used  for scattering --> 
               <Qabs                       spec="OPTIONAL DOUBLE 'positive'" need_applies_to="type basic"/> <!-- fudge parameter for partcle absorption coefficient model "basic" default is 0.8 tested for SUFCO coal --> 
+              <radiateAtGasTemp           spec="OPTIONAL BOOLEAN"/> <!-- forces particles and gas temperatures to be the same, in terms of radiation --> 
+
             </particles>
             <!-- RadiationProperties: Hottel Sarofim -->
             <opl                          spec="REQUIRED DOUBLE 'positive'" need_applies_to="type hottel_sarofim"/> <!-- Optical Path Length --> 
@@ -275,6 +285,7 @@
         <!-- Coal Properties -->
         <Properties                     spec="REQUIRED NO_DATA">
           <diameter_distribution        spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
+          <small_weights                spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- small value for each scaled weight (used in temperature calculation --> 
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
           <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
           <ultimate_analysis            spec="REQUIRED NO_DATA">               <!-- Ultimate analysis. Specified as mass fractions. -->
@@ -302,6 +313,14 @@
           <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
+          <BTDevol                        spec="OPTIONAL NO_DATA">
+            <v_hiT                        spec="REQUIRED DOUBLE" />
+            <Tig                          spec="REQUIRED DOUBLE" />
+            <c                            spec="REQUIRED DOUBLE" />
+            <A                            spec="REQUIRED DOUBLE" />
+            <Ta                           spec="REQUIRED DOUBLE" />
+            <d                            spec="REQUIRED DOUBLE" />
+          </BTDevol>
           <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
           <!-- Shaddix char oxidation coefficients in the following order:  -->
           <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
@@ -1080,7 +1099,7 @@
             <DORadiationModel           spec="OPTIONAL NO_DATA" need_applies_to="type do_radiation" >
               <ordinates                  spec="OPTIONAL INTEGER" />                                   <!-- number of ordinants, default = 2 --> 
               <ReflectOn                  spec="OPTIONAL BOOLEAN" /> <!-- reflections are off by default.-->
-              <usePrevInt                 spec="OPTIONAL BOOLEAN" /> <!-- using the previous solve as initial guess, is off by default -->
+              <initialGuess               spec="OPTIONAL STRING 'zeros, prevDir, prevRadSolve'"/> <!-- prevRadSolvei -> use previous radiation solve as previous guess.  prevDir= use previous direction for initial guess.  zeros=use zeros as initial guess (default)-->
               <ScatteringOn               spec="OPTIONAL BOOLEAN" /> <!-- turn on scattering -->
               <LinearSolver               spec="OPTIONAL NO_DATA"                                      
                                           attribute1="type REQUIRED STRING 'hypre, petsc'">
@@ -1315,7 +1334,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
+                                        attribute2="type REQUIRED STRING 'BTDevol, RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
                                                                           SimpleHeatTransfer, 
                                                                           Drag,
                                                                           ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">

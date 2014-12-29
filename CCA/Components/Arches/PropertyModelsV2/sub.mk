@@ -6,6 +6,7 @@ SRCS += \
 				$(SRCDIR)/CoalDensity.cc \
 				$(SRCDIR)/CoalTemperature.cc \
 				$(SRCDIR)/CoalTemperatureNebo.cc \
+				$(SRCDIR)/ConstEnvProperty.cc \
         $(SRCDIR)/PropertyModelFactoryV2.cc 
 
 
