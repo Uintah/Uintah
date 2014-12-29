@@ -399,7 +399,7 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch
 
     } else { 
 
-      abskg[c] = 0.0; 
+   //   abskg[c] = 1.0; 
 
     }
   }
@@ -735,12 +735,210 @@ void RadPropertyCalculator::coalOptics::computeAsymmetryFactor( const Patch* pat
        double total_mass =composition[i][c] + composition[i+_nQn_part][c] + _ash_mass[i];
       asymmetryParam[c] = (composition[i][c]*_charAsymm+composition[i+_nQn_part][c]*_rawCoalAsymm+_ash_mass[i]*_ashAsymm)/(total_mass*scatkt[c])*scatktQuad[i][c];
       }
+      asymmetryParam[c] /= scatkt[c];
     } // else, phase function remain zero in intrusions (set upstream).
   }
 
 return;
 }
 
+RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool scatteringOn){
+
+  construction_success=true;
+  _scatteringOn = scatteringOn; 
+
+
+  if ( db->findBlock("particles")->findBlock("abskp") ){ 
+    db->findBlock("particles")->findBlock("abskp")->getAttribute("label",_abskp_name); 
+    double realCIF;
+    double imagCIF;
+    db->findBlock("particles")->require("complex_ir_real",realCIF); 
+    db->findBlock("particles")->require("complex_ir_imag",imagCIF); 
+    db->findBlock("particles")->getWithDefault("const_assymmFact",_constAsymmFact,0.0); 
+    std::complex<double>  CIF(realCIF, imagCIF );  
+    _part_radprops = scinew ParticleRadCoeffs(CIF);  
+    std::string which_model = "none"; 
+    db->findBlock("particles")->require("model_type", which_model);
+    if ( which_model == "planck" ){ 
+      _p_planck_abskp = true; 
+    } else if ( which_model == "rossland" ){ 
+      _p_ros_abskp = true; 
+    } else { 
+      throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
+    }   
+  }else{
+    throw ProblemSetupException("Error: abskp name not found! This should be specified in the input file!",__FILE__, __LINE__);
+  }
+
+
+  //-----------------All class objects of this type should do this---------------------//
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  if ( _nQn_part ==0){
+    construction_success = false;
+  }
+  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
+  _abskp_label_vector = vector<const VarLabel* >(_nQn_part);
+  for (int i=0; i<_nQn_part; i++){
+    std::stringstream out; 
+    out << _abskp_name << "_" << i;
+    _abskp_label_vector[i] = VarLabel::create(out.str(), CCVariable<double>::getTypeDescription() ); 
+  }
+  //-----------------------------------------------------------------------------------//
+  
+  if ( _scatteringOn){
+    _scatkt_name = "scatkt";
+    _asymmetryParam_name="asymmetryParam"; 
+    _scatkt_label = VarLabel::create(_scatkt_name,CCVariable<double>::getTypeDescription()); 
+    _asymmetryParam_label = VarLabel::create(_asymmetryParam_name,CCVariable<double>::getTypeDescription()); 
+    if (_scatkt_label==0){
+      throw ProblemSetupException("Error: scattering coefficient label not created!!!?",__FILE__, __LINE__);
+    } 
+  }
+  _computeComplexIndex = false; // complex index of refraction not needed for this model
+ 
+}
+
+RadPropertyCalculator::constantCIF::~constantCIF(){
+  if ( _scatteringOn ) {
+    VarLabel::destroy(_asymmetryParam_label); 
+    VarLabel::destroy(_scatkt_label); 
+  }
+    delete _part_radprops; 
+}
+
+
+bool RadPropertyCalculator::constantCIF::problemSetup(Task* tsk,int time_substep){
+
+  if (time_substep ==0) { 
+    if (_scatteringOn){
+      tsk->computes(  _asymmetryParam_label   );
+    }
+  }
+  else{
+    if (_scatteringOn){
+      tsk->modifies(  _asymmetryParam_label   );
+    }
+  }
+  return true;
+}
+
+void RadPropertyCalculator::constantCIF::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& abskpt, 
+                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter; 
+    double VolFraction = VolFractionBC[c];
+    double unscaled_weight;
+    double unscaled_size;
+
+
+    if ( VolFraction > 1.e-16 ){
+      //now compute the particle values: 
+      abskpt[c] = 0.0; 
+      for ( int i = 0; i < Nqn; i++ ){ 
+
+        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+
+        if ( _p_planck_abskp ){ 
+
+          abskp[i][c] = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c])* unscaled_weight;
+          //double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
+          abskpt[c] += abskp[i][c] ; 
+          
+        } else if ( _p_ros_abskp ){ 
+
+          abskp[i][c] = _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c])* unscaled_weight;
+          //double abskp_i = _part_rossprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
+          abskpt[c] += abskp[i][c] ; 
+
+        } 
+      }
+
+
+    }else{    
+
+      abskpt[c] = 0.0;
+
+    }
+  }
+}
+
+
+void RadPropertyCalculator::constantCIF::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& scatkt,
+                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
+                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
+  for ( int i = 0; i < Nqn; i++ ){ 
+    scatktQuad[i].allocate(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+    scatktQuad[i].initialize(0.0);
+  }
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+
+    double VolFraction = VolFractionBC[c];
+    double unscaled_weight;
+    double unscaled_size;
+
+
+    if ( VolFraction > 1.e-16 ){
+
+      scatkt[c] = 0.0; 
+      for ( int i = 0; i < Nqn; i++ ){ 
+
+        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        if ( _p_planck_abskp ){ 
+          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c]);
+          scatktQuad[i][c]=scatkt_i* unscaled_weight;
+          scatkt[c] += scatkt_i * unscaled_weight; 
+
+        } else if ( _p_ros_abskp ){ 
+          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] );
+          scatktQuad[i][c]=scatkt_i* unscaled_weight;
+          scatkt[c] += scatkt_i * unscaled_weight; 
+        } 
+      }
+    }else{    
+
+      scatkt[c] = 0.0;
+
+    }
+  }
+}
+
+void RadPropertyCalculator::constantCIF::computeComplexIndex( const Patch* patch,
+                                         constCCVariable<double>& VolFractionBC,
+                   SCIRun::StaticArray < constCCVariable<double> > &composition,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+return;
+}
+
+
+void RadPropertyCalculator::constantCIF::computeAsymmetryFactor( const Patch* patch,
+                                            constCCVariable<double>& VolFractionBC,
+                            SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
+                      SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                       CCVariable<double>  &scatkt,
+                                               CCVariable<double>  &asymmetryParam){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter; 
+    if ( VolFractionBC[c] > 1.e-16){
+      for ( int i = 0; i <_nQn_part; i++ ){ 
+      asymmetryParam[c] =_constAsymmFact ;
+      }
+    } // else, phase function remain zero in intrusions (set upstream).
+  }
+return;
+}
 
 
 // This function does not need the particle temperature.
@@ -749,6 +947,7 @@ return;
 RadPropertyCalculator::basic::basic(const ProblemSpecP& db, bool scatteringOn){
 
   construction_success=true;
+  _scatteringOn = scatteringOn; 
 
   if (scatteringOn){
     construction_success=false;
@@ -820,6 +1019,7 @@ void RadPropertyCalculator::basic::compute_scatkt( const Patch* patch,  constCCV
                                     const int Nqn, CCVariable<double>& scatkt,
                         SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
                          SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
 }
 
 void RadPropertyCalculator::basic::computeComplexIndex( const Patch* patch,

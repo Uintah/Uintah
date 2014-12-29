@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 
 #include <spatialops/structured/FVStaggered.h>
 
@@ -21,8 +22,9 @@ CoalTemperature::~CoalTemperature(){
 void 
 CoalTemperature::problemSetup( ProblemSpecP& db ){ 
 
-
   const ProblemSpecP db_root = db->getRootNode(); 
+  _scale_flag = false;
+ 
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties") ){ 
 
     ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
@@ -32,8 +34,16 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     db_coal_props->require("temperature", _initial_temperature); 
     db_coal_props->require("ash_enthalpy", _Ha0); 
     db_coal_props->require("char_enthalpy", _Hh0); 
-    db_coal_props->require("raw_coal_enthalpy", _Hc0); 
-
+    db_coal_props->require("raw_coal_enthalpy", _Hc0);
+    std::vector<double> _small; 
+    _small.push_back(1234); 
+    db_coal_props->getWithDefault("small_weights", _weight_small,_small);
+    if (_weight_small[0]==1234){
+      _scale_flag = false;
+      _weight_small.clear();
+    } else {
+      _scale_flag = true;
+    } 
     if ( db_coal_props->findBlock("ultimate_analysis")){ 
 
       //<!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
@@ -85,8 +95,14 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     _rawcoal_base_name = PropertyHelper::parse_for_role_to_label(db, "raw_coal"); 
     _char_base_name = PropertyHelper::parse_for_role_to_label(db, "char"); 
     _enthalpy_base_name = PropertyHelper::parse_for_role_to_label(db, "enthalpy"); 
+    _weight_base_name = "w"; 
     _dTdt_base_name = PropertyHelper::parse_for_role_to_label(db, "dTdt"); 
     _gas_temperature_name = "temperature"; 
+    
+    for ( int i = 0; i < _sizes.size(); i++ ){ 
+      std::string temp_name = PropertyHelper::append_qn_env("w", i); 
+      _weightqn_name.push_back(temp_name); 
+    }
 
   } else { 
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);
@@ -119,15 +135,25 @@ CoalTemperature::register_initialize( std::vector<VariableInformation>& variable
 
   for ( int i = 0; i < _Nenv; i++ ){ 
 
+    
+    if (!_scale_flag){
+      DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
+      EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(_weightqn_name[i]);                         
+      DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);                                         
+      double weight_small = weight_eqn.getSmallClipCriteria();    
+      _weight_small.push_back(weight_small);  
+    }
     const std::string temperature_name  = get_env_name( i, _task_name );
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
+    const std::string weight_name = get_qn_env_name( i, _weight_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
 
     register_variable( char_name , CC_DOUBLE , REQUIRES , 0 , NEWDW , variable_registry );
     register_variable( enthalpy_name , CC_DOUBLE , REQUIRES , 0 , NEWDW , variable_registry );
+    register_variable( weight_name , CC_DOUBLE , REQUIRES , 0 , NEWDW , variable_registry );
     register_variable( rc_name   , CC_DOUBLE , REQUIRES , 0 , NEWDW , variable_registry );
     register_variable( temperature_name  , CC_DOUBLE , COMPUTES , variable_registry );
     register_variable( dTdt_name  , CC_DOUBLE , COMPUTES , variable_registry );
@@ -216,11 +242,13 @@ CoalTemperature::register_timestep_eval( std::vector<VariableInformation>& varia
     const std::string temperature_name  = get_env_name( i, _task_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
+    const std::string weight_name = get_qn_env_name( i, _weight_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
     register_variable( char_name, CC_DOUBLE, REQUIRES, 0, LATEST, variable_registry );
     register_variable( temperature_name, CC_DOUBLE, REQUIRES, 0, OLDDW, variable_registry );
     register_variable( enthalpy_name, CC_DOUBLE, REQUIRES, 0, LATEST, variable_registry );
+    register_variable( weight_name, CC_DOUBLE, REQUIRES, 0, LATEST, variable_registry );
     register_variable( rc_name  , CC_DOUBLE, REQUIRES, 0, LATEST, variable_registry );
     register_variable( temperature_name , CC_DOUBLE, MODIFIES, variable_registry );
     register_variable( dTdt_name , CC_DOUBLE, COMPUTES, variable_registry );
@@ -243,6 +271,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
+    const std::string weight_name = get_qn_env_name( i, _weight_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
     const double dt = tsk_info->get_dt(); // this is from the old dw.. so we have [T^t-T^(t-1)]/[t-(t-1)]
     
@@ -251,6 +280,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>* vrcmass = tsk_info->get_uintah_const_field<constCCVariable<double> >(rc_name); 
     constCCVariable<double>* vchar = tsk_info->get_uintah_const_field<constCCVariable<double> >(char_name); 
     constCCVariable<double>* venthalpy = tsk_info->get_uintah_const_field<constCCVariable<double> >(enthalpy_name); 
+    constCCVariable<double>* vweight = tsk_info->get_uintah_const_field<constCCVariable<double> >(weight_name); 
     constCCVariable<double>* vtemperatureold = tsk_info->get_uintah_const_field<constCCVariable<double> >(temperature_name); 
     CCVariable<double>& temperature = *vtemperature;
     CCVariable<double>& dTdt = *vdTdt;
@@ -258,6 +288,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>& rcmass = *vrcmass;
     constCCVariable<double>& charmass = *vchar;
     constCCVariable<double>& enthalpy = *venthalpy;
+    constCCVariable<double>& weight = *vweight;
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -283,6 +314,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double RC = rcmass[c];
       double CH = charmass[c];
       double pE = enthalpy[c];
+      double wt = weight[c];
 
       for ( int iter = 0; iter < 15; iter++) {
         icount++;
@@ -310,11 +342,12 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         if (tol < 0.01 ) 
           break;
       }
-      // if the temperature calculation is above or below reasonable values we will
-      // assume the dqmom weights were too small and set the particle temperature
+      // if the temperature calculation is above or below reasonable values or if 
+      // weight of the particles is too small we will set the particle temperature
       // to the gas temperature
-      if (pT > 3500 || pT < 273)
+      if ( (pT > 3500) || (pT < 273) || (wt < _weight_small[i]) ){
          pT=gT;
+      }
      
       temperature[c]=pT;
       dTdt[c]=(pT-pT_olddw)/dt;
