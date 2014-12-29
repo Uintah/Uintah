@@ -112,7 +112,7 @@
   <calc_frequency>    1          </calc_frequency>
 
   
-  <RMCRT>
+  <RMCRT type = "double">
     <randomSeed>         false     </randomSeed>
 
     <nDivQRays>         20         </nDivQRays>
