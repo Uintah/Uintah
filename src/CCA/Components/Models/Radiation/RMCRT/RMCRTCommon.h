@@ -156,7 +156,7 @@ namespace Uintah{
                                 SchedulerP& sched,
                                 Task::WhichDW myDW,
                                 const int radCalc_freq );
-                           
+
       void DoubleToFloat( const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
@@ -190,6 +190,7 @@ namespace Uintah{
       // These are initialized once in registerVarLabels().
       static int d_matl;      
       static MaterialSet* d_matlSet;
+      static std::string d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
       
       // Varlabels local to RMCRT
       static const VarLabel* d_sigmaT4Label;

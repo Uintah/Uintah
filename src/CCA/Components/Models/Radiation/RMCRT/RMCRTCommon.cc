@@ -57,6 +57,7 @@ double RMCRTCommon::d_sigmaScat;
 bool   RMCRTCommon::d_isSeedRandom;
 bool   RMCRTCommon::d_allowReflect;
 int    RMCRTCommon::d_matl;
+string RMCRTCommon::d_abskgBC_tag;
 
 MaterialSet* RMCRTCommon::d_matlSet = 0;
 const VarLabel* RMCRTCommon::d_sigmaT4Label;
@@ -120,6 +121,8 @@ RMCRTCommon::registerVarLabels(int   matlIndex,
   d_cellTypeLabel   = celltype;
   d_divQLabel       = divQ;
 
+  d_abskgBC_tag = d_compAbskgLabel->getName(); // The label name changes when using floats. 
+  
   // If using RMCRT:DBL
   const Uintah::TypeDescription* td = d_compAbskgLabel->typeDescription();
   const Uintah::TypeDescription::Type subtype = td->getSubType()->getType();

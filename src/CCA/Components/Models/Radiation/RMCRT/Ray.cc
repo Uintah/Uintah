@@ -263,7 +263,9 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Read in the algorithm section
+  bool isMultilevel = false;
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
+  
   if (alg_ps){
 
     string type="NULL";
@@ -275,7 +277,8 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //__________________________________
     //  Data Onion
     if (type == "dataOnion" ) {
-
+    
+      isMultilevel = true;
       alg_ps->getWithDefault( "halo",  d_halo,  IntVector(10,10,10));
 
       //  Method for deteriming the extents of the ROI
@@ -301,19 +304,34 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //__________________________________
     //  rmcrt only on the coarse level
     } else if ( type == "RMCRT_coarseLevel" ) {
+      isMultilevel = true;
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
     }
   }
-
+  
+  //__________________________________
+  //  bulletproofing
+  // special conditions when using floats and multi-level
+  if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
+    
+    string abskgName = d_compAbskgLabel->getName();
+    if ( rmcrt_ps->isLabelSaved( abskgName ) ){
+      ostringstream warn;
+      warn << "  RMCRT:ERROR: You're saving a variable ("<< abskgName << ") that doesn't exist on all levels."<< endl;
+      warn << "  Use either: " << endl;
+      warn << "    <save label = 'abskgRMCRT' />             (float version of abskg, local to RMCRT)" << endl;
+      warn << "             or " << endl;
+      warn << "    <save label = 'abskg'  levels = -1 />     ( only saved on the finest level )" << endl;
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  }
   d_sigma_over_pi = d_sigma/M_PI;
-
 }
 
 //______________________________________________________________________
 //  Method:  Check that the boundary conditions have been set for temperature
 //           and abskg
 //______________________________________________________________________
-//
 void
 Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
 {
@@ -339,7 +357,7 @@ Ray::BC_bulletproofing( const ProblemSpecP& rmcrtps )
 
   } else {
     is_BC_specified(root_ps, d_compTempLabel->getName(), mss);
-    is_BC_specified(root_ps, d_abskgLabel->getName(),    mss);
+    is_BC_specified(root_ps, d_abskgBC_tag,              mss);
 
     Vector periodic;
     ProblemSpecP grid_ps  = root_ps->findBlock("Grid");
@@ -1258,9 +1276,9 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 
       //__________________________________
       // set the boundary conditions
-      setBC(abskg,    d_abskgLabel->getName(),     patch, d_matl);
-      setBC(temp,     d_compTempLabel->getName(),  patch, d_matl);
-      setBC(cellType, d_cellTypeLabel->getName(),  patch, d_matl);
+      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
+      setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
+      setBC< int, int >   (cellType, d_cellTypeLabel->getName(),  patch, d_matl);
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
@@ -1281,8 +1299,13 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 
 //______________________________________________________________________
 //  Set Boundary conditions
-template<class T>
-void Ray::setBC(CCVariable<T>& Q_CC,
+//  We're using 2 template types.  "T" is for the CCVariable type and the
+//  "V" is used to create a specialization.  The infrastructure only 
+//  allows int and double BC so we're using the template type "V" to 
+//  fake it out.  
+//______________________________________________________________________
+template<class T, class V>
+void Ray::setBC(CCVariable< T >& Q_CC,
                 const string& desc,
                 const Patch* patch,
                 const int mat_id)
@@ -1309,30 +1332,31 @@ void Ray::setBC(CCVariable<T>& Q_CC,
 
     // iterate over each geometry object along that face
     for (int child = 0;  child < numChildren; child++) {
-      T bc_value = -9;
+      V bc_value = -9;                          // see comments above
       Iterator bound_ptr;
 
-      bool foundIterator =
-        getIteratorBCValueBCKind( patch, face, child, desc, mat_id,
-                        bc_value, bound_ptr,bc_kind);
+      bool foundIterator = getIteratorBCValueBCKind( patch, face, child, desc, mat_id,
+                                                     bc_value, bound_ptr,bc_kind);
 
       if(foundIterator) {
+        // cast the value to the same type as the CCVariable needed when T = float
+        T value = (T) bc_value;
 
         //__________________________________
         // Dirichlet
         if(bc_kind == "Dirichlet"){
-          nCells += setDirichletBC_CC<T>( Q_CC, bound_ptr, bc_value);
+          nCells += setDirichletBC_CC< T >( Q_CC, bound_ptr, value);
         }
         //__________________________________
         // Neumann
         else if(bc_kind == "Neumann"){
-          nCells += setNeumannBC_CC<T>( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC< T >( patch, face, Q_CC, bound_ptr, value, cell_dx);
         }
         //__________________________________
         //  Symmetry
         else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
-          nCells += setNeumannBC_CC<T> ( patch, face, Q_CC, bound_ptr, bc_value, cell_dx);
+          nCells += setNeumannBC_CC<T> ( patch, face, Q_CC, bound_ptr, value, cell_dx);
         }
 
         //__________________________________
@@ -1571,7 +1595,7 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
     //  We don't yet know what to do
     Task* tsk = scinew Task( "Ray::coarsen_cellType", this,
                              &Ray::coarsen_cellType, radCalc_freq );
-    
+
     tsk->requires(Task::OldDW, d_cellTypeLabel, d_gn, 0);  // needed for carryForward
     tsk->computes( d_cellTypeLabel );
     sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet );
@@ -1603,7 +1627,7 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
                          variable, modifies, this_dw, radCalc_freq );
       break;
     default:
-      throw InternalError("Ray::sched_Coarsen_Q: (CCVariable) invalid data type", __FILE__, __LINE__); 
+      throw InternalError("Ray::sched_Coarsen_Q: (CCVariable) invalid data type", __FILE__, __LINE__);
   }
 
   if(modifies){
@@ -2014,9 +2038,9 @@ Ray::filter( const ProcessorGroup*,
 //______________________________________________________________________
 // Explicit template instantiations:
 
-template void Ray::setBC<int>(    CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
-template void Ray::setBC<double>( CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
-template void Ray::setBC<float>(  CCVariable<float>&  Q_CC, const string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<int, int>(       CCVariable<int>&    Q_CC, const string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<double,double>(  CCVariable<double>& Q_CC, const string& desc, const Patch* patch, const int mat_id);
+template void Ray::setBC<float, double>(  CCVariable<float>&  Q_CC, const string& desc, const Patch* patch, const int mat_id);
 
 template void Ray::setBoundaryConditions< double >( const ProcessorGroup*,
                                                     const PatchSubset* ,
