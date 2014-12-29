@@ -49,7 +49,6 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/Parallel.h>
 
 using namespace std;
 using SCIRun::Point;
@@ -139,8 +138,18 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   //  RMCRT variables
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT");
-
-    d_RMCRT = scinew Ray( TypeDescription::double_type );          // HARDWIRED FOR DOUBLE 
+    
+    // using float or doubles for all-to-all variables
+    map<string,string> type;
+    rmcrt_ps->getAttributes(type);
+    
+    string isFloat = type["type"];
+    
+    if( isFloat == "float" ){
+      d_RMCRT = scinew Ray( TypeDescription::float_type );
+    } else {
+      d_RMCRT = scinew Ray( TypeDescription::double_type );
+    }
 
     d_RMCRT->registerVarLabels(0,d_compAbskgLabel,
                                  d_colorLabel,
@@ -148,6 +157,8 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
                                  d_divQLabel);
     proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
     d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid, d_sharedState );
+    
+    d_RMCRT->BC_bulletproofing( rmcrt_ps );
 
     //__________________________________
     //  Read in the dataOnion section
@@ -586,8 +597,8 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
       abskg.initialize( 2.0 );
     }
 
-    d_RMCRT->setBC<double>( color,  d_colorLabel->getName(),     patch, matl );
-    d_RMCRT->setBC<double>( abskg,  d_compAbskgLabel->getName(), patch, matl );
+    d_RMCRT->setBC<double, double>( color,  d_colorLabel->getName(),     patch, matl );
+    d_RMCRT->setBC<double, double>( abskg,  d_compAbskgLabel->getName(), patch, matl );
 
     //__________________________________
     // initialize cell type
@@ -733,8 +744,8 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
       }
     }
 
-    d_RMCRT->setBC( color,  d_colorLabel->getName(),     patch, d_matl );
-    d_RMCRT->setBC( abskg,  d_compAbskgLabel->getName(), patch, d_matl );
+    d_RMCRT->setBC<double, double>( color,  d_colorLabel->getName(),     patch, d_matl );
+    d_RMCRT->setBC<double, double>( abskg,  d_compAbskgLabel->getName(), patch, d_matl );
   }
   delete archive;
 }

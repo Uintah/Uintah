@@ -122,7 +122,7 @@ namespace Uintah{
       void BC_bulletproofing( const ProblemSpecP& rmcrtps );
                                
 
-      template< class T >
+      template< class T, class V >
       void setBC(CCVariable<T>& Q_CC,
                  const std::string& desc,
                  const Patch* patch,
