@@ -195,6 +195,9 @@ void OnTheFly_radiometer::scheduleDoAnalysis(SchedulerP& sched,
  
   d_radiometer->sched_initializeRadVars( level, sched, d_radiometerCalc_freq );
   
+  // convert abskg:dbl -> abskg:flt if needed
+  d_radiometer->sched_DoubleToFloat( level, sched, abskg_dw, d_radiometerCalc_freq );
+  
   d_radiometer->sched_sigmaT4( level, sched, temp_dw, d_radiometerCalc_freq, includeEC );
 
   d_radiometer->sched_radiometer( level, sched, abskg_dw, sigmaT4_dw, celltype_dw, d_radiometerCalc_freq );
