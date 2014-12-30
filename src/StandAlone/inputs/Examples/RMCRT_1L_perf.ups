@@ -114,10 +114,8 @@
   
   <RMCRT type = "double">
     <randomSeed>         false     </randomSeed>
-
     <nDivQRays>         20         </nDivQRays>
     <nFluxRays>         20         </nFluxRays>
-    <nRadRays>          20         </nRadRays>
     
     <Threshold>         0.001      </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
@@ -127,11 +125,13 @@
     <allowReflect>      true       </allowReflect>
     <CCRays>            false      </CCRays>
     
-    <VirtRadiometer>    true       </VirtRadiometer>
-    <VRViewAngle>       180        </VRViewAngle>
-    <VROrientation>     [-1,0,0]   </VROrientation>
-    <VRLocationsMin>    [0,0,0]    </VRLocationsMin>
-    <VRLocationsMax>    [0.5,0.5,0.5] </VRLocationsMax>
+    <Radiometer>
+       <nRadRays>          20         </nRadRays>
+       <VRViewAngle>      180        </VRViewAngle>
+       <VROrientation>    [-1,0,0]   </VROrientation>
+       <VRLocationsMin>   [0,0,0]    </VRLocationsMin>
+       <VRLocationsMax>   [0.5,0.5,0.5] </VRLocationsMax>
+    </Radiometer>
     
   </RMCRT>
 </Uintah_specification>
