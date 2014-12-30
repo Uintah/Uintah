@@ -227,6 +227,8 @@ CoalTemperature::register_timestep_eval( std::vector<VariableInformation>& varia
 
   for ( int i = 0; i < _Nenv; i++ ){ 
     if (!_scale_flag){
+      // Here we are getting the small weight from the DQMOM factory. Currently this isn't in 
+      // problem setup because PropertyModelsV2 is setup before DQMOM
       DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
       EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(_weightqn_name[i]);                         
       DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);                                         
