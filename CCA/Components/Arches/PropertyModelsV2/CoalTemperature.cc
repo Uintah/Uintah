@@ -35,18 +35,15 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     db_coal_props->require("ash_enthalpy", _Ha0); 
     db_coal_props->require("char_enthalpy", _Hh0); 
     db_coal_props->require("raw_coal_enthalpy", _Hc0);
-    std::vector<double> _small; 
-    _small.push_back(1234); 
-    db_coal_props->getWithDefault("small_weights", _weight_small,_small);
-    if (_weight_small[0]==1234){
-      _scale_flag = false;
-      _weight_small.clear();
-    } else {
+    if (db_coal_props->findBlock("small_weights")){ 
+      db_coal_props->require("small_weights", _weight_small);
       _scale_flag = true;
-    } 
+    } else {
+      _scale_flag = false;
+    }
+ 
     if ( db_coal_props->findBlock("ultimate_analysis")){ 
 
-      //<!-- as received mass fractions C+H+O+N+S+char+ash+moisture=1 -->
       ProblemSpecP db_ua = db_coal_props->findBlock("ultimate_analysis"); 
       CoalAnalysis coal; 
 
@@ -135,14 +132,6 @@ CoalTemperature::register_initialize( std::vector<VariableInformation>& variable
 
   for ( int i = 0; i < _Nenv; i++ ){ 
 
-    
-    if (!_scale_flag){
-      DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
-      EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(_weightqn_name[i]);                         
-      DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);                                         
-      double weight_small = weight_eqn.getSmallClipCriteria();    
-      _weight_small.push_back(weight_small);  
-    }
     const std::string temperature_name  = get_env_name( i, _task_name );
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string char_name = get_env_name( i, _char_base_name );
@@ -237,6 +226,13 @@ void
 CoalTemperature::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
 
   for ( int i = 0; i < _Nenv; i++ ){ 
+    if (!_scale_flag){
+      DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
+      EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(_weightqn_name[i]);                         
+      DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);                                         
+      double weight_small = weight_eqn.getSmallClipCriteria();    
+      _weight_small.push_back(weight_small);  
+    }
 
     const std::string dTdt_name  = get_env_name( i, _dTdt_base_name );
     const std::string temperature_name  = get_env_name( i, _task_name );
@@ -262,7 +258,6 @@ CoalTemperature::register_timestep_eval( std::vector<VariableInformation>& varia
 void 
 CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     SpatialOps::OperatorDatabase& opr ){ 
-
   const std::string gas_temperature_name   = _gas_temperature_name;
   constCCVariable<double>* vgas_temperature = tsk_info->get_uintah_const_field<constCCVariable<double> >(gas_temperature_name); 
   constCCVariable<double>& gas_temperature = *vgas_temperature;
