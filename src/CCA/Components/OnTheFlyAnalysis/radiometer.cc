@@ -52,10 +52,6 @@ OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
   : AnalysisModule(module_spec, sharedState, dataArchiver)
 {
   d_sharedState = sharedState;
-
-#ifdef USE_RADIOMETER
-  d_radiometer  = scinew Radiometer( TypeDescription::double_type );          // HARDWIRED: double;
-#endif
   d_module_ps   = module_spec;
   d_dataArchiver = dataArchiver;
 }
@@ -139,6 +135,18 @@ void OnTheFly_radiometer::problemSetup(const ProblemSpecP& ,
     throw InternalError(warn.str(), __FILE__, __LINE__);
   }
 
+   //__________________________________
+   // using float or doubles for all-to-all variables
+   map<string,string> type;
+   rad_ps->getAttributes(type);
+
+   string isFloat = type["type"];
+
+   if( isFloat == "float" ){
+     d_radiometer = scinew Radiometer( TypeDescription::float_type );
+   } else {
+     d_radiometer = scinew Radiometer( TypeDescription::double_type );
+   }
 
   //__________________________________
   // register the component VarLabels the RMCRT:Radiometer
