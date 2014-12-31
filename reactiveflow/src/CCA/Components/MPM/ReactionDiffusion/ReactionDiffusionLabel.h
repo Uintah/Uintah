@@ -36,6 +36,8 @@ namespace Uintah {
     ~ReactionDiffusionLabel();
 
     const VarLabel* pConcentrationLabel;
+    const VarLabel* gConcentrationLabel;
+    const VarLabel* gConcentrationCCLabel;
   };
   
 } // end namespace Uintah

@@ -748,6 +748,15 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
   }
+
+  if(flags->d_doScalarDiffusion){
+    int numMPM = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPM; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+      sdm->addInterpolateParticlesToGridCompAndReq(t, mpm_matl, patches);
+    }
+  }
   
   sched->addTask(t, patches, matls);
 }
@@ -1865,11 +1874,10 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
       totalParticles+=numParticles;
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,mpm_matl,new_dw);
-			if(flags->d_doScalarDiffusion){
-				// to work on move initialization for from createParticles to here
+      if(flags->d_doScalarDiffusion){
+        // to work on move initialization for from createParticles to here
         mpm_matl->getScalarDiffusionModel()->initializeSDMData(patch,mpm_matl,new_dw);
-			}
-
+      }
     }
     IntVector num_extra_cells=patch->getExtraCells();
     IntVector periodic=patch->getLevel()->getPeriodicBoundaries();
@@ -2202,6 +2210,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gvelocityWBC.copyData(gvelocity);
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocityWBC,interp_type);
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityWBC,interp_type);
+      }
+      if(flags->d_doScalarDiffusion){
+        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+        sdm->interpolateParticlesToGrid(patch, mpm_matl, old_dw, new_dw);
       }
     }  // End loop over materials
 
