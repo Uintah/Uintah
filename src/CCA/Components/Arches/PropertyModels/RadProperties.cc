@@ -348,6 +348,9 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       absk_tot.initialize(1.0);
       if ( _particlesOn ){
         abskpt.initialize(0.0); 
+        for ( int i = 0; i < _nQn_part; i++ ){
+          abskp[i].initialize(0.0); // for intrusions (they are not set)
+        }
       }
     }
 
