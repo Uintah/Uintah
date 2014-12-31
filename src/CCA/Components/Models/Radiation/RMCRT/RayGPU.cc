@@ -86,11 +86,10 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   //  varLabel name struct
   varLabelNames labelNames;
 #if 0
-  labelNames->abskg    = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
+  labelNames.abskg    = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
   labelNames.sigmaT4   = d_sigmaT4Label->getName().c_str();
   labelNames.divQ      = d_divQLabel->getName().c_str();
   labelNames.celltype  = d_cellTypeLabel->getName().c_str();
-  labelNames.VRFlux    = d_VRFluxLabel->getName().c_str();
   labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
   labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
   
@@ -98,7 +97,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   cout << " sigmaT4: " << d_sigmaT4Label->getName() << endl;
   cout << " divQ:    " << d_divQLabel->getName() << endl;
   cout << " cellType:" << d_cellTypeLabel->getName() << endl;
-  cout << " VRFlux:  " << d_VRFluxLabel->getName() << endl;
   cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
   cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
 #endif
@@ -112,6 +110,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   RT_flags.allowReflect       = d_allowReflect;
   RT_flags.solveBoundaryFlux  = d_solveBoundaryFlux;
   RT_flags.CCRays             = d_CCRays;
+  RT_flags.usingFloats        = ( d_FLT_DBL == TypeDescription::float_type );
   
   RT_flags.sigma      = d_sigma;    
   RT_flags.sigmaScat  = d_sigmaScat; 
@@ -178,7 +177,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     RT_flags.nRaySteps = 0;
 
-#if 0
     //__________________________________
     // set up and launch kernel
     launchRayTraceKernel< T >(dimGrid, 
@@ -193,8 +191,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
                               celltype_gdw, 
                               old_gdw, 
                               new_gdw);
- 
- #endif                        
+
     //__________________________________
     //
     double end =clock();

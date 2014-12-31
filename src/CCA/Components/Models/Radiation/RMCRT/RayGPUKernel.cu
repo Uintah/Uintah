@@ -77,16 +77,22 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + patch.loEC.y;
   
   const GPUGridVariable< T > sigmaT4OverPi;
-  const GPUGridVariable<double> abskg;              // Need to use getRegion() to get the data
+  const GPUGridVariable< T > abskg;              // Need to use getRegion() to get the data
   const GPUGridVariable<int> celltype;
 
   GPUGridVariable<double> divQ;
   GPUGridVariable<GPUStencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
  
-  abskg_gdw->get(   abskg   ,       "abskg" ,   patch.ID, matl );  
-  sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );
-  celltype_gdw->get( celltype ,     "cellType", patch.ID, matl );
+    
+  sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );       // Should be using labelNames struct
+  celltype_gdw->get( celltype,     "cellType", patch.ID, matl );
+  
+  if(RT_flags.usingFloats){
+    abskg_gdw->get( abskg , "abskgRMCRT",   patch.ID, matl );
+  }else{
+    abskg_gdw->get( abskg , "abskg",   patch.ID, matl );
+  }
 
   if( RT_flags.modifies_divQ ){
     new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
@@ -109,6 +115,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
     }
   }
   
+
   
 /*`==========TESTING==========*/
 #if 0  
@@ -289,7 +296,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
           
           gpuVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
          
-          updateSumIDevice( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+          updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
         } //Ray loop
  
         //__________________________________
@@ -512,7 +519,7 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
                                    const gpuIntVector& origin,
                                    const gpuVector& Dx,
                                    const GPUGridVariable< T >& sigmaT4OverPi,
-                                   const GPUGridVariable<double>& abskg,
+                                   const GPUGridVariable< T >& abskg,
                                    const GPUGridVariable<int>& celltype,
                                    double& sumI,
                                    curandState* randNumStates,
