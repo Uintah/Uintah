@@ -466,7 +466,7 @@
   <DataAnalysis>
     <Module name="radiometer">
       <radiometerCalc_freq>    5   </radiometerCalc_freq>
-      <Radiometer>
+      <Radiometer type="double">
         <temperature label   ="radiation_temperature"/>
         <cellType    label   = "cellType"/>
         <abskg       label   = "abskg"/>
