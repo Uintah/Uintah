@@ -60,15 +60,13 @@ ScalarDiffusionModel::~ScalarDiffusionModel() {
   delete d_rdlb;
 }
 
-void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
-                                              const MPMMaterial* matl,
+void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
                                               const PatchSet* patch) const{
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_rdlb->pConcentrationLabel,      matlset);
 }
 
-void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
-                                  const MPMMaterial* matl,
+void ScalarDiffusionModel::initializeSDMData(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* new_dw)
 {
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
@@ -80,4 +78,38 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pConcentration[*iter] = 0.0;
   }
+}
+
+void ScalarDiffusionModel::addInterpolateParticlesToGridCompAndReq(Task* task, const MPMMaterial* matl,
+                                                         const PatchSet* patch) const{
+
+  const MaterialSubset* matlset = matl->thisMaterial();
+  Ghost::GhostType  gnone = Ghost::None;
+  int NGP = 0;
+
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone);
+  task->computes(d_rdlb->pConcentrationLabel,      matlset);
+}
+
+void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch, const MPMMaterial* matl,
+                                                      DataWarehouse* old_dw, DataWarehouse* new_dw){
+
+  Ghost::GhostType  gnone = Ghost::None;
+  constParticleVariable<double> pConcentration;
+  int dwi = matl->getDWIndex();
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+  old_dw->get(pConcentration,    d_rdlb->pConcentrationLabel,  pset);
+
+  ParticleVariable<double> gConcentration;
+  //new_dw->allocateAndPut(gConcentration,  d_rdlb->pConcentrationLabel,  dwi,  patch);
+  new_dw->allocateAndPut(gConcentration,  d_rdlb->pConcentrationLabel,  pset);
+
+  //gConcentration.initialize(0);
+  
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+    gConcentration[idx] = pConcentration[idx] + 1;
+  }
+
 }

@@ -24,6 +24,8 @@
 
 #include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
+#include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
 using namespace std;
@@ -33,8 +35,16 @@ using namespace Uintah;
 ReactionDiffusionLabel::ReactionDiffusionLabel() {
   pConcentrationLabel = VarLabel::create( "p.concentration",
                          ParticleVariable<double>::getTypeDescription() );
+
+  gConcentrationLabel = VarLabel::create( "g.concentration",
+			NCVariable<double>::getTypeDescription() );
+
+  gConcentrationCCLabel = VarLabel::create( "g.concentrationCC",
+                        CCVariable<double>::getTypeDescription() );
 }
 
 ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(pConcentrationLabel);
+  VarLabel::destroy(gConcentrationLabel);
+  VarLabel::destroy(gConcentrationCCLabel);
 }
