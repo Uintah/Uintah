@@ -65,6 +65,7 @@ struct RMCRT_flags{
   bool allowReflect;
   bool solveBoundaryFlux;
   bool CCRays;
+  bool usingFloats;           // if the communicated vars (sigmaT4 & abskg) are floats
   
   double sigma;               // StefanBoltzmann constant
   double sigmaScat;           // scattering coefficient
@@ -187,7 +188,7 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
                                    const gpuIntVector& origin,
                                    const gpuVector& Dx,
                                    const GPUGridVariable< T >&  sigmaT4OverPi,
-                                   const GPUGridVariable<double>& abskg,
+                                   const GPUGridVariable< T >& abskg,
                                    const GPUGridVariable<int>& celltype,
                                    double& sumI,
                                    curandState* randNumStates,
@@ -201,7 +202,6 @@ __device__ double randDevice(curandState* randNumStates);
 
 __device__ unsigned int hashDevice(unsigned int a);
 
-#if 1
 //______________________________________________________________________
 //
 //__________________________________
@@ -242,8 +242,6 @@ inline HOST_DEVICE gpuVector Abs(const gpuVector& v){
   double z = v.z < 0 ? -v.z:v.z;
   return make_double3(x,y,z);
 }
-
-#endif
 
 } //end namespace Uintah
 
