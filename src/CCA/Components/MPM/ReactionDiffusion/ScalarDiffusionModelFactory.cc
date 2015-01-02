@@ -23,6 +23,7 @@
  */
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 
 #include <sci_defs/uintah_defs.h> // For NO_FORTRAN
 
@@ -62,6 +63,8 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 
   if (mat_type == "linear")
     return(scinew ScalarDiffusionModel(child,flags));
+	else if (mat_type == "jg")
+    return(scinew JGConcentrationDiffusion(child,flags));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+mat_type+")", __FILE__, __LINE__);
