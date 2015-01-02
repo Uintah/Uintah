@@ -2,7 +2,7 @@
 <Uintah_Include>
 
   <diffusion_model              spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'linear, reaflow1'">
+                                attribute1="type REQUIRED STRING 'linear, jg'">
 
     <diffusivity                spec="OPTIONAL DOUBLE" />
   

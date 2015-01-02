@@ -35,9 +35,16 @@ namespace Uintah {
     ReactionDiffusionLabel();
     ~ReactionDiffusionLabel();
 
+    // Particle Variables
     const VarLabel* pConcentrationLabel;
+    const VarLabel* pConcPreviousLabel;
+    const VarLabel* pdCdtLabel;
+
+    // Grid Variables
     const VarLabel* gConcentrationLabel;
     const VarLabel* gConcentrationCCLabel;
+    const VarLabel* gConcentrationRateLabel;
+    const VarLabel* gConcentrationNoBCLabel;
   };
   
 } // end namespace Uintah

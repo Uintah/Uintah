@@ -130,7 +130,7 @@
               <!--<thermal_conductivity>  427.0  </thermal_conductivity>-->
               <thermal_conductivity>  3427.0  </thermal_conductivity>
               <specific_heat>         234.0  </specific_heat>
-	            <diffusion_model type = "linear">
+	            <diffusion_model type = "jg">
 	              <diffusivity>       300   </diffusivity>
 	            </diffusion_model>
               <geom_object>
