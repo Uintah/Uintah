@@ -66,8 +66,8 @@ void JGConcentrationDiffusion::addInitialComputesAndRequires(Task* task,
                                                       const PatchSet* patch) const{
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_rdlb->pConcentrationLabel,  matlset);
-  task->computes(d_rdlb->pConcPreviousLabel,   matlset);
-  task->computes(d_rdlb->pdCdtLabel,           matlset);
+  //task->computes(d_rdlb->pConcPreviousLabel,   matlset);
+  //task->computes(d_rdlb->pdCdtLabel,           matlset);
 }
 
 void JGConcentrationDiffusion::initializeSDMData(const Patch* patch,
@@ -91,13 +91,16 @@ void JGConcentrationDiffusion::addInterpolateParticlesToGridCompAndReq(Task* tas
 
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gan = Ghost::AroundNodes;
-  int NGP = 0;
 
+  //task->requires(Task::OldDW, d_lb->pXLabel,    gan, NGP);
+  //task->requires(Task::OldDW, d_lb->pMassLabel, gan, NGP);
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gan, NGP);
 
-  task->computes(d_rdlb->gConcentrationLabel,      matlset);
-  task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
-  task->computes(d_rdlb->gConcentrationRateLabel,  matlset);
+  //task->computes(d_rdlb->gConcentrationLabel,      matlset);
+  //task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
+  //task->computes(d_rdlb->gConcentrationRateLabel,  matlset);
+
+  task->computes(d_rdlb->pConcentrationLabel,      matlset);
 }
 
 void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
@@ -105,28 +108,68 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
                                                    DataWarehouse* old_dw,
 																									 DataWarehouse* new_dw){
 
-  Ghost::GhostType  gnone = Ghost::None;
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
+  vector<IntVector> ni(interpolator->size());
+  vector<double> S(interpolator->size());
+
   constParticleVariable<double> pConcentration;
+  constParticleVariable<Point>  px;
+  constParticleVariable<double> pmass;
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(pConcentration,    d_rdlb->pConcentrationLabel,  pset);
+  //old_dw->get(px,              d_lb->pXLabel,  pset);
+  //old_dw->get(pmass,           d_lb->pMassLabel,  pset);
+  old_dw->get(pConcentration,  d_rdlb->pConcentrationLabel,  pset);
 
-  NCVariable<double> gConcentration;
-  NCVariable<double> gConcentrationNoBC;
-  NCVariable<double> gConcentrationRate;
-  new_dw->allocateAndPut(gConcentration,      d_rdlb->gConcentrationLabel,
-	                       dwi,  patch);
-  new_dw->allocateAndPut(gConcentrationNoBC,  d_rdlb->gConcentrationNoBCLabel,
-	                       dwi,  patch);
-  new_dw->allocateAndPut(gConcentrationRate,  d_rdlb->gConcentrationRateLabel,
-	                       dwi,  patch);
+  //NCVariable<double> gmass;
+  //NCVariable<double> gconcentration;
+  //NCVariable<double> gconcentrationNoBC;
+  //NCVariable<double> gconcentrationRate;
 
-  gConcentration.initialize(0);
-  gConcentrationNoBC.initialize(0);
-  gConcentrationRate.initialize(0);
+  ParticleVariable<double>  pconcentration;
+
+  /**
+  new_dw->allocateAndPut(gconcentration,      d_rdlb->gConcentrationLabel,
+	                       dwi,  patch);
+  new_dw->allocateAndPut(gconcentrationNoBC,  d_rdlb->gConcentrationNoBCLabel,
+	                       dwi,  patch);
+  new_dw->allocateAndPut(gconcentrationRate,  d_rdlb->gConcentrationRateLabel,
+	                       dwi,  patch);
+  **/
+  new_dw->allocateAndPut(pconcentration,      d_rdlb->pConcentrationLabel,
+	                       pset);
+
+  //gmass.initialize(0);
+  //gconcentration.initialize(0);
+  //gconcentrationNoBC.initialize(0);
+  //gconcentrationRate.initialize(0);
   
+  int n8or27 = d_Mflag->d_8or27;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
     particleIndex idx = *iter;
+    //interpolator->findCellAndWeights(px[idx],ni,S);
+
+    /**
+    IntVector node;
+    for(int k = 0; k < n8or27; k++) {
+      node = ni[k];
+      if(patch->containsNode(node)) {
+        gmass[node]          += pmass[idx]                       * S[k];
+        gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
+      }
+    }
+    **/
+    pconcentration[idx] = pConcentration[idx];
   }
+  /**
+  for(NodeIterator iter=patch->getExtraNodeIterator();
+                   !iter.done();iter++){
+    IntVector c = *iter; 
+    gconcentration[c]   /= gmass[c];
+    gconcentrationNoBC[c] = gconcentration[c];
+  }
+  **/
+  delete interpolator;
 }
