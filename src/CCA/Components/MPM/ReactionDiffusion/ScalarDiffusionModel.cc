@@ -80,7 +80,8 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch, const MPMMateri
   }
 }
 
-void ScalarDiffusionModel::addInterpolateParticlesToGridCompAndReq(Task* task, const MPMMaterial* matl,
+void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
+                                                         const MPMMaterial* matl,
                                                          const PatchSet* patch) const{
 
   const MaterialSubset* matlset = matl->thisMaterial();

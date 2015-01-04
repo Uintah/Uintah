@@ -53,8 +53,8 @@ namespace Uintah {
     virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
                                    DataWarehouse* new_dw);
 
-    virtual void addInterpolateParticlesToGridCompAndReq(Task* task, const MPMMaterial* matl,
-                                                         const PatchSet* patch) const;
+    virtual void scheduleInterpolateParticlesToGrid(Task* task, const MPMMaterial* matl,
+                                                    const PatchSet* patch) const;
 
     virtual void interpolateParticlesToGrid(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw);

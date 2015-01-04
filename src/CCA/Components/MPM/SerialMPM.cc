@@ -572,6 +572,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+	if(flags->d_doScalarDiffusion){
+		scheduleSDInterpolateParticlesToGrid( sched, patches, matls);	
+	}
   scheduleExMomInterpolated(              sched, patches, matls);
   if(flags->d_useCohesiveZones){
     scheduleUpdateCohesiveZones(          sched, patches, mpm_matls_sub,
@@ -749,18 +752,32 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
     t->computes(lb->gVelocityBCLabel);
   }
 
-  if(flags->d_doScalarDiffusion){
-    int numMPM = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-      sdm->addInterpolateParticlesToGridCompAndReq(t, mpm_matl, patches);
-    }
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleSDInterpolateParticlesToGrid(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+    
+  printSchedule(patches,cout_doing,"MPM::scheduleSDInterpolateParticlesToGrid");
+  
+
+  Task* t = scinew Task("MPM::sdInterpolateParticlesToGrid",
+                        this,&SerialMPM::sdInterpolateParticlesToGrid);
+
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleInterpolateParticlesToGrid(t, mpm_matl, patches);
   }
   
   sched->addTask(t, patches, matls);
 }
-
 void SerialMPM::scheduleAddCohesiveZoneForces(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSubset* mpm_matls,
@@ -2211,10 +2228,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocityWBC,interp_type);
         bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocityWBC,interp_type);
       }
-      if(flags->d_doScalarDiffusion){
-        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-        sdm->interpolateParticlesToGrid(patch, mpm_matl, old_dw, new_dw);
-      }
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
@@ -2225,6 +2238,27 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     delete interpolator;
     delete linear_interpolator;
   }  // End loop over patches
+}
+
+void SerialMPM::sdInterpolateParticlesToGrid(const ProcessorGroup*,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing interpolateParticlesToGrid");
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+      sdm->interpolateParticlesToGrid(patch, mpm_matl, old_dw, new_dw);
+	  }
+  }
+
 }
 
 void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
