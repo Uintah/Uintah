@@ -19,7 +19,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-4      </delt_init>
        <timestep_multiplier>0.8         </timestep_multiplier>
-			 <max_Timesteps> 2 </max_Timesteps>
+			 <max_Timesteps> 4 </max_Timesteps>
    </Time>
    
     <!--____________________________________________________________________-->
@@ -79,8 +79,8 @@
        <Level>
            <Box label="1">
               <lower>       [0,0,0]          </lower>
-              <upper>       [1.0,1.00,1.00]  </upper>
-              <resolution>  [10,10,10]     </resolution>
+              <upper>       [.4,.4,.4]  </upper>
+              <resolution>  [4,4,4]     </resolution>
               <extraCells> [1,1,1]            </extraCells>
               <patches>    [1,1,1]            </patches>
            </Box>
@@ -98,6 +98,7 @@
       <save label="p.velocity"/>
       <save label="p.temperature" />
       <save label="p.concentration" />
+      <save label="g.concentration" />
       <checkpoint interval="0.005" cycle="2"/>
    </DataArchiver>
 
@@ -135,8 +136,8 @@
 	            </diffusion_model>
               <geom_object>
                 <box label="gpmpm">
-                  <min>           [0.20,0.00,0.20]   </min>
-                  <max>           [0.30,0.10,0.30]   </max>
+                  <min>           [0.10,0.00,0.10]   </min>
+                  <max>           [0.20,0.10,0.20]   </max>
                  </box>
                  <res>               [2,2,2]         </res>
                  <velocity>          [0.0,0.0,0.0]   </velocity>

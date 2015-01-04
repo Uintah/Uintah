@@ -56,7 +56,6 @@ using namespace SCIRun;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
-class ScalarDiffusion;
 
 /**************************************
 
@@ -235,6 +234,11 @@ protected:
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw);
 
+  virtual void sdInterpolateParticlesToGrid(const ProcessorGroup*,
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here:
   virtual void addCohesiveZoneForces(const ProcessorGroup*,
@@ -396,6 +400,10 @@ protected:
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
+
+  virtual void scheduleSDInterpolateParticlesToGrid(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls);
 
   virtual void scheduleAddCohesiveZoneForces(SchedulerP&, 
                                              const PatchSet*,
