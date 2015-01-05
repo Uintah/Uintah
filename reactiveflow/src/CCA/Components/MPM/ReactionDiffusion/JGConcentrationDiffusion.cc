@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Task.h>
@@ -95,6 +96,8 @@ void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
 
   task->requires(Task::OldDW, d_lb->pXLabel,    gan, NGP);
   task->requires(Task::OldDW, d_lb->pMassLabel, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pSizeLabel, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,gan, NGP);
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gan, NGP);
 	task->requires(Task::NewDW, d_lb->gMassLabel, gnone);
 
@@ -114,22 +117,28 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   Ghost::GhostType  gnone = Ghost::None;
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
+	cout << "Interpolator Size: " << interpolator->size() << endl;
+
   vector<IntVector> ni(interpolator->size());
   vector<double> S(interpolator->size());
 
   constParticleVariable<Point>  px;
   constParticleVariable<double> pmass;
   constParticleVariable<double> pConcentration;
+  constParticleVariable<Matrix3> psize;
+  constParticleVariable<Matrix3> pFOld;
 	constNCVariable<double>       gmass;
 
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
 	                                                 d_lb->pXLabel);
 
-  old_dw->get(px,              d_lb->pXLabel,                pset);
-  old_dw->get(pmass,           d_lb->pMassLabel,             pset);
-  old_dw->get(pConcentration,  d_rdlb->pConcentrationLabel,  pset);
-  new_dw->get(gmass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
+  old_dw->get(px,             d_lb->pXLabel,                pset);
+  old_dw->get(pmass,          d_lb->pMassLabel,             pset);
+  old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,  pset);
+  old_dw->get(psize,          d_lb->pSizeLabel,             pset);
+  old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel,pset);
+  new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
@@ -154,20 +163,14 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   int n8or27 = d_Mflag->d_8or27;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
     particleIndex idx = *iter;
-    interpolator->findCellAndWeights(px[idx],ni,S);
 
-		//cout << "Particle: " << idx << " ,Concentration: " << pConcentration[idx] << endl;
-		//cout << "Particle: " << idx << " ,Mass: " << pmass[idx] << endl;
-		cout << "Particle: " << idx << " ,Position: " << px[idx] << endl;
+    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
     IntVector node;
     for(int k = 0; k < n8or27; k++) {
       node = ni[k];
       if(patch->containsNode(node)) {
         gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
-        //cout << "Node: " << node << " ,Concentration: " << gconcentration[node] << endl;
-        //cout << "Node: " << node << " ,g.mass: " << gmass[node] << endl;
-        //cout << "Node: " << node << " ,S: " << S[k] << endl;
       }
     }
     pconcentration[idx] = pConcentration[idx]+1;
@@ -178,9 +181,9 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
     gconcentration[c]   /= gmass[c];
     gconcentrationNoBC[c] = gconcentration[c];
   }
-  for(NodeIterator iter=patch->getExtraNodeIterator();
-                   !iter.done();iter++){
-    IntVector c = *iter; 
-  }
+
+  MPMBoundCond bc;
+  bc.setBoundaryCondition(patch,dwi,"SD-Type",gconcentration, d_Mflag->d_interpolator_type);
+
   delete interpolator;
 }
