@@ -35,13 +35,16 @@ using namespace Uintah;
 ReactionDiffusionLabel::ReactionDiffusionLabel() {
 	// Particle Variables
   pConcentrationLabel = VarLabel::create( "p.concentration",
-                         ParticleVariable<double>::getTypeDescription() );
+                        ParticleVariable<double>::getTypeDescription() );
 
   pConcPreviousLabel = VarLabel::create( "p.concPrevious",
                         ParticleVariable<double>::getTypeDescription() );
 
   pdCdtLabel = VarLabel::create( "p.dCdt",
-			ParticleVariable<double>::getTypeDescription() );
+			                  ParticleVariable<double>::getTypeDescription() );
+
+  pConcentrationGradientLabel = VarLabel::create("p.concentrationGradient",
+	                      ParticleVariable<Vector>::getTypeDescription());
 
 	// Grid Variables
   gConcentrationLabel = VarLabel::create( "g.concentration",
@@ -55,6 +58,9 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
 
   gConcentrationNoBCLabel = VarLabel::create("g.concentrationnobc",
 			NCVariable<double>::getTypeDescription());
+
+  gdCdtLabel = VarLabel::create("g.dCdt",
+	    NCVariable<double>::getTypeDescription());
 }
 
 ReactionDiffusionLabel::~ReactionDiffusionLabel() {
@@ -62,10 +68,12 @@ ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(pConcentrationLabel);
   VarLabel::destroy(pConcPreviousLabel);
   VarLabel::destroy(pdCdtLabel);
+  VarLabel::destroy(pConcentrationGradientLabel);
 
 	// Grid Variables
   VarLabel::destroy(gConcentrationLabel);
   VarLabel::destroy(gConcentrationCCLabel);
   VarLabel::destroy(gConcentrationRateLabel);
   VarLabel::destroy(gConcentrationNoBCLabel);
+  VarLabel::destroy(gdCdtLabel);
 }

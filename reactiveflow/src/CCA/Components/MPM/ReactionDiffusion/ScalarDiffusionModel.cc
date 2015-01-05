@@ -114,3 +114,16 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch, const 
   }
 
 }
+
+
+void ScalarDiffusionModel::scheduleComputeFluxValue(Task* task, const MPMMaterial* matl, 
+		                                                const PatchSet* patch) const
+{
+
+}
+
+void ScalarDiffusionModel::computeFluxValue(const Patch* patch, const MPMMaterial* matl,
+                                            DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+
+}

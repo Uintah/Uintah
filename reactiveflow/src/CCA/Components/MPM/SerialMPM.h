@@ -571,6 +571,17 @@ protected:
       velGrad(2,2) += gvel.x()*d_S[k].z();
     }
   };
+
+	//--------------- Reaction Diffusion -----------------------
+  virtual void scheduleComputeFluxValue(SchedulerP&, 
+                                        const PatchSet*,
+                                        const MaterialSet*);
+
+  virtual void computeFluxValue(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;

@@ -39,6 +39,9 @@ JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, MPMFlags* M
   ScalarDiffusionModel(ps,Mflag) {
   d_Mflag = Mflag;
 
+	
+  ps->require("diffusivity",diffusivity);
+
   d_lb = scinew MPMLabel;
   d_rdlb = scinew ReactionDiffusionLabel();
 
@@ -105,7 +108,6 @@ void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gConcentrationRateLabel,  matlset);
 
-  task->computes(d_rdlb->pConcentrationLabel,      matlset);
 }
 
 void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
@@ -144,7 +146,6 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> gconcentrationRate;
 
-  ParticleVariable<double>  pconcentration;
 
   new_dw->allocateAndPut(gconcentration,      d_rdlb->gConcentrationLabel,
 	                       dwi,  patch);
@@ -153,8 +154,6 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   new_dw->allocateAndPut(gconcentrationRate,  d_rdlb->gConcentrationRateLabel,
 	                       dwi,  patch);
 
-  new_dw->allocateAndPut(pconcentration,      d_rdlb->pConcentrationLabel,
-	                       pset);
 
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
@@ -173,7 +172,6 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
         gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
       }
     }
-    pconcentration[idx] = pConcentration[idx]+1;
   }
   for(NodeIterator iter=patch->getExtraNodeIterator();
                    !iter.done();iter++){
@@ -186,4 +184,116 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   bc.setBoundaryCondition(patch,dwi,"SD-Type",gconcentration, d_Mflag->d_interpolator_type);
 
   delete interpolator;
+}
+
+
+void JGConcentrationDiffusion::scheduleComputeFluxValue(Task* task, const MPMMaterial* matl, 
+		                                                    const PatchSet* patch) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  Ghost::GhostType  gan = Ghost::AroundNodes;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gnone = Ghost::None;
+  task->requires(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
+  task->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
+  task->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
+  task->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
+  task->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
+  task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,           gan, 2*NGN);
+  task->computes(d_rdlb->gdCdtLabel,  matlset);
+
+	// For testing purposes	
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gan, NGP);
+  task->computes(d_rdlb->pConcentrationLabel,      matlset);
+}
+
+void JGConcentrationDiffusion::computeFluxValue(const Patch* patch, const MPMMaterial* matl,
+                                                DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  Ghost::GhostType  gnone = Ghost::None;
+
+
+  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
+  vector<IntVector> ni(interpolator->size());
+  vector<Vector> d_S(interpolator->size());
+
+  Vector dx = patch->dCell();
+  double oodx[3];
+  oodx[0] = 1.0/dx.x();
+  oodx[1] = 1.0/dx.y();
+  oodx[2] = 1.0/dx.z();
+
+
+  int dwi = matl->getDWIndex();
+  constParticleVariable<Point>  px;
+  constParticleVariable<double> pvol,pMass;
+  constParticleVariable<Matrix3> psize;
+  constParticleVariable<Matrix3> deformationGradient;
+  ParticleVariable<Vector>      pConcentrationGradient;
+  constNCVariable<double>       gConcentration,gMass;
+  NCVariable<double>            gdCdt;
+
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, d_lb->pXLabel);
+
+  old_dw->get(px,           d_lb->pXLabel,                         pset);
+  old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
+  old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
+  old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
+  old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+  new_dw->get(gConcentration, d_rdlb->gConcentrationLabel, dwi, patch, gac,2*NGN);
+  new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
+  new_dw->allocateAndPut(gdCdt, d_rdlb->gdCdtLabel,    dwi, patch);
+  new_dw->allocateTemporary(pConcentrationGradient, pset);
+  
+  gdCdt.initialize(0.);
+
+  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+
+    // Get the node indices that surround the cell
+    interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+
+    pConcentrationGradient[idx] = Vector(0.0,0.0,0.0);
+    for (int k = 0; k < d_Mflag->d_8or27; k++){
+      for (int j = 0; j<3; j++) {
+          pConcentrationGradient[idx][j] += gConcentration[ni[k]] * d_S[k][j] * oodx[j];
+      }
+	  }
+  } //End of Particle Loop
+
+  for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+  
+    // Get the node indices that surround the cell
+    interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+
+    Vector dC_dx = pConcentrationGradient[idx];
+    double Cdot_cond = 0.0;
+    IntVector node(0,0,0);
+
+    for (int k = 0; k < d_Mflag->d_8or27; k++){
+      node = ni[k];
+      if(patch->containsNode(node)){
+        Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+        Cdot_cond = Dot(div, dC_dx)*diffusivity;
+        gdCdt[node] -= Cdot_cond;
+      }
+    }
+  } // End of Particle Loop 
+
+	// For testing purposes
+  constParticleVariable<double> pConcentration;
+  old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,  pset);
+  ParticleVariable<double>  pconcentration;
+  new_dw->allocateAndPut(pconcentration,      d_rdlb->pConcentrationLabel, pset);
+  for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+    particleIndex idx = *iter;
+    pconcentration[idx] = pConcentration[idx]+1;
+	}
+
+	delete interpolator;
 }
