@@ -74,7 +74,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
 
       _Nenv = _sizes.size(); 
 
-      for ( int i = 0; i < _sizes.size(); i++ ){ 
+      for ( unsigned int i = 0; i < _sizes.size(); i++ ){ 
 
         double mass_dry = (_pi/6.0) * pow(_sizes[i],3) * _rhop_o;     // kg/particle
         _init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)  
@@ -96,7 +96,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     _dTdt_base_name = PropertyHelper::parse_for_role_to_label(db, "dTdt"); 
     _gas_temperature_name = "temperature"; 
     
-    for ( int i = 0; i < _sizes.size(); i++ ){ 
+    for (unsigned int i = 0; i < _sizes.size(); i++ ){ 
       std::string temp_name = PropertyHelper::append_qn_env("w", i); 
       _weightqn_name.push_back(temp_name); 
     }
