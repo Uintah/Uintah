@@ -38,6 +38,8 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 
+//#define USE_SPATIAL_SCHEDULING
+
 //______________________________________________________________________
 //
 using namespace Uintah;
@@ -296,12 +298,15 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
     VRFlux.initialize( 0.0 );
   }
 }
+
+#ifndef USE_SPATIAL_SCHEDULING
 //______________________________________________________________________
 // Method: Schedule the virtual radiometer.  Only use temporal scheduling 
 //  This is a HACK until spatial scheduling working.  Each patch is 
 //  performing all-to-all communication even if they don't have
 //  radiometers.
 //______________________________________________________________________
+//  Duct tape until spatial scheduling is working
 void
 Radiometer::sched_radiometer( const LevelP& level,
                               SchedulerP& sched,
@@ -356,7 +361,7 @@ Radiometer::sched_radiometer( const LevelP& level,
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
 
-#if 0
+#else
 //______________________________________________________________________
 // Method: Schedule the virtual radiometer.  This task has both 
 // temporal and spatial scheduling.
@@ -376,6 +381,7 @@ Radiometer::sched_radiometer( const LevelP& level,
     return;
   }
 
+  // find patches that contain radiometers
   vector<const Patch*> myPatches = getPatchSet( sched, level );
   bool hasRadiometers = false;
   
@@ -383,50 +389,50 @@ Radiometer::sched_radiometer( const LevelP& level,
   //  If this processor owns any patches with radiometers
   if( myPatches.size() !=  0 ){
     hasRadiometers = true;
-  }
 
-  std::string taskname = "Radiometer::radiometer";
-  Task *tsk;
-  
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
-  } else {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
-  }
-  
-  tsk->setType(Task::Spatial);
+    std::string taskname = "Radiometer::radiometer";
+    Task *tsk;
 
-  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+      tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    } else {
+      tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    }
 
-  //__________________________________
-  // Require an infinite number of ghost cells so you can access the entire domain.
-  //
-  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
-  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
-  //
-  // The taskgraph must be recompiled to detect a change in the conditional.
-  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
-  dbg << "    sched_radiometer: adding requires for all-to-all variables " << endl;
-  Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-  tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
-  
-  tsk->modifies( d_VRFluxLabel );
+    tsk->setType(Task::Spatial);
 
-  // only schedule on the patches that contain radiometers
-  // Spatial task scheduling
-  PatchSet* radiometerPatchSet;
-  radiometerPatchSet = scinew PatchSet();
-  radiometerPatchSet->addReference();
+    printSchedule( level,dbg,"Radiometer::sched_radiometer" );
 
-  radiometerPatchSet->addAll( myPatches );
-  
-  sched->addTask( tsk, radiometerPatchSet, d_matlSet );
-  
-  if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
-    delete radiometerPatchSet;
-  }
+    //__________________________________
+    // Require an infinite number of ghost cells so you can access the entire domain.
+    //
+    // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
+    // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
+    //
+    // The taskgraph must be recompiled to detect a change in the conditional.
+    // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
+    dbg << "    sched_radiometer: adding requires for all-to-all variables " << endl;
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+
+    tsk->modifies( d_VRFluxLabel );
+
+    // only schedule on the patches that contain radiometers
+    // Spatial task scheduling
+    PatchSet* radiometerPatchSet;
+    radiometerPatchSet = scinew PatchSet();
+    radiometerPatchSet->addReference();
+
+    radiometerPatchSet->addAll( myPatches );
+
+    sched->addTask( tsk, radiometerPatchSet, d_matlSet );
+
+    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
+      delete radiometerPatchSet;
+    }
+  }  // hasRadiometers
 }
 #endif
 //______________________________________________________________________
