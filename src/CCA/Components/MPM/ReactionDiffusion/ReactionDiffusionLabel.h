@@ -39,12 +39,14 @@ namespace Uintah {
     const VarLabel* pConcentrationLabel;
     const VarLabel* pConcPreviousLabel;
     const VarLabel* pdCdtLabel;
+    const VarLabel* pConcentrationGradientLabel; //for heat conduction
 
     // Grid Variables
     const VarLabel* gConcentrationLabel;
     const VarLabel* gConcentrationCCLabel;
     const VarLabel* gConcentrationRateLabel;
     const VarLabel* gConcentrationNoBCLabel;
+    const VarLabel* gdCdtLabel;
   };
   
 } // end namespace Uintah

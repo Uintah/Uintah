@@ -59,6 +59,11 @@ namespace Uintah {
     virtual void interpolateParticlesToGrid(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+    virtual void scheduleComputeFluxValue(Task* task, const MPMMaterial* matl, 
+		                                      const PatchSet* patch) const;
+
+    virtual void computeFluxValue(const Patch* patch, const MPMMaterial* matl,
+                                  DataWarehouse* old_dw, DataWarehouse* new_dw);
 
   private:
     MPMLabel* d_lb;
@@ -66,6 +71,7 @@ namespace Uintah {
     ReactionDiffusionLabel* d_rdlb;
     int NGP, NGN;
     bool do_explicit;
+		double diffusivity;
 
     JGConcentrationDiffusion(const JGConcentrationDiffusion&);
     JGConcentrationDiffusion& operator=(const JGConcentrationDiffusion&);
