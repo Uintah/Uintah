@@ -34,12 +34,18 @@
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -50,12 +56,18 @@
         <BCType id = "all" label = "Temperature"  var = "Dirichlet">
                               <value> 300.0  </value>
         </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
+        </BCType>
       </Face>                  
       <Face side = "y+">
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
       </Face>
@@ -66,12 +78,18 @@
         <BCType id = "all" label = "Temperature"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
       </Face>                  
       <Face side = "z+">
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
       </Face>
