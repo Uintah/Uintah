@@ -53,6 +53,7 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/Functions.h>
 #include <CCA/Components/Wasatch/Expressions/PoissonExpression.h>
 #include <CCA/Components/Wasatch/Expressions/Coordinate.h>
+#include <CCA/Components/Wasatch/Expressions/DORadSolver.h>
 #include <CCA/Components/Wasatch/TagNames.h>
 #include <CCA/Components/Wasatch/Expressions/RadiationSource.h>
 #include <CCA/Components/Wasatch/ReductionHelper.h>
@@ -177,7 +178,7 @@ namespace Wasatch{
 
       /** \brief returns the device Index */
       inline static int get_device_index(){
-        GPULoadBalancer& gpulb = GPULoadBalancer::self();
+        GPULoadBalancer& gpulb = self();
         gpulb.gpuDeviceID_ = (++gpulb.gpuDeviceID_) % gpulb.gpuDeviceCount_;
         return gpulb.gpuDeviceID_;
       }
@@ -576,7 +577,7 @@ namespace Wasatch{
       pexpr.schedule_set_pressure_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
 
-    if (tree->computes_field(TagNames::self().radiationsource)) {
+    if( tree->computes_field(TagNames::self().radiationsource) ){
       RadiationSource& radExpr = dynamic_cast<RadiationSource&>( factory.retrieve_expression(TagNames::self().radiationsource,patchID,true) );
       radExpr.schedule_ray_tracing( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
     }
@@ -590,6 +591,15 @@ namespace Wasatch{
         pexpr.declare_uintah_vars( *task, pss, mss, rkStage );
         pexpr.schedule_set_poisson_bcs( Uintah::getLevelP(pss), scheduler_, materials_, rkStage );
       }
+    }
+
+    BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
+      if( !tree->computes_field(tag) ) continue;
+      std::cout << "preliminary stuff for " << tag << " ... " << std::flush;
+      DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID,true) );
+      rad.schedule_solver( Uintah::getLevelP(pss), scheduler_, materials_, rkStage, tree->name()=="initialization" );
+      rad.declare_uintah_vars( *task, pss, mss, rkStage );
+      std::cout << "done" << std::endl;
     }
 
     // go through reduction variables that are computed in this Wasatch Task
@@ -698,6 +708,15 @@ namespace Wasatch{
 //              else if( coordFieldT == "YVOL" ) oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true );
 //              else if( coordFieldT == "ZVOL" ) oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true );
 //            }
+
+            BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
+              if( tree->computes_field( tag ) ){
+                DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID, true ) );
+                std::cout << "Binding vars for " << tag << " ..." << std::flush;
+                rad.bind_uintah_vars( newDW, patch, material, rkStage );
+                std::cout << "done\n";
+              }
+            }
 
             tree->bind_fields( *fml_ );
             tree->bind_operators( opdb );

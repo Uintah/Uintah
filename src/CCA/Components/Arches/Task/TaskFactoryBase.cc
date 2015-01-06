@@ -39,36 +39,35 @@ TaskFactoryBase::register_task(std::string task_name,
 TaskInterface* 
 TaskFactoryBase::retrieve_task( const std::string task_name ){ 
 
-  BuildMap::iterator i = _builders.find(task_name); 
+  TaskMap::iterator itsk = _tasks.find(task_name); 
 
-  if ( i != _builders.end() ){ 
+  if ( itsk != _tasks.end() ){ 
 
-    TaskInterface::TaskBuilder* b = i->second; 
-    TaskInterface* t = b->build(); 
+    return itsk->second;
 
-    _tasks.insert(std::make_pair(task_name,t)); 
-
-    TaskMap::iterator itsk = _tasks.find(task_name); 
-
-    //don't return t. must return the element in the map to 
-    //have the correct object intitiated
-    return itsk->second; 
-  
   } else { 
 
-    throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__); 
+    BuildMap::iterator ibuild = _builders.find(task_name); 
+
+    if ( ibuild != _builders.end() ){ 
+
+      TaskInterface::TaskBuilder* b = ibuild->second; 
+      TaskInterface* t = b->build(); 
+
+      _tasks.insert(std::make_pair(task_name,t)); 
+
+      TaskMap::iterator itsk_new = _tasks.find(task_name); 
+
+      //don't return t. must return the element in the map to 
+      //have the correct object intitiated
+      return itsk_new->second; 
+    
+    } else { 
+
+      throw InvalidValue("Error: Cannot find task named: "+task_name,__FILE__,__LINE__); 
+
+    }
 
   }
-}
 
-void 
-TaskFactoryBase::create_varlabels(){ 
-
-  for ( std::vector<std::string>::iterator i = _active_tasks.begin(); 
-        i != _active_tasks.end(); i++){ 
-
-    TaskInterface* tsk = retrieve_task(*i); 
-    tsk->create_local_labels(); 
-
-  }
 }

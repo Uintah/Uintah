@@ -939,7 +939,6 @@ ScalarEqn::advClipping( const ProcessorGroup* pc,
 			//		std::cout << " clip_low: "  << see_value_n << " clip_high: " << see_value << " given PC1: " << setprecision(15) << scalar[c] << endl;
 			//		std::cout << "" << endl;
  			//}
-			////////////////////////////////////////////////////BEN END     
 		}
 		//----BOUNDARY CONDITIONS
 		//    must update BCs for next substep

@@ -216,10 +216,10 @@ namespace Wasatch{
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
     
     // make logical decisions based on the specified boundary types
-    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
+    BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
     {
       const std::string& bndName = bndPair.first;
-      BndSpec& myBndSpec = bndPair.second;
+      const BndSpec& myBndSpec = bndPair.second;
       const bool isNormal = is_normal_to_boundary(direction_, myBndSpec.face);
       
       const Uintah::BCGeomBase::ParticleBndSpec pBndSpec = myBndSpec.particleBndSpec;

@@ -109,8 +109,8 @@ namespace Uintah{
   
   template <typename T>
   Constant<T>::Constant( std::string task_name, int matl_index,
-                               const std::string base_var_name, const int N ) :
-  _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+                         const std::string base_var_name, const int N ) :
+  TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
 
     VarTypeHelper<T> dhelper; 
     _D_type = dhelper.get_vartype(); 

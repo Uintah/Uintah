@@ -98,15 +98,21 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
     if       (*vit=="p.volume") {
       proc0cout << " and volume";
     } else if(*vit=="p.temperature") {
-      proc0cout << " and  temperature";
+      proc0cout << " and temperature";
     } else if(*vit=="p.color"){
-      proc0cout << " and  color";
+      proc0cout << " and color";
     } else if(*vit=="p.externalforce") {
-      proc0cout << " and  externalforce";
+      proc0cout << " and externalforce";
     } else if(*vit=="p.fiberdir") {
-      proc0cout << " and  fiberdirn";
+      proc0cout << " and fiberdirn";
+    } else if(*vit=="p.rvec1") {
+      proc0cout << " and rvec1";
+    } else if(*vit=="p.rvec2") {
+      proc0cout << " and rvec2";
+    } else if(*vit=="p.rvec3") {
+      proc0cout << " and rvec3";
     } else if(*vit=="p.velocity") {
-      proc0cout << " and  velocity";
+      proc0cout << " and velocity";
     } else if(*vit=="p.concentration") {
       proc0cout << " and  concentration";
     }
@@ -237,7 +243,11 @@ FileGeometryPiece::read_bbox(std::istream & source, Point & min,
 bool
 FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 {
-  double x1=0.,x2=0.,x3=0.;
+  double x1,x2,x3;
+
+  // CPTI and CPDI pass the size matrix columns containing rvec1, rvec2, rvec3
+  Matrix3 size(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
+ 
   //__________________________________
   //  TEXT FILE
   if(d_file_format=="text") {
@@ -248,8 +258,10 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
     if(is.eof()){
      return false; // out of points
     }
+    // Particle coordinates
     d_points.push_back(Point(x1,x2,x3));
     
+
     for(list<string>::const_iterator vit(d_vars.begin());vit!=d_vars.end();vit++) {
       if (*vit=="p.volume") {
         if(is >> v1) {
@@ -270,7 +282,28 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       } else if(*vit=="p.fiberdir") {
         if(is >> v1 >> v2 >> v3){
           d_fiberdirs.push_back(Vector(v1,v2,v3));
-        }
+	      }  
+      } else if(*vit=="p.rvec1") {
+        if(is >> v1 >> v2 >> v3){
+          d_rvec1.push_back(Vector(v1,v2,v3));
+          size(0,0)=v1;
+          size(1,0)=v2;
+          size(2,0)=v3;
+	      }  
+      } else if(*vit=="p.rvec2") {
+        if(is >> v1 >> v2 >> v3){
+          d_rvec2.push_back(Vector(v1,v2,v3));
+          size(0,1)=v1;
+          size(1,1)=v2;
+          size(2,1)=v3;
+	      }  
+      } else if(*vit=="p.rvec3") {
+        if(is >> v1 >> v2 >> v3){
+          d_rvec3.push_back(Vector(v1,v2,v3));
+          size(0,2)=v1;
+          size(1,2)=v2;
+          size(2,2)=v3;
+	      }  
       } else if(*vit=="p.velocity") {
         if(is >> v1 >> v2 >> v3){
           d_velocity.push_back(Vector(v1,v2,v3));
@@ -288,6 +321,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
     }
+
     //__________________________________
     //  BINARY FILE
   } else if(d_file_format=="lsb" || d_file_format=="msb") {
@@ -362,16 +396,52 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
             swapbytes(v[2]);
           }
           d_fiberdirs.push_back(Vector(v[0],v[1],v[2]));
-	 }
+	      }
+      } else if(*vit=="p.rvec1") {
+        if(is.read((char*)&v[0], sizeof(double)*3)) {
+          if(needflip) {
+            swapbytes(v[0]);
+            swapbytes(v[1]);
+            swapbytes(v[2]);
+          }
+          d_rvec1.push_back(Vector(v[0],v[1],v[2]));
+          size(0,0)=v[0];
+          size(1,0)=v[1];
+          size(2,0)=v[2];
+	      }
+      } else if(*vit=="p.rvec2") {
+        if(is.read((char*)&v[0], sizeof(double)*3)) {
+          if(needflip) {
+            swapbytes(v[0]);
+            swapbytes(v[1]);
+            swapbytes(v[2]);
+          }
+          d_rvec2.push_back(Vector(v[0],v[1],v[2]));
+          size(0,1)=v[0];
+          size(1,1)=v[1];
+          size(2,1)=v[2];
+	      }
+      } else if(*vit=="p.rvec3") {
+        if(is.read((char*)&v[0], sizeof(double)*3)) {
+          if(needflip) {
+            swapbytes(v[0]);
+            swapbytes(v[1]);
+            swapbytes(v[2]);
+          }
+          d_rvec3.push_back(Vector(v[0],v[1],v[2]));
+          size(0,2)=v[0];
+          size(1,2)=v[1];
+          size(2,2)=v[2];
+	      }
       } else if(*vit=="p.velocity") {
-	 if(is.read((char*)&v[0], sizeof(double)*3)) {
-	   if(needflip) {
-	     swapbytes(v[0]);
-	     swapbytes(v[1]);
-	     swapbytes(v[2]);
+	      if(is.read((char*)&v[0], sizeof(double)*3)) {
+	        if(needflip) {
+	          swapbytes(v[0]);
+	          swapbytes(v[1]);
+	          swapbytes(v[2]);
           }
           d_velocity.push_back(Vector(v[0],v[1],v[2]));
-	 }  
+	      }  
       }          
       if(!is){
         std::ostringstream warn;
@@ -382,7 +452,21 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       
     }
   }
-  
+   
+  // CPDI and CPTI check for negative volumes due to Rvector order
+  double vol = size.Determinant();
+  if (vol < 0) {
+    // switch r2 and r3 in size to get a positive volume 
+    Matrix3 tmpsize(size(0,0),size(0,2),size(0,1),size(1,0),size(1,2),size(1,1), size(2,0),size(2,2),size(2,1));
+    //vol = tmpsize.Determinant();
+    d_size.push_back(tmpsize);
+  }
+  else {
+    // CPTI and CPDI populate psize matrix with Rvectors in columns
+    // normalized by the grid spacing for interpolators in ParticleCreator.cc
+    d_size.push_back(size);
+  }
+ 
   xmin = Min(xmin, Point(x1,x2,x3));
   xmax = Max(xmax, Point(x1,x2,x3));
   return true;

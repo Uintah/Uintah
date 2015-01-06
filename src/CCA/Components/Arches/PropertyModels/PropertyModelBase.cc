@@ -80,5 +80,18 @@ PropertyModelBase::timeStepInit( const ProcessorGroup* pc,
                                  DataWarehouse* old_dw, 
                                  DataWarehouse* new_dw )
 {
-  new_dw->transferFrom(old_dw,_prop_label ,  patches, matls);
+//  new_dw->transferFrom(old_dw,_prop_label ,  patches, matls);  // This changes OldDW when used improperly
+
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<double> property_old; 
+    old_dw->get(property_old, _prop_label, matlIndex, patch, Ghost::None, 0 );
+
+    CCVariable<double> property_new; 
+    new_dw->allocateAndPut( property_new, _prop_label, matlIndex, patch );
+    property_new.copyData(property_old);
+  }
 }

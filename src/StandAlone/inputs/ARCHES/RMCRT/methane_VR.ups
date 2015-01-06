@@ -393,6 +393,7 @@
             <constant>0.0</constant>
           </initialization>
           <calculator type="hottel_sarofim">
+            <abskg label="abskg"/>
             <opl>3.0</opl>
           </calculator>
         </model>
@@ -465,7 +466,7 @@
   <DataAnalysis>
     <Module name="radiometer">
       <radiometerCalc_freq>    5   </radiometerCalc_freq>
-      <Radiometer>
+      <Radiometer type="double">
         <temperature label   ="radiation_temperature"/>
         <cellType    label   = "cellType"/>
         <abskg       label   = "abskg"/>

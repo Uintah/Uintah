@@ -91,15 +91,15 @@ namespace Uintah{
      The code that follows does option (3).
      ~Tony S. 
      */
-    double xmin=-DBL_MAX, xmax=DBL_MAX,
-    ymin=-DBL_MAX, ymax=DBL_MAX,
-    zmin=-DBL_MAX, zmax=DBL_MAX;
+    //double xmin=-DBL_MAX, xmax=DBL_MAX,
+    //ymin=-DBL_MAX, ymax=DBL_MAX,
+    //zmin=-DBL_MAX, zmax=DBL_MAX;
 
 
-    std::vector <GeometryPieceP > geomObjects;
+    //std::vector <GeometryPieceP > geomObjects;
     
-    bool hasGeom = false;
-    bool bounded=false;
+    //bool hasGeom = false;
+    //bool bounded=false;
 
     //for( ProblemSpecP exprParams = wasatch_->get_wasatch_spec()->findBlock("BasicExpression");
         //exprParams != 0;

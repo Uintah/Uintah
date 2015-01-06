@@ -29,7 +29,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
-
+#include <Core/Disclosure/TypeDescription.h>
 #include <sci_defs/uintah_defs.h>
 
 #include <iostream>
@@ -45,6 +45,8 @@
  *
  * @brief Methods, functions and variables that are common to both the 
  *        radiometer() and RMCRT()  
+ *        The variable sigmaT4Pi and abskg can be cast as either doubles or floats
+ #        This allows for a significant savings in memory and communication costs
  *
  */
 class MTRand;
@@ -55,7 +57,7 @@ namespace Uintah{
 
     public: 
 
-      RMCRTCommon();
+      RMCRTCommon( TypeDescription::Type FLT_DBL );
       ~RMCRTCommon(); 
 
        //__________________________________
@@ -69,12 +71,13 @@ namespace Uintah{
 
       //__________________________________
       // @brief Update the running total of the incident intensity */
+      template <class T>
       void  updateSumI ( Vector& ray_direction, // can change if scattering occurs
                          Vector& ray_location,
                          const IntVector& origin,
                          const Vector& Dx,
-                         constCCVariable<double>& sigmaT4Pi,
-                         constCCVariable<double>& abskg,
+                         constCCVariable< T >& sigmaT4Pi,
+                         constCCVariable< T >& abskg,
                          constCCVariable<int>& celltype,
                          unsigned long int& size,
                          double& sumI,
@@ -89,6 +92,7 @@ namespace Uintah{
                           const bool includeEC = true );
       //__________________________________
       //
+      template< class T>
       void sigmaT4( const ProcessorGroup* pc,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
@@ -146,6 +150,20 @@ namespace Uintah{
                               DataWarehouse*,
                               DataWarehouse*,
                               const VarLabel* variable);
+      //__________________________________
+      // If neede convert abskg double -> float
+      void sched_DoubleToFloat( const LevelP& level,
+                                SchedulerP& sched,
+                                Task::WhichDW myDW,
+                                const int radCalc_freq );
+
+      void DoubleToFloat( const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          Task::WhichDW which_dw,
+                          const int radCalc_freq );
 
 
       void doRecompileTaskgraph( const int radCalc_freq );
@@ -160,21 +178,29 @@ namespace Uintah{
       Ghost::GhostType d_gac;
 
       SimulationStateP d_sharedState;
+      TypeDescription::Type d_FLT_DBL;       // Is algorithm based on doubles or floats
       
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;
       static double d_sigma;
       static double d_sigmaScat;      
       static bool d_isSeedRandom;     
-      static bool d_allowReflect;                   // specify as false when doing DOM comparisons      
+      static bool d_allowReflect;                   // specify as false when doing DOM comparisons 
+           
       // These are initialized once in registerVarLabels().
       static int d_matl;      
-      static MaterialSet* d_matlSet;      
-      static const VarLabel* d_sigmaT4_label;
+      static MaterialSet* d_matlSet;
+      static std::string d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
+      
+      // Varlabels local to RMCRT
+      static const VarLabel* d_sigmaT4Label;
       static const VarLabel* d_abskgLabel;
-      static const VarLabel* d_temperatureLabel;
-      static const VarLabel* d_cellTypeLabel;
       static const VarLabel* d_divQLabel;
+      
+      // VarLabels passed to RMCRT by the component
+      static const VarLabel* d_compTempLabel;       //  temperature
+      static const VarLabel* d_compAbskgLabel;      //  Absorption Coefficitne
+      static const VarLabel* d_cellTypeLabel;       //  cell type marker
 
   }; // class RMCRTCommon
 

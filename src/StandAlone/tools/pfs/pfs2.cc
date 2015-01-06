@@ -266,6 +266,9 @@ int main(int argc, char *argv[])
                 else if (next_var_name=="p.color")         ncols += 1;
                 else if (next_var_name=="p.externalforce") ncols += 3;
                 else if (next_var_name=="p.fiberdir")      ncols += 3;
+                else if (next_var_name=="p.rvec1")         ncols += 3;
+                else if (next_var_name=="p.rvec2")         ncols += 3;
+                else if (next_var_name=="p.rvec3")         ncols += 3;
                 else 
                   throw ProblemSetupException("Unexpected field variable of '"+next_var_name+"'", __FILE__, __LINE__);
               }

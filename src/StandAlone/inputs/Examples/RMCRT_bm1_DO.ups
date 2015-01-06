@@ -132,9 +132,10 @@
   <DataArchiver>
   <filebase>RMCRT_bm1_DO.uda</filebase>
       <outputTimestepInterval>1</outputTimestepInterval>
-      <save label = "abskg" />
       <save label = "sigmaT4"/>
-      
+
+  <!--<save label = "abskgRMCRT"/>        floats -->
+      <save label = "abskg"/>             <!-- doubles -->
       <save label = "color"          levels="-1"/>
       <save label = "divQ"           levels="-1"/>
 <!--
@@ -152,7 +153,7 @@
   <benchmark>          1            </benchmark>
   <calc_frequency>     2            </calc_frequency>
   
-  <RMCRT>
+  <RMCRT type = "double">
     <randomSeed>        false       </randomSeed>
     <nDivQRays>          3          </nDivQRays>
     <Threshold>         0.05        </Threshold>

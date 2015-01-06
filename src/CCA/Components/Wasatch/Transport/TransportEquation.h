@@ -106,14 +106,14 @@ namespace Wasatch{
      * @param isConstDensity flag for constant density
      */
     TransportEquation( GraphCategories& gc,
-                       const std::string solnVarName,
+                       const std::string& solnVarName,
                        Uintah::ProblemSpecP params,
                        const Direction stagLoc,
                        const bool isConstDensity );
 
     virtual ~TransportEquation(){}
 
-    inline bool is_constant_density()   const { return isConstDensity_; }
+    inline bool is_constant_density() const { return isConstDensity_; }
 
   protected:
     const bool isConstDensity_;

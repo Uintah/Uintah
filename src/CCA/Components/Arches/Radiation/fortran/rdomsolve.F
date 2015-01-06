@@ -31,18 +31,20 @@ C
       double precision val, factor
       double precision areaew, arean, areatb
       double precision volume
+      double precision diffuse_reflection
 
       DATA SIG/5.67D-08/
 
       pi = dacos(-1.0D0)
-      PI1 = intrusion_abskg / PI
+      PI1 = 1.0d0 / PI
+
+c     wall is a perfectly diffuse reflector
+      diffuse_reflection = 1.0d0  / pi
 
       do 30 k=idxlo(3),idxhi(3)
       do 20 j=idxlo(2),idxhi(2)
       do 10 i=idxlo(1),idxhi(1)
 
-c     blackbody emmissive flux
-      esrcg(i,j,k) = SIG/pi*abskg(i,j,k)*tg(i,j,k)**4
 
       if (omu(l).gt.0) then
          
@@ -86,29 +88,35 @@ c     blackbody emmissive flux
          
       end if
 
-      volume = sew(ii) * sns(jj) * stb(kk)
-      su(ii,jj,kk) = esrcg(ii,jj,kk)*volume
-
-      areaew = sns(jj) * stb(kk)
-      arean  = sew(ii) * stb(kk)                 
-      areatb = sew(ii) * sns(jj)
       
       if (pcell(ii,jj,kk).ne.ffield) then
-c  call fixval assume abskg to be one but change it in props calculation
+c  if non-flow cell, then set LHS to 1*I and RHS to sigma*T^4/pi 
 
          val = abs(fraction(bands))*SIG*PI1*tg(ii,jj,kk)**4
          factor = 1.d0
          call fixradval(val,aw(ii,jj,kk),as(ii,jj,kk),ab(ii,jj,kk),
      $                  ap(ii,jj,kk),su(ii,jj,kk),factor)
       else
+
+c  if flow cell, populate corresponding elements in arrays 
+      volume = sew(ii) * sns(jj) * stb(kk)
+      su(ii,jj,kk)=esrct(ii,jj,kk) *volume
+
+      areaew = sns(jj) * stb(kk)
+      arean  = sew(ii) * stb(kk)                 
+      areatb = sew(ii) * sns(jj)
+
          if (plusX) then          
             if (pcell(ii-1,jj,kk).eq.ffield) then
                aw(ii,jj,kk) = abs(omu(l))*areaew
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l))*areaew) *
-     &         PI1 * (SIG * abs(fraction(bands))*
-     &              tg(ii-1,jj,kk)**4)
+     &         (PI1 * (SIG * abs(fraction(bands))*
+c     Empirical model for emissivity at boundaries
+     &           abskt(ii-1,jj,kk) *
+     &              tg(ii-1,jj,kk)**4) + (1.0d0-abskt(ii-1,jj,kk))
+     &    *IncidentFluxE(ii,jj,kk)*diffuse_reflection)
             end if
          else
             if (pcell(ii+1,jj,kk).eq.ffield) then
@@ -116,10 +124,11 @@ c  call fixval assume abskg to be one but change it in props calculation
             else
                aw(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
-     &         PI1 * (SIG * abs(fraction(bands))*
+     &         (PI1 * (SIG * abs(fraction(bands))*
 c     Empirical model for emissivity at boundaries
-     &              1.0d0*
-     &              tg(ii+1,jj,kk)**4)
+     &           abskt(ii+1,jj,kk) *
+     &              tg(ii+1,jj,kk)**4) + (1.0d0-abskt(ii+1,jj,kk))
+     &    *IncidentFluxW(ii,jj,kk)*diffuse_reflection)
             end if
          endif
          
@@ -130,10 +139,11 @@ c     Empirical model for emissivity at boundaries
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean) *
-     &         PI1 * (SIG * abs(fraction(bands)) *
+     &         (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &              1.0d0*
-     &              tg(ii,jj-1,kk)**4)
+     &           abskt(ii,jj-1,kk) *
+     &              tg(ii,jj-1,kk)**4) + (1.0d0-abskt(ii,jj-1,kk))
+     &    *IncidentFluxS(ii,jj,kk)*diffuse_reflection)
             end if
          else
             if (pcell(ii,jj+1,kk).eq.ffield) then
@@ -142,10 +152,11 @@ c     Empirical model for emissivity at boundaries
                as(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oeta(l))*arean) *
-     &         PI1 * (SIG * abs(fraction(bands)) *
+     &        (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &              1.0d0*
-     &              tg(ii,jj+1,kk)**4)
+     &           abskt(ii,jj+1,kk) *
+     &              tg(ii,jj+1,kk)**4) + (1.0d0-abskt(ii,jj+1,kk))
+     &    *IncidentFluxN(ii,jj,kk)*diffuse_reflection)
             end if
          endif
 
@@ -156,10 +167,11 @@ c     Empirical model for emissivity at boundaries
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb) *
-     &         PI1 * (SIG * abs(fraction(bands)) *
+     &         (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &              1.0d0*
-     &              tg(ii,jj,kk-1)**4)
+     &           abskt(ii,jj,kk-1) *
+     &              tg(ii,jj,kk-1)**4) + (1.0d0-abskt(ii,jj,kk-1))
+     &    *IncidentFluxB(ii,jj,kk)*diffuse_reflection)
             end if
          else
             if (pcell(ii,jj,kk+1).eq.ffield) then
@@ -168,15 +180,15 @@ c     Empirical model for emissivity at boundaries
                ab(ii,jj,kk) = 0.0d0
                su(ii,jj,kk) = su(ii,jj,kk) + 
      &              (abs(oxi(l))*areatb) * 
+     &         (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &              1.0d0*
-     &         PI1 * (SIG * abs(fraction(bands)) *
-     &              tg(ii,jj,kk+1)**4)
+     &           abskt(ii,jj,kk+1) *
+     &              tg(ii,jj,kk+1)**4) + (1.0d0-abskt(ii,jj,kk+1))
+     &    *IncidentFluxT(ii,jj,kk)*diffuse_reflection)
             end if
          endif
-         
          ap(ii,jj,kk) =  abs(omu(l))*areaew + abs(oeta(l))*arean + 
-     &        abs(oxi(l))*areatb + abskg(ii,jj,kk) * volume
+     &        abs(oxi(l))*areatb + abskt(ii,jj,kk) * volume
          
       endif
 10    continue

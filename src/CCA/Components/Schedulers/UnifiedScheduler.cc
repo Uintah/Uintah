@@ -84,9 +84,10 @@ static DebugStream affinity("CPUAffinity", false);
 
 //______________________________________________________________________
 //
-UnifiedScheduler::UnifiedScheduler( const ProcessorGroup* myworld,
-                                    const Output*         oport,
-                                    UnifiedScheduler*     parentScheduler ) :
+
+UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld,
+                                    const Output           * oport,
+                                          UnifiedScheduler * parentScheduler ) :
   MPIScheduler(myworld, oport, parentScheduler),
   d_nextsignal("next condition"),
   d_nextmutex("next mutex"),
@@ -136,6 +137,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup* myworld,
 
 //______________________________________________________________________
 //
+
 UnifiedScheduler::~UnifiedScheduler()
 {
   if (Uintah::Parallel::usingMPI()) {
@@ -164,10 +166,12 @@ UnifiedScheduler::~UnifiedScheduler()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
-                                    SimulationStateP& state)
+
+void
+UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec,
+                                      SimulationStateP & state )
 {
-  //default taskReadyQueueAlg
+  // Default taskReadyQueueAlg
   taskQueueAlg_ = MostMessages;
   string taskQueueAlg = "MostMessages";
 
@@ -222,7 +226,7 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   numThreads_ = Uintah::Parallel::getNumThreads();
   if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingDevice())) {
     if (d_myworld->myrank() == 0) {
-      cerr << "Error: no thread number specified" << std::endl;
+      cerr << "Error: no thread number specified for Unified Scheduler" << std::endl;
       throw ProblemSetupException(
           "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__,
@@ -249,9 +253,9 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   // Create the UnifiedWorkers here
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
-    UnifiedSchedulerWorker * worker = scinew UnifiedSchedulerWorker(this, i);
+    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(this, i);
     t_worker[i] = worker;
-    sprintf(name, "Task Compute Thread ID: %d", i);
+    sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
     Thread* t = scinew Thread(worker, name);
     t_thread[i] = t;
   }
@@ -265,32 +269,36 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
 
 //______________________________________________________________________
 //
-SchedulerP UnifiedScheduler::createSubScheduler()
+
+SchedulerP
+UnifiedScheduler::createSubScheduler()
 {
   UnifiedScheduler* subsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   subsched->attachPort("load balancer", lbp);
   subsched->d_sharedState = d_sharedState;
 
+  subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
+
   // create subscheduler task execution threads
-  subsched->numThreads_ = Uintah::Parallel::getNumThreads();
+  if (subsched->numThreads_ > 0) {
+    std::cout << std::endl
+              << "\tUsing EXPERIMENTAL Multi-threaded sub-scheduler" << std::endl
+              << "\tCreating " << subsched->numThreads_
+              << " subscheduler threads for task execution."
+              << std::endl << std::endl;
 
-  std::cout << std::endl
-            << "\tUsing EXPERIMENTAL Multi-threaded sub-scheduler" << std::endl
-            << "\tCreating " << subsched->numThreads_
-            << " subscheduler threads for task execution."
-            << std::endl << std::endl;
+    char name[1024];
 
-  char name[1024];
-
-  // Create UnifiedWorker threads for the subscheduler
-  ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0); // 0 is main/parent thread group
-  for (int i = 0; i < subsched->numThreads_; i++) {
-    UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i + subsched->numThreads_);
-    subsched->t_worker[i] = worker;
-    sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-    Thread* t = scinew Thread(worker, name, subGroup);
-    subsched->t_thread[i] = t;
+    // Create UnifiedWorker threads for the subscheduler
+    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
+    for (int i = 0; i < subsched->numThreads_; i++) {
+      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i + subsched->numThreads_);
+      subsched->t_worker[i] = worker;
+      sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
+      Thread* t = scinew Thread(worker, name, subGroup);
+      subsched->t_thread[i] = t;
+    }
   }
 
   // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different groups
@@ -303,7 +311,9 @@ SchedulerP UnifiedScheduler::createSubScheduler()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::verifyChecksum()
+
+void
+UnifiedScheduler::verifyChecksum()
 {
 #if SCI_ASSERTION_LEVEL >= 3
   if (Uintah::Parallel::usingMPI()) {
@@ -362,10 +372,12 @@ void UnifiedScheduler::verifyChecksum()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::initiateTask(DetailedTask * task,
-                                    bool only_old_recvs,
-                                    int abort_point,
-                                    int iteration)
+
+void
+UnifiedScheduler::initiateTask( DetailedTask * task,
+                                bool           only_old_recvs,
+                                int            abort_point,
+                                int            iteration )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
   TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER);
@@ -378,10 +390,12 @@ void UnifiedScheduler::initiateTask(DetailedTask * task,
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::runTask(DetailedTask * task,
-                               int iteration,
-                               int t_id /*=0*/,
-                               Task::CallBackEvent event)
+
+void
+UnifiedScheduler::runTask( DetailedTask        * task,
+                           int                   iteration,
+                           int                   thread_id /* = 0 */,
+                           Task::CallBackEvent   event )
 {
   TAU_PROFILE("UnifiedScheduler::runTask()", " ", TAU_USER);
 
@@ -431,35 +445,37 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == Task::CPU || event == Task::postGPU) {
     if (Uintah::Parallel::usingMPI()) {
-      postMPISends(task, iteration, t_id);
+      postMPISends(task, iteration, thread_id);
     }
     task->done(dws);  // should this be timed with taskstart? - BJW
     double teststart = Time::currentSeconds();
 
     if (Uintah::Parallel::usingMPI()) {
-      // this is per thread, no lock needed
-      sends_[t_id].testsome(d_myworld);
+      // This is per thread, no lock needed.
+      sends_[thread_id].testsome(d_myworld);
     }
 
     mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
 
 
     // add my timings to the parent scheduler
-    if (parentScheduler) {
-      parentScheduler->mpi_info_.totaltask += mpi_info_.totaltask;
-      parentScheduler->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
-      parentScheduler->mpi_info_.totalrecv += mpi_info_.totalrecv;
-      parentScheduler->mpi_info_.totalsend += mpi_info_.totalsend;
-      parentScheduler->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
-      parentScheduler->mpi_info_.totalreduce += mpi_info_.totalreduce;
+    if( parentScheduler_ ) {
+      parentScheduler_->mpi_info_.totaltask += mpi_info_.totaltask;
+      parentScheduler_->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
+      parentScheduler_->mpi_info_.totalrecv += mpi_info_.totalrecv;
+      parentScheduler_->mpi_info_.totalsend += mpi_info_.totalsend;
+      parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
+      parentScheduler_->mpi_info_.totalreduce += mpi_info_.totalreduce;
     }
   }
 }  // end runTask()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::execute(int tgnum /*=0*/,
-                               int iteration /*=0*/)
+
+void
+UnifiedScheduler::execute( int tgnum     /* = 0 */,
+                           int iteration /* = 0 */ )
 {
   if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
@@ -511,14 +527,22 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     d_times.clear();
   }
 
-  // Do the work of the SingleProcessorScheduler and bail if not using MPI or GPU
-  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
-    for (int i = 0; i < ntasks; i++) {
-      DetailedTask* dtask = dts->getTask(i);
-      runTask(dtask, iteration, -1, Task::CPU);
+  // Do the work of the SingleProcessorScheduler and bail
+  //   if not using MPI or GPU, and also not using multiple threads
+  if (!Uintah::Parallel::usingMPI() && (numThreads_ < 0) && !Uintah::Parallel::usingDevice()) {
+    if (numThreads_ < 0) {
+      for (int i = 0; i < ntasks; i++) {
+        DetailedTask* dtask = dts->getTask(i);
+        runTask(dtask, iteration, -1, Task::CPU);
+      }
+      finalizeTimestep();
+      return;
     }
-    finalizeTimestep();
-    return;
+    else {
+      throw ProblemSetupException(
+          "MPI runtime not initialized. You must  use '-mpi' command line option in conjunction with '-nthreads'",
+          __FILE__, __LINE__);
+    }
   }
 
   int me = d_myworld->myrank();
@@ -597,8 +621,8 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
   wait_till_all_done();
 
-  // if any thread is busy, conditional wait here
-  if (!d_isInitTimestep && !d_isRestartInitTimestep) {
+  // If any thread is busy, conditional wait here:
+  if( !d_isInitTimestep && !d_isRestartInitTimestep ) {
     d_nextmutex.lock();
     while (getAviableThreadNum() < numThreads_) {
       d_nextsignal.wait(d_nextmutex);
@@ -672,7 +696,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 //#endif
 
   log.finishTimestep();
-  if (timeout.active() && !parentScheduler) {  // only do on toplevel scheduler
+  if( timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
     // add number of cells, patches, and particles
     int numCells = 0, numParticles = 0;
     OnDemandDataWarehouseP dw = dws[dws.size() - 1];
@@ -794,6 +818,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   if (execout.active()) {
     static int count = 0;
 
+    // only output the exec times every 10 timesteps
     if (++count % 10 == 0) {
       ofstream fout;
       char filename[100];
@@ -801,7 +826,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
       fout.open(filename);
 
       for (map<string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
-        fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:" << iter->first << std::endl;
+        fout << fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
       // exectimes.clear();
@@ -841,12 +866,14 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   if (dbg.active()) {
     dbg << me << " UnifiedScheduler finished\n";
   }
-}
+
+} // end execute()
 
 //______________________________________________________________________
 //
+
 void
-UnifiedScheduler::runTasks( int t_id )
+UnifiedScheduler::runTasks( int thread_id )
 {
   while( numTasksDone < ntasks ) {
 
@@ -1044,9 +1071,9 @@ UnifiedScheduler::runTasks( int t_id )
       if (numTasksDone == ntasks) {
         break;
       }
-    }
-    schedulerLock.unlock();
+    } // end while (!havework)
 
+    schedulerLock.unlock();
 
     // ----------------------------------------------------------------------------------
     // Part 2
@@ -1064,7 +1091,8 @@ UnifiedScheduler::runTasks( int t_id )
       }
       initTask->markInitiated();
       initTask->checkExternalDepCount();
-    } else if (readyTask != NULL) {
+    }
+    else if (readyTask != NULL) {
       if (taskdbg.active()) {
         cerrLock.lock();
         taskdbg << d_myworld->myrank() << " Task external ready " << *readyTask << std::endl;
@@ -1083,25 +1111,29 @@ UnifiedScheduler::runTasks( int t_id )
           dws[i]->getGPUDW(readyTask->getDeviceNum())->syncto_device();
         }
         dts->addInitiallyReadyDeviceTask(readyTask);
-      } else if (gpuRunReady) {
-        runTask(readyTask, currentIteration, t_id, Task::GPU);
+      }
+      else if (gpuRunReady) {
+        runTask(readyTask, currentIteration, thread_id, Task::GPU);
         postD2HCopies(readyTask);
         dts->addCompletionPendingDeviceTask(readyTask);
-      } else if (gpuPending) {
+      }
+      else if (gpuPending) {
         // run post GPU part of task 
-        runTask(readyTask, currentIteration, t_id, Task::postGPU);
+        runTask(readyTask, currentIteration, thread_id, Task::postGPU);
         // recycle this task's D2H copies streams and events
         reclaimCudaStreams(readyTask);
       }
 #endif
       else {
-        runTask(readyTask, currentIteration, t_id, Task::CPU);
+        runTask(readyTask, currentIteration, thread_id, Task::CPU);
         printTaskLevels(d_myworld, taskLevel_dbg, readyTask);
       }
-    } else if (pendingMPIMsgs > 0) {
+    }
+    else if (pendingMPIMsgs > 0) {
       processMPIRecvs(TEST);
-    } else {
-      //This can only happen when all tasks have finished
+    }
+    else {
+      // This can only happen when all tasks have finished.
       ASSERT(numTasksDone == ntasks);
     }
   }  //end while tasks
@@ -1109,20 +1141,23 @@ UnifiedScheduler::runTasks( int t_id )
 
 //______________________________________________________________________
 //
+
 struct CompareDep {
-    bool operator()(DependencyBatch* a,
-                    DependencyBatch* b)
-    {
-      return a->messageTag < b->messageTag;
-    }
+
+  bool operator()( DependencyBatch* a, DependencyBatch* b )
+  {
+    return a->messageTag < b->messageTag;
+  }
 };
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
-                                    bool only_old_recvs,
-                                    int abort_point,
-                                    int iteration)
+
+void
+UnifiedScheduler::postMPIRecvs( DetailedTask * task,
+                                bool           only_old_recvs,
+                                int            abort_point,
+                                int            iteration )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
   double recvstart = Time::currentSeconds();
@@ -1225,7 +1260,7 @@ void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
         // the load balancer is used to determine where data was in the old dw on the prev timestep
         // pass it in if the particle data is on the old dw
         LoadBalancer* lb = 0;
-        if (!reloc_new_posLabel_ && parentScheduler) {
+        if( !reloc_new_posLabel_ && parentScheduler_ ) {
           posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
         }
         else {
@@ -1240,8 +1275,8 @@ void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
         }
 
         MPIScheduler* top = this;
-        while (top->parentScheduler) {
-          top = top->parentScheduler;
+        while( top->parentScheduler_ ) {
+          top = top->parentScheduler_;
         }
 
         dw->recvMPI(batch, mpibuff, posDW, req, lb);
@@ -1261,9 +1296,9 @@ void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
         MPI_Datatype datatype;
 
 #ifdef USE_PACKING
-        mpibuff.get_type(buf, count, datatype, d_myworld->getComm());
+        mpibuff.get_type( buf, count, datatype, d_myworld->getComm() );
 #else
-        mpibuff.get_type(buf, count, datatype);
+        mpibuff.get_type( buf, count, datatype );
 #endif
 
         //only receive message if size is greater than zero
@@ -1301,8 +1336,8 @@ void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
          }*/
       }
       else {
-        // Nothing really need to be received, but let everyone else know that it has what is needed (nothing).
-        batch->received(d_myworld);
+        // Nothing really needs to be received, but let everyone else know that it has what is needed (nothing).
+        batch->received( d_myworld );
 #ifdef USE_PACKING
         // otherwise, these will be deleted after it receives and unpacks the data.
         delete p_mpibuff;
@@ -1320,7 +1355,9 @@ void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
 
 //______________________________________________________________________
 //
-int UnifiedScheduler::pendingMPIRecvs()
+
+int
+UnifiedScheduler::pendingMPIRecvs()
 {
   int num = 0;
   recvLock.readLock();
@@ -1331,7 +1368,9 @@ int UnifiedScheduler::pendingMPIRecvs()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::processMPIRecvs(int how_much)
+
+void
+UnifiedScheduler::processMPIRecvs( int how_much )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs");
   TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
@@ -1340,7 +1379,9 @@ void UnifiedScheduler::processMPIRecvs(int how_much)
   // shouldn't use this function.
   // ASSERT(outstandingExtRecvs.empty());
   //if (recvs_.numRequests() == 0) return;
+
   double start = Time::currentSeconds();
+
   recvLock.writeLock();
   {
     switch (how_much) {
@@ -1366,6 +1407,7 @@ void UnifiedScheduler::processMPIRecvs(int how_much)
         break;
     } // end switch
   }
+
   recvLock.writeUnlock();
 
   mpi_info_.totalwaitmpi += Time::currentSeconds() - start;
@@ -1375,9 +1417,9 @@ void UnifiedScheduler::processMPIRecvs(int how_much)
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postMPISends(DetailedTask * task,
-                                    int iteration,
-                                    int t_id)
+void UnifiedScheduler::postMPISends( DetailedTask * task,
+                                     int            iteration,
+                                     int            thread_id )
 {
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postMPISends");
   double sendstart = Time::currentSeconds();
@@ -1437,9 +1479,9 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
 
-      if (!reloc_new_posLabel_ && parentScheduler) {
+      if (!reloc_new_posLabel_ && parentScheduler_) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        posLabel = parentScheduler->reloc_new_posLabel_;
+        posLabel = parentScheduler_->reloc_new_posLabel_;
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
@@ -1453,8 +1495,8 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
         posLabel = reloc_new_posLabel_;
       }
       MPIScheduler* top = this;
-      while (top->parentScheduler) {
-        top = top->parentScheduler;
+      while( top->parentScheduler_ ) {
+        top = top->parentScheduler_;
       }
 
       dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
@@ -1487,8 +1529,7 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
 
       if (mpidbg.active()) {
         coutLock.lock();
-        mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count
-               << "\n";
+        mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n";
         coutLock.unlock();
       }
 
@@ -1504,8 +1545,18 @@ void UnifiedScheduler::postMPISends(DetailedTask * task,
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
       int bytes = count;
 
-      // this is written per thread, no lock needed
-      sends_[t_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+
+      if( Uintah::Parallel::getMPIRank() == 0 ) {
+        cerrLock.lock();
+        cout << "thread: " << Thread::self()->myid() << " should be " << thread_id << "\n";
+        if( Thread::self()->myid() != thread_id ) {
+          SCI_THROW( InternalError("thread id not equal to Thread's id.", __FILE__, __LINE__) );
+        }
+        cerrLock.unlock();
+      }
+
+      // This is written per thread, no lock needed.
+      sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
 
       mpi_info_.totalsendmpi += Time::currentSeconds() - start;
 
@@ -1540,7 +1591,8 @@ int UnifiedScheduler::getAviableThreadNum()
 
 #ifdef HAVE_CUDA
 
-void UnifiedScheduler::gpuInitialize(bool reset)
+void
+UnifiedScheduler::gpuInitialize( bool reset )
 {
   cudaError_t retVal;
 
@@ -1562,7 +1614,9 @@ void UnifiedScheduler::gpuInitialize(bool reset)
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
+
+void
+UnifiedScheduler::postH2DCopies( DetailedTask * dtask ) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
   TAU_PROFILE("UnifiedScheduler::postH2DCopies()", " ", TAU_USER);
@@ -1887,8 +1941,10 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
+void
+UnifiedScheduler::preallocateDeviceMemory( DetailedTask * dtask )
+{
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
   TAU_PROFILE("UnifiedScheduler::preallocateDeviceMemory()", " ", TAU_USER);
 
@@ -2054,8 +2110,10 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
+void
+UnifiedScheduler::postD2HCopies( DetailedTask * dtask )
+{
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
   TAU_PROFILE("UnifiedScheduler::postD2HCopies()", " ", TAU_USER);
 
@@ -2299,7 +2357,9 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::createCudaStreams(int device, int numStreams /*=1*/)
+
+void
+UnifiedScheduler::createCudaStreams( int device, int numStreams /* = 1 */ )
 {
   cudaError_t retVal;
 
@@ -2326,7 +2386,9 @@ void UnifiedScheduler::createCudaStreams(int device, int numStreams /*=1*/)
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::freeCudaStreams()
+
+void
+UnifiedScheduler::freeCudaStreams()
 {
   cudaError_t retVal;
 
@@ -2369,7 +2431,9 @@ void UnifiedScheduler::freeCudaStreams()
 
 //______________________________________________________________________
 //
-cudaStream_t* UnifiedScheduler::getCudaStream(int device)
+
+cudaStream_t *
+UnifiedScheduler::getCudaStream( int device )
 {
   cudaError_t retVal;
   cudaStream_t* stream;
@@ -2411,7 +2475,9 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
 
 //______________________________________________________________________
 //
-cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
+
+cudaError_t
+UnifiedScheduler::unregisterPageLockedHostMem()
 {
   cudaError_t retVal;
   std::set<void*>::iterator iter;
@@ -2427,7 +2493,9 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
+
+void
+UnifiedScheduler::reclaimCudaStreams( DetailedTask * dtask )
 {
   cudaStream_t* stream;
   int deviceNum;
@@ -2456,46 +2524,47 @@ void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
 //------------------------------------------
-UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
-                                               int id) :
-    d_id(id),
-    d_scheduler(scheduler),                           
-    d_idle(true),                                     
-    d_runmutex("run mutex"),                          
-    d_runsignal("run condition"),                     
-    d_quit(false),                                    
-    d_waittime(0.0),                                  
-    d_waitstart(0.0),                                 
-    d_rank(scheduler->getProcessorGroup()->myrank())  
+UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler,
+                                                int                thread_id ) :
+    d_thread_id( thread_id ),
+    d_scheduler( scheduler ),                           
+    d_idle(      true ),                                     
+    d_runmutex(  "run mutex" ),
+    d_runsignal( "run condition" ),
+    d_quit(      false ),
+    d_waittime(  0.0 ),
+    d_waitstart( 0.0 ),
+    d_rank(      scheduler->getProcessorGroup()->myrank() )
 {
   d_runmutex.lock();
 }
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerWorker::run()
-{
-  Thread::self()->set_myid(d_id + 1);
 
-  // TODO we need to turn this back on when we have a way of coordinating access to cores shared by threads from different groups
-  if (affinity.active()) {
-    if (threaddbg.active()) {
-      cerrLock.lock();
-      threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id << endl;
-      cerrLock.unlock();
-    }
-    Thread::self()->set_affinity(d_id);
+void
+UnifiedSchedulerWorker::run()
+{
+  if (threaddbg.active()) {
+    cerrLock.lock();
+    threaddbg << "Binding thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
+    cerrLock.unlock();
   }
 
-  while (true) {
-    //wait for main thread signal
-    d_runsignal.wait(d_runmutex);
+  Thread::self()->set_myid(d_thread_id + 1);
+  if (affinity.active()) {
+    Thread::self()->set_affinity(d_thread_id);
+  }
+
+  while( true ) {
+    
+    d_runsignal.wait(d_runmutex); // Wait for main thread signal.
     d_runmutex.unlock();
     d_waittime += Time::currentSeconds() - d_waitstart;
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_id << "quitting   " << "\n";
+        taskdbg << "Worker " << d_rank << "-" << d_thread_id << "quitting   " << "\n";
         cerrLock.unlock();
       }
       return;
@@ -2503,19 +2572,19 @@ void UnifiedSchedulerWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_id << ": executing tasks \n";
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": executing tasks \n";
       cerrLock.unlock();
     }
 
-    d_scheduler->runTasks(d_id + 1);
+    d_scheduler->runTasks( d_thread_id + 1 );
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_id << ": finished executing tasks   \n";
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing tasks   \n";
       cerrLock.unlock();
     }
 
-    //signal main thread for next group of tasks
+    // Signal main thread for next group of tasks.
     d_scheduler->d_nextmutex.lock();
     d_runmutex.lock();
     d_waitstart = Time::currentSeconds();
@@ -2527,14 +2596,18 @@ void UnifiedSchedulerWorker::run()
 
 //______________________________________________________________________
 //
-double UnifiedSchedulerWorker::getWaittime()
+
+double
+UnifiedSchedulerWorker::getWaittime()
 {
   return d_waittime;
 }
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerWorker::resetWaittime(double start)
+
+void
+UnifiedSchedulerWorker::resetWaittime( double start )
 {
   d_waitstart = start;
   d_waittime = 0.0;

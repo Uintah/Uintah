@@ -105,6 +105,7 @@ private:
   bool _using_prop_calculator; 
 
   std::string _T_label_name; 
+  std::string _abskt_label_name; 
   std::string _abskg_label_name; 
 
   DORadiationModel* _DO_model; 
@@ -119,7 +120,10 @@ private:
   std::vector<const VarLabel*> _w_varlabels; 
   std::vector<const VarLabel*> _T_varlabels; 
 
+  const VarLabel* _scatktLabel;
+  const VarLabel* _asymmetryLabel;
   const VarLabel* _T_label; 
+  const VarLabel* _abskt_label;
   const VarLabel* _abskg_label;
   const VarLabel* _radiationSRCLabel;
   const VarLabel* _radiationFluxELabel;
@@ -130,6 +134,7 @@ private:
   const VarLabel* _radiationFluxBLabel;
   const VarLabel* _radiationVolqLabel;
   const PatchSet* _perproc_patches;
+  std::vector< const VarLabel*> _IntensityLabels;
 
 }; // end DORadiation
 } // end namespace Uintah

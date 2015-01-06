@@ -129,17 +129,8 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
-    Vector Dx = patch->dCell(); 
-    double vol = Dx.x();
-#ifdef YDIM
-    vol *= Dx.y();
-#endif
-#ifdef ZDIM
-    vol *= Dx.z();
-#endif
 
     CCVariable<double> rate; 
-
     Ghost::GhostType  gType;
     int nGhosts;
 

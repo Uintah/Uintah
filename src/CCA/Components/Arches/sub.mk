@@ -107,7 +107,6 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) $(SPATIALOPS_INCLUDE)
 
 #### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
-
 SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/CoalModels          \
            $(SRCDIR)/CoalModels/fortran  \
@@ -123,8 +122,8 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/Transport           \
            $(SRCDIR)/TransportEqns       \
            $(SRCDIR)/Utility             \
+					 $(SRCDIR)/PropertyModelsV2 \
            $(SRCDIR)/WallHTModels        
-
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs

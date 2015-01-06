@@ -232,6 +232,7 @@ void
 RadHypreSolver::setMatrix(const ProcessorGroup* pc,
                           const Patch* patch,
                           ArchesVariables* vars,
+                          ArchesConstVariables* constvars, 
                           bool plusX, bool plusY, bool plusZ,
                           CCVariable<double>& SU,
                           CCVariable<double>& AB,
@@ -330,7 +331,7 @@ RadHypreSolver::setMatrix(const ProcessorGroup* pc,
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
-        d_value[i] = vars->cenint[IntVector(colX, colY, colZ)];
+        d_value[i] = constvars->cenint[IntVector(colX, colY, colZ)];
         //cerr << "x0[" << i << "] =" << d_value[i] << endl;
         i++;;
       }
@@ -406,7 +407,6 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
   d_residual = d_stored_residual;
   double zero_residual = 0.0;
 
-  
   n_pre = 1;
   n_post = 1;
   skip = 1;
@@ -414,7 +414,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
 
   double start_time = SCIRun::Time::currentSeconds();
 
-  if (d_kspType == "1") {
+  if( d_kspType == "1" ) {
     /*Solve the system using SMG*/
     HYPRE_StructSMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructSMGSetMemoryUse(solver, 0);
@@ -432,7 +432,7 @@ RadHypreSolver::radLinearSolve( const int direcn, const bool print_all_info )
     HYPRE_StructSMGDestroy(solver);
     //    cerr << "SMG Solve time = " << Time::currentSeconds()-start_time << endl;
   }
-  else if (d_kspType == "2") {
+  else if( d_kspType == "2" ) {
     /*Solve the system using PFMG*/
     HYPRE_StructPFMGCreate(MPI_COMM_WORLD, &solver);
     HYPRE_StructPFMGSetMaxIter(solver, d_maxSweeps);
@@ -688,15 +688,7 @@ RadHypreSolver::destroyMatrix()
   hypre_FinalizeMemoryDebug();
 }
 
-void RadHypreSolver::finalizeSolver()
+void
+RadHypreSolver::finalizeSolver()
 {
-  
 }
-
-
-
-
-
-
-
-

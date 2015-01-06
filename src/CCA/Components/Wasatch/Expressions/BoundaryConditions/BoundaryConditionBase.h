@@ -130,7 +130,7 @@ public:
   
   /**
    *  \brief Specify whether this boundary condition applies to a staggered field that is staggered in a
-   direction normal to the boundary. For exampl, XVol and on x-boundaries, YVol on y-boundaries, and ZVol
+   direction normal to the boundary. For example, XVol and on x-boundaries, YVol on y-boundaries, and ZVol
    on z-boundaries.
    *  \param staggered Boolean that specifies whether this field in staggered and normal (see documentation above).
    *
@@ -309,10 +309,20 @@ public:
     bndNormal_       = SpatialOps::IntVec(0,0,0);
     bcTypeEnum_      = Wasatch::UNSUPPORTED;
     faceTypeEnum_    = Uintah::Patch::xminus;
-    vecInteriorPts_ = NULL;
-    vecGhostPts_ = NULL;
+
+    diriXOp_ = NULL;
+    diriYOp_ = NULL;
+    diriZOp_ = NULL;
+    neumXOp_ = NULL;
+    neumYOp_ = NULL;
+    neumZOp_ = NULL;
+
+    vecInteriorPts_     = NULL;
+    vecGhostPts_        = NULL;
+    neboInteriorPts_    = NULL;
+    neboGhostPts_       = NULL;
     interiorEdgePoints_ = NULL;
-    boundaryParticles_ = NULL;
+    boundaryParticles_  = NULL;
   }
   virtual ~BoundaryConditionBase(){}
 

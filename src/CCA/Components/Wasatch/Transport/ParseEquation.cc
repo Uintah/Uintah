@@ -57,6 +57,9 @@
 #include <CCA/Components/Wasatch/Expressions/MMS/VardenMMS.h>
 #include <CCA/Components/Wasatch/Expressions/MMS/Varden2DMMS.h>
 #include <CCA/Components/Wasatch/Expressions/Particles/ParticleGasMomentumSrc.h>
+#include <CCA/Components/Wasatch/Expressions/SimpleEmission.h>
+#include <CCA/Components/Wasatch/Expressions/DORadSolver.h>
+
 //-- Uintah includes --//
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -283,6 +286,60 @@ namespace Wasatch{
 
   //==================================================================
   
+  void parse_radiation_solver( Uintah::ProblemSpecP params,
+                               GraphHelper& gh,
+                               Uintah::SolverInterface& linSolver,
+                               Uintah::SimulationStateP& sharedState,
+                               std::set<std::string>& lockedFields )
+  {
+    const Expr::Tag tempTag = parse_nametag( params->findBlock("Temperature")->findBlock("NameTag") );
+    const Expr::Tag divQTag = parse_nametag( params->findBlock("DivQ")->findBlock("NameTag") );
+
+    Expr::Tag absCoefTag;
+    if( params->findBlock("AbsorptionCoefficient") )
+      absCoefTag = parse_nametag( params->findBlock("AbsorptionCoefficient")->findBlock("NameTag") );
+
+    if( params->findBlock("SimpleEmission") ){
+      Uintah::ProblemSpecP envTempParams = params->findBlock("SimpleEmission")->findBlock("EnvironmentTemperature");
+      if( envTempParams->findBlock("Constant") ){
+        double envTempVal = 0.0;
+        envTempParams->findBlock("Constant")->getAttribute( "value", envTempVal );
+        gh.exprFactory->register_expression( new SimpleEmission<SVolField>::Builder( divQTag, tempTag, envTempVal, absCoefTag ) );
+      }
+      else{
+        const Expr::Tag envTempTag = parse_nametag( envTempParams );
+        gh.exprFactory->register_expression( new SimpleEmission<SVolField>::Builder( divQTag, tempTag, envTempTag, absCoefTag ) );
+      }
+    }
+    else if( params->findBlock("DiscreteOrdinates") ){
+      Uintah::SolverParameters* sparams = linSolver.readParameters( params, "", sharedState );
+
+      int order = 2;
+      params->findBlock("DiscreteOrdinates")->getAttribute("order",order);
+
+      Expr::Tag scatCoef;  // currently we are not ready for scattering.
+//      if( params->findBlock("ScatteringCoefficient") ) parse_nametag( params->findBlock("ScatteringCoefficient") );
+
+      const OrdinateDirections discOrd( order );
+      Expr::TagList intensityTags;
+      for( size_t i=0; i< discOrd.number_of_directions(); ++i ){
+        const OrdinateDirections::SVec& svec = discOrd.get_ordinate_information(i);
+        const std::string intensity( "intensity_" + boost::lexical_cast<std::string>(i) );
+        std::cout << "registering expression for " << intensity << std::endl;
+        DORadSolver::Builder* radSolver = new DORadSolver::Builder( intensity, svec, absCoefTag, scatCoef, tempTag, *sparams, linSolver );
+        const Expr::ExpressionID id = gh.exprFactory->register_expression( radSolver );
+        gh.exprFactory->cleave_from_children( id );
+        gh.exprFactory->cleave_from_parents ( id );
+        BOOST_FOREACH( const Expr::Tag& tag, radSolver->get_tags() ){
+          lockedFields.insert( tag.name() );
+        }
+      }
+      gh.exprFactory->register_expression( new DORadSrc::Builder( divQTag, tempTag, absCoefTag, discOrd ) );
+    }
+  }
+
+  //==================================================================
+
   void parse_var_den_mms( Uintah::ProblemSpecP wasatchParams,
                           Uintah::ProblemSpecP varDensMMSParams,
                           const bool computeContinuityResidual,
@@ -298,38 +355,38 @@ namespace Wasatch{
          bcExprParams != 0;
          bcExprParams = bcExprParams->findNextBlock("BCExpression") )
     {
-      if (bcExprParams->findBlock("VarDenMMSMomentum")) {
+      if( bcExprParams->findBlock("VarDenMMSMomentum") ){
         double bcRho0=1.29985, bcRho1=0.081889;
         Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSMomentum");
         valParams->get("rho0",bcRho0);
         valParams->get("rho1",bcRho1);
-        if (rho0!=bcRho0 || rho1!=bcRho1) {
+        if( rho0!=bcRho0 || rho1!=bcRho1 ){
           std::ostringstream msg;
-          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSMomentum\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSMomentum\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          msg << "ERROR: the values of rho0 and rho1 should be exactly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSMomentum\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSMomentum\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
           throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
         }
       }
       
-      else if (bcExprParams->findBlock("VarDenMMSDensity")) {
+      else if( bcExprParams->findBlock("VarDenMMSDensity") ){
         double bcRho0=1.29985, bcRho1=0.081889;
         Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSDensity");
         valParams->get("rho0",bcRho0);
         valParams->get("rho1",bcRho1);
-        if (rho0!=bcRho0 || rho1!=bcRho1) {
+        if( rho0!=bcRho0 || rho1!=bcRho1 ){
           std::ostringstream msg;
-          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSDensity\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSDensity\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          msg << "ERROR: the values of rho0 and rho1 should be exactly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSDensity\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSDensity\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
           throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
         }
       }
       
-      else if (bcExprParams->findBlock("VarDenMMSSolnVar")) {
+      else if( bcExprParams->findBlock("VarDenMMSSolnVar") ){
         double bcRho0=1.29985, bcRho1=0.081889;
         Uintah::ProblemSpecP valParams = bcExprParams->findBlock("VarDenMMSSolnVar");
         valParams->get("rho0",bcRho0);
         valParams->get("rho1",bcRho1);
-        if (rho0!=bcRho0 || rho1!=bcRho1) {
+        if( rho0!=bcRho0 || rho1!=bcRho1 ){
           std::ostringstream msg;
-          msg << "ERROR: the values of rho0 and rho1 should be exacly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSSolnVar\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSSolnVar\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
+          msg << "ERROR: the values of rho0 and rho1 should be exactly the same in the \"VariableDensityMMS\" block and the \"VarDen1DMMSSolnVar\" BCExpression. In \"VariableDensityMMS\" rho0=" << rho0 << " and rho1=" << rho1 << " while in \"VarDen1DMMSSolnVar\" BCExpression rho0=" << bcRho0 << " and rho1=" << bcRho1 << std::endl;
           throw Uintah::InvalidValue( msg.str(), __FILE__, __LINE__ );
         }
       }
@@ -349,10 +406,11 @@ namespace Wasatch{
     const Expr::Tag varDensMMSPressureContSrc = Expr::Tag( "mms_pressure_continuity_src", Expr::STATE_NONE);
    
 
-    Uintah::ProblemSpecP densityParams  = wasatchParams->findBlock("Density");
+    Uintah::ProblemSpecP densityParams = wasatchParams->findBlock("Density");
     Uintah::ProblemSpecP momEqnParams  = wasatchParams->findBlock("MomentumEquations");
-    Expr::Tag densityTag = parse_nametag( densityParams->findBlock("NameTag") );
-    Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
+    const Expr::Tag densityTag   = parse_nametag( densityParams->findBlock("NameTag") );
+    const Expr::Tag densStarTag  = tagNames.make_star(densityTag, Expr::CARRY_FORWARD);
+    const Expr::Tag dens2StarTag = tagNames.make_double_star(densityTag, Expr::CARRY_FORWARD);
     
     std::string xvelname, yvelname, zvelname;
     Uintah::ProblemSpecP doxvel,doyvel, dozvel;
@@ -372,7 +430,7 @@ namespace Wasatch{
     VarDenParameters varDenParams;
     parse_varden_input(varDenModelParams, varDenParams);
     
-    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, densityTag, dens2StarTag, velTags, tagNames.xsvolcoord, tagNames.time, tagNames.dt, varDenParams));
+    slngraphHelper->exprFactory->register_expression( new VarDen1DMMSContinuitySrc<SVolField>::Builder( tagNames.mms_continuitysrc, rho0, rho1, densityTag, densStarTag, dens2StarTag, velTags, tagNames.xsvolcoord, tagNames.time, tagNames.dt, varDenParams));
     slngraphHelper->exprFactory->register_expression( new VarDen1DMMSPressureContSrc<SVolField>::Builder( tagNames.mms_pressurecontsrc, tagNames.mms_continuitysrc, tagNames.dt));
     
     slngraphHelper->exprFactory->attach_dependency_to_expression(tagNames.mms_pressurecontsrc, tagNames.pressuresrc);
@@ -960,12 +1018,12 @@ namespace Wasatch{
   //-----------------------------------------------------------------
 
   template< typename FieldT >
-  void setup_convective_flux_expression( const std::string dir,
-                                         const Expr::Tag solnVarTag,
+  void setup_convective_flux_expression( const std::string& dir,
+                                         const Expr::Tag& solnVarTag,
                                          Expr::Tag convFluxTag,
                                          const ConvInterpMethods convMethod,
-                                         const Expr::Tag advVelocityTag,
-                                         const std::string suffix,
+                                         const Expr::Tag& advVelocityTag,
+                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
@@ -986,8 +1044,7 @@ namespace Wasatch{
       // make new Tag for solnVar by adding the appropriate suffix ( "_*" or nothing ). This
       // is because we need the ScalarRHS at time step n+1 for our pressure projection method
       Expr::Tag solnVarCorrectedTag;
-      if (suffix=="") solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),        Expr::STATE_DYNAMIC   );
-      else            solnVarCorrectedTag = Expr::Tag(solnVarTag.name()+suffix, Expr::STATE_NONE);
+      solnVarCorrectedTag = Expr::Tag(solnVarTag.name(),   suffix=="" ? Expr::STATE_DYNAMIC : Expr::STATE_NONE );
 
       Expr::ExpressionBuilder* builder = NULL;
 
@@ -1046,8 +1103,8 @@ namespace Wasatch{
 
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                         const Expr::Tag solnVarTag,
-                                         const std::string suffix,
+                                         const Expr::Tag& solnVarTag,
+                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info )
   {
@@ -1154,8 +1211,7 @@ namespace Wasatch{
     }
     else{ // build an expression for the diffusive flux.
 
-      for (std::string::iterator it = direction.begin(); it != direction.end(); ++it)
-      {
+      for( std::string::iterator it = direction.begin(); it != direction.end(); ++it ){
         std::string dir(1,*it);
         const TagNames& tagNames = TagNames::self();
         diffFluxTag = Expr::Tag( primVarName + suffix + tagNames.diffusiveflux + dir, Expr::STATE_NONE );
@@ -1321,19 +1377,19 @@ namespace Wasatch{
 
 #define INSTANTIATE_CONVECTION( FIELDT )                        \
     template void setup_convective_flux_expression<FIELDT>(     \
-        const std::string dir,                                  \
-        const Expr::Tag solnVarTag,                             \
+        const std::string& dir,                                 \
+        const Expr::Tag& solnVarTag,                            \
         Expr::Tag convFluxTag,                                  \
         const ConvInterpMethods convMethod,                     \
-        const Expr::Tag advVelocityTag,                         \
-        const std::string suffix,                               \
+        const Expr::Tag& advVelocityTag,                        \
+        const std::string& suffix,                              \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );                                   \
                                                                 \
     template void setup_convective_flux_expression<FIELDT>(     \
         Uintah::ProblemSpecP convFluxParams,                    \
-        const Expr::Tag solnVarName,                            \
-        const std::string suffix,                               \
+        const Expr::Tag& solnVarName,                           \
+        const std::string& suffix,                              \
         Expr::ExpressionFactory& factory,                       \
         FieldTagInfo& info );
 

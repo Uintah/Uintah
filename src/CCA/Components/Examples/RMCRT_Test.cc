@@ -49,14 +49,12 @@
 #include <Core/Grid/DbgOutput.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/Parallel.h>
 
 using namespace std;
 using SCIRun::Point;
 using SCIRun::Vector;
-using SCIRun::DebugStream;
 
-static DebugStream dbg("RMCRT_Test", false);
+static SCIRun::DebugStream dbg("RMCRT_Test", false);
 
 
 namespace Uintah
@@ -65,25 +63,10 @@ namespace Uintah
 //
 RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponent( myworld )
 {
-//  d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
+  d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
   d_divQLabel     = VarLabel::create( "divQ",     CCVariable<double>::getTypeDescription() );
-//  d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );
-//  d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
+  d_compAbskgLabel= VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel = VarLabel::create( "cellType", CCVariable<int>::getTypeDescription() );
-
-/*`==========TESTING==========*/
-    #ifdef USINGFLOATRMCRT
-      proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
-      d_colorLabel  = VarLabel::create( "color",    CCVariable<float>::getTypeDescription() );
-      d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<float>::getTypeDescription() );
-      d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<float>::getTypeDescription() );
-    #else
-      proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
-      d_colorLabel    = VarLabel::create( "color",    CCVariable<double>::getTypeDescription() );
-      d_sigmaT4Label  = VarLabel::create( "sigmaT4",  CCVariable<double>::getTypeDescription() );
-      d_abskgLabel    = VarLabel::create( "abskg",    CCVariable<double>::getTypeDescription() );
-    #endif
-/*===========TESTING==========`*/
 
   d_gac = Ghost::AroundCells;
   d_gn  = Ghost::None;
@@ -106,8 +89,7 @@ RMCRT_Test::~RMCRT_Test ( void )
 
   VarLabel::destroy(d_colorLabel);
   VarLabel::destroy(d_divQLabel);
-  VarLabel::destroy(d_abskgLabel);
-  VarLabel::destroy(d_sigmaT4Label);
+  VarLabel::destroy(d_compAbskgLabel);
   VarLabel::destroy(d_cellTypeLabel);
 
   if( d_old_uda){
@@ -156,23 +138,27 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   //  RMCRT variables
   if (prob_spec->findBlock("RMCRT")){
     ProblemSpecP rmcrt_ps = prob_spec->findBlock("RMCRT");
+    
+    // using float or doubles for all-to-all variables
+    map<string,string> type;
+    rmcrt_ps->getAttributes(type);
+    
+    string isFloat = type["type"];
+    
+    if( isFloat == "float" ){
+      d_RMCRT = scinew Ray( TypeDescription::float_type );
+    } else {
+      d_RMCRT = scinew Ray( TypeDescription::double_type );
+    }
 
-/*`==========TESTING==========*/
-    #ifdef USINGFLOATRMCRT
-      proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
-      d_RMCRT = scinew floatRay();
-    #else
-      proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
-      d_RMCRT = scinew Ray();
-    #endif
-/*===========TESTING==========`*/
-
-    d_RMCRT->registerVarLabels(0,d_abskgLabel,
+    d_RMCRT->registerVarLabels(0,d_compAbskgLabel,
                                  d_colorLabel,
                                  d_cellTypeLabel,
                                  d_divQLabel);
     proc0cout << "__________________________________ Reading in RMCRT section of ups file" << endl;
     d_RMCRT->problemSetup( prob_spec, rmcrt_ps, grid, d_sharedState );
+    
+    d_RMCRT->BC_bulletproofing( rmcrt_ps );
 
     //__________________________________
     //  Read in the dataOnion section
@@ -320,7 +306,7 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 
   printSchedule(level,dbg,"RMCRT_Test::scheduleInitialize");
   task->computes( d_colorLabel );
-  task->computes( d_abskgLabel );
+  task->computes( d_compAbskgLabel );
   task->computes( d_cellTypeLabel );
   sched->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
 }
@@ -353,13 +339,10 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   GridP grid = level->getGrid();
   int maxLevels = level->getGrid()->numLevels();
 
-  // move data to the new_dw for simplicity
-  for (int l = 0; l < maxLevels; l++) {
-    const LevelP& level = grid->getLevel(l);
-    d_RMCRT->sched_CarryForward_Var( level, sched, d_cellTypeLabel );
-    d_RMCRT->sched_CarryForward_Var( level, sched, d_colorLabel );
-    d_RMCRT->sched_CarryForward_Var( level, sched, d_abskgLabel );
-  }
+  // move fields to the new_dw to mimic what a component would compute
+  // The variables temperature, cellType, and abskg are computed on the finest level
+  const LevelP& finestLevel = grid->getLevel( maxLevels -1 );
+  sched_initProperties( finestLevel, sched, d_radCalc_freq );
 
   Radiometer* radiometer = d_RMCRT->getRadiometer();
 
@@ -367,10 +350,11 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //   D A T A   O N I O N   A P P R O A C H
   if( d_whichAlgo == dataOnion ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    Task::WhichDW temp_dw = Task::NewDW;
-
-    // modify Radiative properties on the finest level
-    sched_initProperties( fineLevel, sched, d_radCalc_freq);
+    Task::WhichDW temp_dw  = Task::NewDW;
+    Task::WhichDW abskg_dw = Task::NewDW;
+    
+    // convert abskg:dbl -> abskg:flt if needed
+    d_RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw, d_radCalc_freq );
 
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
 
@@ -383,7 +367,7 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
 
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg   = true;
+      const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
       d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq );
       d_RMCRT->sched_setBoundaryConditions( level, sched, notUsed, d_radCalc_freq, backoutTemp );
@@ -394,7 +378,6 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     //  on the finest level
     d_RMCRT->sched_ROI_Extents( fineLevel, sched );
 
-    Task::WhichDW abskg_dw   = Task::NewDW;
     Task::WhichDW sigmaT4_dw = Task::NewDW;
     const bool modifies_divQ = false;
     d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ, d_radCalc_freq);
@@ -407,40 +390,40 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   // and the results are interpolated to the fine level
   if( d_whichAlgo == coarseLevel ){
     const LevelP& fineLevel = grid->getLevel(maxLevels-1);
-    Task::WhichDW temp_dw = Task::NewDW;
-
-    // modify Radiative properties on the finest level
-    sched_initProperties( fineLevel, sched, d_radCalc_freq );
+    Task::WhichDW temp_dw  = Task::NewDW;
+    Task::WhichDW abskg_dw = Task::NewDW;
+    
+    // convert abskg:dbl -> abskg:flt if needed
+    d_RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw, d_radCalc_freq );
 
     d_RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, d_radCalc_freq, false );
 
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
-      const bool modifies_abskg   = true;
+      const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
 
       d_RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, d_radCalc_freq);
 
-      if(level->hasFinerLevel() || maxLevels == 1){
-        Task::WhichDW abskg_dw    = Task::NewDW;
+      if( level->hasFinerLevel() ){
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
         const bool modifies_divQ  = false;
         const bool backoutTemp    = true;
 
         d_RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, d_radCalc_freq, backoutTemp );
-        
+   
         if (radiometer ){
           radiometer->sched_initializeRadVars( level, sched, d_radCalc_freq );
         }
-        
+
         d_RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq );
       }
     }
 
     //__________________________________
-    // push divQ  to the coarser levels
-    for (int l = 0; l < maxLevels; l++) {
+    // interpolate divQ on coarse level -> fine level
+    for (int l = 1; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
       d_RMCRT->sched_Refine_Q (sched,  patches, matls, d_radCalc_freq);
@@ -451,13 +434,14 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
   //   1 - L E V E L   A P P R O A C H
   //  RMCRT is performed on one level
   if( d_whichAlgo == singleLevel ){
-    Task::WhichDW temp_dw = Task::NewDW;
-    
-    sched_initProperties( level, sched, d_radCalc_freq );
+    Task::WhichDW temp_dw  = Task::NewDW;
+    Task::WhichDW abskg_dw = Task::NewDW;
+
+    // convert abskg:dbl -> abskg:flt if needed
+    d_RMCRT->sched_DoubleToFloat( level,sched, abskg_dw, d_radCalc_freq );
 
     d_RMCRT->sched_sigmaT4( level,  sched, temp_dw, d_radCalc_freq, false );
-    
-    Task::WhichDW abskg_dw    = Task::NewDW;                                                                       
+                                                                   
     Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
     Task::WhichDW celltype_dw = Task::NewDW;
     const bool modifies_divQ  = false;
@@ -483,8 +467,9 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     Task::WhichDW celltype_dw = Task::NewDW;
     const bool includeEC      = true;
     const bool backoutTemp    = true;
-
-    sched_initProperties( level, sched, d_radCalc_freq );
+    
+    // convert abskg:dbl -> abskg:flt if needed
+    d_RMCRT->sched_DoubleToFloat( level, sched, abskg_dw, d_radCalc_freq );
     
     radiometer->sched_sigmaT4( level, sched, temp_dw, d_radCalc_freq, includeEC );
     
@@ -533,97 +518,115 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
                              DataWarehouse*,
                              DataWarehouse* new_dw)
 {
+  const Level* level = getLevel(patches);
+  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches, patch,dbg,"Doing initialize");
 
     Box patch_box = patch->getBox();
 
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
+    int matl = 0;
+    CCVariable<double> color;
+    CCVariable<double> abskg;
 
-/*`==========TESTING==========*/
-    #ifdef USINGFLOATRMCRT
-      CCVariable<float> color;
-      CCVariable<float> abskg;
-      bool isFloat = true;
-    #else
-      CCVariable<double> color;
-      CCVariable<double> abskg;
-      bool isFloat = false;
-    #endif
-/*===========TESTING==========`*/
+    CCVariable<int> cellType;
+    new_dw->allocateAndPut(color,    d_colorLabel,    matl, patch);
+    new_dw->allocateAndPut(abskg,    d_compAbskgLabel,matl, patch);
+    new_dw->allocateAndPut(cellType, d_cellTypeLabel, matl, patch);
 
-      CCVariable<int> cellType;
-      new_dw->allocateAndPut(color,    d_colorLabel,    matl, patch);
-      new_dw->allocateAndPut(abskg,    d_abskgLabel,    matl, patch);
-      new_dw->allocateAndPut(cellType, d_cellTypeLabel, matl, patch);
+    //__________________________________
+    //  Default initialization
+    for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
+       IntVector idx(*iter);
+       color[idx] = d_initColor;
+       abskg[idx] = d_initAbskg;
+    }
 
-      for ( CellIterator iter(patch->getExtraCellIterator()); !iter.done(); iter++) {
-         IntVector idx(*iter);
-         color[idx] = d_initColor;
-         abskg[idx] = d_initAbskg;
+    //__________________________________
+    //  Benchmark initializations
+    if ( d_benchmark == 1 || d_benchmark == 3 ) {
+
+      // bulletproofing
+      BBox L_BB;
+      level->getInteriorSpatialRange(L_BB);                 // edge of computational domain
+      Vector L_length = Abs(L_BB.max() - L_BB.min());
+
+      Vector valid_length(1,1,1);
+      if (L_length != valid_length){
+        ostringstream msg;
+        msg << "\n RMCRT:ERROR: the benchmark problem selected is only valid on the domain \n";
+        msg << valid_length << ".  Your domain is " << L_BB << endl;
+        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
 
+      IntVector pLow, pHigh;
+      level->findInteriorCellIndexRange(pLow, pHigh);
+      IntVector Nx = pHigh - pLow;
+      Vector Dx = patch->dCell();
 
-#ifdef USINGFLOATRMCRT
-      //__________________________________
-      // HACK:
-      //  Make a copy of the float data and place it
-      //  in a double array.  The BC infrastructure can't
-      //  deal with floats
-      CCVariable<double> D_abskg, D_color;
-
-      new_dw->allocateTemporary(D_abskg, patch);
-      new_dw->allocateTemporary(D_color, patch);
-      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
         IntVector c = *iter;
-        D_abskg[c] = (double) abskg[c];
-        D_color[c] = (double) color[c];
+        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx.x() - 1.0) /2.0) * Dx.x() ) )
+                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Nx.y() - 1.0) /2.0) * Dx.y() ) )
+                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nx.z() - 1.0) /2.0) * Dx.z() ) )
+                        + 0.1;
       }
-      // set boundary conditions
-      d_RMCRT->setBC<double>( D_color,  d_colorLabel->getName(), patch, matl );
-      d_RMCRT->setBC<double>( D_abskg,  d_abskgLabel->getName(), patch, matl );
+    }
 
-      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+    if ( d_benchmark == 2 ) {
+      abskg.initialize( 1 );
+    }
+
+    if( d_benchmark == 3) {
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
         IntVector c = *iter;
-        abskg[c] = (float) D_abskg[c];
-        color[c]  = (float) D_color[c];
+        color[c] = 1000 * abskg[c];
       }
-#else
-      d_RMCRT->setBC<double>( color,  d_colorLabel->getName(), patch, matl );
-      d_RMCRT->setBC<double>( abskg,  d_abskgLabel->getName(), patch, matl );
+    }
 
-#endif
+    if( d_benchmark == 4 ) {  // Siegel isotropic scattering
+      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
+        IntVector c = *iter;
+        abskg[c] = d_initAbskg;
 
-      //__________________________________
-      // initialize cell type
-      cellType.initialize(d_flow_cell);
+      }
+    }
 
-      for ( int i = 0; i < (int)d_intrusion_geom.size(); i++ ){
+    if( d_benchmark == 5 ) {  // Siegel isotropic scattering for specific abskg and sigma_scat
+      abskg.initialize( 2.0 );
+    }
 
-        for ( std::vector<GeometryPieceP>::iterator iter=d_intrusion_geom.begin(); iter!=d_intrusion_geom.end(); iter++ ){
+    d_RMCRT->setBC<double, double>( color,  d_colorLabel->getName(),     patch, matl );
+    d_RMCRT->setBC<double, double>( abskg,  d_compAbskgLabel->getName(), patch, matl );
 
-          GeometryPieceP piece = iter[i];
-          Box geometry_box     = piece->getBoundingBox();
-          Box intersect_box    = geometry_box.intersect( patch_box );
+    //__________________________________
+    // initialize cell type
+    cellType.initialize(d_flow_cell);
 
-          if ( !(intersect_box.degenerate()) ) {
+    for ( int i = 0; i < (int)d_intrusion_geom.size(); i++ ){
 
-            for ( CellIterator cell_iter(patch->getExtraCellIterator()); !cell_iter.done(); cell_iter++) {
-              IntVector c = *cell_iter;
-              Point p = patch->cellPosition( c );
-              if ( piece->inside( p ) ) {
+      for ( std::vector<GeometryPieceP>::iterator iter=d_intrusion_geom.begin(); iter!=d_intrusion_geom.end(); iter++ ){
 
-                cellType[c] = d_wall_cell;
+        GeometryPieceP piece = iter[i];
+        Box geometry_box     = piece->getBoundingBox();
+        Box intersect_box    = geometry_box.intersect( patch_box );
 
-              }
+        if ( !(intersect_box.degenerate()) ) {
+
+          for ( CellIterator cell_iter(patch->getExtraCellIterator()); !cell_iter.done(); cell_iter++) {
+            IntVector c = *cell_iter;
+            Point p = patch->cellPosition( c );
+            if ( piece->inside( p ) ) {
+
+              cellType[c] = d_wall_cell;
+
             }
           }
         }
       }
-    }
-  }
+    }  // intrusion
+  }  // patch
 }
 
 //______________________________________________________________________
@@ -704,18 +707,11 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,dbg,"Doing initializeWithUda");
 
-/*`==========TESTING==========*/
-    #ifdef USINGFLOATRMCRT
-      CCVariable<float> color;
-      CCVariable<float> abskg;
-    #else
-      CCVariable<double> color;
-      CCVariable<double> abskg;
-    #endif
-/*===========TESTING==========`*/
+    CCVariable<double> color;
+    CCVariable<double> abskg;
 
-    new_dw->allocateAndPut(color,    d_colorLabel,    d_matl, patch);
-    new_dw->allocateAndPut(abskg,    d_abskgLabel,    d_matl, patch);
+    new_dw->allocateAndPut(color,    d_colorLabel,     d_matl, patch);
+    new_dw->allocateAndPut(abskg,    d_compAbskgLabel, d_matl, patch);
 
     IntVector low  = patch->getExtraCellLowIndex();
     IntVector high = patch->getExtraCellHighIndex();
@@ -748,140 +744,24 @@ void RMCRT_Test::initializeWithUda (const ProcessorGroup*,
       }
     }
 
-    d_RMCRT->setBC( color,  d_colorLabel->getName(), patch, d_matl );
-    d_RMCRT->setBC( abskg,  d_abskgLabel->getName(), patch, d_matl );
+    d_RMCRT->setBC<double, double>( color,  d_colorLabel->getName(),     patch, d_matl );
+    d_RMCRT->setBC<double, double>( abskg,  d_compAbskgLabel->getName(), patch, d_matl );
   }
   delete archive;
 }
 //______________________________________________________________________
 //
 //______________________________________________________________________
-void RMCRT_Test::sched_initProperties( const LevelP& level,
+void RMCRT_Test::sched_initProperties( const LevelP& finestLevel,
                                         SchedulerP& sched,
                                         const int radCalc_freq )
 {
-
-  if( d_benchmark != 0 ){
-    Task* tsk = scinew Task( "RMCRT_Test::initProperties", this,
-                             &RMCRT_Test::initProperties, radCalc_freq);
-
-    printSchedule(level,dbg,"RMCRT_Test::initProperties");
-
-    tsk->modifies( d_colorLabel );
-    tsk->modifies( d_abskgLabel );
-    tsk->modifies( d_cellTypeLabel );
-
-    sched->addTask( tsk, level->eachPatch(), d_sharedState->allMaterials() );
-  }
+  // Move the labels forward.    They were computed in initialize()
+  //  This mimics what the component will handoff to RMCRT.
+  d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_cellTypeLabel );
+  d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_compAbskgLabel );
+  d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_colorLabel );
 }
-//______________________________________________________________________
-//  Initialize the properties
-//______________________________________________________________________
-void RMCRT_Test::initProperties( const ProcessorGroup* pc,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw,
-                                 const int radCalc_freq )
-{
-  // Only run if it's time
-  if ( d_RMCRT->doCarryForward( radCalc_freq ) ) {
-    return;
-  }
-
-  const Level* level = getLevel(patches);
-
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing RMCRT_test::InitProperties");
-
-  /*`==========TESTING==========*/
-    #ifdef USINGFLOATRMCRT
-      CCVariable<float> color;
-      CCVariable<float> abskg;
-    #else
-      CCVariable<double> color;
-      CCVariable<double> abskg;
-    #endif
-/*===========TESTING==========`*/
-
-    new_dw->getModifiable( abskg,    d_abskgLabel,     d_matl, patch );
-    abskg.initialize  ( 0.0 );
-
-    IntVector pLow;
-    IntVector pHigh;
-    level->findInteriorCellIndexRange(pLow, pHigh);
-
-    int Nx = pHigh[0] - pLow[0];
-    int Ny = pHigh[1] - pLow[1];
-    int Nz = pHigh[2] - pLow[2];
-
-    Vector Dx = patch->dCell();
-
-    BBox L_BB;
-    level->getInteriorSpatialRange(L_BB);                 // edge of computational domain
-    Vector L_length = Abs(L_BB.max() - L_BB.min());
-
-    //__________________________________
-    //  Benchmark initializations
-    if ( d_benchmark == 1 || d_benchmark == 3 ) {
-
-      // bulletproofing
-      Vector valid_length(1,1,1);
-      if (L_length != valid_length){
-        ostringstream msg;
-        msg << "\n RMCRT:ERROR: the benchmark problem selected is only valid on the domain \n";
-        msg << valid_length << ".  Your domain is " << L_BB << endl;
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      }
-
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = 0.90 * ( 1.0 - 2.0 * fabs( ( c[0] - (Nx - 1.0) /2.0) * Dx[0]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[1] - (Ny - 1.0) /2.0) * Dx[1]) )
-                        * ( 1.0 - 2.0 * fabs( ( c[2] - (Nz - 1.0) /2.0) * Dx[2]) )
-                        + 0.1;
-      }
-    }
-
-    if ( d_benchmark == 2 ) {              // This section should be simplified/ cleaned up --Todd
-
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = 1;
-      }
-    }
-
-    if( d_benchmark == 3) {
-      CCVariable<double> temp;
-      new_dw->getModifiable(temp, d_colorLabel, d_matl, patch);
-
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        temp[c] = 1000 * abskg[c];
-
-      }
-    }
-
-    if( d_benchmark == 4 ) {  // Siegel isotropic scattering
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = d_initAbskg;
-
-      }
-    }
-
-    if( d_benchmark == 5 ) {  // Siegel isotropic scattering for specific abskg and sigma_scat
-      for ( CellIterator iter = patch->getCellIterator(); !iter.done(); iter++ ){
-        IntVector c = *iter;
-        abskg[c] = 2;
-        //d_sigmaScat = 8;
-      }
-    }
-  }
-}
-
 
 //______________________________________________________________________
 //

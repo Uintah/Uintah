@@ -41,7 +41,7 @@ public:
   struct Builder : public Expr::ExpressionBuilder
   {
     Builder( const Expr::Tag& result,
-             const std::string axis,
+             const std::string& axis,
              const std::vector<double>& origin,
              const std::vector<double>& oscillatingdir,
              const double insideValue = 1.0,
@@ -66,7 +66,7 @@ public:
 private:
   typedef SpatialOps::SingleValueField TimeField;
   
-  OscillatingCylinder( const std::string axis,
+  OscillatingCylinder( const std::string& axis,
                        const std::vector<double>& origin,  // origin on the minus face perpendicular to axis
                        const std::vector<double>& oscillatingdir,
                        const double insideValue,

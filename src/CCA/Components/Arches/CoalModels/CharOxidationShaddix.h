@@ -8,20 +8,8 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/Directives.h>
-
 #include <vector>
 #include <string>
-
-// FIXME: more descriptive name
-/**
-  * @class    CharOxidationShaddix
-  * @author   Julien Pedel
-  * @date     Feb 2011
-  *
-  * @brief    A char oxidation model for coal paticles.
-  *           (This needs a more descriptive name)
-  *
-  */
 
 namespace Uintah{
 
@@ -91,37 +79,36 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw,
+                     const int timeSubStep );
 
   /////////////////////////////////////////////////
   // Access methods
 
 private:
 
-  const VarLabel* d_devolCharLabel;
-  const VarLabel* d_char_mass_label;
-  const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
-  const VarLabel* d_particle_temperature_label; ///< Label for particle temperature
-  const VarLabel* d_gas_temperature_label;      ///< label for the gas temperature 
-  const VarLabel* d_particle_length_label;      ///< Label for particle length
-  const VarLabel* d_weight_label;               ///< Weight label
- 
+  const VarLabel* _devolCharLabel;
+  const VarLabel* _rcmass_varlabel;
+  const VarLabel* _char_varlabel;
+  const VarLabel* _length_varlabel;
+  const VarLabel* _particle_temperature_varlabel;
+  const VarLabel* _weight_varlabel;
+  const VarLabel* _gas_temperature_varlabel;
+  const VarLabel* _O2_varlabel;
+  const VarLabel* _CO2_varlabel;
+  const VarLabel* _H2O_varlabel;
+  const VarLabel* _N2_varlabel;
+  const VarLabel* _MW_varlabel;
+  
   std::vector<double>  Shaddix_char_coefficients;
-  double As;
-  double Es;
-  double n;
-  double A1;
-  double A2;
-  double E1;
-  double E2;
-  double k1;
-  double k2;
-  double R;
-  double HF_CO2;
-  double HF_CO;
+  double _As;
+  double _Es;
+  double _n;
+  double _R;
+  double _HF_CO2;
+  double _HF_CO;
   double char_reaction_rate_;
   double char_production_rate_;
-  double gas_char_rate_;
   double particle_temp_rate_;
   double PO2_inf;
   double PO2_surf;
@@ -129,15 +116,15 @@ private:
   double OF;
   double ks;
   double q;
-  double WO2;
-  double WCO2;
-  double WH2O;
-  double WN2;
-  double WC;
-  double D1;
-  double D2;
-  double D3;
-  double T0;
+  double _WO2;
+  double _WCO2;
+  double _WH2O;
+  double _WN2;
+  double _WC;
+  double _D1;
+  double _D2;
+  double _D3;
+  double _T0;
   double d_tol;
   double delta;
   double Conc;
@@ -151,13 +138,10 @@ private:
   double lower_bound;
   double upper_bound;
   int icount;
-  double pi;
-  double rateMax;
-  double d_rh_scaling_constant;
-  double d_rc_scaling_constant;   ///< Scaling factor for raw coal
-  double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
-  double d_pt_scaling_constant;   ///< Scaling factor for particle temperature
-  bool   part_temp_from_enth;
+  double _pi;
+  double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
+  double _weight_scaling_constant;   ///< Scaling factor for weight 
+  double _weight_small;   ///< small weight 
 
 }; // end CharOxidationShaddix
 } // end namespace Uintah

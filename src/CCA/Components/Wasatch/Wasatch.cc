@@ -48,7 +48,6 @@
 #include <CCA/Components/Wasatch/CoordinateHelper.h>
 
 #include <spatialops/structured/FVStaggered.h>
-#include <spatialops/structured/FVStaggeredBCTools.h>
 #ifdef ENABLE_THREADS
 #include <spatialops/SpatialOpsTools.h>
 #include <expression/SchedulerBase.h>
@@ -103,7 +102,8 @@ namespace Wasatch{
       nRKStages_(1),
       isPeriodic_ (true ),
       doRadiation_(false),
-      doParticles_(false)
+      doParticles_(false),
+      timeIntegrator_(TimeIntegrator("FE"))
   {
     proc0cout << std::endl
               << "-------------------------------------------------------------" << std::endl
@@ -523,11 +523,10 @@ namespace Wasatch{
       }
     }
     
-    //
     std::string timeIntName;
     wasatchSpec_->get("TimeIntegrator",timeIntName);
-    TimeIntegrator timeInt(timeIntName);
-    nRKStages_ = timeInt.nStages;
+    timeIntegrator_ = TimeIntegrator(timeIntName);
+    nRKStages_ = timeIntegrator_.nStages;
 
     //
     //  Parse geometry pieces. NOTE: This must take place before create_expressions_from_input
@@ -671,8 +670,14 @@ namespace Wasatch{
       }
     }
     
+    if( wasatchSpec_->findBlock("Radiation") ){
+      parse_radiation_solver( wasatchSpec_->findBlock("Radiation"),
+                              *graphCategories_[ADVANCE_SOLUTION],
+                              *linSolver_, sharedState, locked_fields() );
+    }
+
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeInt );
+      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeIntegrator_ );
     }    
     
     //
@@ -696,10 +701,9 @@ namespace Wasatch{
     // get the variable density mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP VarDenMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
-    if (VarDenMMSParams) {
+    if( VarDenMMSParams ){
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-        parse_var_den_mms(wasatchSpec_, VarDenMMSParams, computeContinuityResidual, graphCategories_);
-
+      parse_var_den_mms(wasatchSpec_, VarDenMMSParams, computeContinuityResidual, graphCategories_);
     }
     
     // radiation
@@ -842,10 +846,10 @@ namespace Wasatch{
       // INITIAL BOUNDARY CONDITIONS TREATMENT
       // -----------------------------------------------------------------------
       typedef std::vector<EqnTimestepAdaptorBase*> EquationAdaptors;
-      
-      proc0cout << "------------------------------------------------" << std::endl
-      << "SETTING INITIAL BOUNDARY CONDITIONS:" << std::endl;
-      proc0cout << "------------------------------------------------" << std::endl;
+
+      proc0cout << "------------------------------------------------\n"
+                << "SETTING INITIAL BOUNDARY CONDITIONS:\n"
+                << "------------------------------------------------\n";
 
       for( EquationAdaptors::const_iterator ia=adaptors_.begin(); ia!=adaptors_.end(); ++ia ){
         EqnTimestepAdaptorBase* const adaptor = *ia;
@@ -855,19 +859,16 @@ namespace Wasatch{
         // set up initial boundary conditions on this transport equation
         try{
           transEq->setup_boundary_conditions( *bcHelperMap_[level->getID()], graphCategories_);
-          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'" << std::endl;
+          proc0cout << "Setting Initial BCs for transport equation '" << eqnLabel << "'\n";
           transEq->apply_initial_boundary_conditions( *icGraphHelper, *bcHelperMap_[level->getID()]);
         }
         catch( std::runtime_error& e ){
           std::ostringstream msg;
-          msg << e.what()
-          << std::endl
-          << "ERORR while setting initial boundary conditions on equation '" << eqnLabel << "'"
-          << std::endl;
+          msg << e.what() << "\nERORR while setting initial boundary conditions on equation '" << eqnLabel << "'\n";
           throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
       }
-      proc0cout << "------------------------------------------------" << std::endl;
+      proc0cout << "------------------------------------------------\n";
 
       // -----------------------------------------------------------------------
       try{
@@ -946,6 +947,8 @@ namespace Wasatch{
         //tsaad: register an patch container as an operator for easy access to the Uintah patch
         // inside of an expression.
         opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
+        
+        opdb->register_new_operator<TimeIntegrator>(scinew TimeIntegrator(timeIntegrator_.name) );
         
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
@@ -1102,29 +1105,30 @@ namespace Wasatch{
 
       proc0cout << "Wasatch: done creating solution task(s)" << std::endl;
       
-      // post processing
-      GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
-      Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
-      if( !postProcGH->rootIDs.empty() ){
-        TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
-                                                         "postprocessing",
-                                                          postProcFactory,
-                                                          level, sched,
-                                                          allPatches,
-                                                          materials_,
-                                                          patchInfoMap_,
-                                                          iStage,
-                                                          sharedState_,
-                                                          lockedFields_ );
-        task->schedule(iStage);
-        taskInterfaceList_.push_back( task );
-      }
-      proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
-      
       // pass the bc Helper to pressure expressions on all patches
       bcHelperMap_[level->getID()]->synchronize_pressure_expression();
     }
+
     
+    // post processing
+    GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
+    Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
+    if( !postProcGH->rootIDs.empty() ){
+      TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
+                                                       "postprocessing",
+                                                       postProcFactory,
+                                                       level, sched,
+                                                       allPatches,
+                                                       materials_,
+                                                       patchInfoMap_,
+                                                       1,
+                                                       sharedState_,
+                                                       lockedFields_ );
+      task->schedule(1);
+      taskInterfaceList_.push_back( task );
+    }
+    proc0cout << "Wasatch: done creating post-processing task(s)" << std::endl;
+
     // ensure that any "CARRY_FORWARD" variable has an initialization provided for it.
     if( buildTimeIntegrator_ ){ // make sure that we have a timestepper created - this is needed for wasatch-in-arches
       const Expr::ExpressionFactory* const icFactory = graphCategories_[INITIALIZATION]->exprFactory;

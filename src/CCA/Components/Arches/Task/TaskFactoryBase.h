@@ -35,9 +35,6 @@ namespace Uintah{
     TaskMap   _tasks;             ///< Task map
     TaskMap& retrieve_all_tasks(){ return _tasks; }; 
 
-    /** @brief Does a VarLabel::create for any local varlabes to all tasks **/
-    void create_varlabels(); 
-
   protected: 
 
     BuildMap  _builders;          ///< Builder map

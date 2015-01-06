@@ -90,7 +90,7 @@ class ParticleRadProps
   ParticleRadProps( const ParticleRadProp prop,
                     const Expr::Tag& tempTag,
                     const Expr::Tag& pRadiusTag,
-                    const std::complex<double> refIndex );
+                    const std::complex<double>& refIndex );
 public:
   class Builder : public Expr::ExpressionBuilder
   {

@@ -525,6 +525,10 @@ ColdFlow::getState( const ProcessorGroup* pc,
             counter++; 
           } 
 
+          if ( !foundIterator ){ 
+            throw InvalidValue( "Error: Missing boundary condition for table variable: "+variable_name, __FILE__, __LINE__ ); 
+          }
+
           if ( bc_kind == "Dirichlet" ) {
             which_bc.push_back(ColdFlow::DIRICHLET); 
           } else if (bc_kind == "Neumann" ) { 
