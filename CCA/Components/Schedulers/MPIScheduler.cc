@@ -88,7 +88,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
                             const Output         * oport,
                                   MPIScheduler   * parentScheduler) :
   SchedulerCommon( myworld, oport ),
-  parentScheduler( parentScheduler ),
+  parentScheduler_( parentScheduler ),
   log( myworld, oport ),
   oport_( oport )
 {
@@ -314,16 +314,16 @@ MPIScheduler::runTask(DetailedTask* task,
 
   mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
 
-  if (parentScheduler)  //add my timings to the parent scheduler
+  if( parentScheduler_ )  // Add my timings to the parent scheduler.
   {
     //  if(d_myworld->myrank()==0)
     //    cout << "adding: " << mpi_info_.totaltask << " to parent counters, new total: " << parentScheduler->mpi_info_.totaltask << endl;
-    parentScheduler->mpi_info_.totaltask += mpi_info_.totaltask;
-    parentScheduler->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
-    parentScheduler->mpi_info_.totalrecv += mpi_info_.totalrecv;
-    parentScheduler->mpi_info_.totalsend += mpi_info_.totalsend;
-    parentScheduler->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
-    parentScheduler->mpi_info_.totalreduce += mpi_info_.totalreduce;
+    parentScheduler_->mpi_info_.totaltask += mpi_info_.totaltask;
+    parentScheduler_->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
+    parentScheduler_->mpi_info_.totalrecv += mpi_info_.totalrecv;
+    parentScheduler_->mpi_info_.totalsend += mpi_info_.totalsend;
+    parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
+    parentScheduler_->mpi_info_.totalreduce += mpi_info_.totalreduce;
     mpi_info_.totalreduce = 0;
     mpi_info_.totalsend = 0;
     mpi_info_.totalrecv = 0;
@@ -415,9 +415,9 @@ MPIScheduler::postMPISends(DetailedTask* task,
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
 
-      if (!reloc_new_posLabel_ && parentScheduler) {
+      if( !reloc_new_posLabel_ && parentScheduler_ ) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        posLabel = parentScheduler->reloc_new_posLabel_;
+        posLabel = parentScheduler_->reloc_new_posLabel_;
       }
       else {
         // on an output task (and only on one) we require particle variables from the NewDW
@@ -430,8 +430,9 @@ MPIScheduler::postMPISends(DetailedTask* task,
         posLabel = reloc_new_posLabel_;
       }
       MPIScheduler* top = this;
-      while (top->parentScheduler)
-        top = top->parentScheduler;
+      while( top->parentScheduler_ ) {
+        top = top->parentScheduler_;
+      }
 
       dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
     }
@@ -603,7 +604,7 @@ void MPIScheduler::postMPIRecvs(DetailedTask* task,
       // the load balancer is used to determine where data was in the old dw on the prev timestep
       // pass it in if the particle data is on the old dw
       LoadBalancer* lb = 0;
-      if (!reloc_new_posLabel_ && parentScheduler) {
+      if( !reloc_new_posLabel_ && parentScheduler_ ) {
         posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       }
       else {
@@ -617,8 +618,9 @@ void MPIScheduler::postMPIRecvs(DetailedTask* task,
       }
 
       MPIScheduler* top = this;
-      while (top->parentScheduler)
-        top = top->parentScheduler;
+      while( top->parentScheduler_ ) {
+        top = top->parentScheduler_;
+      }
 
       dw->recvMPI(batch, mpibuff, posDW, req, lb);
 
@@ -951,7 +953,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
              mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
   }
 
-  if (!parentScheduler) {//if this schedule is root scheduler
+  if( !parentScheduler_ ) { // If this schedule is the root scheduler...
     d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime; // don't count output time...
     d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
     d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
@@ -980,7 +982,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   
 
   log.finishTimestep();
-  if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
+  if( timeout.active() && !parentScheduler_ ){ // only do on toplevel scheduler
     //emitTime("finalize");
 
     // add number of cells, patches, and particles
