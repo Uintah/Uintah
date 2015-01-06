@@ -34,8 +34,10 @@ using namespace std;
 using namespace Uintah;
 
 
-ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, MPMFlags* Mflag){
+ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag)
+{
   d_Mflag = Mflag;
+  d_sharedState = sS;
 
   d_lb = scinew MPMLabel;
   d_rdlb = scinew ReactionDiffusionLabel();
@@ -61,68 +63,50 @@ ScalarDiffusionModel::~ScalarDiffusionModel() {
 }
 
 void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
-                                              const PatchSet* patch) const{
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_rdlb->pConcentrationLabel,      matlset);
+                                              const PatchSet* patch) const
+{
+
 }
 
 void ScalarDiffusionModel::initializeSDMData(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* new_dw)
 {
-  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
 
-  ParticleVariable<double>  pConcentration;
-
-  new_dw->allocateAndPut(pConcentration,   d_rdlb->pConcentrationLabel, pset);
-
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-    pConcentration[*iter] = 0.0;
-  }
 }
 
 void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
                                                          const MPMMaterial* matl,
-                                                         const PatchSet* patch) const{
+                                                         const PatchSet* patch) const
+{
 
-  const MaterialSubset* matlset = matl->thisMaterial();
-  Ghost::GhostType  gnone = Ghost::None;
-  int NGP = 0;
-
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone);
-  task->computes(d_rdlb->pConcentrationLabel,      matlset);
 }
 
 void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch, const MPMMaterial* matl,
-                                                      DataWarehouse* old_dw, DataWarehouse* new_dw){
-
-  Ghost::GhostType  gnone = Ghost::None;
-  constParticleVariable<double> pConcentration;
-  int dwi = matl->getDWIndex();
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
-  old_dw->get(pConcentration,    d_rdlb->pConcentrationLabel,  pset);
-
-  ParticleVariable<double> gConcentration;
-  //new_dw->allocateAndPut(gConcentration,  d_rdlb->pConcentrationLabel,  dwi,  patch);
-  new_dw->allocateAndPut(gConcentration,  d_rdlb->pConcentrationLabel,  pset);
-
-  //gConcentration.initialize(0);
-  
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
-    particleIndex idx = *iter;
-    gConcentration[idx] = pConcentration[idx] + 1;
-  }
+                                                      DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
 
 }
 
 
-void ScalarDiffusionModel::scheduleComputeFluxValue(Task* task, const MPMMaterial* matl, 
+void ScalarDiffusionModel::scheduleComputeStep1(Task* task, const MPMMaterial* matl, 
 		                                                const PatchSet* patch) const
 {
 
 }
 
-void ScalarDiffusionModel::computeFluxValue(const Patch* patch, const MPMMaterial* matl,
+void ScalarDiffusionModel::computeStep1(const Patch* patch, const MPMMaterial* matl,
+                                            DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+
+}
+
+void ScalarDiffusionModel::scheduleComputeStep2(Task* task, const MPMMaterial* matl, 
+		                                                const PatchSet* patch) const
+{
+
+}
+
+void ScalarDiffusionModel::computeStep2(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 

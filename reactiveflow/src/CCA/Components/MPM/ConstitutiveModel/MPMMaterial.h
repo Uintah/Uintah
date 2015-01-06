@@ -187,7 +187,7 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps, MPMFlags* flags);
+   void standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMFlags* flags);
  };
 
 } // End namespace Uintah

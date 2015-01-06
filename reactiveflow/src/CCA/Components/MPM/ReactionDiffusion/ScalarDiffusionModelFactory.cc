@@ -41,7 +41,8 @@ using namespace std;
 using namespace Uintah;
 
 ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
-                                                    MPMFlags* flags)
+                                                          SimulationStateP& ss,
+                                                          MPMFlags* flags)
 {
   ProblemSpecP child = ps->findBlock("diffusion_model");
   if(!child)
@@ -62,9 +63,9 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
   }
 
   if (mat_type == "linear")
-    return(scinew ScalarDiffusionModel(child,flags));
+    return(scinew ScalarDiffusionModel(child, ss, flags));
 	else if (mat_type == "jg")
-    return(scinew JGConcentrationDiffusion(child,flags));
+    return(scinew JGConcentrationDiffusion(child, ss, flags));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+mat_type+")", __FILE__, __LINE__);
