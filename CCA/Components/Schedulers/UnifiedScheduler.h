@@ -82,21 +82,18 @@ WARNING
     
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
     
-    void initiateTask( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration);
+    virtual void initiateTask( DetailedTask * task, bool only_old_recvs, int abort_point, int iteration );
 
-    void runTask( DetailedTask* task, int iteration, int t_id, Task::CallBackEvent event);
+    virtual void runTask( DetailedTask* task, int iteration, int thread_id, Task::CallBackEvent event );
 
-    void runTasks(int t_id);
-    
-    void postMPISends( DetailedTask* task, int iteration, int t_id);
-    
-    void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration);
+            void runTasks( int thread_id );
+     
+            void postMPISends( DetailedTask* task, int iteration, int thread_id );
+    virtual void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
-    void processMPIRecvs(int how_much);
+    virtual void processMPIRecvs(int how_much);
 
     int  pendingMPIRecvs();
-
-    enum { TEST, WAIT_ONCE, WAIT_ALL };
 
     ConditionVariable        d_nextsignal;           // conditional wait mutex
     Mutex                    d_nextmutex;            // mutex
@@ -181,7 +178,7 @@ class UnifiedSchedulerWorker : public Runnable {
 
 public:
   
-  UnifiedSchedulerWorker(UnifiedScheduler* scheduler, int id);
+  UnifiedSchedulerWorker( UnifiedScheduler * scheduler, int thread_id );
 
   void assignTask( DetailedTask* task, int iteration);
 
@@ -200,7 +197,7 @@ public:
 
 private:
 
-  int                    d_id;
+  int                    d_thread_id;
   UnifiedScheduler*      d_scheduler;
   bool                   d_idle;
   Mutex                  d_runmutex;
