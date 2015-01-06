@@ -26,7 +26,7 @@
 //--------------------------------------------------------------------
 
 OscillatingCylinder::
-OscillatingCylinder( const std::string axis,
+OscillatingCylinder( const std::string& axis,
                      const std::vector<double>& origin,
                      const std::vector<double>& oscillatingdir,
                      const double insideValue,
@@ -96,7 +96,7 @@ evaluate()
   const double orig1 = origin_[1] + oscillatingdir_[1]*amplitude_*sin(frequency_ * (*t_)[0] );
   SVolField& result = this->value();
   result <<= cond( (*field1_ - orig0) * (*field1_ - orig0) + (*field2_ - orig1)*(*field2_ - orig1) - radius_*radius_ <= 0,
-                  insidevalue_)
+                   insidevalue_)
                  ( outsidevalue_ );
 }
 
@@ -104,7 +104,7 @@ evaluate()
 
 OscillatingCylinder::Builder::
 Builder( const Expr::Tag& result,
-         const std::string axis,
+         const std::string& axis,
          const std::vector<double>& origin,
          const std::vector<double>& oscillatingdir,
          const double insideValue,
@@ -130,8 +130,8 @@ OscillatingCylinder::Builder::
 build() const
 {
   return new OscillatingCylinder( axis_, origin_, oscillatingdir_,
-                                         insidevalue_, outsidevalue_, radius_,
-                                         frequency_, amplitude_ );
+                                  insidevalue_, outsidevalue_, radius_,
+                                  frequency_, amplitude_ );
 }
 
 //==========================================================================

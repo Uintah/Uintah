@@ -96,7 +96,8 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw, 
+                     const int timeSubStep );
 
   // FIXME: add Glacier computation methods
 
@@ -128,99 +129,66 @@ public:
   double calcEnthalpyChangeParticle() {
     return 0; }
 
-
-  /////////////////////////////////////////////////
-  // Access methods
-
-  /** @brief  Access function for thermal conductivity of particles */
-  inline const VarLabel* getabskp(){
-    return d_abskp; };  
   
 private:
 
   //////////////////////////////////////////////////
   // Private methods for calculation
 
-  /** @brief  Funtion for calculation of heat capacity (from Merrick) */
-  double g1( double z1, double z2);
 
   /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
   double props(double Tg, double Tp);
 
-  double calc_enthalpy(double particle_temperature, double rc_mass,
-                               double char_mass, double ash_mass);
-  double calc_hcint(double Tp);
-  double calc_hhint(double Tp);
-  double calc_haint(double Tp);
-
-  double get_hc(double Tp);
-  double get_hh(double Tp);
-  double get_ha(double Tp);
- 
-  const VarLabel* d_charoxiTempLabel; 
-  const VarLabel* d_surfacerateLabel;
-  const VarLabel* d_chargasLabel;
-  const VarLabel* d_devolgasLabel;
-  const VarLabel* d_raw_coal_mass_label;        ///< Label for raw coal mass
-  const VarLabel* d_char_mass_label;
-  const VarLabel* d_particle_enthalpy_label; ///< Label for particle enthalpy
-  const VarLabel* d_particle_length_label;      ///< Label for particle length
-  const VarLabel* d_weight_label;               ///< Weight label
-
-  const VarLabel* d_abskp;  ///< Label for thermal conductivity (of the particles, I think???)
-  const VarLabel* d_volq_label;
-  const VarLabel* d_abskg_label;
-
-  const VarLabel* d_gas_temperature_label;    ///< Gas temperature label
-  const VarLabel* d_gas_cp_label;             ///< Gas specific heat label
+  // labels used for getting required variables later on in the calculation
+  const VarLabel* _particle_temperature_varlabel;
+  const VarLabel* _gas_temperature_varlabel;
+  const VarLabel* _gas_cp_varlabel;
+  const VarLabel* _volq_varlabel;
+  const VarLabel* _length_varlabel;
+  const VarLabel* _weight_varlabel;
+  const VarLabel* _abskg_varlabel;
+  const VarLabel* _abskp_varlabel;
+  const VarLabel* _charoxiTemp_varlabel; 
+  const VarLabel* _surfacerate_varlabel;
+  const VarLabel* _chargas_varlabel;
+  const VarLabel* _devolgas_varlabel;
 
   Properties* d_props; 
 
-  double visc;
+  // variables used in problem setup
   double yelem[5];              ///< Fractions of each element in coal (C, H, N, O, S respectively)
-  std::vector<double>  particle_sizes;        /// particle sizes in diameters
-  std::vector<double>  vol_dry;         ///volume of each particle size
-  std::vector<double>  mass_dry;         ///mass of each particle size
-  std::vector<double>  rawcoal_mass_init;    ///< Initial raw coal mass
-  std::vector<double>  char_mass_init;        ///< Initial char mass
-  std::vector<double>  ash_mass_init;        ///< Initial ash mass
-  std::vector<double>  as_received; // wt fraction of [C,H,O,N,S,char,ash,moisture] as received components 
-  double rhop;                  ///< Density of particle 
+  double total_rc;
+    struct CoalAnalysis{ 
+      double C;
+      double H; 
+      double O; 
+      double N; 
+      double S; 
+      double CHAR; 
+      double ASH; 
+      double H2O; 
+    };
 
-  double Pr;
+
+  double _Pr;
+  double _sigma;
+  double _pi;
+  double _Rgas;
+  double _RdC;
+  double _RdMW;
+  double _visc;
+  double _MW_avg;
+  double _ksi;
+  double _Hc0;
+  double _Hh0;
+  double _enthalpy_scaling_constant;
+  double _weight_scaling_constant;
+  double _weight_small;   ///< small weight 
+  std::string _weight_name;
+
+  // variables used in cell loops 
   double blow;
   double kappa;
-  double sigma;
-  double pi;
-  double ksi;
-  double Hc0;
-  double Hh0;
-  double Ha0;
-  double Rgas;
-  double MW_avg;
-
-  double total_rc;
-  double total_dry;
-  double rc_mass_frac;
-  double char_mass_frac;
-  double ash_mass_frac;
-  
-  double ai;
-  double bi;
-  double hi;
-  double Cpci;
-  double Cphi;
-  double Cpai;
-  double xi;
-  double Hc;
-  double Hh;
-  double Ha;
-
-  double d_rc_scaling_constant;   ///< Scaling factor for raw coal
-  double d_rh_scaling_constant;
-  double d_ash_scaling_constant;  ///< Scaling factor for ash mass
-  double d_pl_scaling_constant;   ///< Scaling factor for particle size (length)
-  double d_pe_scaling_constant;   ///< Scaling factor for particle temperature
 
   //bool _radiation;                ///< Radiation flag
 

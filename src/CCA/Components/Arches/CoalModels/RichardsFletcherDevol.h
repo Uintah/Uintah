@@ -83,18 +83,17 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw, 
+                     const int timeSubStep );
 
 private:
 
-  const VarLabel* d_raw_coal_mass_label;
-  const VarLabel* d_char_mass_label;
-  const VarLabel* d_weight_label;
-  const VarLabel* d_particle_temperature_label;
-  const VarLabel* d_gas_temperature_label;
+  const VarLabel* _rcmass_varlabel;
+  const VarLabel* _char_varlabel;
+  const VarLabel* _weight_varlabel;
+  const VarLabel* _particle_temperature_varlabel;
 
   std::vector<double>  RichardsFletcher_coefficients;  
-  std::vector<double>  as_received;
   std::vector<double>  particle_sizes;
   std::vector<double>  ash_mass_init;
   std::vector<double>  char_mass_init;
@@ -135,17 +134,20 @@ private:
   
   double pi;
   
-  bool compute_part_temp; ///< Boolean: is particle temperature computed? 
-  bool part_temp_from_enth; ///< Boolean: is particle temperature computed? 
-  bool compute_char_mass;
-
   double rateMax;
-  double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
-  double d_rh_scaling_factor;
-  double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
-  double testVal_part;
-  double testVal_gas;
-  double testVal_char;
+  double _rc_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
+  double _weight_scaling_constant;   ///< Scaling factor for weight 
+  double _weight_small;   ///< small weight 
+    struct CoalAnalysis{ 
+      double C;
+      double H; 
+      double O; 
+      double N; 
+      double S; 
+      double CHAR; 
+      double ASH; 
+      double H2O; 
+    };
 }; // end ConstSrcTerm
 } // end namespace Uintah
 #endif

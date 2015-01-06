@@ -151,10 +151,10 @@ namespace Wasatch {
     scatCoefTag_   ( scatCoefTag    ),
     temperatureTag_( temperatureTag ),
 
+    svec_( svec ),
+
     hasAbsCoef_ (  absCoefTag != Expr::Tag() ),
     hasScatCoef_( scatCoefTag != Expr::Tag() ),
-
-    svec_( svec ),
 
     doX_( true ),
     doY_( true ),

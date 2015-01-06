@@ -172,8 +172,8 @@ namespace Wasatch{
           valParams->get("Origin", origin, 2); // get only the first nEqs moments
           std::vector<double> oscillatingdir;
           valParams->get("OscillatingDir", oscillatingdir, 2); // get only the first nEqs moments
-          if (oscillatingdir[0]!=0) oscillatingdir[0] /= oscillatingdir[0];
-          if (oscillatingdir[1]!=0) oscillatingdir[1] /= oscillatingdir[1];
+          if (oscillatingdir[0]!=0.0) oscillatingdir[0] = 1.0;
+          if (oscillatingdir[1]!=0.0) oscillatingdir[1] = 1.0;
           std::string axis;
           valParams->get("Axis",axis);
           typedef OscillatingCylinder::Builder Builder;

@@ -122,7 +122,7 @@
   <benchmark>         1          </benchmark>
   <calc_frequency>    2          </calc_frequency>
     
-  <RMCRT>
+  <RMCRT type = "double">
     <randomSeed>         false     </randomSeed>
     <nDivQRays>          3          </nDivQRays>
     <Threshold>         0.05       </Threshold>

@@ -179,7 +179,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
     }
   }
-
 }
 
 void 
