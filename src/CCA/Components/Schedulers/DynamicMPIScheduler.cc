@@ -514,7 +514,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   
 
   log.finishTimestep();
-  if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
+  if( timeout.active() && !parentScheduler_ ){ // only do on toplevel scheduler
     //emitTime("finalize");
 
     // add number of cells, patches, and particles
