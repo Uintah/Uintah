@@ -33,10 +33,10 @@ using namespace std;
 
 // get NoMedia from main function
 ray::ray(const int &VolElementNo_,
-	 const int &Ncx_,
-	 const int &Ncy_,
-	 const int &Ncz_,
-	 const double &scat_threshold_){
+   const int &Ncx_,
+   const int &Ncy_,
+   const int &Ncz_,
+   const double &scat_threshold_){
   
   
   VolElementNo = VolElementNo_;
@@ -60,7 +60,7 @@ ray::~ray(){
 
   
 void ray::set_emissS_vol(MTRand &MTrng,
-			 double *sVol){
+       double *sVol){
   
   double phi, theta;
   phi = 2 * pi * MTrng.randExc();
@@ -176,28 +176,28 @@ ray::surfaceIntersect( const double *X,
         
     // hit on top virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) * ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) * ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
       
       // update next step's volume index i, j, k,
       // but note, not updating currentvIndex yet
       
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
       // make sure that if not hit on realsurface and called hitSurfaceIndex
       // will return error
-      hitSurfaceIndex = -1;	
+      hitSurfaceIndex = -1; 
       VIRTUAL =  1;
     }
     else{
-      //	cout << "hit on top real " << endl;
+      //  cout << "hit on top real " << endl;
       VIRTUAL = 0;
       
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
+           jIndex,
+           kIndex);
       
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
       obReal = &obTop_ray;
@@ -226,21 +226,21 @@ ray::surfaceIntersect( const double *X,
 
     // hit on bottom virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex-1+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex-1+1) *ghostTB]){
       
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex-1);
+           hitSurfacejIndex,
+           hitSurfacekIndex-1);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
       
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
+           jIndex,
+           kIndex);
       
       VIRTUAL = 0;
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
@@ -270,21 +270,21 @@ ray::surfaceIntersect( const double *X,
        
     // hit on front virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex-1+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex-1+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
       
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex-1,
-		       hitSurfacekIndex);
+           hitSurfacejIndex-1,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;	
+      hitSurfaceIndex = -1; 
       VIRTUAL =  1;
     }
     else{
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-      	
+           jIndex,
+           kIndex);
+        
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obFront_ray;
@@ -313,22 +313,22 @@ ray::surfaceIntersect( const double *X,
         
     // hit on back virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
 
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-		
+           jIndex,
+           kIndex);
+    
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obBack_ray;
@@ -356,22 +356,22 @@ ray::surfaceIntersect( const double *X,
        
     // hit on left virtual surface
     if (VolFeature[(hitSurfaceiIndex-1+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex-1,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
-      //	cout << "hit on left real " << endl;
+      //  cout << "hit on left real " << endl;
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-      		
+           jIndex,
+           kIndex);
+          
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obLeft_ray;
@@ -400,22 +400,22 @@ ray::surfaceIntersect( const double *X,
     
     // hit on right virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
 
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-      		
+           jIndex,
+           kIndex);
+          
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obRight_ray;
@@ -454,15 +454,15 @@ ray::surfaceIntersect( const double *X,
 // then keep tracking if the ray goes to that scatter length yet.
 // otherwise, if scat-length is too long, the ray will never get a chance to scatter
 void ray::TravelInMediumInten(MTRand &MTrng,
-			      VirtualSurface &obVirtual,
-			      const double *kl_Vol,
-			      const double *scatter_Vol,
-			      const double *X,
-			      const double *Y,
-			      const double *Z,
-			      const int *VolFeature,
-			      double &PathLeft,
-			      double &PathSurfaceLeft) {
+            VirtualSurface &obVirtual,
+            const double *kl_Vol,
+            const double *scatter_Vol,
+            const double *X,
+            const double *Y,
+            const double *Z,
+            const int *VolFeature,
+            double &PathLeft,
+            double &PathSurfaceLeft) {
   
 
   if ( !surfaceIntersect(X, Y, Z, VolFeature) ) {
@@ -552,16 +552,16 @@ void ray::TravelInMediumInten(MTRand &MTrng,
                     
  
       if ( xemiss > X[iIndex+1] || xemiss < X[iIndex] ){
-	cerr << " xemiss out of bound " << endl;
-	exit(1);
+  cerr << " xemiss out of bound " << endl;
+  exit(1);
       }
       if ( yemiss > Y[jIndex+1] || yemiss < Y[jIndex] ){
-	cerr << " yemiss out of bound " << endl;
-	exit(1);
+  cerr << " yemiss out of bound " << endl;
+  exit(1);
       }
       if ( zemiss > Z[kIndex+1] || zemiss < Z[kIndex] ){
-	cerr << " zemiss out of bound " << endl;
-	exit(1);
+  cerr << " zemiss out of bound " << endl;
+  exit(1);
       }      
       
       // re-set straight Position
@@ -581,11 +581,11 @@ void ray::TravelInMediumInten(MTRand &MTrng,
     
       // update on xhit, yhit, zhit, and ray_length
       if( surfaceIntersect(X, Y, Z, VolFeature) ) {
-	length = ray_length();
+  length = ray_length();
       }
       else {
-	cerr << " error @ not getting hit point coordinates after scattering!\n";
-	exit(1); // terminate program
+  cerr << " error @ not getting hit point coordinates after scattering!\n";
+  exit(1); // terminate program
       }
 
       
@@ -668,9 +668,9 @@ void ray::TravelInMediumInten(MTRand &MTrng,
     }
 
     if ( abs(xemiss) >0.5 || abs(yemiss) >0.5 || abs(zemiss) >0.5 || abs(xhit) >0.5
-	 || abs(yhit) > 0.5 || abs(zemiss) > 0.5)
+   || abs(yhit) > 0.5 || abs(zemiss) > 0.5)
       {
-	cerr << "*******error out of bound!!!******* " << endl;
+  cerr << "*******error out of bound!!!******* " << endl;
      cout << "new xhit = " << xhit << endl;
       cout << "new yhit = " << yhit << endl;
       cout << "new zhit = " << zhit << endl;
@@ -678,7 +678,7 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       cout << "new yemiss = " << yemiss << endl;
       cout << "new zemiss = " << zemiss << endl;
            
-	exit(1);
+  exit(1);
       }
 
     
@@ -698,10 +698,10 @@ void ray::TravelInMediumInten(MTRand &MTrng,
 
 // For Intensity
 void ray::hitRealSurfaceInten(MTRand &MTrng,
-			      const double *absorb_surface,
-			      const double *rs_surface,
-			      const double *rd_surface,
-			      double &PathSurfaceLeft){
+            const double *absorb_surface,
+            const double *rs_surface,
+            const double *rd_surface,
+            double &PathSurfaceLeft){
 
 
   // for real surface,

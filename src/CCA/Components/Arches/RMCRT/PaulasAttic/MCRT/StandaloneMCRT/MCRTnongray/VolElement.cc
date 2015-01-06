@@ -31,10 +31,10 @@ VolElement::VolElement(){
 
 
 VolElement::VolElement(const int &iIndex,
-		       const int &jIndex,
-		       const int &kIndex,
-		       const int &Ncx_,
-		       const int &Ncy_){
+           const int &jIndex,
+           const int &kIndex,
+           const int &Ncx_,
+           const int &Ncy_){
   
   VoliIndex = iIndex;
   VoljIndex = jIndex;
@@ -56,8 +56,8 @@ VolElement::~VolElement(){
 
   
 double VolElement::VolumeEmissFluxBlack(const int &vIndex,
-					const double *T_Vol,
-					const double *a_Vol){
+          const double *T_Vol,
+          const double *a_Vol){
     
   
   // we need either the emission position or hit position
@@ -76,9 +76,9 @@ double VolElement::VolumeEmissFluxBlack(const int &vIndex,
 
   
 double VolElement::VolumeEmissFlux(const int &vIndex,
-				   const double *kl_Vol,
-				   const double *T_Vol,
-				   const double *a_Vol){
+           const double *kl_Vol,
+           const double *T_Vol,
+           const double *a_Vol){
   
   
   // we need either the emission position or hit position
@@ -101,8 +101,8 @@ double VolElement::VolumeEmissFlux(const int &vIndex,
 
  
 double VolElement::VolumeIntensityBlack(const int &vIndex,
-					const double *T_Vol,
-					const double *a_Vol){
+          const double *T_Vol,
+          const double *a_Vol){
   
   double Ts, VolInten;
   
@@ -117,7 +117,7 @@ double VolElement::VolumeIntensityBlack(const int &vIndex,
 
   
 double VolElement::VolumeIntensityBlack(const double &TVol,
-					const double &aVol){
+          const double &aVol){
   
   double Ts, VolInten;
   
@@ -131,9 +131,9 @@ double VolElement::VolumeIntensityBlack(const double &TVol,
   
   
 double VolElement::VolumeIntensity(const int &vIndex,
-				   const double *kl_Vol,
-				   const double *T_Vol,
-				   const double *a_Vol){
+           const double *kl_Vol,
+           const double *T_Vol,
+           const double *a_Vol){
   
     double Ts, VolInten;
     

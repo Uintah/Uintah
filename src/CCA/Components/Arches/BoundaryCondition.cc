@@ -2893,7 +2893,7 @@ void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType&
   double elapTime = d_lab->d_sharedState->getElapsedTime();
   int t = TurbInlet->getTimeIndex( ts , elapTime);
 
-  IntVector	shiftVec;
+  IntVector shiftVec;
   shiftVec = TurbInlet->getOffsetVector( );
   
   switch ( face ) {

@@ -40,18 +40,18 @@
   for ( int k = 0; k < Ncz; k ++ )
     for ( int j = 0; j < Ncy; j ++) 
       for ( int i = 0; i < xI; i ++ ) 
-	T_Vol[k*Ncx*Ncy + j*Ncx +i] = 1000;
+  T_Vol[k*Ncx*Ncy + j*Ncx +i] = 1000;
 
 
   for ( int k = 0; k < Ncz; k ++ )
     for ( int j = 0; j < Ncy; j ++) 
       for ( int i = xI; i < xII; i ++ ) 
-	T_Vol[k*Ncx*Ncy + j*Ncx +i] = 1500;
+  T_Vol[k*Ncx*Ncy + j*Ncx +i] = 1500;
 
   for ( int k = 0; k < Ncz; k ++ )
     for ( int j = 0; j < Ncy; j ++) 
       for ( int i = xII; i < Ncx; i ++ ) 
-	T_Vol[k*Ncx*Ncy + j*Ncx +i] = 1000;
+  T_Vol[k*Ncx*Ncy + j*Ncx +i] = 1000;
 
 
 for ( int i = 0; i < VolElementNo; i ++){

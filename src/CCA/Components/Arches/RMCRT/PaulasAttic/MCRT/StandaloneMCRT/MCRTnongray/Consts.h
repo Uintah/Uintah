@@ -47,8 +47,8 @@ static const double n_left[3] = {1, 0, 0};
 static const double n_right[3] = {-1, 0, 0};;
 
 static const double *surface_n[6] = { n_top, n_bottom,
-				      n_front, n_back,
-				      n_left, n_right};
+              n_front, n_back,
+              n_left, n_right};
 
   
 

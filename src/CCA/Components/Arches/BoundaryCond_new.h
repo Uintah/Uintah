@@ -54,7 +54,7 @@ public:
   /** @brief Interface for the input file and set constants */ 
   void  problemSetup( ProblemSpecP& db, std::string eqn_name );
 
-	/** @brief Interface for setting up tabulated BCs */
+  /** @brief Interface for setting up tabulated BCs */
   void setupTabulatedBC( ProblemSpecP& db, std::string eqn_name, MixingRxnModel* table );
 
   /** @brief Create spatial masks **/
@@ -631,7 +631,7 @@ private:
   //-----------------------------
  
   //variables
-	const int d_matl_id; 
+  const int d_matl_id; 
 
   LabelMap           areaMap;
   MapDoubleMap       _tabVarsMap;

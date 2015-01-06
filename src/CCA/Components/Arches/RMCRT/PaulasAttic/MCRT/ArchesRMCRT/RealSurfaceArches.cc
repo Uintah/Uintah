@@ -66,10 +66,10 @@ void RealSurface::get_s(MTRand &MTrng, double *s){
 
 // i -> IntVector currCell
 double RealSurface::SurfaceEmissFlux(const int &i,
-				     const double *emiss_surface,
-				     const double *T_surface,
-				     const double *a_surface){
-	    
+             const double *emiss_surface,
+             const double *T_surface,
+             const double *a_surface){
+      
  
   double emiss, Ts, SurEmissFlux;
 
@@ -85,8 +85,8 @@ double RealSurface::SurfaceEmissFlux(const int &i,
 
 
 double RealSurface::SurfaceEmissFluxBlack(const int &i,
-					  const double *T_surface,
-					  const double *a_surface){
+            const double *T_surface,
+            const double *a_surface){
   
   
   double Ts, SurEmissFlux;
@@ -114,9 +114,9 @@ double RealSurface::SurfaceEmissFluxBlack(const int &i,
 
 // to get Intensity on surface elements
 double RealSurface::SurfaceIntensity(const int &i,
-				     const double *emiss_surface,
-				     const double *T_surface,
-				     const double *a_surface){
+             const double *emiss_surface,
+             const double *T_surface,
+             const double *a_surface){
   
   double Ts, SurInten;
 
@@ -130,8 +130,8 @@ double RealSurface::SurfaceIntensity(const int &i,
 
 
 double RealSurface::SurfaceIntensityBlack(const int &i,
-					  const double *T_surface,
-					  const double *a_surface){
+            const double *T_surface,
+            const double *a_surface){
 
   double Ts, SurInten;
 

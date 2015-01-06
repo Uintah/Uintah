@@ -28,9 +28,9 @@ using std::cout;
 using std::endl;
 
 FrontRealSurface::FrontRealSurface(const int &iIndex,
-				   const int &jIndex,
-				   const int &kIndex,
-				   const int &Ncx){
+           const int &jIndex,
+           const int &kIndex,
+           const int &Ncx){
   
   surfaceiIndex = iIndex;
   surfacejIndex = jIndex;

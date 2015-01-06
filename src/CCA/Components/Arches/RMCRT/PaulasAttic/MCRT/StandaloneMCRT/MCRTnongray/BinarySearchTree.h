@@ -30,8 +30,8 @@ public:
   
   inline
   void search(const double &Rgg,
-	      const double *Rkg,
-	      const int &gSize){
+        const double *Rkg,
+        const int &gSize){
     
     int rootI, endI, startI;
     startI = 0;
@@ -43,26 +43,26 @@ public:
     while ( !found) {
 
       if ( Rgg == Rkg[rootI] ){
-	found = true;
-	lowI = rootI;
-	highI = rootI;
+  found = true;
+  lowI = rootI;
+  highI = rootI;
       }
       else if ( Rgg > Rkg[rootI] ) { // go to right
-	startI = rootI;
-	// int() is taking floor
-	rootI = int( (startI + endI)/2 );
-	
+  startI = rootI;
+  // int() is taking floor
+  rootI = int( (startI + endI)/2 );
+  
       }
       else if ( Rgg < Rkg[rootI]) { // go to left
-	endI = rootI;
-	rootI = int( (startI + endI)/2 );
-	
+  endI = rootI;
+  rootI = int( (startI + endI)/2 );
+  
       }
       
       if ( (endI - startI) == 1 ){// Rgg sits in between
-	found = true;
-	lowI = startI;
-	highI = endI;
+  found = true;
+  lowI = startI;
+  highI = endI;
       }
       //   cout << "startI = " << startI << endl;
       //  cout << "endI = " << endI << endl;
@@ -79,9 +79,9 @@ public:
 
   inline
   void search(const double &gg,
-	      const double *gk,
-	      const int &gSize,
-	      const int &d, const int &ii){
+        const double *gk,
+        const int &gSize,
+        const int &d, const int &ii){
     
     int rootI, endI, startI;
     startI = 0;
@@ -93,26 +93,26 @@ public:
     while ( !found) {
 
       if ( gg == gk[rootI*d+ii] ){
-	found = true;
-	lowI = rootI;
-	highI = rootI;
+  found = true;
+  lowI = rootI;
+  highI = rootI;
       }
       else if ( gg > gk[rootI*d+ii] ) { // go to right
-	startI = rootI;
-	// int() is taking floor
-	rootI = int( (startI + endI)/2 );
-	
+  startI = rootI;
+  // int() is taking floor
+  rootI = int( (startI + endI)/2 );
+  
       }
       else if ( gg < gk[rootI*d+ii]) { // go to left
-	endI = rootI;
-	rootI = int( (startI + endI)/2 );
-	
+  endI = rootI;
+  rootI = int( (startI + endI)/2 );
+  
       }
       
       if ( (endI - startI) == 1 ){// Rgg sits in between
-	found = true;
-	lowI = startI;
-	highI = endI;
+  found = true;
+  lowI = startI;
+  highI = endI;
       }
       //   cout << "startI = " << startI << endl;
       //  cout << "endI = " << endI << endl;
@@ -131,8 +131,8 @@ public:
   
   inline
   void calculate_gk(const double *gk,
-		    const double *Rkg,
-		    const double &Rgg){
+        const double *Rkg,
+        const double &Rgg){
     double A,B;
      
     if ( lowI == highI ) {// find the Rgg exactly there
@@ -145,21 +145,21 @@ public:
       
       A = (Rkg[highI] - Rgg)/(Rgg-Rkg[lowI]);
       g = ( gk[highI *2] + A * gk[lowI*2])/
-	max( (A+1), 1e-9);
+  max( (A+1), 1e-9);
       
       // cout << "lowI = " << lowI << "; highI = " << highI << endl;
       // cout << " A = " << A << "; g = " << g << endl;
 
       // B and A are always the same.
       
-	// then from the index get k-g or k-eta
+  // then from the index get k-g or k-eta
       //   B =  (gk[highI*2] - g)/(g-gk[lowI*2]);
-	
-	k = ( gk[highI *2+1] + A * gk[lowI*2+1])/
-	  max ( (A+1), 1e-9);
-	
+  
+  k = ( gk[highI *2+1] + A * gk[lowI*2+1])/
+    max ( (A+1), 1e-9);
+  
       
-	//	cout << " k = " << k << endl;
+  //  cout << " k = " << k << endl;
       
     }
     
@@ -168,7 +168,7 @@ public:
 
   inline
   void calculate_k(const double *gk,
-		    const double &gg){
+        const double &gg){
     double A;
      
     if ( lowI == highI ) {// find the Rgg exactly there
@@ -181,7 +181,7 @@ public:
       A = (gk[highI *2] - gg)/( gg - gk[lowI*2]);
    
       k = ( gk[highI *2+1] + A * gk[lowI*2+1])/
-	max ( (A+1), 1e-9);
+  max ( (A+1), 1e-9);
       //  cout << "highI = " << highI << "; lowI = " << lowI << endl;
       //  cout << " gg = " << gg << endl;
       //  cout << "k = " << k << endl;

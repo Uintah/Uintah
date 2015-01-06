@@ -33,9 +33,9 @@ class FrontRealSurface:public RealSurface{
 public:
 
   FrontRealSurface(const int &iIndex,
-		   const int &jIndex,
-		   const int &kIndex,
-		   const int &Ncx);
+       const int &jIndex,
+       const int &kIndex,
+       const int &Ncx);
 
   
   FrontRealSurface();
@@ -79,8 +79,8 @@ public:
 
   inline
   void FrontRealSurface::get_limits(const double *X,
-				    const double *Y,
-				    const double *Z){
+            const double *Y,
+            const double *Z){
     
     // i, j, k is settled at the center of the VOLUME cell
     xlow = X[surfaceiIndex];
@@ -101,8 +101,8 @@ public:
 //   virtual void get_t1();
 //   virtual void get_t2();
 //   virtual void get_limits(const double *X,
-// 			  const double *Y,
-// 			  const double *Z);  
+//        const double *Y,
+//        const double *Z);  
 
 
 };

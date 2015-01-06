@@ -31,11 +31,11 @@ class BottomRealSurface:public RealSurface{
 public:
   
   BottomRealSurface(const int &iIndex,
-		    const int &jIndex,
-		    const int &kIndex,
-		    const int &Ncx);
+        const int &jIndex,
+        const int &kIndex,
+        const int &Ncx);
   BottomRealSurface();
-		    
+        
   ~BottomRealSurface();
 
 
@@ -77,8 +77,8 @@ public:
 
   inline
   void BottomRealSurface::get_limits(const double *X,
-				     const double *Y,
-				     const double *Z){
+             const double *Y,
+             const double *Z){
     
     // i, j, k is settled at the center of the VOLUME cell
     xlow = X[surfaceiIndex];
@@ -99,8 +99,8 @@ public:
 //   virtual void get_t1();
 //   virtual void get_t2();
 //   virtual void get_limits(const double *X,
-// 			  const double *Y,
-// 			  const double *Z);
+//        const double *Y,
+//        const double *Z);
   
 
 };

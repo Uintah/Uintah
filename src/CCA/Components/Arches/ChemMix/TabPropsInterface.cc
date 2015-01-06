@@ -364,7 +364,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           std::string variable_name = d_allIndepVarNames[i]; 
 
           const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
-		                                          		           variable_name, bound_ptr,
+                                                             variable_name, bound_ptr,
                                                              nu, child );
 
           const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
@@ -517,6 +517,6 @@ TabPropsInterface::getEnthalpySplineInfo()
 //
 double TabPropsInterface::getTableValue( std::vector<double> iv, std::string variable )
 {
-	double value = getSingleState( variable, iv ); 
-	return value; 
+  double value = getSingleState( variable, iv ); 
+  return value; 
 }

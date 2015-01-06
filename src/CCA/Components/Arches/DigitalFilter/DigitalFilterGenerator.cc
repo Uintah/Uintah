@@ -48,7 +48,7 @@ double bTilde ( int k, double n ) {
 double BSum ( int k, double n, int N ) {
   double SumTerm = 0.0;
   for (int j=-N; j<=N; j++) {  
-    SumTerm	= SumTerm + bTilde(j, n) * bTilde(j, n);
+    SumTerm = SumTerm + bTilde(j, n) * bTilde(j, n);
   }
   SumTerm = sqrt(SumTerm);
   double BK = bTilde(k, n)/SumTerm;
@@ -87,7 +87,7 @@ public:
           lo = mid;
         } else {
           //if (i1[i1dep_ind][mid] == iv[0])
-          lo = mid;											
+          lo = mid;                     
           hi = mid;
         } 
       }
@@ -460,7 +460,7 @@ class specifiedV : public BaseVelocity {
 public:
   specifiedV( std::vector<double>& specDistance, std::vector<std::vector<double> >& specVelocity, bool isSymmetric, bool isRadial){
     interpV = new Interpolator( specDistance, specVelocity);
-		isSymmetric_ = isSymmetric;
+    isSymmetric_ = isSymmetric;
     isRadial_ = isRadial;
   };
   ~specifiedV(){};
@@ -1031,9 +1031,9 @@ int main( int argc, const char* argv[] )
     nPts = getInt(gzFp); //set number of data points in inlet
   
   vector<double> specDistance (nPts, 0.0);
-  vector< vector<double> > specVelocity (nPts, vector<double> (3,0.0) );	
-  vector< vector<double> > specStress (nPts, vector<double> (6,0.0) );	
-  vector< vector<double> > specLengthScale (nPts, vector<double> (3,0.0) );	
+  vector< vector<double> > specVelocity (nPts, vector<double> (3,0.0) );  
+  vector< vector<double> > specStress (nPts, vector<double> (6,0.0) );  
+  vector< vector<double> > specLengthScale (nPts, vector<double> (3,0.0) ); 
   
   if (velocityType == "specified" || stressType == "specified" || lengthScaleType=="specified") {
     cout << "Reading Specified Values " << endl;
@@ -1334,7 +1334,7 @@ int main( int argc, const char* argv[] )
   }
   
   //Print input params
-  cout <<	"face: " << faceSide << endl;
+  cout << "face: " << faceSide << endl;
   cout << "shape: " << faceShape << endl;
   cout << "Timesteps till repeat: " << NT << endl;
   

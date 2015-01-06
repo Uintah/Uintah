@@ -31,9 +31,9 @@ using std::endl;
 
 //inline
 LeftRealSurface::LeftRealSurface(const int &iIndex,
-				 const int &jIndex,
-				 const int &kIndex,
-				 const int &Ncy){
+         const int &jIndex,
+         const int &kIndex,
+         const int &Ncy){
   
   surfaceiIndex = iIndex;
   surfacejIndex = jIndex;

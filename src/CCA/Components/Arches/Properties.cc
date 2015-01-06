@@ -113,8 +113,8 @@ Properties::problemSetup(const ProblemSpecP& params)
   mixModel = "NA"; 
   if (db->findBlock("ClassicTable"))
     mixModel = "ClassicTable";
-	else if (db->findBlock("ColdFlow"))
-		mixModel = "ColdFlow";
+  else if (db->findBlock("ColdFlow"))
+    mixModel = "ColdFlow";
   else if (db->findBlock("ConstantProps"))
     mixModel = "ConstantProps"; 
 #if HAVE_TABPROPS
@@ -128,9 +128,9 @@ Properties::problemSetup(const ProblemSpecP& params)
     // New Classic interface
     d_mixingRxnTable = scinew ClassicTableInterface( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
-	} else if (mixModel == "ColdFlow") {
-		d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
-		d_mixingRxnTable->problemSetup( db ); 
+  } else if (mixModel == "ColdFlow") {
+    d_mixingRxnTable = scinew ColdFlow( d_lab, d_MAlab ); 
+    d_mixingRxnTable->problemSetup( db ); 
   } else if (mixModel == "ConstantProps" ) { 
     d_mixingRxnTable = scinew ConstantProps( d_lab, d_MAlab ); 
     d_mixingRxnTable->problemSetup( db ); 
@@ -516,7 +516,7 @@ Properties::addLookupSpecies( ){
 void 
 Properties::doTableMatching(){ 
 
-	d_mixingRxnTable->tableMatching(); 
+  d_mixingRxnTable->tableMatching(); 
 
 }
 

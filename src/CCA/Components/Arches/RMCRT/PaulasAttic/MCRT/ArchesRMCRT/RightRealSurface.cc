@@ -32,9 +32,9 @@ using std::endl;
 
 //inline
 RightRealSurface::RightRealSurface(const int &iIndex,
-				   const int &jIndex,
-				   const int &kIndex,
-				   const int &Ncy){
+           const int &jIndex,
+           const int &kIndex,
+           const int &Ncy){
   
   surfaceiIndex = iIndex+1;
   surfacejIndex = jIndex;

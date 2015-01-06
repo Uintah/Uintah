@@ -7,22 +7,22 @@
   for ( int k = 0; k < Ncz; k ++ ){
     for ( int j = 0; j < Ncy; j ++) {
       for ( int i = 0; i < Ncx; i ++ ) {
-	
-	T_Vol[fakeIndex] = 500;
-	//	T_Vol[fakeIndex] = 64.80721904; // k
-	xx = (X[i] + X[i+1])/2;
-	yy = (Y[j] + Y[j+1])/2;
-	zz = (Z[k] + Z[k+1])/2;
+  
+  T_Vol[fakeIndex] = 500;
+  //  T_Vol[fakeIndex] = 64.80721904; // k
+  xx = (X[i] + X[i+1])/2;
+  yy = (Y[j] + Y[j+1])/2;
+  zz = (Z[k] + Z[k+1])/2;
 
-// 	kl_Vol[fakeIndex] = 0.9 * ( 1 - 2 * abs ( xx ) )
-// 	  * ( 1 - 2 * abs ( yy ) )
-// 	  * ( 1 - 2 * abs ( zz ) ) + 0.1;
+//  kl_Vol[fakeIndex] = 0.9 * ( 1 - 2 * abs ( xx ) )
+//    * ( 1 - 2 * abs ( yy ) )
+//    * ( 1 - 2 * abs ( zz ) ) + 0.1;
 
-	kl_Vol[fakeIndex] = 5;
-	a_Vol[fakeIndex] = 1;
-	scatter_Vol[fakeIndex] = 0;
-	fakeIndex++;
-	
+  kl_Vol[fakeIndex] = 5;
+  a_Vol[fakeIndex] = 1;
+  scatter_Vol[fakeIndex] = 0;
+  fakeIndex++;
+  
       }
     }
   }
