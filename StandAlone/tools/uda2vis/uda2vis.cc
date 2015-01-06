@@ -551,3 +551,9 @@ getParticleData(DataArchive *archive,
   }
 }
 
+extern "C"
+std::string
+getParticlePositionName(DataArchive *archive) {
+    return archive->getParticlePositionName();
+}
+
