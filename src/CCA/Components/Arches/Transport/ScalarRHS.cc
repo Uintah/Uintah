@@ -272,7 +272,7 @@ ScalarRHS::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   const InterpTY* const interpy = opr.retrieve_operator<InterpTY>();
   const InterpTZ* const interpz = opr.retrieve_operator<InterpTZ>();
 
-  Vector DX = patch->dCell(); 
+  //Vector DX = patch->dCell(); 
   //double vol = DX.x()*DX.y()*DX.z(); 
   const double dt = tsk_info->get_dt(); 
 

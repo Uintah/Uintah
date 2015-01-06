@@ -380,8 +380,8 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       s_varlabels.resize(0);
       w_varlabels.resize(0);
       t_varlabels.resize(0);
-      double s_scaling_constant; // scaling constant for sizes
-      double w_scaling_constant; // scaling constant for weights
+      double s_scaling_constant=0.0; // scaling constant for sizes
+      double w_scaling_constant=0.0; // scaling constant for weights
 
       for ( int i = 0; i < _nQn_part; i++ ){
         std::string label_name_s = _base_size_label_name + "_qn"; 
@@ -468,7 +468,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
           new_dw->getModifiable(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
         }
         _ocalc->compute_scatkt( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
-            w_scaling_constant, pWeight, _nQn_part,  scatkt, scatktQuad, complexIndexReal);
+                                w_scaling_constant, pWeight, _nQn_part,  scatkt, scatktQuad, complexIndexReal);
 
         _ocalc->computeAsymmetryFactor(patch,vol_fraction, scatktQuad, RequiredScalars, scatkt, asymmetryParam);
 

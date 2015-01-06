@@ -172,7 +172,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       //parse the model blocks for var label
       std::string model_name;
       std::string source_label;
-      int nIC;
+      int nIC = 0;
       std::string ic_name;
       m_db->get("IC",ic_name);
       m = 0;

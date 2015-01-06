@@ -444,7 +444,6 @@ void PartVel::InitPartVel( const ProcessorGroup* pc,
 for (int p=0; p < patches->size(); p++){
     
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  Ghost::GhostType  gn  = Ghost::None;
   const Patch* patch = patches->get(p);
   int archIndex = 0;
   int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
