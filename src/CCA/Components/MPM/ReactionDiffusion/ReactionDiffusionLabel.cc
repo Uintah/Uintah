@@ -27,12 +27,14 @@
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 
 using namespace std;
 using namespace Uintah;
 
 
 ReactionDiffusionLabel::ReactionDiffusionLabel() {
+
 	// Particle Variables
   pConcentrationLabel = VarLabel::create( "p.concentration",
                         ParticleVariable<double>::getTypeDescription() );
@@ -61,9 +63,13 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
 
   gdCdtLabel = VarLabel::create("g.dCdt",
 	    NCVariable<double>::getTypeDescription());
+
+  gConcentrationStarLabel = VarLabel::create("g.concentrationStar",
+	    NCVariable<double>::getTypeDescription());
 }
 
 ReactionDiffusionLabel::~ReactionDiffusionLabel() {
+
 	// Particle Variables
   VarLabel::destroy(pConcentrationLabel);
   VarLabel::destroy(pConcPreviousLabel);
@@ -76,4 +82,5 @@ ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(gConcentrationRateLabel);
   VarLabel::destroy(gConcentrationNoBCLabel);
   VarLabel::destroy(gdCdtLabel);
+  VarLabel::destroy(gConcentrationStarLabel);
 }

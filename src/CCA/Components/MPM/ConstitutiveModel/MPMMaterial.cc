@@ -62,7 +62,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
 {
   d_lb = scinew MPMLabel();
   // The standard set of initializations needed
-  standardInitialization(ps,flags);
+  standardInitialization(ps,ss,flags);
   
   d_cm->setSharedState(ss.get_rep());
 
@@ -71,7 +71,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
 }
 
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
+MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMFlags* flags)
 
 {
   // Follow the layout of the input file
@@ -101,7 +101,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   // Step 2 -- check if scalar diffusion is used and
   // create the scalar diffusion model.
   if(flags->d_doScalarDiffusion){
-    d_sdm = ScalarDiffusionModelFactory::create(ps,flags);
+    d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
   }
 
   // Step 3 -- get the general material properties

@@ -28,6 +28,7 @@
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Task.h>
 
 #include <iostream>
@@ -35,34 +36,14 @@ using namespace std;
 using namespace Uintah;
 
 
-JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, MPMFlags* Mflag):
-  ScalarDiffusionModel(ps,Mflag) {
-  d_Mflag = Mflag;
-
+JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag):
+  ScalarDiffusionModel(ps, sS, Mflag) {
 	
   ps->require("diffusivity",diffusivity);
-
-  d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
-
-  if(d_Mflag->d_8or27==8){
-    NGP=1;
-    NGN=1;
-  } else {
-    NGP=2;
-    NGN=2;
-  }
-
-  if(d_Mflag->d_scalarDiffusion_type == "explicit"){
-    do_explicit = true;
-  }else{
-    do_explicit = false;
-  }
 }
 
 JGConcentrationDiffusion::~JGConcentrationDiffusion() {
-  delete d_lb;
-  delete d_rdlb;
+
 }
 
 void JGConcentrationDiffusion::addInitialComputesAndRequires(Task* task,
@@ -119,7 +100,6 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   Ghost::GhostType  gnone = Ghost::None;
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
-	cout << "Interpolator Size: " << interpolator->size() << endl;
 
   vector<IntVector> ni(interpolator->size());
   vector<double> S(interpolator->size());
@@ -187,7 +167,7 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
 }
 
 
-void JGConcentrationDiffusion::scheduleComputeFluxValue(Task* task, const MPMMaterial* matl, 
+void JGConcentrationDiffusion::scheduleComputeStep1(Task* task, const MPMMaterial* matl, 
 		                                                    const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -203,12 +183,9 @@ void JGConcentrationDiffusion::scheduleComputeFluxValue(Task* task, const MPMMat
   task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,           gan, 2*NGN);
   task->computes(d_rdlb->gdCdtLabel,  matlset);
 
-	// For testing purposes	
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gan, NGP);
-  task->computes(d_rdlb->pConcentrationLabel,      matlset);
 }
 
-void JGConcentrationDiffusion::computeFluxValue(const Patch* patch, const MPMMaterial* matl,
+void JGConcentrationDiffusion::computeStep1(const Patch* patch, const MPMMaterial* matl,
                                                 DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 
@@ -285,7 +262,74 @@ void JGConcentrationDiffusion::computeFluxValue(const Patch* patch, const MPMMat
     }
   } // End of Particle Loop 
 
+	delete interpolator;
+}
+
+void JGConcentrationDiffusion::scheduleComputeStep2(Task* task, const MPMMaterial* matl, 
+		                                                const PatchSet* patch) const
+{
+  Ghost::GhostType  gnone = Ghost::None;
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::OldDW, d_sharedState->get_delt_label());
+
+  task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,     gnone);
+  task->requires(Task::NewDW, d_rdlb->gConcentrationNoBCLabel, gnone);
+  task->requires(Task::NewDW, d_rdlb->gdCdtLabel,              gnone);
+  task->modifies(d_rdlb->gConcentrationRateLabel, matlset);
+  task->computes(d_rdlb->gConcentrationStarLabel, matlset);
+
+	// For testing purposes	
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gan, NGP);
+  task->computes(d_rdlb->pConcentrationLabel,      matlset);
+}
+
+void JGConcentrationDiffusion::computeStep2(const Patch* patch, const MPMMaterial* matl,
+                                            DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+  Ghost::GhostType  gnone = Ghost::None;
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  int dwi = matl->getDWIndex();
+
+  constNCVariable<double> gConc_Old;
+  constNCVariable<double> gConc_OldNoBC;
+  constNCVariable<double> gdCdt;
+
+  NCVariable<double> gConcRate;
+  NCVariable<double> gConcStar;
+
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label(), patch->getLevel() );
+ 
+  new_dw->get(gConc_Old,     d_rdlb->gConcentrationLabel,     dwi, patch,gnone,0);
+  new_dw->get(gConc_OldNoBC, d_rdlb->gConcentrationNoBCLabel, dwi, patch,gnone,0);
+  new_dw->get(gdCdt,         d_rdlb->gdCdtLabel,              dwi, patch,gnone,0);
+
+  new_dw->getModifiable(gConcRate,  d_rdlb->gConcentrationRateLabel, dwi,patch);
+  new_dw->allocateAndPut(gConcStar, d_rdlb->gConcentrationStarLabel, dwi,patch);
+
+  gConcStar.initialize(0.0);
+
+  MPMBoundCond bc;
+
+  for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+        IntVector c = *iter;
+        gConcStar[c] = gConc_Old[c] + gdCdt[c] * delT;
+  }
+
+  bc.setBoundaryCondition(patch, dwi, "SD-Type", gConcStar, d_Mflag->d_interpolator_type);
+
+  for(NodeIterator iter=patch->getExtraNodeIterator();
+                       !iter.done();iter++){
+    IntVector c = *iter;
+    gConcRate[c] = (gConcStar[c] - gConc_OldNoBC[c]) / delT;
+  }
+
 	// For testing purposes
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, d_lb->pXLabel);
   constParticleVariable<double> pConcentration;
   old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,  pset);
   ParticleVariable<double>  pconcentration;
@@ -294,6 +338,4 @@ void JGConcentrationDiffusion::computeFluxValue(const Patch* patch, const MPMMat
     particleIndex idx = *iter;
     pconcentration[idx] = pConcentration[idx]+1;
 	}
-
-	delete interpolator;
 }

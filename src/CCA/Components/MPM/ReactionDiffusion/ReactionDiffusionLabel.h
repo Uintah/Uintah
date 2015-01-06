@@ -47,6 +47,7 @@ namespace Uintah {
     const VarLabel* gConcentrationRateLabel;
     const VarLabel* gConcentrationNoBCLabel;
     const VarLabel* gdCdtLabel;
+    const VarLabel* gConcentrationStarLabel;
   };
   
 } // end namespace Uintah

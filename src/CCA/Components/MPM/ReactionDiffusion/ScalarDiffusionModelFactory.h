@@ -26,6 +26,7 @@
 #define _SCALARDIFFUSIONMODELFACTORY_H_
 
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/SimulationStateP.h>
 #include <string>
 
 namespace Uintah {
@@ -39,7 +40,9 @@ namespace Uintah {
   public:
     // this function has a switch for all known mat_types
     
-    static ScalarDiffusionModel* create(ProblemSpecP& ps, MPMFlags* flags);
+    static ScalarDiffusionModel* create(ProblemSpecP& ps,
+                                        SimulationStateP& ss,
+                                        MPMFlags* flags);
 
   };
 } // End namespace Uintah

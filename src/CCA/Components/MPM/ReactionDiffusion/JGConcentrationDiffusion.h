@@ -44,7 +44,7 @@ namespace Uintah {
   class JGConcentrationDiffusion : public ScalarDiffusionModel {
   public:
     
-    JGConcentrationDiffusion(ProblemSpecP& ps, MPMFlags* Mflag);
+    JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     ~JGConcentrationDiffusion();
 
     virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
@@ -59,18 +59,18 @@ namespace Uintah {
     virtual void interpolateParticlesToGrid(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw);
 
-    virtual void scheduleComputeFluxValue(Task* task, const MPMMaterial* matl, 
+    virtual void scheduleComputeStep1(Task* task, const MPMMaterial* matl, 
 		                                      const PatchSet* patch) const;
 
-    virtual void computeFluxValue(const Patch* patch, const MPMMaterial* matl,
+    virtual void computeStep1(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+    virtual void scheduleComputeStep2(Task* task, const MPMMaterial* matl, 
+		                                      const PatchSet* patch) const;
+
+    virtual void computeStep2(const Patch* patch, const MPMMaterial* matl,
+                                  DataWarehouse* old_dw, DataWarehouse* new_dw);
   private:
-    MPMLabel* d_lb;
-    MPMFlags* d_Mflag;
-    ReactionDiffusionLabel* d_rdlb;
-    int NGP, NGN;
-    bool do_explicit;
 		double diffusivity;
 
     JGConcentrationDiffusion(const JGConcentrationDiffusion&);
