@@ -134,7 +134,7 @@ namespace Uintah{
   template <typename IT, typename DT>
   DragModel<IT, DT>::DragModel( std::string task_name, int matl_index,
                                 const std::string base_var_name, const int N ) :
-  _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+  TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
 
     VarTypeHelper<DT> dhelper; 
     _D_type = dhelper.get_vartype(); 

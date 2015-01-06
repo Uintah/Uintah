@@ -402,8 +402,8 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
       double temperatureph=temperature[c];
       double specific_heatph=specific_heat[c];
-      double radiationVolqINph=radiationVolqIN[c];
-      double abskgINph=abskgIN[c];
+      //double radiationVolqINph=radiationVolqIN[c];
+      //double abskgINph=abskgIN[c];
       double denph=den[c];
       double devol_gas_sourceph=devol_gas_source[c];
       double chargas_sourceph=chargas_source[c];

@@ -179,8 +179,6 @@ BTDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSub
   tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
 
-  DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
-
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
 }

@@ -207,7 +207,7 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   std::string taskname = "CharOxidationShaddix::sched_computeModel";
   Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::computeModel, timeSubStep );
 
-  Ghost::GhostType  gn  = gn;
+  Ghost::GhostType  gn  = Ghost::None;
 
   Task::WhichDW which_dw; 
 
@@ -242,7 +242,6 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
   tsk->requires( which_dw, _devolCharLabel, gn, 0);
 
-  DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
 
@@ -259,7 +258,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
 {
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
-    Ghost::GhostType  gn  = gn;
+    Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
     int archIndex = 0;

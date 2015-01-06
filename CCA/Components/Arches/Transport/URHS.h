@@ -74,10 +74,10 @@ public:
     private: 
 
       std::string _task_name; 
+      int _matl_index; 
       std::string _u_name; 
       std::string _v_name; 
       std::string _w_name; 
-      int _matl_index; 
 
   };
 
@@ -342,7 +342,7 @@ private:
     typedef typename MomHelper<UT>::VT VT; 
     typedef typename MomHelper<UT>::WT WT; 
 
-    MomHelper<UT> mom_helper; 
+    //MomHelper<UT> mom_helper; 
 
     const double dt = tsk_info->get_dt();  
 

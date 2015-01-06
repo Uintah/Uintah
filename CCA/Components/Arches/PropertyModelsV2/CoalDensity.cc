@@ -56,7 +56,7 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
 
       _Nenv = _sizes.size(); 
   
-      for (unsigned int i = 0; i < _sizes.size(); i++ ){ 
+      for ( unsigned int i = 0; i < _sizes.size(); i++ ){ 
 
         double mass_dry = (_pi/6.0) * pow(_sizes[i],3) * _rhop_o;     // kg/particle
         _init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)  

@@ -921,11 +921,7 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
       Patch::FaceType face = *iter;
 
       IntVector axes = patch->getFaceAxes(face);
-      int P_dir = axes[0];  // principal direction
-      typedef std::map<int,std::vector<BCGeomBase*> > BCDataArrayType;
-      const BoundCondBase* bc;
       const BCDataArray* bc_data_array = patch->getBCDataArray(face); 
-      const int matl_id = 0; 
 
       //get the face direction
       IntVector insideCellDir = patch->faceDirection(face);
