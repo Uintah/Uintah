@@ -30,9 +30,23 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
 
    */
+  int N;
 
+  if (db->findBlock("CQMOM") ) {
+    std::vector<int> N_i;
+    db->findBlock("CQMOM")->require("QuadratureNodes",N_i);
+    N = 1;
+    std::cout << "N: " << N << std::endl;
+    for (unsigned int i = 0; i < N_i.size(); i++ ) {
+      
+      N *= N_i[i];
+      std::cout << "N: " << N << std::endl;
+    }
+  } else if (db->findBlock("DQMOM") ) {
+    db->findBlock("DQMOM")->require("number_quad_nodes",N);
+  }
 
-  if ( db->findBlock("ParticleModels")){ 
+  if ( db->findBlock("ParticleModels")){
 
     ProblemSpecP db_pm = db->findBlock("ParticleModels"); 
 
@@ -43,10 +57,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       std::string type; 
       db_model->getAttribute("label",model_name ); 
       db_model->getAttribute("type", type ); 
-
-      //stub for number of environments
-      int N; 
-      db_model->require("N",N); 
 
       typedef SpatialOps::SVolField SVol;
 
@@ -169,7 +179,6 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
     }
   }
-
 }
 
 void 

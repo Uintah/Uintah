@@ -108,12 +108,11 @@ cond  ( flowDir > 0.0, LIMITERTYPE(r) )                     \
 template< typename PhiVolT, typename PhiFaceT >
 FluxLimiterInterpolant<PhiVolT,PhiFaceT>::
 FluxLimiterInterpolant( const std::vector<int>& dim,
-                        const std::vector<bool> hasPlusFace,
-                        const std::vector<bool> hasMinusBoundary )
+                        const std::vector<bool>& hasPlusFace,
+                        const std::vector<bool>& hasMinusBoundary )
 : hasPlusBoundary_ (false),
   hasMinusBoundary_(false)
 {
-  
   const size_t direction = PhiFaceT::Location::FaceDir::value;
   
   switch (direction) {
@@ -136,7 +135,6 @@ FluxLimiterInterpolant( const std::vector<int>& dim,
       unitNormal_ = SpatialOps::IntVec(0,0,0);
       break;
   }
-  
 }
 
 //--------------------------------------------------------------------

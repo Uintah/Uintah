@@ -76,6 +76,15 @@
         <ExplicitIntegrator order="second"/>
       </TimeIntegrator>
 
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable label="length" role="size" />
+          <variable label="ux" role="uvel" />
+          <variable label="uy" role="vvel" />
+          <variable label="uz" role="wvel" />
+        </ParticleVariables>
+      </EulerianParticles>   
+
 <!-- EXTRA SCALARS -->
       <TransportEqns>
         <Eqn label="scalar_0" type="CCscalar">
@@ -161,6 +170,7 @@
             <env_step_value qn="2" value=".25"/>
           </initialization>
           <model label="grow"/>
+          <nominal_values>[1, 0.5, 0.25]</nominal_values>
           <scaling_const>1</scaling_const>
         </Ic>
 
@@ -178,6 +188,7 @@
             <env_step_value qn="2" value=".25"/>
           </initialization>
           <model label="shrink"/>
+          <nominal_values>[1, 0.5, 0.25]</nominal_values>
           <scaling_const>1</scaling_const>
         </Ic>
 
@@ -195,6 +206,7 @@
             <env_step_value qn="2" value=".25"/>
           </initialization>
           <model label="grow"/>
+          <nominal_values>[1, 0.5, 0.25]</nominal_values>
           <scaling_const>1</scaling_const>
         </Ic>
 

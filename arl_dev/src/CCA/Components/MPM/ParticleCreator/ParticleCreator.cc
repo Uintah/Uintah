@@ -59,6 +59,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
   d_computeScaleFactor = flags->d_computeScaleFactor;
+  d_useCPTI = flags->d_useCPTI;
 
   d_flags = flags;
 
@@ -188,13 +189,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID, pvars);
       
-      if (volumes) {
-        if (!volumes->empty()) {
-          pvars.pvolume[pidx] = *voliter;
-          pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
-          ++voliter;
-        }
-      }
 
       if (temperatures) {
         if (!temperatures->empty()) {
@@ -231,13 +225,51 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      if (psizes && d_flags->d_interpolator_type=="cpdi") {
+      if (volumes) {
+        if (!volumes->empty()) {
+          pvars.pvolume[pidx] = *voliter;
+          pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
+          ++voliter;
+        }
+      }
+      // CPDI
+      if (psizes && (d_flags->d_interpolator_type=="cpdi")) {
+        // Read psize from file
         if (!psizes->empty()) {
+          Vector dxcc = patch->dCell(); 
           pvars.psize[pidx] = *sizeiter;
+          if (volumes->empty()) {
+            // Calculate CPDI hexahedron volume from psize (if volume not passed from FileGeometryPiece)
+            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant());
+            pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
+          }
+          // Modify psize (CPDI R-vectors) to be normalized by cell spacing
+          Matrix3 size(1./((double) dxcc.x()),0.,0.,
+                       0.,1./((double) dxcc.y()),0.,
+                       0.,0.,1./((double) dxcc.z()));
+          pvars.psize[pidx]= pvars.psize[pidx]*size;
           ++sizeiter;
         }
       }
-
+      // CPTI
+      if (psizes && d_useCPTI) {
+        // Read psize from file
+        if (!psizes->empty()) {
+          Vector dxcc = patch->dCell(); 
+          pvars.psize[pidx] = *sizeiter;
+          if (volumes->empty()) {
+            // Calculate CPTI tetrahedron volume from psize (if volume not passed from FileGeometryPiece)
+            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant()/6.0);
+            pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
+          }
+          // Modify psize (CPTI R-vectors) to be normalized by cell spacing
+          Matrix3 size(1./((double) dxcc.x()),0.,0.,
+                       0.,1./((double) dxcc.y()),0.,
+                       0.,0.,1./((double) dxcc.z()));
+          pvars.psize[pidx]= pvars.psize[pidx]*size;
+          ++sizeiter;
+        }
+      }
       if (colors) {
         if (!colors->empty()) {
           pvars.pcolor[pidx] = *coloriter;
@@ -419,7 +451,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, Obje
 
     // Affine transformation for making conforming particle distributions
     //  to be used in the conforming CPDI simulations. The input vectors are
-    //  optional and if you do not liketo use afine transformation, just do
+    //  optional and if you do not wish to use the affine transformation, just do
     //  not define them in the input file.
     Vector affineTrans_A0=obj->getInitialData_Vector("affineTransformation_A0");
     Vector affineTrans_A1=obj->getInitialData_Vector("affineTransformation_A1");
@@ -496,7 +528,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   // Affine transformation for making conforming particle distributions
   //  to be used in the conforming CPDI simulations. The input vectors are
-  //  optional and if you do not liketo use afine transformation, just do
+  //  optional and if you do not wish to use the affine transformation, just do
   //  not define them in the input file.
 
   Vector affineTrans_A0=(*obj)->getInitialData_Vector("affineTransformation_A0");
@@ -506,11 +538,12 @@ ParticleCreator::initializeParticle(const Patch* patch,
           affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
           affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
           affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
+  // The size matrix is used for storing particle domain sizes (Rvectors for CPDI and CPTI)
+  // normalized by the grid spacing
   Matrix3 size(1./((double) ppc.x()),0.,0.,
                0.,1./((double) ppc.y()),0.,
                0.,0.,1./((double) ppc.z()));
   size=affineTrans_A*size;
-
 /*
 //  *** This part is associated with CBDI_CompressiveCylinder.ups input file.
 //      It determines particle domain sizes for the conforming particle distribution,
@@ -545,13 +578,14 @@ ParticleCreator::initializeParticle(const Patch* patch,
      if(d_flags->d_axisymmetric){
       // assume unit radian extent in the circumferential direction
       pvars.pvolume[i] = p.x()*
-                   (size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
+              (size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
      } else {
-     // standard voxel volume
-     pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
+      // standard voxel volume
+      pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
     }
 
-    pvars.psize[i]      = size;
+    pvars.psize[i]      = size;  // Normalized by grid spacing
+   
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){
       pvars.pvelGrad[i] = Matrix3(0.0);
@@ -617,12 +651,15 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   
   // If the object is a SmoothGeomPiece (e.g. FileGeometryPiece or
   // SmoothCylGeomPiece) then use the particle creators in that 
-  // class to do the counting d
+  // class to do the counting
   SmoothGeomPiece   *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
   if (sgp) {
     int numPts = 0;
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
     if(fgp){
+      if (d_useCPTI) {
+        proc0cout << "*** Reading CPTI file ***" << endl;
+      }
       fgp->readPoints(patch->getID());
       numPts = fgp->returnPointCount();
     } else {

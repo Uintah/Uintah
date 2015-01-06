@@ -60,9 +60,9 @@
     <save label="Charmass_0"/>
     <save label="Charmass_1"/>
     <save label="Charmass_2"/>
-    <save label = "heat_pT_qn0"/>
-    <save label = "heat_pT_qn1"/>
-    <save label = "heat_pT_qn2"/>
+    <save label = "temperature_coal_0"/>
+    <save label = "temperature_coal_1"/>
+    <save label = "temperature_coal_2"/>
     <save label = "heat_qn0_Qconv"/>
     <save label = "heat_qn0_Qrad"/>
     <save label = "heat_qn1_Qconv"/>
@@ -146,7 +146,7 @@
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="pE_qn0" var="Dirichlet">
-          <value>-8.064</value>
+          <value>-7.605108111316770</value>
         </BCType>
         <BCType id = "all" label = "vel_qn1" var = "Dirichlet">
           <value>[10.0,0.0,0.0]</value>
@@ -173,7 +173,7 @@
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
-          <value>-42.192</value>
+          <value>-39.790882273706707</value>
         </BCType>
         <BCType id = "all" label = "vel_qn2" var = "Dirichlet">
           <value>[10.0,0.0,0.0]</value>
@@ -200,10 +200,13 @@
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="pE_qn2" var="Dirichlet">
-          <value>-21.744</value>
+          <value>-20.506554506979398</value>
         </BCType>
         <BCType id="all" label="radiation_temperature" var="Tabulated">
           <value>temperature</value>
+        </BCType>
+        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
       </Face>
 
@@ -313,6 +316,9 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
+        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
 
       <Face side="y-" name="y- wall">
@@ -421,6 +427,9 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200.0</value>
         </BCType>
+        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
 
 
@@ -430,6 +439,9 @@
         </BCType>
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
+        </BCType>
+        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
@@ -539,6 +551,9 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
+        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -646,6 +661,9 @@
         </BCType>
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
+        </BCType>
+        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
           <value>0.0</value>
@@ -771,7 +789,26 @@
     <ARCHES>
  
       <!-- include the coal data base that you are using -->
-      <include href="inputs/ARCHES/CoalDataBase/example_coal.xml" section="Coal_Properties" />
+      <include href="inputs/ARCHES/CoalDataBase/example_coal.xml" section="Coal" />
+      <EulerianParticles>
+        <ParticleVariables>
+          <variable label="RCmass" role="raw_coal" />
+          <variable label="Charmass" role="char" />
+          <variable label="pE" role="enthalpy" />
+          <variable label="length" role="size" />
+          <variable label="rho_coal" role="density" />
+          <variable label="temperature_coal" role="temperature" />
+          <variable label="dTdt" role="dTdt" />
+          <variable label="ux" role="uvel" />
+          <variable label="uy" role="vvel" />
+          <variable label="uz" role="wvel" />
+        </ParticleVariables>
+      </EulerianParticles>   
+
+      <PropertyModelsV2>
+        <model label="rho_coal" type="coal_density" />
+        <model label="temperature_coal" type="coal_temperature" />
+      </PropertyModelsV2>
 
 <!-- TIME INTEGRATOR -->
       <TimeIntegrator>
@@ -893,13 +930,13 @@
           <calculator type="radprops">
           <opl>0.3</opl>
           <abskg label = "abskg"/>
-          <abskp label = "abskp"/>
-            <particles>
+            <particles type="coal">
+              <abskp label = "abskp"/>
               <model_type>planck</model_type> 
               <!--<model_type>rossland</model_type> -->
               <complex_ir_real>2</complex_ir_real>    
               <complex_ir_imag>-0.6</complex_ir_imag> 
-              <part_temp_label>heat_pT</part_temp_label>
+              <part_temp_label>temperature_coal</part_temp_label>
               <part_size_label>length</part_size_label>
             </particles>
           <grey_gas>
@@ -945,52 +982,20 @@
         <VelModel type = "Dragforce">
         </VelModel>
         <Models>
-          <model label="xdragforce" type="XDrag">
-            <ICVars>
-              <variable label="length" role="particle_length"/>
-              <variable label="ux" role="particle_xvel"/>
-              <variable label="RCmass" role="raw_coal_mass"/>
-              <variable label="Charmass" role="char_mass"/>
-            </ICVars>
+          <model label="xdragforce" type="Drag">
+            <direction>x</direction>
           </model>
-          <model label="ydragforce" type="YDrag">
-            <ICVars>
-              <variable label="length" role="particle_length"/>
-              <variable label="uy" role="particle_yvel"/>
-              <variable label="RCmass" role="raw_coal_mass"/>
-              <variable label="Charmass" role="char_mass"/>
-            </ICVars>
+          <model label="ydragforce" type="Drag">
+            <direction>y</direction>
           </model>
-          <model label="zdragforce" type="ZDrag">
-            <ICVars>
-              <variable label="length" role="particle_length"/>
-              <variable label="uz" role="particle_zvel"/>
-              <variable label="RCmass" role="raw_coal_mass"/>
-              <variable label="Charmass" role="char_mass"/>
-            </ICVars>
+          <model label="zdragforce" type="Drag">
+            <direction>z</direction>
           </model>
           <model label="devol" type="YamamotoDevol">
-            <ICVars>
-              <variable label="heat_pT" role="particle_temperature_from_enthalpy" />
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="Charmass" role="char_mass" />
-            </ICVars>
           </model>
           <model label="heat" type="EnthalpyShaddix">
-            <ICVars>
-              <variable label="length" role="particle_length" />
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="pE"     role="particle_enthalpy"/>
-              <variable label="Charmass" role="char_mass" />
-            </ICVars>
           </model>
           <model label="char" type="CharOxidationShaddix">
-            <ICVars>
-              <variable label="length" role="particle_length" />
-              <variable label="RCmass" role="raw_coal_mass" />
-              <variable label="Charmass" role="char_mass" />
-              <variable label="heat_pT"     role="particle_temperature_from_enthalpy"/>
-            </ICVars>
           </model>
         </Models>
         <Weights>
@@ -1025,6 +1030,7 @@
             <env_constant qn="2" value="100e-6">
             </env_constant>
           </initialization>
+          <nominal_values>[40e-6,63e-6,100e-6]</nominal_values>
           <Clipping>
             <low>3.99</low>
             <high>10.01</high>
@@ -1039,13 +1045,14 @@
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <initialization type="env_constant">
-            <env_constant qn="0" value="0.0">
+            <env_constant qn="0" value="3.826770308362518e-11">
             </env_constant>
-            <env_constant qn="1" value="0.0">
+            <env_constant qn="1" value="1.495119175796419e-10">
             </env_constant>
-            <env_constant qn="2" value="0.0">
+            <env_constant qn="2" value="5.979369196349021e-10">
             </env_constant>
           </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <model label="devol" />
           <scaling_const>1.0e-10</scaling_const>
           <Clipping>
@@ -1067,6 +1074,7 @@
             <env_constant qn="2" value="0.0">
             </env_constant>
           </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <model label="char" />
           <scaling_const>1.0e-10</scaling_const>
           <Clipping>
@@ -1082,13 +1090,14 @@
           <doDiff>false</doDiff>
           <doConv>true</doConv>
           <initialization type="env_constant">
-            <env_constant qn="0" value="-1.38e-04">
+            <env_constant qn="0" value="-0.000129924115680">
             </env_constant>
-            <env_constant qn="1" value="-0.000538">
+            <env_constant qn="1" value="-0.000507611869533">
             </env_constant>
-            <env_constant qn="2" value="-0.00215">
+            <env_constant qn="2" value="-0.002030070535468">
             </env_constant>
           </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <model label="heat" />
           <!--Clipping>
               <low>0.3</low>
@@ -1111,6 +1120,7 @@
             <env_constant qn="2" value="10.0">
             </env_constant>
           </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <Clipping>
             <low>-20.0</low>
             <high>40.0</high>
@@ -1131,6 +1141,7 @@
             <env_constant qn="2" value="0.0">
             </env_constant>
           </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <Clipping>
             <low>-15.0</low>
             <high>15.0</high>
@@ -1152,6 +1163,7 @@
             <env_constant qn="2" value="0.0">
             </env_constant>
           </initialization>
+          <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <Clipping>
             <low>-15.0</low>
             <high>15.0</high>

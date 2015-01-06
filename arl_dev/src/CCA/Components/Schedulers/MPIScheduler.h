@@ -99,34 +99,30 @@ WARNING
 
     virtual SchedulerP createSubScheduler();
     
-    void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration);
 
     enum { TEST, WAIT_ONCE, WAIT_ALL};
 
-    void processMPIRecvs(int how_much);    
+    virtual void processMPIRecvs(int how_much);    
 
-    void postMPISends( DetailedTask* task, int iteration );
+            void postMPISends( DetailedTask* task, int iteration );
+    virtual void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration);
 
-    void runTask( DetailedTask* task, int iteration );
-    void runReductionTask( DetailedTask* task);        
+    virtual void runTask( DetailedTask* task, int iteration );
+    virtual void runReductionTask( DetailedTask* task);        
 
     void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var);
 
     // get the processor group executing with (only valid during execute())
-    const ProcessorGroup* getProcessorGroup()
-    { return d_myworld; }
+    const ProcessorGroup* getProcessorGroup() { return d_myworld; }
     
-    void compile()
-    {
-      numMessages_=0;
-      messageVolume_=0;
+    void compile() {
+      numMessages_   = 0;
+      messageVolume_ = 0;
       SchedulerCommon::compile();
     }
 
-    void printMPIStats()
-    {
-      if(mpi_stats.active())
-      {
+    void printMPIStats() {
+      if(mpi_stats.active()) {
         unsigned int total_messages;
         double total_volume;
 
@@ -139,21 +135,25 @@ WARNING
         MPI_Reduce(&numMessages_,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
         MPI_Reduce(&messageVolume_,&max_volume,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
 
-        if(d_myworld->myrank()==0)
-        {
+        if( d_myworld->myrank() == 0 ) {
           mpi_stats << "MPIStats: Num Messages (avg): " << total_messages/(float)d_myworld->size() << " (max):" << max_messages << std::endl;
           mpi_stats << "MPIStats: Message Volume (avg): " << total_volume/(float)d_myworld->size() << " (max):" << max_volume << std::endl;
         }
       }
     }
-    mpi_timing_info_s     mpi_info_;
-    MPIScheduler* parentScheduler;
+
+    mpi_timing_info_s   mpi_info_;
+    MPIScheduler      * parentScheduler_;
+
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
     virtual void initiateReduction( DetailedTask          * task);    
+
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
-    virtual void initiateTask( DetailedTask          * task,
-			       bool only_old_recvs, int abort_point, int iteration);
+    virtual void initiateTask( DetailedTask * task,
+                               bool           only_old_recvs,
+                               int            abort_point,
+                               int            iteration );
 
 
     // Waits until all tasks have finished.  In the MPI Scheduler,

@@ -117,7 +117,7 @@
 #include "GraphHelperTools.h"
 #include "FieldTypes.h"
 #include "BCHelper.h"
-
+#include "TimeIntegratorTools.h"
 //-- ExprLib Includes --//
 #include <expression/ExpressionFactory.h>
 
@@ -143,6 +143,7 @@ namespace Wasatch{
   class TimeStepper;
   class TaskInterface;
   class WasatchParticlesHelper;
+  struct TimeIntegrator;
 
   /**
    *  \ingroup WasatchCore
@@ -257,9 +258,8 @@ namespace Wasatch{
     const std::set<std::string>& locked_fields() const{ return lockedFields_; }
     std::set<std::string>& locked_fields(){ return lockedFields_; }
     
-    void lock_field( const std::string fieldName )
-    {
-      if ( lockedFields_.find(fieldName) == lockedFields_.end() ) lockedFields_.insert(fieldName);
+    void lock_field( const std::string& fieldName ){
+      if( lockedFields_.find(fieldName) == lockedFields_.end() ) lockedFields_.insert(fieldName);
     }
     
     void set_wasatch_materials( const Uintah::MaterialSet* const materials ) { materials_ = materials; }
@@ -274,6 +274,7 @@ namespace Wasatch{
     bool isPeriodic_;
     bool doRadiation_;
     bool doParticles_;
+    TimeIntegrator timeIntegrator_;
     std::set<std::string> lockedFields_;   ///< prevent the ExpressionTree from reclaiming memory on these fields.
     Uintah::SimulationStateP sharedState_; ///< access to some common things like the current timestep.
     const Uintah::MaterialSet* materials_;

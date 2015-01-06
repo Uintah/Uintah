@@ -31,6 +31,7 @@ namespace Wasatch {
   {
     alpha0  = 0.1;
     model  = CONSTANT;
+    onePredictor = false;
   };
 
   void parse_varden_input( Uintah::ProblemSpecP varDenSpec,
@@ -51,6 +52,9 @@ namespace Wasatch {
     }
     // get the turbulent Prandtl number
     varDenSpec->getAttribute("coefficient",varDenInputParams.alpha0 );
+    
+    // check how many predictors to use
+    varDenInputParams.onePredictor = varDenSpec->findBlock("UseOnePredictor");
   }
   
 }

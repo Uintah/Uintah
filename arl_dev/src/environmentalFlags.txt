@@ -7,12 +7,16 @@ Set these like this:
 Name              type               Description
 ______________________________________________________________________
 
-ExecTimes         SCI_DEBUG     outputs the time for execution on each task.
+ExecTimes         SCI_DEBUG     Outputs the time for execution on each task
+                                NOTE: TaskExecTimes are: 
+                                        1) Represented in seconds
+                                        2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps
+                                        3) Cumulative over the number of worker threads for multi-threaded runs
                                 To view the top 10 tasks use:
                                 sort -t: -k 2 -k 3 -g -r exectimes.?.? | head
                                 To get a summary of all exectimes files run the script src/scripts/execsummary
-                                (NOTE: this only works with MPI and you must run your input file for more than 10 timesteps)
-
+                                NOTE: This only works with MPI and you must run your input file for more than 10 timesteps
+                                
 ReductionTasks    SCI_DEBUG     outputs a message on processor 0 whenever a reduction task occurs.
 RELOCATE_DBG      SCI_DEBUG     prints out debugging information in the code that finds the neighboring
                                 patches inside of particle relocation task.
@@ -31,17 +35,27 @@ ComponentTimings  SCI_DEBUG     output overall mpi and cpu times
 BCR_dbg           SCI_DEBUG     print out some information regarding the BC setup
 
 
-Schedulers:                     NOTE: The default is "UnifiedScheduler"
+Schedulers:                              NOTE: The default is "UnifiedScheduler"
 __________________________________
 SingleProcessor            SCI_DEBUG     Use SingleProcessorScheduler
-MPIScheduler               SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
-DynamicMPIScheduler        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
-ThreadedMPIScheduler       SCI_DEBUG     Use ThreadedMPIScheduler - Multi-threaded with centralized control thread
-ThreadedMPI2Scheduler      SCI_DEBUG     Use ThreadedMPI2Scheduler - De-centralized Multi-threaded (no control thread)
-UnifiedScheduler           SCI_DEBUG     Use UnifiedScheduler - De-centralized Multi-threaded, with GPU support
+MPI                        SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
+DynamicMPI                 SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
 
 
-GPU related variables
+Scheduler Debugging Information:
+__________________________________
+MPIScheduler               SCI_DEBUG     Prints debugging information for the MPIScheduler
+DynamicMPIScheduler        SCI_DEBUG     Prints debugging information for the DynamicMPIScheduler
+UnifiedScheduler           SCI_DEBUG     Prints debugging information for the UnifiedScheduler
+
+
+UnifiedScheduler Related:
+__________________________________
+CPUAffinity                SCI_DEBUG     Binds control threads to core 0 and worker threads to core <Uintah thread id>
+UnifiedThreadDBG           SCI_DEBUG     Prints debugging information for thread pinning
+
+
+GPU Related:
 __________________________________
 SingleDevice      SCI_DEBUG     Restrict GPU usage to a "single" GPU, device 0. The default is to use all
                                 available on-node GPUs, where tasks are assigned to GPUs in a round-robin fashion.
@@ -61,10 +75,12 @@ ICE_BC_FC         SCI_DEBUG     output boundary condition debugging information 
 DBG_EqPress       SCI_DEBUG     Output debugging information about the iteration
                                 process in computeEquilibration if an exception is thrown.
 
+
 ARCHES:
 __________________________________
 ARCHES_PRESS_SOLVE SCI_DEBUG    Outputs the name of each task in the pressure solveras it's being     
                                 scheduled and executed.
+
 
 MPM:
 __________________________________
@@ -78,6 +94,7 @@ MPMICE_DOING_COUT SCI_DEBUG     Outputs the name of each task as it's being
                                 scheduled and executed. 
 DBG_EqPress       SCI_DEBUG     Output debugging information if computeEquilibration throws
                                 an exception.
+
 
 WASATCH:
 __________________________________

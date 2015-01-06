@@ -158,6 +158,7 @@ namespace Uintah {
     bool d_with_color;
     bool d_artificial_viscosity;
     bool d_computeScaleFactor;
+    bool d_useCPTI;
 
     std::vector<const VarLabel* > particle_state, particle_state_preReloc;
 

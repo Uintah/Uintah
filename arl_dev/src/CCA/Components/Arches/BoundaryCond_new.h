@@ -338,7 +338,6 @@ public:
     vector<Patch::FaceType>::const_iterator iter;
     vector<Patch::FaceType> bf;
     patch->getBoundaryFaces(bf);
-    Vector Dx = patch->dCell(); 
 
     for (iter = bf.begin(); iter !=bf.end(); iter++){
       Patch::FaceType face = *iter;

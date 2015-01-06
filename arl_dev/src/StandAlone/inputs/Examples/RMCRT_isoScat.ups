@@ -123,7 +123,7 @@
   <benchmark>         1          </benchmark>
   <calc_frequency>    1          </calc_frequency>
   
-  <RMCRT>
+  <RMCRT type = "double">
     <randomSeed>        false     </randomSeed>
     <sigmaScat>         1          </sigmaScat>
     <nDivQRays>         3          </nDivQRays>

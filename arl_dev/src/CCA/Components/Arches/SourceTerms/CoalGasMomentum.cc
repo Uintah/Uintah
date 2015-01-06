@@ -52,38 +52,36 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   std::string taskname = "CoalGasMomentum::eval";
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
 
+  Task::WhichDW which_dw; 
   if (timeSubStep == 0 ) { 
+
     tsk->computes(_src_label);
+    which_dw = Task::OldDW; 
+
   } else {
+
     tsk->modifies(_src_label); 
+    which_dw = Task::NewDW; 
+
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 
   
   for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-    std::string weight_name = "w_qn";
+
     std::string model_name = "xdragforce"; 
     std::string node;  
     std::stringstream out; 
     out << iqn; 
     node = out.str(); 
-    weight_name += node; 
     model_name += "_qn";
     model_name += node; 
 
-    EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
-
-    const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-    tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
-
     ModelBase& modelx = modelFactory.retrieve_model( model_name ); 
 
-    const VarLabel* tempLabel_x = modelx.getModelLabel(); 
-    tsk->requires( Task::OldDW, tempLabel_x, Ghost::None, 0 );
-
     const VarLabel* tempgasLabel_x = modelx.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_x, Ghost::None, 0 );
+    tsk->requires( which_dw, tempgasLabel_x, Ghost::None, 0 );
 
     model_name = "ydragforce"; 
     model_name += "_qn";
@@ -91,11 +89,8 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
 
     ModelBase& modely = modelFactory.retrieve_model( model_name );
 
-    const VarLabel* tempLabel_y = modely.getModelLabel();
-    tsk->requires( Task::OldDW, tempLabel_y, Ghost::None, 0 );
-
     const VarLabel* tempgasLabel_y = modely.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_y, Ghost::None, 0 );
+    tsk->requires( which_dw, tempgasLabel_y, Ghost::None, 0 );
 
     model_name = "zdragforce";
     model_name += "_qn";
@@ -103,21 +98,11 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
 
     ModelBase& modelz = modelFactory.retrieve_model( model_name );
 
-    const VarLabel* tempLabel_z = modelz.getModelLabel();
-    tsk->requires( Task::OldDW, tempLabel_z, Ghost::None, 0 );
-
     const VarLabel* tempgasLabel_z = modelz.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_z, Ghost::None, 0 );
-
+    tsk->requires( which_dw, tempgasLabel_z, Ghost::None, 0 );
 
   }
   
-  for (vector<std::string>::iterator iter = _required_labels.begin(); 
-       iter != _required_labels.end(); iter++) { 
-    // HERE I WOULD REQUIRE ANY VARIABLES NEEDED TO COMPUTE THE SOURCe
-    //tsk->requires( Task::OldDW, .... ); 
-  }
-
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
@@ -135,8 +120,6 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
   //patch loop
   for (int p=0; p < patches->size(); p++){
 
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -147,32 +130,17 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
     CoalModelFactory& modelFactory = CoalModelFactory::self(); 
     
     CCVariable<Vector> dragSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch ); 
-      dragSrc.initialize(Vector(0.,0.,0.)); 
-    } else {
+    DataWarehouse* which_dw; 
+    if ( timeSubStep == 0 ){ 
       new_dw->allocateAndPut( dragSrc, _src_label, matlIndex, patch );
       dragSrc.initialize(Vector(0.,0.,0.));
-    } 
-    
-    for (vector<std::string>::iterator iter = _required_labels.begin(); 
-         iter != _required_labels.end(); iter++) { 
-      //CCVariable<double> temp; 
-      //old_dw->get( *iter.... ); 
+      which_dw = old_dw; 
+    } else { 
+      new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch ); 
+      which_dw = new_dw; 
     }
-
-
-
+    
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
-      //std::string model_name = d_dragModelName; 
-      //std::string node;  
-      //std::stringstream out; 
-      //out << iqn; 
-      //node = out.str(); 
-      //model_name += "_qn";
-      //model_name += node;
-
-      //ModelBase& model = modelFactory.retrieve_model( model_name ); 
 
       Vector qn_gas_drag;
 
@@ -188,7 +156,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       ModelBase& modelx = modelFactory.retrieve_model( model_name );
 
       const VarLabel* XDragGasLabel = modelx.getGasSourceLabel();  
-      old_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
+      which_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
 
       constCCVariable<double> qn_gas_ydrag;
       model_name = "ydragforce";
@@ -198,7 +166,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       ModelBase& modely = modelFactory.retrieve_model( model_name );
 
       const VarLabel* YDragGasLabel = modely.getGasSourceLabel();
-      old_dw->get( qn_gas_ydrag, YDragGasLabel, matlIndex, patch, gn, 0 );
+      which_dw->get( qn_gas_ydrag, YDragGasLabel, matlIndex, patch, gn, 0 );
 
       constCCVariable<double> qn_gas_zdrag;
       model_name = "zdragforce";
@@ -208,7 +176,8 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       ModelBase& modelz = modelFactory.retrieve_model( model_name );
 
       const VarLabel* ZDragGasLabel = modelz.getGasSourceLabel();
-      old_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
+      which_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
+
 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter; 
@@ -232,10 +201,6 @@ CoalGasMomentum::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   tsk->computes(_src_label);
 
-  for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-    tsk->computes(*iter); 
-  }
-
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
 
 }
@@ -253,16 +218,12 @@ CoalGasMomentum::initialize( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    CCVariable<double> src;
+    CCVariable<Vector> src;
 
     new_dw->allocateAndPut( src, _src_label, matlIndex, patch ); 
 
-    src.initialize(0.0); 
+    src.initialize(Vector(0.0,0.0,0.0)); 
 
-    for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
-      CCVariable<double> tempVar; 
-      new_dw->allocateAndPut(tempVar, *iter, matlIndex, patch ); 
-    }
   }
 }
 

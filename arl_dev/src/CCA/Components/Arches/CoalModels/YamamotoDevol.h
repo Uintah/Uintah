@@ -12,17 +12,13 @@
 
 /**
   * @class    YamamotoDevol
-  * @author   Julien Pedel
-  * @date     June 2011
+  * @author   Jeremy Thornock, Julien Pedel, Charles Reid
+  * @date     May 2009        Check-in of initial version
+  *           November 2009   Verification
   *
   * @brief    A class for calculating the DQMOM model term for the 
-  *           Yamamoto coal devolatilization model.
+  *           Kobayashi-Sarofim coal devolatilization model.
   *
-  * Empirical devolatilization model which can reproduce more complex models
-  * such as CPD or DAEM. Model based on the work of K. Yamamoto:
-  * K. Yamamoto, T. Murota, T. Okazaki, M. Tanigushi, Proceedings of the
-  * Combustion Institute 33 (2011), 1771-1778
-  * 
   * The Builder is required because of the Model Factory; the Factory needs
   * some way to create the model term and register it.
   *
@@ -36,12 +32,12 @@ class ArchesLabel;
 class YamamotoDevolBuilder: public ModelBuilder 
 {
 public: 
-  YamamotoDevolBuilder( const std::string          & modelName,
-                        const std::vector<std::string>  & reqICLabelNames,
-                        const std::vector<std::string>  & reqScalarLabelNames,
-                        ArchesLabel          * fieldLabels,
-                        SimulationStateP           & sharedState,
-                        int qn );
+  YamamotoDevolBuilder( const std::string               & modelName,
+                                const std::vector<std::string>  & reqICLabelNames,
+                                const std::vector<std::string>  & reqScalarLabelNames,
+                                ArchesLabel                     * fieldLabels,
+                                SimulationStateP                & sharedState,
+                                int qn );
 
   ~YamamotoDevolBuilder(); 
 
@@ -58,11 +54,11 @@ class YamamotoDevol: public Devolatilization {
 public: 
 
   YamamotoDevol( std::string modelName, 
-                 SimulationStateP& shared_state,
-                 ArchesLabel* fieldLabels,
-                 std::vector<std::string> reqICLabelNames,
-                 std::vector<std::string> reqScalarLabelNames,
-                 int qn );
+                         SimulationStateP& shared_state, 
+                         ArchesLabel* fieldLabels,
+                         std::vector<std::string> reqICLabelNames,
+                         std::vector<std::string> reqScalarLabelNames,
+                         int qn );
 
   ~YamamotoDevol();
 
@@ -87,60 +83,59 @@ public:
                      const PatchSubset* patches, 
                      const MaterialSubset* matls, 
                      DataWarehouse* old_dw, 
-                     DataWarehouse* new_dw );
+                     DataWarehouse* new_dw, 
+                     const int timeSubStep );
 
 private:
 
-  const VarLabel* d_raw_coal_mass_label;
-  const VarLabel* d_char_mass_label;
-  const VarLabel* d_weight_label;
-  const VarLabel* d_particle_temperature_label;
+  const VarLabel* _rcmass_varlabel;
+  const VarLabel* _char_varlabel;
+  const VarLabel* _weight_varlabel;
+  const VarLabel* _particle_temperature_varlabel;
 
-  const VarLabel* d_gas_temperature_label;
-
-  std::vector<double>  as_received;
+  std::vector<double>  Yamamoto_coefficients;  
   std::vector<double>  particle_sizes;
   std::vector<double>  ash_mass_init;
   std::vector<double>  char_mass_init;
   std::vector<double>  vol_dry;
   std::vector<double>  mass_dry;
   std::vector<double>  rc_mass_init;
-  std::vector<double>  Yamamoto_coefficients;  
+  double _Av;        ///< Pre-exponential factors for devolatilization rate constants
+  double _Ev;        ///< Activation energy for devolatilization rate constant
+  double _Yv;       ///< Volatile fraction from proximate analysis
+  double kv;        ///< Rate constant for devolatilization reaction 1
+  double _c0;
+  double _c1;
+  double _c2;
+  double _c3;
+  double _c4;
+  double _c5;
+  double Xv;
+  double Fv;
   double rhop;
   double total_rc;
   double total_dry;
   double rc_mass_frac;
   double char_mass_frac;
   double ash_mass_frac;
-  double Av;
-  double Ev;
-  double Yv;
-  double c0;
-  double c1;
-  double c2;
-  double c3;
-  double c4;
-  double c5;
-  double kv;
-  double Fv;
-  double Xv;
   
-  double pi;
-  double R;         ///< Ideal gas constant
+  double _pi;
+  double _R;
   
-  bool compute_part_temp; ///< Boolean: is particle temperature computed? 
-                          //   (if not, gas temp = particle temp)
-  bool part_temp_from_enth;
-  bool compute_char_mass;
-
-  double d_rc_scaling_factor;   ///< Scaling factor for raw coal internal coordinate
-  double d_rh_scaling_factor;
-  double d_pt_scaling_factor;   ///< Scaling factor for particle temperature internal coordinate
   double rateMax;
-  double testVal_part;
-  double testVal_gas;
-  double testVal_char;
-
+  double _rc_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
+  double _weight_scaling_constant;   ///< Scaling factor for weight 
+  double _weight_small;   ///< small weight 
+    struct CoalAnalysis{ 
+      double C;
+      double H; 
+      double O; 
+      double N; 
+      double S; 
+      double CHAR; 
+      double ASH; 
+      double H2O; 
+    };
 }; // end ConstSrcTerm
 } // end namespace Uintah
 #endif

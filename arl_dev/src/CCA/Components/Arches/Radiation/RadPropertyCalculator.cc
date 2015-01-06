@@ -77,206 +77,6 @@ RadPropertyCalculator::problemSetup( const ProblemSpecP& db ){
   } 
 }
 
-//void 
-//RadPropertyCalculator::sched_compute_radiation_properties( const LevelP& level, SchedulerP& sched, 
-//                                                           const MaterialSet* matls, const int time_substep, 
-//                                                           const bool doing_initialization )
-//{
-//
-//  std::string taskname = "RadPropertyCalculator::compute_radiation_properties"; 
-//  Task* tsk = scinew Task(taskname, this, &RadPropertyCalculator::compute_radiation_properties, 
-//      time_substep, doing_initialization ); 
-//
-//  for ( CalculatorVec::iterator i = _all_calculators.begin(); i != _all_calculators.end(); i++ ){ 
-//
-//    const bool local_abskp = (*i)->has_abskp_local();  
-//    const bool use_abskp   = (*i)->use_abskp(); 
-//
-//    if ( time_substep == 0 && !doing_initialization ){ 
-//
-//      tsk->computes( (*i)->get_abskg_label() );
-//
-//      if ( use_abskp && local_abskp ){ 
-//        tsk->computes( (*i)->get_abskp_label() ); 
-//      } else if ( use_abskp && !local_abskp ){ 
-//        tsk->requires( Task::OldDW, (*i)->get_abskp_label(), Ghost::None, 0 );
-//      }
-//
-//      //participating species from property calculator
-//      std::vector<std::string> part_sp = (*i)->get_sp(); 
-//
-//      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
-//        const VarLabel* label = VarLabel::find(*iter);
-//        if ( label != 0 ){ 
-//          tsk->requires( Task::OldDW, label, Ghost::None, 0 ); 
-//        } else { 
-//          throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
-//        }
-//      }
-//
-//    } else if ( time_substep == 0 && doing_initialization ) {
-//      tsk->computes( (*i)->get_abskg_label() );
-//
-//      if ( use_abskp && local_abskp ){ 
-//        tsk->computes( (*i)->get_abskp_label() ); 
-//      } else if ( use_abskp && !local_abskp ){ 
-//        std::cout << " ABSKP LABEL=" << *((*i)->get_abskp_label()) << std::endl;
-//        tsk->requires( Task::NewDW, (*i)->get_abskp_label(), Ghost::None, 0 );
-//      }
-//      //participating species from property calculator
-//      std::vector<std::string> part_sp = (*i)->get_sp(); 
-//
-//      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
-//        const VarLabel* label = VarLabel::find(*iter);
-//        if ( label != 0 ){ 
-//          tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
-//        } else { 
-//          throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
-//        }
-//      }
-//    } else { 
-//
-//      tsk->modifies( (*i)->get_abskg_label() );
-//
-//      if ( use_abskp && local_abskp ){ 
-//        tsk->modifies( (*i)->get_abskp_label() ); 
-//      } else if ( use_abskp && !local_abskp ){ 
-//        tsk->requires( Task::NewDW, (*i)->get_abskp_label(), Ghost::None, 0 );
-//      }
-//      //participating species from property calculator
-//      std::vector<std::string> part_sp = (*i)->get_sp(); 
-//
-//      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
-//        const VarLabel* label = VarLabel::find(*iter);
-//        if ( label != 0 ){ 
-//          tsk->requires( Task::NewDW, label, Ghost::None, 0 ); 
-//        } else { 
-//          throw ProblemSetupException("Error: Could not match species with varlabel: "+*iter,__FILE__, __LINE__);
-//        }
-//      }
-//
-//    }
-//  }
-//
-//  tsk->requires( Task::NewDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
-//
-//  _temperature_label = VarLabel::find(_temperature_name); 
-//  if ( _temperature_label != 0 ){ 
-//    if ( time_substep == 0 && !doing_initialization ){ 
-//      tsk->requires( Task::OldDW, VarLabel::find(_temperature_name), Ghost::None, 0);
-//    } else if ( time_substep == 0 && doing_initialization ){ 
-//      tsk->requires( Task::NewDW, VarLabel::find(_temperature_name), Ghost::None, 0);
-//    } else { 
-//      tsk->requires( Task::NewDW, VarLabel::find(_temperature_name), Ghost::None, 0);
-//    }
-//  } else { 
-//    throw ProblemSetupException("Error: Could not find the temperature label",__FILE__, __LINE__);
-//  }
-//
-//  sched->addTask(tsk, level->eachPatch(), matls); 
-//
-//}
-//
-//
-//void 
-//RadPropertyCalculator::compute_radiation_properties( const ProcessorGroup* pc, 
-//                                                     const PatchSubset* patches, 
-//                                                     const MaterialSubset* matls, 
-//                                                     DataWarehouse* old_dw, 
-//                                                     DataWarehouse* new_dw, 
-//                                                     const int time_substep, 
-//                                                     const bool doing_initialization )
-//{
-//
-//  //patch loop
-//  for (int p=0; p < patches->size(); p++){
-//    const Patch* patch = patches->get(p);
-//    
-//    //get other variables
-//    constCCVariable<double> vol_fraction; 
-//    constCCVariable<double> temperature; 
-//
-//    new_dw->get( vol_fraction, VarLabel::find("volFraction"), _matl_index, patch, Ghost::None, 0 ); 
-//
-//    for ( CalculatorVec::iterator i = _all_calculators.begin(); i != _all_calculators.end(); i++ ){ 
-//     
-//      DataWarehouse* which_dw; 
-//    
-//      const bool local_abskp = (*i)->has_abskp_local();  
-//      const bool use_abskp   = (*i)->use_abskp(); 
-//
-//      CCVariable<double> abskg; 
-//      CCVariable<double> abskp; 
-//      constCCVariable<double> const_abskp; 
-//
-//      if ( time_substep == 0 && !doing_initialization ) { 
-//        which_dw = old_dw; 
-//        new_dw->allocateAndPut( abskg, (*i)->get_abskg_label(), _matl_index, patch );
-//        if ( use_abskp && local_abskp ){ 
-//          new_dw->allocateAndPut( abskp, (*i)->get_abskp_label(), _matl_index, patch );
-//        } else if ( use_abskp && !local_abskp ){ 
-//          old_dw->get( const_abskp, (*i)->get_abskp_label(), _matl_index, patch, Ghost::None, 0 ); 
-//        }
-//        old_dw->get( temperature, _temperature_label, _matl_index, patch, Ghost::None, 0 ); 
-//      } else if ( time_substep == 0 && doing_initialization ){
-//        which_dw = new_dw; 
-//        new_dw->allocateAndPut( abskg, (*i)->get_abskg_label(), _matl_index, patch );
-//        if ( use_abskp && local_abskp ){ 
-//          new_dw->allocateAndPut( abskp, (*i)->get_abskp_label(), _matl_index, patch );
-//        } else if ( use_abskp && !local_abskp ){ 
-//          new_dw->get( const_abskp, (*i)->get_abskp_label(), _matl_index, patch, Ghost::None, 0 ); 
-//        }
-//        new_dw->get( temperature, _temperature_label, _matl_index, patch, Ghost::None, 0 ); 
-//
-//      } else { 
-//        which_dw = new_dw; 
-//        new_dw->getModifiable( abskg, (*i)->get_abskg_label(), _matl_index, patch );
-//        if ( use_abskp && local_abskp ){ 
-//          new_dw->getModifiable( abskp, (*i)->get_abskp_label(), _matl_index, patch );
-//        } else if ( use_abskp && !local_abskp ){ 
-//          new_dw->get( const_abskp, (*i)->get_abskp_label(), _matl_index, patch, Ghost::None, 0 ); 
-//        }
-//        new_dw->get( temperature, _temperature_label, _matl_index, patch, Ghost::None, 0 ); 
-//      }
-//
-//      //participating species from property calculator
-//      typedef std::vector<constCCVariable<double> > CCCV; 
-//      CCCV species; 
-//      std::vector<std::string> part_sp = (*i)->get_sp(); 
-//
-//      for ( std::vector<std::string>::iterator iter = part_sp.begin(); iter != part_sp.end(); iter++){
-//        const VarLabel* label = VarLabel::find(*iter);
-//        constCCVariable<double> spec; 
-//        which_dw->get( spec, label, _matl_index, patch, Ghost::None, 0 ); 
-//        species.push_back(spec); 
-//      }
-//
-//      //initializing properties here.  This needs to be made consistent with BCs
-//      if ( time_substep == 0 ){ 
-//        abskg.initialize(1.0); //so that walls, bcs, etc, are fulling absorbing 
-//        if ( use_abskp && local_abskp ){
-//          abskp.initialize(0.0); 
-//        }
-//      }
-//
-//      //actually compute the properties
-//      if ( time_substep == 0 )
-//        (*i)->computeProps( patch, vol_fraction, species, temperature, abskg ); 
-//
-//      //sum in the particle contribution if needed
-//      if ( use_abskp ){ 
-//
-//        if ( local_abskp ){ 
-//          (*i)->sum_abs( abskg, abskp, patch ); 
-//        } else { 
-//          (*i)->sum_abs( abskg, const_abskp, patch ); 
-//        }
-//
-//      }
-//
-//    } //calculator loop
-//  }   //patch loop
-//}
 
 //--------------------------------------------------
 // Below find the individual calculators
@@ -286,9 +86,9 @@ RadPropertyCalculator::problemSetup( const ProblemSpecP& db ){
 // Constant Properties
 //--------------------------------------------------
 RadPropertyCalculator::ConstantProperties::ConstantProperties() {
-  _local_abskp = false; 
-  _use_abskp = false; 
+
 };
+
 RadPropertyCalculator::ConstantProperties::~ConstantProperties() {};
     
 bool RadPropertyCalculator::ConstantProperties::problemSetup( const ProblemSpecP& db ) {
@@ -301,6 +101,7 @@ bool RadPropertyCalculator::ConstantProperties::problemSetup( const ProblemSpecP
   } else { 
     _abskg_name = "abskg"; 
   }
+
 
   //Create the particle absorption coeff as a <PropertyModel>
 
@@ -325,13 +126,7 @@ void RadPropertyCalculator::ConstantProperties::compute_abskg( const Patch* patc
 
 }
 
-void RadPropertyCalculator::ConstantProperties::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn,   CCVariable<double>& abskp ){
 
-  throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
-
-}
 
 //--------------------------------------------------
 // Burns/Christon Properties
@@ -339,8 +134,6 @@ void RadPropertyCalculator::ConstantProperties::compute_abskp( const Patch* patc
 RadPropertyCalculator::BurnsChriston::BurnsChriston() {
   _notSetMin = Point(SHRT_MAX, SHRT_MAX, SHRT_MAX);
   _notSetMax = Point(SHRT_MIN, SHRT_MIN, SHRT_MIN);
-  _local_abskp = false; 
-  _use_abskp = false; 
 }
 
 RadPropertyCalculator::BurnsChriston::~BurnsChriston() {}
@@ -365,9 +158,6 @@ bool RadPropertyCalculator::BurnsChriston::problemSetup( const ProblemSpecP& db 
   } else { 
     _abskg_name = "abskg"; 
   }
-
-  //no abskp
-  _abskp_name = "NA"; 
 
   const VarLabel* test_label = VarLabel::find(_abskg_name); 
   if ( test_label == 0 ){ 
@@ -409,19 +199,13 @@ void RadPropertyCalculator::BurnsChriston::compute_abskg( const Patch* patch, co
   } 
 }
 
-void RadPropertyCalculator::BurnsChriston::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn,   CCVariable<double>& abskp ){
 
-  throw InvalidValue( "Error: No particle properties implemented for Burns/Christon radiation properties.",__FILE__,__LINE__);
-}
 
 /// --------------------------------------
 //  Hottel/Sarofim 
 // ---------------------------------------
 RadPropertyCalculator::HottelSarofim::HottelSarofim() {
-  _local_abskp = false; 
-  _use_abskp = false; 
+
 };
 RadPropertyCalculator::HottelSarofim::~HottelSarofim() {};
     
@@ -455,10 +239,7 @@ RadPropertyCalculator::HottelSarofim::problemSetup( const ProblemSpecP& db ) {
     throw ProblemSetupException("Error: Abskg label already used for constant properties: "+_abskg_name,__FILE__, __LINE__);
   }
 
-  if ( db_h->findBlock("abskp")){ 
-    db_h->findBlock("abskp")->getAttribute("label",_abskp_name); 
-    _use_abskp = true; 
-  }
+
 
   bool property_on = true;
   return property_on; 
@@ -479,14 +260,7 @@ RadPropertyCalculator::HottelSarofim::compute_abskg( const Patch* patch,
 
 }
 
-void 
-RadPropertyCalculator::HottelSarofim::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn,   CCVariable<double>& abskp ){
 
-  throw InvalidValue( "Error: No particle properties implemented for constant radiation properties.",__FILE__,__LINE__);
-
-}
 
 vector<std::string> 
 RadPropertyCalculator::HottelSarofim::get_sp(){
@@ -499,8 +273,6 @@ RadPropertyCalculator::HottelSarofim::get_sp(){
 
 }
 
-bool 
-RadPropertyCalculator::HottelSarofim::does_scattering(){ return false; } 
 
 /// --------------------------------------
 //  RADPROPS
@@ -509,21 +281,12 @@ RadPropertyCalculator::HottelSarofim::does_scattering(){ return false; }
 RadPropertyCalculator::RadPropsInterface::RadPropsInterface() 
 {
   _gg_radprops   = 0;
-  _part_radprops = 0; 
-  _p_ros_abskp  = false; 
-  _p_planck_abskp = false; 
-  _local_abskp = false; 
-  _use_abskp = false; 
 }
 
 RadPropertyCalculator::RadPropsInterface::~RadPropsInterface() {
     
   if ( _gg_radprops != 0 ) 
     delete _gg_radprops; 
-
-  if ( _part_radprops != 0 ) 
-    delete _part_radprops; 
-
 }
     
 bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP& db ) {
@@ -579,10 +342,9 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
     _abskg_name = "abskg"; 
   }
 
-  if ( db->findBlock("abskp") ){ 
-    db->findBlock("abskp")->getAttribute("label",_abskp_name); 
-    _use_abskp = true; 
-  }
+
+  
+
 
   const VarLabel* test_label = VarLabel::find(_abskg_name); 
   if ( test_label == 0 ){ 
@@ -591,37 +353,6 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
     throw ProblemSetupException("Error: Abskg label already in use: "+_abskg_name,__FILE__, __LINE__);
   }
 
-  // For particles: 
-  _does_scattering = false; 
-  if ( db->findBlock( "particles" ) ){ 
-
-    ProblemSpecP db_p = db->findBlock( "particles" ); 
-
-    double real_part = 0; 
-    double imag_part = 0; 
-    db_p->require( "complex_ir_real", real_part ); 
-    db_p->require( "complex_ir_imag", imag_part ); 
-
-    std::string which_model = "none"; 
-    db_p->require( "model_type", which_model );
-    if ( which_model == "planck" ){ 
-      _p_planck_abskp = true; 
-    } else if ( which_model == "rossland" ){ 
-      _p_ros_abskp = true; 
-    } else { 
-      throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
-    }   
-
-    std::complex<double> complex_ir( real_part, imag_part ); 
-
-    _part_radprops = scinew ParticleRadCoeffs( complex_ir ); 
-
-    _does_scattering = true; 
-    _local_abskp = true; 
-
-    _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
-
-  }
   return true; 
   
 }
@@ -630,16 +361,15 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch
 { 
 
   int N = species.size(); 
+  double plankCff = 0.0;
+  double rossCff  = 0.0; 
+  double effCff   = 0.0; 
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
     IntVector c = *iter; 
 
-    double plankCff = 0.0;
-    double rossCff  = 0.0; 
-    double effCff   = 0.0; 
     std::vector<double> mol_frac; 
-    double T        = mixT[c];
     double VolFraction = VolFractionBC[c];
 
     //convert mass frac to mol frac
@@ -663,40 +393,232 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskg( const Patch* patch
 
     if ( VolFraction > 1.e-16 ){
 
-      _gg_radprops->mixture_coeffs(plankCff, rossCff, effCff, mol_frac, T);
+      _gg_radprops->mixture_coeffs(plankCff, rossCff, effCff, mol_frac, mixT[c]);
 
-      abskg[c] = effCff*100; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
+      abskg[c] = effCff*100.0; // from cm^-1 to m^-1 //need to generalize this to the other coefficients
 
     } else { 
 
-      abskg[c] = 0.0; 
+   //   abskg[c] = 1.0; 
 
     }
   }
 }
 
-void RadPropertyCalculator::RadPropsInterface::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+
+
+
+#endif 
+
+
+RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatteringOn){
+
+  _scatteringOn = scatteringOn; 
+
+
+
+  construction_success=true;
+
+
+  if ( db->findBlock("particles")->findBlock("abskp") ){ 
+    db->findBlock("particles")->findBlock("abskp")->getAttribute("label",_abskp_name); 
+  }else{
+    throw ProblemSetupException("Error: abskp name not found! This should be specified in the input file!",__FILE__, __LINE__);
+  }
+
+
+  //------------------2 (or 3) components for coal ----------//
+  _ncomp=2;
+  vector < std::string > base_composition_names(_ncomp);
+  base_composition_names[0] = "Charmass_";
+  base_composition_names[1] = "RCmass_";
+  //---------------------------------------------------------//
+  
+  //-----------------All class objects of this type should do this---------------------//
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  if ( _nQn_part ==0){
+    construction_success = false;
+  }
+  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
+  _abskp_label_vector = vector<const VarLabel* >(_nQn_part);
+  for (int i=0; i< _nQn_part ; i++){
+    std::stringstream out; 
+    out << _abskp_name << "_" << i;
+    _abskp_label_vector[i] = VarLabel::create(out.str(), CCVariable<double>::getTypeDescription() ); 
+  }
+  //-----------------------------------------------------------------------------------//
+  
+ ProblemSpecP db_coal=db->findBlock("particles")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
+ 
+ if (db_coal == 0){
+   throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
+ }else if (db_coal->findBlock("optics")==0){
+   throw ProblemSetupException("Error: Coal properties not found! Need Optical Coal properties!",__FILE__, __LINE__);
+ }
+
+  db_coal->findBlock("optics")->require( "RawCoal_real", _rawCoalReal ); 
+  db_coal->findBlock("optics")->require( "RawCoal_imag", _rawCoalImag ); 
+  db_coal->findBlock("optics")->require( "Ash_real", _ashReal ); 
+  db_coal->findBlock("optics")->require( "Ash_imag", _ashImag ); 
+
+  _charReal=_rawCoalReal; // assume char and RC have same optical props
+  _charImag=_rawCoalImag; // assume char and RC have same optical props
+
+  if (_rawCoalReal > _ashReal) {
+    _HighComplex=std::complex<double> ( _rawCoalReal, _rawCoalImag );  
+    _LowComplex=std::complex<double> ( _ashReal, _ashImag );  
+  } else{
+    _HighComplex=std::complex<double> ( _ashReal, _ashImag );  
+    _LowComplex=std::complex<double>  (_rawCoalReal, _rawCoalImag );  
+  }
+
+  /// complex index of refraction for pure coal components   
+  ///  asymmetry parameters for pure coal components
+  _charAsymm=1.0;
+  _rawCoalAsymm=1.0;
+  _ashAsymm=-1.0;
+
+  //
+    _complexIndexReal_label = vector<const VarLabel* >(_nQn_part);
+
+    for (int i=0; i<_nQn_part ; i++ ){
+      std::stringstream out1; 
+      out1 << "complexIndexReal_" << i;
+      _complexIndexReal_label[i]= VarLabel::create(out1.str(), CCVariable<double>::getTypeDescription() ); 
+    }
+
+  if ( _scatteringOn){
+    _scatkt_name = "scatkt";
+    _asymmetryParam_name="asymmetryParam"; 
+    _scatkt_label = VarLabel::create(_scatkt_name,CCVariable<double>::getTypeDescription()); 
+    _asymmetryParam_label = VarLabel::create(_asymmetryParam_name,CCVariable<double>::getTypeDescription()); 
+    if (_scatkt_label==0){
+      throw ProblemSetupException("Error: scattering coefficient label not created!!!?",__FILE__, __LINE__);
+    } 
+  }
+
+  _composition_names = std::vector < std::string > (_ncomp*_nQn_part);
+
+  for (int j=0; j< _ncomp ; j++ ){
+    for (int i=0; i< _nQn_part ; i++ ){
+      std::stringstream out; 
+      out << base_composition_names[j] << i;
+      _composition_names[i+j*_nQn_part] =out.str(); 
+    }
+  }
+  double density;
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->require( "density", density ); 
+
+  vector<double>  particle_sizes ;        /// particle sizes in diameters
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->require( "diameter_distribution", particle_sizes ); 
+
+  double ash_massfrac;  
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties")->findBlock("ultimate_analysis")->require("ASH", ash_massfrac); 
+
+  _ash_mass = vector<double>(_nQn_part);        /// particle sizes in diameters
+
+  for (int i=0; i< _nQn_part ; i++ ){
+    _ash_mass[i] = pow(particle_sizes[i], 3.0)/6*M_PI*density*ash_massfrac;
+  }
+
+
+
+
+  _part_radprops = 0; 
+  ProblemSpecP db_p = db->findBlock( "particles" ); 
+
+
+
+  std::string which_model = "none"; 
+  db_p->require( "model_type", which_model );
+  if ( which_model == "planck" ){ 
+    _p_planck_abskp = true; 
+  } else if ( which_model == "rossland" ){ 
+    _p_ros_abskp = true; 
+  } else { 
+    throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
+  }   
+
+  _part_radprops = scinew ParticleRadCoeffs3D(_LowComplex,_HighComplex,3 );  
+
+  _computeComplexIndex = true; // complex index of refraction needed
+}
+
+RadPropertyCalculator::coalOptics::~coalOptics(){
+
+
+  for (int i=0; i< _nQn_part ; i++ ){
+    VarLabel::destroy(_complexIndexReal_label[i]); 
+  }
+  if ( _scatteringOn ) {
+    VarLabel::destroy(_asymmetryParam_label); 
+    VarLabel::destroy(_scatkt_label); 
+  }
+    delete _part_radprops; 
+}
+
+
+bool RadPropertyCalculator::coalOptics::problemSetup(Task* tsk,int time_substep){
+
+
+  if (time_substep ==0) {  // only populate labels on first time step....otherwise you get duplicates!
+
+
+    for (int i=0; (signed) _compositionLabels.size() < _ncomp*_nQn_part ; i++ ){  // unique loop criteria ensures no label duplicate.
+      const VarLabel* temp =  VarLabel::find(_composition_names[i]);
+      if (temp == 0){
+        proc0cout << "Coal optical-props is unable to find label with name: "<<_composition_names[i] << " \n";
+        throw ProblemSetupException("Error: Could not find the label"+_composition_names[i],__FILE__, __LINE__);
+      }
+      else
+        _compositionLabels.push_back( temp);
+    }
+
+    for (int i=0; i< _ncomp*_nQn_part ; i++ ){
+      tsk->requires( Task::NewDW,_compositionLabels[i],  Ghost::None, 0);
+    }
+    for (int i=0; i< _nQn_part ; i++ ){
+      tsk->computes(  _complexIndexReal_label[i] );
+    }
+    if (_scatteringOn){
+      tsk->computes(  _asymmetryParam_label   );
+    }
+  }
+  else{
+    for (int i=0; i< _ncomp*_nQn_part ; i++ ){
+      tsk->requires( Task::NewDW,_compositionLabels[i] , Ghost::None, 0); // this should be new_dw, but i'm getting an error BEN?
+    }
+    for (int i=0; i< _nQn_part ; i++ ){
+      tsk->modifies(  _complexIndexReal_label[i] );
+    }
+    if (_scatteringOn){
+      tsk->modifies(  _asymmetryParam_label   );
+    }
+  }
+
+
+
+  return true;
+}
+
+void RadPropertyCalculator::coalOptics::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
                                     double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, CCVariable<double>& abskp ){
+                                    const int Nqn, CCVariable<double>& abskpt, 
+                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
     IntVector c = *iter; 
 
-    double plankCff = 0.0;
-    double rossCff  = 0.0; 
-    double effCff   = 0.0; 
     double VolFraction = VolFractionBC[c];
     double unscaled_weight;
     double unscaled_size;
 
 
     if ( VolFraction > 1.e-16 ){
-
-
-    
       //now compute the particle values: 
-      abskp[c] = 0.0; 
+      abskpt[c] = 0.0; 
       for ( int i = 0; i < Nqn; i++ ){ 
 
         unscaled_weight = (weights[i])[c]*weights_scaling_constant;
@@ -704,13 +626,15 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskp( const Patch* patch
 
         if ( _p_planck_abskp ){ 
 
-          double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
-          abskp[c] += abskp_i * unscaled_weight; 
+          abskp[i][c] = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c],complexReal[i][c] )* unscaled_weight;
+          //double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
+          abskpt[c] += abskp[i][c] ; 
           
         } else if ( _p_ros_abskp ){ 
 
-          double abskp_i =  _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c] );
-          abskp[c] += abskp_i * unscaled_weight; 
+          abskp[i][c] = _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c],complexReal[i][c] )* unscaled_weight;
+          //double abskp_i = _part_rossprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
+          abskpt[c] += abskp[i][c] ; 
 
         } 
       }
@@ -718,10 +642,399 @@ void RadPropertyCalculator::RadPropsInterface::compute_abskp( const Patch* patch
 
     }else{    
 
-      abskp[c] = 0.0;
+      abskpt[c] = 0.0;
 
     }
   }
 }
-#endif 
 
+
+void RadPropertyCalculator::coalOptics::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& scatkt,
+                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
+                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
+  for ( int i = 0; i < Nqn; i++ ){ 
+    scatktQuad[i].allocate(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+    scatktQuad[i].initialize(0.0);
+  }
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+
+    IntVector c = *iter; 
+
+    double VolFraction = VolFractionBC[c];
+    double unscaled_weight;
+    double unscaled_size;
+
+
+    if ( VolFraction > 1.e-16 ){
+
+      scatkt[c] = 0.0; 
+      for ( int i = 0; i < Nqn; i++ ){ 
+
+        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        if ( _p_planck_abskp ){ 
+          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c], complexReal[i][c]);
+          //double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c]);
+          scatktQuad[i][c]=scatkt_i* unscaled_weight;
+          scatkt[c] += scatkt_i * unscaled_weight; 
+          
+        } else if ( _p_ros_abskp ){ 
+          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] , complexReal[i][c]);
+          //double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] );
+          scatktQuad[i][c]=scatkt_i* unscaled_weight;
+          scatkt[c] += scatkt_i * unscaled_weight; 
+        } 
+      }
+    }else{    
+
+      scatkt[c] = 0.0;
+
+    }
+  }
+}
+
+void RadPropertyCalculator::coalOptics::computeComplexIndex( const Patch* patch,
+                                         constCCVariable<double>& VolFractionBC,
+                   SCIRun::StaticArray < constCCVariable<double> > &composition,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter; 
+    if ( VolFractionBC[c]> 1.e-16){
+      //now compute the particle values: 
+      for ( int i = 0; i <_nQn_part; i++ ){ 
+       double total_mass =composition[i][c] + composition[i+_nQn_part][c] + _ash_mass[i];
+       complexReal[i][c]  =  (composition[i][c]*_charReal+composition[i+_nQn_part][c]*_rawCoalReal+_ash_mass[i]*_ashReal)/total_mass;
+      }
+    }
+    else{
+    }// else, phase complex values remain zero in intrusions (set upstream).
+  }
+
+return;
+}
+
+
+void RadPropertyCalculator::coalOptics::computeAsymmetryFactor( const Patch* patch,
+                                            constCCVariable<double>& VolFractionBC,
+                            SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
+                      SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                       CCVariable<double>  &scatkt,
+                                               CCVariable<double>  &asymmetryParam){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter; 
+    if ( VolFractionBC[c]> 1.e-16){
+
+      for ( int i = 0; i <_nQn_part; i++ ){ 
+       double total_mass =composition[i][c] + composition[i+_nQn_part][c] + _ash_mass[i];
+      asymmetryParam[c] = (composition[i][c]*_charAsymm+composition[i+_nQn_part][c]*_rawCoalAsymm+_ash_mass[i]*_ashAsymm)/(total_mass*scatkt[c])*scatktQuad[i][c];
+      }
+      asymmetryParam[c] /= scatkt[c];
+    } // else, phase function remain zero in intrusions (set upstream).
+  }
+
+return;
+}
+
+RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool scatteringOn){
+
+  construction_success=true;
+  _scatteringOn = scatteringOn; 
+
+
+  if ( db->findBlock("particles")->findBlock("abskp") ){ 
+    db->findBlock("particles")->findBlock("abskp")->getAttribute("label",_abskp_name); 
+    double realCIF;
+    double imagCIF;
+    db->findBlock("particles")->require("complex_ir_real",realCIF); 
+    db->findBlock("particles")->require("complex_ir_imag",imagCIF); 
+    db->findBlock("particles")->getWithDefault("const_assymmFact",_constAsymmFact,0.0); 
+    std::complex<double>  CIF(realCIF, imagCIF );  
+    _part_radprops = scinew ParticleRadCoeffs(CIF);  
+    std::string which_model = "none"; 
+    db->findBlock("particles")->require("model_type", which_model);
+    if ( which_model == "planck" ){ 
+      _p_planck_abskp = true; 
+    } else if ( which_model == "rossland" ){ 
+      _p_ros_abskp = true; 
+    } else { 
+      throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
+    }   
+  }else{
+    throw ProblemSetupException("Error: abskp name not found! This should be specified in the input file!",__FILE__, __LINE__);
+  }
+
+
+  //-----------------All class objects of this type should do this---------------------//
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  if ( _nQn_part ==0){
+    construction_success = false;
+  }
+  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
+  _abskp_label_vector = vector<const VarLabel* >(_nQn_part);
+  for (int i=0; i<_nQn_part; i++){
+    std::stringstream out; 
+    out << _abskp_name << "_" << i;
+    _abskp_label_vector[i] = VarLabel::create(out.str(), CCVariable<double>::getTypeDescription() ); 
+  }
+  //-----------------------------------------------------------------------------------//
+  
+  if ( _scatteringOn){
+    _scatkt_name = "scatkt";
+    _asymmetryParam_name="asymmetryParam"; 
+    _scatkt_label = VarLabel::create(_scatkt_name,CCVariable<double>::getTypeDescription()); 
+    _asymmetryParam_label = VarLabel::create(_asymmetryParam_name,CCVariable<double>::getTypeDescription()); 
+    if (_scatkt_label==0){
+      throw ProblemSetupException("Error: scattering coefficient label not created!!!?",__FILE__, __LINE__);
+    } 
+  }
+  _computeComplexIndex = false; // complex index of refraction not needed for this model
+ 
+}
+
+RadPropertyCalculator::constantCIF::~constantCIF(){
+  if ( _scatteringOn ) {
+    VarLabel::destroy(_asymmetryParam_label); 
+    VarLabel::destroy(_scatkt_label); 
+  }
+    delete _part_radprops; 
+}
+
+
+bool RadPropertyCalculator::constantCIF::problemSetup(Task* tsk,int time_substep){
+
+  if (time_substep ==0) { 
+    if (_scatteringOn){
+      tsk->computes(  _asymmetryParam_label   );
+    }
+  }
+  else{
+    if (_scatteringOn){
+      tsk->modifies(  _asymmetryParam_label   );
+    }
+  }
+  return true;
+}
+
+void RadPropertyCalculator::constantCIF::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& abskpt, 
+                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter; 
+    double VolFraction = VolFractionBC[c];
+    double unscaled_weight;
+    double unscaled_size;
+
+
+    if ( VolFraction > 1.e-16 ){
+      //now compute the particle values: 
+      abskpt[c] = 0.0; 
+      for ( int i = 0; i < Nqn; i++ ){ 
+
+        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+
+        if ( _p_planck_abskp ){ 
+
+          abskp[i][c] = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c])* unscaled_weight;
+          //double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
+          abskpt[c] += abskp[i][c] ; 
+          
+        } else if ( _p_ros_abskp ){ 
+
+          abskp[i][c] = _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c])* unscaled_weight;
+          //double abskp_i = _part_rossprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
+          abskpt[c] += abskp[i][c] ; 
+
+        } 
+      }
+
+
+    }else{    
+
+      abskpt[c] = 0.0;
+
+    }
+  }
+}
+
+
+void RadPropertyCalculator::constantCIF::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& scatkt,
+                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
+                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
+  for ( int i = 0; i < Nqn; i++ ){ 
+    scatktQuad[i].allocate(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
+    scatktQuad[i].initialize(0.0);
+  }
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    IntVector c = *iter; 
+
+    double VolFraction = VolFractionBC[c];
+    double unscaled_weight;
+    double unscaled_size;
+
+
+    if ( VolFraction > 1.e-16 ){
+
+      scatkt[c] = 0.0; 
+      for ( int i = 0; i < Nqn; i++ ){ 
+
+        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        if ( _p_planck_abskp ){ 
+          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c]);
+          scatktQuad[i][c]=scatkt_i* unscaled_weight;
+          scatkt[c] += scatkt_i * unscaled_weight; 
+
+        } else if ( _p_ros_abskp ){ 
+          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] );
+          scatktQuad[i][c]=scatkt_i* unscaled_weight;
+          scatkt[c] += scatkt_i * unscaled_weight; 
+        } 
+      }
+    }else{    
+
+      scatkt[c] = 0.0;
+
+    }
+  }
+}
+
+void RadPropertyCalculator::constantCIF::computeComplexIndex( const Patch* patch,
+                                         constCCVariable<double>& VolFractionBC,
+                   SCIRun::StaticArray < constCCVariable<double> > &composition,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+return;
+}
+
+
+void RadPropertyCalculator::constantCIF::computeAsymmetryFactor( const Patch* patch,
+                                            constCCVariable<double>& VolFractionBC,
+                            SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
+                      SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                       CCVariable<double>  &scatkt,
+                                               CCVariable<double>  &asymmetryParam){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter; 
+    if ( VolFractionBC[c] > 1.e-16){
+      for ( int i = 0; i <_nQn_part; i++ ){ 
+      asymmetryParam[c] =_constAsymmFact ;
+      }
+    } // else, phase function remain zero in intrusions (set upstream).
+  }
+return;
+}
+
+
+// This function does not need the particle temperature.
+// Temperature is passed anyway so that other functions of 
+// the base class can use it.
+RadPropertyCalculator::basic::basic(const ProblemSpecP& db, bool scatteringOn){
+
+  construction_success=true;
+  _scatteringOn = scatteringOn; 
+
+  if (scatteringOn){
+    construction_success=false;
+    proc0cout<<endl<<"Scattering not enabled for basic-radiative-particle-properties.  Use radprops, coal, OR turn off scattering!"<< "\n";;
+  }
+
+  db->findBlock( "particles" )->getWithDefault("Qabs",_Qabs,0.8); //  0.8 was used by Julien for coal particles
+
+  if ( db->findBlock("particles")->findBlock("abskp") ){ 
+    db->findBlock("particles")->findBlock("abskp")->getAttribute("label",_abskp_name); 
+  }else{
+    throw ProblemSetupException("Error: abskp name not found! This should be specified in the input file!",__FILE__, __LINE__);
+  }
+
+  //-----------------All class objects of this type should do this---------------------//
+  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  if ( _nQn_part ==0){
+    construction_success = false;
+  }
+  _abskp_label = VarLabel::create(_abskp_name, CCVariable<double>::getTypeDescription() ); 
+  _abskp_label_vector = vector<const VarLabel* >(_nQn_part);
+  for (int i=0; i<_nQn_part; i++){
+    std::stringstream out; 
+    out << _abskp_name << "_" << i;
+    _abskp_label_vector[i] = VarLabel::create(out.str(), CCVariable<double>::getTypeDescription() ); 
+  }
+  //-----------------------------------------------------------------------------------//
+  _computeComplexIndex = false; // complex index of refraction not needed for this model
+ 
+}
+
+RadPropertyCalculator::basic::~basic(){
+}
+
+
+bool RadPropertyCalculator::basic::problemSetup(Task* tsk,int time_substep){
+  return true;
+}
+
+// This is Julliens particle absorption coefficient model!
+// In juliens model, Qabs, was hard coded to 0.8 for SUFCO coal.
+void RadPropertyCalculator::basic::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& abskpt, 
+                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+  double unscaled_weight;
+  double unscaled_size;
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    IntVector c = *iter; 
+    if ( VolFractionBC[c] > 1.e-16 ){
+      abskpt[c] =0.0 ; 
+      for ( int i = 0; i < Nqn; i++ ){ 
+        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
+        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        abskp[i][c]= M_PI/4.0*_Qabs*unscaled_weight*pow(unscaled_size,2.0);
+        abskpt[c] +=abskp[i][c]; 
+      }
+    }else{    
+      abskpt[c] = 0.0;
+    }
+  }
+}
+
+
+void RadPropertyCalculator::basic::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
+                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
+                                    const int Nqn, CCVariable<double>& scatkt,
+                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
+                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+
+}
+
+void RadPropertyCalculator::basic::computeComplexIndex( const Patch* patch,
+                                         constCCVariable<double>& VolFractionBC,
+                   SCIRun::StaticArray < constCCVariable<double> > &composition,
+                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+return;
+}
+
+
+void RadPropertyCalculator::basic::computeAsymmetryFactor( const Patch* patch,
+                                            constCCVariable<double>& VolFractionBC,
+                            SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
+                      SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                       CCVariable<double>  &scatkt,
+                                               CCVariable<double>  &asymmetryParam){
+return;
+}

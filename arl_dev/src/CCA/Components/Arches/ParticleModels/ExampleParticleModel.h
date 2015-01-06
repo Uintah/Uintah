@@ -107,7 +107,7 @@ private:
   template <typename IT, typename DT>
   ExampleParticleModel<IT, DT>::ExampleParticleModel( std::string task_name, int matl_index, 
                                                       const std::string base_var_name, const int N ) : 
-  _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+  TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
 
     //This sets the type of the independent and dependent variable types as needed by the variable 
     //registration step. 

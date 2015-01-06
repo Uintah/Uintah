@@ -37,6 +37,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/Variables/VarTypes.h>  // delt_vartype
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
@@ -79,7 +80,7 @@ namespace Wasatch {
   divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
   {
-    rmcrt_ = scinew Uintah::Ray();
+    rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
     
     rmcrt_->registerVarLabels( 0,
                               absorptionLabel_,
@@ -163,7 +164,11 @@ namespace Wasatch {
     int maxLevels = grid->numLevels();
     {
       const LevelP& fineLevel = grid->getLevel(0);
-      Uintah::Task::WhichDW tempDW = Task::NewDW;
+      Uintah::Task::WhichDW tempDW   = Task::NewDW;
+      Uintah::Task::WhichDW abskgDW  = Task::NewDW;
+      
+      // if needed convert absorptionLabel: double -> float
+      rmcrt_->sched_DoubleToFloat( fineLevel, sched, abskgDW, radiationCalcFreq );
       
       rmcrt_->sched_sigmaT4( fineLevel,  sched, tempDW, 1, includeExtraCells );
       
@@ -175,7 +180,6 @@ namespace Wasatch {
         rmcrt_->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, radiationCalcFreq );
         
         if(level->hasFinerLevel() || maxLevels == 1){
-          const Task::WhichDW abskgDW    = Task::NewDW;
           const Task::WhichDW sigmaT4DW  = Task::NewDW;
           const Task::WhichDW celltypeDW = Task::NewDW;
           

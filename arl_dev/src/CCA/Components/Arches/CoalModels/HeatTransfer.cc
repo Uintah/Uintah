@@ -35,11 +35,6 @@ HeatTransfer::HeatTransfer( std::string modelName,
   std::string gasSourceName = modelName + "_gasSource";
   d_gasLabel = VarLabel::create( gasSourceName, CCVariable<double>::getTypeDescription() );
 
-  // Create the absorption coefficient term associated with this model
-  std::string abskpName = modelName + "_abskp";
-  d_abskpLabel = VarLabel::create( abskpName, CCVariable<double>::getTypeDescription() );
-  _extra_local_labels.push_back(d_abskpLabel);
-
   std::string qconvName = modelName + "_Qconv";
   d_qconvLabel = VarLabel::create( qconvName, CCVariable<double>::getTypeDescription() );
   _extra_local_labels.push_back(d_qconvLabel);
@@ -107,8 +102,60 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
 
-  d_w_small = weight_eqn.getSmallClip();
+  d_w_small = weight_eqn.getSmallClipCriteria();
   d_w_scaling_constant = weight_eqn.getScalingConstant();
+
+  // Find the absorption coefficient term associated with this model
+  // if it isn't there, print a warning
+  std::string modelName;
+  std::string baseNameAbskp;
+
+  if (d_radiation ) {
+    
+    _radiateAtGasTemp=true; // this flag is arbitrary for no radiation 
+    ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
+    for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
+        db_model = db_model->findNextBlock("model")){
+      db_model->getAttribute("type", modelName);
+      if (modelName=="radiation_properties"){
+        if  (db_model->findBlock("calculator") == 0){
+          if(qn ==0) {
+            proc0cout <<"\n///-------------------------------------------///\n";
+            proc0cout <<"WARNING: No radiation particle properties computed!\n";
+            proc0cout <<"Particles will not interact with radiation!\n";
+            proc0cout <<"///-------------------------------------------///\n";
+          }
+          d_radiation = false;
+          break;
+        }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+          if(qn ==0) {
+            proc0cout <<"\n///-------------------------------------------///\n";
+            proc0cout <<"WARNING: No radiation particle properties computed!\n";
+            proc0cout <<"Particles will not interact with radiation!\n";
+            proc0cout <<"///-------------------------------------------///\n";
+          }
+          d_radiation = false;
+          break;
+        }
+        db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
+        db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true ); 
+        break;
+      }
+      if  (db_model== 0){
+          if(qn ==0) {
+            proc0cout <<"\n///-------------------------------------------///\n";
+            proc0cout <<"WARNING: No radiation particle properties computed!\n";
+            proc0cout <<"Particles will not interact with radiation!\n";
+            proc0cout <<"///-------------------------------------------///\n";
+          }
+        d_radiation = false;
+        break;
+      }
+    }
+    std::stringstream out2;
+    out2 <<baseNameAbskp <<"_"<< qn; 
+    d_abskpLabel = VarLabel::find(out2.str());
+  }
 }
 
 //---------------------------------------------------------------------------

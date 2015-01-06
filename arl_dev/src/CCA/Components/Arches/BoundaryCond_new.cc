@@ -301,7 +301,6 @@ void BoundaryCondition_new::setVectorValueBC( const ProcessorGroup*,
     IntVector insideCellDir = patch->faceDirection(face);
     //get the number of children
     int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
-
     for (int child = 0; child < numChildren; child++){
       Vector bc_value = Vector(0.0, 0.0, 0.0);
       string bc_kind = "NotSet";
@@ -922,11 +921,7 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
       Patch::FaceType face = *iter;
 
       IntVector axes = patch->getFaceAxes(face);
-      int P_dir = axes[0];  // principal direction
-      typedef std::map<int,std::vector<BCGeomBase*> > BCDataArrayType;
-      const BoundCondBase* bc;
       const BCDataArray* bc_data_array = patch->getBCDataArray(face); 
-      const int matl_id = 0; 
 
       //get the face direction
       IntVector insideCellDir = patch->faceDirection(face);

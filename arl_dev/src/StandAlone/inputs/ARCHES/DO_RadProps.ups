@@ -82,6 +82,9 @@
         <BCType id="0" var="Neumann" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
       <Face side="x+">
         <BCType id="0" var="OutletBC"  label="the outlet"> 
@@ -101,6 +104,9 @@
         </BCType>
         <BCType id="0" var="Neumann" label="radiation_temperature"> 
           <value>0.0</value>
+        </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="y-">
@@ -123,6 +129,9 @@
         <BCType id="0" var="Neumann" label="enthalpy"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
       <Face side="y+">
         <BCType id="0" var="WallBC"  label="y+pressure">  
@@ -142,6 +151,9 @@
         </BCType>
         <BCType id="0" var="Neumann" label="radiation_temperature"> 
           <value>0.0</value>
+        </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
       </Face>
       <Face side="z-">
@@ -163,6 +175,9 @@
         <BCType id="0" var="Neumann" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
+        </BCType>
       </Face>
       <Face side="z+">
         <BCType id="0" var="WallBC"  label="z+pressure">  
@@ -182,6 +197,9 @@
         </BCType>
         <BCType id="0" var="Neumann" label="radiation_temperature"> 
           <value>0.0</value>
+        </BCType>
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
+                            <value> 1.0 </value>
         </BCType>
       </Face>
     </BoundaryConditions>

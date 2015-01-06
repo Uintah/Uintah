@@ -793,12 +793,12 @@ DataArchiver::addRestartStamp(ProblemSpecP indexDoc, Dir& fromDir,
 {
    // add restart history to restarts section
    ProblemSpecP restarts = indexDoc->findBlock("restarts");
-   if (restarts == 0) {
+   if( restarts == 0 ) {
      restarts = indexDoc->appendChild("restarts");
    }
 
-   // restart from <dir> at timestep
-   ProblemSpecP restartInfo = indexDoc->appendChild("restart");
+   // Restart from <dir> at timestep.
+   ProblemSpecP restartInfo = restarts->appendChild( "restart" );
    restartInfo->setAttribute("from", fromDir.getName().c_str());
    
    ostringstream timestep_str;
