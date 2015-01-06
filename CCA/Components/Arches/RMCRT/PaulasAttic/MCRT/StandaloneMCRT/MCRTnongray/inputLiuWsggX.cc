@@ -45,17 +45,17 @@ for ( int i = Changei+1; i < Npx; i ++ )
    for ( int i = 0; i < Ncx; i ++ ){
      for ( int j = 0; j < Ncy; j ++ ){
        for ( int k = 0; k < Ncz; k ++ ){
-	 xavg = ( Z[k] + Z[k+1] )/2;
-	 yavg = ( Y[j] + Y[j+1] )/2;
-	 Tcavg = ( Tc[i] + Tc[i+1] )/2;
-	 r = sqrt( xavg * xavg + yavg * yavg ) ;
-	 rR = r / R;
-	 
-	 if ( rR <= 1 ) { // within the circular zone
-	   T_Vol[k*Ncx*Ncy+j*Ncx+i] = (Tcavg - Te) *
-	     ( 1- 3 * rR* rR + 2 * rR * rR * rR) + Te;
-	 }else
-	   T_Vol[k*Ncx*Ncy+j*Ncx+i] = 800;
+   xavg = ( Z[k] + Z[k+1] )/2;
+   yavg = ( Y[j] + Y[j+1] )/2;
+   Tcavg = ( Tc[i] + Tc[i+1] )/2;
+   r = sqrt( xavg * xavg + yavg * yavg ) ;
+   rR = r / R;
+   
+   if ( rR <= 1 ) { // within the circular zone
+     T_Vol[k*Ncx*Ncy+j*Ncx+i] = (Tcavg - Te) *
+       ( 1- 3 * rR* rR + 2 * rR * rR * rR) + Te;
+   }else
+     T_Vol[k*Ncx*Ncy+j*Ncx+i] = 800;
        }
 
        
@@ -67,7 +67,7 @@ for ( int i = Changei+1; i < Npx; i ++ )
      scatter_Vol[i] = 0;
    
 
-	 
+   
    // all surfaces are at 300K, cold black.
 
   // top bottom surfaces

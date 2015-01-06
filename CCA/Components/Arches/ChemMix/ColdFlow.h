@@ -122,15 +122,15 @@ public:
   typedef std::map<std::string, DepVarCont >       DepVarMap;
   typedef std::map<std::string, int >               IndexMap;
 
-	void tableMatching(){}; 
+  void tableMatching(){}; 
 
   double getTableValue( std::vector<double>, std::string ); 
 
-	double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c){ return -99;};
+  double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c){ return -99;};
 
   double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions ){return -99;};
 
-	int findIndex( std::string ){return 0; }; 
+  int findIndex( std::string ){return 0; }; 
 
 private:
 

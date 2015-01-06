@@ -186,11 +186,11 @@ public:
 
   /** @brief Set a reference to the mix/rxn table **/ 
   inline void set_table( MixingRxnModel* table ){
-  	_table = table; 	
+    _table = table;   
   }
   
   inline bool does_table_initialization(){ 
-  	return _table_init; 
+    return _table_init; 
   }
 
   // Clipping:
@@ -230,7 +230,7 @@ protected:
   ExplicitTimeInt* d_timeIntegrator;      ///< Time integrator object associated with equation object
   Discretization_new* d_disc;             ///< Discretization object associated with equation object
   IntrusionBC* _intrusions;               ///< Intrusions for boundary conditions. 
-  MixingRxnModel* _table; 								///< Reference to the table for lookup 
+  MixingRxnModel* _table;                 ///< Reference to the table for lookup 
 
   const VarLabel* d_transportVarLabel;    ///< Label for scalar being transported, in NEW data warehouse
   const VarLabel* d_oldtransportVarLabel; ///< Label for scalar being transported, in OLD data warehouse
@@ -248,7 +248,7 @@ protected:
   std::string d_convScheme;               ///< Convection scheme (superbee, upwind, etc.)
   std::string d_initFunction;             ///< A functional form for initial value.
   std::string d_mol_D_label_name;         ///< Name of the molecular diffusivity label. 
-  std::string d_init_dp_varname; 					///< The name of a table dependent variable which could be used to initialize the transported variable
+  std::string d_init_dp_varname;          ///< The name of a table dependent variable which could be used to initialize the transported variable
 
   // Initialization:
   bool b_stepUsesCellLocation;      ///< Boolean: is step function's cell location specified?

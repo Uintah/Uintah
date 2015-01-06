@@ -59,9 +59,9 @@ using namespace std;
 /*
 template <class ArrayType>
 void MakeTableFunction::singleArrayTable(const ArrayType *Array,
-					 const int &ArraySize,
-					 const int &No,
-					 char *_argv){
+           const int &ArraySize,
+           const int &No,
+           char *_argv){
 
   ofstream out( _argv);
 
@@ -78,8 +78,8 @@ void MakeTableFunction::singleArrayTable(const ArrayType *Array,
 
 
 void MakeTableFunction::singleArrayTable(const double *Array,
-					 const int &ArraySize,
-					 const int &No, char * _argv){
+           const int &ArraySize,
+           const int &No, char * _argv){
   ofstream out( _argv);
 
   for ( int i = 0; i < ArraySize; i ++ ) {    
@@ -94,8 +94,8 @@ void MakeTableFunction::singleArrayTable(const double *Array,
 
 
 void MakeTableFunction::singleIntArrayTable(const int *Array,
-					    const int &ArraySize,
-					    const int &No, char *_argv){
+              const int &ArraySize,
+              const int &No, char *_argv){
   ofstream out( _argv);
 
   for ( int i = 0; i < ArraySize; i ++ ) {    
@@ -111,10 +111,10 @@ void MakeTableFunction::singleIntArrayTable(const int *Array,
 
 
 void MakeTableFunction::coupleTwoArrayTable(const int &arraySize,
-					    const double *array1,
-					    const double *array2,
-					    const int &changelineNo,
-					    char *_argv){
+              const double *array1,
+              const double *array2,
+              const int &changelineNo,
+              char *_argv){
   
   ofstream out( _argv);
   
@@ -144,9 +144,9 @@ void MakeTableFunction::coupleTwoArrayTable(const int &arraySize,
 
 
 void MakeTableFunction::twoArrayTable(const int  &arraySize,
-				      const double *array1,
-				      const double *array2,
-				      char *_argv) {
+              const double *array1,
+              const double *array2,
+              char *_argv) {
 
   ofstream out(_argv);
 
@@ -166,10 +166,10 @@ void MakeTableFunction::twoArrayTable(const int  &arraySize,
 
 
 void MakeTableFunction::threeArrayTable(const int  &arraySize,
-					const double *array1,
-					const double *array2,
-					const double *array3,
-					char *_argv) {
+          const double *array1,
+          const double *array2,
+          const double *array3,
+          char *_argv) {
 
   ofstream out(_argv);
 
@@ -189,11 +189,11 @@ void MakeTableFunction::threeArrayTable(const int  &arraySize,
 
 
 void MakeTableFunction::fourArrayTable(const int  &arraySize,
-				       const double *array1,
-				       const double *array2,
-				       const double *array3,
-				       const double *array4,
-				       char *_argv) {
+               const double *array1,
+               const double *array2,
+               const double *array3,
+               const double *array4,
+               char *_argv) {
 
   ofstream out(_argv);
 
@@ -216,8 +216,8 @@ void MakeTableFunction::fourArrayTable(const int  &arraySize,
 
 
 void MakeTableFunction::q_top(const double *Array,
-			      const int &xno, const int &yno,
-			      char *_argv){
+            const int &xno, const int &yno,
+            char *_argv){
   ofstream out( _argv);
   int index;
   index = xno * yno;
@@ -234,8 +234,8 @@ void MakeTableFunction::q_top(const double *Array,
 
 
 void MakeTableFunction::q_bottom(const double *Array,
-				 const int &xno, const int &yno,
-				 char *_argv){
+         const int &xno, const int &yno,
+         char *_argv){
   ofstream out( _argv);
   int index;
   index = 2 * xno * yno;
@@ -251,7 +251,7 @@ void MakeTableFunction::q_bottom(const double *Array,
 
 
 void MakeTableFunction::q_Q(const double *q_surface, const double *qdiv,
-			    const int &VolElementNo, const int &totalElementNo, char *_argv){
+          const int &VolElementNo, const int &totalElementNo, char *_argv){
   
   ofstream out( _argv);
 
@@ -273,16 +273,16 @@ void MakeTableFunction::q_Q(const double *q_surface, const double *qdiv,
 
 }
 
-		     
+         
 
 
 
 void MakeTableFunction::VolProperty(  const int  &VolElementNo,
-				      const double *T_Vol,
-				      const double *kl_Vol,
-				      const double *scatter_Vol,
-				      const double *emiss_Vol,
-				      char *_argv) {
+              const double *T_Vol,
+              const double *kl_Vol,
+              const double *scatter_Vol,
+              const double *emiss_Vol,
+              char *_argv) {
 
   ofstream out(_argv);
 
@@ -303,11 +303,11 @@ void MakeTableFunction::VolProperty(  const int  &VolElementNo,
 
 
 void MakeTableFunction::VolProperty_Array(  const int  &VolElementNo,
-					    const double *T_Vol,
-					    const double *kl_Vol,
-					    const double *scatter_Vol,
-					    const double *emiss_Vol,
-					    double *VolArray){
+              const double *T_Vol,
+              const double *kl_Vol,
+              const double *scatter_Vol,
+              const double *emiss_Vol,
+              double *VolArray){
 
   int k = 0;
   for ( int i = 0; i < VolElementNo; i ++ ) {
@@ -328,13 +328,13 @@ void MakeTableFunction::VolProperty_Array(  const int  &VolElementNo,
 
 
 void MakeTableFunction::RealSurfaceProperty(  int  TopStartNo,
-					      int  surfaceElementNo,
-					      const double *T_surface,
-					      const double *absorb_surface,
-					      const double *rs_surface,
-					      const double *rd_surface,
-					      const double *emiss_surface,
-					      char *_argv){
+                int  surfaceElementNo,
+                const double *T_surface,
+                const double *absorb_surface,
+                const double *rs_surface,
+                const double *rd_surface,
+                const double *emiss_surface,
+                char *_argv){
 
   ofstream out(_argv);
   int surfaceIndex = TopStartNo;
@@ -359,13 +359,13 @@ void MakeTableFunction::RealSurfaceProperty(  int  TopStartNo,
 
 
 void MakeTableFunction::RealSurfaceProperty_Array(  int TopStartNo,
-						    int surfaceElementNo,
-						    const double *T_surface,
-						    const double *absorb_surface,
-						    const double *rs_surface,
-						    const double *rd_surface,
-						    const double *emiss_surface,
-						    double *SurfaceArray){
+                int surfaceElementNo,
+                const double *T_surface,
+                const double *absorb_surface,
+                const double *rs_surface,
+                const double *rd_surface,
+                const double *emiss_surface,
+                double *SurfaceArray){
 
 
   int surfaceIndex = TopStartNo;
@@ -390,12 +390,12 @@ void MakeTableFunction::RealSurfaceProperty_Array(  int TopStartNo,
 
 
 void MakeTableFunction::vtkSurfaceTableMake( const char *_argv, const int &xnop,
-					     const int &ynop, const int &znop,
-					     const double *X, const double *Y,
-					     const double *Z,
-					     const int &surfaceElementNo,
-					     const double *q_surface,
-					     const double *Q_surface){
+               const int &ynop, const int &znop,
+               const double *X, const double *Y,
+               const double *Z,
+               const int &surfaceElementNo,
+               const double *q_surface,
+               const double *Q_surface){
   
   ofstream out( _argv );// surface element table
   int pointNo;
@@ -564,42 +564,42 @@ void MakeTableFunction::vtkSurfaceTableMake( const char *_argv, const int &xnop,
   for ( int i = 0; i < ynop-1; i ++ )
     for ( int j = 0; j < xnop-1; j ++ ) 
       out << " " << 4 << " " << topcell[i][j] << " " << topcell[i][j+1] <<
-	" " << topcell[i+1][j+1] << " " << topcell[i+1][j] << endl;
+  " " << topcell[i+1][j+1] << " " << topcell[i+1][j] << endl;
 
 
   // bottom surface
   for ( int i = 0; i < ynop-1; i ++ )
     for ( int j = 0; j < xnop-1; j ++ ) 
       out << " " << 4 << " " << bottomcell[i][j] << " " << bottomcell[i][j+1] <<
-	" " << bottomcell[i+1][j+1] << " " << bottomcell[i+1][j] << endl;
+  " " << bottomcell[i+1][j+1] << " " << bottomcell[i+1][j] << endl;
 
   
   // front surface
   for ( int i = 0; i < znop-1; i ++ )
     for ( int j = 0; j < xnop-1; j ++ ) 
       out << " " << 4 << " " << frontcell[i][j] << " " << frontcell[i][j+1] <<
-	" " << frontcell[i+1][j+1] << " " << frontcell[i+1][j] << endl;
+  " " << frontcell[i+1][j+1] << " " << frontcell[i+1][j] << endl;
 
 
   // back surface
   for ( int i = 0; i < znop-1; i ++ )
     for ( int j = 0; j < xnop-1; j ++ ) 
       out << " " << 4 << " " << backcell[i][j] << " " << backcell[i][j+1] <<
-	" " << backcell[i+1][j+1] << " " << backcell[i+1][j] << endl;
+  " " << backcell[i+1][j+1] << " " << backcell[i+1][j] << endl;
 
   
   // left surface
   for ( int i = 0; i < znop-1; i ++ )
     for ( int j = 0; j < ynop-1; j ++ ) 
       out << " " << 4 << " " << leftcell[i][j] << " " << leftcell[i][j+1] <<
-	" " << leftcell[i+1][j+1] << " " << leftcell[i+1][j] << endl;
+  " " << leftcell[i+1][j+1] << " " << leftcell[i+1][j] << endl;
 
 
   // right surface
   for ( int i = 0; i < znop-1; i ++ )
     for ( int j = 0; j < ynop-1; j ++ ) 
       out << " " << 4 << " " << rightcell[i][j] << " " << rightcell[i][j+1] <<
-	" " << rightcell[i+1][j+1] << " " << rightcell[i+1][j] << endl;
+  " " << rightcell[i+1][j+1] << " " << rightcell[i+1][j] << endl;
 
   out << endl;
 
@@ -634,12 +634,12 @@ void MakeTableFunction::vtkSurfaceTableMake( const char *_argv, const int &xnop,
 
 
 void MakeTableFunction::vtkVolTableMake(const char *_argv, const int &xnop,
-					const int &ynop, const int &znop,
-					const double *X, const double *Y,
-					const double *Z,
-					const int &VolElementNo,
-					const double *qdiv,
-					const double *Qdiv){
+          const int &ynop, const int &znop,
+          const double *X, const double *Y,
+          const double *Z,
+          const int &VolElementNo,
+          const double *qdiv,
+          const double *Qdiv){
 
 
   ofstream out(_argv);// volume table ( div of heat flux and Q )
@@ -664,7 +664,7 @@ void MakeTableFunction::vtkVolTableMake(const char *_argv, const int &xnop,
   for ( int k = 0; k < znop; k ++ ) 
     for ( int j = 0; j < ynop; j ++ ) 
       for ( int i = 0; i < xnop ; i ++ ) 
-	out << " " << X[i] << " " << Y[j] << " " << Z[k] << endl;
+  out << " " << X[i] << " " << Y[j] << " " << Z[k] << endl;
 
   out << endl;
 
@@ -678,18 +678,18 @@ void MakeTableFunction::vtkVolTableMake(const char *_argv, const int &xnop,
   for ( int k = 0; k < znop; k ++ )
     for ( int j = 0; j < ynop; j ++ )
       for ( int i = 0; i < xnop; i ++ ){
-	volcell[k][j][i] = start_index;
-	start_index ++;
+  volcell[k][j][i] = start_index;
+  start_index ++;
       }
 
   for ( int k = 0; k < znop - 1; k ++ )
     for ( int j = 0; j < ynop -1 ; j ++ )
       for ( int i = 0; i < xnop - 1; i ++ )
-	out << " " << 8 << " " <<
-	  volcell[k][j][i] << " " << volcell[k][j][i+1] << " " <<
-	  volcell[k][j+1][i+1] << " " << volcell[k][j+1][i] << " " <<
-	  volcell[k+1][j][i] << " " << volcell[k+1][j][i+1] << " " <<
-	  volcell[k+1][j+1][i+1] << " " << volcell[k+1][j+1][i] << endl;
+  out << " " << 8 << " " <<
+    volcell[k][j][i] << " " << volcell[k][j][i+1] << " " <<
+    volcell[k][j+1][i+1] << " " << volcell[k][j+1][i] << " " <<
+    volcell[k+1][j][i] << " " << volcell[k+1][j][i+1] << " " <<
+    volcell[k+1][j+1][i+1] << " " << volcell[k+1][j+1][i] << endl;
   
   out << endl;
   

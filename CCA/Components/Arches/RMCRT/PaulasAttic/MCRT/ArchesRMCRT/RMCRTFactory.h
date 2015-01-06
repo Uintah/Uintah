@@ -44,10 +44,10 @@ namespace Uintah {
     virtual ~RMCRTFactory();
 
     virtual int RMCRTsolver(const int &i_n,
-			    const int &j_n,
-			    const int &k_n,
-			    const int &theta_n,
-			    const int &phi_n) =0;
+          const int &j_n,
+          const int &k_n,
+          const int &theta_n,
+          const int &phi_n) =0;
     
     static RMCRTFactory *RMCRTModel(string sample_sche);
 
@@ -58,13 +58,13 @@ namespace Uintah {
       // this should be faster
       
       if ( sample_sche == "simple_sample"){
-	return new RMCRTnoInterpolation;
+  return new RMCRTnoInterpolation;
       }
       else if ( sample_sche == "RRSD"){
-	return new RMCRTRRSD;
+  return new RMCRTRRSD;
       }
       else if ( sample_sche == "RRSDstratified") {
-	return  new RMCRTRRSDStratified;
+  return  new RMCRTRRSDStratified;
       }
       
     }

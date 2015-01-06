@@ -41,7 +41,7 @@ namespace Uintah {
     double MeshSize(int &Nchalf, double &Lhalf, double &ratio);
     
     int RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
-		    const int& theta_n, const int& phi_n);
+        const int& theta_n, const int& phi_n);
     
     
   };

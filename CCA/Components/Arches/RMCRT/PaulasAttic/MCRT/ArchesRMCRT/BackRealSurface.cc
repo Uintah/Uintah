@@ -31,9 +31,9 @@ using std::endl;
 
 //inline
 BackRealSurface::BackRealSurface(const int &iIndex,
-				 const int &jIndex,
-				 const int &kIndex,
-				 const int &Ncx){
+         const int &jIndex,
+         const int &kIndex,
+         const int &Ncx){
   
   surfaceiIndex = iIndex;
   surfacejIndex = jIndex+1;

@@ -29,10 +29,10 @@ class VolElement{
 public:
   VolElement();
   VolElement(const int &iIndex,
-	     const int &jIndex,
-	     const int &kIndex,
-	     const int &Ncx_,
-	     const int &Ncy_);
+       const int &jIndex,
+       const int &kIndex,
+       const int &Ncx_,
+       const int &Ncy_);
 
   // cell center numbre Nc
 
@@ -44,8 +44,8 @@ public:
   
   inline
   void get_limits(const double *X,
-		  const double *Y,
-		  const double *Z) {
+      const double *Y,
+      const double *Z) {
     
     xlow = X[VoliIndex];
     xup = X[VoliIndex+1];
@@ -94,26 +94,26 @@ public:
     
 
   double VolumeEmissFluxBlack(const int &vIndex,
-			      const double *T_Vol,
-			      const double *a_Vol);
+            const double *T_Vol,
+            const double *a_Vol);
   
   double VolumeEmissFlux(const int &vIndex,
-			 const double *kl_Vol,
-			 const double *T_Vol,
-			 const double *a_Vol);
+       const double *kl_Vol,
+       const double *T_Vol,
+       const double *a_Vol);
 
   double VolumeIntensityBlack(const int &vIndex,
-			      const double *T_Vol,
-			      const double *a_Vol);
+            const double *T_Vol,
+            const double *a_Vol);
   
   double VolumeIntensityBlack(const double &TVol,
-			      const double &aVol);
+            const double &aVol);
 
   
   double VolumeIntensity(const int &vIndex,
-			 const double *kl_Vol,
-			 const double *T_Vol,
-			 const double *a_Vol);
+       const double *kl_Vol,
+       const double *T_Vol,
+       const double *a_Vol);
   
   ~VolElement();
   

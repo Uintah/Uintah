@@ -33,12 +33,12 @@ public:
   ~RadCoeff();
   
   void PrepCoeff(const double *CO2,
-		 const double *H2O,
-		 const double *SFV,
-		 const double *T_Vol,
-		 double *kl_Vol,
-		 const int &VolElementNo, const int &TopBottomNo,
-		 const int &xno, const int &yno, const int &zno);
+     const double *H2O,
+     const double *SFV,
+     const double *T_Vol,
+     double *kl_Vol,
+     const int &VolElementNo, const int &TopBottomNo,
+     const int &xno, const int &yno, const int &zno);
 
 
 private:
@@ -62,8 +62,8 @@ private:
   double EICO2(const double &TK, const double &PLA, double &ECO2);
   
   void FIND(double ARG, double ANS,
-	    const double x[], const double y[],
-	    int NPTS, int I);  
+      const double x[], const double y[],
+      int NPTS, int I);  
   
 };
 

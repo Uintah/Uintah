@@ -76,13 +76,13 @@ namespace Uintah {
                                      const PatchSet* patches,
                                      const MaterialSet* matls,
                                      const TimeIntegratorLabel* timelabels)
-    {;}
+    {}
     
     void sched_computeScalarDissipation(SchedulerP&,
                                         const PatchSet* patches,
                                         const MaterialSet* matls,
                                         const TimeIntegratorLabel* timelabels)
-    {;}
+    {}
     
     double getMolecularViscosity() const;
     

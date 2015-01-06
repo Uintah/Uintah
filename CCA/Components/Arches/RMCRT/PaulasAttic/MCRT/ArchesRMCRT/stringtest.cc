@@ -5,9 +5,9 @@ using namespace std;
 
 void
 outputs(const string &s,
-	const string &s2,
-	const string &s3,
-	const string &time){
+  const string &s2,
+  const string &s3,
+  const string &time){
   if ( time == "8")
     
   cout << s2 << endl;

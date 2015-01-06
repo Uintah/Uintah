@@ -38,9 +38,9 @@ public:
 
   inline
   void get_PhFunc(const int &PhFunc_Flag,
-		  const double &linear_b,
-		  const double &eddington_f,
-		  const double &eddington_g){
+      const double &linear_b,
+      const double &eddington_f,
+      const double &eddington_g){
     PhFunc = PhFunc_Flag;
     b = linear_b;
     f = eddington_f;
@@ -51,9 +51,9 @@ public:
   
   //get e1-- e1
   void get_e1(const double &random1,
-	      const double &random2,
-	      const double &random3,
-	      const double *sIn);
+        const double &random2,
+        const double &random3,
+        const double *sIn);
 
   //get e2 -- e2
   void get_e2(const double *sIn);
