@@ -879,9 +879,7 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
 			  } else {
 				  //read but don't assign inbetween vals
 				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(fp);
-            //quites a warning
-					  v += 0.0;
+  				  getDouble(fp);
 				  }
 			  }
 			    for (int j=0; j<size2; j++) {
@@ -901,9 +899,7 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
 				}
 			} else { 
 			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(fp);
-          //quites a warning
-					v += 0.0;
+  				getDouble(fp);
 				}	
 			}
 			for (int j=0; j<size; j++) {
@@ -1020,9 +1016,7 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
 			  } else {
 				  //read but don't assign inbetween vals
 				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(table_stream);
-            //quites a warning
-					  v += 0.0;
+  				  getDouble(table_stream);
 				  }
 			  }
 			    for (int j=0; j<size2; j++) {
@@ -1042,9 +1036,7 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
 				}
 			} else { 
 			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(table_stream);
-          //quites a warning
-					v += 0.0;
+  				getDouble(table_stream);
 				}	
 			}
 			for (int j=0; j<size; j++) {
