@@ -77,10 +77,6 @@ ProblemSpec::findBlock(const string& name) const
     //    string child_name(to_char_ptr(child->name));
     string child_name((const char *)(child->name));
     if (name == child_name) {
-      xmlNode* dbl_child = child->children;
-      while (dbl_child != 0) {
-        dbl_child = dbl_child->next;
-      }
       return scinew ProblemSpec( child, false );
     }
     child = child->next;
@@ -1739,4 +1735,31 @@ string
 ProblemSpec::getFile() const
 {
   return (const char *)( d_node->doc->URL );
+}
+
+
+//______________________________________________________________________
+//   Search through the saved labels in the ups:DataArchive section and 
+//   return true if name is found
+bool
+ProblemSpec::isLabelSaved(const std::string& name )
+{
+  ProblemSpecP root   = getRootNode();
+  ProblemSpecP DA_ps  = root->findBlock("DataArchiver");
+  
+  if( !DA_ps ){
+    string error = "ERROR:  The <DataArchiver> node was not found";
+    throw ProblemSetupException(error, __FILE__, __LINE__);
+  }
+  
+  for (ProblemSpecP var_ps = DA_ps->findBlock("save");var_ps != 0; 
+                    var_ps=var_ps->findNextBlock("save")) { 
+                          
+    map<string,string> saveLabel;
+    var_ps->getAttributes(saveLabel);
+    if ( saveLabel["label"] == name ) {
+      return true;
+    }
+  }
+  return false;
 }

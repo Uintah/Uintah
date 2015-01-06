@@ -62,10 +62,9 @@
 #include <CCA/Components/Arches/Radiation/fortran/radcal_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsolve_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomsrc_fort.h>
+#include <CCA/Components/Arches/Radiation/fortran/rdomsrcscattering_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
-#include <CCA/Components/Arches/Radiation/fortran/rdomincident_fort.h>
 #include <CCA/Components/Arches/Radiation/fortran/rdomvolq_fort.h>
-#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah;
@@ -118,15 +117,77 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   db->getWithDefault("ReflectOn",reflectionsTurnedOn,false);  //  reflections are off by default.
 
   //db->getRootNode()->findBlock("Grid")->findBlock("BoundaryConditions") 
-
-  db->getWithDefault("usePrevInt",usePreviousIntensity,false); //  using the previous solve as initial guess, is off by default
-
-  if (db) {
-    db->getWithDefault("ordinates",d_sn,2);
-    proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
-  } else {
-    throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
+  std::string initialGuessType;
+  db->getWithDefault("initialGuess",initialGuessType,"zeros"); //  using the previous solve as initial guess, is off by default
+  if(initialGuessType=="zeros"){
+    _zeroInitialGuess=true;
+    _usePreviousIntensity=false;
+  } else if(initialGuessType=="prevDir"){
+    _zeroInitialGuess=false;
+    _usePreviousIntensity=false;
+  } else if(initialGuessType=="prevRadSolve"){
+    _zeroInitialGuess=false;
+    _usePreviousIntensity=true;
+  }  else{
+    throw ProblemSetupException("Error:DO-radiation initial guess not set!.", __FILE__, __LINE__);
   }
+
+  db->getWithDefault("ScatteringOn",_scatteringOn,false);   
+
+  std::string baseNameAbskp;
+  std::string modelName;
+  std::string baseNameTemperature;
+  _radiateAtGasTemp=true; // this flag is arbitrary for no particles
+  ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
+  for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
+      db_model = db_model->findNextBlock("model")){
+    db_model->getAttribute("type", modelName);
+    if (modelName=="radiation_properties"){
+      if  (db_model->findBlock("calculator") == 0){
+        throw ProblemSetupException("Error: <calculator> for DO-radiation node not found.", __FILE__, __LINE__);
+        break;
+      }else if(db_model->findBlock("calculator")->findBlock("particles") == 0){
+        _nQn_part = 0;
+        break;
+      }else{
+        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+        db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", baseNameTemperature, "heat_pT" ); 
+        db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true ); 
+        db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
+      //  db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+        break;
+      }
+    }
+    if  (db_model== 0){
+      throw ProblemSetupException("Error: <radiation_properties> for DO-radiation node not found.", __FILE__, __LINE__);
+      break;
+    }
+  }
+
+    for (int qn=0; qn < _nQn_part; qn++){
+      std::stringstream absorp;
+      std::stringstream temper;
+      absorp <<baseNameAbskp <<"_"<< qn; 
+      temper <<baseNameTemperature <<"_"<< qn; 
+      _abskp_name_vector.push_back( absorp.str());
+      _temperature_name_vector.push_back( temper.str());
+    }
+
+    if (_scatteringOn  && _nQn_part ==0){
+      throw ProblemSetupException("Error: No particle model found in DO-radiation! When scattering is turned on, a particle model is required!", __FILE__, __LINE__);
+    }
+
+
+
+    if (db) {
+      bool ordinates_specified =db->findBlock("ordinates");
+      db->getWithDefault("ordinates",d_sn,2);
+      if (ordinates_specified == false){
+        proc0cout << " Notice: No ordinate number specified.  Defaulting to 2." << endl;
+      }
+    } else {
+      throw ProblemSetupException("Error: <DORadiation> node not found.", __FILE__, __LINE__);
+    }
 
   //WARNING: Hack -- Hard-coded for now. 
   d_lambda      = 1;
@@ -160,26 +221,23 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
   //WARNING: Hack -- flow cells set to -1
   ffield = -1;
 
-  //NOTE: Setting wall properties to 1.0 
-  d_intrusion_abskg = 1.0;
-
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   for( int ix=0;  ix<d_totalOrds ;ix++){
     ostringstream my_stringstream_object;
     my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
     _IntensityLabels.push_back(  VarLabel::create(my_stringstream_object.str(),  CC_double));
-    if(usePreviousIntensity==false){
+    if(needIntensitiesBool()== false){
      break;  // gets labels for all intensities, otherwise only create 1 label
     }
   }
-   if( reflectionsTurnedOn){
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxE",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxW",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxN",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxS",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxT",  CC_double));
-  _IncidentIntensityLabels.push_back(  VarLabel::create("IncidentFluxB",  CC_double));
-  }
+
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxE"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxW"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxN"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxS"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxT"));
+  _radiationFluxLabels.push_back(  VarLabel::find("radiationFluxB"));
+
 
 }
 //______________________________________________________________________
@@ -201,6 +259,19 @@ DORadiationModel::computeOrdinatesOPL() {
 
   fort_rordr(d_sn, oxi, omu, oeta, wt);
 
+  _sigma=5.67e-8;  //  w / m^2 k^4
+
+  if (_scatteringOn){
+    cosineTheta    = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
+    solidAngleQuad = vector<vector< double > > (d_totalOrds,vector<double>(d_totalOrds,0.0));
+
+    for (int i=0; i<d_totalOrds ; i++){
+      for (int j=0; j<d_totalOrds ; j++){
+        cosineTheta[i][j]=oxi[j+1]*oxi[i+1]+oeta[j+1]*oeta[i+1]+omu[j+1]*omu[i+1];
+        solidAngleQuad[i][j]=  wt[i+1]/(4.0 * M_PI);
+      }
+    }
+  }
 }
 
 //***************************************************************************
@@ -282,32 +353,54 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> ab;
   CCVariable<double> ap;
 
-  StaticArray< CCVariable<double> > IncidentFlux(_IncidentIntensityLabels.size());
-  StaticArray< CCVariable<double> > IncidentFlux_old(6); // must always 6, even when reflections are off.
+  StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
 
-    for (unsigned int i=0; i<  _IncidentIntensityLabels.size(); i++){
-      constCCVariable<double>  IncidentFlux_temp;
-      old_dw->get(IncidentFlux_temp,_IncidentIntensityLabels[i], matlIndex , patch,Ghost::None, 0  );
-      new_dw->allocateAndPut(IncidentFlux[i],_IncidentIntensityLabels[i] , matlIndex, patch );
-      IncidentFlux_old[i].allocate(domLo,domHi);
-      IncidentFlux_old[i].copyData(IncidentFlux_temp);
-      IncidentFlux[i].initialize(0.0);          // must be set to zero, for sum+
+  if(reflectionsTurnedOn){
+    for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){
+      constCCVariable<double>  radiationFlux_temp;
+      old_dw->get(radiationFlux_temp,_radiationFluxLabels[i], matlIndex , patch,Ghost::None, 0  );
+      radiationFlux_old[i].allocate(domLo,domHi);
+      radiationFlux_old[i].copyData(radiationFlux_temp);
     }
-
-    if(reflectionsTurnedOn==false){
-      for (int i=0; i<  6; i++){  // magic number cooresponds to number of labels tranported, when 
-        IncidentFlux_old[i].allocate(domLo,domHi);
-        IncidentFlux_old[i].initialize(0.0);      // for no reflections, this must be zero
-      }
+  }
+  else{
+    for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){  // magic number cooresponds to number of labels tranported, when 
+      radiationFlux_old[i].allocate(domLo,domHi);
+      radiationFlux_old[i].initialize(0.0);      // for no reflections, this must be zero
     }
+  }
   
 
-  if(usePreviousIntensity==false){
+  if(_usePreviousIntensity==false){
     old_dw->get(constvars->cenint,_IntensityLabels[0], matlIndex , patch,Ghost::None, 0  );
     new_dw->getModifiable(vars->cenint,_IntensityLabels[0] , matlIndex, patch ); // per the logic in sourceterms/doradiation, old and new dw are the same.
   }
 
 
+  StaticArray< constCCVariable<double> > Intensities(_scatteringOn ? d_totalOrds : 0);
+
+  CCVariable<double> scatIntensitySource;  
+  constCCVariable<double> scatkt;   //total scattering coefficient
+  constCCVariable<double> asymmetryParam;   //total scattering coefficient
+
+  scatIntensitySource.allocate(domLo,domHi);
+  scatIntensitySource.initialize(0.0); // needed for non-scattering cases
+
+
+  if(_scatteringOn){
+    for( int ix=0;  ix<d_totalOrds ;ix++)
+      old_dw->get(Intensities[ix],_IntensityLabels[ix], matlIndex , patch,Ghost::None, 0  );
+      old_dw->get(asymmetryParam,_asymmetryLabel, matlIndex , patch,Ghost::None, 0);
+      old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
+    }
+
+  StaticArray< constCCVariable<double> > abskp(_nQn_part);
+  StaticArray< constCCVariable<double> > partTemp(_nQn_part);
+  for (int ix=0;  ix< _nQn_part; ix++){
+      old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  ); 
+      old_dw->get(partTemp[ix],_temperature_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
+  }
+     
   su.allocate(domLo,domHi);
   ae.allocate(domLo,domHi);
   aw.allocate(domLo,domHi);
@@ -332,21 +425,26 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   vars->qfluxt.initialize(0.0);
   vars->qfluxb.initialize(0.0);
 
-
   //__________________________________
   //begin discrete ordinates
   for (int bands =1; bands <=d_lambda; bands++){
 
     vars->volq.initialize(0.0);
+    vars->ESRCG.initialize(0.0);
+    computeIntensitySource(patch,abskp,partTemp,constvars->ABSKG,constvars->temperature,vars->ESRCG);
 
     for (int direcn = 1; direcn <=d_totalOrds; direcn++){
-      if(usePreviousIntensity){
+
+      if(_usePreviousIntensity ){
         old_dw->get(constvars->cenint,_IntensityLabels[direcn-1], matlIndex , patch,Ghost::None, 0  );
         new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
       }
+      else if ( _scatteringOn){
+        new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
+       }
   
+     if(_zeroInitialGuess)
     vars->cenint.initialize(0.0); // remove once RTs have been checked.
-
 
       
       su.initialize(0.0);
@@ -359,17 +457,21 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       at.initialize(0.0);
       bool plusX, plusY, plusZ;
 
+      if(_scatteringOn){
+        computeScatteringIntensities(direcn,scatkt, Intensities,scatIntensitySource,asymmetryParam, patch, vars->ESRCG);
+      }
+                                                         
+
       fort_rdomsolve( idxLo, idxHi, constvars->cellType, ffield, 
                       cellinfo->sew, cellinfo->sns, cellinfo->stb, 
                       vars->ESRCG, direcn, oxi, omu,oeta, wt, 
-                      constvars->temperature, constvars->ABSKG,
+                      constvars->temperature, constvars->ABSKT,
                       su, aw, as, ab, ap, ae, an, at,
                       plusX, plusY, plusZ, fraction, bands, 
-                      d_intrusion_abskg,
-                      IncidentFlux_old[0] , IncidentFlux_old[1],
-                      IncidentFlux_old[2] , IncidentFlux_old[3],
-                      IncidentFlux_old[4] , IncidentFlux_old[5]);
-
+                      radiationFlux_old[0] , radiationFlux_old[1],
+                      radiationFlux_old[2] , radiationFlux_old[3],
+                      radiationFlux_old[4] , radiationFlux_old[5]); //  this term needed for scattering
+                      
 
 
       d_linearSolver->setMatrix( pg ,patch, vars, constvars, plusX, plusY, plusZ, 
@@ -393,35 +495,129 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                      vars->qfluxn, vars->qfluxs,
                      vars->qfluxt, vars->qfluxb);
                      
-
-      if(reflectionsTurnedOn){
-        fort_rdomincident( idxLo, idxHi, direcn, oxi, omu, oeta, wt, vars->cenint,
-            plusX, plusY, plusZ, 
-            IncidentFlux[0] , IncidentFlux[1],
-            IncidentFlux[2] , IncidentFlux[3],
-            IncidentFlux[4] , IncidentFlux[5]);
-      }
     }  // ordinate loop
 
-    fort_rdomsrc( idxLo, idxHi, constvars->ABSKG, vars->ESRCG,vars->volq, divQ );
+    if(_scatteringOn)
+      fort_rdomsrcscattering( idxLo, idxHi, constvars->ABSKT, vars->ESRCG,vars->volq, divQ, scatkt,scatIntensitySource); 
+    else
+      fort_rdomsrc( idxLo, idxHi, constvars->ABSKT, vars->ESRCG,vars->volq, divQ); 
+
 
   }  // bands loop
 
   proc0cout << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
 
 }
-
+// returns the total number of directions, sn*(sn+2)
 int 
 DORadiationModel::getIntOrdinates(){
 return d_totalOrds;
 }
 
+// Do the walls reflect? (should only be off if emissivity of walls = 1.0)
 bool 
 DORadiationModel::reflectionsBool(){
 return reflectionsTurnedOn;
 }
 
+// Do the Intensities need to be saved from the previous solve?
+// Yes, if we are using the previous intensity as our initial guess in the linear solve.
+// Yes, if we modeling scattering physics, by lagging the scattering source term.
 bool 
-DORadiationModel::DOSolveInitialGuessBool(){
-return usePreviousIntensity;
+DORadiationModel::needIntensitiesBool(){
+return _usePreviousIntensity || _scatteringOn  ;
 }
+
+// Model scattering physics of particles?
+bool 
+DORadiationModel::ScatteringOnBool(){
+return _scatteringOn;
+}
+
+void
+DORadiationModel::setLabels(){
+
+
+  for (int qn=0; qn < _nQn_part; qn++){
+    _abskp_label_vector.push_back(VarLabel::find(_abskp_name_vector[qn]));
+    if (_abskp_label_vector[qn]==0){
+      throw ProblemSetupException("Error: particle absorption coefficient node not found."+_abskp_name_vector[qn], __FILE__, __LINE__);
+    }
+
+    _temperature_label_vector.push_back(VarLabel::find(_temperature_name_vector[qn]));
+
+    if (_temperature_label_vector[qn]==0){
+      throw ProblemSetupException("Error: particle temperature node not foundr! "+_temperature_name_vector[qn], __FILE__, __LINE__);
+    }
+  }
+
+
+  if(_scatteringOn){
+    _scatktLabel= VarLabel::find("scatkt");
+    _asymmetryLabel=VarLabel::find("asymmetryParam"); 
+  }
+  return;
+}
+
+void
+DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    b_sourceArray[*iter]-=scatIntensitySource[*iter];
+  }
+  scatIntensitySource.initialize(0.0); //reinitialize to zero for sum
+
+  direction -=1;   // change from fortran vector to c++ vector
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+
+    if (scatkt[*iter] < 1e-6) // intended to increase speed! 
+      continue;
+
+    for (int i=0; i < d_totalOrds ; i++) {                                    
+      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])* solidAngleQuad[direction][i];      
+      scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
+
+    }
+  }
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    scatIntensitySource[*iter] *= scatkt[*iter]  ;
+  }
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+      b_sourceArray[*iter]+=scatIntensitySource[*iter];
+  }
+
+  return;
+}
+
+void
+DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <constCCVariable<double> >&abskp,
+    StaticArray <constCCVariable<double> > &pTemp,
+                  constCCVariable<double>  &abskg,
+                  constCCVariable<double>  &gTemp,
+                  CCVariable<double> &b_sourceArray){
+
+  for (int qn=0; qn < _nQn_part; qn++){
+    if( _radiateAtGasTemp ){
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+       // b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*pow(gTemp[*iter],4.0);
+        b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter];
+      }
+    }else{
+      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+        b_sourceArray[*iter]+=((_sigma/M_PI)*abskp[qn][*iter])*pow(pTemp[qn][*iter],4.0);
+      }
+    }
+  }
+
+  for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+    //b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*pow(gTemp[*iter],4.0);
+    b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter];
+  }
+
+  return;
+}
+
+
+

@@ -42,6 +42,7 @@ static DebugStream dbggpu("RAYGPU", false);
 //---------------------------------------------------------------------------
 // Method: The GPU ray tracer - setup for ray trace kernel
 //---------------------------------------------------------------------------
+template< class T >
 void Ray::rayTraceGPU(Task::CallBackEvent event,
                       const ProcessorGroup* pg,
                       const PatchSubset* patches,
@@ -85,19 +86,17 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   //  varLabel name struct
   varLabelNames labelNames;
 #if 0
-  labelNames->abskg    = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
-  labelNames.sigmaT4   = d_sigmaT4_label->getName().c_str();
+  labelNames.abskg    = d_abskgLabel->getName().c_str();    // cuda doesn't support C++ strings
+  labelNames.sigmaT4   = d_sigmaT4Label->getName().c_str();
   labelNames.divQ      = d_divQLabel->getName().c_str();
   labelNames.celltype  = d_cellTypeLabel->getName().c_str();
-  labelNames.VRFlux    = d_VRFluxLabel->getName().c_str();
   labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
   labelNames.radVolQ   = d_radiationVolqLabel->getName().c_str();
   
   cout << " abskg:   " << d_abskgLabel->getName() << endl;
-  cout << " sigmaT4: " << d_sigmaT4_label->getName() << endl;
+  cout << " sigmaT4: " << d_sigmaT4Label->getName() << endl;
   cout << " divQ:    " << d_divQLabel->getName() << endl;
   cout << " cellType:" << d_cellTypeLabel->getName() << endl;
-  cout << " VRFlux:  " << d_VRFluxLabel->getName() << endl;
   cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
   cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
 #endif
@@ -111,6 +110,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   RT_flags.allowReflect       = d_allowReflect;
   RT_flags.solveBoundaryFlux  = d_solveBoundaryFlux;
   RT_flags.CCRays             = d_CCRays;
+  RT_flags.usingFloats        = ( d_FLT_DBL == TypeDescription::float_type );
   
   RT_flags.sigma      = d_sigma;    
   RT_flags.sigmaScat  = d_sigmaScat; 
@@ -179,19 +179,19 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     //__________________________________
     // set up and launch kernel
-    launchRayTraceKernel(dimGrid, 
-                         dimBlock,
-                         d_matl,
-                         patchP,
-                         (cudaStream_t*)stream,
-                         RT_flags,
-                         labelNames,
-                         abskg_gdw, 
-                         sigmaT4_gdw, 
-                         celltype_gdw, 
-                         old_gdw, 
-                         new_gdw);
-                         
+    launchRayTraceKernel< T >(dimGrid, 
+                              dimBlock,
+                              d_matl,
+                              patchP,
+                              (cudaStream_t*)stream,
+                              RT_flags,
+                              labelNames,
+                              abskg_gdw, 
+                              sigmaT4_gdw, 
+                              celltype_gdw, 
+                              old_gdw, 
+                              new_gdw);
+
     //__________________________________
     //
     double end =clock();
@@ -211,3 +211,35 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
 
 }  // end GPU ray trace method
+
+//______________________________________________________________________
+//
+template
+void Ray::rayTraceGPU< float > (Task::CallBackEvent,
+                                const ProcessorGroup*,
+                                const PatchSubset*,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse*,
+                                void* stream,
+                                int deviceID,
+                                bool,
+                                Task::WhichDW,
+                                Task::WhichDW,
+                                Task::WhichDW,
+                                const int  );
+                                
+template
+void Ray::rayTraceGPU< double > (Task::CallBackEvent,
+                                 const ProcessorGroup*,
+                                 const PatchSubset*,
+                                 const MaterialSubset*,
+                                 DataWarehouse*,
+                                 DataWarehouse*,
+                                 void* stream,
+                                 int deviceID,
+                                 bool,
+                                 Task::WhichDW,
+                                 Task::WhichDW,
+                                 Task::WhichDW,
+                                 const int  );

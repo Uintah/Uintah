@@ -37,15 +37,13 @@
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
+#include <CCA/Components/Arches/CoalModels/BTDevol.h>
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
-#include <CCA/Components/Arches/CoalModels/SimpleHeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
-#include <CCA/Components/Arches/CoalModels/XDragModel.h>
-#include <CCA/Components/Arches/CoalModels/YDragModel.h>
-#include <CCA/Components/Arches/CoalModels/ZDragModel.h>
+#include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -59,7 +57,6 @@
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
-#include <CCA/Components/Arches/PropertyModels/ABSKP.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
@@ -83,6 +80,7 @@
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleModelFactory.h>
 #include <CCA/Components/Arches/LagrangianParticles/LagrangianParticleFactory.h>
+#include <CCA/Components/Arches/PropertyModelsV2/PropertyModelFactoryV2.h>
 //#include <CCA/Components/Arches/Task/SampleFactory.h>
 
 
@@ -315,6 +313,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory()); 
   boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory()); 
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory()); 
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2()); 
 
   _boost_factory_map.clear(); 
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF)); 
@@ -322,23 +321,24 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("initialize_factory",InitF)); 
   _boost_factory_map.insert(std::make_pair("particle_model_factory",PartModF)); 
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
+  _boost_factory_map.insert(std::make_pair("property_models", PropModels)); 
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
-  std::cout << "\n Registering Tasks For: " << std::endl;
+  proc0cout << "\n Registering Tasks For: " << std::endl;
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
 
-    std::cout << "   " << i->first << std::endl;
+    proc0cout << "   " << i->first << std::endl;
     i->second->register_all_tasks(db); 
 
   }
-  std::cout << "\n Building Tasks For: " << std::endl;
+  proc0cout << "\n Building Tasks For: " << std::endl;
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
 
-    std::cout << "   " << i->first << std::endl;
+    proc0cout << "   " << i->first << std::endl;
     i->second->build_all_tasks(db); 
 
   }
-  std::cout << endl;
+  proc0cout << endl;
   //===================END NEW TASK STUFF
 
   //Checking for lagrangian particles:
@@ -906,7 +906,6 @@ Arches::problemSetup(const ProblemSpecP& params,
       DQMOMEqn& weight = dynamic_cast<DQMOMEqn&>(a_weight);
       weight.setAsWeight();
       weight.problemSetup( w_db );
-
     }
 
     // loop for all ic's
@@ -1179,6 +1178,7 @@ Arches::scheduleInitialize(const LevelP& level,
   BFM::iterator i_init_fac = _boost_factory_map.find("initialize_factory"); 
   BFM::iterator i_partmod_fac = _boost_factory_map.find("particle_model_factory"); 
   BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
+  BFM::iterator i_property_models = _boost_factory_map.find("property_models"); 
 
   //utility factory
   TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
@@ -1246,7 +1246,6 @@ Arches::scheduleInitialize(const LevelP& level,
 
     PropertyModelBase* prop_model = iprop->second;
     prop_model->sched_initialize( level, sched );
-
   }
 
   // Table Lookup
@@ -1314,8 +1313,11 @@ Arches::scheduleInitialize(const LevelP& level,
     for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
       EqnBase* eqn = ieqn->second;
       eqn->sched_checkBCs( level, sched );
+      //as needed for the coal propery models
+      DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(ieqn->second); 
+      dqmom_eqn->sched_getUnscaledValues( level, sched ); 
     }
-
+    d_partVel->schedInitPartVel(level, sched);
   }
 
 
@@ -1335,6 +1337,18 @@ Arches::scheduleInitialize(const LevelP& level,
     //call the cqmom inversion so weights and abscissas are calculated at the start
     d_cqmomSolver->sched_solveCQMOMInversion( level, sched, 0 );
   }
+
+  //=================================================================================
+  //NEW TASK INTERFACE 
+  //
+  //Initialization of COAL property models
+  std::vector<std::string> coal_property_tasks = i_property_models->second->retrieve_task_subset("coal_models"); 
+  for ( std::vector<std::string>::iterator i = coal_property_tasks.begin(); i != coal_property_tasks.end(); i++){ 
+    TaskInterface* tsk = i_property_models->second->retrieve_task(*i); 
+    tsk->schedule_init(level, sched, matls ); 
+  }
+  //=================================================================================
+
   
   // check to make sure that all the scalar variables have BCs set and set intrusions:
   EqnFactory& eqnFactory = EqnFactory::self();
@@ -1814,7 +1828,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
   if (d_doingRestart  ) {
 
-    const PatchSet* patches= level->eachPatch();
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
     d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
@@ -2098,12 +2111,12 @@ Arches::sched_weightedAbsInit( const LevelP& level,
 {
   Task* tsk = scinew Task( "Arches::weightedAbsInit",
                            this, &Arches::weightedAbsInit);
-    // DQMOM transport vars
+  // DQMOM transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
   DQMOMEqnFactory::EqnMap& dqmom_eqns = dqmomFactory.retrieve_all_eqns();
   for (DQMOMEqnFactory::EqnMap::iterator ieqn=dqmom_eqns.begin(); ieqn != dqmom_eqns.end(); ieqn++){
-    EqnBase* temp_eqn = ieqn->second;
-    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(temp_eqn);
+
+    DQMOMEqn* eqn = dynamic_cast<DQMOMEqn*>(ieqn->second); 
 
     if (!eqn->weight()) {
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
@@ -2120,11 +2133,6 @@ Arches::sched_weightedAbsInit( const LevelP& level,
   }
 
   // Particle Velocities
-  for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin();
-        i != d_lab->partVel.end(); i++){
-    tsk->computes( i->second );
-  }
-  tsk->requires( Task::NewDW, d_lab->d_CCVelocityLabel, Ghost::None, 0 );
 
   // Models
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -2159,15 +2167,6 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw )
 {
-  // ***************************************
-  // QUESTION: WHY DOES THIS FUNCTION GET CALLED ON THE FIRST TIMESTEP RATHER THAN THE ZEROTH TIMESTEP???
-  // This causes several problems:
-  // - The RHS/unweighted variables are unavailable until the first timestep
-  //      (not available at zeroth timestep because they're initialized here, and this isn't called until the first timestep)
-  // - DQMOM & other scalars are not initialized until the first timestep, so at the first timestep (if you output it) everything is 0.0!!!
-  //      (this means that if you initialize your scalar to be a step function, you never see the scalar as the actual step function;
-  //        at the zeroth timestep the scalar is 0.0 everywhere, and at the first timestep the step function has already been convected/diffused)
-  // ***************************************
 
   string msg = "Initializing all DQMOM weighted abscissa equations...";
   proc0cout << msg << std::endl;
@@ -2239,23 +2238,7 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
       }
     }
 
-    constCCVariable<Vector> gasVel;
-    new_dw->get( gasVel, d_lab->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
      // --- PARTICLE VELS
-    for (ArchesLabel::PartVelMap::iterator i = d_lab->partVel.begin();
-          i != d_lab->partVel.end(); i++){
-
-      CCVariable<Vector> partVel;
-      new_dw->allocateAndPut( partVel, i->second, matlIndex, patch );
-      partVel.initialize(Vector(0.,0.,0.));
-
-      for (CellIterator iter=patch->getCellIterator();
-           !iter.done(); iter++){
-        IntVector c = *iter;
-        partVel[c] = gasVel[c];
-
-      }
-    }
 
 
     // --- MODELS VALUES
@@ -2649,17 +2632,15 @@ void Arches::registerModels(ProblemSpecP& db)
           // Richards Fletcher devolatilization model
           ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "BTDevol" ) {
+          // Biagini Tognotti devolatilization model
+          ModelBuilder* modelBuilder = scinew BTDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
           ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-              //} else if ( model_type == "HeatTransfer" ) {
-        //  ModelBuilder* modelBuilder = scinew HeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-        //  model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationShaddix" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "SimpleHeatTransfer" ) {
-          ModelBuilder* modelBuilder = scinew SimpleHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "ShaddixHeatTransfer" ) {
           ModelBuilder* modelBuilder = scinew ShaddixHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
@@ -2667,17 +2648,9 @@ void Arches::registerModels(ProblemSpecP& db)
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "XDrag" ) {
-          ModelBuilder* modelBuilder = scinew XDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+        } else if ( model_type == "Drag" ) {
+          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "YDrag" ) {
-          ModelBuilder* modelBuilder = scinew YDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "ZDrag" ) {
-          ModelBuilder* modelBuilder = scinew ZDragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
-        //} else if (model_type == "Drag" ) {
-        //  ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
           proc0cout << "with type: " << model_type << endl;
@@ -2761,13 +2734,7 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         PropertyModelBase::Builder* the_builder = new ConstProperty<CCVariable<double>, constCCVariable<double> >::Builder( prop_name, d_sharedState );
         prop_factory.register_property_model( prop_name, the_builder );
 
-      } else if ( prop_type == "particle_absorption_coefficient" ) {
-
-        // Coal particles absorption coefficient rate calculation
-        PropertyModelBase::Builder* the_builder = new ABSKP::Builder( prop_name, d_sharedState );
-        prop_factory.register_property_model( prop_name, the_builder );
-
-      } else if ( prop_type == "extent_rxn" ) {
+      }  else if ( prop_type == "extent_rxn" ) {
 
         // Scalar dissipation rate calculation
         PropertyModelBase::Builder* the_builder = new ExtentRxn::Builder( prop_name, d_sharedState );

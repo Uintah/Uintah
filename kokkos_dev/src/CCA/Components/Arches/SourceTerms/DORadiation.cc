@@ -92,16 +92,21 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false ); 
   _T_label_name = "radiation_temperature"; 
 
-  if ( db->findBlock("abskg")){ 
-    db->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
-  } else { 
-    throw ProblemSetupException("Error: DO Radiation - The absorption coefficient is not defined.",__FILE__,__LINE__);
+  std::string modelName;
+  ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
+  for ( ProblemSpecP db_model = db_prop->findBlock("model"); db_model != 0; 
+      db_model = db_model->findNextBlock("model")){
+    db_model->getAttribute("type", modelName);
+    if (modelName=="radiation_properties"){
+    db_model->getAttribute("label",_abskt_label_name);
+    db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",_abskg_label_name);
+    }
   }
   
   proc0cout << " --- DO Radiation Model Summary: --- " << endl;
   proc0cout << "   -> calculation frequency:     " << _radiation_calc_freq << endl;
   proc0cout << "   -> temperature label:         " << _T_label_name << endl;
-  proc0cout << "   -> abskg label:               " << _abskg_label_name << endl;
+  proc0cout << "   -> abskt label:               " << _abskt_label_name << endl;
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
   _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
@@ -112,22 +117,10 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
     my_stringstream_object << "Intensity" << setfill('0') << setw(4)<<  ix ;
     _IntensityLabels.push_back(  VarLabel::find(my_stringstream_object.str()));
     _extra_local_labels.push_back(_IntensityLabels[ix]); 
-    if(_DO_model->DOSolveInitialGuessBool()==false){
+    if(_DO_model->needIntensitiesBool()==false){
      break;  // create labels for all intensities, otherwise only create 1 label
     }
   }
-   if(_DO_model->reflectionsBool()){
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxE"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxW"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxN"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxS"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxT"));
-  _IncidentIntensityLabels.push_back(  VarLabel::find("IncidentFluxB"));
-  }
-
-   for(unsigned int ix=0;  ix<_IncidentIntensityLabels.size();ix++){  // using unsigned int removes warnings.
-     _extra_local_labels.push_back(_IncidentIntensityLabels[ix]); 
-   }
 
 }
 //---------------------------------------------------------------------------
@@ -136,13 +129,16 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
 void 
 DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-
   std::string taskname = "DORadiation::computeSource";
   Task* tsk = scinew Task(taskname, this, &DORadiation::computeSource, timeSubStep);
 
   _T_label = VarLabel::find(_T_label_name); 
   if ( _T_label == 0){
     throw InvalidValue("Error: For DO Radiation source term -- Could not find the radiation temperature label.", __FILE__, __LINE__);
+  }
+  _abskt_label = VarLabel::find(_abskt_label_name); 
+  if ( _abskt_label == 0){
+    throw InvalidValue("Error: For DO Radiation source term -- Could not find the abskt label.", __FILE__, __LINE__);
   }
   _abskg_label = VarLabel::find(_abskg_label_name); 
   if ( _abskg_label == 0){
@@ -160,10 +156,34 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->computes(_src_label);
     tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
+    tsk->requires( Task::OldDW, _abskt_label, gac, 1 ); 
     tsk->requires( Task::OldDW, _abskg_label, gn, 0 ); 
 
+
+      _DO_model->setLabels();
+
+      for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
+        tsk->requires( Task::OldDW,_DO_model->getAbskpLabels()[i], gn, 0 );  
+        tsk->requires( Task::OldDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+      }
+
+    if (_DO_model->ScatteringOnBool()){
+      _scatktLabel =  VarLabel::find("scatkt");
+      _asymmetryLabel= VarLabel::find("asymmetryParam"); 
+      if ( _scatktLabel == 0 ){ 
+        throw ProblemSetupException("Error: scatkt label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
+      } 
+      if (_asymmetryLabel == 0 ){ 
+        throw ProblemSetupException("Error: asymmetry label not found! This label should be created in the Radiation property calculator!",__FILE__, __LINE__);
+      } 
+
+
+      tsk->requires( Task::OldDW, _scatktLabel, gn, 0 ); 
+      tsk->requires( Task::OldDW,_asymmetryLabel, gn, 0 ); 
+    }
+
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
-         iter != _extra_local_labels.end(); iter++){
+        iter != _extra_local_labels.end(); iter++){
 
       tsk->requires( Task::OldDW, *iter, gn, 0 ); 
       tsk->computes( *iter ); 
@@ -174,7 +194,13 @@ DORadiation::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
 
     tsk->modifies(_src_label); 
     tsk->requires( Task::NewDW, _T_label, gac, 1 ); 
+    tsk->requires( Task::NewDW, _abskt_label, gac, 1 ); 
     tsk->requires( Task::NewDW, _abskg_label, gn, 0 ); 
+
+    for (int i=0 ; i< _DO_model->get_nQn_part(); i++){
+      tsk->requires( Task::NewDW,_DO_model->getAbskpLabels()[i], gn, 0 ); 
+      tsk->requires( Task::NewDW,_DO_model->getPartTempLabels()[i], gn, 0 ); 
+    }
 
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); 
          iter != _extra_local_labels.end(); iter++){
@@ -201,7 +227,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
                    DataWarehouse* new_dw, 
                    int timeSubStep )
 {
-
   _DO_model->d_linearSolver->matrixCreate( _perproc_patches, patches );
 
     int timestep = _labels->d_sharedState->getCurrentTopLevelTimeStep(); 
@@ -219,13 +244,10 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
           new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
         }
-        for(unsigned int ix=0;  ix< _IncidentIntensityLabels.size() ;ix++){  
-          new_dw->transferFrom(old_dw, _IncidentIntensityLabels[ix],  patches, matls);
-        }
       }
     }
     else{  
-      if(_DO_model->DOSolveInitialGuessBool()==false){
+      if(_DO_model->needIntensitiesBool()==false ){
         for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
           new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
         }
@@ -266,8 +288,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->allocateAndPut( radiation_vars.volq   , _radiationVolqLabel                 , matlIndex , patch );
       new_dw->allocateAndPut( divQ, _src_label, matlIndex, patch ); 
 
-      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
-      radiation_vars.ESRCG.initialize(0.0); 
+      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );  
 
       // copy old solution into new
       old_dw->copyOut( divQ, _src_label, matlIndex, patch, gn, 0 ); 
@@ -278,14 +299,14 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       old_dw->copyOut( radiation_vars.qfluxt , _radiationFluxTLabel                , matlIndex , patch , gn , 0 );
       old_dw->copyOut( radiation_vars.qfluxb , _radiationFluxBLabel                , matlIndex , patch , gn , 0 );
       old_dw->copyOut( radiation_vars.volq   , _radiationVolqLabel                 , matlIndex , patch , gn , 0 );
+      old_dw->get( const_radiation_vars.ABSKT  , _abskt_label , matlIndex , patch , gac , 1 );
       old_dw->get( const_radiation_vars.ABSKG  , _abskg_label , matlIndex , patch , gn , 0 );
 
     } else { 
 
       new_dw->get( const_radiation_vars.temperature, _T_label, matlIndex , patch , gac , 1 );
 
-      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(1), patch->getExtraCellHighIndex(1) );  
-      radiation_vars.ESRCG.initialize(0.0); 
+      radiation_vars.ESRCG.allocate( patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex() );  
 
       new_dw->getModifiable( radiation_vars.qfluxe , _radiationFluxELabel , matlIndex , patch );
       new_dw->getModifiable( radiation_vars.qfluxw , _radiationFluxWLabel , matlIndex , patch );
@@ -296,6 +317,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       new_dw->getModifiable( radiation_vars.volq   , _radiationVolqLabel  , matlIndex , patch );
       new_dw->getModifiable( divQ, _src_label, matlIndex, patch ); 
 
+      new_dw->get( const_radiation_vars.ABSKT  , _abskt_label, matlIndex , patch, gac, 1 );
       new_dw->get( const_radiation_vars.ABSKG  , _abskg_label, matlIndex , patch, gn, 0 );
 
     } 
@@ -304,15 +326,14 @@ DORadiation::computeSource( const ProcessorGroup* pc,
 
     if ( do_radiation ){ 
 
-
       if ( timeSubStep == 0 ) {
 
-      if(_DO_model->DOSolveInitialGuessBool()){
-        for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
-          CCVariable<double> cenint;
-          new_dw->allocateAndPut(cenint,_IntensityLabels[ix] , matlIndex, patch );
+        if(_DO_model->needIntensitiesBool()){
+          for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){
+            CCVariable<double> cenint;
+            new_dw->allocateAndPut(cenint,_IntensityLabels[ix] , matlIndex, patch );
+          }
         }
-       }
 
         //Note: The final divQ is initialized (to zero) and set after the solve in the intensity solve itself.
         _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL, matlIndex, new_dw, old_dw ); 

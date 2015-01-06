@@ -310,7 +310,6 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
   for( int p=0; p < patches->size(); p++ ) {  // Patch loop
 
     //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
 
     const Patch* patch = patches->get(p);
@@ -365,7 +364,7 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> weight;
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
-#if !defined(VERIFY_KOBAYASHI_MODEL)
+//#if !defined(VERIFY_KOBAYASHI_MODEL)
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -439,18 +438,18 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
 
         }
 
-#else
-        bool weight_is_small = false;
-        double unscaled_weight = 1e6;
-        double unscaled_temperature = 2000;
-        double unscaled_raw_coal_mass = 1e-8;
-        double scaled_raw_coal_mass = unscaled_raw_coal_mass;
-        double unscaled_char_mass = 1e-8;
-        double scaled_char_mass = unscaled_char_mass;
-        double devol_rate_;
-        double gas_devol_rate_;
-        double char_rate_;
-#endif
+//#else
+        //bool weight_is_small = false;
+        //double unscaled_weight = 1e6;
+        //double unscaled_temperature = 2000;
+        //double unscaled_raw_coal_mass = 1e-8;
+        //double scaled_raw_coal_mass = unscaled_raw_coal_mass;
+        //double unscaled_char_mass = 1e-8;
+        ////double scaled_char_mass = unscaled_char_mass;
+        //double devol_rate_;
+        //double gas_devol_rate_;
+        //double char_rate_;
+//#endif
 
         k1 = A1*exp(-E1/(R*unscaled_temperature)); // [=] 1/s
         k2 = A2*exp(-E2/(R*unscaled_temperature)); // [=] 1/s
@@ -503,46 +502,46 @@ KobayashiSarofimDevol::computeModel( const ProcessorGroup * pc,
       //  proc0cout << "k1: " << k1  << endl;
       //  proc0cout << "k2: " << k2  << endl;
       //  proc0cout << "****************************************************************" << endl;
-#if defined(VERIFY_KOBAYASHI_MODEL)
-      proc0cout << "****************************************************************" << endl;
-      proc0cout << "Verification error, Kobayashi-Sarofim Devolatilization model:   " << endl;
-      proc0cout << endl;
+//#if defined(VERIFY_KOBAYASHI_MODEL)
+      //proc0cout << "****************************************************************" << endl;
+      //proc0cout << "Verification error, Kobayashi-Sarofim Devolatilization model:   " << endl;
+      //proc0cout << endl;
 
-      double error; 
+      //double error; 
       
-      error = ( (-0.04053)-(devol_rate_) )/(-0.04053);
-      if( fabs(error) < 0.01 ) {
-        proc0cout << "Verification for particle model term successful:" << endl;
-        proc0cout << "    Percent error is " << fabs(error)*100 << ", which is less than 1 percent." << endl;
-      } else {
-        proc0cout << "WARNING: VERIFICATION FOR PARTICLE MODEL TERM FAILED!!! " << endl;
-        proc0cout << "    Verification value  = -0.04053" << endl;
-        proc0cout << "    Calculated value    = " << devol_rate_ << endl;
-        proc0cout << "    Percent error = " << fabs(error)*100 << ", which is greater than 1 percent." << endl;
-      }
+      //error = ( (-0.04053)-(devol_rate_) )/(-0.04053);
+      //if( fabs(error) < 0.01 ) {
+        //proc0cout << "Verification for particle model term successful:" << endl;
+        //proc0cout << "    Percent error is " << fabs(error)*100 << ", which is less than 1 percent." << endl;
+      //} else {
+        //proc0cout << "WARNING: VERIFICATION FOR PARTICLE MODEL TERM FAILED!!! " << endl;
+        //proc0cout << "    Verification value  = -0.04053" << endl;
+        //proc0cout << "    Calculated value    = " << devol_rate_ << endl;
+        //proc0cout << "    Percent error = " << fabs(error)*100 << ", which is greater than 1 percent." << endl;
+      //}
 
-      proc0cout << endl;
+      //proc0cout << endl;
 
-      error = ( (40500.3) - (gas_devol_rate_) )/(40500.3);
-      if( fabs(error) < 0.01 ) {
-        proc0cout << "Verification for gas model term successful:" << endl;
-        proc0cout << "    Percent error = " << fabs(error)*100 << ", which is less than 1 percent." << endl;
-      } else {
-        proc0cout << "WARNING: VERIFICATION FOR GAS MODEL TERM FAILED!!! " << endl;
-        proc0cout << "    Verification value  = 40500.3" << endl;
-        proc0cout << "    Calculated value    = " << gas_devol_rate_ << endl;
-        proc0cout << "    Percent error = " << fabs(error)*100 << ", which is greater than 1 percent." << endl;
-      }
+      //error = ( (40500.3) - (gas_devol_rate_) )/(40500.3);
+      //if( fabs(error) < 0.01 ) {
+        //proc0cout << "Verification for gas model term successful:" << endl;
+        //proc0cout << "    Percent error = " << fabs(error)*100 << ", which is less than 1 percent." << endl;
+      //} else {
+        //proc0cout << "WARNING: VERIFICATION FOR GAS MODEL TERM FAILED!!! " << endl;
+        //proc0cout << "    Verification value  = 40500.3" << endl;
+        //proc0cout << "    Calculated value    = " << gas_devol_rate_ << endl;
+        //proc0cout << "    Percent error = " << fabs(error)*100 << ", which is greater than 1 percent." << endl;
+      //}
 
-      proc0cout << endl;
-      proc0cout << "****************************************************************" << endl;
+      //proc0cout << endl;
+      //proc0cout << "****************************************************************" << endl;
 
-#else
+//#else
       devol_rate[c] = devol_rate_;
       gas_devol_rate[c] = gas_devol_rate_;
       char_rate[c] = char_rate_;
     }//end cell loop
-#endif
+//#endif
   
   }//end patch loop
 }

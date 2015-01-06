@@ -32,80 +32,86 @@ using std::vector;
 
 BufferInfo::BufferInfo()
 {
-  have_datatype = false;
-  free_datatype = false;
-  sendlist = 0;
+  d_have_datatype = false;
+  d_free_datatype = false;
+  d_sendlist      = 0;
 }
 
 BufferInfo::~BufferInfo()
 {
-
-  if (free_datatype) {
+  if( d_free_datatype ) {
     ASSERT(datatype!=MPI_DATATYPE_NULL);
     ASSERT(datatype!=MPI_INT);
     ASSERT(datatype!=MPI_DOUBLE);
     MPI_Type_free(&datatype);
     datatype = MPI_DATATYPE_NULL;
   }
-  for (int i = 0; i < (int)datatypes.size(); i++) {
-    if (free_datatypes[i]) {
-      ASSERT(datatypes[i]!=MPI_DATATYPE_NULL);
-      ASSERT(datatypes[i]!=MPI_INT);
-      ASSERT(datatypes[i]!=MPI_DOUBLE);
-      MPI_Type_free(&datatypes[i]);
-      datatypes[i] = MPI_DATATYPE_NULL;
+
+  for( unsigned int i = 0; i < d_datatypes.size(); i++ ) {
+    if( d_free_datatypes[i] ) {
+      ASSERT( d_datatypes[i] != MPI_DATATYPE_NULL );
+      ASSERT( d_datatypes[i] != MPI_INT );
+      ASSERT( d_datatypes[i] != MPI_DOUBLE );
+      MPI_Type_free( &d_datatypes[i] );
+      d_datatypes[i] = MPI_DATATYPE_NULL;
     }
   }
 
-  if (sendlist) {
-    delete sendlist;
-    sendlist = 0;
+  if( d_sendlist ) {
+
+    delete d_sendlist;
+    d_sendlist = 0;
   }
 }
 
-int BufferInfo::count() const
+unsigned int
+BufferInfo::count() const
 {
-  return (int)datatypes.size();
+  return (int)d_datatypes.size();
 }
 
-void BufferInfo::add(void* startbuf,
-                     int count,
-                     MPI_Datatype datatype,
-                     bool free_datatype)
+void
+BufferInfo::add( void         * startbuf,
+                 int            count,
+                 MPI_Datatype   datatype,
+                 bool           free_datatype )
 {
-  ASSERT(!have_datatype);
-  startbufs.push_back(startbuf);
-  counts.push_back(count);
-  datatypes.push_back(datatype);
-  free_datatypes.push_back(free_datatype);
+  ASSERT( !d_have_datatype );
+  d_startbufs.push_back( startbuf );
+  d_counts.push_back( count );
+  d_datatypes.push_back( datatype );
+  d_free_datatypes.push_back( free_datatype );
 }
 
-void BufferInfo::get_type(void*& out_buf,
-                          int& out_count,
-                          MPI_Datatype& out_datatype)
+void
+BufferInfo::get_type( void        *& out_buf,
+                      int          & out_count,
+                      MPI_Datatype & out_datatype )
 {
   ASSERT(count() > 0);
-  if (!have_datatype) {
-    if (count() == 1) {
-      buf = startbufs[0];
-      cnt = counts[0];
-      datatype = datatypes[0];
-      free_datatype = false;  // Will get freed with array
+
+  if( !d_have_datatype ){
+    if( count() == 1 ) {
+      buf             = d_startbufs[0];
+      cnt             = d_counts[0];
+      datatype        = d_datatypes[0];
+      d_free_datatype = false; // Will get freed with array
     }
     else {
       std::vector<MPI_Aint> indices(count());
-      for (int i = 0; i < (int)startbufs.size(); i++)
-        indices[i] = (MPI_Aint)startbufs[i];
-      MPI_Type_struct(count(), &counts[0], &indices[0], &datatypes[0], &datatype);
-      MPI_Type_commit(&datatype);
+      for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
+        indices[i] = (MPI_Aint)d_startbufs[i];
+      }
+      MPI_Type_struct( count(), &d_counts[0], &indices[0], &d_datatypes[0], &datatype );
+      MPI_Type_commit( &datatype );
       buf = 0;
       cnt = 1;
-      free_datatype = true;
+      d_free_datatype = true;
     }
-    have_datatype = true;
+    d_have_datatype = true;
   }
-  out_buf = buf;
-  out_count = cnt;
+  out_buf      = buf;
+  out_count    = cnt;
   out_datatype = datatype;
 }
 
@@ -116,14 +122,15 @@ Sendlist::~Sendlist()
     obj = 0;
   }
 
-  // A little more complicated than normal, so that this doesn't need
-  // to be recursive...
-  Sendlist* p = next;
-  while (p) {
-    if (p->obj->removeReference()) {
+  // A little more complicated than normal, so that this doesn't need to be recursive...
+
+  Sendlist * p = next;
+  while( p ){
+
+    if( p->obj->removeReference() ) {
       delete p->obj;
     }
-    Sendlist* n = p->next;
+    Sendlist * n = p->next;
     p->next = 0;  // So that DTOR won't recurse...
     p->obj = 0;
     delete p;
@@ -131,15 +138,17 @@ Sendlist::~Sendlist()
   }
 }
 
-void BufferInfo::addSendlist(RefCounted* obj)
+void
+BufferInfo::addSendlist( RefCounted * obj )
 {
   obj->addReference();
-  sendlist = scinew Sendlist(sendlist, obj);
+  d_sendlist = scinew Sendlist( d_sendlist, obj );
 }
 
-Sendlist* BufferInfo::takeSendlist()
+Sendlist*
+BufferInfo::takeSendlist()
 {
-  Sendlist* rtn = sendlist;
-  sendlist = 0;  // They are now responsible for freeing...
+  Sendlist * rtn = d_sendlist;
+  d_sendlist = 0; // They are now responsible for freeing...
   return rtn;
 }

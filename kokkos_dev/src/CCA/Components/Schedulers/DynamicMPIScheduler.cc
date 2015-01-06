@@ -514,7 +514,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   
 
   log.finishTimestep();
-  if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
+  if( timeout.active() && !parentScheduler_ ){ // only do on toplevel scheduler
     //emitTime("finalize");
 
     // add number of cells, patches, and particles
@@ -624,6 +624,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   {
     static int count=0;
       
+    // only output the exec times every 10 timesteps
     if(++count%10==0)
     {
       ofstream fout;
@@ -632,7 +633,7 @@ DynamicMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       fout.open(filename);
       
       for(map<string,double>::iterator iter=exectimes.begin();iter!=exectimes.end();iter++)
-        fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:" << iter->first << endl;
+        fout << fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << endl;
       fout.close();
       //exectimes.clear();
     }

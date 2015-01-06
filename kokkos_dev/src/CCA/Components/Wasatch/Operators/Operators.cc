@@ -122,10 +122,6 @@ namespace Wasatch{
     for( size_t i=0; i<3; ++i ){ dim[i] = udim[i];}
     
     const Uintah::Vector spacing = patch.dCell();
-    std::vector<double> area(3,1);
-    area[0] = spacing[1]*spacing[2];
-    area[1] = spacing[0]*spacing[2];
-    area[2] = spacing[0]*spacing[1];
     
     std::vector<bool> bcPlus(3,false);
     bcPlus[0] = patch.getBCType(Uintah::Patch::xplus) != Uintah::Patch::Neighbor;

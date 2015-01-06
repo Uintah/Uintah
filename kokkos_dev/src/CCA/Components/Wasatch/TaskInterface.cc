@@ -178,7 +178,7 @@ namespace Wasatch{
 
       /** \brief returns the device Index */
       inline static int get_device_index(){
-        GPULoadBalancer& gpulb = GPULoadBalancer::self();
+        GPULoadBalancer& gpulb = self();
         gpulb.gpuDeviceID_ = (++gpulb.gpuDeviceID_) % gpulb.gpuDeviceCount_;
         return gpulb.gpuDeviceID_;
       }

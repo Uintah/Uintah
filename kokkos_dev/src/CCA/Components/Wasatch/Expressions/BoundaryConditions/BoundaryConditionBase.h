@@ -309,10 +309,20 @@ public:
     bndNormal_       = SpatialOps::IntVec(0,0,0);
     bcTypeEnum_      = Wasatch::UNSUPPORTED;
     faceTypeEnum_    = Uintah::Patch::xminus;
-    vecInteriorPts_ = NULL;
-    vecGhostPts_ = NULL;
+
+    diriXOp_ = NULL;
+    diriYOp_ = NULL;
+    diriZOp_ = NULL;
+    neumXOp_ = NULL;
+    neumYOp_ = NULL;
+    neumZOp_ = NULL;
+
+    vecInteriorPts_     = NULL;
+    vecGhostPts_        = NULL;
+    neboInteriorPts_    = NULL;
+    neboGhostPts_       = NULL;
     interiorEdgePoints_ = NULL;
-    boundaryParticles_ = NULL;
+    boundaryParticles_  = NULL;
   }
   virtual ~BoundaryConditionBase(){}
 

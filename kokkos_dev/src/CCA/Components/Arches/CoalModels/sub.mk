@@ -10,18 +10,14 @@ SRCS += \
   $(SRCDIR)/CharOxidation.cc \
   $(SRCDIR)/KobayashiSarofimDevol.cc \
   $(SRCDIR)/RichardsFletcherDevol.cc \
+  $(SRCDIR)/BTDevol.cc \
   $(SRCDIR)/YamamotoDevol.cc \
   $(SRCDIR)/CharOxidationShaddix.cc \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/HeatTransfer.cc \
-  $(SRCDIR)/SimpleHeatTransfer.cc \
   $(SRCDIR)/ShaddixHeatTransfer.cc \
   $(SRCDIR)/EnthalpyShaddix.cc \
-  $(SRCDIR)/XDragModel.cc \
-  $(SRCDIR)/YDragModel.cc \
-  $(SRCDIR)/ZDragModel.cc \
-  $(SRCDIR)/DragModel.cc
+  $(SRCDIR)/DragModel.cc 
 
 $(SRCDIR)/ShaddixHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
 $(SRCDIR)/EnthalpyShaddix.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h
-$(SRCDIR)/SimpleHeatTransfer.$(OBJEXT): $(SRCDIR)/fortran/rqpart_fort.h

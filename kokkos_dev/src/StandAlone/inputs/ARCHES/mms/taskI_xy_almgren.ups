@@ -36,7 +36,7 @@
     <save label="arches_task_scalar_Fdiff"/>
     <save label="arches_task_scalar_Fconv"/>
     <save label="arches_task_scalar_D"/>
-    <save label="my_model_0"/>
+    <!--<save label="my_model_0"/>-->
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -94,17 +94,16 @@
         </task>
       </Initialization>
 
-      <ParticleModels>
-        <model type="simple_rate" label="my_model">
-          <A>1.0</A>
-          <ER>1.0</ER>
-          <m>1.0</m>
-          <grid dependent_type="svol" independent_type="svol"/>
-          <temperature label="gridX"/>
-          <concentration label="gridY"/>
-          <N>1</N>
-        </model>
-      </ParticleModels>
+      <!--<ParticleModels>-->
+        <!--<model type="simple_rate" label="my_model">-->
+          <!--<A>1.0</A>-->
+          <!--<ER>1.0</ER>-->
+          <!--<m>1.0</m>-->
+          <!--<grid dependent_type="svol" independent_type="svol"/>-->
+          <!--<temperature label="gridX"/>-->
+          <!--<concentration label="gridY"/>-->
+        <!--</model>-->
+      <!--</ParticleModels>-->
 
 <!-- END NEW STUFF -->
 

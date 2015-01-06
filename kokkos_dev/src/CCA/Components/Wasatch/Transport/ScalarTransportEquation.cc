@@ -248,7 +248,7 @@ namespace Wasatch{
           infoStar_[AREA_FRAC_Y] = vNames.vol_frac_tag<YVolField>();
           infoStar_[AREA_FRAC_Z] = vNames.vol_frac_tag<ZVolField>();
         }
-        const Expr::Tag solnVarTagNp1(solnVarTag_.name(), Expr::STATE_NONE);
+        const Expr::Tag solnVarTagNp1( solnVarTag_.name(), Expr::STATE_NONE );
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarTagNp1, densityStarTag ) );
         factory.register_expression( scinew RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
       }
@@ -300,22 +300,19 @@ namespace Wasatch{
   setup_boundary_conditions( BCHelper& bcHelper,
                              GraphCategories& graphCat )
   {
-    Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
-
     const TagNames& tagNames = TagNames::self();
-    const Expr::Tag rhsStarTag = tagNames.make_star_rhs( this->solution_variable_tag() );
   
     // make logical decisions based on the specified boundary types
-    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
+    BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() ){
       const std::string& bndName = bndPair.first;
-      BndSpec& myBndSpec = bndPair.second;
+      const BndSpec& myBndSpec = bndPair.second;
       
       if (!isConstDensity_) {
         // for variable density problems, we must ALWAYS guarantee proper boundary conditions for
         // rhof_{n+1}. Since we apply bcs on rhof at the bottom of the graph, we can't apply
         // the same bcs on rhof (time advanced). Hence, we set rhof_rhs to zero always :)
         if( !myBndSpec.has_field(rhs_name()) ){
-          BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
+          const BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
           bcHelper.add_boundary_condition(bndName, rhsBCSpec);
         }
       }
@@ -328,7 +325,7 @@ namespace Wasatch{
           // for constant density problems, on all types of boundary conditions, set the scalar rhs
           // to zero. The variable density case requires setting the scalar rhs to zero ALL the time
           // and is handled in the code above.
-          if (isConstDensity_) {
+          if( isConstDensity_ ){
             if( myBndSpec.has_field(rhs_name()) ){
               std::ostringstream msg;
               msg << "ERROR: You cannot specify scalar rhs boundary conditions unless you specify USER "
@@ -337,7 +334,7 @@ namespace Wasatch{
               << std::endl;
               throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
             }
-            BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
+            const BndCondSpec rhsBCSpec = {rhs_name(), "none", 0.0, DIRICHLET, DOUBLE_TYPE };
             bcHelper.add_boundary_condition(bndName, rhsBCSpec);
           }
           
