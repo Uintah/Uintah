@@ -246,8 +246,8 @@ namespace Uintah {
     static std::vector<std::string> needsBC_;
 
     typedef std::vector<int> BndParticlesVector;
-    typedef std::map <int, BndParticlesVector            > patchIDBndParticlesMapT;  // temporary typedef map that stores boundary particles per patch id: Patch ID -> Bnd particles
-    typedef std::map <std::string, patchIDBndParticlesMapT    > MaskMapT         ;  // boundary name -> (patch ID -> boundary particles )
+    typedef std::map <int, BndParticlesVector> patchIDBndParticlesMapT; // temporary typedef map that stores boundary particles per patch id: Patch ID -> Bnd particles
+    typedef std::map <std::string, patchIDBndParticlesMapT> MaskMapT;   // boundary name -> (patch ID -> boundary particles )
     static MaskMapT bndParticlesMap_;
     static MaskMapT inletBndParticlesMap_;
 
@@ -268,24 +268,24 @@ namespace Uintah {
                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     virtual void restart_initialize( const Uintah::ProcessorGroup*,
-                                    const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                    Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
+                                     const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                     Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
-    virtual void transfer_particle_ids(const Uintah::ProcessorGroup*,
-                              const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                              Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
-
-    virtual void delete_outside_particles(const Uintah::ProcessorGroup*,
-                                          const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                          Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
-
-    virtual void clear_deleteset(const Uintah::ProcessorGroup*,
-                                 const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                 Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
-
-    virtual void sync_particle_position(const Uintah::ProcessorGroup*,
+    virtual void transfer_particle_ids( const Uintah::ProcessorGroup*,
                                         const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
+                                        Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+
+    virtual void delete_outside_particles( const Uintah::ProcessorGroup*,
+                                           const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                           Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+
+    virtual void clear_deleteset( const Uintah::ProcessorGroup*,
+                                  const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                  Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw);
+
+    virtual void sync_particle_position( const Uintah::ProcessorGroup*,
+                                         const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
+                                         Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw, const bool initialization);
 
     virtual void add_particles( const Uintah::ProcessorGroup*,
                                 const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
@@ -300,7 +300,7 @@ namespace Uintah {
     
     void find_boundary_particles( const Uintah::ProcessorGroup*,
                                   const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                 Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
+                                  Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw );
 
     void initialize_internal(const int materialSize);
     

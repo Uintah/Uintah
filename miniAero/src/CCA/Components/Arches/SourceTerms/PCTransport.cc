@@ -250,13 +250,13 @@ PCTransport::computeSource( const ProcessorGroup* pc,
 
       IntVector c = *iter; //(i,j,k) 
 
-      double pc_test[3]; 
+      //double pc_test[3]; 
       //populated the pc_test array: 
       //note that this is currently hard coded for 3 scores.  Need to make this general. 
       for (int i = 0; i < 3; i++){
 
         PcStorage::iterator pc_iter = pc_storage.find(i); 
-        pc_test[i] = pc_iter->second[c];  
+        //pc_test[i] = pc_iter->second[c];  
 
       }
 

@@ -165,11 +165,11 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& factory = *gh.exprFactory;
 
-    std::string tagNameAppend;
+    std::string tagNameAppend, scalarTagNameAppend;
     switch (densLevel){
-      case NORMAL    : tagNameAppend="";                          break;
-      case STAR      : tagNameAppend=TagNames::self().star;       break;
-      case STARSTAR  : tagNameAppend=TagNames::self().doubleStar; break;
+      case NORMAL    : tagNameAppend=scalarTagNameAppend="";                          break;
+      case STAR      : tagNameAppend=TagNames::self().star; scalarTagNameAppend = ""; break;
+      case STARSTAR  : tagNameAppend=scalarTagNameAppend=TagNames::self().doubleStar; break;
     }
 
     densityTag.name() += tagNameAppend;
@@ -178,8 +178,8 @@ namespace Wasatch{
 
       const Uintah::ProblemSpecP modelParams = params->findBlock("ModelBasedOnMixtureFraction");
       Expr::Tag rhofTag = parse_nametag( modelParams->findBlock("DensityWeightedMixtureFraction")->findBlock("NameTag") );
-      if( densLevel != NORMAL ) rhofTag.context() = Expr::STATE_NONE;
-      rhofTag.name() += tagNameAppend;
+      if( densLevel != NORMAL   ) rhofTag.context() = Expr::STATE_NONE;
+      rhofTag.name() += scalarTagNameAppend;
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
       densCalcID = factory.register_expression( scinew DensCalc( *densInterp, densityTag, rhofTag ) );
@@ -205,9 +205,9 @@ namespace Wasatch{
       if( densLevel != NORMAL ){
         rhofTag.context()     = Expr::STATE_NONE;
         rhohTag.context()     = Expr::STATE_NONE;
-        rhofTag.name()     += tagNameAppend;
-        rhohTag.name()     += tagNameAppend;
-        heatLossTag.name() += tagNameAppend;
+        rhofTag.name()        += scalarTagNameAppend;
+        rhohTag.name()        += scalarTagNameAppend;
+        heatLossTag.name()    += scalarTagNameAppend;
       }
 
       typedef DensHeatLossMixfrac<SVolField>::Builder DensCalc;
@@ -281,6 +281,11 @@ namespace Wasatch{
     Expr::TagList ivarNames;
     const Names& ivars = table.get_indepvar_names();
     for( Names::const_iterator inm=ivars.begin(); inm!=ivars.end(); ++inm ){
+      if( ivarMap.find(*inm) == ivarMap.end() ){
+        std::ostringstream msg;
+        msg << "ERROR: table variable '" << *inm << "' was not provided\n";
+        throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      }
       ivarNames.push_back( ivarMap[*inm] );
     }
 
@@ -433,7 +438,7 @@ namespace Wasatch{
       const TagNames& names = TagNames::self();
 
       Expr::Tag rhoStar ( rhoTag .name()+names.star, rhoTag.context() );
-      Expr::Tag rhofStar( rhofTag.name()+names.star, Expr::STATE_NONE );
+      Expr::Tag rhofStar( rhofTag.name(), Expr::STATE_NONE );
       const Expr::ExpressionID id1 = gc[ADVANCE_SOLUTION]->exprFactory->register_expression( scinew DensExpr(rhoStar,rhofStar,rho0,rho1) );
 
       rhoStar .name() = rhoTag.name()  + names.doubleStar;
@@ -464,20 +469,14 @@ namespace Wasatch{
       transEqnParams->get( "SolutionVariable", solnVarName );
 
       // Here we get the variables needed for calculations at the stage "*"
-      const Expr::Tag solnVarTag    ( solnVarName,               Expr::STATE_N    );
-      const Expr::Tag solnVarRHSTag ( solnVarName+"_rhs",        Expr::STATE_NONE );
-      const Expr::Tag solnVarStarTag( solnVarName+tagNames.star, Expr::STATE_NONE );
-
-      if( !solnGraphHelper.exprFactory->have_entry( solnVarStarTag ) ){
-        solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVarStarTag, solnVarTag, solnVarRHSTag, tagNames.dt ));
-      }
+      const Expr::Tag solnVarTagNp1  ( solnVarName,                 Expr::STATE_NONE ); // tag for rhof_{n+1}
 
       // Here we get the variables needed for calculations at the stage "**"
       const Expr::Tag solnVarRHSStarTag = tagNames.make_star_rhs(solnVarName);;
       const Expr::Tag solnVar2StarTag   = tagNames.make_double_star(solnVarName);
 
       if( !solnGraphHelper.exprFactory->have_entry( solnVar2StarTag ) ){
-        solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVar2StarTag, solnVarStarTag, solnVarRHSStarTag, tagNames.dt ));
+        solnGraphHelper.exprFactory->register_expression( scinew SolnVarEst<SVolField>::Builder( solnVar2StarTag, solnVarTagNp1, solnVarRHSStarTag, tagNames.dt ));
       }
     }
   }

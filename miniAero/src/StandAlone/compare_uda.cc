@@ -1458,6 +1458,31 @@ main(int argc, char** argv)
           bool first = true;
           Level::const_patchIterator iter;
          
+          //__________________________________
+          //  bulletproofing does the variable exist in both DAs on this timestep?
+          //  This problem mainly occurs if <outputInitTimestep> has been specified.
+          bool existsDA1 = true;
+          bool existsDA2 = true;
+          for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+            const Patch* patch = *iter;
+            if ( ! da1->exists( var, patch, tstep ) ){
+              existsDA1 = false;
+            }
+          }
+          for(iter = level2->patchesBegin(); iter != level2->patchesEnd(); iter++) {
+            const Patch* patch = *iter;
+            if ( ! da2->exists( var, patch, tstep ) ){
+              existsDA2 = false;
+            }
+          }
+          if( existsDA1 != existsDA2 ) {
+            cerr << "The variable ("<< var << ") was not found on timestep (" << tstep  <<  ") in both udas. \n"
+                 << "If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task."<<endl; 
+            abort_uncomparable();
+          }
+          
+          //__________________________________
+          //  bulletproof are material sets consistent over DA 1
           for(iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
             const Patch* patch = *iter;
             
@@ -1477,6 +1502,8 @@ main(int argc, char** argv)
           
           ASSERT(!first); /* More serious problems would show up if this
                              assertion would fail */
+          //__________________________________
+          //  bulletproof are material sets consistent between DA1 & DA2
           for(iter = level2->patchesBegin(); iter != level2->patchesEnd(); iter++) {
             const Patch* patch = *iter;
             

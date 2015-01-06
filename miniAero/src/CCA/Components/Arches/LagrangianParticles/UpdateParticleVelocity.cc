@@ -113,7 +113,7 @@ UpdateParticleVelocity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_inf
   Pptr old_pv = tsk_info->get_const_particle_field( _v_name ); 
   Pptr old_pw = tsk_info->get_const_particle_field( _w_name ); 
 
-  const double dt = tsk_info->get_dt(); 
+  //const double dt = tsk_info->get_dt(); 
 
   //no RHS currently
   *pu <<= *old_pu; 

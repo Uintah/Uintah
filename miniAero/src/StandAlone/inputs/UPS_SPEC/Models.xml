@@ -6,17 +6,15 @@
     
     <!--__________________________________-->
     <!-- Used by Arches and Examples/RMCRT_test -->
-    <RMCRT                    spec="OPTIONAL NO_DATA" >
+    <RMCRT                    spec="OPTIONAL NO_DATA" attribute1="type OPTIONAL STRING 'float, double'" >
       <randomSeed             spec="OPTIONAL BOOLEAN"/>
       <sigmaScat              spec="OPTIONAL DOUBLE  'positive'"/>
-      <abskgBench4            spec="OPTIONAL DOUBLE  'positive'"/>
       <nDivQRays              spec="OPTIONAL INTEGER 'positive'"/>
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
       <benchmark              spec="OPTIONAL INTEGER 'positive'"/>
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>
       <CCRays                 spec="OPTIONAL BOOLEAN"/>
-      <VirtRadiometer         spec="OPTIONAL BOOLEAN"/>
       <VRViewAngle            spec="OPTIONAL DOUBLE 'positive'"/>
       <VROrientation          spec="OPTIONAL VECTOR"/>
       <VRLocationsMin         spec="OPTIONAL VECTOR 'positive'"/>

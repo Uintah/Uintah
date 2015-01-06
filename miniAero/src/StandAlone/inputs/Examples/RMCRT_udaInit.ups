@@ -114,7 +114,7 @@
   <benchmark>          0          </benchmark>
   <calc_frequency>    1           </calc_frequency>
   
-  <RMCRT>
+  <RMCRT type = "double">
     <randomSeed>        false       </randomSeed>
     <nDivQRays>         10          </nDivQRays>
     <Threshold>         0.05        </Threshold>
@@ -124,7 +124,6 @@
     <allowReflect>      true        </allowReflect>
     <ignore_BC_bulletproofing> false </ignore_BC_bulletproofing>
     <CCRays>          false         </CCRays>
-    <VirtRadiometer>  false         </VirtRadiometer>
     <nRadRays>        10            </nRadRays>
     <sigmaScat>       1.0           </sigmaScat>
     <solveDivQ>       true          </solveDivQ>

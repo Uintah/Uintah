@@ -178,6 +178,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   } else { 
     
     task->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
+    task->requires( Task::NewDW , _cellType_label , Ghost::None , 0 );
     
   } 
   

@@ -1161,9 +1161,6 @@ BoundaryCondition::velocityOutletPressureTangentBC(const Patch* patch,
   IntVector idxLo = patch->getFortranCellLowIndex();
   IntVector idxHi = patch->getFortranCellHighIndex();
 
-  int outlet_celltypeval = outletCellType();
-  int pressure_celltypeval = pressureCellType();
-
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;

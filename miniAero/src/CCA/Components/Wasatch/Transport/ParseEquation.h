@@ -259,12 +259,12 @@ namespace Wasatch{
    * \param info this will be populated for use in the ScalarRHS expression if needed.
    */
   template< typename FieldT >
-  void setup_convective_flux_expression( const std::string dir,
-                                         const Expr::Tag solnVarTag,
+  void setup_convective_flux_expression( const std::string& dir,
+                                         const Expr::Tag& solnVarTag,
                                          Expr::Tag convFluxTag,
                                          const ConvInterpMethods convMethod,
-                                         const Expr::Tag advVelocityTag,
-                                         const std::string suffix,
+                                         const Expr::Tag& advVelocityTag,
+                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 
@@ -279,8 +279,8 @@ namespace Wasatch{
    */
   template< typename FieldT >
   void setup_convective_flux_expression( Uintah::ProblemSpecP convFluxParams,
-                                         const Expr::Tag solnVarTag,
-                                         const std::string suffix,
+                                         const Expr::Tag& solnVarTag,
+                                         const std::string& suffix,
                                          Expr::ExpressionFactory& factory,
                                          FieldTagInfo& info );
 

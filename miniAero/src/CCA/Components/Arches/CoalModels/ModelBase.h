@@ -7,6 +7,7 @@
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/Grid/SimulationState.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
+#include <Core/Exceptions/ParameterNotFound.h>
 
 
 //===============================================================
@@ -60,23 +61,10 @@ public:
   inline void reinitializeLabel(){ 
     d_labelSchedInit  = false; };
 
-  ////////////////////////////////////////////////
-  // Model computation methods
-
   /** @brief  Pure virtual function: schedule computation of DQMOM model term. */
   virtual void sched_computeModel(const LevelP& level, 
                                   SchedulerP&   sched, 
                                   int           timeSubStep ) = 0;
-
-  /** @brief  Pure virtual function: actually compute the DQMOM model term. */
-  virtual void computeModel( const ProcessorGroup * pc,
-                             const PatchSubset    * patches,
-                             const MaterialSubset * matls, 
-                             DataWarehouse        * old_dw, 
-                             DataWarehouse        * new_dw ) = 0;
-
-  ///////////////////////////////////////////////////
-  // Access methods
 
   /** @brief  Return a string containing the model type (pure virtual) */
   virtual std::string getType() = 0;

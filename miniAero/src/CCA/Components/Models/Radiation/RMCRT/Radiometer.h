@@ -43,7 +43,7 @@ namespace Uintah{
 
     public:
 
-      Radiometer();
+      Radiometer(const TypeDescription::Type FLT_DBL );         // This class can use sigmaT4 & abskg Float or Double;
       ~Radiometer();
 
       //__________________________________
@@ -66,22 +66,23 @@ namespace Uintah{
       void sched_initializeRadVars( const LevelP& level,
                                     SchedulerP& sched,
                                     const int radCalc_freq );
-
+      template < class T >
       void initializeRadVars( const ProcessorGroup*,
                               const PatchSubset* patches,
                               const MaterialSubset* ,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw,
-                               const int radCalc_freq );
+                              const int radCalc_freq );
 
       //__________________________________
       //  FUNCTIONS
+      template< class T >
       void radiometerFlux(  const Patch* patch,
                             const Level* level,
                             DataWarehouse* new_dw,
                             MTRand& mTwister,
-                            constCCVariable<double> sigmaT4OverPi,
-                            constCCVariable<double> abskg,
+                            constCCVariable< T > sigmaT4OverPi,
+                            constCCVariable< T > abskg,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux );
 
@@ -114,6 +115,7 @@ namespace Uintah{
 
       //__________________________________
       //
+      template< class T >
       void radiometer( const ProcessorGroup* pc,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
@@ -122,7 +124,8 @@ namespace Uintah{
                        Task::WhichDW which_abskg_dw,
                        Task::WhichDW whichd_sigmaT4_dw,
                        Task::WhichDW which_celltype_dw,
-                       const int radCalc_freq );
+                       const int radCalc_freq,
+                       const bool hadRadiometers );
 
       //__________________________________
       //

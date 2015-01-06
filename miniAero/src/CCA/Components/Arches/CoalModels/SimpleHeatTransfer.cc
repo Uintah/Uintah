@@ -476,7 +476,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
     old_dw->get( w_raw_coal_mass, d_raw_coal_mass_label, matlIndex, patch, gn, 0 );
     old_dw->get( weight, d_weight_label, matlIndex, patch, gn, 0 );
 
-#if !defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
+//#if !defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
@@ -502,7 +502,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
       // paticle length
       double unscaled_length;
       // particle raw coal mass
-      double unscaled_raw_coal_mass;
+      //double unscaled_raw_coal_mass;
 
       // temperature - gas
       double gas_temperature = temperature[c];
@@ -513,65 +513,65 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
       double FSum = 0.0;
 
-      double heat_rate_;
-      double gas_heat_rate_;
+      double heat_rate;
+      double gas_heat_rate;
       double abskp_;
 
       // intermediate calculation values
       double Re;
       double Nu;
-      double Cpc;
-      double Cph;
-      double Cpa; 
+      //double Cpc;
+      //double Cph;
+      //double Cpa; 
       double rkg;
       double Q_convection;
-      double Q_radiation;
+      //double Q_radiation;
 
       if (weight_is_small && !d_unweighted) {
-        heat_rate_ = 0.0;
-        gas_heat_rate_ = 0.0;
+        heat_rate = 0.0;
+        gas_heat_rate = 0.0;
         abskp_ = 0.0;
       } else {
 
         if(d_unweighted){
-          scaled_weight = weight[c];
+          //scaled_weight = weight[c];
           unscaled_weight = weight[c]*d_w_scaling_constant;
           unscaled_particle_temperature = w_particle_temperature[c]*d_pt_scaling_constant;
           unscaled_length = w_particle_length[c]*d_pl_scaling_constant;
-          unscaled_raw_coal_mass = w_raw_coal_mass[c]*d_rc_scaling_constant;
+          //unscaled_raw_coal_mass = w_raw_coal_mass[c]*d_rc_scaling_constant;
         } else {
           scaled_weight = weight[c];
           unscaled_weight = weight[c]*d_w_scaling_constant;
           unscaled_particle_temperature = (w_particle_temperature[c]*d_pt_scaling_constant)/scaled_weight;
           unscaled_length = (w_particle_length[c]*d_pl_scaling_constant)/scaled_weight;
-          unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
+          //unscaled_raw_coal_mass = (w_raw_coal_mass[c]*d_rc_scaling_constant)/scaled_weight;
         }
 
-#else
-        Vector gas_velocity       = Vector(3.0);
-        Vector particle_velocity  = Vector(1.0);
-        bool weight_is_small = false;
-        double unscaled_weight = 1.0e6;
-        double scaled_weight = unscaled_weight;
-        double unscaled_particle_temperature = 2000.0;
-        double d_pt_scaling_constant = 1.0;
-        double gas_temperature = 2050;
-        double unscaled_length = 1.0e-5;
-        double unscaled_raw_coal_mass = 1.0e-8;
-        double unscaled_ash_mass = 1.0e-9;
-        double density = 1;
-        visc = 1.0e-5;
-        // redefine composition array
-        yelem[0] = 0.75; // C
-        yelem[1] = 0.05; // H
-        yelem[2] = 0.00; // N
-        yelem[3] = 0.20; // O
-        yelem[4] = 0.00; // S
-        double FSum = 0.0;
-        double heat_rate_;
-        double gas_heat_rate_;
-        double abskp_;
-#endif
+//#else
+        //Vector gas_velocity       = Vector(3.0);
+        //Vector particle_velocity  = Vector(1.0);
+        //bool weight_is_small = false;
+        //double unscaled_weight = 1.0e6;
+        //double scaled_weight = unscaled_weight;
+        //double unscaled_particle_temperature = 2000.0;
+        //double d_pt_scaling_constant = 1.0;
+        //double gas_temperature = 2050;
+        //double unscaled_length = 1.0e-5;
+        ////double unscaled_raw_coal_mass = 1.0e-8;
+        //double unscaled_ash_mass = 1.0e-9;
+        //double density = 1;
+        //visc = 1.0e-5;
+        //// redefine composition array
+        //yelem[0] = 0.75; // C
+        //yelem[1] = 0.05; // H
+        //yelem[2] = 0.00; // N
+        //yelem[3] = 0.20; // O
+        //yelem[4] = 0.00; // S
+        //double FSum = 0.0;
+        //double heat_rate;
+        //double gas_heat_rate;
+        //double abskp_;
+//#endif
 
         // Convection part: -----------------------
 
@@ -582,13 +582,13 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
         Nu = 2.0 + 0.65*pow(Re,0.50)*pow(Pr,(1.0/3.0));
 
         // Heat capacity of raw coal
-        Cpc = heatcp( unscaled_particle_temperature );
+        //Cpc = heatcp( unscaled_particle_temperature );
 
         // Heat capacity of char
-        Cph = heatcph( unscaled_particle_temperature );
+        //Cph = heatcph( unscaled_particle_temperature );
  
         // Heat capacity of ash
-        Cpa = heatap( unscaled_particle_temperature );
+        //Cpa = heatap( unscaled_particle_temperature );
 
         // Gas thermal conductivity
         rkg = props(gas_temperature, unscaled_particle_temperature); // [=] J/s/m/K
@@ -598,7 +598,7 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
 
         // Radiation part: -------------------------
         bool DO_NEW_ABSKP = false; 
-        Q_radiation = 0.0;
+        //Q_radiation = 0.0;
         if ( d_radiation  && DO_NEW_ABSKP){ 
           // New Glacier Code for ABSKP: 
           double qabs = 0.0; 
@@ -609,109 +609,109 @@ SimpleHeatTransfer::computeModel( const ProcessorGroup * pc,
           //what goes next?!
         } else if ( d_radiation && !DO_NEW_ABSKP ) { 
           double Qabs = 0.8;
-          double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
-          double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
-          FSum = radiationVolqIN[c];    
-          Q_radiation = Apsc*(FSum - Eb);
+          //double Apsc = (pi/4)*Qabs*pow(unscaled_length,2);
+          //double Eb = 4*sigma*pow(unscaled_particle_temperature,4);
+          //FSum = radiationVolqIN[c];    
+          //Q_radiation = Apsc*(FSum - Eb);
           abskp_ = pi/4*Qabs*unscaled_weight*pow(unscaled_length,2);
         } else {
           abskp_ = 0.0;
         }
     
         //cout << "Qconv " << Q_convection << " Qrad " << Q_radiation << endl;
-        gas_heat_rate_ = -unscaled_weight*Q_convection;
+        gas_heat_rate = -unscaled_weight*Q_convection;
  
       }
 
+//verification commented out. someone needs to verify the verification. 
+//#if defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
+      //proc0cout << "****************************************************************" << endl;
+      //proc0cout << "Verification error, Simple Heat Trasnfer model: " << endl;
+      //proc0cout << endl;
 
-#if defined(VERIFY_SIMPLEHEATTRANSFER_MODEL)
-      proc0cout << "****************************************************************" << endl;
-      proc0cout << "Verification error, Simple Heat Trasnfer model: " << endl;
-      proc0cout << endl;
-
-      double error; 
-      double verification_value;
+      //double error; 
+      //double verification_value;
       
-      verification_value = 2979.4;
-      error = ( (verification_value)-(Cpc) )/(verification_value);
-      if( fabs(error) < 0.01 ) {
-        proc0cout << "Verification for raw coal heat capacity successful:" << endl;
-        proc0cout << "    Percent error = " << setw(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
-      } else {
-        proc0cout << "WARNING: VERIFICATION FOR RAW COAL HEAT CAPACITY FAILED!!! " << endl;
-        proc0cout << "    Verification value  = " << verification_value << endl;
-        proc0cout << "    Calculated value    = " << Cpc << endl;
-        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
-      }
+      //verification_value = 2979.4;
+      //error = ( (verification_value)-(Cpc) )/(verification_value);
+      //if( fabs(error) < 0.01 ) {
+        //proc0cout << "Verification for raw coal heat capacity successful:" << endl;
+        //proc0cout << "    Percent error = " << setw(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      //} else {
+        //proc0cout << "WARNING: VERIFICATION FOR RAW COAL HEAT CAPACITY FAILED!!! " << endl;
+        //proc0cout << "    Verification value  = " << verification_value << endl;
+        //proc0cout << "    Calculated value    = " << Cpc << endl;
+        //proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      //}
 
-      proc0cout << endl;
+      //proc0cout << endl;
 
-      verification_value = 1765.00;
-      error = ( (verification_value)-(Cpa) )/(verification_value);
-      if( fabs(error) < 0.01 ) {
-        proc0cout << "Verification for ash heat capacity successful:" << endl;
-        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
-      } else {
-        proc0cout << "WARNING: VERIFICATION FOR ASH HEAT CAPACITY FAILED!!! " << endl;
-        proc0cout << "    Verification value  = " << verification_value << endl;
-        proc0cout << "    Calculated value    = " << Cpa << endl;
-        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
-      }
+      //verification_value = 1765.00;
+      //error = ( (verification_value)-(Cpa) )/(verification_value);
+      //if( fabs(error) < 0.01 ) {
+        //proc0cout << "Verification for ash heat capacity successful:" << endl;
+        //proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      //} else {
+        //proc0cout << "WARNING: VERIFICATION FOR ASH HEAT CAPACITY FAILED!!! " << endl;
+        //proc0cout << "    Verification value  = " << verification_value << endl;
+        //proc0cout << "    Calculated value    = " << Cpa << endl;
+        //proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      //}
 
-      proc0cout << endl;
+      //proc0cout << endl;
       
-      verification_value = 4.6985e-4;
-      error = ( (verification_value)-(Q_convection) )/(verification_value);
-      if( fabs(error) < 0.01 ) {
-        proc0cout << "Verification for convection heat transfer term successful:" << endl;
-        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
-      } else {
-        proc0cout << "WARNING: VERIFICATION FOR CONVECTION HEAT TRANSFER TERM FAILED!!! " << endl;
-        proc0cout << "    Verification value  = " << verification_value << endl;
-        proc0cout << "    Calculated value    = " << Q_convection << endl;
-        proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
-      }
+      //verification_value = 4.6985e-4;
+      //error = ( (verification_value)-(Q_convection) )/(verification_value);
+      //if( fabs(error) < 0.01 ) {
+        //proc0cout << "Verification for convection heat transfer term successful:" << endl;
+        //proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      //} else {
+        //proc0cout << "WARNING: VERIFICATION FOR CONVECTION HEAT TRANSFER TERM FAILED!!! " << endl;
+        //proc0cout << "    Verification value  = " << verification_value << endl;
+        //proc0cout << "    Calculated value    = " << Q_convection << endl;
+        //proc0cout << "    Percent error = " << setw(4) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      //}
 
-      proc0cout << endl;
+      //proc0cout << endl;
 
-      verification_value = 0.097312;
-      error = ( (verification_value)-(rkg) )/(verification_value);
-      if( fabs(error) < 0.01 ) {
-        proc0cout << "Verification for gas thermal conductivity successful:" << endl;
-        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
-      } else {
-        proc0cout << "WARNING: VERIFICATION FOR GAS THERMAL CONDUCTIVITY FAILED!!! " << endl;
-        proc0cout << "    Verification value  = " << verification_value << endl;
-        proc0cout << "    Calculated value    = " << rkg << endl;
-        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
-      }
+      //verification_value = 0.097312;
+      //error = ( (verification_value)-(rkg) )/(verification_value);
+      //if( fabs(error) < 0.01 ) {
+        //proc0cout << "Verification for gas thermal conductivity successful:" << endl;
+        //proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      //} else {
+        //proc0cout << "WARNING: VERIFICATION FOR GAS THERMAL CONDUCTIVITY FAILED!!! " << endl;
+        //proc0cout << "    Verification value  = " << verification_value << endl;
+        //proc0cout << "    Calculated value    = " << rkg << endl;
+        //proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      //}
 
-      proc0cout << endl;
+      //proc0cout << endl;
       
-      verification_value = 14.888;
-      error = ( (verification_value)-(heat_rate_) )/(verification_value);
-      if( fabs(error) < 0.01 ) {
-        proc0cout << "Verification for particle heating rate term successful:" << endl;
-        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
-      } else {
-        proc0cout << "WARNING: VERIFICATION FOR PARTICLE HEATING RATE TERM FAILED!!! " << endl;
-        proc0cout << "    Verification value  = " << verification_value << endl;
-        proc0cout << "    Calculated value    = " << heat_rate_ << endl;
-        proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
-      }
+      //verification_value = 14.888;
+      //error = ( (verification_value)-(heat_rate) )/(verification_value);
+      //if( fabs(error) < 0.01 ) {
+        //proc0cout << "Verification for particle heating rate term successful:" << endl;
+        //proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is less than 1 percent." << endl;
+      //} else {
+        //proc0cout << "WARNING: VERIFICATION FOR PARTICLE HEATING RATE TERM FAILED!!! " << endl;
+        //proc0cout << "    Verification value  = " << verification_value << endl;
+        //proc0cout << "    Calculated value    = " << heat_rate << endl;
+        //proc0cout << "    Percent error = " << setw(5) << setprecision(4) << fabs(error)*100 << " \%, which is greater than 1 percent." << endl;
+      //}
 
-      proc0cout << endl;
-      proc0cout << "****************************************************************" << endl;
+      //proc0cout << endl;
+      //proc0cout << "****************************************************************" << endl;
 
-      proc0cout << endl << endl;
+      //proc0cout << endl << endl;
 
-#else
-      heat_rate[c] = heat_rate_;
-      gas_heat_rate[c] = gas_heat_rate_;
+//#else
+      heat_rate[c] = heat_rate;
+      gas_heat_rate[c] = gas_heat_rate;
       abskp[c] = abskp_;
  
     }//end cell loop
-#endif
+//#endif
 
   }//end patch loop
 }

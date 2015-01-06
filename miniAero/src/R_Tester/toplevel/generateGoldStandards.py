@@ -35,7 +35,9 @@ no_sci_malloc = ""
                       # 1 for GPU RT machine (albion, aurora), 0 otherwise.
                       #   need to make this generic, perhaps pycuda?
 has_gpu       = 0 
-if socket.gethostname() == "albion" or socket.gethostname() == "aurora": 
+
+
+if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
   has_gpu = 1
 ####################################################################################
 

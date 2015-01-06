@@ -83,7 +83,8 @@ void printTask(const PatchSubset* patches,
     dbg << left;
     dbg.width(70);
     dbg << where << "  \tL-"
-        << getLevel(patches)->getIndex()<< endl;
+        << getLevel(patches)->getIndex()
+        << " patches " << *patches << endl;
   }  
 }
 //__________________________________
