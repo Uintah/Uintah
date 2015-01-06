@@ -1054,8 +1054,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
     //  X  (This includes the extra cells)
     CellIterator SFCX_iter = patch->getSFCXIterator();
 
-    const double small = 1e-12;
-
     const int flow = -1;
     
     for(; !SFCX_iter.done(); SFCX_iter++) {

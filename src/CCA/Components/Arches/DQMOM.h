@@ -118,7 +118,8 @@ public:
                           const PatchSubset    * patches,
                           const MaterialSubset *,
                           DataWarehouse        * old_dw,
-                          DataWarehouse        * new_dw );
+                          DataWarehouse        * new_dw, 
+                          const int timeSubStep );
   
   /** @brief Schedule calculation of all moments
   */

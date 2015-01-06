@@ -15,7 +15,7 @@
     <delt_min>0.00001</delt_min>
     <delt_max>5</delt_max>
     <timestep_multiplier>0.5</timestep_multiplier>
-    <max_Timesteps>5</max_Timesteps>
+    <max_Timesteps>10</max_Timesteps>
   </Time>
 
   <DataArchiver>
@@ -41,7 +41,7 @@
     <save label="uvelocity"/>
     <save label="umom_RHS"/>
     <save label="umom_Fconv"/>
-    <save label="umom_Sij"/>
+    <save label="umom_Tauij"/>
     <checkpoint cycle="2" interval="0.05"/>
     <compression>gzip</compression>
   </DataArchiver>

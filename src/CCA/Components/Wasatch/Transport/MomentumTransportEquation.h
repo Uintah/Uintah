@@ -148,7 +148,7 @@ namespace Wasatch{
     
     Expr::ExpressionID normalStrainID_, normalConvFluxID_, pressureID_, convTermWeakID_;
     Expr::TagList velTags_;  ///< TagList for the velocity expressions
-    Expr::TagList momTags_;  ///< TagList for the momentum expressions
+    Expr::TagList momTags_, oldMomTags_;  ///< TagList for the momentum expressions
     Expr::Tag     thisVolFracTag_;
 
   };

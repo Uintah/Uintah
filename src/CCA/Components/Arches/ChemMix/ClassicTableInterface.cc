@@ -119,7 +119,6 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
             Parallel::getRootProcessorGroup()->getComm());
 
   if (mpi_rank != 0) {
-    int receive_table_size = table_size;
     table_contents = scinew char[table_size];
   }
     
@@ -614,6 +613,11 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
               getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
            counter++; 
           } 
+
+          if ( !foundIterator ){ 
+            throw InvalidValue( "Error: Independent variable missing a boundary condition spec: "+variable_name, __FILE__, __LINE__); 
+          }
+
         }
 
         if ( counter != totalIVs ){
@@ -876,7 +880,7 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
 				  //read but don't assign inbetween vals
 				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
 					  double v = getDouble(fp);
-					  v += 0.0;
+					  //v += 0.0;
 				  }
 			  }
 			    for (int j=0; j<size2; j++) {
@@ -897,7 +901,7 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
 			} else { 
 			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
 					double v = getDouble(fp);
-					v += 0.0;
+					//v += 0.0;
 				}	
 			}
 			for (int j=0; j<size; j++) {
@@ -1015,7 +1019,7 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
 				  //read but don't assign inbetween vals
 				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
 					  double v = getDouble(table_stream);
-					  v += 0.0;
+					  //v += 0.0;
 				  }
 			  }
 			    for (int j=0; j<size2; j++) {
@@ -1036,7 +1040,7 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
 			} else { 
 			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
 					double v = getDouble(table_stream);
-					v += 0.0;
+					//v += 0.0;
 				}	
 			}
 			for (int j=0; j<size; j++) {

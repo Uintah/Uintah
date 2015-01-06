@@ -46,7 +46,10 @@ namespace Wasatch {
   
   WasatchParticlesHelper::WasatchParticlesHelper() :
   Uintah::ParticlesHelper()
-  {}
+  {
+    wasatch_ = NULL;
+    wasatchSync_ = false;
+  }
   
   //------------------------------------------------------------------
   
@@ -55,12 +58,12 @@ namespace Wasatch {
   
   //--------------------------------------------------------------------
   
-  void WasatchParticlesHelper::schedule_initialize (const Uintah::LevelP& level,
-                                                    Uintah::SchedulerP& sched)
+  void WasatchParticlesHelper::schedule_initialize( const Uintah::LevelP& level,
+                                                    Uintah::SchedulerP& sched )
   {
     // this task will allocate a particle subset and create particle positions
-    Uintah::Task* task = scinew Uintah::Task("initialize particles",
-                                             this, &WasatchParticlesHelper::initialize);
+    Uintah::Task* task = scinew Uintah::Task( "initialize particles",
+                                              this, &WasatchParticlesHelper::initialize );
     task->computes(pPosLabel_);
     task->computes(pIDLabel_);
     sched->addTask(task, level->eachPatch(), materials_);    
@@ -71,9 +74,14 @@ namespace Wasatch {
   
   // this will create the particle subset
   void WasatchParticlesHelper::initialize( const Uintah::ProcessorGroup*,
-                                   const Uintah::PatchSubset* patches, const Uintah::MaterialSubset* matls,
-                                   Uintah::DataWarehouse* old_dw, Uintah::DataWarehouse* new_dw)
+                                           const Uintah::PatchSubset* patches,
+                                           const Uintah::MaterialSubset* matls,
+                                           Uintah::DataWarehouse* old_dw,
+                                           Uintah::DataWarehouse* new_dw)
   {
+    assert( wasatchSync_     );
+    assert( wasatch_ != NULL );
+
     using namespace Uintah;
     initialize_internal(matls->size());
     //____________________________________________
@@ -140,7 +148,6 @@ namespace Wasatch {
         }
       }
     }
-  
     
     for(int m = 0;m<matls->size();m++){
       const int matl = matls->get(m);
@@ -161,29 +168,33 @@ namespace Wasatch {
         // of cells that fall within the specified bounds of the initialization and multiply that
         // by the number of particles per cell to get the total number of particles in this patch
         unsigned int nCells = 0;
-        if (bounded) {
-          Point low = patch->getBox().lower();
-          Point high = patch->getBox().upper();
-          if (   xmin >= high.x() || ymin >= high.y() || zmin >= high.z()
-              || xmax <= low.x()  || ymax <= low.y()  || zmax <= low.z()  ) {
+        if( bounded ){
+          const Point low  = patch->getBox().lower();
+          const Point high = patch->getBox().upper();
+          if(   xmin >= high.x() || ymin >= high.y() || zmin >= high.z()
+             || xmax <= low.x()  || ymax <= low.y()  || zmax <= low.z()  ){
             // no particles will be created in this patch
             nCells = 0;
-          } else {
+          }
+          else {
             // count the number of cells that we will initialize particles in
-            for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-              IntVector iCell = *iter;
-              Point p = patch->getCellPosition(iCell);
-              if (p.x() <= xmax && p.x() >= xmin && p.y() <= ymax && p.y() >= ymin && p.z() <= zmax && p.z() >= zmin  ) {
+            for( CellIterator iter(patch->getCellIterator()); !iter.done(); ++iter ){
+              const IntVector iCell = *iter;
+              const Point p = patch->getCellPosition(iCell);
+              if( p.x() <= xmax && p.x() >= xmin &&
+                  p.y() <= ymax && p.y() >= ymin &&
+                  p.z() <= zmax && p.z() >= zmin ){
                 nCells++;
+              }
+            }
           }
         }
-          }
-        } else {
+        else {
           nCells = patch->getNumCells();
         }
         
-        int nPatchCells = 0;
-        if (hasGeom) {
+        if( hasGeom ){
+          int nPatchCells = 0;
           std::vector<GeometryPieceP>::iterator geomIter;
           // get the total cells inside the geometries
           nCells = 0;
@@ -194,12 +205,9 @@ namespace Wasatch {
             // loop over all geometry objects
             geomIter = geomObjects.begin();
             SCIRun::Point p = patch->getCellPosition(iCell);
-            while (geomIter != geomObjects.end()) {
+            while( geomIter != geomObjects.end() ){
               isInside = (*geomIter)->inside(p);
-              if (isInside)
-              {
-                nCells++;
-              }
+              if( isInside ) nCells++;
               ++geomIter;
             }
           }
@@ -217,7 +225,7 @@ namespace Wasatch {
         ParticleVariable<long64> pid;
         new_dw->allocateAndPut(ppos,    pPosLabel_,           subset);
         new_dw->allocateAndPut(pid,    pIDLabel_,           subset);
-        for (int i=0; i < nParticles; i++) {
+        for( int i=0; i < nParticles; i++ ){
           pid[i] = i + patch->getID() * nParticles;
         }
         lastPIDPerPatch[patchID] = nParticles > 0 ? pid[nParticles-1] : 0;

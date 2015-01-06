@@ -192,8 +192,6 @@
       
       <DefaultMaterial>all</DefaultMaterial>
       <Face circle="x-" origin="0 0.0 0.0" radius="0.05" name="circle-inlet" type="Velocity">
-<!--       <Face rectangle="x-" lower="0 -0.1 -1" upper = "0.0 0.1 1" name="circle-inlet" type="Velocity"> -->
-      <!-- Face rectangle="x-" lower="0 -0.1 -0.7" upper="0 0.1 0.7" name="planar-inlet" type="Velocity" -->
         <BCType label="x-mom" var="Dirichlet" value="5.0"/>
         <BCType label="y-mom" var="Dirichlet" value="0.0"/>
         <BCType label="z-mom" var="Dirichlet" value="0.0"/>
@@ -209,20 +207,6 @@
         <BCType label="rhof" var="Dirichlet" value="0.0"/>
         <BCType label="f" var="Dirichlet" value="0.0"/>
         <BCType label="density" var="Dirichlet" value="1.0"/>
-<!-- 
-        <BCType label="x-mom" var="Dirichlet" value="0.001"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="u" var="Dirichlet" value="0.001"/>
-        <BCType label="u*" var="Dirichlet" value="0.001"/>
-        <BCType label="v" var="Dirichlet" value="0.0"/>
-        <BCType label="v*" var="Dirichlet" value="0.0"/>
-        <BCType label="w" var="Dirichlet" value="0.0"/>
-        <BCType label="w*" var="Dirichlet" value="0.0"/>
-        <BCType label="f" var="Dirichlet" value="0.0"/>
-        <BCType label="rhof" var="Dirichlet" value="0.0"/>
-        <BCType label="density" var="Dirichlet" value="1.0"/>
- -->
       </Face>
       
       <Face side="x+" name="outlet" type="Outflow">

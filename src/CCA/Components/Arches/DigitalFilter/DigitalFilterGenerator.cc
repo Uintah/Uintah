@@ -178,7 +178,8 @@ public:
     } 
     
     //tmp vars for angle
-    double magA, magB;
+    //double magA;
+    double magB;
     double AdotB;
     
     for (int j = 0; j< inlet.jSize; j++) {
@@ -196,7 +197,7 @@ public:
         inlet.distanceProfile[j][k] = isPos*inlet.distanceProfile[j][k]/charDim_*2.0; //normalize distance
         
         //find the angle from [1,0], need for radial type data
-        magA = 1.0;
+        //magA = 1.0;
         magB = sqrt( ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) * ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) +
                     ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) * ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) );
         
@@ -234,8 +235,9 @@ public:
     } else if (inlet.faceSide=="z-" || inlet.faceSide=="z+") {
       jj = 0; kk = 1;
     }
-    
-    double magA, magB;
+   
+    //double magA;
+    double magB;
     double AdotB;
 
     for (int j = 0; j< inlet.jSize; j++) {
@@ -247,7 +249,7 @@ public:
         inlet.distanceProfile[j][k] = (inlet.distanceProfile[j][k] - middleRadius_)/charDim_; //normalize distance
       
         //find the angle from [1,0], need for radial type data
-        magA = 1.0;
+        //magA = 1.0;
         magB = sqrt( ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) * ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) +
                     ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) * ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) );
         

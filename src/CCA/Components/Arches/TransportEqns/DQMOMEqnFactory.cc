@@ -106,9 +106,8 @@ DQMOMEqnFactory::retrieve_scalar_eqn( const std::string name )
   if( ieqn != eqns_.end() ) return *(ieqn->second);
 
   const BuildMap::iterator ibuilder = builders_.find( name );
-
   if( ibuilder == builders_.end() ){
-    std::string errmsg = "ERROR: No source term registered for \"" + name + "\". \n";
+    std::string errmsg = "ERROR: No DQMOM eqn registered for \"" + name + "\". \n";
     throw InvalidValue(errmsg,__FILE__,__LINE__);
   }
 

@@ -38,14 +38,15 @@
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
 VelocityMagnitude( const Expr::Tag& vel1tag,
-           const Expr::Tag& vel2tag,
-           const Expr::Tag& vel3tag )
+                   const Expr::Tag& vel2tag,
+                   const Expr::Tag& vel3tag )
 : Expr::Expression<FieldT>(),
   vel1t_( vel1tag ),
   vel2t_( vel2tag ),
   vel3t_( vel3tag ),
   is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
 {
+  vel1_=NULL;  vel2_=NULL;  vel3_=NULL;
   this->set_gpu_runnable( true );
 }
 

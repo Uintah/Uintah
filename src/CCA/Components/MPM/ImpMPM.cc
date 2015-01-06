@@ -711,9 +711,9 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
     }
     
     string interp_type = flags->d_interpolator_type;
-    if((interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi" || interp_type=="cpgimp")){
+    if((interp_type=="gimp" || interp_type=="3rdorderBS" || interp_type=="cpdi" || interp_type=="cpti" || interp_type=="cpgimp")){
       proc0cout << "__________________________________\n"
-                << "WARNING: Use of GIMP/3rdorderBS/cpdi/cpgimp with Implicit MPM is untested and may not work at this time.\n\n";
+                << "WARNING: Use of gimp, 3rdorderBS, cpdi, cpti, cpgimp with Implicit MPM is untested and may not work at this time.\n\n";
     }
     
     //__________________________________
@@ -728,12 +728,13 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
     else if((interp_type=="gimp" || interp_type=="3rdorderBS" 
-          || interp_type=="cpdi" || interp_type=="cpgimp")
+          || interp_type=="cpdi" || interp_type=="cpti" || interp_type=="cpgimp")
                           && (num_extra_cells+periodic)!=IntVector(1,1,1)){
       ostringstream msg;
       msg << "\n ERROR: When using <interpolator>gimp</interpolator> \n"
           << " or <interpolator>3rdorderBS</interpolator> \n"
           << " or <interpolator>cpdi</interpolator> \n"
+          << " or <interpolator>cpti</interpolator> \n"
           << " or <interpolator>cpgimp</interpolator> \n"
           << " you must also use extraCells and/or periodicBCs such that\n"
           << " the sum of the two is [1,1,1].\n";

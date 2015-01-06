@@ -91,7 +91,7 @@ private:
 
   template <typename IT, typename DT>
   WaveFormInit<IT, DT>::WaveFormInit( std::string task_name, int matl_index, const std::string var_name ) : 
-  _var_name(var_name), TaskInterface( task_name, matl_index ){
+  TaskInterface( task_name, matl_index ), _var_name(var_name){
 
     _two_pi = 2.0*acos(-1.0);
 
