@@ -262,7 +262,6 @@ CoalTemperatureNebo::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     SpatialOps::SpatFldPtr<SVolF> oldtemperature = SpatialFieldStore::get<SVolF>(*temperature);//see the change in T
 
     int icount = 0;
-    double d_tol = 0.1;
     double delta = 1;
     double tolMax = 1;
     for ( int iter = 0; iter < 15; iter++) {

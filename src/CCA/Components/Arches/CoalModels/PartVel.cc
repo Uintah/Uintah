@@ -99,10 +99,6 @@ PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
   string taskname = "PartVel::InitPartVel";
   Task* tsk = scinew Task(taskname, this, &PartVel::InitPartVel);
 
-  Ghost::GhostType gn = Ghost::None;
-
-  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-
   // actual velocity we will compute
   for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
         i != d_fieldLabels->partVel.end(); i++){

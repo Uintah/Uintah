@@ -181,17 +181,13 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
     which_dw = Task::NewDW; 
   }
 
-  tsk->requires( which_dw, _rhop_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _length_varlabel, gn, 0 );
-  tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
-  tsk->requires( Task::NewDW, _conv_source_varlabel, gn, 0 ); 
-  tsk->requires( Task::NewDW, _diff_source_varlabel, gn, 0 ); 
-
-  //EqnFactory& eqn_factory = EqnFactory::self();
-  DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
-
-  tsk->requires(which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
-  tsk->requires(which_dw, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
+  tsk->requires( which_dw    , _rhop_varlabel                   , gn , 0 );
+  tsk->requires( which_dw    , _length_varlabel                 , gn , 0 );
+  tsk->requires( which_dw    , _weight_varlabel                 , gn , 0 );
+  tsk->requires( Task::NewDW , _conv_source_varlabel            , gn , 0 );
+  tsk->requires( Task::NewDW , _diff_source_varlabel            , gn , 0 );
+  tsk->requires( which_dw    , d_fieldLabels->d_CCVelocityLabel , gn , 0 );
+  tsk->requires( which_dw    , d_fieldLabels->d_densityCPLabel  , gn , 0 );
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);

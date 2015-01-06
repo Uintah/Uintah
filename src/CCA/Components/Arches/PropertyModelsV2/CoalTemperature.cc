@@ -96,7 +96,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
     _dTdt_base_name = PropertyHelper::parse_for_role_to_label(db, "dTdt"); 
     _gas_temperature_name = "temperature"; 
     
-    for (unsigned int i = 0; i < _sizes.size(); i++ ){ 
+    for ( unsigned int i = 0; i < _sizes.size(); i++ ){ 
       std::string temp_name = PropertyHelper::append_qn_env("w", i); 
       _weightqn_name.push_back(temp_name); 
     }

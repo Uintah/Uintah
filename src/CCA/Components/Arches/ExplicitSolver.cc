@@ -650,8 +650,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     for ( SVec::iterator i = mom_ssp.begin(); i != mom_ssp.end(); i++){ 
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
-      //if ( curr_level > 0 )
-      //  tsk->schedule_task( level, sched, matls, curr_level ); 
+      if ( curr_level > 0 )
+        tsk->schedule_task( level, sched, matls, curr_level ); 
     }
     //============= END NEW TASK STUFF===============================
 
@@ -1662,8 +1662,6 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   if (timelabels->use_old_values){
     old_values_dw = parent_old_dw;
     tsk->requires(old_values_dw, d_lab->d_densityCPLabel,gn, 0);
-  }else{
-    old_values_dw = Task::NewDW;
   }
 
 

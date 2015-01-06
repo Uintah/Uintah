@@ -1335,7 +1335,6 @@
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'BTDevol, RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
-                                                                          SimpleHeatTransfer, 
                                                                           Drag,
                                                                           ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
 

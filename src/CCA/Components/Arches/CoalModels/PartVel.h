@@ -59,56 +59,6 @@ public:
     d_boundaryCond->setVectorValueBC( 0, patch, vel, varName ); 
   };
 
-  //////////////////////////////////////////////////////
-  // Velocity calculation methods 
-
-  /** @brief  Static method to convert cartesian coordinates to spherical coordinates */
-  static Vector cart2sph( Vector X ) {
-    double mag   = pow( X.x(), 2.0 );
-    double magxy = mag;  
-    double z = 0; 
-    double y = 0;
-#ifdef YDIM
-    mag   += pow( X.y(), 2.0 );
-    magxy = mag; 
-    y = X.y(); 
-#endif 
-#ifdef ZDIM
-    mag += pow( X.z(), 2.0 );
-    z = X.z(); 
-#endif
-
-    mag   = pow(mag, 1./2.);
-    magxy = pow(magxy, 1./2.);
-
-    double elev = atan2( z, magxy );
-    double az   = atan2( y, X.x() );  
-
-    Vector answer(az, elev, mag);
-    return answer; 
-
-  };
-
-  /** @brief  Static method to convert Cartesian coorinates to spherical coordinates */
-  static Vector sph2cart( Vector X ) {
-    double x = 0.;
-    double y = 0.;
-    double z = 0.;
-
-    double rcoselev = X.z() * cos(X.y());
-    x = rcoselev * cos(X.x());
-#ifdef YDIM
-    y = rcoselev * sin(X.x());
-#endif
-#ifdef ZDIM
-    z = X.z()*sin(X.y());
-#endif
-    Vector answer(x,y,z);
-    return answer; 
-
-  };
-
-
 private:
 
   std::string get_env_name( const std::string base, const int i ){
