@@ -3526,8 +3526,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         particleIndex idx = *iter;
         if(pvelocitynew[idx].length() > flags->d_max_vel){
           if(pvelocitynew[idx].length() >= pvelocity[idx].length()){
-	     pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())*(flags->d_max_vel*.9);	  
-	     cout<<endl<<"Warning: particle "<<pids[idx]<<" hit speed ceiling #1. Modifying particle velocity accordingly."<<endl;
+            pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())
+                             *(flags->d_max_vel*.9);   
+            cout << endl <<"Warning: particle " <<pids[idx]
+                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
+                 << endl;
             //pvelocitynew[idx]=pvelocity[idx];
           }
         }
@@ -3659,7 +3662,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       constParticleVariable<double> pmass;
       constParticleVariable<Matrix3> pFOld;
       constParticleVariable<long64> pids;
-	  
+   
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> gvelocity_star, gacceleration;
 
@@ -3672,7 +3675,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       old_dw->get(pFOld,        lb->pDeformationMeasureLabel,        pset);
       old_dw->get(psize,        lb->pSizeLabel,                      pset);
       old_dw->get(pids,                lb->pParticleIDLabel,          pset);
-	  
+   
       new_dw->allocateAndPut(pvelocitynew, lb->pVelocityLabel_preReloc,   pset);
       new_dw->allocateAndPut(pxnew,        lb->pXLabel_preReloc,          pset);
       new_dw->allocateAndPut(pxx,          lb->pXXLabel,                  pset);
@@ -3681,7 +3684,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);  
-	  
+   
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -3722,8 +3725,11 @@ void SerialMPM::interpolateToParticlesAndUpdateMom1(const ProcessorGroup*,
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         if(pvelocitynew[idx].length() > flags->d_max_vel){
-	      pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())*flags->d_max_vel;
-		  cout<<endl<<"Warning: particle "<<pids[idx]<<" hit speed ceiling #2. Modifying particle velocity accordingly."<<endl;
+            pvelocitynew[idx]=(pvelocitynew[idx]/pvelocitynew[idx].length())
+                             *(flags->d_max_vel*.9);   
+            cout << endl <<"Warning: particle " <<pids[idx]
+                 <<" hit speed ceiling #1. Modifying particle vel. accordingly."
+                 << endl;
           //pvelocitynew[idx]=pvelocity[idx];
         }
       }
@@ -4219,7 +4225,6 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
           cout << "delT " << delT << endl;
         }
 */
-      
       }
     }
 
@@ -4233,50 +4238,49 @@ void SerialMPM::insertParticles(const ProcessorGroup*,
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw)
 {
-	for(int p=0;p<patches->size();p++){
-		const Patch* patch = patches->get(p);
-		printTask(patches, patch,cout_doing,
-				  "Doing insertParticles");
-		
-		// Get current time and timestep size
-		double time = d_sharedState->getElapsedTime();
-		delt_vartype delT;
-		old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
-		
-		int index = -999;
-		for(int i = 0; i<(int) d_IPTimes.size(); i++){
-			if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
-				index = i;
-				if(index>=0){
-					int numMPMMatls=d_sharedState->getNumMPMMatls();
-					for(int m = 0; m < numMPMMatls; m++){
-						MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-						int dwi = mpm_matl->getDWIndex();
-						ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-						
-						// Get the arrays of particle values to be changed
-						ParticleVariable<Point> px;
-						ParticleVariable<Vector> pvelocity;
-						constParticleVariable<double> pcolor;
-						
-						old_dw->get(pcolor,               lb->pColorLabel,              pset);
-						new_dw->getModifiable(px,         lb->pXLabel_preReloc,         pset);
-						new_dw->getModifiable(pvelocity,  lb->pVelocityLabel_preReloc,  pset);
-						
-						// Loop over particles here
-						for(ParticleSubset::iterator iter  = pset->begin();
-								iter != pset->end(); iter++){
-							particleIndex idx = *iter;
-							if(pcolor[idx]==d_IPColor[index]){
-								pvelocity[idx]=d_IPVelNew[index];
-								px[idx] = px[idx] + d_IPTranslate[index];
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing, "Doing insertParticles");
+
+    // Get current time and timestep size
+    double time = d_sharedState->getElapsedTime();
+    delt_vartype delT;
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
+
+    int index = -999;
+    for(int i = 0; i<(int) d_IPTimes.size(); i++){
+      if(time+delT > d_IPTimes[i] && time <= d_IPTimes[i]){
+        index = i;
+        if(index>=0){
+          int numMPMMatls=d_sharedState->getNumMPMMatls();
+          for(int m = 0; m < numMPMMatls; m++){
+            MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+            int dwi = mpm_matl->getDWIndex();
+            ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+            // Get the arrays of particle values to be changed
+            ParticleVariable<Point> px;
+            ParticleVariable<Vector> pvelocity;
+            constParticleVariable<double> pcolor;
+        
+            old_dw->get(pcolor,             lb->pColorLabel,              pset);
+            new_dw->getModifiable(px,       lb->pXLabel_preReloc,         pset);
+            new_dw->getModifiable(pvelocity,lb->pVelocityLabel_preReloc,  pset);
+      
+            // Loop over particles here
+            for(ParticleSubset::iterator iter  = pset->begin();
+                                         iter != pset->end();   iter++){
+              particleIndex idx = *iter;
+              if(pcolor[idx]==d_IPColor[index]){
+               pvelocity[idx]=d_IPVelNew[index];
+               px[idx] = px[idx] + d_IPTranslate[index];
+              } // end if
+            }   // end for
+          }     // end for
+        }       // end if
+      }         // end if
+    }           // end for
+  }             // end for
 }
 
 void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
