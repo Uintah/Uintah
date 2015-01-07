@@ -135,8 +135,8 @@ namespace Uintah{
   void Constant<T>::register_initialize( std::vector<VariableInformation>& variable_registry ){
     
     for ( int i = 0; i < _N; i++ ){
+
       const std::string name = get_name(i, _base_var_name);
-      std::cout << "Source label " << name << std::endl;
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
       
     }
@@ -154,34 +154,23 @@ namespace Uintah{
       const std::string name = get_name(i, _base_var_name);
       Tptr model_value = tsk_info->get_so_field<T>(name);
       
-      *model_value <<= 0.0;
+      *model_value <<= _const;
     }
   }
   
   //======TIME STEP INITIALIZATION:
   template <typename T>
   void Constant<T>::register_timestep_init( std::vector<VariableInformation>& variable_registry ){
+    for ( int i = 0; i < _N; i++ ){
+      //dependent variables(s) or model values
+      const std::string name = get_name(i, _base_var_name);
+      register_variable( name, _D_type, COMPUTES, variable_registry );
+    }
   }
   
   template <typename T>
   void Constant<T>::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                        SpatialOps::OperatorDatabase& opr ){
-  }
-  
-  //======TIME STEP EVALUATION:
-  template <typename T>
-  void Constant<T>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
-    
-    for ( int i = 0; i < _N; i++ ){
-      //dependent variables(s) or model values
-      const std::string name = get_name(i, _base_var_name);
-      register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry, time_substep );
-    }
-  }
-  
-  template <typename T>
-  void Constant<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                              SpatialOps::OperatorDatabase& opr ) {
     using namespace SpatialOps;
     using SpatialOps::operator *;
     typedef SpatialOps::SpatFldPtr<T> Tptr;
@@ -195,6 +184,17 @@ namespace Uintah{
       
     }
     
+  }
+  
+  //======TIME STEP EVALUATION:
+  template <typename T>
+  void Constant<T>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
+    
+  }
+  
+  template <typename T>
+  void Constant<T>::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                              SpatialOps::OperatorDatabase& opr ) {
   }
 }
 #endif

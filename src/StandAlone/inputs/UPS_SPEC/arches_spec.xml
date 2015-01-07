@@ -23,13 +23,7 @@
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_density, 
-                                                                          coal_temperature,
-                                                                          coal_temperature_nebo,
-                                                                          const_environment'">
-
-          <constants                    spec="REQUIRED MULTIPLE_DOUBLES"
-                                        need_applies_to="type const_environment"/>
+                                        attribute2="type REQUIRED STRING ''">
 
         </model>
       </PropertyModelsV2>
@@ -880,12 +874,23 @@
 
         <model                        spec="MULTIPLE NO_DATA"
                                       attribute1="label REQUIRED STRING"
-                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity, constant'">
-
-          <!-- Simple rate expression -->
+                                      attribute2="type REQUIRED STRING 'simple_rate, 
+                                                                        drag, 
+                                                                        gravity, 
+                                                                        constant, 
+                                                                        coal_density, 
+                                                                        coal_temperature_nebo, 
+                                                                        coal_temperature'">
+            <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"
                                         attribute1="dependent_type REQUIRED STRING 'svol'"
-                                        attribute2="independent_type REQUIRED STRING 'svol'"/>
+                                        attribute2="independent_type REQUIRED STRING 'svol'"
+                                        need_applies_to="type drag, gravity, constant"/>
+
+            <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this model affects -->
+
+
+            <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->
             <ER                         spec="REQUIRED DOUBLE 'positive'"
@@ -899,8 +904,7 @@
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
             
-            <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this source affects -->
-          <!-- drag model -->
+            <!-- drag model -->
             <particle_density           spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, node_specific'"
                                         need_applies_to="type drag, gravity"> <!-- use a constant density for all particles, or use a model for each-->
@@ -927,6 +931,8 @@
                                         need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
             <w_velocity_label           spec="OPTIONAL STRING"
                                         need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
+
+            <!-- constant property model -->
             <constant                   spec="REQUIRED DOUBLE"
                                         need_applies_to="type constant"/>
         </model>
