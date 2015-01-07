@@ -3239,6 +3239,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     if(!flags->d_doGridReset){
       move_particles=0.;
     }
+    //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
+    constNCVariable<double> NC_CCweight;
+    NCVariable<double> NC_CCweight_new;
+    Ghost::GhostType  gnone = Ghost::None;
+    old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,  0, patch, gnone, 0);
+    new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
+    NC_CCweight_new.copyData(NC_CCweight);
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -3307,14 +3314,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
         pColor_new.copyData(pColor);
       }    
-
-      //Carry forward NC_CCweight
-      constNCVariable<double> NC_CCweight;
-      NCVariable<double> NC_CCweight_new;
-      Ghost::GhostType  gnone = Ghost::None;
-      old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,  0, patch, gnone, 0);
-      new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
-      NC_CCweight_new.copyData(NC_CCweight);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
@@ -3789,6 +3788,14 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       //combustion_problem=true;
     }
 
+    //Carry forward NC_CCweight (put outside of matl loop, only need for matl 0)
+    constNCVariable<double> NC_CCweight;
+    NCVariable<double> NC_CCweight_new;
+    Ghost::GhostType  gnone = Ghost::None;
+    old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,  0, patch, gnone, 0);
+    new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
+    NC_CCweight_new.copyData(NC_CCweight);
+
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
@@ -3828,14 +3835,6 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
 
       // for thermal stress analysis
       new_dw->allocateAndPut(pTempPreNew, lb->pTempPreviousLabel_preReloc,pset);
-
-      //Carry forward NC_CCweight
-      constNCVariable<double> NC_CCweight;
-      NCVariable<double> NC_CCweight_new;
-      Ghost::GhostType  gnone = Ghost::None;
-      old_dw->get(NC_CCweight,       lb->NC_CCweightLabel,  0, patch, gnone, 0);
-      new_dw->allocateAndPut(NC_CCweight_new, lb->NC_CCweightLabel,0,patch);
-      NC_CCweight_new.copyData(NC_CCweight);
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
