@@ -74,6 +74,12 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch, const MPMMateri
 
 }
 
+void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
+                                            std::vector<const VarLabel*>& to)
+{
+
+}
+
 void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
                                                          const MPMMaterial* matl,
                                                          const PatchSet* patch) const
@@ -111,3 +117,31 @@ void ScalarDiffusionModel::computeStep2(const Patch* patch, const MPMMaterial* m
 {
 
 }
+
+void ScalarDiffusionModel::scheduleInterpolateToParticlesAndUpdate(Task* task,
+                                                                   const MPMMaterial* matl, 
+		                                                               const PatchSet* patch) const
+{
+
+}
+
+void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
+                                                           const MPMMaterial* matl,
+                                                           DataWarehouse* old_dw,
+		      										  							     				 DataWarehouse* new_dw)
+{
+
+}
+
+void ScalarDiffusionModel::scheduleFinalParticleUpdate(Task* task, const MPMMaterial* matl, 
+		                                                   const PatchSet* patch) const
+{
+
+}
+
+void ScalarDiffusionModel::finalParticleUpdate(const Patch* patch, const MPMMaterial* matl,
+                                     DataWarehouse* old_dw, DataWarehouse* new_dw)
+{
+
+}
+

@@ -603,15 +603,17 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
 		scheduleComputeStep2(             sched, patches, matls);
 	}
   if(!flags->d_use_momentum_form){
-    cout << "non momentum form" << endl;
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
     if(flags->d_doScalarDiffusion){
+      scheduleSDInterpolateToParticlesAndUpdate(sched, patches, matls);
     }
     scheduleComputeStressTensor(            sched, patches, matls);
+    if(flags->d_doScalarDiffusion){
+      scheduleSDFinalParticleUpdate(sched, patches, matls);
+    }
     scheduleFinalParticleUpdate(            sched, patches, matls);
   }
   if(flags->d_use_momentum_form){
-    cout << "momentum from" << endl;
     scheduleInterpolateToParticlesAndUpdateMom1(sched, patches, matls);
     scheduleInterpolateParticleVelToGridMom(    sched, patches, matls);
     scheduleExMomIntegrated(                    sched, patches, matls);
@@ -3238,7 +3240,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     // acceleration and velocity to the particles to update their
     // velocity and position respectively
  
-    // DON'T MOVE THESE!!!
+    // DON'T MOVE THESE!!
     double thermal_energy = 0.0;
     double totalmass = 0;
     double partvoldef = 0.;
@@ -4817,3 +4819,85 @@ void SerialMPM::computeStep2(const ProcessorGroup*, const PatchSubset* patches,
   }
 }
 
+void SerialMPM::scheduleSDInterpolateToParticlesAndUpdate(SchedulerP& sched,
+                                                          const PatchSet* patches,
+                                                          const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+    
+  printSchedule(patches,cout_doing,"MPM::scheduleSDInterpolateToParticlesAndUpdate");
+  
+
+  Task* t = scinew Task("MPM::sdInterpolateToParticlesAndUpdate",
+                        this,&SerialMPM::sdInterpolateToParticlesAndUpdate);
+
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleInterpolateToParticlesAndUpdate(t, mpm_matl, patches);
+  }
+  
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::sdInterpolateToParticlesAndUpdate(const ProcessorGroup*, const PatchSubset* patches,
+                                                  const MaterialSubset* matls, DataWarehouse* old_dw,
+                                                  DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing sdInterpolateToParticlesAndUpdate");
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+      sdm->interpolateToParticlesAndUpdate(patch, mpm_matl, old_dw, new_dw);
+	  }
+  }
+}
+
+void SerialMPM::scheduleSDFinalParticleUpdate(SchedulerP& sched, const PatchSet* patches,
+                                              const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+    
+  printSchedule(patches,cout_doing,"MPM::scheduleSDFinalParticleUpdate");
+  
+
+  Task* t = scinew Task("MPM::sdFinalParticleUpdate",
+                        this,&SerialMPM::sdFinalParticleUpdate);
+
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleFinalParticleUpdate(t, mpm_matl, patches);
+  }
+  
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::sdFinalParticleUpdate(const ProcessorGroup*, const PatchSubset* patches,
+                                      const MaterialSubset* matls, DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing sdFinalParticleUpdate");
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+      sdm->finalParticleUpdate(patch, mpm_matl, old_dw, new_dw);
+	  }
+  }
+}
