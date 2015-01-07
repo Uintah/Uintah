@@ -28,6 +28,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
 
@@ -52,6 +53,9 @@ namespace Uintah {
     virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
                                    DataWarehouse* new_dw);
 
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
+
     virtual void scheduleInterpolateParticlesToGrid(Task* task,
 		                                                const MPMMaterial* matl,
                                                     const PatchSet* patch) const;
@@ -71,6 +75,17 @@ namespace Uintah {
     virtual void computeStep2(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+    virtual void scheduleInterpolateToParticlesAndUpdate(Task* task, const MPMMaterial* matl, 
+		                                                     const PatchSet* patch) const;
+
+    virtual void interpolateToParticlesAndUpdate(const Patch* patch, const MPMMaterial* matl,
+                                                 DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    virtual void scheduleFinalParticleUpdate(Task* task, const MPMMaterial* matl, 
+		                                         const PatchSet* patch) const;
+
+    virtual void finalParticleUpdate(const Patch* patch, const MPMMaterial* matl,
+                                     DataWarehouse* old_dw, DataWarehouse* new_dw);
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;

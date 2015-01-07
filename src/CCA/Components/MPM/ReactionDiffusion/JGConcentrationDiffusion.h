@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_RF_JGSCALARDIFFUSION_H
-#define UINTAH_RF_JGSCALARDIFFUSION_H
+#ifndef UINTAH_RD_JGSCALARDIFFUSION_H
+#define UINTAH_RD_JGSCALARDIFFUSION_H
 
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <Core/Grid/Variables/ComputeSet.h>
@@ -53,6 +53,9 @@ namespace Uintah {
     virtual void initializeSDMData(const Patch* patch, const MPMMaterial* matl,
                                    DataWarehouse* new_dw);
 
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+                                  std::vector<const VarLabel*>& to);
+
     virtual void scheduleInterpolateParticlesToGrid(Task* task, const MPMMaterial* matl,
                                                     const PatchSet* patch) const;
 
@@ -70,6 +73,19 @@ namespace Uintah {
 
     virtual void computeStep2(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    virtual void scheduleInterpolateToParticlesAndUpdate(Task* task, const MPMMaterial* matl, 
+		                                                     const PatchSet* patch) const;
+
+    virtual void interpolateToParticlesAndUpdate(const Patch* patch, const MPMMaterial* matl,
+                                                 DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    virtual void scheduleFinalParticleUpdate(Task* task, const MPMMaterial* matl, 
+		                                         const PatchSet* patch) const;
+
+    virtual void finalParticleUpdate(const Patch* patch, const MPMMaterial* matl,
+                                     DataWarehouse* old_dw, DataWarehouse* new_dw);
+
   private:
 		double diffusivity;
 
