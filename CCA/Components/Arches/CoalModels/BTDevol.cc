@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/CoalModels/BTDevol.h>
-#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -69,22 +69,22 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
   
   // create raw coal mass var label and get scaling constant
-  std::string rcmass_root = PropertyHelper::parse_for_role_to_label(db, "raw_coal"); 
-  std::string rcmass_name = PropertyHelper::append_env( rcmass_root, d_quadNode ); 
-  std::string rcmassqn_name = PropertyHelper::append_qn_env( rcmass_root, d_quadNode ); 
+  std::string rcmass_root = ParticleHelper::parse_for_role_to_label(db, "raw_coal"); 
+  std::string rcmass_name = ParticleHelper::append_env( rcmass_root, d_quadNode ); 
+  std::string rcmassqn_name = ParticleHelper::append_qn_env( rcmass_root, d_quadNode ); 
   _rcmass_varlabel = VarLabel::find(rcmass_name);
   EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
   DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
    _rc_scaling_constant = rcmass_eqn.getScalingConstant();
 
   // create char mass var label
-  std::string char_root = PropertyHelper::parse_for_role_to_label(db, "char"); 
-  std::string char_name = PropertyHelper::append_env( char_root, d_quadNode ); 
+  std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
+  std::string char_name = ParticleHelper::append_env( char_root, d_quadNode ); 
   _char_varlabel = VarLabel::find(char_name); 
   
   // create particle temperature label
-  std::string temperature_root = PropertyHelper::parse_for_role_to_label(db, "temperature"); 
-  std::string temperature_name = PropertyHelper::append_env( temperature_root, d_quadNode ); 
+  std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
+  std::string temperature_name = ParticleHelper::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
  
   // Look for required scalars
@@ -139,8 +139,8 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // get weight scaling constant
-  std::string weightqn_name = PropertyHelper::append_qn_env("w", d_quadNode); 
-  std::string weight_name = PropertyHelper::append_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
   _weight_varlabel = VarLabel::find(weight_name); 
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);

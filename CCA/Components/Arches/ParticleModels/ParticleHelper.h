@@ -1,17 +1,17 @@
-#ifndef Uintah_Component_Arches_PropertyHelper_h
-#define Uintah_Component_Arches_PropertyHelper_h
+#ifndef Uintah_Component_Arches_ParticleHelper_h
+#define Uintah_Component_Arches_ParticleHelper_h
 
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{ 
 
-  class PropertyHelper { 
+  class ParticleHelper { 
 
 
     public: 
 
-      PropertyHelper(){}
-      ~PropertyHelper(){}
+      ParticleHelper(){}
+      ~ParticleHelper(){}
 
       /** @brief Parse for a role -> label match in the EulerianParticles section **/
       inline static std::string parse_for_role_to_label( ProblemSpecP& db, const std::string role ){ 

@@ -368,9 +368,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
     tsk->schedule_timestep_init(level, sched, matls); 
   }
-  BFM::iterator i_property_models = _boost_fac_map.find("property_models"); 
+  BFM::iterator i_property_models = _boost_fac_map.find("property_models_factory"); 
   TaskFactoryBase::TaskMap all_property_models = i_property_models->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_property_models.begin(); i != all_property_models.end(); i++){ 
+    i->second->schedule_timestep_init(level, sched, matls); 
+  }
+  BFM::iterator i_particle_models = _boost_fac_map.find("particle_model_factory"); 
+  TaskFactoryBase::TaskMap all_particle_models = i_particle_models->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); i != all_particle_models.end(); i++){ 
     i->second->schedule_timestep_init(level, sched, matls); 
   }
   //===================END NEW STUFF=======================
@@ -398,9 +403,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       tsk->schedule_task(level, sched, matls, curr_level); 
     }
 
-    //Particle Models
-    BFM::iterator i_partmod_fac = _boost_fac_map.find("particle_model_factory"); 
-    TaskFactoryBase::TaskMap all_particle_models = i_partmod_fac->second->retrieve_all_tasks(); 
+    //ParticleModels
     for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); 
           i != all_particle_models.end(); i++){ 
       i->second->schedule_task(level, sched, matls, curr_level); 

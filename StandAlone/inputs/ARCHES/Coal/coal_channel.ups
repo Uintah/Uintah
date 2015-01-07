@@ -813,10 +813,10 @@
         </ParticleVariables>
       </EulerianParticles>   
 
-      <PropertyModelsV2>
+      <ParticleModels>
         <model label="rho_coal" type="coal_density" />
         <model label="temperature_coal" type="coal_temperature" />
-      </PropertyModelsV2>
+      </ParticleModels>
 
 <!-- TIME INTEGRATOR -->
       <TimeIntegrator>

@@ -321,7 +321,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("initialize_factory",InitF)); 
   _boost_factory_map.insert(std::make_pair("particle_model_factory",PartModF)); 
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
-  _boost_factory_map.insert(std::make_pair("property_models", PropModels)); 
+  _boost_factory_map.insert(std::make_pair("property_models_factory", PropModels)); 
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -1171,6 +1171,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
   d_turbModel->sched_computeFilterVol( sched, level, matls ); 
 
+  //Particle models are initialized after DQMOM/CQMOM initialization 
+
   //=========== NEW TASK INTERFACE ==============================
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory"); 
@@ -1178,7 +1180,7 @@ Arches::scheduleInitialize(const LevelP& level,
   BFM::iterator i_init_fac = _boost_factory_map.find("initialize_factory"); 
   BFM::iterator i_partmod_fac = _boost_factory_map.find("particle_model_factory"); 
   BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
-  BFM::iterator i_property_models = _boost_factory_map.find("property_models"); 
+  BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory"); 
 
   //utility factory
   TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
@@ -1211,19 +1213,20 @@ Arches::scheduleInitialize(const LevelP& level,
   TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
   if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
 
-  //particle models
-  all_tasks.clear(); 
-  all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
-  }
-
   //lagrangian particles
   all_tasks.clear();
   all_tasks = i_lag_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
   }
+
+  //property models
+  all_tasks.clear();
+  all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
   //===============================================================
 
   // base initialization of all scalars
@@ -1341,11 +1344,11 @@ Arches::scheduleInitialize(const LevelP& level,
   //=================================================================================
   //NEW TASK INTERFACE 
   //
-  //Initialization of COAL property models
-  std::vector<std::string> coal_property_tasks = i_property_models->second->retrieve_task_subset("coal_models"); 
-  for ( std::vector<std::string>::iterator i = coal_property_tasks.begin(); i != coal_property_tasks.end(); i++){ 
-    TaskInterface* tsk = i_property_models->second->retrieve_task(*i); 
-    tsk->schedule_init(level, sched, matls ); 
+  //particle models
+  all_tasks.clear(); 
+  all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
   }
   //=================================================================================
 
