@@ -75,9 +75,7 @@ namespace Uintah{
         
       }
 
-
     private: 
-
 
   
   }; 

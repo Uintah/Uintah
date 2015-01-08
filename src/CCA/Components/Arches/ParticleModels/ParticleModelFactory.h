@@ -20,7 +20,13 @@ namespace Uintah{
     std::vector<std::string> retrieve_task_subset( const std::string subset ) { 
 
       if ( subset == "coal_models"){ 
+
         return _coal_models; 
+
+      } else if ( subset == "post_update_coal"){ 
+
+        return _post_update_coal_tasks; 
+
       } else { 
         throw InvalidValue("Error: Task subset not recognized in ParticleModelFactory:  "+subset, __FILE__,__LINE__);
       }
@@ -32,6 +38,7 @@ namespace Uintah{
   private: 
 
     std::vector<std::string> _coal_models; 
+    std::vector<std::string> _post_update_coal_tasks; 
   
   };
 }

@@ -9,6 +9,7 @@
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
 #include <CCA/Components/Arches/ParticleModels/CoalTemperatureNebo.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
+#include <CCA/Components/Arches/ParticleModels/CoalMassClip.h>
 
 using namespace Uintah; 
 
@@ -47,6 +48,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
     }
   } else if (db->findBlock("DQMOM") ) {
     db->findBlock("DQMOM")->require("number_quad_nodes",N);
+  } else if (db->findBlock("LagrangianParticles")){ 
+    N = 1;
   }
 
   if ( db->findBlock("ParticleModels")){
@@ -192,6 +195,13 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         _active_tasks.push_back(task_name); 
         _coal_models.push_back(task_name); 
+
+      } else if ( type == "coal_mass_clip" ) { 
+
+        TaskInterface::TaskBuilder* tsk = scinew CoalMassClip::Builder(task_name, 0, N); 
+        register_task( task_name, tsk );
+
+        _post_update_coal_tasks.push_back(task_name); 
         
       } else { 
 
