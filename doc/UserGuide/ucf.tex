@@ -74,7 +74,7 @@ The Uintah framework uses XML like input files to specify the various
 parameters required by simulation components.  These Uintah Problem
 Specification (.ups) files are validated based on the specification
 found in \tt src/StandAlone/inputs/UPS\_SPEC/ups\_spec.xml \normalfont
-(and its sibling files).  
+(and its sibling files).
 
 The application developer is free to use any of the specified tags to
 specify the data needed by the simulation.  The essential tags that
@@ -235,7 +235,7 @@ copies all of the appropriate information from the old uda directory to its
 new uda directory.
 % I'M NOT SURE ABOUT THIS, -nocopy REMOVES THE OLD UDA?  I THOUGHT IT
 % JUST LEFT STUFF IN THE OLD UDA, WHERE AS -copy MADE A COPY OF OLD TIMESTEP
-% DATA, AND -move MOVED THE OLD TIMESTEP DATA TO THE NEW UDA.  
+% DATA, AND -move MOVED THE OLD TIMESTEP DATA TO THE NEW UDA.
 %  If one doesn't want to keep the old uda directory
 %around, they can specify \tt -nocopy \normalfont to have it be removed
 %(e.g., if you are cramped for disk space).  Either way it creates a new uda
@@ -255,7 +255,7 @@ Here are some examples:
 
 There are many options available when running MPM simulations.  These
 are generally specified in the \tt <MPM> \normalfont section of the input file.
-A list of these options taken from 
+A list of these options taken from
 \tt inputs/UPS\_SPEC/mpm\_spec.xml \normalfont  is given in section \ref{Sec:UintahImp}.
 
 \section{Geometry objects} \label{Sec:GeometryObjects}
@@ -379,15 +379,15 @@ discretized using a body fit particle distribution as described here
 fixed eventually, at which point it may be possible to create more
 general endcaps using unions of \tt smoothcyl \normalfont.
 
-\tt ellipsoid \normalfont has an origin tag specified as a vector.  There are 
+\tt ellipsoid \normalfont has an origin tag specified as a vector.  There are
 two ways to assign axis lengths depending on the orientation of the ellipsoid.
-If the axes are aligned with the Cartesian grid, they may be specified as 
-floating point values with tagnames: rx, ry, rz.  For all other orientation, 
+If the axes are aligned with the Cartesian grid, they may be specified as
+floating point values with tagnames: rx, ry, rz.  For all other orientation,
 three vector quantities must be specified in the \tt [a,b,c] \normalfont format.
-Vector quantity tag names are: v1, v2, v3.These vectors must be orthogonal 
-to within 1e-12 after dot product or the simulation will throw an exception.  
-Note, if both vector quantities and floating point tags are used, 
-the vector quantity inputs will take precedence.  
+Vector quantity tag names are: v1, v2, v3.These vectors must be orthogonal
+to within 1e-12 after dot product or the simulation will throw an exception.
+Note, if both vector quantities and floating point tags are used,
+the vector quantity inputs will take precedence.
 
 \tt parallelepiped \normalfont requires that four points be specified as
 illustrated by the ASCII art snippet taken from the source code:
@@ -645,7 +645,7 @@ The \tt <Grid> \normalfont section specifies the domain of the
 structured grid and includes tags which indicate the lower and upper
 corners, the number of extra cells which can be used by various
 components for the application of boundary conditions or interpolation
-schemes.  
+schemes.
 
 The grid is decomposed into a number of patches.  For single processor
 problems, usually one patch is used for the entire domain.  For
@@ -703,6 +703,151 @@ there are ten cells in the interior of the grid and one layer of
 ``extraCells" outside of the domain.  extraCells are the Uintah nomenclature
 for what are frequently referred to as ``ghost-cells".
 
+
+\section{Schedulers} \label{Sec:Schedulers}
+
+In Uintah, the task scheduler component is responsible for computing task dependencies, determining the order of task execution and ensuring that the correct inter-process communication is performed. The Uintah task scheduler compiles all of the tasks and variable dependencies into a task-graph. Dependency edges are added between tasks based on the supplied variable dependencies. The computed dependency edges can be either internal or external. Internal dependencies are between patches on the same processor and external dependencies are between patches on different processors. Thus internal dependencies imply a \emph{necessary order} where external dependencies specify \emph{required communication}. The compilation process also combines external dependencies from the same source or to the same destination, thus coalescing messages.
+
+\vspace{10pt}
+\noindent The following is a brief summary of Uintah's available schedulers, followed by more in-depth discussion of each, its usage and input (XML) specification.
+
+\begin{itemize}
+  \item \textbf{Single Processor Scheduler:} Static task ordering and deterministic execution without MPI. Primarily used for small runs on a single desktop or laptop.
+  \item \textbf{MPI Scheduler:} Static task ordering and deterministic execution with MPI. One MPI rank per CPU core.
+  \item \textbf{Dynamic MPI Scheduler:} Dynamic scheduling with non-deterministic, out-of-order execution of tasks at runtime. One MPI rank per CPU core.
+  \item \textbf{Unified Scheduler:} This is a multi-threaded scheduler that uses a combination of MPI + Pthreads and offers support for GPU tasks. Dynamic scheduling with non-deterministic, out-of-order execution of tasks at runtime. One MPI rank per multi-core node. Pthreads are pinned to individual CPU cores where these tasks are executed.
+\end{itemize}
+
+\noindent A comprehensive list of Scheduler input file options with explanation.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+  <Scheduler type="DynamicMPI">
+    <small_messages>     true          </small_messages>
+    <taskReadyQueueAlg>  MostMessages  </taskReadyQueueAlg>
+    <VarTracker>
+        <start_time>    0.0            </start_time>
+        <end_time>      0.2            </end_time>
+        <start_index>   [0,0,0]        </start_index>
+        <end_index>     [12,12,12]     </end_index>
+        <var label="divQ" dw="OldDW"/>
+        <locations before_comm="false" before_exec="true" after_exec="true"/>
+        <task name="Ray::rayTrace"/>
+    </VarTracker>
+  </Scheduler>
+\end{Verbatim}
+
+\begin{itemize}
+  \item Scheduler - specifies the specific Uintah task scheduler to use. Valid options are: \texttt{SingleProcessor MPI DynamicMPI or Unified}
+  \item small\_messages - whether or not to turn on/off MPI message combination, e.g. send small, individual messages (takes more work to organize) or large, combined messages (more communication time). There is is no "good" value for it. Sometimes MPI message combination works better, sometimes not.
+  \item taskReadyQueueAlg - (only applicable for Dynamic and Unified Schedulers) Priority for sorting of task queues. Valid options are: \texttt{MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack}. Evidence suggests using \texttt{MostMessages} algorithm works best in general. This means highest execution priority is given to tasks that will generate the most outgoing MPI messages.
+  \item VarTracker - This allows the user to track values for variables throughout a simulation or at specific points or ranges in time. The elements below control this.
+  \item start\_time - Variable tracking start time.
+  \item end\_time - Variable tracking end time.
+  \item start\_index - Variable tracking starting cell index.
+  \item end\_index - Variable tracking starting end index.
+  \item var - Specify the name of the variable to track and the DataWarehouse to track from. Valid DataWarehouse options are: \texttt{NewDW OldDW CoarseNewDW CoarseOldDW ParentOldDW ParentNewDW}
+  \item locations - The points in the simulation at which variable information will be reported, e.g. before communication and before/after task execution.
+  \item task - The specific task to track the specified variable.
+\end{itemize}
+
+Using the Scheduler Section  above in and input file, the Uintah infrastructure will report something like the following:
+
+\begin{Verbatim}[fontsize=\footnotesize]
+Parallel: 1 processors (using MPI)
+Parallel: MPI Level Required: 0, provided: 0
+Date:    Thu Jan  8 16:05:22 2015
+Machine: albion
+SVN: Revision: 52944
+SVN: Last Changed Date: 2015-01-08 09:41:48 -0700 (Thu, 08 Jan 2015)
+Assertion level: 3
+CFLAGS: -fPIC  -fopenmp -Wall  -g -O0 -fno-inline-functions
+Implicit Solver: 	CGSolver
+Simulation Component: 	'RMCRT_Test'
+Load Balancer: 		SimpleLoadBalancer
+Scheduler: 		    DynamicMPI
+   Using theoretical scheduler
+
+-----------------------------------------------------------
+-- Initializing VarTracker...
+--  Running from time 0 to 0.2
+--  for indices: [int 0, 0, 0] to [int 12, 12, 12]
+--  Printing variable information before task execution.
+--  Printing variable information after task execution.
+--  Tracking variable 'phi' in DataWarehouse 'OldDW'
+--  Tracking variables for specific task: Poisson1::timeAdvance
+-----------------------------------------------------------
+
+...
+...
+\end{Verbatim}
+
+
+\subsection{Single Processor Scheduler} \label{Sec:SingleProcessorScheduler}
+This is the simplest scheduler available within Uintah, and simply offers static task ordering and deterministic execution of ALL tasks, without MPI. With this scheduler, the MPI runtime is not initialized. It is primarily used for small runs on a single desktop or laptop. The \texttt{SingleProcessorScheduler} is not the default scheduler in any case, and to invoke you must specify \texttt{SingleProcessor} in the \texttt{<Scheduler>} section of your input file.
+
+
+\subsection{MPI Scheduler} \label{Sec:MPIScheduler}
+Uintah's MPI Scheduler, shown in Figure \ref{fig:MPIScheduler} is the basic task scheduler to be used in a distributed, cluster setting, and using a model of one MPI process per core. Though distributed, the task-graph on each compute node will be identical and executed in the same order, that is static task ordering and deterministic execution of ALL tasks. This normally works well for most cases under roughly 100K cores and where results need to be reproduced to machine precision.
+
+It has been shown that there is a substantial increase in MPI communication time at larger numbers of cores due to dependencies between computing tasks distributed to different nodes and Uintah's memory use associated with ghost cells and global meta-data becomes a barrier to scalability beyond $\mathcal{O}(100K)$ cores. Beyond these core counts you will have to employ Uintah's Unified Scheduler, described below in Subsection \ref{Sec:UnifiedScheduler}, which moves to a shared memory model on-node, and drastically reduces the memory footprint seen at high core counts with an MPI-only approach.
+
+For most cases, this is the default scheduler.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.
+  \textwidth]{MPIScheduler.png}
+  \caption{MPI Scheduler}
+  \label{fig:MPIScheduler}
+\end{figure}
+
+
+\subsection{Dynamic MPI Scheduler} \label{Sec:DynamicMPIScheduler}
+In the MPI scheduler described above in Subsection \ref{Sec:MPIScheduler} where tasks are executed in a pre-determined order. This sometimes caused the
+simulation to sit idle when a single task was waiting for a message.
+Measurements have shown that this type of delay was nearly 80 percent
+of total MPI wait time in Uintah. The Dynamic MPI scheduler, shown in Figure \ref{fig:DynamicMPIScheduler}
+changes the task order during the execution to overlap communication
+and computation. This scheduler  achieves a significant performance benefit in lowering both the MPI wait time and the overall runtime. The dynamic scheduler utilizes two task queues: an internal ready queue and an external ready
+queue. If a task’s internal dependencies are satisfied, then that task
+will be put in the internal ready queue where they will wait until
+all required MPI communication has finished. A counter of outstanding
+MPI messages is tracked for each task. When this counter
+reaches zero the communication is complete and the task is ready to
+be executed. At that point it is placed in the external ready queue.
+
+To invoke the Dynamic MPI Scheduler, you must specify \texttt{DynamicMPI} in the \texttt{<Scheduler>} section of your input file.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.
+  \textwidth]{DynamicMPIScheduler.png}
+  \caption{Dynamic MPI Scheduler}
+  \label{fig:DynamicMPIScheduler}
+\end{figure}
+
+
+\subsection{Unified Scheduler} \label{Sec:UnifiedScheduler}
+Uintah has evolved to demonstrate both weak and strong scalability up to 768,000 cores on DOE Mira. At ~100K cores, we have shown that with an MPI-only approach, memory use associated with ghost cells and global meta-data becomes a barrier to scalability beyond O(100K) cores. This limitation has been overcome within Uintah through the use of hybrid parallelism, significantly reducing the memory footprint of the code per core by the development of task scheduler that includes a multi-threaded option to take advantage of current multi-core and emerging many-core architectures. This hybrid memory approach (a combination of Pthreads and MPI) has enabled Uintah to demonstrate scalability up to 256K cores on DOE Titan 768k cores on the DOE Mira system.
+
+Originally, Uintah used both dynamic and static schedulers, based solely on MPI (Subsections \ref{Sec:MPIScheduler} and \ref{Sec:DynamicMPIScheduler}), in which data structures were created on each MPI process. Although most of Uintah infrastructure components are carefully designed to be stored in a distributed manner, it is necessary for some data to be stored multiple times, e.g. neighboring patch sets, neighboring tasks and ghost variables. A limitation of pure MPI scheduling is that tasks which are created and executed on the same node cannot share data. The multi-threaded Unified scheduler shown in Figure \ref{fig:UnifiedScheduler} solves this problem by dynamically assigning tasks to worker threads during execution and share the same infrastructure components between threads. The architecture of the runtime system has been extended to support multi-threaded and GPU execution. Compared to Uintah’s dynamic MPI scheduler, the multi-threaded MPI scheduler has several independent worker threads per MPI process. These all share infrastructure components such as the regridder, the load balancer, the task graph and the data warehouse and all have read and write access to them (via efficient, lock-free data structures). All threads on a node additionally process their own MPI.
+
+To invoke the Unified Scheduler, you must specify \texttt{Unified} in the \texttt{<Scheduler>} section of your input file, or simply at the "\texttt{nthreads <n>}" shown below to your command to launch the \texttt{sus} executable.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+mpirun -np <#procs> sus -mpi -nthreads 16 input.ups
+\end{Verbatim}
+
+Typically the \texttt{<n>} will be equal to the number of cores available on a compute node. The above command line will launch 1 MPI process per node and "nthreads" number of task execution threads.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.
+  \textwidth]{UnifiedScheduler.png}
+  \caption{Multi-threaded Unified Scheduler with GPU support}
+  \label{fig:UnifiedScheduler}
+\end{figure}
+
 %
 %__________________________________
 %\section{Adaptive Mesh Refinement}
@@ -724,7 +869,7 @@ that will become patches if refinement is required in the tiles region.
 The following is an example of this regridder.
 
 \begin{Verbatim}[fontsize=\footnotesize]
-<Regridder type="Tiled">   
+<Regridder type="Tiled">
     <max_levels>2</max_levels>
     <cell_refinement_ratio> [[2,2,1]] </cell_refinement_ratio>
     <cell_stability_dilation> [2,2,0] </cell_stability_dilation>
@@ -734,8 +879,8 @@ The following is an example of this regridder.
 \end{Verbatim}
 
 The \TT{max\_levels} tag specifies the maximum number of levels
-to be created.  The \TT{cell\_refinement\_ratio} tag specifies the 
-refinement ratio between the levels.  This can be specified on a per 
+to be created.  The \TT{cell\_refinement\_ratio} tag specifies the
+refinement ratio between the levels.  This can be specified on a per
 level basis as follows:
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -744,7 +889,7 @@ level basis as follows:
 
 The \TT{cell\_stability\_dilation} tag specifies how many cells around
 the refinement flags are also guaranteed to be refined.  The
-\TT{min\_boundary\_cells} tag specifies the size of the boundary layers. 
+\TT{min\_boundary\_cells} tag specifies the size of the boundary layers.
 The size of the tiles is specified using the \TT{min\_patch\_size} tag
 and can also be specified on a per level basis.
 
@@ -861,7 +1006,7 @@ no longer supported, although legacy versions will continue to work.
 The VisIt package from LLNL is general purpose visualization software
 that offers all of the usual capabilities for rendering scientific
 data.  It is still developed and maintained by LLNL staff, and its
-interface to Uintah data is supported by the Uintah team. 
+interface to Uintah data is supported by the Uintah team.
 
 %Manta offers volume rendering and particle visualization based on
 %parallel (shared memory) ray tracing techniques.  While the
@@ -1000,7 +1145,7 @@ Operators menu.
 
 \begin{figure}
   \vspace{-100pt}
-  \centering 
+  \centering
   \subfloat[Applying the Pseudocolor plot to a variable]{\label{VisItSelectPlot}\includegraphics[width=0.3\textwidth]{VisItSelectPlot.png}}
   \hspace{50pts}
   \subfloat[Applying an operator to a plot]{\label{VisItSelectOperator}\includegraphics[width=0.3\textwidth]{VisItSelectOperator.png}}
@@ -1369,7 +1514,7 @@ Figure~\ref{VisItSubsetPlotViewer}.
 %\begin{figure}
 %  \center
 %  \includegraphics[scale=0.5]{VisItSubsetPlot.png}
-%  \caption{Visualizing patch boundaries} 
+%  \caption{Visualizing patch boundaries}
 %  \label{VisItSubsetPlot}
 %\end{figure}
 
@@ -1404,7 +1549,7 @@ Figure~\ref{VisItSubsetPlotWireframe}.
 % \begin{wrapfigure}{r}{.5\textwidth}
 %   \center
 %   \includegraphics[width=.4\textwidth]{VisItSubsetPlotViewer.png}
-%   \caption{The default visualization of patches} 
+%   \caption{The default visualization of patches}
 %   \label{VisItSubsetPlotViewer}
 % \end{wrapfigure}
 
@@ -1597,7 +1742,7 @@ ghost zones and real zones' in this window
 %   \label{VisItInverseGhostZoneAttribs}
 % \end{wrapfigure}
 
-We then hit 'Draw'. When combined with the 'Mesh' plot we get a visualization similar to the one shown in Figure ~\ref{VisItInverseGhostZoneViewer}. The pick operations on the viewer can then be used to investigate the value(s) in these extra cells. 
+We then hit 'Draw'. When combined with the 'Mesh' plot we get a visualization similar to the one shown in Figure ~\ref{VisItInverseGhostZoneViewer}. The pick operations on the viewer can then be used to investigate the value(s) in these extra cells.
 
 % \begin{wrapfigure}{r}{.5\textwidth}
 %   \center
@@ -1684,7 +1829,7 @@ Put into words, if magnitude of vel\_CC/1 is greater than 0.0, display it, else 
 %Aside from the normal GUI, VisIt also presents options for CLI (Command Line Interface) %manipulation. The CLI of VisIt is very useful and can generate images without ever %opening any VisIt window. Thus saving substantial time and computation for large %visualizations. There is a simple example cis
 %\chapter{Visualization Tools -- Manta}
 
-%To run the C-SAFE scene: 
+%To run the C-SAFE scene:
 %\begin{Verbatim}[fontsize=\footnotesize]
 %  Manta/build/bin/csafe_scene
 %\end{Verbatim}
@@ -1725,9 +1870,9 @@ Put into words, if magnitude of vel\_CC/1 is greater than 0.0, display it, else 
 %   \label{fig:manta_histograms}
 % \end{figure}
 
-% and a separate window will open showing the visualization. 
+% and a separate window will open showing the visualization.
 
-% \section{Manta Commandline options} 
+% \section{Manta Commandline options}
 % Many of the operations typically used through the GUI can be used through the commandline when running the csafe scene.
 
 % \begin{enumerate}
@@ -1771,9 +1916,9 @@ Put into words, if magnitude of vel\_CC/1 is greater than 0.0, display it, else 
 
 % Exporting transfer functions: You can export the transfer function currently displayed by selecting File->Export Transfer Function. This is The exported format is as follows: position r g b a position r g b a ... position is a number (0-1) that specifies the position of your control point in the transfer function. r g b a are simply the color and alpha values of the control point.
 
-% You can import saved transfer functions from File->import Transfer Function. 
+% You can import saved transfer functions from File->import Transfer Function.
 
-% The configuration file saves the data files used however if you would like to use the same configuration file for multiple sets of data you can select File->Export NrrdList.  This stores the data files as a list in ASCII which can be imported to use with any configuration.  
+% The configuration file saves the data files used however if you would like to use the same configuration file for multiple sets of data you can select File->Export NrrdList.  This stores the data files as a list in ASCII which can be imported to use with any configuration.
 
 % \section{Using the Transfer Function Editor}
 
@@ -1796,7 +1941,7 @@ Put into words, if magnitude of vel\_CC/1 is greater than 0.0, display it, else 
 % \end{figure}
 
 % Histograms represent the frequency of data values in a data set. Each histogram is associated with an index into either a volume or sphere data. If you select index 0 in the sphere data set, then the histogram mostly likely shows the accumulated range of x-coordinates for all of the sphere data sets. There is a semi-transparent grey box overlaying each histogram. This represents the range of values in the histogram that are displayed. Clicking on the right or left side of this box moves the left or right side of the clipping region accordingly. You can also click and drag the middle of the region to drag the region along the histogram. You can also use the mouse wheel to zoom into a region of the histogram.
-%   Name (\#) - The name associated with the histogram and the index it corresponds to in the NRRD file. 
+%   Name (\#) - The name associated with the histogram and the index it corresponds to in the NRRD file.
 % To the right are various controls.
 
 % \begin{enumerate}
@@ -1805,12 +1950,12 @@ Put into words, if magnitude of vel\_CC/1 is greater than 0.0, display it, else 
 % \item
 % Ruler : you can explicitly set specific data ranges for the clipping region or the region of the data to which the transfer function applies to. This is extremely useful if there is only a vary narrow region of the data range that you want to be looking at.
 % \item
-% Zoom in/out: this will zoom in to the clipping region or back out to the zoom where you were previously. 
+% Zoom in/out: this will zoom in to the clipping region or back out to the zoom where you were previously.
 % \end{enumerate}
 
 % \section{Ambient Occlusion}
 %   Ambient occlusion is an approximation of global illumination and can give a better sense of relative depth in clusters of objects.  To enable ambient occlusion turn it on in Scene->Preferences.  There are two variables to modify, the cutoff distance and the number of rays shot.  The cutoff distance is how far away objects can be to occlude rays.  To produce a good image it is a good idea to turn off the volume and reduce or remove the lights.  The light can be turned off in the Light dialog in the Manta Menu.  Setting the light color to black will completely disable a light.
-  
+
 % %\section{CSAFE Window Menus}
 
 % % \subsection{File - Save and Load Configuration File}
@@ -2123,16 +2268,16 @@ domains and different patch distributions to be compared.  The uda
 with the smallest computational domain should always be specified
 first.
 %
-In order for the norms to be computed the physical times must satisfy 
+In order for the norms to be computed the physical times must satisfy
 \begin{equation*}
 | \text{physical Time}_{uda_1} - \text{physical Time}_{uda_2}| < 1e^{-5}.
-\end{equation*} 
+\end{equation*}
 
 %__________________________________
-\section{timeextract} 
+\section{timeextract}
 
 Timeextract is used to extract a user specified variable from a point in a computational
-domain.  
+domain.
 
 Usage: \begin{Verbatim}[fontsize=\footnotesize]
 ./timeextract [options] -uda <archive file>
@@ -2150,18 +2295,18 @@ Valid options are:
   -vv,--verbose (prints status of output)
   -q,--quite (only print data values)
   -noxml,--xml-cache-off (turn off XML caching in DataArchive)
- \end{Verbatim} 
+ \end{Verbatim}
 
 The following example shows the usage of timeextract for extracting density data
 at the computationat cell coordinates 5,0,0, from timestep 0 to the last
 timestep. The variable containing the density data within the uda is "rho\_CC" and the output variable that
-will store the data for post processing is "rho." 
+will store the data for post processing is "rho."
 \begin{Verbatim}[fontsize=\footnotesize]
 ./timeextract -v rho_CC -i 5 0 0 -o rho -uda test01.uda.000
 \end{Verbatim}
 
 %__________________________________
-\section{particle2tiff} 
+\section{particle2tiff}
 particle2tiff is used to extract a user specified particle variable,
 compute a cell centered average and write that data to a series of tiff
 slices that can be used in further image processing.  Each slice in the tiff
@@ -2171,7 +2316,7 @@ This utility depends on \TT{libtiff4, libtiff4-dev, \& libtiffxx0c2}, please
 verify that they are installed on your system before configuring and compiling.
 
 
-  
+
 The data types supported are\TT{ double, Vector, Matrix3}, and the equations for computing the cell-centered average are:
 \begin{eqnarray}
   CC_{ave} =& {\raise1.5pt\hbox{$\scriptstyle\sum_{p=1}^{nParticles}$}} Double[p]          \over {nParticles} \nonumber \\
@@ -2201,7 +2346,7 @@ Valid options are:
                                         rightbot 0th row represents the ........
                                         leftbot  0th row represents the ........
                                                     Many readers ignore this tag
-                                                    
+
   -tlow,     --timesteplow:   [int] (start output timestep) [defaults to 0]
   -thigh,    --timestephigh:  [int] (end output timestep) [defaults to last timestep]
   -timestep, --timestep:      [int] (only outputs timestep)  [defaults to 0]
@@ -2219,11 +2364,11 @@ Valid options are:
                                    [int 102, 44, 0]
 ----------------------------------------------------------------------------------------
  For particle variables the average over all particles in a cell is returned.
- \end{Verbatim} 
+ \end{Verbatim}
 
 The following example shows the usage of particle2tiff for averaging the particle stress (p.stress)
-for all materials over the interior cells of the computational domain.  A series of 3 tiff slices 
-are saved for every timestep in the directory``output." 
+for all materials over the interior cells of the computational domain.  A series of 3 tiff slices
+are saved for every timestep in the directory``output."
 \begin{Verbatim}[fontsize=\scriptsize]
 tools/extractors/particle2tiff -m all -d output -v p.stress -uda disks2mat4patch.uda.000/
 There are 14 timesteps
@@ -2262,8 +2407,8 @@ in Fig. \ref{fig:p2tiff}.  In this simulation two similar disks collided at the 
 
 
 %__________________________________
-\section{On the fly analysis} 
-On the fly analysis is used to determine the minimum and maximum of specified variables while the simulation is running.  Parameters are included in the input file to specify at what frequency the data is analyzed and which variables to look at. A new directory will be made in the uda directory for each level (e.g. L-0). Within the new directory the max and min of each variable for the specified material is determined as a function of time at the given sampling frequency. 
+\section{On the fly analysis}
+On the fly analysis is used to determine the minimum and maximum of specified variables while the simulation is running.  Parameters are included in the input file to specify at what frequency the data is analyzed and which variables to look at. A new directory will be made in the uda directory for each level (e.g. L-0). Within the new directory the max and min of each variable for the specified material is determined as a function of time at the given sampling frequency.
 
 \begin{center}
 \begin{tabular}{| l | c | p{7cm} |}
@@ -2304,7 +2449,7 @@ The input file specification is as follows:
 \chapter{Order of Accuracy}
 \label{chap:OA}
 
-Order of accuracy is an extremely powerful framework that has been built to run a series of tests where multiple parameters are varied. The framework was originally built to easily do an order of accuracy analysis when resoultion was varied for a specific simulation. Since then it has been used for a variety of other tasks. The framework allows multiple tests to be easily repeated autonomously, proving to be extremely usefull for man studies. 
+Order of accuracy is an extremely powerful framework that has been built to run a series of tests where multiple parameters are varied. The framework was originally built to easily do an order of accuracy analysis when resoultion was varied for a specific simulation. Since then it has been used for a variety of other tasks. The framework allows multiple tests to be easily repeated autonomously, proving to be extremely usefull for man studies.
 
 \section{Using The Framework}
 
@@ -2315,7 +2460,7 @@ To run a study using the order of accuracy tools, edit the $\TT{components.xml}$
 Once all of the above steps have been done, you can follow these steps to run your studies.
 \begin{enumerate}
 
-\item cd to /opt/StandAlone or /dbg/StandAlone 
+\item cd to /opt/StandAlone or /dbg/StandAlone
 \item Create a symbolic link to orderAccuracy \\
 \TT{ln -s /src/orderAccuracy}
 \item Set a readlink to the orderAccuracy directory using the following command \\
@@ -2351,13 +2496,13 @@ The order of accuracy framework uses test or .tst files to determine which param
     </replace_lines>
     <replace_values>
       /Uintah_specification/Grid/BoundaryConditions/Face[@side='y+']
-      /BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [1,0,0] 
+      /BCType[@id = '0' and @label ='Velocity' and @var='Dirichlet']/value : [1,0,0]
     </replace_values>
 </AllTests>
 <Test>
     <Title>16</Title>
     <sus_cmd>mpirun -np 6 sus -mpi </sus_cmd>
-    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true 
+    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true
     -Re 5000</postProcess_cmd>
     <x>16</x>
     <replace_lines>
@@ -2367,7 +2512,7 @@ The order of accuracy framework uses test or .tst files to determine which param
 <Test>
     <Title>32</Title>
     <sus_cmd>mpirun -np 6 sus -mpi</sus_cmd>
-    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true 
+    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true
     -Re 5000</postProcess_cmd>
         <x>32</x>
     <replace_lines>
@@ -2377,7 +2522,7 @@ The order of accuracy framework uses test or .tst files to determine which param
 <Test>
     <Title>64</Title>
     <sus_cmd>mpirun -np 6 sus -mpi</sus_cmd>
-    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true 
+    <postProcess_cmd>compare_cavityFlow.m -pDir 1 -mat 0 -plot true
     -Re 5000</postProcess_cmd>
     <x>64</x>
     <replace_lines>
@@ -2391,7 +2536,7 @@ The order of accuracy framework uses test or .tst files to determine which param
 
 The following is a list of required parameters for the .tst files. These fields must be present, but many of them may remain empty.
 \begin{itemize}
-\item $\textless$start$\textgreater$ 
+\item $\textless$start$\textgreater$
 \item $\textless$upsFile$\textgreater$ \\
 This points the .tst to the input file, only one input file can be specified per test.
 \item $\textless$gnuplot$\textgreater$ \\
@@ -2410,7 +2555,7 @@ This line is used to feed the current tests uda and output file into a post proc
 this sets the x label for the gnuplot script
 \end{itemize}
 
-This section is for the two optional parameters, $\textless$replace\_lines$\textgreater$ and $\textless$replace\_values$\textgreater$. These two parameters are what specify the changes between the tests. These can both be placed inside $\textless$Test$\textgreater$ and $\textless$AllTests$\textgreater$. 
+This section is for the two optional parameters, $\textless$replace\_lines$\textgreater$ and $\textless$replace\_values$\textgreater$. These two parameters are what specify the changes between the tests. These can both be placed inside $\textless$Test$\textgreater$ and $\textless$AllTests$\textgreater$.
 \begin{itemize}
 \item $\textless$replace\_lines$\textgreater$\\
 This parameter is used to replace specific lines in the input files, and can be used when there is a unique tag such as $\textless$resolution$\textgreater$. To use this, just replace the line with the one you would like. This method is the simplest way to replace section of an input file.
