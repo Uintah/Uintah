@@ -403,10 +403,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       tsk->schedule_task(level, sched, matls, curr_level); 
     }
 
-    //ParticleModels
-    for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); 
-          i != all_particle_models.end(); i++){ 
-      i->second->schedule_task(level, sched, matls, curr_level); 
+    //ParticleModels before any update has occured 
+    std::vector<std::string> pre_update_part_tasks 
+      = i_particle_models->second->retrieve_task_subset("pre_update_particle_models"); 
+    for ( std::vector<std::string>::iterator itsk = pre_update_part_tasks.begin(); itsk != pre_update_part_tasks.end(); itsk++ ){ 
+      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk); 
+      tsk->schedule_task( level, sched, matls, curr_level ); 
     }
 
     //Property Models

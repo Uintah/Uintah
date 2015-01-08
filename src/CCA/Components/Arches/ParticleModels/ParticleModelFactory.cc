@@ -84,6 +84,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
             register_task( task_name, tsk ); 
             _active_tasks.push_back(task_name); 
+            _pre_update_particle_tasks.push_back(task_name); 
 
           } else { 
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
@@ -111,6 +112,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             
             register_task( task_name, tsk );
             _active_tasks.push_back(task_name);
+            _pre_update_particle_tasks.push_back(task_name); 
             
           } else {
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
@@ -137,6 +139,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             
             register_task( task_name, tsk );
             _active_tasks.push_back(task_name);
+            _pre_update_particle_tasks.push_back(task_name); 
             
           } else {
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
@@ -162,6 +165,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             
             register_task( task_name, tsk );
             _active_tasks.push_back(task_name);
+            _pre_update_particle_tasks.push_back(task_name); 
             
           } else {
             throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
@@ -179,6 +183,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         _active_tasks.push_back(task_name); 
         _coal_models.push_back(task_name); 
+        _pre_update_particle_tasks.push_back(task_name); 
 
       } else if ( type == "coal_temperature" ) { 
 
@@ -187,6 +192,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         _active_tasks.push_back(task_name); 
         _coal_models.push_back(task_name); 
+        _pre_update_particle_tasks.push_back(task_name); 
 
       } else if ( type == "coal_temperature_nebo" ) { 
 
@@ -195,12 +201,14 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
         _active_tasks.push_back(task_name); 
         _coal_models.push_back(task_name); 
+        _pre_update_particle_tasks.push_back(task_name); 
 
       } else if ( type == "coal_mass_clip" ) { 
 
         TaskInterface::TaskBuilder* tsk = scinew CoalMassClip::Builder(task_name, 0, N); 
         register_task( task_name, tsk );
 
+        _active_tasks.push_back(task_name); 
         _post_update_coal_tasks.push_back(task_name); 
         
       } else { 

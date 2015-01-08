@@ -27,6 +27,10 @@ namespace Uintah{
 
         return _post_update_coal_tasks; 
 
+      } else if ( subset == "pre_update_particle_models"){
+
+        return _pre_update_particle_tasks; 
+
       } else { 
         throw InvalidValue("Error: Task subset not recognized in ParticleModelFactory:  "+subset, __FILE__,__LINE__);
       }
@@ -37,8 +41,9 @@ namespace Uintah{
 
   private: 
 
-    std::vector<std::string> _coal_models; 
-    std::vector<std::string> _post_update_coal_tasks; 
+    std::vector<std::string> _coal_models;                ///<Tasks associated with coal 
+    std::vector<std::string> _post_update_coal_tasks;     ///<Tasks that execute at the end of the DQMOM update
+    std::vector<std::string> _pre_update_particle_tasks;  ///<Tasks that execute at the start of an RK step 
   
   };
 }
