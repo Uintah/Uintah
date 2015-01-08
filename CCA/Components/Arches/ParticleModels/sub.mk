@@ -11,4 +11,5 @@ SRCS += \
 				$(SRCDIR)/CoalDensity.cc \
 				$(SRCDIR)/CoalTemperature.cc \
 				$(SRCDIR)/CoalTemperatureNebo.cc \
+				$(SRCDIR)/CoalMassClip.cc \
         $(SRCDIR)/ParticleModelFactory.cc

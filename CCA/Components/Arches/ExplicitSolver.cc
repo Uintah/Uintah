@@ -493,15 +493,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
 
-      // ---- schedule the solution of the transport equations ----
-
-
       for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
            iEqn!=dqmom_eqns.end(); ++iEqn ) {
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        //also get the abscissa values
+        //get the abscissa values
         dqmom_eqn->sched_getUnscaledValues( level, sched );
       }
 
@@ -511,6 +508,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // schedule DQMOM moment calculation
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
+
+      //final clipping
+      std::vector<std::string> clipping_tasks = i_particle_models->second->retrieve_task_subset("post_update_coal"); 
+      for ( std::vector<std::string>::iterator itsk = clipping_tasks.begin(); itsk != clipping_tasks.end(); itsk++ ){ 
+        TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk); 
+        tsk->schedule_task( level, sched, matls, curr_level ); 
+      }
+
     }
     
     if ( d_doCQMOM ) {
