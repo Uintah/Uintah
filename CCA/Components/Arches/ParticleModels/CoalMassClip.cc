@@ -85,8 +85,6 @@ CoalMassClip::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   typedef SpatialOps::SVolField   SVolF;
   typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
 
-  std::cout << "HELLLLLLO" << std::endl;
-
   for ( int i = 0; i < _Nenv; i++ ){ 
 
     const std::string char_name = ParticleHelper::append_env( _char_base, i );
