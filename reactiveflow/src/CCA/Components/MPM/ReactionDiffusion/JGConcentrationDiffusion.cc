@@ -52,7 +52,6 @@ void JGConcentrationDiffusion::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_rdlb->pConcentrationLabel,  matlset);
   task->computes(d_rdlb->pConcPreviousLabel,   matlset);
-  task->computes(d_rdlb->pdCdtLabel,           matlset);
 }
 
 void JGConcentrationDiffusion::initializeSDMData(const Patch* patch,
@@ -63,16 +62,13 @@ void JGConcentrationDiffusion::initializeSDMData(const Patch* patch,
 
   ParticleVariable<double>  pConcentration;
   ParticleVariable<double>  pConcPrevious;
-  ParticleVariable<double>  pdCdt;
 
   new_dw->allocateAndPut(pConcentration,  d_rdlb->pConcentrationLabel, pset);
   new_dw->allocateAndPut(pConcPrevious,   d_rdlb->pConcPreviousLabel,  pset);
-  new_dw->allocateAndPut(pdCdt,           d_rdlb->pdCdtLabel,          pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pConcentration[*iter] = 0.0;
     pConcPrevious[*iter] = 0.0;
-    pdCdt[*iter] = 0.0;
   }
 }
 
@@ -81,11 +77,9 @@ void JGConcentrationDiffusion::addParticleState(std::vector<const VarLabel*>& fr
 {
   from.push_back(d_rdlb->pConcentrationLabel);
   from.push_back(d_rdlb->pConcPreviousLabel);
-  from.push_back(d_rdlb->pdCdtLabel);
 
   to.push_back(d_rdlb->pConcentrationLabel_preReloc);
   to.push_back(d_rdlb->pConcPreviousLabel_preReloc);
-  to.push_back(d_rdlb->pdCdtLabel_preReloc);
 }
 
 void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
@@ -397,8 +391,8 @@ void JGConcentrationDiffusion::interpolateToParticlesAndUpdate(const Patch* patc
   old_dw->get(pConcentration,     d_rdlb->pConcentrationLabel,     pset);
   new_dw->get(gConcentrationRate, d_rdlb->gConcentrationRateLabel, dwi, patch, gac, NGP);
 
-  new_dw->allocateAndPut(pConcentrationNew,    d_rdlb->pConcentrationLabel_preReloc, pset);
-  new_dw->allocateAndPut(pConcPreviousNew,    d_rdlb->pConcPreviousLabel_preReloc, pset);
+  new_dw->allocateAndPut(pConcentrationNew,  d_rdlb->pConcentrationLabel_preReloc, pset);
+  new_dw->allocateAndPut(pConcPreviousNew,   d_rdlb->pConcPreviousLabel_preReloc,  pset);
 
   for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
@@ -412,7 +406,7 @@ void JGConcentrationDiffusion::interpolateToParticlesAndUpdate(const Patch* patc
     }
 
     pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
-    pConcPreviousNew[idx] = pConcentrationNew[idx];
+    pConcPreviousNew[idx] = pConcentration[idx];
 	}
 	delete interpolator;
 }
@@ -428,7 +422,6 @@ void JGConcentrationDiffusion::scheduleFinalParticleUpdate(Task* task,
 
 
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
-  task->requires(Task::OldDW, d_rdlb->pdCdtLabel_preReloc,           gnone);
 
   task->modifies(d_rdlb->pConcentrationLabel_preReloc, matlset);
 }
@@ -444,7 +437,6 @@ void JGConcentrationDiffusion::finalParticleUpdate(const Patch* patch,
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  new_dw->get(pdCdt,        d_rdlb->pdCdtLabel_preReloc,             pset);
   new_dw->getModifiable(pConcNew, d_rdlb->pConcentrationLabel_preReloc,pset);
 
   delt_vartype delT;
@@ -453,6 +445,5 @@ void JGConcentrationDiffusion::finalParticleUpdate(const Patch* patch,
   for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
     particleIndex idx = *iter;
-    pConcNew[idx] += pdCdt[idx]*delT;
   }
 }

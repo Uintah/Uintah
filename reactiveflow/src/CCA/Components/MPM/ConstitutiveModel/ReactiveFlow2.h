@@ -48,6 +48,7 @@ namespace Uintah {
 
   class MPMLabel;
   class MPMFlags;
+  class ReactionDiffusionLabel;
 
   //*********************************************************
 	// Reactive Flow is a major refactor of the below model
@@ -121,6 +122,7 @@ namespace Uintah {
     // Prevent copying of this class
     // copy constructor
     ReactiveFlow2& operator=(const ReactiveFlow2 &cm);
+    ReactionDiffusionLabel* d_rdlb;
 
   public:
 

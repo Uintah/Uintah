@@ -13,13 +13,12 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            3.00       </maxTime>
+       <maxTime>            0.60       </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
-       <delt_max>           1.0         </delt_max>
-       <delt_init>          1.0e-4      </delt_init>
+       <delt_max>           0.001         </delt_max>
        <timestep_multiplier>0.8         </timestep_multiplier>
-			 <max_Timesteps> 4 </max_Timesteps>
+       <!--<max_Timesteps> 4 </max_Timesteps> -->
    </Time>
    
     <!--____________________________________________________________________-->
@@ -31,9 +30,6 @@
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
@@ -41,9 +37,6 @@
       <Face side = "x+">
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
@@ -53,9 +46,6 @@
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Dirichlet">
-                              <value> 300.0  </value>
-        </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
@@ -63,9 +53,6 @@
       <Face side = "y+">
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
@@ -75,9 +62,6 @@
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
@@ -85,9 +69,6 @@
       <Face side = "z+">
         <BCType id = "all" label = "Velocity"     var = "Neumann">
                               <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "Temperature"  var = "Neumann">
-                              <value> 0.0  </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
@@ -98,7 +79,7 @@
            <Box label="1">
               <lower>       [0,0,0]          </lower>
               <upper>       [.4,.4,.4]  </upper>
-              <resolution>  [4,4,4]     </resolution>
+              <resolution>  [10,10,10]     </resolution>
               <extraCells> [1,1,1]            </extraCells>
               <patches>    [1,1,1]            </patches>
            </Box>
@@ -141,23 +122,20 @@
     <MaterialProperties>
        <MPM>
          <material name="pillar">
-              <density>             1000.0           </density>
+              <density>             2329.0           </density>
               <constitutive_model type = "reactive_flow2">
-                  <!--<bulk_modulus>      3.50e7        </bulk_modulus> -->
-                  <bulk_modulus>      0.0        </bulk_modulus>
-                  <!--<shear_modulus>     8.40e7        </shear_modulus> -->
-                  <shear_modulus>     0.0        </shear_modulus>
+                  <bulk_modulus>      6.50e8        </bulk_modulus>
+                  <shear_modulus>     9.70e8        </shear_modulus>
               </constitutive_model>
-              <!--<thermal_conductivity>  427.0  </thermal_conductivity>-->
-              <thermal_conductivity>  3427.0  </thermal_conductivity>
+              <thermal_conductivity>  427.0  </thermal_conductivity>
               <specific_heat>         234.0  </specific_heat>
-	            <diffusion_model type = "jg">
-	              <diffusivity>       200   </diffusivity>
-	            </diffusion_model>
+	         <diffusion_model type = "jg">
+	           <diffusivity>       2e-2   </diffusivity>
+	         </diffusion_model>
               <geom_object>
                 <box label="gpmpm">
                   <min>           [0.10,0.00,0.10]   </min>
-                  <max>           [0.20,0.10,0.20]   </max>
+                  <max>           [0.30,0.20,0.30]   </max>
                  </box>
                  <res>               [2,2,2]         </res>
                  <velocity>          [0.0,0.0,0.0]   </velocity>

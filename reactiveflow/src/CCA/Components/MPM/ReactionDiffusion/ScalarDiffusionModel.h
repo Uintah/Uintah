@@ -89,8 +89,8 @@ namespace Uintah {
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
-    ReactionDiffusionLabel* d_rdlb;
     SimulationStateP d_sharedState;
+    ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
     bool do_explicit;
