@@ -28,8 +28,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
-#include "Core/Thread/Time.h"
+#include <Core/Thread/Time.h>
 
 using namespace std;
 using namespace Uintah;
@@ -94,7 +93,7 @@ bool
 CommRecMPI::waitsome( const ProcessorGroup * pg, 
                             list<int>      * finishedGroups /* = 0 */ )
 {
-  if( ids_.size() == 0 ){
+  if( ids_.size() == 0 ) {
     return false; // no more to test
   }
 
