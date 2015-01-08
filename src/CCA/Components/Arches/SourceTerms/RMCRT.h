@@ -121,10 +121,7 @@ private:
   //
   int _radiation_calc_freq;    
   int _matl;                   
-  int _archesLevelIndex;       
-  MaterialSet* _matlSet;
-  
-
+  int _archesLevelIndex;
   bool _all_rk; 
   
   int  _whichAlgo;
