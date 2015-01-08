@@ -42,6 +42,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/PlasticityState.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/DeformationState.h>
 
+#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
+
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -87,6 +89,7 @@ ReactiveFlow2::ReactiveFlow2(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("useModifiedEOS",d_useModifiedEOS);
 
   initializeLocalMPMLabels();
+  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 ReactiveFlow2::ReactiveFlow2(const ReactiveFlow2* cm) :
@@ -98,6 +101,7 @@ ReactiveFlow2::ReactiveFlow2(const ReactiveFlow2* cm) :
   d_tol = cm->d_tol ;
   
   initializeLocalMPMLabels();
+  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 ReactiveFlow2::~ReactiveFlow2()
@@ -299,7 +303,6 @@ ReactiveFlow2::addComputesAndRequires(Task* task,
   }
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
 
   task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
@@ -308,6 +311,9 @@ ReactiveFlow2::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pEnergyLabel,           matlset, gnone);
 
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+
+  task->requires(Task::OldDW, d_rdlb->pConcPreviousLabel, matlset, gnone); 
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone); 
 
   task->computes(pRotationLabel_preReloc,       matlset);
   task->computes(pStrainRateLabel_preReloc,     matlset);
@@ -361,17 +367,22 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pVolume;
     constParticleVariable<double> pTemperature;
     constParticleVariable<double> pTemp_prenew;
+    constParticleVariable<double> pConcentration;
+    constParticleVariable<double> pConc_prenew;
     constParticleVariable<Vector> pVelocity;
     constParticleVariable<Matrix3> pDeformGrad;
     constParticleVariable<Matrix3> pStress;
 
-    old_dw->get(pMass,        lb->pMassLabel,               pset);
-    old_dw->get(pVolume,      lb->pVolumeLabel,             pset);
-    old_dw->get(pTemperature, lb->pTemperatureLabel,        pset);
-    old_dw->get(pTemp_prenew, lb->pTempPreviousLabel,       pset);
-    old_dw->get(pVelocity,    lb->pVelocityLabel,           pset);
-    old_dw->get(pStress,      lb->pStressLabel,             pset);
-    old_dw->get(pDeformGrad,  lb->pDeformationMeasureLabel, pset);
+    old_dw->get(pMass,          lb->pMassLabel,               pset);
+    old_dw->get(pVolume,        lb->pVolumeLabel,             pset);
+    old_dw->get(pTemperature,   lb->pTemperatureLabel,        pset);
+    old_dw->get(pTemp_prenew,   lb->pTempPreviousLabel,       pset);
+    old_dw->get(pVelocity,      lb->pVelocityLabel,           pset);
+    old_dw->get(pStress,        lb->pStressLabel,             pset);
+    old_dw->get(pDeformGrad,    lb->pDeformationMeasureLabel, pset);
+
+    old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,      pset);
+    old_dw->get(pConc_prenew,   d_rdlb->pConcPreviousLabel,       pset);
 
     constParticleVariable<double> pStrainRate, pPlasticStrainRate, pEnergy;
     constParticleVariable<int> pLocalized;
@@ -459,8 +470,8 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
 
 			// Get concentrations
       double temperature = pTemperature[idx];
-			double concentration = pTemperature[idx]/300;
-			double concentration_pn = pTemp_prenew[idx]/300;
+			double concentration = pConcentration[idx];
+			double concentration_pn = pConc_prenew[idx];
 			double conc_rate = (concentration - concentration_pn)/delT;
 
       // Calculate rate of deformation tensor (D)

@@ -543,7 +543,9 @@ void SerialMPM::scheduleComputeStableTimestep(const LevelP& level,
   // However, this task needs to do something in the case that MPM
   // is being run on more than one level.
   Task* t = 0;
-  cout_doing << UintahParallelComponent::d_myworld->myrank() << " MPM::scheduleComputeStableTimestep \t\t\t\tL-" <<level->getIndex() << endl;
+  cout_doing << UintahParallelComponent::d_myworld->myrank()
+             << " MPM::scheduleComputeStableTimestep \t\t\t\tL-"
+             << level->getIndex() << endl;
 
   t = scinew Task("MPM::actuallyComputeStableTimestep",
                    this, &SerialMPM::actuallyComputeStableTimestep);
