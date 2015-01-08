@@ -1436,9 +1436,12 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
     // Create the MPI type
     int to = batch->toTasks.front()->getAssignedResourceIndex();
     ASSERTRANGE(to, 0, d_myworld->size());
+
     ostringstream ostr;
     ostr.clear();
+
     for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+      ostr << *req << ' ';
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
           && iteration == 0)
           || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
@@ -1459,7 +1462,6 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
 
       if (dbg.active()) {
-        ostr << *req << ' ';
         dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells
             << " from dw " << dw->getID() << '\n';
       }
@@ -1507,18 +1509,13 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
       mpibuff.get_type(buf, count, datatype);
 #endif
 
-      //only send message if size is greather than zero
+      // TODO need to determine if this is actually true now - I don't think it is, APH - 01/07/15
+      //only send message if size is greater than zero
       //we need this empty message to enforce modify after read dependencies 
       //if(count>0)
       //{
 
       if (dbg.active()) {
-        coutLock.lock();
-        dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << " to " << to << ": " << ostr.str() << "\n";
-        coutLock.unlock();
-      }
-
-      if (mpidbg.active()) {
         coutLock.lock();
         mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n";
         coutLock.unlock();
@@ -1536,15 +1533,8 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
       int bytes = count;
 
-
-      if( Uintah::Parallel::getMPIRank() == 0 ) {
-        cerrLock.lock();
-        cout << "thread: " << Thread::self()->myid() << " should be " << thread_id << "\n";
-        if( Thread::self()->myid() != thread_id ) {
-          SCI_THROW( InternalError("thread id not equal to Thread's id.", __FILE__, __LINE__) );
-        }
-        cerrLock.unlock();
-      }
+      // make sure each thread is accessing the correct MPI comm record (in sends_[thread_id] below)
+      ASSERTEQ(Thread::self()->myid(), thread_id);
 
       // This is written per thread, no lock needed.
       sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);

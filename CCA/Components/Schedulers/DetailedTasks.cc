@@ -46,9 +46,9 @@
 using namespace Uintah;
 using namespace std;
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
+// sync cout/cerr so they are readable when output by multiple threads
 extern SCIRun::Mutex cerrLock;
+extern SCIRun::Mutex coutLock;
 extern DebugStream mixedDebug;
 static DebugStream dbg("DetailedTasks", false);
 static DebugStream scrubout("Scrubbing", false);
@@ -144,14 +144,15 @@ void DetailedTasks::assignMessageTags(int me)
     ASSERTRANGE(to, 0, d_myworld->size());
 
     if (from == me || to == me) {
-      // Easier to go in reverse order now, instead of reinitializing
-      // perPairBatchIndices.
+      // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
       pair<int, int> fromToPair = make_pair(from, to);
       batches_[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
        one */
       if (messagedbg.active()) {
+        coutLock.lock();
         messagedbg << me << " assigning message num " << batch->messageTag << " from task " << batch->fromTask->getName()
                    << " to task " << batch->toTasks.front()->getName() << ", process " << from << " to process " << to << "\n";
+        coutLock.unlock();
       }
     }
   }
@@ -815,10 +816,10 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   //make keys for MPI messages
   if (fromPatch) varKeyDB.insert(req->var,matl,fromPatch);
 
-  //get dependancy batch
+  //get dependency batch
   DependencyBatch* batch = from->getComputes();
 
-  //find dependancy batch that is to the same processor as this dependency
+  //find dependency batch that is to the same processor as this dependency
   for (; batch != 0; batch = batch->comp_next) {
     if (batch->to == toresource) {
       break;
