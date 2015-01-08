@@ -13,10 +13,7 @@ static DebugStream dbg("RMCRT", false);
 /*______________________________________________________________________
           TO DO:
           
-  - fix coarsen operator      
-  
-  - Don't like how _matlSet is being defined.  
-
+  - fix coarsen operator
 ______________________________________________________________________*/
 
 RMCRT_Radiation::RMCRT_Radiation( std::string src_name, 
@@ -49,27 +46,16 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _whichAlgo = singleLevel;
   
   //__________________________________
-  //  define the materialSet
+  //  define the material index
   int archIndex = 0;                // HARDWIRED
   _matl = _sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  
-  _matlSet = scinew MaterialSet();
-  vector<int> m;
-  m.push_back(_matl);
-  _matlSet->addAll(m);
-  _matlSet->addReference();
 }
 //______________________________________________________________________
 //
 RMCRT_Radiation::~RMCRT_Radiation()
 {
-  // source label is destroyed in the base class 
-
+  // source label is destroyed in the base class
   delete _RMCRT; 
-
-  if( _matlSet && _matlSet->removeReference()) {
-    delete _matlSet;
-  }
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -308,7 +294,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
-      _RMCRT->sched_Refine_Q (sched,  patches, _matlSet, _radiation_calc_freq);
+      _RMCRT->sched_Refine_Q (sched,  patches, _sharedState->allArchesMaterials() , _radiation_calc_freq);
     }
   }
   
@@ -360,7 +346,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     printSchedule(level,dbg,taskname);
     
     tsk->computes(_src_label);
-    sched->addTask(tsk, level->eachPatch(), _matlSet);
+    sched->addTask(tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
   }
 }
 //______________________________________________________________________
