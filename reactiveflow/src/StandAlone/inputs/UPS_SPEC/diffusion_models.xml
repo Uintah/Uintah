@@ -1,10 +1,11 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
 
-  <diffusion_model              spec="REQUIRED NO_DATA"
-                                attribute1="type REQUIRED STRING 'linear, jg'">
+  <diffusion_model               spec="REQUIRED NO_DATA"
+                                 attribute1="type REQUIRED STRING 'linear, jg, rf1'">
 
-    <diffusivity                spec="OPTIONAL DOUBLE" />
+    <diffusivity                 spec="OPTIONAL DOUBLE" />
+    <initial_chemical_potential  spec="OPTIONAL DOUBLE" />
   
   </diffusion_model>
 
