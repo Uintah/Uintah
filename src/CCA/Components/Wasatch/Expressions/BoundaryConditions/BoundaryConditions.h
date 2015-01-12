@@ -173,7 +173,7 @@ private:
  *  \author 	Tony Saad
  *  \date    September, 2012
  *
- *  \brief Implements a parabolic profile at the boundary.
+ *  \brief Implements a parabolic profile at the boundary of the form: a*x^2 + b*x + c.
  *
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
@@ -190,6 +190,14 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
+    /**
+     *  \param resultTag The tag of the resulting expression computed here.
+     *  \param indepVarTag The tag of the independent variable
+     *  \param a  The coefficient of x^2 in the parabolic formula
+     *  \param b  The coefficient of x in the parabolic formula
+     *  \param c  The constant in the parabolic formula
+     *  \param x0 The value of the point (independent variable) where the parabola assumes its maximum/minimum
+     */
     Builder( const Expr::Tag& resultTag,
              const Expr::Tag& indepVarTag,
             const double a, const double b,

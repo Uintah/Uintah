@@ -113,9 +113,10 @@
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="u" state="STATE_NONE"/>
-      <ParabolicFunction a="-4.0" b="4.0" c="0.0">
-         <NameTag name="YXVOL" state="STATE_NONE"/>
-       </ParabolicFunction>
+      <ParabolicFunction type="GENERAL">
+        <General a="-4.0" b="4.0" c="0.0"/>
+        <NameTag name="YXVOL" state="STATE_NONE"/>
+      </ParabolicFunction>
     </BasicExpression>
 
     <!-- Build a non-staggered scalar transport equation -->
