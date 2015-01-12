@@ -350,7 +350,7 @@ SchedulerCommon::problemSetup(const ProblemSpecP& prob_spec,
         else {
           // This error message most likely can go away once the .ups validation is put into place:
           printf( "WARNING: Hit switch statement default... using NewDW... (This could possibly be"
-                  "an error in input file specifciation.)\n" );
+                  "an error in input file specification.)\n" );
           trackingDWs_.push_back(Task::NewDW);
         }
         if( d_myworld->myrank() == 0 ) {
