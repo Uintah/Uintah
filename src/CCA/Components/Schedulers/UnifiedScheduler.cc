@@ -123,14 +123,12 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld,
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     timingStats.open(filename);
     if (d_myworld->myrank() == 0) {
-      if (d_myworld->myrank() == 0) {
-        sprintf(filename, "timingStats.%d.min", d_myworld->size());
-        minStats.open(filename);
-        sprintf(filename, "timingStats.%d.max", d_myworld->size());
-        maxStats.open(filename);
-        sprintf(filename, "timingStats.%d.avg", d_myworld->size());
-        avgStats.open(filename);
-      }
+      sprintf(filename, "timingStats.%d.min", d_myworld->size());
+      minStats.open(filename);
+      sprintf(filename, "timingStats.%d.max", d_myworld->size());
+      maxStats.open(filename);
+      sprintf(filename, "timingStats.%d.avg", d_myworld->size());
+      avgStats.open(filename);
     }
   }
 }
