@@ -27,16 +27,17 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Thread/Time.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Time.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -68,6 +69,7 @@ extern DebugStream taskLevel_dbg;
 extern map<string, double> waittimes;
 extern map<string, double> exectimes;
 extern ofstream            wout;
+
 static double              CurrentWaitTime = 0;
 
 static DebugStream dbg("UnifiedScheduler", false);
@@ -424,7 +426,7 @@ UnifiedScheduler::runTask( DetailedTask        * task,
       exectimes[task->getTask()->getName()] += dtask;
     }
 
-    //if i do not have a sub scheduler
+    // If I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
       mpi_info_.totaltask += dtask;

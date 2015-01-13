@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UNIFIED_SCHEDULER_H
-#define UNIFIED_SCHEDULER_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H
+#define CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <Core/Thread/ConditionVariable.h>
@@ -211,4 +211,4 @@ private:
 
 } // End namespace Uintah
    
-#endif
+#endif // End CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H

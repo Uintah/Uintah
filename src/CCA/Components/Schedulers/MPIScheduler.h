@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_MPISCHEDULER_H
-#define UINTAH_HOMEBREW_MPISCHEDULER_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H
+#define CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/MessageLog.h>
@@ -188,4 +188,4 @@ WARNING
 
 } // End namespace Uintah
    
-#endif
+#endif // End CCA_COMPONENTS_SCHEDULERS_MPISCHEDULER_H
