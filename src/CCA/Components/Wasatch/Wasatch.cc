@@ -366,7 +366,7 @@ namespace Wasatch{
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
     if( doParticles_ ){
-      particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
+      particlesHelper_->problem_setup(params, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names

@@ -403,7 +403,7 @@
   <Unit                   spec="OPTIONAL NO_DATA"
                             attribute1="name REQUIRED STRING 'KG^2'" />  <!-- FIXME: is this a good idea?  If so, how to specify?  Make required! -->
 
-	<ParticlePosition spec="OPTIONAL STRING"
+	<ParticlePosition spec="OPTIONAL NO_DATA"
 										attribute1="label REQUIRED STRING"/>
 										
   <Time                   spec="REQUIRED NO_DATA">
