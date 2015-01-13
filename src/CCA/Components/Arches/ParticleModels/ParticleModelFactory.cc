@@ -40,11 +40,8 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
     std::vector<int> N_i;
     db->findBlock("CQMOM")->require("QuadratureNodes",N_i);
     N = 1;
-    std::cout << "N: " << N << std::endl;
     for (unsigned int i = 0; i < N_i.size(); i++ ) {
-      
       N *= N_i[i];
-      std::cout << "N: " << N << std::endl;
     }
   } else if (db->findBlock("DQMOM") ) {
     db->findBlock("DQMOM")->require("number_quad_nodes",N);

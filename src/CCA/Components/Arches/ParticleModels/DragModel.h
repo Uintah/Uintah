@@ -210,11 +210,9 @@ namespace Uintah{
 
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      std::cout << "Source label " << name << std::endl;
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
       
       const std::string gas_name = get_name(i, _base_gas_var_name);
-      std::cout << "Source label " << gas_name << std::endl;
       register_variable( gas_name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
     }
   }
