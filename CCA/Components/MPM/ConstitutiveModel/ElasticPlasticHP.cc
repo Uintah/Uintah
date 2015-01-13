@@ -670,8 +670,6 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
   }
 
   // Other constitutive model and input dependent computes and requires
-  task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-
   task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
