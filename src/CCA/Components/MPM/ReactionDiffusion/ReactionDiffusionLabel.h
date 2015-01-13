@@ -53,6 +53,7 @@ namespace Uintah {
     const VarLabel* gConcentrationNoBCLabel;
     const VarLabel* gdCdtLabel;
     const VarLabel* gConcentrationStarLabel;
+    const VarLabel* gHydrostaticStressLabel;
   };
   
 } // end namespace Uintah

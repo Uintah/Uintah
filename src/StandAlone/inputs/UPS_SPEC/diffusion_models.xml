@@ -6,6 +6,7 @@
 
     <diffusivity                 spec="OPTIONAL DOUBLE" />
     <initial_chemical_potential  spec="OPTIONAL DOUBLE" />
+    <max_concentration           spec="OPTIONAL DOUBLE" />
   
   </diffusion_model>
 

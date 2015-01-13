@@ -88,7 +88,8 @@ namespace Uintah {
 
   private:
 		double diffusivity;
-		double initial_potential;
+		double init_potential;
+    double max_concentration;
 
     RFConcDiffusion1MPM(const RFConcDiffusion1MPM&);
     RFConcDiffusion1MPM& operator=(const RFConcDiffusion1MPM&);
