@@ -349,7 +349,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   //Checking for lagrangian particles:
   _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
   if ( _doLagrangianParticles ){ 
-    _particlesHelper->problem_setup(_arches_spec->findBlock("LagrangianParticles"), sharedState);
+    _particlesHelper->problem_setup(params,_arches_spec->findBlock("LagrangianParticles"), sharedState);
   }
 
   //__________________________________

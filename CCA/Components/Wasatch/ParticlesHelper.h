@@ -174,7 +174,8 @@ namespace Uintah {
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
      that MUST be called during Wasatch::ProblemSetup
      */
-    void problem_setup(Uintah::ProblemSpecP particleEqsSpec,
+    void problem_setup(Uintah::ProblemSpecP uintahSpec,
+                       Uintah::ProblemSpecP particleEqsSpec,
                        Uintah::SimulationStateP sharedState);
     
     void set_materials(const Uintah::MaterialSet* const materials)
