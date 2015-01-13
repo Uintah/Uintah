@@ -173,7 +173,6 @@ namespace Uintah{
     
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      std::cout << "Source label " << name << std::endl;
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
       
     }
