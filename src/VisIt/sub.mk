@@ -27,12 +27,11 @@
 # 
 # Makefile fragment for this subdirectory 
 
-ifeq ($(BUILD_VISIT),yes)
+ifeq ($(HAVE_VISIT),yes)
 
 SRCDIR := VisIt
-
 SUBDIRS := \
-	$(SRCDIR)/udaReaderMTMD
+	$(SRCDIR)/libsim
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
