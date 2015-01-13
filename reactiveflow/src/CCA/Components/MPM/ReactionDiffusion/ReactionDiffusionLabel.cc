@@ -78,6 +78,9 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
 
   gConcentrationStarLabel = VarLabel::create("g.concentrationStar",
 	    NCVariable<double>::getTypeDescription());
+
+  gHydrostaticStressLabel = VarLabel::create("g.hydrostaticStressRD",
+	    NCVariable<double>::getTypeDescription());
 }
 
 ReactionDiffusionLabel::~ReactionDiffusionLabel() {
@@ -100,4 +103,5 @@ ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(gConcentrationNoBCLabel);
   VarLabel::destroy(gdCdtLabel);
   VarLabel::destroy(gConcentrationStarLabel);
+  VarLabel::destroy(gHydrostaticStressLabel);
 }

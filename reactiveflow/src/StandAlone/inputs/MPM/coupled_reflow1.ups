@@ -18,7 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           0.001         </delt_max>
        <timestep_multiplier>0.8         </timestep_multiplier>
-       <!--<max_Timesteps> 4 </max_Timesteps> -->
+       <!--<max_Timesteps> 2 </max_Timesteps>-->
    </Time>
    
     <!--____________________________________________________________________-->
@@ -130,8 +130,9 @@
               <thermal_conductivity>  427.0  </thermal_conductivity>
               <specific_heat>         234.0  </specific_heat>
 	         <diffusion_model type = "rf1">
-	           <diffusivity>                 2e-2   </diffusivity>
-	           <initial_chemical_potential>  1      </initial_chemical_potential>
+	           <diffusivity>                 1e-10   </diffusivity>
+	           <initial_chemical_potential>  1e-3   </initial_chemical_potential>
+		   <max_concentration>           1.0    </max_concentration>  
 	         </diffusion_model>
               <geom_object>
                 <box label="gpmpm">
