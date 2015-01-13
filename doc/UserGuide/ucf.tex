@@ -711,13 +711,13 @@ dependencies, determining the order of task execution and ensuring that the
 correct inter-process communication is performed. The Uintah task scheduler
 compiles all of the tasks and variable dependencies into a task-graph.
 Dependency edges are added between tasks based on the supplied variable
-dependencies. The computed dependency edges can be either internal or external.
-Internal dependencies are between patches on the same processor and external
-dependencies are between patches on different processors. Thus internal
-dependencies imply a \emph{necessary order} where external dependencies specify
-\emph{required communication}. The compilation process also combines external
-dependencies from the same source or to the same destination, thus coalescing
-messages.
+dependencies. The computed dependency edges can be either internal or
+external. Internal dependencies are between patches on the same processor and
+external dependencies are between patches on different processors. Thus
+internal dependencies imply a \emph{necessary order} where external
+dependencies specify \emph{required communication}. The compilation process
+also combines external dependencies from the same source or to the same
+destination, thus coalescing messages.
 
 \vspace{10pt}
 \noindent The following is a brief summary of Uintah's available schedulers,
@@ -726,18 +726,31 @@ specification.
 
 \begin{itemize}
   \item \textbf{Single Processor Scheduler:} Static task ordering and
-      deterministic execution without MPI. Primarily used for small runs on a
+      deterministic execution without MPI. Primarily used for small runs on
+      a
       single desktop or laptop.
   \item \textbf{MPI Scheduler:} Static task ordering and deterministic
       execution with MPI. One MPI rank per CPU core.
   \item \textbf{Dynamic MPI Scheduler:} Dynamic scheduling with
       non-deterministic, out-of-order execution of tasks at runtime. One MPI
       rank per CPU core.
-  \item \textbf{Unified Scheduler:} This is a multi-threaded scheduler that
-      uses a combination of MPI + Pthreads and offers support for GPU tasks.
-      Dynamic scheduling with non-deterministic, out-of-order execution of
-      tasks at runtime. One MPI rank per multi-core node. Pthreads are pinned
-      to individual CPU cores where these tasks are executed.
+  \item \textbf{Threaded MPI Scheduler:} A multi-threaded scheduler that uses
+      a combination of MPI + Pthreads, with dynamic scheduling with
+      non-deterministic, out-of-order execution of tasks at runtime. One MPI
+      rank per multi-core node. Pthreads are pinned to individual CPU cores
+      where these tasks are executed. Uses a centralized model using 1
+      control thread and $n-1$ task execution threads. The control thread
+      assigns tasks, processes MPI send and recvs. Shared access to the
+      DataWarehouse (requires \textbf{MPI\_THREAD\_MULTIPLE} support).
+  \item \textbf{Unified Scheduler:} A more advanced, multi-threaded scheduler
+      that uses a combination of MPI + Pthreads and offers support for GPU
+      tasks. Dynamic scheduling with non-deterministic, out-of-order
+      execution of tasks at runtime. One MPI rank per multi-core node.
+      Pthreads are pinned to individual CPU cores where these tasks are
+      executed. Uses a decentralized model wherein all threads can access
+      task queues, processes there own MPI send and recvs, with shared access
+      to the DataWarehouse. (requires \textbf{MPI\_THREAD\_MULTIPLE}
+      support)
 \end{itemize}
 
 \noindent A comprehensive example of Scheduler input file options with
@@ -763,29 +776,33 @@ explanation.
   \item \emph{Scheduler} - specifies the specific Uintah task scheduler to
       use.
       Valid options are: \TT{SingleProcessor \; MPI \; DynamicMPI \;
-      Unified}
+      ThreadedMPI \; Unified}
   \item \emph{small\_messages} - whether or not to turn on MPI message
       combination, e.g. send small, individual messages (takes more work to
       organize) or large, combined messages (more communication time). There
       is no "good" value for it. Sometimes MPI message combination works
       better, sometimes not.
   \item \emph{taskReadyQueueAlg} - (only applicable for Dynamic and Unified
-      Schedulers) Priority for sorting of tasks in task queues. Valid options
+      Schedulers) Priority for sorting of tasks in task queues. Valid
+      options
       are: \TT{MostChildren \; LeastChildren \; MostAllChildren \;
       LeastAllChildren \; MostL2Children \; LeastL2Children \; PatchOrder \;
-      PatchOrderRandom \; MostMessages \\* LeastMessages \; Random \; FCFS \;
+      PatchOrderRandom \; MostMessages \\* LeastMessages \; Random \; FCFS
+      \;
       Stack}. Evidence suggests using \TT{MostMessages} algorithm works best
       in general. This means highest execution priority is given to tasks
       that will generate the most outgoing MPI messages.
   \item \emph{VarTracker} - This allows the user to track values for
-      variables throughout a simulation or at specific points/ranges in time.
+      variables throughout a simulation or at specific points/ranges in
+      time.
       The elements below control this.
   \item \emph{start\_time} - Variable tracking start time.
   \item \emph{end\_time} - Variable tracking end time.
   \item \emph{start\_index} - Variable tracking starting cell index.
   \item \emph{end\_index} - Variable tracking starting end index.
   \item \emph{var} - Specify the name of the variable to track and the
-      DataWarehouse to track from. Valid DataWarehouse options are: \TT{NewDW
+      DataWarehouse to track from. Valid DataWarehouse options are:
+      \TT{NewDW
       \; OldDW \; CoarseNewDW \; CoarseOldDW \; ParentOldDW \; ParentNewDW}
   \item \emph{locations} - The points in the simulation at which variable
       information will be reported, e.g. before communication and
@@ -839,19 +856,20 @@ to a Uintah simulation.
 This is the simplest scheduler available within Uintah, and offers
 static task ordering and deterministic execution of ALL tasks, without MPI.
 With this scheduler, the MPI runtime is not initialized. It is primarily used
-for small runs on a single desktop or laptop. The
-\TT{SingleProcessorScheduler} is not the default scheduler in any case, and
-to invoke you must specify \TT{SingleProcessor} in the \TT{<Scheduler>}
-section of your input file.
+for small runs on a single desktop or laptop. The \TT{SingleProcessorScheduler}
+is not the default scheduler in any case, and to invoke you must specify
+\TT{SingleProcessor} in the \TT{<Scheduler>} section of your input file.
 
 
 \subsection{MPI Scheduler} \label{Sec:MPIScheduler}
 Uintah's MPI Scheduler, shown in Figure \ref{fig:MPIScheduler} is the basic
 task scheduler to be used in a distributed, cluster setting. The MPI scheduler
-uses a model of one MPI process per core. Though distributed, the task-graph on
+uses a model of one MPI process per core. Though distributed, the task-graph
+on
 each compute node will be identical and is executed in the same order, that is
 static task ordering and deterministic execution of ALL tasks. This normally
-works well for most cases under roughly 100K cores and where results need to be
+works well for most cases under roughly 100K cores and where results need to
+be
 reproduced to machine precision.
 
 It has been shown that there is a substantial increase in MPI communication
@@ -865,7 +883,8 @@ drastically reduces the memory footprint seen at high core counts with an
 MPI-only approach.
 
 For most cases, this is the default scheduler, but you may also specify
-\TT{MPI} in the \TT{<Scheduler>} section of your input file. An example command
+\TT{MPI} in the \TT{<Scheduler>} section of your input file. An example
+command
 line to use the MPI Scheduler would look like:
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -874,7 +893,7 @@ mpirun -np <#procs> sus -mpi input.ups
 
 \begin{figure}[H]
   \centering
-  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.
+  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.0
   \textwidth]{MPIScheduler.png}
   \caption{MPI Scheduler}
   \label{fig:MPIScheduler}
@@ -888,19 +907,23 @@ simulation to sit idle when a single task is waiting for a message.
 Measurements have shown that this type of delay can be nearly 80 percent
 of the total MPI wait time in Uintah. The Dynamic MPI scheduler, shown in
 Figure \ref{fig:DynamicMPIScheduler} adaptively changes the task order during
-the execution to overlap communication and computation. This scheduler achieves
+the execution to overlap communication and computation. This scheduler
+achieves
 a significant performance benefit in lowering both the MPI wait time and the
 overall runtime. The dynamic scheduler utilizes two task queues: an internal
 ready queue and an external ready queue. If a task’s internal dependencies are
-satisfied, then that task will be put in the internal ready queue where it will
+satisfied, then that task will be put in the internal ready queue where it
+will
 wait until all required MPI communication has finished. A counter of
 outstanding MPI messages is tracked for each task. When this counter reaches
-zero the requisite, external communication is complete and the task is ready to
+zero the requisite, external communication is complete and the task is ready
+to
 be executed. At that point it is placed in the external ready queue (ranked
 based on the task priority algorithm used).
 
 To invoke the Dynamic MPI Scheduler, you must specify \TT{DynamicMPI} in
-the \TT{<Scheduler>} section of your input file. An example command line to use
+the \TT{<Scheduler>} section of your input file. An example command line to
+use
 the Dynamic MPI Scheduler would look like:
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -909,28 +932,26 @@ mpirun -np <#procs> sus -mpi input.ups
 
 \begin{figure}[H]
   \centering
-  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.
+  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.0
   \textwidth]{DynamicMPIScheduler.png}
   \caption{Dynamic MPI Scheduler}
   \label{fig:DynamicMPIScheduler}
 \end{figure}
 
 
-\subsection{Unified Scheduler} \label{Sec:UnifiedScheduler}
-Uintah has evolved to demonstrate both weak and strong scalability up to
-768,000 cores on DOE Mira. At ~100K cores, we have shown that with an MPI-only
-approach, memory use associated with ghost cells and global meta-data becomes a
+\subsection{Threaded MPI Scheduler} \label{Sec:ThreadedMPIScheduler}
+At ~100K cores, we have shown that with an MPI-only approach, memory use
+associated with ghost cells and global meta-data becomes a
 barrier to scalability beyond $\mathcal{O}(100K)$ cores. This limitation has
 been overcome within Uintah through the use of hybrid parallelism,
 significantly reducing the memory footprint of the code per core by the
 development of a multi-threaded task scheduler that takes advantage of current
-multi-core and emerging many-core architectures. This hybrid memory approach (a
-combination of Pthreads and MPI) has enabled Uintah to demonstrate scalability
-up to 256K cores on DOE Titan 768k cores on the DOE Mira system.
+multi-core and emerging many-core architectures. This hybrid memory approach
+(a combination of Pthreads and MPI) has enabled Uintah to demonstrate scalability up to 256K cores on DOE Titan.
 
 With Uintah's dynamic and static MPI schedulers, based solely on MPI
 (Subsections \ref{Sec:MPIScheduler} and \ref{Sec:DynamicMPIScheduler}), data
-structures are created on each MPI process. Although most of Uintah
+structures are created on each MPI process. Although most Uintah
 infrastructure components are carefully designed to be stored in a distributed
 manner, it is necessary for some data to be stored multiple times, e.g.
 neighboring patch sets, neighboring tasks and ghost variables. A limitation of
@@ -939,12 +960,53 @@ node cannot share data. The multi-threaded Unified scheduler shown in Figure
 \ref{fig:UnifiedScheduler} solves this problem by dynamically assigning tasks
 to worker threads during execution and share the same infrastructure components
 between threads. The architecture of the runtime system has been extended to
-support multi-threaded and GPU execution. Compared to Uintah’s dynamic MPI
-scheduler, the multi-threaded MPI scheduler has several independent worker
-threads per MPI process. These all share infrastructure components such as the
-regridder, the load balancer, the task graph and the data warehouse and all
-have read and write access to them (via efficient, lock-free data structures).
-All threads on a node additionally process their own MPI.
+support multi-threaded execution (Uintah's answer to \textbf{"MPI + X"}).
+Compared to Uintah’s dynamic MPI scheduler, the multi-threaded MPI scheduler
+uses a centralized model using 1 control thread and $n-1$ task execution
+threads (out of $n$ threads specified). The control thread assigns tasks and
+processes MPI recvs (\emph{\textbf{not MPI sends}; worker threads post MPI sends for the task they execute}). There is shared access to the DataWarehouse. This scheduler requires \textbf{MPI\_THREAD\_MULTIPLE} support.
+
+To invoke the ThreadedMPI Scheduler, you must specify \texttt{ThreadedMPI} in
+the \TT{<Scheduler>} section of your input file, with the addition of
+"\TT{nthreads <n>}" (shown below) to your command to launch the \texttt{sus}
+executable.
+
+\begin{Verbatim}[fontsize=\footnotesize]
+mpirun -np <#procs> sus -mpi -nthreads 16 input.ups
+\end{Verbatim}
+
+Typically the \TT{<n>} will be equal to the number of cores available on a
+compute node. The above command line will launch 1 MPI process per node, 1
+control thread and 15 \TT{(nthreads -1)} task execution threads.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.0
+  \textwidth]{ThreadedMPIScheduler.png}
+  \caption{Multi-threaded MPI Scheduler}
+  \label{fig:UnifiedScheduler}
+\end{figure}
+
+
+\subsection{Unified Scheduler} \label{Sec:UnifiedScheduler}
+Through significant development on the Threaded MPI scheduler (Section
+\ref{Sec:ThreadedMPIScheduler} above) Uintah has evolved to demonstrate both
+weak and strong scalability up to 768,000 cores on DOE Mira. The hybrid memory
+approach used here (a combination of Pthreads and MPI) has enabled Uintah to
+demonstrate scalability up to 256K cores on DOE Titan 768k cores on the DOE
+Mira system.
+
+The multi-threaded Unified scheduler shown in Figure \ref{fig:UnifiedScheduler}
+allows all threads to access task queues (assigning work to themselves)
+during execution, process their own MPI sends and recvs, and share the same
+infrastructure components between all threads. The architecture of the runtime
+system has been extended to support multi-threaded and GPU execution. Compared
+to Uintah’s dynamic MPI and Threaded MPI scheduler, the Unified scheduler has
+several independent worker threads per MPI process. These all share
+infrastructure components such as the regridder, the load balancer, the task
+graph and the data warehouse and all have read and write access to them (via
+efficient, lock-free data structures). Again, all threads on a node
+additionally process their own MPI.
 
 To invoke the Unified Scheduler, you must specify \texttt{Unified} in the
 \TT{<Scheduler>} section of your input file, or simply at the
@@ -961,12 +1023,13 @@ compute node. The above command line will launch 1 MPI process per node and
 
 \begin{figure}[H]
   \centering
-  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.
+  \includegraphics[trim=0cm 0cm 0cm 0cm, clip=true, width=1.0
   \textwidth]{UnifiedScheduler.png}
   \caption{Multi-threaded Unified Scheduler with GPU support}
   \label{fig:UnifiedScheduler}
 \end{figure}
 
+\textbf{\emph{NOTE: This scheduler is still highly experimental!}}
 %
 %__________________________________
 %\section{Adaptive Mesh Refinement}
