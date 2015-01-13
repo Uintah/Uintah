@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_DMPISCHEDULER_H
-#define UINTAH_HOMEBREW_DMPISCHEDULER_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_DYNAMICMPISCHEDULER_H
+#define CCA_COMPONENTS_SCHEDULERS_DYNAMICMPISCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 
@@ -61,7 +61,10 @@ WARNING
 
   class DynamicMPIScheduler : public MPIScheduler  {
   public:
-    DynamicMPIScheduler( const ProcessorGroup * myworld, const Output * oport, DynamicMPIScheduler * parentScheduler = 0 );
+    DynamicMPIScheduler(const ProcessorGroup* myworld,
+                        const Output* oport,
+                        DynamicMPIScheduler* parentScheduler = 0);
+
     virtual ~DynamicMPIScheduler();
     
     virtual void problemSetup( const ProblemSpecP     & prob_spec,
@@ -82,4 +85,4 @@ WARNING
 
 } // End namespace Uintah
    
-#endif
+#endif // End CCA_COMPONENTS_SCHEDULERS_DYNAMICMPISCHEDULER_H

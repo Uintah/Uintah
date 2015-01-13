@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
-#define UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_SINGLEPROCESSORSCHEDULER_H
+#define CCA_COMPONENTS_SCHEDULERS_SINGLEPROCESSORSCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -55,12 +55,12 @@ GENERAL INFORMATION
   
 
 KEYWORDS
-   Scheduler_Brain_Damaged
+   Single Processor Scheduler
 
 DESCRIPTION
-   Long description...
+   Static task ordering and deterministic execution without MPI.
+   Primarily used for small runs on a single desktop or laptop.
   
-WARNING
   
 ****************************************/
 
@@ -84,4 +84,4 @@ WARNING
   };
 } // End namespace Uintah
    
-#endif
+#endif // End CCA_COMPONENTS_SCHEDULERS_SINGLEPROCESSORSCHEDULER_H

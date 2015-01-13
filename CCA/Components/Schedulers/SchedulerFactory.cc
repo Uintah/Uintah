@@ -27,6 +27,7 @@
 #include <CCA/Components/Schedulers/SingleProcessorScheduler.h>
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
+#include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
@@ -43,8 +44,8 @@ using namespace Uintah;
 
 // Enable specific schedulers via environment variable
 static DebugStream SingleProcessor("SingleProcessor", false);
-static DebugStream MPI("MPI", false);
 static DebugStream DynamicMPI("DynamicMPI", false);
+static DebugStream ThreadedMPI("ThreadedMPI", false);
 
 SchedulerCommon*
 SchedulerFactory::create(const ProblemSpecP&   ps,
@@ -73,6 +74,9 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
           scheduler = "MPI";
         }
       }
+      else if (ThreadedMPI.active()) {
+        scheduler = "ThreadedMPI";
+      }
       else {
         scheduler = "Unified";
       }
@@ -82,7 +86,7 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
         scheduler = "SingleProcessor";
       }
       else {
-        // Unified Scheduler without threads or MPI (Single-Processor mode)
+        // Defaults are: MPI (w/o threads) and Unified (with threads)
         scheduler = "Unified";
       }
     }
@@ -98,6 +102,9 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
   else if (scheduler == "DynamicMPI") {
     sch = scinew DynamicMPIScheduler(world, output, NULL);
   }
+  else if (scheduler == "ThreadedMPI") {
+    sch = scinew ThreadedMPIScheduler(world, output, NULL);
+  }
   else if (scheduler == "Unified") {
     sch = scinew UnifiedScheduler(world, output, NULL);
   }
@@ -108,8 +115,8 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
   }
 
   // "-nthreads" at command line, something other than "Unified" specified in UPS file
-  if ((Uintah::Parallel::getNumThreads() > 0) && (scheduler != "Unified")) {
-    throw ProblemSetupException("Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
+  if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "Unified") && (scheduler != "ThreadedMPI"))) {
+    throw ProblemSetupException("ThreadedMPI or Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
   }
 
   // Output which scheduler will be used
