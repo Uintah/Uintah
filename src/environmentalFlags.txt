@@ -9,9 +9,10 @@ ______________________________________________________________________
 
 ExecTimes         SCI_DEBUG     Outputs the time for execution on each task
                                 NOTE: TaskExecTimes are: 
-                                        1) Represented in seconds
-                                        2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps
-                                        3) Cumulative over the number of worker threads for multi-threaded runs
+                                         1) Represented in seconds
+                                         2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps
+                                        3a) Cumulative over nthreads when using the UnifiedScheduler
+                                        3b) Cumulative over nthreads-1 when using the ThreadedMPIScheduler
                                 To view the top 10 tasks use:
                                 sort -t: -k 2 -k 3 -g -r exectimes.?.? | head
                                 To get a summary of all exectimes files run the script src/scripts/execsummary
@@ -51,10 +52,22 @@ MPIScheduler               SCI_DEBUG     Prints debugging information for the MP
 DynamicMPIScheduler        SCI_DEBUG     Prints debugging information for the DynamicMPIScheduler
 UnifiedScheduler           SCI_DEBUG     Prints debugging information for the UnifiedScheduler
 
+ThreadedMPIScheduler Related:
+__________________________________
+CPUAffinity                SCI_DEBUG     Binds the main thread to core 0 and TaskWorkers to core <Uintah thread id>
+                                         NOTE: This is ENABLED by default
+MICCompactAffinity         SCI_DEBUG     Binds the main thread to core 242 and TaskWorkers to core <Uintah thread id>
+                                         NOTE: The main thread is placed such that it shares the physical core
+                                               containing core 0, which is reserved for the Xeon Phi OS
 
 UnifiedScheduler Related:
 __________________________________
-CPUAffinity                SCI_DEBUG     Binds control threads to core 0 and worker threads to core <Uintah thread id>
+CPUAffinity                SCI_DEBUG     Binds the main thread to core 0 and UnifiedWorkers to core <Uintah thread id>
+                                         NOTE: This is ENABLED by default
+MICCompactAffinity         SCI_DEBUG     Binds the main thread to core 1 and UnifiedWorkers to core <Uintah thread id + 1>
+                                         NOTE: Since it can execute tasks, the main thread has been placed such that 
+                                               it avoids the physical core containing core 0, which is reserved for 
+                                               the Xeon Phi OS
 UnifiedThreadDBG           SCI_DEBUG     Prints debugging information for thread pinning
 
 

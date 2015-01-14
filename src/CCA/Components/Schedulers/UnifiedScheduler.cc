@@ -78,6 +78,7 @@ static DebugStream timeout("UnifiedScheduler.timings", false);
 static DebugStream queuelength("QueueLength", false);
 static DebugStream threaddbg("UnifiedThreadDBG", false);
 static DebugStream affinity("CPUAffinity", true);
+static DebugStream miccompactaffinity("MICCompactAffinity", false);
 
 #ifdef HAVE_CUDA
   static DebugStream gpu_stats("GPUStats", false);
@@ -264,6 +265,9 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec,
   SchedulerCommon::problemSetup(prob_spec, state);
   if (affinity.active()) {
     Thread::self()->set_affinity(0);  // bind main thread to core 0
+  }
+  if (miccompactaffinity.active()) {
+    Thread::self()->set_affinity(1);  // bind main thread to core 1
   }
 }
 
@@ -2535,6 +2539,9 @@ UnifiedSchedulerWorker::run()
   Thread::self()->set_myid(d_thread_id + 1);
   if (affinity.active()) {
     Thread::self()->set_affinity(d_thread_id + 1);
+  }
+  if (miccompactaffinity.active()) {
+    Thread::self()->set_affinity(d_thread_id + 2);
   }
 
   while( true ) {

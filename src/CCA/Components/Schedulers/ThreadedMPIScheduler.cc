@@ -57,6 +57,7 @@ extern DebugStream execout;
 static double CurrentWaitTime=0;
 
 static DebugStream affinity("CPUAffinity", true);
+static DebugStream miccompactaffinity("MICCompactAffinity", false);
 static DebugStream dbg("ThreadedMPIScheduler", false);
 static DebugStream timeout("ThreadedMPIScheduler.timings", false);
 static DebugStream queuelength("QueueLength",false);
@@ -200,7 +201,10 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
   if (affinity.active()) {
-    Thread::self()->set_affinity(0);  // bind main thread to core 0
+    Thread::self()->set_affinity(0);    // bind main thread to core 0
+  }
+  if (miccompactaffinity.active()) {
+    Thread::self()->set_affinity(242);  // bind main thead to core 242
   }
 
 }
@@ -993,6 +997,9 @@ TaskWorker::run()
 
   Thread::self()->set_myid(d_id + 1);
   if (affinity.active()) {
+    Thread::self()->set_affinity(d_id + 1);
+  }
+  if (miccompactaffinity.active()) {
     Thread::self()->set_affinity(d_id + 1);
   }
 
