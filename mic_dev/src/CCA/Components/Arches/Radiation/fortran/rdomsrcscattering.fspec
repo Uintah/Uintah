@@ -1,6 +1,0 @@
-void rdomsrcscattering(IntVector idxlo, IntVector idxhi, 
-           constCCVariable<double> abskg,
-	         CCVariable<double> esrcg,
-           CCVariable<double> volq,
-           CCVariable<double> src,
-           constCCVariable<double> scatkt);

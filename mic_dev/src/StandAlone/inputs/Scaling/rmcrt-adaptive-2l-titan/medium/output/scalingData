@@ -1,7 +1,0 @@
-#file procs startTime endTime aveMean
-rmcrt.bm1.do.med.16.64.1024.out 1024  145.86  507.91 51.7214
-rmcrt.bm1.do.med.16.128.2048.out 2048  94.57  270.18 25.0871
-rmcrt.bm1.do.med.16.256.4096.out 4096  48.26  157.23 15.5671
-rmcrt.bm1.do.med.16.512.8192.out 8192  36.25  116.27 11.4314
-rmcrt.bm1.do.med.16.1024.16384.out 16384  21.95  62.45 5.78571
-rmcrt.bm1.do.med.16.2048.32768.out 32768  21.29  43.81 3.21714
