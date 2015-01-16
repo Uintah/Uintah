@@ -30,14 +30,15 @@
 // Macros used to eliminate excess spew on large parallel runs...
 //
 //   Note, make sure that MPI_Init (or MPI_Init_thread) is called
-//   before using proc0cout().
+//   before using isProc0_macro.
 //
-#define proc0cout        if( Uintah::Parallel::getMPIRank() == 0 && \
-			       ( ( Uintah::Parallel::getNumThreads() > 1 && SCIRun::Thread::self()->myid() == 0 ) || \
-				 ( Uintah::Parallel::getNumThreads() <= 1 ) ) ) std::cout
-#define proc0cerr        if( Uintah::Parallel::getMPIRank() == 0 && \
-			       ( ( Uintah::Parallel::getNumThreads() > 1 && SCIRun::Thread::self()->myid() == 0 ) || \
-				 ( Uintah::Parallel::getNumThreads() <= 1 ) ) ) std::cerr
+#define isProc0_macro  ( Uintah::Parallel::getMPIRank() == 0 &&	  \
+		         ( ( Uintah::Parallel::getNumThreads() > 1 &&   \
+                             SCIRun::Thread::self()->myid() == 0 ) ||   \
+			   ( Uintah::Parallel::getNumThreads() <= 1 ) ) )
+
+#define proc0cout        if( isProc0_macro ) std::cout
+#define proc0cerr        if( isProc0_macro ) std::cerr
 
 namespace Uintah {
 
