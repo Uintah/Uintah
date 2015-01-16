@@ -66,7 +66,7 @@ set me = `xmlstarlet sel --template --value-of "$xmlpath" $ups`
 if ($me != $value) then
   echo ""
   echo " WARNING there was a problem editing the xml file, specifically the label $value was not found." 
-  echo " This may be OK.
+  echo " This may be OK."
   echo " $me  $value"
   echo ""
   exit(-1)  
