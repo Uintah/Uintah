@@ -334,7 +334,7 @@ void MiniAero::schedPrimitives(const LevelP& level,
 //
 void MiniAero::schedGradients(const LevelP& level,
                               SchedulerP& sched,
-			      const int RK_step)
+                              const int RK_step)
 {
   Task* task = scinew Task("MiniAero::Gradients", this, 
                            &MiniAero::Gradients, RK_step);
@@ -400,7 +400,7 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
   Task* task = scinew Task("MiniAero::faceCenteredFlux", this, 
                            &MiniAero::faceCenteredFlux, RK_step);
 
-   printSchedule(level,dbg,"schedFaceCenteredFlux");
+  printSchedule(level,dbg,"schedFaceCenteredFlux");
    
   task->requires(Task::NewDW,flux_mass_CClabel,  Ghost::AroundCells, 1);
   task->requires(Task::NewDW,flux_mom_CClabel,   Ghost::AroundCells, 1);
@@ -930,8 +930,8 @@ void MiniAero::Primitives(const ProcessorGroup* /*pg*/,
     // This must be done after BCs are set
     if(d_viscousFlow){
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-	IntVector c = *iter;
-	viscosity[c] = getViscosity(Temp_CC[c]);
+        IntVector c = *iter;
+        viscosity[c] = getViscosity(Temp_CC[c]);
       }
     }
     
@@ -962,8 +962,8 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
                           const PatchSubset* patches,
                           const MaterialSubset* /*matls*/,
                           DataWarehouse* old_dw,
-			 DataWarehouse* new_dw,
-			 const int RK_step)
+       DataWarehouse* new_dw,
+       const int RK_step)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -1419,26 +1419,25 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
       IntVector offset(-1,0,0);
 
       for(int idim = 0; idim < 3; ++idim){
-	primitives_l[idim] = vel_CC[c][idim];
-	primitives_r[idim] = vel_CC[c+offset][idim];
-	for(int jdim = 0; jdim < 3; ++jdim){
-	  grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
-	  grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
-	}
+        primitives_l[idim] = vel_CC[c][idim];
+        primitives_r[idim] = vel_CC[c+offset][idim];
+        for(int jdim = 0; jdim < 3; ++jdim){
+          grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
+          grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
+        }
       }
       primitives_l[3] = Temp_CC[c];
       primitives_r[3] = Temp_CC[c+offset];
       for(int jdim = 0; jdim < 3; ++jdim){
-	grad_primitives_l[4][jdim] = grad_temp[c][jdim];
-	grad_primitives_r[4][jdim] = grad_temp[c+offset][jdim];
+        grad_primitives_l[3][jdim] = grad_temp[c][jdim];
+        grad_primitives_r[3][jdim] = grad_temp[c+offset][jdim];
       }
       double normal[] = {1.0, 0.0, 0.0};
       for(int i=0; i<4; ++i)
         visc_flux[i] = 0.0;
 
-
       compute_viscous_flux(primitives_l, primitives_r, grad_primitives_l,
-			   grad_primitives_r, visc_flux, normal); 
+         grad_primitives_r, visc_flux, normal); 
       visc_flux_mom_FCX   [c][0] = visc_flux[0];
       visc_flux_mom_FCX   [c][1] = visc_flux[1];
       visc_flux_mom_FCX   [c][2] = visc_flux[2];
@@ -1450,25 +1449,25 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
       IntVector offset(0,-1,0);
 
       for(int idim = 0; idim < 3; ++idim){
-	primitives_l[idim] = vel_CC[c][idim];
-	primitives_r[idim] = vel_CC[c+offset][idim];
-	for(int jdim = 0; jdim < 3; ++jdim){
-	  grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
-	  grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
-	}
+        primitives_l[idim] = vel_CC[c][idim];
+        primitives_r[idim] = vel_CC[c+offset][idim];
+        for(int jdim = 0; jdim < 3; ++jdim){
+          grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
+          grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
+        }
       }
       primitives_l[3] = Temp_CC[c];
       primitives_r[3] = Temp_CC[c+offset];
       for(int jdim = 0; jdim < 3; ++jdim){
-	grad_primitives_l[4][jdim] = grad_temp[c][jdim];
-	grad_primitives_r[4][jdim] = grad_temp[c+offset][jdim];
+        grad_primitives_l[3][jdim] = grad_temp[c][jdim];
+        grad_primitives_r[3][jdim] = grad_temp[c+offset][jdim];
       }
       double normal[] = {0.0, 1.0, 0.0};
       for(int i=0; i<4; ++i)
         visc_flux[i] = 0.0;
 
       compute_viscous_flux(primitives_l, primitives_r, grad_primitives_l,
-			   grad_primitives_r, visc_flux, normal); 
+         grad_primitives_r, visc_flux, normal); 
       visc_flux_mom_FCY   [c][0] = visc_flux[0];
       visc_flux_mom_FCY   [c][1] = visc_flux[1];
       visc_flux_mom_FCY   [c][2] = visc_flux[2];
@@ -1480,25 +1479,25 @@ void MiniAero::viscousFaceFlux(const ProcessorGroup* /*pg*/,
       IntVector offset(0,0,-1);
 
       for(int idim = 0; idim < 3; ++idim){
-	primitives_l[idim] = vel_CC[c][idim];
-	primitives_r[idim] = vel_CC[c+offset][idim];
-	for(int jdim = 0; jdim < 3; ++jdim){
-	  grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
-	  grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
-	}
+        primitives_l[idim] = vel_CC[c][idim];
+        primitives_r[idim] = vel_CC[c+offset][idim];
+        for(int jdim = 0; jdim < 3; ++jdim){
+          grad_primitives_l[idim][jdim] = grad_vel[c](idim,jdim);
+          grad_primitives_r[idim][jdim] = grad_vel[c+offset](idim,jdim);
+        }
       }
       primitives_l[3] = Temp_CC[c];
       primitives_r[3] = Temp_CC[c+offset];
       for(int jdim = 0; jdim < 3; ++jdim){
-	grad_primitives_l[4][jdim] = grad_temp[c][jdim];
-	grad_primitives_r[4][jdim] = grad_temp[c+offset][jdim];
+        grad_primitives_l[3][jdim] = grad_temp[c][jdim];
+        grad_primitives_r[3][jdim] = grad_temp[c+offset][jdim];
       }
       double normal[] = {0.0, 0.0, 1.0};
       for(int i=0; i<4; ++i)
         visc_flux[i] = 0.0;
 
       compute_viscous_flux(primitives_l, primitives_r, grad_primitives_l,
-			   grad_primitives_r, visc_flux, normal); 
+         grad_primitives_r, visc_flux, normal); 
       visc_flux_mom_FCZ   [c][0] = visc_flux[0];
       visc_flux_mom_FCZ   [c][1] = visc_flux[1];
       visc_flux_mom_FCZ   [c][2] = visc_flux[2];
@@ -1594,7 +1593,8 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
         IntVector c = *iter;
         sum_residual_CC[c].initialize(0.0);
       }
-    }else{
+    }
+    else{
       new_dw->getModifiable( residual_CC,     residual_CClabel,      0,patch );
       new_dw->getModifiable( sum_residual_CC, sum_residual_CClabel,  0,patch );
     }
@@ -1625,25 +1625,24 @@ void MiniAero::updateResidual(const ProcessorGroup* /*pg*/,
         (flux_energy_FCZ[F] - flux_energy_FCZ[c])*dydx + (diss_flux_energy_FCZ[F] - diss_flux_energy_FCZ[c])*dydx;
 
       for(int idim = 0; idim < 3; ++idim) {
-	 residual_CC[c][idim + 1] =  
+        residual_CC[c][idim + 1] =  
           (flux_mom_FCX[R][idim] - flux_mom_FCX[c][idim])*dydz + (diss_flux_mom_FCX[R][idim] - diss_flux_mom_FCX[c][idim])*dydz + 
           (flux_mom_FCY[T][idim] - flux_mom_FCY[c][idim])*dxdz + (diss_flux_mom_FCY[T][idim] - diss_flux_mom_FCY[c][idim])*dxdz + 
           (flux_mom_FCZ[F][idim] - flux_mom_FCZ[c][idim])*dydx + (diss_flux_mom_FCZ[F][idim] - diss_flux_mom_FCZ[c][idim])*dydx;
       }
 
       if(d_viscousFlow){ //Only subtract viscous fluxes for momentum and energy. Mass viscous flux = 0
-	residual_CC[c][4] -=  //Verify that the -ve sign is correct
-	  (visc_flux_energy_FCX[R] - visc_flux_energy_FCX[c])*dydz + 
-	  (visc_flux_energy_FCY[T] - visc_flux_energy_FCY[c])*dxdz +  
-	  (visc_flux_energy_FCZ[F] - visc_flux_energy_FCZ[c])*dydx;
+        residual_CC[c][4] -=  //Verify that the -ve sign is correct
+          (visc_flux_energy_FCX[R] - visc_flux_energy_FCX[c])*dydz + 
+          (visc_flux_energy_FCY[T] - visc_flux_energy_FCY[c])*dxdz +  
+          (visc_flux_energy_FCZ[F] - visc_flux_energy_FCZ[c])*dydx;
 
-	for(int idim = 0; idim < 3; ++idim) {
-	residual_CC[c][idim + 1] -=  
-	  (visc_flux_mom_FCX[R][idim] - visc_flux_mom_FCX[c][idim])*dydz + 
-	  (visc_flux_mom_FCY[T][idim] - visc_flux_mom_FCY[c][idim])*dxdz + 
-	  (visc_flux_mom_FCZ[F][idim] - visc_flux_mom_FCZ[c][idim])*dydx;
-	} //idim
-
+        for(int idim = 0; idim < 3; ++idim) {
+        residual_CC[c][idim + 1] -=  
+          (visc_flux_mom_FCX[R][idim] - visc_flux_mom_FCX[c][idim])*dydz + 
+          (visc_flux_mom_FCY[T][idim] - visc_flux_mom_FCY[c][idim])*dxdz + 
+          (visc_flux_mom_FCZ[F][idim] - visc_flux_mom_FCZ[c][idim])*dydx;
+        } //idim
       } //d_viscousFlow
       
       
@@ -1949,11 +1948,11 @@ void MiniAero::compute_roe_dissipative_flux(const double * primitives_left,
 //______________________________________________________________________
 //
 void MiniAero::compute_viscous_flux(const double * primitives_left,
-				    const double * primitives_right,
-				    double grad_primitives_left[4][3],
-				    double grad_primitives_right[4][3],
-				    double * flux, 
-				    double * face_normal)
+            const double * primitives_right,
+            double grad_primitives_left[4][3],
+            double grad_primitives_right[4][3],
+            double * flux, 
+            double * face_normal)
 {
  
   //Left State
@@ -1987,13 +1986,13 @@ void MiniAero::compute_viscous_flux(const double * primitives_left,
   for (int i = 0; i < 3; ++i)
     {
       for (int j = 0; j < 3; ++j)
-	{
-	  const double delta_ij = (i == j ) ? 1 : 0;
-	  const double S_ij = 0.5*(grad_primitives[i][j] + grad_primitives[j][i]);
-	  const double t_ij = S_ij - divergence_velocity*delta_ij/3.;
-	  flux[i] += (2*viscosity*t_ij)*face_normal[j];
-	  flux[3] += (2*viscosity*t_ij)*primitives[i]*face_normal[j];
-	}
+  {
+    const double delta_ij = (i == j ) ? 1 : 0;
+    const double S_ij = 0.5*(grad_primitives[i][j] + grad_primitives[j][i]);
+    const double t_ij = S_ij - divergence_velocity*delta_ij/3.;
+    flux[i] += (2*viscosity*t_ij)*face_normal[j];
+    flux[3] += (2*viscosity*t_ij)*primitives[i]*face_normal[j];
+  }
       flux[3] += thermal_conductivity*grad_primitives[3][i]*face_normal[i];
     }
 
