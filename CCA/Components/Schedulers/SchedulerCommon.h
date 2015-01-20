@@ -26,13 +26,13 @@
 #ifndef UINTAH_HOMEBREW_SCHEDULERCOMMON_H
 #define UINTAH_HOMEBREW_SCHEDULERCOMMON_H
 
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Components/Schedulers/Relocate.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
+#include <CCA/Components/Schedulers/Relocate.h>
+#include <CCA/Ports/Scheduler.h>
+#include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationStateP.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/Util/DebugStream.h>
 
 #include   <iosfwd>
@@ -76,7 +76,9 @@ WARNING
 ****************************************/
 
   class SchedulerCommon : public Scheduler, public UintahParallelComponent {
+
   public:
+
     SchedulerCommon( const ProcessorGroup * myworld, const Output * oport );
     virtual ~SchedulerCommon();
 
@@ -243,6 +245,7 @@ WARNING
     ReductionTasksMap reductionTasks;
 
   protected:
+
     void finalizeTimestep();
     
     void makeTaskGraphDoc(const DetailedTasks* dt,
@@ -284,14 +287,12 @@ WARNING
 
     std::vector<OnDemandDataWarehouseP> dws;
     int                                 numOldDWs;
-
     int                                 dwmap[Task::TotalDWs];
 
-    const Output                      * m_outPort;
+    const Output*                       m_outPort;
     bool                                restartable;
 
-    //! These are so we can track certain variables over the taskgraph's
-    //! execution.
+    //! These are so we can track certain variables over the taskgraph's execution.
     std::vector<std::string>   trackingVars_;
     std::vector<std::string>   trackingTasks_;
     std::vector<Task::WhichDW> trackingDWs_;
