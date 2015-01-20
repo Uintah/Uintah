@@ -33,6 +33,7 @@
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
+
 #include <map>
 #include <list>
 #include <string>
@@ -80,16 +81,15 @@ WARNING
     virtual ~Scheduler();
    
     virtual void printMPIStats() {};
+
     // Only called by the SimulationController, and only once, and only
     // if the simulation has been "restarted."
     virtual void setGeneration( int id ) = 0;
 
-    virtual void problemSetup(const ProblemSpecP& prob_spec, 
-                              SimulationStateP& state) = 0;
+    virtual void problemSetup(const ProblemSpecP& prob_spec, SimulationStateP& state) = 0;
     
-    virtual void checkMemoryUse( unsigned long & memuse, unsigned long & highwater,
-                                 unsigned long & maxMemUse ) = 0;
-    virtual void  setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
+    virtual void checkMemoryUse( unsigned long & memuse, unsigned long & highwater, unsigned long & maxMemUse ) = 0;
+    virtual void setStartAddr( char * start ) = 0;  // sbrk memory start location (for memory tracking)
     virtual char* getStartAddr() = 0;
     virtual void resetMaxMemValue() = 0;
 
@@ -153,21 +153,21 @@ WARNING
     // Insert Documentation Here:
     virtual void setPositionVar(const VarLabel* posLabel) = 0;
     
-    virtual void scheduleParticleRelocation(const LevelP& coarsestLevelwithParticles,
-					    const VarLabel* posLabel,
-					    const std::vector<std::vector<const VarLabel*> >& labels,
-					    const VarLabel* new_posLabel,
-					    const std::vector<std::vector<const VarLabel*> >& new_labels,
-					    const VarLabel* particleIDLabel,
-					    const MaterialSet* matls) = 0;
+    virtual void scheduleParticleRelocation( const LevelP& coarsestLevelwithParticles,
+                                             const VarLabel* posLabel,
+                                             const std::vector<std::vector<const VarLabel*> >& labels,
+                                             const VarLabel* new_posLabel,
+                                             const std::vector<std::vector<const VarLabel*> >& new_labels,
+                                             const VarLabel* particleIDLabel,
+                                             const MaterialSet* matls) = 0;
 
-    virtual void scheduleParticleRelocation(const LevelP& level,
-					    const VarLabel* posLabel,
-					    const std::vector<std::vector<const VarLabel*> >& labels,
-					    const VarLabel* new_posLabel,
-					    const std::vector<std::vector<const VarLabel*> >& new_labels,
-					    const VarLabel* particleIDLabel,
-					    const MaterialSet* matls, int w) = 0;
+    virtual void scheduleParticleRelocation( const LevelP& level,
+                                             const VarLabel* posLabel,
+                                             const std::vector<std::vector<const VarLabel*> >& labels,
+                                             const VarLabel* new_posLabel,
+                                             const std::vector<std::vector<const VarLabel*> >& new_labels,
+                                             const VarLabel* particleIDLabel,
+                                             const MaterialSet* matls, int w) = 0;
 
     //////////
     // Schedule particle relocation without the need to provide pre-relocation labels. Warning: This
@@ -178,13 +178,16 @@ WARNING
                                             const MaterialSet* matls) = 0;
 
     //! Schedule copying data to new grid after regridding
-    virtual void scheduleAndDoDataCopy(const GridP& grid, 
-                                       SimulationInterface* sim) = 0;
+    virtual void scheduleAndDoDataCopy( const GridP& grid,
+                                              SimulationInterface* sim) = 0;
 
 
-    virtual void overrideVariableBehavior(std::string var, bool treatAsOld, 
-                                          bool copyData, bool noScrub,
-                                          bool notCopyData, bool noCheckpoint) = 0;
+    virtual void overrideVariableBehavior( std::string var,
+                                           bool treatAsOld,
+                                           bool copyData,
+                                           bool noScrub,
+                                           bool notCopyData,
+                                           bool noCheckpoint) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
@@ -192,12 +195,14 @@ WARNING
     // ghost cells as well (requestedLow, requestedHigh) for each of the
     // patches.  Required and requested will be the same if requestedNumGCells = 0.
     virtual const std::vector<const Patch*>*
-    getSuperPatchExtents(const VarLabel* label, int matlIndex,
-			 const Patch* patch, Ghost::GhostType requestedGType,
-			 int requestedNumGCells, IntVector& requiredLow,
-			 IntVector& requiredHigh, IntVector& requestedLow,
-			 IntVector& requestedHigh) const = 0;
     
+    getSuperPatchExtents( const VarLabel* label,
+                                int matlIndex,
+                          const Patch* patch, Ghost::GhostType requestedGType,
+                                int requestedNumGCells, IntVector& requiredLow,
+                                IntVector& requiredHigh, IntVector& requestedLow,
+                                IntVector& requestedHigh) const = 0;
+
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
@@ -212,6 +217,7 @@ WARNING
     virtual void setRestartInitTimestep(bool) = 0;
 
   private:
+
     Scheduler(const Scheduler&);
     Scheduler& operator=(const Scheduler&);
   };

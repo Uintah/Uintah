@@ -31,10 +31,11 @@
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
+
 #include <Core/Parallel/PackBufferInfo.h>
- 
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>
+
 #include <vector>
 #include <map>
 #include <fstream>
@@ -76,25 +77,22 @@ GENERAL INFORMATION
   
 
 KEYWORDS
-   Scheduler_Brain_Damaged
+   MPI Scheduler
 
 DESCRIPTION
-   Long description...
-  
-WARNING
+   Static task ordering and deterministic execution with MPI. One MPI rank per CPU core.
   
 ****************************************/
 
   class MPIScheduler : public SchedulerCommon {
+
   public:
-    MPIScheduler( const ProcessorGroup * myworld, const Output * oport, MPIScheduler * parentScheduler = 0 );
+
+    MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
     virtual ~MPIScheduler();
       
-    virtual void problemSetup( const ProblemSpecP     & prob_spec,
-                                     SimulationStateP & state );
+    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
 
-    //////////
-    // Insert Documentation Here:
     virtual void execute( int tgnum = 0, int iteration = 0 );
 
     virtual SchedulerP createSubScheduler();
@@ -105,12 +103,12 @@ WARNING
     virtual void processMPIRecvs(int how_much);    
 
             void postMPISends( DetailedTask* task, int iteration );
-    virtual void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration);
+    virtual void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
     virtual void runTask( DetailedTask* task, int iteration );
     virtual void runReductionTask( DetailedTask* task);        
 
-    void addToSendList(const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var);
+    void addToSendList( const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var );
 
     // get the processor group executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup() { return d_myworld; }
@@ -122,7 +120,7 @@ WARNING
     }
 
     void printMPIStats() {
-      if(mpi_stats.active()) {
+      if (mpi_stats.active()) {
         unsigned int total_messages;
         double total_volume;
 
@@ -131,7 +129,6 @@ WARNING
 
         MPI_Reduce(&numMessages_,&total_messages,1,MPI_UNSIGNED,MPI_SUM,0,d_myworld->getComm());
         MPI_Reduce(&messageVolume_,&total_volume,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-        
         MPI_Reduce(&numMessages_,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
         MPI_Reduce(&messageVolume_,&max_volume,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
 
@@ -143,17 +140,15 @@ WARNING
     }
 
     mpi_timing_info_s   mpi_info_;
-    MPIScheduler      * parentScheduler_;
+    MPIScheduler*       parentScheduler_;
 
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
-    virtual void initiateReduction( DetailedTask          * task);    
+    virtual void initiateReduction( DetailedTask* task);
 
   protected:
+
     // Runs the task. (In Mixed, gives the task to a thread.)
-    virtual void initiateTask( DetailedTask * task,
-                               bool           only_old_recvs,
-                               int            abort_point,
-                               int            iteration );
+    virtual void initiateTask( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
 
     // Waits until all tasks have finished.  In the MPI Scheduler,
@@ -167,9 +162,7 @@ WARNING
     void emitTime( const char* label, double time );
 
     MessageLog                  log;
-
-    const Output              * oport_;
-
+    const Output*               oport_;
     CommRecMPI                  sends_;
     CommRecMPI                  recvs_;
 
@@ -182,6 +175,7 @@ WARNING
     double                      messageVolume_;
 
   private:
+
     MPIScheduler(const MPIScheduler&);
     MPIScheduler& operator=(const MPIScheduler&);
   };

@@ -49,30 +49,30 @@ extern SCIRun::Mutex cerrLock;
 
 extern DebugStream taskdbg;
 extern DebugStream mpidbg;
-extern map<string,double> waittimes;
-extern map<string,double> exectimes;
+extern map<string, double> waittimes;
+extern map<string, double> exectimes;
 extern DebugStream waitout;
 extern DebugStream execout;
 
-static double CurrentWaitTime=0;
+static double ThreadedMPI_CurrentWaitTime = 0;
 
-static DebugStream affinity("CPUAffinity", true);
-static DebugStream miccompactaffinity("MICCompactAffinity", false);
-static DebugStream dbg("ThreadedMPIScheduler", false);
-static DebugStream timeout("ThreadedMPIScheduler.timings", false);
-static DebugStream queuelength("QueueLength",false);
-static DebugStream threaddbg("ThreadDBG",false);
+static DebugStream threadedmpi_dbg(         "ThreadedMPI_DBG",         false);
+static DebugStream threadedmpi_timeout(     "ThreadedMPI_Timeout",     false);
+static DebugStream threadedmpi_st(          "ThreadedMPI_SendTiming",  false);
+static DebugStream threadedmpi_queuelength( "ThreadedMPI_QueueLength", false);
+static DebugStream threadedmpi_threaddbg(   "ThreadedMPI_ThreadDBG",   false);
+static DebugStream threadedmpi_affinity(    "ThreadedMPI_CPUAffinity", true);
+static DebugStream threadedmpi_miccompactaffinity("ThreadedMPI_MICCompactAffinity", false);
 
-ThreadedMPIScheduler::ThreadedMPIScheduler(const ProcessorGroup* myworld,
-                                           const Output* oport,
-                                           ThreadedMPIScheduler* parentScheduler)
-    :
-      MPIScheduler(myworld, oport, parentScheduler),
+ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup*       myworld,
+                                            const Output*               oport,
+                                                  ThreadedMPIScheduler* parentScheduler) :
+        MPIScheduler(myworld, oport, parentScheduler),
         d_nextsignal("next condition"),
         d_nextmutex("next mutex"),
         dlbLock("loadbalancer lock")
 {
-  if (timeout.active()) {
+  if (threadedmpi_timeout.active()) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     timingStats.open(filename);
@@ -101,11 +101,12 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
     t_thread[i]->join();
   }
 
-  if (timeout.active()) {
+  if (threadedmpi_timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
-      avgStats.close();
+      minStats.close();
       maxStats.close();
+      avgStats.close();
     }
   }
 }
@@ -114,8 +115,8 @@ ThreadedMPIScheduler::~ThreadedMPIScheduler()
 //
 
 void
-ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
-                           SimulationStateP& state)
+ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
+                                          SimulationStateP& state)
 {
   // Default taskReadyQueueAlg
   taskQueueAlg_ = MostMessages;
@@ -200,11 +201,13 @@ ThreadedMPIScheduler::problemSetup(const ProblemSpecP& prob_spec,
   
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-  if (affinity.active()) {
-    Thread::self()->set_affinity(0);    // bind main thread to core 0
+
+  if (threadedmpi_affinity.active()) {
+    Thread::self()->set_affinity(0);    // CPU - bind main thread to core 0
   }
-  if (miccompactaffinity.active()) {
-    Thread::self()->set_affinity(242);  // bind main thead to core 242
+
+  if (threadedmpi_miccompactaffinity.active()) {
+    Thread::self()->set_affinity(242);  // MIC - bind main thead to core 242
   }
 
 }
@@ -241,6 +244,14 @@ ThreadedMPIScheduler::createSubScheduler()
       Thread* t = scinew Thread(worker, name, subGroup);
       subsched->t_thread[i] = t;
     }
+
+    if (threadedmpi_affinity.active()) {
+      Thread::self()->set_affinity(0);    // CPU - bind main thread to core 0
+    }
+
+    if (threadedmpi_miccompactaffinity.active()) {
+      Thread::self()->set_affinity(242);  // MIC - bind main thead to core 242
+    }
   }
 
   return subsched;
@@ -250,7 +261,8 @@ ThreadedMPIScheduler::createSubScheduler()
 //
 
 void
-ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
+ThreadedMPIScheduler::execute( int tgnum /*=0*/,
+                               int iteration /*=0*/ )
 {
   if (d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
@@ -297,7 +309,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (timeout.active()) {
+  if (threadedmpi_timeout.active()) {
     d_labels.clear();
     d_times.clear();
     //emitTime("time since last execute");
@@ -313,15 +325,15 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 //    emitTime("taskGraph output");
 //  }
 
-  mpi_info_.totalreduce = 0;
-  mpi_info_.totalsend = 0;
-  mpi_info_.totalrecv = 0;
-  mpi_info_.totaltask = 0;
+  mpi_info_.totalreduce    = 0;
+  mpi_info_.totalsend      = 0;
+  mpi_info_.totalrecv      = 0;
+  mpi_info_.totaltask      = 0;
   mpi_info_.totalreducempi = 0;
-  mpi_info_.totalsendmpi = 0;
-  mpi_info_.totalrecvmpi = 0;
-  mpi_info_.totaltestmpi = 0;
-  mpi_info_.totalwaitmpi = 0;
+  mpi_info_.totalsendmpi   = 0;
+  mpi_info_.totalrecvmpi   = 0;
+  mpi_info_.totaltestmpi   = 0;
+  mpi_info_.totalwaitmpi   = 0;
 
   int numTasksDone = 0;
 
@@ -347,9 +359,9 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
-  if (dbg.active()) {
+  if (threadedmpi_dbg.active()) {
     cerrLock.lock();
-    dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << endl;
+    threadedmpi_dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << endl;
     cerrLock.unlock();
   }
 
@@ -403,7 +415,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     }
     //if it is time to run reduction task
     else if ((phaseSyncTask[currphase] != NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {
-      if (queuelength.active()) {
+      if (threadedmpi_queuelength.active()) {
         if ((int)histogram.size() < dts->numExternalReadyTasks() + 1)
           histogram.resize(dts->numExternalReadyTasks() + 1);
         histogram[dts->numExternalReadyTasks()]++;
@@ -451,7 +463,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     // tasks get in this queue automatically when their receive count hits 0
     //   in DependencyBatch::received, which is called when a message is delivered.
     else if (dts->numExternalReadyTasks() > 0) {
-      if (queuelength.active()) {
+      if (threadedmpi_queuelength.active()) {
         if ((int)histogram.size() < dts->numExternalReadyTasks() + 1) {
           histogram.resize(dts->numExternalReadyTasks() + 1);
         }
@@ -489,7 +501,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
   d_nextmutex.unlock();
 
-  if (queuelength.active()) {
+  if (threadedmpi_queuelength.active()) {
     float lengthsum = 0;
     totaltasks += ntasks;
     for (unsigned int i = 1; i < histogram.size(); i++) {
@@ -504,7 +516,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   // TODO - need to update this to state that's in UnifiedScheduler (APH - 01/12/15)
-  if (timeout.active()) {
+  if (threadedmpi_timeout.active()) {
     emitTime("MPI send time", mpi_info_.totalsendmpi);
 //    emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
     emitTime("Total send time", mpi_info_.totalsend - mpi_info_.totalsendmpi - mpi_info_.totaltestmpi);
@@ -553,7 +565,7 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   finalizeTimestep();
 
   log.finishTimestep();
-  if (timeout.active() && !parentScheduler_) {  // only do on toplevel scheduler
+  if (threadedmpi_timeout.active() && !parentScheduler_) {  // only do on toplevel scheduler
     //emitTime("finalize");
 
     // add number of cells, patches, and particles
@@ -655,11 +667,11 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
     // TODO - need to update this to state that's in UnifiedScheduler (APH - 01/12/15)
     if (me == 0) {
-      timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100
+      threadedmpi_timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100
               << " load imbalance (exec)%\n";
-      timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100
+      threadedmpi_timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100
               << " load imbalance (comm)%\n";
-      timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100
+      threadedmpi_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100
               << " load imbalance (theoretical)%\n";
     }
 
@@ -709,8 +721,8 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     }
   }
 
-  if (dbg.active()) {
-    dbg << me << " ThreadedMPIScheduler finished\n";
+  if (threadedmpi_dbg.active()) {
+    threadedmpi_dbg << me << " ThreadedMPIScheduler finished\n";
   }
 }
 
@@ -718,15 +730,15 @@ ThreadedMPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 //
 
 void
-ThreadedMPIScheduler::runTask(DetailedTask* task,
-                              int iteration,
-                              int t_id /*=0*/)
+ThreadedMPIScheduler::runTask( DetailedTask* task,
+                               int           iteration,
+                               int           t_id /*=0*/ )
 {
   TAU_PROFILE("ThreadedMPIScheduler::runTask()", " ", TAU_USER);
 
   if (waitout.active()) {
-    waittimes[task->getTask()->getName()] += CurrentWaitTime;
-    CurrentWaitTime = 0;
+    waittimes[task->getTask()->getName()] += ThreadedMPI_CurrentWaitTime;
+    ThreadedMPI_CurrentWaitTime = 0;
   }
 
   double taskstart = Time::currentSeconds();
@@ -790,16 +802,22 @@ ThreadedMPIScheduler::runTask(DetailedTask* task,
 //
 
 void
-ThreadedMPIScheduler::postMPISends( DetailedTask* task, int iteration, int t_id )
+ThreadedMPIScheduler::postMPISends( DetailedTask* task,
+                                    int           iteration,
+                                    int           t_id )
 {
   MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::postMPISends");
 
   double sendstart = Time::currentSeconds();
-  if (dbg.active()) {
+
+  if (threadedmpi_dbg.active()) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
+    threadedmpi_dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
     cerrLock.unlock();
   }
+
+  int numSend=0;
+  int volSend=0;
 
   // Send data to dependendents
   for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
@@ -820,24 +838,24 @@ ThreadedMPIScheduler::postMPISends( DetailedTask* task, int iteration, int t_id 
           && iteration == 0)
           || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
         // See comment in DetailedDep about CommCondition
-        if (dbg.active())
-          dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;
+        if (threadedmpi_dbg.active())
+          threadedmpi_dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;
         continue;
       }
       // if we send/recv to an output task, don't send/recv if not an output timestep
       if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep()
           && !oport_->isCheckpointTimestep()) {
-        if (dbg.active())
-          dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << endl;
+        if (threadedmpi_dbg.active())
+          threadedmpi_dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << endl;
         continue;
       }
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
 
       //dbg.setActive(req->req->lookInOldTG);
-      if (dbg.active()) {
+      if (threadedmpi_dbg.active()) {
         ostr << *req << ' ';
         //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
-        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells
+        threadedmpi_dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells
             << " from dw " << dw->getID() << '\n';
       }
       const VarLabel* posLabel;
@@ -886,23 +904,22 @@ ThreadedMPIScheduler::postMPISends( DetailedTask* task, int iteration, int t_id 
       //we need this empty message to enforce modify after read dependencies 
       //if(count>0)
       //{
-      if (dbg.active()) {
+      if (threadedmpi_dbg.active()) {
         cerrLock.lock();
-        //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
-        dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << " to " << to << ": " << ostr.str() << "\n";
+        threadedmpi_dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << " to " << to << ": " << ostr.str() << "\n";
         cerrLock.unlock();
-        //dbg.setActive(false);
       }
-      //if (to == 40 && d_sharedState->getCurrentTopLevelTimeStep() == 2 && d_myworld->myrank() == 43)
       if (mpidbg.active())
         mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count
                << "\n";
 
       numMessages_++;
+      numSend++;
       int typeSize;
 
       MPI_Type_size(datatype, &typeSize);
       messageVolume_ += count * typeSize;
+      volSend += count * typeSize;
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
@@ -915,7 +932,19 @@ ThreadedMPIScheduler::postMPISends( DetailedTask* task, int iteration, int t_id 
       //}
     }
   }  // end for (DependencyBatch * batch = task->getComputes() )
+
+
   double dsend = Time::currentSeconds() - sendstart;
+
+  if (threadedmpi_st.active() && numSend > 0) {
+    if (d_myworld->myrank() == d_myworld->size() / 2) {
+      cerrLock.lock();
+      threadedmpi_st << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= " << numSend << " , VolSend: "
+      << volSend << endl;
+      cerrLock.unlock();
+    }
+  }
+
   mpi_info_.totalsend += dsend;
 
 } // end postMPISends();
@@ -937,8 +966,8 @@ int ThreadedMPIScheduler::getAviableThreadNum()
 //______________________________________________________________________
 //
 
-void ThreadedMPIScheduler::assignTask(DetailedTask* task,
-                                      int iteration)
+void ThreadedMPIScheduler::assignTask( DetailedTask* task,
+                                       int           iteration )
 {
   d_nextmutex.lock();
   if (getAviableThreadNum() == 0) {
@@ -967,7 +996,7 @@ void ThreadedMPIScheduler::assignTask(DetailedTask* task,
 //
 
 TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler,
-                       int id)
+                       int                   id)
     :
       d_id(id),
         d_scheduler(scheduler),
@@ -989,17 +1018,22 @@ TaskWorker::TaskWorker(ThreadedMPIScheduler* scheduler,
 void
 TaskWorker::run()
 {
-  if (threaddbg.active()) {
+  // set thread ID
+  Thread::self()->set_myid(d_id + 1);
+
+  if (threadedmpi_threaddbg.active()) {
     cerrLock.lock();
-    threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id + 1 << "\n";
+    threadedmpi_threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id + 1 << "\n";
     cerrLock.unlock();
   }
 
-  Thread::self()->set_myid(d_id + 1);
-  if (affinity.active()) {
+  // CPU
+  if (threadedmpi_affinity.active()) {
     Thread::self()->set_affinity(d_id + 1);
   }
-  if (miccompactaffinity.active()) {
+
+  // MIC
+  if (threadedmpi_miccompactaffinity.active()) {
     Thread::self()->set_affinity(d_id + 1);
   }
 
@@ -1023,8 +1057,8 @@ TaskWorker::run()
       taskdbg << "Worker " << d_rank << "-" << d_id << ": executeTask:   " << *d_task << "\n";
       cerrLock.unlock();
     }
-    ASSERT(d_task!=NULL);
 
+    ASSERT(d_task!=NULL);
     try {
       if (d_task->getTask()->getType() == Task::Reduction) {
         d_scheduler->initiateReduction(d_task);
@@ -1070,9 +1104,9 @@ double TaskWorker::getWaittime()
 //______________________________________________________________________
 //
 
-void TaskWorker::resetWaittime(double start)
+void TaskWorker::resetWaittime( double start )
 {
     d_waitstart  = start;
-    d_waittime = 0.0;
+    d_waittime   = 0.0;
 }
 

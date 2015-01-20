@@ -38,9 +38,9 @@ class ProcessorGroup;
     public:
 
       // this function has a switch for all known Schedulers
-      static SchedulerCommon* create( const ProblemSpecP   & ps,
-                                      const ProcessorGroup * world,
-                                      const Output         * ouput );
+      static SchedulerCommon* create( const ProblemSpecP&   ps,
+                                      const ProcessorGroup* world,
+                                      const Output*         ouput );
   };
 } // End namespace Uintah
 

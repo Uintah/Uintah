@@ -70,34 +70,34 @@ extern map<string, double> waittimes;
 extern map<string, double> exectimes;
 extern ofstream            wout;
 
-static double              CurrentWaitTime = 0;
+static double Unified_CurrentWaitTime = 0;
 
-static DebugStream dbg("UnifiedScheduler", false);
-static DebugStream dbgst("SendTiming", false);
-static DebugStream timeout("UnifiedScheduler.timings", false);
-static DebugStream queuelength("QueueLength", false);
-static DebugStream threaddbg("UnifiedThreadDBG", false);
-static DebugStream affinity("CPUAffinity", true);
-static DebugStream miccompactaffinity("MICCompactAffinity", false);
+static DebugStream unified_dbg(               "Unified_DBG",                false);
+static DebugStream unified_st(                "Unified_SendTiming",         false);
+static DebugStream unified_timeout(           "Unified_Timeout",            false);
+static DebugStream unified_queuelength(       "Unified_QueueLength",        false);
+static DebugStream unified_threaddbg(         "Unified_ThreadDBG",          false);
+static DebugStream unified_affinity(          "Unified_CPUAffinity",        true);
+static DebugStream unified_miccompactaffinity("Unified_MICCompactAffinity", false);
 
 #ifdef HAVE_CUDA
-  static DebugStream gpu_stats("GPUStats", false);
-         DebugStream use_single_device("SingleDevice", false);
+  static DebugStream gpu_stats(        "Unified_GPUStats",     false);
+         DebugStream use_single_device("Unified_SingleDevice", false);
 #endif
 
 //______________________________________________________________________
 //
 
-UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld,
-                                    const Output           * oport,
-                                          UnifiedScheduler * parentScheduler ) :
-  MPIScheduler(myworld, oport, parentScheduler),
-  d_nextsignal("next condition"),
-  d_nextmutex("next mutex"),
-  dlbLock("loadbalancer lock"),
-  schedulerLock("scheduler lock"),
-  waittimesLock("waittimes lock"),
-  recvLock("MPI receive lock")
+UnifiedScheduler::UnifiedScheduler( const ProcessorGroup*   myworld,
+                                    const Output*           oport,
+                                          UnifiedScheduler* parentScheduler )
+  : MPIScheduler(myworld, oport, parentScheduler),
+    d_nextsignal("next condition"),
+    d_nextmutex("next mutex"),
+    dlbLock("loadbalancer lock"),
+    schedulerLock("scheduler lock"),
+    waittimesLock("waittimes lock"),
+    recvLock("MPI receive lock")
 #ifdef HAVE_CUDA
   ,
   idleStreamsLock_("CUDA streams lock"),
@@ -121,7 +121,7 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup   * myworld,
   }
 #endif
 
-  if (timeout.active()) {
+  if (unified_timeout.active()) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     timingStats.open(filename);
@@ -152,7 +152,7 @@ UnifiedScheduler::~UnifiedScheduler()
     }
   }
 
-  if (timeout.active()) {
+  if (unified_timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
       minStats.close();
@@ -169,8 +169,8 @@ UnifiedScheduler::~UnifiedScheduler()
 //
 
 void
-UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec,
-                                      SimulationStateP & state )
+UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
+                                      SimulationStateP& state )
 {
   // Default taskReadyQueueAlg
   taskQueueAlg_ = MostMessages;
@@ -263,11 +263,13 @@ UnifiedScheduler::problemSetup( const ProblemSpecP     & prob_spec,
 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-  if (affinity.active()) {
-    Thread::self()->set_affinity(0);  // bind main thread to core 0
+
+  if (unified_affinity.active()) {
+    Thread::self()->set_affinity(0);  // CPU -bind main thread to core 0
   }
-  if (miccompactaffinity.active()) {
-    Thread::self()->set_affinity(1);  // bind main thread to core 1
+
+  if (unified_miccompactaffinity.active()) {
+    Thread::self()->set_affinity(1);  // MIC - bind main thread to core 1
   }
 }
 
@@ -373,7 +375,7 @@ UnifiedScheduler::verifyChecksum()
 //
 
 void
-UnifiedScheduler::initiateTask( DetailedTask * task,
+UnifiedScheduler::initiateTask( DetailedTask*  task,
                                 bool           only_old_recvs,
                                 int            abort_point,
                                 int            iteration )
@@ -391,7 +393,7 @@ UnifiedScheduler::initiateTask( DetailedTask * task,
 //
 
 void
-UnifiedScheduler::runTask( DetailedTask        * task,
+UnifiedScheduler::runTask( DetailedTask*         task,
                            int                   iteration,
                            int                   thread_id /* = 0 */,
                            Task::CallBackEvent   event )
@@ -400,8 +402,8 @@ UnifiedScheduler::runTask( DetailedTask        * task,
 
   if (waitout.active()) {
     waittimesLock.lock();
-    waittimes[task->getTask()->getName()] += CurrentWaitTime;
-    CurrentWaitTime = 0;
+    waittimes[task->getTask()->getName()] += Unified_CurrentWaitTime;
+    Unified_CurrentWaitTime = 0;
     waittimesLock.unlock();
   }
 
@@ -521,7 +523,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (timeout.active()) {
+  if (unified_timeout.active()) {
     d_labels.clear();
     d_times.clear();
   }
@@ -581,9 +583,9 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
-  if (dbg.active()) {
+  if (unified_dbg.active()) {
     coutLock.lock();
-    dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << std::endl;
+    unified_dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << std::endl;
     coutLock.unlock();
   }
 
@@ -625,7 +627,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     d_nextmutex.unlock();
   }
 
-  if (queuelength.active()) {
+  if (unified_queuelength.active()) {
     float lengthsum = 0;
     totaltasks += ntasks;
     for (unsigned int i = 1; i < histogram.size(); i++) {
@@ -691,7 +693,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 //#endif
 
   log.finishTimestep();
-  if( timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
+  if( unified_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
     // add number of cells, patches, and particles
     int numCells = 0, numParticles = 0;
     OnDemandDataWarehouseP dw = dws[dws.size() - 1];
@@ -711,7 +713,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     }
 
     // now collect timing info
-    if (timeout.active()) {
+    if (unified_timeout.active()) {
       emitTime("NumPatches", myPatches->size());
       emitTime("NumCells", numCells);
       emitTime("NumParticles", numParticles);
@@ -794,11 +796,11 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
       }
 
       if (me == 0) {
-        timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100
+        unified_timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100
                 << " load imbalance (exec)%\n";
-        timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100
+        unified_timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100
                 << " load imbalance (comm)%\n";
-        timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100
+        unified_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100
                 << " load imbalance (theoretical)%\n";
       }
     }  // end timeout.active()
@@ -858,8 +860,8 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     }
   }
 
-  if (dbg.active()) {
-    dbg << me << " UnifiedScheduler finished\n";
+  if (unified_dbg.active()) {
+    unified_dbg << me << " UnifiedScheduler finished\n";
   }
 
 } // end execute()
@@ -1139,7 +1141,8 @@ UnifiedScheduler::runTasks( int thread_id )
 
 struct CompareDep {
 
-  bool operator()( DependencyBatch* a, DependencyBatch* b )
+  bool operator()( DependencyBatch* a,
+                   DependencyBatch* b )
   {
     return a->messageTag < b->messageTag;
   }
@@ -1149,7 +1152,7 @@ struct CompareDep {
 //
 
 void
-UnifiedScheduler::postMPIRecvs( DetailedTask * task,
+UnifiedScheduler::postMPIRecvs( DetailedTask*  task,
                                 bool           only_old_recvs,
                                 int            abort_point,
                                 int            iteration )
@@ -1160,9 +1163,9 @@ UnifiedScheduler::postMPIRecvs( DetailedTask * task,
 
   // Receive any of the foreign requires
 
-  if (dbg.active()) {
+  if (unified_dbg.active()) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
+    unified_dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
     cerrLock.unlock();
   }
 
@@ -1195,20 +1198,20 @@ UnifiedScheduler::postMPIRecvs( DetailedTask * task,
       task->incrementExternalDepCount();
       if (!batch->makeMPIRequest()) {
 
-        if (dbg.active()) {
+        if (unified_dbg.active()) {
           cerrLock.lock();
-          dbg << "Someone else already receiving it\n";
+          unified_dbg << "Someone else already receiving it\n";
           cerrLock.unlock();
         }
         continue;
       }
 
       if (only_old_recvs) {
-        if (dbg.active()) {
-          dbg << "abort analysis: " << batch->fromTask->getTask()->getName() << ", so="
+        if (unified_dbg.active()) {
+          unified_dbg << "abort analysis: " << batch->fromTask->getTask()->getName() << ", so="
               << batch->fromTask->getTask()->getSortedOrder() << ", abort_point=" << abort_point << '\n';
           if (batch->fromTask->getTask()->getSortedOrder() <= abort_point)
-            dbg << "posting MPI recv for pre-abort message " << batch->messageTag << '\n';
+            unified_dbg << "posting MPI recv for pre-abort message " << batch->messageTag << '\n';
         }
         if (!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
           continue;
@@ -1235,18 +1238,18 @@ UnifiedScheduler::postMPIRecvs( DetailedTask * task,
             || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
           // See comment in DetailedDep about CommCondition
 
-          dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << std::endl;
+          unified_dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << std::endl;
           continue;
         }
         // if we send/recv to an output task, don't send/recv if not an output timestep
         if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep()
             && !oport_->isCheckpointTimestep()) {
-          dbg << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << std::endl;
+          unified_dbg << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << std::endl;
           continue;
         }
-        if (dbg.active()) {
+        if (unified_dbg.active()) {
           ostr << *req << ' ';
-          dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", "
+          unified_dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", "
               << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
         }
 
@@ -1304,9 +1307,9 @@ UnifiedScheduler::postMPIRecvs( DetailedTask * task,
         ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Request requestid;
 
-        if (dbg.active()) {
+        if (unified_dbg.active()) {
           coutLock.lock();
-          dbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ": "
+          unified_dbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ": "
               << ostr.str() << "\n";
           coutLock.unlock();
         }
@@ -1406,22 +1409,22 @@ UnifiedScheduler::processMPIRecvs( int how_much )
   recvLock.writeUnlock();
 
   mpi_info_.totalwaitmpi += Time::currentSeconds() - start;
-  CurrentWaitTime += Time::currentSeconds() - start;
+  Unified_CurrentWaitTime += Time::currentSeconds() - start;
 
 }  // end processMPIRecvs()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postMPISends( DetailedTask * task,
+void UnifiedScheduler::postMPISends( DetailedTask*  task,
                                      int            iteration,
                                      int            thread_id )
 {
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postMPISends");
   double sendstart = Time::currentSeconds();
 
-  if (dbg.active()) {
+  if (unified_dbg.active()) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
+    unified_dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
     cerrLock.unlock();
   }
 
@@ -1450,23 +1453,23 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
           && iteration == 0)
           || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
         // See comment in DetailedDep about CommCondition
-        if (dbg.active()) {
-          dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << std::endl;
+        if (unified_dbg.active()) {
+          unified_dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << std::endl;
         }
         continue;
       }
       // if we send/recv to an output task, don't send/recv if not an output timestep
       if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep()
           && !oport_->isCheckpointTimestep()) {
-        if (dbg.active()) {
-          dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << std::endl;
+        if (unified_dbg.active()) {
+          unified_dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << std::endl;
         }
         continue;
       }
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
 
-      if (dbg.active()) {
-        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells
+      if (unified_dbg.active()) {
+        unified_dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells
             << " from dw " << dw->getID() << '\n';
       }
       const VarLabel* posLabel;
@@ -1519,7 +1522,7 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
       //if(count>0)
       //{
 
-      if (dbg.active()) {
+      if (unified_dbg.active()) {
         coutLock.lock();
         mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n";
         coutLock.unlock();
@@ -1551,10 +1554,10 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
 
   double dsend = Time::currentSeconds() - sendstart;
   mpi_info_.totalsend += dsend;
-  if (dbgst.active() && numSend > 0) {
+  if (unified_st.active() && numSend > 0) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
       coutLock.lock();
-      dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= " << numSend << " , VolSend: " << volSend
+      unified_st << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= " << numSend << " , VolSend: " << volSend
             << std::endl;
       coutLock.unlock();
     }
@@ -1601,7 +1604,7 @@ UnifiedScheduler::gpuInitialize( bool reset )
 //
 
 void
-UnifiedScheduler::postH2DCopies( DetailedTask * dtask ) {
+UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
   TAU_PROFILE("UnifiedScheduler::postH2DCopies()", " ", TAU_USER);
@@ -1928,7 +1931,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask * dtask ) {
 //
 
 void
-UnifiedScheduler::preallocateDeviceMemory( DetailedTask * dtask )
+UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
 {
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
   TAU_PROFILE("UnifiedScheduler::preallocateDeviceMemory()", " ", TAU_USER);
@@ -2097,7 +2100,7 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask * dtask )
 //
 
 void
-UnifiedScheduler::postD2HCopies( DetailedTask * dtask )
+UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
 {
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
   TAU_PROFILE("UnifiedScheduler::postD2HCopies()", " ", TAU_USER);
@@ -2344,7 +2347,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask * dtask )
 //
 
 void
-UnifiedScheduler::createCudaStreams( int device, int numStreams /* = 1 */ )
+UnifiedScheduler::createCudaStreams( int device,
+                                     int numStreams /* = 1 */ )
 {
   cudaError_t retVal;
 
@@ -2480,7 +2484,7 @@ UnifiedScheduler::unregisterPageLockedHostMem()
 //
 
 void
-UnifiedScheduler::reclaimCudaStreams( DetailedTask * dtask )
+UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
 {
   cudaStream_t* stream;
   int deviceNum;
@@ -2509,7 +2513,7 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask * dtask )
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
 //------------------------------------------
-UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler,
+UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
                                                 int                thread_id ) :
     d_thread_id( thread_id ),
     d_scheduler( scheduler ),                           
@@ -2530,17 +2534,22 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler * scheduler,
 void
 UnifiedSchedulerWorker::run()
 {
-  if (threaddbg.active()) {
+  // set thread ID
+  Thread::self()->set_myid(d_thread_id + 1);
+
+  if (unified_threaddbg.active()) {
     cerrLock.lock();
-    threaddbg << "Binding thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
+    unified_threaddbg << "Binding thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
     cerrLock.unlock();
   }
 
-  Thread::self()->set_myid(d_thread_id + 1);
-  if (affinity.active()) {
+  // CPU
+  if (unified_affinity.active()) {
     Thread::self()->set_affinity(d_thread_id + 1);
   }
-  if (miccompactaffinity.active()) {
+
+  // MIC
+  if (unified_miccompactaffinity.active()) {
     Thread::self()->set_affinity(d_thread_id + 2);
   }
 
