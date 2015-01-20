@@ -50,25 +50,35 @@ Scheduler Debugging Information:
 __________________________________
 MPIScheduler               SCI_DEBUG     Prints debugging information for the MPIScheduler
 DynamicMPIScheduler        SCI_DEBUG     Prints debugging information for the DynamicMPIScheduler
-UnifiedScheduler           SCI_DEBUG     Prints debugging information for the UnifiedScheduler
+
 
 ThreadedMPIScheduler Related:
 __________________________________
-CPUAffinity                SCI_DEBUG     Binds the main thread to core 0 and TaskWorkers to core <Uintah thread id>
-                                         NOTE: This is ENABLED by default
-MICCompactAffinity         SCI_DEBUG     Binds the main thread to core 242 and TaskWorkers to core <Uintah thread id>
-                                         NOTE: The main thread is placed such that it shares the physical core
-                                               containing core 0, which is reserved for the Xeon Phi OS
+ThreadedMPI_DBG                 SCI_DEBUG     Prints general debugging information
+ThreadedMPI_Timeout             SCI_DEBUG     Outputs communication-related timings to file (e.g. MPI recv time, MPI send time, etc)
+ThreadedMPI_SendTiming          SCI_DEBUG     Prints the number and volume of sends
+ThreadedMPI_QueueLength         SCI_DEBUG     Prints the average task queue length
+ThreadedMPI_ThreadDBG           SCI_DEBUG     Prints thread pinning information
+ThreadedMPI_CPUAffinity         SCI_DEBUG     Binds the main thread to core 0 and TaskWorkers to core <Uintah thread id>
+                                              NOTE: This is ENABLED by default
+ThreadedMPI_MICCompactAffinity  SCI_DEBUG     Binds the main thread to core 242 and TaskWorkers to core <Uintah thread id>
+                                              NOTE: The main thread is placed such that it shares the physical core
+                                                    containing core 0, which is reserved for the Xeon Phi OS
+
 
 UnifiedScheduler Related:
 __________________________________
-CPUAffinity                SCI_DEBUG     Binds the main thread to core 0 and UnifiedWorkers to core <Uintah thread id>
+Unified_DBG                SCI_DEBUG     Prints general debugging information
+Unified_SendTiming         SCI_DEBUG     Outputs communication-related timings to file (e.g. MPI recv time, MPI send time, etc)
+Unified_Timeout            SCI_DEBUG     Prints the number and volume of sends
+Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
+Unified_ThreadDBG          SCI_DEBUG     Prints thread pinning information
+Unified_CPUAffinity        SCI_DEBUG     Binds the main thread to core 0 and UnifiedWorkers to core <Uintah thread id>
                                          NOTE: This is ENABLED by default
-MICCompactAffinity         SCI_DEBUG     Binds the main thread to core 1 and UnifiedWorkers to core <Uintah thread id + 1>
+Unified_MICCompactAffinity SCI_DEBUG     Binds the main thread to core 1 and UnifiedWorkers to core <Uintah thread id + 1>
                                          NOTE: Since it can execute tasks, the main thread has been placed such that 
                                                it avoids the physical core containing core 0, which is reserved for 
                                                the Xeon Phi OS
-UnifiedThreadDBG           SCI_DEBUG     Prints debugging information for thread pinning
 
 
 GPU Related:
