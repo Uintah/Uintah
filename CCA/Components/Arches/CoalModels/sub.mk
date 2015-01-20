@@ -15,7 +15,6 @@ SRCS += \
   $(SRCDIR)/CharOxidationShaddix.cc \
   $(SRCDIR)/ConstantModel.cc  \
   $(SRCDIR)/HeatTransfer.cc \
-  $(SRCDIR)/ShaddixHeatTransfer.cc \
   $(SRCDIR)/EnthalpyShaddix.cc \
   $(SRCDIR)/DragModel.cc 
 

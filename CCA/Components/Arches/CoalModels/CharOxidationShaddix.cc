@@ -85,7 +85,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   _char_varlabel = VarLabel::find(char_name);
   EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
   DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
-  _char_scaling_constant = char_eqn.getScalingConstant();
+  _char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
 
   // check for particle temperature 
   std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
@@ -126,7 +126,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipCriteria();
-  _weight_scaling_constant = weight_eqn.getScalingConstant();
+  _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
   // get Char source term label from the devolatilization model
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 

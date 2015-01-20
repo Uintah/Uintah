@@ -216,9 +216,6 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
   } 
 
-  // Scaling information:
-  db->getWithDefault( "scaling_const", d_scalingConstant, 1.0 ); 
-
   // Initialization (new way):
   ProblemSpecP db_initialValue = db->findBlock("initialization");
   if (db_initialValue) {

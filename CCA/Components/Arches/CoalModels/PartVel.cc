@@ -268,7 +268,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         const VarLabel* mylLabel = eqn.getTransportEqnLabel();  
         old_dw->get(wlength, mylLabel, matlIndex, patch, gn, 0); 
 
-        d_highClip = eqn.getScalingConstant()*d_upLimMult; // should figure out how to do this once and only once...
+        d_highClip = eqn.getScalingConstant(iqn)*d_upLimMult; // should figure out how to do this once and only once...
 
         name = "w_qn"; 
         name += node; 
@@ -305,9 +305,9 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           } else {
 
             if(d_unweighted == true) {
-              length = wlength[c]*eqn.getScalingConstant();
+              length = wlength[c]*eqn.getScalingConstant(iqn);
             } else {
-              length = (wlength[c]/weight[c])*eqn.getScalingConstant();
+              length = (wlength[c]/weight[c])*eqn.getScalingConstant(iqn);
             }
 
             Vector v_gas = gasVel[c];

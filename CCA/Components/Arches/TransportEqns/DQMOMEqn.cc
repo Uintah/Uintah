@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Ports/Scheduler.h>
@@ -203,6 +204,12 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
 
+  int Nqn = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
+
+  if ( Nqn != d_scalingConstant.size() ){ 
+    throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);
+  }
+
   // Extra Source terms (for mms and other tests):
   if (db->findBlock("src")){
     string srcname; 
@@ -242,7 +249,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
                  err_msg << d_constant_init << " : your A matrix will be singular!  Use 'env_constant' instead of 'constant' for your initialization type.\n";
           throw ProblemSetupException(err_msg.str(),__FILE__,__LINE__);
         } else {
-          d_constant_init /= d_scalingConstant; 
+          d_constant_init /= d_scalingConstant[d_quadNode]; 
         }
 
     // -------- Environment constant initialization function --------------
@@ -265,7 +272,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
         db_env_constants->getAttribute("value", s_constant);
         double constantValue = atof( s_constant.c_str() );
         if( i_tempQuadNode == d_quadNode )
-          d_constant_init = constantValue / d_scalingConstant;
+          d_constant_init = constantValue / d_scalingConstant[d_quadNode];
       }
 
     // ------- (Environment & Uniform) Step initialization function ------------
@@ -307,7 +314,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
       // Step functions: get step values
       if (d_initFunction == "step") {
         db_initialValue->require("step_value", d_step_value); 
-        d_step_value /= d_scalingConstant; 
+        d_step_value /= d_scalingConstant[d_quadNode]; 
       
       } else if (d_initFunction == "env_step") {
         
@@ -326,7 +333,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
           db_env_step_value->getAttribute("value", s_step_value);
           double step_value = atof( s_step_value.c_str() );
           if( i_tempQuadNode == d_quadNode ) 
-            d_step_value = step_value / d_scalingConstant;
+            d_step_value = step_value / d_scalingConstant[d_quadNode];
         }
       }//end step_value init.
 
@@ -828,7 +835,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
       for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
         IntVector c = *iter;
 
-        w_actual[c] = w[c]*d_scalingConstant;
+        w_actual[c] = w[c]*d_scalingConstant[d_quadNode];
       }
 
     } else {
@@ -848,7 +855,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
   
           IntVector c = *iter;
          
-          ic[c] = wa[c]*d_scalingConstant;
+          ic[c] = wa[c]*d_scalingConstant[d_quadNode];
         }
       } else {
         for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
@@ -856,7 +863,7 @@ DQMOMEqn::getUnscaledValues( const ProcessorGroup* pc,
           IntVector c = *iter;
  
           if (w[c] > d_w_small){
-            ic[c] = (wa[c]/w[c])*d_scalingConstant;
+            ic[c] = (wa[c]/w[c])*d_scalingConstant[d_quadNode];
           }  else {
             ic[c] = d_nominal[d_quadNode];
           }
