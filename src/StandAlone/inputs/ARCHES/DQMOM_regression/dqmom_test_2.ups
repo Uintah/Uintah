@@ -148,7 +148,7 @@
           <initialization type="constant">
             <constant>0.2</constant>
           </initialization>
-          <scaling_const>1</scaling_const>
+          <scaling_const>[1,1]</scaling_const>
         </Weights>
 
         <Ic label="length">
@@ -164,7 +164,7 @@
           </initialization>
           <nominal_values>[1, 0.5]</nominal_values>
           <model label="grow"/>
-          <scaling_const>1</scaling_const>
+          <scaling_const>[1,1]</scaling_const>
         </Ic>
 
         <Ic label="mass">
@@ -180,7 +180,7 @@
           </initialization>
           <nominal_values>[1, 0.5]</nominal_values>
           <model label="shrink"/>
-          <scaling_const>1</scaling_const>
+          <scaling_const>[1,1]</scaling_const>
         </Ic>
 
         <Moment>

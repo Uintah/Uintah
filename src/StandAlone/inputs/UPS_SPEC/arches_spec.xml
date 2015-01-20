@@ -960,7 +960,7 @@
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
           <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/-->
-          <scaling_const                spec="OPTIONAL DOUBLE"/>  <!-- Not used at the moment -->                               
+          <scaling_const                spec="OPTIONAL MULTIPLE_DOUBLES"/>  <!-- Not used at the moment -->                               
           <!-- Regarding the density guess (next two specs): If the equation is enthalpy or a table parameter, then density_guess=true is automatically set for you.
                You don't need to set it again if you don't want to. --> 
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
@@ -1398,7 +1398,7 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
-          <scaling_const                spec="REQUIRED DOUBLE"/>                              
+          <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
@@ -1444,7 +1444,7 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
-          <scaling_const                spec="REQUIRED DOUBLE"/>                              
+          <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>                              
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           <Clipping                     spec="OPTIONAL NO_DATA">

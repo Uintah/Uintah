@@ -3,6 +3,9 @@
 #include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <Core/Containers/StaticArray.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+
 using namespace Uintah; 
 
 //---------------------------------------------------------------------------
@@ -45,6 +48,7 @@ RadProperties::~RadProperties( )
 //---------------------------------------------------------------------------
 void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 {
+
   ProblemSpecP db = inputdb; 
 
   commonProblemSetup(db);
@@ -79,29 +83,31 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
     _temperature_name = "temperature"; 
   }
 
- _particlesOn = db_calc->findBlock("particles");
+  _particlesOn = db_calc->findBlock("particles");
 
- bool complete; 
- complete = _calc->problemSetup( db_calc );
+  bool complete; 
+  complete = _calc->problemSetup( db_calc );
 
- if ( _particlesOn ){ 
-   _scatteringOn = false;
-   //------------ check to see if scattering is turned on --//
-   ProblemSpecP db_source = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ; 
-   for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != 0; 
-       db_src = db_src->findNextBlock("src")){
-     std::string radiation_model;
-     db_src->getAttribute("type", radiation_model);
-     if (radiation_model == "do_radiation"){
-       db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
-       break;
-     }
-     else if ( radiation_model == "rmcrt_radiation"){
-       db->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
-       break;
-     }
-   }
-   //-------------------------------------------------------//
+  if ( _particlesOn ){ 
+
+    _scatteringOn = false;
+
+    //------------ check to see if scattering is turned on --//
+    ProblemSpecP db_source = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ; 
+    for ( ProblemSpecP db_src = db_source->findBlock("src"); db_src != 0; 
+        db_src = db_src->findNextBlock("src")){
+      std::string radiation_model;
+      db_src->getAttribute("type", radiation_model);
+      if (radiation_model == "do_radiation"){
+        db_src->findBlock("DORadiationModel")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+        break;
+      }
+      else if ( radiation_model == "rmcrt_radiation"){
+        db->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+        break;
+      }
+    }
+    //-------------------------------------------------------//
 
     std::string particle_calculator_type; 
     db_calc->findBlock("particles")->getAttribute("type",particle_calculator_type); 
@@ -120,13 +126,17 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
   }
 
   _nQn_part = 0;
-  if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM") && _particlesOn ){
-    db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
-    db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", _base_temperature_label_name, "heat_pT" ); 
-    db->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_size_label", _base_size_label_name, "length" ); 
-  }
-  else if ( _particlesOn){
-    throw InvalidValue("Error: No particle models found (DQMOM CQMOM Lagrangian?) ",__FILE__, __LINE__); 
+  if ( _particlesOn ){ 
+
+    //only works for DQMOM currently....need to check to make sure it is working with CQMOM/Lagrangian
+    if ( !ParticleHelper::check_for_particle_method( db, ParticleHelper::DQMOM)){ 
+      throw InvalidValue("Error: Only DQMOM verified to be working with particles/radiation. ", __FILE__, __LINE__);
+    }
+
+    _nQn_part = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
+    _base_temperature_label_name = ParticleHelper::parse_for_role_to_label( db, "temperature" );
+    _base_size_label_name        = ParticleHelper::parse_for_role_to_label( db, "size" );
+
   }
 
   if ( !complete )
@@ -224,14 +234,10 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
       throw ProblemSetupException("Error: DQMOM must be used in combination with radiation properties for particles. Zero quadrature nodes found." ,__FILE__, __LINE__);
     }
     for ( int i = 0; i < _nQn_part; i++ ){
-      std::string label_name_s = _base_size_label_name + "_qn"; 
-      std::string label_name_t = _base_temperature_label_name + "_"; 
-      std::string label_name_w =   "w_qn"; 
-      std::stringstream out; 
-      out << i; 
-      label_name_s += out.str();  // size
-      label_name_t += out.str();  // temperature
-      label_name_w += out.str();  // weight
+
+      std::string label_name_s = ParticleHelper::append_env( _base_size_label_name, i ); 
+      std::string label_name_t = ParticleHelper::append_env( _base_temperature_label_name, i ); 
+      std::string label_name_w = ParticleHelper::append_env( "w", i ); 
 
       // requires size
       const VarLabel* label_s = VarLabel::find( label_name_s );
@@ -380,25 +386,17 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       s_varlabels.resize(0);
       w_varlabels.resize(0);
       t_varlabels.resize(0);
-      double s_scaling_constant=0.0; // scaling constant for sizes
-      double w_scaling_constant=0.0; // scaling constant for weights
 
       for ( int i = 0; i < _nQn_part; i++ ){
-        std::string label_name_s = _base_size_label_name + "_qn"; 
-        std::string label_name_t = _base_temperature_label_name + "_"; 
-        std::string label_name_w =   "w_qn"; 
-        std::stringstream out; 
-        out << i; 
-        label_name_s += out.str(); 
-        label_name_t += out.str(); 
-        label_name_w += out.str(); 
-        if (i == 0){
-          s_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_s).getScalingConstant();
-          w_scaling_constant = dqmom_eqn_factory.retrieve_scalar_eqn(label_name_w).getScalingConstant();
-        }
+
+        std::string label_name_s = ParticleHelper::append_env( _base_size_label_name, i ); 
+        std::string label_name_t = ParticleHelper::append_env( _base_temperature_label_name, i ); 
+        std::string label_name_w = ParticleHelper::append_env( "w", i ); 
+
         s_varlabels.push_back(VarLabel::find( label_name_s ));
         t_varlabels.push_back(VarLabel::find( label_name_t ) );
         w_varlabels.push_back(VarLabel::find( label_name_w ) );
+
       }
 
       ////size
@@ -407,6 +405,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
         which_dw->get( var,*iterx, matlIndex, patch, Ghost::None, 0 ); 
         pSize.push_back( var ); 
       }
+
       /////--temperature
       for ( CCCVL::iterator iterx = t_varlabels.begin(); iterx != t_varlabels.end(); iterx++ ){ 
         constCCVariable<double> var; 
@@ -425,50 +424,65 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       std::vector< const VarLabel*> requiredLabels;
       requiredLabels =  _ocalc->getRequiresLabels();  
       StaticArray< constCCVariable<double> > RequiredScalars(requiredLabels.size());
+
       for (unsigned int i=0; i<requiredLabels.size(); i++){ // unsigned avoids compiler warning
+
         new_dw->get( RequiredScalars[i] , requiredLabels[i], matlIndex,patch, Ghost::None, 0);// This should be WhichDW, but I'm getting an error BEN??
+
       }
+
       ////--compute the complex index of refraction
       StaticArray<CCVariable<double> >complexIndexReal(_nQn_part);
+
       if(_ocalc->get_complexIndexBool()){
+
         if(time_substep==0) {
+
           for ( int i=0; i<_nQn_part; i++){ 
+
             new_dw->allocateAndPut(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
             complexIndexReal[i].initialize(0.0);
+
           }
-        }
-        else{
+        } else {
 
           for ( int i=0; i<_nQn_part; i++){ 
+
             new_dw->getModifiable(complexIndexReal[i], _ocalc->get_complexIndexReal_label()[i], matlIndex,patch);
+
           }
+
         }
       }
-
-
 
       _ocalc->computeComplexIndex(patch, vol_fraction,RequiredScalars, complexIndexReal);
 
-      _ocalc->compute_abskp( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
-          w_scaling_constant, pWeight, _nQn_part,  abskpt,abskp, complexIndexReal);
+      _ocalc->compute_abskp( patch, vol_fraction, pSize, pTemperature, 
+                             pWeight, _nQn_part,  abskpt, abskp, complexIndexReal);
 
       _calc->sum_abs( absk_tot, abskpt, patch ); 
 
       if (_scatteringOn){  //----scattering props---//
+
         StaticArray<CCVariable<double> >scatktQuad(_nQn_part);
         CCVariable<double> asymmetryParam;
+
         if(time_substep==0) {
+
           new_dw->allocateAndPut( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
           new_dw->allocateAndPut(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
           scatkt.initialize(0.0);  
           asymmetryParam.initialize(0.0);  
-        }
-        else{
+
+        } else{
+
           new_dw->getModifiable( scatkt, _ocalc->get_scatkt_label(), matlIndex, patch );
           new_dw->getModifiable(asymmetryParam  , _ocalc->get_asymmetryParam_label()  , matlIndex,patch);
+
         }
-        _ocalc->compute_scatkt( patch, vol_fraction, s_scaling_constant, pSize, pTemperature, 
-                                w_scaling_constant, pWeight, _nQn_part,  scatkt, scatktQuad, complexIndexReal);
+
+        _ocalc->compute_scatkt( patch, vol_fraction, pSize, pTemperature, 
+                                pWeight, _nQn_part,  scatkt, scatktQuad, complexIndexReal);
 
         _ocalc->computeAsymmetryFactor(patch,vol_fraction, scatktQuad, RequiredScalars, scatkt, asymmetryParam);
 

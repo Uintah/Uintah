@@ -119,7 +119,7 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   vel_root = ParticleHelper::append_qn_env( vel_root, d_quadNode ); 
   EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
   DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
-  _vel_scaling_constant = current_eqn.getScalingConstant();
+  _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
   std::string ic_convection = vel_root+"_Fconv";
   std::string ic_diffusion = vel_root+"_Fdiff";
   _conv_source_varlabel = VarLabel::find(ic_convection);
@@ -132,7 +132,7 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
   _weight_small = current_eqn2.getSmallClipCriteria();
-  _weight_scaling_constant = current_eqn2.getScalingConstant();
+  _weight_scaling_constant = current_eqn2.getScalingConstant(d_quadNode);
 
 }
 

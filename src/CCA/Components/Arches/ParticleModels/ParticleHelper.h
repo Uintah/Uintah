@@ -10,6 +10,8 @@ namespace Uintah{
 
     public: 
 
+      enum PARTICLE_METHOD {DQMOM, CQMOM, LAGRANGIAN}; 
+
       ParticleHelper(){}
       ~ParticleHelper(){}
 
@@ -73,6 +75,76 @@ namespace Uintah{
         new_name += str_qn.str(); 
         return new_name; 
         
+      }
+
+      /** @brief Check for a particle method in the input file **/ 
+      inline static bool check_for_particle_method( ProblemSpecP& db, PARTICLE_METHOD method ){ 
+
+        const ProblemSpecP arches_root = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
+       
+        bool check = false; 
+        if ( method == DQMOM ){ 
+
+          if ( arches_root->findBlock("DQMOM") ){ 
+            check = true; 
+          }
+
+        } else if ( method == CQMOM ){ 
+
+          if ( arches_root->findBlock("CQMOM") ){ 
+            check = true; 
+          }
+
+        } else if ( method == LAGRANGIAN ){ 
+
+          if ( arches_root->findBlock("LagrangianParticles") ){ 
+            check = true; 
+          }
+
+        } else { 
+          throw ProblemSetupException("Error: Particle method type not recognized.", __FILE__, __LINE__); 
+        }
+
+        return check; 
+
+      }
+
+      /** @brief Returns the number of environments for a specific particle method **/ 
+      static int get_num_env( ProblemSpecP& db, PARTICLE_METHOD method ){ 
+
+        const ProblemSpecP arches_root = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
+       
+        if ( method == DQMOM ){ 
+
+          if ( arches_root->findBlock("DQMOM") ){ 
+            int N; 
+            arches_root->findBlock("DQMOM")->require("number_quad_nodes",N); 
+            return N; 
+          } else { 
+            throw ProblemSetupException("Error: DQMOM particle method not found.", __FILE__, __LINE__); 
+          }
+
+        } else if ( method == CQMOM ){ 
+
+          if ( arches_root->findBlock("CQMOM") ){ 
+            int N; 
+            arches_root->findBlock("CQMOM")->require("QuadratureNodes",N); 
+            return N; 
+          } else { 
+            throw ProblemSetupException("Error: DQMOM particle method not found.", __FILE__, __LINE__); 
+          }
+
+        } else if ( method == LAGRANGIAN ){ 
+
+          if ( arches_root->findBlock("LagrangianParticles") ){ 
+            return 1; 
+          } else { 
+            throw ProblemSetupException("Error: DQMOM particle method not found.", __FILE__, __LINE__); 
+          }
+
+        } else { 
+          throw ProblemSetupException("Error: Particle method type not recognized.", __FILE__, __LINE__); 
+        }
       }
 
     private: 

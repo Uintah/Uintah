@@ -82,7 +82,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   std::string enthalpyqn_name = ParticleHelper::append_qn_env( enthalpy_root, d_quadNode ); 
   EqnBase& temp_enthalpy_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(enthalpyqn_name);
   DQMOMEqn& enthalpy_eqn = dynamic_cast<DQMOMEqn&>(temp_enthalpy_eqn);
-   _enthalpy_scaling_constant = enthalpy_eqn.getScalingConstant();
+   _enthalpy_scaling_constant = enthalpy_eqn.getScalingConstant(d_quadNode);
 
   // check for particle temperature 
   std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
@@ -101,7 +101,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipCriteria();
-  _weight_scaling_constant = weight_eqn.getScalingConstant();
+  _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
   // get computed rates from char oxidation model 
   CoalModelFactory& modelFactory = CoalModelFactory::self();

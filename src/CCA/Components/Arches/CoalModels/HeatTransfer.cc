@@ -103,7 +103,7 @@ HeatTransfer::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
 
   d_w_small = weight_eqn.getSmallClipCriteria();
-  d_w_scaling_constant = weight_eqn.getScalingConstant();
+  d_w_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
   // Find the absorption coefficient term associated with this model
   // if it isn't there, print a warning

@@ -75,7 +75,7 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   _rcmass_varlabel = VarLabel::find(rcmass_name);
   EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
   DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
-   _rc_scaling_constant = rcmass_eqn.getScalingConstant();
+   _rc_scaling_constant = rcmass_eqn.getScalingConstant(d_quadNode);
 
   // create char mass var label
   std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
@@ -145,7 +145,7 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipCriteria();
-  _weight_scaling_constant = weight_eqn.getScalingConstant();
+  _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
 }
 //---------------------------------------------------------------------------

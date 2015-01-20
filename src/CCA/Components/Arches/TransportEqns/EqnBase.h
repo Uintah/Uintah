@@ -139,8 +139,8 @@ public:
     return d_initFunction; }; 
 
   /** @brief Return the scaling constant for the given equation. */
-  inline double getScalingConstant(){
-    return d_scalingConstant; };
+  inline double getScalingConstant(const int qn){
+    return d_scalingConstant[qn]; };
 
   /** @brief Return a bool indicating if the density guess is used for this transport equation */
   inline bool getDensityGuessBool(){
@@ -279,10 +279,10 @@ protected:
 
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
-  double d_scalingConstant;         ///< Value by which to scale values 
   double curr_ssp_time;             ///< Current value of time considering ssp averaging  
   double curr_time;                 ///< "old" time (t)
   int _stage;                       ///< At which algorithmic stage should this be computed. 
+  std::vector<double> d_scalingConstant;         ///< Value by which to scale values 
 
   std::vector<SourceContainer> d_sources;  ///< List of source terms for this eqn
   double d_mol_diff;                  ///< Molecular Diffusivity
