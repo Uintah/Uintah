@@ -220,9 +220,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     }
   }
 
-  if (d_myworld->myrank() == 0) {
-    cout << "\tUsing \"" << taskQueueAlg << "\" Algorithm" << std::endl;
-  }
+  proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
   if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingDevice())) {
@@ -246,8 +244,12 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
       cout << "\tUsing Unified Scheduler without threads (Single-Processor mode)" << std::endl;
     }
     else {
-      cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << std::endl
-           << "\tCreating " << numThreads_ << " thread(s) for task execution." << std::endl;
+      std::string plural = (numThreads_ == 1) ? " thread" : " threads";
+      cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, "
+           << "not all tasks are thread safe yet." << std::endl
+           << "   Creating " << numThreads_ << " additional "
+           << plural + " for task execution (total task execution threads = "
+           << numThreads_ + 1 << ")." << std::endl;
     }
   }
 
@@ -345,7 +347,7 @@ UnifiedScheduler::verifyChecksum()
     }
     // Spatial tasks don't count against the global checksum
     checksum -= numSpatialTasks;
-    
+
     if (mpidbg.active()) {
       coutLock.lock();
       mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
@@ -2516,8 +2518,8 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
 UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
                                                 int                thread_id ) :
     d_thread_id( thread_id ),
-    d_scheduler( scheduler ),                           
-    d_idle(      true ),                                     
+    d_scheduler( scheduler ),
+    d_idle(      true ),
     d_runmutex(  "run mutex" ),
     d_runsignal( "run condition" ),
     d_quit(      false ),
@@ -2554,7 +2556,7 @@ UnifiedSchedulerWorker::run()
   }
 
   while( true ) {
-    
+
     d_runsignal.wait(d_runmutex); // Wait for main thread signal.
     d_runmutex.unlock();
     d_waittime += Time::currentSeconds() - d_waitstart;

@@ -22,10 +22,10 @@
  * IN THE SOFTWARE.
  */
 
+#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using std::vector;
@@ -58,7 +58,6 @@ BufferInfo::~BufferInfo()
   }
 
   if( d_sendlist ) {
-
     delete d_sendlist;
     d_sendlist = 0;
   }
@@ -71,7 +70,7 @@ BufferInfo::count() const
 }
 
 void
-BufferInfo::add( void         * startbuf,
+BufferInfo::add( void*          startbuf,
                  int            count,
                  MPI_Datatype   datatype,
                  bool           free_datatype )
@@ -84,13 +83,13 @@ BufferInfo::add( void         * startbuf,
 }
 
 void
-BufferInfo::get_type( void        *& out_buf,
-                      int          & out_count,
-                      MPI_Datatype & out_datatype )
+BufferInfo::get_type( void*&        out_buf,
+                      int&          out_count,
+                      MPI_Datatype& out_datatype )
 {
   ASSERT(count() > 0);
 
-  if( !d_have_datatype ){
+  if( !d_have_datatype ) {
     if( count() == 1 ) {
       buf             = d_startbufs[0];
       cnt             = d_counts[0];
@@ -124,13 +123,13 @@ Sendlist::~Sendlist()
 
   // A little more complicated than normal, so that this doesn't need to be recursive...
 
-  Sendlist * p = next;
+  Sendlist* p = next;
   while( p ){
 
     if( p->obj->removeReference() ) {
       delete p->obj;
     }
-    Sendlist * n = p->next;
+    Sendlist* n = p->next;
     p->next = 0;  // So that DTOR won't recurse...
     p->obj = 0;
     delete p;
@@ -139,7 +138,7 @@ Sendlist::~Sendlist()
 }
 
 void
-BufferInfo::addSendlist( RefCounted * obj )
+BufferInfo::addSendlist( RefCounted* obj )
 {
   obj->addReference();
   d_sendlist = scinew Sendlist( d_sendlist, obj );
@@ -148,7 +147,7 @@ BufferInfo::addSendlist( RefCounted * obj )
 Sendlist*
 BufferInfo::takeSendlist()
 {
-  Sendlist * rtn = d_sendlist;
+  Sendlist* rtn = d_sendlist;
   d_sendlist = 0; // They are now responsible for freeing...
   return rtn;
 }

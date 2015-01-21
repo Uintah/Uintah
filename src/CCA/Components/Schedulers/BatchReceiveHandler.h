@@ -36,7 +36,7 @@ public:
   BatchReceiveHandler(const BatchReceiveHandler& copy)
     : batch_(copy.batch_) {}
   
-  void finishedCommunication(const ProcessorGroup * pg)
+  void finishedCommunication(const ProcessorGroup* pg)
   { batch_->received(pg); }
 
 private:

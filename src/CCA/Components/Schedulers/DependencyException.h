@@ -37,10 +37,11 @@
 #ifndef UINTAH_COMPONENTS_SCHEDULERS_DEPENDENCY_EXCEPTION_H
 #define UINTAH_COMPONENTS_SCHEDULERS_DEPENDENCY_EXCEPTION_H
 
+#include <Core/Exceptions/Exception.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Exceptions/Exception.h>
+
 #include <string>
 
 namespace Uintah {
@@ -48,28 +49,41 @@ namespace Uintah {
   using SCIRun::Exception;
 
   class DependencyException : public Exception {
+
   public:
-    DependencyException(const Task* task, const VarLabel* label,
-			int matlIndex, const Patch* patch,
-			std::string has, std::string needs,
-                        const char* file, int line);
+    DependencyException(const Task* task,
+                        const VarLabel* label,
+                              int matlIndex,
+                        const Patch* patch,
+                              std::string has,
+                              std::string needs,
+                        const char* file,
+                              int line);
+
     DependencyException(const DependencyException& copy);
+
     virtual ~DependencyException() {}
 
     static std::string
-    makeMessage(const Task* task, const VarLabel* label, int matlIndex,
-		const Patch* patch, std::string has, std::string needs);
+    makeMessage(const Task* task,
+                const VarLabel* label,
+                      int matlIndex,
+                const Patch* patch,
+                      std::string has,
+                      std::string needs);
      
     virtual const char* message() const;
     virtual const char* type() const;
+
   protected:
+
   private:
     DependencyException& operator=(const DependencyException& copy);
-    const Task* task_;
+    const Task*     task_;
     const VarLabel* label_;
-    int matlIndex_;
-    const Patch* patch_;
-    std::string d_msg;
+    int             matlIndex_;
+    const Patch*    patch_;
+    std::string     d_msg;
   };
 
 } // End namespace Uintah

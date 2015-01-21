@@ -36,7 +36,6 @@ class Task;
 CLASS
    DynamicMPIScheduler
    
-   Short description...
 
 GENERAL INFORMATION
 
@@ -50,29 +49,31 @@ GENERAL INFORMATION
   
    
 KEYWORDS
-   Scheduler_Brain_Damaged
+   Dynamic MPI Scheduler
 
 DESCRIPTION
-   Long description...
-  
-WARNING
+   Dynamic scheduling with non-deterministic, out-of-order execution of
+   tasks at runtime. One MPI rank per CPU core.
+
   
 ****************************************/
 
-  class DynamicMPIScheduler : public MPIScheduler  {
+class DynamicMPIScheduler : public MPIScheduler {
+
   public:
     DynamicMPIScheduler(const ProcessorGroup* myworld,
                         const Output* oport,
-                        DynamicMPIScheduler* parentScheduler = 0);
+                              DynamicMPIScheduler* parentScheduler = 0);
 
     virtual ~DynamicMPIScheduler();
-    
-    virtual void problemSetup( const ProblemSpecP     & prob_spec,
-                                     SimulationStateP & state );
-      
+
+    virtual void problemSetup(const ProblemSpecP& prob_spec,
+                                    SimulationStateP& state);
+
     virtual SchedulerP createSubScheduler();
-    
-    virtual void execute( int tgnum = 0, int iteration = 0 );
+
+    virtual void execute(int tgnum = 0,
+                         int iteration = 0);
     
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
     
@@ -81,7 +82,7 @@ WARNING
     DynamicMPIScheduler& operator=(const DynamicMPIScheduler&);
 
     QueueAlg taskQueueAlg_;
-  };
+};
 
 } // End namespace Uintah
    

@@ -49,9 +49,9 @@ PackBufferInfo::~PackBufferInfo()
 }
 
 void
-PackBufferInfo::get_type( void        *& out_buf,
-                          int          & out_count,
-                          MPI_Datatype & out_datatype,
+PackBufferInfo::get_type( void*&         out_buf,
+                          int&           out_count,
+                          MPI_Datatype&  out_datatype,
                           MPI_Comm       comm )
 {
   MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::get_type");
@@ -91,7 +91,7 @@ PackBufferInfo::get_type( void*&,
 
 void
 PackBufferInfo::pack( MPI_Comm   comm,
-                      int      & out_count )
+                      int&       out_count )
 {
   MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::pack");
   ASSERT( d_have_datatype );
@@ -100,7 +100,7 @@ PackBufferInfo::pack( MPI_Comm   comm,
   int bufsize = packedBuffer->getBufSize();
   //for each buffer
   for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
-    //pack into a contigious buffer
+    //pack into a contiguous buffer
     if( d_counts[i] > 0 ) {
       MPI_Pack( d_startbufs[i], d_counts[i], d_datatypes[i], buf, bufsize, &position, comm );
     }
@@ -117,7 +117,7 @@ PackBufferInfo::pack( MPI_Comm   comm,
 
 void
 PackBufferInfo::unpack( MPI_Comm     comm,
-                        MPI_Status & status )
+                        MPI_Status&  status )
 {
   MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::unpack");
   ASSERT( d_have_datatype );
