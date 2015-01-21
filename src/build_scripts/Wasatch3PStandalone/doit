@@ -1,0 +1,38 @@
+#! /bin/bash
+
+#
+# This scrip updates the 3P Wasatch libraries... 
+#
+
+echo
+echo "Building Wasatch 3P libraries."
+echo
+
+echo "  Using compiler: $COMPILER"
+
+source HelperBuildScripts/checkEnv.sh
+
+for dir in SpatialOps ExprLib TabProps RadProps
+do
+
+  echo "--- Building $dir ---"
+  echo
+
+  if ! test -d "$dir"; then
+    echo "Error, there is no $dir directory!"
+    exit
+  fi
+
+  cd $dir
+  git pull
+
+  if test "$?" != "0"; then
+    echo "Error, 'git pull' failed for $dir!"
+    exit
+  fi
+
+  ./doit
+
+  cd ..
+
+done
