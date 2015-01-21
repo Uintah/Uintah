@@ -65,7 +65,7 @@ extern SCIRun::Mutex cerrLock;
 
 extern DebugStream mixedDebug;
 
-static DebugStream dbg(          "MPIScheduler",         false );
+static DebugStream dbg(          "MPIScheduler_DBG",         false );
 static DebugStream dbgst(        "SendTiming",           false );
 static DebugStream timeout(      "MPIScheduler.timings", false );
 static DebugStream reductionout( "ReductionTasks",       false );

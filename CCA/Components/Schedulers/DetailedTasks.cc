@@ -654,6 +654,7 @@ void DetailedTask::findRequiringTasks(const VarLabel* var,
     }
   }
 }
+
 DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch,
                                                     DetailedTask* toTask,
                                                     Task::Dependency* req,

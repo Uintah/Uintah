@@ -166,9 +166,7 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     }
   }
 
-  if (d_myworld->myrank() == 0) {
-    cout << "\tUsing \"" << taskQueueAlg << "\" Algorithm" << std::endl;
-  }
+  proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
   if ((numThreads_ < 1) && Uintah::Parallel::usingMPI()) {
@@ -183,10 +181,10 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
       throw ProblemSetupException("Too many threads. Reduce MAX_THREADS and recompile.", __FILE__, __LINE__);
     }
   }
-  
-  if ( d_myworld->myrank()==0){
-    cout <<"   WARNING: Component tasks must be thread safe." << endl;
-    cout <<"   Using one thread for scheduling, " << numThreads_ << " threads for task execution."<< endl;
+
+  if (d_myworld->myrank() == 0) {
+    cout << "   WARNING: Component tasks must be thread safe." << endl;
+    cout << "   Using one thread for scheduling, and " << numThreads_ << " threads for task execution." << endl;
   }
 
   // Create the TaskWorkers here
@@ -198,7 +196,7 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     Thread* t = scinew Thread(worker, name);
     t_thread[i] = t;
   }
-  
+
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
 
@@ -270,7 +268,7 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
   }
 
   MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::execute");
-  TAU_PROFILE("ThreadedMPIScheduler::execute()", " ", TAU_USER); 
+  TAU_PROFILE("ThreadedMPIScheduler::execute()", " ", TAU_USER);
 
   TAU_PROFILE_TIMER(reducetimer, "Reductions", "[ThreadedMPIScheduler::execute()] " , TAU_USER);
   TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[ThreadedMPIScheduler::execute()] " , TAU_USER);

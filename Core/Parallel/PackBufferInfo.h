@@ -49,7 +49,7 @@ public:
   int getBufSize()  { return bufsize; }
 
 private:
-  void * buf;
+  void*  buf;
   int    bufsize;
 };
 
@@ -70,23 +70,24 @@ class PackBufferInfo : public BufferInfo {
                    MPI_Datatype& );
 
     void pack( MPI_Comm   comm,
-               int      & out_count );
+               int&       out_count );
 
     void unpack( MPI_Comm     comm,
-                 MPI_Status & status );
+                 MPI_Status&  status );
 
     // PackBufferInfo is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  After receive
     // requests have finished, then it needs to unpack what got received.
 
-    void finishedCommunication( const ProcessorGroup * pg, MPI_Status & status ) { unpack( pg->getComm(), status ); }
+    void finishedCommunication( const ProcessorGroup* pg, MPI_Status& status ) { unpack( pg->getComm(), status ); }
 
   private:
+
     // disable copy and assignment
     PackBufferInfo(const PackBufferInfo&);
     PackBufferInfo& operator=(const PackBufferInfo&);
 
-    PackedBuffer * packedBuffer;
+    PackedBuffer* packedBuffer;
 };
 } // end namespace Uintah
 

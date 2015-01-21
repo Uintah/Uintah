@@ -30,11 +30,11 @@
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Exceptions/ProblemSetupException.h>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -44,8 +44,8 @@ using namespace Uintah;
 
 // Enable specific schedulers via environment variable
 static DebugStream SingleProcessor("SingleProcessor", false);
-static DebugStream DynamicMPI("DynamicMPI", false);
-static DebugStream ThreadedMPI("ThreadedMPI", false);
+static DebugStream DynamicMPI(     "DynamicMPI",      false);
+static DebugStream ThreadedMPI(    "ThreadedMPI",     false);
 
 SchedulerCommon*
 SchedulerFactory::create(const ProblemSpecP&   ps,

@@ -287,8 +287,11 @@ SchedulerCommon::problemSetup(const ProblemSpecP&     prob_spec,
   if (params) {
     params->getWithDefault("small_messages", d_useSmallMessages, true);
     
-    if (d_useSmallMessages && d_myworld->myrank() == 0) {
-      cout << "   Using theoretical option for message sizes\n";
+    if (d_useSmallMessages) {
+      proc0cout << "   Using small, individual MPI messages (no message combining)\n";
+    }
+    else {
+      proc0cout << "   Using large, combined MPI messages\n";
     }
     
     ProblemSpecP track = params->findBlock("VarTracker");
