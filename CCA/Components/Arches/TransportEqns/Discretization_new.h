@@ -1806,7 +1806,16 @@ namespace Uintah{
 
       } else if ( convScheme == "super_bee_wall_upwind" || convScheme == "roe_minmod_wall_upwind" || convScheme == "vanleer_wall_upwind"){
 
-       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( convScheme ); 
+       std::string mod_convScheme; 
+       if ( convScheme == "super_bee_wall_upwind"){ 
+         mod_convScheme = "super_bee"; 
+       } else if ( convScheme == "roe_minmod_wall_upwind"){ 
+         mod_convScheme = "roal_minmod"; 
+       } else if ( convScheme == "vanleer_wall_upwind"){
+         mod_convScheme = "vanleer";
+       }
+
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
        ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
          scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
@@ -1876,6 +1885,26 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
+      } else if ( convScheme == "super_bee_wall_upwind" || convScheme == "roe_minmod_wall_upwind" || convScheme == "vanleer_wall_upwind"){
+
+       std::string mod_convScheme; 
+       if ( convScheme == "super_bee_wall_upwind"){ 
+         mod_convScheme = "super_bee"; 
+       } else if ( convScheme == "roe_minmod_wall_upwind"){ 
+         mod_convScheme = "roal_minmod"; 
+       } else if ( convScheme == "vanleer_wall_upwind"){
+         mod_convScheme = "vanleer";
+       }
+
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
       } else if (convScheme == "central") {
 
        CentralInterpolation<oldPhiT>* the_interpolant = scinew CentralInterpolation<oldPhiT>(); 
@@ -1923,6 +1952,26 @@ namespace Uintah{
          scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
  
        convection_helper->do_convection( p, Fconv, partVel,  areaFraction, this );
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+      } else if ( convScheme == "super_bee_wall_upwind" || convScheme == "roe_minmod_wall_upwind" || convScheme == "vanleer_wall_upwind"){
+
+       std::string mod_convScheme; 
+       if ( convScheme == "super_bee_wall_upwind"){ 
+         mod_convScheme = "super_bee"; 
+       } else if ( convScheme == "roe_minmod_wall_upwind"){ 
+         mod_convScheme = "roal_minmod"; 
+       } else if ( convScheme == "vanleer_wall_upwind"){
+         mod_convScheme = "vanleer";
+       }
+
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
        delete convection_helper; 
        delete the_interpolant; 
