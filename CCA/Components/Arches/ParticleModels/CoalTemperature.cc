@@ -232,7 +232,7 @@ CoalTemperature::register_timestep_eval( std::vector<VariableInformation>& varia
       DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
       EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(_weightqn_name[i]);                         
       DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);                                         
-      double weight_small = weight_eqn.getSmallClipCriteria();    
+      double weight_small = weight_eqn.getSmallClipPlusTol();    
       _weight_small.push_back(weight_small);  
     }
 

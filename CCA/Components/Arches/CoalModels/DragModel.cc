@@ -131,7 +131,7 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
   EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
-  _weight_small = current_eqn2.getSmallClipCriteria();
+  _weight_small = current_eqn2.getSmallClipPlusTol();
   _weight_scaling_constant = current_eqn2.getScalingConstant(d_quadNode);
 
 }

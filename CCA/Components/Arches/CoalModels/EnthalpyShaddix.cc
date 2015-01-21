@@ -100,7 +100,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   _weight_varlabel = VarLabel::find(weight_name); 
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
-  _weight_small = weight_eqn.getSmallClipCriteria();
+  _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
   // get computed rates from char oxidation model 

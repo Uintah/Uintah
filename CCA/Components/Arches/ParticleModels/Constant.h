@@ -84,8 +84,8 @@ namespace Uintah{
     const std::string _base_var_name;
     VAR_TYPE _D_type;
     
-    const int _N;         //<<< The number of "environments"
-    double _const;        //<<< constant source value
+    const int _N;                      //<<< The number of "environments"
+    std::vector<double> _const;        //<<< constant source value/environment
     
     const std::string get_name(const int i, const std::string base_name){
       std::stringstream out;
@@ -128,6 +128,7 @@ namespace Uintah{
     _do_bcs_task = false;
     
     db->require("constant",_const);
+
   }
   
   //======INITIALIZATION:
@@ -154,7 +155,8 @@ namespace Uintah{
       const std::string name = get_name(i, _base_var_name);
       Tptr model_value = tsk_info->get_so_field<T>(name);
       
-      *model_value <<= _const;
+      *model_value <<= _const[i];
+
     }
   }
   
@@ -162,9 +164,11 @@ namespace Uintah{
   template <typename T>
   void Constant<T>::register_timestep_init( std::vector<VariableInformation>& variable_registry ){
     for ( int i = 0; i < _N; i++ ){
+
       //dependent variables(s) or model values
       const std::string name = get_name(i, _base_var_name);
       register_variable( name, _D_type, COMPUTES, variable_registry );
+
     }
   }
   
@@ -180,7 +184,7 @@ namespace Uintah{
       const std::string name = get_name(i, _base_var_name);
       Tptr model_value = tsk_info->get_so_field<T>(name);
 
-      *model_value <<= _const;
+      *model_value <<= _const[i];
       
     }
     

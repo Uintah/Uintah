@@ -174,7 +174,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     EqnBase& temp_weightEqnE = eqn_factory.retrieve_scalar_eqn( weight_name );
     DQMOMEqn& temp_weightEqnD = dynamic_cast<DQMOMEqn&>(temp_weightEqnE);
     weightEqns.push_back( &temp_weightEqnD );
-    d_w_small = temp_weightEqnD.getSmallClipCriteria();
+    d_w_small = temp_weightEqnD.getSmallClipPlusTol();
     //d_weight_scaling_constant = temp_weightEqnD.getScalingConstant();
   }
 
