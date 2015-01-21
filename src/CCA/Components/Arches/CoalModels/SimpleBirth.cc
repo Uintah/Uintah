@@ -239,6 +239,7 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
         model[c] = a[c]/_a_scale * balance; 
 
       }
+      gas_source[c] = 0.0;
 
     }
   }
