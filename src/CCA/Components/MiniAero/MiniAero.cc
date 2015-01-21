@@ -27,6 +27,7 @@
 
 #include <CCA/Components/MiniAero/MiniAero.h>
 #include <CCA/Components/MiniAero/BoundaryCond.h>
+#include <CCA/Components/MiniAero/VenkatLimiter.h>
 #include <CCA/Components/Examples/ExamplesLabel.h>
 #include <CCA/Ports/Scheduler.h>
 
@@ -88,6 +89,10 @@ MiniAero::MiniAero(const ProcessorGroup* myworld)
   grad_vel_CClabel   = VarLabel::create("vel_grad",    CCVariable<Matrix3>::getTypeDescription());
   grad_temp_CClabel  = VarLabel::create("tempr_grad",  CCVariable<Vector>::getTypeDescription());
 
+  limiter_rho_CClabel   = VarLabel::create("rho_limiter",    CCVariable<double>::getTypeDescription());
+  limiter_vel_CClabel   = VarLabel::create("vel_limiter",    CCVariable<Vector>::getTypeDescription());
+  limiter_temp_CClabel  = VarLabel::create("temp_limiter",   CCVariable<double>::getTypeDescription());
+
   flux_mass_CClabel    = VarLabel::create("flux_mass",         CCVariable<Vector>::getTypeDescription());
   flux_mom_CClabel     = VarLabel::create("flux_mom",          CCVariable<Matrix3>::getTypeDescription());
   flux_energy_CClabel  = VarLabel::create("flux_energy",       CCVariable<Vector>::getTypeDescription());
@@ -144,6 +149,10 @@ MiniAero::~MiniAero()
   VarLabel::destroy(grad_rho_CClabel);
   VarLabel::destroy(grad_vel_CClabel);
   VarLabel::destroy(grad_temp_CClabel);
+
+  VarLabel::destroy(limiter_rho_CClabel);
+  VarLabel::destroy(limiter_vel_CClabel);
+  VarLabel::destroy(limiter_temp_CClabel);
 
   VarLabel::destroy(flux_mass_CClabel);
   VarLabel::destroy(flux_mom_CClabel);
@@ -272,6 +281,7 @@ void MiniAero::scheduleTimeAdvance(const LevelP& level,
     printSchedule(level,dbg, "    scheduleTimeAdvance" );
     
     schedGradients(level, sched, k);
+    schedLimiters(level, sched, k);
 
     schedCellCenteredFlux(level, sched, k);
     schedFaceCenteredFlux(level, sched, k);
@@ -355,6 +365,40 @@ void MiniAero::schedGradients(const LevelP& level,
     task->modifies(grad_rho_CClabel);
     task->modifies(grad_vel_CClabel);
     task->modifies(grad_temp_CClabel);
+  }
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+}
+
+//______________________________________________________________________
+//
+void MiniAero::schedLimiters(const LevelP& level,
+                              SchedulerP& sched,
+                              const int RK_step)
+{
+  Task* task = scinew Task("MiniAero::Limiters", this, 
+                           &MiniAero::Limiters, RK_step);
+                           
+  printSchedule(level,dbg,"schedLimiters");
+
+  Task::WhichDW whichDW = getRK_DW(RK_step); 
+
+  task->requires(whichDW, rho_CClabel, Ghost::AroundCells, 1);
+  task->requires(whichDW, vel_CClabel, Ghost::AroundCells, 1);
+  task->requires(whichDW, temp_CClabel, Ghost::AroundCells, 1);
+
+  task->requires(Task::NewDW, grad_rho_CClabel, Ghost::None);
+  task->requires(Task::NewDW, grad_vel_CClabel, Ghost::None);
+  task->requires(Task::NewDW, grad_temp_CClabel, Ghost::None);
+
+  if(RK_step == 0){
+    task->computes(limiter_rho_CClabel);
+    task->computes(limiter_vel_CClabel);
+    task->computes(limiter_temp_CClabel);
+  } else {
+    task->modifies(limiter_rho_CClabel);
+    task->modifies(limiter_vel_CClabel);
+    task->modifies(limiter_temp_CClabel);
   }
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
@@ -1034,6 +1078,150 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
       grad_temp_CC[c][1] = 0.5*(Temp_CC[Above] - Temp_CC[Below])*dxdz/cell_volume;
       grad_temp_CC[c][2] = 0.5*(Temp_CC[Front] - Temp_CC[Back])*dydx/cell_volume;
 
+    } // Cell loop
+  
+  }// Patch loop
+}
+
+//______________________________________________________________________
+//
+void MiniAero::Limiters(const ProcessorGroup* /*pg*/,
+                          const PatchSubset* patches,
+                          const MaterialSubset* /*matls*/,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const int RK_step)
+{
+
+  std::vector<IntVector> connected_cells(6);
+  std::vector<double> face_distance(3);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg, "Doing MiniAero::Limiters" );
+    
+    // Requires...
+    constCCVariable<double> rho_CC, temp_CC;
+    constCCVariable<Vector> vel_CC;
+    constCCVariable<Vector> grad_rho_CC, grad_temp_CC;
+    constCCVariable<Matrix3> grad_vel_CC;
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    Ghost::GhostType  gn  = Ghost::None;
+
+    DataWarehouse* my_dw = getRK_DW(RK_step, old_dw, new_dw);
+
+    my_dw->get( rho_CC,  rho_CClabel, 0, patch, gac, 1 );
+    my_dw->get( vel_CC,  vel_CClabel, 0, patch, gac, 1 );
+    my_dw->get( temp_CC, temp_CClabel,0, patch, gac, 1 );
+
+    new_dw->get( grad_rho_CC,  grad_rho_CClabel, 0, patch, gn, 0);
+    new_dw->get( grad_vel_CC,  grad_vel_CClabel, 0, patch, gn, 0);
+    new_dw->get( grad_temp_CC, grad_temp_CClabel,0, patch, gn, 0);
+
+    // Provides...
+    CCVariable<double> limiter_rho_CC, limiter_temp_CC;
+    CCVariable<Vector> limiter_vel_CC;
+
+    if( RK_step == 0 ) { 
+      new_dw->allocateAndPut( limiter_rho_CC,  limiter_rho_CClabel,  0, patch );
+      new_dw->allocateAndPut( limiter_temp_CC, limiter_temp_CClabel, 0, patch );
+      new_dw->allocateAndPut( limiter_vel_CC,  limiter_vel_CClabel,  0,patch );
+    } else {
+      new_dw->getModifiable( limiter_rho_CC,  limiter_rho_CClabel,  0, patch );
+      new_dw->getModifiable( limiter_temp_CC, limiter_temp_CClabel, 0, patch );
+      new_dw->getModifiable( limiter_vel_CC,  limiter_vel_CClabel,  0,patch );
+    }
+
+
+    const Vector& cellSize = patch->getLevel()->dCell();
+    face_distance[0] = cellSize[0]/2.0;
+    face_distance[1] = cellSize[1]/2.0;
+    face_distance[2] = cellSize[2]/2.0;
+
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+
+      IntVector c = *iter;
+      connected_cells[0] = c + IntVector(1,0,0); //Right; 
+      connected_cells[1] = c + IntVector(-1,0,0); //Left; 
+      connected_cells[2] = c + IntVector(0,1,0); //Above; 
+      connected_cells[3] = c + IntVector(0,-1,0); //Below; 
+      connected_cells[4] = c + IntVector(0,0,1); //Front; 
+      connected_cells[5] = c + IntVector(0,0,-1); //Back; 
+
+      //Compute min and max of all values over stencil
+      double rho_max, rho_min;
+      double vel_max[3], vel_min[3];
+      double temp_max, temp_min;
+
+      rho_max = rho_CC[c];
+      rho_min = rho_CC[c];
+      for(unsigned j = 0; j<3; ++j)
+      {
+        vel_max[j] = vel_CC[c][j];
+        vel_min[j] = vel_CC[c][j];
+      }
+      temp_max = temp_CC[c];
+      temp_min = temp_CC[c];
+      for(size_t i = 0; i<connected_cells.size(); ++i)
+      {
+         rho_max = std::max(rho_max, rho_CC[connected_cells[i]]);
+         rho_min = std::min(rho_min, rho_CC[connected_cells[i]]);
+         temp_max = std::max(temp_max, temp_CC[connected_cells[i]]);
+         temp_min = std::min(temp_min, temp_CC[connected_cells[i]]);
+         for(unsigned j = 0; j<3; ++j)
+         {
+            vel_max[j] = std::max(vel_max[j], vel_CC[connected_cells[i]][j]);
+            vel_min[j] = std::min(vel_min[j], vel_CC[connected_cells[i]][j]);
+         }
+      }
+      double rho_limit = 1.0;
+      double temp_limit = 1.0;
+      double vel_limit[3] = {1.0, 1.0, 1.0};
+      //Compute limited values over all directions.
+      double drhomax = rho_max - rho_CC[c];
+      double drhomin = rho_min - rho_CC[c];
+      double dtempmax = temp_max - temp_CC[c];
+      double dtempmin = temp_min - temp_CC[c];
+      double dvelmax[3];
+      double dvelmin[3];
+
+      for(int idir=0; idir<3; ++idir)
+      {
+        dvelmax[idir] = vel_max[idir]-vel_CC[c][idir];
+        dvelmin[idir] = vel_min[idir]-vel_CC[c][idir];
+      }
+
+      double drho = 0.0;
+      double dtemp = 0.0;
+      double dvel[3] = {0.0, 0.0, 0.0};
+
+      for(int idir=0; idir<3; ++idir)
+      {
+        drho = grad_rho_CC[c][idir]*face_distance[idir];
+        rho_limit = std::min(rho_limit, limit(drhomax, drhomin, drho, face_distance[idir]*face_distance[idir]));
+        drho = -grad_rho_CC[c][idir]*face_distance[idir];
+        rho_limit = std::min(rho_limit, limit(drhomax, drhomin, drho, face_distance[idir]*face_distance[idir]));
+
+        dtemp = grad_temp_CC[c][idir]*face_distance[idir];
+        temp_limit = std::min(temp_limit, limit(dtempmax, dtempmin, dtemp, face_distance[idir]*face_distance[idir]));
+        dtemp = -grad_temp_CC[c][idir]*face_distance[idir];
+        temp_limit = std::min(temp_limit, limit(dtempmax, dtempmin, dtemp, face_distance[idir]*face_distance[idir]));
+
+        for(int jdir=0; jdir<3; ++jdir)
+        {
+            dvel[jdir] = grad_vel_CC[c](idir,jdir)*face_distance[idir];
+            vel_limit[jdir] = std::min(vel_limit[jdir], limit(dvelmax[jdir], dvelmin[jdir], dvel[jdir], face_distance[idir]*face_distance[idir]));
+            dvel[jdir] = -grad_vel_CC[c](idir,jdir)*face_distance[idir];
+            vel_limit[jdir] = std::min(vel_limit[jdir], limit(dvelmax[jdir], dvelmin[jdir], dvel[jdir], face_distance[idir]*face_distance[idir]));
+        }
+      }
+     
+      limiter_rho_CC[c] = rho_limit; 
+      limiter_temp_CC[c] = temp_limit;
+      for(int idir=0; idir<3; ++idir)
+      {
+        limiter_vel_CC[c][idir] = vel_limit[idir];
+      }
+          
     } // Cell loop
   
   }// Patch loop
