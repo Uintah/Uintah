@@ -1,0 +1,47 @@
+ADD_LIBRARY(Packages_Uintah_Dataflow_Modules_Visualization
+	GridVisualizer.cc 
+	PatchVisualizer.cc 
+	PatchDataVisualizer.cc 
+	RescaleColorMapForParticles.cc 
+	ParticleColorMapKey.cc 
+	ParticleVis.cc 
+	FaceCuttingPlane.cc
+	Hedgehog.cc
+	AnimatedStreams.cc
+	VariablePlotter.cc 
+	NodeHedgehog.cc 
+	SubFieldHistogram.cc 
+	UTextureBuilder.cc 
+)
+TARGET_LINK_LIBRARIES(Packages_Uintah_Dataflow_Modules_Visualization
+        Dataflow_GuiInterface              
+	Dataflow_Network               
+	Dataflow_Modules_Visualization 
+	Dataflow_Widgets               
+	Core_Basis                     
+	Core_Datatypes                 
+        Core_Thread                    
+	Core_Persistent                
+	Core_Exceptions                
+	Core_Containers                
+	Core_Datatypes                 
+        Core_Geom                      
+        Core_GeomInterface             
+	Core_Geometry                  
+	Core_Util                      
+	Core_Basis                     
+	Packages_Uintah_Core_Grid          
+	Packages_Uintah_Core_Math          
+	Packages_Uintah_Core_Util          
+	Packages_Uintah_Core_Disclosure    
+	Packages_Uintah_CCA_Ports          
+	Packages_Uintah_Core_ProblemSpec   
+	Packages_Uintah_Core_Exceptions    
+	Packages_Uintah_Core_Datatypes     
+	Packages_Uintah_Core_DataArchive   
+	Packages_Uintah_Dataflow_Modules_Selectors
+)
+
+IF(BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Packages_Uintah_Dataflow_Modules_Visualization)
+ENDIF(BUILD_SHARED_LIBS)

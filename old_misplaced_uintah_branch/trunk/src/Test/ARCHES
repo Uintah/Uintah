@@ -1,0 +1,20 @@
+#!/usr/local/bin/python
+
+from os import symlink,environ
+from sys import argv,exit,platform
+from helpers.runSusTests import runSusTests, inputs_root
+from helpers.modUPS import modUPS
+
+methane8patch_ups = modUPS("%s/ARCHES" % inputs_root(), \
+                           "methane_explicit_table.ups", \
+                           ["<patches>[2,2,2]</patches>", \
+                            "<maxTime>10.0</maxTime>"])
+
+UNUSED_TESTS = []
+TESTS = [
+    ("methane_explicit", "methane_explicit_table.ups", 1.1, "ALL"),
+    ("methane_explicit_8patch", methane8patch_ups, 8, "ALL")
+]
+
+exit(runSusTests(argv, TESTS, "ARCHES"))
+

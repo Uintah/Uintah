@@ -1,0 +1,62 @@
+#!/bin/csh
+#__________________________________
+#  This script plot the totalMassBurned and its sum
+#   output and plot it using gnuplot.
+#  Usage:
+#     plotBurnedMass <dump postScript File (y/Y), default is no>
+#
+#  This requires gnuplot 3.8 or greater.
+#__________________________________
+
+set out = totalMassBurned.dat
+if ( !(-e $out) ) then
+    echo "Couldn't find your file $out"
+  exit(1)
+endif
+
+set hardcopy = "n"
+if ( $#argv == 1 ) then
+  set hardcopy = $argv
+endif 
+
+#__________________________________
+cp $out $out.org
+echo "computing cumulative sum"
+awk 'NR==1 {sum=$2; lambda=.9; print $1,$2,sum} ; NR>1 {sum=sum + $2; print $1, $2, sum}' < $out.org >& $out
+/bin/rm $out.org
+
+echo "" > gp
+
+
+#__________________________________
+# if making a hardcopy
+if( $hardcopy == "y" || $hardcopy == "Y" ) then 
+echo "Generating the postscript file plotMassBurned.ps"
+/bin/rm gp
+cat > gp << fin
+set terminal postscript color solid "Times-Roman" 9
+set output "plotMassBurned.ps"
+fin
+endif
+
+#__________________________________
+# generate the  plot script
+cat >> gp << fin
+set grid xtics ytics 
+set y2tics
+
+set ylabel 'Mass Burned /timestep  [Kg]' textcolor lt 1
+set y2label 'Total Mass Burned [Kg]'     textcolor lt 2
+set xlabel 'Physical Time[sec]
+
+plot 'totalMassBurned.dat' using 1:2 t           'Mass Burned' with lines,\
+     'totalMassBurned.dat' using 1:3 axis x1y2 t 'Cum. Sum' with lines
+
+pause -1 "Hit return to exit"
+fin
+#__________________________________
+# plot it up
+gnuplot gp
+
+
+exit(1)
