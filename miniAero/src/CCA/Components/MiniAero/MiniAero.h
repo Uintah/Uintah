@@ -124,6 +124,8 @@ namespace Uintah {
 
     void schedGradients(const LevelP& level,SchedulerP& sched, const int RK_step);
 
+    void schedLimiters(const LevelP& level,SchedulerP& sched, const int RK_step);
+
     void schedViscousFaceFlux(const LevelP& level,SchedulerP& sched, const int RK_step);
 
     void schedUpdateSolution(const LevelP& level, SchedulerP& sched);
@@ -177,6 +179,13 @@ namespace Uintah {
                         DataWarehouse*);
 
     void Gradients(const ProcessorGroup*,
+                    const PatchSubset* patches,
+                    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw,
+		   const int RK_step);
+
+    void Limiters(const ProcessorGroup*,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
@@ -246,6 +255,9 @@ namespace Uintah {
     const VarLabel* grad_rho_CClabel;
     const VarLabel* grad_vel_CClabel;
     const VarLabel* grad_temp_CClabel;
+    const VarLabel* limiter_rho_CClabel;
+    const VarLabel* limiter_vel_CClabel;
+    const VarLabel* limiter_temp_CClabel;
     const VarLabel* viscous_flux_mom_FCXlabel;
     const VarLabel* viscous_flux_energy_FCXlabel;
     const VarLabel* viscous_flux_mom_FCYlabel;
