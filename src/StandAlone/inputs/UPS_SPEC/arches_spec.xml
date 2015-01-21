@@ -933,8 +933,8 @@
             <w_velocity_label           spec="OPTIONAL STRING"
                                         need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
 
-            <!-- constant property model -->
-            <constant                   spec="REQUIRED DOUBLE"
+            <!-- constant property model: set a constant/environment -->
+            <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
                                         need_applies_to="type constant"/>
         </model>
 
@@ -1347,9 +1347,16 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'BTDevol, RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
+                                        attribute2="type REQUIRED STRING 'BTDevol, 
+                                                                          RichardsFletcherDevol, 
+                                                                          KobayashiSarofimDevol, 
+                                                                          YamamotoDevol, 
+                                                                          ConstantModel, 
                                                                           Drag,
-                                                                          ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
+                                                                          ShaddixHeatTransfer, 
+                                                                          EnthalpyShaddix, 
+                                                                          CharOxidationShaddix, 
+                                                                          SimpleBirth'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
@@ -1375,6 +1382,14 @@
             <!-- Drag -->
             <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'" 
                                         need_applies_to="type Drag"/>
+
+            <!-- Simple Birth -->
+            <is_weight                  spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type SimpleBirth"/> <!-- Model birth term for the weight -->
+            <abscissa                   spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type SimpleBirth"/> <!-- If not a weight, then the root of the abscissa name -->
+
 
           </model>
         </Models>

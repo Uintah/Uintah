@@ -107,7 +107,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(name);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
   d_weightLabel = eqn.getTransportEqnLabel();
-  d_w_small = eqn.getSmallClipCriteria();
+  d_w_small = eqn.getSmallClipPlusTol();
   if( d_w_small == 0.0 ) {
     d_w_small = 1e-16;
   }
@@ -174,7 +174,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
       //By default, set the low value for this weight to 0 and run on low clipping
       clip.activated = true; 
       clip.low = 1e-100; 
-      clip.tol = 1e-10; 
+      clip.tol = 0.0; 
       clip.do_low = true; 
 
     } else { 
@@ -184,21 +184,10 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
         //weights always have low clip values!  ie, negative weights not allowed
         clip.do_low = true; 
         clip.low = 1e-100; 
+        clip.tol = 0.0;
 
       } 
     }
-  } else { 
-
-    // Actor to role matching: 
-    // Only needed for ICs
-    //std::string descriptor; 
-    //db->require( "ndf_descriptor", descriptor ); 
-
-    //DQMOMEqnFactory::NDF_DESCRIPTOR ndf_desc_enum = dqmomFactory.get_descriptor(descriptor); 
-
-    ////now register it
-    //dqmomFactory.assign_descriptor(d_ic_name, ndf_desc_enum);
-
   }
 
   // Scaling information:

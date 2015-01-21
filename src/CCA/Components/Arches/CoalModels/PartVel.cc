@@ -276,7 +276,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(eqn2);
         constCCVariable<double> weight;  
         const VarLabel* mywLabel = weight_eqn.getTransportEqnLabel();  
-        double small_weight = weight_eqn.getSmallClipCriteria(); 
+        double small_weight = weight_eqn.getSmallClipPlusTol(); 
         old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
 
         ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
