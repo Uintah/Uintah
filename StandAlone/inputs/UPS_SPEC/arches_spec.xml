@@ -957,7 +957,13 @@
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" /> <!-- Turbulence closure (D_T = mu_t/(Sc_t or Pr_t)), default = 0.4 -->    
           <doDiff                       spec="OPTIONAL BOOLEAN"/> <!-- Turn diffusion on/off --> 
           <doConv                       spec="OPTIONAL BOOLEAN"/> <!-- Turn convection on/off --> 
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, 
+                                                               roe_minmod, 
+                                                               super_bee, 
+                                                               central, 
+                                                               old_super_bee, 
+                                                               super_bee_wall_upwind, 
+                                                               roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/-->
           <scaling_const                spec="OPTIONAL MULTIPLE_DOUBLES"/>  <!-- Not used at the moment -->                               
@@ -1376,7 +1382,13 @@
         <Weights                        spec="REQUIRED NO_DATA">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, 
+                                                               roe_minmod, 
+                                                               super_bee, 
+                                                               central, 
+                                                               old_super_bee, 
+                                                               super_bee_wall_upwind, 
+                                                               roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <initialization               spec="OPTIONAL NO_DATA"
@@ -1411,7 +1423,13 @@
                                         attribute1="label REQUIRED STRING">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, 
+                                                               roe_minmod, 
+                                                               super_bee, 
+                                                               central, 
+                                                               old_super_bee, 
+                                                               super_bee_wall_upwind, 
+                                                               roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <nominal_values               spec="REQUIRED MULTIPLE_DOUBLES"/> <!-- nominal values for each of the internal coordinates when the weight goes to zero -->

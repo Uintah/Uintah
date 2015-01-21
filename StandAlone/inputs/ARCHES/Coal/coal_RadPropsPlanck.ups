@@ -1009,7 +1009,7 @@
             <env_constant qn="2" value="1e5">
             </env_constant>
           </initialization>
-          <scaling_const>1e7</scaling_const>
+          <scaling_const>[1e7,1e7,1e7]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <Clipping>
             <low>0.0</low>
@@ -1035,7 +1035,7 @@
             <low>3.99</low>
             <high>10.01</high>
           </Clipping>
-          <scaling_const>1e-5</scaling_const>
+          <scaling_const>[1e-5,1e-5,1e-5]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
@@ -1054,7 +1054,7 @@
           </initialization>
           <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <model label="devol" />
-          <scaling_const>1.0e-10</scaling_const>
+          <scaling_const>[1.0e-10,1.0e-10,1.0e-10]</scaling_const>
           <Clipping>
             <low>0.0</low>
             <high>10.0</high>
@@ -1076,7 +1076,7 @@
           </initialization>
           <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <model label="char" />
-          <scaling_const>1.0e-10</scaling_const>
+          <scaling_const>[1.0e-10,1.0e-10,1.0e-10]</scaling_const>
           <Clipping>
             <low>-10.0</low>
             <high>10.0</high>
@@ -1103,7 +1103,7 @@
               <low>0.3</low>
               <high>3.0</high>
           </Clipping-->
-          <scaling_const>1e-4</scaling_const>
+          <scaling_const>[1e-4,1e-4,1e-4]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
@@ -1125,7 +1125,7 @@
             <low>-20.0</low>
             <high>40.0</high>
           </Clipping>
-          <scaling_const>1.0</scaling_const>
+          <scaling_const>[1.0,1.0,1.0]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
@@ -1146,7 +1146,7 @@
             <low>-15.0</low>
             <high>15.0</high>
           </Clipping>
-          <scaling_const>1.0</scaling_const>
+          <scaling_const>[1.0,1.0,1.0]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
@@ -1168,7 +1168,7 @@
             <low>-15.0</low>
             <high>15.0</high>
           </Clipping>
-          <scaling_const>1.0</scaling_const>
+          <scaling_const>[1.0,1.0,1.0]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
