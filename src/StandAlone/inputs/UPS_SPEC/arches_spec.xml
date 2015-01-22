@@ -1102,6 +1102,7 @@
 
             <!-- Radiation models --> 
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+            <checkForMissingIntensities spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- This flag is designed to assist users using DOR with scattering, and changing their ordinate number on a restart --> 
             <!--abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /--> <!-- Derek -->  
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false --> 
             <abskg                      spec="OPTIONAL NO_DATA"  

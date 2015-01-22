@@ -103,6 +103,7 @@ private:
 
   bool _all_rk; 
   bool _using_prop_calculator; 
+  bool _checkForMissingIntensities;
 
   std::string _T_label_name; 
   std::string _abskt_label_name; 

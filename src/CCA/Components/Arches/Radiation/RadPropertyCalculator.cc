@@ -754,7 +754,7 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     double imagCIF;
     db->findBlock("particles")->require("complex_ir_real",realCIF); 
     db->findBlock("particles")->require("complex_ir_imag",imagCIF); 
-    db->findBlock("particles")->getWithDefault("const_assymmFact",_constAsymmFact,0.0); 
+    db->findBlock("particles")->getWithDefault("const_asymmFact",_constAsymmFact,0.0); 
     std::complex<double>  CIF(realCIF, imagCIF );  
     _part_radprops = scinew ParticleRadCoeffs(CIF);  
     std::string which_model = "none"; 
