@@ -1386,6 +1386,8 @@
                                         need_applies_to="type Drag"/>
 
             <!-- Simple Birth -->
+            <small_weight               spec="REQUIRED DOUBLE"
+                                        need_applies_to="type SimpleBirth"/> <!-- The smallest weight value allowed -->
             <is_weight                  spec="OPTIONAL NO_DATA"
                                         need_applies_to="type SimpleBirth"/> <!-- Model birth term for the weight -->
             <abscissa                   spec="OPTIONAL NO_DATA"

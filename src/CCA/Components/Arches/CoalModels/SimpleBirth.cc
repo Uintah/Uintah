@@ -93,7 +93,14 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
   std::string w_name = ParticleHelper::append_qn_env( "w", d_quadNode ); 
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(w_name);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
-  _small_weight = eqn.getSmallClip();
+  double weight_clip = eqn.getSmallClip();
+
+  db->require("small_weight",_small_weight);  
+
+  if ( weight_clip > _small_weight ){ 
+    throw InvalidValue("Error: The low clip limit for the weight must be smaller than the small_weight limit for the SimpleBirth model.", __FILE__, __LINE__); 
+  }
+
   _w_label = VarLabel::find(w_name);
 
   std::string w_rhs_name = w_name + "_RHS"; 
