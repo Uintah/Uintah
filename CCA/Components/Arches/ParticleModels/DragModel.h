@@ -151,9 +151,6 @@ namespace Uintah{
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    _do_ts_init_task = false; 
-    _do_bcs_task = false; 
-    
     db->getWithDefault("u_velocity_label",_base_u_velocity_name,"none");
     db->getWithDefault("v_velocity_label",_base_v_velocity_name,"none");
     db->getWithDefault("w_velocity_label",_base_w_velocity_name,"none");

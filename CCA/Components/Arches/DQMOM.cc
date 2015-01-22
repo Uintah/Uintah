@@ -199,18 +199,6 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     N_xi = N_xi + 1;
   }
   
-  // Check to make sure number of total moments specified in input file is correct
-  if ( moments != (N_xi+1)*N_ ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
-  }
-
-  // Check to make sure number of moment indices matches the number of internal coordinates
-  if ( index_length != N_xi ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
-  }
-
 #if defined(VERIFY_AB_CONSTRUCTION)
   N_ = vab_N;
   N_xi = vab_N_xi;
@@ -266,6 +254,20 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     string err_msg = "ERROR: Arches: DQMOM: Could not find block '<LinearSolver>': this block is required for DQMOM. \n";
     throw ProblemSetupException(err_msg,__FILE__,__LINE__);
   }
+
+  // Check to make sure number of total moments specified in input file is correct
+  if ( moments != (N_xi+1)*N_ && d_solverType != "Simplest") {
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
+  }
+
+  // Check to make sure number of moment indices matches the number of internal coordinates
+  if ( index_length != N_xi && d_solverType != "Simplest" ) {
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
+  }
+
+
 
 
 }
@@ -356,6 +358,14 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
       tsk->computes(sourceterm_label);
     } else {
       tsk->modifies(sourceterm_label);
+    }
+
+    // require model terms
+    vector<string> modelsList = (*iEqn)->getModelsList();
+    for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
+      ModelBase& model_base = model_factory.retrieve_model(*iModels);
+      const VarLabel* model_label = model_base.getModelLabel();
+      tsk->requires( Task::NewDW, model_label, Ghost::None, 0 );
     }
   }
   
@@ -479,15 +489,32 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     }
 
     // get weights from data warehouse and put into CCVariable
-    vector<constCCVarWrapper> weightCCVars;
+    vector<constCCVarWrapper_withModels> weightCCVars;
     for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
          iEqn != weightEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
       
       // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
+      constCCVarWrapper_withModels tempWrapper;
       which_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
 
+      // for a given weight, get models from data warehouse and put into vector of constCCVarWrapper
+      vector<constCCVarWrapper> modelCCVarsVec;
+      vector<string> modelsList = (*iEqn)->getModelsList();
+      for( vector<string>::iterator iModels = modelsList.begin();
+           iModels != modelsList.end(); ++iModels ) {
+        ModelBase& model_base = model_factory.retrieve_model(*iModels);
+        
+        // instead of using a CCVariable, use a constCCVarWrapper struct
+        constCCVarWrapper tempModelWrapper;
+        const VarLabel* model_label = model_base.getModelLabel();
+        new_dw->get( tempModelWrapper.data, model_label, matlIndex, patch, Ghost::None, 0);
+        modelCCVarsVec.push_back(tempModelWrapper);
+      }
+
+      // put the vector into the constCCVarWrapper_withModels
+      tempWrapper.models = modelCCVarsVec;
+      
       // put the wrapper into a vector
       weightCCVars.push_back(tempWrapper);
     }
@@ -559,12 +586,23 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       vector<double> weights;
       vector<double> weightedAbscissas;
       vector<double> models;
+      vector<double> weight_models; 
 
       // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
-      for( vector<constCCVarWrapper>::iterator iter = weightCCVars.begin();
+      for( vector<constCCVarWrapper_withModels>::iterator iter = weightCCVars.begin();
            iter != weightCCVars.end(); ++iter ) {
         double temp_value = (iter->data)[c];
         weights.push_back(temp_value);
+
+        // now sum the model terms for this weight
+        double runningsum = 0;
+        for( vector<constCCVarWrapper>::iterator iM = iter->models.begin();
+             iM != iter->models.end(); ++iM ) {
+          double temp_model_value = (iM->data)[c];
+          runningsum += temp_model_value;
+        }
+
+        weight_models.push_back(runningsum);
       }
 
       // get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
@@ -696,11 +734,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           
           int z=0; // equation loop counter
           int z2=0; // equation loop counter
-          
+
           // Weight equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
               iEqn != weightEqns.end(); ++iEqn ) {
-                (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
+                (*(Source_weights_weightedAbscissas[z]))[c] = weight_models[z];
               ++z;
           }
           // Weighted abscissa equations:

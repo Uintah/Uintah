@@ -13,13 +13,6 @@ TaskInterface::TaskInterface( std::string task_name, int matl_index ) :
   _task_name(task_name),
   _matl_index(matl_index)
 {
-
-  //by default turn these features on. 
-  //the derived class can turn them off if so desired.
-  _do_init_task    = true;
-  _do_bcs_task     = true;
-  _do_ts_init_task = true;
-
 }
 
 TaskInterface::~TaskInterface()
@@ -708,69 +701,67 @@ void TaskInterface::schedule_bcs( const LevelP& level,
                                   const MaterialSet* matls,
                                   int time_substep ){ 
 
-  if ( _do_bcs_task ){ 
-    std::vector<VariableInformation> variable_registry; 
+  std::vector<VariableInformation> variable_registry; 
 
-    register_timestep_eval( variable_registry, time_substep ); 
+  register_timestep_eval( variable_registry, time_substep ); 
 
-    resolve_labels( variable_registry ); 
+  resolve_labels( variable_registry ); 
 
-    Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
+  Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
 
-    int counter = 0; 
+  int counter = 0; 
 
-    BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
-      counter++; 
+    counter++; 
 
-      switch(ivar.depend){
+    switch(ivar.depend){
 
-        case COMPUTES: 
-          if ( time_substep == 0 ){ 
-            tsk->computes( ivar.label ); //only compute on the zero time substep
-          } else { 
-            tsk->modifies( ivar.label );
-            ivar.dw = NEWDW; 
-            ivar.uintah_task_dw = Task::NewDW; 
-            ivar.depend = MODIFIES; 
-          }
-          break; 
-        case MODIFIES: 
+      case COMPUTES: 
+        if ( time_substep == 0 ){ 
+          tsk->computes( ivar.label ); //only compute on the zero time substep
+        } else { 
           tsk->modifies( ivar.label );
-          break; 
-        case REQUIRES: 
-          if ( ivar.dw_inquire ){
-            if ( time_substep > 0 ){ 
-              ivar.dw = NEWDW;
-              ivar.uintah_task_dw = Task::NewDW; 
-            } else { 
-              ivar.dw = OLDDW; 
-              ivar.uintah_task_dw = Task::OldDW; 
-            }
+          ivar.dw = NEWDW; 
+          ivar.uintah_task_dw = Task::NewDW; 
+          ivar.depend = MODIFIES; 
+        }
+        break; 
+      case MODIFIES: 
+        tsk->modifies( ivar.label );
+        break; 
+      case REQUIRES: 
+        if ( ivar.dw_inquire ){
+          if ( time_substep > 0 ){ 
+            ivar.dw = NEWDW;
+            ivar.uintah_task_dw = Task::NewDW; 
           } else { 
-            if ( ivar.dw == OLDDW ){
-              ivar.uintah_task_dw = Task::OldDW; 
-            } else { 
-              ivar.uintah_task_dw = Task::NewDW; 
-            }
+            ivar.dw = OLDDW; 
+            ivar.uintah_task_dw = Task::OldDW; 
           }
-          tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-          break; 
-        default: 
-          throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
-          break; 
+        } else { 
+          if ( ivar.dw == OLDDW ){
+            ivar.uintah_task_dw = Task::OldDW; 
+          } else { 
+            ivar.uintah_task_dw = Task::NewDW; 
+          }
+        }
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        break; 
+      default: 
+        throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
+        break; 
 
-      }
     }
-
-    //other variables: 
-    tsk->requires(Task::OldDW, VarLabel::find("delT")); 
-
-    if ( counter > 0 )
-      sched->addTask( tsk, level->eachPatch(), matls );
-    else 
-      delete tsk; 
   }
+
+  //other variables: 
+  tsk->requires(Task::OldDW, VarLabel::find("delT")); 
+
+  if ( counter > 0 )
+    sched->addTask( tsk, level->eachPatch(), matls );
+  else 
+    delete tsk; 
 
 }
 
@@ -781,51 +772,49 @@ void TaskInterface::schedule_init( const LevelP& level,
                                    SchedulerP& sched, 
                                    const MaterialSet* matls ){ 
 
-  if ( _do_init_task ){ 
-    std::vector<VariableInformation> variable_registry; 
+  std::vector<VariableInformation> variable_registry; 
 
-    register_initialize( variable_registry ); 
+  register_initialize( variable_registry ); 
 
-    resolve_labels( variable_registry ); 
+  resolve_labels( variable_registry ); 
 
-    Task* tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
+  Task* tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
 
-    int counter = 0;
+  int counter = 0;
 
-    BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
-      counter++; 
+    counter++; 
 
-      if ( ivar.dw == OLDDW ){ 
-        throw InvalidValue("Arches Task Error: Cannot use OLDDW for initialization task: "+_task_name, __FILE__, __LINE__); 
-      }
-
-      switch(ivar.depend){
-
-        case COMPUTES: 
-          tsk->computes( ivar.label ); 
-          break; 
-        case MODIFIES: 
-          tsk->modifies( ivar.label );
-          break; 
-        case REQUIRES: 
-          ivar.dw = NEWDW; 
-          ivar.uintah_task_dw = Task::NewDW; 
-          tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-          break; 
-        default: 
-          throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
-          break; 
-
-      }
+    if ( ivar.dw == OLDDW ){ 
+      throw InvalidValue("Arches Task Error: Cannot use OLDDW for initialization task: "+_task_name, __FILE__, __LINE__); 
     }
 
-    if ( counter > 0 )
-      sched->addTask( tsk, level->eachPatch(), matls );
-    else 
-      delete tsk;
+    switch(ivar.depend){
 
+      case COMPUTES: 
+        tsk->computes( ivar.label ); 
+        break; 
+      case MODIFIES: 
+        tsk->modifies( ivar.label );
+        break; 
+      case REQUIRES: 
+        ivar.dw = NEWDW; 
+        ivar.uintah_task_dw = Task::NewDW; 
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        break; 
+      default: 
+        throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
+        break; 
+
+    }
   }
+
+  if ( counter > 0 )
+    sched->addTask( tsk, level->eachPatch(), matls );
+  else 
+    delete tsk;
+
 }
 
 //====================================================================================
@@ -835,56 +824,53 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
                                             SchedulerP& sched, 
                                             const MaterialSet* matls ){ 
 
-  if ( _do_ts_init_task ){ 
+  std::vector<VariableInformation> variable_registry; 
 
-    std::vector<VariableInformation> variable_registry; 
+  register_timestep_init( variable_registry ); 
 
-    register_timestep_init( variable_registry ); 
+  resolve_labels( variable_registry ); 
 
-    resolve_labels( variable_registry ); 
+  Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry ); 
 
-    Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry ); 
+  int counter = 0; 
 
-    int counter = 0; 
+  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
-    BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
+    counter++; 
 
-      counter++; 
+    switch(ivar.depend){
 
-      switch(ivar.depend){
-
-        case COMPUTES: 
-          tsk->computes( ivar.label ); //only compute on the zero time substep
-          break; 
-        case MODIFIES: 
-          tsk->modifies( ivar.label );
-          break; 
-        case REQUIRES: 
-          if ( ivar.dw_inquire ){
-            ivar.dw = OLDDW; 
+      case COMPUTES: 
+        tsk->computes( ivar.label ); //only compute on the zero time substep
+        break; 
+      case MODIFIES: 
+        tsk->modifies( ivar.label );
+        break; 
+      case REQUIRES: 
+        if ( ivar.dw_inquire ){
+          ivar.dw = OLDDW; 
+          ivar.uintah_task_dw = Task::OldDW; 
+        } else { 
+          if ( ivar.dw == OLDDW ){
             ivar.uintah_task_dw = Task::OldDW; 
           } else { 
-            if ( ivar.dw == OLDDW ){
-              ivar.uintah_task_dw = Task::OldDW; 
-            } else { 
-              ivar.uintah_task_dw = Task::NewDW; 
-            }
+            ivar.uintah_task_dw = Task::NewDW; 
           }
-          tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-          break; 
-        default: 
-          throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
-          break; 
+        }
+        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
+        break; 
+      default: 
+        throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
+        break; 
 
-      }
     }
-
-    if ( counter > 0 )
-      sched->addTask( tsk, level->eachPatch(), matls );
-    else 
-      delete tsk; 
-
   }
+
+  if ( counter > 0 )
+    sched->addTask( tsk, level->eachPatch(), matls );
+  else 
+    delete tsk; 
+
 
 }
 

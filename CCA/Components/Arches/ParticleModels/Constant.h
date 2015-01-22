@@ -124,9 +124,6 @@ namespace Uintah{
   template <typename T>
   void Constant<T>::problemSetup( ProblemSpecP& db ){
     
-    _do_ts_init_task = false;
-    _do_bcs_task = false;
-    
     db->require("constant",_const);
 
   }
