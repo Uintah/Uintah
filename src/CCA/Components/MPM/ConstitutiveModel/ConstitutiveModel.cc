@@ -162,7 +162,7 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pdTdtLabel_preReloc,               matlset);
+  task->computes(lb->pdTdtLabel,                        matlset);
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
 
@@ -201,7 +201,7 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
 {
   ParticleVariable<double>  pIntHeatRate_new,p_q;
   ParticleVariable<Matrix3> pStress_new;
-  new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel_preReloc,    pset);
+  new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel,             pset);
   new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
   new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
 

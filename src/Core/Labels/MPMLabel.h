@@ -100,6 +100,8 @@ namespace Uintah {
       const VarLabel* pSizeLabel_preReloc;
       const VarLabel* pLocalizedMPMLabel;
       const VarLabel* pLocalizedMPMLabel_preReloc;
+      const VarLabel* pRefinedLabel;
+      const VarLabel* pRefinedLabel_preReloc;
 
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;

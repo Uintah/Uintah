@@ -208,7 +208,7 @@ HypoElasticFortran::computeStressTensor( const PatchSubset* patches,
     ParticleVariable<double> pdTdt,p_q;
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,              pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->get(pvolume_new,                lb->pVolumeLabel_preReloc,   pset);
     new_dw->get(velGrad,                    lb->pVelGradLabel_preReloc,  pset);

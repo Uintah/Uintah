@@ -193,7 +193,7 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     
     new_dw->allocateAndPut(pstress,     lb->pStressLabel_preReloc, pset);
-    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,            pset);
     new_dw->get(pvolume_new, lb->pVolumeLabel_preReloc, pset);
     new_dw->get(deformationGradient_new,
                             lb->pDeformationMeasureLabel_preReloc, pset);

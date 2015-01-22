@@ -574,7 +574,7 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
 
     // Allocate arrays for the updated particle data for the current patch
     new_dw->allocateAndPut(pdTdt, 
-                           lb->pdTdtLabel_preReloc,               pset);
+                           lb->pdTdtLabel,                        pset);
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolHeatRate_new, 

@@ -178,7 +178,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pvelocity,                   lb->pVelocityLabel,          pset);
     old_dw->get(deformationGradient,         lb->pDeformationMeasureLabel,pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,              pset);
     new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,       pset);
     new_dw->get(deformationGradient_new,
                                    lb->pDeformationMeasureLabel_preReloc, pset);

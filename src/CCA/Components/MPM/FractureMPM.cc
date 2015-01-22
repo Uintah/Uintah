@@ -133,14 +133,6 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
     //Create and register as an MPM material
     MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);
     sharedState->registerMPMMaterial(mat);
-
-    // If new particles are to be created, create a copy of each material
-    // without the associated geometry
-    if (flags->d_createNewParticles) {
-      MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(ps,mat, flags);
-      sharedState->registerMPMMaterial(mat_copy);
-    }
   }
 }
 

@@ -1162,7 +1162,7 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     // Universal Allocations
     new_dw->allocateAndPut(bElBar_new,  bElBarLabel_preReloc,      pset);
     new_dw->allocateAndPut(pStress,     lb->pStressLabel_preReloc, pset);
-    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,            pset);
     new_dw->allocateAndPut(p_q,         lb->p_qLabel_preReloc,     pset);
 
     ParticleSubset::iterator iter = pset->begin();
@@ -1925,7 +1925,7 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
     new_dw->allocateAndPut(pVolume_new, 
                            lb->pVolumeDeformedLabel,              pset);
     new_dw->allocateAndPut(pdTdt, 
-                           lb->pdTdtLabel_preReloc,               pset);
+                           lb->pdTdtLabel,                        pset);
     new_dw->allocateAndPut(pDefGrad_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pBeBar_new, 
