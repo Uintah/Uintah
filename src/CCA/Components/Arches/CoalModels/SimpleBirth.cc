@@ -144,28 +144,25 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
   if ( !_is_weight ){ 
     std::string abscissa_name = ParticleHelper::append_env( _abscissa_name, d_quadNode ); 
     _abscissa_label = VarLabel::find(abscissa_name); 
+    if ( _abscissa_label == 0 )
+      throw InvalidValue("Error: Abscissa not found: "+abscissa_name, __FILE__, __LINE__); 
   }
-
-  if ( _abscissa_label == 0 ){ 
-    throw InvalidValue("Error: Abscissa not found: "+_abscissa_name, __FILE__, __LINE__); 
-  } 
 
   if (d_timeSubStep == 0) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
     tsk->requires(Task::OldDW, _w_label, Ghost::None, 0); 
-    tsk->requires(Task::OldDW, _w_rhs_label, Ghost::None, 0); 
     if ( !_is_weight )
       tsk->requires(Task::OldDW, _abscissa_label, Ghost::None, 0); 
   } else {
     tsk->modifies(d_modelLabel); 
     tsk->modifies(d_gasLabel); 
     tsk->requires(Task::NewDW, _w_label, Ghost::None, 0); 
-    tsk->requires(Task::NewDW, _w_rhs_label, Ghost::None, 0); 
     if ( !_is_weight )
       tsk->requires(Task::NewDW, _abscissa_label, Ghost::None, 0); 
   }
 
+  tsk->requires(Task::NewDW, _w_rhs_label, Ghost::None, 0); 
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
@@ -217,7 +214,7 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
     constCCVariable<double> a; 
 
     which_dw->get( w, _w_label, matlIndex, patch, Ghost::None, 0 ); 
-    which_dw->get( w_rhs, _w_rhs_label, matlIndex, patch, Ghost::None, 0 ); 
+    new_dw->get( w_rhs, _w_rhs_label, matlIndex, patch, Ghost::None, 0 ); 
     if ( !_is_weight ){ 
       which_dw->get( a, _abscissa_label, matlIndex, patch, Ghost::None, 0 ); 
     }

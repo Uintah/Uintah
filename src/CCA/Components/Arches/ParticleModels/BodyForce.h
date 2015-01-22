@@ -137,9 +137,6 @@ namespace Uintah{
   template <typename IT, typename DT>
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    _do_ts_init_task = false; 
-    _do_bcs_task = false; 
-    
     std::string tempType;
     db->findBlock("particle_density")->getAttribute("type",tempType);
     if ( tempType == "constant" ) {

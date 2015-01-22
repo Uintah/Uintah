@@ -88,10 +88,6 @@ private:
 
   template <typename T>
   void TemplatedSampleTask<T>::problemSetup( ProblemSpecP& db ){ 
-
-    _do_ts_init_task = false; 
-    _do_bcs_task = false; 
-
   }
 
   template <typename T>

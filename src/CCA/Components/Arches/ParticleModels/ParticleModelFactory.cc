@@ -152,6 +152,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         std::string dependent_type;
         std::string independent_type;
         db_model->findBlock("grid")->getAttribute("dependent_type", dependent_type);
+        db_model->findBlock("grid")->getAttribute("independent_type", independent_type);
         
         if ( dependent_type == "svol" ){
           
@@ -165,7 +166,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
             _pre_update_particle_tasks.push_back(task_name); 
             
           } else {
-            throw InvalidValue("Error: Independent grid type not recognized.",__FILE__,__LINE__);
+            throw InvalidValue("Error: Independent grid type not recognized: "+independent_type,__FILE__,__LINE__);
           }
           
           //else lagrangian particle type...need to add

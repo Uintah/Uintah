@@ -1325,7 +1325,8 @@
 
         <VelModel                       spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
-                                        attribute2="type REQUIRED STRING 'Balachandar, Dragforce'">
+                                        attribute2="type REQUIRED STRING 'Balachandar, 
+                                                                          Dragforce'">
 
           <kinematic_viscosity          spec="OPTIONAL DOUBLE 'positive'"/>
           <L                            spec="OPTIONAL DOUBLE 'positive'"/>
@@ -1431,6 +1432,8 @@
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
             <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) --> 
           </Clipping>
+          <model                        spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
         </Weights>
 
 
