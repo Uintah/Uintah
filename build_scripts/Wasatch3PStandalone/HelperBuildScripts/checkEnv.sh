@@ -31,7 +31,7 @@ if test "$COMPILER" = "icc"; then
    COMP=icc-15.0.0
 else
    if test "$COMPILER" = "gcc"; then
-      echo f  "Building with GCC"
+      echo "  Building with GCC"
       CC=gcc
       CXX=g++
       COMP=gcc-4.4.7
@@ -59,7 +59,7 @@ if test "$MACHINE" = "Ember"; then
 else
 if test "$MACHINE" = "Ash"; then
 
-  echo "Building for Ash"
+  echo "  Building for Ash"
   if test "$PHOENIX" = ""; then
     echo
     echo "ERROR: Please set the env var PHOENIX to yes or no!"
@@ -91,7 +91,7 @@ if test "$MACHINE" = "Ash"; then
   NAME2="Ash"
   TPI=thirdparty-install
   INSTALL_BASE=/uufs/$NAME/sys/pkg/uintah/$TPI$PHOENIXEXT/$NAME2/Wasatch3P
-  BOOSTLOC=/uufs/$NAME/sys/pkg/boost/1.54.0_mvapich2-1.9
+  BOOST_LOC=/uufs/$NAME/sys/pkg/boost/1.54.0_mvapich2-1.9
 else
   echo ""
   echo "$MACHINE not supported yet... add it."
@@ -105,8 +105,8 @@ fi
 # Some bullet proofing...
 #
 
-if test "$BOOSTLOC" = ""; then
-   echo "ERROR: Env var BOOST_LOC \($BOOSTLOC\) not set or is not a valid directory..."
+if test "$BOOST_LOC" = ""; then
+   echo "ERROR: Env var BOOST_LOC \($BOOST_LOC\) not set or is not a valid directory..."
    echo "Exiting..."
    echo
    exit
@@ -123,12 +123,17 @@ fi
 
 # Add date to complete installation dir variable:
 
-echo "  CC:   $CC"
-echo "  CC:   $CXX"
-echo "  COMP: $COMP"
+export CC
+export CXX
+export COMP
+export BOOST_LOC
 
+echo "  CC:    $CC"
+echo "  CXX:   $CXX"
+echo "  COMP:  $COMP"
+echo "  BOOST: $BOOST_LOC"
 
-INSTALL_BASE=$INSTALL_BASE-$DATE
+export INSTALL_BASE=$INSTALL_BASE-$DATE
 
 echo 
 

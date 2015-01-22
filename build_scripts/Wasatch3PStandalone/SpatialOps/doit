@@ -9,7 +9,6 @@ rm -rf ${INSTALL_HERE}/*
 
 /uufs/chpc.utah.edu/sys/pkg/cmake/2.8.9/bin/cmake \
   -DBOOST_ROOT=$BOOST_LOC \
-  -DENABLE_STENCIL=ON \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_C_COMPILER=$CC \
   -DCMAKE_CXX_COMPILER=$CXX \
