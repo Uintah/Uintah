@@ -723,7 +723,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                               pStress_new, pStressQS_new;
 
     new_dw->allocateAndPut(p_q,                 lb->p_qLabel_preReloc,         pset);
-    new_dw->allocateAndPut(pdTdt,               lb->pdTdtLabel_preReloc,       pset);
+    new_dw->allocateAndPut(pdTdt,               lb->pdTdtLabel,                pset);
     new_dw->allocateAndPut(pScratchDouble1_new, pScratchDouble1Label_preReloc, pset);
     new_dw->allocateAndPut(pScratchDouble2_new, pScratchDouble2Label_preReloc, pset);
     new_dw->allocateAndPut(pPorePressure_new,   pPorePressureLabel_preReloc,   pset);

@@ -98,6 +98,7 @@ namespace Uintah {
     ParticleVariable<Vector> pfiberdir; 
     ParticleVariable<int> pLoadCurveID;
     ParticleVariable<int> plocalized;
+    ParticleVariable<int> prefined;
     // ImplicitParticleCreator
     ParticleVariable<Vector> pacceleration;
     ParticleVariable<double> pvolumeold;

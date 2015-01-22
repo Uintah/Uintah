@@ -1130,7 +1130,7 @@ void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
 
   t->modifies(lb->pTemperatureLabel_preReloc);
@@ -3194,7 +3194,7 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
-      new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
+      new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
 
       new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);

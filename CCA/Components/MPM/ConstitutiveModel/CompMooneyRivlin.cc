@@ -184,7 +184,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     new_dw->get(velGrad,             lb->pVelGradLabel_preReloc,   pset);
 
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel,               pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
 
     double C1 = d_initialData.C1;

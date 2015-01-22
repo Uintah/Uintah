@@ -333,6 +333,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pLocalizedMPMLabel);
+  t->computes(lb->pRefinedLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
   t->computes(lb->NC_CCweightLabel,zeroth_matl);
@@ -603,7 +604,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleInterpolateToParticlesAndUpdateMom2(sched, patches, matls);
   }
   scheduleInsertParticles(                    sched, patches, matls);
-//  scheduleAddParticles(                       sched, patches, matls);
+  if(flags->d_refineParticles){
+    scheduleAddParticles(                     sched, patches, matls);
+  }
   if(flags->d_computeScaleFactor){
     scheduleComputeParticleScaleFactor(       sched, patches, matls);
   }
@@ -1210,6 +1213,12 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->pColorLabel_preReloc);
   }
 
+  // Carry Forward particle refinement flag
+  if(flags->d_refineParticles){
+    t->requires(Task::OldDW, lb->pRefinedLabel,                Ghost::None);
+    t->computes(             lb->pRefinedLabel_preReloc);
+  }
+
   MaterialSubset* z_matl = scinew MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
@@ -1240,7 +1249,7 @@ void SerialMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
 
@@ -1325,7 +1334,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pTemperatureLabel,               gnone);
   t->requires(Task::OldDW, lb->pSizeLabel,                      gnone);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,gnone);
-  t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
   t->requires(Task::NewDW, lb->pLocalizedMPMLabel_preReloc,     gnone);
 
   if(flags->d_with_ice){
@@ -1478,10 +1487,14 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pDispLabel_preReloc);
     t->modifies(lb->pStressLabel_preReloc);
     t->modifies(lb->pColorLabel_preReloc);
+    t->modifies(lb->pLocalizedMPMLabel_preReloc);
     t->modifies(lb->pExtForceLabel_preReloc);
     t->modifies(lb->pTemperatureLabel_preReloc);
     t->modifies(lb->pTempPreviousLabel_preReloc);
     t->modifies(lb->pDeformationMeasureLabel_preReloc);
+    t->modifies(lb->pRefinedLabel_preReloc);
+    t->modifies(lb->pVelGradLabel_preReloc);
+
     t->requires(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
     t->computes(             lb->pCellNAPIDLabel, zeroth_matl);
 
@@ -1504,7 +1517,7 @@ void SerialMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
   Task* t=scinew Task("MPM::computeParticleScaleFactor",this,
                 &SerialMPM::computeParticleScaleFactor);
 
-  t->requires(Task::OldDW, lb->pSizeLabel,                         Ghost::None);
+  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None);
   t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None);
   t->computes(lb->pScaleFactorLabel_preReloc);
 
@@ -3359,7 +3372,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         old_dw->get(pColor, lb->pColorLabel, pset);
         new_dw->allocateAndPut(pColor_new, lb->pColorLabel_preReloc, pset);
         pColor_new.copyData(pColor);
-      }    
+      }
+      if(flags->d_refineParticles){
+        constParticleVariable<int> pRefinedOld;
+        ParticleVariable<int> pRefinedNew;
+        old_dw->get(pRefinedOld,            lb->pRefinedLabel,          pset);
+        new_dw->allocateAndPut(pRefinedNew, lb->pRefinedLabel_preReloc, pset);
+        pRefinedNew.copyData(pRefinedOld);
+      }
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       new_dw->get(gvelocity_star,  lb->gVelocityStarLabel,   dwi,patch,gac,NGP);
@@ -3637,7 +3657,7 @@ void SerialMPM::finalParticleUpdate(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
-      new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
+      new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
@@ -3870,7 +3890,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
       old_dw->get(pmass,        lb->pMassLabel,                      pset);
       old_dw->get(pids,         lb->pParticleIDLabel,                pset);
       old_dw->get(pTemperature, lb->pTemperatureLabel,               pset);
-      new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
+      new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
       new_dw->get(pFNew,        lb->pDeformationMeasureLabel_preReloc, pset);
       new_dw->get(pLocalized,   lb->pLocalizedMPMLabel_preReloc,     pset);
 
@@ -4348,27 +4368,17 @@ void SerialMPM::addParticles(const ProcessorGroup*,
     new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
     NAPID_new.copyData(NAPID);
 
-    static int added = 0;
-
-   cout << "added = " << added << endl;
-
-   if(added == 3){
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-      const unsigned int newNParticles = 7;
-      const unsigned int oldNParticles = pset->addParticles(newNParticles);
-      const unsigned int numNow = pset->addParticles(0);
-
-      cout << "numNow = " << numNow << endl;
-
       ParticleVariable<Point> px;
-      ParticleVariable<Matrix3> pF,pSize,pstress;
+      ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad;
       ParticleVariable<long64> pids;
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
       ParticleVariable<Vector> pvelocity,pextforce,pdisp;
+      ParticleVariable<int> pref,ploc;
       new_dw->getModifiable(px,       lb->pXLabel_preReloc,            pset);
       new_dw->getModifiable(pids,     lb->pParticleIDLabel_preReloc,   pset);
       new_dw->getModifiable(pmass,    lb->pMassLabel_preReloc,         pset);
@@ -4381,13 +4391,30 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(pextforce,lb->pExtForceLabel_preReloc,     pset);
       new_dw->getModifiable(ptemp,    lb->pTemperatureLabel_preReloc,  pset);
       new_dw->getModifiable(ptempP,   lb->pTempPreviousLabel_preReloc, pset);
+      new_dw->getModifiable(pref,     lb->pRefinedLabel_preReloc,      pset);
+      new_dw->getModifiable(ploc,     lb->pLocalizedMPMLabel_preReloc, pset);
+      new_dw->getModifiable(pvelgrad, lb->pVelGradLabel_preReloc,      pset);
       new_dw->getModifiable(pF,  lb->pDeformationMeasureLabel_preReloc,pset);
 
+      int numNewPartNeeded=0;
+      // Put refinement criteria here
+      const unsigned int origNParticles = pset->addParticles(0);
+      for( unsigned int pp=0; pp<origNParticles; ++pp ){
+        if(pref[pp]==0 && pstress[pp].Norm() > 1){
+          pref[pp]=2;
+          numNewPartNeeded++;
+        }
+      }
+      numNewPartNeeded*=8;
+
+      const unsigned int oldNumPar = pset->addParticles(numNewPartNeeded);
+
       ParticleVariable<Point> pxtmp;
-      ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp;
+      ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp;
       ParticleVariable<long64> pidstmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp;
+      ParticleVariable<int> preftmp,ploctmp;
       new_dw->allocateTemporary(pidstmp,  pset);
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
@@ -4401,76 +4428,117 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(pstrstmp, pset);
       new_dw->allocateTemporary(pcolortmp,pset);
       new_dw->allocateTemporary(pmasstmp, pset);
+      new_dw->allocateTemporary(preftmp,  pset);
+      new_dw->allocateTemporary(ploctmp,  pset);
+      new_dw->allocateTemporary(pvgradtmp,pset);
 
       // copy data from old variables for particle IDs and the position vector
-      for( unsigned int p=0; p<oldNParticles; ++p ){
-        pidstmp[p]  = pids[p];
-        pxtmp[p]    = px[p];
-        pvoltmp[p]  = pvolume[p];
-        pveltmp[p]  = pvelocity[p];
-        pextFtmp[p] = pextforce[p];
-        ptemptmp[p] = ptemp[p];
-        ptempPtmp[p]= ptempP[p];
-        pFtmp[p]    = pF[p];
-        psizetmp[p] = pSize[p];
-        pdisptmp[p] = pdisp[p];
-        pstrstmp[p] = pstress[p];
-        pcolortmp[p]= pcolor[p];
-        pmasstmp[p] = pmass[p];
+      for( unsigned int pp=0; pp<oldNumPar; ++pp ){
+        pidstmp[pp]  = pids[p];
+        pxtmp[pp]    = px[pp];
+        pvoltmp[pp]  = pvolume[pp];
+        pveltmp[pp]  = pvelocity[pp];
+        pextFtmp[pp] = pextforce[pp];
+        ptemptmp[pp] = ptemp[pp];
+        ptempPtmp[pp]= ptempP[pp];
+        pFtmp[pp]    = pF[pp];
+        psizetmp[pp] = pSize[pp];
+        pdisptmp[pp] = pdisp[pp];
+        pstrstmp[pp] = pstress[pp];
+        pcolortmp[pp]= pcolor[pp];
+        pmasstmp[pp] = pmass[pp];
+        preftmp[pp]  = pref[pp];
+        ploctmp[pp]  = ploc[pp];
+        pvgradtmp[pp]= pvelgrad[pp];
       }
 
-     cout << "here 1" << endl;
+      Vector dx = patch->dCell();
+      int numRefPar=0;
+      for( unsigned int idx=0; idx<oldNumPar; ++idx ){
+       if(pref[idx]==2){
+        vector<Point> new_part_pos;
 
-      vector<Point> new_part_pos;
-      double dxp = 0.0125;
-      new_part_pos.push_back(px[0]+Vector(dxp,dxp,dxp));
-      new_part_pos.push_back(px[0]+Vector(-dxp,-dxp,-dxp));
-      new_part_pos.push_back(px[0]+Vector(dxp,dxp,-dxp));
-      new_part_pos.push_back(px[0]+Vector(dxp,-dxp,dxp));
-      new_part_pos.push_back(px[0]+Vector(-dxp,dxp,dxp));
-      new_part_pos.push_back(px[0]+Vector(dxp,-dxp,-dxp));
-      new_part_pos.push_back(px[0]+Vector(-dxp,-dxp,dxp));
-      new_part_pos.push_back(px[0]+Vector(-dxp,dxp,-dxp));
+        Matrix3 dsize = (pF[idx]*pSize[idx]*Matrix3(dx[0],0,0,
+                                                    0,dx[1],0,
+                                                    0,0,dx[2]));
 
-      cout << "orig_pos = " << px[0] << endl;
-      for(int i=0;i<8;i++){
-        cout << "new_part_pos = " << new_part_pos[i] << endl;
-      }
+        // Find vectors to new particle locations, based on particle size and
+        // deformation (patterned after CPDI interpolator code)
+        Vector r[4];
+        r[0]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
+                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
+                    -dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
+        r[1]=Vector( dsize(0,0)-dsize(0,1)+dsize(0,2),
+                     dsize(1,0)-dsize(1,1)+dsize(1,2),
+                     dsize(2,0)-dsize(2,1)+dsize(2,2))*0.25;
+        r[2]=Vector( dsize(0,0)+dsize(0,1)+dsize(0,2),
+                     dsize(1,0)+dsize(1,1)+dsize(1,2),
+                     dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
+        r[3]=Vector(-dsize(0,0)+dsize(0,1)+dsize(0,2),
+                    -dsize(1,0)+dsize(1,1)+dsize(1,2),
+                    -dsize(2,0)+dsize(2,1)+dsize(2,2))*0.25;
 
-      pxtmp[0] = new_part_pos[0];
+        new_part_pos.push_back(px[idx]+r[0]);
+        new_part_pos.push_back(px[idx]+r[1]);
+        new_part_pos.push_back(px[idx]+r[2]);
+        new_part_pos.push_back(px[idx]+r[3]);
+        new_part_pos.push_back(px[idx]-r[0]);
+        new_part_pos.push_back(px[idx]-r[1]);
+        new_part_pos.push_back(px[idx]-r[2]);
+        new_part_pos.push_back(px[idx]-r[3]);
 
-      for(int i = 1;i<8;i++){
-        IntVector c;
-        patch->findCell(new_part_pos[i],c);
+//        new_part_pos.push_back(px[idx]+Vector(dxp,dxp,dxp));
+//        new_part_pos.push_back(px[idx]+Vector(-dxp,-dxp,-dxp));
+//        new_part_pos.push_back(px[idx]+Vector(dxp,dxp,-dxp));
+//        new_part_pos.push_back(px[idx]+Vector(dxp,-dxp,dxp));
+//        new_part_pos.push_back(px[idx]+Vector(-dxp,dxp,dxp));
+//        new_part_pos.push_back(px[idx]+Vector(dxp,-dxp,-dxp));
+//        new_part_pos.push_back(px[idx]+Vector(-dxp,-dxp,dxp));
+//        new_part_pos.push_back(px[idx]+Vector(-dxp,dxp,-dxp));
+        cout << "new_part_pos = " << new_part_pos[0] << endl;
 
-        long64 cellID = ((long64)c.x() << 16) |
-                        ((long64)c.y() << 32) |
-                        ((long64)c.z() << 48);
+        for(int i = 0;i<8;i++){
+          IntVector c;
+          patch->findCell(new_part_pos[i],c);
 
-        short int& myCellNAPID = NAPID_new[c];
-        pidstmp[i] = (cellID | (long64) myCellNAPID);
-        pxtmp[i]   = new_part_pos[i];
-        pvoltmp[i] = .125*pvolume[0];
-        pmasstmp[i]= .125*pmass[0];
-        pveltmp[i] = pvelocity[0];
-        pextFtmp[i]= pextforce[0];
-        pFtmp[i]   = pF[0];
-        psizetmp[i]= 0.5*pSize[0];
-        pdisptmp[i]= pdisp[0];
-        pstrstmp[i]= pstress[0];
-        pcolortmp[i]= pcolor[0];
-        ptemptmp[i]= ptemp[0];
-        ptempPtmp[i]= ptempP[0];
-        NAPID_new[c]++;
-     cout << "here 5" << endl;
-      }
-     cout << "here 6" << endl;
+          long64 cellID = ((long64)c.x() << 16) |
+                          ((long64)c.y() << 32) |
+                          ((long64)c.z() << 48);
+
+          short int& myCellNAPID = NAPID_new[c];
+          int new_index;
+          if(i==0){
+             new_index=idx;
+          } else {
+             new_index=oldNumPar+8*numRefPar+i;
+          }
+          pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
+          pxtmp[new_index]      = new_part_pos[i];
+          pvoltmp[new_index]    = .125*pvolume[idx];
+          pmasstmp[new_index]   = .125*pmass[idx];
+          pveltmp[new_index]    = pvelocity[idx];
+          pextFtmp[new_index]   = pextforce[idx];
+          pFtmp[new_index]      = pF[idx];
+          psizetmp[new_index]   = 0.5*pSize[idx];
+          pdisptmp[new_index]   = pdisp[idx];
+          pstrstmp[new_index]   = pstress[idx];
+          pcolortmp[new_index]  = pcolor[idx];
+          ptemptmp[new_index]   = ptemp[idx];
+          ptempPtmp[new_index]  = ptempP[idx];
+          preftmp[new_index]    = 1;
+          ploctmp[new_index]    = ploc[idx];
+          pvgradtmp[new_index]  = pvelgrad[idx];
+          NAPID_new[c]++;
+        }
+        numRefPar++;
+       }  // if particle flagged for refinement
+      } // for particles
+
+
 
       // put back temporary data
       new_dw->put(pidstmp,  lb->pParticleIDLabel_preReloc,           true);
-     cout << "here 7" << endl;
       new_dw->put(pxtmp,    lb->pXLabel_preReloc,                    true);
-     cout << "here 8" << endl;
       new_dw->put(pvoltmp,  lb->pVolumeLabel_preReloc,               true);
       new_dw->put(pveltmp,  lb->pVelocityLabel_preReloc,             true);
       new_dw->put(pextFtmp, lb->pExtForceLabel_preReloc,             true);
@@ -4482,10 +4550,10 @@ void SerialMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pstrstmp, lb->pStressLabel_preReloc,               true);
       new_dw->put(pcolortmp,lb->pColorLabel_preReloc,                true);
       new_dw->put(pFtmp,    lb->pDeformationMeasureLabel_preReloc,   true);
-     cout << "here 20" << endl;
+      new_dw->put(preftmp,  lb->pRefinedLabel_preReloc,              true);
+      new_dw->put(ploctmp,  lb->pLocalizedMPMLabel_preReloc,         true);
+      new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
     }  // for matls
-   }   // if added
-    added++;
   }    // for patches
 }
 
@@ -4510,7 +4578,7 @@ void SerialMPM::computeParticleScaleFactor(const ProcessorGroup*,
 
       constParticleVariable<Matrix3> psize,pF;
       ParticleVariable<Matrix3> pScaleFactor;
-      old_dw->get(psize,        lb->pSizeLabel,                           pset);
+      new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
       new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
       new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
 

@@ -223,7 +223,7 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemp,               lb->pTemperatureLabel,        pset);
 
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel,               pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
     new_dw->get(deformationGradient_new,
                             lb->pDeformationMeasureLabel_preReloc, pset);

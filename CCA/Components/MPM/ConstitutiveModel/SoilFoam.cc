@@ -292,7 +292,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
     new_dw->allocateAndPut(sv_min_new,      sv_minLabel_preReloc,        pset);
     new_dw->allocateAndPut(p_sv_min_new,    p_sv_minLabel_preReloc,      pset);
-    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,              pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->get(pvolume,       lb->pVolumeLabel_preReloc,   pset);
     new_dw->get(velGrad,       lb->pVelGradLabel_preReloc,  pset);

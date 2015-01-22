@@ -389,7 +389,7 @@ void JWLppMPM::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pLocalized,          pLocalizedLabel,              pset);
     
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,               pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,        pset);
     
     new_dw->allocateAndPut(pProgressF_new,    pProgressFLabel_preReloc,   pset);

@@ -670,7 +670,7 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
     // Allocate variable to store internal heating rate
     ParticleVariable<double> pdTdt, p_q;
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc, 
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel,          
                            pset);
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
 
@@ -1109,7 +1109,7 @@ ViscoPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     new_dw->allocateAndPut(pVolume_deformed, 
                            lb->pVolumeDeformedLabel,              pset);
     new_dw->allocateAndPut(pdTdt, 
-                           lb->pdTdtLabel_preReloc,   pset);
+                           lb->pdTdtLabel,            pset);
 
 //     LOCAL
     new_dw->allocateAndPut(pLeftStretch_new, 

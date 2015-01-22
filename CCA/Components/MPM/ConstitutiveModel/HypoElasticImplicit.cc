@@ -174,7 +174,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
   
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,            pset);
     new_dw->allocateTemporary(deformationGradient_new,pset);
 
     double G = d_initialData.G;
@@ -354,7 +354,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
 
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,             pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
  

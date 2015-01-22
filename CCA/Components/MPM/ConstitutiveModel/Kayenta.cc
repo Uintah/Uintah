@@ -482,7 +482,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     }
     ParticleVariable<double> pdTdt,p_q;
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,              pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(peakI1IDist_new, peakI1IDistLabel_preReloc,   pset);
     new_dw->get(deformationGradient_new,

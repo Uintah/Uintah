@@ -594,7 +594,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pAvMoment,  pAverageMomentLabel,     pset);
     new_dw->allocateAndPut(pNDotAvSig, pNormalDotAvStressLabel, pset);
     new_dw->allocateAndPut(pRotMass,   pRotMassLabel,           pset);
-    new_dw->allocateAndPut(pdTdt,      lb->pdTdtLabel_preReloc, pset);
+    new_dw->allocateAndPut(pdTdt,      lb->pdTdtLabel,          pset);
     new_dw->allocateAndPut(p_q,        lb->p_qLabel_preReloc,   pset);
 
     // Initialize contants

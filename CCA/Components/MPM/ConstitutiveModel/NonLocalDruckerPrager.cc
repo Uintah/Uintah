@@ -303,7 +303,7 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
     old_dw->get(eta_nl_old,          eta_nlLabel,                        pset);
     old_dw->get(k_o_dist,            k_o_distLabel,                      pset);
     new_dw->allocateAndPut(stress_new,  lb->pStressLabel_preReloc,       pset);
-    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,            pset);
+    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel,                     pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,              pset);
 
     new_dw->allocateAndPut(eta_new,  etaLabel_preReloc,                  pset);

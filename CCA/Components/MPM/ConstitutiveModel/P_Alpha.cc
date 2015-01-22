@@ -253,7 +253,7 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
     old_dw->get(tempAlpha1_old,              tempAlpha1Label,             pset);
 
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,              pset);
     new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,       pset);
     new_dw->allocateAndPut(alpha_min_new,     alphaMinLabel_preReloc,     pset);
     new_dw->allocateAndPut(alpha_new,         alphaLabel,                 pset);

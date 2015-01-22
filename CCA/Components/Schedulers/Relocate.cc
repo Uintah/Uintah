@@ -1655,6 +1655,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           for(int v=0;v<numVars;v++){
             const VarLabel* label = reloc_old_labels[m][v];
             ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
+            //cout << label->getName() << endl;
             
             for(int i=0;i<numOldVariables;i++){
               invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);

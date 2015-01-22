@@ -346,7 +346,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
     new_dw->get(velGrad,          lb->pVelGradLabel_preReloc,            pset);
     new_dw->get(pDefGrad_new,     lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pIntHeatRate_new, 
-                           lb->pdTdtLabel_preReloc,               pset);
+                           lb->pdTdtLabel,                        pset);
     new_dw->allocateAndPut(pSig_new,      
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolHeatRate_new, 
