@@ -6,7 +6,6 @@
 
 echo
 echo "Building Wasatch 3P libraries."
-echo
 
 source HelperBuildScripts/checkEnv.sh
 
