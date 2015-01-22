@@ -1,3 +1,23 @@
 
-This directory contains scrips to allow for updating, building, and installing the
-Wasatch3P libraries outside of Uintah.
+This directory contains scripts to allow for updating, building, and installing the
+Wasatch3P libraries outside of Uintah.  This set of scripts is stored in the Uintah
+SVN repository under src/build_scripts/Wasatch3PStandalone/.  It should be checked
+out into the Wasatch3P git directory using:
+
+[ Might need --force to get it to insert itself into the directory structure that
+  is already in place. ]
+
+svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src/build_scripts/Wasatch3PStandalone .
+
+
+It builds the W3P in this order:
+
+SpatialOps
+ExprLib
+TabProps (though TabProps doesn't actually depend on either of the other two)
+RadProps
+
+--------------------------------------
+
+And uses: 'git pull' to update code.
+

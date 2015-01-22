@@ -1,14 +1,12 @@
 #! /bin/bash
 
 #
-# This scrip updates the 3P Wasatch libraries... 
+# This script updates, builds, and installs the 3P Wasatch libraries... 
 #
 
 echo
 echo "Building Wasatch 3P libraries."
 echo
-
-echo "  Using compiler: $COMPILER"
 
 source HelperBuildScripts/checkEnv.sh
 
@@ -23,6 +21,9 @@ do
     exit
   fi
 
+  echo "----- Updating GIT files ---"
+  echo
+
   cd $dir
   git pull
 
@@ -30,6 +31,10 @@ do
     echo "Error, 'git pull' failed for $dir!"
     exit
   fi
+
+  echo
+  echo "----- Installing ---"
+  echo
 
   ./doit
 
