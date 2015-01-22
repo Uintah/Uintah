@@ -90,7 +90,8 @@ public:
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, 
                                   CCVariable<double>& divQ,
-                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw);
+                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw,
+                                  bool old_DW_isMissingIntensities);
       int getIntOrdinates();
 
       bool reflectionsBool();
@@ -161,9 +162,11 @@ private:
       std::vector< std::vector < double > > cosineTheta;
       std::vector< std::vector < double > > solidAngleQuad;
 
+      template<class TYPE> 
       void computeScatteringIntensities(int direction,
                       constCCVariable<double> &scatkt,
-  StaticArray< constCCVariable<double> > &Intensities,
+  //StaticArray< constCCVariable<double> > &Intensities,
+  StaticArray< TYPE > &Intensities,
               CCVariable<double> &scatIntensitySource,
               constCCVariable<double> &asymmetryFactor,
                                     const Patch* patch,
