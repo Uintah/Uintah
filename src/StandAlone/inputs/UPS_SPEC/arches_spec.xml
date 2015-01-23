@@ -958,6 +958,8 @@
           <doDiff                       spec="OPTIONAL BOOLEAN"/> <!-- Turn diffusion on/off --> 
           <doConv                       spec="OPTIONAL BOOLEAN"/> <!-- Turn convection on/off --> 
           <conv_scheme                  spec="OPTIONAL STRING 'upwind, 
+                                                               2upwind,
+                                                               quick,
                                                                roe_minmod, 
                                                                super_bee, 
                                                                central, 
@@ -1401,7 +1403,9 @@
         <Weights                        spec="REQUIRED NO_DATA">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, 
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind,
+                                                               2upwind,
+                                                               quick,
                                                                roe_minmod, 
                                                                super_bee, 
                                                                central, 
@@ -1444,7 +1448,9 @@
                                         attribute1="label REQUIRED STRING">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, 
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind,
+                                                               2upwind,
+                                                               quick,
                                                                roe_minmod, 
                                                                super_bee, 
                                                                central, 
