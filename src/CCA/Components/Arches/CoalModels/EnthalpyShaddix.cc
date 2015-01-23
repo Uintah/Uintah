@@ -367,10 +367,17 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> radiationVolqIN;
     constCCVariable<double> abskgIN;
     constCCVariable<double> abskp; 
+
+    constCCVariable<double> rad_particle_temperature;
     if ( d_radiation ){ 
       which_dw->get( radiationVolqIN, _volq_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskgIN, _abskg_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0);
+      if (_radiateAtGasTemp){
+        which_dw->get( rad_particle_temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
+      }else{
+        which_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+      }
     }
     constCCVariable<Vector> gasVel; 
     which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
@@ -388,6 +395,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     which_dw->get( weight, _weight_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> particle_temperature;
     which_dw->get( particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+
     constCCVariable<double> charoxi_temp_source;
     which_dw->get( charoxi_temp_source, _charoxiTemp_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> surface_rate;
@@ -482,11 +490,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         Q_radiation = 0.0;
         if ( d_radiation) { 
           double Eb;
-          if (_radiateAtGasTemp){
-            Eb = 4.0*_sigma*pow(temperatureph,4.0); 
-          }else{
-            Eb = 4.0*_sigma*pow(particle_temperatureph,4.0); 
-          }
+          Eb = 4.0*_sigma*pow(rad_particle_temperature[c],4.0); 
           FSum = radiationVolqIN[c];    
           Q_radiation = abskp[c]*(FSum - Eb);
         } 
