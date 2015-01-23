@@ -71,8 +71,7 @@ extern std::map<std::string, double> exectimes;
 static double Unified_CurrentWaitTime = 0;
 
 static DebugStream unified_dbg(               "Unified_DBG",                false);
-static DebugStream unified_st(                "Unified_SendTiming",         false);
-static DebugStream unified_timeout(           "Unified_Timeout",            false);
+static DebugStream unified_timeout(           "Unified_TimingsOut",         false);
 static DebugStream unified_queuelength(       "Unified_QueueLength",        false);
 static DebugStream unified_threaddbg(         "Unified_ThreadDBG",          false);
 static DebugStream unified_affinity(          "Unified_CPUAffinity",        true);
@@ -721,7 +720,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     if (me == 0) {
       unified_timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
       unified_timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
-      unified_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
+      unified_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n\n";
     }
 
     // TODO - need to clean this up (APH - 01/22/15)

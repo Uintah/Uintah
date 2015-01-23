@@ -49,7 +49,7 @@ extern DebugStream        execout;
 extern DebugStream        taskorder;
 
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
-static DebugStream dynamicmpi_timeout(    "DynamicMPI_Timings",     false);
+static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
 static DebugStream dynamicmpi_queuelength("DynamicMPI_QueueLength", false);
 
 #ifdef USE_TAU_PROFILING

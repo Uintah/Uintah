@@ -55,8 +55,7 @@ extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
 static DebugStream threadedmpi_dbg(         "ThreadedMPI_DBG",         false);
-static DebugStream threadedmpi_timeout(     "ThreadedMPI_Timeout",     false);
-static DebugStream threadedmpi_st(          "ThreadedMPI_SendTiming",  false);
+static DebugStream threadedmpi_timeout(     "ThreadedMPI_TimingsOut",  false);
 static DebugStream threadedmpi_queuelength( "ThreadedMPI_QueueLength", false);
 static DebugStream threadedmpi_threaddbg(   "ThreadedMPI_ThreadDBG",   false);
 static DebugStream threadedmpi_affinity(    "ThreadedMPI_CPUAffinity", true);
@@ -666,12 +665,9 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
     }
 
     if (me == 0) {
-      threadedmpi_timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100
-                          << " load imbalance (exec)%\n";
-      threadedmpi_timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100
-                          << " load imbalance (comm)%\n";
-      threadedmpi_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100
-                          << " load imbalance (theoretical)%\n";
+      threadedmpi_timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
+      threadedmpi_timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
+      threadedmpi_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n\n";
     }
 
     // TODO - need to clean this up (APH - 01/22/15)
