@@ -39,9 +39,9 @@
         <dynamic>true</dynamic>
         <solver>amgx</solver>
 	<amgx_config_path>/home/sci/mmath/Software/amgx_mpi/configs/PBICGSTAB.json</amgx_config_path>
-        <convergence_criteria_disp>1.e-10</convergence_criteria_disp>
-        <convergence_criteria_energy>4.e-10</convergence_criteria_energy>
-        <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
+        <convergence_criteria_disp>1.e-12</convergence_criteria_disp>
+        <convergence_criteria_energy>1.e-12</convergence_criteria_energy>
+        <DoImplicitHeatConduction>false</DoImplicitHeatConduction>
     </MPM>
 
     <PhysicalConstants>

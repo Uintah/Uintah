@@ -296,16 +296,19 @@ void MPMPetscSolver::solve(vector<double>& guess)
     for (int i = 0; i < (int) guess.size(); i++) {
       VecSetValues(d_x,1,&i,&guess[i],INSERT_VALUES);
     }
-
   }
   TAU_PROFILE_TIMER(solve, "Petsc:KPSolve()", "", TAU_USER);
   TAU_PROFILE_START(solve);
 
+  //PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD, PETSC_VIEWER_ASCII_MATLAB);
+  //MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+
+  //throw 0;
+  PetscInt m;
+  PetscInt n;
   
-  PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_MATLAB);
-  MatView(d_A, PETSC_VIEWER_STDOUT_WORLD);
-  throw 0;
-  
+  MatGetSize(d_A, &m, &n);
+  cout << "Petsc Matrix SOLVE=" << m <<  " " << n << endl;
   KSPSolve(solver,d_B,d_x);
   TAU_PROFILE_STOP(solve);
 #ifdef LOG
@@ -352,12 +355,13 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   PetscTruth exists;
 #endif
 
-
+  /*
   cerr << "me = " << me << endl;
   cerr << "numlrows = " << numlrows << endl;
   cerr << "numlcolumns = " << numlcolumns << endl;
   cerr << "globalrows = " << globalrows << endl;
   cerr << "globalcolumns = " << globalcolumns << endl;
+  */
 
 
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
@@ -486,6 +490,11 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     VecDuplicate(d_B,&d_x);
     VecDuplicate(d_B,&d_t);
     VecDuplicate(d_B,&d_flux);
+    PetscInt m;
+    PetscInt n;
+  
+    MatGetSize(d_A, &m, &n);
+    cout << "Petsc Matrix size CREATE=" << m <<  " " << n << endl;
 
   delete[] diag;
   delete[] onnz;

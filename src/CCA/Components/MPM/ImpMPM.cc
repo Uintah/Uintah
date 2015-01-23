@@ -257,6 +257,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    }
 
    materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+
+   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    
    if (flags->d_solver_type == "petsc") {
      d_solver = scinew MPMPetscSolver();
@@ -265,16 +267,14 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
      if (flags->d_amgx_config == "") {
        throw ProblemSetupException("No amgx config file provided", __FILE__, __LINE__);
      }
-     d_solver = scinew MPMAmgxSolver(flags->d_amgx_config);
+     d_solver = scinew MPMAmgxSolver(flags->d_amgx_config, UintahParallelComponent::d_myworld, sched);
    } else {
      d_solver = scinew SimpleSolver();
    }
 
-
    d_solver->initialize();
 
    // setup sub scheduler
-   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    sched->setRestartable(true);
 
    d_subsched = sched->createSubScheduler();

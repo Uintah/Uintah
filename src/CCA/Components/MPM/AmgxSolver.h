@@ -33,6 +33,8 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/Array3.h>
 #include <CCA/Components/MPM/Solver.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/LoadBalancer.h>
 
 #include <set>
 #include <map>
@@ -55,7 +57,7 @@ namespace Uintah {
     
   public:
     
-    MPMAmgxSolver(std::string& config_name);
+    MPMAmgxSolver(std::string& config_name, const ProcessorGroup* d_myworld, Scheduler* sched);
     ~MPMAmgxSolver();
     
     void initialize();
@@ -110,9 +112,11 @@ namespace Uintah {
     int d_DOFsPerNode;
     int d_iteration;
 
-    int numlcolumns;
+
     int numlrows;
-    void fromCOOtoCSR(vector<double>&, vector<int>&, vector<int>&);
+    int globalrows;
+    
+    void fromCOOtoCSR(vector<double>&, vector<int>&, vector<int>&, map<int, int>&);
     
 #ifdef HAVE_AMGX
     //Use device memory with data in the form of double floating point
@@ -126,7 +130,9 @@ namespace Uintah {
     AMGX_vector_handle d_B;
     AMGX_vector_handle d_x;
 
-    bool matrix_created;
+    Scheduler* d_sched;
+    const ProcessorGroup *d_uintah_world;
+    
     map<int, double> matrix_values;
 
     //Each of the vectors will be stored host side before we write them to
@@ -136,6 +142,7 @@ namespace Uintah {
     vector<double> d_x_Host;
     vector<double> d_t;
     vector<double> d_flux;
+    
 
     inline bool compare(double num1, double num2)
       {
