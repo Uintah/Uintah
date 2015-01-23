@@ -372,18 +372,27 @@ namespace Uintah{
       
       //compute a rate term
       if ( _direction=="x" ) {
-        *model_value <<= (*fDrag) / (*tauP) * ( *velU - *partVelU );
+        *model_value <<= cond( *tauP != 0.0, (*fDrag) / (*tauP) * ( *velU - *partVelU ) )
+                             (0.0);
       } else if ( _direction=="y" ) {
-        *model_value <<= (*fDrag) / (*tauP) * ( *velV - *partVelV );
+        *model_value <<= cond( *tauP != 0.0, (*fDrag) / (*tauP) * ( *velV - *partVelV ) )
+                             (0.0);
       } else if ( _direction=="z" ) {
-        *model_value <<= (*fDrag) / (*tauP) * ( *velW - *partVelW );
+        *model_value <<= cond( *tauP != 0.0, (*fDrag) / (*tauP) * ( *velW - *partVelW ) )
+                             (0.0);
       }
       
       const std::string w_name = get_name( i, "w" );
       ITptr weight = tsk_info->get_const_so_field<IT>(w_name);
       
-      if (!constDensity ) {
-        *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter);
+      if (!constDensity && !constDiameter) {
+        *gas_model_value <<= cond( *diameter!=0.0, - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter) )
+                                 (0.0);
+      } else if (!constDensity && constDiameter ) {
+        *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
+      } else if (constDensity && !constDiameter ) {
+        *gas_model_value <<= cond( *diameter!=0.0, - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter) )
+                                 (0.0);
       } else {
         *gas_model_value <<= - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
       }
