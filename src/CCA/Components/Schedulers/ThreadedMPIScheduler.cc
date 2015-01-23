@@ -177,9 +177,10 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   if (d_myworld->myrank() == 0) {
-    std::cout << "   WARNING: Component tasks must be thread safe." << std::endl;
     std::string plural = (numThreads_ == 1) ? " thread" : " threads";
-    std::cout << "   Using 1 thread for scheduling, and " << numThreads_ << plural + " for task execution." << std::endl;
+    std::cout << "   WARNING: Component tasks must be thread safe.\n"
+              << "   Using 1 thread for scheduling, and " << numThreads_
+              << plural + " for task execution." << std::endl;
   }
 
   // Bind main execution thread
@@ -227,11 +228,12 @@ ThreadedMPIScheduler::createSubScheduler()
 
   // create subscheduler task execution threads
   if (subsched->numThreads_ > 0) {
-    std::cout << std::endl
-              << "   WARNING: Component tasks must be thread safe." << std::endl
-              << "   Using one thread for scheduling. " << std::endl
-              << "\tCreating " << subsched->numThreads_ << " threads for task execution."<< std::endl
-              << std::endl << std::endl;
+    std::string plural = (numThreads_ == 1) ? " thread" : " threads";
+    std::cout << "\n"
+              << "   Using multi-threaded sub-scheduler\n"
+              << "   WARNING: Component tasks must be thread safe.\n"
+              << "   Using 1 thread for scheduling.\n"
+              << "   Creating " << subsched->numThreads_ << plural << " for task execution.\n\n"<< std::endl;
 
     char name[1024];
 
@@ -250,7 +252,7 @@ ThreadedMPIScheduler::createSubScheduler()
     }
 
     if (threadedmpi_miccompactaffinity.active()) {
-      Thread::self()->set_affinity(242);  // MIC - bind main thead to core 242
+      Thread::self()->set_affinity(242);  // MIC - bind main thread to core 242
     }
   }
 

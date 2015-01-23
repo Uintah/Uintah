@@ -237,11 +237,10 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     }
     else {
       std::string plural = (numThreads_ == 1) ? " thread" : " threads";
-      std::cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, "
-           << "not all tasks are thread safe yet." << std::endl
-           << "   Creating " << numThreads_ << " additional "
-           << plural + " for task execution (total task execution threads = "
-           << numThreads_ + 1 << ")." << std::endl;
+      std::cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
+                << "   Creating " << numThreads_ << " additional "
+                << plural + " for task execution (total task execution threads = "
+                << numThreads_ + 1 << ")." << std::endl;
     }
   }
 
@@ -286,11 +285,10 @@ UnifiedScheduler::createSubScheduler()
 
   // create subscheduler task execution threads
   if (subsched->numThreads_ > 0) {
-    std::cout << std::endl
-              << "\tUsing EXPERIMENTAL Multi-threaded sub-scheduler" << std::endl
-              << "\tCreating " << subsched->numThreads_
-              << " subscheduler threads for task execution."
-              << std::endl << std::endl;
+    std::cout << "\n"
+              << "   Using EXPERIMENTAL multi-threaded sub-scheduler\n"
+              << "   WARNING: Component tasks must be thread safe.\n"
+              << "   Creating " << subsched->numThreads_ << " subscheduler threads for task execution.\n\n" << std::endl;
 
     char name[1024];
 
