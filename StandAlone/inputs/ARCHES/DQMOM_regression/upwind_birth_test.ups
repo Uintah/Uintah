@@ -22,7 +22,6 @@
     <filebase>upwind_birth_test.uda</filebase>
     <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-<!--    <save label="totalKineticEnergy"/>  FIXME, RT fails with this enabled-->
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
@@ -146,11 +145,11 @@
         <Models>
           <model label="weight_birth" type="SimpleBirth">
             <is_weight/>
-            <small_weight>0.199</small_weight>
+            <small_weight>0.1</small_weight>
           </model>
           <model label="length_birth" type="SimpleBirth">
             <abscissa label="length"/>
-            <small_weight>0.199</small_weight>
+            <small_weight>0.1</small_weight>
           </model>
           <model label="xdragforce" type="Drag">
             <direction>x</direction>
