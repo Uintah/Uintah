@@ -179,10 +179,22 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   if (d_myworld->myrank() == 0) {
     std::cout << "   WARNING: Component tasks must be thread safe." << std::endl;
     std::string plural = (numThreads_ == 1) ? " thread" : " threads";
-    std::cout << "   Using one thread for scheduling, and " << numThreads_ << plural + " for task execution." << std::endl;
+    std::cout << "   Using 1 thread for scheduling, and " << numThreads_ << plural + " for task execution." << std::endl;
   }
 
-  // Create the TaskWorkers here
+  // Bind main execution thread
+  if (threadedmpi_affinity.active()) {
+    if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+      threadedmpi_threaddbg << "   Binding main thread (ID 0) to CPU core 0" << "\n";
+    }
+    Thread::self()->set_affinity(0);  // CPU -bind main thread to core 0
+  }
+
+  if (threadedmpi_miccompactaffinity.active()) {
+    Thread::self()->set_affinity(242);  // MIC - bind main thread to core 242
+  }
+
+  // Create the TaskWorkers here (pinned to cores in TaskWorker::run())
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
     TaskWorker* worker = scinew TaskWorker(this, i);
@@ -198,11 +210,6 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   if (threadedmpi_affinity.active()) {
     Thread::self()->set_affinity(0);    // CPU - bind main thread to core 0
   }
-
-  if (threadedmpi_miccompactaffinity.active()) {
-    Thread::self()->set_affinity(242);  // MIC - bind main thead to core 242
-  }
-
 }
 
 //______________________________________________________________________
@@ -801,7 +808,7 @@ TaskWorker::run()
 
   // CPU
   if (threadedmpi_affinity.active()) {
-    if (threadedmpi_threaddbg.active()) {
+    if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
       threadedmpi_threaddbg << "Binding thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
       cerrLock.unlock();

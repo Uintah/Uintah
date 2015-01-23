@@ -245,7 +245,19 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     }
   }
 
-  // Create the UnifiedWorkers here
+  // Bind main execution thread
+  if (unified_affinity.active()) {
+    if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+      unified_threaddbg << "   Binding main thread (ID 0) to CPU core 0" << "\n";
+    }
+    Thread::self()->set_affinity(0);  // CPU -bind main thread to core 0
+  }
+
+  if (unified_miccompactaffinity.active()) {
+    Thread::self()->set_affinity(1);  // MIC - bind main thread to core 1
+  }
+
+  // Create the UnifiedWorkers here (pinned to cores in UnifiedSchedulerWorker::run())
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
     UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(this, i);
@@ -257,14 +269,6 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-
-  if (unified_affinity.active()) {
-    Thread::self()->set_affinity(0);  // CPU -bind main thread to core 0
-  }
-
-  if (unified_miccompactaffinity.active()) {
-    Thread::self()->set_affinity(1);  // MIC - bind main thread to core 1
-  }
 }
 
 //______________________________________________________________________
@@ -2040,7 +2044,7 @@ UnifiedSchedulerWorker::run()
 
   // CPU
   if (unified_affinity.active()) {
-    if (unified_threaddbg.active()) {
+    if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
       unified_threaddbg << "Binding thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
       cerrLock.unlock();
