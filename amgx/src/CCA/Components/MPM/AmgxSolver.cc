@@ -67,7 +67,7 @@ void print_callback(const char *msg, int length){
   printf("%s", msg);
 } 
 
-MPMAmgxSolver::MPMAmgxSolver(string& amgx_config_string)
+MPMAmgxSolver::MPMAmgxSolver(string& amgx_config_string, const ProcessorGroup* d_myworld, Scheduler* sched)
 {
   mode = AMGX_mode_dDDI;
   AMGX_SAFE_CALL(AMGX_initialize());
@@ -77,11 +77,28 @@ MPMAmgxSolver::MPMAmgxSolver(string& amgx_config_string)
 
   AMGX_SAFE_CALL(AMGX_config_create_from_file(&config, amgx_config_string.c_str()));
   AMGX_SAFE_CALL(AMGX_config_add_parameters(&config, "exception_handling=1"));
-  AMGX_SAFE_CALL(AMGX_resources_create_simple(&rsrc, config));
+  AMGX_SAFE_CALL(AMGX_config_add_parameters(&config, "communicator=MPI"));
+  //Create a seperate mpi communicator
+  MPI_Comm amgx_comm;
+  MPI_Comm_dup(d_myworld->getComm(), &amgx_comm);
+  int device[] = {0};
+  AMGX_SAFE_CALL(AMGX_resources_create(&rsrc, config, &amgx_comm, 1, device));
+
+  AMGX_SAFE_CALL(AMGX_solver_create(&solver, rsrc, mode, config));
+  AMGX_SAFE_CALL(AMGX_matrix_create(&d_A, rsrc, mode));
+  AMGX_SAFE_CALL(AMGX_vector_create(&d_B, rsrc, mode));
+
+  AMGX_SAFE_CALL(AMGX_vector_create(&d_x, rsrc, mode));
+  d_uintah_world = d_myworld;
+  d_sched = sched;
 }
 
 MPMAmgxSolver::~MPMAmgxSolver()
 {
+  AMGX_SAFE_CALL(AMGX_solver_destroy(solver));
+  AMGX_SAFE_CALL(AMGX_matrix_destroy(d_A));
+  AMGX_SAFE_CALL(AMGX_vector_destroy(d_x));
+
   //Safely finalize amgx after this goes out of scope.
   AMGX_SAFE_CALL(AMGX_resources_destroy(rsrc));
   AMGX_SAFE_CALL(AMGX_config_destroy(config));
@@ -123,10 +140,10 @@ void MPMAmgxSolver::initialize()
  *************************************************************/
 void 
 MPMAmgxSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
-                                           const PatchSet* perproc_patches,
-                                           const PatchSubset* patches,
-                                           const int DOFsPerNode,
-                                           const int n8or27)
+					  const PatchSet* perproc_patches,
+					  const PatchSubset* patches,
+					  const int DOFsPerNode,
+					  const int n8or27)
 {
   int numProcessors = d_myworld->size();
   d_numNodes.resize(numProcessors, 0);
@@ -221,35 +238,32 @@ MPMAmgxSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
     d_petscLocalToGlobal[patch].copyPointer(l2g);
   }
   d_DOFsPerNode=DOFsPerNode;
-
-  numlrows = d_numNodes[d_myworld->myrank()];
-  numlcolumns = d_numNodes[d_myworld->myrank()];
-  d_B_Host.resize(numlrows);
 }
 
 void MPMAmgxSolver::fromCOOtoCSR(vector<double>& values,
 				 vector<int>& row_ptrs,
-				 vector<int>& col_inds){
+				 vector<int>& col_inds,
+				 map<int,int>& global_to_local_map){
   row_ptrs.push_back(0);
   int col_count = 0;
   for (std::map<int, double>::iterator it = matrix_values.begin(); it != matrix_values.end(); ++it){
     //Only add if the value is non-zero
     if (!compare(it->second, 0.0)) {
-      int i = it->first / numlrows;
-      int j = it->first % numlrows;
+      int i = it->first / globalrows;
+      int j = it->first % globalrows;
     
       if (i == (int)row_ptrs.size()){
 	row_ptrs.push_back(col_count + row_ptrs[row_ptrs.size() - 1]);
 	col_count = 0;
       }
       col_count++;
-      col_inds.push_back(j);
+      //Use local index instead of global index
+      col_inds.push_back(global_to_local_map[j]);
       values.push_back(it->second);
     }
   }
   row_ptrs.push_back(col_count + row_ptrs[row_ptrs.size() - 1]);
 }
-
 
 
 void MPMAmgxSolver::solve(vector<double>& guess)
@@ -260,66 +274,102 @@ void MPMAmgxSolver::solve(vector<double>& guess)
   vector<double> values;
   vector<int> row_ptrs;
   vector<int> col_inds;
-  
-  fromCOOtoCSR(values, row_ptrs, col_inds);
-  /*
-  ofstream myFile;
-  myFile.open("A.dat");
 
-  int el = 0;
-  for (int i = 0; i < row_ptrs.size(); i++){
-    for (int j = row_ptrs[i]; j < row_ptrs[i + 1]; j++){
-      int row = i;
-      int col = col_inds[j];
-      myFile << row << " " << col << " " << values[el++] << endl;
+  /*
+  ofstream fd;
+  fd.open("A.dat");
+  for (map<int, double>::iterator it = matrix_values.begin(); it != matrix_values.end(); it++){
+    fd << it->first / numlrows << " " <<  it->first % numlrows << " " << it->second << endl;
+  }
+  fd.close();
+  throw 0;
+  */
+  //We are using a global mapping for the indices, but AMGX uses local indices instead
+  //so we have to create a mapping
+
+  map<int, double>::iterator lst_el = matrix_values.end();
+  --lst_el;
+  int max_row = lst_el->first / globalrows;
+  int min_row = matrix_values.begin()->first / globalrows;
+
+  int max_col = -1;
+  int min_col = globalrows;
+  
+  for (map<int, double>::iterator it = matrix_values.begin(); it != matrix_values.end(); ++it){
+    int i = it->first / globalrows;
+    int j = it->first % d_B_Host.size();
+    max_col = max(j, max_col);
+    min_col = min(j, min_col);
+  }
+  
+  vector<bool> hasCol(max_col - min_col, false);
+  int numNonZero = 0;
+  for (map<int, double>::iterator it = matrix_values.begin(); it != matrix_values.end(); ++it){
+    int j = it->first % d_B_Host.size();
+    if (!hasCol[j - min_col])
+      numNonZero++;
+    hasCol[j - min_col] = true;
+  }
+
+  //Now we creat our local column index to global column index map
+  vector<int> local_to_global_map;
+  local_to_global_map.resize(numNonZero);
+  
+  map<int, int> global_to_local_map;
+  for (int i = 0, j = 0; i < max_col - min_col; i++){
+    if (hasCol[i]){
+      local_to_global_map[j] = i + min_col;
+      global_to_local_map[i + min_col] = j;
+      j++;
     }
   }
-  myFile.close();
 
-  myFile.open("b.dat");
+  //TODO
+  ////Now we create our CSR formated data in the local index space
+  fromCOOtoCSR(values, row_ptrs, col_inds, global_to_local_map);
+  //const vector<int>::iterator mx = max_element(col_inds.begin(), col_inds.end());
+  //const vector<int>::iterator mn = min_element(col_inds.begin(), col_inds.end());
+
+  //We want to find out all the processes that we are neighbors with so that we can figure
+  //out the mapping for AMGX
+  LoadBalancer* loadbal = sched->getLoadBalancer();
+  set<int> procNeighborhood = loadbal->getNeighborhoodProcessors();
+
+  /*
+    The row looks something like this from our perspective
+    Recv       Non            Recv
+    col idx    Halo           col idx
+    _ _ _ _ | _ _ _ _ _ _ _ | _ _ _
+    _ _ _ _ | _ _ _ _ _ _ _ | _ _ _
+    _ _ _ _ | _ _ _ _ _ _ _ | _ _ _
+    _ _ _ _ | _ _ _ _ _ _ _ | _ _ _
+    _ _ _ _ | _ _ _ _ _ _ _ | _ _ _
+    _ _ _ _ | _ _ _ _ _ _ _ | _ _ _
+    _ _ _ _ | _ _ _ _ _ _ _ | _ _ _
+    
+    We need to send the global indices of halo columns that have data to neighbors. 
+    They will do the same for us. 
+    We can then figure out if we have values in the indices that were sent.
+    Use this overlap information to figure out amgx send and recv maps.
+   */
   
-  for (int i = 0; i < numlrows; i++){
-    myFile << i << " " << d_B_Host[i] << endl;
-  }
-  myFile.close();
-  */
-  const vector<int>::iterator mx = max_element(col_inds.begin(), col_inds.end());
-  const vector<int>::iterator mn = min_element(col_inds.begin(), col_inds.end());
-
-  
-  if ((*mx - *mn + 1) != numlrows) {
-    cout << "Matrix is not square" << endl;
-    cout << "Matrix dim=" << (*mx - *mn + 1) << ", " << numlrows << endl;
-  }
-  cout << "Row pointer size: " << row_ptrs.size() << endl;
-  cout << "Row pointer end: " << row_ptrs[row_ptrs.size() - 1] << endl;
-  cout << "Column inds size: " << col_inds.size() << endl;
-  cout << "Values size: " << col_inds.size() << endl;
-  
-  AMGX_SAFE_CALL(AMGX_solver_create(&solver, rsrc, mode, config));
-  AMGX_SAFE_CALL(AMGX_matrix_create(&d_A, rsrc, mode));
-  AMGX_SAFE_CALL(AMGX_vector_create(&d_B, rsrc, mode));
-
-  AMGX_SAFE_CALL(AMGX_vector_create(&d_x, rsrc, mode));
-
-
   //Now we can upload everything to the GPU
   AMGX_SAFE_CALL(AMGX_matrix_upload_all(d_A, numlrows, matrix_values.size(), 1, 1,
 					&(row_ptrs[0]), &(col_inds[0]), &(values[0]),
 					NULL));
-  AMGX_SAFE_CALL(AMGX_vector_upload(d_B, numlrows, 1, &d_B_Host[0]));
+  AMGX_SAFE_CALL(AMGX_vector_upload(d_B, d_B_Host.size(), 1, &d_B_Host[0]));
 
   if (!guess.empty()){
     AMGX_SAFE_CALL(AMGX_vector_upload(d_x, guess.size(), 1, &(guess[0])));
   } else {
-    AMGX_SAFE_CALL(AMGX_vector_set_zero(d_x, numlrows, 1));
+    AMGX_SAFE_CALL(AMGX_vector_set_zero(d_x, d_B_Host.size(), 1));
   }
   
   //Now we can setup the solver and solve the matrix system
   AMGX_SAFE_CALL(AMGX_solver_setup(solver, d_A));
   AMGX_SAFE_CALL(AMGX_solver_solve(solver, d_B, d_x));
 
-  d_x_Host.resize(numlrows);
+  d_x_Host.resize(d_B_Host.size());
   AMGX_SAFE_CALL(AMGX_vector_download(d_x, &d_x_Host[0]));
 
   /*
@@ -332,22 +382,33 @@ void MPMAmgxSolver::solve(vector<double>& guess)
   */
   
   //exit(0);
-  AMGX_SAFE_CALL(AMGX_solver_destroy(solver));
-  AMGX_SAFE_CALL(AMGX_matrix_destroy(d_A));
-  AMGX_SAFE_CALL(AMGX_vector_destroy(d_x));
 }
 void MPMAmgxSolver::createMatrix(const ProcessorGroup* d_myworld,
-                                  const map<int,int>& dof_diag)
+				 const map<int,int>& dof_diag)
 {
+  int me = d_myworld->myrank();
+  numlrows = d_numNodes[me];
+  int numlcolumns = numlrows;
+  globalrows = (int)d_totalNodes;
+  int globalcolumns = (int)d_totalNodes; 
+
+  /*
+  cerr << "me = " << me << endl;
+  cerr << "numlrows = " << numlrows << endl;
+  cerr << "numlcolumns = " << numlcolumns << endl;
+  cerr << "globalrows = " << globalrows << endl;
+  cerr << "globalcolumns = " << globalcolumns << endl;
+  */
+  cerr << "CREATE" << globalrows << endl;
   //Here we call all of our AMGX_blank_create functions
-  d_flux.assign(numlrows, 0);
-  d_t.assign(numlrows, 0);
-  d_B_Host.assign(numlrows, 0);
+  d_flux.assign(globalrows, 0);
+  d_t.assign(globalrows, 0);
+  d_B_Host.assign(globalrows, 0);
 }
 
 void MPMAmgxSolver::destroyMatrix(bool recursion)
 {
-  cout << "Destroy Matrix" << endl;
+  cout << "DESTROY" << endl;
   matrix_values.clear();
   if (recursion == false){
     d_DOF.clear();
@@ -365,12 +426,12 @@ MPMAmgxSolver::fillMatrix(int numi, int i_indices[], int numj, int j_indices[], 
   for (int i = 0; i < numi; i++){
     for (int j = 0; j < numj; j++){
       
-      map<int, double>::iterator it = matrix_values.find(i_indices[i] * numlcolumns + j_indices[j]);
+      map<int, double>::iterator it = matrix_values.find(i_indices[i] * d_B_Host.size() + j_indices[j]);
       if (it == matrix_values.end()){
-	matrix_values[i_indices[i] * d_totalNodes + j_indices[j]] =  value[i * numj + j];	
+	matrix_values[i_indices[i] * d_B_Host.size() + j_indices[j]] =  value[i * numj + j];	
       } else {
 	double new_val = it->second + value[i * numj + j];
-	matrix_values[i_indices[i] * d_totalNodes + j_indices[j]] =  new_val;
+	matrix_values[i_indices[i] * d_B_Host.size() + j_indices[j]] =  new_val;
       }
     }
   }
@@ -457,13 +518,13 @@ MPMAmgxSolver::removeFixedDOF()
        iter++) {
     int j = *iter;
     d_B_Host[j] = 0;
-    matrix_values[j*numlrows + j] = 1.0;
+    matrix_values[j * globalrows + j] = 1.0;
   }
 
   for (int i = 0; i < (int)d_B_Host.size(); i++){
-    map<int,double>::iterator diag_el = matrix_values.find(i * d_B_Host.size() + i);
+    map<int,double>::iterator diag_el = matrix_values.find(i * globalrows + i);
     if ((matrix_values.end() ==  diag_el) || compare(diag_el->second, 0)){
-      matrix_values[i * numlrows + i] =  1.0;
+      matrix_values[i * globalrows + i] =  1.0;
       d_B_Host[i] = 0;
     }
   }
@@ -472,14 +533,14 @@ MPMAmgxSolver::removeFixedDOF()
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++){
 
     //Find the first nonzero element in the nodes row 
-    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * numlrows);
+    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * globalrows);
     
     //Iterate through until we are in the next row setting all the elements to 0 except for the diagonal
-    for (; (int)row_index->first / (int)d_B_Host.size() == *iter; row_index++){
+    for (; (int)row_index->first / (int)globalrows == *iter; row_index++){
       row_index->second = 0;
     }
     //Set diagonal to 1
-    matrix_values[*iter * numlrows + *iter] = 1.0;
+    matrix_values[*iter * globalrows + *iter] = 1.0;
   }
 }
 
@@ -493,7 +554,7 @@ void MPMAmgxSolver::removeFixedDOFHeat()
     int j = *iter;
 
     d_B_Host[j] = 0;
-    matrix_values[j * d_B_Host.size() + j] =  1.0;
+    matrix_values[j * globalrows + j] =  1.0;
   }
 
 
@@ -508,7 +569,7 @@ void MPMAmgxSolver::removeFixedDOFHeat()
       for (vector<int>::iterator n = neighbors.begin(); n != neighbors.end();
            n++) {
         // zero out the columns
-	matrix_values[d_B_Host.size() * (*n) + index] =  0.0;
+	matrix_values[globalrows * (*n) + index] =  0.0;
       }
     }
   }
@@ -518,11 +579,11 @@ void MPMAmgxSolver::removeFixedDOFHeat()
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); iter++){
 
     //Find the first nonzero element in the nodes row 
-    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * d_B_Host.size());
+    map<int, double>::iterator row_index = matrix_values.lower_bound((*iter) * globalrows);
 
     //Iterate through until we are in the next row setting all the elements to 0
-    for (; row_index->first / (int)d_B_Host.size() == *iter; row_index++){
-      if (row_index->first % (int)d_B_Host.size() != *iter)
+    for (; row_index->first / (int)globalrows == *iter; row_index++){
+      if (row_index->first % (int)globalrows != *iter)
 	row_index->second = 0.0;
     }
   }

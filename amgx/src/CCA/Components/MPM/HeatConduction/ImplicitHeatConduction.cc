@@ -92,7 +92,7 @@ ImplicitHeatConduction::~ImplicitHeatConduction()
 void ImplicitHeatConduction::problemSetup(string solver_type)
 {
 
-  if (solver_type == "petsc") {
+  if (solver_type == "petsc" || solver_type == "amgx") {
     d_HC_solver = scinew MPMPetscSolver();
     d_HC_solver->initialize();
   }  
