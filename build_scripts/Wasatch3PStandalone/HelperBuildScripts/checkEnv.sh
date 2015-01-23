@@ -32,8 +32,8 @@ if test "$COMPILER" = "icc"; then
 else
    if test "$COMPILER" = "gcc"; then
       echo "  Building with GCC"
-      CC=gcc
-      CXX=g++
+      CC=`which gcc`
+      CXX=`which g++`
       COMP=gcc-4.4.7
    else
       echo "ERROR: Env var COMPILER was set to '$COMPILER', but must be set to 'icc' or 'gcc'"
@@ -45,8 +45,9 @@ fi
 TPI=Thirdparty-Install
 
 echo
+echo "  Building for $MACHINE"
+
 if test "$MACHINE" = "Ember"; then
-  echo "  Building for Ember"
   if [[ $host != ember* ]]; then
      echo "Error: hostname did not return ember... Goodbye."
      exit
@@ -59,7 +60,6 @@ if test "$MACHINE" = "Ember"; then
 else
 if test "$MACHINE" = "Ash"; then
 
-  echo "  Building for Ash"
   if test "$PHOENIX" = ""; then
     echo
     echo "ERROR: Please set the env var PHOENIX to yes or no!"
@@ -93,10 +93,28 @@ if test "$MACHINE" = "Ash"; then
   INSTALL_BASE=/uufs/$NAME/sys/pkg/uintah/$TPI$PHOENIXEXT/$NAME2/Wasatch3P
   BOOST_LOC=/uufs/$NAME/sys/pkg/boost/1.54.0_mvapich2-1.9
 else
+if test "$MACHINE" = "Mapache"; then
+  if [[ $host != mp-fe* ]]; then
+     echo "Error: hostname did not return mp-fe*... Goodbye."
+     exit
+  fi
+  COMP=gcc4.7.2
+  echo
+  echo "Have you run the appropriate 'module load' commands? Eg:"
+  echo "   * module load gcc"
+  echo "   * module load cmake/3.0.0"
+  echo
+  sleep 1
+
+  NAME2="Mapache"
+  INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/Mapache/Boost/v1_56_0-$COMP
+else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 
@@ -105,8 +123,8 @@ fi
 # Some bullet proofing...
 #
 
-if test "$BOOST_LOC" = ""; then
-   echo "ERROR: Env var BOOST_LOC \($BOOST_LOC\) not set or is not a valid directory..."
+if test "$BOOST_LOC" = "" -o ! -d "$BOOST_LOC"; then
+   echo "ERROR: BOOST_LOC ($BOOST_LOC) not set or is not a valid directory..."
    echo "Exiting..."
    echo
    exit

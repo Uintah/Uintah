@@ -7,7 +7,7 @@ source ../HelperBuildScripts/setupEnv.sh
 rm -f CMakeCache.txt
 rm -rf ${INSTALL_HERE}/*
 
-/uufs/chpc.utah.edu/sys/pkg/cmake/2.8.9/bin/cmake \
+cmake                                       \
   -DTabProps_PREPROCESSOR=OFF               \
   -DTabProps_UTILS=OFF                      \
   -DTabProps_ENABLE_TESTING=OFF             \
