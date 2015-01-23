@@ -222,22 +222,21 @@ ThreadedMPIScheduler::createSubScheduler()
 
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
-  // create subscheduler task execution threads
+  Thread::self()->set_myid(0);
+
   if (subsched->numThreads_ > 0) {
+
     std::string plural = (numThreads_ == 1) ? " thread" : " threads";
-    std::cout << "\n"
+    proc0cout << "\n"
               << "   Using multi-threaded sub-scheduler\n"
               << "   WARNING: Component tasks must be thread safe.\n"
               << "   Using 1 thread for scheduling.\n"
-              << "   Creating " << subsched->numThreads_ << plural << " for task execution.\n\n"<< std::endl;
-
-    char name[1024];
+              << "   Creating " << subsched->numThreads_ << plural << " for task execution.\n\n" << std::endl;
 
     // Bind main subscheduler execution thread
     if (threadedmpi_affinity.active()) {
-      Thread::self()->set_myid(0);
-      if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-        threadedmpi_threaddbg << "Binding main subscheduler thread ID " <<  Thread::self()->myid() << " to CPU core 0" << "\n";
+      if ((threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0)) {
+        threadedmpi_threaddbg << "Binding main subscheduler thread ID " << Thread::self()->myid() << " to CPU core 0" << "\n";
       }
       Thread::self()->set_affinity(0);  // bind main subscheduler thread to core 0
     }
@@ -247,6 +246,7 @@ ThreadedMPIScheduler::createSubScheduler()
     }
 
     // Create UnifiedWorker threads for the subscheduler
+    char name[1024];
     ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
       TaskWorker* worker = scinew TaskWorker(subsched, i);
