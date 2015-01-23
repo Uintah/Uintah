@@ -247,7 +247,7 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   // Bind main execution thread
   if (unified_affinity.active()) {
     if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-      unified_threaddbg << "   Binding main thread (ID 0) to CPU core 0" << "\n";
+      unified_threaddbg << "   Binding main thread ID "<<  Thread::self()->myid() << " to CPU core 0" << "\n";
     }
     Thread::self()->set_affinity(0);  // CPU -bind main thread to core 0
   }
@@ -292,17 +292,29 @@ UnifiedScheduler::createSubScheduler()
 
     char name[1024];
 
+    // Bind main subscheduler execution thread
+    if (unified_affinity.active()) {
+      Thread::self()->set_myid(0);
+      if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+        unified_threaddbg << "Binding main subscheduler thread ID " <<  Thread::self()->myid() << " to CPU core 0" << "\n";
+      }
+      Thread::self()->set_affinity(0);  // CPU -bind main thread to core 0
+    }
+
+    if (unified_miccompactaffinity.active()) {
+      Thread::self()->set_affinity(242);  // MIC - bind main thread to core 242
+    }
+
     // Create UnifiedWorker threads for the subscheduler
     ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
-      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i + subsched->numThreads_);
+      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i);
       subsched->t_worker[i] = worker;
       sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
       Thread* t = scinew Thread(worker, name, subGroup);
       subsched->t_thread[i] = t;
     }
   }
-
   return subsched;
 }
 
@@ -2044,7 +2056,8 @@ UnifiedSchedulerWorker::run()
   if (unified_affinity.active()) {
     if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
-      unified_threaddbg << "Binding thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : "";
+      unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
       cerrLock.unlock();
     }
     Thread::self()->set_affinity(d_thread_id + 1);

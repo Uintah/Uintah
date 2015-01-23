@@ -186,7 +186,7 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   // Bind main execution thread
   if (threadedmpi_affinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-      threadedmpi_threaddbg << "   Binding main thread (ID 0) to CPU core 0" << "\n";
+      threadedmpi_threaddbg << "   Binding main thread ID "<<  Thread::self()->myid() << " to CPU core 0" << "\n";
     }
     Thread::self()->set_affinity(0);  // CPU -bind main thread to core 0
   }
@@ -207,10 +207,6 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-
-  if (threadedmpi_affinity.active()) {
-    Thread::self()->set_affinity(0);    // CPU - bind main thread to core 0
-  }
 }
 
 //______________________________________________________________________
@@ -237,25 +233,29 @@ ThreadedMPIScheduler::createSubScheduler()
 
     char name[1024];
 
-    // Create UnifiedWorker threads for the subscheduler
-    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
-    for (int i = 0; i < subsched->numThreads_; i++) {
-      TaskWorker* worker = scinew TaskWorker(subsched, i + subsched->numThreads_);
-      subsched->t_worker[i] = worker;
-      sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-      Thread* t = scinew Thread(worker, name, subGroup);
-      subsched->t_thread[i] = t;
-    }
-
+    // Bind main subscheduler execution thread
     if (threadedmpi_affinity.active()) {
-      Thread::self()->set_affinity(0);    // CPU - bind main thread to core 0
+      Thread::self()->set_myid(0);
+      if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+        threadedmpi_threaddbg << "Binding main subscheduler thread ID " <<  Thread::self()->myid() << " to CPU core 0" << "\n";
+      }
+      Thread::self()->set_affinity(0);  // bind main subscheduler thread to core 0
     }
 
     if (threadedmpi_miccompactaffinity.active()) {
       Thread::self()->set_affinity(242);  // MIC - bind main thread to core 242
     }
-  }
 
+    // Create UnifiedWorker threads for the subscheduler
+    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
+    for (int i = 0; i < subsched->numThreads_; i++) {
+      TaskWorker* worker = scinew TaskWorker(subsched, i);
+      subsched->t_worker[i] = worker;
+      sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
+      Thread* t = scinew Thread(worker, name, subGroup);
+      subsched->t_thread[i] = t;
+    }
+  }
   return subsched;
 }
 
@@ -805,6 +805,8 @@ TaskWorker::TaskWorker( ThreadedMPIScheduler* scheduler,
 void
 TaskWorker::run()
 {
+  // t_worker[] is 0-based, but IDs need to be offset by 1 to account for the main thread, ID=0
+
   // set thread ID
   Thread::self()->set_myid(d_thread_id + 1);
 
@@ -812,7 +814,8 @@ TaskWorker::run()
   if (threadedmpi_affinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
-      threadedmpi_threaddbg << "Binding thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : "";
+      threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id + 1 << " to CPU core " << d_thread_id + 1 << "\n";
       cerrLock.unlock();
     }
     Thread::self()->set_affinity(d_thread_id + 1);
