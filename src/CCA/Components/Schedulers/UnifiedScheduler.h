@@ -42,10 +42,8 @@ class UnifiedSchedulerWorker;
 CLASS
    UnifiedScheduler
    
-   Multi-threaded MPI scheduler with GPU support
 
 GENERAL INFORMATION
-
    UnifiedScheduler.h
 
    Qingyu Meng & Alan Humphrey
@@ -54,7 +52,7 @@ GENERAL INFORMATION
 
    
 KEYWORDS
-   Task Scheduler, Multi-threaded, CPU, GPU, MIC
+   Task Scheduler, Multi-threaded MPI, CPU, GPU, MIC
 
 DESCRIPTION
    A multi-threaded scheduler that uses a combination of MPI + Pthreads
@@ -74,13 +72,14 @@ WARNING
    Requires MPI THREAD MULTIPLE support.
   
 ****************************************/
-  class UnifiedScheduler : public MPIScheduler  {
+
+class UnifiedScheduler : public MPIScheduler  {
 
   public:
 
     UnifiedScheduler( const ProcessorGroup* myworld, const Output* oport, UnifiedScheduler* parentScheduler = 0 );
 
-    ~UnifiedScheduler();
+    virtual ~UnifiedScheduler();
     
     virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
       
@@ -90,32 +89,21 @@ WARNING
     
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
     
-    virtual void initiateTask( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
-
     virtual void runTask( DetailedTask* task, int iteration, int thread_id, Task::CallBackEvent event );
 
             void runTasks( int thread_id );
-     
-            void postMPISends( DetailedTask* task, int iteration, int thread_id );
 
-    virtual void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
+    friend class UnifiedSchedulerWorker;
 
-    virtual void processMPIRecvs(int how_much);
-
-    int  pendingMPIRecvs();
+  protected:
 
     ConditionVariable        d_nextsignal;           // conditional wait mutex
     Mutex                    d_nextmutex;            // mutex
     UnifiedSchedulerWorker*  t_worker[MAX_THREADS];  // the workers
     Thread*                  t_thread[MAX_THREADS];  // the threads themselves
 
-    // NOTE: these are not recursive
-    Mutex                    dlbLock;                // load balancer lock
+    // NOTE: A Mutex is not recursive
     Mutex                    schedulerLock;          // scheduler lock (acquire and release quickly)
-    Mutex                    waittimesLock;          // MPI wait times lock
-
-    // multiple reader, single writer lock (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor     recvLock;               // CommRecMPI recvs lock
 
 #ifdef HAVE_CUDA
 
@@ -138,16 +126,15 @@ WARNING
     bool  abort;
     int   abort_point;
 
-  protected:
-
-    virtual void verifyChecksum();
-
   private:
     
+    // Disable copy and assignment
+    UnifiedScheduler( const UnifiedScheduler& );
+    UnifiedScheduler& operator=( const UnifiedScheduler& );
+
     int getAviableThreadNum();
 
-    UnifiedScheduler(const UnifiedScheduler&);
-    UnifiedScheduler& operator=(const UnifiedScheduler&);
+    int  pendingMPIRecvs();
 
     const Output*  oport_t;
     CommRecMPI     sends_[MAX_THREADS];
@@ -184,7 +171,7 @@ WARNING
     mutable CrowdMonitor h2dRequiresLock_;
 
 #endif
-  };
+};
 
 
 class UnifiedSchedulerWorker : public Runnable {
@@ -193,33 +180,32 @@ public:
   
   UnifiedSchedulerWorker( UnifiedScheduler* scheduler, int thread_id );
 
-  void assignTask( DetailedTask* task, int iteration);
+  void assignTask( DetailedTask* task, int iteration );
 
   DetailedTask* getTask();
 
   void run();
 
-  void quit(){d_quit=true;};
+  void quit() { d_quit=true; };
 
   double getWaittime();
 
-  void resetWaittime(double start);
+  void resetWaittime( double start );
   
   friend class UnifiedScheduler;
 
-
 private:
 
-  int                    d_thread_id;
   UnifiedScheduler*      d_scheduler;
-  bool                   d_idle;
-  Mutex                  d_runmutex;
+  CommRecMPI             d_sends_;
   ConditionVariable      d_runsignal;
+  Mutex                  d_runmutex;
   bool                   d_quit;
+  bool                   d_idle;
+  int                    d_thread_id;
+  int                    d_rank;
   double                 d_waittime;
   double                 d_waitstart;
-  int                    d_rank;
-  CommRecMPI             d_sends_;
 };
 
 } // End namespace Uintah

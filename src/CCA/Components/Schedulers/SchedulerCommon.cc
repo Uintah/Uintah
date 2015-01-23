@@ -24,28 +24,28 @@
 
 #include <TauProfilerForSCIRun.h>
 
-#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
-#include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
-#include <CCA/Ports/Output.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
 #include <CCA/Ports/SimulationInterface.h>
 
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Grid/Task.h>
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Grid/Task.h>
+#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -54,15 +54,15 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
+#include <cerrno>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <cerrno>
 #include <sstream>
-#include <string>
 #include <map>
+#include <string>
 #include <vector>
-#include <cstdlib>
 
 #include <time.h>
 
@@ -222,6 +222,7 @@ SchedulerCommon::useInternalDeps()
   // the taskgraphs (by default).
   return emit_taskgraph;
 }
+
 //______________________________________________________________________
 //
 void
