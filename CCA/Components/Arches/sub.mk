@@ -57,7 +57,6 @@ SRCS += $(SRCDIR)/Arches.cc                    \
         $(SRCDIR)/Source.cc                    \
         $(SRCDIR)/TurbulenceModel.cc           \
         $(SRCDIR)/TurbulenceModelPlaceholder.cc 
-        
 
 ifeq ($(HAVE_CUDA),yes)
   SRCS += $(SRCDIR)/constructLinearSystemKernel.cu
@@ -107,6 +106,7 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) \
 INCLUDES := $(INCLUDES) $(BOOST_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) $(SPATIALOPS_INCLUDE)
 
 #### Handle subdirs (These files are just 'included' into the build of libCCA_Components_Arches.so)
+
 SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/CoalModels          \
            $(SRCDIR)/CoalModels/fortran  \
@@ -115,6 +115,7 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/Operators           \
            $(SRCDIR)/ParticleModels      \
            $(SRCDIR)/PropertyModels      \
+           $(SRCDIR)/PropertyModelsV2    \
            $(SRCDIR)/Radiation           \
            $(SRCDIR)/Radiation/fortran   \
            $(SRCDIR)/SourceTerms         \
@@ -122,8 +123,8 @@ SUBDIRS := $(SRCDIR)/ChemMix             \
            $(SRCDIR)/Transport           \
            $(SRCDIR)/TransportEqns       \
            $(SRCDIR)/Utility             \
-					 $(SRCDIR)/PropertyModelsV2 \
            $(SRCDIR)/WallHTModels        
+
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs
@@ -139,31 +140,31 @@ SUBDIRS := $(SRCDIR)/fortran
 include $(SCIRUN_SCRIPTS)/recurse.mk
 #### End handle subdirs
 
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mmbcvelocity_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_computevel_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_explicit_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_explicit_oldvalue_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/mm_explicit_vel_fort.h
-$(SRCDIR)/CellInformation.$(OBJEXT): $(SRCDIR)/fortran/cellg_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/prescoef_var_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_central_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_upwind_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/uvelcoef_mixed_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_central_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_upwind_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/vvelcoef_mixed_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_central_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_upwind_fort.h
-$(SRCDIR)/Discretization.$(OBJEXT): $(SRCDIR)/fortran/wvelcoef_mixed_fort.h
-$(SRCDIR)/SmagorinskyModel.$(OBJEXT): $(SRCDIR)/fortran/smagmodel_fort.h
-$(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/pressrcpred_fort.h
-$(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/pressrcpred_var_fort.h
-$(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/uvelsrc_fort.h
-$(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/vvelsrc_fort.h
-$(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/wvelsrc_fort.h
+$(SRCDIR)/BoundaryCondition.$(OBJEXT) : $(SRCDIR)/fortran/mmbcvelocity_fort.h
+$(SRCDIR)/BoundaryCondition.$(OBJEXT) : $(SRCDIR)/fortran/mm_computevel_fort.h
+$(SRCDIR)/BoundaryCondition.$(OBJEXT) : $(SRCDIR)/fortran/mm_explicit_fort.h
+$(SRCDIR)/BoundaryCondition.$(OBJEXT) : $(SRCDIR)/fortran/mm_explicit_oldvalue_fort.h
+$(SRCDIR)/BoundaryCondition.$(OBJEXT) : $(SRCDIR)/fortran/mm_explicit_vel_fort.h
+$(SRCDIR)/CellInformation.$(OBJEXT)   : $(SRCDIR)/fortran/cellg_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/prescoef_var_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/uvelcoef_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/uvelcoef_central_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/uvelcoef_upwind_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/uvelcoef_mixed_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/vvelcoef_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/vvelcoef_central_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/vvelcoef_upwind_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/vvelcoef_mixed_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/wvelcoef_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/wvelcoef_central_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/wvelcoef_upwind_fort.h
+$(SRCDIR)/Discretization.$(OBJEXT)    : $(SRCDIR)/fortran/wvelcoef_mixed_fort.h
+$(SRCDIR)/SmagorinskyModel.$(OBJEXT)  : $(SRCDIR)/fortran/smagmodel_fort.h
+$(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/pressrcpred_fort.h
+$(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/pressrcpred_var_fort.h
+$(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/uvelsrc_fort.h
+$(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/vvelsrc_fort.h
+$(SRCDIR)/Source.$(OBJEXT)            : $(SRCDIR)/fortran/wvelsrc_fort.h
 
 ##############################################
 # DigitalFilterGenerator
