@@ -38,7 +38,6 @@ CLASS
    
 
 GENERAL INFORMATION
-
    DynamicMPIScheduler.h
 
    Steven G. Parker
@@ -61,25 +60,24 @@ DESCRIPTION
 class DynamicMPIScheduler : public MPIScheduler {
 
   public:
-    DynamicMPIScheduler(const ProcessorGroup* myworld,
-                        const Output* oport,
-                              DynamicMPIScheduler* parentScheduler = 0);
+
+    DynamicMPIScheduler( const ProcessorGroup* myworld, const Output* oport, DynamicMPIScheduler* parentScheduler = 0 );
 
     virtual ~DynamicMPIScheduler();
 
-    virtual void problemSetup(const ProblemSpecP& prob_spec,
-                                    SimulationStateP& state);
+    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
 
     virtual SchedulerP createSubScheduler();
 
-    virtual void execute(int tgnum = 0,
-                         int iteration = 0);
+    virtual void execute( int tgnum = 0, int iteration = 0 );
     
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
     
   private:
-    DynamicMPIScheduler(const DynamicMPIScheduler&);
-    DynamicMPIScheduler& operator=(const DynamicMPIScheduler&);
+
+    // Disable copy and assignment
+    DynamicMPIScheduler( const DynamicMPIScheduler& );
+    DynamicMPIScheduler& operator=( const DynamicMPIScheduler& );
 
     QueueAlg taskQueueAlg_;
 };

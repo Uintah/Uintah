@@ -42,83 +42,80 @@ class TaskWorker;
 
 
  GENERAL INFORMATION
-
    ThreadedMPIScheduler.h
+
+   Qingyu Meng & Alan Humphrey
+   Scientific Computing and Imaging Institute
+   University of Utah
 
 
  KEYWORDS
-  Multi-threaded MPI Scheduler
+   Task Scheduler, Multi-threaded MPI
 
 
  DESCRIPTION
-  This Scheduler using a shared memory model on-node, that is, 1 MPI process per node and "-nthreads"
-  number of Pthreads to execute tasks on available CPU cores.
+   A multi-threaded MPI scheduler that uses a combination of MPI + Pthreads, with dynamic
+   scheduling with non-deterministic, out-of-order execution of tasks at runtime. One
+   MPI rank per multi-core node. Pthreads are pinned to individual CPU cores where
+   tasks are executed. Uses a centralized model using 1 control thread and "nthreads − 1"
+   task execution threads. The control thread assigns tasks and processes MPI receives.
+   Threads have shared access to the DataWarehouse.
+
+   This Scheduler using a shared memory model on-node, that is, 1 MPI process per node and "-nthreads"
+   number of Pthreads to execute tasks on available CPU cores.
 
 
  WARNING
    Tasks must be thread-safe when using this Scheduler.
+   Requires MPI THREAD MULTIPLE support.
 
  ****************************************/
+
 class ThreadedMPIScheduler : public MPIScheduler {
 
   public:
 
-    ThreadedMPIScheduler(const ProcessorGroup* myworld,
-                         const Output* oport,
-                         ThreadedMPIScheduler* parentScheduler = 0);
+    ThreadedMPIScheduler( const ProcessorGroup* myworld, const Output* oport, ThreadedMPIScheduler* parentScheduler = 0 );
 
-    ~ThreadedMPIScheduler();
+    virtual ~ThreadedMPIScheduler();
 
-    virtual void problemSetup(const ProblemSpecP& prob_spec,
-                              SimulationStateP& state);
+    virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
 
     virtual SchedulerP createSubScheduler();
 
-    virtual void execute(int tgnum = 0,
-                         int iteration = 0);
+    virtual void execute( int tgnum = 0, int iteration = 0 ) ;
 
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
 
-    void runTask(DetailedTask* task,
-                 int iteration,
-                 int t_id = 0);
-
-    void postMPISends(DetailedTask* task,
-                      int iteration,
-                      int t_id);
-
-    void assignTask(DetailedTask* task,
-                    int iteration);
+            void assignTask( DetailedTask* task, int iteration );
 
     ConditionVariable d_nextsignal;
-    Mutex             d_nextmutex;             //conditional wait mutex
-    TaskWorker*       t_worker[MAX_THREADS];  //workers
-    Thread*           t_thread[MAX_THREADS];
-    Mutex             dlbLock;                //load balancer lock
+    Mutex             d_nextmutex;             // conditional wait mutex
+    TaskWorker*       t_worker[MAX_THREADS];   // workers
+    Thread*           t_thread[MAX_THREADS];   // actual threads
 
   private:
 
+    // Disable copy and assignment
+    ThreadedMPIScheduler( const ThreadedMPIScheduler& );
+    ThreadedMPIScheduler& operator=( const ThreadedMPIScheduler& );
+
     Output*    oport_t;
     CommRecMPI sends_[MAX_THREADS];
-    
-    // Disable copy and assignment
-    ThreadedMPIScheduler(const ThreadedMPIScheduler&);
-    ThreadedMPIScheduler& operator=(const ThreadedMPIScheduler&);
+    QueueAlg   taskQueueAlg_;
+    int        numThreads_;
 
-    QueueAlg taskQueueAlg_;
-    int      numThreads_;
     int getAviableThreadNum();
 };
+
 
 class TaskWorker : public Runnable {
 
   public:
 
-    TaskWorker(ThreadedMPIScheduler* scheduler,
-               int id);
+    TaskWorker( ThreadedMPIScheduler* scheduler, int thread_id ) ;
 
-    void assignTask(DetailedTask* task,
-                    int iteration);
+    void assignTask( DetailedTask* task, int iteration );
 
     DetailedTask* getTask();
 
@@ -128,23 +125,23 @@ class TaskWorker : public Runnable {
 
     double getWaittime();
 
-    void resetWaittime(double start);
+    void resetWaittime( double start );
 
     friend class ThreadedMPIScheduler;
 
   private:
 
-    int d_id;
     ThreadedMPIScheduler* d_scheduler;
     DetailedTask*         d_task;
-    int                   d_iteration;
-    Mutex                 d_runmutex;
-    ConditionVariable     d_runsignal;
-    bool                  d_quit;
     CommRecMPI            d_sends_;
+    ConditionVariable     d_runsignal;
+    Mutex                 d_runmutex;
+    bool                  d_quit;
+    int                   d_thread_id;
+    int                   d_rank;
+    int                   d_iteration;
     double                d_waittime;
     double                d_waitstart;
-    int                   d_rank;
 };
 
 }  // End namespace Uintah

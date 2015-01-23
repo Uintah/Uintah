@@ -42,7 +42,7 @@
 
 namespace Uintah {
 
-static DebugStream mpi_stats("MPIStats",false);
+static DebugStream mpi_stats("MPIStats", false);
 
 class Task;
 
@@ -84,11 +84,12 @@ DESCRIPTION
   
 ****************************************/
 
-  class MPIScheduler : public SchedulerCommon {
+class MPIScheduler : public SchedulerCommon {
 
   public:
 
     MPIScheduler( const ProcessorGroup* myworld, const Output* oport, MPIScheduler* parentScheduler = 0 );
+
     virtual ~MPIScheduler();
       
     virtual void problemSetup( const ProblemSpecP& prob_spec, SimulationStateP& state );
@@ -96,21 +97,18 @@ DESCRIPTION
     virtual void execute( int tgnum = 0, int iteration = 0 );
 
     virtual SchedulerP createSubScheduler();
-    
 
-    enum { TEST, WAIT_ONCE, WAIT_ALL};
+    virtual void processMPIRecvs( int how_much );
 
-    virtual void processMPIRecvs(int how_much);    
+            void postMPISends( DetailedTask* task, int iteration, int thread_id = 0 );
 
-            void postMPISends( DetailedTask* task, int iteration );
-    virtual void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
+            void postMPIRecvs( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
-    virtual void runTask( DetailedTask* task, int iteration );
-    virtual void runReductionTask( DetailedTask* task);        
+            void runTask( DetailedTask* task, int iteration, int thread_id = 0 );
 
-    void addToSendList( const MPI_Request& request, int bytes, AfterCommunicationHandler* buf, const std::string& var );
+    virtual void runReductionTask( DetailedTask* task );
 
-    // get the processor group executing with (only valid during execute())
+    // get the processor group this scheduler is executing with (only valid during execute())
     const ProcessorGroup* getProcessorGroup() { return d_myworld; }
     
     void compile() {
@@ -143,42 +141,48 @@ DESCRIPTION
     MPIScheduler*       parentScheduler_;
 
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
-    virtual void initiateReduction( DetailedTask* task);
+    virtual void initiateReduction( DetailedTask* task );
+
+    enum { TEST, WAIT_ONCE, WAIT_ALL };
 
   protected:
 
-    // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask* task, bool only_old_recvs, int abort_point, int iteration );
 
-
-    // Waits until all tasks have finished.  In the MPI Scheduler,
-    // this is basically a nop, for the mixed, it talks to the ThreadPool 
-    // and waits until the threadpool in empty (ie: all tasks done.)
-    virtual void wait_till_all_done();
-    
     virtual void verifyChecksum();
 
     void emitTime( const char* label );
+
     void emitTime( const char* label, double time );
 
     MessageLog                  log;
     const Output*               oport_;
-    CommRecMPI                  sends_;
+    CommRecMPI                  sends_[MAX_THREADS];
     CommRecMPI                  recvs_;
 
     double                      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
-    std::ofstream               timingStats, minStats, maxStats, avgStats;
+    std::ofstream               timingStats, maxStats, avgStats;
 
     unsigned int                numMessages_;
     double                      messageVolume_;
 
+    //-------------------------------------------------------------------------
+    // The following locks are for multi-threaded schedulers that derive from MPIScheduler
+    //   This eliminates miles of unnecessarily redundant code
+    //-------------------------------------------------------------------------
+    // multiple reader, single writer lock (pthread_rwlock_t wrapper)
+    mutable CrowdMonitor        recvLock;               // CommRecMPI recvs lock
+    Mutex                       dlbLock;                // load balancer lock
+    Mutex                       waittimesLock;          // MPI wait times lock
+
   private:
 
-    MPIScheduler(const MPIScheduler&);
-    MPIScheduler& operator=(const MPIScheduler&);
-  };
+    // Disable copy and assignment
+    MPIScheduler( const MPIScheduler& );
+    MPIScheduler& operator=( const MPIScheduler& );
+};
 
 } // End namespace Uintah
    

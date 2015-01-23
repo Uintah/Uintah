@@ -43,14 +43,14 @@
 #include <Core/Thread/Parallel2.h>
 #include <Core/Thread/Parallel3.h>
 
-#define MAX_THREADS 241
+#define MAX_THREADS 64
 
 namespace SCIRun {
 
   struct Thread_private;
-  class ParallelBase;
-  class Runnable;
-  class ThreadGroup;
+  class  ParallelBase;
+  class  Runnable;
+  class  ThreadGroup;
 	
 /**************************************
  
