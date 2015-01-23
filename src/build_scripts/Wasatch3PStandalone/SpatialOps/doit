@@ -7,7 +7,7 @@ source ../HelperBuildScripts/setupEnv.sh
 rm -f CMakeCache.txt
 rm -rf ${INSTALL_HERE}/*
 
-/uufs/chpc.utah.edu/sys/pkg/cmake/2.8.9/bin/cmake \
+cmake \
   -DBOOST_ROOT=$BOOST_LOC \
   -DCMAKE_INSTALL_PREFIX=${INSTALL_HERE} \
   -DCMAKE_C_COMPILER=$CC \

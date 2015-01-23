@@ -4,11 +4,10 @@ Wasatch3P libraries outside of Uintah.  This set of scripts is stored in the Uin
 SVN repository under src/build_scripts/Wasatch3PStandalone/.  It should be checked
 out into the Wasatch3P git directory using:
 
-[ Might need --force to get it to insert itself into the directory structure that
-  is already in place. ]
+svn co --force https://gforge.sci.utah.edu/svn/uintah/trunk/src/build_scripts/Wasatch3PStandalone .
 
-svn co https://gforge.sci.utah.edu/svn/uintah/trunk/src/build_scripts/Wasatch3PStandalone .
-
+This will add "doit" files to the SpatialOps, ExprLib, TabProps, and RadProps directories, in 
+addition to adding the HelperBuildScripts directory.
 
 It builds the W3P in this order:
 
