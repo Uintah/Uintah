@@ -364,6 +364,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pStressLabel);
+  t->computes(lb->pRefinedLabel);
   t->computes(lb->pCellNAPIDLabel);
   if(flags->d_artificial_viscosity){
     t->computes(lb->p_qLabel);        //  only used for imp -> exp transition
