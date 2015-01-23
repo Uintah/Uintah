@@ -65,7 +65,8 @@ SRCS   += \
         $(SRCDIR)/Arenisca3.cc                  \
         $(SRCDIR)/Arenisca4.cc                  \
         $(SRCDIR)/ReactiveFlow.cc               \
-        $(SRCDIR)/ReactiveFlow2.cc
+        $(SRCDIR)/ReactiveFlow2.cc              \
+        $(SRCDIR)/ReactiveFlow3.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
