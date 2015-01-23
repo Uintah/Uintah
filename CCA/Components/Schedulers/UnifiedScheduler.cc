@@ -283,18 +283,17 @@ UnifiedScheduler::createSubScheduler()
 
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
-  // create subscheduler task execution threads
+  Thread::self()->set_myid(0);
+
   if (subsched->numThreads_ > 0) {
-    std::cout << "\n"
+
+    proc0cout << "\n"
               << "   Using EXPERIMENTAL multi-threaded sub-scheduler\n"
               << "   WARNING: Component tasks must be thread safe.\n"
               << "   Creating " << subsched->numThreads_ << " subscheduler threads for task execution.\n\n" << std::endl;
 
-    char name[1024];
-
     // Bind main subscheduler execution thread
     if (unified_affinity.active()) {
-      Thread::self()->set_myid(0);
       if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
         unified_threaddbg << "Binding main subscheduler thread ID " <<  Thread::self()->myid() << " to CPU core 0" << "\n";
       }
@@ -306,6 +305,7 @@ UnifiedScheduler::createSubScheduler()
     }
 
     // Create UnifiedWorker threads for the subscheduler
+    char name[1024];
     ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
       UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i);
