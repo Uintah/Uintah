@@ -715,6 +715,7 @@ DQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -745,10 +746,12 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> phi;    // phi @ current sub-level 
     constCCVariable<double> RHS; 
     constCCVariable<double> rk1_phi; // phi @ n for averaging 
+    constCCVariable<double> vol_fraction; 
 
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
+    old_dw->get(vol_fraction, d_fieldLabels->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
     d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt, curr_ssp_time, d_eqnName );
 
@@ -757,12 +760,14 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     if(d_weight){
         // weights being clipped inside this function call
-        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high );
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, 
+            clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, vol_fraction );
     }else{
         constCCVariable<double> w;
         new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
         // weighted abscissa being clipped inside this function call 
-        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, w); 
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, 
+            clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, w, vol_fraction); 
     }
 
     //----BOUNDARY CONDITIONS
