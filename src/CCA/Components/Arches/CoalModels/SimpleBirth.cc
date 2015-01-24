@@ -171,6 +171,7 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
 
   tsk->requires(Task::NewDW, _w_rhs_label, Ghost::None, 0); 
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
+  tsk->requires(Task::OldDW, VarLabel::find("volFraction"), Ghost::None, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -219,9 +220,11 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
     constCCVariable<double> w; 
     constCCVariable<double> w_rhs; 
     constCCVariable<double> a; 
+    constCCVariable<double> vol_fraction; 
 
     which_dw->get( w, _w_label, matlIndex, patch, Ghost::None, 0 ); 
     new_dw->get( w_rhs, _w_rhs_label, matlIndex, patch, Ghost::None, 0 ); 
+    old_dw->get( vol_fraction, VarLabel::find("volFraction"), matlIndex, patch, Ghost::None, 0 ); 
     if ( !_is_weight ){ 
       which_dw->get( a, _abscissa_label, matlIndex, patch, Ghost::None, 0 ); 
     }
@@ -230,19 +233,28 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
 
       IntVector c = *iter;
 
-      double balance = ( _small_weight - w[c] ) / dt - w_rhs[c] / vol;
+      if ( vol_fraction[c] > 0. ){ 
 
-      balance = std::max(balance, 0.0); 
-      
-      if ( _is_weight ){ 
+        double balance = ( _small_weight - w[c] ) / dt - w_rhs[c] / vol;
 
-        model[c] = balance; 
+        balance = std::max(balance, 0.0); 
+
+        if ( _is_weight ){ 
+
+          model[c] = balance; 
+
+        } else { 
+
+          model[c] = a[c]/_a_scale * balance; 
+
+        }
 
       } else { 
 
-        model[c] = a[c]/_a_scale * balance; 
+        model[c] = 0.0; 
 
       }
+
       gas_source[c] = 0.0;
 
     }
