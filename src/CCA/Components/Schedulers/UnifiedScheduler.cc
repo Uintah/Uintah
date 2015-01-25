@@ -70,12 +70,11 @@ extern std::map<std::string, double> exectimes;
 
 static double Unified_CurrentWaitTime = 0;
 
-static DebugStream unified_dbg(               "Unified_DBG",                false);
-static DebugStream unified_timeout(           "Unified_TimingsOut",         false);
-static DebugStream unified_queuelength(       "Unified_QueueLength",        false);
-static DebugStream unified_threaddbg(         "Unified_ThreadDBG",          false);
-static DebugStream unified_affinity(          "Unified_CPUAffinity",        true);
-static DebugStream unified_miccompactaffinity("Unified_MICCompactAffinity", false);
+static DebugStream unified_dbg(             "Unified_DBG",             false);
+static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
+static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
+static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
+static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
   static DebugStream gpu_stats(        "Unified_GPUStats",     false);
@@ -245,16 +244,12 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 
   // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
   Thread::self()->set_myid(numThreads_);
-  if (unified_affinity.active()) {
+  if (unified_compactaffinity.active()) {
     if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
-                        << ") to CPU core " << numThreads_ << "\n";
+                        << ") to CPU/MIC core " << numThreads_ << "\n";
     }
-    Thread::self()->set_affinity(numThreads_);  // CPU -bind main thread to last physical core
-  }
-
-  if (unified_miccompactaffinity.active()) {
-    Thread::self()->set_affinity(1);            // MIC - bind main thread to core 1
+    Thread::self()->set_affinity(numThreads_);  // CPU/MIC - bind main thread to last physical core
   }
 
   // Create the UnifiedWorkers here (pinned to cores in UnifiedSchedulerWorker::run())
@@ -294,17 +289,13 @@ UnifiedScheduler::createSubScheduler()
               << "   Creating " << subsched->numThreads_ << " subscheduler threads for task execution.\n\n" << std::endl;
 
     // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
-    if (unified_affinity.active()) {
+    if (unified_compactaffinity.active()) {
       if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
         unified_threaddbg << "Binding main subscheduler thread (ID "
-                          << Thread::self()->myid() << ") to CPU core "
+                          << Thread::self()->myid() << ") to CPU/MIC core "
                           << subsched->numThreads_ << "\n";
       }
-      Thread::self()->set_affinity(numThreads_);  // CPU - bind main subscheduler thread to last physical core
-    }
-
-    if (unified_miccompactaffinity.active()) {
-      Thread::self()->set_affinity(242);          // MIC - bind main thread to core 242
+      Thread::self()->set_affinity(numThreads_);  // CPU/MIC - bind main subscheduler thread to last physical core
     }
 
     // Create UnifiedWorker threads for the subscheduler
@@ -2054,25 +2045,15 @@ UnifiedSchedulerWorker::run()
   // set thread ID
   Thread::self()->set_myid(d_thread_id);
 
-  // CPU
-  if (unified_affinity.active()) {
+  // CPU/MIC compact affinity
+  if (unified_compactaffinity.active()) {
     if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
-      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : "";
-      unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to CPU core " << d_thread_id << "\n";
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+      unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to CPU/MIC core " << d_thread_id << "\n";
       cerrLock.unlock();
     }
     Thread::self()->set_affinity(d_thread_id);
-  }
-
-  // MIC
-  if (unified_miccompactaffinity.active()) {
-    Thread::self()->set_affinity(d_thread_id + 2);
-    if (unified_threaddbg.active()) {
-      cerrLock.lock();
-      unified_threaddbg << "Binding thread ID " << d_thread_id << " to CPU core " << d_thread_id << "\n";
-      cerrLock.unlock();
-    }
   }
 
   while( true ) {

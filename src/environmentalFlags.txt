@@ -68,11 +68,9 @@ ThreadedMPI_TimingsOut          SCI_DEBUG     Outputs fine-grained communication
                                                 e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
 ThreadedMPI_QueueLength         SCI_DEBUG     Prints the average task queue length
 ThreadedMPI_ThreadDBG           SCI_DEBUG     Prints thread pinning information
-ThreadedMPI_CPUAffinity         SCI_DEBUG     Binds the main thread to core 0 and TaskWorkers to core <Uintah thread id>
-                                              	NOTE: This is ENABLED by default
-ThreadedMPI_MICCompactAffinity  SCI_DEBUG     Binds the main thread to core 242 and TaskWorkers to core <Uintah thread id>
-                                                NOTE: The main thread is placed such that it shares the physical core
-                                                      containing core 0, which is reserved for the Xeon Phi OS
+ThreadedMPI_CompactAffinity     SCI_DEBUG     Binds the main thread to core <nthreads-1> and TaskWorkers to core <Uintah thread id>
+                                                NOTE: This is ENABLED by default. This affinity pattern is modeled after OpenMP's compact 
+                                                      affinity, which binds threads incrementally across logical cores. 
 
 UnifiedScheduler Related:
 __________________________________
@@ -81,12 +79,9 @@ Unified_TimingsOut         SCI_DEBUG     Outputs fine-grained communication timi
                                            e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
 Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
 Unified_ThreadDBG          SCI_DEBUG     Prints thread pinning information
-Unified_CPUAffinity        SCI_DEBUG     Binds the main thread to core 0 and UnifiedWorkers to core <Uintah thread id>
-                                           NOTE: This is ENABLED by default
-Unified_MICCompactAffinity SCI_DEBUG     Binds the main thread to core 1 and UnifiedWorkers to core <Uintah thread id + 1>
-                                           NOTE: Since it can execute tasks, the main thread has been placed such that 
-                                                 it avoids the physical core containing core 0, which is reserved for 
-                                                 the Xeon Phi OS
+Unified_CompactAffinity    SCI_DEBUG     Binds the main thread to core <nthreads-1> and UnifiedWorkers to core <Uintah thread id>
+                                           NOTE: This is ENABLED by default. This affinity pattern is modeled after OpenMP's compact 
+                                                 affinity, which binds threads incrementally across logical cores. 
 
 
 GPU Related:
