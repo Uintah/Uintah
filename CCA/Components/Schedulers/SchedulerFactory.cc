@@ -31,8 +31,8 @@
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
 
@@ -43,9 +43,9 @@
 using namespace Uintah;
 
 // Enable specific schedulers via environment variable
-static DebugStream SingleProcessor("SingleProcessor", false);
-static DebugStream DynamicMPI(     "DynamicMPI",      false);
-static DebugStream ThreadedMPI(    "ThreadedMPI",     false);
+static DebugStream singleProcessor("SingleProcessorScheduler", false);
+static DebugStream dynamicMPI(     "DynamicMPIScheduler",      false);
+static DebugStream unified(        "UnifiedScheduler",         false);
 
 SchedulerCommon*
 SchedulerFactory::create(const ProblemSpecP&   ps,
@@ -64,30 +64,30 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
   if (scheduler == "") {
     if (Uintah::Parallel::usingMPI()) {
       if (!(Uintah::Parallel::getNumThreads() > 0)) {
-        if (SingleProcessor.active()) {
+        if (singleProcessor.active()) {
           throw ProblemSetupException("Cannot use Single Processor Scheduler with MPI.", __FILE__, __LINE__);
         }
-        else if (DynamicMPI.active()) {
+        else if (dynamicMPI.active()) {
           scheduler = "DynamicMPI";
         }
         else {
           scheduler = "MPI";
         }
       }
-      else if (ThreadedMPI.active()) {
-        scheduler = "ThreadedMPI";
+      else if (unified.active()) {
+        scheduler = "Unified";
       }
       else {
-        scheduler = "Unified";
+        scheduler = "ThreadedMPI";
       }
     }
     else {
-      if (SingleProcessor.active()) {
+      if (singleProcessor.active()) {
         scheduler = "SingleProcessor";
       }
       else {
         // Defaults are: MPI (w/o threads) and Unified (with threads)
-        scheduler = "Unified";
+        scheduler = "ThreadedMPI";
       }
     }
   }
@@ -110,11 +110,11 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
   }
   else {
     sch = 0;
-    std::string error = "Unknown scheduler: '" + scheduler + "' Please check UPS Spec for valid scheduler options";
+    std::string error = "Unknown scheduler: '" + scheduler + "' Please check UPS Spec for valid scheduler options (.../src/StandAlone/inputs/UPS_SPEC/ups_spec.xml)'";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
-  // "-nthreads" at command line, something other than "Unified" specified in UPS file
+  // "-nthreads" at command line, something other than "ThreadedMPI" specified in UPS file
   if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "Unified") && (scheduler != "ThreadedMPI"))) {
     throw ProblemSetupException("ThreadedMPI or Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
   }

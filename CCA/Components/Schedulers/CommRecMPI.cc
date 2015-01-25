@@ -260,8 +260,6 @@ CommRecMPI::donesome( const ProcessorGroup     * pg,
   int  numReceived = 0;
   int  volReceived = 0;
 
-  //  mixedDebug << me << " Done calling testsome with " << ids_.size() 
-  //      << " waiters and got " << donecount << " done\n";
   ASSERT(donecount != MPI_UNDEFINED);
 
   for( int i = 0; i < donecount; i++ ) {

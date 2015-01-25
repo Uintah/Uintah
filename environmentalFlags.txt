@@ -40,12 +40,11 @@ Schedulers:                              NOTE: The default is "MPI" without thre
                                                These flags invoke specific schedulers and are semantically equivalent to
                                                adding a <Scheduler> section to an input file.
 __________________________________
-SingleProcessor            SCI_DEBUG     Use SingleProcessorScheduler
-                                            (Static task ordering and deterministic execution without MPI.)
-DynamicMPI                 SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
-                                            (1 MPI process per CPU core)
-ThreadedMPI                SCI_DEBUG     Use Multi-threaded MPIScheduler - uses out-of-order, multi-threaded task execution
+SingleProcessorScheduler   SCI_DEBUG     Use SingleProcessorScheduler (Static task ordering and deterministic execution without MPI.)
+DynamicMPIScheduler        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution (1 MPI process per CPU core)
+UnifiedScheduler           SCI_DEBUG     Use Multi-threaded Unified w/ GPU support - uses out-of-order, multi-threaded task execution
                                             (1 MPI process per multi-core node; Pthreads created to execute tasks on individual cores)
+                                            NOTE: This scheduler is EXPERIMENTAL and under active development.
 
 
 Scheduler Debugging Information:

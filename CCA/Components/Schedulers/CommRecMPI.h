@@ -79,7 +79,9 @@ class CommRecMPI {
               int                         groupID );
 
     void          setDefaultGroupID( int groupID ) { groupIDDefault_ = groupID; }
+
     int           getUnfinishedBytes() const { return totalBytes_; }
+
     unsigned long numRequests() const { return ids_.size(); }
 
     void          print( const ProcessorGroup * pg );

@@ -93,6 +93,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
     numMessages_(0),
     messageVolume_(0),
     recvLock("MPI receive lock"),
+    sendLock("MPI send lock"),
     dlbLock("loadbalancer lock"),
     waittimesLock("waittimes lock")
 {
@@ -327,13 +328,13 @@ MPIScheduler::runTask( DetailedTask* task,
     parentScheduler_->mpi_info_.totalsend += mpi_info_.totalsend;
     parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
     parentScheduler_->mpi_info_.totalreduce += mpi_info_.totalreduce;
-    mpi_info_.totalreduce = 0;
-    mpi_info_.totalsend = 0;
-    mpi_info_.totalrecv = 0;
-    mpi_info_.totaltask = 0;
+    mpi_info_.totalreduce    = 0;
+    mpi_info_.totalsend      = 0;
+    mpi_info_.totalrecv      = 0;
+    mpi_info_.totaltask      = 0;
     mpi_info_.totalreducempi = 0;
-    mpi_info_.totaltestmpi = 0;
-    mpi_info_.totalwaitmpi = 0;
+    mpi_info_.totaltestmpi   = 0;
+    mpi_info_.totalwaitmpi   = 0;
   }
 
   emitNode(task, taskstart, dtask, 0);
@@ -500,7 +501,18 @@ MPIScheduler::postMPISends( DetailedTask* task,
       int bytes = count;
 
       // with multi-threaded schedulers (derived from MPIScheduler), this is written per thread
+      // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      // TODO - Somehow, with only the ThreadedMPI scheduler, a race condition exists on a member
+      //        one of these CommRecMPI objects (deletion and access to this member)
+      //        "sends_" contains per-threads objects so this is puzzling... for now, just lock it.
+      //
+      // NOTE:  This may have something to do with the PackBufferInfo leak in the Unified Scheduler
+      //
+      // APH - 01/24/15
+      //
+      sendLock.writeLock();
       sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
+      sendLock.writeUnlock();
 
       mpi_info_.totalsendmpi += Time::currentSeconds() - start;
 
@@ -946,8 +958,7 @@ MPIScheduler::execute( int tgnum /*=0*/,
       phase_id = (*iter).second;
     }
     else {
-      TAU_MAPPING_CREATE( phase_name, "",
-          (TauGroup_t) unique_id, "TAU_USER", 0 );
+      TAU_MAPPING_CREATE( phase_name, "", (TauGroup_t) unique_id, "TAU_USER", 0 );
       phase_map[ phase_name ] = unique_id;
       phase_id = unique_id++;
     }
