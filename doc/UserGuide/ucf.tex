@@ -965,9 +965,12 @@ uses a centralized model using 1 control thread and $n-1$ task execution
 threads (out of $n$ threads specified). The control thread assigns tasks and
 processes MPI recvs (\emph{\textbf{not MPI sends}; worker threads post MPI sends for the task they execute}). There is shared access to the DataWarehouse. This scheduler requires \textbf{MPI\_THREAD\_MULTIPLE} support.
 
+\vspace{20pt}
+\textbf{NOTE: The ThreadedMPI scheduler is Uintah's default multi-threaded scheduler.}
+\vspace{20pt}
+
 To invoke the ThreadedMPI Scheduler, you must specify \texttt{ThreadedMPI} in
-the \TT{<Scheduler>} section of your input file, with the addition of
-"\TT{nthreads <n>}" (shown below) to your command to launch the \texttt{sus}
+the \TT{<Scheduler>} section of your input file, or simply add the "\TT{nthreads <n>}" (shown below) to your command to launch the \texttt{sus}
 executable.
 
 \begin{Verbatim}[fontsize=\footnotesize]
@@ -975,8 +978,8 @@ mpirun -np <#procs> sus -mpi -nthreads 16 input.ups
 \end{Verbatim}
 
 Typically the \TT{<n>} will be equal to the number of cores available on a
-compute node. The above command line will launch 1 MPI process per node, 1
-control thread and 15 \TT{(nthreads -1)} task execution threads.
+compute node. The above command line will launch 1 MPI process per node, use 1
+control thread and create 15 \TT{(nthreads -1)} additional task execution threads.
 
 \begin{figure}[H]
   \centering
@@ -1008,7 +1011,7 @@ efficient, lock-free data structures). Again, all threads on a node
 additionally process their own MPI.
 
 To invoke the Unified Scheduler, you must specify \texttt{Unified} in the
-\TT{<Scheduler>} section of your input file, or simply at the
+\TT{<Scheduler>} section of your input file, and also add
 "\TT{nthreads <n>}" shown below to your command to launch the \texttt{sus}
 executable.
 
@@ -1018,7 +1021,11 @@ mpirun -np <#procs> sus -mpi -nthreads 16 input.ups
 
 Typically the \TT{<n>} will be equal to the number of cores available on a
 compute node. The above command line will launch 1 MPI process per node and
-"\TT{nthreads}" number of task execution threads.
+create "\TT{nthreads}" task execution threads.
+
+\vspace{20pt}
+
+\textbf{NOTE: This scheduler is still highly experimental and is under active development. Documentation on GPU support will be available in a subsequent Uintah release (1.6.x).}
 
 \begin{figure}[H]
   \centering
@@ -1028,7 +1035,6 @@ compute node. The above command line will launch 1 MPI process per node and
   \label{fig:UnifiedScheduler}
 \end{figure}
 
-\textbf{\emph{NOTE: This scheduler is still highly experimental!}}
 %
 %__________________________________
 %\section{Adaptive Mesh Refinement}
