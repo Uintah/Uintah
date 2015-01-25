@@ -101,7 +101,6 @@ class ThreadedMPIScheduler : public MPIScheduler {
     ThreadedMPIScheduler& operator=( const ThreadedMPIScheduler& );
 
     Output*    oport_t;
-    CommRecMPI sends_[MAX_THREADS];
     QueueAlg   taskQueueAlg_;
     int        numThreads_;
 
@@ -133,7 +132,6 @@ class TaskWorker : public Runnable {
 
     ThreadedMPIScheduler* d_scheduler;
     DetailedTask*         d_task;
-    CommRecMPI            d_sends_;
     ConditionVariable     d_runsignal;
     Mutex                 d_runmutex;
     bool                  d_quit;

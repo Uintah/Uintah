@@ -197,7 +197,6 @@ public:
 private:
 
   UnifiedScheduler*      d_scheduler;
-  CommRecMPI             d_sends_;
   ConditionVariable      d_runsignal;
   Mutex                  d_runmutex;
   bool                   d_quit;
