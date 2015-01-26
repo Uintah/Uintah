@@ -1,10 +1,7 @@
-#ifndef VardenMMSBCs_h
-#define VardenMMSBCs_h
-
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +21,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+#ifndef VardenMMSBCs_h
+#define VardenMMSBCs_h
 
 #include <expression/Expression.h>
 #include <spatialops/structured/FVStaggered.h>

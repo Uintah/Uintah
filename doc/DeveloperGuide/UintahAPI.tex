@@ -1272,6 +1272,317 @@ the following:
 A driver program must be developed that will then be compiled and
 linked with the Uintah framework libraries.
 
+How to add a new component to the build system i.e. --enable-new\_component
+
+\begin{enumerate}
+\item  Edit the configure.ac
+
+Look for lines:
+
+\begin{verbatim}
+SCI_ARG_ENABLE(new_component,
+  AC_HELP_STRING(--enable-new_component,
+                 Turn on the New_Component component.),
+  [BUILD_NEW_COMPONENT="yes"],
+  [BUILD_NEW_COMPONENT="no"
+   DEF_NEW_COMPONENT=["#define NO_NEW_COMPONENT"]])
+
+\end{verbatim}
+
+\item  Look for the \textgreater\textgreater \space \space \space
+  \textless\textless \space \space for the NEW\_COMPONENT additions below.
+  Remove the \textgreater\textgreater \space \space \space
+  \textless\textless \space \space in your version of configure.ac
+
+\begin{verbatim}
+SCI_ARG_ENABLE(all_components,
+  AC_HELP_STRING(--enable-all-components,
+                 Turn on the all components.),
+  [use_all_components="yes"
+   BUILD_ARCHES="yes"
+   BUILD_ICE="yes"
+   BUILD_ICE_SM="yes"   
+   BUILD_MINIAERO="yes"
+>>   BUILD_NEW_COMPONENT="yes"      <<
+   BUILD_MPM="yes"
+   BUILD_WASATCH="yes"
+   DEF_ARCHES=
+   DEF_ICE=
+   DEF_ICE_SM=
+   DEF_MINIAERO=
+>>   DEF_NEW_COMPONENT=              <<
+   DEF_MPM=
+   DEF_WASATCH=
+  ],
+  [use_all_components="no"])
+\end{verbatim}
+
+\begin{verbatim}
+if test "$use_all_components" = "yes" -a          \
+        \( "$enable_arches"           = "yes" -o  \
+           "$enable_ice"              = "yes" -o  \
+           "$enable_ice_sm"           = "yes" -o  \
+           "$enable_miniaero"         = "yes" -o  \
+>>           "$enable_new_component"    = "yes" -o  \    <<
+           "$enable_models_radiation" = "yes" -o  \
+           "$enable_mpm"              = "yes" -o  \
+           "$enable_wasatch"          = "yes" \); then
+   AC_MSG_ERROR( Please do not use both --enable-all-components and --enable-<specific-component> )
+fi
+
+if test "$BUILD_ARCHES"  != "yes"              -a   \
+        "$BUILD_ICE"     != "yes"              -a   \
+        "$BUILD_ICE_SM"  != "yes"              -a   \
+        "$BUILD_MINIAERO" != "yes"             -a   \
+>>        "$BUILD_NEW_COMPONENT" != "yes"        -a   \           <<
+        "$BUILD_MPM"     != "yes"              -a   \
+        "$BUILD_WASATCH" != "yes"; then
+  add_important_warning "-------------------------------------------------------------------------"
+  msg="!!! NO COMPONENTS WERE SPECIFIED! ONLY UTILITY PROGRAMS WILL BE BUILT !!!"
+  add_important_warning "$msg"
+  add_important_warning "-------------------------------------------------------------------------"
+fi
+
+if test "$USE_NEW_COMPONENT" != ""; then
+   AC_MSG_ERROR( USE_NEW_COMPONENT is deprecated.  Please use --enable-new_component. )
+fi
+
+
+AC_SUBST(BUILD_ARCHES)
+AC_SUBST(BUILD_ICE)
+AC_SUBST(BUILD_ICE_SM)
+AC_SUBST(BUILD_MINIAERO)
+>>  AC_SUBST(BUILD_NEW_COMPONENT)    <<
+AC_SUBST(BUILD_MODELS_RADIATION)
+AC_SUBST(BUILD_MPM)
+AC_SUBST(BUILD_WASATCH)
+
+AC_SUBST(DEF_ARCHES)
+AC_SUBST(DEF_ICE)
+AC_SUBST(DEF_ICE_SM)
+AC_SUBST(DEF_MINIAERO)
+>> AC_SUBST(DEF_NEW_COMPONENT)   <<
+AC_SUBST(DEF_MPM)
+AC_SUBST(DEF_NO_FORTRAN)
+AC_SUBST(DEF_MODELS_RADIATION)
+AC_SUBST(DEF_WASATCH)
+AC_SUBST(NO_FORTRAN)
+\end{verbatim}
+
+\item  Run autoconf in the src/ 
+\begin{verbatim}
+autoconf
+\end{verbatim}
+
+\item  Edit the file src/include/sci\_defs/uintah\_testdefs.h.in
+
+\begin{verbatim}
+@DEF_ARCHES@
+@DEF_ICE@
+@DEF_MINIAERO@
+>>>  @DEF_NEW_COMPONENT@   <<
+@DEF_MPM@
+@DEF_MODELS_RADIATION@
+
+\item  Edit Makefile.in
+
+ifeq ($(BUILD_ICE),yes)
+  ICE_LIB            = CCA/Components/ICE
+endif
+
+ifeq ($(BUILD_ICE_SM),yes)
+  ICE_SM_LIB            = CCA/Components/ICE_sm
+endif
+
+ifeq ($(BUILD_MINIAERO),yes)
+  MINIAERO_LIB       = CCA/Components/MiniAero
+endif
+
+ifeq ($(BUILD_NEW_COMPONENT),yes)
+  NEW_COMPONENT_LIB       = CCA/Components/New_Component
+endif
+
+ifeq ($(BUILD_WASATCH),yes)
+  WASATCH_LIB        = CCA/Components/Wasatch
+endif
+
+Edit the ALL_PSE_LIBS line:
+
+ALL_PSE_LIBS =             \
+        Core/Containers    \
+        Core/DataArchive   \
+.... SNIP
+        CCA/Components/SimulationController \
+        CCA/Components/Schedulers           \
+        CCA/Components/Solvers              \
+                                            \
+        $(ARCHES_LIBS)                      \
+        $(ARCHES_SUB_LIBS)                  \
+        $(MPMARCHES_LIB)                    \
+        $(MPM_LIB)                          \
+        $(ICE_LIB)                          \
+        $(MINIAERO_LIB)                     \
+>>        $(NEW_COMPONENT_LIB)                     \      <<
+\end{verbatim}
+
+\item Edit the ALL\_STATIC\_PSE\_LIBS  line:
+
+\begin{verbatim}
+ALL_STATIC_PSE_LIBS =                   \
+    CCA/Components/Parent               \
+    CCA/Components/Solvers              \
+    CCA/Components/DataArchiver         \
+    CCA/Components/SimulationController \
+    CCA/Components/Regridder            \
+    CCA/Components/LoadBalancers        \
+    CCA/Components/SwitchingCriteria    \
+    CCA/Components/Examples             \
+                                        \
+    $(ARCHES_LIBS)                      \
+    $(ARCHES_SUB_LIBS)                  \
+    $(MPMARCHES_LIB)                    \
+    $(MPM_LIB)                          \
+    $(ICE_LIB)                          \
+    $(MINIAERO_LIB)			\
+>>    $(NEW_COMPONENT_LIB)			\     <<
+    $(MPMICE_LIB)                       \
+    $(WASATCH_LIB)                      \
+                                        \
+    CCA/Components/Schedulers           \
+    CCA/Components/OnTheFlyAnalysis     \
+
+\end{verbatim}
+
+\item Edit the CCA/Components/Parent/ComponentFactory.cc file
+
+\begin{verbatim}
+#ifndef NO_WASATCH
+#  include <CCA/Components/Wasatch/Wasatch.h>
+#endif
+
+#ifndef NO_MINIAERO
+#include <CCA/Components/MiniAero/MiniAero.h>
+#endif
+
+#ifndef NO_NEW_COMPONENT
+#include <CCA/Components/New_Component/New_Component.h>
+#endif
+
+
+#ifndef NO_ICE_SM  
+  if (sim_comp == "ice_sm") {
+    return scinew ICE_sm(world);
+  }
+#else
+  turned_off_options += "ICE_SM ";
+#endif
+  
+#ifndef NO_MINIAERO
+  if (sim_comp == "miniaero") {
+    return scinew MiniAero(world);
+  }
+#else
+  turned_off_options += "MINIAERO ";
+#endif
+
+#ifndef NO_NEW_COMPONENT
+  if (sim_comp == "new_component") {
+    return scinew New_Component(world);
+  }
+#else
+  turned_off_options += "NEW_COMPONENT ";
+#endif
+\end{verbatim}
+
+\item  Edit the CCA/Components/Parent/sub.mk and add the new component
+  in the PSELIBS line:
+\begin{verbatim}
+PSELIBS := \
+        CCA/Ports                          \
+        Core/Containers                    \
+        Core/Disclosure                    \
+        Core/Exceptions                    \
+        Core/Grid                          \
+        Core/Geometry                      \
+        Core/GeometryPiece                 \
+        Core/Math                          \
+        Core/Parallel                      \
+        Core/ProblemSpec                   \
+        Core/Util                          \
+        Core/Thread                        \
+        $(ARCHES)                          \
+        $(MPMARCHES)                       \
+        $(ICE)                             \
+	$(ICE_SM)                          \
+        $(MPM)                             \
+        $(MPMICE)                          \
+        $(MINIAERO)		           \
+>>        $(NEW_COMPONENT)                 \       <<
+        $(COMPONENTS)/Examples             \
+        $(COMPONENTS)/ReduceUda            \
+        $(COMPONENTS)/ProblemSpecification \
+\end{verbatim}
+
+\item Edit the CCA/Components/sub.mk
+
+\begin{verbatim}
+ifeq ($(BUILD_ICE),yes)
+  ICE      := $(SRCDIR)/ICE
+endif
+
+ifeq ($(BUILD_ICE_SM),yes)
+  ICE_SM      := $(SRCDIR)/ICE_sm
+endif
+
+ifeq ($(BUILD_MINIAERO),yes)
+  MINIAERO := $(SRCDIR)/MiniAero
+endif
+
+ifeq ($(BUILD_NEW_COMPONENT),yes)
+  NEW_COMPONENT := $(SRCDIR)/New_Component
+endif
+
+
+and the SUBDIRS line:
+
+SUBDIRS := \
+        $(MPM)                         \
+        $(ICE)                         \
+        $(ICE_SM)                      \
+        $(MPMICE)                      \
+        $(ARCHES)                      \
+        $(MPMARCHES)                   \
+        $(WASATCH)                     \
+        $(MINIAERO)                    \
+>>      $(NEW_COMPONENT)               \     <<
+        $(SRCDIR)/ICE_sm               \
+        $(SRCDIR)/DataArchiver         \
+        $(SRCDIR)/Examples             \
+        $(SRCDIR)/LoadBalancers        \
+        $(SRCDIR)/Models               \
+        $(SRCDIR)/OnTheFlyAnalysis     \
+        $(SRCDIR)/Parent               \
+        $(SRCDIR)/ProblemSpecification \
+        $(SRCDIR)/ReduceUda            \
+\end{verbatim}
+
+\item Edit the configVars.mk.in
+
+\begin{verbatim}
+BUILD_ARCHES=@BUILD_ARCHES@
+BUILD_ICE=@BUILD_ICE@
+BUILD_ICE_SM=@BUILD_ICE_SM@
+BUILD_MINIAERO=@BUILD_MINIAERO@
+>>>  BUILD_NEW_COMPONENT=@BUILD_NEW_COMPONENT@     <<<
+BUILD_MODELS_RADIATION=@BUILD_MODELS_RADIATION@
+BUILD_MPM=@BUILD_MPM@
+BUILD_WASATCH=@BUILD_WASATCH@
+BUILD_WASATCH_IN_ARCHES=@BUILD_WASATCH_IN_ARCHES@
+\end{verbatim}
+
+\end{enumerate}
+
+
 \chapter{Saving Simulation Data}
 
 The UCF automatically saves data as specified in the .ups file.  This

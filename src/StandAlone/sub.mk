@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -57,7 +57,7 @@ endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_OS) $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
           $(PAPI_LIBRARY) $(M_LIBRARY)
@@ -68,7 +68,6 @@ else
           $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)                   \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                      \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                       \
-          $(TEEM_LIBRARY)                                               \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY)                              \
           $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 endif
@@ -141,7 +140,7 @@ SRCS := $(SRCDIR)/selectpart.cc
 PROGRAM := StandAlone/selectpart
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := Core/Tracker $(CORE_STATIC_PSELIBS)
+  PSELIBS := $(CORE_STATIC_PSELIBS)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
