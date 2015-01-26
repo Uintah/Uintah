@@ -1,0 +1,116 @@
+<?xml encoding="ISO-8859-1"?>
+
+<!-- @version:  -->
+
+<!ELEMENT Uintah_specification (Meta,Time,OutputVars,CFD,MPM,PhysicalConstants)>
+
+<!-- Meta data -->
+
+<!ELEMENT Meta (title)>
+<!ELEMENT title (#PCDATA)>
+
+<!-- Time Information -->
+
+<!ELEMENT Time (maxTime,initTime,delt_min,delt_max)> 
+<!ELEMENT maxTime  (#PCDATA)>
+<!ELEMENT initTime (#PCDATA)>
+<!ELEMENT delt_min (#PCDATA)>
+<!ELEMENT delt_max (#PCDATA)>
+
+<!-- OutputVariables -->
+
+<!ELEMENT OutputVars (t_initial_output,t_final_output,t_delta_output,
+  filebasename, file_description) >
+<!ELEMENT t_initial_output (#PCDATA)>
+<!ELEMENT t_final_output (#PCDATA)>
+<!ELEMENT t_delta_output (#PCDATA)>
+<!ELEMENT filebasename (#PCDATA)>
+<!ELEMENT file_description (#PCDATA)>
+
+<!-- CFD specification -->
+
+<!ELEMENT CFD (cfl, (ICE | ARCHES )) >
+<!ELEMENT cfl (#PCDATA)>
+
+<!-- ICE Stuff -->
+
+<!ELEMENT ICE (time_integrator, max_iteration, rel_tolerance, abs_tolerance, div_tolerance, compute_delta_velocity,material_properties) >
+<!ELEMENT time_integrator EMPTY>
+<!ATTLIST time_integrator type (explicit | implicit | semi-implicit) #IMPLIED>
+<!ELEMENT max_iteration (#PCDATA) >
+<!ELEMENT rel_tolerance (#PCDATA) >
+<!ELEMENT abs_tolerance (#PCDATA) >
+<!ELEMENT div_tolerance (#PCDATA) >
+<!ELEMENT compute_delta_velocity (#PCDATA)>
+<!ATTLIST compute_delta_velocity method (convective | sound | sum) #IMPLIED>
+<!ELEMENT material_properties (viscosity,thermal_conductivity,
+          specific_heat, speed_of_sound) >
+<!ELEMENT viscosity (#PCDATA)>
+<!ELEMENT thermal_conductivity (#PCDATA) >
+<!ELEMENT specific_heat (#PCDATA) >
+<!ELEMENT speed_of_sound (#PCDATA) >
+
+
+<!-- ARCHES Stuff -->
+
+<!ELEMENT ARCHES (time_integrator) >
+<!ELEMENT explicit EMPTY>
+<!ELEMENT semi-implicit EMPTY>
+<!ELEMENT implicit (grow_dt,non_linear_solver) >
+<!ELEMENT grow_dt (#PCDATA)>
+<!ELEMENT non_linear_solver  (picard_solver | nk_solver)>
+<!ELEMENT picard_solver (max_iter, res_tol,  pressure_solver,cal_momentum, momentum_solver, turbulence_model, mixing_model, mixture_fraction_solver)>
+<!ELEMENT max_iter (#PCDATA)>
+<!ELEMENT res_tol (#PCDATA)>
+<!ATTLIST cal_pressure state (true | false) #IMPLIED>
+<!ATTLIST pressure_solver state (true | false) #IMPLIED>
+<!ELEMENT mixing_model EMPTY>
+<!ATTLIST mixing_model type (delta_pdf | beta_pdf | joint_beta_pdf) #IMPLIED>
+
+<!-- Mixture Fraction Solver specification -->
+
+<!ELEMENT mixture_fraction_solver (underrelax, finite_difference, 
+          linear_solver)>
+
+<!ELEMENT nk_solver EMPTY>
+<!ELEMENT pressure_solver (ref_point,underrelax,finite_difference,
+          linear_solver) >
+<!ELEMENT ref_point (#PCDATA)>
+<!ELEMENT underrelax (#PCDATA)>
+<!ELEMENT finite_difference EMPTY>
+<!ATTLIST finite_difference type (first | second | central) #REQUIRED >
+<!ELEMENT linear_solver (linegs | jacobi | pointgs | rbgs | amg) >
+
+<!-- Momentum Solver specification -->
+<!ELEMENT cal_momentum EMPTY>
+<!ATTLIST cal_momentum state (true | false) #IMPLIED>
+<!ELEMENT momentum_solver (underrelax, finite_difference, linear_solver)>
+
+<!-- Linear Solver parameters -->
+<!ELEMENT linegs (max_iter, res_tol)>
+<!ELEMENT jacobi (max_iter, res_tol)>
+<!ELEMENT pointgs (max_iter, res_tol)>
+<!ELEMENT rbgs (max_iter, res_tol)>
+<!ELEMENT amg (max_iter, res_tol)>
+
+
+<!-- Turbulence Models -->
+<!ELEMENT turbulence_model (smagorinsky | mixlt | kepsilon)>
+<!ELEMENT smagorinsky (cf, fac_mesh, filterl)>
+<!ELEMENT cf (#PCDATA)>
+<!ELEMENT fac_mesh (#PCDATA)>
+<!ELEMENT filterl (#PCDATA)>
+<!ELEMENT mixlt EMPTY>
+<!ELEMENT kepsilon EMPTY>
+
+<!ELEMENT MPM (time_integrator)>
+
+
+<!ELEMENT PhysicalConstants EMPTY>
+<!ELEMENT gravity (#PCDATA)>
+<!ELEMENT ideal_gas_constant (#PCDATA)>
+
+<!-- MPM specification -->
+
+
+
