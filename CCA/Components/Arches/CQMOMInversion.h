@@ -69,9 +69,9 @@ using namespace Uintah;
  **************************/
 // solves sum_0^{n-1} x_i^k w_i = q_k for w_i
 // x, q input, w output
-void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, const std::vector<double> &q)
+void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, const std::vector<double> &q, const int n)
 {
-  int n = q.size();
+//  int n = q.size();
   double b,s,t,xx;
   std::vector<double> c (n,0.0);
   
@@ -534,7 +534,14 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     if ( !useLapack ) {
     //vander solve (x,w,q) -> vandersolve sum x_i^k w_i = q_k
     // q contians known moments, x_i contains abscissas, w_i are conditional moments (unknown)
-      vandermondeSolve ( x1, condMomStar, vanderMom);
+      int n = x1.size();
+      for (int ii = 0; ii < x1.size(); ii++ ) {
+        if (w1[ii] == 0.0 ) {
+          n--;
+        }
+      }
+      
+      vandermondeSolve ( x1, condMomStar, vanderMom, n);
     } else {
       int dim = N_i[0];
       int nRHS = 1;
@@ -649,7 +656,14 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       
       if ( !useLapack ) {
       //feed into vandermonde
-        vandermondeSolve(x1, tempStar, vanderMom);
+        int n = x1.size();
+        for (int ii = 0; ii < x1.size(); ii++ ) {
+          if (w1[ii] == 0.0 ) {
+            n--;
+          }
+        }
+        
+        vandermondeSolve(x1, tempStar, vanderMom, n);
       } else {
         int dim = N_i[0];
         int nRHS = 1;
@@ -722,14 +736,21 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #ifdef cqmom_dbg
         if ( k == 1 ) {
           cout << "rhs[" << j << "] = " << Zeta[i][j][k] << endl;
-          cout << "rhs[" << j << "] = " << vanderMom[j]<< endl;
           cout << "x[" << j << "] = " << xTemp[j]<< endl;
+          cout << "w[" << j << "] = " << wTemp[j]<< endl;
         }
 #endif
       }
       
       if ( !useLapack ) {
-        vandermondeSolve(xTemp, condMomStar, vanderMom );
+        int n = xTemp.size();
+        for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          if (wTemp[ii] == 0.0 ) {
+            n--;
+          }
+        }
+        
+        vandermondeSolve(xTemp, condMomStar, vanderMom, n );
       } else {
         int dim = N_i[0];
         int nRHS = 1;
@@ -850,7 +871,13 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         }
         
         if (!useLapack) {
-          vandermondeSolve(x1, tempStar, vanderMom);
+          int n = x1.size();
+          for (int ii = 0; ii < x1.size(); ii++ ) {
+            if (w1[ii] == 0.0 ) {
+              n--;
+            }
+          }
+          vandermondeSolve(x1, tempStar, vanderMom, n);
         } else {
           int dim = N_i[0];
           int nRHS = 1;
@@ -925,15 +952,21 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #ifdef cqmom_dbg
           if ( k4 == 1 ) {
             cout << "rhs[" << k2 << "] = " << Zeta2[k1][k2][k3][k4] << endl;
-            cout << "rhs[" << k2 << "] = " << vanderMom[k2]<< endl;
             cout << "x[" << k2 << "] = " << xTemp[k2]<< endl;
+            cout << "w[" << k2 << "] = " << wTemp[k2]<< endl;
           }
 #endif
         }
         
         //now solve the vandermonde matrix for some Omega values
         if (!useLapack) {
-          vandermondeSolve(xTemp, tempStar, vanderMom);
+          int n = xTemp.size();
+          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+            if (wTemp[ii] == 0.0 ) {
+              n--;
+            }
+          }
+          vandermondeSolve(xTemp, tempStar, vanderMom, n);
         } else {
           int dim = N_i[1];
           int nRHS = 1;
@@ -1002,7 +1035,13 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         }
         
         if ( !useLapack ) {
-          vandermondeSolve(xTemp, condMomStar, vanderMom );
+          int n = xTemp.size();
+          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+            if (wTemp[ii] == 0.0 ) {
+              n--;
+            }
+          }
+          vandermondeSolve(xTemp, condMomStar, vanderMom, n );
         } else {
           int dim = N_i[2];
           int nRHS = 1;
@@ -1150,7 +1189,13 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #endif
           }
           
-          vandermondeSolve(x1, tempStar, vanderMom);
+          int n = x1.size();
+          for (int ii = 0; ii < x1.size(); ii++ ) {
+            if (w1[ii] == 0.0 ) {
+              n--;
+            }
+          }
+          vandermondeSolve(x1, tempStar, vanderMom, n);
           
           for (int k1 = 0; k1<N_i[0]; k1++) {
             if ( w1[k1] > 0.0 ) {
@@ -1183,7 +1228,13 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
             vanderMom[k2] = Zeta2[k1][k2][k3][k4];
           }
 
-          vandermondeSolve(xTemp, tempStar, vanderMom);
+          int n = xTemp.size();
+          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+            if (wTemp[ii] == 0.0 ) {
+              n--;
+            }
+          }
+          vandermondeSolve(xTemp, tempStar, vanderMom, n);
           
           //fill in this omega value
           for (int k2 = 0; k2<N_i[1]; k2++) {
@@ -1219,7 +1270,13 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
             vanderMom[k3] = Omega[k1][k2][k3][k4];
           }
           
-          vandermondeSolve(xTemp, tempStar, vanderMom );
+          int n = xTemp.size();
+          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+            if (wTemp[ii] == 0.0 ) {
+              n--;
+            }
+          }
+          vandermondeSolve(xTemp, tempStar, vanderMom, n );
           
           for (int k3 = 0; k3<N_i[2]; k3++) {
             if ( wTemp[k3] > 0.0 ) {
@@ -1251,7 +1308,13 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
             vanderMom[k4] = Y[k1][k2][k3][k4];
           }
           
-          vandermondeSolve(xTemp, tempStar, vanderMom);
+          int n = xTemp.size();
+          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+            if (wTemp[ii] == 0.0 ) {
+              n--;
+            }
+          }
+          vandermondeSolve(xTemp, tempStar, vanderMom, n);
           
           for (int k4 = 0; k4 < N_i[3]; k4++) {
             if (wTemp[k4] > 0.0) {
