@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -95,7 +95,7 @@ public:
 
   // This directly sets the eigenvectors and values in the tensor.  It
   // is meant to be used in conjunction with custom eigenvector/value
-  // computation, such as that found in the TEEM package.
+  // computation, such as that found in the package.
   void set_outside_eigens(const Vector &e1, const Vector &e2,
 			  const Vector &e3,
 			  double v1, double v2, double v3);

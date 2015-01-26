@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1250,9 +1250,7 @@ void DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
-//#if !defined( _AIX )
   readyQueueLock_.writeLock();
-//#endif
 
   readyTasks_.push(task);
 
@@ -1261,11 +1259,7 @@ void DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     mixedDebug << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
     cerrLock.unlock();
   }
-//#if !defined( _AIX )
-  // need to make a non-binary semaphore under aix for this to work.
-//  readyQueueSemaphore_.up();
   readyQueueLock_.writeUnlock();
-//#endif
 }
 
 DetailedTask*
@@ -1377,9 +1371,6 @@ void DetailedTasks::addCompletionPendingDeviceTask(DetailedTask* dtask)
 void DetailedTasks::initTimestep()
 {
   readyTasks_ = initiallyReadyTasks_;
-//#if !defined( _AIX )
-//  readyQueueSemaphore_.up((int)readyTasks_.size());
-//#endif
   incrementDependencyGeneration();
   initializeBatches();
 }

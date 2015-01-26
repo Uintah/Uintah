@@ -1,6 +1,6 @@
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -103,7 +103,6 @@ ALL_PSE_LIBS =             \
         Core/Persistent    \
         Core/ProblemSpec   \
         Core/Thread        \
-        Core/Tracker       \
         Core/Util          \
         CCA/Ports          \
         CCA/Components/DataArchiver         \
@@ -155,7 +154,6 @@ ALL_STATIC_PSE_LIBS =                   \
     Core/Grid                           \
     Core/ProblemSpec                    \
     Core/GeometryPiece                  \
-    Core/Tracker                        \
     CCA/Components/ProblemSpecification \
     CCA/Ports                           \
     Core/Parallel                       \
