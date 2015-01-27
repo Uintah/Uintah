@@ -10,6 +10,7 @@
 #include <CCA/Components/Arches/ParticleModels/CoalTemperatureNebo.h>
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
 #include <CCA/Components/Arches/ParticleModels/CoalMassClip.h>
+#include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
 
 using namespace Uintah; 
 
@@ -204,6 +205,14 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
       } else if ( type == "coal_mass_clip" ) { 
 
         TaskInterface::TaskBuilder* tsk = scinew CoalMassClip::Builder(task_name, 0, N); 
+        register_task( task_name, tsk );
+
+        _active_tasks.push_back(task_name); 
+        _post_update_coal_tasks.push_back(task_name); 
+
+      } else if ( type == "total_number_density" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew TotNumDensity::Builder(task_name, 0); 
         register_task( task_name, tsk );
 
         _active_tasks.push_back(task_name); 
