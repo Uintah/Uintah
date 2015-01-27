@@ -49,9 +49,9 @@ static DebugStream dynamicMPI(     "DynamicMPIScheduler",      false);
 static DebugStream unified(        "UnifiedScheduler",         false);
 
 SchedulerCommon*
-SchedulerFactory::create( const ProblemSpecP   &   ps,
+SchedulerFactory::create( const ProblemSpecP   & ps,
                           const ProcessorGroup * world,
-                          const Output         *         output )
+                          const Output         * output )
 {
   SchedulerCommon* sch = 0;
   std::string scheduler = "";
