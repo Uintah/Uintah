@@ -182,7 +182,9 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
-  Thread::self()->set_myid(numThreads_);
+  int tid = (numThreads_ < 0) ? 0 : numThreads_;
+  Thread::self()->set_myid(tid);
+
   if (threadedmpi_compactaffinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
@@ -218,7 +220,8 @@ ThreadedMPIScheduler::createSubScheduler()
 
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
-  Thread::self()->set_myid(numThreads_);
+  int tid = (numThreads_ < 0) ? 0 : numThreads_;
+  Thread::self()->set_myid(tid);
 
   if (subsched->numThreads_ > 0) {
 
@@ -312,8 +315,19 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
     //emitTime("time since last execute");
   }
 
-  int me = d_myworld->myrank();
+  // Do the work of the SingleProcessorScheduler and bail
+  if (!Uintah::Parallel::usingMPI()) {
+    if (numThreads_ <= 0) {
+      for (int i = 0; i < ntasks; i++) {
+        DetailedTask* dtask = dts->getTask(i);
+        runTask(dtask, iteration, Thread::self()->myid());
+      }
+      finalizeTimestep();
+      return;
+    }
+  }
 
+  int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
 
   // TODO - figure out and fix this (APH - 01/12/15)
