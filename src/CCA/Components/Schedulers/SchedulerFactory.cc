@@ -75,7 +75,7 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
           scheduler = "MPI";
         }
       }
-      else if (unified.active()) {
+      else if (Uintah::Parallel::usingDevice() || unified.active()) {
         scheduler = "Unified";
       }
       else {
