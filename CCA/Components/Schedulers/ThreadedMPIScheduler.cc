@@ -181,9 +181,8 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
               << plural + " for task execution." << std::endl;
   }
 
-  // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
-  int tid = (numThreads_ < 0) ? 0 : numThreads_;
-  Thread::self()->set_myid(tid);
+  // Reset Uintah thread ID (to reflect number of last physical core used)
+  Thread::self()->set_myid(numThreads_);
 
   if (threadedmpi_compactaffinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
@@ -220,8 +219,8 @@ ThreadedMPIScheduler::createSubScheduler()
 
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
-  int tid = (numThreads_ < 0) ? 0 : numThreads_;
-  Thread::self()->set_myid(tid);
+  // Reset Uintah subscheduler thread ID (to reflect number of last physical core used)
+  Thread::self()->set_myid(numThreads_);
 
   if (subsched->numThreads_ > 0) {
 
@@ -253,7 +252,9 @@ ThreadedMPIScheduler::createSubScheduler()
       subsched->t_thread[i] = t;
     }
   }
+
   return subsched;
+
 }
 
 //______________________________________________________________________
@@ -313,18 +314,6 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
     d_labels.clear();
     d_times.clear();
     //emitTime("time since last execute");
-  }
-
-  // Do the work of the SingleProcessorScheduler and bail
-  if (!Uintah::Parallel::usingMPI()) {
-    if (numThreads_ <= 0) {
-      for (int i = 0; i < ntasks; i++) {
-        DetailedTask* dtask = dts->getTask(i);
-        runTask(dtask, iteration, Thread::self()->myid());
-      }
-      finalizeTimestep();
-      return;
-    }
   }
 
   int me = d_myworld->myrank();

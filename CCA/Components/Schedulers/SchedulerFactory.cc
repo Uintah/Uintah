@@ -39,6 +39,7 @@
 #include <sci_defs/cuda_defs.h>
 
 #include <iostream>
+#include <string>
 
 using namespace Uintah;
 
@@ -82,12 +83,11 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
       }
     }
     else {
-      if (singleProcessor.active()) {
-        scheduler = "SingleProcessor";
+      if (dynamicMPI.active() || unified.active()) {
+        std::string message = "Cannot use MPI schedulers without -mpi option. SCI_DEBUG flags: DynamicMPI or Unified may also be active.";
+        throw ProblemSetupException(message, __FILE__, __LINE__);
       }
-      else {
-        scheduler = "ThreadedMPI";
-      }
+      scheduler = "SingleProcessor";
     }
   }
 
