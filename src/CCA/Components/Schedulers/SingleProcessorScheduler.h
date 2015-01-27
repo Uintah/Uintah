@@ -41,7 +41,6 @@ namespace Uintah {
 CLASS
    SingleProcessorScheduler
    
-   Short description...
 
 GENERAL INFORMATION
 
@@ -64,24 +63,28 @@ DESCRIPTION
   
 ****************************************/
 
-  class SingleProcessorScheduler : public SchedulerCommon {
+class SingleProcessorScheduler : public SchedulerCommon {
+
   public:
+
     SingleProcessorScheduler( const ProcessorGroup * myworld, const Output * oport, SingleProcessorScheduler * parent = NULL );
+
     virtual ~SingleProcessorScheduler();
 
-    //////////
-    // Insert Documentation Here:
     virtual void execute(int tgnum = 0, int iteration = 0);
     
     virtual SchedulerP createSubScheduler();
 
   private:
+
+    // Disable copy and assignment
+    SingleProcessorScheduler( const SingleProcessorScheduler& );
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
 
     virtual void verifyChecksum();
 
     SingleProcessorScheduler* m_parent;
-  };
+};
 } // End namespace Uintah
    
 #endif // End CCA_COMPONENTS_SCHEDULERS_SINGLEPROCESSORSCHEDULER_H
