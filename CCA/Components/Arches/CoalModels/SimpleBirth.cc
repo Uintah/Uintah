@@ -146,8 +146,6 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
   std::string taskname = "SimpleBirth::computeModel";
   Task* tsk = scinew Task(taskname, this, &SimpleBirth::computeModel, timeSubStep );
 
-  d_timeSubStep = timeSubStep; 
-
   if ( !_is_weight ){ 
     std::string abscissa_name = ParticleHelper::append_env( _abscissa_name, d_quadNode ); 
     _abscissa_label = VarLabel::find(abscissa_name); 
@@ -155,7 +153,7 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
       throw InvalidValue("Error: Abscissa not found: "+abscissa_name, __FILE__, __LINE__); 
   }
 
-  if (d_timeSubStep == 0) {
+  if (timeSubStep == 0) {
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
     tsk->requires(Task::OldDW, _w_label, Ghost::None, 0); 
