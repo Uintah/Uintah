@@ -47,9 +47,6 @@ public:
 
   ~SimpleBirth();
 
-  ///////////////////////////////////////////////
-  // Initialization methods
-
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
 
@@ -63,9 +60,6 @@ public:
                  DataWarehouse        * old_dw, 
                  DataWarehouse        * new_dw );
 
-  /////////////////////////////////////////////////
-  // Model computation methods
-
   /** @brief Schedule the calculation of the source term */ 
   void sched_computeModel( const LevelP& level, 
                            SchedulerP& sched, 
@@ -78,9 +72,6 @@ public:
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw, 
                      const int timeSubStep );
-
-  ///////////////////////////////////////////////
-  // Access methods
 
   inline std::string getType() {
     return "Constant"; }
