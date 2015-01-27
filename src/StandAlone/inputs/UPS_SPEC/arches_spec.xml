@@ -267,7 +267,15 @@
       <EulerianParticles                   spec="OPTIONAL NO_DATA">
         <ParticleVariables                 spec="OPTIONAL NO_DATA">
           <variable                        spec="MULTIPLE NO_DATA"
-                                           attribute1="role REQUIRED STRING 'raw_coal, char, size, density, uvel, vvel, wvel, enthalpy, temperature, dTdt'"
+                                           attribute1="role REQUIRED STRING 'raw_coal, 
+                                                                             char, 
+                                                                             size, 
+                                                                             density, 
+                                                                             uvel, vvel, wvel, 
+                                                                             enthalpy, 
+                                                                             temperature, 
+                                                                             dTdt, 
+                                                                             total_number_density'"
                                            attribute2="label REQUIRED STRING"/>
           
         </ParticleVariables>
@@ -881,7 +889,9 @@
                                                                         coal_density, 
                                                                         coal_temperature_nebo, 
                                                                         coal_temperature, 
-                                                                        coal_mass_clip'">
+                                                                        coal_mass_clip, 
+                                                                        total_number_density'">
+
             <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"
                                         attribute1="dependent_type REQUIRED STRING 'svol'"
