@@ -1038,12 +1038,15 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
       new_dw->getModifiable( grad_vel_CC, grad_vel_CClabel,   0,patch );
     }
 
+    // this includes extra cells
+    grad_rho_CC.initialize( Vector(0.0) );
+    grad_temp_CC.initialize(Vector(0.0) );
+    grad_vel_CC.initialize( Matrix3(0.0) );
+    
     //__________________________________
     // Compute cell centered gradients  
     // of primitive quantities 
-
     // uniform Cartesian mesh
-
     const Vector& cellSize = patch->getLevel()->dCell();
     const double dxdz = cellSize[0] * cellSize[2];
     const double dydz = cellSize[1] * cellSize[2];
@@ -1131,6 +1134,10 @@ void MiniAero::Limiters(const ProcessorGroup* /*pg*/,
       new_dw->getModifiable( limiter_vel_CC,  limiter_vel_CClabel,  0,patch );
     }
 
+    // this includes extra cells
+    limiter_rho_CC.initialize( 0.0 );
+    limiter_temp_CC.initialize( 0.0 );
+    limiter_vel_CC.initialize( Vector(0.0) );
 
     const Vector& cellSize = patch->getLevel()->dCell();
     face_distance[0] = cellSize[0]/2.0;
