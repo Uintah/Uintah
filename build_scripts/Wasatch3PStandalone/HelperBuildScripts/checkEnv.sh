@@ -26,9 +26,9 @@ fi
 
 if test "$COMPILER" = "icc"; then
    echo "  Building with ICC"
-   CC=icc
-   CXX=icpc
-   COMP=icc-15.0.0
+   CC=`which icc`
+   CXX=`which icpc`
+   COMP=icc14.0.4
 else
    if test "$COMPILER" = "gcc"; then
       echo "  Building with GCC"
@@ -98,7 +98,7 @@ if test "$MACHINE" = "Mapache"; then
      echo "Error: hostname did not return mp-fe*... Goodbye."
      exit
   fi
-  COMP=gcc4.7.2
+  #COMP=gcc4.7.2
   echo
   echo "Have you run the appropriate 'module load' commands? Eg:"
   echo "   * module load gcc"
@@ -151,7 +151,7 @@ echo "  CXX:   $CXX"
 echo "  COMP:  $COMP"
 echo "  BOOST: $BOOST_LOC"
 
-export INSTALL_BASE=$INSTALL_BASE-$DATE
+export INSTALL_BASE=$INSTALL_BASE/build-$DATE
 
 echo 
 
