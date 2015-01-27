@@ -82,10 +82,12 @@ SchedulerFactory::create(const ProblemSpecP&   ps,
       }
     }
     else {
-      if (dynamicMPI.active() || unified.active()) {
-        throw ProblemSetupException("Cannot use MPI schedulers without -mpi option.", __FILE__, __LINE__);
+      if (singleProcessor.active()) {
+        scheduler = "SingleProcessor";
       }
-      scheduler = "SingleProcessor";
+      else {
+        scheduler = "ThreadedMPI";
+      }
     }
   }
 
