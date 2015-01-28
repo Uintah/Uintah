@@ -167,8 +167,8 @@ ParticleRadProps( const ParticleRadProp prop,
                   const std::complex<double>& refIndex )
   : Expr::Expression<FieldT>(),
     props_( new ParticleRadCoeffs(refIndex,
-                                  1e-4,   /// min particle size
-                                  1e-7,   // max particle size
+                                  1e-7,   /// min particle size
+                                  1e-4,   // max particle size
                                   10,     // number of sizes
                                   1 ) ),  // order of interpolant
     prop_      ( prop       ),
