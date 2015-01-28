@@ -539,7 +539,7 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
     throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
   }   
 
-  _part_radprops = scinew ParticleRadCoeffs3D(_LowComplex,_HighComplex,3 );  
+  _part_radprops = scinew ParticleRadCoeffs3D( _LowComplex, _HighComplex, 1e-4, 1e-7, 10, 3 );
 
   _computeComplexIndex = true; // complex index of refraction needed
 }
