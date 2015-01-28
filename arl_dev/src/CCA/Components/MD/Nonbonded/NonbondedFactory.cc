@@ -69,14 +69,17 @@ Nonbonded* NonbondedFactory::create(const ProblemSpecP& ps,
   // radius.
   SCIRun::Vector resInverse;
   coords->toReduced(nonbondedCutoff,resInverse);
+  proc0cout << "Cutoff as fractional cell: " << resInverse << std::endl;
   SCIRun::Vector fractionalCutoffCells;
   fractionalCutoffCells = coords->getCellExtent().asVector() * resInverse;
-
+  proc0cout << "Double vector with cutoff cell reqiurements: " << fractionalCutoffCells << std::endl;
 
   int xCells = ceil(fractionalCutoffCells.x());
   int yCells = ceil(fractionalCutoffCells.y());
   int zCells = ceil(fractionalCutoffCells.z());
   int nonbondedGhostCells = std::max(xCells,std::max(yCells, zCells));
+
+  proc0cout << "Integral number of cutoff cells: " << nonbondedGhostCells << std::endl;
 
   switch (ffType) {
     case(TwoBody):
