@@ -216,7 +216,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
         register_task( task_name, tsk );
 
         _active_tasks.push_back(task_name); 
-        _post_update_coal_tasks.push_back(task_name); 
+        _pre_update_particle_tasks.push_back(task_name); 
         
       } else { 
 

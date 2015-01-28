@@ -17,7 +17,7 @@ public:
 
     void register_initialize( std::vector<VariableInformation>& variable_registry );
 
-    void register_timestep_init( std::vector<VariableInformation>& variable_registry ); 
+    void register_timestep_init( std::vector<VariableInformation>& variable_registry ){}; 
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
 
@@ -30,7 +30,7 @@ public:
                      SpatialOps::OperatorDatabase& opr );
     
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                        SpatialOps::OperatorDatabase& opr );
+                        SpatialOps::OperatorDatabase& opr ){};
 
     void eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                SpatialOps::OperatorDatabase& opr );
