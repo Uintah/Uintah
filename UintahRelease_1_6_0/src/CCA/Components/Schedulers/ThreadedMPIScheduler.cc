@@ -181,8 +181,9 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
               << plural + " for task execution." << std::endl;
   }
 
-  // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
+  // Reset Uintah thread ID (to reflect number of last physical core used)
   Thread::self()->set_myid(numThreads_);
+
   if (threadedmpi_compactaffinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
@@ -218,6 +219,7 @@ ThreadedMPIScheduler::createSubScheduler()
 
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
+  // Reset Uintah subscheduler thread ID (to reflect number of last physical core used)
   Thread::self()->set_myid(numThreads_);
 
   if (subsched->numThreads_ > 0) {
@@ -250,7 +252,9 @@ ThreadedMPIScheduler::createSubScheduler()
       subsched->t_thread[i] = t;
     }
   }
+
   return subsched;
+
 }
 
 //______________________________________________________________________
@@ -313,7 +317,6 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
   }
 
   int me = d_myworld->myrank();
-
   makeTaskGraphDoc(dts, me);
 
   // TODO - figure out and fix this (APH - 01/12/15)

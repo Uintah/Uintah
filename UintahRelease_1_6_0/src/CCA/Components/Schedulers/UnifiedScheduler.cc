@@ -230,20 +230,16 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   if (d_myworld->myrank() == 0) {
-    if (numThreads_ < 0) {
-      std::cout << "\tUsing Unified Scheduler without threads (Single-Processor mode)" << std::endl;
-    }
-    else {
-      std::string plural = (numThreads_ == 1) ? " thread" : " threads";
-      std::cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
-                << "   Creating " << numThreads_ << " additional "
-                << plural + " for task execution (total task execution threads = "
-                << numThreads_ + 1 << ")." << std::endl;
-    }
+    std::string plural = (numThreads_ == 1) ? " thread" : " threads";
+    std::cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
+              << "   Creating " << numThreads_ << " additional "
+              << plural + " for task execution (total task execution threads = "
+              << numThreads_ + 1 << ")." << std::endl;
   }
 
-  // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
+  // Reset Uintah thread ID (to reflect number of last physical core)
   Thread::self()->set_myid(numThreads_);
+
   if (unified_compactaffinity.active()) {
     if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
@@ -309,7 +305,9 @@ UnifiedScheduler::createSubScheduler()
       subsched->t_thread[i] = t;
     }
   }
+
   return subsched;
+
 }
 
 //______________________________________________________________________
@@ -453,26 +451,13 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     d_times.clear();
   }
 
-  // Do the work of the SingleProcessorScheduler and bail
-  //   if not using MPI or GPU, and also not using multiple threads
-  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
-    if (numThreads_ < 0) {
-      for (int i = 0; i < ntasks; i++) {
-        DetailedTask* dtask = dts->getTask(i);
-        runTask(dtask, iteration, -1, Task::CPU);
-      }
-      finalizeTimestep();
-      return;
-    }
-    else {
-      throw ProblemSetupException(
-          "MPI runtime not initialized. You must  use '-mpi' command line option in conjunction with '-nthreads'",
-          __FILE__, __LINE__);
-    }
-  }
-
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
+
+  // TODO - figure out and fix this (APH - 01/12/15)
+//  if (timeout.active()) {
+//    emitTime("taskGraph output");
+//  }
 
   mpi_info_.totalreduce = 0;
   mpi_info_.totalsend = 0;

@@ -40,6 +40,7 @@
     <save label = "temperature" table_lookup="true"/>
     <save label = "CO2" table_lookup="true"/>
     <save label = "O2" table_lookup="true"/>
+    <save label = "tot_N"/>
     <checkpoint cycle="2" interval="0.005"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
@@ -628,6 +629,7 @@
           <variable label="ux" role="uvel" />
           <variable label="uy" role="vvel" />
           <variable label="uz" role="wvel" />
+          <variable label="tot_N" role="total_number_density"/>
         </ParticleVariables>
       </EulerianParticles>   
 
@@ -640,6 +642,7 @@
           <grid independent_type="svol" dependent_type="svol"/>
           <constant>[10,10,10]</constant>
         </model>
+        <model label="tot_N" type="total_number_density"/>
       </ParticleModels>
 
 <!-- TIME INTEGRATOR -->
