@@ -539,7 +539,7 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
     throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
   }   
 
-  _part_radprops = scinew ParticleRadCoeffs3D(_LowComplex,_HighComplex,3 );  
+  _part_radprops = scinew ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
 
   _computeComplexIndex = true; // complex index of refraction needed
 }
@@ -756,7 +756,7 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     db->findBlock("particles")->require("complex_ir_imag",imagCIF); 
     db->findBlock("particles")->getWithDefault("const_asymmFact",_constAsymmFact,0.0); 
     std::complex<double>  CIF(realCIF, imagCIF );  
-    _part_radprops = scinew ParticleRadCoeffs(CIF);  
+    _part_radprops = scinew ParticleRadCoeffs(CIF,1e-6,3e-4,10);  
     std::string which_model = "none"; 
     db->findBlock("particles")->require("model_type", which_model);
     if ( which_model == "planck" ){ 
