@@ -18,7 +18,17 @@ void
 TotNumDensity::problemSetup( ProblemSpecP& db ){ 
 
   //only working for DQMOM at the moment
-  _Nenv = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM );
+
+  bool doing_dqmom = ParticleHelper::check_for_particle_method(db,ParticleHelper::DQMOM); 
+  bool doing_cqmom = ParticleHelper::check_for_particle_method(db,ParticleHelper::CQMOM); 
+
+  if ( doing_dqmom ){ 
+    _Nenv = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM );
+  } else if ( doing_cqmom ){ 
+    _Nenv = ParticleHelper::get_num_env( db, ParticleHelper::CQMOM );
+  } else { 
+    throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+  }
 
 }
 
@@ -74,19 +84,6 @@ TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
 }
 
-//
-//------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void 
-TotNumDensity::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
-}
-
-void 
-TotNumDensity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                          SpatialOps::OperatorDatabase& opr ){ 
-}
 //
 //------------------------------------------------
 //------------- TIMESTEP WORK --------------------
