@@ -1304,8 +1304,11 @@ namespace Uintah{
 
             double psi = 2.0; // when r = infinity
 
-            if ( r < _huge ) { 
+            if ( r < _huge && r >= 0.0 ) { 
               psi = ( r + std::abs(r) ) / ( 1.0 + std::abs(r) ); 
+            } else { 
+              // r went to -inf
+              psi = 0;
             }
 
             return psi; 

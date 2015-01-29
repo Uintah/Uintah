@@ -23,7 +23,11 @@
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING ''">
+                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable'">
+
+          <frequency                    spec="OPTIONAL INTEGER 'positive'"
+                                        need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps). 
+                                                                                             Otherwise it just copies old fluxes forward. Default = 1. -->
 
         </model>
       </PropertyModelsV2>
@@ -972,9 +976,11 @@
                                                                quick,
                                                                roe_minmod, 
                                                                super_bee, 
+                                                               vanleer, 
                                                                central, 
                                                                old_super_bee, 
-                                                               super_bee_wall_upwind, 
+                                                               super_bee_wall_upwind,
+                                                               vanleer_wall_upwind, 
                                                                roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/-->
@@ -1417,10 +1423,12 @@
                                                                2upwind,
                                                                quick,
                                                                roe_minmod, 
+                                                               vanleer, 
                                                                super_bee, 
                                                                central, 
                                                                old_super_bee, 
                                                                super_bee_wall_upwind, 
+                                                               vanleer_wall_upwind,
                                                                roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
@@ -1462,10 +1470,12 @@
                                                                2upwind,
                                                                quick,
                                                                roe_minmod, 
+                                                               vanleer, 
                                                                super_bee, 
                                                                central, 
                                                                old_super_bee, 
                                                                super_bee_wall_upwind, 
+                                                               vanleer_wall_upwind,
                                                                roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
