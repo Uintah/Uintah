@@ -192,7 +192,7 @@
                                         attribute1="type REQUIRED STRING 'constant, burns_christon, radprops, hottel_sarofim'"
                                         need_applies_to="type radiation_properties">
 
-            <abskg                        spec="OPTIONAL NO_DATA" 
+            <abskg                        spec="REQUIRED NO_DATA" 
                                           attribute1="label REQUIRED STRING"/> <!-- the name you want to give the abskg (gas only) variable.  Default value is abskg. -->
             <temperature                  spec="OPTIONAL NO_DATA"
                                           attribute1="label REQUIRED STRING"/> <!-- The label (table) name of temperature -->
