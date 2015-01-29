@@ -318,7 +318,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory()); 
   boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory()); 
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory()); 
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2()); 
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(sharedState)); 
 
   _boost_factory_map.clear(); 
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF)); 
@@ -1225,6 +1225,7 @@ Arches::scheduleInitialize(const LevelP& level,
     i->second->schedule_init(level, sched, matls ); 
   }
 
+  sched_scalarInit(level, sched);
   //property models
   all_tasks.clear();
   all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
@@ -1235,7 +1236,7 @@ Arches::scheduleInitialize(const LevelP& level,
   //===============================================================
 
   // base initialization of all scalars
-  sched_scalarInit(level, sched);
+ // sched_scalarInit(level, sched);
 
   //pass some periodic stuff around.
   IntVector periodic_vector = level->getPeriodicBoundaries();
