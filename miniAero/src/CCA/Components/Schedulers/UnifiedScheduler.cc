@@ -1539,7 +1539,7 @@ void UnifiedScheduler::postMPISends( DetailedTask * task,
 
       if( Uintah::Parallel::getMPIRank() == 0 ) {
         cerrLock.lock();
-        cout << "thread: " << Thread::self()->myid() << " should be " << thread_id << "\n";
+        //cout << "thread: " << Thread::self()->myid() << " should be " << thread_id << "\n";
         if( Thread::self()->myid() != thread_id ) {
           SCI_THROW( InternalError("thread id not equal to Thread's id.", __FILE__, __LINE__) );
         }
