@@ -48,7 +48,7 @@ ManifoldRxn::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("Pr", _prNo, 0.4); 
 
-	_table_lookup_species->lookup.insert(std::make_pair(_manifold_var_name, ChemHelper::TableLookup::OLD)); 
+  _table_lookup_species->lookup.insert(std::make_pair(_manifold_var_name, ChemHelper::TableLookup::OLD)); 
   //Note: Density old is added automagically in ClassicTable problemSetup. 
 
 }

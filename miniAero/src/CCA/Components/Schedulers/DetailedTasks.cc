@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,9 +46,9 @@
 using namespace Uintah;
 using namespace std;
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
+// sync cout/cerr so they are readable when output by multiple threads
 extern SCIRun::Mutex cerrLock;
+extern SCIRun::Mutex coutLock;
 extern DebugStream mixedDebug;
 static DebugStream dbg("DetailedTasks", false);
 static DebugStream scrubout("Scrubbing", false);
@@ -144,14 +144,15 @@ void DetailedTasks::assignMessageTags(int me)
     ASSERTRANGE(to, 0, d_myworld->size());
 
     if (from == me || to == me) {
-      // Easier to go in reverse order now, instead of reinitializing
-      // perPairBatchIndices.
+      // Easier to go in reverse order now, instead of reinitializing perPairBatchIndices.
       pair<int, int> fromToPair = make_pair(from, to);
       batches_[i]->messageTag = ++perPairBatchIndices[fromToPair]; /* start with
        one */
       if (messagedbg.active()) {
+        coutLock.lock();
         messagedbg << me << " assigning message num " << batch->messageTag << " from task " << batch->fromTask->getName()
                    << " to task " << batch->toTasks.front()->getName() << ", process " << from << " to process " << to << "\n";
+        coutLock.unlock();
       }
     }
   }
@@ -653,6 +654,7 @@ void DetailedTask::findRequiringTasks(const VarLabel* var,
     }
   }
 }
+
 DetailedDep* DetailedTasks::findMatchingDetailedDep(DependencyBatch* batch,
                                                     DetailedTask* toTask,
                                                     Task::Dependency* req,
@@ -815,10 +817,10 @@ void DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   //make keys for MPI messages
   if (fromPatch) varKeyDB.insert(req->var,matl,fromPatch);
 
-  //get dependancy batch
+  //get dependency batch
   DependencyBatch* batch = from->getComputes();
 
-  //find dependancy batch that is to the same processor as this dependency
+  //find dependency batch that is to the same processor as this dependency
   for (; batch != 0; batch = batch->comp_next) {
     if (batch->to == toresource) {
       break;
@@ -1248,9 +1250,7 @@ void DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     mixedDebug << "Begin internalDependenciesSatisfied\n";
     cerrLock.unlock();
   }
-//#if !defined( _AIX )
   readyQueueLock_.writeLock();
-//#endif
 
   readyTasks_.push(task);
 
@@ -1259,11 +1259,7 @@ void DetailedTasks::internalDependenciesSatisfied(DetailedTask* task)
     mixedDebug << *task << " satisfied.  Now " << readyTasks_.size() << " ready.\n";
     cerrLock.unlock();
   }
-//#if !defined( _AIX )
-  // need to make a non-binary semaphore under aix for this to work.
-//  readyQueueSemaphore_.up();
   readyQueueLock_.writeUnlock();
-//#endif
 }
 
 DetailedTask*
@@ -1375,9 +1371,6 @@ void DetailedTasks::addCompletionPendingDeviceTask(DetailedTask* dtask)
 void DetailedTasks::initTimestep()
 {
   readyTasks_ = initiallyReadyTasks_;
-//#if !defined( _AIX )
-//  readyQueueSemaphore_.up((int)readyTasks_.size());
-//#endif
   incrementDependencyGeneration();
   initializeBatches();
 }

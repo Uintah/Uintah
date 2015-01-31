@@ -29,7 +29,7 @@ WasatchExprSource::problemSetup(const ProblemSpecP& inputdb)
   
   _source_grid_type = CC_SRC; 
   
-	_wasatch_expr_names.push_back(_was_expr); 
+  _wasatch_expr_names.push_back(_was_expr); 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 

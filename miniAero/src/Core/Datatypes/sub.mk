@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -52,13 +52,8 @@ SRCS += $(SRCDIR)/Color.cc                      \
         $(SRCDIR)/PSet.cc 			\
         $(SRCDIR)/VariableCache.cc 		
 
-ifeq ($(HAVE_TEEM),yes)
-  SRCS += \
-        $(SRCDIR)/NrrdData.cc                   
-endif
 
 PSELIBS := \
-	Core/Basis	  \
         Core/Containers   \
         Core/Disclosure   \
         Core/Exceptions   \
@@ -71,14 +66,10 @@ PSELIBS := \
         Core/Util         
 
 LIBS := $(M_LIBRARY) $(F_LIBRARY)           \
-        $(TEEM_LIBRARY) $(Z_LIBRARY)         \
+        $(Z_LIBRARY)         \
         $(LAPACK_LIBRARY) $(BLAS_LIBRARY) $(THREAD_LIBRARY) \
 	$(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-ifeq ($(HAVE_TEEM),yes)
-  INCLUDES += $(TEEM_INCLUDE)
-endif
 
 INCLUDES += $(BLAS_INCLUDE)

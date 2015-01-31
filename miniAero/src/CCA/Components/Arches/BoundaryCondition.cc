@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -2893,7 +2893,7 @@ void BoundaryCondition::setTurbInlet( const Patch* patch, const Patch::FaceType&
   double elapTime = d_lab->d_sharedState->getElapsedTime();
   int t = TurbInlet->getTimeIndex( ts , elapTime);
 
-  IntVector	shiftVec;
+  IntVector shiftVec;
   shiftVec = TurbInlet->getOffsetVector( );
   
   switch ( face ) {

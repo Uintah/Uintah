@@ -9,9 +9,10 @@ ______________________________________________________________________
 
 ExecTimes         SCI_DEBUG     Outputs the time for execution on each task
                                 NOTE: TaskExecTimes are: 
-                                        1) Represented in seconds
-                                        2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps
-                                        3) Cumulative over the number of worker threads for multi-threaded runs
+                                         1) Represented in seconds
+                                         2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps
+                                        3a) Cumulative over nthreads when using the UnifiedScheduler
+                                        3b) Cumulative over nthreads-1 when using the ThreadedMPIScheduler
                                 To view the top 10 tasks use:
                                 sort -t: -k 2 -k 3 -g -r exectimes.?.? | head
                                 To get a summary of all exectimes files run the script src/scripts/execsummary
@@ -35,24 +36,52 @@ ComponentTimings  SCI_DEBUG     output overall mpi and cpu times
 BCR_dbg           SCI_DEBUG     print out some information regarding the BC setup
 
 
-Schedulers:                              NOTE: The default is "UnifiedScheduler"
+Schedulers:                              NOTE: The default is "MPI" without threads and "UnifiedScheduler" with threads.
+                                               These flags invoke specific schedulers and are semantically equivalent to
+                                               adding a <Scheduler> section to an input file.
 __________________________________
-SingleProcessor            SCI_DEBUG     Use SingleProcessorScheduler
-MPI                        SCI_DEBUG     Use MPIScheduler - tasks are statically ordered
-DynamicMPI                 SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution
+SingleProcessorScheduler   SCI_DEBUG     Use SingleProcessorScheduler (Static task ordering and deterministic execution without MPI.)
+DynamicMPIScheduler        SCI_DEBUG     Use DynamicMPIScheduler - uses out-of-order task execution (1 MPI process per CPU core)
+UnifiedScheduler           SCI_DEBUG     Use Multi-threaded Unified w/ GPU support - uses out-of-order, multi-threaded task execution
+                                            (1 MPI process per multi-core node; Pthreads created to execute tasks on individual cores)
+                                            NOTE: This scheduler is EXPERIMENTAL and under active development.
 
 
 Scheduler Debugging Information:
 __________________________________
-MPIScheduler               SCI_DEBUG     Prints debugging information for the MPIScheduler
-DynamicMPIScheduler        SCI_DEBUG     Prints debugging information for the DynamicMPIScheduler
-UnifiedScheduler           SCI_DEBUG     Prints debugging information for the UnifiedScheduler
+MPIScheduler_DBG           SCI_DEBUG     Prints general debugging information for the MPIScheduler
+WaitTimes                  SCI_DEBUG     Outputs fine-grained MPI wait time to file per rank, e.g. waittimes.<comm_size>.<rank>
 
+
+DynamicMPIScheduler Related:
+__________________________________
+DynamicMPI_DBG             SCI_DEBUG     Prints general debugging information
+DynamicMPI_TimingsOut      SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
+                                           e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
+DynamicMPI_QueueLength     SCI_DEBUG     Prints the average task queue length
+
+
+ThreadedMPIScheduler Related:
+__________________________________
+ThreadedMPI_DBG                 SCI_DEBUG     Prints general debugging information
+ThreadedMPI_TimingsOut          SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
+                                                e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
+ThreadedMPI_QueueLength         SCI_DEBUG     Prints the average task queue length
+ThreadedMPI_ThreadDBG           SCI_DEBUG     Prints thread pinning information
+ThreadedMPI_CompactAffinity     SCI_DEBUG     Binds the main thread to core <nthreads-1> and TaskWorkers to core <Uintah thread id>
+                                                NOTE: This is ENABLED by default. This affinity pattern is modeled after OpenMP's compact 
+                                                      affinity, which binds threads incrementally across logical cores. 
 
 UnifiedScheduler Related:
 __________________________________
-CPUAffinity                SCI_DEBUG     Binds control threads to core 0 and worker threads to core <Uintah thread id>
-UnifiedThreadDBG           SCI_DEBUG     Prints debugging information for thread pinning
+Unified_DBG                SCI_DEBUG     Prints general debugging information
+Unified_TimingsOut         SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
+                                           e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
+Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
+Unified_ThreadDBG          SCI_DEBUG     Prints thread pinning information
+Unified_CompactAffinity    SCI_DEBUG     Binds the main thread to core <nthreads-1> and UnifiedWorkers to core <Uintah thread id>
+                                           NOTE: This is ENABLED by default. This affinity pattern is modeled after OpenMP's compact 
+                                                 affinity, which binds threads incrementally across logical cores. 
 
 
 GPU Related:

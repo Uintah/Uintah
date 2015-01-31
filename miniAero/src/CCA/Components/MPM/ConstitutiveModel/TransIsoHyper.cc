@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -275,7 +275,7 @@ void TransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pfiberdir_carry,  lb->pFiberDirLabel_preReloc,pset);
     new_dw->allocateAndPut(stretch,          pStretchLabel_preReloc,     pset);
     new_dw->allocateAndPut(fail,             pFailureLabel_preReloc,     pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,             pset);
     new_dw->allocateAndPut(p_q,              lb->p_qLabel_preReloc,      pset);
     new_dw->get(pvolume_new,      lb->pVolumeLabel_preReloc,  pset);
     new_dw->get(velGrad,          lb->pVelGradLabel_preReloc, pset);

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,9 +34,8 @@
 
 #include <algorithm>
 
-#if (defined(__digital__) || defined(_AIX) \
-   || defined(__ECC) || defined(_MSC_VER) || HAVE_EXT_ALGORITHM ) // forget about using extension library
-// AIX and DEC don't have this...X
+#if ( defined(__ECC) || defined(_MSC_VER) || HAVE_EXT_ALGORITHM ) // forget about using extension library
+
 namespace std {
   template <class Iter, class Compare>
   bool is_sorted(Iter begin, Iter end, Compare compare)

@@ -142,7 +142,7 @@
           <initialization type="constant">
             <constant>0.2</constant>
           </initialization>
-          <scaling_const>1</scaling_const>
+          <scaling_const>[1.,1.]</scaling_const>
         </Weights>
 
         <Ic label="length">
@@ -157,7 +157,7 @@
             <env_step_value qn="1" value=".50"/>
           </initialization>
           <nominal_values>[1, 0.5]</nominal_values>
-          <scaling_const>1</scaling_const>
+          <scaling_const>[1.,1.]</scaling_const>
         </Ic>
 
         <Ic label="mass">
@@ -172,7 +172,7 @@
             <env_step_value qn="1" value=".50"/>
           </initialization>
           <nominal_values>[1, 0.5]</nominal_values>
-          <scaling_const>1</scaling_const>
+          <scaling_const>[1.,1.]</scaling_const>
         </Ic>
 
         <Moment>

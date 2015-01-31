@@ -24,11 +24,11 @@
      // for all ys and zs
      for ( int m =  0; m < Ncz; m ++ ) {
        for ( int n = 0; n < Ncy; n ++ ) {
-	 i_index = i + Ncx * n + TopBottomNo * m;
-	 CO2[i_index] = CO2[i];
-	 H2O[i_index] = H2O[i];
-	 SFV[i_index] = SFV[i];
-	 T_Vol[i_index] = T_Vol[i];
+   i_index = i + Ncx * n + TopBottomNo * m;
+   CO2[i_index] = CO2[i];
+   H2O[i_index] = H2O[i];
+   SFV[i_index] = SFV[i];
+   T_Vol[i_index] = T_Vol[i];
        }
      }
 

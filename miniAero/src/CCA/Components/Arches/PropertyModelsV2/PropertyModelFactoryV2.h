@@ -2,6 +2,7 @@
 #define UT_PropertyModelFactoryV2_h
 
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
+#include <Core/Grid/SimulationState.h>
 #include <string>
 
 namespace Uintah{ 
@@ -10,7 +11,7 @@ namespace Uintah{
 
   public: 
 
-    PropertyModelFactoryV2(); 
+    PropertyModelFactoryV2( SimulationStateP& shared_state ); 
     ~PropertyModelFactoryV2(); 
 
     void register_all_tasks( ProblemSpecP& db ); 
@@ -19,18 +20,15 @@ namespace Uintah{
 
     std::vector<std::string> retrieve_task_subset( const std::string subset ) { 
 
-      if ( subset == "coal_models"){ 
-        return _coal_models; 
-      } else { 
-        throw InvalidValue("Error: No task subsets here yet. ", __FILE__,__LINE__);
-      }
+      throw InvalidValue("Error: Accessing the base class implementation of retrieve_task_subset in PropertyModelFactoryV2, which means there is no specific implementation for this factory.",__FILE__,__LINE__); 
+
     }
 
   protected: 
 
   private: 
 
-    std::vector<std::string> _coal_models; 
+    SimulationStateP _shared_state; 
 
   };
 }

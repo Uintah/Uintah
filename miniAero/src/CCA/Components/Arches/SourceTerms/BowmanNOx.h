@@ -18,8 +18,8 @@
 * \code 
 *   <Sources>
 *     <src label = "my_source" type = "bowman_nox" > 
-			 	<!-- Bowman NOx rate expression --> 
-			 	<n2_label 								  spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for N2 (default = N2) --> 
+        <!-- Bowman NOx rate expression --> 
+        <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- mass fraction label for N2 (default = N2) --> 
         <A                          spec="REQUIRED DOUBLE" need_applies_to="type bowman_nox"/> <!-- Pre-exponential factor --> 
         <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type bowman_nox"/> <!-- Activation temperature, code multiplies the -1!! --> 
         <o2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- o2 label (default = O2) --> 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,8 +29,8 @@ const double n_back[3] = {0, -1, 0};
 const double n_left[3] = {1, 0, 0};
 const double n_right[3] = {-1, 0, 0};;
 const double *surface_n[6] = { n_top, n_bottom,
-				      n_front, n_back,
-				      n_left, n_right};
+              n_front, n_back,
+              n_left, n_right};
 
   
 

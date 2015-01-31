@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -368,9 +368,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
     tsk->schedule_timestep_init(level, sched, matls); 
   }
-  BFM::iterator i_property_models = _boost_fac_map.find("property_models"); 
+  BFM::iterator i_property_models = _boost_fac_map.find("property_models_factory"); 
   TaskFactoryBase::TaskMap all_property_models = i_property_models->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_property_models.begin(); i != all_property_models.end(); i++){ 
+    i->second->schedule_timestep_init(level, sched, matls); 
+  }
+  BFM::iterator i_particle_models = _boost_fac_map.find("particle_model_factory"); 
+  TaskFactoryBase::TaskMap all_particle_models = i_particle_models->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); i != all_particle_models.end(); i++){ 
     i->second->schedule_timestep_init(level, sched, matls); 
   }
   //===================END NEW STUFF=======================
@@ -398,12 +403,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       tsk->schedule_task(level, sched, matls, curr_level); 
     }
 
-    //Particle Models
-    BFM::iterator i_partmod_fac = _boost_fac_map.find("particle_model_factory"); 
-    TaskFactoryBase::TaskMap all_particle_models = i_partmod_fac->second->retrieve_all_tasks(); 
-    for ( TaskFactoryBase::TaskMap::iterator i = all_particle_models.begin(); 
-          i != all_particle_models.end(); i++){ 
-      i->second->schedule_task(level, sched, matls, curr_level); 
+    //ParticleModels before any update has occured 
+    std::vector<std::string> pre_update_part_tasks 
+      = i_particle_models->second->retrieve_task_subset("pre_update_particle_models"); 
+    for ( std::vector<std::string>::iterator itsk = pre_update_part_tasks.begin(); itsk != pre_update_part_tasks.end(); itsk++ ){ 
+      TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk); 
+      tsk->schedule_task( level, sched, matls, curr_level ); 
     }
 
     //Property Models
@@ -490,15 +495,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
 
 
-      // ---- schedule the solution of the transport equations ----
-
-
       for( DQMOMEqnFactory::EqnMap::iterator iEqn = dqmom_eqns.begin();
            iEqn!=dqmom_eqns.end(); ++iEqn ) {
 
         DQMOMEqn* dqmom_eqn = dynamic_cast<DQMOMEqn*>(iEqn->second);
 
-        //also get the abscissa values
+        //get the abscissa values
         dqmom_eqn->sched_getUnscaledValues( level, sched );
       }
 
@@ -508,6 +510,14 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         // schedule DQMOM moment calculation
         d_dqmomSolver->sched_calculateMoments( level, sched, curr_level );
       }
+
+      //final clipping
+      std::vector<std::string> clipping_tasks = i_particle_models->second->retrieve_task_subset("post_update_coal"); 
+      for ( std::vector<std::string>::iterator itsk = clipping_tasks.begin(); itsk != clipping_tasks.end(); itsk++ ){ 
+        TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk); 
+        tsk->schedule_task( level, sched, matls, curr_level ); 
+      }
+
     }
     
     if ( d_doCQMOM ) {

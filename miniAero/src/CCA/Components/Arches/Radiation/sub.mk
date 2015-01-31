@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -22,18 +22,14 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
-# Makefile fragment for this subdirectory 
-
+#  Makefile fragment for this subdirectory:
+#
 
 SRCDIR := CCA/Components/Arches/Radiation
 
 SRCS += \
-        $(SRCDIR)/RadiationSolver.cc  \
-				$(SRCDIR)/RadPropertyCalculator.cc \
-        $(SRCDIR)/DORadiationModel.cc
+        $(SRCDIR)/RadiationSolver.cc       \
+        $(SRCDIR)/RadPropertyCalculator.cc 
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/RadPetscSolver.cc
@@ -42,8 +38,10 @@ else
 endif
 
 ifeq ($(HAVE_HYPRE),yes)
-  SRCS += $(SRCDIR)/RadHypreSolver.cc
+  SRCS += $(SRCDIR)/DORadiationModel.cc \
+          $(SRCDIR)/RadHypreSolver.cc   
 endif
+
 
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rordr_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rordrss_fort.h
@@ -59,6 +57,4 @@ $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomflux_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdombmcalc_fort.h
 $(SRCDIR)/DORadiationModel.$(OBJEXT): $(SRCDIR)/fortran/rdomvolq_fort.h
 $(SRCDIR)/RadPropertyCalculator.$(OBJEXT): $(SRCDIR)/fortran/hottel_fort.h
-
-
 

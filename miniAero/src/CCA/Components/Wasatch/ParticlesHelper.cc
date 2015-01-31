@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2014 The University of Utah
+ * Copyright (c) 2013-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -130,18 +130,6 @@ namespace Uintah {
     pYLabel_ = NULL;
     pZLabel_ = NULL;
     materials_ = NULL;
-    pPosLabel_ = VarLabel::create("p.x",
-                                  ParticleVariable<Uintah::Point>::getTypeDescription(),
-                                  SCIRun::IntVector(0,0,0),
-                                  VarLabel::PositionVariable );
-    pIDLabel_ = Uintah::VarLabel::create("p.particleID",
-                                         ParticleVariable<long64>::getTypeDescription());
-    
-    pPosName_ = pPosLabel_->getName();
-    pIDName_  = pIDLabel_->getName();
-    
-    destroyMe_.push_back(pPosLabel_);
-    destroyMe_.push_back(pIDLabel_);
   }
   
   //------------------------------------------------------------------
@@ -158,10 +146,28 @@ namespace Uintah {
   
   //------------------------------------------------------------------
   
-  void ParticlesHelper::problem_setup(Uintah::ProblemSpecP particleEqsSpec,
+  void ParticlesHelper::problem_setup(Uintah::ProblemSpecP uintahSpec,
+                                      Uintah::ProblemSpecP particleEqsSpec,
                                       Uintah::SimulationStateP sharedState)
   {
     using namespace Uintah;
+    
+    ProblemSpecP uintahPPosSpec = uintahSpec->findBlock("ParticlePosition");
+    if (uintahPPosSpec) uintahPPosSpec->getAttribute("label",pPosName_);
+    else pPosName_ = "p.x";
+    
+    pPosLabel_ = VarLabel::create(pPosName_,
+                                  ParticleVariable<Uintah::Point>::getTypeDescription(),
+                                  SCIRun::IntVector(0,0,0),
+                                  VarLabel::PositionVariable );
+    pIDLabel_ = Uintah::VarLabel::create("p.particleID",
+                                         ParticleVariable<long64>::getTypeDescription());
+    
+    pIDName_  = pIDLabel_->getName();
+    
+    destroyMe_.push_back(pPosLabel_);
+    destroyMe_.push_back(pIDLabel_);
+
     particleEqsSpec_ = particleEqsSpec;
     sharedState_     = sharedState;
 

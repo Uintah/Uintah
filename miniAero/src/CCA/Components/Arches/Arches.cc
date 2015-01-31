@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,9 +38,9 @@
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
 #include <CCA/Components/Arches/CoalModels/BTDevol.h>
+#include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
-#include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/DragModel.h>
@@ -49,6 +49,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 //NOTE: new includes for CQMOM
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
@@ -306,6 +307,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   _arches_spec = db; 
   d_lab->problemSetup( db );
 
+  //Look for coal information 
+  CoalHelper& coal_helper = CoalHelper::self(); 
+  coal_helper.parse_for_coal_info( db ); 
+
   //==============NEW TASK STUFF
   //build the factories
   boost::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory()); 
@@ -313,7 +318,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory()); 
   boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory()); 
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory()); 
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2()); 
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(sharedState)); 
 
   _boost_factory_map.clear(); 
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF)); 
@@ -321,7 +326,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("initialize_factory",InitF)); 
   _boost_factory_map.insert(std::make_pair("particle_model_factory",PartModF)); 
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
-  _boost_factory_map.insert(std::make_pair("property_models", PropModels)); 
+  _boost_factory_map.insert(std::make_pair("property_models_factory", PropModels)); 
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -344,7 +349,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   //Checking for lagrangian particles:
   _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
   if ( _doLagrangianParticles ){ 
-    _particlesHelper->problem_setup(_arches_spec->findBlock("LagrangianParticles"), sharedState);
+    _particlesHelper->problem_setup(params,_arches_spec->findBlock("LagrangianParticles"), sharedState);
   }
 
   //__________________________________
@@ -1171,6 +1176,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
   d_turbModel->sched_computeFilterVol( sched, level, matls ); 
 
+  //Particle models are initialized after DQMOM/CQMOM initialization 
+
   //=========== NEW TASK INTERFACE ==============================
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory"); 
@@ -1178,7 +1185,7 @@ Arches::scheduleInitialize(const LevelP& level,
   BFM::iterator i_init_fac = _boost_factory_map.find("initialize_factory"); 
   BFM::iterator i_partmod_fac = _boost_factory_map.find("particle_model_factory"); 
   BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
-  BFM::iterator i_property_models = _boost_factory_map.find("property_models"); 
+  BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory"); 
 
   //utility factory
   TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
@@ -1211,23 +1218,25 @@ Arches::scheduleInitialize(const LevelP& level,
   TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
   if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
 
-  //particle models
-  all_tasks.clear(); 
-  all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
-  }
-
   //lagrangian particles
   all_tasks.clear();
   all_tasks = i_lag_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
   }
+
+  sched_scalarInit(level, sched);
+  //property models
+  all_tasks.clear();
+  all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
   //===============================================================
 
   // base initialization of all scalars
-  sched_scalarInit(level, sched);
+ // sched_scalarInit(level, sched);
 
   //pass some periodic stuff around.
   IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -1341,11 +1350,11 @@ Arches::scheduleInitialize(const LevelP& level,
   //=================================================================================
   //NEW TASK INTERFACE 
   //
-  //Initialization of COAL property models
-  std::vector<std::string> coal_property_tasks = i_property_models->second->retrieve_task_subset("coal_models"); 
-  for ( std::vector<std::string>::iterator i = coal_property_tasks.begin(); i != coal_property_tasks.end(); i++){ 
-    TaskInterface* tsk = i_property_models->second->retrieve_task(*i); 
-    tsk->schedule_init(level, sched, matls ); 
+  //particle models
+  all_tasks.clear(); 
+  all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
   }
   //=================================================================================
 
@@ -2642,14 +2651,14 @@ void Arches::registerModels(ProblemSpecP& db)
         } else if ( model_type == "CharOxidationShaddix" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "ShaddixHeatTransfer" ) {
-          ModelBuilder* modelBuilder = scinew ShaddixHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
           ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "SimpleBirth" ) {
+          ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;

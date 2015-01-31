@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,9 +33,9 @@ using namespace std;
 
 // get NoMedia from main function
 ray::ray(const int &VolElementNo_,
-	 const int &Ncx_,
-	 const int &Ncy_,
-	 const int &Ncz_){  
+   const int &Ncx_,
+   const int &Ncy_,
+   const int &Ncz_){  
   
   VolElementNo = VolElementNo_;
   Ncx = Ncx_;
@@ -53,7 +53,7 @@ ray::~ray(){
 
   
 void ray::set_emissS_vol(MTRand &MTrng,
-			 double *sVol){
+       double *sVol){
   // double phi, theta;
   R_phi =  MTrng.randExc();
   R_theta = MTrng.randExc();
@@ -146,28 +146,28 @@ ray::surfaceIntersect( const double *X,
         
     // hit on top virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) * ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) * ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
       
       // update next step's volume index i, j, k,
       // but note, not updating currentvIndex yet
       
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
       // make sure that if not hit on realsurface and called hitSurfaceIndex
       // will return error
-      hitSurfaceIndex = -1;	
+      hitSurfaceIndex = -1; 
       VIRTUAL =  1;
     }
     else{
-      //	cout << "hit on top real " << endl;
+      //  cout << "hit on top real " << endl;
       VIRTUAL = 0;
       
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
+           jIndex,
+           kIndex);
       
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
       obReal = &obTop_ray;
@@ -196,21 +196,21 @@ ray::surfaceIntersect( const double *X,
 
     // hit on bottom virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex-1+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex-1+1) *ghostTB]){
       
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex-1);
+           hitSurfacejIndex,
+           hitSurfacekIndex-1);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
       
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
+           jIndex,
+           kIndex);
       
       VIRTUAL = 0;
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacejIndex * Ncx;
@@ -240,21 +240,21 @@ ray::surfaceIntersect( const double *X,
        
     // hit on front virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex-1+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex-1+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
       
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex-1,
-		       hitSurfacekIndex);
+           hitSurfacejIndex-1,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;	
+      hitSurfaceIndex = -1; 
       VIRTUAL =  1;
     }
     else{
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-      	
+           jIndex,
+           kIndex);
+        
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obFront_ray;
@@ -283,22 +283,22 @@ ray::surfaceIntersect( const double *X,
         
     // hit on back virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
 
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-		
+           jIndex,
+           kIndex);
+    
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfaceiIndex + hitSurfacekIndex * Ncx;
       obReal = &obBack_ray;
@@ -326,22 +326,22 @@ ray::surfaceIntersect( const double *X,
        
     // hit on left virtual surface
     if (VolFeature[(hitSurfaceiIndex-1+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex-1,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
-      //	cout << "hit on left real " << endl;
+      //  cout << "hit on left real " << endl;
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-      		
+           jIndex,
+           kIndex);
+          
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obLeft_ray;
@@ -370,22 +370,22 @@ ray::surfaceIntersect( const double *X,
     
     // hit on right virtual surface
     if (VolFeature[(hitSurfaceiIndex+1) +
-		   (hitSurfacejIndex+1) *ghostX +
-		   (hitSurfacekIndex+1) *ghostTB]){
+       (hitSurfacejIndex+1) *ghostX +
+       (hitSurfacekIndex+1) *ghostTB]){
 
       set_futurevIndex(hitSurfaceiIndex,
-		       hitSurfacejIndex,
-		       hitSurfacekIndex);
+           hitSurfacejIndex,
+           hitSurfacekIndex);
       
-      hitSurfaceIndex = -1;		
+      hitSurfaceIndex = -1;   
       VIRTUAL =  1;
     }
     else{
 
       set_futurevIndex(iIndex,
-		       jIndex,
-		       kIndex);
-      		
+           jIndex,
+           kIndex);
+          
       VIRTUAL = 0;      
       hitSurfaceIndex = hitSurfacejIndex + hitSurfacekIndex * Ncy;
       obReal = &obRight_ray;
@@ -424,15 +424,15 @@ ray::surfaceIntersect( const double *X,
 // then keep tracking if the ray goes to that scatter length yet.
 // otherwise, if scat-length is too long, the ray will never get a chance to scatter
 void ray::TravelInMediumInten(MTRand &MTrng,
-			      VirtualSurface &obVirtual,
-			      const double *kl_Vol,
-			      const double *scatter_Vol,
-			      const double *X,
-			      const double *Y,
-			      const double *Z,
-			      const int *VolFeature,
-			      double &PathLeft,
-			      double &PathSurfaceLeft) {
+            VirtualSurface &obVirtual,
+            const double *kl_Vol,
+            const double *scatter_Vol,
+            const double *X,
+            const double *Y,
+            const double *Z,
+            const int *VolFeature,
+            double &PathLeft,
+            double &PathSurfaceLeft) {
   
 
   if ( !surfaceIntersect(X, Y, Z, VolFeature) ) {
@@ -480,8 +480,8 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       PathSurfaceLeft = 1;      
       vIndexUpdate = 1;
    //    cout << "directionVector in ray.cc = " << directionVector[0] <<
-// 	"; " << directionVector[1] << "; " <<
-// 	directionVector[2] << endl;
+//  "; " << directionVector[1] << "; " <<
+//  directionVector[2] << endl;
       }
     else { // scatter happens within the subregion
       
@@ -506,11 +506,11 @@ void ray::TravelInMediumInten(MTRand &MTrng,
       
       // update on xhit, yhit, zhit, and ray_length
       if( surfaceIntersect(X, Y, Z, VolFeature) ) {
-	length = ray_length();
+  length = ray_length();
       }
       else {
-	cerr << " error @ not getting hit point coordinates after scattering!\n";
-	exit(1); // terminate program
+  cerr << " error @ not getting hit point coordinates after scattering!\n";
+  exit(1); // terminate program
       }
       
     }// else scatter happens
@@ -532,10 +532,10 @@ void ray::TravelInMediumInten(MTRand &MTrng,
 
 // For Intensity
 void ray::hitRealSurfaceInten(MTRand &MTrng,
-			      const double *absorb_surface,
-			      const double *rs_surface,
-			      const double *rd_surface,
-			      double &PathSurfaceLeft){
+            const double *absorb_surface,
+            const double *rs_surface,
+            const double *rd_surface,
+            double &PathSurfaceLeft){
 
 
   // for real surface,

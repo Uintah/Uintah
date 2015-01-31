@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,7 +90,8 @@ public:
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, 
                                   CCVariable<double>& divQ,
-                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw);
+                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw,
+                                  bool old_DW_isMissingIntensities);
       int getIntOrdinates();
 
       bool reflectionsBool();
@@ -161,9 +162,11 @@ private:
       std::vector< std::vector < double > > cosineTheta;
       std::vector< std::vector < double > > solidAngleQuad;
 
+      template<class TYPE> 
       void computeScatteringIntensities(int direction,
                       constCCVariable<double> &scatkt,
-  StaticArray< constCCVariable<double> > &Intensities,
+  //StaticArray< constCCVariable<double> > &Intensities,
+  StaticArray< TYPE > &Intensities,
               CCVariable<double> &scatIntensitySource,
               constCCVariable<double> &asymmetryFactor,
                                     const Patch* patch,

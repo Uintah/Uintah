@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,9 +32,9 @@ using std::endl;
 
 //inline
 RightRealSurface::RightRealSurface(const int &iIndex,
-				   const int &jIndex,
-				   const int &kIndex,
-				   const int &Ncy){
+           const int &jIndex,
+           const int &kIndex,
+           const int &Ncy){
   
   surfaceiIndex = iIndex+1;
   surfacejIndex = jIndex;

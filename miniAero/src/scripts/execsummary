@@ -24,9 +24,10 @@
 count=`ls -1 exectimes.* | wc -l`
 echo "##################################################################################"
 echo "# NOTE: TaskExecTimes are:"
-echo "#         1) Represented in seconds"
-echo "#         2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps"
-echo "#         3) Cumulative over the number of worker threads for multi-threaded runs"
+echo "#          1) Represented in seconds"
+echo "#          2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps"
+echo "#         3a) Cumulative over nthreads when using the UnifiedScheduler"
+echo "#         3b) Cumulative over nthreads-1 when using the ThreadedMPIScheduler"
 echo "# --------------------------------------------------------------------------------"
 echo "# Total(s): Average reported TaskExecTime for all tasks over all processors"
 echo "#   Avg(s): Average reported TaskExecTime for a given task over all processors"

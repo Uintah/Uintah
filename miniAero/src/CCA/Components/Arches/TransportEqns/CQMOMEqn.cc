@@ -172,7 +172,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       //parse the model blocks for var label
       std::string model_name;
       std::string source_label;
-      int nIC;
+      int nIC = 0;
       std::string ic_name;
       m_db->get("IC",ic_name);
       m = 0;
@@ -745,6 +745,7 @@ CQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int t
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, Ghost::None, 0);
   tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0 );
+  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::None, 0 ); 
   
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
@@ -776,18 +777,21 @@ CQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     CCVariable<double> oldphi; // phi @ last update for rk substeps
     constCCVariable<double> RHS;
     constCCVariable<double> rk1_phi; // phi @ n for averaging
+    constCCVariable<double> vol_fraction; 
     
     new_dw->getModifiable(phi, d_transportVarLabel, matlIndex, patch);
     new_dw->getModifiable(oldphi, d_oldtransportVarLabel, matlIndex, patch);
     new_dw->get(RHS, d_RHSLabel, matlIndex, patch, gn, 0);
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
+    old_dw->get(vol_fraction, d_fieldLabels->d_volFractionLabel, matlIndex, patch, gn, 0);
     
     d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt, curr_ssp_time, d_eqnName );
     
     double factor = d_timeIntegrator->time_factor[timeSubStep];
     curr_ssp_time = curr_time + factor * dt;
     
-    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high);
+    d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, 
+        clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, vol_fraction );
     
     //----BOUNDARY CONDITIONS
     // For first time step, bc's have been set in dqmomInit

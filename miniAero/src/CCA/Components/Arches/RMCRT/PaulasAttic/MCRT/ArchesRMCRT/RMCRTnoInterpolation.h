@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,7 +40,7 @@ public:
   double MeshSize(int &Nchalf, double &Lhalf, double &ratio);
 
   int RMCRTsolver(const int& i_n, const int& j_n, const int& k_n,
-		  const int& theta_n, const int& phi_);
+      const int& theta_n, const int& phi_);
   
   
 };

@@ -1,10 +1,7 @@
-#ifndef Core_Exceptions_ErrnoException_h
-#define Core_Exceptions_ErrnoException_h
-
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,6 +32,10 @@
  *   May 2000
  *
  */
+
+#ifndef Core_Exceptions_ErrnoException_h
+#define Core_Exceptions_ErrnoException_h
+
 
 #include <Core/Exceptions/Exception.h>
 

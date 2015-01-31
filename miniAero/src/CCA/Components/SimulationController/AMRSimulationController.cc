@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -50,7 +50,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Thread/Time.h>
-#include <Core/Tracker/TrackerClient.h>
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -199,8 +198,7 @@ AMRSimulationController::run()
        HeapProfilerDump(heapename);
      }
 #endif
-     TrackerClient::trackEvent( Tracker::TIMESTEP_STARTED, time );
-
+     
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
      if(dbg_barrier.active()) {
        for(int i=0;i<5;i++) {

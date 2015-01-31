@@ -57,7 +57,8 @@ public:
                      const int step, const double time, 
                      const double clip_tol, 
                      const bool do_low_clip,  const double low_clip, 
-                     const bool do_high_clip, const double high_clip );
+                     const bool do_high_clip, const double high_clip, 
+                     constCCVariable<double>& vol_fraction );
 
 
     /** @brief A template for time averaging using a Runge-kutta form for weighted abscissa*/  
@@ -68,7 +69,8 @@ public:
                      const int step, const double time, 
                      const double clip_tol, 
                      const bool do_low_clip,  const double low_clip, 
-                     const bool do_high_clip, const double high_clip, constCCVariable<double> weight);
+                     const bool do_high_clip, const double high_clip, constCCVariable<double>& weight, 
+                     constCCVariable<double>& vol_fraction );
 
 
     /** @brief A template for time averaging using a Runge-kutta form with density */ 
@@ -281,7 +283,8 @@ private:
                                     const int step, const double time,
                                     const double clip_tol, 
                                     const bool do_low_clip,  const double low_clip, 
-                                    const bool do_high_clip, const double high_clip )
+                                    const bool do_high_clip, const double high_clip, 
+                                    constCCVariable<double>& vol_fraction )
   {
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -290,11 +293,11 @@ private:
 
       if ( do_low_clip && phi[c] < ( low_clip + clip_tol ) ){ 
 
-        phi[c] = low_clip; 
+        phi[c] = low_clip * vol_fraction[c]; 
 
       } else if ( do_high_clip && phi[c] > ( high_clip + clip_tol ) ){ 
 
-        phi[c] = high_clip; 
+        phi[c] = high_clip * vol_fraction[c]; 
 
       } else { 
 
@@ -333,7 +336,7 @@ private:
   }
 
 
-//---------------------std::endl--------------------------------------------------
+//---------------------------------------------------------------------------
 // Time averaging W/O density
 //---------------------------------------------------------------------------
 // ----RK AVERAGING
@@ -347,7 +350,8 @@ private:
                                     const int step, const double time,
                                     const double clip_tol, 
                                     const bool do_low_clip,  const double low_clip, 
-                                    const bool do_high_clip, const double high_clip, constCCVariable<double> weight)
+                                    const bool do_high_clip, const double high_clip, 
+                                    constCCVariable<double>& weight, constCCVariable<double>& vol_fraction )
   {
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -360,11 +364,11 @@ private:
 
       } else if ( do_low_clip && phi[c]/weight[c] < ( low_clip + clip_tol ) ){ 
 
-        phi[c] = weight[c]*low_clip; 
+        phi[c] = weight[c] * low_clip * vol_fraction[c]; 
 
       } else if ( do_high_clip && phi[c]/weight[c] > ( high_clip - clip_tol ) ){ 
 
-        phi[c] = high_clip*weight[c]; 
+        phi[c] = high_clip*weight[c] * vol_fraction[c]; 
 
       } else { 
 

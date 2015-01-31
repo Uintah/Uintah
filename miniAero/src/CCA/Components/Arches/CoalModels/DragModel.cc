@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
-#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -97,42 +97,42 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   }
   
   // Need a size IC: 
-  std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
-  std::string length_name = PropertyHelper::append_env( length_root, d_quadNode ); 
+  std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
+  std::string length_name = ParticleHelper::append_env( length_root, d_quadNode ); 
   _length_varlabel = VarLabel::find(length_name); 
 
   // Need a density
-  std::string density_root = PropertyHelper::parse_for_role_to_label(db, "density"); 
-  std::string density_name = PropertyHelper::append_env( density_root, d_quadNode ); 
+  std::string density_root = ParticleHelper::parse_for_role_to_label(db, "density"); 
+  std::string density_name = ParticleHelper::append_env( density_root, d_quadNode ); 
   _rhop_varlabel = VarLabel::find(density_name); 
 
   // Need velocity scaling constant
   std::string vel_root; 
   if ( _dir == 0 ){ 
-    vel_root = PropertyHelper::parse_for_role_to_label(db, "uvel"); 
+    vel_root = ParticleHelper::parse_for_role_to_label(db, "uvel"); 
   } else if ( _dir == 1){ 
-    vel_root = PropertyHelper::parse_for_role_to_label(db, "vvel"); 
+    vel_root = ParticleHelper::parse_for_role_to_label(db, "vvel"); 
   } else { 
-    vel_root = PropertyHelper::parse_for_role_to_label(db, "wvel"); 
+    vel_root = ParticleHelper::parse_for_role_to_label(db, "wvel"); 
   }
   
-  vel_root = PropertyHelper::append_qn_env( vel_root, d_quadNode ); 
+  vel_root = ParticleHelper::append_qn_env( vel_root, d_quadNode ); 
   EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
   DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
-  _vel_scaling_constant = current_eqn.getScalingConstant();
+  _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
   std::string ic_convection = vel_root+"_Fconv";
   std::string ic_diffusion = vel_root+"_Fdiff";
   _conv_source_varlabel = VarLabel::find(ic_convection);
   _diff_source_varlabel = VarLabel::find(ic_diffusion);
 
   // Need weight name and scaling constant
-  std::string weight_name = PropertyHelper::append_env("w", d_quadNode); 
+  std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
   _weight_varlabel = VarLabel::find(weight_name); 
-  std::string weightqn_name = PropertyHelper::append_qn_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
   EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
-  _weight_small = current_eqn2.getSmallClipCriteria();
-  _weight_scaling_constant = current_eqn2.getScalingConstant();
+  _weight_small = current_eqn2.getSmallClipPlusTol();
+  _weight_scaling_constant = current_eqn2.getScalingConstant(d_quadNode);
 
 }
 

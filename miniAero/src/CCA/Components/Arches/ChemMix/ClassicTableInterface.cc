@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -116,14 +116,14 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   }
 
   MPI_Bcast(&table_size,1,MPI_INT,0,
-            Parallel::getRootProcessorGroup()->getComm());
+      Parallel::getRootProcessorGroup()->getComm());
 
   if (mpi_rank != 0) {
     table_contents = scinew char[table_size];
   }
-    
+
   MPI_Bcast(table_contents, table_size, MPI_CHAR, 0, 
-            Parallel::getRootProcessorGroup()->getComm());
+      Parallel::getRootProcessorGroup()->getComm());
 
   std::stringstream table_contents_stream;
   table_contents_stream << table_contents;
@@ -148,7 +148,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
   if (mpi_rank != 0)
     delete [] table_contents;
 #endif
-  
+
   proc0cout << "-------------------------------------------------  " << endl;
 
   // Extract independent and dependent variables from input file
@@ -273,7 +273,7 @@ ClassicTableInterface::problemSetup( const ProblemSpecP& propertiesParameters )
 
 void ClassicTableInterface::tableMatching(){ 
   // Match the requested dependent variables with their table index:
-	// Must do this again in case a source or model added more species -- 
+  // Must do this again in case a source or model added more species -- 
   getIndexInfo(); 
 }
 
@@ -528,7 +528,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         indepVarIndexes.push_back( i->second.index );
       }
       depVarValues = ND_interp->find_val(iv, indepVarIndexes );
-      
+
       int depVarCount = 0;
       //now deal with the mixing and density checks same as before
       for ( DepVarMap::iterator i = depend_storage.begin(); i != depend_storage.end(); ++i ){
@@ -567,7 +567,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
         }
         depVarCount++;
       }
-      
+
     }
 
     // set boundary property values: 
@@ -611,7 +611,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
           } else {
             foundIterator = 
               getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
-           counter++; 
+            counter++; 
           } 
 
           if ( !foundIterator ){ 
@@ -656,7 +656,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             indepVarIndexes.push_back( i->second.index );
           }
           depVarValues = ND_interp->find_val(iv, indepVarIndexes );
-          
+
           //take care of the mixing and density the same
           int depVarCount = 0;
           // now get state for boundary cell: 
@@ -687,7 +687,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             double ghost_value = 2.0*depVarValues[depVarCount] - (*i->second.var)[cp1];
             (*i->second.var)[c] = ghost_value; 
             //(*i->second.var)[c] = table_value;
-            
+
             if (d_MAlab)
               mpmarches_denmicro[c] = ghost_value; 
 
@@ -712,12 +712,12 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
       //actually modify the reference density value: 
       DepVarMap::iterator i = depend_storage.find("density");
       std::vector<double> iv = _iv_transform->get_reference_iv();
-      
+
       std::vector<int> varIndex (1, i->second.index );
       std::vector<double> denValue(1, 0.0);
       denValue = ND_interp->find_val( iv, varIndex );
       double den_ref = denValue[0];
-      
+
       if ( time_substep == 0 ){ 
         CCVariable<double> den_ref_array; 
         new_dw->allocateAndPut(den_ref_array, d_lab->d_denRefArrayLabel, matlIndex, patch );
@@ -773,7 +773,7 @@ ClassicTableInterface::getIndexInfo()
 ClassicTableInterface::getEnthalpyIndexInfo()
 {
   if ( !d_coldflow){ 
-    
+
     d_enthalpyVarIndexMapLock.writeLock();
     cout_tabledbg << "ClassicTableInterface::getEnthalpyIndexInfo(): Looking up sensible enthalpy" << endl;
     int index = findIndex( "sensibleenthalpy" ); 
@@ -831,7 +831,7 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
     std::string units = getString( fp );
     d_allDepVarUnits[ii] =  units ; 
   }
-  
+
   //indep vars grids
   indep_headers = vector<vector<double> >(d_indepvarscount);  //vector contains 2 -> N dimensions
   for (int i = 0; i < d_indepvarscount - 1; i++) {
@@ -839,20 +839,20 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
   }
   i1 = vector<vector<double> >(d_allIndepVarNum[d_indepvarscount-1]);
   for (int i = 0; i < d_allIndepVarNum[d_indepvarscount-1]; i++) {
-	  i1[i] = vector<double>(d_allIndepVarNum[0]);
+    i1[i] = vector<double>(d_allIndepVarNum[0]);
   }
   //assign values (backwards)
   for (int i = d_indepvarscount-2; i>=0; i--) {
-	  for (int j = 0; j < d_allIndepVarNum[i+1] ; j++) {
-	    double v = getDouble( fp );
-	    indep_headers[i][j] = v;
-	  }
+    for (int j = 0; j < d_allIndepVarNum[i+1] ; j++) {
+      double v = getDouble( fp );
+      indep_headers[i][j] = v;
+    }
   }
-	
+
   int size=1;
   //ND size
   for (int i = 0; i < d_indepvarscount; i++) {
-	  size = size*d_allIndepVarNum[i];
+    size = size*d_allIndepVarNum[i];
   }
 
 
@@ -863,75 +863,73 @@ ClassicTableInterface::loadMixingTable(gzFile &fp, const string & inputfile )
 
   int size2 = size/d_allIndepVarNum[d_indepvarscount-1];
   proc0cout << "Table size " << size << endl;
-  
+
   proc0cout << "Reading in the dependent variables: " << endl;
   bool read_assign = true; 
-	if (d_indepvarscount > 1) {
-	  for (int kk = 0; kk < d_varscount; kk++) {
-	    proc0cout << " loading ---> " << d_allDepVarNames[kk] << endl;
-	
-	    for (int mm = 0; mm < d_allIndepVarNum[d_indepvarscount-1]; mm++) {
-			  if (read_assign) {
-				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(fp);
-					  i1[mm][i] = v;
-				  }
-			  } else {
-				  //read but don't assign inbetween vals
-				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(fp);
-					  //v += 0.0;
-				  }
-			  }
-			    for (int j=0; j<size2; j++) {
-				    double v = getDouble(fp);
-				    table[kk][j + mm*size2] = v;
-				  }
-			  }
-		  if ( read_assign ) { read_assign = false; }
-	  } 
-	} else {
-		for (int kk = 0; kk < d_varscount; kk++) {
-			proc0cout << "loading --->" << d_allDepVarNames[kk] << endl;
-			if (read_assign) {
-				for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(fp);
-					i1[0][i] = v;
-				}
-			} else { 
-			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(fp);
-					//v += 0.0;
-				}	
-			}
-			for (int j=0; j<size; j++) {
-				double v = getDouble(fp);
-				table[kk][j] = v;
-			}
-			if (read_assign){read_assign = false;}
-	  }
-	}
-  
+  if (d_indepvarscount > 1) {
+    for (int kk = 0; kk < d_varscount; kk++) {
+      proc0cout << " loading ---> " << d_allDepVarNames[kk] << endl;
 
-	if (d_indepvarscount == 1) {
-		ND_interp = new Interp1(d_allIndepVarNum, table, i1);
-  }	else if (d_indepvarscount == 2) {
- 	  ND_interp = new Interp2(d_allIndepVarNum, table, indep_headers, i1);
+      for (int mm = 0; mm < d_allIndepVarNum[d_indepvarscount-1]; mm++) {
+        if (read_assign) {
+          for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+            double v = getDouble(fp);
+            i1[mm][i] = v;
+          }
+        } else {
+          //read but don't assign inbetween vals
+          for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+            getDouble(fp);
+          }
+        }
+        for (int j=0; j<size2; j++) {
+          double v = getDouble(fp);
+          table[kk][j + mm*size2] = v;
+        }
+      }
+      if ( read_assign ) { read_assign = false; }
+    } 
+  } else {
+    for (int kk = 0; kk < d_varscount; kk++) {
+      proc0cout << "loading --->" << d_allDepVarNames[kk] << endl;
+      if (read_assign) {
+        for (int i=0; i<d_allIndepVarNum[0]; i++) {
+          double v = getDouble(fp);
+          i1[0][i] = v;
+        }
+      } else { 
+        for (int i=0; i<d_allIndepVarNum[0]; i++) {
+          getDouble(fp);
+        } 
+      }
+      for (int j=0; j<size; j++) {
+        double v = getDouble(fp);
+        table[kk][j] = v;
+      }
+      if (read_assign){read_assign = false;}
+    }
+  }
+
+
+  if (d_indepvarscount == 1) {
+    ND_interp = new Interp1(d_allIndepVarNum, table, i1);
+  } else if (d_indepvarscount == 2) {
+    ND_interp = new Interp2(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 3) {
-	  ND_interp = new Interp3(d_allIndepVarNum, table, indep_headers, i1);
+    ND_interp = new Interp3(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 4) {
-		ND_interp = new Interp4(d_allIndepVarNum, table, indep_headers, i1);
-	} else {  //IV > 4
-		ND_interp = new InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
-	}
-	  
+    ND_interp = new Interp4(d_allIndepVarNum, table, indep_headers, i1);
+  } else {  //IV > 4
+    ND_interp = new InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
+  }
+
   proc0cout << "Table successfully loaded into memory!" << endl;
 
 }
 
 void
 ClassicTableInterface::loadMixingTable(stringstream& table_stream, 
-                                       const string & inputfile )
+    const string & inputfile )
 {
 
   proc0cout << " Preparing to read the table inputfile:   " << inputfile << "\n";
@@ -970,7 +968,7 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
     std::string units = getString( table_stream );
     d_allDepVarUnits[ii] =  units ; 
   }
-  
+
   //indep vars grids
   indep_headers = vector<vector<double> >(d_indepvarscount);  //vector contains 2 -> N dimensions
   for (int i = 0; i < d_indepvarscount - 1; i++) {
@@ -978,20 +976,20 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
   }
   i1 = vector<vector<double> >(d_allIndepVarNum[d_indepvarscount-1]);
   for (int i = 0; i < d_allIndepVarNum[d_indepvarscount-1]; i++) {
-	  i1[i] = vector<double>(d_allIndepVarNum[0]);
+    i1[i] = vector<double>(d_allIndepVarNum[0]);
   }
   //assign values (backwards)
   for (int i = d_indepvarscount-2; i>=0; i--) {
-	  for (int j = 0; j < d_allIndepVarNum[i+1] ; j++) {
-	    double v = getDouble( table_stream );
-	    indep_headers[i][j] = v;
-	  }
+    for (int j = 0; j < d_allIndepVarNum[i+1] ; j++) {
+      double v = getDouble( table_stream );
+      indep_headers[i][j] = v;
+    }
   }
-	
+
   int size=1;
   //ND size
   for (int i = 0; i < d_indepvarscount; i++) {
-	  size = size*d_allIndepVarNum[i];
+    size = size*d_allIndepVarNum[i];
   }
 
 
@@ -1002,68 +1000,66 @@ ClassicTableInterface::loadMixingTable(stringstream& table_stream,
 
   int size2 = size/d_allIndepVarNum[d_indepvarscount-1];
   proc0cout << "Table size " << size << endl;
-  
+
   proc0cout << "Reading in the dependent variables: " << endl;
   bool read_assign = true; 
-	if (d_indepvarscount > 1) {
-	  for (int kk = 0; kk < d_varscount; kk++) {
-	    proc0cout << " loading ---> " << d_allDepVarNames[kk] << endl;
-	
-	    for (int mm = 0; mm < d_allIndepVarNum[d_indepvarscount-1]; mm++) {
-			  if (read_assign) {
-				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(table_stream);
-					  i1[mm][i] = v;
-				  }
-			  } else {
-				  //read but don't assign inbetween vals
-				  for (int i = 0; i < d_allIndepVarNum[0]; i++) {
-					  double v = getDouble(table_stream);
-					  //v += 0.0;
-				  }
-			  }
-			    for (int j=0; j<size2; j++) {
-				    double v = getDouble(table_stream);
-				    table[kk][j + mm*size2] = v;
-				  }
-			  }
-		  if ( read_assign ) { read_assign = false; }
-	  } 
-	} else {
-		for (int kk = 0; kk < d_varscount; kk++) {
-			proc0cout << "loading --->" << d_allDepVarNames[kk] << endl;
-			if (read_assign) {
-				for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(table_stream);
-					i1[0][i] = v;
-				}
-			} else { 
-			  for (int i=0; i<d_allIndepVarNum[0]; i++) {
-					double v = getDouble(table_stream);
-					//v += 0.0;
-				}	
-			}
-			for (int j=0; j<size; j++) {
-				double v = getDouble(table_stream);
-				table[kk][j] = v;
-			}
-			if (read_assign){read_assign = false;}
-	  }
-	}
-  
+  if (d_indepvarscount > 1) {
+    for (int kk = 0; kk < d_varscount; kk++) {
+      proc0cout << " loading ---> " << d_allDepVarNames[kk] << endl;
 
-	if (d_indepvarscount == 1) {
-		ND_interp = scinew Interp1(d_allIndepVarNum, table, i1);
-  }	else if (d_indepvarscount == 2) {
- 	  ND_interp = scinew Interp2(d_allIndepVarNum, table, indep_headers, i1);
+      for (int mm = 0; mm < d_allIndepVarNum[d_indepvarscount-1]; mm++) {
+        if (read_assign) {
+          for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+            double v = getDouble(table_stream);
+            i1[mm][i] = v;
+          }
+        } else {
+          //read but don't assign inbetween vals
+          for (int i = 0; i < d_allIndepVarNum[0]; i++) {
+            getDouble(table_stream);
+          }
+        }
+        for (int j=0; j<size2; j++) {
+          double v = getDouble(table_stream);
+          table[kk][j + mm*size2] = v;
+        }
+      }
+      if ( read_assign ) { read_assign = false; }
+    } 
+  } else {
+    for (int kk = 0; kk < d_varscount; kk++) {
+      proc0cout << "loading --->" << d_allDepVarNames[kk] << endl;
+      if (read_assign) {
+        for (int i=0; i<d_allIndepVarNum[0]; i++) {
+          double v = getDouble(table_stream);
+          i1[0][i] = v;
+        }
+      } else { 
+        for (int i=0; i<d_allIndepVarNum[0]; i++) {
+          getDouble(table_stream);
+        } 
+      }
+      for (int j=0; j<size; j++) {
+        double v = getDouble(table_stream);
+        table[kk][j] = v;
+      }
+      if (read_assign){read_assign = false;}
+    }
+  }
+
+
+  if (d_indepvarscount == 1) {
+    ND_interp = scinew Interp1(d_allIndepVarNum, table, i1);
+  } else if (d_indepvarscount == 2) {
+    ND_interp = scinew Interp2(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 3) {
-	  ND_interp = scinew Interp3(d_allIndepVarNum, table, indep_headers, i1);
+    ND_interp = scinew Interp3(d_allIndepVarNum, table, indep_headers, i1);
   } else if (d_indepvarscount == 4) {
-		ND_interp = scinew Interp4(d_allIndepVarNum, table, indep_headers, i1);
-	} else {  //IV > 4
-		ND_interp = scinew InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
-	}
-	  
+    ND_interp = scinew Interp4(d_allIndepVarNum, table, indep_headers, i1);
+  } else {  //IV > 4
+    ND_interp = scinew InterpN(d_allIndepVarNum, table, indep_headers, i1, d_indepvarscount);
+  }
+
   proc0cout << "Table successfully loaded into memory!" << endl;
 
 }
@@ -1073,25 +1069,25 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string variab
 {
   int dep_index = findIndex( variable ); 
   _iv_transform->transform( iv, 0.0 );
-  
+
   std::vector<int> varIndex (1, dep_index );
   std::vector<double> tabValue(1, 0.0);
   tabValue = ND_interp->find_val( iv, varIndex );
   double value = tabValue[0];
-  
+
   return value; 
 }
 
 //---------------------------
 double 
 ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend_varname, 
-                                      MixingRxnModel::StringToCCVar inert_mixture_fractions, 
-                                      IntVector c )
+    MixingRxnModel::StringToCCVar inert_mixture_fractions, 
+    IntVector c )
 { 
 
   double total_inert_f = 0.0; 
 
-	int dep_index = findIndex( depend_varname ); 
+  int dep_index = findIndex( depend_varname ); 
 
   for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
       inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
@@ -1119,18 +1115,18 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   }
 
-	return table_value; 
+  return table_value; 
 
 }
 //---------------------------
 double 
 ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend_varname, 
-                                      MixingRxnModel::doubleMap inert_mixture_fractions )
+    MixingRxnModel::doubleMap inert_mixture_fractions )
 { 
 
   double total_inert_f = 0.0; 
 
-	int dep_index = findIndex( depend_varname ); 
+  int dep_index = findIndex( depend_varname ); 
 
   for (MixingRxnModel::doubleMap::iterator inert_iter = inert_mixture_fractions.begin(); 
       inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
@@ -1158,12 +1154,13 @@ ClassicTableInterface::getTableValue( std::vector<double> iv, std::string depend
 
   }
 
-	return table_value; 
+  return table_value; 
 
 }
 
 //---------------------------
-void ClassicTableInterface::checkForConstants(gzFile &fp, const string & inputfile ) { 
+void 
+ClassicTableInterface::checkForConstants(gzFile &fp, const string & inputfile ) { 
 
   proc0cout << "\n Looking for constants in the header... " << endl;
 
@@ -1223,8 +1220,9 @@ void ClassicTableInterface::checkForConstants(gzFile &fp, const string & inputfi
   }
 }
 
-void ClassicTableInterface::checkForConstants(stringstream &table_stream, 
-                                              const string & inputfile ) 
+void 
+ClassicTableInterface::checkForConstants(stringstream &table_stream, 
+    const string & inputfile ) 
 { 
 
   proc0cout << "\n Looking for constants in the header... " << endl;
@@ -1274,6 +1272,7 @@ void ClassicTableInterface::checkForConstants(stringstream &table_stream,
         d_constants.insert( make_pair( name, value ) ); 
 
       } else { 
+
         while ( true ) { 
           // ch = gzgetc( table_stream ); // skipping this line
           ch = table_stream.get(); // skipping this line
