@@ -20,7 +20,7 @@
 
   <DataArchiver>
     <filebase>birth_test.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
+    <outputTimestepInterval>3</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
@@ -52,7 +52,7 @@
     <save label="weight_birth_qn1"/>
     <save label="length_birth_qn0"/>
     <save label="length_birth_qn1"/>
-    <checkpoint cycle="2" interval="0.05"/>
+    <checkpoint cycle="2" interval="0.06"/>
     <compression>gzip</compression>
   </DataArchiver>
 
