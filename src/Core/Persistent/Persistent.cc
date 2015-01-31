@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,14 +42,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
-#include <sci_defs/teem_defs.h>
-
-#ifdef HAVE_TEEM
-#  include <teem/nrrd.h>
-#else
-#  include <Core/Util/Endian.h>
-#endif
+#include <Core/Util/Endian.h>
 
 using namespace std;
 
@@ -574,11 +567,7 @@ auto_istream(const string& filename, ProgressReporter *pr)
     // the version = 1, readHeader would return BIG, otherwise it will
     // read it from the header.
     int machine_endian = Piostream::Big;
-#ifdef HAVE_TEEM
-    if (airMyEndian == airEndianLittle) 
-#else
     if ( isLittleEndian() )
-#endif
       machine_endian = Piostream::Little;
 
     if (file_endian == machine_endian) 

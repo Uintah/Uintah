@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -80,14 +80,6 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     }
     else{
       sharedState->registerMPMMaterial(mat);
-    }
-
-    // If new particles are to be created, create a copy of each material
-    // without the associated geometry
-    if (flags->d_createNewParticles) {
-      MPMMaterial *mat_copy = scinew MPMMaterial();
-      mat_copy->copyWithoutGeom(ps,mat, flags);    
-      sharedState->registerMPMMaterial(mat_copy);
     }
   }
 }

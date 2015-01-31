@@ -29,10 +29,6 @@ SampleTask::problemSetup( ProblemSpecP& db ){
 
   _value = 1.0;
   //db->findBlock("sample_task")->getAttribute("value",_value); 
-  
-  //turn off a couple things: 
-  _do_ts_init_task = false; 
-  _do_bcs_task = false; 
 
 }
 

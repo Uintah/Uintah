@@ -81,14 +81,14 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
   std::string taskname = "HeatLoss::computeProp"; 
   Task* tsk = scinew Task( taskname, this, &HeatLoss::computeProp, time_substep ); 
 
-	_enthalpy_label = 0; 
+  _enthalpy_label = 0; 
 
-	_enthalpy_label = VarLabel::find( _enthalpy_label_name ); 
+  _enthalpy_label = VarLabel::find( _enthalpy_label_name ); 
   _vol_frac_label= VarLabel::find( "volFraction" ); 
 
-	if ( _enthalpy_label == 0 ){ 
-  	throw InvalidValue( "Error: Could not find enthalpy label with name: "+_enthalpy_label_name, __FILE__, __LINE__); 
-	} 
+  if ( _enthalpy_label == 0 ){ 
+    throw InvalidValue( "Error: Could not find enthalpy label with name: "+_enthalpy_label_name, __FILE__, __LINE__); 
+  } 
   if ( _vol_frac_label == 0 ){ 
     throw InvalidValue("Error: Cannot match volume fraction name with label.",__FILE__, __LINE__);             
   } 
@@ -103,33 +103,33 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
       const VarLabel* label = VarLabel::find( *iter ); 
 
       if ( label == 0 ){ 
-  	    throw InvalidValue( "Error: Could not find table IV label with name: "+*iter, __FILE__, __LINE__); 
+        throw InvalidValue( "Error: Could not find table IV label with name: "+*iter, __FILE__, __LINE__); 
       } 
-		  tsk->requires( Task::NewDW , label , Ghost::None , 0 );
+      tsk->requires( Task::NewDW , label , Ghost::None , 0 );
     } 
   } 
 
   tsk->modifies( _prop_label ); 
-	if ( time_substep == 0 ){ 
+  if ( time_substep == 0 ){ 
 
     if ( _constant_heat_loss ){ 
       tsk->computes( _actual_hl_label ); 
     } 
 
-		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
+    tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
     tsk->requires( Task::OldDW,  _vol_frac_label , Ghost::None , 0 ); 
 
-	} else { 
+  } else { 
 
 
     if ( _constant_heat_loss ){ 
       tsk->modifies( _actual_hl_label ); 
     } 
 
-		tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
+    tsk->requires( Task::NewDW , _enthalpy_label , Ghost::None , 0 );
     tsk->requires( Task::NewDW,  _vol_frac_label , Ghost::None , 0 ); 
 
-	} 
+  } 
 
   //inerts 
   _inert_map = _rxn_model->getInertMap(); 
@@ -162,8 +162,8 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
     CellIterator iter = patch->getCellIterator(); 
 
-		bool oob_up = false; 
-		bool oob_dn = false; 
+    bool oob_up = false; 
+    bool oob_dn = false; 
 
     CCVariable<double> prop; 
 
@@ -216,7 +216,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
     for (iter.begin(); !iter.done(); iter++){
 
-			IntVector c = *iter; 
+      IntVector c = *iter; 
 
       if ( eps[c] > 0.0 ){ 
 
@@ -254,16 +254,16 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
 
         hl /= ( h_sens + small );
 
-			  if ( hl < _low_hl ){ 
-			  	hl     = _low_hl;
-			  	oob_dn = true;
-			  } 
-			  if ( hl > _high_hl ){ 
-			  	hl     = _high_hl;
-			  	oob_up = true;
-			  } 
+        if ( hl < _low_hl ){ 
+          hl     = _low_hl;
+          oob_dn = true;
+        } 
+        if ( hl > _high_hl ){ 
+          hl     = _high_hl;
+          oob_up = true;
+        } 
 
-			  prop[c] = hl;
+        prop[c] = hl;
 
       } else { 
 
@@ -279,7 +279,7 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
     if ( _noisy_heat_loss ) { 
      
       if ( oob_up || oob_dn ) {  
-				std::cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << std::endl;
+        std::cout << "Patch with bounds: " << patch->getCellLowIndex() << " to " << patch->getCellHighIndex()  << std::endl;
         if ( oob_dn ){
           std::cout << "   --> lower heat loss exceeded. " << std::endl;
         }
@@ -293,15 +293,15 @@ void HeatLoss::computeProp(const ProcessorGroup* pc,
       //assuming this will be used for debugging and not production cases.
       CCVariable<double> actual_heat_loss; 
 
-		  if ( time_substep == 0 ){ 
+      if ( time_substep == 0 ){ 
 
         new_dw->allocateAndPut( actual_heat_loss, _actual_hl_label, matlIndex, patch ); 
 
-		  } else { 
+      } else { 
 
         new_dw->getModifiable( actual_heat_loss, _actual_hl_label, matlIndex, patch ); 
 
-		  } 
+      } 
 
       actual_heat_loss.copyData( prop ); 
       prop.initialize( _const_init ); 

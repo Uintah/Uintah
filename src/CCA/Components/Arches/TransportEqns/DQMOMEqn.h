@@ -182,7 +182,7 @@ public:
   }
 
   /** @brief Get the small clipping value (for weights only). */
-  inline double getSmallClipCriteria(){
+  inline double getSmallClipPlusTol(){
 
     if( clip.activated && clip.do_low ) {
 

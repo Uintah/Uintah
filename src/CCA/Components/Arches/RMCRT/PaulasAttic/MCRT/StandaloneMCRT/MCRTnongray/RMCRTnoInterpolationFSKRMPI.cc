@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -121,35 +121,35 @@ double MeshSize(int &Nchalf, double &Lhalf, double &ratio){
 
 template<class SurfaceType>
 void rayfromSurf(SurfaceType &obSurface,
-		 RealSurface *RealPointer,
-		 VirtualSurface &obVirtual,
-		 ray &obRay,
-		 MTRand &MTrng,
-		 const int &surfaceFlag,
-		 const int &surfaceIndex,
-		 const double * const alpha_surface[],
-		 const double * const emiss_surface[],
-		 const double * const T_surface[],
-		 const double * const a_surface[],
-		 const double * const rs_surface[],
-		 const double * const rd_surface[],
-		 const double *IntenArray_Vol,
-		 const double * const IntenArray_surface[],
-		 const double *X, const double *Y, const double *Z,
-		 double *kl_Vol, const double *scatter_Vol,
-		 const int *VolFeature,
-		 const int &thisRayNo,
-		 const int &iIndex,
-		 const int &jIndex,
-		 const int &kIndex,
-		 const int &iggNo,
-		 const double &StopLowerBound,
-		 double ***netInten_surface,
-		 double *s,
-		 BinarySearchTree &obBST,
-		 int *countg, const int &gSize, const int &VolElementNo,
-		 const double *Rkg, const double *gk,
-		 const double *kl, const double *g){
+     RealSurface *RealPointer,
+     VirtualSurface &obVirtual,
+     ray &obRay,
+     MTRand &MTrng,
+     const int &surfaceFlag,
+     const int &surfaceIndex,
+     const double * const alpha_surface[],
+     const double * const emiss_surface[],
+     const double * const T_surface[],
+     const double * const a_surface[],
+     const double * const rs_surface[],
+     const double * const rd_surface[],
+     const double *IntenArray_Vol,
+     const double * const IntenArray_surface[],
+     const double *X, const double *Y, const double *Z,
+     double *kl_Vol, const double *scatter_Vol,
+     const int *VolFeature,
+     const int &thisRayNo,
+     const int &iIndex,
+     const int &jIndex,
+     const int &kIndex,
+     const int &iggNo,
+     const double &StopLowerBound,
+     double ***netInten_surface,
+     double *s,
+     BinarySearchTree &obBST,
+     int *countg, const int &gSize, const int &VolElementNo,
+     const double *Rkg, const double *gk,
+     const double *kl, const double *g){
   
   double alpha, previousSum, currentSum, LeftIntenFrac, SurLeft;
   double PathLeft, PathSurfaceLeft, weight, traceProbability;
@@ -163,7 +163,7 @@ void rayfromSurf(SurfaceType &obSurface,
    
   double *IncomingIntenSur = new double[ thisRayNo ];
   
-	  // loop over ray numbers on each surface element
+    // loop over ray numbers on each surface element
   for ( rayCounter = 0; rayCounter < thisRayNo; rayCounter++ ) {
 
     /*
@@ -184,7 +184,7 @@ void rayfromSurf(SurfaceType &obSurface,
     for ( int ki = 0; ki < VolElementNo; ki++)
       kl_Vol[ki] = kl[rayCounter];
 
-	     
+       
     LeftIntenFrac = 1;
     traceProbability = 1;
     weight = 1;
@@ -205,9 +205,9 @@ void rayfromSurf(SurfaceType &obSurface,
     
     // get ray's emission position, xemiss, yemiss, zemiss
     obRay.set_emissP(MTrng,
-		     obSurface.get_xlow(), obSurface.get_xup(),
-		     obSurface.get_ylow(), obSurface.get_yup(),
-		     obSurface.get_zlow(), obSurface.get_zup());
+         obSurface.get_xlow(), obSurface.get_xup(),
+         obSurface.get_ylow(), obSurface.get_yup(),
+         obSurface.get_zlow(), obSurface.get_zup());
     
     //   obRay.set_straightP();
     //   obRay.set_straight_len(0);
@@ -225,47 +225,47 @@ void rayfromSurf(SurfaceType &obSurface,
       // if hit on virtual surface, PathSurfaceLeft is updated.
       // else no update on PathSurfaceLeft.
       obRay.TravelInMediumInten(MTrng, obVirtual,
-				kl_Vol, scatter_Vol,
-				X, Y, Z, VolFeature,
-				PathLeft, PathSurfaceLeft);
+        kl_Vol, scatter_Vol,
+        X, Y, Z, VolFeature,
+        PathLeft, PathSurfaceLeft);
       
       
       // the upper bound of the segment
       currentSum = previousSum + PathLeft;
       
       IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] + 
-	IntenArray_Vol[obRay.get_currentvIndex()] 
-	* ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
-	* weight;
+  IntenArray_Vol[obRay.get_currentvIndex()] 
+  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+  * weight;
       
 //       cout << "previousSum = " << previousSum << endl;
 //       cout << "currentSum = " << currentSum << endl;
       
-      // 	      	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
-      // 	      cout << "IntenArray_Vol = " << IntenArray_Vol[obRay.get_currentvIndex()] << endl;
+      //          cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
+      //        cout << "IntenArray_Vol = " << IntenArray_Vol[obRay.get_currentvIndex()] << endl;
       
       if ( !obRay.VIRTUAL ) {
-	
-	hitSurfaceFlag = obRay.get_surfaceFlag();
-	hitSurfaceIndex = obRay.get_hitSurfaceIndex();
-// 	cout << "hitSurfaceFlag = " << hitSurfaceFlag << endl;
-// 	cout << "hitSurfaceIndex = " << hitSurfaceIndex << endl;
-	// PathSurfaceLeft is updated here
-	// and it comes into effect for next travelling step.
-	obRay.hitRealSurfaceInten(MTrng,
-				  alpha_surface[hitSurfaceFlag],
-				  rs_surface[hitSurfaceFlag],
-				  rd_surface[hitSurfaceFlag],
-				  PathSurfaceLeft);
-		
-	// 		cout << "obRay.get_surfaceFlag() = " << obRay.get_surfaceFlag() << endl;
-	// 		cout << "surfaceFlag = " << surfaceFlag << endl;
-	
-	IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
-	  IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
-	  exp ( -currentSum ) * SurLeft
-	  * weight;
-	//	cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
+  
+  hitSurfaceFlag = obRay.get_surfaceFlag();
+  hitSurfaceIndex = obRay.get_hitSurfaceIndex();
+//  cout << "hitSurfaceFlag = " << hitSurfaceFlag << endl;
+//  cout << "hitSurfaceIndex = " << hitSurfaceIndex << endl;
+  // PathSurfaceLeft is updated here
+  // and it comes into effect for next travelling step.
+  obRay.hitRealSurfaceInten(MTrng,
+          alpha_surface[hitSurfaceFlag],
+          rs_surface[hitSurfaceFlag],
+          rd_surface[hitSurfaceFlag],
+          PathSurfaceLeft);
+    
+  //    cout << "obRay.get_surfaceFlag() = " << obRay.get_surfaceFlag() << endl;
+  //    cout << "surfaceFlag = " << surfaceFlag << endl;
+  
+  IncomingIntenSur[rayCounter] = IncomingIntenSur[rayCounter] +
+    IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
+    exp ( -currentSum ) * SurLeft
+    * weight;
+  //  cout << "InComing = " << IncomingIntenSur[rayCounter] << endl;
       }
       
       
@@ -283,7 +283,7 @@ void rayfromSurf(SurfaceType &obSurface,
 
        
   } // rayCounter loop
-	  
+    
   
   sumIncomInten = 0;
 
@@ -300,7 +300,7 @@ void rayfromSurf(SurfaceType &obSurface,
          ( g[aaa+1] - g[aaa])/2.0;
   
 
-  //	  cout << "sumIncomInten = " << sumIncomInten << endl;
+  //    cout << "sumIncomInten = " << sumIncomInten << endl;
   delete[] IncomingIntenSur;
   
   aveIncomInten = sumIncomInten / thisRayNo;
@@ -312,7 +312,7 @@ void rayfromSurf(SurfaceType &obSurface,
     OutIntenSur - sumIncomInten;
   
   
-  //	  cout << "netInten_surface = " << netInten_surface[surfaceFlag][surfaceIndex] << endl;
+  //    cout << "netInten_surface = " << netInten_surface[surfaceFlag][surfaceIndex] << endl;
   
 }
 
@@ -543,7 +543,7 @@ int main(int argc, char *argv[]){
   for ( int k = 0; k < Ncz; k ++ )
     for ( int j = 0; j < Ncy; j ++ )
       for ( int i = 0; i < Ncx; i ++ )
-	VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
+  VolFeature[(i+1) + (j+1) * ghostX + (k+1) * ghostTB] = FLOW;
   
   // get coordinates arrays
   double *X = new double [Npx]; // i 
@@ -643,8 +643,8 @@ int main(int argc, char *argv[]){
     // dont use x[i] = f ( x[i-1] ) , will get fatal error when cubelen is not integer.    
     for ( int i = 1; i < Ncxhalf ; i ++ )
       {
-	X[i] = X[i-1] + dx[i-1];
-	X[Ncx-i] = X[Npx-i] - dx[i-1];	
+  X[i] = X[i-1] + dx[i-1];
+  X[Ncx-i] = X[Npx-i] - dx[i-1];  
       }
   }
   else if ( ratioBCx == 1 ) {
@@ -652,8 +652,8 @@ int main(int argc, char *argv[]){
     dxUni = Lx / Ncx;
     for ( int i = 1; i < Npx ; i ++ )
       {
-	dx[i-1] = dxUni;
-	X[i] = X[0] + i * dx[i-1];
+  dx[i-1] = dxUni;
+  X[i] = X[0] + i * dx[i-1];
       }
   }
   
@@ -671,16 +671,16 @@ int main(int argc, char *argv[]){
     
     for ( int i = 1; i < Ncyhalf; i ++ )
       {
-	Y[i] = Y[i-1] + dy[i-1];
-	Y[Ncy-i] = Y[Npy-i] - dy[i-1];
+  Y[i] = Y[i-1] + dy[i-1];
+  Y[Ncy-i] = Y[Npy-i] - dy[i-1];
       }    
   }
   else if ( ratioBCy == 1 ) {
     dyUni = Ly / Ncy;
     for ( int i = 1; i < Npy ; i ++ )
       {
-	dy[i-1] = dyUni;
-	Y[i] = Y[0] + i * dy[i-1]; 
+  dy[i-1] = dyUni;
+  Y[i] = Y[0] + i * dy[i-1]; 
       }
         
   }
@@ -697,16 +697,16 @@ int main(int argc, char *argv[]){
     
     for ( int i = 1; i < Nczhalf; i ++ )
       {
-	Z[i] = Z[i-1] + dz[i-1];
-	Z[Ncz-i] = Z[Npz-i] - dz[i-1];
+  Z[i] = Z[i-1] + dz[i-1];
+  Z[Ncz-i] = Z[Npz-i] - dz[i-1];
       }    
   }
   else if ( ratioBCz == 1 ){
     dzUni = Lz / Ncz;
     for ( int i = 1; i < Npz ; i ++ )
       {
-	dz[i-1] = dzUni;
-	Z[i] = Z[0] + i * dz[i-1]; 
+  dz[i-1] = dzUni;
+  Z[i] = Z[0] + i * dz[i-1]; 
       }    
     
   }
@@ -748,7 +748,7 @@ int main(int argc, char *argv[]){
   for ( int i = 0; i < Ncz; i ++ )
     for ( int j = 0; j < Ncy; j ++ )
       for ( int k = 0; k < Ncx; k ++ )
-	ElementVol[ i*TopBottomNo + j*Ncx + k ] = dz[i] * dy[j] * dx[k];
+  ElementVol[ i*TopBottomNo + j*Ncx + k ] = dz[i] * dy[j] * dx[k];
 
 
   X[Ncxhalf] = 0;
@@ -762,7 +762,7 @@ int main(int argc, char *argv[]){
    for ( int k = 0; k < Ncz; k ++ )
      for ( int j = 0; j < Ncy; j ++ )
        for ( int i = 0; i < Ncx; i ++ )
-	 rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
+   rayNo_Vol[ i + j*Ncx + k*TopBottomNo] = 0; 
    // TopBottomNo = Ncx * Ncy;
 
    rayNo_Vol[454] = 60000;
@@ -930,8 +930,8 @@ int main(int argc, char *argv[]){
    for ( int i = 0;  i < TopBottomNo; i ++ ) {
      RealPointer = &obTop_init;
      IntenArray_surface[TOP][i] = RealPointer->SurfaceIntensity(i, emiss_surface[TOP],
-							       T_surface[TOP],
-							       a_surface[TOP]);
+                     T_surface[TOP],
+                     a_surface[TOP]);
      
    }
    
@@ -939,18 +939,18 @@ int main(int argc, char *argv[]){
   for ( int i = 0; i < TopBottomNo; i ++ ) {
     RealPointer = &obBottom_init;
     IntenArray_surface[BOTTOM][i] = RealPointer->SurfaceIntensity(i,
-								 emiss_surface[BOTTOM],
-								 T_surface[BOTTOM],
-								 a_surface[BOTTOM]);
+                 emiss_surface[BOTTOM],
+                 T_surface[BOTTOM],
+                 a_surface[BOTTOM]);
   }
   
   // front back surfaces intensity
   for ( int i = 0;  i < FrontBackNo; i ++ ) {
     RealPointer = &obFront_init;
     IntenArray_surface[FRONT][i] = RealPointer->SurfaceIntensity(i,
-								emiss_surface[FRONT],
-								T_surface[FRONT],
-								a_surface[FRONT]);
+                emiss_surface[FRONT],
+                T_surface[FRONT],
+                a_surface[FRONT]);
 
   }
 
@@ -958,9 +958,9 @@ int main(int argc, char *argv[]){
   for ( int i = 0; i < FrontBackNo; i ++ ) {
     RealPointer = &obBack_init;
     IntenArray_surface[BACK][i] = RealPointer->SurfaceIntensity(i,
-							       emiss_surface[BACK],
-							       T_surface[BACK],
-							       a_surface[BACK]);
+                     emiss_surface[BACK],
+                     T_surface[BACK],
+                     a_surface[BACK]);
   }
 
 
@@ -968,18 +968,18 @@ int main(int argc, char *argv[]){
   for ( int i = 0; i < LeftRightNo; i ++ ) {
     RealPointer = &obLeft_init;
     IntenArray_surface[LEFT][i] = RealPointer->SurfaceIntensity(i,
-							       emiss_surface[LEFT],
-							       T_surface[LEFT],
-							       a_surface[LEFT]);
+                     emiss_surface[LEFT],
+                     T_surface[LEFT],
+                     a_surface[LEFT]);
   }
 
   
   for ( int i = 0; i < LeftRightNo; i ++ ) {
     RealPointer = &obRight_init;
     IntenArray_surface[RIGHT][i] = RealPointer->SurfaceIntensity(i,
-								emiss_surface[RIGHT],
-								T_surface[RIGHT],
-								a_surface[RIGHT]);
+                emiss_surface[RIGHT],
+                T_surface[RIGHT],
+                a_surface[RIGHT]);
   }
  
   // end of recalculate Intensity
@@ -1005,54 +1005,54 @@ int main(int argc, char *argv[]){
     
     for ( jIndex = 0; jIndex < Ncy; jIndex ++ ) {
       for ( iIndex = 0; iIndex < Ncx; iIndex ++){
-	//	cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
-	surfaceIndex = iIndex + jIndex * Ncx;
-	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
+  //  cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
+  surfaceIndex = iIndex + jIndex * Ncx;
+  thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
-	if ( thisRayNo != 0 ) { // rays emitted from this surface
-	  
-	  MTrng.seed(surfaceIndex);
-	  TopRealSurface obTop(iIndex, jIndex, kIndex, Ncx);
-	  RealPointer = &obTop;
-	  
-	  // search for corresponding Rkg in file for the new ray
-	  // then this ray will carry the energy from same wavenumber.
-	  // the whole domain is set at this wavenumber
+  if ( thisRayNo != 0 ) { // rays emitted from this surface
+    
+    MTrng.seed(surfaceIndex);
+    TopRealSurface obTop(iIndex, jIndex, kIndex, Ncx);
+    RealPointer = &obTop;
+    
+    // search for corresponding Rkg in file for the new ray
+    // then this ray will carry the energy from same wavenumber.
+    // the whole domain is set at this wavenumber
 
-	  // Call BinarySearchTree, return kl_Vol
-	  // count which g got called most.
-	  
-	  rayfromSurf(obTop,
-		      RealPointer,
-		      obVirtual,
-		      obRay,
-		      MTrng,
-		      surfaceFlag,
-		      surfaceIndex,
-		      alpha_surface,
-		      emiss_surface,
-		      T_surface,
-		      a_surface,
-		      rs_surface,
-		      rd_surface,
-		      IntenArray_Vol,
-		      IntenArray_surface,
-		      X, Y, Z,
-		      kl_Vol, scatter_Vol,
-		      VolFeature,
-		      thisRayNo,
-		      iIndex,
-		      jIndex,
-		      kIndex,
-		      iggNo,
-		      StopLowerBound,
-		      netInten_surface,
-		      s,
-		      obBST,
-		      countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
-	 
-	}
+    // Call BinarySearchTree, return kl_Vol
+    // count which g got called most.
+    
+    rayfromSurf(obTop,
+          RealPointer,
+          obVirtual,
+          obRay,
+          MTrng,
+          surfaceFlag,
+          surfaceIndex,
+          alpha_surface,
+          emiss_surface,
+          T_surface,
+          a_surface,
+          rs_surface,
+          rd_surface,
+          IntenArray_Vol,
+          IntenArray_surface,
+          X, Y, Z,
+          kl_Vol, scatter_Vol,
+          VolFeature,
+          thisRayNo,
+          iIndex,
+          jIndex,
+          kIndex,
+          iggNo,
+          StopLowerBound,
+          netInten_surface,
+          s,
+          obBST,
+          countg,
+          gSize, VolElementNo, Rkg, gk, kl, g);
+   
+  }
 
      } // end iIndex
    
@@ -1069,46 +1069,46 @@ int main(int argc, char *argv[]){
     
     for ( jIndex = 0; jIndex < Ncy; jIndex ++ ) {
       for ( iIndex = 0; iIndex < Ncx; iIndex ++){
-	//	cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
-	surfaceIndex = iIndex + jIndex * Ncx;
-	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
+  //  cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
+  surfaceIndex = iIndex + jIndex * Ncx;
+  thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
-	if ( thisRayNo != 0 ) { // rays emitted from this surface
-	  
-	  MTrng.seed(surfaceIndex + BottomStartNo);
-	  BottomRealSurface obBottom(iIndex, jIndex, kIndex, Ncx);
-	  RealPointer = &obBottom;
-	  
-	  rayfromSurf(obBottom,
-		      RealPointer,
-		      obVirtual,
-		      obRay,
-		      MTrng,
-		      surfaceFlag,
-		      surfaceIndex,
-		      alpha_surface,
-		      emiss_surface,
-		      T_surface,
-		      a_surface,
-		      rs_surface,
-		      rd_surface,
-		      IntenArray_Vol,
-		      IntenArray_surface,
-		      X, Y, Z,
-		      kl_Vol, scatter_Vol,
-		      VolFeature,
-		      thisRayNo,
-		      iIndex,
-		      jIndex,
-		      kIndex,
-		      iggNo,
-		      StopLowerBound,
-		      netInten_surface,
-		      s,
-		      obBST,
-		      countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
-	}
+  if ( thisRayNo != 0 ) { // rays emitted from this surface
+    
+    MTrng.seed(surfaceIndex + BottomStartNo);
+    BottomRealSurface obBottom(iIndex, jIndex, kIndex, Ncx);
+    RealPointer = &obBottom;
+    
+    rayfromSurf(obBottom,
+          RealPointer,
+          obVirtual,
+          obRay,
+          MTrng,
+          surfaceFlag,
+          surfaceIndex,
+          alpha_surface,
+          emiss_surface,
+          T_surface,
+          a_surface,
+          rs_surface,
+          rd_surface,
+          IntenArray_Vol,
+          IntenArray_surface,
+          X, Y, Z,
+          kl_Vol, scatter_Vol,
+          VolFeature,
+          thisRayNo,
+          iIndex,
+          jIndex,
+          kIndex,
+          iggNo,
+          StopLowerBound,
+          netInten_surface,
+          s,
+          obBST,
+          countg,
+          gSize, VolElementNo, Rkg, gk, kl, g);
+  }
 
 
      } // end iIndex
@@ -1128,44 +1128,44 @@ int main(int argc, char *argv[]){
     
     for ( kIndex = 0; kIndex < Ncz; kIndex ++ ) {
       for ( iIndex = 0; iIndex < Ncx; iIndex ++){
-	//	cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
-	surfaceIndex = iIndex + kIndex * Ncx;
-	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
+  //  cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
+  surfaceIndex = iIndex + kIndex * Ncx;
+  thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
-	if ( thisRayNo != 0 ) { // rays emitted from this surface
-	  
-	  MTrng.seed(surfaceIndex + FrontStartNo);
-	  FrontRealSurface obFront(iIndex, jIndex, kIndex, Ncx);
-	  RealPointer = &obFront;
-	  
-	  rayfromSurf(obFront,
-		      RealPointer,
-		      obVirtual,
-		      obRay,
-		      MTrng,
-		      surfaceFlag,
-		      surfaceIndex,
-		      alpha_surface,
-		      emiss_surface,
-		      T_surface,
-		      a_surface,
-		      rs_surface,
-		      rd_surface,
-		      IntenArray_Vol,
-		      IntenArray_surface,
-		      X, Y, Z,
-		      kl_Vol, scatter_Vol,
-		      VolFeature,
-		      thisRayNo,
-		      iIndex,
-		      jIndex,
-		      kIndex,
-		      iggNo,
-		      StopLowerBound,
-		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
-	}
+  if ( thisRayNo != 0 ) { // rays emitted from this surface
+    
+    MTrng.seed(surfaceIndex + FrontStartNo);
+    FrontRealSurface obFront(iIndex, jIndex, kIndex, Ncx);
+    RealPointer = &obFront;
+    
+    rayfromSurf(obFront,
+          RealPointer,
+          obVirtual,
+          obRay,
+          MTrng,
+          surfaceFlag,
+          surfaceIndex,
+          alpha_surface,
+          emiss_surface,
+          T_surface,
+          a_surface,
+          rs_surface,
+          rd_surface,
+          IntenArray_Vol,
+          IntenArray_surface,
+          X, Y, Z,
+          kl_Vol, scatter_Vol,
+          VolFeature,
+          thisRayNo,
+          iIndex,
+          jIndex,
+          kIndex,
+          iggNo,
+          StopLowerBound,
+          netInten_surface,
+          s, obBST, countg,
+          gSize, VolElementNo, Rkg, gk, kl, g);
+  }
 
 
      } // end iIndex
@@ -1184,44 +1184,44 @@ int main(int argc, char *argv[]){
     
     for ( kIndex = 0; kIndex < Ncz; kIndex ++ ) {
       for ( iIndex = 0; iIndex < Ncx; iIndex ++){
-	//	cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
-	surfaceIndex = iIndex + kIndex * Ncx;
-	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
+  //  cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
+  surfaceIndex = iIndex + kIndex * Ncx;
+  thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
-	if ( thisRayNo != 0 ) { // rays emitted from this surface
-	  
-	  MTrng.seed(surfaceIndex + BackStartNo);
-	  BackRealSurface obBack(iIndex, jIndex, kIndex, Ncx);
-	  RealPointer = &obBack;
-	  
-	  rayfromSurf(obBack,
-		      RealPointer,
-		      obVirtual,
-		      obRay,
-		      MTrng,
-		      surfaceFlag,
-		      surfaceIndex,
-		      alpha_surface,
-		      emiss_surface,
-		      T_surface,
-		      a_surface,
-		      rs_surface,
-		      rd_surface,
-		      IntenArray_Vol,
-		      IntenArray_surface,
-		      X, Y, Z,
-		      kl_Vol, scatter_Vol,
-		      VolFeature,
-		      thisRayNo,
-		      iIndex,
-		      jIndex,
-		      kIndex,
-		      iggNo,
-		      StopLowerBound,
-		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
-	}
+  if ( thisRayNo != 0 ) { // rays emitted from this surface
+    
+    MTrng.seed(surfaceIndex + BackStartNo);
+    BackRealSurface obBack(iIndex, jIndex, kIndex, Ncx);
+    RealPointer = &obBack;
+    
+    rayfromSurf(obBack,
+          RealPointer,
+          obVirtual,
+          obRay,
+          MTrng,
+          surfaceFlag,
+          surfaceIndex,
+          alpha_surface,
+          emiss_surface,
+          T_surface,
+          a_surface,
+          rs_surface,
+          rd_surface,
+          IntenArray_Vol,
+          IntenArray_surface,
+          X, Y, Z,
+          kl_Vol, scatter_Vol,
+          VolFeature,
+          thisRayNo,
+          iIndex,
+          jIndex,
+          kIndex,
+          iggNo,
+          StopLowerBound,
+          netInten_surface,
+          s, obBST, countg,
+          gSize, VolElementNo, Rkg, gk, kl, g);
+  }
 
 
      } // end iIndex
@@ -1241,44 +1241,44 @@ int main(int argc, char *argv[]){
     
     for ( kIndex = 0; kIndex < Ncz; kIndex ++ ) {
       for ( jIndex = 0; jIndex < Ncy; jIndex ++){
-	//	cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
-	surfaceIndex = jIndex + kIndex * Ncy;
-	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
+  //  cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
+  surfaceIndex = jIndex + kIndex * Ncy;
+  thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
-	if ( thisRayNo != 0 ) { // rays emitted from this surface
-	  
-	  MTrng.seed(surfaceIndex + LeftStartNo);
-	  LeftRealSurface obLeft(iIndex, jIndex, kIndex, Ncy);
-	  RealPointer = &obLeft;
+  if ( thisRayNo != 0 ) { // rays emitted from this surface
+    
+    MTrng.seed(surfaceIndex + LeftStartNo);
+    LeftRealSurface obLeft(iIndex, jIndex, kIndex, Ncy);
+    RealPointer = &obLeft;
 
-	  rayfromSurf(obLeft,
-		      RealPointer,
-		      obVirtual,
-		      obRay,
-		      MTrng,
-		      surfaceFlag,
-		      surfaceIndex,
-		      alpha_surface,
-		      emiss_surface,
-		      T_surface,
-		      a_surface,
-		      rs_surface,
-		      rd_surface,
-		      IntenArray_Vol,
-		      IntenArray_surface,
-		      X, Y, Z,
-		      kl_Vol, scatter_Vol,
-		      VolFeature,
-		      thisRayNo,
-		      iIndex,
-		      jIndex,
-		      kIndex,
-		      iggNo,
-		      StopLowerBound,
-		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
-	}
+    rayfromSurf(obLeft,
+          RealPointer,
+          obVirtual,
+          obRay,
+          MTrng,
+          surfaceFlag,
+          surfaceIndex,
+          alpha_surface,
+          emiss_surface,
+          T_surface,
+          a_surface,
+          rs_surface,
+          rd_surface,
+          IntenArray_Vol,
+          IntenArray_surface,
+          X, Y, Z,
+          kl_Vol, scatter_Vol,
+          VolFeature,
+          thisRayNo,
+          iIndex,
+          jIndex,
+          kIndex,
+          iggNo,
+          StopLowerBound,
+          netInten_surface,
+          s, obBST, countg,
+          gSize, VolElementNo, Rkg, gk, kl, g);
+  }
 
 
      } // end jIndex
@@ -1298,44 +1298,44 @@ int main(int argc, char *argv[]){
     
     for ( kIndex = 0; kIndex < Ncz; kIndex ++ ) {
       for ( jIndex = 0; jIndex < Ncy; jIndex ++){
-	//	cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
-	surfaceIndex = jIndex + kIndex * Ncy;
-	thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
+  //  cout << "iIndex = " << iIndex <<"; jIndex = " << jIndex << endl;
+  surfaceIndex = jIndex + kIndex * Ncy;
+  thisRayNo = rayNo_surface[surfaceFlag][surfaceIndex];
 
-	if ( thisRayNo != 0 ) { // rays emitted from this surface
-	  
-	  MTrng.seed(surfaceIndex + RightStartNo);
-	  RightRealSurface obRight(iIndex, jIndex, kIndex, Ncy);
-	  RealPointer = &obRight;
+  if ( thisRayNo != 0 ) { // rays emitted from this surface
+    
+    MTrng.seed(surfaceIndex + RightStartNo);
+    RightRealSurface obRight(iIndex, jIndex, kIndex, Ncy);
+    RealPointer = &obRight;
 
-	  rayfromSurf(obRight,
-		      RealPointer,
-		      obVirtual,
-		      obRay,
-		      MTrng,
-		      surfaceFlag,
-		      surfaceIndex,
-		      alpha_surface,
-		      emiss_surface,
-		      T_surface,
-		      a_surface,
-		      rs_surface,
-		      rd_surface,
-		      IntenArray_Vol,
-		      IntenArray_surface,
-		      X, Y, Z,
-		      kl_Vol, scatter_Vol,
-		      VolFeature,
-		      thisRayNo,
-		      iIndex,
-		      jIndex,
-		      kIndex,
-		      iggNo,
-		      StopLowerBound,
-		      netInten_surface,
-		      s, obBST, countg,
-		      gSize, VolElementNo, Rkg, gk, kl, g);
-	}
+    rayfromSurf(obRight,
+          RealPointer,
+          obVirtual,
+          obRay,
+          MTrng,
+          surfaceFlag,
+          surfaceIndex,
+          alpha_surface,
+          emiss_surface,
+          T_surface,
+          a_surface,
+          rs_surface,
+          rd_surface,
+          IntenArray_Vol,
+          IntenArray_surface,
+          X, Y, Z,
+          kl_Vol, scatter_Vol,
+          VolFeature,
+          thisRayNo,
+          iIndex,
+          jIndex,
+          kIndex,
+          iggNo,
+          StopLowerBound,
+          netInten_surface,
+          s, obBST, countg,
+          gSize, VolElementNo, Rkg, gk, kl, g);
+  }
 
 
      } // end jIndex
@@ -1347,7 +1347,7 @@ int main(int argc, char *argv[]){
   
 } // end if rayNoSurface ! = 0 ?
    
-	  
+    
   iggNo = 0;
   
   //  cout << " i am here after one iggNo" << endl;
@@ -1357,179 +1357,179 @@ int main(int argc, char *argv[]){
     
     for ( int kVolIndex = 0; kVolIndex < Ncz; kVolIndex ++ ) {
       for ( int jVolIndex = 0 ; jVolIndex < Ncy; jVolIndex ++ ) {
-	for ( int iVolIndex = 0; iVolIndex < Ncx; iVolIndex ++ ) {
+  for ( int iVolIndex = 0; iVolIndex < Ncx; iVolIndex ++ ) {
 
-	  VolIndex = iVolIndex + jVolIndex * Ncx + kVolIndex * TopBottomNo;
+    VolIndex = iVolIndex + jVolIndex * Ncx + kVolIndex * TopBottomNo;
 
-	  if ( rayNo_Vol[VolIndex] != 0 ) {
-	    
-	    MTrng.seed(VolIndex);	    
-	    VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
-	    
+    if ( rayNo_Vol[VolIndex] != 0 ) {
+      
+      MTrng.seed(VolIndex);     
+      VolElement obVol(iVolIndex, jVolIndex, kVolIndex, Ncx, Ncy);
+      
 
-	    double *IncomingIntenVol = new double [ rayNo_Vol[VolIndex] ];
-	  
-	    for ( rayCounter = 0; rayCounter < rayNo_Vol[VolIndex]; rayCounter ++) {
+      double *IncomingIntenVol = new double [ rayNo_Vol[VolIndex] ];
+    
+      for ( rayCounter = 0; rayCounter < rayNo_Vol[VolIndex]; rayCounter ++) {
 
-	      /*
-	      Rgg = Runi[rayCounter];
-	      // Rgg =  MTrng.randExc(); // Rgg random number
-	      //	  cout << " Rgg = " << Rgg << endl;
-	      obBST.search(Rgg, Rkg, gSize);
-	      obBST.calculate_gk(gk, Rkg, Rgg);
-	      g = obBST.get_g();
-	      //  cout << " g= "<< g << endl;
-	      kl = obBST.get_k();
-	      //  cout << "kl = " << kl << endl;
-	      countg[obBST.get_lowI()] ++;
-	      */
+        /*
+        Rgg = Runi[rayCounter];
+        // Rgg =  MTrng.randExc(); // Rgg random number
+        //    cout << " Rgg = " << Rgg << endl;
+        obBST.search(Rgg, Rkg, gSize);
+        obBST.calculate_gk(gk, Rkg, Rgg);
+        g = obBST.get_g();
+        //  cout << " g= "<< g << endl;
+        kl = obBST.get_k();
+        //  cout << "kl = " << kl << endl;
+        countg[obBST.get_lowI()] ++;
+        */
 
-	      
-	      // set absorption coeff
-	      for ( int ki = 0; ki < VolElementNo; ki++)
-		kl_Vol[ki] = kl[rayCounter];
-	      
-	      OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
-	      
-	      LeftIntenFrac = 1;
-	      weight = 1;
-	      traceProbability = 1;
-	      previousSum = 0;
-	      currentSum = 0;
-	      IncomingIntenVol[rayCounter] = 0;
-	      
-	      // when absorbed by this emitting volume, only absorbed by kl_Vol portion.
-	      SurLeft = kl_Vol[VolIndex];
-	      
-	      // get emitting ray's direction vector s
-	      obRay.set_emissS_vol(MTrng, s);
-	      
-	      obRay.set_directionS(s); // put s into directionVector ( private )
-	      obVol.get_limits(X, Y, Z);
-	      
-	      // VolIndex is the vIndex is
-	      // VoliIndex + VoljIndex * Ncx + VolkIndex * TopBottomNo
-	      
-	      obRay.set_emissP(MTrng,
-			       obVol.get_xlow(), obVol.get_xup(),
-			       obVol.get_ylow(), obVol.get_yup(),
-			       obVol.get_zlow(), obVol.get_zup());
+        
+        // set absorption coeff
+        for ( int ki = 0; ki < VolElementNo; ki++)
+    kl_Vol[ki] = kl[rayCounter];
+        
+        OutIntenVol = IntenArray_Vol[VolIndex] * kl_Vol[VolIndex];
+        
+        LeftIntenFrac = 1;
+        weight = 1;
+        traceProbability = 1;
+        previousSum = 0;
+        currentSum = 0;
+        IncomingIntenVol[rayCounter] = 0;
+        
+        // when absorbed by this emitting volume, only absorbed by kl_Vol portion.
+        SurLeft = kl_Vol[VolIndex];
+        
+        // get emitting ray's direction vector s
+        obRay.set_emissS_vol(MTrng, s);
+        
+        obRay.set_directionS(s); // put s into directionVector ( private )
+        obVol.get_limits(X, Y, Z);
+        
+        // VolIndex is the vIndex is
+        // VoliIndex + VoljIndex * Ncx + VolkIndex * TopBottomNo
+        
+        obRay.set_emissP(MTrng,
+             obVol.get_xlow(), obVol.get_xup(),
+             obVol.get_ylow(), obVol.get_yup(),
+             obVol.get_zlow(), obVol.get_zup());
 
-	      //   obRay.set_straightP();
-	      //   obRay.set_straight_len(0);
-	      
-	      obRay.set_currentvIndex(iVolIndex, jVolIndex, kVolIndex);
-	      
-	      // emitting rays from volume, then surely has participating media
-	      
-	      // only one criteria for now ( the left energy percentage )
-	      //   vectorIndex = 0;
+        //   obRay.set_straightP();
+        //   obRay.set_straight_len(0);
+        
+        obRay.set_currentvIndex(iVolIndex, jVolIndex, kVolIndex);
+        
+        // emitting rays from volume, then surely has participating media
+        
+        // only one criteria for now ( the left energy percentage )
+        //   vectorIndex = 0;
 
-	      obRay.dirChange = 1;
-	      
-	      do {
-		weight = weight / traceProbability;
-		
-		previousSum = currentSum;
-		
-		obRay.TravelInMediumInten(MTrng, obVirtual,
-					  kl_Vol, scatter_Vol,
-					  X, Y, Z, VolFeature,
-					  PathLeft, PathSurfaceLeft);
-		
-		
-		// the upper bound of the segment
-		currentSum = previousSum + PathLeft;
-		
-		// the IntensityArray for volumes are black ones.
-		// use the previous SurLeft here.
-		// SurLeft is not updated yet.
-		
-		IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] + 
-		  IntenArray_Vol[obRay.get_currentvIndex()]
-		  * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
-		  * weight;
-		
-		// SurLeft to accout for the real surface absorption effect on intensity
-		
-		if ( !obRay.VIRTUAL ) {
-		  
-		  hitSurfaceFlag = obRay.get_surfaceFlag();
-		  hitSurfaceIndex = obRay.get_hitSurfaceIndex();
-		  
-		  // PathSurfaceLeft is updated here
-		  // and it comes into effect for next travelling step.
-		  obRay.hitRealSurfaceInten(MTrng,
-					    alpha_surface[hitSurfaceFlag],
-					    rs_surface[hitSurfaceFlag],
-					    rd_surface[hitSurfaceFlag],
-					    PathSurfaceLeft);
-		  
-		  IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
-		    IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
-		    exp ( -currentSum ) * SurLeft
-		    * weight;
-		  
-		}
-		
-		// set hitPoint as new emission Point
-		// and direction of the ray already updated
-		obRay.update_emissP();
-		obRay.update_vIndex();
-		
-		SurLeft = SurLeft * PathSurfaceLeft;		
-		LeftIntenFrac = exp(-currentSum) * SurLeft;
-		traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
+        obRay.dirChange = 1;
+        
+        do {
+    weight = weight / traceProbability;
+    
+    previousSum = currentSum;
+    
+    obRay.TravelInMediumInten(MTrng, obVirtual,
+            kl_Vol, scatter_Vol,
+            X, Y, Z, VolFeature,
+            PathLeft, PathSurfaceLeft);
+    
+    
+    // the upper bound of the segment
+    currentSum = previousSum + PathLeft;
+    
+    // the IntensityArray for volumes are black ones.
+    // use the previous SurLeft here.
+    // SurLeft is not updated yet.
+    
+    IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] + 
+      IntenArray_Vol[obRay.get_currentvIndex()]
+      * ( exp(-previousSum) - exp(-currentSum) ) * SurLeft
+      * weight;
+    
+    // SurLeft to accout for the real surface absorption effect on intensity
+    
+    if ( !obRay.VIRTUAL ) {
+      
+      hitSurfaceFlag = obRay.get_surfaceFlag();
+      hitSurfaceIndex = obRay.get_hitSurfaceIndex();
+      
+      // PathSurfaceLeft is updated here
+      // and it comes into effect for next travelling step.
+      obRay.hitRealSurfaceInten(MTrng,
+              alpha_surface[hitSurfaceFlag],
+              rs_surface[hitSurfaceFlag],
+              rd_surface[hitSurfaceFlag],
+              PathSurfaceLeft);
+      
+      IncomingIntenVol[rayCounter] = IncomingIntenVol[rayCounter] +
+        IntenArray_surface[hitSurfaceFlag][hitSurfaceIndex] *
+        exp ( -currentSum ) * SurLeft
+        * weight;
+      
+    }
+    
+    // set hitPoint as new emission Point
+    // and direction of the ray already updated
+    obRay.update_emissP();
+    obRay.update_vIndex();
+    
+    SurLeft = SurLeft * PathSurfaceLeft;    
+    LeftIntenFrac = exp(-currentSum) * SurLeft;
+    traceProbability = min(1.0, LeftIntenFrac/StopLowerBound);
 
-		
-	      }while ( MTrng.randExc() < traceProbability ); // continue the path
-	      
-	      // temperory solution.
-	      // otherwise get an array of OutIntenVol[rayCounter]
-	      IncomingIntenVol[rayCounter] = OutIntenVol - IncomingIntenVol[rayCounter];
-	      
-	    } // rayCounter loop
-	    
-	  
-	    // deal with the current control volume
-	    // isotropic emission, weighting factors are all the same on all directions
-	    // net = OutInten - averaged_IncomingIntenDir
-	    // div q = 4 * pi * netInten
+    
+        }while ( MTrng.randExc() < traceProbability ); // continue the path
+        
+        // temperory solution.
+        // otherwise get an array of OutIntenVol[rayCounter]
+        IncomingIntenVol[rayCounter] = OutIntenVol - IncomingIntenVol[rayCounter];
+        
+      } // rayCounter loop
+      
+    
+      // deal with the current control volume
+      // isotropic emission, weighting factors are all the same on all directions
+      // net = OutInten - averaged_IncomingIntenDir
+      // div q = 4 * pi * netInten
 
-	    // integrate over all g of incoming Intensity
-	    // here the rayNo_Vol[VolIndex] has to be the same as Runisize
+      // integrate over all g of incoming Intensity
+      // here the rayNo_Vol[VolIndex] has to be the same as Runisize
 
-	    // the OutIntenVol is changing with each ray too!!!
-	    sumIncomInten = 0;
-	    obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ietaeta60000.dat");
+      // the OutIntenVol is changing with each ray too!!!
+      sumIncomInten = 0;
+      obTable.twoArrayTable( rayNouniform, g, IncomingIntenVol, "Ietaeta60000.dat");
 
-	    /*
-	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
-	      sumIncomInten = sumIncomInten +
-		IncomingIntenVol[aaa] ;
-	    */
-	    
-	    
-	    for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
-	      sumIncomInten = sumIncomInten +
-		( IncomingIntenVol[aaa+1] + IncomingIntenVol[aaa] ) *
-		( g[aaa+1] - g[aaa])/2.0;
-	    
-	    
-	    delete[] IncomingIntenVol;
-	    
-	    // aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
-	    // cout << "aveIncomInten = " << aveIncomInten << endl;
-	    
-	    // netInten_Vol[VolIndex][iggNo] = OutIntenVol - aveIncomInten;
+      /*
+      for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
+        sumIncomInten = sumIncomInten +
+    IncomingIntenVol[aaa] ;
+      */
+      
+      
+      for ( int aaa = 0; aaa < rayNo_Vol[VolIndex]-1 ; aaa ++ )
+        sumIncomInten = sumIncomInten +
+    ( IncomingIntenVol[aaa+1] + IncomingIntenVol[aaa] ) *
+    ( g[aaa+1] - g[aaa])/2.0;
+      
+      
+      delete[] IncomingIntenVol;
+      
+      // aveIncomInten = sumIncomInten / rayNo_Vol[VolIndex];
+      // cout << "aveIncomInten = " << aveIncomInten << endl;
+      
+      // netInten_Vol[VolIndex][iggNo] = OutIntenVol - aveIncomInten;
 
-	     netInten_Vol[VolIndex][iggNo] = sumIncomInten;
-	    
-	  } // if rayNo_Vol[VolIndex] != 0
-	  
-	  
-	} // end if iVolIndex
-	
+       netInten_Vol[VolIndex][iggNo] = sumIncomInten;
+      
+    } // if rayNo_Vol[VolIndex] != 0
+    
+    
+  } // end if iVolIndex
+  
       } // end if jVolIndex
       
     } // end if kVolIndex
@@ -1557,8 +1557,8 @@ int main(int argc, char *argv[]){
   for ( surfaceFlag = 0; surfaceFlag < 6; surfaceFlag++)
     for ( int elementNo = 0; elementNo < surfaceNo[surfaceFlag]; elementNo ++)
       for ( int iggNo = 0; iggNo < 1; iggNo ++)
-	integrIntenSurface[surfaceFlag][elementNo] = integrIntenSurface[surfaceFlag][elementNo] +
-	  netInten_surface[surfaceFlag][elementNo][iggNo];
+  integrIntenSurface[surfaceFlag][elementNo] = integrIntenSurface[surfaceFlag][elementNo] +
+    netInten_surface[surfaceFlag][elementNo][iggNo];
 
   
   iSurface = 0;
@@ -1573,8 +1573,8 @@ int main(int argc, char *argv[]){
   
   
   obTable.vtkSurfaceTableMake("vtkSurfaceWebbHomoReta60000-L1-101010", Npx, Npy, Npz,
-			      X, Y, Z, surfaceElementNo,
-			      global_qsurface, global_Qsurface);
+            X, Y, Z, surfaceElementNo,
+            global_qsurface, global_Qsurface);
 
 
   
@@ -1588,8 +1588,8 @@ int main(int argc, char *argv[]){
 
     for ( int i = 0; i < VolElementNo; i ++)
       for ( int iggNo = 0; iggNo < 1; iggNo ++)
-	integrIntenVol[i]= integrIntenVol[i]+
-	  netInten_Vol[i][iggNo] ;
+  integrIntenVol[i]= integrIntenVol[i]+
+    netInten_Vol[i][iggNo] ;
 
   
   
@@ -1600,9 +1600,9 @@ int main(int argc, char *argv[]){
   }
   
   obTable.vtkVolTableMake("vtkVolWebbHomoReta60000-L1-101010",
-			  Npx, Npy, Npz,
-			  X, Y, Z, VolElementNo,
-			  global_qdiv, global_Qdiv);
+        Npx, Npy, Npz,
+        X, Y, Z, VolElementNo,
+        global_qdiv, global_Qdiv);
 
   
  

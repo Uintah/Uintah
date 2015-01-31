@@ -10,7 +10,7 @@
  * @date   Not sure
  *
  * @brief Assembles source term for the particle drag from the
- * 				particle phase. 
+ *        particle phase. 
  *
  * @todo
  *
@@ -23,7 +23,7 @@
  * Input file interface is as follows: 
 \code
 <Sources>
-	<src label="STRING REQUIRED" type="coal_gas_momentum"/>
+  <src label="STRING REQUIRED" type="coal_gas_momentum"/>
 </Sources>
 \endcode
  *

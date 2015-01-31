@@ -29,7 +29,7 @@
 *   <Sources>
 *     <src label = "my_source" type = "westbrook_dryer" > 
         <!-- Westbrook Dryer Global Hydrocarbon reaction rate model -->
-	      <!-- see Turns, pg. 156-157 -->
+        <!-- see Turns, pg. 156-157 -->
         <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Pre-exponential factor --> 
         <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Activation temperature --> 
         <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y --> 

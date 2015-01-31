@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -404,7 +404,7 @@ ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(dispNew,lb->dispNewLabel,dwi,patch, Ghost::AroundCells,1);
   
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc, pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,            pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
     new_dw->allocateTemporary(deformationGradient_new,pset);
 
@@ -622,7 +622,7 @@ ViscoScramImplicit::computeStressTensorImplicit(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,  pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,             pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
@@ -728,7 +728,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW,lb->dispNewLabel,matlset,Ghost::AroundCells,1);
 
   task->computes(lb->pStressLabel_preReloc,matlset);  
-  task->computes(lb->pdTdtLabel_preReloc,  matlset);  
+  task->computes(lb->pdTdtLabel,           matlset);  
   task->computes(lb->pVolumeDeformedLabel, matlset);
 
 }
@@ -754,7 +754,7 @@ void ViscoScramImplicit::addComputesAndRequires(Task* task,
   task->requires(Task::NewDW, lb->dispNewLabel,   matlset,Ghost::AroundCells,1);
                                                                                 
   task->computes(lb->pStressLabel_preReloc,                matlset);
-  task->computes(lb->pdTdtLabel_preReloc,                  matlset);
+  task->computes(lb->pdTdtLabel,                           matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc,    matlset);
   task->computes(lb->pVolumeDeformedLabel,                 matlset);
   task->computes(pVolChangeHeatRateLabel_preReloc,         matlset);

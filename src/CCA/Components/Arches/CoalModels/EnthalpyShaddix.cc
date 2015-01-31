@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/CoalModels/PartVel.h>
-#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -78,30 +78,30 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self();
   
   // check for particle enthalpy scaling constant
-  std::string enthalpy_root = PropertyHelper::parse_for_role_to_label(db, "enthalpy"); 
-  std::string enthalpyqn_name = PropertyHelper::append_qn_env( enthalpy_root, d_quadNode ); 
+  std::string enthalpy_root = ParticleHelper::parse_for_role_to_label(db, "enthalpy"); 
+  std::string enthalpyqn_name = ParticleHelper::append_qn_env( enthalpy_root, d_quadNode ); 
   EqnBase& temp_enthalpy_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(enthalpyqn_name);
   DQMOMEqn& enthalpy_eqn = dynamic_cast<DQMOMEqn&>(temp_enthalpy_eqn);
-   _enthalpy_scaling_constant = enthalpy_eqn.getScalingConstant();
+   _enthalpy_scaling_constant = enthalpy_eqn.getScalingConstant(d_quadNode);
 
   // check for particle temperature 
-  std::string temperature_root = PropertyHelper::parse_for_role_to_label(db, "temperature"); 
-  std::string temperature_name = PropertyHelper::append_env( temperature_root, d_quadNode ); 
+  std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
+  std::string temperature_name = ParticleHelper::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name); 
 
   // check for length  
-  std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
-  std::string length_name = PropertyHelper::append_env( length_root, d_quadNode ); 
+  std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
+  std::string length_name = ParticleHelper::append_env( length_root, d_quadNode ); 
   _length_varlabel = VarLabel::find(length_name); 
 
   // get weight and scaling constant
-  std::string weightqn_name = PropertyHelper::append_qn_env("w", d_quadNode); 
-  std::string weight_name = PropertyHelper::append_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
   _weight_varlabel = VarLabel::find(weight_name); 
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
-  _weight_small = weight_eqn.getSmallClipCriteria();
-  _weight_scaling_constant = weight_eqn.getScalingConstant();
+  _weight_small = weight_eqn.getSmallClipPlusTol();
+  _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
   // get computed rates from char oxidation model 
   CoalModelFactory& modelFactory = CoalModelFactory::self();
@@ -179,7 +179,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     } else {
       throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): can't find radiationVolq.",__FILE__,__LINE__);
     }
-    std::string abskp_string = PropertyHelper::append_env(baseNameAbskp, d_quadNode);
+    std::string abskp_string = ParticleHelper::append_env(baseNameAbskp, d_quadNode);
     _abskp_varlabel = VarLabel::find(abskp_string);
     _abskg_varlabel = VarLabel::find(baseNameAbskg);
   }
@@ -367,10 +367,17 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> radiationVolqIN;
     constCCVariable<double> abskgIN;
     constCCVariable<double> abskp; 
+
+    constCCVariable<double> rad_particle_temperature;
     if ( d_radiation ){ 
       which_dw->get( radiationVolqIN, _volq_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskgIN, _abskg_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0);
+      if (_radiateAtGasTemp){
+        which_dw->get( rad_particle_temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
+      }else{
+        which_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+      }
     }
     constCCVariable<Vector> gasVel; 
     which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
@@ -388,6 +395,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     which_dw->get( weight, _weight_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> particle_temperature;
     which_dw->get( particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+
     constCCVariable<double> charoxi_temp_source;
     which_dw->get( charoxi_temp_source, _charoxiTemp_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> surface_rate;
@@ -482,11 +490,7 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         Q_radiation = 0.0;
         if ( d_radiation) { 
           double Eb;
-          if (_radiateAtGasTemp){
-            Eb = 4.0*_sigma*pow(temperatureph,4.0); 
-          }else{
-            Eb = 4.0*_sigma*pow(particle_temperatureph,4.0); 
-          }
+          Eb = 4.0*_sigma*pow(rad_particle_temperature[c],4.0); 
           FSum = radiationVolqIN[c];    
           Q_radiation = abskp[c]*(FSum - Eb);
         } 

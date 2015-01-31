@@ -539,7 +539,7 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
     throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
   }   
 
-  _part_radprops = scinew ParticleRadCoeffs3D(_LowComplex,_HighComplex,3 );  
+  _part_radprops = scinew ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
 
   _computeComplexIndex = true; // complex index of refraction needed
 }
@@ -602,10 +602,10 @@ bool RadPropertyCalculator::coalOptics::problemSetup(Task* tsk,int time_substep)
 }
 
 void RadPropertyCalculator::coalOptics::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, CCVariable<double>& abskpt, 
-                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                       RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weights, 
+                                                       const int Nqn, CCVariable<double>& abskpt, 
+                                                       SCIRun::StaticArray < CCVariable<double> >  &abskp,
+                                                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -621,8 +621,8 @@ void RadPropertyCalculator::coalOptics::compute_abskp( const Patch* patch,  cons
       abskpt[c] = 0.0; 
       for ( int i = 0; i < Nqn; i++ ){ 
 
-        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
-        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        unscaled_weight = (weights[i])[c];
+        unscaled_size = (size[i])[c];
 
         if ( _p_planck_abskp ){ 
 
@@ -650,10 +650,10 @@ void RadPropertyCalculator::coalOptics::compute_abskp( const Patch* patch,  cons
 
 
 void RadPropertyCalculator::coalOptics::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, CCVariable<double>& scatkt,
-                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
-                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                        RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weights, 
+                                                        const int Nqn, CCVariable<double>& scatkt,
+                                                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
+                                                        SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 
   for ( int i = 0; i < Nqn; i++ ){ 
     scatktQuad[i].allocate(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
@@ -675,8 +675,8 @@ void RadPropertyCalculator::coalOptics::compute_scatkt( const Patch* patch,  con
       scatkt[c] = 0.0; 
       for ( int i = 0; i < Nqn; i++ ){ 
 
-        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
-        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        unscaled_weight = (weights[i])[c];
+        unscaled_size = (size[i])[c];
         if ( _p_planck_abskp ){ 
           double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c], complexReal[i][c]);
           //double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c]);
@@ -699,9 +699,9 @@ void RadPropertyCalculator::coalOptics::compute_scatkt( const Patch* patch,  con
 }
 
 void RadPropertyCalculator::coalOptics::computeComplexIndex( const Patch* patch,
-                                         constCCVariable<double>& VolFractionBC,
-                   SCIRun::StaticArray < constCCVariable<double> > &composition,
-                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                             constCCVariable<double>& VolFractionBC,
+                                                             SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                             SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter; 
@@ -721,11 +721,11 @@ return;
 
 
 void RadPropertyCalculator::coalOptics::computeAsymmetryFactor( const Patch* patch,
-                                            constCCVariable<double>& VolFractionBC,
-                            SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                      SCIRun::StaticArray < constCCVariable<double> > &composition,
-                                                       CCVariable<double>  &scatkt,
-                                               CCVariable<double>  &asymmetryParam){
+                                                                constCCVariable<double>& VolFractionBC,
+                                                                SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
+                                                                SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                                CCVariable<double>  &scatkt,
+                                                                CCVariable<double>  &asymmetryParam){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter; 
@@ -754,9 +754,9 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     double imagCIF;
     db->findBlock("particles")->require("complex_ir_real",realCIF); 
     db->findBlock("particles")->require("complex_ir_imag",imagCIF); 
-    db->findBlock("particles")->getWithDefault("const_assymmFact",_constAsymmFact,0.0); 
+    db->findBlock("particles")->getWithDefault("const_asymmFact",_constAsymmFact,0.0); 
     std::complex<double>  CIF(realCIF, imagCIF );  
-    _part_radprops = scinew ParticleRadCoeffs(CIF);  
+    _part_radprops = scinew ParticleRadCoeffs(CIF,1e-6,3e-4,10);  
     std::string which_model = "none"; 
     db->findBlock("particles")->require("model_type", which_model);
     if ( which_model == "planck" ){ 
@@ -823,10 +823,10 @@ bool RadPropertyCalculator::constantCIF::problemSetup(Task* tsk,int time_substep
 }
 
 void RadPropertyCalculator::constantCIF::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, CCVariable<double>& abskpt, 
-                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                        RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weights, 
+                                                        const int Nqn, CCVariable<double>& abskpt, 
+                                                        SCIRun::StaticArray < CCVariable<double> >  &abskp,
+                                                        SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     IntVector c = *iter; 
@@ -840,8 +840,8 @@ void RadPropertyCalculator::constantCIF::compute_abskp( const Patch* patch,  con
       abskpt[c] = 0.0; 
       for ( int i = 0; i < Nqn; i++ ){ 
 
-        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
-        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        unscaled_weight = (weights[i])[c];
+        unscaled_size = (size[i])[c];
 
         if ( _p_planck_abskp ){ 
 
@@ -869,10 +869,10 @@ void RadPropertyCalculator::constantCIF::compute_abskp( const Patch* patch,  con
 
 
 void RadPropertyCalculator::constantCIF::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, CCVariable<double>& scatkt,
-                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
-                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                         RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weights, 
+                                                         const int Nqn, CCVariable<double>& scatkt,
+                                                         SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
+                                                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 
   for ( int i = 0; i < Nqn; i++ ){ 
     scatktQuad[i].allocate(patch->getExtraCellLowIndex(),patch->getExtraCellHighIndex());
@@ -893,8 +893,8 @@ void RadPropertyCalculator::constantCIF::compute_scatkt( const Patch* patch,  co
       scatkt[c] = 0.0; 
       for ( int i = 0; i < Nqn; i++ ){ 
 
-        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
-        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        unscaled_weight = (weights[i])[c];
+        unscaled_size = (size[i])[c];
         if ( _p_planck_abskp ){ 
           double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c]);
           scatktQuad[i][c]=scatkt_i* unscaled_weight;
@@ -915,9 +915,9 @@ void RadPropertyCalculator::constantCIF::compute_scatkt( const Patch* patch,  co
 }
 
 void RadPropertyCalculator::constantCIF::computeComplexIndex( const Patch* patch,
-                                         constCCVariable<double>& VolFractionBC,
-                   SCIRun::StaticArray < constCCVariable<double> > &composition,
-                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                              constCCVariable<double>& VolFractionBC,
+                                                              SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                              SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 return;
 }
 
@@ -937,7 +937,7 @@ void RadPropertyCalculator::constantCIF::computeAsymmetryFactor( const Patch* pa
       }
     } // else, phase function remain zero in intrusions (set upstream).
   }
-return;
+  return;
 }
 
 
@@ -990,10 +990,10 @@ bool RadPropertyCalculator::basic::problemSetup(Task* tsk,int time_substep){
 // This is Julliens particle absorption coefficient model!
 // In juliens model, Qabs, was hard coded to 0.8 for SUFCO coal.
 void RadPropertyCalculator::basic::compute_abskp( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, CCVariable<double>& abskpt, 
-                           SCIRun::StaticArray < CCVariable<double> >  &abskp,
-                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                  RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weights, 
+                                                  const int Nqn, CCVariable<double>& abskpt, 
+                                                  SCIRun::StaticArray < CCVariable<double> >  &abskp,
+                                                  SCIRun::StaticArray < CCVariable<double> >  &complexReal){
   double unscaled_weight;
   double unscaled_size;
 
@@ -1002,8 +1002,8 @@ void RadPropertyCalculator::basic::compute_abskp( const Patch* patch,  constCCVa
     if ( VolFractionBC[c] > 1.e-16 ){
       abskpt[c] =0.0 ; 
       for ( int i = 0; i < Nqn; i++ ){ 
-        unscaled_weight = (weights[i])[c]*weights_scaling_constant;
-        unscaled_size = (size[i])[c]*size_scaling_constant/(weights[i])[c];
+        unscaled_weight = (weights[i])[c];
+        unscaled_size = (size[i])[c];
         abskp[i][c]= M_PI/4.0*_Qabs*unscaled_weight*pow(unscaled_size,2.0);
         abskpt[c] +=abskp[i][c]; 
       }
@@ -1015,26 +1015,26 @@ void RadPropertyCalculator::basic::compute_abskp( const Patch* patch,  constCCVa
 
 
 void RadPropertyCalculator::basic::compute_scatkt( const Patch* patch,  constCCVariable<double>& VolFractionBC,  
-                                    double size_scaling_constant, RadCalcSpeciesList size, RadCalcSpeciesList pT, double weights_scaling_constant, RadCalcSpeciesList weights, 
-                                    const int Nqn, CCVariable<double>& scatkt,
-                        SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
-                         SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+                                                   RadCalcSpeciesList size, RadCalcSpeciesList pT, RadCalcSpeciesList weights, 
+                                                   const int Nqn, CCVariable<double>& scatkt,
+                                                   SCIRun::StaticArray < CCVariable<double> > &scatktQuad,
+                                                   SCIRun::StaticArray < CCVariable<double> >  &complexReal){
 
 }
 
 void RadPropertyCalculator::basic::computeComplexIndex( const Patch* patch,
-                                         constCCVariable<double>& VolFractionBC,
-                   SCIRun::StaticArray < constCCVariable<double> > &composition,
-                       SCIRun::StaticArray < CCVariable<double> >  &complexReal){
-return;
+                                                        constCCVariable<double>& VolFractionBC,
+                                                        SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                        SCIRun::StaticArray < CCVariable<double> >  &complexReal){
+  return;
 }
 
 
 void RadPropertyCalculator::basic::computeAsymmetryFactor( const Patch* patch,
-                                            constCCVariable<double>& VolFractionBC,
-                            SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
-                      SCIRun::StaticArray < constCCVariable<double> > &composition,
-                                                       CCVariable<double>  &scatkt,
-                                               CCVariable<double>  &asymmetryParam){
-return;
+                                                           constCCVariable<double>& VolFractionBC,
+                                                           SCIRun::StaticArray < CCVariable<double> > &scatktQuad, 
+                                                           SCIRun::StaticArray < constCCVariable<double> > &composition,
+                                                           CCVariable<double>  &scatkt,
+                                                           CCVariable<double>  &asymmetryParam){
+  return;
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -114,10 +114,10 @@ public:
     bounds.push_back(d_hl_lower_bound); 
     bounds.push_back(d_hl_upper_bound); 
     return bounds; };
-	
+  
 
-	/*********interp derived classes*****************************************/
-	
+  /*********interp derived classes*****************************************/
+  
   /** @brief A base class for Interpolation */
   class Interp_class {
 
@@ -145,12 +145,12 @@ public:
 
   };
 
-	class Interp1 : public Interp_class {
-		
-	public:
+  class Interp1 : public Interp_class {
+    
+  public:
 
-		Interp1(std::vector<int> d_allIndepVarNum, std::vector<std::vector<double> > table, 
-						std::vector< std::vector <double> > i1) {
+    Interp1(std::vector<int> d_allIndepVarNum, std::vector<std::vector<double> > table, 
+            std::vector< std::vector <double> > i1) {
 
           d_allIndepVarNo = d_allIndepVarNum;
           ind_1 = i1;
@@ -158,10 +158,10 @@ public:
 
     };
 
-		~Interp1() {};
-		
+    ~Interp1() {};
+    
     inline std::vector<double> find_val( std::vector <double> iv, std::vector<int> var_index) {
-			
+      
       table_vals = std::vector<double>(2);
       lo_index = std::vector<int>(1);
       hi_index = std::vector<int>(1);
@@ -172,8 +172,8 @@ public:
       double var_val = 0.0;
       std::vector<double> var_values (var_index.size(), 0.0 );
 
-		  d_interpLock.lock();
-		  {
+      d_interpLock.lock();
+      {
 
         int hi_ind = d_allIndepVarNo[0] - 1;
 
@@ -214,31 +214,31 @@ public:
         }
         
       }
-			d_interpLock.unlock();
+      d_interpLock.unlock();
 
       return var_values;
 
     };
   };
-	
-	class Interp2 : public Interp_class {
-	
-	public:
+  
+  class Interp2 : public Interp_class {
+  
+  public:
 
-		Interp2(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
+    Interp2(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
 
-			d_allIndepVarNo = d_allIndepVarNum;
-			indep = indep_headers;
-			ind_1 = i1;
-			table2 = table;
+      d_allIndepVarNo = d_allIndepVarNum;
+      indep = indep_headers;
+      ind_1 = i1;
+      table2 = table;
 
-		};
+    };
 
-		~Interp2() {};
-		
-		inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {
-			
+    ~Interp2() {};
+    
+    inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {
+      
       table_vals = std::vector<double>(4);
       lo_index = std::vector<int>(2);
       hi_index = std::vector<int>(2);
@@ -337,31 +337,31 @@ public:
       d_interpLock.unlock();
 
       return var_values;
-			
+      
     };
   };
-	
-	class Interp3 : public Interp_class {
-		
-	public:
+  
+  class Interp3 : public Interp_class {
+    
+  public:
 
-		Interp3(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
+    Interp3(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
 
-		  d_allIndepVarNo = d_allIndepVarNum;
-			indep = indep_headers;
-			ind_1 = i1;
-			table2 = table;
-		};
+      d_allIndepVarNo = d_allIndepVarNum;
+      indep = indep_headers;
+      ind_1 = i1;
+      table2 = table;
+    };
 
-		~Interp3() {};
-		
+    ~Interp3() {};
+    
     inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {
 
-			table_vals = std::vector<double>(8,0.0);
-			dist_vals = std::vector<double>(4,0.0); // make sure the default is zero
-			lo_index = std::vector<int>(4,0);
-			hi_index = std::vector<int>(4,0);
+      table_vals = std::vector<double>(8,0.0);
+      dist_vals = std::vector<double>(4,0.0); // make sure the default is zero
+      lo_index = std::vector<int>(4,0);
+      hi_index = std::vector<int>(4,0);
       int mid = 0;
       double var_val = 0.0;
       int lo_ind;
@@ -511,23 +511,23 @@ public:
 
     };
   };
-	
-	class Interp4 : public Interp_class {
+  
+  class Interp4 : public Interp_class {
 
-	public:
+  public:
 
-		Interp4(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
+    Interp4(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
 
-			d_allIndepVarNo = d_allIndepVarNum;
-			indep = indep_headers;
-			ind_1 = i1;
-			table2 = table;
+      d_allIndepVarNo = d_allIndepVarNum;
+      indep = indep_headers;
+      ind_1 = i1;
+      table2 = table;
 
-		};
+    };
 
-		~Interp4(){};
-		
+    ~Interp4(){};
+    
     inline std::vector<double> find_val(std::vector<double> iv, std::vector<int> var_index) {
 
       int mid = 0;
@@ -647,49 +647,49 @@ public:
       d_interpLock.unlock();
 
       return var_values;
-			
-		};
-	};
-	
-	class InterpN : public Interp_class {
+      
+    };
+  };
+  
+  class InterpN : public Interp_class {
 
-	  public:
+    public:
 
-		InterpN(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-						std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1, int d_indepvarscount) {
+    InterpN(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
+            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1, int d_indepvarscount) {
 
-		  multiples = std::vector<int>(d_indepvarscount);
-		  multtemp = 0;
-		  for (int i = 0; i < d_indepvarscount; i++) {
-			  multtemp = 1;
-			  for (int j = 0; j<i; j++) {
-				  multtemp = multtemp * d_allIndepVarNum[j];
-			  }
-			  multiples[i] = multtemp;
-		  }
-  	
-		  int npts = (int)pow(2.0,d_indepvarscount);
-		  value_pop = std::vector< std::vector <bool> > (npts);
-		
-		  for (int i =0; i < npts; i++) {
-			  value_pop[i] = std::vector<bool>(d_indepvarscount );
-		  }
-		
-		  //bool matrix for use in lookup
-		  int temp_pts;
-		  double temp_pts_d;
-		  for (int i=0; i < npts; i++) {
-			  for (int j = d_indepvarscount-1; j >= 0; j--) {
-				  temp_pts_d = pow(2.0, j);
-				  temp_pts = (int)floor((i/temp_pts_d));
-				  if ((temp_pts % 2) == 0) {
-					  value_pop[i][j] = true;
-				  } else {
-					  value_pop[i][j] = false;
-				  }
-			  }
-		  }
-			
+      multiples = std::vector<int>(d_indepvarscount);
+      multtemp = 0;
+      for (int i = 0; i < d_indepvarscount; i++) {
+        multtemp = 1;
+        for (int j = 0; j<i; j++) {
+          multtemp = multtemp * d_allIndepVarNum[j];
+        }
+        multiples[i] = multtemp;
+      }
+    
+      int npts = (int)pow(2.0,d_indepvarscount);
+      value_pop = std::vector< std::vector <bool> > (npts);
+    
+      for (int i =0; i < npts; i++) {
+        value_pop[i] = std::vector<bool>(d_indepvarscount );
+      }
+    
+      //bool matrix for use in lookup
+      int temp_pts;
+      double temp_pts_d;
+      for (int i=0; i < npts; i++) {
+        for (int j = d_indepvarscount-1; j >= 0; j--) {
+          temp_pts_d = pow(2.0, j);
+          temp_pts = (int)floor((i/temp_pts_d));
+          if ((temp_pts % 2) == 0) {
+            value_pop[i][j] = true;
+          } else {
+            value_pop[i][j] = false;
+          }
+        }
+      }
+      
       d_allIndepVarNo = d_allIndepVarNum;
       indep = indep_headers;
       ind_1 = i1;
@@ -698,8 +698,8 @@ public:
       vals_size = npts;
     };
 
-		~InterpN(){};
-		
+    ~InterpN(){};
+    
     inline std::vector<double> find_val(std::vector<double> iv, std::vector<int> var_index) {
 
       int mid = 0;
@@ -817,39 +817,39 @@ public:
       d_interpLock.unlock();
 
       return var_values;
-			
-		}
-		
-	  protected:
+      
+    }
+    
+    protected:
 
     int ivcount;
     std::vector<int> multiples;
     std::vector <std::vector <bool> > value_pop;
     int multtemp;
     int vals_size;
-	};
-	
+  };
+  
   //*******************************************end interp classes//
   
   typedef std::map<std::string, DepVarCont >       DepVarMap;
   typedef std::map<std::string, int >               IndexMap;
 
-	/** @brief Return a table lookup for a variable given the independent variable space. **/ 
+  /** @brief Return a table lookup for a variable given the independent variable space. **/ 
   double getTableValue( std::vector<double>, std::string ); 
 
-	/** @brief Match the requested dependent variable with their table index. **/ 
-	void tableMatching(); 
+  /** @brief Match the requested dependent variable with their table index. **/ 
+  void tableMatching(); 
 
-	/** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - Grid wise **/
-	double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c); 
+  /** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - Grid wise **/
+  double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c); 
 
-	/** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - single point wise**/
-	double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
+  /** @brief Return a table lookup for a variable given the independent variables and set of inerts (may be an empty set) - single point wise**/
+  double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions );
 
-	/** @brief Return a reference to the inert map for scheduling purposes in other classes.**/ 
-	InertMasterMap& getInertMap(){
-		return d_inertMap; 
-	};
+  /** @brief Return a reference to the inert map for scheduling purposes in other classes.**/ 
+  InertMasterMap& getInertMap(){
+    return d_inertMap; 
+  };
 
   /** @brief Method to find the index for any dependent variable.  **/
   int inline findIndex( std::string name ){ 
@@ -877,7 +877,7 @@ public:
 private:
 
   Interp_class * ND_interp;
-	
+  
   bool d_table_isloaded;    ///< Boolean: has the table been loaded?
 
   // Specifically for the classic table: 

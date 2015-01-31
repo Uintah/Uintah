@@ -65,12 +65,12 @@ private:
     double water1_Sa(double Ba,double Enthalpy); //get Tem based on Pressure and Enthalpy
     double water1_SV(double Ba,double Sa);  //get SV given Tem and Pressure
     double water1_H(double Ba,double Sa);  //get Enthalpy given Temperaure and Pressure
-	
+  
     //properties for The second block
     double water2_Sa(double Ba,double Enthalpy,double Sal,double Bal,double Balpie); //p h to Tem
     double water2_SV(double Ba,double Sa,double Bal,double Balpie);  //p t to SV
     double water2_H(double Ba,double Sa,double Bal,double Balpie);  //p t to Enthalpy
-	
+  
     //properties for the third block
     double water3_1(double x,double Sa); //v Tem to Pressure
     double water3_SV(double Ba, double Sa); //¸p t to sv
@@ -121,7 +121,7 @@ void H2O_Properties::Water_PT(double P, double T, double X){
     Ba=Pressure/Pc1/1e6;  
     Sa=Temperature/Tc1;
     Sak=p_Kfun(Ba);
-    if (fabs(Sa-Sak)>0.1/Tc1)	Steam_Fraction=0;
+    if (fabs(Sa-Sak)>0.1/Tc1) Steam_Fraction=0;
 
     Bal=Lfun(Sa);
     Balpie=Lpiefun(Sa);
@@ -238,9 +238,9 @@ void H2O_Properties::p_waterBah(double P,double H)
     {
         Sak=p_Kfun(Ba);// to get K boundary Temperature (saturation temperature) given pressure
         Sal=p_Lfun(Ba);  //to get L boundary Temperature given pressure
-        Bal=Lfun(Sal);	
+        Bal=Lfun(Sal);  
         Balpie=Lpiefun(Sal);
-        v12_1=water1_SV(Ba,Sak);				//boundary of 1 and 2 block
+        v12_1=water1_SV(Ba,Sak);        //boundary of 1 and 2 block
         v12_2=water2_SV(Ba,Sak,Bal,Balpie); 
         h12_1=water1_H(Ba,Sak);
         h12_2=water2_H(Ba,Sak,Bal,Balpie);
@@ -271,8 +271,8 @@ void H2O_Properties::p_waterBah(double P,double H)
     {
         if(Ba<=1) Sak=p_Kfun(Ba);
         else if(Ba>1) Sak=1;
-        Sal=p_Lfun(Ba);	//L boundary given pressure
-        Bal=Lfun(Sal);	
+        Sal=p_Lfun(Ba); //L boundary given pressure
+        Bal=Lfun(Sal);  
         Balpie=Lpiefun(Sal);
 
         v41_4=water4_SV(Ba,Sa1);//boundary between 1 and 4
@@ -291,7 +291,7 @@ void H2O_Properties::p_waterBah(double P,double H)
             h43_4=(h43_4+h43_3)/2;
             h43_3=h43_4;
         }
-	
+  
         v32_3=water3_SV(Bal,Sal);
         v32_2=water2_SV(Bal,Sal,Bal,Balpie); //boundary between 3 and 2
         h32_3=water3_H(v32_3,Sal);
@@ -475,7 +475,7 @@ double H2O_Properties::water1_Sa(double Ba,double Enthalpy)
     double t1=0,t2,Sak,t; 
     double h_1=0;
     int i=0;
-    if(Ba<Ba1)	Sak=p_Kfun(Ba);
+    if(Ba<Ba1)  Sak=p_Kfun(Ba);
     else Sak=Sa1;
     t2=Sak;
     while(fabs(h_1-Enthalpy)>5e-12 && i<200)
@@ -567,7 +567,7 @@ double H2O_Properties::water2_H(double Ba,double Sa,double Bal,double Balpie)
 
     for(v=0;v<5;v++)
         h1=h1-B0[v]*((v+1)-2)*pow(Sa,(v+1)-1);
-	
+  
     h2=pow(Ba,1)*(B1[0]*(1+13*b*Sa)*pow(X,13)+B1[1]*(1+3*b*Sa)*pow(X,3))\
         +pow(Ba,2)*(B2[0]*(1+18*b*Sa)*pow(X,18)+B2[1]*(1+2*b*Sa)*pow(X,2)+B2[2]*(1+b*Sa)*X)\
         +pow(Ba,3)*(B3[0]*(1+18*b*Sa)*pow(X,18)+B3[1]*(1+10*b*Sa)*pow(X,10))\
@@ -583,9 +583,9 @@ double H2O_Properties::water2_H(double Ba,double Sa,double Bal,double Balpie)
 
     for(v=0;v<7;v++)
         h4=h4+B9[v]*pow(X,v)*(1+Sa*(10*Balpie/Bal+v*b));
-	
+  
     h4=h4*Ba*pow(Ba/Bal,10);
-	
+  
     h=h1-h2-h3+h4;
     return(h);
 }
@@ -630,7 +630,7 @@ double H2O_Properties::water3_1(double x,double Sa)
         x_mid[0]=x_mid[0]+(1-v)*C0[v]*pow(x,-v);
     x_mid[0]=x_mid[0]+C0[1]+C0[12]*pow(x,-1);
     x_mid[0]=-x_mid[0];
-	
+  
     for(v=2;v<7;v++)
         x_mid[1]=x_mid[1]+(1-v)*C1[v-1]*pow(x,-v);
     x_mid[1]=x_mid[1]+C1[0]+C1[6]*pow(x,-1);
@@ -694,7 +694,7 @@ double H2O_Properties::water3_H(double x,double Sa)
     double C7[9]={-2.571600553e2,-1.518783715e2,2.220723208e1,-1.802039570e2,2.357096220e3,-1.462335698e4,4.542916630e4,-7.053556432e4,4.381571428e4};
     double h=0,hm[6]={0,0,0,0,0,0};
     int v;
-	
+  
     for(v=2;v<12;v++)
         hm[0]=hm[0]+v*C0[v]*pow(x,1-v);
     for(v=2;v<7;v++)
@@ -724,7 +724,7 @@ double H2O_Properties::water3_H(double x,double Sa)
         hm[4]=hm[4]+pow(x,6)*(v-3)*C6[v]*pow(Sa,-(2+v));
     hm[4]=hm[4]+(23*C4[0]+28*C4[1]*pow(x,-5))*pow(Sa,-22);
     hm[4]=hm[4]-(24*C4[0]+29*C4[1]*pow(x,-5))*pow(Sa,-23);
-	
+  
     for(v=0;v<9;v++)
         hm[5]=hm[5]-C7[v]*(1+v*Sa)*pow(Sa-1,v);
 
@@ -850,7 +850,7 @@ double H2O_Properties::Dynamic_Viscosity(double Tem, double Rho)
 }
 
 
-	
+  
 //to calculate thermal conductivity, W/(m.K)
 double H2O_Properties::Conductivity(double Tem,double Rho)
 {

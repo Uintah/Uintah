@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -79,7 +79,9 @@ class CommRecMPI {
               int                         groupID );
 
     void          setDefaultGroupID( int groupID ) { groupIDDefault_ = groupID; }
+
     int           getUnfinishedBytes() const { return totalBytes_; }
+
     unsigned long numRequests() const { return ids_.size(); }
 
     void          print( const ProcessorGroup * pg );

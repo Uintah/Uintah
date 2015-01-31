@@ -137,9 +137,6 @@ namespace Uintah{
   template <typename IT, typename DT>
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    _do_ts_init_task = false; 
-    _do_bcs_task = false; 
-    
     std::string tempType;
     db->findBlock("particle_density")->getAttribute("type",tempType);
     if ( tempType == "constant" ) {
@@ -173,7 +170,6 @@ namespace Uintah{
     
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      std::cout << "Source label " << name << std::endl;
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
       
     }

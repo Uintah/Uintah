@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,9 +32,9 @@ class BackRealSurface:public RealSurface{
 public:
   
   BackRealSurface(const int &iIndex,
-		  const int &jIndex,
-		  const int &kIndex,
-		  const int &Ncx);
+      const int &jIndex,
+      const int &kIndex,
+      const int &Ncx);
   
   BackRealSurface();  
   ~BackRealSurface();
@@ -77,8 +77,8 @@ public:
 
   inline 
   void BackRealSurface::get_limits(const double *X,
-				   const double *Y,
-				   const double *Z){
+           const double *Y,
+           const double *Z){
     
     // i, j, k is settled at the center of the VOLUME cell
     xlow = X[surfaceiIndex];
@@ -100,8 +100,8 @@ public:
 //   virtual void get_t1();
 //   virtual void get_t2();
 //   virtual void get_limits(const double *X,
-// 			  const double *Y,
-// 			  const double *Z);
+//        const double *Y,
+//        const double *Z);
 
   
 };

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -81,7 +81,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Tracker/TrackerClient.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -192,8 +191,6 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
     cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
-    cerr << "-track               : Turns on (external) simulation tracking... continues w/o tracking if connection fails.\n";
-    cerr << "-TRACK               : Turns on (external) simulation tracking... dies if connection fails.\n";
     cerr << "\n\n";
   }
   quit();
@@ -289,8 +286,7 @@ main( int argc, char *argv[], char *env[] )
   string solver              = ""; // Empty string defaults to CGSolver
   bool   validateUps         = true;
   bool   onlyValidateUps     = false;
-  bool   track               = false;
-  bool   track_or_die        = false;
+
     
   IntVector layout(1,1,1);
 
@@ -414,13 +410,6 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-do_not_validate") {
       validateUps = false;
     }
-    else if (arg == "-track") {
-      track = true;
-    }
-    else if (arg == "-TRACK") {
-      track = true;
-      track_or_die = true;
-    }
     else if (arg == "-reduce_uda" || arg == "-reduceUda") {
       reduce_uda = true;
     }
@@ -452,25 +441,7 @@ main( int argc, char *argv[], char *env[] )
     usage("No input file specified", "", argv[0]);
   }
 
-  if( track ) {
-    string server  = "updraft1.privatearch.arches";
-    bool   initialized = TrackerClient::initialize( server );
 
-    if( !initialized ) {
-      if ( track_or_die ) {
-        cout << "\n";
-        cout << "Error: Tracking initialization failed... Good bye.\n";
-        cout << "\n";
-        Uintah::Parallel::finalizeManager();
-        Thread::exitAll( 1 );
-      }
-      else {
-        cout << "\n";
-        cout << "WARNING: Tracking initialization failed... (Could not contact Server).  Tracking will not take place.\n";
-        cout << "\n";
-      }
-    }
-  }
 
   if(dbgwait.active()) {
     TURN_ON_WAIT_FOR_DEBUGGER();

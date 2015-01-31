@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2012 The University of Utah
+ * Copyright (c) 2010-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -366,7 +366,7 @@ namespace Wasatch{
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
     if( doParticles_ ){
-      particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
+      particlesHelper_->problem_setup(params, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names

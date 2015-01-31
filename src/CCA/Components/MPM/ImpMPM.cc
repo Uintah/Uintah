@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -364,6 +364,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pStressLabel);
+  t->computes(lb->pRefinedLabel);
   t->computes(lb->pCellNAPIDLabel);
   if(flags->d_artificial_viscosity){
     t->computes(lb->p_qLabel);        //  only used for imp -> exp transition

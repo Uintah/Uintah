@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -367,35 +367,35 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
     // cuz my indexes are different from Arches.
 
       // error in here, seems cannot get to Ttest[currCell]
-	// because i just claim it myself, and it doesnot have the dimension
-	// it is supposed to have from datawarehouse???
-	
+  // because i just claim it myself, and it doesnot have the dimension
+  // it is supposed to have from datawarehouse???
+  
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector currCell = *iter;
        cout << "i am in the patch" << endl;
        cout << "currCell = " << currCell << endl;
        
        if ( currCell.x() == idxLo.x() )  {
-	 // left side boundary
-	 cout << "currcellx() o the left face" << endl;
-	 cout << "Ttest[currCell] = " << Ttest[currCell] << endl;
-	  cout << "Ttest[currCell - IntVector(1,0,0)] = " <<
- 	   Ttest[currCell - IntVector(1,0,0)] << endl;	 
-	Ttest[currCell - IntVector(1, 0, 0)] = Tleft;
-	cout << " i am on the left surface " << endl;
+   // left side boundary
+   cout << "currcellx() o the left face" << endl;
+   cout << "Ttest[currCell] = " << Ttest[currCell] << endl;
+    cout << "Ttest[currCell - IntVector(1,0,0)] = " <<
+     Ttest[currCell - IntVector(1,0,0)] << endl;   
+  Ttest[currCell - IntVector(1, 0, 0)] = Tleft;
+  cout << " i am on the left surface " << endl;
        }
       else if ( currCell.x() == idxHi.x() ) // right side 
-	Ttest[currCell + IntVector(1, 0, 0)] = Tright;
+  Ttest[currCell + IntVector(1, 0, 0)] = Tright;
       
       if ( currCell.y() == idxLo.y() ) // front side boundary
-	Ttest[currCell - IntVector(0, 1, 0)] = Tfront;
+  Ttest[currCell - IntVector(0, 1, 0)] = Tfront;
       else if ( currCell.y() == idxHi.y() ) // back side boundary
-	Ttest[currCell + IntVector(0, 1, 0)] = Tback;
+  Ttest[currCell + IntVector(0, 1, 0)] = Tback;
       
       if ( currCell.z() == idxLo.z() ) //  bottom side boundary
-	Ttest[currCell - IntVector(0, 0, 1)] = Tbottom;
+  Ttest[currCell - IntVector(0, 0, 1)] = Tbottom;
       else if ( currCell.y() == idxHi.z() ) // top side boundary
-	Ttest[currCell + IntVector(0, 0, 1)] = Ttop;
+  Ttest[currCell + IntVector(0, 0, 1)] = Ttop;
       
       
       Ttest[currCell] = 64.80721904;
@@ -405,10 +405,10 @@ RMCRTRadiationModel::solve(  const ProcessorGroup* pc,
       cout << "i am after point p " << endl;
       // the p.x(), p.y(), p.z() are the cell centered x, y, z.
       absorpCoeftest[currCell] = 0.9 * ( 1 - 2 * abs ( p.x() ) )
-	* ( 1 - 2 * abs ( p.y() ) )
-	* ( 1 - 2 * abs ( p.z() ) ) + 0.1;
+  * ( 1 - 2 * abs ( p.y() ) )
+  * ( 1 - 2 * abs ( p.z() ) ) + 0.1;
       // cout << "i am in the patch" << endl;
-				     
+             
     }
     
     // concluseion set my own Ttest, wont work.

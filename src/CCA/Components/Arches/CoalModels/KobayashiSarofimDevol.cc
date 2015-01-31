@@ -236,7 +236,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
-          d_pt_scaling_factor = current_eqn.getScalingConstant();
+          d_pt_scaling_factor = current_eqn.getScalingConstant(d_quadNode);
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: KobayashiSarofimDevol: Invalid variable given in <variable> tag for KobayashiSarofimDevol model";
@@ -257,7 +257,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
-          d_rc_scaling_factor = current_eqn.getScalingConstant();
+          d_rc_scaling_factor = current_eqn.getScalingConstant(d_quadNode);
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
 
         } else {
@@ -273,7 +273,7 @@ KobayashiSarofimDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_char_mass_label = current_eqn.getTransportEqnLabel();
-          d_rh_scaling_factor = current_eqn.getScalingConstant();
+          d_rh_scaling_factor = current_eqn.getScalingConstant(d_quadNode);
           tsk->requires(Task::OldDW, d_char_mass_label, Ghost::None, 0);
 
         } else {

@@ -89,6 +89,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb; 
 
   db->getWithDefault( "calc_frequency",   _radiation_calc_freq, 3 ); 
+  db->getWithDefault( "checkForMissingIntensities", _checkForMissingIntensities  , false ); 
   db->getWithDefault( "calc_on_all_RKsteps", _all_rk, false ); 
   _T_label_name = "radiation_temperature"; 
 
@@ -239,17 +240,81 @@ DORadiation::computeSource( const ProcessorGroup* pc,
       } 
     } 
 
-    if (do_radiation==false){
-      if ( timeSubStep == 0 ) { 
-        for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
-          new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+    bool old_DW_isMissingIntensities=0;
+    if(_checkForMissingIntensities){  // should only be true for first time step of a restart
+      if (do_radiation==false){
+        if ( timeSubStep == 0 ) { 
+          for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
+            for (int p=0; p < patches->size(); p++){
+              const Patch* patch = patches->get(p);
+              int archIndex = 0;
+              int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
+              if (!old_dw->exists(_IntensityLabels[ix],matlIndex,patch)){
+                proc0cout << "WARNING:  Intensities from previous solve are missing!   Using zeros. \n"; 
+                CCVariable< double> temp;
+                new_dw->allocateAndPut(temp  , _IntensityLabels[ix]  , matlIndex , patch );
+                temp.initialize(0.0);
+                old_DW_isMissingIntensities=true;
+              }
+              else{
+                bool old_DW_isMissingIntensities=1;
+                new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+                break;
+              }
+            }
+          }
         }
       }
-    }
-    else{  
-      if(_DO_model->needIntensitiesBool()==false ){
-        for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
-          new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+      else{  
+        if(_DO_model->needIntensitiesBool()==false ){
+          for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
+            for (int p=0; p < patches->size(); p++){
+              const Patch* patch = patches->get(p);
+              int archIndex = 0;
+              int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
+              if (!old_dw->exists(_IntensityLabels[ix],matlIndex,patch)){
+                proc0cout << "WARNING:  Intensity" << *_IntensityLabels[ix] << "from previous solve are missing!   Using zeros. \n"; 
+                CCVariable< double> temp;
+                new_dw->allocateAndPut(temp  , _IntensityLabels[ix]  , matlIndex , patch );
+                temp.initialize(0.0);
+                old_DW_isMissingIntensities=true;
+              }
+              else{
+                new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+                break;
+              }
+            }
+          }
+        }
+        else{
+          for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
+            for (int p=0; p < patches->size(); p++){
+              const Patch* patch = patches->get(p);
+              int archIndex = 0;
+              int matlIndex = _labels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();  // have to do it this way because overloaded exists(arg) doesn't seem to work!!
+              if (!old_dw->exists(_IntensityLabels[ix],matlIndex,patch)){
+                proc0cout << "WARNING:  Intensity" << *_IntensityLabels[ix] << "from previous solve are missing!   Using zeros. \n"; 
+                old_DW_isMissingIntensities=true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    } else{
+
+      if (do_radiation==false){
+        if ( timeSubStep == 0 ) { 
+          for(unsigned int ix=0; ix< _IntensityLabels.size() ;ix++){
+            new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+          }
+        }
+      }
+      else{  
+        if(_DO_model->needIntensitiesBool()==false ){
+          for(unsigned int ix=0;  ix< _IntensityLabels.size();ix++){ 
+            new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
+          }
         }
       }
     }
@@ -336,7 +401,7 @@ DORadiation::computeSource( const ProcessorGroup* pc,
         }
 
         //Note: The final divQ is initialized (to zero) and set after the solve in the intensity solve itself.
-        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL, matlIndex, new_dw, old_dw ); 
+        _DO_model->intensitysolve( pc, patch, cellinfo, &radiation_vars, &const_radiation_vars, divQ, BoundaryCondition::WALL, matlIndex, new_dw, old_dw, old_DW_isMissingIntensities ); 
 
       }
     }
@@ -389,7 +454,6 @@ DORadiation::initialize( const ProcessorGroup* pc,
       CCVariable<double> temp_var; 
       new_dw->allocateAndPut(temp_var, *iter, matlIndex, patch ); 
       temp_var.initialize(0.0);
-      
     }
 
   }

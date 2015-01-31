@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
-#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -32,9 +32,9 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb; 
   ProblemSpecP dqmom_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
 
-  _uname = PropertyHelper::parse_for_role_to_label(db, "uvel"); 
-  _vname = PropertyHelper::parse_for_role_to_label(db, "vvel"); 
-  _wname = PropertyHelper::parse_for_role_to_label(db, "wvel"); 
+  _uname = ParticleHelper::parse_for_role_to_label(db, "uvel"); 
+  _vname = ParticleHelper::parse_for_role_to_label(db, "vvel"); 
+  _wname = ParticleHelper::parse_for_role_to_label(db, "wvel"); 
 
   std::string which_dqmom; 
   dqmom_db->getAttribute( "type", which_dqmom ); 
@@ -268,7 +268,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         const VarLabel* mylLabel = eqn.getTransportEqnLabel();  
         old_dw->get(wlength, mylLabel, matlIndex, patch, gn, 0); 
 
-        d_highClip = eqn.getScalingConstant()*d_upLimMult; // should figure out how to do this once and only once...
+        d_highClip = eqn.getScalingConstant(iqn)*d_upLimMult; // should figure out how to do this once and only once...
 
         name = "w_qn"; 
         name += node; 
@@ -276,7 +276,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(eqn2);
         constCCVariable<double> weight;  
         const VarLabel* mywLabel = weight_eqn.getTransportEqnLabel();  
-        double small_weight = weight_eqn.getSmallClipCriteria(); 
+        double small_weight = weight_eqn.getSmallClipPlusTol(); 
         old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
 
         ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
@@ -305,9 +305,9 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           } else {
 
             if(d_unweighted == true) {
-              length = wlength[c]*eqn.getScalingConstant();
+              length = wlength[c]*eqn.getScalingConstant(iqn);
             } else {
-              length = (wlength[c]/weight[c])*eqn.getScalingConstant();
+              length = (wlength[c]/weight[c])*eqn.getScalingConstant(iqn);
             }
 
             Vector v_gas = gasVel[c];
@@ -367,7 +367,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         // set boundary conditions now that the velocity field is set.  
-        name = PropertyHelper::append_qn_env("vel", iqn);
+        name = ParticleHelper::append_qn_env("vel", iqn);
         if ( d_gasBC )  // assume gas vel =  part vel on boundary 
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
         else            // part vel set by user.  
@@ -419,7 +419,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         // Now set boundary conditions after velocities are set.  
-        name = PropertyHelper::append_qn_env("vel", iqn);
+        name = ParticleHelper::append_qn_env("vel", iqn);
         if ( d_gasBC ){  // assume gas vel =  part vel on boundary 
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
         } else {           // part vel set by user.  
@@ -444,7 +444,6 @@ void PartVel::InitPartVel( const ProcessorGroup* pc,
 for (int p=0; p < patches->size(); p++){
     
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-  Ghost::GhostType  gn  = Ghost::None;
   const Patch* patch = patches->get(p);
   int archIndex = 0;
   int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
@@ -460,7 +459,7 @@ for (int p=0; p < patches->size(); p++){
     partVel.initialize(Vector(0.,0.,0.));
 
     // Now set boundary conditions after velocities are set.  
-    std::string name = PropertyHelper::append_qn_env("vel", iqn); 
+    std::string name = ParticleHelper::append_qn_env("vel", iqn); 
     d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
     }
   }  

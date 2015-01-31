@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -36,16 +36,17 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Util/ProgressiveWarning.h>
-
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
+
 #include <TauProfilerForSCIRun.h>
 
 #include <sci_defs/config_defs.h>
 #include <sci_algorithm.h>
+
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -59,19 +60,12 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-static DebugStream dbg0("TaskGraph", false);
-static DebugStream dbg("TaskGraphDetailed", false);
+static DebugStream tgdbg("TaskGraph", false);
+static DebugStream detaileddbg("TaskGraphDetailed", false);
 static DebugStream compdbg("FindComp", false);
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex       cerrLock;
-extern DebugStream mixedDebug;
-
-#define DAV_DEBUG 0
-
 TaskGraph::TaskGraph(SchedulerCommon* sc, const ProcessorGroup* pg, Scheduler::tgType type)
-  : sc(sc), d_myworld(pg), type_(type), dts_(0), d_numtaskphases(0)
+  : sc(sc), d_myworld(pg), type_(type), dts_(0), currentIteration(0), d_numtaskphases(0)
 {
   lb = dynamic_cast<LoadBalancer*>(sc->getPort("load balancer"));
 }
@@ -108,12 +102,12 @@ TaskGraph::overlaps( const Task::Dependency* comp, const Task::Dependency* req) 
 {
   constHandle<PatchSubset> saveHandle2;
   const PatchSubset* ps1 = comp->patches;
-  if(!ps1){
-    if(!comp->task->getPatchSet())
+  if (!ps1) {
+    if (!comp->task->getPatchSet()) {
       return false;
+    }
     ps1 = comp->task->getPatchSet()->getUnion();
-    if(comp->patches_dom == Task::CoarseLevel
-       || comp->patches_dom == Task::FineLevel) {
+    if (comp->patches_dom == Task::CoarseLevel || comp->patches_dom == Task::FineLevel) {
       SCI_THROW(InternalError("Should not compute onto another level!", __FILE__, __LINE__));
       // This may not be a big deal if it were needed, but I didn't
       // think that it should be allowed - Steve
@@ -123,34 +117,38 @@ TaskGraph::overlaps( const Task::Dependency* comp, const Task::Dependency* req) 
   }
 
   const PatchSubset* ps2 = req->patches;
-  if(!ps2){
-    if(!req->task->getPatchSet())
+  if (!ps2) {
+    if (!req->task->getPatchSet()) {
       return false;
+    }
     ps2 = req->task->getPatchSet()->getUnion();
-    if(req->patches_dom == Task::CoarseLevel
-       || req->patches_dom == Task::FineLevel){
+    if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
       saveHandle2 = req->getPatchesUnderDomain(ps2);
       ps2 = saveHandle2.get_rep();
     }
   }
 
-  if(!PatchSubset::overlaps(ps1, ps2)) // && !(ps1->size() == 0 && (!req->patches || ps2->size() == 0) && comp->task->getType() == Task::OncePerProc))
+  if (!PatchSubset::overlaps(ps1, ps2)) {  // && !(ps1->size() == 0 && (!req->patches || ps2->size() == 0) && comp->task->getType() == Task::OncePerProc))
     return false;
+  }
 
   const MaterialSubset* ms1 = comp->matls;
-  if(!ms1){
-    if(!comp->task->getMaterialSet())
+  if (!ms1) {
+    if (!comp->task->getMaterialSet()) {
       return false;
+    }
     ms1 = comp->task->getMaterialSet()->getUnion();
   }
   const MaterialSubset* ms2 = req->matls;
-  if(!ms2){
-    if(!req->task->getMaterialSet())
+  if (!ms2) {
+    if (!req->task->getMaterialSet()) {
       return false;
+    }
     ms2 = req->task->getMaterialSet()->getUnion();
   }
-  if(!MaterialSubset::overlaps(ms1, ms2))
+  if (!MaterialSubset::overlaps(ms1, ms2)) {
     return false;
+  }
   return true;
 }
 
@@ -162,7 +160,8 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   // Initialize variables on the tasks
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     sortinfo[*iter] = GraphSortInfo();
-  }    
+  }
+
   if (edges.size() > 0) {
     return; // already been done
   }
@@ -174,17 +173,16 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   ReductionTasksMap reductionTasks;
   for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
     Task* task = *iter;
-    if (task->isReductionTask()){
+    if (task->isReductionTask()) {
       continue; // already a reduction task so skip it
     }
 
-
     for( Task::Dependency* comp = task->getComputes(); comp != 0; comp=comp->next ) {
-      if(sc->isOldDW(comp->mapDataWarehouse())){
-        if (dbg.active())
-          dbg << d_myworld->myrank() << " which = " << comp->whichdw << ", mapped to " << comp->mapDataWarehouse() << '\n';
-        SCI_THROW(InternalError("Variable produced in old datawarehouse: "
-              +comp->var->getName(), __FILE__, __LINE__));
+      if(sc->isOldDW(comp->mapDataWarehouse())) {
+        if (detaileddbg.active()) {
+          detaileddbg << d_myworld->myrank() << " which = " << comp->whichdw << ", mapped to " << comp->mapDataWarehouse() << '\n';
+        }
+        SCI_THROW(InternalError("Variable produced in old datawarehouse: " +comp->var->getName(), __FILE__, __LINE__));
       } else if(comp->var->typeDescription()->isReductionVariable()){
         int levelidx = comp->reductionLevel?comp->reductionLevel->getIndex():-1;
         // Look up this variable in the reductionTasks map
@@ -192,11 +190,11 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
         // for reduction var allows multi computes such as delT
         // do not generate reduction task each time it computes,
         // instead computes it in a system wide reduction task
-        if (comp->var->allowsMultipleComputes() ) { 
-          if (dbg.active())
-            dbg << d_myworld->myrank() << " Skipping Reduction task for variable: " 
-              << comp->var->getName() << " on level " << levelidx 
-              << ", DW " << dw << '\n';
+        if (comp->var->allowsMultipleComputes()) {
+          if (detaileddbg.active()) {
+            detaileddbg << d_myworld->myrank() << " Skipping Reduction task for variable: " << comp->var->getName() << " on level "
+                << levelidx << ", DW " << dw << '\n';
+          }
           continue;
         }
         ASSERT(comp->patches == 0);
@@ -208,22 +206,22 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
         const Level* level = comp->reductionLevel;
 
         ReductionTasksMap::iterator it=reductionTasks.find(key);
-        if(it == reductionTasks.end()){
+        if(it == reductionTasks.end()) {
           // No reduction task yet, create one
-          if (dbg.active())
-            dbg << d_myworld->myrank() << " creating Reduction task for variable: " 
-              << comp->var->getName() << " on level " << levelidx 
-              << ", DW " << dw << '\n';
+          if (detaileddbg.active()) {
+            detaileddbg << d_myworld->myrank() << " creating Reduction task for variable: " << comp->var->getName() << " on level "
+                << levelidx << ", DW " << dw << '\n';
+          }
           ostringstream taskname;
-          taskname << "Reduction: " << comp->var->getName() 
-            << ", level " << levelidx << ", dw " << dw;
+          taskname << "Reduction: " << comp->var->getName() << ", level " << levelidx << ", dw " << dw;
           Task* newtask = scinew Task(taskname.str(), Task::Reduction);
 
           sortinfo[newtask] = GraphSortInfo();
 
           int dwmap[Task::TotalDWs];
-          for(int i=0;i<Task::TotalDWs;i++)
-            dwmap[i]=Task::InvalidDW;
+          for (int i = 0; i < Task::TotalDWs; i++) {
+            dwmap[i] = Task::InvalidDW;
+          }
           dwmap[Task::OldDW] = Task::NoDW;
           dwmap[Task::NewDW] = dw;
           newtask->setMapping(dwmap);
@@ -250,34 +248,35 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   }
 
   // Add the new reduction tasks to the list of tasks
-  for(ReductionTasksMap::iterator it = reductionTasks.begin();
-      it != reductionTasks.end(); it++){
+  for(ReductionTasksMap::iterator it = reductionTasks.begin(); it != reductionTasks.end(); it++) {
     addTask(it->second, 0, 0);
   }
 
   // Gather the comps for the tasks into a map
   CompMap comps;
-  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+  for (iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
     Task* task = *iter;
-    if (dbg.active())
-      dbg << d_myworld->myrank() << " Gathering comps from task: " << *task << '\n';
-    for( Task::Dependency* comp = task->getComputes(); comp != 0; comp=comp->next ) {
+    if (detaileddbg.active()) {
+      detaileddbg << d_myworld->myrank() << " Gathering comps from task: " << *task << '\n';
+    }
+    for (Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
       comps.insert(make_pair(comp->var, comp));
-      if (dbg.active())
-        dbg << d_myworld->myrank() << "   Added comp for: " << *comp << '\n';
+      if (detaileddbg.active()) {
+        detaileddbg << d_myworld->myrank() << "   Added comp for: " << *comp << '\n';
+      }
     }
   }
 
   // Connect the tasks where the requires/modifies match a comp.
   // Also, updates the comp map with each modify and doing this in task order
   // so future modifies/requires find the modified var.  Also do a type check
-  for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+  for (iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
     Task* task = *iter;
-    if(dbg.active()) {
-      dbg << d_myworld->myrank() << "   Looking at dependencies for task: " << *task << '\n';
+    if (detaileddbg.active()) {
+      detaileddbg << d_myworld->myrank() << "   Looking at dependencies for task: " << *task << '\n';
     }
-    addDependencyEdges( task, sortinfo, task->getRequires(), comps, reductionTasks, false );
-    addDependencyEdges( task, sortinfo, task->getModifies(), comps, reductionTasks, true );
+    addDependencyEdges(task, sortinfo, task->getRequires(), comps, reductionTasks, false);
+    addDependencyEdges(task, sortinfo, task->getModifies(), comps, reductionTasks, true);
     // Used here just to warn if a modifies comes before its computes
     // in the order that tasks were added to the graph.
     sortinfo.find(task)->second.visited = true;
@@ -286,27 +285,31 @@ TaskGraph::setupTaskConnections(GraphSortInfoMap& sortinfo)
   }
   
   //count the all child tasks
-  int nd_task=d_tasks.size();
-  while (nd_task > 0 ){
-    nd_task =d_tasks.size(); 
-    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
+  int nd_task = d_tasks.size();
+  while (nd_task > 0) {
+    nd_task = d_tasks.size();
+    for (iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
       Task* task = *iter;
-      if (task->allChildTasks.size() == 0){            
-          if (task->childTasks.size() == 0) {     //leaf task, add itself to the set
-            task->allChildTasks.insert(task);
+      if (task->allChildTasks.size() == 0) {
+        if (task->childTasks.size() == 0) {     //leaf task, add itself to the set
+          task->allChildTasks.insert(task);
+          break;
+        }
+        set<Task*>::iterator it;
+        for (it = task->childTasks.begin(); it != task->childTasks.end(); it++) {
+          if ((*it)->allChildTasks.size() > 0) {
+            task->allChildTasks.insert((*it)->allChildTasks.begin(), (*it)->allChildTasks.end());
+            task->allChildTasks.insert(*it);
+          }
+          else {                 //if child didn't finish computing allChildTasks
+            task->allChildTasks.clear();
             break;
           }
-          set<Task*>::iterator it;
-          for( it=task->childTasks.begin(); it != task->childTasks.end(); it++ ) {
-            if ( (*it)->allChildTasks.size()> 0 ) {
-              task->allChildTasks.insert((*it)->allChildTasks.begin(), (*it)->allChildTasks.end());
-              task->allChildTasks.insert(*it);
-            } else {                 //if child didn't finish computing allChildTasks
-              task->allChildTasks.clear();        
-              break;
-            }
-          }
-      } else nd_task--;
+        }
+      }
+      else {
+        nd_task--;
+      }
     }
   }
 
@@ -323,8 +326,9 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
                                     CompMap& comps, ReductionTasksMap& reductionTasks, bool modifies )
 {
   for(; req != 0; req=req->next){
-    if (dbg.active())
-      dbg << d_myworld->myrank() << "     Checking edge for req: " << *req << ", task: " << *req->task << ", domain: " << req->patches_dom << '\n';
+    if (detaileddbg.active()) {
+      detaileddbg << d_myworld->myrank() << "     Checking edge for req: " << *req << ", task: " << *req->task << ", domain: " << req->patches_dom << '\n';
+    }
     if(req->whichdw==Task::NewDW) {
       // If DW is finalized, we assume that we already have it,
       // or that we will get it sent to us.  Otherwise, we set
@@ -333,18 +337,19 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
       pair<CompMap::iterator,CompMap::iterator> iters
         = comps.equal_range(static_cast<const Uintah::VarLabel*>(req->var));
       int count=0;
-      for(CompMap::iterator compiter = iters.first;
-          compiter != iters.second; ++compiter){
+      for(CompMap::iterator compiter = iters.first; compiter != iters.second; ++compiter){
 
-        if(req->var->typeDescription() != compiter->first->typeDescription())
+        if (req->var->typeDescription() != compiter->first->typeDescription()) {
           SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName(), __FILE__, __LINE__));
+        }
 
         // determine if we need to add a dependency edge
         bool add=false;
         bool requiresReductionTask=false;
-        if (dbg.active())
-          dbg << d_myworld->myrank() << "       Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
-        if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()){
+        if (detaileddbg.active()) {
+          detaileddbg << d_myworld->myrank() << "  Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
+        }
+        if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()) {
           if(req->var->typeDescription()->isReductionVariable()) {
             // Match the level first 
             if(compiter->second->reductionLevel == req->reductionLevel) {
@@ -362,7 +367,7 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
         }
 
         if( !add ) {
-          if (dbg.active()) { dbg << d_myworld->myrank() << "       did NOT create dependency\n"; }
+          if (detaileddbg.active()) { detaileddbg << d_myworld->myrank() << "       did NOT create dependency\n"; }
         }
         else {
           Task::Dependency* comp;
@@ -374,7 +379,7 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
             // assign the requiring task's require to it
             comp = redTask->getModifies();
             ASSERT(comp != 0);
-            dbg << "  Using Reduction task: " << *redTask << endl;
+            detaileddbg << "  Using Reduction task: " << *redTask << endl;
           }
           else {
             comp = compiter->second;
@@ -383,8 +388,7 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
           if (modifies) {
             // Add dependency edges to each task that requires the data
             // before it is modified.
-            for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0;
-                otherEdge = otherEdge->reqNext) {
+            for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0; otherEdge = otherEdge->reqNext) {
               Task::Dependency* priorReq =
                 const_cast<Task::Dependency*>(otherEdge->req);
               if (priorReq != req) {
@@ -394,10 +398,10 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
                   edges.push_back(edge);
                   req->addComp(edge);
                   priorReq->addReq(edge);
-                  if(dbg.active()){
-                    dbg << d_myworld->myrank() << " Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
-                    dbg << d_myworld->myrank() << " Prior Req=" << *priorReq << '\n';
-                    dbg << d_myworld->myrank() << " Modify=" << *req << '\n';
+                  if(detaileddbg.active()) {
+                    detaileddbg << d_myworld->myrank() << " Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
+                    detaileddbg << d_myworld->myrank() << " Prior Req=" << *priorReq << '\n';
+                    detaileddbg << d_myworld->myrank() << " Modify=" << *req << '\n';
                   }
                 }
               }
@@ -413,10 +417,12 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
           if (!sortinfo.find(edge->comp->task)->second.visited &&
               !edge->comp->task->isReductionTask()) {
             cout << "\nWARNING: The task, '" << task->getName() << "', that ";
-            if (modifies)
+            if (modifies) {
               cout << "modifies '";
-            else
+            }
+            else {
               cout << "requires '";
+            }
             cout << req->var->getName() << "' was added before the computing task";
             cout << ", '" << edge->comp->task->getName() << "'\n";
             cout << "  Required/modified by: " << *task << '\n';
@@ -427,10 +433,10 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
           }
           count++;
           task->childTasks.insert(comp->task);
-          if(dbg.active()){
-            dbg << d_myworld->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
-            dbg << d_myworld->myrank() << "         Req=" << *req << '\n';
-            dbg << d_myworld->myrank() << "         Comp=" << *comp << '\n';
+          if(detaileddbg.active()) {
+            detaileddbg << d_myworld->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
+            detaileddbg << d_myworld->myrank() << "         Req=" << *req << '\n';
+            detaileddbg << d_myworld->myrank() << "         Comp=" << *comp << '\n';
           }
         }
       }
@@ -452,16 +458,18 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
         
         cout << "The variable (" <<req->var->getName() << ") is requiring data from:\n";
         
-        if(req->patches){
+        if (req->patches) {
           cout << "  Level: " << getLevel(req->patches)->getIndex() << "\n";
-          cout << "  Patches': "<< *(req->patches) << "\n";
-        }else{
+          cout << "  Patches': " << *(req->patches) << "\n";
+        }
+        else {
           cout << "  Patches:  All \n";
         }
         
-        if(req->matls){
-          cout << "  Materials: "<< *(req->matls) << "\n";
-        } else{
+        if (req->matls) {
+          cout << "  Materials: " << *(req->matls) << "\n";
+        }
+        else {
           cout << "  Materials:  All \n";
         }
         
@@ -476,8 +484,9 @@ void TaskGraph::addDependencyEdges( Task* task, GraphSortInfoMap& sortinfo,
         // not just requires, but modifies, so the comps map must be
         // updated so future modifies or requires will link to this one.
         comps.insert(make_pair(req->var, req));
-        if (dbg.active())
-          dbg << d_myworld->myrank() << " Added modified comp for: " << *req << '\n';
+        if (detaileddbg.active()) {
+          detaileddbg << d_myworld->myrank() << " Added modified comp for: " << *req << '\n';
+        }
       }
     }
   }
@@ -487,8 +496,9 @@ void
 TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks,
                        GraphSortInfoMap& sortinfo) const
 {
-  if(dbg.active())
-    dbg << d_myworld->myrank() << " Looking at task: " << task->getName() << '\n';
+  if(detaileddbg.active()) {
+    detaileddbg << d_myworld->myrank() << " Looking at task: " << task->getName() << '\n';
+  }
 
   GraphSortInfo& gsi = sortinfo.find(task)->second;
   // we throw an exception before calling processTask if this task has already been visited
@@ -500,8 +510,9 @@ TaskGraph::processTask(Task* task, vector<Task*>& sortedTasks,
   // All prerequisites are done - add this task to the list
   sortedTasks.push_back(task);
   gsi.sorted=true;
-  if(dbg.active())
-    dbg << d_myworld->myrank() << " Sorted task: " << task->getName() << '\n';
+  if(detaileddbg.active()) {
+    detaileddbg << d_myworld->myrank() << " Sorted task: " << task->getName() << '\n';
+  }
 } // end processTask()
 
 
@@ -510,28 +521,29 @@ void TaskGraph::processDependencies(Task* task, Task::Dependency* req,
                                     GraphSortInfoMap& sortinfo) const
 
 {
-  for(; req != 0; req=req->next){
-    if (dbg.active())
-      dbg << d_myworld->myrank() << " processDependencies for req: " << *req << '\n';
-    if(req->whichdw==Task::NewDW) {
+  for (; req != 0; req = req->next) {
+    if (detaileddbg.active()) {
+      detaileddbg << d_myworld->myrank() << " processDependencies for req: " << *req << '\n';
+    }
+    if (req->whichdw == Task::NewDW) {
       Task::Edge* edge = req->comp_head;
-      for (;edge != 0; edge = edge->compNext){
+      for (; edge != 0; edge = edge->compNext) {
         Task* vtask = edge->comp->task;
         GraphSortInfo& gsi = sortinfo.find(vtask)->second;
-        if(!gsi.sorted){
+        if (!gsi.sorted) {
           try {
             // this try-catch mechanism will serve to print out the entire TG cycle
-            if(gsi.visited){
+            if (gsi.visited) {
               cout << d_myworld->myrank() << " Cycle detected in task graph\n";
               SCI_THROW(InternalError("Cycle detected in task graph", __FILE__, __LINE__));
             }
 
             // recursively process the dependencies of the computing task
             processTask(vtask, sortedTasks, sortinfo);
-          } catch (InternalError& e) {
-            cout << d_myworld->myrank() << "   Task " << task->getName()
-              << " requires " << req->var->getName() << " from " 
-              << vtask->getName() << "\n";
+          }
+          catch (InternalError& e) {
+            cout << d_myworld->myrank() << "   Task " << task->getName() << " requires " << req->var->getName() << " from "
+                 << vtask->getName() << "\n";
 
             throw;
           }
@@ -546,7 +558,7 @@ TaskGraph::nullSort( vector<Task*>& tasks )
 {
   vector<Task*>::iterator iter;
 
-  // No longer going to sort them... let the MixedScheduler take care
+  // No longer going to sort them... let the UnifiedScheduler (threaded) take care
   // of calling the tasks when all dependencies are satisfied.
   // Sorting the tasks causes problem because now tasks (actually task
   // groups) run in different orders on different MPI processes.
@@ -576,16 +588,14 @@ TaskGraph::topologicalSort(vector<Task*>& sortedTasks)
 
   setupTaskConnections(sortinfo);
 
-  for(vector<Task*>::iterator iter=d_tasks.begin();
-      iter != d_tasks.end(); iter++ ) {
+  for (vector<Task*>::iterator iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
     Task* task = *iter;
-    if(!sortinfo.find(task)->second.sorted){
+    if (!sortinfo.find(task)->second.sorted) {
       processTask(task, sortedTasks, sortinfo);
     }
   }
-  int n=0;
-  for(vector<Task*>::iterator iter = sortedTasks.begin();
-      iter != sortedTasks.end(); iter++) {
+  int n = 0;
+  for (vector<Task*>::iterator iter = sortedTasks.begin(); iter != sortedTasks.end(); iter++) {
     (*iter)->setSortedOrder(n++);
   }
 }
@@ -596,18 +606,18 @@ TaskGraph::addTask(Task* task,
                    const MaterialSet* matlset)
 {
   task->setSets(patchset, matlset);
-  if((patchset && patchset->totalsize() == 0)
-      || (matlset && matlset->totalsize() == 0)){
+  if((patchset && patchset->totalsize() == 0) || (matlset && matlset->totalsize() == 0)) {
     delete task;
-    if(dbg.active())
-      dbg << d_myworld->myrank() << " Killing empty task: " << *task << "\n";
+    if(detaileddbg.active()) {
+      detaileddbg << d_myworld->myrank() << " Killing empty task: " << *task << "\n";
+    }
   } else {
     d_tasks.push_back(task);
     
     // debugging Code
-    if(dbg0.active()) {
-      dbg0 << d_myworld->myrank() << " Adding task: ";
-      task->displayAll( dbg0 );
+    if(tgdbg.active()) {
+      tgdbg << d_myworld->myrank() << " Adding task: ";
+      task->displayAll( tgdbg );
     }
     
 #if 0    
@@ -654,9 +664,9 @@ TaskGraph::createDetailedTasks(bool useInternalDeps,
   TAU_PROFILE_TIMER(ddtimer, "TG Compile - createDetailedDependencies" , "", TAU_USER);
 
   TAU_PROFILE_START(gentimer);
-
   TAU_PROFILE_START(sorttimer);
   vector<Task*> sorted_tasks;
+  // TODO plz leave this commented line alone, APH 01/07/15
   //topologicalSort(sorted_tasks);
   nullSort(sorted_tasks);
   TAU_PROFILE_STOP(sorttimer);
@@ -673,33 +683,33 @@ TaskGraph::createDetailedTasks(bool useInternalDeps,
   const set<int> neighborhood_procs=lb->getNeighborhoodProcessors();
   dts_ = scinew DetailedTasks(sc, d_myworld, first, this, neighborhood_procs, useInternalDeps );
   
-  for(int i=0;i<(int)sorted_tasks.size();i++) {
-  
+  for (int i = 0; i < (int)sorted_tasks.size(); i++) {
+
     Task* task = sorted_tasks[i];
     const PatchSet* ps = task->getPatchSet();
     const MaterialSet* ms = task->getMaterialSet();
-    if(ps && ms) {
+    if (ps && ms) {
       //only create OncePerProc tasks and output tasks once on each processor.
-      if(task->getType()==Task::OncePerProc) {
-        //only schedule this task on processors in the the neighborhood
-        for(set<int>::iterator p=neighborhood_procs.begin();p!=neighborhood_procs.end();p++) {
+      if (task->getType() == Task::OncePerProc) {
+        //only schedule this task on processors in the neighborhood
+        for (set<int>::iterator p = neighborhood_procs.begin(); p != neighborhood_procs.end(); p++) {
           const PatchSubset* pss = ps->getSubset(*p);
-            for(int m=0;m<ms->size();m++) {
-              const MaterialSubset* mss = ms->getSubset(m);
-              createDetailedTask(task, pss, mss);
-            }
+          for (int m = 0; m < ms->size(); m++) {
+            const MaterialSubset* mss = ms->getSubset(m);
+            createDetailedTask(task, pss, mss);
+          }
         }
       }
-      else if(task->getType()==Task::Output) {
+      else if (task->getType() == Task::Output) {
         //compute subset that involves this rank
-        int subset=(d_myworld->myrank()/lb->getNthProc())*lb->getNthProc();
-        
+        int subset = (d_myworld->myrank() / lb->getNthProc()) * lb->getNthProc();
+
         //only schedule output task for the subset involving our rank
         const PatchSubset* pss = ps->getSubset(subset);
 
         //don't schedule if there are no patches
-        if(pss->size()>0) {
-          for(int m=0;m<ms->size();m++) {
+        if (pss->size() > 0) {
+          for (int m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
             createDetailedTask(task, pss, mss);
           }
@@ -707,22 +717,25 @@ TaskGraph::createDetailedTasks(bool useInternalDeps,
 
       }
       else {
-        for(int p=0;p<ps->size();p++) {
+        for (int p = 0; p < ps->size(); p++) {
           const PatchSubset* pss = ps->getSubset(p);
           // don't make tasks that are not in our neighborhood or tasks that do not have patches
-          if(lb->inNeighborhood(pss) && pss->size() > 0) {
-            for(int m=0;m<ms->size();m++) {
+          if (lb->inNeighborhood(pss) && pss->size() > 0) {
+            for (int m = 0; m < ms->size(); m++) {
               const MaterialSubset* mss = ms->getSubset(m);
               createDetailedTask(task, pss, mss);
             }
           }
         }
       }
-    } else if(!ps && !ms) {
+    }
+    else if (!ps && !ms) {
       createDetailedTask(task, 0, 0);
-    } else if(!ps) {
+    }
+    else if (!ps) {
       SCI_THROW(InternalError("Task has MaterialSet, but no PatchSet", __FILE__, __LINE__));
-    } else {
+    }
+    else {
       SCI_THROW(InternalError("Task has PatchSet, but no MaterialSet", __FILE__, __LINE__));
     }
   }
@@ -768,6 +781,7 @@ TaskGraph::createDetailedTasks(bool useInternalDeps,
 namespace Uintah {
 
   class CompTable {
+
     struct Data {
       Data* next;
       DetailedTask* task;
@@ -778,8 +792,9 @@ namespace Uintah {
 
       unsigned int string_hash(const char* p) {
         unsigned int sum=0;
-        while(*p)
+        while(*p) {
           sum = sum*7 + (unsigned char)*p++;
+        }
         return sum;
       }
 
@@ -790,12 +805,15 @@ namespace Uintah {
           hash=(unsigned int)(((unsigned int)comp->mapDataWarehouse()<<3)
               ^(string_hash(comp->var->getName().c_str()))
               ^matl);
-          if(patch)
+          if(patch) {
             hash ^= (unsigned int)(patch->getID()<<4);
+          }
         }
+
       ~Data()
       {
       }
+
       bool operator==(const Data& c) {
         return matl == c.matl && patch == c.patch &&
           comp->reductionLevel == c.comp->reductionLevel &&
@@ -803,22 +821,26 @@ namespace Uintah {
           comp->var->equals(c.comp->var);
       }
     };
+
     FastHashTable<Data> data;
     void insert(Data* d);
+
     public:
-    CompTable();
-    ~CompTable();
-    void remembercomp(DetailedTask* task, Task::Dependency* comp,
-        const PatchSubset* patches, const MaterialSubset* matls,
-        const ProcessorGroup* pg);
-    bool findcomp(Task::Dependency* req, const Patch* patch, int matlIndex,
-        DetailedTask*& dt, Task::Dependency*& comp,
-        const ProcessorGroup* pg);
-    bool findReductionComps(Task::Dependency* req, const Patch* patch, int matlIndex,
-        vector<DetailedTask*>& dt, const ProcessorGroup* pg);
+      CompTable();
+      ~CompTable();
+      void remembercomp(DetailedTask* task, Task::Dependency* comp,
+                        const PatchSubset* patches, const MaterialSubset* matls,
+                        const ProcessorGroup* pg);
+
+      bool findcomp(Task::Dependency* req, const Patch* patch, int matlIndex,
+                    DetailedTask*& dt, Task::Dependency*& comp,
+                    const ProcessorGroup* pg);
+
+      bool findReductionComps(Task::Dependency* req, const Patch* patch, int matlIndex,
+                              vector<DetailedTask*>& dt, const ProcessorGroup* pg);
 
     private:
-    void remembercomp(Data* newData, const ProcessorGroup* pg);
+      void remembercomp(Data* newData, const ProcessorGroup* pg);
   };
 
 }
@@ -833,25 +855,27 @@ CompTable::~CompTable()
 
 void CompTable::remembercomp(Data* newData, const ProcessorGroup* pg)
 {
-  if(dbg.active()){
-    dbg << pg->myrank() << " remembercomp: " << *newData->comp << ", matl=" << newData->matl;
-    if(newData->patch)
-      dbg << ", patch=" << *newData->patch;
-    dbg << '\n';
+  if(detaileddbg.active()){
+    detaileddbg << pg->myrank() << " remembercomp: " << *newData->comp << ", matl=" << newData->matl;
+    if(newData->patch) {
+      detaileddbg << ", patch=" << *newData->patch;
+    }
+    detaileddbg << '\n';
   }
 
   // can't have two computes for the same variable (need modifies)
-  if(newData->comp->deptype != Task::Modifies && !newData->comp->var->typeDescription()->isReductionVariable()){
-    if(data.lookup(newData)){
+  if (newData->comp->deptype != Task::Modifies && !newData->comp->var->typeDescription()->isReductionVariable()) {
+    if (data.lookup(newData)) {
       cout << "Multiple compute found:\n";
       cout << "  matl: " << newData->matl << "\n";
-      if (newData->patch)
+      if (newData->patch) {
         cout << "  patch: " << *newData->patch << "\n";
+      }
       cout << "  " << *newData->comp << "\n";
       cout << "  " << *newData->task << "\n\n";
       cout << "  It was originally computed by the following task(s):\n";
-      for(Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)){
-        cout << "  "<< *old->task << endl;
+      for (Data* old = data.lookup(newData); old != 0; old = data.nextMatch(newData, old)) {
+        cout << "  " << *old->task << endl;
         //old->comp->task->displayAll(cout);
       }
       SCI_THROW(InternalError("Multiple computes for variable: "+newData->comp->var->getName(), __FILE__, __LINE__));
@@ -866,25 +890,25 @@ void CompTable::remembercomp(DetailedTask* task,
                              const MaterialSubset* matls,
                              const ProcessorGroup* pg)
 {
-  if(patches && matls){
-    for(int p=0;p<patches->size();p++){
+  if (patches && matls) {
+    for (int p = 0; p < patches->size(); p++) {
       const Patch* patch = patches->get(p);
-      for(int m=0;m<matls->size();m++){
+      for (int m = 0; m < matls->size(); m++) {
         int matl = matls->get(m);
         Data* newData = scinew Data(task, comp, patch, matl);
         remembercomp(newData, pg);
       }
     }
-  } 
+  }
   else if (matls) {
-    for(int m=0;m<matls->size();m++){
+    for (int m = 0; m < matls->size(); m++) {
       int matl = matls->get(m);
-      Data* newData = scinew Data(task, comp, 0, matl);      
+      Data* newData = scinew Data(task, comp, 0, matl);
       remembercomp(newData, pg);
     }
   }
   else if (patches) {
-    for(int p=0;p<patches->size();p++){
+    for (int p = 0; p < patches->size(); p++) {
       const Patch* patch = patches->get(p);
       Data* newData = scinew Data(task, comp, patch, 0);
       remembercomp(newData, pg);
@@ -915,11 +939,13 @@ bool CompTable::findcomp(Task::Dependency* req,
     }
 
     ASSERT(!result || p->comp->task->getSortedOrder() != result->comp->task->getSortedOrder());
+
     if (p->comp->task->getSortedOrder() < req->task->getSortedOrder()) {
       if (!result || p->comp->task->getSortedOrder() > result->comp->task->getSortedOrder()) {
-        if (compdbg.active())
+        if (compdbg.active()) {
           compdbg << pg->myrank() << "          New best is comp from: " << p->comp->task->getName() << ", order="
                   << p->comp->task->getSortedOrder() << '\n';
+        }
         result = p;
       }
     }
@@ -932,7 +958,8 @@ bool CompTable::findcomp(Task::Dependency* req,
     dt = result->task;
     comp = result->comp;
     return true;
-  } else {
+  }
+  else {
     return false;
   }
 }
@@ -948,19 +975,23 @@ bool CompTable::findReductionComps(Task::Dependency* req,
 
   Data key(0, req, patch, matlIndex);
   int bestSortedOrder = -1;
-  for(Data* p = data.lookup(&key); p != 0; p = data.nextMatch(&key, p)){
-    if (dbg.active())
-      dbg << pg->myrank() << "          Examining comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << " (" << req->task->getName() << " order: " << req->task->getSortedOrder() << '\n';
+  for (Data* p = data.lookup(&key); p != 0; p = data.nextMatch(&key, p)) {
+    if (detaileddbg.active()) {
+      detaileddbg << pg->myrank() << "          Examining comp from: " << p->comp->task->getName() << ", order="
+                  << p->comp->task->getSortedOrder() << " (" << req->task->getName() << " order: " << req->task->getSortedOrder()
+                  << '\n';
+    }
 
-    if(p->comp->task->getSortedOrder() < req->task->getSortedOrder() && 
-        p->comp->task->getSortedOrder() >= bestSortedOrder){
+    if (p->comp->task->getSortedOrder() < req->task->getSortedOrder() && p->comp->task->getSortedOrder() >= bestSortedOrder) {
       if (p->comp->task->getSortedOrder() > bestSortedOrder) {
         creators.clear();
         bestSortedOrder = p->comp->task->getSortedOrder();
-        dbg <<pg->myrank() << "          New Best Sorted Order: " << bestSortedOrder << "!\n";
+        detaileddbg << pg->myrank() << "          New Best Sorted Order: " << bestSortedOrder << "!\n";
       }
-      if (dbg.active())
-        dbg << pg->myrank() << "          Adding comp from: " << p->comp->task->getName() << ", order=" << p->comp->task->getSortedOrder() << '\n';
+      if (detaileddbg.active()) {
+        detaileddbg << pg->myrank() << "          Adding comp from: " << p->comp->task->getName() << ", order="
+                    << p->comp->task->getSortedOrder() << '\n';
+      }
       creators.push_back(p->task);
     }
   }
@@ -974,16 +1005,15 @@ TaskGraph::createDetailedDependencies()
   TAU_PROFILE_TIMER(rctimer, "createDetailedDependencies - remembercomps" , "", TAU_USER);
   TAU_PROFILE_TIMER(ddtimer, "createDetailedDependencies2" , "", TAU_USER);
 
-
   TAU_PROFILE_START(rctimer);
   // Collect all of the comps
   CompTable ct;
-  for(int i=0;i<dts_->numTasks();i++) {
+  for (int i = 0; i < dts_->numTasks(); i++) {
     DetailedTask* task = dts_->getTask(i);
 
-    if( dbg.active() ) {
-      dbg << d_myworld->myrank() << " createDetailedDependencies (collect comps) for:\n";
-      task->task->displayAll( dbg );
+    if (detaileddbg.active()) {
+      detaileddbg << d_myworld->myrank() << " createDetailedDependencies (collect comps) for:\n";
+      task->task->displayAll(detaileddbg);
     }
 
     remembercomps(task, task->task->getComputes(), ct);
@@ -992,46 +1022,49 @@ TaskGraph::createDetailedDependencies()
 
   // Assign task phase number based on the reduction tasks so a mixed thread/mpi
   // scheduler won't have out of order reduction problems.
-  int currphase=0;
-  int currcomm=0; 
-  for(int i=0;i<dts_->numTasks();i++) {
+  int currphase = 0;
+  int currcomm = 0;
+  for (int i = 0; i < dts_->numTasks(); i++) {
     DetailedTask* task = dts_->getTask(i);
-    task->task->d_phase=currphase;
+    task->task->d_phase = currphase;
     //cout << d_myworld->myrank()  << " Task: " << *task << " phase: " << currphase << endl;
     if (task->task->getType() == Task::Reduction) {
-      task->task->d_comm=currcomm;
+      task->task->d_comm = currcomm;
       currcomm++;
       currphase++;
-    } else if (task->task->usesMPI()) {
+    }
+    else if (task->task->usesMPI()) {
       currphase++;
     }
   }
   d_myworld->setgComm(currcomm);
-  d_numtaskphases=currphase+1;
+  d_numtaskphases = currphase + 1;
 
   TAU_PROFILE_STOP(rctimer);
   // Go through the modifies/requires and 
   // create data dependencies as appropriate
   TAU_PROFILE_START(ddtimer);
-  for(int i=0;i<dts_->numTasks();i++) {
+
+  for (int i = 0; i < dts_->numTasks(); i++) {
     DetailedTask* task = dts_->getTask(i);
 
-    if(dbg.active() && (task->task->getRequires() != 0)) {
-      dbg << d_myworld->myrank() << " Looking at requires of detailed task: " << *task << '\n';
+    if (detaileddbg.active() && (task->task->getRequires() != 0)) {
+      detaileddbg << d_myworld->myrank() << " Looking at requires of detailed task: " << *task << '\n';
     }
 
     createDetailedDependencies(task, task->task->getRequires(), ct, false);
 
-    if(dbg.active() && (task->task->getModifies() != 0)) {
-      dbg << d_myworld->myrank() << " Looking at modifies of detailed task: " << *task << '\n';
+    if (detaileddbg.active() && (task->task->getModifies() != 0)) {
+      detaileddbg << d_myworld->myrank() << " Looking at modifies of detailed task: " << *task << '\n';
     }
 
     createDetailedDependencies(task, task->task->getModifies(), ct, true);
   }
-
   TAU_PROFILE_STOP(ddtimer);
-  if(dbg.active())
-    dbg << d_myworld->myrank() << " Done creating detailed tasks\n";
+
+  if (detaileddbg.active()) {
+    detaileddbg << d_myworld->myrank() << " Done creating detailed tasks\n";
+  }
 }
 
 void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
@@ -1040,38 +1073,35 @@ void TaskGraph::remembercomps(DetailedTask* task, Task::Dependency* comp,
   //calling getPatchesUnderDomain can get expensive on large processors.  Thus we 
   //cache results and use them on the next call.  This works well because comps
   //are added in order and they share the same patches under the domain
-  const PatchSubset *cached_task_patches=0, *cached_comp_patches=0;
-  constHandle <PatchSubset> cached_patches;
+  const PatchSubset *cached_task_patches = 0, *cached_comp_patches = 0;
+  constHandle<PatchSubset> cached_patches;
 
-  for(;comp != 0; comp = comp->next){
-    if (comp->var->typeDescription()->isReductionVariable()){
+  for (; comp != 0; comp = comp->next) {
+    if (comp->var->typeDescription()->isReductionVariable()) {
       //if(task->getTask()->getType() == Task::Reduction || comp->deptype == Task::Modifies) {
-        // this is either the task computing the var, modifying it, or the reduction itself
-	    ct.remembercomp(task, comp, 0, comp->matls, d_myworld);
-    } else {
+      // this is either the task computing the var, modifying it, or the reduction itself
+      ct.remembercomp(task, comp, 0, comp->matls, d_myworld);
+    }
+    else {
       // Normal tasks
       constHandle<PatchSubset> patches;
 
       //if the patch pointer on both the dep and the task have not changed then use the 
       //cached result
-      if(task->patches==cached_task_patches && comp->patches==cached_comp_patches)
-      {
-        patches=cached_patches;
+      if (task->patches == cached_task_patches && comp->patches == cached_comp_patches) {
+        patches = cached_patches;
       }
-      else
-      {
+      else {
         //compute the intersection 
-        patches=comp->getPatchesUnderDomain(task->patches);
+        patches = comp->getPatchesUnderDomain(task->patches);
         //cache the result for the next iteration
-        cached_patches=patches;
-        cached_task_patches=task->patches;
-        cached_comp_patches=comp->patches;
+        cached_patches = patches;
+        cached_task_patches = task->patches;
+        cached_comp_patches = comp->patches;
       }
-      constHandle<MaterialSubset> matls =
-	      comp->getMaterialsUnderDomain(task->matls);
-      if(!patches->empty() && !matls->empty()) {
-        ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep(),
-                        d_myworld);
+      constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(task->matls);
+      if (!patches->empty() && !matls->empty()) {
+        ct.remembercomp(task, comp, patches.get_rep(), matls.get_rep(), d_myworld);
       }
     }
   }
@@ -1098,7 +1128,9 @@ TaskGraph::remapTaskDWs(int dwmap[])
       }
 
       const PatchSet* ps = d_tasks[i]->getPatchSet();
-      if (!ps) continue;
+      if (!ps) {
+        continue;
+      }
       const Level* l = getLevel(ps);
       levelmin = Min(levelmin, l->getIndex());
     }
@@ -1112,14 +1144,15 @@ TaskGraph::remapTaskDWs(int dwmap[])
     for (unsigned i = 0; i < d_tasks.size(); i++) {
       if (d_tasks[i]->getType() != Task::Output && d_tasks[i]->getType() != Task::OncePerProc) {
         const PatchSet* ps = d_tasks[i]->getPatchSet();
-        if (!ps) continue;
+        if (!ps) {
+          continue;
+        }
         if (getLevel(ps)->getIndex() > levelmin) {
           d_tasks[i]->setMapping(dwmap);
           //cout << d_tasks[i]->getName() << " mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " (levelmin=" << levelmin << ")" << endl;
         }
       }
     }
-
   }
   
 }
@@ -1142,8 +1175,8 @@ void TaskGraph::createDetailedDependencies(DetailedTask* task,
       continue;
     }
     
-    if(dbg.active()) {
-      dbg << d_myworld->myrank() << "  req: " << *req << '\n';
+    if(detaileddbg.active()) {
+      detaileddbg << d_myworld->myrank() << "  req: " << *req << '\n';
     }
 
     constHandle<PatchSubset> patches =
@@ -1190,10 +1223,8 @@ void TaskGraph::createDetailedDependencies(DetailedTask* task,
           ratio - IntVector(1,1,1);
       }
       else {
-        origPatch->computeVariableExtents(req->var->typeDescription()->getType(),
-            req->var->getBoundaryLayer(),
-            req->gtype, req->numGhostCells,
-            otherLevelLow, otherLevelHigh);
+        origPatch->computeVariableExtents(req->var->typeDescription()->getType(), req->var->getBoundaryLayer(), req->gtype,
+                                          req->numGhostCells, otherLevelLow, otherLevelHigh);
 
         otherLevelLow = origLevel->mapCellToFiner(otherLevelLow);
         otherLevelHigh = origLevel->mapCellToFiner(otherLevelHigh);
@@ -1252,9 +1283,9 @@ void TaskGraph::createDetailedDependencies(DetailedTask* task,
         }
         ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
               Patch::Compare()));
-        if(dbg.active()){
-          dbg << d_myworld->myrank() << "    Creating dependency on " << neighbors.size() << " neighbors\n";
-          dbg << d_myworld->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
+        if(detaileddbg.active()){
+          detaileddbg << d_myworld->myrank() << "    Creating dependency on " << neighbors.size() << " neighbors\n";
+          detaileddbg << d_myworld->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName() << '\n';
         }
 
 
@@ -1393,18 +1424,18 @@ void TaskGraph::createDetailedDependencies(DetailedTask* task,
                       message << " WARNING - task ("<< task->getName() << ") requires with Ghost cells *and* modifies and may not be correct" << endl;
                       static ProgressiveWarning warn(message.str(),10);
                       warn.invoke();
-                      if (dbg.active()) {
-                        dbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
-                        dbg <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: " 
+                      if (detaileddbg.active()) {
+                        detaileddbg << d_myworld->myrank() << " Task that requires with ghost cells and modifies\n";
+                        detaileddbg <<  d_myworld->myrank() << " RGM: var: " << *req->var << " compute: "
                         << *creator << " mod " << *task << " PRT " << *prevReqTask << " " << from_l << " " << from_h << endl;
                       }
                     }
                   } else {
                     // dep requires what is to be modified before it is to be
                     // modified so create a dependency between them so the
-                    // modifying won't conflist with the previous require.
-                    if (dbg.active()) {
-                      dbg << d_myworld->myrank() << "       Requires to modifies dependency from "
+                    // modifying won't conflict with the previous require.
+                    if (detaileddbg.active()) {
+                      detaileddbg << d_myworld->myrank() << "       Requires to modifies dependency from "
                         << prevReqTask->getName()
                         << " to " << task->getName() << " (created by " << creator->getName() << ")\n";
                     }
@@ -1450,15 +1481,13 @@ void TaskGraph::createDetailedDependencies(DetailedTask* task,
                 if (subsequentProc != proc) {
                   cond = DetailedDep::FirstIteration;  // change outer cond from always to first-only
                   DetailedTask* subsequentCreator = dts_->getOldDWSendTask(subsequentProc);
-                  dts_->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor,
-                      task, req, fromNeighbor,
-                      matl, from_l, from_h, DetailedDep::SubsequentIterations);
-                  dbg << d_myworld->myrank() << "   Adding condition reqs for " << *req->var << " task : " << *creator << "  to " << *task << endl;
+                  dts_->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor, task, req, fromNeighbor, matl, from_l,
+                                                 from_h, DetailedDep::SubsequentIterations);
+                  detaileddbg << d_myworld->myrank() << "   Adding condition reqs for " << *req->var << " task : " << *creator
+                              << "  to " << *task << endl;
                 }
               }
-              dts_->possiblyCreateDependency(creator, comp, fromNeighbor,
-                  task, req, fromNeighbor,
-                  matl, from_l, from_h, cond);
+              dts_->possiblyCreateDependency(creator, comp, fromNeighbor, task, req, fromNeighbor, matl, from_l, from_h, cond);
             }
           }
         }
@@ -1486,7 +1515,7 @@ void TaskGraph::createDetailedDependencies(DetailedTask* task,
           DetailedTask* creator = creators[i];
           if(task->getAssignedResourceIndex() == creator->getAssignedResourceIndex() && task->getAssignedResourceIndex() == me) {
             task->addInternalDependency(creator, req->var);
-            dbg << d_myworld->myrank() << "   Created reduction dependency between " << *task << " and " << *creator << endl;
+            detaileddbg << d_myworld->myrank() << "   Created reduction dependency between " << *task << " and " << *creator << endl;
           }
         }
       }
@@ -1509,23 +1538,27 @@ void TaskGraph::createDetailedDependencies(DetailedTask* task,
            << " \n Trying to require or modify " << *req << " in Task " << task->getTask()->getName() << "\n\n";
       if (task->matls) {
         desc << "task materials:" << *task->matls << "\n";
-      } else {
+      }
+      else {
         desc << "no task materials\n";
       }
       if (req->matls) {
         desc << "req materials: " << *req->matls << "\n";
-      } else {
+      }
+      else {
         desc << "no req materials\n";
         desc << "domain materials: " << *matls.get_rep() << "\n";
       }
       if (task->patches) {
         desc << "task patches:" << *task->patches << "\n";
-      } else {
+      }
+      else {
         desc << "no task patches\n";
       }
       if (req->patches) {
         desc << "req patches: " << *req->patches << "\n";
-      } else {
+      }
+      else {
         desc << "no req patches\n";
       }
 
@@ -1570,8 +1603,7 @@ void TaskGraph::makeVarLabelMaterialMap(Scheduler::VarLabelMaterialMap* result)
   for (int i = 0; i < (int)d_tasks.size(); i++) {
     Task* task = d_tasks[i];
     for (Task::Dependency* comp = task->getComputes(); comp != 0; comp = comp->next) {
-      // assume all patches will compute the same labels on the same
-      // materials
+      // assume all patches will compute the same labels on the same materials
       const VarLabel* label = comp->var;
       list<int>& matls = (*result)[label->getName()];
       const MaterialSubset* msubset = comp->matls;
@@ -1579,10 +1611,12 @@ void TaskGraph::makeVarLabelMaterialMap(Scheduler::VarLabelMaterialMap* result)
         for (int mm = 0; mm < msubset->size(); mm++) {
           matls.push_back(msubset->get(mm));
         }
-      } else if (label->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+      }
+      else if (label->typeDescription()->getType() == TypeDescription::ReductionVariable) {
         // Default to material -1 (global)
         matls.push_back(-1);
-      } else {
+      }
+      else {
         const MaterialSet* ms = task->getMaterialSet();
         for (int m = 0; m < ms->size(); m++) {
           const MaterialSubset* msubset = ms->getSubset(m);
