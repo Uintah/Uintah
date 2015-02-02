@@ -3740,11 +3740,18 @@ int main(int argc, char **argv) {
 }
 EOF
 
+# use different set of libs if doing a static build
+if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+	_cudart_lib="cudart_static dl pthread rt"
+else
+	_cudart_lib="cudart"
+fi
+
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA libraries and headers,
                              cuda.h,
                              $_cuda_inc,
-                             cudart,
+                             $_cudart_lib,
                              $_cuda_lib,
                              ,
                              cuda_conf_test.cu,

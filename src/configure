@@ -36154,6 +36154,13 @@ int main(int argc, char **argv) {
 }
 EOF
 
+# use different set of libs if doing a static build
+if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+	_cudart_lib="cudart_static dl pthread rt"
+else
+	_cudart_lib="cudart"
+fi
+
 
 ## arguments mean:
 ## arg 1  : variable base name i.e. CUDA
@@ -36206,7 +36213,7 @@ for i in $_cuda_inc; do
 done
 
 
-for i in cudart; do
+for i in $_cudart_lib; do
   if test -z "$_sci_libs"; then
     _sci_libs=-l$i
   else
