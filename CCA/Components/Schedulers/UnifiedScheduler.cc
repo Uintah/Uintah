@@ -432,9 +432,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   dts = tg->getDetailedTasks();
 
   if (dts == 0) {
-    if (d_myworld->myrank() == 0) {
-      std::cerr << "UnifiedScheduler skipping execute, no tasks\n";
-    }
+    proc0cout << "UnifiedScheduler skipping execute, no tasks\n";
     return;
   }
 
@@ -481,32 +479,42 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   currentIteration = iteration;
   currphase = 0;
-  numPhase = tg->getNumTaskPhases();
+  numPhases = tg->getNumTaskPhases();
   phaseTasks.clear();
-  phaseTasks.resize(numPhase, 0);
+  phaseTasks.resize(numPhases, 0);
   phaseTasksDone.clear();
-  phaseTasksDone.resize(numPhase, 0);
+  phaseTasksDone.resize(numPhases, 0);
   phaseSyncTask.clear();
-  phaseSyncTask.resize(numPhase, NULL);
+  phaseSyncTask.resize(numPhases, NULL);
   dts->setTaskPriorityAlg(taskQueueAlg_);
+
+  // get the number of tasks in each task phase
   for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
   if (unified_dbg.active()) {
-    coutLock.lock();
-    unified_dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << std::endl;
-    coutLock.unlock();
+    cerrLock.lock();
+    {
+      unified_dbg << "\n"
+                  << "Rank-" << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)\n"
+                  << "Total task phases: " << numPhases
+                  << "\n";
+      for (size_t phase = 0; phase < phaseTasks.size(); ++phase) {
+        unified_dbg << "Phase: " << phase << " has " << phaseTasks[phase] << " total tasks\n";
+      }
+      unified_dbg << std::endl;
+    }
+    cerrLock.unlock();
   }
 
   static int totaltasks;
 
   if (taskdbg.active()) {
-    coutLock.lock();
-    taskdbg << "Rank: " << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  "
+    cerrLock.lock();
+    taskdbg << "Rank-" << me << " starting task phase " << currphase << ", total phase " << currphase << " tasks = "
             << phaseTasks[currphase] << std::endl;
-    taskdbg << "Total task phases: " << numPhase << std::endl;
-    coutLock.unlock();
+    cerrLock.unlock();
   }
 
   // signal worker threads to begin executing tasks
@@ -758,7 +766,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   }
 
   if (unified_dbg.active()) {
-    unified_dbg << me << " UnifiedScheduler finished\n";
+    unified_dbg << "Rank-" << me << " - UnifiedScheduler finished" << std::endl;
   }
 } // end execute()
 
@@ -768,6 +776,8 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 void
 UnifiedScheduler::runTasks( int thread_id )
 {
+  int me = d_myworld->myrank();
+
   while( numTasksDone < ntasks ) {
 
     DetailedTask* readyTask = NULL;
@@ -800,16 +810,22 @@ UnifiedScheduler::runTasks( int thread_id )
         havework = true;
         numTasksDone++;
         if (taskorder.active()) {
-          if (d_myworld->myrank() == d_myworld->size() / 2) {
+          if (me == d_myworld->size() / 2) {
             cerrLock.lock();
-            taskorder << d_myworld->myrank() << " Running task static order: " << readyTask->getSaticOrder()
+            taskorder << "Rank-" << me  << " Running task static order: " << readyTask->getSaticOrder()
                       << " , scheduled order: " << numTasksDone << std::endl;
             cerrLock.unlock();
           }
         }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
-        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
           currphase++;
+          if (taskdbg.active()) {
+            cerrLock.lock();
+            taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+                    << phaseTasks[currphase] << std::endl;
+            cerrLock.unlock();
+          }
         }
         break;
       }
@@ -843,20 +859,27 @@ UnifiedScheduler::runTasks( int thread_id )
             currentDevice_++;
             currentDevice_ %= numDevices_;
             gpuInitReady = true;
-          } else {
+          }
+          else {
 #endif
           numTasksDone++;
-          if (taskorder.active()){
-            if (d_myworld->myrank() == d_myworld->size()/2) {
+          if (taskorder.active()) {
+            if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
-                << numTasksDone << std::endl;
+              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+                        << ", scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
           }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
             currphase++;
+            if (taskdbg.active()) {
+              cerrLock.lock();
+              taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+                      << phaseTasks[currphase] << std::endl;
+              cerrLock.unlock();
+            }
           }
 #ifdef HAVE_CUDA
         }
@@ -879,17 +902,19 @@ UnifiedScheduler::runTasks( int thread_id )
           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
             if (taskdbg.active()) {
               cerrLock.lock();
-              taskdbg << d_myworld->myrank() << " Task internal ready 1 " << *initTask << std::endl;
+              taskdbg << "Rank-" << me << " Task internal ready 1 " << *initTask << std::endl;
               cerrLock.unlock();
             }
             phaseSyncTask[initTask->getTask()->d_phase] = initTask;
             ASSERT(initTask->getRequires().size() == 0)
             initTask = NULL;
-          } else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
+          }
+          else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
             initTask->markInitiated();
             initTask->checkExternalDepCount();  // where tasks get added to external ready queue
             initTask = NULL;
-          } else {
+          }
+          else {
             havework = true;
             break;
           }
@@ -936,14 +961,20 @@ UnifiedScheduler::runTasks( int thread_id )
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << d_myworld->myrank() << " Running task static order: " << readyTask->getSaticOrder() << " , scheduled order: "
-                      << numTasksDone << std::endl;
+              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+                        << " , scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
           }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
             currphase++;
+            if (taskdbg.active()) {
+              cerrLock.lock();
+              taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+                      << phaseTasks[currphase] << std::endl;
+              cerrLock.unlock();
+            }
           }
           break;
         }
@@ -978,7 +1009,7 @@ UnifiedScheduler::runTasks( int thread_id )
       initiateTask(initTask, abort, abort_point, currentIteration);
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task internal ready 2 " << *initTask << " deps needed: "
+        taskdbg << "Rank-" << me << " Task internal ready 2 " << *initTask << " deps needed: "
                 << initTask->getExternalDepCount() << std::endl;
         cerrLock.unlock();
       }
@@ -988,7 +1019,7 @@ UnifiedScheduler::runTasks( int thread_id )
     else if (readyTask != NULL) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task external ready " << *readyTask << std::endl;
+        taskdbg << "Rank-" << me << " Task external ready " << *readyTask << std::endl;
         cerrLock.unlock();
       }
       if (readyTask->getTask()->getType() == Task::Reduction) {
@@ -1072,6 +1103,8 @@ int UnifiedScheduler::getAviableThreadNum()
 }
 
 #ifdef HAVE_CUDA
+//______________________________________________________________________
+//
 
 void
 UnifiedScheduler::gpuInitialize( bool reset )
@@ -2003,6 +2036,7 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
 
 #endif // end HAVE_CUDA
 
+
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
 //------------------------------------------
@@ -2049,7 +2083,7 @@ UnifiedSchedulerWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_thread_id << "quitting   " << "\n";
+        taskdbg << "Worker " << d_rank << "-" << d_thread_id << " quitting" << "\n";
         cerrLock.unlock();
       }
       return;

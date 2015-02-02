@@ -522,7 +522,6 @@ main( int argc, char *argv[], char *env[] )
 
       cout << "Date:    " << time_string;  // has its own newline
       cout << "Machine: " << name << "\n";
-
       cout << "SVN: " << SVN_REVISION << "\n";
       cout << "SVN: " << SVN_DATE << "\n";
       cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";

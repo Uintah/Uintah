@@ -122,7 +122,7 @@ class UnifiedScheduler : public MPIScheduler  {
     int   numTasksDone;
     int   ntasks;
     int   currphase;
-    int   numPhase;
+    int   numPhases;
     bool  abort;
     int   abort_point;
 
