@@ -99,7 +99,8 @@ Operators::create_patch_operators( const LevelP& level, SchedulerP& sched, const
   for( int ipss=0; ipss<patches->size(); ++ipss ){
     const Uintah::PatchSubset* pss = patches->getSubset(ipss);
     for( int ip=0; ip<pss->size(); ++ip ){
-      SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+
+      //SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
       const Uintah::Patch* const patch = pss->get(ip);
 
       IntVector low = patch->getExtraCellLowIndex(); 
