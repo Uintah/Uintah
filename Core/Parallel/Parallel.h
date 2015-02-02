@@ -32,13 +32,13 @@
 //   Note, make sure that MPI_Init (or MPI_Init_thread) is called
 //   before using isProc0_macro.
 //
-#define isProc0  ( Uintah::Parallel::getMPIRank() == 0   &&        \
-		               ( ( Uintah::Parallel::getNumThreads() > 1 &&    \
-                       SCIRun::Thread::self()->myid() == 0 ) ||    \
-			             ( Uintah::Parallel::getNumThreads() <= 1 ) ) )
+#define isProc0_macro ( Uintah::Parallel::getMPIRank() == 0 &&           \
+			( ( Uintah::Parallel::getNumThreads() > 1 &&	\
+			    SCIRun::Thread::self()->myid() == 0 ) ||	\
+			  ( Uintah::Parallel::getNumThreads() <= 1 ) ) )
 
-#define proc0cout    if( isProc0 ) std::cout
-#define proc0cerr    if( isProc0 ) std::cerr
+#define proc0cout if( isProc0_macro ) std::cout
+#define proc0cerr if( isProc0_macro ) std::cerr
 
 namespace Uintah {
 
