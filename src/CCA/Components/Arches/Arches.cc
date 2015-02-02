@@ -1856,6 +1856,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
     Operators& opr = Operators::self();
+    opr.set_my_world( d_myworld ); 
     opr.create_patch_operators( level, sched, matls );
   }
   
