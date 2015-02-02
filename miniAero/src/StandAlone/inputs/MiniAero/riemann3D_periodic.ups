@@ -15,6 +15,9 @@
    </Meta>    
 
    <SimulationComponent type="miniaero" />
+   
+   <!-- <Scheduler type="ThreadedMPI"/> -->
+   <Scheduler type="MPI"/>
 
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
