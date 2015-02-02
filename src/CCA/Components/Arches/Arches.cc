@@ -1149,7 +1149,8 @@ Arches::scheduleInitialize(const LevelP& level,
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   Operators& opr = Operators::self(); 
-  opr.sched_create_patch_operators( level, sched, matls ); 
+  opr.set_my_world( d_myworld ); 
+  opr.create_patch_operators( level, sched, matls ); 
 
   if ( _doLagrangianParticles ){ 
     _particlesHelper->set_materials(d_sharedState->allArchesMaterials()); 
@@ -1855,7 +1856,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
     Operators& opr = Operators::self();
-    opr.sched_create_patch_operators( level, sched, matls );
+    opr.create_patch_operators( level, sched, matls );
   }
   
 #ifdef WASATCH_IN_ARCHES
