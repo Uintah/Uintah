@@ -62,8 +62,6 @@ using namespace SCIRun;
 extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
-extern DebugStream mixedDebug;
-
 static DebugStream dbg(          "MPIScheduler_DBG",     false );
 static DebugStream dbgst(        "SendTiming",           false );
 static DebugStream timeout(      "MPIScheduler.timings", false );

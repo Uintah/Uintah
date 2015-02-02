@@ -1927,8 +1927,7 @@ SchedulerCommon::overrideVariableBehavior( string var,
 }
 
 //______________________________________________________________________
-// output the task name and the level it's executing on.
-// and each of the patches
+// output the task name and the level it's executing on, and each of the patches
 void
 SchedulerCommon::printTask( ostream&      out,
                             DetailedTask* task )

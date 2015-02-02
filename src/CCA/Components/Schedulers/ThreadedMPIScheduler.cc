@@ -261,8 +261,8 @@ ThreadedMPIScheduler::createSubScheduler()
 //
 
 void
-ThreadedMPIScheduler::execute( int tgnum /*=0*/,
-                               int iteration /*=0*/ )
+ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
+                               int iteration /* = 0 */ )
 {
   // copy data timestep must be single threaded for now
   if (d_sharedState->isCopyDataTimestep()) {
@@ -296,9 +296,7 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
   DetailedTasks* dts = tg->getDetailedTasks();
 
   if (dts == 0) {
-    if (d_myworld->myrank() == 0) {
-      std::cerr << "ThreadedMPIScheduler skipping execute, no tasks\n";
-    }
+    proc0cout << "ThreadedMPIScheduler skipping execute, no tasks\n";
     return;
   }
 
@@ -335,7 +333,6 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
   mpi_info_.totalwaitmpi   = 0;
 
   int numTasksDone = 0;
-
   bool abort = false;
   int abort_point = 987654;
 
@@ -347,10 +344,10 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
   TAU_PROFILE_START(doittimer);
 
   int currphase = 0;
-  int numPhase = tg->getNumTaskPhases();
-  std::vector<int> phaseTasks(numPhase);
-  std::vector<int> phaseTasksDone(numPhase);
-  std::vector<DetailedTask *> phaseSyncTask(numPhase);
+  int numPhases = tg->getNumTaskPhases();
+  std::vector<int> phaseTasks(numPhases);
+  std::vector<int> phaseTasksDone(numPhases);
+  std::vector<DetailedTask*> phaseSyncTask(numPhases);
 
   dts->setTaskPriorityAlg(taskQueueAlg_);
 
@@ -360,16 +357,28 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
 
   if (threadedmpi_dbg.active()) {
     cerrLock.lock();
-    threadedmpi_dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << std::endl;
+    {
+      threadedmpi_dbg << "\n"
+                      << "Rank-" << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)\n"
+                      << "Total task phases: " << numPhases
+                      << "\n";
+      for (size_t phase = 0; phase < phaseTasks.size(); ++phase) {
+        threadedmpi_dbg << "Phase: " << phase << " has " << phaseTasks[phase] << " total tasks\n";
+      }
+      threadedmpi_dbg << std::endl;
+    }
     cerrLock.unlock();
   }
 
-  static std::vector<int> histogram;
   static int totaltasks;
+  static std::vector<int> histogram;
   std::set<DetailedTask*> pending_tasks;
 
   if (taskdbg.active()) {
-    taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  " << phaseTasks[currphase] << std::endl;
+    cerrLock.lock();
+    taskdbg << "Rank-" << me << " starting task phase " << currphase << ", total phase " << currphase << " tasks = "
+            << phaseTasks[currphase] << std::endl;
+    cerrLock.unlock();
   }
 
   for (int i = 0; i < numThreads_; i++) {
@@ -382,19 +391,21 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
     if (phaseTasks[currphase] == phaseTasksDone[currphase]) {  // this phase done, goto next phase
       currphase++;
       if (taskdbg.active()) {
-      taskdbg << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  " << phaseTasks[currphase]
-              << std::endl;
+        cerrLock.lock();
+        taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+                << phaseTasks[currphase] << std::endl;
+        cerrLock.unlock();
       }
     }
     // if we have an internally-ready task, initiate its recvs
     else if (dts->numInternalReadyTasks() > 0) {
-      DetailedTask * task = dts->getNextInternalReadyTask();
+      DetailedTask* task = dts->getNextInternalReadyTask();
       // save the reduction task and once per proc task for later execution
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {
         phaseSyncTask[task->getTask()->d_phase] = task;
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount()
+          taskdbg << "Rank-" << me << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount()
                   << std::endl;
           cerrLock.unlock();
         }
@@ -405,7 +416,7 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
         task->checkExternalDepCount();
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << d_myworld->myrank() << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount()
+          taskdbg << "Rank-" << me << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount()
                   << std::endl;
           cerrLock.unlock();
           pending_tasks.insert(task);
@@ -415,21 +426,26 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
     //if it is time to run reduction task
     else if ((phaseSyncTask[currphase] != NULL) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {
       if (threadedmpi_queuelength.active()) {
-        if ((int)histogram.size() < dts->numExternalReadyTasks() + 1)
+        if ((int)histogram.size() < dts->numExternalReadyTasks() + 1) {
           histogram.resize(dts->numExternalReadyTasks() + 1);
+        }
         histogram[dts->numExternalReadyTasks()]++;
       }
       DetailedTask* reducetask = phaseSyncTask[currphase];
 
       if (taskdbg.active()) {
-        taskdbg << d_myworld->myrank() << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << std::endl;
+        cerrLock.lock();
+        taskdbg << "Rank-" << me << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << std::endl;
+        cerrLock.unlock();
       }
 
       if (reducetask->getTask()->getType() == Task::Reduction) {
         if (!abort) {
           if (taskdbg.active()) {
-            taskdbg << d_myworld->myrank() << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator "
+            cerrLock.lock();
+            taskdbg << "Rank-" << me << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator "
                     << reducetask->getTask()->d_comm << std::endl;
+            cerrLock.unlock();
           }
           assignTask(reducetask, iteration);
         }
@@ -443,10 +459,14 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
         assignTask(reducetask, iteration);
 
         if (taskdbg.active()) {
-          taskdbg << d_myworld->myrank() << " Running OPP task:  \t";
+          cerrLock.lock();
+          taskdbg << "Rank-" << me << " Running OPP task: ";
+          cerrLock.unlock();
         }
 
+        cerrLock.lock();
         printTask(taskdbg, reducetask);
+        cerrLock.unlock();
 
         if (taskdbg.active()) {
           taskdbg << '\n';
@@ -470,10 +490,10 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
         histogram[dts->numExternalReadyTasks()]++;
       }
 
-      DetailedTask * task = dts->getNextExternalReadyTask();
+      DetailedTask* task = dts->getNextExternalReadyTask();
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Dispatching task " << *task << "(" << dts->numExternalReadyTasks() << "/"
+        taskdbg << "Rank-" << me << " Dispatching task " << *task << "(" << dts->numExternalReadyTasks() << "/"
                 << pending_tasks.size() << " tasks in queue)" << std::endl;
         cerrLock.unlock();
         pending_tasks.erase(pending_tasks.find(task));
@@ -724,7 +744,7 @@ ThreadedMPIScheduler::execute( int tgnum /*=0*/,
 
   if (threadedmpi_dbg.active()) {
     coutLock.lock();
-    threadedmpi_dbg << me << " ThreadedMPIScheduler finished\n";
+    threadedmpi_dbg << "Rank-" << me << " - ThreadedMPIScheduler finished" << std::endl;
     coutLock.unlock();
   }
 } // end execute()
@@ -820,7 +840,7 @@ TaskWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_thread_id << "quitting   " << "\n";
+        taskdbg << "Worker " << d_rank << "-" << d_thread_id << " quitting\n";
         cerrLock.unlock();
       }
       return;
@@ -828,7 +848,7 @@ TaskWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": executeTask:   " << *d_task << "\n";
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": began executing " << *d_task << "\n";
       cerrLock.unlock();
     }
 
@@ -852,7 +872,7 @@ TaskWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finishTask:   " << *d_task << "\n";
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing " << *d_task << std::endl;
       cerrLock.unlock();
     }
 

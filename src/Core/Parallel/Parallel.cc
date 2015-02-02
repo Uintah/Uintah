@@ -195,14 +195,15 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   }
   else {
     // Look for mpich
-    for(int i=0;i<argc;i++){
+    for (int i = 0; i < argc; i++) {
       string s = argv[i];
 
       // on the turing machine, using mpich, we can't find the mpich var, so
       // search for our own -mpi, as (according to sus.cc),
       // we haven't parsed the args yet
-      if(s.substr(0,3) == "-p4" || s == "-mpi")
+      if (s.substr(0, 3) == "-p4" || s == "-mpi") {
         usingMPI_ = true;
+      }
     }
   }
   determinedIfUsingMPI_ = true;
