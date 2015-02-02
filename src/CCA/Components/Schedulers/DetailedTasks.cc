@@ -1517,9 +1517,10 @@ DetailedTasks::peekNextInitiallyReadyDeviceTask()
 DetailedTask*
 DetailedTasks::peekNextCompletionPendingDeviceTask()
 {
+  DetailedTask* dtask = NULL;
   deviceCompletedQueueLock_.readLock();
   {
-    DetailedTask* dtask = completionPendingDeviceTasks_.top();
+    dtask = completionPendingDeviceTasks_.top();
   }
   deviceCompletedQueueLock_.readUnlock();
 
