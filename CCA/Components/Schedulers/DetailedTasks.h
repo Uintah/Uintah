@@ -205,7 +205,7 @@ namespace Uintah {
     InternalDependency(       DetailedTask* prerequisiteTask,
                               DetailedTask* dependentTask,
                         const VarLabel*     var,
-                        long                satisfiedGeneration )
+                              long          satisfiedGeneration )
         : prerequisiteTask(prerequisiteTask), dependentTask(dependentTask), satisfiedGeneration(satisfiedGeneration)
     {
       addVarLabel(var);
@@ -526,7 +526,7 @@ namespace Uintah {
     std::vector<DependencyBatch*> batches_;
     DetailedDep*                  initreq_;
     
-    // True for mixed scheduler which needs to keep track of internal depedencies.
+    // True for mixed scheduler which needs to keep track of internal dependencies.
     bool mustConsiderInternalDependencies_;
 
     // In the future, we may want to prioritize tasks for the MixedScheduler
@@ -560,8 +560,8 @@ namespace Uintah {
     DetailedTasks& operator=( const DetailedTasks& );
 
 #ifdef HAVE_CUDA
-    TaskPQueue initiallyReadyDeviceTasks_;     // initially ready, h2d copies pending
-    TaskPQueue completionPendingDeviceTasks_;  // execution and d2h copies pending
+    TaskPQueue            initiallyReadyDeviceTasks_;     // initially ready, h2d copies pending
+    TaskPQueue            completionPendingDeviceTasks_;  // execution and d2h copies pending
     mutable CrowdMonitor  deviceReadyQueueLock_;
     mutable CrowdMonitor  deviceCompletedQueueLock_;
 #endif

@@ -848,7 +848,7 @@ TaskWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": began executing " << *d_task << "\n";
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": began executing task: " << *d_task << "\n";
       cerrLock.unlock();
     }
 
@@ -872,7 +872,7 @@ TaskWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing " << *d_task << std::endl;
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing task: " << *d_task << std::endl;
       cerrLock.unlock();
     }
 
