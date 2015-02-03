@@ -1132,7 +1132,7 @@ namespace Wasatch {
                   const string& functorName = *functorIter;
                   DBGBC << "attaching dummy modifier " << functorName << " on field " << varTag << endl;                  
                   const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
-                  factory.attach_modifier_expression( modTag, varTag, patchID, true );
+                  if (factory.have_entry(modTag)) factory.attach_modifier_expression( modTag, varTag, patchID, true );
                   ++functorIter;
                 } // while
               } // if
@@ -1174,7 +1174,7 @@ namespace Wasatch {
                 modTag = Expr::Tag( myBndCondSpec->functorName, Expr::STATE_NONE );
               }
               else{ // constant bc
-                modTag = Expr::Tag( fieldName + "state_" + Expr::context2str(varTag.context()) + "_bc_" + myBndSpec.name + "_patch_" + strPatchID, Expr::STATE_NONE );
+                modTag = Expr::Tag( fieldName + "_" + Expr::context2str(varTag.context()) + "_bc_" + myBndSpec.name + "_patch_" + strPatchID, Expr::STATE_NONE );
                 factory.register_expression( new typename ConstantBC<FieldT>::Builder( modTag, myBndCondSpec->value ), true );
               }
               
