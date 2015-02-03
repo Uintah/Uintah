@@ -581,12 +581,15 @@ chmod +x build_visit_2.8.2
   processors (or use the number of available processors on your
   machine). This will take a long time since all the prerequisite
   software will be downloaded and compiled. Select the 'parallel'
-  option when the script starts up.  You will likely need to set the
-  PAR\_COMPILER environment variable to the location of mpic++, i.e.
+  option when the script starts up.  You will need to set the
+  PAR\_COMPILER and PAR\_COMPILER\_CXX environment variables to the
+  location of mpicc and mpic++, i.e.
 
 \begin{verbatim}
-export PAR_COMPILER=`which mpic++` (bash)
-setenv PAR_COMPILER `which mpic++` (csh)
+export PAR_COMPILER=`which mpicc` (bash)
+export PAR_COMPILER_CXX=`which mpic++` (bash)
+setenv PAR_COMPILER `which mpicc` (csh)
+setenv PAR_COMPILER_CXX `which mpic++` (csh)
 \end{verbatim}
 
 \begin{verbatim}
