@@ -1260,7 +1260,6 @@ namespace Wasatch {
       const BndSpec& myBndSpec = bndSpecPair.second; // get the boundary specification
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name()); // get the bc spec - we will check if the user specified anything for pressure here
       const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
-      if (!myBndCondSpec) return;
       //_____________________________________________________________________________________
       // check if we have this patchID in the list of patchIDs
       // here are the scenarios here:
