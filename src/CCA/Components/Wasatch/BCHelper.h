@@ -229,10 +229,10 @@ namespace Wasatch {
    *  @author Tony Saad
    *  @date   Sept 2013
    *
-   *  @brief  Stores the domain boundary iterators necessary for setting boundary conditions.
+   *  @brief  Stores the domain's boundary iterators necessary for setting boundary conditions.
    *  For particles, we store a pointer to a list of particles near a given boundary. That list
-   is updated by the ParticlesHelper object. This external list stores the particle index that is
-   near the boundary, NOT the particle ID.
+   is updated by the ParticlesHelper class. This external list stores the particle index that is
+   near the boundary, NOT the particle ID (PID).
    */
   //****************************************************************************
   struct BoundaryIterators

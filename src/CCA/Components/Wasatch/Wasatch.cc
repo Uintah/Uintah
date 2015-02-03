@@ -821,7 +821,6 @@ namespace Wasatch{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
@@ -1033,7 +1032,6 @@ namespace Wasatch{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
-      //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
