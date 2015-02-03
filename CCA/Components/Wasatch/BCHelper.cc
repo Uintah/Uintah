@@ -850,7 +850,7 @@ namespace Wasatch {
                 if (bndName.compare("NotSet")==0) {
                   std::ostringstream msg;
                   msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
-                  << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
+                      << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                   throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                 }
                 DBGBC << " boundary name = " << bndName << std::endl;
@@ -918,7 +918,7 @@ namespace Wasatch {
                     {
                       std::ostringstream msg;
                       msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
-                      << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
+                          << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
                       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                     }
                       break;
@@ -959,7 +959,7 @@ namespace Wasatch {
                   if (bndName.compare("NotSet")==0) {
                     std::ostringstream msg;
                     msg << "ERROR: It looks like you have not set a name for one of your boundary conditions! "
-                    << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
+                        << "You MUST specify a name for your <Face> spec boundary condition. Please revise your input file." << std::endl;
                     throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                   }
                   DBGBC << " boundary name = " << bndName << std::endl;
@@ -993,7 +993,7 @@ namespace Wasatch {
                     const BndCondTypeEnum atomBCTypeEnum = select_bc_type_enum(bndCondBase->getBCType());
                     
                     DBGBC << " bc variable = " << varName << std::endl
-                    << " bc type = "     << atomBCTypeEnum << std::endl;
+                          << " bc type = "     << atomBCTypeEnum << std::endl;
                     
                     double doubleVal=0.0;
                     std::string functorName="none";
@@ -1027,7 +1027,7 @@ namespace Wasatch {
                       {
                         std::ostringstream msg;
                         msg << "ERROR: It looks like you have specified an unsupported datatype value for boundary " << bndName << ". "
-                        << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
+                            << "Supported datatypes are: double, vector, and string (i.e. functor name)." << std::endl;
                         throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
                       }
                         break;
@@ -1215,7 +1215,7 @@ namespace Wasatch {
               modExpr.set_nebo_interior_points( get_nebo_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
               
               modExpr.set_boundary_particles(get_particles_bnd_mask(myBndSpec,patchID));
-              // do not delete this. this could be needed for some outflow/open boundary conditions
+              // tsaad: do not delete this. this could be needed for some outflow/open boundary conditions
               //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
             }
           }
