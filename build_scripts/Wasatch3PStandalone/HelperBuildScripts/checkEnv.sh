@@ -7,7 +7,7 @@ if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
    echo "  At Utah: Ember or Ash"
    echo "  At LLNL: Vulcan or Cab"
-   echo "  At LANL: Mustang or Mapache"
+   echo "  At LANL: Mustang, Mapache, or Wolf"
    echo
    exit
 fi
@@ -108,12 +108,30 @@ if test "$MACHINE" = "Mapache"; then
 
   NAME2="Mapache"
   INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
-  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/Mapache/Boost/v1_56_0-$COMP
+  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
+else
+if test "$MACHINE" = "Wolf"; then
+  if [[ $host != wf-fe* ]]; then
+     echo "Error: hostname did not return wf-fe*... Goodbye."
+     exit
+  fi
+  #COMP=gcc4.7.2
+  echo
+  echo "Have you run the appropriate 'module load' commands? Eg:"
+  echo "   * module load intel/14.0.4"
+  echo "   * module load cmake/3.0.0"
+  echo
+  sleep 1
+
+  NAME2="Wolf"
+  INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
 else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi
