@@ -5,7 +5,7 @@ host=`hostname`
 echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
-   echo "  At Utah: Ember or Ash"
+   echo "  At Utah: Ember, Ash, or Baja"
    echo "  At LLNL: Vulcan or Cab"
    echo "  At LANL: Mustang, Mapache, or Wolf"
    echo
@@ -127,10 +127,21 @@ if test "$MACHINE" = "Wolf"; then
   INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
   BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
 else
+if test "$MACHINE" = "Baja"; then
+  if [[ $host != baja* ]]; then
+     echo "Error: hostname did not return baja*... Goodbye."
+     exit
+  fi
+  COMP=gcc4.9.1
+  NAME2="Baja"
+  INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr
+else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi
