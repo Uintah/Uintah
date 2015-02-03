@@ -308,4 +308,58 @@ private:
   const Expr::Tag srcTag_;
 };
 
+
+/**
+ *  \class 	BCPrimVar
+ *  \ingroup 	Expressions
+ *  \author 	Tony Saad
+ *  \date    March, 2014
+ *
+ *  \brief Provides a mechanism to copy boundary values from one field to another.
+ *
+ *  \tparam FieldT - the type of field for the RHS.
+ */
+template< typename FieldT >
+class BCPrimVar
+: public BoundaryConditionBase<FieldT>
+{
+  BCPrimVar( const Expr::Tag& srcTag,
+           const Expr::Tag& densityTag) :
+  srcTag_(srcTag),
+  densityTag_(densityTag)
+  {}
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Builder( const Expr::Tag& resultTag,
+            const Expr::Tag& srcTag,
+            const Expr::Tag densityTag = Expr::Tag() )
+    : ExpressionBuilder(resultTag),
+    srcTag_ (srcTag),
+    densityTag_(densityTag)
+    {}
+    Expr::ExpressionBase* build() const{ return new BCPrimVar(srcTag_, densityTag_); }
+  private:
+    const Expr::Tag srcTag_, densityTag_;
+  };
+  
+  ~BCPrimVar(){}
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){
+    exprDeps.requires_expression( srcTag_ );
+    if (densityTag_ != Expr::Tag() ) exprDeps.requires_expression( densityTag_ );
+  }
+  
+  void bind_fields( const Expr::FieldManagerList& fml ){
+    src_ = &fml.template field_ref<FieldT>(srcTag_);
+    if ( densityTag_ != Expr::Tag() ) rho_ = &fml.template field_ref<SVolField>(densityTag_);
+  }
+  
+  void evaluate();
+private:
+  const FieldT* src_;
+  const SVolField* rho_;
+  const Expr::Tag srcTag_, densityTag_;
+};
+
 #endif // BoundaryConditions_h

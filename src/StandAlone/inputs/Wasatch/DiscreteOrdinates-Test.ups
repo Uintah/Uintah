@@ -64,10 +64,10 @@
     </TransportEquation>
     
     <Radiation>
-      <AbsorptionCoefficient><NameTag name="AbsCoef"     state="STATE_NONE"/></AbsorptionCoefficient>
+      <AbsorptionCoefficient><NameTag name="AbsCoef" state="STATE_NONE"/></AbsorptionCoefficient>
       <Temperature>          <NameTag name="temperature" state="STATE_NONE"/></Temperature>
-      <DivQ>                 <NameTag name="DivQ"        state="STATE_NONE"/></DivQ>
-      <DiscreteOrdinates order="2" >
+      <DivQ>                 <NameTag name="DivQ" state="STATE_NONE"/></DivQ>
+      <DiscreteOrdinates order="2">
         <Parameters>
           <solver>cg</solver>
           <tolerance>1e-10</tolerance>
