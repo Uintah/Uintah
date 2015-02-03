@@ -65,7 +65,8 @@ static SCIRun::DebugStream dbgbc("WASATCH_BC", false);
  */
 
 namespace Wasatch {
-  
+  // Given a string BC type (Dirichlet, Neumann,...), this function returns a BndCondTypeEnum
+  // of supported boundary condition types
   BndCondTypeEnum select_bc_type_enum( const std::string& bcTypeStr )
   {
     if      ( bcTypeStr == "Dirichlet" )     return DIRICHLET;
@@ -73,6 +74,8 @@ namespace Wasatch {
     else                                     return UNSUPPORTED;
   }
 
+  // Given a string boundary type (Wall, Velocity, Outflow,...), this function returns a BndTypeEnum
+  // of supported boundary types
   BndTypeEnum select_bnd_type_enum( const std::string& bndTypeStr )
   {
     if      ( bndTypeStr == "Wall"     )  return WALL;
@@ -84,6 +87,8 @@ namespace Wasatch {
     else                                  return INVALID;
   }
 
+  // Given a BndCondTypeEnum (DIRICHLET,...), this function returns a string
+  // of supported boundary condition types
   std::string bc_type_enum_to_string( const BndCondTypeEnum bcTypeEnum )
   {
     switch (bcTypeEnum) {
@@ -99,6 +104,8 @@ namespace Wasatch {
     }
   }
 
+  // Given a BndTypeEnum (WALL, VELOCITY,...), this function returns a string
+  // of supported boundary types
   const std::string bnd_type_enum_to_string( const BndTypeEnum bndTypeEnum )
   {
     switch (bndTypeEnum) {
@@ -249,7 +256,6 @@ namespace Wasatch {
       (*it).print();
     }
   }
-
 
   //============================================================================
 
@@ -1036,7 +1042,6 @@ namespace Wasatch {
         } // patch subset loop
       } // material loop
     } // material subset loop
-    //print();
   }
 
   //------------------------------------------------------------------------------------------------
@@ -1255,7 +1260,7 @@ namespace Wasatch {
       const BndSpec& myBndSpec = bndSpecPair.second; // get the boundary specification
       const BndCondSpec* myBndCondSpec = bndSpecPair.second.find(pressure_tag().name()); // get the bc spec - we will check if the user specified anything for pressure here
       const Uintah::IntVector unitNormal = patch->getFaceDirection(myBndSpec.face);
-//      if (myBndCondSpec) {
+      if (!myBndCondSpec) return;
       //_____________________________________________________________________________________
       // check if we have this patchID in the list of patchIDs
       // here are the scenarios here:
@@ -1264,40 +1269,38 @@ namespace Wasatch {
        2. OUTFLOW/OPEN: p_outside = - p_inside -> we augment the coefficient for p_0
        3. Intrusion: do NOT modify the coefficient matrix since it will be modified inside the pressure expression when modifying the matrix for intrusions
        */
-        if( myBndSpec.has_patch(patchID) ){
-          Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
+      if( myBndSpec.has_patch(patchID) ){
+        Uintah::Iterator& bndMask = get_uintah_extra_bnd_mask(myBndSpec,patchID);
+        
+        double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0; // For OUTFLOW/OPEN boundaries, augment the P0
+        if (myBndCondSpec) {
+          if (myBndCondSpec->bcType == DIRICHLET) { // DIRICHLET on pressure
+            sign = 1.0;
+          }
+        }
+        
+        for( bndMask.reset(); !bndMask.done(); ++bndMask ){
+          Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
           
-          double sign = (myBndSpec.type == OUTFLOW || myBndSpec.type == OPEN) ? 1.0 : -1.0; // For OUTFLOW/OPEN boundaries, augment the P0
-          if (myBndCondSpec) {
-            if (myBndCondSpec->bcType == DIRICHLET) { // DIRICHLET on pressure
-              sign = 1.0;
-            }
+          // if we are inside a solid, then don't do anything because we already handle this in the pressure expression
+          if( volFrac ){
+            const Uintah::IntVector iCell = *bndMask - unitNormal - patch->getExtraCellLowIndex(1);
+            const SpatialOps::IntVec iiCell(iCell.x(), iCell.y(), iCell.z() );
+            if ((*volFrac)(iiCell) < 1.0)
+              continue;
           }
           
-          for( bndMask.reset(); !bndMask.done(); ++bndMask ){
-            Uintah::Stencil4& coefs = pMatrix[*bndMask - unitNormal];
-            
-            // if we are inside a solid, then don't do anything because we already handle this in the pressure expression
-            if( volFrac ){
-              const Uintah::IntVector iCell = *bndMask - unitNormal - patch->getExtraCellLowIndex(1);
-              const SpatialOps::IntVec iiCell(iCell.x(), iCell.y(), iCell.z() );
-              if ((*volFrac)(iiCell) < 1.0)
-                continue;
-            }
-            
-            //
-            switch(myBndSpec.face){
-              case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += sign/dx2; break;
-              case Uintah::Patch::xplus :                coefs.p += sign/dx2; break;
-              case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p += sign/dy2; break;
-              case Uintah::Patch::yplus :                coefs.p += sign/dy2; break;
-              case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p += sign/dz2; break;
-              case Uintah::Patch::zplus :                coefs.p += sign/dz2; break;
-              default:                                                        break;
-            }
+          //
+          switch(myBndSpec.face){
+            case Uintah::Patch::xminus: coefs.w = 0.0; coefs.p += sign/dx2; break;
+            case Uintah::Patch::xplus :                coefs.p += sign/dx2; break;
+            case Uintah::Patch::yminus: coefs.s = 0.0; coefs.p += sign/dy2; break;
+            case Uintah::Patch::yplus :                coefs.p += sign/dy2; break;
+            case Uintah::Patch::zminus: coefs.b = 0.0; coefs.p += sign/dz2; break;
+            case Uintah::Patch::zplus :                coefs.p += sign/dz2; break;
+            default:                                                        break;
           }
-          
-//        }
+        }
       }
     }
   }
