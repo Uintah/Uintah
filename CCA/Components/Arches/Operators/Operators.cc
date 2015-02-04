@@ -56,6 +56,17 @@ Operators::Operators()
 Operators::~Operators()
 {} 
 
+void 
+Operators::delete_patch_set()
+{
+
+  for (std::map<int, Uintah::PatchSet*>::iterator i=_patches_for_operators.begin(); 
+      i != _patches_for_operators.end(); i++){ 
+    delete i->second; 
+  }
+
+} 
+
 template<typename FieldT>
 const SCIRun::Point arches_get_low_position(const Uintah::Patch& patch);
 
@@ -169,10 +180,11 @@ Operators::get_patchset( const PatchsetSelector pss,
 
       //if( ip != patchesForOperators_.end() ) return ip->second;
 
-      Uintah::PatchSet* patches = new Uintah::PatchSet;
+      Uintah::PatchSet* patches = scinew Uintah::PatchSet;
       patches->addEach( localPatches->getVector() );
-      //patchesForOperators_[levelID] = patches;
+      _patches_for_operators[levelID] = patches;
       return patches;
+
     }
   }
   return NULL;
