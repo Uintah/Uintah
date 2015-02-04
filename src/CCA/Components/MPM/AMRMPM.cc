@@ -153,7 +153,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
-  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  dataArchiver = dynamic_cast<Output*>(getPort("output"));
 
   if(!dataArchiver){
     throw InternalError("AMRMPM:couldn't get output port", __FILE__, __LINE__);
@@ -502,6 +502,13 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleComputeStressTensor(            sched, patches, matls);
   }
  
+  if(flags->d_computeScaleFactor){
+    for (int l = 0; l < maxLevels; l++) {
+      const LevelP& level = grid->getLevel(l);
+      const PatchSet* patches = level->eachPatch();
+      scheduleComputeParticleScaleFactor(       sched, patches, matls);
+    }
+  }
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -1113,6 +1120,30 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
     sched->addTask(t, patches, matls);
   }
 }
+
+
+void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,
+                        "AMRMPM::scheduleComputeParticleScaleFactor");
+
+  Task* t=scinew Task("AMRMPM::computeParticleScaleFactor",this,
+                      &AMRMPM::computeParticleScaleFactor);
+
+  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None);
+  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None);
+  t->computes(lb->pScaleFactorLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+}
+
 
 void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
                                          const PatchSet* patches,
@@ -3216,6 +3247,47 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
       new_dw->deleteParticles(delset);
     } // materials
   } // patches
+}
+
+void AMRMPM::computeParticleScaleFactor(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
+{
+  // This task computes the particles initial physical size, to be used
+  // in scaling particles for the deformed particle vis feature
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing, "Doing computeParticleScaleFactor");
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      constParticleVariable<Matrix3> psize,pF;
+      ParticleVariable<Matrix3> pScaleFactor;
+      new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
+      new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
+      new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
+
+      if(dataArchiver->isOutputTimestep()){
+        Vector dx = patch->dCell();
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pScaleFactor[idx] = (pF[idx]*psize[idx]*Matrix3(dx[0],0,0,
+                                                          0,dx[1],0,
+                                                          0,0,dx[2]));
+
+        } // for particles
+      } // isOutputTimestep
+    } // matls
+  } // patches
+
 }
 
 //______________________________________________________________________
