@@ -21,20 +21,25 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <TauProfilerForSCIRun.h>
+
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
+
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
-#include <CCA/Ports/Scheduler.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Thread/Mutex.h>
+
+#include <TauProfilerForSCIRun.h>
+
 #include <sci_values.h>
 #include <sstream>
 
@@ -43,7 +48,8 @@ using namespace std;
 
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex       cerrLock;
+extern SCIRun::Mutex cerrLock;
+
 DebugStream lbDebug( "LoadBalancer", false );
 DebugStream neiDebug("Neighborhood", false );
 
@@ -56,7 +62,8 @@ LoadBalancerCommon::~LoadBalancerCommon()
 {
 }
 
-void LoadBalancerCommon::assignResources(DetailedTasks& graph)
+void
+LoadBalancerCommon::assignResources( DetailedTasks & graph )
 {
   TAU_PROFILE("LoadBalancerCommon::assignResources()", " ", TAU_USER);
   int nTasks = graph.numTasks();
@@ -127,14 +134,14 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
         // once per patch subset (empty or not)
         // at least one example is the multi-level (impAMRICE) pressureSolve
         for(set<int>::iterator p=d_neighborProcessors.begin();p!=d_neighborProcessors.end();p++) {
-	  int i=(*p);
+          int i=(*p);
           if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
             task->assignResource(i);
           if( lbDebug.active() ) 
             lbDebug << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
               << i << "\n";
           }
-	}
+        }
       } else {
         if( lbDebug.active() ) 
           lbDebug << d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource "
