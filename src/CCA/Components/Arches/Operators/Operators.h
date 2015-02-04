@@ -31,6 +31,8 @@ namespace Uintah {
       _myworld = myworld; 
     };
 
+    void delete_patch_set(); 
+
   private: 
 
     Operators(); 
@@ -47,6 +49,9 @@ namespace Uintah {
     const Uintah::PatchSet* get_patchset( const PatchsetSelector,
                                           const Uintah::LevelP& level,
                                           Uintah::SchedulerP& sched );
+
+    std::map<int, Uintah::PatchSet*> _patches_for_operators; 
+
   };
 
 
