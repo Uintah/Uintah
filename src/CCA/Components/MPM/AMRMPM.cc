@@ -2436,7 +2436,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
   }  // patch loop
 }
 //______________________________________________________________________
-/
+
 void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
