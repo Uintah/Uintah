@@ -1591,7 +1591,8 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         old_dw->get(pDefMeasure_coarse,    lb->pDeformationMeasureLabel, pset);
         new_dw->get(pExternalforce_coarse, lb->pExtForceLabel_preReloc,  pset);
 
-        for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        for (ParticleSubset::iterator iter  = pset->begin();
+                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
 
           // Get the node indices that surround the fine patch cell
@@ -1606,9 +1607,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
           IntVector fineNode;
           for(int k = 0; k < (int) ni.size(); k++) {
             fineNode = ni[k];
-            
-            //S[k] *= pErosion[idx];
-            
+
             gMass_fine[fineNode]          += pMass_coarse[idx]          * S[k];
             gVelocity_fine[fineNode]      += pmom                       * S[k];
             gVolume_fine[fineNode]        += pVolume_coarse[idx]        * S[k];
@@ -1698,13 +1697,12 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
         const Patch* finePatch = finePatches[fp];
         if(finePatch->hasCoarseFaces() ){
 
-          // get fine level data                                                                                  
-          constNCVariable<double> gMass_fine;                                                                     
+          // get fine level data
+          constNCVariable<double> gMass_fine;
           constNCVariable<double> gVolume_fine;
           constNCVariable<Vector> gVelocity_fine;
           constNCVariable<Vector> gExternalforce_fine;
           constNCVariable<double> gTemperature_fine;
-//          Ghost::GhostType  gn = Ghost::None; 
 
           if(flag == coarsenData){
             // use getRegion() instead of get().  They should be equivalent but 
@@ -2438,7 +2436,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
   }  // patch loop
 }
 //______________________________________________________________________
-//
+/
 void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
@@ -2507,7 +2505,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
             bool isRight_CP_FP_pair;
             
             coarseLevel_CFI_NodeIterator( patchFace,patch, finePatch, fineLevel,
-                                          n_iter ,isRight_CP_FP_pair);
+                                          n_iter, isRight_CP_FP_pair);
 
             // The ZOI element is opposite
             // of the patch face
@@ -2582,12 +2580,9 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                           n_iter ,isRight_CP_FP_pair);
                                           
             int element = patchFace;
-            
-            IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
-            int p_dir = dir[0];                                       // normal direction 
-            
+            IntVector dir = finePatch->getFaceAxes(patchFace); // face axes
+            int p_dir = dir[0];                                // normal dir 
 
-            
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
               setFace = true; 
@@ -2606,16 +2601,15 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
           }  // coarsePatches loop
           
           // bulletproofing
-          if( !setFace ){                                                               
-              ostringstream warn;                                                      
+          if( !setFace ){ 
+              ostringstream warn;
               warn << "\n ERROR: computeZoneOfInfluence:Fine Level: Did not find node   iterator! "
-                   << "\n coarse: L-" << level->getIndex()                       
-                   << "\n coarePatches size: " << coarsePatches.size()                              
-                   << "\n fine patch:   " << *finePatch                                
-                   << "\n fine patch face: " << finePatch->getFaceName(patchFace);     
-
-              throw ProblemSetupException(warn.str(), __FILE__, __LINE__);             
-          }                                                                            
+                   << "\n coarse: L-" << level->getIndex()
+                   << "\n coarePatches size: " << coarsePatches.size()
+                   << "\n fine patch:   " << *finePatch
+                   << "\n fine patch face: " << finePatch->getFaceName(patchFace);
+              throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          }
         }  // face interator
       }  // patch has coarse face 
     }  // has finer level
