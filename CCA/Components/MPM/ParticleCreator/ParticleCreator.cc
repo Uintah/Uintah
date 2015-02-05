@@ -217,16 +217,22 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++voliter;
         }
       }
-      // CPDI
-      if (psizes && (d_flags->d_interpolator_type=="cpdi")) {
+
+      // CPDI or CPTI
+      if (psizes && ((d_flags->d_interpolator_type=="cpdi") || d_useCPTI)) {
         // Read psize from file
         if (!psizes->empty()) {
           Vector dxcc = patch->dCell(); 
           pvars.psize[pidx] = *sizeiter;
           if (volumes->empty()) {
             // Calculate CPDI hexahedron volume from psize 
+            double volFactor=1.0;
+            if (d_useCPTI) {
+              // Calculate CPTI tetrahedron volume from psize 
+              volFactor=6.0;
+            }
             // (if volume not passed from FileGeometryPiece)
-            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant());
+            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant()/volFactor);
             pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
           }
           // Modify psize (CPDI R-vectors) to be normalized by cell spacing
@@ -237,26 +243,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++sizeiter;
         }
       }
-      // CPTI
-      if (psizes && d_useCPTI) {
-        // Read psize from file
-        if (!psizes->empty()) {
-          Vector dxcc = patch->dCell(); 
-          pvars.psize[pidx] = *sizeiter;
-          if (volumes->empty()) {
-            // Calculate CPTI tetrahedron volume from psize 
-            // (if volume not passed from FileGeometryPiece)
-            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant()/6.0);
-            pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
-          }
-          // Modify psize (CPTI R-vectors) to be normalized by cell spacing
-          Matrix3 size(1./((double) dxcc.x()),0.,0.,
-                       0.,1./((double) dxcc.y()),0.,
-                       0.,0.,1./((double) dxcc.z()));
-          pvars.psize[pidx]= pvars.psize[pidx]*size;
-          ++sizeiter;
-        }
-      }
+
       if (colors) {
         if (!colors->empty()) {
           pvars.pcolor[pidx] = *coloriter;
