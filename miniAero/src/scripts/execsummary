@@ -1,6 +1,6 @@
 #!/bin/bash
 #______________________________________________________________________
-#  This script takes a folder of exectime.* files and summarizes them so 
+#  This script takes a folder of exectime.* files and summarizes them so
 #  the user can see what task is taking the most time.  Below is an example:
 #
 # Processors=4
@@ -15,7 +15,7 @@
 # Task:Ray::rayTrace   Avg(s)=779.806   Max(s)=797.282158
 # Task:   Avg(s)=1.34021   Max(s)=1.404592
 #
-#  To output the exectime files set the environmental variable 
+#  To output the exectime files set the environmental variable
 #     SCI_DEBUG ExecTimes:+
 #
 #            -- The Ghost of Justin
@@ -36,5 +36,24 @@ echo "##########################################################################
 
 echo "Processors=$count"
 cat exectimes.* > .exectimes.tmp
-cat .exectimes.tmp | awk -v count=$count -- 'BEGIN {total=0} {a[$4]+=$3; total+=$3; if (max[$4] < $3) max[$4]=$3} END {print "Total(s)="total/count; for (i in a) print i,"  Avg(s)="a[i]/count,"  Max(s)="max[i]}' | sort -g -k 2 -r
+cat .exectimes.tmp | awk -v count=$count -- \
+  'BEGIN{
+           total=0
+         }
+         {
+           ave[$4] += $3;
+           total   += $3;
+           if (max[$4] < $3)
+             max[$4]=$3
+         }
+  END\
+  {
+    print "Total(s)="total/count;
+    printf ("%20s %30s %10s","Task",  "Ave(s)", "Max(s)\n")
+    for (i in ave)
+     printf "%-40s|  %-10g|  %g \n", i, ave[i]/count, max[i] > ".exectimes.tmp2"
+  }'
+  
+sort --general-numeric-sort --field-separator="|" --key=2 --reverse .exectimes.tmp2
+
 rm -f .exectimes.tmp

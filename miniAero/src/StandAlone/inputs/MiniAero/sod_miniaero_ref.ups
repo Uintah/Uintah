@@ -10,7 +10,7 @@
 
    <SimulationComponent type="miniaero" />
 
-   <!-- <Scheduler type="ThreadedMPI"/> -->
+   <!-- <Scheduler type="Unified"/> -->
    <Scheduler type="MPI"/>
 
     <!--____________________________________________________________________-->
