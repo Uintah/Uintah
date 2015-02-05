@@ -258,6 +258,9 @@ Arches::~Arches()
   delete d_nlSolver;
   delete d_physicalConsts;
 
+  Operators& opr = Operators::self();
+  opr.delete_patch_set(); 
+
   if (init_timelabel_allocated)
     delete init_timelabel;
 
@@ -1151,7 +1154,6 @@ Arches::scheduleInitialize(const LevelP& level,
   Operators& opr = Operators::self(); 
   opr.set_my_world( d_myworld ); 
   opr.create_patch_operators( level, sched, matls ); 
-  opr.delete_patch_set(); 
 
   if ( _doLagrangianParticles ){ 
     _particlesHelper->set_materials(d_sharedState->allArchesMaterials()); 
@@ -1859,7 +1861,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     Operators& opr = Operators::self();
     opr.set_my_world( d_myworld ); 
     opr.create_patch_operators( level, sched, matls );
-    opr.delete_patch_set(); 
   }
   
 #ifdef WASATCH_IN_ARCHES
