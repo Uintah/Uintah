@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+      <!--
+          From: Louwers, J., Gadiot G.M.H.J.L., Brewster, M.Q., Son, S.F., Parr, T., Hanson-Parr, D.
+                Steady-State HNF Combustion Modeling, 27th Int. Symposium on Combustion, University
+                of Colorado at Boulder, Aug. 20-7, 1998, LA-UR-97-5119.
+
+          Other Parameters:
+                density = 1860 kg/m^3
+                Eg@inf  = 1.05e4 m^3/kgK^2s
+                Eg      = 167 kJ/mol
+      -->
+    <Model type="Steady_Burn">
+      <fromMaterial>         Reactant     </fromMaterial>
+      <toMaterial>           Product      </toMaterial>
+
+      <IdealGasConst>        8.314        </IdealGasConst> 
+      <PreExpCondPh>         3.30e8       </PreExpCondPh>     
+      <ActEnergyCondPh>      7.5e4        </ActEnergyCondPh>   <!-- J/mol -->
+      <PreExpGasPh>          5.71e-2      </PreExpGasPh>      
+      <CondPhaseHeat>        3.0e5        </CondPhaseHeat>     
+      <GasPhaseHeat>         2.589e6      </GasPhaseHeat>      
+      <HeatConductGasPh>     0.07         </HeatConductGasPh>  
+      <HeatConductCondPh>    0.32         </HeatConductCondPh> 
+      <SpecificHeatBoth>     9.7e2        </SpecificHeatBoth>  
+      <MoleWeightGasPh>      0.0256       </MoleWeightGasPh>   
+      <BoundaryParticles>    3            </BoundaryParticles>
+      <ThresholdPressure>    50000        </ThresholdPressure>
+      <IgnitionTemp>         410.0        </IgnitionTemp>
+    </Model>
+
+</Uintah_Include>

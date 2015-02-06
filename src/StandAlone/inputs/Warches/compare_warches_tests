@@ -1,0 +1,26 @@
+rm -rf *.uda*
+
+sed -i '' 's@bc-test-xy-inlet-outlet-pressure.uda@warches-bc-test-xy-inlet-outlet-pressure.uda@g' inputs/Warches/warches-bc-test-xy-inlet-outlet-pressure.ups
+
+mpirun -np 6 sus inputs/Warches/warches-bc-test-xy-inlet-outlet-pressure.ups > warches_bc.log
+
+sed -i '' 's@warches-bc-test-xy-inlet-outlet-pressure.uda@arches-bc-test-xy-inlet-outlet-pressure.uda@g' inputs/Warches/warches-bc-test-xy-inlet-outlet-pressure.ups
+mpirun -np 6 ../../opt/StandAlone/sus inputs/Warches/warches-bc-test-xy-inlet-outlet-pressure.ups > arches_bc.log
+sed -i '' 's@arches-bc-test-xy-inlet-outlet-pressure.uda@bc-test-xy-inlet-outlet-pressure.uda@g' inputs/Warches/warches-bc-test-xy-inlet-outlet-pressure.ups
+./tools/compute_Lnorm_udas arches-bc-test-xy-inlet-outlet-pressure.uda warches-bc-test-xy-inlet-outlet-pressure.uda
+
+sed -i '' 's@taylor-green-vortex.uda@warches-taylor-green-vortex-xy.uda@g' inputs/Warches/warches-taylor-green-vortex.ups
+mpirun -np 4 sus inputs/Warches/warches-taylor-green-vortex.ups > warches-tgvortex.log
+
+sed -i '' 's@warches-taylor-green-vortex-xy.uda@arches-taylor-green-vortex-xy.uda@g' inputs/Warches/warches-taylor-green-vortex.ups
+mpirun -np 4 ../../opt/StandAlone/sus inputs/Warches/warches-taylor-green-vortex.ups > arches-tgvortex.log
+./tools/compute_Lnorm_udas arches-taylor-green-vortex-xy.uda warches-taylor-green-vortex-xy.uda
+
+sed -i '' 's@arches-taylor-green-vortex-xy.uda@taylor-green-vortex.uda@g' inputs/Warches/warches-taylor-green-vortex.ups
+
+
+sed -i '' 's@<max_Timesteps>1000</max_Timesteps>@<max_Timesteps>100</max_Timesteps>@g' inputs/Warches/turbulence-verification/warches-decay-isotropic-turbulence-viscous-32.ups
+mpirun -np 8 sus inputs/Warches/turbulence-verification/warches-decay-isotropic-turbulence-viscous-32.ups > warches_visc.log
+sed -i '' 's@<max_Timesteps>100</max_Timesteps>@<max_Timesteps>1000</max_Timesteps>@g' inputs/Warches/turbulence-verification/warches-decay-isotropic-turbulence-viscous-32.ups
+mpirun -np 8 ../../opt/StandAlone/sus inputs/Warches/arches-decay-isotropic-turbulence-viscous-32.ups > arches_visc.log
+./tools/compute_Lnorm_udas warches-decay-isotropic-turbulence-viscous-32.uda arches-decay-isotropic-turbulence-viscous.uda

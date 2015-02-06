@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+      <!-- Fit to data from Hobbs, M.L., Williams, B.W., Kaneshige, M.J. PETN Ignition Experiments and Models.
+           J. Phys. Chem. A 2010, 114, 5306-5319. 
+      -->
+    <Model type="Steady_Burn">
+      <fromMaterial>         Reactant      </fromMaterial>
+      <toMaterial>           Product      </toMaterial>
+
+      <IdealGasConst>        8.314        </IdealGasConst>
+      <PreExpCondPh>         8.65934e16   </PreExpCondPh>
+      <ActEnergyCondPh>      1.5e8        </ActEnergyCondPh>
+      <PreExpGasPh>          1.6e-3       </PreExpGasPh>       <!-- Couldn't find a value for PBX 9502 so used value for PBX 9501 -->
+      <CondPhaseHeat>        1.77e5       </CondPhaseHeat>
+      <GasPhaseHeat>         6.45e6       </GasPhaseHeat>
+      <HeatConductGasPh>     0.0263       </HeatConductGasPh>  <!-- at 300 K, Linearly to 0.0407 at 500 K -->
+      <HeatConductCondPh>    0.35         </HeatConductCondPh>
+      <SpecificHeatBoth>     1.4e3        </SpecificHeatBoth>  <!-- with +- 10% error -->
+      <MoleWeightGasPh>      0.0308       </MoleWeightGasPh>
+      <BoundaryParticles>    3            </BoundaryParticles>
+      <ThresholdPressure>    50000        </ThresholdPressure>
+      <IgnitionTemp>         348.0        </IgnitionTemp>
+    </Model>
+
+</Uintah_Include>
