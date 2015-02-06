@@ -30,6 +30,8 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/SimulationStateP.h>
 
+#include <Core/Thread/Mutex.h>
+
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
 #include <CCA/Components/MD/MDSystem.h>
 
@@ -43,6 +45,8 @@
 //using namespace Uintah;
 
 namespace Uintah {
+
+  SCIRun::Mutex MD_flowLock("MD flow control lock");
 
   static DebugStream mdSystemDebug("MDSystemDebug", false);
 
@@ -62,6 +66,7 @@ namespace Uintah {
                     :d_forcefield(_ff)
   {
     //std::vector<int> d_atomTypeList;
+    f_atomsRegistered = false;
     ProblemSpecP mdsystem_ps = ps->findBlock("MD")->findBlock("System");
     std::string ensembleLabel;
 
@@ -109,4 +114,43 @@ namespace Uintah {
     // Reference the atomMap here to get number of atoms of Type into system
 
   }
+
+  size_t MDSystem::registerAtomTypes(const atomMap*             incomingMap,
+                                     const SimulationStateP&    simState)
+  {
+//    if (!f_atomsRegistered)
+//    {
+//      MD_flowLock.lock();
+//      f_atomsRegistered = true;
+      d_numAtoms = 0;
+      d_numAtomsOfType.clear();
+      size_t numTypes = incomingMap->getNumberAtomTypes();
+      for (size_t currType = 0; currType < numTypes; ++currType) {
+        std::string atomLabel;
+        atomLabel = simState->getMDMaterial(currType)->getMaterialLabel();
+        size_t numOfType = incomingMap->getAtomListSize(atomLabel);
+        d_numAtoms += numOfType;
+        d_numAtomsOfType.push_back(numOfType);
+      }
+//      MD_flowLock.unlock();
+//    }
+    return d_numAtoms;
+  }
+
+  size_t MDSystem::registerAtomCount(const size_t count,
+                                     const size_t matlIndex)
+  {
+//    MD_flowLock.lock();
+    size_t numMatls = d_numAtomsOfType.size();
+    if (matlIndex < numMatls) {
+      d_numAtomsOfType[matlIndex] = count;
+      d_numAtoms += count;
+    };
+//    MD_flowLock.unlock();
+    return count;
+//        size_t numAtomTypes = getNumAtomTypes();
+
+  }
+
+
 } // namespace Uintah_MD

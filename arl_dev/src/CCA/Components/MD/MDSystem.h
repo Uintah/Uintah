@@ -40,7 +40,10 @@
 
 namespace Uintah {
 
+
   enum ensembleType { NVE, NVT, NPT, ISOKINETIC };
+
+
 
   using namespace Uintah;
   using namespace SCIRun;
@@ -56,6 +59,7 @@ namespace Uintah {
    *  @param
    */
   class MDSystem {
+
 
     public:
      ~MDSystem ();
@@ -129,34 +133,11 @@ namespace Uintah {
         return d_forcefield;
       };
 
-      inline size_t registerAtomTypes(const atomMap*            incomingMap,
-                                      const SimulationStateP&   simState)
-      {
-        d_numAtoms = 0;
-        d_numAtomsOfType.clear();
-        size_t numTypes = incomingMap->getNumberAtomTypes();
-        for (size_t currType = 0; currType < numTypes; ++currType) {
-          std::string atomLabel;
-          atomLabel = simState->getMDMaterial(currType)->getMaterialLabel();
-          size_t numOfType = incomingMap->getAtomListSize(atomLabel);
-          d_numAtoms += numOfType;
-          d_numAtomsOfType.push_back(numOfType);
-        }
-        return d_numAtoms;
-      }
+      size_t registerAtomTypes(const atomMap*            incomingMap,
+                               const SimulationStateP&   simState);
 
-      inline size_t registerAtomCount(const size_t count,
-                                      const size_t matlIndex) {
-
-        size_t numMatls = d_numAtomsOfType.size();
-        if (matlIndex < numMatls) {
-          d_numAtomsOfType[matlIndex] = count;
-          d_numAtoms += count;
-        };
-        return count;
-//        size_t numAtomTypes = getNumAtomTypes();
-
-      }
+      size_t registerAtomCount(const size_t count,
+                               const size_t matlIndex);
 
       inline ensembleType getEnsemble() const {
         return d_ensemble;
@@ -182,6 +163,8 @@ namespace Uintah {
 
       Vector                d_pressure;             //!< Total MD System pressure
       double                d_temperature;          //!< Total MD system temperature
+
+      bool                  f_atomsRegistered;      //!< Flag to ensure atoms only registered once
 
       // Methods
 //      void calcCellVolume();

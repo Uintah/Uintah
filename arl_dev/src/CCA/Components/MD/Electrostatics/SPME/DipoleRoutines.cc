@@ -321,7 +321,7 @@ void SPME::calculateRealspaceTholeDipole(const ProcessorGroup*      pg,
                                                     currPatch
 //                                                    );
                                                     ,
-                                                    Ghost::AroundNodes,
+                                                    Ghost::AroundCells,
                                                     d_electrostaticGhostCells,
                                                     label->global->pX);
         size_t targetNum = targetSet->numParticles();
@@ -502,7 +502,7 @@ void SPME::calculateRealspacePointDipole(const ProcessorGroup*      pg,
         ParticleSubset* neighborSet;
         neighborSet =  parentOldDW->getParticleSubset(neighborType,
                                                       patch,
-                                                      Ghost::AroundNodes,
+                                                      Ghost::AroundCells,
                                                       d_electrostaticGhostCells,
                                                       label->global->pX);
 

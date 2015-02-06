@@ -244,7 +244,7 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
       // for the polarizability iteration
       task->requires(Task::OldDW,
                      label->electrostatic->pMu,
-                     Ghost::AroundNodes,
+                     Ghost::AroundCells,
                      d_electrostaticGhostCells);
 
       // And provides the field
@@ -262,12 +262,12 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
 
     task->requires(Task::ParentOldDW,
                    label->global->pX,
-                   Ghost::AroundNodes,
+                   Ghost::AroundCells,
                    d_electrostaticGhostCells);
 
     task->requires(Task::ParentOldDW,
                    label->global->pID,
-                   Ghost::AroundNodes,
+                   Ghost::AroundCells,
                    d_electrostaticGhostCells);
 
     // Computes the realspace contribution to the electrostatic field,
@@ -406,6 +406,8 @@ void SPME::scheduleTransformRealToFourier(const ProcessorGroup* pg,
                  label->SPME_dep->dReduceNodeLocalQ,
                  Ghost::AroundNodes,
                  SHRT_MAX);
+  // FIXME!  JBH - 2/2015  (Double check to make sure this is the right amount
+  // of info to pull in, and the right way (nodes vs. cells) to do it.
 
   task->computes(label->SPME_dep->dTransformRealToFourier);
 //  task->requires(Task::NewDW, label->electrostatic->dSubschedulerDependency, Ghost::None, 0);
