@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Mylar -->
+<!-- At density: 1.38 g/cm^3 -->
+<!-- From: Tarver, C.M., Breithaupt, R.D., Kury, J.W. 
+           Detonation waves in pentaerythritol tetranitrate. 
+           J. Appl. Phys. 81(11), 1997. pp 7193-7202.-->
+<Uintah_Include>
+  <equation_of_state type="mie_gruneisen">
+    <C_0>    2270.0  </C_0>
+    <Gamma_0>   0.76 </Gamma_0>
+    <S_alpha>   1.56 </S_alpha>
+    <S_2>       0.0  </S_2>
+    <S_3>       0.0  </S_3>
+  </equation_of_state>
+</Uintah_Include>
+

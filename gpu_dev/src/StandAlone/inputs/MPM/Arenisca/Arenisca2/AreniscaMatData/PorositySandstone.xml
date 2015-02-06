@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Sandstone -->
+<!--   p3: roughly equals the initial porosity
+       p4: roughly equals the volumetric strain at
+             the onset of inelastic pore collapse.
+             (est. p4 = -p0/3/B0 when fluid_B0 != 0) -->
+<Uintah_Include>
+  <CR> 6.0 </CR>
+  <p0_crush_curve>  -30e6   </p0_crush_curve>
+  <p1_crush_curve>  5.9e-11 </p1_crush_curve>
+  <p3_crush_curve>  0.189   </p3_crush_curve>
+  <p4_fluid_effect> 0.0     </p4_fluid_effect>
+  <fluid_B0>        0.0     </fluid_B0>
+</Uintah_Include>
