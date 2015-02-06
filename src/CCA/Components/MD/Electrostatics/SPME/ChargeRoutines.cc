@@ -261,7 +261,7 @@ void SPME::calculateRealspace(const ProcessorGroup*     pg,
         ParticleSubset* neighborSet;
         neighborSet = parentOldDW->getParticleSubset(neighborType,
                                                      patch,
-                                                     Ghost::AroundNodes,
+                                                     Ghost::AroundCells,
                                                      d_electrostaticGhostCells,
                                                      label->global->pX);
         size_t numNeighbor      = neighborSet->numParticles();

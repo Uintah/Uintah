@@ -81,6 +81,11 @@ nonbondedLabels::nonbondedLabels() { // create variable labels used in nonbonded
   pF_nonbonded          = VarLabel::create("pF_nb", ParticleVariable<SCIRun::Vector>::getTypeDescription());
   pF_nonbonded_preReloc = VarLabel::create("pF_nb+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
 
+  pNumPairsInCalc           = VarLabel::create("p.nn", ParticleVariable<long64>::getTypeDescription());
+  pNumPairsInCalc_preReloc  = VarLabel::create("p.nn+", ParticleVariable<long64>::getTypeDescription());
+
+
+
 }
 
 nonbondedLabels::~nonbondedLabels() { // destroy variable labels used in nonbonded calculation context
@@ -89,6 +94,8 @@ nonbondedLabels::~nonbondedLabels() { // destroy variable labels used in nonbond
   VarLabel::destroy(dNonbondedDependency);
   VarLabel::destroy(pF_nonbonded);
   VarLabel::destroy(pF_nonbonded_preReloc);
+  VarLabel::destroy(pNumPairsInCalc);
+  VarLabel::destroy(pNumPairsInCalc_preReloc);
 }
 
 electrostaticLabels::electrostaticLabels() { // create variable labels used in electrostatic calculation contexts

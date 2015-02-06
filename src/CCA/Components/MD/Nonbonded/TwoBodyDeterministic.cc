@@ -24,6 +24,9 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 
+#include <fstream>
+#include <iomanip>
+
 
 using namespace Uintah;
 
@@ -48,6 +51,7 @@ void TwoBodyDeterministic::addInitializeComputes(Task* task,
 {
   // Need to provide the particle variables we register
   task->computes(label->nonbonded->pF_nonbonded);
+  task->computes(label->nonbonded->pNumPairsInCalc);
 
   // And reductions to initialize
   task->computes(label->nonbonded->rNonbondedEnergy);
@@ -81,10 +85,16 @@ void TwoBodyDeterministic::initialize(const ProcessorGroup*     pg,
       newDW->allocateAndPut(pF_nb,
                             label->nonbonded->pF_nonbonded,
                             atomSubset);
+      ParticleVariable<long64> pNumPairsCalc;
+      newDW->allocateAndPut(pNumPairsCalc,
+                            label->nonbonded->pNumPairsInCalc,
+                            atomSubset);
+
       particleIndex numAtoms = atomSubset->numParticles();
       for (particleIndex atom = 0; atom < numAtoms; ++atom)
       {
         pF_nb[atom] = 0.0;
+        pNumPairsCalc[atom]=0;
       }
     }
     newDW->put(matrix_sum(MDConstants::M3_0),
@@ -129,12 +139,12 @@ void TwoBodyDeterministic::addCalculateRequirements(Task* task,
   proc0cout << "Registering for " << CUTOFF_CELLS << " ghost cells required." << std::endl;
   task->requires(Task::OldDW,
                  label->global->pX,
-                 Ghost::AroundNodes,
+                 Ghost::AroundCells,
                  CUTOFF_CELLS);
 
   task->requires(Task::OldDW,
                  label->global->pID,
-                 Ghost::AroundNodes,
+                 Ghost::AroundCells,
                  CUTOFF_CELLS);
 
 }
@@ -143,6 +153,7 @@ void TwoBodyDeterministic::addCalculateComputes(Task* task,
                                                 MDLabel* label) const {
   // Provide per particle force
   task->computes(label->nonbonded->pF_nonbonded_preReloc);
+  task->computes(label->nonbonded->pNumPairsInCalc_preReloc);
 
   // Provide per patch contribution to energy and stress tensor
   task->computes(label->nonbonded->rNonbondedEnergy);
@@ -181,6 +192,11 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
   size_t numPatches     = patches->size();
   size_t numAtomTypes   = processorAtomTypes->size();
 
+//  int timestep = simState->getCurrentTopLevelTimeStep();
+//  std::fstream debugOut;
+//  std::string debugName = "source445.txt";
+//  debugOut.open(debugName.c_str(),std::fstream::out | std::fstream::app);
+
   SCIRun::Vector atomOffsetVector(0.0);
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
   { // Loop over all patches
@@ -206,6 +222,10 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
       newDW->allocateAndPut(pForce,
                             label->nonbonded->pF_nonbonded_preReloc,
                             sourceAtomSet);
+      ParticleVariable<long64> numPairsInteracting;
+      newDW->allocateAndPut(numPairsInteracting,
+                            label->nonbonded->pNumPairsInCalc_preReloc,
+                            sourceAtomSet);
 
 //      for (size_t sourceAtom = 0; sourceAtom < numSourceAtoms; ++sourceAtom)
 //      { // Initialize force array
@@ -214,6 +234,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
       for (size_t sourceAtom = 0; sourceAtom < numSourceAtoms; ++sourceAtom)
       {
         pForce[sourceAtom] = 0.0;
+        numPairsInteracting[sourceAtom] = 0;
       }
 
       // (Internal + ghost) patch material loop
@@ -224,7 +245,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
         ParticleSubset* targetAtomSet;
         targetAtomSet = oldDW->getParticleSubset(targetAtomType,
                                                  currPatch
-                                                 ,Ghost::AroundNodes,
+                                                 ,Ghost::AroundCells,
                                                  d_nonbondedGhostCells,
                                                  label->global->pX);
         size_t numTargetAtoms = targetAtomSet->numParticles();
@@ -245,15 +266,47 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
 
         for (size_t sourceAtom = 0; sourceAtom < numSourceAtoms; ++sourceAtom)
         { // Loop over atoms in local patch
-
           for (size_t targetAtom = 0; targetAtom < numTargetAtoms; ++targetAtom)
           { // Loop over local plus nearby atoms
             if (sourceID[sourceAtom] != targetID[targetAtom])
             { // Ensure we're not working with the same particle
               atomOffsetVector = targetX[targetAtom] - sourceX[sourceAtom];
 
+//              if (sourceID[sourceAtom] == 445 && targetID[targetAtom] == 7947)
+////              if ( targetID[targetAtom] == 7947)
+////                if (sourceID[sourceAtom] == 445)
+//              {
+//                std::cerr << "Patch:  " << patchIndex
+//                          << " dCell: " << currPatch->dCell() << " || "
+//                          << " Source: " << sourceID[sourceAtom] << " - "
+//                          << sourceX[sourceAtom]
+//                          << " Range: "  << currPatch->getCellLowIndex() << " - "
+//                          << currPatch->getCellHighIndex()
+//                          << " O "
+//                          << " Target: " << targetID[targetAtom] << " - "
+//                          << targetX[targetAtom] << " : "
+//                          << " Range: " << currPatch->getExtraCellLowIndex() << " - "
+//                          << currPatch->getExtraCellHighIndex()
+//                          << " Distance: "
+//                          << atomOffsetVector.length2() << " < " << cutoff2
+//                          << std::endl;
+//              }
+
               if (atomOffsetVector.length2() <= cutoff2)
               { // Interaction is within range
+                numPairsInteracting[sourceAtom]++;
+//                if ((sourceID[sourceAtom] == 445) && (timestep <= 1))
+//                {
+//                  debugOut << " t: " << std::setw(2) << std::left
+//                           << timestep
+//                           << " S: " << std::setw(6) << std::right
+//                           << sourceID[sourceAtom]
+//                           << " T: " << std::setw(6) << std::right
+//                           << targetID[targetAtom]
+//                           << " TLoc: " << targetX[targetAtom]
+//                           << " Dist: " << atomOffsetVector.length()
+//                           << std::endl;
+//                }
                 SCIRun::Vector  tempForce;
                 double          tempEnergy;
                 currPotential->fillEnergyAndForce(tempForce,
@@ -271,6 +324,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
       }  // Loop over target materials
     }  // Loop over source materials
   }  // Loop over patches
+//  debugOut.close();
   newDW->put(sum_vartype(0.5 * nbEnergy_patchLocal),
              label->nonbonded->rNonbondedEnergy);
   newDW->put(matrix_sum(0.5 * stressTensor_patchLocal),
@@ -303,6 +357,8 @@ void TwoBodyDeterministic::registerRequiredParticleStates(LabelArray& particleSt
   //  We probably don't need these for relocation, but it may be easier to set
   //  them up that way than to do it any other way
   particleState.push_back(d_label->nonbonded->pF_nonbonded);
+  particleState.push_back(d_label->nonbonded->pNumPairsInCalc);
   particleState_preReloc.push_back(d_label->nonbonded->pF_nonbonded_preReloc);
+  particleState_preReloc.push_back(d_label->nonbonded->pNumPairsInCalc_preReloc);
 
 }

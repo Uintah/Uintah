@@ -93,6 +93,8 @@ namespace Uintah {
       //  TODO Determine about getting rid of these variables later
       const VarLabel* pF_nonbonded;             // May not actually need long term
       const VarLabel* pF_nonbonded_preReloc;    // May not actually need long term
+      const VarLabel* pNumPairsInCalc;
+      const VarLabel* pNumPairsInCalc_preReloc;
   };
 
   class electrostaticLabels {

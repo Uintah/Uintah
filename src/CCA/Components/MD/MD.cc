@@ -80,13 +80,15 @@ using namespace Uintah;
 //static DebugStream electrostaticDebug("MDElectrostaticDebug", false);
 //static DebugStream mdFlowDebug("MDLogicFlowDebug", false);
 //
-//#define isPrincipleThread (   Uintah::Parallel::getMPIRank() == 0              \
-//                           &&(                                                 \
-//                                (  Uintah::Parallel::getNumThreads() > 1       \
-//                                 && SCIRun::Thread::self()->myid() == 0 )      \
-//                              ||(  Uintah::Parallel::getNumThreads() <= 1 )    \
-//                             )                                                 \
-//                          )
+#define isPrincipleThread (   Uintah::Parallel::getMPIRank() == 0              \
+                           &&(                                                 \
+                                (  Uintah::Parallel::getNumThreads() > 1       \
+                                 && SCIRun::Thread::self()->myid() == 1 )      \
+                              ||(  Uintah::Parallel::getNumThreads() <= 1 )    \
+                             )                                                 \
+                          )
+
+#define isPrincipleProc (Uintah::Parallel::getMPIRank() == 0)
 
 MD::MD(const ProcessorGroup* myworld) :
     UintahParallelComponent(myworld)
@@ -320,8 +322,8 @@ void MD::problemSetup(const ProblemSpecP&   params,
   }
 }
 
-void MD::scheduleInitialize(const LevelP&   level,
-                            SchedulerP&     sched)
+void MD::scheduleInitialize(const LevelP&       level,
+                                  SchedulerP&   sched)
 {
   const std::string flowLocation = "MD::scheduleInitialize | ";
   printSchedule(level, md_cout, flowLocation);
@@ -403,42 +405,40 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
 
 }
 
-void MD::scheduleTimeAdvance(const LevelP& level,
-                             SchedulerP& sched)
+void MD::scheduleTimeAdvance(const LevelP&      level,
+                                   SchedulerP&  sched)
 {
   const std::string flowLocation = "MD::scheduleTimeAdvance | ";
   printSchedule(level, md_cout, flowLocation);
 
-  const PatchSet* patches = level->eachPatch();
-  const MaterialSet* matls = d_sharedState->allMaterials();
+  // Get list of MD materials for scheduling
+  const MaterialSet*    atomTypes       =   d_sharedState->allMDMaterials();
+        LoadBalancer*   loadBal         =   sched->getLoadBalancer();
+  const PatchSet*       perProcPatches  =
+                            loadBal->getPerProcessorPatchSet(level);
+  const PatchSet*       patches         =   level->eachPatch();
 
-  scheduleOutputStatistics(sched, patches, matls, level);
+  scheduleOutputStatistics(sched, perProcPatches, atomTypes, level);
 
-  scheduleNonbondedSetup(sched, patches, matls, level);
+  scheduleNonbondedSetup(sched, patches, atomTypes, level);
 
-  scheduleElectrostaticsSetup(sched, patches, matls, level);
+  scheduleElectrostaticsSetup(sched, patches, atomTypes, level);
 
-  scheduleIntegratorSetup(sched, patches, matls, level);
+  scheduleIntegratorSetup(sched, patches, atomTypes, level);
 
-  scheduleNonbondedCalculate(sched, patches, matls, level);
+  scheduleNonbondedCalculate(sched, patches, atomTypes, level);
 
-  scheduleElectrostaticsCalculate(sched, patches, matls, level);
+  scheduleElectrostaticsCalculate(sched, patches, atomTypes, level);
 
-  scheduleIntegratorCalculate(sched, patches, matls, level);
+  scheduleIntegratorCalculate(sched, patches, atomTypes, level);
 
   // Should probably move the Finalizes into the appropriate clean-up step on MD.  (Destructor?)
   //   and appropriately modify the finalize routines.  !FIXME
-  scheduleNonbondedFinalize(sched, patches, matls, level);
+  scheduleNonbondedFinalize(sched, patches, atomTypes, level);
 
-  scheduleElectrostaticsFinalize(sched, patches, matls, level);
+  scheduleElectrostaticsFinalize(sched, patches, atomTypes, level);
 
-  scheduleIntegratorFinalize(sched, patches, matls, level);
-
-//  scheduleKineticCalculations(sched, patches, matls, level);
-
-//  scheduleUpdatePosition(sched, patches, matls, level);
-
-//  scheduleNewUpdatePosition(sched, patches, matls, level);
+  scheduleIntegratorFinalize(sched, patches, atomTypes, level);
 
   sched->scheduleParticleRelocation(level,
                                     d_label->global->pX_preReloc,
@@ -446,7 +446,7 @@ void MD::scheduleTimeAdvance(const LevelP& level,
                                     d_label->global->pX,
                                     d_sharedState->d_particleState,
                                     d_label->global->pID,
-                                    matls);
+                                    atomTypes);
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -960,6 +960,14 @@ void MD::scheduleOutputStatistics(      SchedulerP&     sched,
   task->requires(Task::OldDW,
                  d_label->global->rKineticEnergy);
 
+  // Pair interaction debugging
+  task->requires(Task::OldDW,
+                 d_label->nonbonded->pNumPairsInCalc, Ghost::None, 0);
+  task->requires(Task::OldDW,
+                 d_label->global->pID, Ghost::None, 0);
+  task->requires(Task::OldDW,
+                 d_label->nonbonded->pF_nonbonded, Ghost::None, 0);
+
   // We only -need- stress tensors if we're doing NPT
   if ( NPT == d_system->getEnsemble()) {
     task->requires(Task::OldDW,
@@ -975,19 +983,18 @@ void MD::scheduleOutputStatistics(      SchedulerP&     sched,
     }
   }
 
+
   //task->setType(Task::Output); // TODO FIXME How do I use this?
   task->setType(Task::OncePerProc);
   sched->addTask(task, patches, atomTypes);
 }
 
 void MD::outputStatistics(const ProcessorGroup* pg,
-                          const PatchSubset*    patches,
+                          const PatchSubset*    perProcPatches,
                           const MaterialSubset* atomTypes,
                                 DataWarehouse*  oldDW,
                                 DataWarehouse*/*newDW*/)
 {
-
-
   sum_vartype nonbondedEnergy;
   sum_vartype kineticEnergy;
   sum_vartype electrostaticInverseEnergy;
@@ -997,52 +1004,16 @@ void MD::outputStatistics(const ProcessorGroup* pg,
   matrix_sum spmeRealStress;
   matrix_sum spmeFourierStressDipole;
 
-  // This is where we would actually map the correct timestep/taskgraph
-  // for a multistep integrator
-
   oldDW->get(nonbondedEnergy, d_label->nonbonded->rNonbondedEnergy);
   oldDW->get(electrostaticInverseEnergy,
               d_label->electrostatic->rElectrostaticInverseEnergy);
   oldDW->get(electrostaticRealEnergy,
               d_label->electrostatic->rElectrostaticRealEnergy);
   oldDW->get(kineticEnergy, d_label->global->rKineticEnergy);
+  int timestep = d_sharedState->getCurrentTopLevelTimeStep()-1;
 
   double totalEnergy = nonbondedEnergy + kineticEnergy
                       + electrostaticInverseEnergy + electrostaticRealEnergy;
-//  proc0cout << std::endl;
-//  proc0cout << "-----------------------------------------------------"
-//            << std::endl
-//            << " Electrostatic Energy: "
-//            << std::setprecision(16)
-//            << std::setw(22) << std::fixed << std::right
-//            << electrostaticInverseEnergy + electrostaticRealEnergy << std::endl
-//            << "\tInverse: " << std::setprecision(16)
-//            << std::setw(22) << std::fixed << std::right
-//            << electrostaticInverseEnergy << std::endl
-//            << "\tReal:    " << std::setprecision(16)
-//            << std::setw(22) << std::fixed << std::right
-//            << electrostaticRealEnergy << std::endl;
-//
-//  proc0cout << "-----------------------------------------------------"
-//            << std::endl
-//            << "Nonbonded Energy:      "
-//            << std::setprecision(16)
-//            << std::setw(22) << std::fixed << std::right
-//            << nonbondedEnergy << std::endl;
-//
-//  proc0cout << "-----------------------------------------------------"
-//            << std::endl
-//            << "Kinetic Energy:        "
-//            << std::setprecision(16)
-//            << std::setw(22) << std::fixed << std::right
-//            << kineticEnergy << std::endl;
-//
-//  proc0cout << "-----------------------------------------------------"
-//            << std::endl
-//            << "Total Energy:          "
-//            << std::setprecision(16)
-//            << std::setw(22) << std::fixed << std::right
-//            << totalEnergy;
 
   double potentialEnergy = nonbondedEnergy + electrostaticInverseEnergy + electrostaticRealEnergy;
   if (d_secondIntegration) {
@@ -1052,19 +1023,76 @@ void MD::outputStatistics(const ProcessorGroup* pg,
     d_referenceEnergy += d_PotentialBase;
   }
 
+//  if (timestep >= 0)
+//  {
+//    std::vector<long64> pairCount(d_system->getNumAtoms(), 0);
+//    constParticleVariable<long64> pairOutCount;
+//    size_t numPatches = patches->size();
+//    size_t numAtomTypes = atomTypes->size();
+//
+//    std::string  pairOutName = "pairCount.txt";
+//    std::ofstream pairOutFile;
+//    pairOutFile.open(pairOutName.c_str(),std::fstream::out | std::fstream::app);
+
+//    for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
+//    {
+//      const Patch* currPatch = patches->get(patchIndex);
+//      for (size_t atomIndex = 0; atomIndex < numAtomTypes; ++atomIndex)
+//      {
+//        int             atomType = atomTypes->get(atomIndex);
+//        ParticleSubset* atomSet  = oldDW->getParticleSubset(atomType,currPatch);
+//
+//        constParticleVariable<long64> pairInteractionCount, atomID;
+//        constParticleVariable<SCIRun::Vector> pairForce;
+//        oldDW->get(pairInteractionCount, d_label->nonbonded->pNumPairsInCalc, atomSet);
+//        oldDW->get(atomID, d_label->global->pID, atomSet);
+//        oldDW->get(pairForce, d_label->nonbonded->pF_nonbonded, atomSet);
+//
+//        size_t numAtoms = atomSet->numParticles();
+//        for (size_t atom = 0; atom < numAtoms; ++atom)
+//        {
+//          pairOutFile << "Timestep: " << std::setw(5) << std::right
+//                      << timestep + 1
+//                      << "\tSource Atom: " << std::setw(8) << std::right
+//                      << atomID[atom]
+//                      << "\tTargets Seen: " << std::setw(10) << std::right
+//                      << pairInteractionCount[atom]
+//                    //  << "\tForce: " << pairForce[atom]
+//                      << std::endl;
+//        }
+//      }
+//    } // All pair mappings by here
+//    pairOutFile.close();
+//  } // If main processor
+//
+//  std::cout << "Seeing: " << d_system->getNumAtoms() << " atoms." << std::endl;
+
+  if (isPrincipleProc)
+  {
+    std::cout << "  Potential:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy
+              << "  Kinetic:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << kineticEnergy
+              << "  Total:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy + kineticEnergy;
+
+    std::cout << "  electrostaticInverse: " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << electrostaticInverseEnergy
+              << "  electrostaticReal: " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << electrostaticRealEnergy;
 
 
-  proc0cout << "  Potential:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy
-            << "  Kinetic:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << kineticEnergy
-            << "  Total:  " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << potentialEnergy + kineticEnergy;
+    if (d_referenceStored)
+    {
+      std::cout << "\t" << " Relative to reference: "
+                << std::setprecision(3) << std::setw(6) << std::right << std::fixed
+                << (totalEnergy/d_referenceEnergy)*100.0 << "%";
+    }
+    std::string energyFileName = "EnergyOutput.txt";
+    std::ofstream energyFile;
+    energyFile.open(energyFileName.c_str(),std::fstream::out | std::fstream::app);
+    energyFile << std::setw(10) << std::left << timestep
+               << std::setprecision(2) << std::setw(13) << std::fixed << std::right << kineticEnergy
+               << std::setprecision(2) << std::setw(13) << std::fixed << std::right << potentialEnergy
+               << std::setprecision(2) << std::setw(13) << std::fixed << std::right << totalEnergy
+               << std::endl;
+    energyFile.close();
 
-  proc0cout << "  electrostaticInverse: " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << electrostaticInverseEnergy
-            << "  electrostaticReal: " << std::setprecision(4) << std::setw(12) << std::right << std::fixed << electrostaticRealEnergy;
-
-  if (d_referenceStored) {
-    proc0cout << "\t" << " Relative to reference: "
-              << std::setprecision(3) << std::setw(6) << std::right << std::fixed
-              << (totalEnergy/d_referenceEnergy)*100.0 << "%";
   }
 
   if (!d_referenceStored && kineticEnergy != 0.0 && nonbondedEnergy != 0.0)
@@ -1073,52 +1101,29 @@ void MD::outputStatistics(const ProcessorGroup* pg,
     d_referenceStored = true;
   }
 
-//  // FIXME TODO This is a bit of a hack for a quick up and running issue
-//  double Temp = 2.0 * kineticEnergy / (3.0*(6192.0-(2.0*288.0)-1.0) * 1.98709e-3);
-//  if (Temp != 0.0) {
-//    d_isoKineticMult =  sqrt(11.89/Temp); // Set temp to 298.15
-//    if (d_isoKineticMult > 2.0) {
-//      d_isoKineticMult = 2.0;
-//    }
-//  }
-  int timestep = d_sharedState->getCurrentTopLevelTimeStep()-1;
-  if (isPrincipleThread) {
-  std::string energyFileName = "EnergyOutput.txt";
-  std::ofstream energyFile;
-  energyFile.open(energyFileName.c_str(),std::fstream::out | std::fstream::app);
-  energyFile << std::setw(10) << std::left << timestep
-             << std::setprecision(2) << std::setw(13) << std::fixed << std::right << kineticEnergy
-             << std::setprecision(2) << std::setw(13) << std::fixed << std::right << potentialEnergy
-             << std::setprecision(2) << std::setw(13) << std::fixed << std::right << totalEnergy
-             << std::endl;
-  energyFile.close();
-  }
-
-//  if (timestep%25 == 0) {
-//    proc0cout << "  Step: " << std::setw(10) << std::left << timestep
-//              << "\t" << "KE: " << kineticEnergy << " PE:" << potentialEnergy
-//              << " Total: " << totalEnergy << std::endl;
-//  }
-//  proc0cout << "Temperature: " << Temp << " Mult: " << d_isoKineticMult <<std::endl;
-    if (NPT == d_system->getEnsemble()) {
+  if (NPT == d_system->getEnsemble())
+  {
     oldDW->get(spmeFourierStress,
-                d_label->electrostatic->rElectrostaticInverseStress);
+               d_label->electrostatic->rElectrostaticInverseStress);
     oldDW->get(spmeRealStress,
-                d_label->electrostatic->rElectrostaticRealStress);
-    proc0cout << "Fourier Stress = "
-              << std::setprecision(16)
-              << spmeFourierStress
-              << std::endl;
-    proc0cout << "-----------------------------------------------------"           << std::endl;
-
-    if (d_electrostatics->isPolarizable()) {
+               d_label->electrostatic->rElectrostaticRealStress);
+    if (d_electrostatics->isPolarizable())
+    {
       oldDW->get(spmeFourierStressDipole,
-                  d_label->electrostatic->rElectrostaticInverseStressDipole);
+                 d_label->electrostatic->rElectrostaticInverseStressDipole);
+    }
+    if (isPrincipleProc)
+    {
+
+      std::cout << "Fourier Stress = " << std::setprecision(16)
+                << spmeFourierStress << std::endl;
+      std::cout << "-----------------------------------------------------"
+                << std::endl;
     }
   }
-
-  proc0cout << std::endl;
-
+  if (isPrincipleProc) {
+      std::cout << std::endl;
+  }
 }
 
 void MD::initialize(const ProcessorGroup*   pg,
@@ -1173,7 +1178,7 @@ void MD::initialize(const ProcessorGroup*   pg,
                                 parsedCoordinates->getAtomList(materialLabel);
 
     size_t numAtoms                         =   currAtomList->size();
-    d_system->registerAtomCount(numAtoms,matlIndex);
+//    d_system->registerAtomCount(numAtoms,matlIndex);
   }
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -1193,8 +1198,11 @@ void MD::initialize(const ProcessorGroup*   pg,
     SCIRun::IntVector   lowCellBoundary     =   currPatch->getCellLowIndex();
     SCIRun::IntVector   highCellBoundary    =   currPatch->getCellHighIndex();
 
+//    std::cerr << "Cell dimensions before coordinate system involved: " << currPatch->dCell() << std::endl;
 //    std::cerr << "Current Cell Dimensions: " << cellDimensions << std::endl;
     (const_cast<Patch*> (currPatch))->getLevel(true)->setdCell(cellDimensions);
+
+//    std::cerr << "Cell dimensions after coordinate system involved: " << currPatch->dCell() << std::endl;
 
     double          atomTypeVelocitySquared     = 0.0;
     SCIRun::Vector  atomTypeCumulativeVelocity  = MDConstants::V_ZERO;
@@ -1220,14 +1228,6 @@ void MD::initialize(const ProcessorGroup*   pg,
         Point       currPosition    = currAtom->getPosition();
 
         // TODO:  This is a good location to inject initial transformations of the as-read data
-//        // TODO FIXME Remove these comments once verified unbroken without VVVVV
-//        double boxX = 56.0114734706852;
-//        double numSteps = 20000;
-//        SCIRun::Vector xDimension = d_coordinate->getUnitCell().getColumn(0);
-//        xDimension -= boxX * MDConstants::V_X; // Get back to unmodified box
-//        currPosition += (xDimension/2.0); // Add 10% of X dimension as constant shift
-//        //d_xShift = 0.2*boxX/numSteps;
-//        d_xShift = MDConstants::V_X*5e-4;
 
         if (currPatch->containsPoint(currPosition))
         { // Atom is on this patch
