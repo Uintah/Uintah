@@ -360,9 +360,6 @@ protected:
     std::string _task_name; 
     const int _matl_index; 
     std::vector<const VarLabel*> _local_labels;
-    bool _do_init_task;                  ///< Should this task schedule the t=0 initialization. Default = true. 
-    bool _do_bcs_task;                   ///< Should this task compute BCs. Default = true
-    bool _do_ts_init_task;               ///< Should this task schedule the timestep startup initialization. Default = true
 
     /** @brief Get the Uintah typeDescription for a TaskType **/ 
     inline const TypeDescription* get_TD(VAR_TYPE type){ 

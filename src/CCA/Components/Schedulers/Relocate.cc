@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1655,6 +1655,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           for(int v=0;v<numVars;v++){
             const VarLabel* label = reloc_old_labels[m][v];
             ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
+            //cout << label->getName() << endl;
             
             for(int i=0;i<numOldVariables;i++){
               invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);

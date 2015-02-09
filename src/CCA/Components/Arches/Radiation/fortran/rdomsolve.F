@@ -1,7 +1,7 @@
 C
 C The MIT License
 C
-C Copyright (c) 1997-2014 The University of Utah
+C Copyright (c) 1997-2015 The University of Utah
 C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
 C of this software and associated documentation files (the "Software"), to
@@ -36,7 +36,7 @@ C
       DATA SIG/5.67D-08/
 
       pi = dacos(-1.0D0)
-      PI1 = intrusion_abskg / PI
+      PI1 = 1.0d0 / PI
 
 c     wall is a perfectly diffuse reflector
       diffuse_reflection = 1.0d0  / pi
@@ -45,7 +45,6 @@ c     wall is a perfectly diffuse reflector
       do 20 j=idxlo(2),idxhi(2)
       do 10 i=idxlo(1),idxhi(1)
 
-      esrcg(i,j,k) = SIG/pi*abskg(i,j,k)*tg(i,j,k)**4
 
       if (omu(l).gt.0) then
          
@@ -101,7 +100,7 @@ c  if non-flow cell, then set LHS to 1*I and RHS to sigma*T^4/pi
 
 c  if flow cell, populate corresponding elements in arrays 
       volume = sew(ii) * sns(jj) * stb(kk)
-      su(ii,jj,kk) = (esrcg(ii,jj,kk) + scat_source(ii,jj,kk)) *volume
+      su(ii,jj,kk)=esrct(ii,jj,kk) *volume
 
       areaew = sns(jj) * stb(kk)
       arean  = sew(ii) * stb(kk)                 
@@ -115,8 +114,8 @@ c  if flow cell, populate corresponding elements in arrays
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l))*areaew) *
      &         (PI1 * (SIG * abs(fraction(bands))*
 c     Empirical model for emissivity at boundaries
-     &           abskg(ii-1,jj,kk) *
-     &              tg(ii-1,jj,kk)**4) + (1.0d0-abskg(ii-1,jj,kk))
+     &           abskt(ii-1,jj,kk) *
+     &              tg(ii-1,jj,kk)**4) + (1.0d0-abskt(ii-1,jj,kk))
      &    *IncidentFluxE(ii,jj,kk)*diffuse_reflection)
             end if
          else
@@ -127,8 +126,8 @@ c     Empirical model for emissivity at boundaries
                su(ii,jj,kk) = su(ii,jj,kk) + (abs(omu(l)) * areaew) * 
      &         (PI1 * (SIG * abs(fraction(bands))*
 c     Empirical model for emissivity at boundaries
-     &           abskg(ii+1,jj,kk) *
-     &              tg(ii+1,jj,kk)**4) + (1.0d0-abskg(ii+1,jj,kk))
+     &           abskt(ii+1,jj,kk) *
+     &              tg(ii+1,jj,kk)**4) + (1.0d0-abskt(ii+1,jj,kk))
      &    *IncidentFluxW(ii,jj,kk)*diffuse_reflection)
             end if
          endif
@@ -142,8 +141,8 @@ c     Empirical model for emissivity at boundaries
      &              (abs(oeta(l))*arean) *
      &         (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &           abskg(ii,jj-1,kk) *
-     &              tg(ii,jj-1,kk)**4) + (1.0d0-abskg(ii,jj-1,kk))
+     &           abskt(ii,jj-1,kk) *
+     &              tg(ii,jj-1,kk)**4) + (1.0d0-abskt(ii,jj-1,kk))
      &    *IncidentFluxS(ii,jj,kk)*diffuse_reflection)
             end if
          else
@@ -155,8 +154,8 @@ c     Empirical model for emissivity at boundaries
      &              (abs(oeta(l))*arean) *
      &        (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &           abskg(ii,jj+1,kk) *
-     &              tg(ii,jj+1,kk)**4) + (1.0d0-abskg(ii,jj+1,kk))
+     &           abskt(ii,jj+1,kk) *
+     &              tg(ii,jj+1,kk)**4) + (1.0d0-abskt(ii,jj+1,kk))
      &    *IncidentFluxN(ii,jj,kk)*diffuse_reflection)
             end if
          endif
@@ -170,8 +169,8 @@ c     Empirical model for emissivity at boundaries
      &              (abs(oxi(l))*areatb) *
      &         (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &           abskg(ii,jj,kk-1) *
-     &              tg(ii,jj,kk-1)**4) + (1.0d0-abskg(ii,jj,kk-1))
+     &           abskt(ii,jj,kk-1) *
+     &              tg(ii,jj,kk-1)**4) + (1.0d0-abskt(ii,jj,kk-1))
      &    *IncidentFluxB(ii,jj,kk)*diffuse_reflection)
             end if
          else
@@ -183,13 +182,13 @@ c     Empirical model for emissivity at boundaries
      &              (abs(oxi(l))*areatb) * 
      &         (PI1 * (SIG * abs(fraction(bands)) *
 c     Empirical model for emissivity at boundaries
-     &           abskg(ii,jj,kk+1) *
-     &              tg(ii,jj,kk+1)**4) + (1.0d0-abskg(ii,jj,kk+1))
+     &           abskt(ii,jj,kk+1) *
+     &              tg(ii,jj,kk+1)**4) + (1.0d0-abskt(ii,jj,kk+1))
      &    *IncidentFluxT(ii,jj,kk)*diffuse_reflection)
             end if
          endif
          ap(ii,jj,kk) =  abs(omu(l))*areaew + abs(oeta(l))*arean + 
-     &        abs(oxi(l))*areatb + abskg(ii,jj,kk) * volume
+     &        abs(oxi(l))*areatb + abskt(ii,jj,kk) * volume
          
       endif
 10    continue

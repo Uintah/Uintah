@@ -253,8 +253,8 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
   d_weight_label = weight_eqn.getTransportEqnLabel();
-  d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_factor = weight_eqn.getScalingConstant();
+  d_w_small = weight_eqn.getSmallClipCriteria();
+  d_w_scaling_factor = weight_eqn.getScalingConstant(d_quad_node);
   tsk->requires(Task::OldDW, d_weight_label, gn, 0);
 
   // require gas temperature
@@ -281,7 +281,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_particle_temperature_label = current_eqn.getTransportEqnLabel();
-          d_pt_scaling_factor = current_eqn.getScalingConstant();
+          d_pt_scaling_factor = current_eqn.getScalingConstant(d_quad_node);
           tsk->requires(Task::OldDW, d_particle_temperature_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <variable> tag for BadHawkDevol model";
@@ -296,7 +296,7 @@ BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int ti
           EqnBase& t_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(*iter);
           DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(t_current_eqn);
           d_raw_coal_mass_label = current_eqn.getTransportEqnLabel();
-          d_rc_scaling_factor = current_eqn.getScalingConstant();
+          d_rc_scaling_factor = current_eqn.getScalingConstant(d_quad_node);
           tsk->requires(Task::OldDW, d_raw_coal_mass_label, Ghost::None, 0);
         } else {
           std::string errmsg = "ARCHES: BadHawkDevol: Invalid variable given in <variable> tag for BadHawkDevol model";

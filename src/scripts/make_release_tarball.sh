@@ -2,7 +2,7 @@
 
 #VERSION
 
-VERSION="1.1.0-alpha"
+VERSION="1.6.0"
 
 while getopts v: opt
 
@@ -18,16 +18,15 @@ shift `expr $OPTIND - 1`
 
 cd ../..
 
-mkdir uintah-$VERSION
+mkdir Uintah-$VERSION
 
-cp -a doc src uintah-$VERSION
+cp -a doc src Uintah-$VERSION
 
-cd uintah-$VERSION/src
+cd Uintah-$VERSION/src
 
 for i in `find . -name "*.release"`; do 
     j=`echo $i | sed 's/.release//'`;  
     cp $i $j 
- 
 done
 
 cd ../doc
@@ -42,10 +41,11 @@ rm -rf DeveloperGuide figures InstallationGuide UserGuide movies Other README ru
 
 cd ../..
 
-tar -X src/exclude.txt --exclude-vcs -cvf uintah-$VERSION.tar uintah-$VERSION
+tar -X src/exclude.txt --exclude-vcs -cvf Uintah-$VERSION.tar Uintah-$VERSION
 
-gzip uintah-$VERSION.tar
+gzip Uintah-$VERSION.tar
 
+rm -rf Uintah-$VERSION
 
 
 exit 0

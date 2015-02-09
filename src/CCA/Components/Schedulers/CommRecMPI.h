@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,92 +42,80 @@ class ProcessorGroup;
 class CommRecMPI {
 
   public:
-    CommRecMPI()
-        : groupIDDefault_(0), totalBytes_(0)
-    {
-    }
+    CommRecMPI() : groupIDDefault_(0), totalBytes_(0) {}
 
-    // returns true while there are more tests to wait for.
-    //bool waitsome(MPI_Comm comm, int me); // return false when all done
-    //bool testsome(MPI_Comm comm, int me); // return false when all done
+    // Returns true while there are more tests to wait for.
+    // bool waitsome(MPI_Comm comm, int me); // return false when all done
+    // bool testsome(MPI_Comm comm, int me); // return false when all done
 
-    bool waitsome(const ProcessorGroup* pg,
-                  std::list<int>* finishedGroups = 0);
+    bool waitsome( const ProcessorGroup * pg,
+                         std::list<int> * finishedGroups = 0 );
 
     // overload waitsome to take another CommRecMPI and do a waitsome on the
     // union of the two sets
-    bool waitsome(const ProcessorGroup* pg,
-                  CommRecMPI &cr,
-                  std::list<int>* finishedGroups = 0);
+    bool waitsome( const ProcessorGroup * pg,
+                         CommRecMPI     & cr,
+                         std::list<int> * finishedGroups = 0 );
 
-    bool testsome(const ProcessorGroup* pg,
-                  std::list<int>* finishedGroups = 0);
+    bool testsome( const ProcessorGroup * pg,
+                         std::list<int> * finishedGroups = 0 );
 
-    void waitall(const ProcessorGroup* pg);
+    void waitall( const ProcessorGroup * pg );
 
-    void add(MPI_Request id,
-             int bytes,
-             AfterCommunicationHandler* handler,
-             std::string var,
-             int message)
+    void add(       MPI_Request                 id,
+                    int                         bytes,
+                    AfterCommunicationHandler * handler,
+              const std::string               & var,
+                    int                         message )
     {
-      add(id, bytes, handler, var, message, groupIDDefault_);
+      add( id, bytes, handler, var, message, groupIDDefault_ );
     }
 
-    void add(MPI_Request id,
-             int bytes,
-             AfterCommunicationHandler* handler,
-             std::string var,
-             int message,
-             int groupID);
+    void add( MPI_Request                 id,
+              int                         bytes,
+              AfterCommunicationHandler * handler,
+              const std::string         & var,
+              int                         message,
+              int                         groupID );
 
-    void setDefaultGroupID(int groupID)
-    {
-      groupIDDefault_ = groupID;
-    }
+    void          setDefaultGroupID( int groupID ) { groupIDDefault_ = groupID; }
 
-    int getUnfinishedBytes() const
-    {
-      return totalBytes_;
-    }
+    int           getUnfinishedBytes() const { return totalBytes_; }
 
-    unsigned long numRequests() const
-    {
-      return ids.size();
-    }
+    unsigned long numRequests() const { return ids_.size(); }
 
-    void print(const ProcessorGroup* pg);
+    void          print( const ProcessorGroup * pg );
 
     static double WaitTimePerMessage;
 
   private:
-    std::vector<MPI_Request> ids;
-    std::vector<int> groupIDs;
-    std::vector<AfterCommunicationHandler*> handlers;
-    std::vector<int> byteCounts;
-    std::vector<std::string> vars;
-    std::vector<int> messageNums;
-    std::map<int, int> groupWaitCount_;  // groupID -> # receives waiting
-    int groupIDDefault_;
-    int totalBytes_;
+    std::vector<MPI_Request>                ids_;
+    std::vector<int>                        groupIDs_;
+    std::vector<AfterCommunicationHandler*> handlers_;
+    std::vector<int>                        byteCounts_;
+    std::vector<std::string>                vars_;
+    std::vector<int>                        messageNums_;
+    std::map<int, int>                      groupWaitCount_;  // groupID -> # receives waiting
+    int                                     groupIDDefault_;
+    int                                     totalBytes_;
 
     // temporary, used in calls to waitsome, testsome, and waitall
     std::vector<MPI_Status> statii;
-    std::vector<int> indices;
+    std::vector<int>        indices;
 
-    bool donesome(const ProcessorGroup* pg,
-                  int donecount,
-                  std::vector<MPI_Status> &statii,
-                  std::list<int>* finishedGroups = 0);
+    bool donesome( const ProcessorGroup    * pg,
+                   int                       donecount,
+                   std::vector<MPI_Status> & statii,
+                   std::list<int>          * finishedGroups = 0 );
 };
 
 // AfterCommunicationHandler is defined in BufferInfo.h with Sendlist
 class ReceiveHandler : public AfterCommunicationHandler {
 
   public:
-    ReceiveHandler(PackBufferInfo* unpackHandler,
-                   BatchReceiveHandler* batchHandler)
-        : unpackHandler_(unpackHandler), batchHandler_(batchHandler)
+    ReceiveHandler( PackBufferInfo      * unpackHandler,
+                    BatchReceiveHandler * batchHandler ) :
+      unpackHandler_(unpackHandler), batchHandler_(batchHandler)
     {
     }
 
@@ -135,21 +123,18 @@ class ReceiveHandler : public AfterCommunicationHandler {
     {
       delete unpackHandler_;
       unpackHandler_ = 0;
+
       delete batchHandler_;
       batchHandler_ = 0;
     }
 
-    virtual void finishedCommunication(const ProcessorGroup* pg,
-                                       MPI_Status &status)
+    virtual void finishedCommunication (const ProcessorGroup * pg,
+                                              MPI_Status     & status )
     {
       // The order is important: it should unpack before informing the
       // DependencyBatch that the data has been received.
-      if (unpackHandler_ != 0) {
-        unpackHandler_->finishedCommunication(pg, status);
-      }
-      if (batchHandler_ != 0) {
-        batchHandler_->finishedCommunication(pg);
-      }
+      if (unpackHandler_ != 0) { unpackHandler_->finishedCommunication(pg, status); }
+      if (batchHandler_ != 0)  { batchHandler_->finishedCommunication(pg); }
     }
 
   private:

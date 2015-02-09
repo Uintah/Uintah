@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -110,16 +110,16 @@ namespace Uintah {
      * This will be useful for other classes to have access to */
     virtual double getTableValue( std::vector<double>, std::string ) = 0; 
 
-		/** @brief Get a table value **/ 
+    /** @brief Get a table value **/ 
     virtual double getTableValue( std::vector<double> iv, std::string depend_varname, 
         StringToCCVar inert_mixture_fractions, IntVector c) = 0;
 
     /** @brief Get a table value **/ 
     virtual double getTableValue( std::vector<double> iv, std::string depend_varname, 
                    doubleMap inert_mixture_fractions ) = 0;
-		
-		/** @brief For efficiency: Matches tables lookup species with pointers/index/etc */
-		virtual void tableMatching() = 0; 
+    
+    /** @brief For efficiency: Matches tables lookup species with pointers/index/etc */
+    virtual void tableMatching() = 0; 
 
     /** @brief Return a reference to the independent variables */
     inline const VarMap getIVVars(){ return d_ivVarMap; }; 

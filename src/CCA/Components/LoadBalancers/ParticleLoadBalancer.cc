@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,48 +21,55 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-//Allgatherv currently performs poorly on Kraken.  
-//This hack changes the Allgatherv to an allgather 
-//by padding the digits
+
+// Allgatherv currently performs poorly on Kraken.  
+// This hack changes the Allgatherv to an allgather 
+// by padding the digits.
+//
 #define AG_HACK  
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
-#include <Core/Grid/Grid.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Components/Schedulers/DetailedTasks.h>
-#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/DataArchive/DataArchive.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/SimulationState.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Thread/Time.h>
-#include <Core/Exceptions/InternalError.h>
+
 #include <CCA/Components/LoadBalancers/CostModeler.h>
 #include <CCA/Components/LoadBalancers/CostModelForecaster.h>
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
+#include <CCA/Components/Schedulers/DetailedTasks.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/Scheduler.h>
+
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/SimulationState.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
+
+#include <TauProfilerForSCIRun.h>
 
 #include <iostream> // debug only
 #include <stack>
 #include <vector>
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
-static DebugStream doing("ParticleLoadBalancer_doing", false);
-static DebugStream lb("ParticleLoadBalancer_lb", false);
-static DebugStream dbg("ParticleLoadBalancer", false);
-static DebugStream stats("LBStats",false);
-static DebugStream times("LBTimes",false);
-static DebugStream lbout("LBOut",false);
 
-//if defined the space-filling curve will be computed in parallel, this may not be a good idea because the time to compute 
-//the space-filling curve is so small that it might not parallelize well.
+static DebugStream doing( "ParticleLoadBalancer_doing", false );
+static DebugStream lb(    "ParticleLoadBalancer_lb", false );
+static DebugStream dbg(   "ParticleLoadBalancer", false );
+static DebugStream stats( "LBStats", false );
+static DebugStream times( "LBTimes", false );
+static DebugStream lbout( "LBOut", false );
+
+// If defined the space-filling curve will be computed in parallel, this may not be a good idea because the time to compute 
+// the space-filling curve is so small that it might not parallelize well.
 #define SFC_PARALLEL  
 
 ParticleLoadBalancer::ParticleLoadBalancer(const ProcessorGroup* myworld)
@@ -877,7 +884,7 @@ ParticleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
 
 int
 ParticleLoadBalancer::getOldProcessorAssignment(const VarLabel* var, 
-						const Patch* patch, 
+                                                const Patch* patch, 
                                                 const int /*matl*/)
 {
 
@@ -900,7 +907,7 @@ ParticleLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
 
 bool 
 ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
-				    const GridP& grid)
+                                    const GridP& grid)
 {
   double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();

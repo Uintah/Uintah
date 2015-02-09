@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,8 +34,8 @@ using namespace Uintah;
 #include <zlib.h>
 #include <string.h>
 
-PackBufferInfo::PackBufferInfo()
-    : BufferInfo()
+PackBufferInfo::PackBufferInfo() :
+  BufferInfo()
 {
   packedBuffer = 0;
 }
@@ -48,19 +48,20 @@ PackBufferInfo::~PackBufferInfo()
   }
 }
 
-void PackBufferInfo::get_type(void*& out_buf,
-                              int& out_count,
-                              MPI_Datatype& out_datatype,
-                              MPI_Comm comm)
+void
+PackBufferInfo::get_type( void*&         out_buf,
+                          int&           out_count,
+                          MPI_Datatype&  out_datatype,
+                          MPI_Comm       comm )
 {
   MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::get_type");
   ASSERT(count() > 0);
-  if (!have_datatype) {
+  if( !d_have_datatype ) {
     int packed_size;
     int total_packed_size = 0;
-    for (int i = 0; i < (int)startbufs.size(); i++) {
-      if (counts[i] > 0) {
-        MPI_Pack_size(counts[i], datatypes[i], comm, &packed_size);
+    for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
+      if( d_counts[i] > 0 ) {
+        MPI_Pack_size( d_counts[i], d_datatypes[i], comm, &packed_size );
         total_packed_size += packed_size;
       }
     }
@@ -71,7 +72,7 @@ void PackBufferInfo::get_type(void*& out_buf,
     datatype = MPI_PACKED;
     cnt = total_packed_size;
     buf = packedBuffer->getBuffer();
-    have_datatype = true;
+    d_have_datatype = true;
   }
 
   out_buf = buf;
@@ -79,27 +80,29 @@ void PackBufferInfo::get_type(void*& out_buf,
   out_datatype = datatype;
 }
 
-void PackBufferInfo::get_type(void*&,
-                              int&,
-                              MPI_Datatype&)
+void
+PackBufferInfo::get_type( void*&,
+                          int&,
+                          MPI_Datatype& )
 {
   // Should use other overload for a PackBufferInfo
   SCI_THROW(SCIRun::InternalError("get_type(void*&, int&, MPI_Datatype&) should not be called on PackBufferInfo objects", __FILE__, __LINE__));
 }
 
-void PackBufferInfo::pack(MPI_Comm comm,
-                          int& out_count)
+void
+PackBufferInfo::pack( MPI_Comm   comm,
+                      int&       out_count )
 {
   MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::pack");
-  ASSERT(have_datatype);
+  ASSERT( d_have_datatype );
 
   int position = 0;
   int bufsize = packedBuffer->getBufSize();
   //for each buffer
-  for (int i = 0; i < (int)startbufs.size(); i++) {
-    //pack into a contigious buffer
-    if (counts[i] > 0) {
-      MPI_Pack(startbufs[i], counts[i], datatypes[i], buf, bufsize, &position, comm);
+  for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
+    //pack into a contiguous buffer
+    if( d_counts[i] > 0 ) {
+      MPI_Pack( d_startbufs[i], d_counts[i], d_datatypes[i], buf, bufsize, &position, comm );
     }
   }
 
@@ -107,23 +110,24 @@ void PackBufferInfo::pack(MPI_Comm comm,
 
   // When it is all packed, only the buffer necessarily needs to be kept
   // around until after it is sent.
-  delete sendlist;
-  sendlist = 0;
-  addSendlist(packedBuffer);
+  delete d_sendlist;
+  d_sendlist = 0;
+  addSendlist( packedBuffer );
 }
 
-void PackBufferInfo::unpack(MPI_Comm comm,
-                            MPI_Status& status)
+void
+PackBufferInfo::unpack( MPI_Comm     comm,
+                        MPI_Status&  status )
 {
   MALLOC_TRACE_TAG_SCOPE("PackBufferInfo::unpack");
-  ASSERT(have_datatype);
+  ASSERT( d_have_datatype );
 
   unsigned long bufsize = packedBuffer->getBufSize();
 
   int position = 0;
-  for (int i = 0; i < (int)startbufs.size(); i++) {
-    if (counts[i] > 0) {
-      MPI_Unpack(buf, bufsize, &position, startbufs[i], counts[i], datatypes[i], comm);
+  for( unsigned int i = 0; i < d_startbufs.size(); i++ ) {
+    if( d_counts[i] > 0 ) {
+      MPI_Unpack( buf, bufsize, &position, d_startbufs[i], d_counts[i], d_datatypes[i], comm );
     }
   }
 }

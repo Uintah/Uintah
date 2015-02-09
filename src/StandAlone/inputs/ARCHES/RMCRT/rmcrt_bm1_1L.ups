@@ -21,7 +21,6 @@
 
   <DataArchiver>
     <filebase>rmcrt_bm1_1L.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="uVelocitySPBC"/>
     <save label="vVelocitySPBC"/>
@@ -33,7 +32,7 @@
     <save label="radiation_temperature"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
-    <save label = "boundFlux" />
+    <save label="boundFlux" />
 
     <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>

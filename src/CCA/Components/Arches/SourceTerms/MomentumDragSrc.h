@@ -10,7 +10,7 @@
  * @date   Sept 2014
  *
  * @brief Assembles source term for the particle drag from the
- * 				particle phase.  This is generalized to be used for testing in
+ *        particle phase.  This is generalized to be used for testing in
  *        1/2D examples and should be able to be used for any particle method
  *        as the labels are inputs rather than fixed 
  *

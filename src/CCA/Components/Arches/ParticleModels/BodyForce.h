@@ -119,8 +119,8 @@ namespace Uintah{
   
   template <typename IT, typename DT>
   BodyForce<IT, DT>::BodyForce( std::string task_name, int matl_index,
-                                         const std::string base_var_name, const int N ) :
-  _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+                                const std::string base_var_name, const int N ) :
+  TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
 
     VarTypeHelper<DT> dhelper; 
     _D_type = dhelper.get_vartype(); 
@@ -137,9 +137,6 @@ namespace Uintah{
   template <typename IT, typename DT>
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    _do_ts_init_task = false; 
-    _do_bcs_task = false; 
-    
     std::string tempType;
     db->findBlock("particle_density")->getAttribute("type",tempType);
     if ( tempType == "constant" ) {
@@ -173,7 +170,6 @@ namespace Uintah{
     
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      std::cout << "Source label " << name << std::endl;
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
       
     }

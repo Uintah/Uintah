@@ -1,7 +1,7 @@
 C
 C The MIT License
 C
-C Copyright (c) 1997-2014 The University of Utah
+C Copyright (c) 1997-2015 The University of Utah
 C
 C Permission is hereby granted, free of charge, to any person obtaining a copy
 C of this software and associated documentation files (the "Software"), to
@@ -39,7 +39,8 @@ c     calculate incident flux at cell centers and radiative source
             do 10 i=idxlo(1),idxhi(1)
 
                src(i,j,k) =src(i,j,k)+(abskg(i,j,k) -scatkt(i,j,k)) 
-     &           * volq(i,j,k) - 4.0D0*PI * (esrcg(i,j,k))
+     &           * volq(i,j,k) -
+     &           4.0D0*PI * (esrcg(i,j,k)-scatSource(i,j,k))
 
  10         continue
  20      continue

@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __REACTIVEFLOW2_H__
-#define __REACTIVEFLOW2_H__
+#ifndef __REACTIVEFLOW3_H__
+#define __REACTIVEFLOW3_H__
 
 
 #include "ConstitutiveModel.h"
@@ -81,7 +81,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class ReactiveFlow2 : public ConstitutiveModel, public ImplicitCM {
+  class ReactiveFlow3 : public ConstitutiveModel, public ImplicitCM {
 
   public:
     // Create datatype for storing model parameters
@@ -121,7 +121,7 @@ namespace Uintah {
   private:
     // Prevent copying of this class
     // copy constructor
-    ReactiveFlow2& operator=(const ReactiveFlow2 &cm);
+    ReactiveFlow3& operator=(const ReactiveFlow3 &cm);
     ReactionDiffusionLabel* d_rdlb;
 
   public:
@@ -129,18 +129,18 @@ namespace Uintah {
     ////////////////////////////////////////////////////////////////////////
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
-    ReactiveFlow2(ProblemSpecP& ps,MPMFlags* flag);
-    ReactiveFlow2(const ReactiveFlow2* cm);
+    ReactiveFlow3(ProblemSpecP& ps,MPMFlags* flag);
+    ReactiveFlow3(const ReactiveFlow3* cm);
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
     ////////////////////////////////////////////////////////////////////////
-    virtual ~ReactiveFlow2();
+    virtual ~ReactiveFlow3();
 
     virtual void outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag = true);
 
     // clone
-    ReactiveFlow2* clone();
+    ReactiveFlow3* clone();
          
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Put documentation here. */

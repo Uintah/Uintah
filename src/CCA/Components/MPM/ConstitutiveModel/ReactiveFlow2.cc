@@ -423,7 +423,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
 
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel,                 pset);
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
 

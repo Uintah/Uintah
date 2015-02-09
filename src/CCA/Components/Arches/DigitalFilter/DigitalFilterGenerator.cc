@@ -48,7 +48,7 @@ double bTilde ( int k, double n ) {
 double BSum ( int k, double n, int N ) {
   double SumTerm = 0.0;
   for (int j=-N; j<=N; j++) {  
-    SumTerm	= SumTerm + bTilde(j, n) * bTilde(j, n);
+    SumTerm = SumTerm + bTilde(j, n) * bTilde(j, n);
   }
   SumTerm = sqrt(SumTerm);
   double BK = bTilde(k, n)/SumTerm;
@@ -87,7 +87,7 @@ public:
           lo = mid;
         } else {
           //if (i1[i1dep_ind][mid] == iv[0])
-          lo = mid;											
+          lo = mid;                     
           hi = mid;
         } 
       }
@@ -178,7 +178,8 @@ public:
     } 
     
     //tmp vars for angle
-    double magA, magB;
+    //double magA;
+    double magB;
     double AdotB;
     
     for (int j = 0; j< inlet.jSize; j++) {
@@ -196,7 +197,7 @@ public:
         inlet.distanceProfile[j][k] = isPos*inlet.distanceProfile[j][k]/charDim_*2.0; //normalize distance
         
         //find the angle from [1,0], need for radial type data
-        magA = 1.0;
+        //magA = 1.0;
         magB = sqrt( ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) * ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) +
                     ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) * ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) );
         
@@ -234,8 +235,9 @@ public:
     } else if (inlet.faceSide=="z-" || inlet.faceSide=="z+") {
       jj = 0; kk = 1;
     }
-    
-    double magA, magB;
+   
+    //double magA;
+    double magB;
     double AdotB;
 
     for (int j = 0; j< inlet.jSize; j++) {
@@ -247,7 +249,7 @@ public:
         inlet.distanceProfile[j][k] = (inlet.distanceProfile[j][k] - middleRadius_)/charDim_; //normalize distance
       
         //find the angle from [1,0], need for radial type data
-        magA = 1.0;
+        //magA = 1.0;
         magB = sqrt( ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) * ((minCell_[jj]+j+0.5)*Dx_[jj] +gridLoPts_[jj] - origin_[jj]) +
                     ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) * ((minCell_[kk]+k+0.5)*Dx_[kk] +gridLoPts_[kk] - origin_[kk]) );
         
@@ -458,7 +460,7 @@ class specifiedV : public BaseVelocity {
 public:
   specifiedV( std::vector<double>& specDistance, std::vector<std::vector<double> >& specVelocity, bool isSymmetric, bool isRadial){
     interpV = new Interpolator( specDistance, specVelocity);
-		isSymmetric_ = isSymmetric;
+    isSymmetric_ = isSymmetric;
     isRadial_ = isRadial;
   };
   ~specifiedV(){};
@@ -1029,9 +1031,9 @@ int main( int argc, const char* argv[] )
     nPts = getInt(gzFp); //set number of data points in inlet
   
   vector<double> specDistance (nPts, 0.0);
-  vector< vector<double> > specVelocity (nPts, vector<double> (3,0.0) );	
-  vector< vector<double> > specStress (nPts, vector<double> (6,0.0) );	
-  vector< vector<double> > specLengthScale (nPts, vector<double> (3,0.0) );	
+  vector< vector<double> > specVelocity (nPts, vector<double> (3,0.0) );  
+  vector< vector<double> > specStress (nPts, vector<double> (6,0.0) );  
+  vector< vector<double> > specLengthScale (nPts, vector<double> (3,0.0) ); 
   
   if (velocityType == "specified" || stressType == "specified" || lengthScaleType=="specified") {
     cout << "Reading Specified Values " << endl;
@@ -1332,7 +1334,7 @@ int main( int argc, const char* argv[] )
   }
   
   //Print input params
-  cout <<	"face: " << faceSide << endl;
+  cout << "face: " << faceSide << endl;
   cout << "shape: " << faceShape << endl;
   cout << "Timesteps till repeat: " << NT << endl;
   

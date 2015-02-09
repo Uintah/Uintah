@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,16 +27,17 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/Output.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/NCVariable.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-#include <Core/Thread/Time.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
-#include <Core/Thread/Mutex.h>
+#include <Core/Thread/Time.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -50,7 +51,6 @@
 
 #define USE_PACKING
 
-using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -65,35 +65,32 @@ extern DebugStream execout;
 extern DebugStream taskorder;
 extern DebugStream taskLevel_dbg;
 
-extern map<string, double> waittimes;
-extern map<string, double> exectimes;
-extern ofstream            wout;
-static double              CurrentWaitTime = 0;
+extern std::map<std::string, double> waittimes;
+extern std::map<std::string, double> exectimes;
 
-static DebugStream dbg("UnifiedScheduler", false);
-static DebugStream dbgst("SendTiming", false);
-static DebugStream timeout("UnifiedScheduler.timings", false);
-static DebugStream queuelength("QueueLength", false);
-static DebugStream threaddbg("UnifiedThreadDBG", false);
-static DebugStream affinity("CPUAffinity", true);
+static double Unified_CurrentWaitTime = 0;
+
+static DebugStream unified_dbg(             "Unified_DBG",             false);
+static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
+static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
+static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
+static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
-  static DebugStream gpu_stats("GPUStats", false);
-         DebugStream use_single_device("SingleDevice", false);
+  static DebugStream gpu_stats(        "Unified_GPUStats",     false);
+         DebugStream use_single_device("Unified_SingleDevice", false);
 #endif
 
 //______________________________________________________________________
 //
-UnifiedScheduler::UnifiedScheduler( const ProcessorGroup* myworld,
-                                    const Output*         oport,
-                                    UnifiedScheduler*     parentScheduler ) :
-  MPIScheduler(myworld, oport, parentScheduler),
-  d_nextsignal("next condition"),
-  d_nextmutex("next mutex"),
-  dlbLock("loadbalancer lock"),
-  schedulerLock("scheduler lock"),
-  waittimesLock("waittimes lock"),
-  recvLock("MPI receive lock")
+
+UnifiedScheduler::UnifiedScheduler( const ProcessorGroup*   myworld,
+                                    const Output*           oport,
+                                          UnifiedScheduler* parentScheduler )
+  : MPIScheduler(myworld, oport, parentScheduler),
+    d_nextsignal("next condition"),
+    d_nextmutex("next mutex"),
+    schedulerLock("scheduler lock")
 #ifdef HAVE_CUDA
   ,
   idleStreamsLock_("CUDA streams lock"),
@@ -117,25 +114,22 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup* myworld,
   }
 #endif
 
-  if (timeout.active()) {
+  if (unified_timeout.active()) {
     char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     timingStats.open(filename);
     if (d_myworld->myrank() == 0) {
-      if (d_myworld->myrank() == 0) {
-        sprintf(filename, "timingStats.%d.min", d_myworld->size());
-        minStats.open(filename);
-        sprintf(filename, "timingStats.%d.max", d_myworld->size());
-        maxStats.open(filename);
-        sprintf(filename, "timingStats.%d.avg", d_myworld->size());
-        avgStats.open(filename);
-      }
+      sprintf(filename, "timingStats.%d.max", d_myworld->size());
+      maxStats.open(filename);
+      sprintf(filename, "timingStats.%d.avg", d_myworld->size());
+      avgStats.open(filename);
     }
   }
 }
 
 //______________________________________________________________________
 //
+
 UnifiedScheduler::~UnifiedScheduler()
 {
   if (Uintah::Parallel::usingMPI()) {
@@ -149,10 +143,9 @@ UnifiedScheduler::~UnifiedScheduler()
     }
   }
 
-  if (timeout.active()) {
+  if (unified_timeout.active()) {
     timingStats.close();
     if (d_myworld->myrank() == 0) {
-      minStats.close();
       maxStats.close();
       avgStats.close();
     }
@@ -164,12 +157,14 @@ UnifiedScheduler::~UnifiedScheduler()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
-                                    SimulationStateP& state)
+
+void
+UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
+                                      SimulationStateP& state )
 {
-  //default taskReadyQueueAlg
+  // Default taskReadyQueueAlg
   taskQueueAlg_ = MostMessages;
-  string taskQueueAlg = "MostMessages";
+  std::string taskQueueAlg = "MostMessages";
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");
   if (params) {
@@ -215,14 +210,12 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
     }
   }
 
-  if (d_myworld->myrank() == 0) {
-    cout << "\tUsing \"" << taskQueueAlg << "\" Algorithm" << std::endl;
-  }
+  proc0cout << "   Using \"" << taskQueueAlg << "\" task queue priority algorithm" << std::endl;
 
   numThreads_ = Uintah::Parallel::getNumThreads() - 1;
   if (numThreads_ < 1 && (Uintah::Parallel::usingMPI() || Uintah::Parallel::usingDevice())) {
     if (d_myworld->myrank() == 0) {
-      cerr << "Error: no thread number specified for Unified Scheduler" << std::endl;
+      std::cerr << "Error: no thread number specified for Unified Scheduler" << std::endl;
       throw ProblemSetupException(
           "This scheduler requires number of threads to be in the range [2, 64],\n.... please use -nthreads <num>, and -gpu if using GPUs",
           __FILE__,
@@ -231,22 +224,31 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
   }
   else if (numThreads_ > MAX_THREADS) {
     if (d_myworld->myrank() == 0) {
-      cerr << "Error: Number of threads too large..." << std::endl;
+      std::cerr << "Error: Number of threads too large..." << std::endl;
       throw ProblemSetupException("Too many threads. Reduce MAX_THREADS and recompile.", __FILE__, __LINE__);
     }
   }
 
   if (d_myworld->myrank() == 0) {
-    if (numThreads_ < 0) {
-      cout << "\tUsing Unified Scheduler without threads (Single-Processor mode)" << std::endl;
-    }
-    else {
-      cout << "\tWARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, " << "not all tasks are thread safe yet." << std::endl
-           << "\tCreating " << numThreads_ << " thread(s) for task execution." << std::endl;
-    }
+    std::string plural = (numThreads_ == 1) ? " thread" : " threads";
+    std::cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
+              << "   Creating " << numThreads_ << " additional "
+              << plural + " for task execution (total task execution threads = "
+              << numThreads_ + 1 << ")." << std::endl;
   }
 
-  // Create the UnifiedWorkers here
+  // Reset Uintah thread ID (to reflect number of last physical core)
+  Thread::self()->set_myid(numThreads_);
+
+  if (unified_compactaffinity.active()) {
+    if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+      unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                        << ") to CPU/MIC core " << numThreads_ << "\n";
+    }
+    Thread::self()->set_affinity(numThreads_);  // CPU/MIC - bind main thread to last physical core
+  }
+
+  // Create the UnifiedWorkers here (pinned to cores in UnifiedSchedulerWorker::run())
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
     UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(this, i);
@@ -258,14 +260,13 @@ void UnifiedScheduler::problemSetup(const ProblemSpecP& prob_spec,
 
   log.problemSetup(prob_spec);
   SchedulerCommon::problemSetup(prob_spec, state);
-  if (affinity.active()) {
-    Thread::self()->set_affinity(0);  // bind main thread to core 0
-  }
 }
 
 //______________________________________________________________________
 //
-SchedulerP UnifiedScheduler::createSubScheduler()
+
+SchedulerP
+UnifiedScheduler::createSubScheduler()
 {
   UnifiedScheduler* subsched = scinew UnifiedScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
@@ -274,20 +275,30 @@ SchedulerP UnifiedScheduler::createSubScheduler()
 
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
-  // create subscheduler task execution threads
-  if (subsched->numThreads_ > 0) {
-    std::cout << std::endl
-              << "\tUsing EXPERIMENTAL Multi-threaded sub-scheduler" << std::endl
-              << "\tCreating " << subsched->numThreads_
-              << " subscheduler threads for task execution."
-              << std::endl << std::endl;
+  Thread::self()->set_myid(numThreads_);
 
-    char name[1024];
+  if (subsched->numThreads_ > 0) {
+
+    proc0cout << "\n"
+              << "   Using EXPERIMENTAL multi-threaded sub-scheduler\n"
+              << "   WARNING: Component tasks must be thread safe.\n"
+              << "   Creating " << subsched->numThreads_ << " subscheduler threads for task execution.\n\n" << std::endl;
+
+    // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
+    if (unified_compactaffinity.active()) {
+      if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+        unified_threaddbg << "Binding main subscheduler thread (ID "
+                          << Thread::self()->myid() << ") to CPU/MIC core "
+                          << subsched->numThreads_ << "\n";
+      }
+      Thread::self()->set_affinity(numThreads_);  // CPU/MIC - bind main subscheduler thread to last physical core
+    }
 
     // Create UnifiedWorker threads for the subscheduler
+    char name[1024];
     ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
-      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i + subsched->numThreads_);
+      UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i);
       subsched->t_worker[i] = worker;
       sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
       Thread* t = scinew Thread(worker, name, subGroup);
@@ -296,96 +307,26 @@ SchedulerP UnifiedScheduler::createSubScheduler()
   }
 
   return subsched;
+
 }
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::verifyChecksum()
-{
-#if SCI_ASSERTION_LEVEL >= 3
-  if (Uintah::Parallel::usingMPI()) {
-    TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER);
 
-    // Compute a simple checksum to make sure that all processes
-    // are trying to execute the same graph.  We should do two
-    // things in the future:
-    //  - make a flag to turn this off
-    //  - make the checksum more sophisticated
-    int checksum = 0;
-    int numSpatialTasks = 0;
-    for (unsigned i = 0; i < graphs.size(); i++) {
-      checksum += graphs[i]->getTasks().size();
-
-      // This begins addressing the issue of making the global checksum more sophisticated:
-      //   check if any tasks were spatially scheduled - TaskType::Spatial, meaning no computes, requires or modifies
-      //     e.g. RMCRT radiometer task, which is not scheduled on all patches
-      //          these Spatial tasks won't count toward the global checksum
-      std::vector<Task*> tasks = graphs[i]->getTasks();
-      std::vector<Task*>::const_iterator tasks_iter = tasks.begin();
-      for ( ; tasks_iter != tasks.end(); ++tasks_iter ) {
-        Task* task = *tasks_iter;
-        if ( task->getType() == Task::Spatial ) {
-          numSpatialTasks++;
-        }
-      }
-    }
-    // Spatial tasks don't count against the global checksum
-    checksum -= numSpatialTasks;
-    
-    if (mpidbg.active()) {
-      coutLock.lock();
-      mpidbg << d_myworld->myrank() << " (Allreduce) Checking checksum of " << checksum << '\n';
-      coutLock.unlock();
-    }
-
-    int result_checksum;
-    MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN, d_myworld->getComm());
-
-    if (checksum != result_checksum) {
-      cerr << "UnifiedScheduler::Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
-      cerr << "  Processor: " << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
-           << " and global is " << result_checksum << '\n';
-      MPI_Abort(d_myworld->getComm(), 1);
-    }
-
-    if (mpidbg.active()) {
-      coutLock.lock();
-      mpidbg << d_myworld->myrank() << " (Allreduce) Check succeeded\n";
-      coutLock.unlock();
-    }
-  }
-#endif
-}
-
-//______________________________________________________________________
-//
-void UnifiedScheduler::initiateTask(DetailedTask * task,
-                                    bool only_old_recvs,
-                                    int abort_point,
-                                    int iteration)
-{
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
-  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER);
-
-  postMPIRecvs(task, only_old_recvs, abort_point, iteration);
-  if (only_old_recvs) {
-    return;
-  }
-}  // end initiateTask()
-
-//______________________________________________________________________
-//
-void UnifiedScheduler::runTask(DetailedTask * task,
-                               int iteration,
-                               int t_id /*=0*/,
-                               Task::CallBackEvent event)
+void
+UnifiedScheduler::runTask( DetailedTask*         task,
+                           int                   iteration,
+                           int                   thread_id /* = 0 */,
+                           Task::CallBackEvent   event )
 {
   TAU_PROFILE("UnifiedScheduler::runTask()", " ", TAU_USER);
 
   if (waitout.active()) {
     waittimesLock.lock();
-    waittimes[task->getTask()->getName()] += CurrentWaitTime;
-    CurrentWaitTime = 0;
+    {
+      waittimes[task->getTask()->getName()] += Unified_CurrentWaitTime;
+      Unified_CurrentWaitTime = 0;
+    }
     waittimesLock.unlock();
   }
 
@@ -395,7 +336,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
   }
 
-  vector<DataWarehouseP> plain_old_dws(dws.size());
+  std::vector<DataWarehouseP> plain_old_dws(dws.size());
   for (int i = 0; i < (int)dws.size(); i++) {
     plain_old_dws[i] = dws[i].get_rep();
   }
@@ -414,7 +355,7 @@ void UnifiedScheduler::runTask(DetailedTask * task,
       exectimes[task->getTask()->getName()] += dtask;
     }
 
-    //if i do not have a sub scheduler
+    // If I do not have a sub scheduler
     if (!task->getTask()->getHasSubScheduler()) {
       //add my task time to the total time
       mpi_info_.totaltask += dtask;
@@ -428,36 +369,38 @@ void UnifiedScheduler::runTask(DetailedTask * task,
   // For CPU and postGPU task runs, post MPI sends and call task->done;
   if (event == Task::CPU || event == Task::postGPU) {
     if (Uintah::Parallel::usingMPI()) {
-      postMPISends(task, iteration, t_id);
+      postMPISends(task, iteration, thread_id);
     }
     task->done(dws);  // should this be timed with taskstart? - BJW
     double teststart = Time::currentSeconds();
 
     if (Uintah::Parallel::usingMPI()) {
-      // this is per thread, no lock needed
-      sends_[t_id].testsome(d_myworld);
+      // This is per thread, no lock needed.
+      sends_[thread_id].testsome(d_myworld);
     }
 
     mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
 
     // add my timings to the parent scheduler
-    if (parentScheduler) {
-      parentScheduler->mpi_info_.totaltask += mpi_info_.totaltask;
-      parentScheduler->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
-      parentScheduler->mpi_info_.totalrecv += mpi_info_.totalrecv;
-      parentScheduler->mpi_info_.totalsend += mpi_info_.totalsend;
-      parentScheduler->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
-      parentScheduler->mpi_info_.totalreduce += mpi_info_.totalreduce;
+    if( parentScheduler_ ) {
+      parentScheduler_->mpi_info_.totaltask += mpi_info_.totaltask;
+      parentScheduler_->mpi_info_.totaltestmpi += mpi_info_.totaltestmpi;
+      parentScheduler_->mpi_info_.totalrecv += mpi_info_.totalrecv;
+      parentScheduler_->mpi_info_.totalsend += mpi_info_.totalsend;
+      parentScheduler_->mpi_info_.totalwaitmpi += mpi_info_.totalwaitmpi;
+      parentScheduler_->mpi_info_.totalreduce += mpi_info_.totalreduce;
     }
   }
-
 }  // end runTask()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::execute(int tgnum /*=0*/,
-                               int iteration /*=0*/)
+
+void
+UnifiedScheduler::execute( int tgnum     /* = 0 */,
+                           int iteration /* = 0 */ )
 {
+  // copy data timestep must be single threaded for now
   if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
     MPIScheduler::execute(tgnum, iteration);
     return;
@@ -489,9 +432,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   dts = tg->getDetailedTasks();
 
   if (dts == 0) {
-    if (d_myworld->myrank() == 0) {
-      std::cerr << "UnifiedScheduler skipping execute, no tasks\n";
-    }
+    proc0cout << "UnifiedScheduler skipping execute, no tasks\n";
     return;
   }
 
@@ -503,31 +444,18 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     dts->localTask(i)->resetDependencyCounts();
   }
 
-  if (timeout.active()) {
+  if (unified_timeout.active()) {
     d_labels.clear();
     d_times.clear();
   }
 
-  // Do the work of the SingleProcessorScheduler and bail
-  //   if not using MPI or GPU, and also not using multiple threads
-  if (!Uintah::Parallel::usingMPI() && !Uintah::Parallel::usingDevice()) {
-    if (numThreads_ < 0) {
-      for (int i = 0; i < ntasks; i++) {
-        DetailedTask* dtask = dts->getTask(i);
-        runTask(dtask, iteration, -1, Task::CPU);
-      }
-      finalizeTimestep();
-      return;
-    }
-    else {
-      throw ProblemSetupException(
-          "MPI runtime not initialized. You must  use '-mpi' command line option in conjunction with '-nthreads'",
-          __FILE__, __LINE__);
-    }
-  }
-
   int me = d_myworld->myrank();
   makeTaskGraphDoc(dts, me);
+
+  // TODO - figure out and fix this (APH - 01/12/15)
+//  if (timeout.active()) {
+//    emitTime("taskGraph output");
+//  }
 
   mpi_info_.totalreduce = 0;
   mpi_info_.totalsend = 0;
@@ -551,32 +479,42 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
   currentIteration = iteration;
   currphase = 0;
-  numPhase = tg->getNumTaskPhases();
+  numPhases = tg->getNumTaskPhases();
   phaseTasks.clear();
-  phaseTasks.resize(numPhase, 0);
+  phaseTasks.resize(numPhases, 0);
   phaseTasksDone.clear();
-  phaseTasksDone.resize(numPhase, 0);
+  phaseTasksDone.resize(numPhases, 0);
   phaseSyncTask.clear();
-  phaseSyncTask.resize(numPhase, NULL);
+  phaseSyncTask.resize(numPhases, NULL);
   dts->setTaskPriorityAlg(taskQueueAlg_);
+
+  // get the number of tasks in each task phase
   for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
 
-  if (dbg.active()) {
-    coutLock.lock();
-    dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)" << std::endl;
-    coutLock.unlock();
+  if (unified_dbg.active()) {
+    cerrLock.lock();
+    {
+      unified_dbg << "\n"
+                  << "Rank-" << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)\n"
+                  << "Total task phases: " << numPhases
+                  << "\n";
+      for (size_t phase = 0; phase < phaseTasks.size(); ++phase) {
+        unified_dbg << "Phase: " << phase << " has " << phaseTasks[phase] << " total tasks\n";
+      }
+      unified_dbg << std::endl;
+    }
+    cerrLock.unlock();
   }
 
   static int totaltasks;
 
   if (taskdbg.active()) {
-    coutLock.lock();
-    taskdbg << "Rank: " << d_myworld->myrank() << " Switched to Task Phase " << currphase << " , total task  "
+    cerrLock.lock();
+    taskdbg << "Rank-" << me << " starting task phase " << currphase << ", total phase " << currphase << " tasks = "
             << phaseTasks[currphase] << std::endl;
-    taskdbg << "Total task phases: " << numPhase << std::endl;
-    coutLock.unlock();
+    cerrLock.unlock();
   }
 
   // signal worker threads to begin executing tasks
@@ -591,23 +529,23 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     }
   }
 
-  // main thread also executes tasks (tid 0)
-  runTasks(0);
+  // main thread also executes tasks
+  runTasks(Thread::self()->myid());
 
   TAU_PROFILE_STOP(doittimer);
 
-  wait_till_all_done();
-
-  // if any thread is busy, conditional wait here
+  // run single-threaded if in initial or initial-restart timestep
   if (!d_isInitTimestep && !d_isRestartInitTimestep) {
+    // wait for all tasks to finish
     d_nextmutex.lock();
     while (getAviableThreadNum() < numThreads_) {
+      // if any thread is busy, conditional wait here
       d_nextsignal.wait(d_nextmutex);
     }
     d_nextmutex.unlock();
   }
 
-  if (queuelength.active()) {
+  if (unified_queuelength.active()) {
     float lengthsum = 0;
     totaltasks += ntasks;
     for (unsigned int i = 1; i < histogram.size(); i++) {
@@ -618,9 +556,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     float allqueuelength = 0;
     MPI_Reduce(&queuelength, &allqueuelength, 1, MPI_FLOAT, MPI_SUM, 0, d_myworld->getComm());
 
-    if (me == 0) {
-      cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
-    }
+    proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
 
   emitTime("MPI Send time", mpi_info_.totalsendmpi);
@@ -641,7 +577,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
   emitTime("Other excution time",
            totalexec - mpi_info_.totalsend - mpi_info_.totalrecv - mpi_info_.totaltask - mpi_info_.totalreduce);
 
-  if (d_sharedState != 0) {  // subschedulers don't have a sharedState
+  if (d_sharedState != 0) {
     d_sharedState->taskExecTime += mpi_info_.totaltask - d_sharedState->outputTime;  // don't count output time...
     d_sharedState->taskLocalCommTime += mpi_info_.totalrecv + mpi_info_.totalsend;
     d_sharedState->taskWaitCommTime += mpi_info_.totalwaitmpi;
@@ -655,6 +591,7 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size() - 1]->timestepRestarted();
     int netrestart;
+
     MPI_Allreduce(&myrestart, &netrestart, 1, MPI_INT, MPI_LOR, d_myworld->getComm());
 
     if (netrestart) {
@@ -673,7 +610,8 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 //#endif
 
   log.finishTimestep();
-  if (timeout.active() && !parentScheduler) {  // only do on toplevel scheduler
+
+  if( unified_timeout.active() && !parentScheduler_ ) {  // only do on toplevel scheduler
     // add number of cells, patches, and particles
     int numCells = 0, numParticles = 0;
     OnDemandDataWarehouseP dw = dws[dws.size() - 1];
@@ -693,119 +631,108 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
     }
 
     // now collect timing info
-    if (timeout.active()) {
-      emitTime("NumPatches", myPatches->size());
-      emitTime("NumCells", numCells);
-      emitTime("NumParticles", numParticles);
-      vector<double> d_totaltimes(d_times.size());
-      vector<double> d_mintimes(d_times.size());
-      vector<double> d_maxtimes(d_times.size());
-      vector<double> d_avgtimes(d_times.size());
-      double minTask = -1, maxTask = -1, avgTask = -1;
-      double minComm = -1, maxComm = -1, avgComm = -1;
-      double minCell = -1, maxCell = -1, avgCell = -1;
+    emitTime("NumPatches", myPatches->size());
+    emitTime("NumCells", numCells);
+    emitTime("NumParticles", numParticles);
+    std::vector<double> d_totaltimes(d_times.size());
+    std::vector<double> d_maxtimes(d_times.size());
+    std::vector<double> d_avgtimes(d_times.size());
+    double avgTask = -1, maxTask = -1;
+    double avgComm = -1, maxComm = -1;
+    double avgCell = -1, maxCell = -1;
 
-      MPI_Comm comm = d_myworld->getComm();
-      MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_SUM, 0, comm);
-      MPI_Reduce(&d_times[0], &d_mintimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_MIN, 0, comm);
-      MPI_Reduce(&d_times[0], &d_maxtimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_MAX, 0, comm);
+    MPI_Comm comm = d_myworld->getComm();
+    MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE, MPI_SUM, 0, comm);
+    MPI_Reduce(&d_times[0], &d_maxtimes[0],   (int)d_times.size(), MPI_DOUBLE, MPI_MAX, 0, comm);
 
-      double total = 0, minTotal = 0, avgTotal = 0, maxTotal = 0;
-      for (int i = 0; i < (int)d_totaltimes.size(); i++) {
-        d_avgtimes[i] = d_totaltimes[i] / d_myworld->size();
-        if (strcmp(d_labels[i], "Total task time") == 0) {
-          minTask = d_mintimes[i];
-          maxTask = d_maxtimes[i];
-          avgTask = d_avgtimes[i];
+    double total = 0, avgTotal = 0, maxTotal = 0;
+    for (int i = 0; i < static_cast<int>(d_totaltimes.size()); i++) {
+      d_avgtimes[i] = d_totaltimes[i] / d_myworld->size();
+      if (strcmp(d_labels[i], "Total task time") == 0) {
+        avgTask = d_avgtimes[i];
+        maxTask = d_maxtimes[i];
+      }
+      else if (strcmp(d_labels[i], "Total comm time") == 0) {
+        avgComm = d_avgtimes[i];
+        maxComm = d_maxtimes[i];
+      }
+      else if (strncmp(d_labels[i], "Num", 3) == 0) {
+        if (strcmp(d_labels[i], "NumCells") == 0) {
+          avgCell = d_avgtimes[i];
+          maxCell = d_maxtimes[i];
         }
-        else if (strcmp(d_labels[i], "Total comm time") == 0) {
-          minComm = d_mintimes[i];
-          maxComm = d_maxtimes[i];
-          avgComm = d_avgtimes[i];
-        }
-        else if (strncmp(d_labels[i], "Num", 3) == 0) {
-          if (strcmp(d_labels[i], "NumCells") == 0) {
-            minCell = d_mintimes[i];
-            maxCell = d_maxtimes[i];
-            avgCell = d_avgtimes[i];
-          }
-          // these are independent stats - not to be summed
-          continue;
-        }
-
-        total += d_times[i];
-        minTotal += d_mintimes[i];
-        maxTotal += d_maxtimes[i];
-        avgTotal += d_avgtimes[i];
+        // these are independent stats - not to be summed
+        continue;
       }
 
-      // to not duplicate the code
-      vector<ofstream*> files;
-      vector<vector<double>*> data;
-      files.push_back(&timingStats);
-      data.push_back(&d_times);
+      total    += d_times[i];
+      maxTotal += d_maxtimes[i];
+      avgTotal += d_avgtimes[i];
+    }
 
-      if (me == 0) {
-        files.push_back(&minStats);
-        files.push_back(&maxStats);
-        files.push_back(&avgStats);
-        data.push_back(&d_mintimes);
-        data.push_back(&d_maxtimes);
-        data.push_back(&d_avgtimes);
-      }
+    // to not duplicate the code
+    std::vector<std::ofstream*> files;
+    std::vector<std::vector<double>*> data;
+    files.push_back(&timingStats);
+    data.push_back(&d_times);
 
-      for (unsigned file = 0; file < files.size(); file++) {
-        ofstream& out = *files[file];
-        out << "Timestep " << d_sharedState->getCurrentTopLevelTimeStep() << std::endl;
-        for (int i = 0; i < (int)(*data[file]).size(); i++) {
-          out << "UnifiedScheduler: " << d_labels[i] << ": ";
-          int len = (int)(strlen(d_labels[i]) + strlen("UnifiedScheduler: ") + strlen(": "));
-          for (int j = len; j < 55; j++) {
-            out << ' ';
-          }
-          double percent;
-          if (strncmp(d_labels[i], "Num", 3) == 0) {
-            percent = d_totaltimes[i] == 0 ? 100 : (*data[file])[i] / d_totaltimes[i] * 100;
-          }
-          else {
-            percent = (*data[file])[i] / total * 100;
-          }
-          out << (*data[file])[i] << " (" << percent << "%)\n";
+    if (me == 0) {
+      files.push_back(&avgStats);
+      files.push_back(&maxStats);
+      data.push_back(&d_avgtimes);
+      data.push_back(&d_maxtimes);
+    }
+
+    for (unsigned int file = 0; file < files.size(); file++) {
+      std::ofstream& out = *files[file];
+      out << "Timestep " << d_sharedState->getCurrentTopLevelTimeStep() << std::endl;
+      for (int i = 0; i < static_cast<int>((*data[file]).size()); i++) {
+        out << "UnifiedScheduler: " << d_labels[i] << ": ";
+        int len = static_cast<int>((strlen(d_labels[i])) + strlen("UnifiedScheduler: ") + strlen(": "));
+        for (int j = len; j < 55; j++) {
+          out << ' ';
         }
-        out << std::endl << std::endl;
+        double percent = 0.0;
+        if (strncmp(d_labels[i], "Num", 3) == 0) {
+          percent = d_totaltimes[i] == 0 ? 100 : (*data[file])[i] / d_totaltimes[i] * 100;
+        }
+        else {
+          percent = (*data[file])[i] / total * 100;
+        }
+        out << (*data[file])[i] << " (" << percent << "%)\n";
       }
+      out << std::endl << std::endl;
+    }
 
-      if (me == 0) {
-        timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100
-                << " load imbalance (exec)%\n";
-        timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100
-                << " load imbalance (comm)%\n";
-        timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100
-                << " load imbalance (theoretical)%\n";
-      }
-    }  // end timeout.active()
+    if (me == 0) {
+      unified_timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1 - avgTask / maxTask) * 100 << " load imbalance (exec)%\n";
+      unified_timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1 - avgComm / maxComm) * 100 << " load imbalance (comm)%\n";
+      unified_timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n\n";
+    }
 
+    // TODO - need to clean this up (APH - 01/22/15)
     double time = Time::currentSeconds();
-    //double rtime=time-d_lasttime;
+//    double rtime = time - d_lasttime;
     d_lasttime = time;
-    //timeout << "UnifiedScheduler: TOTAL                                    " << total << '\n';
-    //timeout << "UnifiedScheduler: time sum reduction (one processor only): " << rtime << '\n';
-  }
+//    unified_timeout << "UnifiedScheduler: TOTAL                                    " << total << '\n';
+//    unified_timeout << "UnifiedScheduler: time sum reduction (one processor only): " << rtime << '\n';
+  } // end unified_timeout.active()
 
   if (execout.active()) {
     static int count = 0;
 
+    // only output the exec times every 10 timesteps
     if (++count % 10 == 0) {
-      ofstream fout;
+      std::ofstream fout;
       char filename[100];
       sprintf(filename, "exectimes.%d.%d", d_myworld->size(), d_myworld->myrank());
       fout.open(filename);
 
-      for (map<string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
-        fout << fixed << d_myworld->myrank() << ": TaskExecTime: " << iter->second << " Task:" << iter->first << std::endl;
+      for (std::map<std::string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
+        fout << std::fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
       fout.close();
-      // exectimes.clear();
+      exectimes.clear();
     }
   }
 
@@ -817,38 +744,40 @@ void UnifiedScheduler::execute(int tgnum /*=0*/,
 
       if (d_myworld->myrank() == 0 || d_myworld->myrank() == d_myworld->size() / 2
           || d_myworld->myrank() == d_myworld->size() - 1) {
-
+        std::ofstream wout;
         char fname[100];
         sprintf(fname, "waittimes.%d.%d", d_myworld->size(), d_myworld->myrank());
         wout.open(fname);
 
-        for (map<string, double>::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++) {
-          wout << fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << std::endl;
+        for (std::map<std::string, double>::iterator iter = waittimes.begin(); iter != waittimes.end(); iter++) {
+          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(TO): " << iter->second << " Task:" << iter->first << "\n";
         }
 
-        for (map<string, double>::iterator iter = DependencyBatch::waittimes.begin(); iter != DependencyBatch::waittimes.end();
+        for (std::map<std::string, double>::iterator iter = DependencyBatch::waittimes.begin(); iter != DependencyBatch::waittimes.end();
             iter++) {
-          wout << fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << std::endl;
+          wout << std::fixed << d_myworld->myrank() << ": TaskWaitTime(FROM): " << iter->second << " Task:" << iter->first << std::endl;
         }
-
         wout.close();
       }
 
-//      waittimes.clear();
-//      DependencyBatch::waittimes.clear();
+      waittimes.clear();
+      DependencyBatch::waittimes.clear();
     }
   }
 
-  if (dbg.active()) {
-    dbg << me << " UnifiedScheduler finished\n";
+  if (unified_dbg.active()) {
+    unified_dbg << "Rank-" << me << " - UnifiedScheduler finished" << std::endl;
   }
-}
+} // end execute()
 
 //______________________________________________________________________
 //
+
 void
-UnifiedScheduler::runTasks( int t_id )
+UnifiedScheduler::runTasks( int thread_id )
 {
+  int me = d_myworld->myrank();
+
   while( numTasksDone < ntasks ) {
 
     DetailedTask* readyTask = NULL;
@@ -881,16 +810,22 @@ UnifiedScheduler::runTasks( int t_id )
         havework = true;
         numTasksDone++;
         if (taskorder.active()) {
-          if (d_myworld->myrank() == d_myworld->size() / 2) {
+          if (me == d_myworld->size() / 2) {
             cerrLock.lock();
-            taskorder << d_myworld->myrank() << " Running task static order: " << readyTask->getSaticOrder()
+            taskorder << "Rank-" << me  << " Running task static order: " << readyTask->getSaticOrder()
                       << " , scheduled order: " << numTasksDone << std::endl;
             cerrLock.unlock();
           }
         }
         phaseTasksDone[readyTask->getTask()->d_phase]++;
-        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+        while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
           currphase++;
+          if (taskdbg.active()) {
+            cerrLock.lock();
+            taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+                    << phaseTasks[currphase] << std::endl;
+            cerrLock.unlock();
+          }
         }
         break;
       }
@@ -924,20 +859,27 @@ UnifiedScheduler::runTasks( int t_id )
             currentDevice_++;
             currentDevice_ %= numDevices_;
             gpuInitReady = true;
-          } else {
+          }
+          else {
 #endif
           numTasksDone++;
-          if (taskorder.active()){
-            if (d_myworld->myrank() == d_myworld->size()/2) {
+          if (taskorder.active()) {
+            if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << d_myworld->myrank() << " Running task static order: " <<  readyTask->getSaticOrder() << " , scheduled order: "
-                << numTasksDone << std::endl;
+              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+                        << ", scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
           }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
             currphase++;
+            if (taskdbg.active()) {
+              cerrLock.lock();
+              taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+                      << phaseTasks[currphase] << std::endl;
+              cerrLock.unlock();
+            }
           }
 #ifdef HAVE_CUDA
         }
@@ -960,17 +902,19 @@ UnifiedScheduler::runTasks( int t_id )
           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
             if (taskdbg.active()) {
               cerrLock.lock();
-              taskdbg << d_myworld->myrank() << " Task internal ready 1 " << *initTask << std::endl;
+              taskdbg << "Rank-" << me << " Task internal ready 1 " << *initTask << std::endl;
               cerrLock.unlock();
             }
             phaseSyncTask[initTask->getTask()->d_phase] = initTask;
             ASSERT(initTask->getRequires().size() == 0)
             initTask = NULL;
-          } else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
+          }
+          else if (initTask->getRequires().size() == 0) {  // no ext. dependencies, then skip MPI sends
             initTask->markInitiated();
             initTask->checkExternalDepCount();  // where tasks get added to external ready queue
             initTask = NULL;
-          } else {
+          }
+          else {
             havework = true;
             break;
           }
@@ -1017,14 +961,20 @@ UnifiedScheduler::runTasks( int t_id )
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << d_myworld->myrank() << " Running task static order: " << readyTask->getSaticOrder() << " , scheduled order: "
-                      << numTasksDone << std::endl;
+              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+                        << " , scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
           }
           phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhase) {
+          while (phaseTasks[currphase] == phaseTasksDone[currphase] && currphase + 1 < numPhases) {
             currphase++;
+            if (taskdbg.active()) {
+              cerrLock.lock();
+              taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+                      << phaseTasks[currphase] << std::endl;
+              cerrLock.unlock();
+            }
           }
           break;
         }
@@ -1045,9 +995,9 @@ UnifiedScheduler::runTasks( int t_id )
       if (numTasksDone == ntasks) {
         break;
       }
-    }
-    schedulerLock.unlock();
+    } // end while (!havework)
 
+    schedulerLock.unlock();
 
     // ----------------------------------------------------------------------------------
     // Part 2
@@ -1059,16 +1009,17 @@ UnifiedScheduler::runTasks( int t_id )
       initiateTask(initTask, abort, abort_point, currentIteration);
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task internal ready 2 " << *initTask << " deps needed: "
+        taskdbg << "Rank-" << me << " Task internal ready 2 " << *initTask << " deps needed: "
                 << initTask->getExternalDepCount() << std::endl;
         cerrLock.unlock();
       }
       initTask->markInitiated();
       initTask->checkExternalDepCount();
-    } else if (readyTask != NULL) {
+    }
+    else if (readyTask != NULL) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << d_myworld->myrank() << " Task external ready " << *readyTask << std::endl;
+        taskdbg << "Rank-" << me << " Task external ready " << *readyTask << std::endl;
         cerrLock.unlock();
       }
       if (readyTask->getTask()->getType() == Task::Reduction) {
@@ -1084,244 +1035,51 @@ UnifiedScheduler::runTasks( int t_id )
           dws[i]->getGPUDW(readyTask->getDeviceNum())->syncto_device();
         }
         dts->addInitiallyReadyDeviceTask(readyTask);
-      } else if (gpuRunReady) {
-        runTask(readyTask, currentIteration, t_id, Task::GPU);
+      }
+      else if (gpuRunReady) {
+        runTask(readyTask, currentIteration, thread_id, Task::GPU);
         postD2HCopies(readyTask);
         dts->addCompletionPendingDeviceTask(readyTask);
-      } else if (gpuPending) {
+      }
+      else if (gpuPending) {
         // run post GPU part of task 
-        runTask(readyTask, currentIteration, t_id, Task::postGPU);
-        // recycle this task's D2H copies streams and events
+        runTask(readyTask, currentIteration, thread_id, Task::postGPU);
+        // recycle this task's stream
         reclaimCudaStreams(readyTask);
       }
 #endif
       else {
-        runTask(readyTask, currentIteration, t_id, Task::CPU);
+        runTask(readyTask, currentIteration, thread_id, Task::CPU);
         printTaskLevels(d_myworld, taskLevel_dbg, readyTask);
       }
-    } else if (pendingMPIMsgs > 0) {
+    }
+    else if (pendingMPIMsgs > 0) {
       processMPIRecvs(TEST);
-    } else {
-      //This can only happen when all tasks have finished
+    }
+    else {
+      // This can only happen when all tasks have finished.
       ASSERT(numTasksDone == ntasks);
     }
-  }  //end while tasks
+  }  //end while (numTasksDone < ntasks)
 }
 
 //______________________________________________________________________
 //
+
 struct CompareDep {
-    bool operator()(DependencyBatch* a,
-                    DependencyBatch* b)
-    {
-      return a->messageTag < b->messageTag;
-    }
+
+  bool operator()( DependencyBatch* a,
+                   DependencyBatch* b )
+  {
+    return a->messageTag < b->messageTag;
+  }
 };
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postMPIRecvs(DetailedTask * task,
-                                    bool only_old_recvs,
-                                    int abort_point,
-                                    int iteration)
-{
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
-  double recvstart = Time::currentSeconds();
-  TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER);
 
-  // Receive any of the foreign requires
-
-  if (dbg.active()) {
-    cerrLock.lock();
-    dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
-    cerrLock.unlock();
-  }
-
-  if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_COMM) {
-    printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_COMM);
-  }
-
-  // sort the requires, so in case there is a particle send we receive it with
-  // the right message tag
-
-  vector<DependencyBatch*> sorted_reqs;
-  map<DependencyBatch*, DependencyBatch*>::const_iterator iter = task->getRequires().begin();
-  for (; iter != task->getRequires().end(); iter++) {
-    sorted_reqs.push_back(iter->first);
-  }
-
-  CompareDep comparator;
-  sort(sorted_reqs.begin(), sorted_reqs.end(), comparator);
-  vector<DependencyBatch*>::iterator sorted_iter = sorted_reqs.begin();
-
-  recvLock.writeLock();
-  {
-    for (; sorted_iter != sorted_reqs.end(); sorted_iter++) {
-      DependencyBatch* batch = *sorted_iter;
-
-      // The first thread that calls this on the batch will return true
-      // while subsequent threads calling this will block and wait for
-      // that first thread to receive the data.
-
-      task->incrementExternalDepCount();
-      if (!batch->makeMPIRequest()) {
-
-        if (dbg.active()) {
-          cerrLock.lock();
-          dbg << "Someone else already receiving it\n";
-          cerrLock.unlock();
-        }
-        continue;
-      }
-
-      if (only_old_recvs) {
-        if (dbg.active()) {
-          dbg << "abort analysis: " << batch->fromTask->getTask()->getName() << ", so="
-              << batch->fromTask->getTask()->getSortedOrder() << ", abort_point=" << abort_point << '\n';
-          if (batch->fromTask->getTask()->getSortedOrder() <= abort_point)
-            dbg << "posting MPI recv for pre-abort message " << batch->messageTag << '\n';
-        }
-        if (!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
-          continue;
-        }
-      }
-
-      // Prepare to receive a message
-      BatchReceiveHandler* pBatchRecvHandler = scinew BatchReceiveHandler(batch);
-      PackBufferInfo* p_mpibuff = 0;
-#ifdef USE_PACKING
-      p_mpibuff = scinew PackBufferInfo();
-      PackBufferInfo& mpibuff = *p_mpibuff;
-#else
-      BufferInfo mpibuff;
-#endif
-
-      ostringstream ostr;
-      ostr.clear();
-      // Create the MPI type
-      for (DetailedDep* req = batch->head; req != 0; req = req->next) {
-        OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
-        if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-            && iteration == 0)
-            || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
-          // See comment in DetailedDep about CommCondition
-
-          dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << std::endl;
-          continue;
-        }
-        // if we send/recv to an output task, don't send/recv if not an output timestep
-        if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep()
-            && !oport_->isCheckpointTimestep()) {
-          dbg << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << std::endl;
-          continue;
-        }
-        if (dbg.active()) {
-          ostr << *req << ' ';
-          dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", "
-              << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
-        }
-
-        OnDemandDataWarehouse* posDW;
-
-        // the load balancer is used to determine where data was in the old dw on the prev timestep
-        // pass it in if the particle data is on the old dw
-        LoadBalancer* lb = 0;
-        if (!reloc_new_posLabel_ && parentScheduler) {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        }
-        else {
-          // on an output task (and only on one) we require particle variables from the NewDW
-          if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-            posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
-          }
-          else {
-            posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
-            lb = getLoadBalancer();
-          }
-        }
-
-        MPIScheduler* top = this;
-        while (top->parentScheduler) {
-          top = top->parentScheduler;
-        }
-
-        dw->recvMPI(batch, mpibuff, posDW, req, lb);
-
-        if (!req->isNonDataDependency()) {
-          graphs[currentTG_]->getDetailedTasks()->setScrubCount(req->req, req->matl, req->fromPatch, dws);
-        }
-      }
-
-      // Post the receive
-      if (mpibuff.count() > 0) {
-
-        ASSERT(batch->messageTag > 0);
-        double start = Time::currentSeconds();
-        void* buf;
-        int count;
-        MPI_Datatype datatype;
-
-#ifdef USE_PACKING
-        mpibuff.get_type(buf, count, datatype, d_myworld->getComm());
-#else
-        mpibuff.get_type(buf, count, datatype);
-#endif
-
-        //only receive message if size is greater than zero
-        //we need this empty message to enforce modify after read dependencies
-        //if(count>0)
-        //{
-        int from = batch->fromTask->getAssignedResourceIndex();
-        ASSERTRANGE(from, 0, d_myworld->size());
-        MPI_Request requestid;
-
-        if (dbg.active()) {
-          coutLock.lock();
-          dbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from << ": "
-              << ostr.str() << "\n";
-          coutLock.unlock();
-        }
-
-        if (mpidbg.active()) {
-          coutLock.lock();
-          mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from
-                 << ", length=" << count << "\n";
-          coutLock.unlock();
-        }
-
-        MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
-        int bytes = count;
-        recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
-        mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
-        /*}
-         else
-         {
-         //no message was sent so clean up buffer and handler
-         delete p_mpibuff;
-         delete pBatchRecvHandler;
-         }*/
-      }
-      else {
-        // Nothing really need to be received, but let everyone else know that it has what is needed (nothing).
-        batch->received(d_myworld);
-#ifdef USE_PACKING
-        // otherwise, these will be deleted after it receives and unpacks the data.
-        delete p_mpibuff;
-        delete pBatchRecvHandler;
-#endif	        
-      }
-    }  // end for loop over requires
-  }
-  recvLock.writeUnlock();
-
-  double drecv = Time::currentSeconds() - recvstart;
-  mpi_info_.totalrecv += drecv;
-
-}  // end postMPIRecvs()
-
-//______________________________________________________________________
-//
-int UnifiedScheduler::pendingMPIRecvs()
+int
+UnifiedScheduler::pendingMPIRecvs()
 {
   int num = 0;
   recvLock.readLock();
@@ -1332,202 +1090,7 @@ int UnifiedScheduler::pendingMPIRecvs()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::processMPIRecvs(int how_much)
-{
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs");
-  TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
 
-  // Should only have external receives in the MixedScheduler version which
-  // shouldn't use this function.
-  // ASSERT(outstandingExtRecvs.empty());
-  //if (recvs_.numRequests() == 0) return;
-  double start = Time::currentSeconds();
-  recvLock.writeLock();
-  {
-    switch (how_much) {
-      case TEST :
-        recvs_.testsome(d_myworld);
-        break;
-      case WAIT_ONCE :
-        mpidbg << d_myworld->myrank() << " Start waiting once...\n";
-        recvs_.waitsome(d_myworld);
-        mpidbg << d_myworld->myrank() << " Done  waiting once...\n";
-        break;
-      case WAIT_ALL :
-        // This will allow some receives to be "handled" by their
-        // AfterCommincationHandler while waiting for others.
-        mpidbg << d_myworld->myrank() << "  Start waiting...\n";
-        while ((recvs_.numRequests() > 0)) {
-          bool keep_waiting = recvs_.waitsome(d_myworld);
-          if (!keep_waiting) {
-            break;
-          }
-        }
-        mpidbg << d_myworld->myrank() << "  Done  waiting...\n";
-        break;
-    } // end switch
-  }
-  recvLock.writeUnlock();
-
-  mpi_info_.totalwaitmpi += Time::currentSeconds() - start;
-  CurrentWaitTime += Time::currentSeconds() - start;
-
-}  // end processMPIRecvs()
-
-//______________________________________________________________________
-//
-void UnifiedScheduler::postMPISends(DetailedTask * task,
-                                    int iteration,
-                                    int t_id)
-{
-  MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postMPISends");
-  double sendstart = Time::currentSeconds();
-
-  if (dbg.active()) {
-    cerrLock.lock();
-    dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
-    cerrLock.unlock();
-  }
-
-  int numSend = 0;
-  int volSend = 0;
-
-  // Send data to dependents
-  for (DependencyBatch* batch = task->getComputes(); batch != 0; batch = batch->comp_next) {
-
-    // Prepare to send a message
-#ifdef USE_PACKING
-    PackBufferInfo mpibuff;
-#else
-    BufferInfo mpibuff;
-#endif
-    // Create the MPI type
-    int to = batch->toTasks.front()->getAssignedResourceIndex();
-    ASSERTRANGE(to, 0, d_myworld->size());
-    ostringstream ostr;
-    ostr.clear();
-    for (DetailedDep* req = batch->head; req != 0; req = req->next) {
-      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
-          && iteration == 0)
-          || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
-        // See comment in DetailedDep about CommCondition
-        if (dbg.active()) {
-          dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << std::endl;
-        }
-        continue;
-      }
-      // if we send/recv to an output task, don't send/recv if not an output timestep
-      if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep()
-          && !oport_->isCheckpointTimestep()) {
-        if (dbg.active()) {
-          dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << std::endl;
-        }
-        continue;
-      }
-      OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
-
-      if (dbg.active()) {
-        ostr << *req << ' ';
-        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells
-            << " from dw " << dw->getID() << '\n';
-      }
-      const VarLabel* posLabel;
-      OnDemandDataWarehouse* posDW;
-
-      // the load balancer is used to determine where data was in the old dw on the prev timestep -
-      // pass it in if the particle data is on the old dw
-      LoadBalancer* lb = 0;
-
-      if (!reloc_new_posLabel_ && parentScheduler) {
-        posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
-        posLabel = parentScheduler->reloc_new_posLabel_;
-      }
-      else {
-        // on an output task (and only on one) we require particle variables from the NewDW
-        if (req->toTasks.front()->getTask()->getType() == Task::Output) {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
-        }
-        else {
-          posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
-          lb = getLoadBalancer();
-        }
-        posLabel = reloc_new_posLabel_;
-      }
-      MPIScheduler* top = this;
-      while (top->parentScheduler) {
-        top = top->parentScheduler;
-      }
-
-      dw->sendMPI(batch, posLabel, mpibuff, posDW, req, lb);
-    }
-    // Post the send
-    if (mpibuff.count() > 0) {
-      ASSERT(batch->messageTag > 0);
-      double start = Time::currentSeconds();
-      void* buf;
-      int count;
-      MPI_Datatype datatype;
-
-#ifdef USE_PACKING
-      mpibuff.get_type(buf, count, datatype, d_myworld->getComm());
-      mpibuff.pack(d_myworld->getComm(), count);
-#else
-      mpibuff.get_type(buf, count, datatype);
-#endif
-
-      //only send message if size is greather than zero
-      //we need this empty message to enforce modify after read dependencies 
-      //if(count>0)
-      //{
-
-      if (dbg.active()) {
-        coutLock.lock();
-        dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << " to " << to << ": " << ostr.str() << "\n";
-        coutLock.unlock();
-      }
-
-      if (mpidbg.active()) {
-        coutLock.lock();
-        mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count
-               << "\n";
-        coutLock.unlock();
-      }
-
-      numMessages_++;
-      numSend++;
-      int typeSize;
-
-      MPI_Type_size(datatype, &typeSize);
-      messageVolume_ += count * typeSize;
-      volSend += count * typeSize;
-
-      MPI_Request requestid;
-      MPI_Isend(buf, count, datatype, to, batch->messageTag, d_myworld->getComm(), &requestid);
-      int bytes = count;
-
-      // this is written per thread, no lock needed
-      sends_[t_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
-
-      mpi_info_.totalsendmpi += Time::currentSeconds() - start;
-
-      //}
-    }
-  }  // end for (DependencyBatch * batch = task->getComputes() )
-
-  double dsend = Time::currentSeconds() - sendstart;
-  mpi_info_.totalsend += dsend;
-  if (dbgst.active() && numSend > 0) {
-    if (d_myworld->myrank() == d_myworld->size() / 2) {
-      coutLock.lock();
-      dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= " << numSend << " , VolSend: " << volSend
-            << std::endl;
-      coutLock.unlock();
-    }
-  }
-}  // end postMPISends();
-
-//______________________________________________________________________
-//
 int UnifiedScheduler::getAviableThreadNum()
 {
   int num = 0;
@@ -1540,8 +1103,11 @@ int UnifiedScheduler::getAviableThreadNum()
 }
 
 #ifdef HAVE_CUDA
+//______________________________________________________________________
+//
 
-void UnifiedScheduler::gpuInitialize(bool reset)
+void
+UnifiedScheduler::gpuInitialize( bool reset )
 {
   cudaError_t retVal;
 
@@ -1563,7 +1129,9 @@ void UnifiedScheduler::gpuInitialize(bool reset)
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
+
+void
+UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postH2DCopies");
   TAU_PROFILE("UnifiedScheduler::postH2DCopies()", " ", TAU_USER);
@@ -1888,8 +1456,10 @@ void UnifiedScheduler::postH2DCopies(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
+void
+UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
+{
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::preallocateDeviceMemory");
   TAU_PROFILE("UnifiedScheduler::preallocateDeviceMemory()", " ", TAU_USER);
 
@@ -2055,8 +1625,10 @@ void UnifiedScheduler::preallocateDeviceMemory(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
+void
+UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
+{
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::postD2HCopies");
   TAU_PROFILE("UnifiedScheduler::postD2HCopies()", " ", TAU_USER);
 
@@ -2300,7 +1872,10 @@ void UnifiedScheduler::postD2HCopies(DetailedTask* dtask) {
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::createCudaStreams(int device, int numStreams /*=1*/)
+
+void
+UnifiedScheduler::createCudaStreams( int device,
+                                     int numStreams /* = 1 */ )
 {
   cudaError_t retVal;
 
@@ -2327,7 +1902,9 @@ void UnifiedScheduler::createCudaStreams(int device, int numStreams /*=1*/)
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::freeCudaStreams()
+
+void
+UnifiedScheduler::freeCudaStreams()
 {
   cudaError_t retVal;
 
@@ -2370,7 +1947,9 @@ void UnifiedScheduler::freeCudaStreams()
 
 //______________________________________________________________________
 //
-cudaStream_t* UnifiedScheduler::getCudaStream(int device)
+
+cudaStream_t *
+UnifiedScheduler::getCudaStream( int device )
 {
   cudaError_t retVal;
   cudaStream_t* stream;
@@ -2412,7 +1991,9 @@ cudaStream_t* UnifiedScheduler::getCudaStream(int device)
 
 //______________________________________________________________________
 //
-cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
+
+cudaError_t
+UnifiedScheduler::unregisterPageLockedHostMem()
 {
   cudaError_t retVal;
   std::set<void*>::iterator iter;
@@ -2428,7 +2009,9 @@ cudaError_t UnifiedScheduler::unregisterPageLockedHostMem()
 
 //______________________________________________________________________
 //
-void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
+
+void
+UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
 {
   cudaStream_t* stream;
   int deviceNum;
@@ -2451,51 +2034,56 @@ void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask)
   }
 }
 
+#endif // end HAVE_CUDA
 
-#endif
 
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
 //------------------------------------------
-UnifiedSchedulerWorker::UnifiedSchedulerWorker(UnifiedScheduler* scheduler,
-                                               int id) :
-    d_id(id),
-    d_scheduler(scheduler),                           
-    d_idle(true),                                     
-    d_runmutex("run mutex"),                          
-    d_runsignal("run condition"),                     
-    d_quit(false),                                    
-    d_waittime(0.0),                                  
-    d_waitstart(0.0),                                 
-    d_rank(scheduler->getProcessorGroup()->myrank())  
+UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
+                                                int                thread_id )
+  : d_scheduler( scheduler ),
+    d_runsignal( "run condition" ),
+    d_runmutex( "run mutex" ),
+    d_quit( false ),
+    d_idle( true ),
+    d_thread_id( thread_id ),
+    d_rank( scheduler->getProcessorGroup()->myrank() ),
+    d_waittime( 0.0 ),
+    d_waitstart( 0.0 )
 {
   d_runmutex.lock();
 }
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerWorker::run()
+
+void
+UnifiedSchedulerWorker::run()
 {
-  if (threaddbg.active()) {
-    cerrLock.lock();
-    threaddbg << "Binding thread ID " << d_id + 1 << " to CPU core " << d_id + 1 << std::endl;
-    cerrLock.unlock();
+  // set thread ID
+  Thread::self()->set_myid(d_thread_id);
+
+  // CPU/MIC compact affinity
+  if (unified_compactaffinity.active()) {
+    if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+      cerrLock.lock();
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+      unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to CPU/MIC core " << d_thread_id << "\n";
+      cerrLock.unlock();
+    }
+    Thread::self()->set_affinity(d_thread_id);
   }
 
-  Thread::self()->set_myid(d_id + 1);
-  if (affinity.active()) {
-    Thread::self()->set_affinity(d_id + 1);
-  }
-
-  while (true) {
-    //wait for main thread signal
-    d_runsignal.wait(d_runmutex);
+  while( true ) {
+    d_runsignal.wait(d_runmutex); // wait for main thread signal.
     d_runmutex.unlock();
     d_waittime += Time::currentSeconds() - d_waitstart;
+
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_id << "quitting   " << "\n";
+        taskdbg << "Worker " << d_rank << "-" << d_thread_id << " quitting" << "\n";
         cerrLock.unlock();
       }
       return;
@@ -2503,19 +2091,29 @@ void UnifiedSchedulerWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_id << ": executing tasks \n";
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": executing tasks \n";
       cerrLock.unlock();
     }
 
-    d_scheduler->runTasks(d_id + 1);
+    try {
+      d_scheduler->runTasks(d_thread_id);
+    }
+    catch (Exception& e) {
+      cerrLock.lock();
+      std::cerr << "Worker " << d_rank << "-" << d_thread_id << ": Caught exception: " << e.message() << "\n";
+      if (e.stackTrace()) {
+        std::cerr << "Stack trace: " << e.stackTrace() << '\n';
+      }
+      cerrLock.unlock();
+    }
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_id << ": finished executing tasks   \n";
+      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing tasks   \n";
       cerrLock.unlock();
     }
 
-    //signal main thread for next group of tasks
+    // Signal main thread for next group of tasks.
     d_scheduler->d_nextmutex.lock();
     d_runmutex.lock();
     d_waitstart = Time::currentSeconds();
@@ -2527,15 +2125,19 @@ void UnifiedSchedulerWorker::run()
 
 //______________________________________________________________________
 //
-double UnifiedSchedulerWorker::getWaittime()
+
+double
+UnifiedSchedulerWorker::getWaittime()
 {
   return d_waittime;
 }
 
 //______________________________________________________________________
 //
-void UnifiedSchedulerWorker::resetWaittime(double start)
+
+void
+UnifiedSchedulerWorker::resetWaittime( double start )
 {
   d_waitstart = start;
-  d_waittime = 0.0;
+  d_waittime  = 0.0;
 }

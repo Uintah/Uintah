@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +24,7 @@
 
 #ifndef UINTAH_HOMEBREW_BufferInfo_H
 #define UINTAH_HOMEBREW_BufferInfo_H
+
 #include <sci_defs/mpi_defs.h> // For mpi.h
 
 #include <vector>
@@ -40,28 +41,23 @@ class AfterCommunicationHandler {
     }
 
     virtual void finishedCommunication(const ProcessorGroup*,
-                                       MPI_Status &status) = 0;
+                                       MPI_Status& status) = 0;
 };
 
 class Sendlist : public AfterCommunicationHandler {
 
   public:
-    Sendlist(Sendlist* next,
-             RefCounted* obj)
-        : next(next), obj(obj)
-    {
-    }
+    Sendlist( Sendlist* next, RefCounted* obj ) : next(next), obj(obj) {}
+
     virtual ~Sendlist();
-    Sendlist* next;
+
+    Sendlist*   next;
     RefCounted* obj;
 
     // Sendlist is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  The only task
     // it needs to do to handle finished send requests is simply get deleted.
-    virtual void finishedCommunication(const ProcessorGroup*,
-                                       MPI_Status &status)
-    {
-    }
+    virtual void finishedCommunication( const ProcessorGroup *, MPI_Status & status ) {}
 
 };
 
@@ -72,18 +68,18 @@ class BufferInfo {
 
     virtual ~BufferInfo();
 
-    int count() const;
+    unsigned int count() const;
 
     void get_type(void*&,
                   int&,
                   MPI_Datatype&);
 
-    void add(void* startbuf,
-             int count,
-             MPI_Datatype datatype,
-             bool free_datatype);
+    void add( void*          startbuf,
+              int            count,
+              MPI_Datatype   datatype,
+              bool           free_datatype );
 
-    void addSendlist(RefCounted*);
+    void addSendlist( RefCounted* );
 
     Sendlist* takeSendlist();
 
@@ -92,18 +88,18 @@ class BufferInfo {
     BufferInfo& operator=(const BufferInfo&);
 
   protected:
-    Sendlist* sendlist;
-    std::vector<void*> startbufs;
-    std::vector<int> counts;
-    std::vector<MPI_Datatype> datatypes;
-    std::vector<bool> free_datatypes;
+    Sendlist*                   d_sendlist;
+    std::vector<void*>          d_startbufs;
+    std::vector<int>            d_counts;
+    std::vector<MPI_Datatype>   d_datatypes;
+    std::vector<bool>           d_free_datatypes;
 
-    void* buf;
-    int cnt;
-    MPI_Datatype datatype;
+    void*          buf;
+    int            cnt;
+    MPI_Datatype   datatype;
 
-    bool free_datatype;
-    bool have_datatype;
+    bool d_free_datatype;
+    bool d_have_datatype;
 };
 }
 

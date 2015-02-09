@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -954,7 +954,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     cout.flush();
 
     if (stats.active()) {
-      stats << left << setw(19)  << "  Description         Ave time:       max Time:     mpi proc:    100*(1-ave/max) '% load imbalance'\n";
+      stats << left << setw(19)  << "  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'\n";
 
       if(d_myworld->size()>1){
         for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
@@ -962,8 +962,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
             stats << "  "<< left << setw(19)<< statLabels[i]
                   << " : " << setw(12) << avgReduce[i]
                   << " : " << setw(12) << maxReduce[i].val
-                  << " : " << setw(10)  << maxReduce[i].loc
-                  << " : " << setw(10)  << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
+                  << " : " << setw(10) << maxReduce[i].loc
+                  << " : " << setw(10) << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
           }
         }
       }else {//runing in serial

@@ -11,7 +11,7 @@
  * @date   Not sure
  *
  * @brief Assembles source term for the gas enthalpy equation from the 
- * 				particle phase. 
+ *        particle phase. 
  *
  * @todo
  *
@@ -24,13 +24,13 @@
  * Input file interface is as follows: 
 \code
 <Sources>
-	<src label="STRING OPTIONAL" type="coal_gas_heat">
-		<heat_model_name>STRING REQUIRED</heat_model_name>
+  <src label="STRING OPTIONAL" type="coal_gas_heat">
+    <heat_model_name>STRING REQUIRED</heat_model_name>
   </src>
 </Sources>
 \endcode
-	* where heat_model_name is the given name of the heat transfer model for the 
-	* particle model as specified in the CoalModel section. 
+  * where heat_model_name is the given name of the heat transfer model for the 
+  * particle model as specified in the CoalModel section. 
 */
 
 namespace Uintah{ 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -54,6 +54,7 @@ using namespace SCIRun;
 //---------------------------------------------------------------------------
 // Kernel: The GPU ray tracer kernel
 //---------------------------------------------------------------------------
+template< class T>
 __global__ void rayTraceKernel(dim3 dimGrid,
                                dim3 dimBlock,
                                int matl,
@@ -75,17 +76,23 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + patch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + patch.loEC.y;
   
-  const GPUGridVariable<double> sigmaT4OverPi;
-  const GPUGridVariable<double> abskg;              // Need to use getRegion() to get the data
+  const GPUGridVariable< T > sigmaT4OverPi;
+  const GPUGridVariable< T > abskg;              // Need to use getRegion() to get the data
   const GPUGridVariable<int> celltype;
 
   GPUGridVariable<double> divQ;
   GPUGridVariable<GPUStencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
  
-  abskg_gdw->get(   abskg   ,       "abskg" ,   patch.ID, matl );  
-  sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );
-  celltype_gdw->get( celltype ,     "cellType", patch.ID, matl );
+    
+  sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );       // Should be using labelNames struct
+  celltype_gdw->get( celltype,     "cellType", patch.ID, matl );
+  
+  if(RT_flags.usingFloats){
+    abskg_gdw->get( abskg , "abskgRMCRT",   patch.ID, matl );
+  }else{
+    abskg_gdw->get( abskg , "abskg",   patch.ID, matl );
+  }
 
   if( RT_flags.modifies_divQ ){
     new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
@@ -108,6 +115,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
     }
   }
   
+
   
 /*`==========TESTING==========*/
 #if 0  
@@ -241,7 +249,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
             rayLocation_cellFaceDevice( randNumStates, origin, locationIndexOrder[RayFace], locationShift[RayFace], 
                                   DyDx, DzDx, ray_location);            
 
-            updateSumIDevice( direction_vector, ray_location, origin, patch.dx, sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+            updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx, sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
 
             sumProjI += cosTheta * (sumI - sumI_prev);   // must subtract sumI_prev, since sumI accumulates intensity
 
@@ -288,7 +296,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
           
           gpuVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
          
-          updateSumIDevice( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+          updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
         } //Ray loop
  
         //__________________________________
@@ -505,12 +513,13 @@ __device__ void reflect(double& fs,
 }
 
 //______________________________________________________________________
+template< class T >
 __device__ void updateSumIDevice ( gpuVector& ray_direction,
                                    gpuVector& ray_location,
                                    const gpuIntVector& origin,
                                    const gpuVector& Dx,
-                                   const GPUGridVariable<double>& sigmaT4OverPi,
-                                   const GPUGridVariable<double>& abskg,
+                                   const GPUGridVariable< T >& sigmaT4OverPi,
+                                   const GPUGridVariable< T >& abskg,
                                    const GPUGridVariable<int>& celltype,
                                    double& sumI,
                                    curandState* randNumStates,
@@ -765,7 +774,7 @@ __global__ void setupRandNum_kernel(curandState* randNumStates)
 }
 
 //______________________________________________________________________
-
+template< class T>
 __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
                                    int matlIndex,
@@ -779,7 +788,6 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    GPUDataWarehouse* old_gdw,
                                    GPUDataWarehouse* new_gdw)
 {
-
   // setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
@@ -788,7 +796,7 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
   
   setupRandNum_kernel<<< dimGrid, dimBlock>>>( randNumStates );
   
-  rayTraceKernel<<< dimGrid, dimBlock, 0, *stream >>>(dimGrid, 
+  rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>(dimGrid, 
                                                       dimBlock, 
                                                       matlIndex,
                                                       patch,
@@ -803,5 +811,36 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
     // free device-side RNG states
     CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
 }
+
+//______________________________________________________________________
+//  Explicit template instantiations
+
+template
+__host__ void launchRayTraceKernel<double>(dim3 dimGrid,
+                                           dim3 dimBlock,
+                                           int matlIndex,
+                                           patchParams patch,
+                                           cudaStream_t* stream,
+                                           RMCRT_flags RT_flags,
+                                           varLabelNames labelNames,
+                                           GPUDataWarehouse* abskg_gdw,
+                                           GPUDataWarehouse* sigmaT4_gdw,
+                                           GPUDataWarehouse* celltype_gdw,
+                                           GPUDataWarehouse* old_gdw,
+                                           GPUDataWarehouse* new_gdw);
+                                   
+template
+__host__ void launchRayTraceKernel<float>(dim3 dimGrid,
+                                          dim3 dimBlock,
+                                          int matlIndex,
+                                          patchParams patch,
+                                          cudaStream_t* stream,
+                                          RMCRT_flags RT_flags,
+                                          varLabelNames labelNames,
+                                          GPUDataWarehouse* abskg_gdw,
+                                          GPUDataWarehouse* sigmaT4_gdw,
+                                          GPUDataWarehouse* celltype_gdw,
+                                          GPUDataWarehouse* old_gdw,
+                                          GPUDataWarehouse* new_gdw);
 
 } //end namespace Uintah

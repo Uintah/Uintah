@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
-#define UINTAH_HOMEBREW_SinglePROCESSORSCHEDULER_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_SINGLEPROCESSORSCHEDULER_H
+#define CCA_COMPONENTS_SCHEDULERS_SINGLEPROCESSORSCHEDULER_H
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/DataWarehouseP.h>
@@ -41,7 +41,6 @@ namespace Uintah {
 CLASS
    SingleProcessorScheduler
    
-   Short description...
 
 GENERAL INFORMATION
 
@@ -55,33 +54,37 @@ GENERAL INFORMATION
   
 
 KEYWORDS
-   Scheduler_Brain_Damaged
+   Single Processor Scheduler
 
 DESCRIPTION
-   Long description...
+   Static task ordering and deterministic execution without MPI.
+   Primarily used for small runs on a single desktop or laptop.
   
-WARNING
   
 ****************************************/
 
-  class SingleProcessorScheduler : public SchedulerCommon {
+class SingleProcessorScheduler : public SchedulerCommon {
+
   public:
+
     SingleProcessorScheduler( const ProcessorGroup * myworld, const Output * oport, SingleProcessorScheduler * parent = NULL );
+
     virtual ~SingleProcessorScheduler();
 
-    //////////
-    // Insert Documentation Here:
     virtual void execute(int tgnum = 0, int iteration = 0);
     
     virtual SchedulerP createSubScheduler();
 
   private:
+
+    // Disable copy and assignment
+    SingleProcessorScheduler( const SingleProcessorScheduler& );
     SingleProcessorScheduler& operator=(const SingleProcessorScheduler&);
 
     virtual void verifyChecksum();
 
     SingleProcessorScheduler* m_parent;
-  };
+};
 } // End namespace Uintah
    
-#endif
+#endif // End CCA_COMPONENTS_SCHEDULERS_SINGLEPROCESSORSCHEDULER_H

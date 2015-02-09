@@ -58,6 +58,8 @@ NIGHTLYTESTS = [
    ("dqmom_test_3"                      , "DQMOM_regression/dqmom_test_3.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("dqmom_test_4"                      , "DQMOM_regression/dqmom_test_4.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("dqmom_test_5"                      , "DQMOM_regression/dqmom_test_5.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("birth_test"                        , "DQMOM_regression/birth_test.ups"                         , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("upwind_birth_test"                 , "DQMOM_regression/upwind_birth_test.ups"                  , 1.1 , "Linux" , ["exactComparison"])   , 
    ("methane_jet"                       , "ClassicMixingTables/ups/methane_jet.ups"                 , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("acidbase_jet"                      , "ClassicMixingTables/ups/acidbase_jet.ups"                , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("acidbase_jet_2D"                   , "ClassicMixingTables/ups/acidbase_jet_2D.ups"             , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
@@ -114,6 +116,8 @@ LOCALTESTS = [
    ("dqmom_test_3"                      , "DQMOM_regression/dqmom_test_3.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("dqmom_test_4"                      , "DQMOM_regression/dqmom_test_4.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("dqmom_test_5"                      , "DQMOM_regression/dqmom_test_5.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+   ("birth_test"                        , "DQMOM_regression/birth_test.ups"                         , 1.1 , "All"  , ["exactComparison"])   , 
+   ("upwind_birth_test"                 , "DQMOM_regression/upwind_birth_test.ups"                  , 1.1 , "All"  , ["exactComparison"])   , 
    ("methane_jet"                       , "ClassicMixingTables/ups/methane_jet.ups"                 , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("acidbase_jet"                      , "ClassicMixingTables/ups/acidbase_jet.ups"                , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("acidbase_jet_2D"                   , "ClassicMixingTables/ups/acidbase_jet_2D.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -146,7 +150,7 @@ LOCALTESTS = [
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    
 # multi-threaded LOCAL tests
-   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   #("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
    #("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
 ]
 

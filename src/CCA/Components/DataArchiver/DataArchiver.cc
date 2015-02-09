@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -220,12 +220,12 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       //__________________________________
       //  bullet proofing: must save p.x 
       //  in addition to other particle variables "p.*"
-      if (saveItem.labelName == "p.x" || saveItem.labelName == "p.xx") {
+      if (saveItem.labelName == d_particlePositionName || saveItem.labelName == "p.xx") {
          d_saveP_x = true;
       }
 
       string::size_type pos = saveItem.labelName.find("p.");
-      if ( pos != string::npos &&  saveItem.labelName != "p.x") {
+      if ( pos != string::npos &&  saveItem.labelName != d_particlePositionName) {
         d_saveParticleVariables = true;
       }
       
@@ -234,7 +234,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       save = save->findNextBlock("save");
    }
    if(d_saveP_x == false && d_saveParticleVariables == true) {
-     throw ProblemSetupException(" You must save p.x when saving other particle variables",
+     throw ProblemSetupException(" You must save " + d_particlePositionName + " when saving other particle variables",
                                  __FILE__, __LINE__);
    }     
    

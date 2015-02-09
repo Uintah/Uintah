@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2010-2012 The University of Utah
+ * Copyright (c) 2010-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -366,7 +366,7 @@ namespace Wasatch{
     //
     doParticles_ = wasatchSpec_->findBlock("ParticleTransportEquations");
     if( doParticles_ ){
-      particlesHelper_->problem_setup(wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
+      particlesHelper_->problem_setup(params, wasatchSpec_->findBlock("ParticleTransportEquations"), sharedState);
     }
 
     // setup names for all the boundary condition faces that do NOT have a name or that have duplicate names
@@ -701,10 +701,9 @@ namespace Wasatch{
     // get the variable density mms params, if any, and parse them.
     //
     Uintah::ProblemSpecP VarDenMMSParams = wasatchSpec_->findBlock("VariableDensityMMS");
-    if (VarDenMMSParams) {
+    if( VarDenMMSParams ){
       const bool computeContinuityResidual = wasatchSpec_->findBlock("MomentumEquations")->findBlock("ComputeMassResidual");
-        parse_var_den_mms(wasatchSpec_, VarDenMMSParams, computeContinuityResidual, graphCategories_);
-
+      parse_var_den_mms(wasatchSpec_, VarDenMMSParams, computeContinuityResidual, graphCategories_);
     }
     
     // radiation
@@ -822,7 +821,6 @@ namespace Wasatch{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
@@ -1034,7 +1032,6 @@ namespace Wasatch{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
-      //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     

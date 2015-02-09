@@ -614,7 +614,7 @@ namespace Uintah{
     class SecondOrderInterpolation {
     public:
       double minMod ( double& x, double& y) {
-        double sgn;
+        double sgn=0.0;
         if ( x < 0.0 )
           sgn = -1.0;
         if ( x > 0.0 )
@@ -622,7 +622,7 @@ namespace Uintah{
         if (x == 0.0 )
           sgn = 0.0;
         
-        double sgn2;
+        double sgn2=0.0;
         if ( x*y < 0.0 )
           sgn2 = -1.0;
         if ( x*y > 0.0 )

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,7 +26,6 @@
 #define Packages_Uintah_CCA_Components_Examples_RMCRT_Test_h
 
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
-#include <CCA/Components/Models/Radiation/floatRMCRT/Ray.h>
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Grid/Patch.h>
@@ -35,8 +34,6 @@
 #include <Core/GeometryPiece/GeometryPiece.h>
 
 using SCIRun::DebugStream;
-
-//#define USINGFLOATRMCRT
 
 namespace Uintah
 {
@@ -144,18 +141,14 @@ WARNING
    protected:
     const ProcessorGroup* d_myworld;
     
-    #ifdef USINGFLOATRMCRT
-      floatRay* d_RMCRT;
-    #else
-      Ray* d_RMCRT;
-    #endif
+    Ray* d_RMCRT;
     
     SimulationStateP d_sharedState;
     SimpleMaterial*  d_material;
 
     VarLabel* d_colorLabel;
     VarLabel* d_divQLabel;
-    VarLabel* d_abskgLabel;
+    VarLabel* d_compAbskgLabel;
     VarLabel* d_sigmaT4Label;
     VarLabel* d_cellTypeLabel; 
     

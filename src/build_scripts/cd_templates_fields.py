@@ -3,7 +3,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -82,7 +82,6 @@ if __name__ == '__main__' :
 
   out = open("cd_templates_fields.cc", "w")
 
-  out.write("#include <Core/Persistent/PersistentSTL.h>\n")
   out.write("#include <Core/Geometry/Tensor.h>\n")
   out.write("#include <Core/Geometry/Vector.h>\n")
   out.write("#include <Core/Datatypes/GenericField.h>\n")

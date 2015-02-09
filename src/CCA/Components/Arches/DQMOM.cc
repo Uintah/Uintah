@@ -154,6 +154,7 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
   b_save_moments = false;
 #endif
   if( b_save_moments ) {
+    throw InvalidValue( "ERROR:Save moments is currently disabled.",__FILE__,__LINE__);
     DQMOM::populateMomentsMap(momentIndexes);
   }
 
@@ -173,8 +174,8 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     EqnBase& temp_weightEqnE = eqn_factory.retrieve_scalar_eqn( weight_name );
     DQMOMEqn& temp_weightEqnD = dynamic_cast<DQMOMEqn&>(temp_weightEqnE);
     weightEqns.push_back( &temp_weightEqnD );
-    d_w_small = temp_weightEqnD.getSmallClip();
-    d_weight_scaling_constant = temp_weightEqnD.getScalingConstant();
+    d_w_small = temp_weightEqnD.getSmallClipPlusTol();
+    //d_weight_scaling_constant = temp_weightEqnD.getScalingConstant();
   }
 
   N_xi = 0;
@@ -193,23 +194,11 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
       EqnBase& temp_weightedAbscissaEqnE = eqn_factory.retrieve_scalar_eqn( final_name );
       DQMOMEqn& temp_weightedAbscissaEqnD = dynamic_cast<DQMOMEqn&>(temp_weightedAbscissaEqnE);
       weightedAbscissaEqns.push_back( &temp_weightedAbscissaEqnD );
-      d_weighted_abscissa_scaling_constants.push_back( temp_weightedAbscissaEqnD.getScalingConstant() );
+      //d_weighted_abscissa_scaling_constants.push_back( temp_weightedAbscissaEqnD.getScalingConstant() );
     }
     N_xi = N_xi + 1;
   }
   
-  // Check to make sure number of total moments specified in input file is correct
-  if ( moments != (N_xi+1)*N_ ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
-  }
-
-  // Check to make sure number of moment indices matches the number of internal coordinates
-  if ( index_length != N_xi ) {
-    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
-    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
-  }
-
 #if defined(VERIFY_AB_CONSTRUCTION)
   N_ = vab_N;
   N_xi = vab_N_xi;
@@ -266,6 +255,20 @@ void DQMOM::problemSetup(const ProblemSpecP& params)
     throw ProblemSetupException(err_msg,__FILE__,__LINE__);
   }
 
+  // Check to make sure number of total moments specified in input file is correct
+  if ( moments != (N_xi+1)*N_ && d_solverType != "Simplest") {
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << moments << " moments, but you need " << (N_xi+1)*N_ << " moments." << endl;
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moments specified was incorrect!",__FILE__,__LINE__);
+  }
+
+  // Check to make sure number of moment indices matches the number of internal coordinates
+  if ( index_length != N_xi && d_solverType != "Simplest" ) {
+    proc0cout << "ERROR:DQMOM:ProblemSetup: You specified " << index_length << " moment indices, but there are " << N_xi << " internal coordinates." << endl;
+    throw InvalidValue( "ERROR:DQMOM:ProblemSetup: The number of moment indices specified was incorrect! Need ",__FILE__,__LINE__);
+  }
+
+
+
 
 }
 
@@ -317,18 +320,19 @@ void
 DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int timeSubStep )
 { 
   string taskname = "DQMOM::solveLinearSystem";
-  Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem);
+  Task* tsk = scinew Task(taskname, this, &DQMOM::solveLinearSystem, timeSubStep);
 
   CoalModelFactory& model_factory = CoalModelFactory::self();
+  Task::WhichDW which_dw; 
 
   if (timeSubStep == 0) {
-    proc0cout << "Asking for norm labels" << endl; 
     tsk->computes(d_normBLabel); 
     tsk->computes(d_normXLabel);
     tsk->computes(d_normResLabel);
     tsk->computes(d_normResNormalizedLabelB);
     tsk->computes(d_normResNormalizedLabelX);
     tsk->computes(d_conditionNumberLabel);
+    which_dw = Task::NewDW; 
   } else {
     tsk->modifies(d_normBLabel); 
     tsk->modifies(d_normXLabel);
@@ -336,20 +340,32 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tsk->modifies(d_normResNormalizedLabelB);
     tsk->modifies(d_normResNormalizedLabelX);
     tsk->modifies(d_conditionNumberLabel);
+    which_dw = Task::OldDW; 
   }
 
+
+
   for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
+
     const VarLabel* tempLabel;
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weights
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+    tsk->requires( which_dw, tempLabel, Ghost::None, 0 );
 
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
     if (timeSubStep == 0) {
       tsk->computes(sourceterm_label);
     } else {
       tsk->modifies(sourceterm_label);
+    }
+
+    // require model terms
+    vector<string> modelsList = (*iEqn)->getModelsList();
+    for ( vector<string>::iterator iModels = modelsList.begin(); iModels != modelsList.end(); ++iModels ) {
+      ModelBase& model_base = model_factory.retrieve_model(*iModels);
+      const VarLabel* model_label = model_base.getModelLabel();
+      tsk->requires( Task::NewDW, model_label, Ghost::None, 0 );
     }
   }
   
@@ -358,7 +374,7 @@ DQMOM::sched_solveLinearSystem( const LevelP& level, SchedulerP& sched, int time
     tempLabel = (*iEqn)->getTransportEqnLabel();
     
     // require weighted abscissas
-    tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
+    tsk->requires(which_dw, tempLabel, Ghost::None, 0);
 
     // compute or modify source terms
     const VarLabel* sourceterm_label = (*iEqn)->getSourceLabel();
@@ -389,7 +405,8 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
                           const PatchSubset* patches,
                           const MaterialSubset* matls,
                           DataWarehouse* old_dw,
-                          DataWarehouse* new_dw )
+                          DataWarehouse* new_dw, 
+                          const int timeSubStep )
 {
   double start_solveLinearSystemTime = Time::currentSeconds();
 #if !defined(VERIFY_LINEAR_SOLVER) && !defined(VERIFY_AB_CONSTRUCTION)
@@ -404,6 +421,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 #endif
 #endif
 
+
   CoalModelFactory& model_factory = CoalModelFactory::self();
 
   // patch loop
@@ -412,59 +430,36 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
 
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    DataWarehouse* which_dw; 
 
-    // get/allocate normB label
     CCVariable<double> normB; 
-    if (new_dw->exists(d_normBLabel, matlIndex, patch)) { 
-      new_dw->getModifiable(normB, d_normBLabel, matlIndex, patch);
-    } else {
+    CCVariable<double> normX; 
+    CCVariable<double> normRes;
+    CCVariable<double> normResNormalizedB;
+    CCVariable<double> normResNormalizedX;
+    CCVariable<double> conditionNumber;
+    if ( timeSubStep == 0 ){ 
+      which_dw = new_dw; 
       new_dw->allocateAndPut(normB, d_normBLabel, matlIndex, patch);
+      new_dw->allocateAndPut(normX, d_normXLabel, matlIndex, patch);
+      new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
+      new_dw->allocateAndPut( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
+      new_dw->allocateAndPut( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
+      new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
+    } else { 
+      which_dw = old_dw; 
+      new_dw->getModifiable(normB, d_normBLabel, matlIndex, patch);
+      new_dw->getModifiable(normX, d_normXLabel, matlIndex, patch);
+      new_dw->getModifiable( normRes, d_normResLabel, matlIndex, patch );
+      new_dw->getModifiable( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
+      new_dw->getModifiable( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
+      new_dw->getModifiable( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
     }
     normB.initialize(0.0);
-
-    // get/allocate normX label
-    CCVariable<double> normX; 
-    if (new_dw->exists(d_normXLabel, matlIndex, patch)) { 
-      new_dw->getModifiable(normX, d_normXLabel, matlIndex, patch);
-    } else {
-      new_dw->allocateAndPut(normX, d_normXLabel, matlIndex, patch);
-    }
     normX.initialize(0.0);
-
-    // get/allocate normRes label
-    CCVariable<double> normRes;
-    if( new_dw->exists(d_normResLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( normRes, d_normResLabel, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( normRes, d_normResLabel, matlIndex, patch );
-    }
     normRes.initialize(0.0);
-
-    // get/allocate normResNormalizedB label
-    CCVariable<double> normResNormalizedB;
-    if( new_dw->exists(d_normResNormalizedLabelB, matlIndex, patch) ) {
-      new_dw->getModifiable( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( normResNormalizedB, d_normResNormalizedLabelB, matlIndex, patch );
-    }
     normResNormalizedB.initialize(0.0);
-
-    // get/allocate normResNormalizedX label
-    CCVariable<double> normResNormalizedX;
-    if( new_dw->exists(d_normResNormalizedLabelX, matlIndex, patch) ) {
-      new_dw->getModifiable( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( normResNormalizedX, d_normResNormalizedLabelX, matlIndex, patch );
-    }
     normResNormalizedX.initialize(0.0);
-
-    // get/allocate condition number label
-    CCVariable<double> conditionNumber;
-    if( new_dw->exists(d_conditionNumberLabel, matlIndex, patch) ) {
-      new_dw->getModifiable( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
-    } else {
-      new_dw->allocateAndPut( conditionNumber, d_conditionNumberLabel, matlIndex, patch );
-    }
     conditionNumber.initialize(0.0);
 
     // get/allocate weight source term labels
@@ -472,10 +467,10 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightEqns.end(); iEqn++) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if (new_dw->exists(source_label, matlIndex, patch)) {
-        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      } else {
+      if ( timeSubStep == 0 ) { 
         new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      } else { 
+        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
       }
       tempCCVar.initialize(0.0);
     }
@@ -485,24 +480,41 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
          iEqn != weightedAbscissaEqns.end(); ++iEqn) {
       const VarLabel* source_label = (*iEqn)->getSourceLabel();
       CCVariable<double> tempCCVar;
-      if (new_dw->exists(source_label, matlIndex, patch)) {
-        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
-      } else {
+      if ( timeSubStep == 0 ){ 
         new_dw->allocateAndPut(tempCCVar, source_label, matlIndex, patch);
+      } else { 
+        new_dw->getModifiable(tempCCVar, source_label, matlIndex, patch);
       }
       tempCCVar.initialize(0.0);
     }
 
     // get weights from data warehouse and put into CCVariable
-    vector<constCCVarWrapper> weightCCVars;
+    vector<constCCVarWrapper_withModels> weightCCVars;
     for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); 
          iEqn != weightEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
       
       // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+      constCCVarWrapper_withModels tempWrapper;
+      which_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
 
+      // for a given weight, get models from data warehouse and put into vector of constCCVarWrapper
+      vector<constCCVarWrapper> modelCCVarsVec;
+      vector<string> modelsList = (*iEqn)->getModelsList();
+      for( vector<string>::iterator iModels = modelsList.begin();
+           iModels != modelsList.end(); ++iModels ) {
+        ModelBase& model_base = model_factory.retrieve_model(*iModels);
+        
+        // instead of using a CCVariable, use a constCCVarWrapper struct
+        constCCVarWrapper tempModelWrapper;
+        const VarLabel* model_label = model_base.getModelLabel();
+        new_dw->get( tempModelWrapper.data, model_label, matlIndex, patch, Ghost::None, 0);
+        modelCCVarsVec.push_back(tempModelWrapper);
+      }
+
+      // put the vector into the constCCVarWrapper_withModels
+      tempWrapper.models = modelCCVarsVec;
+      
       // put the wrapper into a vector
       weightCCVars.push_back(tempWrapper);
     }
@@ -512,10 +524,11 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
     for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
          iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+      std::string eqn_name = (*iEqn)->getEqnName(); 
 
       // instead of using a CCVariable, use a constCCVarWrapper struct
       constCCVarWrapper_withModels tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+      which_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
 
       // for a given weighted abscissa, get models from data warehouse and put into vector of constCCVarWrapper
       vector<constCCVarWrapper> modelCCVarsVec;
@@ -573,12 +586,23 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
       vector<double> weights;
       vector<double> weightedAbscissas;
       vector<double> models;
+      vector<double> weight_models; 
 
       // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
-      for( vector<constCCVarWrapper>::iterator iter = weightCCVars.begin();
+      for( vector<constCCVarWrapper_withModels>::iterator iter = weightCCVars.begin();
            iter != weightCCVars.end(); ++iter ) {
         double temp_value = (iter->data)[c];
         weights.push_back(temp_value);
+
+        // now sum the model terms for this weight
+        double runningsum = 0;
+        for( vector<constCCVarWrapper>::iterator iM = iter->models.begin();
+             iM != iter->models.end(); ++iM ) {
+          double temp_model_value = (iM->data)[c];
+          runningsum += temp_model_value;
+        }
+
+        weight_models.push_back(runningsum);
       }
 
       // get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
@@ -701,7 +725,6 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
  
       }else if( b_simplest == true ){
    
-
           double start_AXBConstructionTime = Time::currentSeconds();
 
           total_AXBConstructionTime += Time::currentSeconds() - start_AXBConstructionTime;
@@ -710,35 +733,21 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
           total_SolveTime += (Time::currentSeconds() - start_SolveTime); //timing
           
           int z=0; // equation loop counter
-          
+          int z2=0; // equation loop counter
+
           // Weight equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
               iEqn != weightEqns.end(); ++iEqn ) {
-              
-              if (z >= dimension ) {
-                  stringstream err_msg;
-                  err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-                  throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-              } else {
-                (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-              }
+                (*(Source_weights_weightedAbscissas[z]))[c] = weight_models[z];
+              ++z;
           }
           // Weighted abscissa equations:
           for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
               iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-
-              // Make sure several critera are met for an acceptable solution
-              if (z >= dimension ) {
-                  stringstream err_msg;
-                  err_msg << "ERROR: Arches: DQMOM: Trying to access solution of AX=B system, but had array out of bounds! Accessing element " << z << " of " << dimension << endl;
-                  throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
-              } else {
-                (*(Source_weights_weightedAbscissas[z]))[c] = models[z];
-              }
+                (*(Source_weights_weightedAbscissas[z]))[c] = models[z2];
               ++z;
+              ++z2;
           }
-          
-      
       }else if( b_useLapack == false ) {
 
         ///////////////////////////////////////////////////////
@@ -1753,22 +1762,6 @@ DQMOM::constructBopt_unw( ColumnMatrix*  &BB,
 
 
 
-// **********************************************
-// Construct source terms directly for simplest linear type solver
-// **********************************************
-void
-DQMOM::construct_Simplest_XX( ColumnMatrix*  &XX,
-                         vector<double> &models)
-{
-    for ( unsigned int k = 0; k< N_; k++)
-        (*XX) [k] = 0.0;
-    for ( unsigned int k = 0; k < N_*N_xi; k++) {
-        (*XX) [k+N_] = models[k];
-    } // end moments
-}
-
-
-
 
 // **********************************************
 // Construct A and B matrices for DQMOM
@@ -1902,36 +1895,36 @@ DQMOM::constructLinearSystem( DenseMatrix*   &AA,
 void
 DQMOM::sched_calculateMoments( const LevelP& level, SchedulerP& sched, int timeSubStep )
 { 
-  string taskname = "DQMOM::calculateMoments";
-  Task* tsk = scinew Task(taskname, this, &DQMOM::calculateMoments);
+  //string taskname = "DQMOM::calculateMoments";
+  //Task* tsk = scinew Task(taskname, this, &DQMOM::calculateMoments);
 
-  if( timeSubStep == 0 )
-    proc0cout << "Requesting DQMOM moment labels" << endl;
+  //if( timeSubStep == 0 )
+    //proc0cout << "Requesting DQMOM moment labels" << endl;
   
-  // computing/modifying the actual moments
-  for( ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.begin();
-       iMoment != d_fieldLabels->DQMOMMoments.end(); ++iMoment ) {
-    if( timeSubStep == 0 )
-      tsk->computes( iMoment->second );
-    else
-      tsk->modifies( iMoment->second );
-  }
+  //// computing/modifying the actual moments
+  //for( ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.begin();
+       //iMoment != d_fieldLabels->DQMOMMoments.end(); ++iMoment ) {
+    //if( timeSubStep == 0 )
+      //tsk->computes( iMoment->second );
+    //else
+      //tsk->modifies( iMoment->second );
+  //}
 
-  // require the weights and weighted abscissas
-  for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
-    // require weights
-    const VarLabel* tempLabel;
-    tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
-  }
-  for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
-    // require weighted abscissas
-    const VarLabel* tempLabel;
-    tempLabel = (*iEqn)->getTransportEqnLabel();
-    tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
-  }
+  //// require the weights and weighted abscissas
+  //for (vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin(); iEqn != weightEqns.end(); ++iEqn) {
+    //// require weights
+    //const VarLabel* tempLabel;
+    //tempLabel = (*iEqn)->getTransportEqnLabel();
+    //tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
+  //}
+  //for (vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin(); iEqn != weightedAbscissaEqns.end(); ++iEqn) {
+    //// require weighted abscissas
+    //const VarLabel* tempLabel;
+    //tempLabel = (*iEqn)->getTransportEqnLabel();
+    //tsk->requires(Task::NewDW, tempLabel, Ghost::None, 0);
+  //}
 
-  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+  //sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
 }
 
 // **********************************************
@@ -1949,156 +1942,157 @@ DQMOM::calculateMoments( const ProcessorGroup* pc,
                          DataWarehouse* old_dw,
                          DataWarehouse* new_dw )
 {
-  // patch loop
-  for( int p=0; p < patches->size(); ++p ) {
-    const Patch* patch = patches->get(p);
+  //// patch loop
+  //for( int p=0; p < patches->size(); ++p ) {
+    //const Patch* patch = patches->get(p);
 
-    int archIndex = 0;
-    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    //int archIndex = 0;
+    //int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    // get weights from data warehouse and store their corresponding CCVariables
-    vector<constCCVarWrapper> weightCCVars;
-    for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
-         iEqn != weightEqns.end(); ++iEqn ) {
-      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+    //// get weights from data warehouse and store their corresponding CCVariables
+    //vector<constCCVarWrapper> weightCCVars;
+    //for( vector<DQMOMEqn*>::iterator iEqn = weightEqns.begin();
+         //iEqn != weightEqns.end(); ++iEqn ) {
+      //const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
 
-      // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+      //// instead of using a CCVariable, use a constCCVarWrapper struct
+      //constCCVarWrapper tempWrapper;
+      //new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
 
-      // put the wrapper into a vector
-      weightCCVars.push_back(tempWrapper);
-    }
+      //// put the wrapper into a vector
+      //weightCCVars.push_back(tempWrapper);
+    //}
 
-    // get weighted abscissas from data warehouse and store their corresponding CCVariables
-    vector<constCCVarWrapper> weightedAbscissaCCVars;
-    for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
-         iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
-      const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
+    //// get weighted abscissas from data warehouse and store their corresponding CCVariables
+    //vector<constCCVarWrapper> weightedAbscissaCCVars;
+    //for( vector<DQMOMEqn*>::iterator iEqn = weightedAbscissaEqns.begin();
+         //iEqn != weightedAbscissaEqns.end(); ++iEqn ) {
+      //const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
 
-      // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
+      //// instead of using a CCVariable, use a constCCVarWrapper struct
+      //constCCVarWrapper tempWrapper;
+      //new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
 
-      // put the wrapper into vector
-      weightedAbscissaCCVars.push_back(tempWrapper);
-    }
+      //// put the wrapper into vector
+      //weightedAbscissaCCVars.push_back(tempWrapper);
+    //}
 
-    // Cell iterator
-    for ( CellIterator iter = patch->getCellIterator();
-          !iter.done(); ++iter) {
-      IntVector c = *iter;
+    //// Cell iterator
+    //for ( CellIterator iter = patch->getCellIterator();
+          //!iter.done(); ++iter) {
+      //IntVector c = *iter;
       
-      vector<double> weights;
-      vector<double> weightedAbscissas;
+      //vector<double> weights;
+      //vector<double> weightedAbscissas;
 
-      // get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
-      for( vector<constCCVarWrapper>::iterator iter = weightCCVars.begin();
-           iter != weightCCVars.end(); ++iter ) {
-        double temp_value = (iter->data)[c];
-        weights.push_back(temp_value);
-      }
+      //// get weights in current cell from CCVariable in constCCVarWrapper, store value in vector
+      //for( vector<constCCVarWrapper>::iterator iter = weightCCVars.begin();
+           //iter != weightCCVars.end(); ++iter ) {
+        //double temp_value = (iter->data)[c];
+        //weights.push_back(temp_value);
+      //}
 
-      // get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
-      for( vector<constCCVarWrapper>::iterator iter = weightedAbscissaCCVars.begin();
-           iter != weightedAbscissaCCVars.end(); ++iter ) {
-        double temp_value = (iter->data)[c];
-        weightedAbscissas.push_back(temp_value);
-      }
+      //// get weighted abscissas in current cell from CCVariable in constCCVarWrapper, store value in vector
+      //for( vector<constCCVarWrapper>::iterator iter = weightedAbscissaCCVars.begin();
+           //iter != weightedAbscissaCCVars.end(); ++iter ) {
+        //double temp_value = (iter->data)[c];
+        //weightedAbscissas.push_back(temp_value);
+      //}
 
-      // moment index k = {k1, k2, k3, ...}
-      // moment k = \displaystyle{ sum_{alpha=1}^{N}{ w_{\alpha} \prod_{j=1}^{N_xi}{ \langle \xi_{j} \rangle_{\alpha}^{k_j} } } }
-      for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin();
-           iAllMoments != momentIndexes.end(); ++iAllMoments ) {
+      //// moment index k = {k1, k2, k3, ...}
+      //// moment k = \displaystyle{ sum_{alpha=1}^{N}{ w_{\alpha} \prod_{j=1}^{N_xi}{ \langle \xi_{j} \rangle_{\alpha}^{k_j} } } }
+      //for( vector<MomentVector>::iterator iAllMoments = momentIndexes.begin();
+           //iAllMoments != momentIndexes.end(); ++iAllMoments ) {
 
-        MomentVector thisMoment = (*iAllMoments);
+        //MomentVector thisMoment = (*iAllMoments);
 
-        // Grab the corresponding moment from the DQMOMMoment map (to get the VarLabel associated with this moment)
-        const VarLabel* moment_label;
-        ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.find( thisMoment );
-        if( iMoment != d_fieldLabels->DQMOMMoments.end() ) {
-          // grab the corresponding label
-          moment_label = iMoment->second;
-        } else {
-          string index;
-          std::stringstream out;
-          for( MomentVector::iterator iMomentIndex = thisMoment.begin();
-               iMomentIndex != thisMoment.end(); ++iMomentIndex ) {
-            out << (*iMomentIndex);
-            index += out.str();
-          }
-          string errmsg = "ERROR: DQMOM: calculateMoments: could not find moment index " + index + " in DQMOMMoment map!\nIf you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
-          throw InvalidValue( errmsg,__FILE__,__LINE__);
-        }
+        //// Grab the corresponding moment from the DQMOMMoment map (to get the VarLabel associated with this moment)
+        //const VarLabel* moment_label;
+        //ArchesLabel::MomentMap::iterator iMoment = d_fieldLabels->DQMOMMoments.find( thisMoment );
+        //if( iMoment != d_fieldLabels->DQMOMMoments.end() ) {
+          //// grab the corresponding label
+          //moment_label = iMoment->second;
+        //} else {
+          //string index;
+          //std::stringstream out;
+          //for( MomentVector::iterator iMomentIndex = thisMoment.begin();
+               //iMomentIndex != thisMoment.end(); ++iMomentIndex ) {
+            //out << (*iMomentIndex);
+            //index += out.str();
+          //}
+          //string errmsg = "ERROR: DQMOM: calculateMoments: could not find moment index " + index + " in DQMOMMoment map!\nIf you are running verification, you must turn off calculation of moments using <calculate_moments>false</calculate_moments>";
+          //throw InvalidValue( errmsg,__FILE__,__LINE__);
+        //}
 
-        // Associate a CCVariable<double> with this moment 
-        CCVariable<double> moment_k;
-        if( new_dw->exists( moment_label, matlIndex, patch ) ) {
-          // running getModifiable once for each cell
-          new_dw->getModifiable( moment_k, moment_label, matlIndex, patch );
-        } else {
-          // only run for first cell - so this doesn't wipe out previous calculations
-          new_dw->allocateAndPut( moment_k, moment_label, matlIndex, patch );
-          moment_k.initialize(0.0);
-        }
+        //// Associate a CCVariable<double> with this moment 
+        //CCVariable<double> moment_k;
+        //if( new_dw->exists( moment_label, matlIndex, patch ) ) {
+          //// running getModifiable once for each cell
+          //new_dw->getModifiable( moment_k, moment_label, matlIndex, patch );
+        //} else {
+          //// only run for first cell - so this doesn't wipe out previous calculations
+          //new_dw->allocateAndPut( moment_k, moment_label, matlIndex, patch );
+          //moment_k.initialize(0.0);
+        //}
 
-        // Calculate the value of the moment
-        double temp_moment_k = 0.0;
-        double running_weights_sum = 0.0; // this is the denominator of p_alpha
-        double running_product = 0.0; // this is w_alpha * xi_1_alpha^k1 * xi_2_alpha^k2 * ...
+        //// Calculate the value of the moment
+        //double temp_moment_k = 0.0;
+        //double running_weights_sum = 0.0; // this is the denominator of p_alpha
+        //double running_product = 0.0; // this is w_alpha * xi_1_alpha^k1 * xi_2_alpha^k2 * ...
 
-        bool is_zeroth_moment = true;
-        for( MomentVector::iterator iM = thisMoment.begin(); iM != thisMoment.end(); ++iM ) {
-          if ( (*iM) != 0 ) {
-            is_zeroth_moment = false;
-            break;
-          }
-        }
+        //bool is_zeroth_moment = true;
+        //for( MomentVector::iterator iM = thisMoment.begin(); iM != thisMoment.end(); ++iM ) {
+          //if ( (*iM) != 0 ) {
+            //is_zeroth_moment = false;
+            //break;
+          //}
+        //}
 
-        for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
-          if( weights[alpha] < d_w_small ) {
-            running_product = 0.0;
-          } else {
-            double weight = weights[alpha]*d_weight_scaling_constant;
-            running_weights_sum += weight;
-            running_product = weight;
-            for( unsigned int j = 0; j < N_xi; ++j ) {
-              double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
-                                                                                                                                    // because it's already in the weighted abscissa!
-              // calculating moments about the mean... so find the mean
-              if( thisMoment[j] != 0 && thisMoment[j] != 1 ) {
-                double mean = 0.0;
-                double mean_numerator = 0.0;
-                double mean_divisor = 0.0;
-                for( unsigned int alpha2 = 0; alpha2 < N_; ++alpha2 ) {
-                  mean_numerator += weightedAbscissas[j*(N_)+alpha2]*d_weighted_abscissa_scaling_constants[j*(N_)+alpha2];
-                  mean_divisor += weights[alpha2];
-                }
-                if (mean_divisor != 0 ) {
-                  mean = mean_numerator/mean_divisor;
-                }
-                base -= mean;
-              }
-              double exponent = thisMoment[j];
-              running_product *= pow( base, exponent );
-            }
-          }
-          temp_moment_k += running_product;
-          running_product = 0.0;
-        }
+        //for( unsigned int alpha = 0; alpha < N_; ++alpha ) {
+          //if( weights[alpha] < d_w_small ) {
+            //running_product = 0.0;
+          //} else {
+            //double weight = weights[alpha]*d_weight_scaling_constant;
+            //running_weights_sum += weight;
+            //running_product = weight;
+            //for( unsigned int j = 0; j < N_xi; ++j ) {
 
-        if (running_weights_sum == 0) {
-          moment_k[c] = 0.0;
-        } else if (is_zeroth_moment) {
-          moment_k[c] = temp_moment_k; // don't normalize zeroth moment! otherwise it's always 1...
-        } else {
-          moment_k[c] = temp_moment_k/running_weights_sum; // normalize environment weight to get environment probability
-        }
+              //double base = (weightedAbscissas[j*(N_)+alpha]/weights[alpha])*(d_weighted_abscissa_scaling_constants[j*(N_)+alpha]); // don't need 1/d_weight_scaling_constant 
+                                                                                                                                    //// because it's already in the weighted abscissa!
+              //// calculating moments about the mean... so find the mean
+              //if( thisMoment[j] != 0 && thisMoment[j] != 1 ) {
+                //double mean = 0.0;
+                //double mean_numerator = 0.0;
+                //double mean_divisor = 0.0;
+                //for( unsigned int alpha2 = 0; alpha2 < N_; ++alpha2 ) {
+                  //mean_numerator += weightedAbscissas[j*(N_)+alpha2]*d_weighted_abscissa_scaling_constants[j*(N_)+alpha2];
+                  //mean_divisor += weights[alpha2];
+                //}
+                //if (mean_divisor != 0 ) {
+                  //mean = mean_numerator/mean_divisor;
+                //}
+                //base -= mean;
+              //}
+              //double exponent = thisMoment[j];
+              //running_product *= pow( base, exponent );
+            //}
+          //}
+          //temp_moment_k += running_product;
+          //running_product = 0.0;
+        //}
 
-      }//end all moments
+        //if (running_weights_sum == 0) {
+          //moment_k[c] = 0.0;
+        //} else if (is_zeroth_moment) {
+          //moment_k[c] = temp_moment_k; // don't normalize zeroth moment! otherwise it's always 1...
+        //} else {
+          //moment_k[c] = temp_moment_k/running_weights_sum; // normalize environment weight to get environment probability
+        //}
 
-    }//end cells
-  }//end patches
+      //}//end all moments
+
+    //}//end cells
+  //}//end patches
 }
 
 

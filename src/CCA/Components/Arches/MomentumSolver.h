@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -382,7 +382,9 @@ private:
               IntVector currCell(colX-1, colY-1, colZ-1);          
               uvel_in = getDouble(file);
               tmp =  getDouble(file);
+              (void)tmp; //to silence the unused variable warning.
               tmp =  getDouble(file);          
+              (void)tmp; //to silence the unused variable warning.
               if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
                   (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
                 uvel[currCell] = uvel_in;
@@ -430,8 +432,10 @@ private:
 
               IntVector currCell(colX-1, colY-1, colZ-1);          
               tmp = getDouble(file);
+              (void)tmp; //to silence the unused variable warning.
               vvel_in =  getDouble(file);
               tmp =  getDouble(file);          
+              (void)tmp; //to silence the unused variable warning.
               if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
                   (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {
                 vvel[currCell] = vvel_in;
@@ -480,7 +484,9 @@ private:
 
               IntVector currCell(colX-1, colY-1, colZ-1);          
               tmp = getDouble(file);
+              (void)tmp; //to silence the unused variable warning.
               tmp =  getDouble(file);
+              (void)tmp; //to silence the unused variable warning.
               wvel_in =  getDouble(file);          
               if ((currCell.x() <= idxHi.x() && currCell.y() <= idxHi.y() && currCell.z() <= idxHi.z()) &&
                   (currCell.x() >= idxLo.x() && currCell.y() >= idxLo.y() && currCell.z() >= idxLo.z())) {

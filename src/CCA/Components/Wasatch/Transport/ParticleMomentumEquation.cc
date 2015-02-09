@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2014 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -216,10 +216,10 @@ namespace Wasatch{
     Expr::ExpressionFactory& advSlnFactory = *(graphCat[ADVANCE_SOLUTION]->exprFactory);
     
     // make logical decisions based on the specified boundary types
-    BOOST_FOREACH( BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
+    BOOST_FOREACH( const BndMapT::value_type& bndPair, bcHelper.get_boundary_information() )
     {
       const std::string& bndName = bndPair.first;
-      BndSpec& myBndSpec = bndPair.second;
+      const BndSpec& myBndSpec = bndPair.second;
       const bool isNormal = is_normal_to_boundary(direction_, myBndSpec.face);
       
       const Uintah::BCGeomBase::ParticleBndSpec pBndSpec = myBndSpec.particleBndSpec;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -40,20 +40,13 @@
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Math/MiscMath.h>
-
-#include <sci_defs/teem_defs.h>
-
-#include   <iostream>
+#include <iostream>
 
 using namespace std;
 
 #include <cstdio>
+#include <Core/Exceptions/InternalError.h>
 
-#ifdef HAVE_TEEM
-#  include <teem/ten.h>
-#else
-#  include <Core/Exceptions/InternalError.h>
-#endif
 
 namespace SCIRun {
 
@@ -314,19 +307,7 @@ void Tensor::build_eigens_from_mat()
   if (have_eigens_) return;
   float eval[3];
   float evec[9];
-#ifdef HAVE_TEEM
-  float ten[7];
-  ten[0] = 1.0;
-  ten[1] = mat_[0][0];
-  ten[2] = mat_[0][1];
-  ten[3] = mat_[0][2];
-  ten[4] = mat_[1][1];
-  ten[5] = mat_[1][2];
-  ten[6] = mat_[2][2];
-  tenEigensolve_f(eval, evec, ten);
-#else
   throw InternalError("Trying to eigensolve without Teem", __FILE__, __LINE__);
-#endif
   e1_ = Vector(evec[0], evec[1], evec[2]);
   e2_ = Vector(evec[3], evec[4], evec[5]);
   e3_ = Vector(evec[6], evec[7], evec[8]);

@@ -84,8 +84,8 @@ CharOxidation::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& t_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn( temp_weight_name );
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(t_weight_eqn);
 
-  d_w_small = weight_eqn.getSmallClip();
-  d_w_scaling_constant = weight_eqn.getScalingConstant();
+  d_w_small = weight_eqn.getSmallClipPlusTol();
+  d_w_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 }
 
 //---------------------------------------------------------------------------

@@ -25,8 +25,8 @@ using namespace std;
 }
 
 void singleArrayTable(const double *Array,
-		      const int &ArraySize,
-		      const int &No, char * _argv){
+          const int &ArraySize,
+          const int &No, char * _argv){
   ofstream out( _argv);
 
   for ( int i = 0; i < ArraySize; i ++ ) {    
@@ -141,15 +141,15 @@ int main(){
       cout << "dR = " << dR << endl;
       cout << "size = " << sameIndex.size() << endl;
       for ( int k = 0; k < sameIndex.size(); k ++)
-	cout << "sameIndex = " << sameIndex[k] << endl;
+  cout << "sameIndex = " << sameIndex[k] << endl;
       
       for ( int i = sameIndex[0]; i < sameIndex[sameIndex.size()-1]+1 ; i ++){
-	counter ++;
-	cout << "counter = " << counter << endl;
-	Rwvnabcs[i] =  Rwvnabcs[sameIndex[0]-1] + counter * dR;
-	cout << "Rwvnabcs[ " << i << "] =" << 
-	  Rwvnabcs[i] << endl;
-	
+  counter ++;
+  cout << "counter = " << counter << endl;
+  Rwvnabcs[i] =  Rwvnabcs[sameIndex[0]-1] + counter * dR;
+  cout << "Rwvnabcs[ " << i << "] =" << 
+    Rwvnabcs[i] << endl;
+  
       }
      
       sameRwvnabcs = false;
@@ -165,16 +165,16 @@ int main(){
       cout << "dR = " << dR << endl;
       cout << "size = " << sameIndex.size() << endl;
       for ( int k = 0; k < sameIndex.size(); k ++)
-	cout << "sameIndex = " << sameIndex[k] << endl;
+  cout << "sameIndex = " << sameIndex[k] << endl;
       
       for ( int i = sameIndex[0]; i < sameIndex[sameIndex.size()-1]+1 ; i ++){
 
-	cout << "counter = " << counter << endl;
-	Rwvnabcs[i] = Rwvnabcs[i] + counter * dR;
-	cout << "Rwvnabcs[ " << i << "] =" << 
-	         Rwvnabcs[i] << endl;
-	counter ++;
-	
+  cout << "counter = " << counter << endl;
+  Rwvnabcs[i] = Rwvnabcs[i] + counter * dR;
+  cout << "Rwvnabcs[ " << i << "] =" << 
+           Rwvnabcs[i] << endl;
+  counter ++;
+  
       }
      
       sameRwvnabcs = false;

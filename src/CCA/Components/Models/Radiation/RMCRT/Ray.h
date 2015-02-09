@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,6 +29,7 @@
 #include <CCA/Components/Models/Radiation/RMCRT/Radiometer.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Containers/StaticArray.h>
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
@@ -68,7 +69,7 @@ namespace Uintah{
 
     public:
 
-      Ray();
+      Ray( TypeDescription::Type FLT_DBL );         // This class can  Float or Double
       ~Ray();
 
       //__________________________________
@@ -121,7 +122,7 @@ namespace Uintah{
       void BC_bulletproofing( const ProblemSpecP& rmcrtps );
                                
 
-      template< class T >
+      template< class T, class V >
       void setBC(CCVariable<T>& Q_CC,
                  const std::string& desc,
                  const Patch* patch,
@@ -204,6 +205,7 @@ namespace Uintah{
                      const int radCalc_freq );
 
       //__________________________________
+      template<class T>
       void rayTraceGPU( Task::CallBackEvent event,
                         const ProcessorGroup* pg,
                         const PatchSubset* patches,
@@ -245,7 +247,7 @@ namespace Uintah{
                             std::vector<IntVector>& regionLo,
                             std::vector<IntVector>& regionHi,
                             StaticArray< constCCVariable< T > >& sigmaT4Pi,
-                            StaticArray< constCCVariable<double> >& abskg,
+                            StaticArray< constCCVariable< T > >& abskg,
                             unsigned long int& size,
                             double& sumI,
                             MTRand& mTwister);
@@ -302,6 +304,7 @@ namespace Uintah{
                           std::vector<int> &boundaryFaces);
       //______________________________________________________________________
       //   Boundary Conditions
+      template< class T >
       void setBoundaryConditions( const ProcessorGroup*,
                                   const PatchSubset* patches,
                                   const MaterialSubset*,
@@ -331,7 +334,8 @@ namespace Uintah{
                           const bool modifies,
                           const VarLabel* variable,
                           const int radCalc_freq);
-
+    
+    template< class T >
     void coarsen_Q ( const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
@@ -341,7 +345,15 @@ namespace Uintah{
                      const bool modifies,
                      Task::WhichDW this_dw,
                      const int radCalc_freq);
-
+                     
+    void coarsen_cellType( const ProcessorGroup*,
+                           const PatchSubset* patches,       
+                           const MaterialSubset*,      
+                           DataWarehouse*,            
+                           DataWarehouse* new_dw,            
+                           const int radCalc_freq );
+                     
+    template< class T >
     void ROI_Extents ( const ProcessorGroup*,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,

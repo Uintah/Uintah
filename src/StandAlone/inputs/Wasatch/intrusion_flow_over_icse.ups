@@ -128,13 +128,13 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_NONE"/>
+       <NameTag name="u" state="STATE_NONE"/>
        <Constant>0.1</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_NONE"/>
+       <NameTag name="v" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
@@ -215,7 +215,6 @@
 				</Face>
 				<Face side="y-" type="Velocity">
 					<BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
-					<BCType label="y-mom" var="Dirichlet" value="1.0"/>
 					<BCType label="v" var="Dirichlet" value="1.0"/>
 				</Face>
 				<Face side="y+" type="Outflow">

@@ -1,28 +1,59 @@
 #!/bin/bash
 #______________________________________________________________________
-#  This script takes a folder of exectime.* files and summarizes them so 
+#  This script takes a folder of exectime.* files and summarizes them so
 #  the user can see what task is taking the most time.  Below is an example:
 #
-#  Processors=768
-#  Task:lineExtract::doAnalysis 1661.3 2167.781864
-#  Task:ICE::implicitPressureSolve 834.03 898.061664
-#  Task:Hypre:Matrix 767.076 768.174537
-#  Task:particleExtract::doAnalysis 190.183 381.251922
-#  Task:Relocate::relocateParticles 30.3722 102.867239
-#  Task:ICE::advectAndAdvanceInTime 26.5182 38.782531
-#  Task:ICE::setupRHS 23.1352 32.746978
-#  Task:ICE::addExchangeContributionToFCVel 9.67137 13.826766
-#  Task:MPMICE::computeEquilibrationPressure 7.2525 10.368830
+# Processors=4
+# Total(s)=784.726
+# Task:send   Avg(s)=0.001259   Max(s)=0.001602
+# Task:RMCRT_Test::initProperties   Avg(s)=0.450059   Max(s)=0.683893
+# Task:RMCRT_Test::initialize   Avg(s)=0.0510892   Max(s)=0.076248
+# Task:RMCRT_Test::computeStableTimestep   Avg(s)=1.17948   Max(s)=1.680541
+# Task:RMCRTCommon::sigmaT4   Avg(s)=0.462538   Max(s)=0.575988
+# Task:reduceSysVar   Avg(s)=0.839146   Max(s)=1.548100
+# Task:Ray::setBoundaryConditions   Avg(s)=0.596272   Max(s)=0.753568
+# Task:Ray::rayTrace   Avg(s)=779.806   Max(s)=797.282158
+# Task:   Avg(s)=1.34021   Max(s)=1.404592
 #
-#  To output the exectime files set the environmental variable 
+#  To output the exectime files set the environmental variable
 #     SCI_DEBUG ExecTimes:+
 #
 #            -- The Ghost of Justin
 #______________________________________________________________________
 
 count=`ls -1 exectimes.* | wc -l`
-echo "Processors=$count"
+echo "##################################################################################"
+echo "# NOTE: TaskExecTimes are:"
+echo "#          1) Represented in seconds"
+echo "#          2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps"
+echo "#         3a) Cumulative over nthreads when using the UnifiedScheduler"
+echo "#         3b) Cumulative over nthreads-1 when using the ThreadedMPIScheduler"
+echo "# --------------------------------------------------------------------------------"
+echo "# Total(s): Average reported TaskExecTime for all tasks over all processors"
+echo "#   Avg(s): Average reported TaskExecTime for a given task over all processors"
+echo "#   Max(s): Maximum reported TaskExecTime for a given task over all processors"
+echo "##################################################################################"
 
+echo "Processors=$count"
 cat exectimes.* > .exectimes.tmp
-cat .exectimes.tmp | awk -v count=$count -- 'BEGIN {total=0} {a[$4]+=$3; total+=$3; if (max[$4] < $3) max[$4]=$3} END {print "Total time="total/count; for (i in a) print i,a[i]/count,max[i]}' | sort -g -k 2 -r
+cat .exectimes.tmp | awk -v count=$count -- \
+  'BEGIN{
+           total=0
+         }
+         {
+           ave[$4] += $3;
+           total   += $3;
+           if (max[$4] < $3)
+             max[$4]=$3
+         }
+  END\
+  {
+    print "Total(s)="total/count;
+    printf ("%20s %30s %10s","Task",  "Ave(s)", "Max(s)\n")
+    for (i in ave)
+     printf "%-40s|  %-10g|  %g \n", i, ave[i]/count, max[i] > ".exectimes.tmp2"
+  }'
+  
+sort --general-numeric-sort --field-separator="|" --key=2 --reverse .exectimes.tmp2
+
 rm -f .exectimes.tmp

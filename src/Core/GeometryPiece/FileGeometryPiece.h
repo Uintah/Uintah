@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef __FILE_GEOMETRY_OBJECT_H__
-#define __FILE_GEOMETRY_OBJECT_H__
+#ifndef __FILE_GEOMETRY_PIECE_H__
+#define __FILE_GEOMETRY_PIECE_H__
 
 #include <Core/GeometryPiece/SmoothGeomPiece.h>
 #include <Core/Grid/Box.h>
@@ -48,17 +48,18 @@ namespace Uintah {
   University of Utah \n
   Center for the Simulation of Accidental Fires and Explosions (C-SAFE) \n
 	
-  Reads in a set of points from an input file.  
+  Reads in a set of points (particle centroids) from an input file.  
 
-  In addition, Convected Particle domain Triangle/Tetrahedral (CPTI) 
-  descriptions can be read if the vectors rvec1, rvec2 and rvec3 are
-  specified.  The results are stored in the columns of the Size matrix.
-  See Brian Leavy for more information.
+  In addition, Convected Particle Domain Interpolation (CPDI) or the 
+  Convected Particle domain Triangle/Tetrahedral Interpolation (CPTI)
+  particle domain descriptions can be read if the vectors rvec1, rvec2
+  and rvec3 are specified.  The results are stored in the columns of 
+  the Size matrix.  Contact Brian Leavy for more information.
 
   The input form looks like this:
   \verbatim
     <file>
-      <name>file_name.txt</name>
+      <name>file_name.pts</name>
       <format>text </format>
       <var>p.volume</var>
       <var>p.fiberdir</var>
@@ -69,7 +70,7 @@ namespace Uintah {
     </file>
   \endverbatim
   
-  Requires one input: file name <name>points.pts</name>
+  Requires one input: file name <name>filename.pts</name>
   
   The format field can be used to specify that the point file is 
     text  - plain text list of points (slow for may processors)
@@ -146,4 +147,4 @@ namespace Uintah {
   
 } // End namespace Uintah
 
-#endif // __FILE_GEOMTRY_Piece_H__
+#endif // __FILE_GEOMETRY_PIECE_H__

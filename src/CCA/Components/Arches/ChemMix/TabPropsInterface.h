@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -154,15 +154,15 @@ public:
 
   typedef std::map<std::string, DepVarCont >       DepVarMap;
 
-	void tableMatching(){};
+  void tableMatching(){};
 
   double getTableValue( std::vector<double>, std::string );
 
-	double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c){ return -99;};
+  double getTableValue( std::vector<double> iv, std::string depend_varname, StringToCCVar inert_mixture_fractions, IntVector c){ return -99;};
 
   double getTableValue( std::vector<double> iv, std::string depend_varname, doubleMap inert_mixture_fractions ){return -99;};
 
-	int findIndex( std::string ){return 0; }; 
+  int findIndex( std::string ){return 0; }; 
 
 protected :
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1399,3 +1399,32 @@ DataArchive::queryNumMaterials(const Patch* patch, int index)
   return numMatls;
 }
 
+
+//______________________________________________________________________
+//    Does this variable exist on this patch at this timestep
+bool
+DataArchive::exists( const string& varname,
+                     const Patch* patch,
+                     const int timeStep )
+{
+  d_lock.lock();
+
+  TimeData& timedata = getTimeData(timeStep);
+  timedata.parsePatch(patch);
+
+  int levelIndex = patch->getLevel()->getIndex();
+  
+  for (unsigned i = 0; i < timedata.d_matlInfo[levelIndex].size(); i++) {
+    // i-1, since the matlInfo is adjusted to allow -1 as entries
+    VarnameMatlPatch vmp( varname, i-1, patch->getRealPatch()->getID() );
+    DataFileInfo dummy;
+
+    if (timedata.d_datafileInfo.lookup(vmp, dummy) == 1){
+      d_lock.unlock();
+      return true;
+    }
+  }
+  d_lock.unlock();
+
+  return false;
+}

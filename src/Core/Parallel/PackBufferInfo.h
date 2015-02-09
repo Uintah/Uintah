@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,31 +35,22 @@ namespace Uintah {
 
 class PackedBuffer : public RefCounted {
 
-  public:
-    PackedBuffer(int bytes)
-        : buf((void*)(scinew char[bytes])), bufsize(bytes)
-    {
-    }
+public:
+  PackedBuffer(int bytes) :
+    buf((void*)(scinew char[bytes])), bufsize(bytes) {}
+  
+  ~PackedBuffer() {
+    delete[] (char*)buf;
+    buf = 0;
+  }
 
-    ~PackedBuffer()
-    {
-      delete[] (char*)buf;
-      buf = 0;
-    }
+  void* getBuffer() { return buf; }
 
-    void* getBuffer()
-    {
-      return buf;
-    }
+  int getBufSize()  { return bufsize; }
 
-    int getBufSize()
-    {
-      return bufsize;
-    }
-
-  private:
-    void* buf;
-    int bufsize;
+private:
+  void*  buf;
+  int    bufsize;
 };
 
 class PackBufferInfo : public BufferInfo {
@@ -69,38 +60,35 @@ class PackBufferInfo : public BufferInfo {
 
     ~PackBufferInfo();
 
-    void get_type(void*&,
-                  int&,
-                  MPI_Datatype&,
-                  MPI_Comm comm);
+    void get_type( void*&,
+                   int&,
+                   MPI_Datatype&,
+                   MPI_Comm comm );
 
-    void get_type(void*&,
+    void get_type( void*&,
+                   int&,
+                   MPI_Datatype& );
 
-                  int&,
-                  MPI_Datatype&);
+    void pack( MPI_Comm   comm,
+               int&       out_count );
 
-    void pack(MPI_Comm comm,
-              int& out_count);
-
-    void unpack(MPI_Comm comm,
-                MPI_Status& status);
+    void unpack( MPI_Comm     comm,
+                 MPI_Status&  status );
 
     // PackBufferInfo is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  After receive
     // requests have finished, then it needs to unpack what got received.
-    void finishedCommunication(const ProcessorGroup* pg,
-                               MPI_Status &status)
-    {
-      unpack(pg->getComm(), status);
-    }
+
+    void finishedCommunication( const ProcessorGroup* pg, MPI_Status& status ) { unpack( pg->getComm(), status ); }
 
   private:
+
     // disable copy and assignment
     PackBufferInfo(const PackBufferInfo&);
     PackBufferInfo& operator=(const PackBufferInfo&);
 
     PackedBuffer* packedBuffer;
 };
-}
+} // end namespace Uintah
 
 #endif

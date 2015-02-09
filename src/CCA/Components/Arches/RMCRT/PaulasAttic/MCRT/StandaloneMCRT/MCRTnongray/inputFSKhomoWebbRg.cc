@@ -7,13 +7,13 @@
   for ( int k = 0; k < Ncz; k ++ ){
     for ( int j = 0; j < Ncy; j ++) {
       for ( int i = 0; i < Ncx; i ++ ) {
-	
-	T_Vol[fakeIndex] = 1000; // k
+  
+  T_Vol[fakeIndex] = 1000; // k
 
-	a_Vol[fakeIndex] = 1;
-	scatter_Vol[fakeIndex] = 0;
-	fakeIndex++;
-	
+  a_Vol[fakeIndex] = 1;
+  scatter_Vol[fakeIndex] = 0;
+  fakeIndex++;
+  
       }
     }
   }
