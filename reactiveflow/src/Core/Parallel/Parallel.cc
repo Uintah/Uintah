@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,8 +30,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
-#include <cstdlib>
 
+#include <cstdlib>
 #include <sstream>
 #include <iostream>
 
@@ -195,14 +195,15 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
   }
   else {
     // Look for mpich
-    for(int i=0;i<argc;i++){
+    for (int i = 0; i < argc; i++) {
       string s = argv[i];
 
       // on the turing machine, using mpich, we can't find the mpich var, so
       // search for our own -mpi, as (according to sus.cc),
       // we haven't parsed the args yet
-      if(s.substr(0,3) == "-p4" || s == "-mpi")
+      if (s.substr(0, 3) == "-p4" || s == "-mpi") {
         usingMPI_ = true;
+      }
     }
   }
   determinedIfUsingMPI_ = true;
@@ -261,23 +262,24 @@ Parallel::initializeManager(int& argc, char**& argv)
 #ifdef THREADED_MPI_AVAILABLE
      if( provided < required ) {
        cerr << "Provided MPI parallel support of " << provided << " is not enough for the required level of " << required << "\n"
-            << "To use the Unified Scheduler, your MPI implementation needs to support MPI_THREAD_MULTIPLE (level-3)" << std::endl;
+            << "To use multi-threaded schedulers, your MPI implementation needs to support MPI_THREAD_MULTIPLE (level-3)" << std::endl;
        throw InternalError( "Bad MPI level", __FILE__, __LINE__ );
      }
 #endif
 
      Uintah::worldComm_ = MPI_COMM_WORLD;
-     if( ( status=MPI_Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS )
+     if( ( status=MPI_Comm_size( Uintah::worldComm_, &worldSize_ ) ) != MPI_SUCCESS ) {
        MpiError(const_cast<char*>("MPI_Comm_size"), status);
+     }
 
-     if((status=MPI_Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS)
+     if((status=MPI_Comm_rank( Uintah::worldComm_, &worldRank_ )) != MPI_SUCCESS) {
        MpiError(const_cast<char*>("MPI_Comm_rank"), status);
+     }
 #if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
      SCIRun::AllocatorSetDefaultTagMalloc(oldtag);
      SCIRun::AllocatorMallocStatsAppendNumber( worldRank_ );
 #endif
-     rootContext_ = scinew ProcessorGroup( 0, Uintah::worldComm_, true,
-                                           worldRank_, worldSize_, numThreads_ );
+     rootContext_ = scinew ProcessorGroup( 0, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
 
      if(rootContext_->myrank() == 0) {
        cout << "Parallel: " << rootContext_->size() << " processors (using MPI)\n";
@@ -290,7 +292,7 @@ Parallel::initializeManager(int& argc, char**& argv)
      }
      //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
    } else {
-     worldRank_ = 0;
+     worldRank_   = 0;
      rootContext_ = scinew ProcessorGroup(0, 0, false, 0, 1, 0);
    }
 }

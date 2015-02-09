@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -63,9 +63,9 @@ void VirtualSurface::set_theta(const double &random){
 
 // get_e1, sIn = sIn ( incoming direction vector)
 void VirtualSurface::get_e1(const double &random1,
-			    const double &random2,
-			    const double &random3,
-			    const double *sIn){
+          const double &random2,
+          const double &random3,
+          const double *sIn){
 
   // av is an arbitrary vector
   // e1 is then a unit vector

@@ -25,11 +25,10 @@
   <!--__________________________________-->
   <DataArchiver>
     <filebase>rmcrt_bm1_ML.uda</filebase>
-    <outputInitTimestep/>
     <outputTimestepInterval>1</outputTimestepInterval>
     <save label="divQ"  levels="-1"/>
     <save label="radiation_temperature"  levels = "-1"/>
-    <!--<save label="abskg" />-->
+    <save label="abskg" />
     <save label="sigmaT4" />
     <save label="cellType" />
     

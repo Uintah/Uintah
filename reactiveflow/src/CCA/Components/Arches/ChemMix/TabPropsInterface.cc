@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -364,7 +364,7 @@ TabPropsInterface::getState( const ProcessorGroup* pc,
           std::string variable_name = d_allIndepVarNames[i]; 
 
           const BoundCondBase* bc = patch->getArrayBCValues( face, matlIndex,
-		                                          		           variable_name, bound_ptr,
+                                                             variable_name, bound_ptr,
                                                              nu, child );
 
           const BoundCond<double> *new_bcs =  dynamic_cast<const BoundCond<double> *>(bc);
@@ -517,6 +517,6 @@ TabPropsInterface::getEnthalpySplineInfo()
 //
 double TabPropsInterface::getTableValue( std::vector<double> iv, std::string variable )
 {
-	double value = getSingleState( variable, iv ); 
-	return value; 
+  double value = getSingleState( variable, iv ); 
+  return value; 
 }

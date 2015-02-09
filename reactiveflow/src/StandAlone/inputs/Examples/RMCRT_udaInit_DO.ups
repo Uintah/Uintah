@@ -149,7 +149,7 @@
   <abskg>             999        </abskg>
   <calc_frequency>    1          </calc_frequency>
     
-  <RMCRT>
+  <RMCRT type = "double">
     <randomSeed>       true        </randomSeed>
     <nDivQRays>          5         </nDivQRays>
     <Threshold>         0.05       </Threshold>

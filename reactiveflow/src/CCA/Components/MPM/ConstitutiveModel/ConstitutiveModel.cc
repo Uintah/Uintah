@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -162,7 +162,7 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   }
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pdTdtLabel_preReloc,               matlset);
+  task->computes(lb->pdTdtLabel,                        matlset);
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
 
@@ -201,7 +201,7 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
 {
   ParticleVariable<double>  pIntHeatRate_new,p_q;
   ParticleVariable<Matrix3> pStress_new;
-  new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel_preReloc,    pset);
+  new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel,             pset);
   new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
   new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
 

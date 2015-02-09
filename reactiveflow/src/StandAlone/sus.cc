@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -81,7 +81,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Tracker/TrackerClient.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -105,6 +104,7 @@
 #  include <fenv.h>
 #endif
 
+#include <iomanip>
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -192,8 +192,6 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
     cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
-    cerr << "-track               : Turns on (external) simulation tracking... continues w/o tracking if connection fails.\n";
-    cerr << "-TRACK               : Turns on (external) simulation tracking... dies if connection fails.\n";
     cerr << "\n\n";
   }
   quit();
@@ -230,7 +228,6 @@ abortCleanupFunc()
   Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 }
 
-#include <iomanip>
 int
 main( int argc, char *argv[], char *env[] )
 {
@@ -289,8 +286,6 @@ main( int argc, char *argv[], char *env[] )
   string solver              = ""; // Empty string defaults to CGSolver
   bool   validateUps         = true;
   bool   onlyValidateUps     = false;
-  bool   track               = false;
-  bool   track_or_die        = false;
     
   IntVector layout(1,1,1);
 
@@ -414,13 +409,6 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-do_not_validate") {
       validateUps = false;
     }
-    else if (arg == "-track") {
-      track = true;
-    }
-    else if (arg == "-TRACK") {
-      track = true;
-      track_or_die = true;
-    }
     else if (arg == "-reduce_uda" || arg == "-reduceUda") {
       reduce_uda = true;
     }
@@ -450,26 +438,6 @@ main( int argc, char *argv[], char *env[] )
 
   if( filename == "" ) {
     usage("No input file specified", "", argv[0]);
-  }
-
-  if( track ) {
-    string server  = "updraft1.privatearch.arches";
-    bool   initialized = TrackerClient::initialize( server );
-
-    if( !initialized ) {
-      if ( track_or_die ) {
-        cout << "\n";
-        cout << "Error: Tracking initialization failed... Good bye.\n";
-        cout << "\n";
-        Uintah::Parallel::finalizeManager();
-        Thread::exitAll( 1 );
-      }
-      else {
-        cout << "\n";
-        cout << "WARNING: Tracking initialization failed... (Could not contact Server).  Tracking will not take place.\n";
-        cout << "\n";
-      }
-    }
   }
 
   if(dbgwait.active()) {
@@ -551,7 +519,6 @@ main( int argc, char *argv[], char *env[] )
 
       cout << "Date:    " << time_string;  // has its own newline
       cout << "Machine: " << name << "\n";
-
       cout << "SVN: " << SVN_REVISION << "\n";
       cout << "SVN: " << SVN_DATE << "\n";
       cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
@@ -590,7 +557,22 @@ main( int argc, char *argv[], char *env[] )
     }
     //__________________________________
     // Read input file
-    ProblemSpecP ups = ProblemSpecReader().readInputFile( filename, validateUps );
+    ProblemSpecP ups;
+    try {
+      ups = ProblemSpecReader().readInputFile( filename, validateUps );
+    }
+    catch( ... ) {
+      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
+      // instead of a UPS file.
+      proc0cout   << "\n";
+      proc0cout   << "ERROR - Failed to open UPS file: " << filename << ".\n";
+      if( validDir( filename ) ) {
+        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
+      }
+      proc0cout   << "\n";
+      Uintah::Parallel::finalizeManager();
+      Thread::exitAll( 0 );
+    }
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
@@ -731,12 +713,12 @@ main( int argc, char *argv[], char *env[] )
   } catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     cerrLock.lock();
-    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
+    cout << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
     cerrLock.unlock();
     thrownException = true;
   } catch (Exception& e) {
     cerrLock.lock();
-    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
+    cout << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
     if(e.stackTrace())
       stackDebug << "Stack trace: " << e.stackTrace() << '\n';
     cerrLock.unlock();
@@ -774,7 +756,7 @@ main( int argc, char *argv[], char *env[] )
   }
   
   Uintah::TypeDescription::deleteAll();
-  
+
   /*
    * Finalize MPI
    */

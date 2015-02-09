@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,27 +22,27 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef Packages_Uintah_CCA_Components_Scheduler_SchedulerFactory_h
-#define Packages_Uintah_CCA_Components_Scheduler_SchedulerFactory_h
+#ifndef CCA_COMPONENTS_SCHEDULERS_SCHEDULERFACTORY_H
+#define CCA_COMPONENTS_SCHEDULERS_SCHEDULERFACTORY_H
 
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/Output.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
 
-  class ProcessorGroup;
+class ProcessorGroup;
  
   class SchedulerFactory
   {
-  public:
-    // this function has a switch for all known Schedulers
+    public:
 
-    static SchedulerCommon * create( const ProblemSpecP   & ps,
-                                     const ProcessorGroup * world,
-                                     const Output         * ouput );
+      // this function has a switch for all known Schedulers
+      static SchedulerCommon* create( const ProblemSpecP&   ps,
+                                      const ProcessorGroup* world,
+                                      const Output*         ouput );
   };
 } // End namespace Uintah
 
 
-#endif
+#endif // End CCA_COMPONENTS_SCHEDULERS_SCHEDULERFACTORY_H

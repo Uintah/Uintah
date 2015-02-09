@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -29,9 +30,12 @@ PartVel::~PartVel()
 void PartVel::problemSetup(const ProblemSpecP& inputdb)
 {
   ProblemSpecP db = inputdb; 
+  ProblemSpecP dqmom_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
 
-  ProblemSpecP db_root = db->getRootNode();
-  ProblemSpecP dqmom_db = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
+  _uname = ParticleHelper::parse_for_role_to_label(db, "uvel"); 
+  _vname = ParticleHelper::parse_for_role_to_label(db, "vvel"); 
+  _wname = ParticleHelper::parse_for_role_to_label(db, "wvel"); 
+
   std::string which_dqmom; 
   dqmom_db->getAttribute( "type", which_dqmom ); 
   if ( which_dqmom == "unweightedAbs" )
@@ -83,6 +87,29 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
 
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of the particle velocities
+//---------------------------------------------------------------------------
+void 
+PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
+{
+ 
+  string taskname = "PartVel::InitPartVel";
+  Task* tsk = scinew Task(taskname, this, &PartVel::InitPartVel);
+
+  // actual velocity we will compute
+  for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
+        i != d_fieldLabels->partVel.end(); i++){
+    tsk->computes( i->second );
+  }
+
+
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the particle velocities
 //---------------------------------------------------------------------------
@@ -97,6 +124,14 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
   int N = dqmomFactory.get_quad_nodes();  
+
+  Task::WhichDW which_dw; 
+
+  if ( rkStep == 0 ){ 
+    which_dw = Task::OldDW; 
+  } else { 
+    which_dw = Task::NewDW; 
+  }
 
   //--New
   // actual velocity we will compute
@@ -114,7 +149,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
   if (d_bala) {
     //--Old
     // fluid velocity
-    tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+    tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
 
     // requires weighted legnth and weight (to back out length)
     for (int i = 0; i < N; i++){
@@ -147,63 +182,39 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 
   } else if(d_drag) {
    
-    tsk->requires( Task::OldDW, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+    tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+    
+    //for (int i = 0; i < N; i++){
+      //std::string name = "w_qn";
+      //std::string node;
+      //std::stringstream out;
+      //out << i;
+      //node = out.str();
+      //name += node;
+
+      //EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
+      //const VarLabel* myLabel = eqn.getTransportEqnLabel();
+
+      //tsk->requires( which_dw, myLabel, gn, 0 );
+    //}
     
     for (int i = 0; i < N; i++){
-      std::string name = "w_qn";
-      std::string node;
-      std::stringstream out;
-      out << i;
-      node = out.str();
-      name += node;
 
-      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
-      const VarLabel* myLabel = eqn.getTransportEqnLabel();
+      //U
+      std::string name = get_env_name( _uname, i ); 
+      const VarLabel* ulabel = VarLabel::find(name); 
+      tsk->requires( which_dw, ulabel, gn, 0 );
+      //V
+      name = get_env_name( _vname, i ); 
+      const VarLabel* vlabel = VarLabel::find(name); 
+      tsk->requires( which_dw, vlabel, gn, 0 );
+      //W
+      name = get_env_name( _wname, i ); 
+      const VarLabel* wlabel = VarLabel::find(name); 
+      tsk->requires( which_dw, wlabel, gn, 0 );
 
-      tsk->requires( Task::OldDW, myLabel, gn, 0 );
     }
-    
-    for (int i = 0; i < N; i++){
-      std::string name = "ux_qn";
-      std::string node;
-      std::stringstream out;
-      out << i;
-      node = out.str();
-      name += node;
 
-      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
-      const VarLabel* myLabel = eqn.getTransportEqnLabel();
-
-      tsk->requires( Task::OldDW, myLabel, gn, 0 );
-    }
-  
-   for (int i = 0; i < N; i++){
-      std::string name = "uy_qn";
-      std::string node;
-      std::stringstream out;
-      out << i;
-      node = out.str();
-      name += node;
-
-      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
-      const VarLabel* myLabel = eqn.getTransportEqnLabel();
-
-      tsk->requires( Task::OldDW, myLabel, gn, 0 );
-    }
-   
-    for (int i = 0; i < N; i++){
-      std::string name = "uz_qn";
-      std::string node;
-      std::stringstream out;
-      out << i;
-      node = out.str();
-      name += node;
-
-      EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( name );
-      const VarLabel* myLabel = eqn.getTransportEqnLabel();
-
-      tsk->requires( Task::OldDW, myLabel, gn, 0 );
-    }
   }
 
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -215,28 +226,30 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
                               const PatchSubset* patches, 
                               const MaterialSubset* matls, 
                               DataWarehouse* old_dw, 
-                              DataWarehouse* new_dw, const int rkStep )
+                              DataWarehouse* new_dw, 
+                              const int rkStep )
 {
+
   for (int p=0; p < patches->size(); p++){
     
-    //double pi = acos(-1.0);
-
     DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
-
-    //Ghost::GhostType  gaf = Ghost::AroundFaces;
-    //Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn  = Ghost::None;
-
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    DataWarehouse* which_dw; 
+    if ( rkStep == 0 ){ 
+      which_dw = old_dw; 
+    } else { 
+      which_dw = new_dw; 
+    }
 
     if (d_bala) {
 
       constCCVariable<Vector> gasVel; 
 
-      old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 ); 
+      which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 ); 
 
       // now loop for all qn's
       int N = dqmomFactory.get_quad_nodes();  
@@ -255,7 +268,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         const VarLabel* mylLabel = eqn.getTransportEqnLabel();  
         old_dw->get(wlength, mylLabel, matlIndex, patch, gn, 0); 
 
-        d_highClip = eqn.getScalingConstant()*d_upLimMult; // should figure out how to do this once and only once...
+        d_highClip = eqn.getScalingConstant(iqn)*d_upLimMult; // should figure out how to do this once and only once...
 
         name = "w_qn"; 
         name += node; 
@@ -263,7 +276,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(eqn2);
         constCCVariable<double> weight;  
         const VarLabel* mywLabel = weight_eqn.getTransportEqnLabel();  
-        double small_weight = weight_eqn.getSmallClip(); 
+        double small_weight = weight_eqn.getSmallClipPlusTol(); 
         old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0); 
 
         ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
@@ -292,9 +305,9 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
           } else {
 
             if(d_unweighted == true) {
-              length = wlength[c]*eqn.getScalingConstant();
+              length = wlength[c]*eqn.getScalingConstant(iqn);
             } else {
-              length = (wlength[c]/weight[c])*eqn.getScalingConstant();
+              length = (wlength[c]/weight[c])*eqn.getScalingConstant(iqn);
             }
 
             Vector v_gas = gasVel[c];
@@ -354,107 +367,100 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         // set boundary conditions now that the velocity field is set.  
-        name = "vel_qn";
-        name += node; 
+        name = ParticleHelper::append_qn_env("vel", iqn);
         if ( d_gasBC )  // assume gas vel =  part vel on boundary 
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name ); 
-        else           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
+        else            // part vel set by user.  
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
-
       }
     } else if (d_drag) {
      
       constCCVariable<Vector> gasVel;
 
-      old_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
+      which_dw->get( gasVel, d_fieldLabels->d_CCVelocityLabel, matlIndex, patch, gn, 0 );
       
       int N = dqmomFactory.get_quad_nodes();
       for ( int iqn = 0; iqn < N; iqn++){
-    
-        std::string node;
-        std::stringstream out;
-        out << iqn;
-        node = out.str();
-
-        std::string name = "w_qn";
-        name += node;
-        EqnBase& eqn2 = dqmomFactory.retrieve_scalar_eqn( name );
-        const VarLabel* mywLabel = eqn2.getTransportEqnLabel();
-        DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(eqn2);
-        constCCVariable<double> weight;
-        double small_weight = weight_eqn.getSmallClip();
-        old_dw->get(weight, mywLabel, matlIndex, patch, gn, 0);
-        
-        name = "ux_qn";
-        name += node;
-        EqnBase& t_eqn3 = dqmomFactory.retrieve_scalar_eqn( name );
-        DQMOMEqn& eqn3 = dynamic_cast<DQMOMEqn&>(t_eqn3);
-        constCCVariable<double> vel_x;
-        const VarLabel* myuxLabel = eqn3.getTransportEqnLabel();
-        old_dw->get(vel_x, myuxLabel, matlIndex, patch, gn, 0);
-        
-        name = "uy_qn";
-        name += node;
-        EqnBase& t_eqn4 = dqmomFactory.retrieve_scalar_eqn( name );
-        DQMOMEqn& eqn4 = dynamic_cast<DQMOMEqn&>(t_eqn4);
-        constCCVariable<double> vel_y;
-        const VarLabel* myuyLabel = eqn4.getTransportEqnLabel();
-        old_dw->get(vel_y, myuyLabel, matlIndex, patch, gn, 0);
-
-        name = "uz_qn";
-        name += node;
-        EqnBase& t_eqn5 = dqmomFactory.retrieve_scalar_eqn( name );
-        DQMOMEqn& eqn5 = dynamic_cast<DQMOMEqn&>(t_eqn5);
-        constCCVariable<double> vel_z;
-        const VarLabel* myuzLabel = eqn5.getTransportEqnLabel();
-        old_dw->get(vel_z, myuzLabel, matlIndex, patch, gn, 0);
+   
+        //U
+        std::string name;
+        name = get_env_name( _uname, iqn ); 
+        const VarLabel* ulabel = VarLabel::find(name); 
+        constCCVariable<double> u; 
+        which_dw->get(u, ulabel, matlIndex, patch, gn, 0); 
+        //V
+        name = get_env_name( _vname, iqn ); 
+        const VarLabel* vlabel = VarLabel::find(name); 
+        constCCVariable<double> v; 
+        which_dw->get(v, vlabel, matlIndex, patch, gn, 0); 
+        //W
+        name = get_env_name( _wname, iqn ); 
+        const VarLabel* wlabel = VarLabel::find(name); 
+        constCCVariable<double> w; 
+        which_dw->get(w, wlabel, matlIndex, patch, gn, 0); 
 
         ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
 
         CCVariable<Vector> partVel;
-        if (rkStep < 1)
+        if (rkStep == 0){
           new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );
-        else
+        } else { 
           new_dw->getModifiable( partVel, iter->second, matlIndex, patch );
+        }
+
         partVel.initialize(Vector(0.,0.,0.));
 
         // now loop over all cells
         for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){
+
           IntVector c = *iter;
-          double ux;
-          double uy;
-          double uz;
-          
-          if(d_unweighted == true){
-            ux = vel_x[c]*eqn3.getScalingConstant();
-            uy = vel_y[c]*eqn4.getScalingConstant();
-            uz = vel_z[c]*eqn5.getScalingConstant();
+          partVel[c] = Vector(u[c],v[c],w[c]);
 
-          } else {
-            if( weight[c] < small_weight ) {
-              ux = 0;
-              uy = 0;
-              uz = 0;
-            } else {
-              ux = (vel_x[c]/weight[c])*eqn3.getScalingConstant();
-              uy = (vel_y[c]/weight[c])*eqn4.getScalingConstant();
-              uz = (vel_z[c]/weight[c])*eqn5.getScalingConstant();
-            }
-          }
-
-          partVel[c] = Vector(ux,uy,uz);
         }
 
         // Now set boundary conditions after velocities are set.  
-        name = "vel_qn";
-        name += node;
-        if ( d_gasBC )  // assume gas vel =  part vel on boundary 
+        name = ParticleHelper::append_qn_env("vel", iqn);
+        if ( d_gasBC ){  // assume gas vel =  part vel on boundary 
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
-        else           // part vel set by user.  
-          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name );
+        } else {           // part vel set by user.  
+          d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
+        }
 
       } 
     }  
   } 
 } // end ComputePartVel()
 
+//---------------------------------------------------------------------------
+// Method: Initialized partvel 
+//---------------------------------------------------------------------------
+void PartVel::InitPartVel( const ProcessorGroup* pc, 
+                              const PatchSubset* patches, 
+                              const MaterialSubset* matls, 
+                              DataWarehouse* old_dw, 
+                              DataWarehouse* new_dw )
+{
+
+for (int p=0; p < patches->size(); p++){
+    
+  DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
+  const Patch* patch = patches->get(p);
+  int archIndex = 0;
+  int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+  int N = dqmomFactory.get_quad_nodes();
+  for ( int iqn = 0; iqn < N; iqn++){
+
+    ArchesLabel::PartVelMap::iterator iter = d_fieldLabels->partVel.find(iqn);
+
+    CCVariable<Vector> partVel;
+    new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );
+
+    partVel.initialize(Vector(0.,0.,0.));
+
+    // Now set boundary conditions after velocities are set.  
+    std::string name = ParticleHelper::append_qn_env("vel", iqn); 
+    d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
+    }
+  }  
+} // end ComputePartVel()

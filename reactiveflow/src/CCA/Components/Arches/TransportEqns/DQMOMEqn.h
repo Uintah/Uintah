@@ -43,7 +43,7 @@ public:
 private:
 
   std::string d_ic_name; 
-  const int d_quadNode;
+  int d_quadNode;
 
 }; 
 // End Builder
@@ -66,9 +66,13 @@ public:
   /** @brief not needed here. **/ 
   void assign_stage_to_sources(){};
   
-  /** @brief Schedule a transport equation to be built and solved */
+  /** @brief Schedule a transport equation to be built */
   void sched_evalTransportEqn( const LevelP&, 
                                SchedulerP& sched, int timeSubStep );
+
+  /** @brief Adds the DQMOM source to the RHS and time updates the eqn **/ 
+  void sched_updateTransportEqn( const LevelP&, 
+                                 SchedulerP& sched, int timeSubStep ); 
 
   /** @brief Schedule the build for the terms needed in the transport equation */
   void sched_buildTransportEqn( const LevelP& level, 
@@ -80,6 +84,17 @@ public:
                           DataWarehouse* old_dw, 
                           DataWarehouse* new_dw, 
                           const int timeSubStep );
+
+  /** @brief Schedule the addition of the sources from the linear system */ 
+  void sched_addSources( const LevelP& level, SchedulerP& sched, const int timeSubStep ); 
+
+  /** @brief Callback function for sched_addSources **/ 
+  void addSources( const ProcessorGroup*, 
+                   const PatchSubset* patches, 
+                   const MaterialSubset*, 
+                   DataWarehouse* old_dw, 
+                   DataWarehouse* new_dw, 
+                   const int timeSubStep );
 
   /** @brief Schedule the solution the transport equation */
   void sched_solveTransportEqn(const LevelP& level, 
@@ -138,43 +153,59 @@ public:
 
   /** @brief Return the list of models associated with this equation. */
   inline const std::vector<std::string> getModelsList(){
-    return d_models; };
+    return d_models; }
 
   /** @brief Return the VarLabel for this equation's source term. */ 
   inline const VarLabel* getSourceLabel(){
-    return d_sourceLabel; };
+    return d_sourceLabel; }
 
   /** @brief  Return the VarLabel for the unweighted (and unscaled) value of this transport equation */
   inline const VarLabel* getUnscaledLabel(){
-    return d_icLabel; };
+    return d_icLabel; }
 
   /** @brief return a bool to tell if this equation is a weight.
    If false, this eqn is a weighted abscissa */
   inline bool weight(){
-    return d_weight; };
+    return d_weight; }
 
   /** @brief Get the small clipping value (for weights only). */
   inline double getSmallClip(){
 
     if( clip.activated && clip.do_low ) {
 
-      double small = clip.low + clip.tol; 
-      return small; 
+      return clip.low;  
 
     } else {
 
       return 0.0; 
     } 
-  }; 
+  }
+
+  /** @brief Get the small clipping value (for weights only). */
+  inline double getSmallClipPlusTol(){
+
+    if( clip.activated && clip.do_low ) {
+
+      return clip.low+clip.tol; 
+
+    } else {
+
+      return 1e300;  // Infinity
+    } 
+  } 
 
   /** @brief Set this equation as a weight.
    this seems a little dangerous.  Is there a better way? */
   inline void setAsWeight(){
-    d_weight = true; }; 
+    d_weight = true; }
 
   /** @brief Get the quadrature node value. */
   inline int getQuadNode(){
-    return d_quadNode; };
+    return d_quadNode; }
+
+  /** @brief Get the IC name. */ 
+  inline std::string getICName(){ 
+    return d_ic_name; }
 
  
 private:
@@ -188,6 +219,7 @@ private:
   std::vector<std::string> d_sources;
   bool d_addExtraSources; 
   double d_w_small;               ///< Value of "small" weights
+  std::vector<double> d_nominal;               ///< nominal value for each IC when weight -> zero
   bool d_unweighted;
   DQMOMEqnFactory::NDF_DESCRIPTOR d_descriptor;    ///< This actor plays this role.  
   std::string d_ic_name; 

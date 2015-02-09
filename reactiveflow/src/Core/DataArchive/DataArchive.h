@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -242,14 +242,11 @@ namespace Uintah {
       //! and thus is only necessary on a true restart.
       GridP queryGrid( int index, const ProblemSpec* ups = 0 );
 
-#if 0
       //////////
-      // Does a variable exist in a particular patch?
-      bool exists(const std::string&, const Patch*, int) {
-        return true;
-      }
-#endif
-
+      // Does a variable exist on a patch at this timestep?
+      bool exists( const std::string& varname,
+                   const Patch* patch,
+                   const int timeStep );
       //////////
       // how long does a particle live?  Not variable specific.
       void queryLifetime( double & min, double & max, particleId id );

@@ -80,7 +80,10 @@ namespace Uintah{
       std::string  _base_temperature_label_name;          // DQMOM Temperature name
       std::string  _base_size_label_name;                 // DQMOM size_name
 
+      bool  _particlesOn ;
+      bool  _scatteringOn ;
       RadPropertyCalculator::PropertyCalculatorBase* _calc; 
+      RadPropertyCalculator::opticalPropertyCalculatorBase* _ocalc; // needed when including scattering
       const VarLabel* _temperature_label; 
       std::string _temperature_name;
       BoundaryCondition_new* _boundaryCond;

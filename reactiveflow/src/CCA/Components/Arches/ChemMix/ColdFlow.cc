@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -524,6 +524,10 @@ ColdFlow::getState( const ProcessorGroup* pc,
               getIteratorBCValue<double>( patch, face, child, variable_name, matlIndex, bc_value, bound_ptr ); 
             counter++; 
           } 
+
+          if ( !foundIterator ){ 
+            throw InvalidValue( "Error: Missing boundary condition for table variable: "+variable_name, __FILE__, __LINE__ ); 
+          }
 
           if ( bc_kind == "Dirichlet" ) {
             which_bc.push_back(ColdFlow::DIRICHLET); 

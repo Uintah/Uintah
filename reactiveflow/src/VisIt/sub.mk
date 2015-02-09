@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,12 +27,11 @@
 # 
 # Makefile fragment for this subdirectory 
 
-ifeq ($(BUILD_VISIT),yes)
+ifeq ($(HAVE_VISIT),yes)
 
 SRCDIR := VisIt
-
 SUBDIRS := \
-	$(SRCDIR)/udaReaderMTMD
+	$(SRCDIR)/libsim
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

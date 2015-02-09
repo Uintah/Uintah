@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -414,7 +414,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(history4,        pHistory4Label_preReloc,      pset);
     new_dw->allocateAndPut(history5,        pHistory5Label_preReloc,      pset);
     new_dw->allocateAndPut(history6,        pHistory6Label_preReloc,      pset);
-    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,               pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,        pset);
     new_dw->get(pvolume,          lb->pVolumeLabel_preReloc,              pset);
     new_dw->get(deformationGradient_new,

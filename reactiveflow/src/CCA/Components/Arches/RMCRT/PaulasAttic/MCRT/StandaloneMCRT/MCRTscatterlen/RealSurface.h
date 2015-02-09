@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,8 +43,8 @@ public:
 
   // given surfaceIndex, find limits of that surface element
   virtual void get_limits(const double *X,
-			  const double *Y,
-			  const double *Z) = 0;
+        const double *Y,
+        const double *Z) = 0;
 
   virtual void get_n() = 0;
   virtual void get_t1() = 0;
@@ -113,24 +113,24 @@ public:
   
   
   double SurfaceEmissFlux(const int &i,
-			  const double *emiss_surface,
-			  const double *T_surface,
-			  const double *a_surface);
-			 
+        const double *emiss_surface,
+        const double *T_surface,
+        const double *a_surface);
+       
   double SurfaceEmissFluxBlack(const int &i,
-			       const double *T_surface,
-			       const double *a_surface);
+             const double *T_surface,
+             const double *a_surface);
   
   
   double SurfaceIntensity(const int &i,
-			  const double *emiss_surface,
-			  const double *T_surface,
-			  const double *a_surface);
+        const double *emiss_surface,
+        const double *T_surface,
+        const double *a_surface);
 
   
   double SurfaceIntensityBlack(const int &i,
-			       const double *T_surface,
-			       const double *a_surface);  
+             const double *T_surface,
+             const double *a_surface);  
   
   friend class ray;
   

@@ -900,9 +900,9 @@ IntrusionBC::setCellType( const ProcessorGroup*,
       } // geometry loop
 
       //debugging: 
-//      std::cout << " ======== " << std::endl;
-//      std::cout << " For Intrusion named: " << iter->first << std::endl;
-//      print_iterator( patchID, iter->second ); 
+      //std::cout << " ======== " << std::endl;
+      //std::cout << " For Intrusion named: " << iter->first << std::endl;
+      //print_iterator( patchID, iter->second ); 
       
 
       // For this collection of  geometry pieces, the iterator is now established.  

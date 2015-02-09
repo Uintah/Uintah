@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -151,10 +151,10 @@ namespace Wasatch {
     scatCoefTag_   ( scatCoefTag    ),
     temperatureTag_( temperatureTag ),
 
+    svec_( svec ),
+
     hasAbsCoef_ (  absCoefTag != Expr::Tag() ),
     hasScatCoef_( scatCoefTag != Expr::Tag() ),
-
-    svec_( svec ),
 
     doX_( true ),
     doY_( true ),

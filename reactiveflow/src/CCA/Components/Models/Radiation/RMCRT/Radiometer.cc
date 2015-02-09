@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,6 +38,8 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 
+//#define USE_SPATIAL_SCHEDULING
+
 //______________________________________________________________________
 //
 using namespace Uintah;
@@ -48,9 +50,15 @@ static DebugStream dbg("RAY", false);
 // Class: Constructor.
 //______________________________________________________________________
 //
-Radiometer::Radiometer()
+Radiometer::Radiometer(const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
-  d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );
+  if ( FLT_DBL == TypeDescription::double_type ){
+    d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<double>::getTypeDescription() );
+    proc0cout << "__________________________________ USING DOUBLE VERSION OF RADIOMETER" << endl;
+  } else {
+    d_VRFluxLabel = VarLabel::create( "VRFlux", CCVariable<float>::getTypeDescription() );
+    proc0cout << "__________________________________ USING FLOAT VERSION OF RADIOMETER" << endl;
+  }
 
 }
 
@@ -235,9 +243,16 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
                                      SchedulerP& sched,
                                      const int radCalc_freq )
 {
-  std::string taskname = "Radiometer::initializeRadVars";
-  Task* tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars, radCalc_freq );
 
+  std::string taskname = "Radiometer::initializeRadVars";
+
+  Task* tsk = NULL;
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< double >, radCalc_freq );
+  }else{
+    tsk= scinew Task( taskname, this, &Radiometer::initializeRadVars< float >, radCalc_freq );
+  }
+  
   printSchedule(level,dbg,taskname);
   tsk->requires(Task::OldDW, d_VRFluxLabel, d_gn, 0);
   tsk->computes( d_VRFluxLabel );
@@ -250,6 +265,7 @@ Radiometer::sched_initializeRadVars( const LevelP& level,
 //    The flux is modified downstream.
 //  - Determine if the taskgraph should be recompiled
 //______________________________________________________________________
+template< class T >
 void
 Radiometer::initializeRadVars( const ProcessorGroup*,
                                const PatchSubset* patches,
@@ -277,12 +293,75 @@ Radiometer::initializeRadVars( const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing Radiometer::initializeVars");
 
-    CCVariable<double> VRFlux;
+    CCVariable< T > VRFlux;
     new_dw->allocateAndPut( VRFlux, d_VRFluxLabel, d_matl, patch );
     VRFlux.initialize( 0.0 );
   }
 }
 
+#ifndef USE_SPATIAL_SCHEDULING
+//______________________________________________________________________
+// Method: Schedule the virtual radiometer.  Only use temporal scheduling 
+//  This is a HACK until spatial scheduling working.  Each patch is 
+//  performing all-to-all communication even if they don't have
+//  radiometers.
+//______________________________________________________________________
+//  Duct tape until spatial scheduling is working
+void
+Radiometer::sched_radiometer( const LevelP& level,
+                              SchedulerP& sched,
+                              Task::WhichDW abskg_dw,
+                              Task::WhichDW sigma_dw,
+                              Task::WhichDW celltype_dw,
+                              const int radCalc_freq )
+{
+  // return if it's a carryforward timestep
+  // Temporal task scheduling
+  if ( doCarryForward( radCalc_freq) ) {
+    return;
+  }
+  
+  vector<const Patch*> myPatches = getPatchSet( sched, level );
+  bool hasRadiometers = false;
+  int nGhostCells = SHRT_MAX;
+  
+  //__________________________________
+  //  If this processor owns any patches with radiometers
+  if( myPatches.size() !=  0 ){
+    hasRadiometers = true;
+    nGhostCells = SHRT_MAX; 
+  }
+  
+  std::string taskname = "Radiometer::radiometer";
+  Task *tsk;
+
+  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+  } else {
+    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+  }
+
+  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
+
+  //__________________________________
+  // Require an infinite number of ghost cells so you can access the entire domain.
+  //
+  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
+  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
+  //
+  // The taskgraph must be recompiled to detect a change in the conditional.
+  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+  tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
+  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+
+  tsk->modifies( d_VRFluxLabel );
+
+  sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
+
+#else
 //______________________________________________________________________
 // Method: Schedule the virtual radiometer.  This task has both 
 // temporal and spatial scheduling.
@@ -302,57 +381,66 @@ Radiometer::sched_radiometer( const LevelP& level,
     return;
   }
 
-  std::string taskname = "Radiometer::radiometer";
-  Task *tsk;
-  
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-  } else {
-    tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-  }
-  
-  tsk->setType(Task::Spatial);
-
-  printSchedule( level,dbg,"Radiometer::sched_radiometer" );
-
-  //__________________________________
-  // Require an infinite number of ghost cells so you can access the entire domain.
-  //
-  // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
-  // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
-  //
-  // The taskgraph must be recompiled to detect a change in the conditional.
-  // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
-  dbg << "    sched_radiometer: adding requires for all-to-all variables " << endl;
-  Ghost::GhostType  gac  = Ghost::AroundCells;
-  tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-  tsk->requires( sigma_dw ,    d_sigmaT4_label,  gac, SHRT_MAX);
-  tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
-
-  // only schedule on the patches that contain radiometers
-  // Spatial task scheduling
-  PatchSet* radiometerPatchSet;
-  radiometerPatchSet = scinew PatchSet();
-  radiometerPatchSet->addReference();
+  // find patches that contain radiometers
   vector<const Patch*> myPatches = getPatchSet( sched, level );
+  bool hasRadiometers = false;
+  
+  //__________________________________
+  //  If this processor owns any patches with radiometers
+  if( myPatches.size() !=  0 ){
+    hasRadiometers = true;
 
-  radiometerPatchSet->addAll( myPatches );
-  
-  tsk->modifies( d_VRFluxLabel );
-  
-  sched->addTask( tsk, radiometerPatchSet, d_matlSet );
-  
-  if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
-    delete radiometerPatchSet;
-  }
+    std::string taskname = "Radiometer::radiometer";
+    Task *tsk;
+
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+      tsk = scinew Task( taskname, this, &Radiometer::radiometer< double >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    } else {
+      tsk = scinew Task( taskname, this, &Radiometer::radiometer< float >, abskg_dw, sigma_dw, celltype_dw, radCalc_freq, hasRadiometers );
+    }
+
+    tsk->setType(Task::Spatial);
+
+    printSchedule( level,dbg,"Radiometer::sched_radiometer" );
+
+    //__________________________________
+    // Require an infinite number of ghost cells so you can access the entire domain.
+    //
+    // THIS IS VERY EXPENSIVE.  THIS EXPENSE IS INCURRED ON NON-CALCULATION TIMESTEPS,
+    // ONLY REQUIRE THESE VARIABLES ON A CALCULATION TIMESTEPS.
+    //
+    // The taskgraph must be recompiled to detect a change in the conditional.
+    // The taskgraph recompilation is activated from RMCRTCommon:doRecompileTaskgraph()
+    dbg << "    sched_radiometer: adding requires for all-to-all variables " << endl;
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+    tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
+    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
+
+    tsk->modifies( d_VRFluxLabel );
+
+    // only schedule on the patches that contain radiometers
+    // Spatial task scheduling
+    PatchSet* radiometerPatchSet;
+    radiometerPatchSet = scinew PatchSet();
+    radiometerPatchSet->addReference();
+
+    radiometerPatchSet->addAll( myPatches );
+
+    sched->addTask( tsk, radiometerPatchSet, d_matlSet );
+
+    if( radiometerPatchSet && radiometerPatchSet->removeReference() ){ 
+      delete radiometerPatchSet;
+    }
+  }  // hasRadiometers
 }
-
+#endif
 //______________________________________________________________________
 // Method: The actual work of the ray tracer
 //______________________________________________________________________
 template < class T >
 void
-Radiometer::radiometer( const ProcessorGroup* pc,
+Radiometer::radiometer( const ProcessorGroup* pg,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
@@ -360,11 +448,12 @@ Radiometer::radiometer( const ProcessorGroup* pc,
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
-                        const int radCalc_freq )
+                        const int radCalc_freq,
+                        const bool hasRadiometers )
 {
-
-  // return if it's a carryforward timestep
-  if ( doCarryForward( radCalc_freq) ) {
+  // return if it's a carryforward timestep or there are no
+  // radiometers.
+  if ( doCarryForward( radCalc_freq) || hasRadiometers == false) {
     return;
   }
 
@@ -386,11 +475,11 @@ Radiometer::radiometer( const ProcessorGroup* pc,
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
   constCCVariable< T > sigmaT4OverPi;
-  constCCVariable<double> abskg;
+  constCCVariable< T > abskg;
   constCCVariable<int>    celltype;
 
   abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC );
-  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4_label, d_matl , level, domainLo_EC, domainHi_EC );
+  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level, domainLo_EC, domainHi_EC );
   celltype_dw->getRegion( celltype ,     d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC );
 
   //__________________________________
@@ -416,7 +505,7 @@ Radiometer::radiometerFlux( const Patch* patch,
                             DataWarehouse* new_dw,
                             MTRand& mTwister,
                             constCCVariable< T > sigmaT4OverPi,
-                            constCCVariable<double> abskg,
+                            constCCVariable< T > abskg,
                             constCCVariable<int> celltype,
                             const bool modifiesFlux )
 {
@@ -481,7 +570,7 @@ Radiometer::radiometerFlux( const Patch* patch,
 
       //__________________________________
       //  Compute VRFlux
-      VRFlux[c] = sumProjI * d_VR.sldAngl/d_nRadRays;
+      VRFlux[c] = (T) sumProjI * d_VR.sldAngl/d_nRadRays;
 
     }  // end VR cell iterator
   }  // is radiometer on this patch
@@ -589,5 +678,5 @@ Radiometer::radiometerFlux( const Patch*, const Level*, DataWarehouse*, MTRand&,
                             const bool );
 template void
 Radiometer::radiometerFlux( const Patch*, const Level*, DataWarehouse*, MTRand&,
-                            constCCVariable< float >, constCCVariable<double>, constCCVariable<int>,
+                            constCCVariable< float >, constCCVariable< float >, constCCVariable<int>,
                             const bool );

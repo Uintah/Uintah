@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,6 +45,8 @@
  *
  * @brief Methods, functions and variables that are common to both the 
  *        radiometer() and RMCRT()  
+ *        The variable sigmaT4Pi and abskg can be cast as either doubles or floats
+ #        This allows for a significant savings in memory and communication costs
  *
  */
 class MTRand;
@@ -55,7 +57,7 @@ namespace Uintah{
 
     public: 
 
-      RMCRTCommon();
+      RMCRTCommon( TypeDescription::Type FLT_DBL );
       ~RMCRTCommon(); 
 
        //__________________________________
@@ -75,7 +77,7 @@ namespace Uintah{
                          const IntVector& origin,
                          const Vector& Dx,
                          constCCVariable< T >& sigmaT4Pi,
-                         constCCVariable<double>& abskg,
+                         constCCVariable< T >& abskg,
                          constCCVariable<int>& celltype,
                          unsigned long int& size,
                          double& sumI,
@@ -148,6 +150,20 @@ namespace Uintah{
                               DataWarehouse*,
                               DataWarehouse*,
                               const VarLabel* variable);
+      //__________________________________
+      // If neede convert abskg double -> float
+      void sched_DoubleToFloat( const LevelP& level,
+                                SchedulerP& sched,
+                                Task::WhichDW myDW,
+                                const int radCalc_freq );
+
+      void DoubleToFloat( const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          Task::WhichDW which_dw,
+                          const int radCalc_freq );
 
 
       void doRecompileTaskgraph( const int radCalc_freq );
@@ -174,14 +190,17 @@ namespace Uintah{
       // These are initialized once in registerVarLabels().
       static int d_matl;      
       static MaterialSet* d_matlSet;
+      static std::string d_abskgBC_tag;             // Needed by BC, manages the varLabel name change when using floats
       
-      static const VarLabel* d_sigmaT4_label;
+      // Varlabels local to RMCRT
+      static const VarLabel* d_sigmaT4Label;
       static const VarLabel* d_abskgLabel;
-      static const VarLabel* d_temperatureLabel;
-      static const VarLabel* d_cellTypeLabel;
       static const VarLabel* d_divQLabel;
-
-
+      
+      // VarLabels passed to RMCRT by the component
+      static const VarLabel* d_compTempLabel;       //  temperature
+      static const VarLabel* d_compAbskgLabel;      //  Absorption Coefficitne
+      static const VarLabel* d_cellTypeLabel;       //  cell type marker
 
   }; // class RMCRTCommon
 

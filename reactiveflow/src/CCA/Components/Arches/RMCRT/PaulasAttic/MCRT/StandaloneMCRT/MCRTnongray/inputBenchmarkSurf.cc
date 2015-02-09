@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -31,19 +31,19 @@ for ( int k = 0; k < Ncz; k ++ ){
   for ( int j = 0; j < Ncy; j ++) {
     for ( int i = 0; i < Ncx; i ++ ) {
       
-	T_Vol[fakeIndex] = 64.80721904; // k
-	xx = (X[i] + X[i+1])/2;
-	yy = (Y[j] + Y[j+1])/2;
-	zz = (Z[k] + Z[k+1])/2;
-	
-	kl_Vol[fakeIndex] = 0.9 * ( 1 - 2 * abs ( xx ) )
-	  * ( 1 - 2 * abs ( yy ) )
-	  * ( 1 - 2 * abs ( zz ) ) + 0.1;
-	
-	a_Vol[fakeIndex] = 1;
-	scatter_Vol[fakeIndex] = 0;
-	fakeIndex++;
-	
+  T_Vol[fakeIndex] = 64.80721904; // k
+  xx = (X[i] + X[i+1])/2;
+  yy = (Y[j] + Y[j+1])/2;
+  zz = (Z[k] + Z[k+1])/2;
+  
+  kl_Vol[fakeIndex] = 0.9 * ( 1 - 2 * abs ( xx ) )
+    * ( 1 - 2 * abs ( yy ) )
+    * ( 1 - 2 * abs ( zz ) ) + 0.1;
+  
+  a_Vol[fakeIndex] = 1;
+  scatter_Vol[fakeIndex] = 0;
+  fakeIndex++;
+  
     }
   }
  }

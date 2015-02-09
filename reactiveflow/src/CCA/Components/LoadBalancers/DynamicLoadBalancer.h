@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,16 +25,17 @@
 #ifndef UINTAH_HOMEBREW_DynamicLoadBalancer_H
 #define UINTAH_HOMEBREW_DynamicLoadBalancer_H
 
-#include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-
 #include <CCA/Components/LoadBalancers/CostForecasterBase.h>
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
+#include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 #include <CCA/Ports/SFC.h>
+
 #include <Core/Grid/Grid.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sci_defs/uintah_defs.h>
+
 #if defined( HAVE_ZOLTAN )
 #  include <zoltan_cpp.h>
 #endif
@@ -93,7 +94,7 @@ namespace Uintah {
     ~DynamicLoadBalancer();
     virtual int getPatchwiseProcessorAssignment(const Patch* patch);
     virtual int getOldProcessorAssignment(const VarLabel* var,
-					  const Patch* patch, const int matl);
+                                          const Patch* patch, const int matl);
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
@@ -121,27 +122,30 @@ namespace Uintah {
                                     ProblemSpecP& pspec,
                                     std::string tsurl, const GridP& grid );
    
-  //cost profiling functions
-    //update the contribution for this patch
-    void addContribution(DetailedTask *task ,double cost) {d_costForecaster->addContribution(task,cost);}
-    //finalize the contributions (updates the weight, should be called once per timestep)
-    void finalizeContributions(const GridP currentGrid);
-    //initializes the regions in the new level that are not in the old level
-    void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {
-            d_costForecaster->initializeWeights(oldgrid,newgrid); }
-    //resets the profiler counters to zero
-    void resetCostForecaster() {d_costForecaster->reset();}
+    // Cost profiling functions
+    // Update the contribution for this patch.
+    void addContribution( DetailedTask * task ,double cost ) { d_costForecaster->addContribution(task,cost); }
+
+    // Finalize the contributions (updates the weight, should be called once per timestep):
+    void finalizeContributions( const GridP & currentGrid );
+
+    // Initializes the regions in the new level that are not in the old level.
+    void initializeWeights(const Grid* oldgrid, const Grid* newgrid) { d_costForecaster->initializeWeights(oldgrid,newgrid); }
+
+    // Resets the profiler counters to zero
+    void resetCostForecaster() { d_costForecaster->reset(); }
     
     // Helper for assignPatchesFactor.  Collects each patch's particles
     void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);
-    // same, but can be called after a regrid when patches have not been load balanced yet
-    void collectParticlesForRegrid(const Grid* oldGrid, const std::vector<std::vector<Region> >& newGridRegions,  std::vector<std::vector<int> >& particles);
+    // Same, but can be called after a regrid when patches have not been load balanced yet.
+    void collectParticlesForRegrid( const Grid                               * oldGrid,
+                                    const std::vector< std::vector<Region> > & newGridRegions,
+                                          std::vector< std::vector<int> >    & particles );
 
 
   private:
     
-    struct double_int
-    {
+    struct double_int {
       double val;
       int loc;
       double_int(double val, int loc): val(val), loc(loc) {}
@@ -174,7 +178,7 @@ namespace Uintah {
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
     std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
 
-    // the assignment vectors are stored 0-n.  This stores the start patch number so we can
+    // The assignment vectors are stored 0-n.  This stores the start patch number so we can
     // detect if something has gone wrong when we go to look up what proc a patch is on.
     int d_assignmentBasePatch;   
     int d_oldAssignmentBasePatch;
@@ -182,12 +186,12 @@ namespace Uintah {
     double d_lbInterval;
     double d_lastLbTime;
 
-    bool d_levelIndependent;
+    bool   d_levelIndependent;
     
-    int d_lbTimestepInterval;
-    int d_lastLbTimestep;
+    int    d_lbTimestepInterval;
+    int    d_lastLbTimestep;
     
-    bool d_do_AMR;
+    bool   d_do_AMR;
     ProblemSpecP d_pspec;
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
@@ -197,7 +201,7 @@ namespace Uintah {
     double d_particleCost;  //cost weight per particle
     double d_patchCost;     //cost weight per patch
     
-    int d_dynamicAlgorithm;
+    int  d_dynamicAlgorithm;
     bool d_doSpaceCurve;
     bool d_collectParticles;
     bool d_checkAfterRestart;

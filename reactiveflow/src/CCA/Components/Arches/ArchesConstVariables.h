@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -107,6 +107,7 @@ namespace Uintah {
       constCCVariable<double> h2o;
       constCCVariable<double> co2;
       constCCVariable<double> ABSKG;           /// 
+      constCCVariable<double> ABSKT;           /// total absorption coefficient + scattering coefficient
       constCCVariable<double> cenint;          /// working intensity variable-space for DO-radiation
       constCCVariable<double> reactscalarSRC;  ///
       StencilMatrix<constCCVariable<double> > scalarCoeff; //7 point stencil

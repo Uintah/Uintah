@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -173,14 +173,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     }
 
     vector<Point>::const_iterator itr;
-    for(itr=vars.d_object_points[*obj].begin();itr!=vars.d_object_points[*obj].end();++itr){
+    for(itr=vars.d_object_points[*obj].begin();
+        itr!=vars.d_object_points[*obj].end(); ++itr){
       IntVector cell_idx;
       if (!patch->findCell(*itr,cell_idx)) continue;
 
       if (!patch->containsPoint(*itr)) continue;
       
       particleIndex pidx = start+count;      
-      //cerr << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
  
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID, pvars);
       
@@ -220,15 +220,22 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++voliter;
         }
       }
-      // CPDI
-      if (psizes && (d_flags->d_interpolator_type=="cpdi")) {
+
+      // CPDI or CPTI
+      if (psizes && ((d_flags->d_interpolator_type=="cpdi") || d_useCPTI)) {
         // Read psize from file
         if (!psizes->empty()) {
           Vector dxcc = patch->dCell(); 
           pvars.psize[pidx] = *sizeiter;
           if (volumes->empty()) {
-            // Calculate CPDI hexahedron volume from psize (if volume not passed from FileGeometryPiece)
-            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant());
+            // Calculate CPDI hexahedron volume from psize 
+            double volFactor=1.0;
+            if (d_useCPTI) {
+              // Calculate CPTI tetrahedron volume from psize 
+              volFactor=6.0;
+            }
+            // (if volume not passed from FileGeometryPiece)
+            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant()/volFactor);
             pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
           }
           // Modify psize (CPDI R-vectors) to be normalized by cell spacing
@@ -239,25 +246,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           ++sizeiter;
         }
       }
-      // CPTI
-      if (psizes && d_useCPTI) {
-        // Read psize from file
-        if (!psizes->empty()) {
-          Vector dxcc = patch->dCell(); 
-          pvars.psize[pidx] = *sizeiter;
-          if (volumes->empty()) {
-            // Calculate CPTI tetrahedron volume from psize (if volume not passed from FileGeometryPiece)
-            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant()/6.0);
-            pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
-          }
-          // Modify psize (CPTI R-vectors) to be normalized by cell spacing
-          Matrix3 size(1./((double) dxcc.x()),0.,0.,
-                       0.,1./((double) dxcc.y()),0.,
-                       0.,0.,1./((double) dxcc.z()));
-          pvars.psize[pidx]= pvars.psize[pidx]*size;
-          ++sizeiter;
-        }
-      }
+
       if (colors) {
         if (!colors->empty()) {
           pvars.pcolor[pidx] = *coloriter;
@@ -377,37 +366,37 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 {
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
                                                         patch);
-  new_dw->allocateAndPut(pvars.position,       d_lb->pXLabel,             subset);
-  new_dw->allocateAndPut(pvars.pvelocity,      d_lb->pVelocityLabel,      subset); 
-  new_dw->allocateAndPut(pvars.pexternalforce, d_lb->pExternalForceLabel, subset);
-  new_dw->allocateAndPut(pvars.pmass,          d_lb->pMassLabel,          subset);
-  new_dw->allocateAndPut(pvars.pvolume,        d_lb->pVolumeLabel,        subset);
-  new_dw->allocateAndPut(pvars.ptemperature,   d_lb->pTemperatureLabel,   subset);
-  new_dw->allocateAndPut(pvars.pparticleID,    d_lb->pParticleIDLabel,    subset);
-  new_dw->allocateAndPut(pvars.psize,          d_lb->pSizeLabel,          subset);
-  new_dw->allocateAndPut(pvars.plocalized,     d_lb->pLocalizedMPMLabel,  subset);
-  new_dw->allocateAndPut(pvars.pfiberdir,      d_lb->pFiberDirLabel,      subset); 
-  // for thermal stress
-  new_dw->allocateAndPut(pvars.ptempPrevious,  d_lb->pTempPreviousLabel,  subset); 
-  new_dw->allocateAndPut(pvars.pdisp,          d_lb->pDispLabel,          subset);
+  new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
+  new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset); 
+  new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
+  new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
+  new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
+  new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
+  new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
+  new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
+  new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
+  new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
+  new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
+  new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
+  new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
   if(d_flags->d_integrator_type=="explicit"){
-    new_dw->allocateAndPut(pvars.pvelGrad,     d_lb->pVelGradLabel,       subset);
+    new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
   }
-  
   if (d_useLoadCurves) {
-    new_dw->allocateAndPut(pvars.pLoadCurveID, d_lb->pLoadCurveIDLabel,   subset); 
+    new_dw->allocateAndPut(pvars.pLoadCurveID,d_lb->pLoadCurveIDLabel,  subset);
   }
   if(d_with_color){
-     new_dw->allocateAndPut(pvars.pcolor,      d_lb->pColorLabel,         subset);
+     new_dw->allocateAndPut(pvars.pcolor,     d_lb->pColorLabel,        subset);
   }
   if(d_artificial_viscosity){
-     new_dw->allocateAndPut(pvars.p_q,         d_lb->p_qLabel,            subset);
+     new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
   }
 
   return subset;
 }
 
-void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, ObjectVars& vars)
+void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, 
+                                                       ObjectVars& vars)
 {
 
   GeometryPieceP piece = obj->getPiece();
@@ -430,16 +419,17 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, Obje
     if(hasFiner){ // Don't create particles if a finer level exists here
       const Point CC = patch->cellPosition(c);
       bool includeExtraCells=true;
-      const Patch* patchExists = fineLevel->getPatchFromPoint(CC,includeExtraCells);
+      const Patch* patchExists = fineLevel->getPatchFromPoint(CC,
+                                                              includeExtraCells);
       if(patchExists != 0){
        continue;
       }
     }
 
     // Affine transformation for making conforming particle distributions
-    //  to be used in the conforming CPDI simulations. The input vectors are
-    //  optional and if you do not wish to use the affine transformation, just do
-    //  not define them in the input file.
+    // to be used in the conforming CPDI simulations. The input vectors are
+    // optional and if you do not wish to use the affine transformation, just do
+    // not define them in the input file.
     Vector affineTrans_A0=obj->getInitialData_Vector("affineTransformation_A0");
     Vector affineTrans_A1=obj->getInitialData_Vector("affineTransformation_A1");
     Vector affineTrans_A2=obj->getInitialData_Vector("affineTransformation_A2");
@@ -456,7 +446,8 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, Obje
           IntVector idx(ix, iy, iz);
           Point p = lower + dxpp*idx;
           if (!b2.contains(p)){
-            throw InternalError("Particle created outside of patch?", __FILE__, __LINE__);
+            throw InternalError("Particle created outside of patch?",
+                                 __FILE__, __LINE__);
           }
           if (piece->inside(p)){ 
             Vector p1(p(0),p(1),p(2));
@@ -472,11 +463,11 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj, Obje
   }  // iterator
 
 /*
-//  *** This part is associated with CBDI_CompressiveCylinder.ups input file.
-//      It creates conforming particle distribution to be used in the simulation.
-//      To use that you need to uncomment the following commands to create the
-//      conforming particle distribution and comment above commands that are used
-//      to create non-conforming particle distributions.
+//  This part is associated with CBDI_CompressiveCylinder.ups input file.
+//  It creates conforming particle distribution to be used in the simulation.
+//  To use that you need to uncomment the following commands to create the
+//  conforming particle distribution and comment above commands that are used
+//  to create non-conforming particle distributions.
 
   geompoints::key_type key(patch,obj);
   int resolutionPart=1;
@@ -514,9 +505,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
   Vector dxcc = patch->dCell();
 
   // Affine transformation for making conforming particle distributions
-  //  to be used in the conforming CPDI simulations. The input vectors are
-  //  optional and if you do not wish to use the affine transformation, just do
-  //  not define them in the input file.
+  // to be used in the conforming CPDI simulations. The input vectors are
+  // optional and if you do not wish to use the affine transformation, just do
+  // not define them in the input file.
 
   Vector affineTrans_A0=(*obj)->getInitialData_Vector("affineTransformation_A0");
   Vector affineTrans_A1=(*obj)->getInitialData_Vector("affineTransformation_A1");
@@ -525,20 +516,20 @@ ParticleCreator::initializeParticle(const Patch* patch,
           affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
           affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
           affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
-  // The size matrix is used for storing particle domain sizes (Rvectors for CPDI and CPTI)
-  // normalized by the grid spacing
+  // The size matrix is used for storing particle domain sizes (Rvectors for CPDI
+  // and CPTI) normalized by the grid spacing
   Matrix3 size(1./((double) ppc.x()),0.,0.,
                0.,1./((double) ppc.y()),0.,
                0.,0.,1./((double) ppc.z()));
   size=affineTrans_A*size;
 /*
-//  *** This part is associated with CBDI_CompressiveCylinder.ups input file.
-//      It determines particle domain sizes for the conforming particle distribution,
-//      which is used in the simulation.
-//      To activate that you need to uncomment the following commands to determine
-//      particle domain sizes for the conforming particle distribution, and
-//      comment above commands that are used to determine particle domain sizes for
-//      non-conforming particle distributions.
+// This part is associated with CBDI_CompressiveCylinder.ups input file.
+// It determines particle domain sizes for the conforming particle distribution,
+// which is used in the simulation.
+// To activate that you need to uncomment the following commands to determine
+// particle domain sizes for the conforming particle distribution, and
+// comment above commands that are used to determine particle domain sizes for
+// non-conforming particle distributions.
 
   int resolutionPart=1;
   int nPar1=180*resolutionPart;
@@ -551,21 +542,23 @@ ParticleCreator::initializeParticle(const Patch* patch,
 */
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
-  pvars.plocalized[i] = 0;
+  pvars.plocalized[i]   = 0;
+  pvars.prefined[i]     = 0;
 
   //MMS
   string mms_type = d_flags->d_mms_type;
   if(!mms_type.empty()) {
-    MMS MMSObject;
-    MMSObject.initializeParticleForMMS(pvars.position,pvars.pvelocity,pvars.psize,pvars.pdisp,pvars.pmass,
-                                       pvars.pvolume,p,dxcc,size,patch,d_flags,i);
-  }  else {
+   MMS MMSObject;
+   MMSObject.initializeParticleForMMS(pvars.position,pvars.pvelocity,
+                                      pvars.psize,pvars.pdisp, pvars.pmass,
+                                      pvars.pvolume,p,dxcc,size,patch,d_flags,i);
+  } else {
     pvars.position[i] = p;
-     if(d_flags->d_axisymmetric){
+    if(d_flags->d_axisymmetric){
       // assume unit radian extent in the circumferential direction
       pvars.pvolume[i] = p.x()*
               (size(0,0)*size(1,1)-size(0,1)*size(1,0))*dxcc.x()*dxcc.y();
-     } else {
+    } else {
       // standard voxel volume
       pvars.pvolume[i]  = size.Determinant()*dxcc.x()*dxcc.y()*dxcc.z();
     }
@@ -584,7 +577,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
       pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i];
      } else {
       vol_frac_CC = (*obj)->getInitialData_double("volumeFraction");
-      pvars.pmass[i]      = matl->getInitialDensity()*pvars.pvolume[i]*vol_frac_CC;
+      pvars.pmass[i]   = matl->getInitialDensity()*pvars.pvolume[i]*vol_frac_CC;
      }
     } catch (...) {
       vol_frac_CC = 1.0;       
@@ -678,7 +671,8 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       if(p.x() < min.x() || p.y() < min.y() || p.z() < min.z() ||
          p.x() > max.x() || p.y() > max.y() || p.z() > max.z() ){
         ostringstream warn;
-        warn << "\n ERROR:MPM:ParticleCreator:SmoothGeometry Piece: the point ["<< p << "] generated by this geometry piece "
+        warn << "\n ERROR:MPM:ParticleCreator:SmoothGeometry Piece: the point ["
+             << p << "] generated by this geometry piece "
              << " lies outside of the computational domain. \n" << endl;
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
       }
@@ -795,11 +789,13 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pStressLabel);
   particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
 
-  particle_state.push_back(d_lb->pdTdtLabel);
-  particle_state_preReloc.push_back(d_lb->pdTdtLabel_preReloc);
-
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
+
+  if (d_flags->d_refineParticles) {
+    particle_state.push_back(d_lb->pRefinedLabel);
+    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
+  }
 
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);

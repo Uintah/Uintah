@@ -134,7 +134,7 @@ namespace Uintah{
   template <typename IT, typename DT>
   DragModel<IT, DT>::DragModel( std::string task_name, int matl_index,
                                 const std::string base_var_name, const int N ) :
-  _base_var_name(base_var_name), TaskInterface( task_name, matl_index ), _N(N){
+  TaskInterface( task_name, matl_index ), _base_var_name(base_var_name), _N(N){
 
     VarTypeHelper<DT> dhelper; 
     _D_type = dhelper.get_vartype(); 
@@ -151,9 +151,6 @@ namespace Uintah{
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    _do_ts_init_task = false; 
-    _do_bcs_task = false; 
-    
     db->getWithDefault("u_velocity_label",_base_u_velocity_name,"none");
     db->getWithDefault("v_velocity_label",_base_v_velocity_name,"none");
     db->getWithDefault("w_velocity_label",_base_w_velocity_name,"none");
@@ -210,11 +207,9 @@ namespace Uintah{
 
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      std::cout << "Source label " << name << std::endl;
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
       
       const std::string gas_name = get_name(i, _base_gas_var_name);
-      std::cout << "Source label " << gas_name << std::endl;
       register_variable( gas_name, _D_type, COMPUTES, 0, NEWDW, variable_registry );
     }
   }
@@ -377,18 +372,27 @@ namespace Uintah{
       
       //compute a rate term
       if ( _direction=="x" ) {
-        *model_value <<= (*fDrag) / (*tauP) * ( *velU - *partVelU );
+        *model_value <<= cond( *tauP != 0.0, (*fDrag) / (*tauP) * ( *velU - *partVelU ) )
+                             (0.0);
       } else if ( _direction=="y" ) {
-        *model_value <<= (*fDrag) / (*tauP) * ( *velV - *partVelV );
+        *model_value <<= cond( *tauP != 0.0, (*fDrag) / (*tauP) * ( *velV - *partVelV ) )
+                             (0.0);
       } else if ( _direction=="z" ) {
-        *model_value <<= (*fDrag) / (*tauP) * ( *velW - *partVelW );
+        *model_value <<= cond( *tauP != 0.0, (*fDrag) / (*tauP) * ( *velW - *partVelW ) )
+                             (0.0);
       }
       
       const std::string w_name = get_name( i, "w" );
       ITptr weight = tsk_info->get_const_so_field<IT>(w_name);
       
-      if (!constDensity ) {
-        *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter);
+      if (!constDensity && !constDiameter) {
+        *gas_model_value <<= cond( *diameter!=0.0, - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter) )
+                                 (0.0);
+      } else if (!constDensity && constDiameter ) {
+        *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
+      } else if (constDensity && !constDiameter ) {
+        *gas_model_value <<= cond( *diameter!=0.0, - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter) )
+                                 (0.0);
       } else {
         *gas_model_value <<= - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
       }

@@ -122,7 +122,7 @@
       
   <!--__________________________________-->
   <!-- Only compute VRFlux at the radiometer locations -->    
-  <RMCRT>
+  <RMCRT type = "double">
      <algorithm type="radiometerOnly"/> 
     <randomSeed>        false       </randomSeed>
     <Threshold>         0.05        </Threshold>

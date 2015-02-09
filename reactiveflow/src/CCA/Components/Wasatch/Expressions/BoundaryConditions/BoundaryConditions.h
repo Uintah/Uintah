@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,8 +41,7 @@
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class ConstantBC
-: public BoundaryConditionBase<FieldT>
+class ConstantBC : public BoundaryConditionBase<FieldT>
 {
 public:
   ConstantBC( const double bcValue) :
@@ -56,10 +55,9 @@ public:
      * @param result Tag of the resulting expression.
      * @param bcValue   constant boundary condition value.
      */
-    Builder( const Expr::Tag& resultTag,
-            const double bcValue ) :
-    ExpressionBuilder(resultTag),
-    bcValue_(bcValue)
+    Builder( const Expr::Tag& resultTag, const double bcValue )
+    : ExpressionBuilder(resultTag),
+      bcValue_(bcValue)
     {}
     Expr::ExpressionBase* build() const{ return new ConstantBC(bcValue_); }
   private:
@@ -87,8 +85,7 @@ private:
  */
 
 template< typename FieldT >
-class OneSidedDirichletBC
-: public BoundaryConditionBase<FieldT>
+class OneSidedDirichletBC : public BoundaryConditionBase<FieldT>
 {
 public:
   OneSidedDirichletBC( const double bcValue) :
@@ -103,9 +100,9 @@ public:
      * @param bcValue   constant boundary condition value.
      */
     Builder( const Expr::Tag& resultTag,
-            const double bcValue ) :
-    ExpressionBuilder(resultTag),
-    bcValue_(bcValue)
+            const double bcValue )
+    : ExpressionBuilder(resultTag),
+      bcValue_(bcValue)
     {}
     Expr::ExpressionBase* build() const{ return new OneSidedDirichletBC(bcValue_); }
   private:
@@ -132,26 +129,25 @@ private:
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class LinearBC
-: public BoundaryConditionBase<FieldT>
+class LinearBC : public BoundaryConditionBase<FieldT>
 {
   LinearBC( const Expr::Tag& indepVarTag,
-           const double a,
-           const double b ) :
-  indepVarTag_ (indepVarTag),
-  a_(a), b_(b)
+            const double a,
+            const double b )
+  : indepVarTag_ (indepVarTag),
+    a_(a), b_(b)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& indepVarTag,
-            const double a,
-            const double b) :
-    ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag),
-    a_(a), b_(b)
+             const Expr::Tag& indepVarTag,
+             const double a,
+             const double b )
+    : ExpressionBuilder(resultTag),
+      indepVarTag_ (indepVarTag),
+      a_(a), b_(b)
     {}
     Expr::ExpressionBase* build() const{ return new LinearBC(indepVarTag_, a_, b_); }
   private:
@@ -177,35 +173,38 @@ private:
  *  \author 	Tony Saad
  *  \date    September, 2012
  *
- *  \brief Implements a parabolic profile at the boundary.
+ *  \brief Implements a parabolic profile at the boundary of the form: a*x^2 + b*x + c.
  *
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class ParabolicBC
-: public BoundaryConditionBase<FieldT>
+class ParabolicBC : public BoundaryConditionBase<FieldT>
 {
   ParabolicBC( const Expr::Tag& indepVarTag,
-              const double a,
-              const double b,
-              const double c,
-              const double x0) :
-  indepVarTag_ (indepVarTag),
-  a_(a), b_(b), c_(c), x0_(x0)
+               const double a, const double b,
+               const double c, const double x0 )
+  : indepVarTag_ (indepVarTag),
+    a_(a), b_(b), c_(c), x0_(x0)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
+    /**
+     *  \param resultTag The tag of the resulting expression computed here.
+     *  \param indepVarTag The tag of the independent variable
+     *  \param a  The coefficient of x^2 in the parabolic formula
+     *  \param b  The coefficient of x in the parabolic formula
+     *  \param c  The constant in the parabolic formula
+     *  \param x0 The value of the point (independent variable) where the parabola assumes its maximum/minimum
+     */
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& indepVarTag,
-            const double a,
-            const double b,
-            const double c,
-            const double x0) :
-    ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag),
-    a_(a), b_(b), c_(c), x0_(x0)
+             const Expr::Tag& indepVarTag,
+            const double a, const double b,
+            const double c, const double x0 )
+    : ExpressionBuilder(resultTag),
+      indepVarTag_ (indepVarTag),
+      a_(a), b_(b), c_(c), x0_(x0)
     {}
     Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_, x0_); }
   private:
@@ -235,30 +234,25 @@ private:
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class PowerLawBC
-: public BoundaryConditionBase<FieldT>
+class PowerLawBC : public BoundaryConditionBase<FieldT>
 {
   PowerLawBC( const Expr::Tag& indepVarTag,
-             const double x0,
-             const double phiCenter,
-             const double halfHeight,
-             const double n) :
-  indepVarTag_ (indepVarTag),
-  x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
+              const double x0, const double phiCenter,
+             const double halfHeight, const double n )
+  : indepVarTag_ (indepVarTag),
+    x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
   {}
 public:
   class Builder : public Expr::ExpressionBuilder
   {
   public:
     Builder( const Expr::Tag& resultTag,
-            const Expr::Tag& indepVarTag,
-            const double x0,
-            const double phiCenter,
-            const double halfHeight,
-            const double n) :
-    ExpressionBuilder(resultTag),
-    indepVarTag_ (indepVarTag),
-    x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
+             const Expr::Tag& indepVarTag,
+             const double x0, const double phiCenter,
+             const double halfHeight, const double n)
+    : ExpressionBuilder(resultTag),
+      indepVarTag_ (indepVarTag),
+      x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
     {}
     Expr::ExpressionBase* build() const{ return new PowerLawBC(indepVarTag_, x0_, phic_, R_, n_); }
   private:
@@ -288,8 +282,7 @@ private:
  *  \tparam FieldT - The type of field for the expression on which this bc applies.
  */
 template< typename FieldT >
-class BCCopier
-: public BoundaryConditionBase<FieldT>
+class BCCopier : public BoundaryConditionBase<FieldT>
 {
   BCCopier( const Expr::Tag& srcTag ) : srcTag_(srcTag){}
 public:
@@ -313,6 +306,60 @@ public:
 private:
   const FieldT* src_;
   const Expr::Tag srcTag_;
+};
+
+
+/**
+ *  \class 	BCPrimVar
+ *  \ingroup 	Expressions
+ *  \author 	Tony Saad
+ *  \date    March, 2014
+ *
+ *  \brief Provides a mechanism to copy boundary values from one field to another.
+ *
+ *  \tparam FieldT - the type of field for the RHS.
+ */
+template< typename FieldT >
+class BCPrimVar
+: public BoundaryConditionBase<FieldT>
+{
+  BCPrimVar( const Expr::Tag& srcTag,
+           const Expr::Tag& densityTag) :
+  srcTag_(srcTag),
+  densityTag_(densityTag)
+  {}
+public:
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Builder( const Expr::Tag& resultTag,
+            const Expr::Tag& srcTag,
+            const Expr::Tag densityTag = Expr::Tag() )
+    : ExpressionBuilder(resultTag),
+    srcTag_ (srcTag),
+    densityTag_(densityTag)
+    {}
+    Expr::ExpressionBase* build() const{ return new BCPrimVar(srcTag_, densityTag_); }
+  private:
+    const Expr::Tag srcTag_, densityTag_;
+  };
+  
+  ~BCPrimVar(){}
+  void advertise_dependents( Expr::ExprDeps& exprDeps ){
+    exprDeps.requires_expression( srcTag_ );
+    if (densityTag_ != Expr::Tag() ) exprDeps.requires_expression( densityTag_ );
+  }
+  
+  void bind_fields( const Expr::FieldManagerList& fml ){
+    src_ = &fml.template field_ref<FieldT>(srcTag_);
+    if ( densityTag_ != Expr::Tag() ) rho_ = &fml.template field_ref<SVolField>(densityTag_);
+  }
+  
+  void evaluate();
+private:
+  const FieldT* src_;
+  const SVolField* rho_;
+  const Expr::Tag srcTag_, densityTag_;
 };
 
 #endif // BoundaryConditions_h

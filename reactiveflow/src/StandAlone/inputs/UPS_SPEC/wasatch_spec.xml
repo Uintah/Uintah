@@ -111,12 +111,25 @@
       </LinearFunction>
       
       <!-- parabolic function: a x^2 + b x + c !-->
+      <!--
+      This expression also supports a "centered" parabolic function of the form:
+       y(x) = - f0/h^2 * (x - x0)^2 + f0. This form has the maximum/minimum at x0 such
+       that y(x0 +- h) = 0. 
+       x0 is the value at which the parabola assumes its maximum/minimum
+       h is the value at which y(x0 +- h) = 0
+      -->
       <ParabolicFunction  spec="OPTIONAL NO_DATA"
+                          attribute1="type  REQUIRED STRING 'GENERAL, CENTERED'">
+				<Centered         spec="OPTIONAL NO_DATA" need_applies_to="type CENTERED"
+                          attribute1="x0 REQUIRED DOUBLE"
+                          attribute2="f0 REQUIRED DOUBLE"
+                          attribute3="h REQUIRED DOUBLE"/>
+				<General          spec="OPTIONAL NO_DATA" need_applies_to="type GENERAL"
                           attribute1="a REQUIRED DOUBLE"
                           attribute2="b REQUIRED DOUBLE"
-                          attribute3="c REQUIRED DOUBLE">
+                          attribute3="c REQUIRED DOUBLE"/>                          
         <NameTag          spec="REQUIRED"/>
-      </ParabolicFunction>
+      </ParabolicFunction>      
       
       <!-- sinetime: a x^2 + b x + c !-->
       <SineTime    spec="OPTIONAL NO_DATA">

@@ -158,39 +158,39 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
     if ( db_clipping->getAttribute( "type", type )){
 
-		  db_clipping->getAttribute( "type", type );
+      db_clipping->getAttribute( "type", type );
       if ( type == "variable_constrained" ){
 
         clip.my_type = ClipInfo::CONSTRAINED;
         db_clipping->findBlock("constraint")->getAttribute("label", clip.ind_var );
 
-			  db_clipping->require("clip_dep_file",clip_dep_file);
-			  db_clipping->require("clip_dep_low_file",clip_dep_low_file);        
-			  db_clipping->require("clip_ind_file",clip_ind_file);
-	
-			  // read clipping file		
-			  double number;
-			  inputFile.open(clip_dep_file.c_str());
-			  while (inputFile >> number)
-			  {
-			  	clip_dep_vec.push_back(number);
-			  }
+        db_clipping->require("clip_dep_file",clip_dep_file);
+        db_clipping->require("clip_dep_low_file",clip_dep_low_file);        
+        db_clipping->require("clip_ind_file",clip_ind_file);
+  
+        // read clipping file   
+        double number;
+        inputFile.open(clip_dep_file.c_str());
+        while (inputFile >> number)
+        {
+          clip_dep_vec.push_back(number);
+        }
         inputFile.close(); 
-	
-			  inputFile.open(clip_dep_low_file.c_str());
-			  while (inputFile >> number)
-			  {
-			  	clip_dep_low_vec.push_back(number);
-			  }
+  
+        inputFile.open(clip_dep_low_file.c_str());
+        while (inputFile >> number)
+        {
+          clip_dep_low_vec.push_back(number);
+        }
         inputFile.close(); 
-	
-	
-			  // read clipping file		
-			  inputFile.open(clip_ind_file.c_str());
-			  while (inputFile >> number)
-			  {
-			  	clip_ind_vec.push_back(number);
-			  }
+  
+  
+        // read clipping file   
+        inputFile.open(clip_ind_file.c_str());
+        while (inputFile >> number)
+        {
+          clip_ind_vec.push_back(number);
+        }
         inputFile.close(); 
       
       }
@@ -215,9 +215,6 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
     }
 
   } 
-
-  // Scaling information:
-  db->getWithDefault( "scaling_const", d_scalingConstant, 1.0 ); 
 
   // Initialization (new way):
   ProblemSpecP db_initialValue = db->findBlock("initialization");
@@ -324,9 +321,9 @@ ScalarEqn::sched_evalTransportEqn( const LevelP& level,
   sched_solveTransportEqn( level, sched, timeSubStep );
 
   if ( clip.my_type == ClipInfo::CONSTRAINED )
-	{
-		sched_advClipping( level, sched, timeSubStep );
-	}
+  {
+    sched_advClipping( level, sched, timeSubStep );
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the intialization of the variables. 
@@ -857,92 +854,91 @@ ScalarEqn::advClipping( const ProcessorGroup* pc,
                     DataWarehouse* new_dw,
                     int timeSubStep )
 {
-	//patch loop
-	for (int p=0; p < patches->size(); p++){
-		
-	  //Ghost::GhostType  gn  = Ghost::None;
-		const Patch* patch = patches->get(p);
-		int archIndex = 0;
-		int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    
+    //Ghost::GhostType  gn  = Ghost::None;
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     int length_clip_dep_low_vec = clip_dep_low_vec.size(); 
     int length_clip_dep_vec = clip_dep_vec.size(); 
     int length_clip_ind_vec = clip_ind_vec.size(); 
-		
-		CCVariable<double> scalar; 
-		new_dw->getModifiable( scalar, d_transportVarLabel, matlIndex, patch ); 
-		// --- clipping as constrained by another variable -- // 
+    
+    CCVariable<double> scalar; 
+    new_dw->getModifiable( scalar, d_transportVarLabel, matlIndex, patch ); 
+    // --- clipping as constrained by another variable -- // 
 
-		const VarLabel* ind_var_label = VarLabel::find( clip.ind_var );
-		constCCVariable<double> ivcon;  //(for "independent scalar")   
-		new_dw->get( ivcon, ind_var_label, matlIndex, patch, Ghost::None, 0 );
+    const VarLabel* ind_var_label = VarLabel::find( clip.ind_var );
+    constCCVariable<double> ivcon;  //(for "independent scalar")   
+    new_dw->get( ivcon, ind_var_label, matlIndex, patch, Ghost::None, 0 );
 
-		for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++)
-		{
-			IntVector c = *iter;
+    for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++)
+    {
+      IntVector c = *iter;
       int bounds = 9999;
       int id_pos=bounds;
-			// find where independent vector is
-			for(int i=0; i < (length_clip_ind_vec-1); i = i + 1)
-			{
-				if ( (ivcon[c] > clip_ind_vec[i]) &&  (ivcon[c] <= clip_ind_vec[i+1]))
-				{
-					id_pos=i;
-					break;
-				}
-				else if (ivcon[c]<=clip_ind_vec[0])
-				{
-					id_pos=0;
-					break;
-				}	
-			}
+      // find where independent vector is
+      for(int i=0; i < (length_clip_ind_vec-1); i = i + 1)
+      {
+        if ( (ivcon[c] > clip_ind_vec[i]) &&  (ivcon[c] <= clip_ind_vec[i+1]))
+        {
+          id_pos=i;
+          break;
+        }
+        else if (ivcon[c]<=clip_ind_vec[0])
+        {
+          id_pos=0;
+          break;
+        } 
+      }
       if ( id_pos == bounds){
         throw InvalidValue("Error: For advanced Clipping on equation: "+d_eqnName+" cannot find the dependent clipping variable.", __FILE__, __LINE__);
       }
-			double see_value;
-			double see_value_n;
-			if ( (ivcon[c]>0) && (ivcon[c]<1) )
-			{
-			  //     std::cout << "MF is between zero and 1" << endl;
-				see_value=clip_dep_vec[id_pos]+((clip_dep_vec[id_pos+1]-clip_dep_vec[id_pos])/(clip_ind_vec[id_pos+1]-clip_ind_vec[id_pos]))*(ivcon[c]-clip_ind_vec[id_pos]);
-				see_value_n=clip_dep_low_vec[id_pos]+((clip_dep_low_vec[id_pos+1]-clip_dep_low_vec[id_pos])/(clip_ind_vec[id_pos+1]-clip_ind_vec[id_pos]))*(ivcon[c]-clip_ind_vec[id_pos]);
-			}
-			else if (ivcon[c]<=clip_ind_vec[0])
-			{
-			  //     std::cout << "MF is zero" << endl;
-				see_value=clip_dep_vec[0];
-				see_value_n=clip_dep_low_vec[0];
-			}
-			else
-			{
-			  // std::cout<< "MF is 1" << endl;
-				see_value=clip_dep_vec[length_clip_dep_vec];
-				see_value_n=clip_dep_low_vec[length_clip_dep_low_vec];
-			}
+      double see_value;
+      double see_value_n;
+      if ( (ivcon[c]>0) && (ivcon[c]<1) )
+      {
+        //     std::cout << "MF is between zero and 1" << endl;
+        see_value=clip_dep_vec[id_pos]+((clip_dep_vec[id_pos+1]-clip_dep_vec[id_pos])/(clip_ind_vec[id_pos+1]-clip_ind_vec[id_pos]))*(ivcon[c]-clip_ind_vec[id_pos]);
+        see_value_n=clip_dep_low_vec[id_pos]+((clip_dep_low_vec[id_pos+1]-clip_dep_low_vec[id_pos])/(clip_ind_vec[id_pos+1]-clip_ind_vec[id_pos]))*(ivcon[c]-clip_ind_vec[id_pos]);
+      }
+      else if (ivcon[c]<=clip_ind_vec[0])
+      {
+        //     std::cout << "MF is zero" << endl;
+        see_value=clip_dep_vec[0];
+        see_value_n=clip_dep_low_vec[0];
+      }
+      else
+      {
+        // std::cout<< "MF is 1" << endl;
+        see_value=clip_dep_vec[length_clip_dep_vec];
+        see_value_n=clip_dep_low_vec[length_clip_dep_low_vec];
+      }
 
-			//	double flagga=0;					
-			if (see_value < scalar[c])
-			{
-			  // std::cout << "before clipping: current PC: " << setprecision(15) << scalar[c] << " current MF: " << setprecision(15) << ivcon[c] << endl;
-			  	scalar[c] = see_value;
-				//		flagga++;	
-			}
-			else if (see_value_n> scalar[c])
-			{
-			  //      std::cout << "before clipping: current PC: " << setprecision(15) << scalar[c] << " current MF: " << setprecision(15) << ivcon[c] << endl;
-			  	scalar[c] = see_value_n;
-				//		flagga++;
-			}
-			
-			//	if (flagga>0)
-			//	{
-			//		std::cout << " clip_low: "  << see_value_n << " clip_high: " << see_value << " given PC1: " << setprecision(15) << scalar[c] << endl;
-			//		std::cout << "" << endl;
- 			//}
-			////////////////////////////////////////////////////BEN END     
-		}
-		//----BOUNDARY CONDITIONS
-		//    must update BCs for next substep
-		computeBCs( patch, d_eqnName, scalar );
+      //  double flagga=0;          
+      if (see_value < scalar[c])
+      {
+        // std::cout << "before clipping: current PC: " << setprecision(15) << scalar[c] << " current MF: " << setprecision(15) << ivcon[c] << endl;
+          scalar[c] = see_value;
+        //    flagga++; 
+      }
+      else if (see_value_n> scalar[c])
+      {
+        //      std::cout << "before clipping: current PC: " << setprecision(15) << scalar[c] << " current MF: " << setprecision(15) << ivcon[c] << endl;
+          scalar[c] = see_value_n;
+        //    flagga++;
+      }
+      
+      //  if (flagga>0)
+      //  {
+      //    std::cout << " clip_low: "  << see_value_n << " clip_high: " << see_value << " given PC1: " << setprecision(15) << scalar[c] << endl;
+      //    std::cout << "" << endl;
+      //}
+    }
+    //----BOUNDARY CONDITIONS
+    //    must update BCs for next substep
+    computeBCs( patch, d_eqnName, scalar );
   }
 }

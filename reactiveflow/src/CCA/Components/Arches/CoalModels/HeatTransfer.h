@@ -103,7 +103,7 @@ public:
     return d_pTLabel; };
 
 protected:
-
+  bool _radiateAtGasTemp;
   bool d_radiation;
   const VarLabel* d_abskpLabel;
   const VarLabel* d_qconvLabel;

@@ -23,6 +23,7 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   doY_      ( momTags[1]!=Expr::Tag() ),
   doZ_      ( momTags[2]!=Expr::Tag() ),
   is3d_     ( doX_ && doY_ && doZ_    ),
+  useOnePredictor_(varDenParams.onePredictor),
   xMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[0]     ),
   yMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[1]     ),
   zMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[2]     ),
@@ -42,9 +43,8 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   timestept_  ( Wasatch::TagNames::self().dt ),
   rkstaget_   ( Wasatch::TagNames::self().rkstage ),
   divmomstart_( divmomstarTag ),
-  a0_( varDenParams.alpha0),
-  model_(varDenParams.model),
-  useOnePredictor_(varDenParams.onePredictor)
+  a0_   (varDenParams.alpha0),
+  model_(varDenParams.model )
 {
   set_gpu_runnable( true );
 }

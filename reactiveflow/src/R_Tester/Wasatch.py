@@ -122,8 +122,9 @@ decayIsotropicTurbulenceDSmag64_ups = modUPS( turbulenceDir, \
 #______________________________________________________________________
 
 DEBUGTESTS = [
-	("interior-bc-test", "interior-bc-test.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] )
-    ]
+  ("lid-driven-cavity-3D-Re1000",   "lid-driven-cavity-3D-Re1000.ups",   8,  "All",   ["exactComparison"] ),
+  ("liddrivencavity3DRe1000rk3",   liddrivencavity3DRe1000rk3_ups,   8,  "All",  ["exactComparison","no_restart"] )  
+  ]
 
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),

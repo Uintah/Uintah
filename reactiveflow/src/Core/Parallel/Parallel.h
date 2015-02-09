@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,22 +22,23 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_PARALLEL_H
-#define UINTAH_HOMEBREW_PARALLEL_H
+#ifndef CORE_PARALLEL_PARALLEL_H
+#define CORE_PARALLEL_PARALLEL_H
 
 #include <Core/Thread/Thread.h>
 
 // Macros used to eliminate excess spew on large parallel runs...
 //
 //   Note, make sure that MPI_Init (or MPI_Init_thread) is called
-//   before using proc0cout().
+//   before using isProc0_macro.
 //
-#define proc0cout        if( Uintah::Parallel::getMPIRank() == 0 && \
-			       ( ( Uintah::Parallel::getNumThreads() > 1 && SCIRun::Thread::self()->myid() == 0 ) || \
-				 ( Uintah::Parallel::getNumThreads() <= 1 ) ) ) std::cout
-#define proc0cerr        if( Uintah::Parallel::getMPIRank() == 0 && \
-			       ( ( Uintah::Parallel::getNumThreads() > 1 && SCIRun::Thread::self()->myid() == 0 ) || \
-				 ( Uintah::Parallel::getNumThreads() <= 1 ) ) ) std::cerr
+#define isProc0_macro ( Uintah::Parallel::getMPIRank() == 0 &&           \
+			( ( Uintah::Parallel::getNumThreads() > 1 &&	\
+			    SCIRun::Thread::self()->myid() == 0 ) ||	\
+			  ( Uintah::Parallel::getNumThreads() <= 1 ) ) )
+
+#define proc0cout if( isProc0_macro ) std::cout
+#define proc0cerr if( isProc0_macro ) std::cerr
 
 namespace Uintah {
 
@@ -71,7 +72,7 @@ WARNING
   
 ****************************************/
 
-   class Parallel {
+class Parallel {
    public:
       enum Circumstances {
           NormalShutdown,
@@ -147,11 +148,11 @@ WARNING
       
    private:
       Parallel();
-      Parallel(const Parallel&);
+      Parallel( const Parallel& );
       ~Parallel();
-      Parallel& operator=(const Parallel&);
+      Parallel& operator=( const Parallel& );
 
-     // static bool          allowThreads;
+//     static bool          allowThreads;
 
       static int             numThreads_;
       static bool            determinedIfUsingMPI_;
@@ -159,12 +160,13 @@ WARNING
       static bool            initialized_;
       static bool            usingMPI_;
       static bool            usingDevice_;
-     //      static MPI_Comm        worldComm_;
+//      static MPI_Comm        worldComm_;
       static int             worldRank_;
       static int             worldSize_;
       static ProcessorGroup* rootContext_;
 
-   };
+};
+
 } // End namespace Uintah
 
-#endif
+#endif // end CORE_PARALLEL_PARALLEL_H

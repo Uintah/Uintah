@@ -24,23 +24,36 @@ namespace Uintah {
 
     PatchInfoMap patch_info_map; 
 
-    void sched_create_patch_operators( const LevelP& level, SchedulerP& sched,
+    void create_patch_operators( const LevelP& level, SchedulerP& sched,
                                        const MaterialSet* matls ); 
+
+    void set_my_world( const ProcessorGroup* myworld ){ 
+      _myworld = myworld; 
+    };
+
+    void delete_patch_set(); 
 
   private: 
 
     Operators(); 
 
     ~Operators(); 
+    const ProcessorGroup* _myworld; 
 
-    void create_patch_operators( const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
+    enum PatchsetSelector{
+      USE_FOR_TASKS,
+      USE_FOR_OPERATORS
+    };
 
+    /** \brief obtain the set of patches to operate on */
+    const Uintah::PatchSet* get_patchset( const PatchsetSelector,
+                                          const Uintah::LevelP& level,
+                                          Uintah::SchedulerP& sched );
+
+    std::map<int, Uintah::PatchSet*> _patches_for_operators; 
 
   };
+
 
 
 }

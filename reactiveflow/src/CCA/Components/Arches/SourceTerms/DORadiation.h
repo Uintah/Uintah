@@ -18,16 +18,16 @@
 *
 * The input file interface for this property should like this in your UPS file: 
 *
-*	 <calc_frequency 						   spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+*  <calc_frequency               spec="OPTIONAL INTEGER" need_applies_to="type do_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
 *  <calc_on_all_RKsteps          spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- calculate radiation every RK step, default = false --> 
-*	 <co2_label 									 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label with default of CO2, default = CO2 --> 
-*	 <h2o_label 									 spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label wtih default of H2O, default = H2O --> 
-*	 <DORadiationModel 					   spec="REQUIRED NO_DATA" need_applies_to="type do_radiation" >
-*  	 <opl                        spec="REQUIRED DOUBLE" />
+*  <co2_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label with default of CO2, default = CO2 --> 
+*  <h2o_label                    spec="OPTIONAL STRING"  need_applies_to="type do_radiation" /> <!-- string label wtih default of H2O, default = H2O --> 
+*  <DORadiationModel             spec="REQUIRED NO_DATA" need_applies_to="type do_radiation" >
+*    <opl                        spec="REQUIRED DOUBLE" />
 *    <ordinates                  spec="OPTIONAL INTEGER" />
 *    <property_model             spec="OPTIONAL STRING 'radcoef, patchmean, wsggm'" />
 *    <LinearSolver               spec="OPTIONAL NO_DATA" 
-*            	                        attribute1="type REQUIRED STRING 'hypre, petsc'">
+*                                     attribute1="type REQUIRED STRING 'hypre, petsc'">
 *      <res_tol                  spec="REQUIRED DOUBLE" />
 *      <ksptype                  spec="REQUIRED STRING 'gmres, cg'" />
 *      <pctype                   spec="REQUIRED STRING 'jacobi, blockjacobi'" />
@@ -103,8 +103,10 @@ private:
 
   bool _all_rk; 
   bool _using_prop_calculator; 
+  bool _checkForMissingIntensities;
 
   std::string _T_label_name; 
+  std::string _abskt_label_name; 
   std::string _abskg_label_name; 
 
   DORadiationModel* _DO_model; 
@@ -119,8 +121,10 @@ private:
   std::vector<const VarLabel*> _w_varlabels; 
   std::vector<const VarLabel*> _T_varlabels; 
 
-  const VarLabel* _T_label; 
   const VarLabel* _scatktLabel;
+  const VarLabel* _asymmetryLabel;
+  const VarLabel* _T_label; 
+  const VarLabel* _abskt_label;
   const VarLabel* _abskg_label;
   const VarLabel* _radiationSRCLabel;
   const VarLabel* _radiationFluxELabel;

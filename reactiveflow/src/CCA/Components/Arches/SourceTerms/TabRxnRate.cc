@@ -32,7 +32,7 @@ TabRxnRate::problemSetup(const ProblemSpecP& inputdb)
 
   _source_grid_type = CC_SRC; 
 
-	_table_lookup_species->lookup.insert(std::make_pair(_rxn_rate, ChemHelper::TableLookup::NEW)); 
+  _table_lookup_species->lookup.insert(std::make_pair(_rxn_rate, ChemHelper::TableLookup::NEW)); 
 
 }
 //---------------------------------------------------------------------------

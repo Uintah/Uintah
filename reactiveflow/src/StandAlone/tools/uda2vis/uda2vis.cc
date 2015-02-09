@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -549,5 +549,11 @@ getParticleData(DataArchive *archive,
     cerr << "Unknown subtype for particle data: " << subtype->getName() << "\n";
     return NULL;
   }
+}
+
+extern "C"
+std::string
+getParticlePositionName(DataArchive *archive) {
+    return archive->getParticlePositionName();
 }
 

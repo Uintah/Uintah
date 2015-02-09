@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,14 +90,29 @@ public:
                                   ArchesVariables* vars,
                                   ArchesConstVariables* constvars, 
                                   CCVariable<double>& divQ,
-                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw);
-             int getIntOrdinates();
+                                  int wall_type, int matlIndex, DataWarehouse* new_dw, DataWarehouse* old_dw,
+                                  bool old_DW_isMissingIntensities);
+      int getIntOrdinates();
 
-             bool reflectionsBool();
-               
-             bool DOSolveInitialGuessBool();
+      bool reflectionsBool();
 
-             bool ScatteringOnBool();
+      bool needIntensitiesBool();
+
+      bool ScatteringOnBool();
+
+      void setLabels() ;
+
+      inline std::vector< const VarLabel*> getAbskpLabels(){
+        return _abskp_label_vector;
+      }
+
+      inline std::vector< const VarLabel*> getPartTempLabels(){
+        return _temperature_label_vector;
+      }
+
+      inline int get_nQn_part(){
+        return _nQn_part;
+      }
 
 private:
 
@@ -113,9 +128,6 @@ private:
       void computeOrdinatesOPL();
       int d_lambda;
       int ffield;
-
-      double d_wall_abskg; 
-      double d_intrusion_abskg; 
 
       OffsetArray1<double> fraction;
 
@@ -136,19 +148,46 @@ private:
 
       bool d_print_all_info; 
       bool reflectionsTurnedOn;
-      bool ScatteringOn;
-      bool usePreviousIntensity;
+      bool _scatteringOn;
+      bool _usePreviousIntensity;
+      bool _zeroInitialGuess;
+      bool _radiateAtGasTemp; // this flag is arbitrary for no particles
 
       const VarLabel* _scatktLabel;
+      const VarLabel* _asymmetryLabel;
+
       std::vector< const VarLabel*> _IntensityLabels;
       std::vector< const VarLabel*> _radiationFluxLabels;
-      std::vector< std::vector < double > > phaseFunction;
 
+      std::vector< std::vector < double > > cosineTheta;
+      std::vector< std::vector < double > > solidAngleQuad;
+
+      template<class TYPE> 
       void computeScatteringIntensities(int direction,
                       constCCVariable<double> &scatkt,
-  StaticArray< constCCVariable<double> > &Intensities,
+  //StaticArray< constCCVariable<double> > &Intensities,
+  StaticArray< TYPE > &Intensities,
               CCVariable<double> &scatIntensitySource,
-                                   const Patch* patch);
+              constCCVariable<double> &asymmetryFactor,
+                                    const Patch* patch,
+                   CCVariable<double> &b_sourceArray);
+
+
+
+      void computeIntensitySource( const Patch* patch,
+              StaticArray <constCCVariable<double> >&abskp,
+             StaticArray <constCCVariable<double> > &pTemp,
+                           constCCVariable<double>  &abskg,
+                           constCCVariable<double>  &gTemp,
+                         CCVariable<double> &b_sourceArray);
+
+      // variables needed for particles
+      std::vector<std::string> _temperature_name_vector;
+      std::vector<std::string> _abskp_name_vector;
+      std::vector< const VarLabel*> _abskp_label_vector;
+      std::vector< const VarLabel*> _temperature_label_vector;
+      int _nQn_part ;                                // number of quadrature nodes in DQMOM
+      double _sigma;
 
 
 }; // end class RadiationModel
