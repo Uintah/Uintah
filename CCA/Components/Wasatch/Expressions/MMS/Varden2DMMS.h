@@ -82,8 +82,6 @@ public:
     const Expr::Tag xTag_, yTag_, tTag_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -100,9 +98,8 @@ private:
                                  const double uf,
                                  const double vf);
   const double r0_, r1_, d_, w_, k_, uf_, vf_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const FieldT *x_, *y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(FieldT, x_, y_);
+  DECLARE_FIELD (TimeField, t_);
 };
 
 //**********************************************************************
@@ -134,7 +131,7 @@ public:
              const Expr::TagList& velStarTags,
              const double r0,
              const double r1,
-             const double w,
+             const double wf,
              const double k,
              const double uf,
              const double vf,
@@ -146,15 +143,13 @@ public:
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
-    const double r0_, r1_, w_, k_, uf_, vf_;
+    const double r0_, r1_, wf_, k_, uf_, vf_;
     const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
     const Expr::Tag denst_, densStart_, dens2Start_;
     const Expr::TagList velTs_,velStarTs_;
     const Wasatch::VarDenParameters varDenParams_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB);
   void evaluate();
   
@@ -184,7 +179,7 @@ private:
                                      const Expr::TagList& velStarTags,
                                      const double r0,
                                      const double r1,
-                                     const double w,
+                                     const double wf,
                                      const double k,
                                      const double uf,
                                      const double vf,
@@ -195,17 +190,20 @@ private:
                                      const Wasatch::VarDenParameters varDenParams );
   const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_;
   const bool doX_, doY_, doZ_, is3d_;
-  const double r0_, r1_, w_, k_, uf_, vf_;
+  const double r0_, r1_, wf_, k_, uf_, vf_;
   const Expr::Tag xTag_, yTag_, tTag_, timestepTag_;
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
   const bool useOnePredictor_;
-  const XVolField *uStar_, *xVel_;
-  const YVolField *vStar_, *yVel_;
-  const ZVolField *wStar_, *zVel_;
-  const SVolField *dens_, *densStar_, *dens2Star_;
-  const FieldT *x_, *y_;
-  const TimeField *t_, *timestep_;
+  
+  DECLARE_FIELDS(XVolField, uStar_, u_);
+  DECLARE_FIELDS(YVolField, vStar_, v_);
+  DECLARE_FIELDS(ZVolField, wStar_, w_);
+  DECLARE_FIELDS(SVolField, dens_, densStar_, dens2Star_);
+  DECLARE_FIELDS(FieldT, x_, y_);
+  DECLARE_FIELDS(TimeField, t_, dt_);
+  
+  // Operators
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
@@ -269,8 +267,6 @@ public:
     const Expr::Tag xTag_, yTag_, tTag_, rhoTag_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -287,11 +283,9 @@ private:
                             const double uf,
                             const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
-  const Expr::Tag xTag_, yTag_, tTag_, rhoTag_;
-  const FieldT* x_;
-  const FieldT* y_;
-  const SVolField* rho_;
-  const TimeField* t_;
+  DECLARE_FIELDS(FieldT, x_, y_);
+  DECLARE_FIELD(SVolField, rho_);
+  DECLARE_FIELD(TimeField, t_);
 };
 
 //**********************************************************************
@@ -343,8 +337,6 @@ public:
     const Expr::Tag xTag_, yTag_, tTag_, rhoTag_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -361,11 +353,9 @@ private:
         const double uf,
         const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
-  const Expr::Tag xTag_, yTag_, tTag_, rhoTag_;
-  const FieldT* x_;
-  const FieldT* y_;
-  const SVolField* rho_;
-  const TimeField* t_;
+  DECLARE_FIELDS(FieldT, x_, y_);
+  DECLARE_FIELD(SVolField, rho_);
+  DECLARE_FIELD(TimeField, t_);
 };
 
 //**********************************************************************
@@ -413,9 +403,6 @@ public:
     const double r0_, r1_, w_, k_, uf_, vf_;
     const Expr::Tag xTag_, yTag_, tTag_;
   };
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -430,10 +417,8 @@ private:
                    const double uf,
                    const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const FieldT* x_;
-  const FieldT* y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(FieldT, x_, y_);
+  DECLARE_FIELD (TimeField, t_);
 };
 
 //**********************************************************************
@@ -470,18 +455,14 @@ public:
     const Expr::Tag rhoTag_;
     const double d_;
   };
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
   
   DiffusiveConstant( const Expr::Tag& rhoTag,
                      const double d);
-  const Expr::Tag rhoTag_;
   const double d_;
-  const FieldT* rho_;
+  DECLARE_FIELD(FieldT, rho_);
 };
 
 #endif //VarDen_2D_MMS_Expressions

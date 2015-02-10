@@ -12,11 +12,11 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
                                 const Expr::TagList& velTags,
                                 const Expr::TagList& velStarTags,
                                 const bool isConstDensity,
-                                const Expr::Tag densTag,
-                                const Expr::Tag densStarTag,
-                                const Expr::Tag dens2StarTag,
+                                const Expr::Tag& densTag,
+                                const Expr::Tag& densStarTag,
+                                const Expr::Tag& dens2StarTag,
                                 const Wasatch::VarDenParameters varDenParams,
-                                const Expr::Tag divmomstarTag)
+                                const Expr::Tag& divmomstarTag)
 : Expr::Expression<SVolField>(),
   isConstDensity_( isConstDensity ),
   doX_      ( momTags[0]!=Expr::Tag() ),
@@ -24,123 +24,53 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   doZ_      ( momTags[2]!=Expr::Tag() ),
   is3d_     ( doX_ && doY_ && doZ_    ),
   useOnePredictor_(varDenParams.onePredictor),
-  xMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[0]     ),
-  yMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[1]     ),
-  zMomt_      ( densStarTag==Expr::Tag() ? Expr::Tag() : momTags[2]     ),
-  xMomOldt_   ( oldMomTags[0]     ),
-  yMomOldt_   ( oldMomTags[1]     ),
-  zMomOldt_   ( oldMomTags[2]     ),
-  xVelt_  ( velTags[0] ),
-  yVelt_  ( velTags[1] ),
-  zVelt_  ( velTags[2] ),
-  xVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[0] ),
-  yVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[1] ),
-  zVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[2] ),
-  denst_      ( densTag  ),
-  densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    ),
-  dens2Start_ ( densStarTag==Expr::Tag() ? Expr::Tag() : dens2StarTag   ),
-  dilt_       ( Wasatch::TagNames::self().dilatation ),
-  timestept_  ( Wasatch::TagNames::self().dt ),
-  rkstaget_   ( Wasatch::TagNames::self().rkstage ),
-  divmomstart_( divmomstarTag ),
   a0_   (varDenParams.alpha0),
   model_(varDenParams.model )
 {
   set_gpu_runnable( true );
+  
+  if( doX_ ) create_field_request(oldMomTags[0], xMomOld_);
+  if( doY_ ) create_field_request(oldMomTags[1], yMomOld_);
+  if( doZ_ ) create_field_request(oldMomTags[2], zMomOld_);
+  
+  if (!isConstDensity_) {
+    
+    if( doX_ ){
+      create_field_request(momTags[0], xMom_);
+      create_field_request(velTags[0], xVel_);
+      create_field_request(velStarTags[0], uStar_);
+    }
+    if( doY_ ){
+      create_field_request(momTags[1], yMom_);
+      create_field_request(velTags[1], yVel_);
+      create_field_request(velStarTags[1], vStar_);
+    }
+    if( doZ_ ){
+      create_field_request(momTags[2], zMom_);
+      create_field_request(velTags[2], zVel_);
+      create_field_request(velStarTags[2], wStar_);
+    }
+    create_field_request(densStarTag, densStar_);
+
+    // if we are using more than one predictor then we will need rho**
+    if (!useOnePredictor_) create_field_request(dens2StarTag, dens2Star_);
+    create_field_request(divmomstarTag, divmomstar_);
+  }
+  else {
+    const Expr::Tag dilt = Wasatch::TagNames::self().dilatation;
+    create_field_request(dilt, dil_);
+  }
+  create_field_request(densTag, dens_);
+  const Expr::Tag dtt = Wasatch::TagNames::self().dt;
+  create_field_request(dtt, dt_);
+  const Expr::Tag rkst = Wasatch::TagNames::self().rkstage;
+  create_field_request(rkst, rkStage_);
 }
 
 //------------------------------------------------------------------
 
 PressureSource::~PressureSource()
 {}
-
-//------------------------------------------------------------------
-
-void PressureSource::advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( doX_ ) exprDeps.requires_expression( xMomOldt_ );
-  if( doY_ ) exprDeps.requires_expression( yMomOldt_ );
-  if( doZ_ ) exprDeps.requires_expression( zMomOldt_ );
-
-  if (!isConstDensity_) {
-    if( doX_ )
-    {
-      exprDeps.requires_expression( xMomt_ );
-      exprDeps.requires_expression( xVelt_ );
-      exprDeps.requires_expression( xVelStart_ );
-    }
-    if( doY_ )
-    {
-      exprDeps.requires_expression( yMomt_ );
-      exprDeps.requires_expression( yVelt_ );
-      exprDeps.requires_expression( yVelStart_ );
-    }  
-    if( doZ_ )
-    {
-      exprDeps.requires_expression( zMomt_ );
-      exprDeps.requires_expression( zVelt_ );
-      exprDeps.requires_expression( zVelStart_ );
-    }  
-    
-    exprDeps.requires_expression( densStart_ );
-    if (!useOnePredictor_) exprDeps.requires_expression( dens2Start_ );
-    exprDeps.requires_expression( divmomstart_ );
-  }
-  else {
-    exprDeps.requires_expression( dilt_ );
-  }
-  exprDeps.requires_expression( denst_ );
-  
-  exprDeps.requires_expression( timestept_ );
-  exprDeps.requires_expression( rkstaget_  );
-}
-
-//------------------------------------------------------------------
-
-void PressureSource::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
-  const Expr::FieldMgrSelector<TimeField>::type& tsfm     = fml.field_manager<TimeField>();
-
-  const Expr::FieldMgrSelector<XVolField>::type& xVolFM  = fml.field_manager<XVolField>();
-  const Expr::FieldMgrSelector<YVolField>::type& yVolFM  = fml.field_manager<YVolField>();
-  const Expr::FieldMgrSelector<ZVolField>::type& zVolFM  = fml.field_manager<ZVolField>();
-
-  if( doX_ ) xMomOld_  = &xVolFM.field_ref( xMomOldt_ );
-  if( doY_ ) yMomOld_  = &yVolFM.field_ref( yMomOldt_ );
-  if( doZ_ ) zMomOld_  = &zVolFM.field_ref( zMomOldt_ );
-
-  if (!isConstDensity_) {
-    
-    if( doX_ ){
-      xMom_  = &xVolFM.field_ref( xMomt_ );
-      xVel_  = &xVolFM.field_ref( xVelt_ );
-      uStar_ = &xVolFM.field_ref( xVelStart_ );
-    }
-    if( doY_ ){
-      yMom_  = &yVolFM.field_ref( yMomt_ );
-      yVel_  = &yVolFM.field_ref( yVelt_ );
-      vStar_ = &yVolFM.field_ref( yVelStart_ );
-    }
-    if( doZ_ ){
-      zMom_  = &zVolFM.field_ref( zMomt_ );
-      zVel_  = &zVolFM.field_ref( zVelt_ );
-      wStar_ = &zVolFM.field_ref( zVelStart_ );
-    }
-    
-    densStar_ = &scalarFM.field_ref( densStart_ );
-    // if we are using more than one predictor then we will need rho**
-    if (!useOnePredictor_) dens2Star_ = &scalarFM.field_ref( dens2Start_ );
-    divmomstar_ = &scalarFM.field_ref( divmomstart_ );
-  }
-  else {
-    dil_  = &scalarFM.field_ref( dilt_ );
-  }
-  dens_ = &scalarFM.field_ref( denst_ );
-  
-  timestep_ = &tsfm.field_ref( timestept_ );
-  rkStage_  = &tsfm.field_ref( rkstaget_  );
-}
 
 //------------------------------------------------------------------
 
@@ -179,7 +109,10 @@ void PressureSource::evaluate()
   typedef std::vector<SVolField*> SVolFieldVec;
   SVolFieldVec& results = this->get_value_vec();
   
-  const TimeField& dt = *timestep_;
+  const TimeField& dt = dt_->field_ref();
+  const TimeField& rkStage = rkStage_->field_ref();
+  const SVolField& rho = dens_->field_ref();
+  
   
   SVolField& psrc = *results[0];
 
@@ -192,21 +125,25 @@ void PressureSource::evaluate()
   const double b3 = timeIntInfo.beta[2];
 
   if( isConstDensity_ ) {
+    const SVolField& dil = dil_->field_ref();
 
     if( is3d_ ){ // for 3D cases, inline the whole thing
-      psrc <<= cond( *rkStage_ > 1.0, (*gradXOp_)(*xMomOld_) + (*gradYOp_)(*yMomOld_) + (*gradZOp_)(*zMomOld_) )
+      const XVolField& rUOld = xMomOld_->field_ref();
+      const YVolField& rVOld = yMomOld_->field_ref();
+      const ZVolField& rWOld = zMomOld_->field_ref();
+      psrc <<= cond( rkStage > 1.0, (*gradXOp_)(rUOld) + (*gradYOp_)(rVOld) + (*gradZOp_)(rWOld) )
                    ( 0.0 );
     } else {
       // for 1D and 2D cases, we are not as efficient - add terms as needed...
-      if( doX_ ) psrc <<=        (*gradXOp_)( (*xMomOld_) );
+      if( doX_ ) psrc <<=        (*gradXOp_)( xMomOld_->field_ref() );
       else       psrc <<= 0.0;
-      if( doY_ ) psrc <<= psrc + (*gradYOp_)( (*yMomOld_) );
-      if( doZ_ ) psrc <<= psrc + (*gradZOp_)( (*zMomOld_) );
+      if( doY_ ) psrc <<= psrc + (*gradYOp_)( yMomOld_->field_ref() );
+      if( doZ_ ) psrc <<= psrc + (*gradZOp_)( zMomOld_->field_ref() );
     } // 1D, 2D cases
-    
-    psrc <<= cond( *rkStage_ == 1.0,                  *dens_ * *dil_  / dt        )
-                 ( *rkStage_ == 2.0, (a2* psrc + b2 * *dens_ * *dil_) / (b2 * dt) )
-                 ( *rkStage_ == 3.0, (a3* psrc + b3 * *dens_ * *dil_) / (b3 * dt) )
+
+    psrc <<= cond( rkStage == 1.0,                  rho * dil  / dt        )
+                 ( rkStage == 2.0, (a2* psrc + b2 * rho * dil) / (b2 * dt) )
+                 ( rkStage == 3.0, (a3* psrc + b3 * rho * dil) / (b3 * dt) )
                  ( 0.0 ); // should never get here.
     
   } else { // variable density
@@ -216,8 +153,11 @@ void PressureSource::evaluate()
 //    SVolField& beta       = *results[3];
     SVolField& drhodtstar = *results[4];
 
-    if (useOnePredictor_) drhodtstar <<= (*densStar_ - *dens_) / *timestep_;
-    else                  drhodtstar <<= (*dens2Star_ - *dens_) / (2.0 * *timestep_);
+    const SVolField& rhoStar = densStar_->field_ref();
+    const SVolField& divMomStar = divmomstar_->field_ref();
+
+    if (useOnePredictor_) drhodtstar <<= (rhoStar - rho) / dt;
+    else                  drhodtstar <<= (dens2Star_->field_ref() - rho) / (2.0 * dt);
     
     // beta is the ratio of drhodt to div(mom*)
 //    beta  <<= cond (abs(drhodtstar - divmomstar) <= 1e-10, 1.0)
@@ -247,13 +187,16 @@ void PressureSource::evaluate()
       {
         SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( alpha );
         if( is3d_ ){ // for 3D cases, inline the whole thing
-          *velDotDensGrad <<= (*x2SInterpOp_)(*xVel_) * (*gradXSOp_)(*dens_) + (*y2SInterpOp_)(*yVel_) * (*gradYSOp_)(*dens_) + (*z2SInterpOp_)(*zVel_) * (*gradZSOp_)(*dens_);
+          const XVolField& u = xVel_->field_ref();
+          const YVolField& v = yVel_->field_ref();
+          const ZVolField& w = zVel_->field_ref();
+          *velDotDensGrad <<= (*x2SInterpOp_)(u) * (*gradXSOp_)(rho) + (*y2SInterpOp_)(v) * (*gradYSOp_)(rho) + (*z2SInterpOp_)(w) * (*gradZSOp_)(rho);
         } else {
           // for 1D and 2D cases, we are not as efficient - add terms as needed...
-          if( doX_ ) *velDotDensGrad <<= (*x2SInterpOp_)(*xVel_) * (*gradXSOp_)(*dens_);
+          if( doX_ ) *velDotDensGrad <<= (*x2SInterpOp_)(xVel_->field_ref()) * (*gradXSOp_)(rho);
           else       *velDotDensGrad <<= 0.0;
-          if( doY_ ) *velDotDensGrad <<= *velDotDensGrad + (*y2SInterpOp_)(*yVel_) * (*gradYSOp_)(*dens_);
-          if( doZ_ ) *velDotDensGrad <<= *velDotDensGrad + (*z2SInterpOp_)(*zVel_) * (*gradZSOp_)(*dens_);
+          if( doY_ ) *velDotDensGrad <<= *velDotDensGrad + (*y2SInterpOp_)(yVel_->field_ref()) * (*gradYSOp_)(rho);
+          if( doZ_ ) *velDotDensGrad <<= *velDotDensGrad + (*z2SInterpOp_)(zVel_->field_ref()) * (*gradZSOp_)(rho);
         } // 1D, 2D cases
         *velDotDensGrad <<= abs(*velDotDensGrad);
         alpha <<= cond(drhodtstar == 0.0, 1.0)( (1.0 - a0_) * ((0.1 * *velDotDensGrad) / ( 0.1 * *velDotDensGrad + 1)) + a0_ );
@@ -271,50 +214,57 @@ void PressureSource::evaluate()
         break;
     }
 
-    drhodt <<= alpha * drhodtstar - (1.0 - alpha) * *divmomstar_;
+    drhodt <<= alpha * drhodtstar - (1.0 - alpha) * divMomStar;
     
     SpatFldPtr<SVolField> divmomlatest_ = SpatialFieldStore::get<SVolField>( psrc );
     SVolField& divmomlatest = *divmomlatest_;
     
     if( is3d_ ){ // for 3D cases, inline the whole thing
       // always add the divergence of momentum from the old timestep div(r u)^n
-      psrc <<= (*gradXOp_)(*xMomOld_) + (*gradYOp_)(*yMomOld_) + (*gradZOp_)(*zMomOld_);
+      const XVolField& rUOld = xMomOld_->field_ref();
+      const YVolField& rVOld = yMomOld_->field_ref();
+      const ZVolField& rWOld = zMomOld_->field_ref();
+      const XVolField& rU = xMom_->field_ref();
+      const YVolField& rV = yMom_->field_ref();
+      const ZVolField& rW = zMom_->field_ref();
+
+      psrc <<= (*gradXOp_)(rUOld) + (*gradYOp_)(rVOld) + (*gradZOp_)(rWOld);
       // if we are at an rkstage > 1, then add the divergence of the most recent momentum
-      psrc <<= cond( *rkStage_ == 1.0,                  psrc                                                             )
-                   ( *rkStage_ == 2.0, a2* psrc + b2 * ((*gradXOp_)(*xMom_) + (*gradYOp_)(*yMom_) + (*gradZOp_)(*zMom_)) )
-                   ( *rkStage_ == 3.0, a3* psrc + b3 * ((*gradXOp_)(*xMom_) + (*gradYOp_)(*yMom_) + (*gradZOp_)(*zMom_)) )
+      psrc <<= cond( rkStage == 1.0,                  psrc                                                             )
+                   ( rkStage == 2.0, a2* psrc + b2 * ((*gradXOp_)(rU) + (*gradYOp_)(rV) + (*gradZOp_)(rW)) )
+                   ( rkStage == 3.0, a3* psrc + b3 * ((*gradXOp_)(rU) + (*gradYOp_)(rV) + (*gradZOp_)(rW)) )
                    ( 0.0 ); // should never get here.
 
     } else {
       // for 1D and 2D cases, we are not as efficient - add terms as needed...
       if( doX_ ) {
         // always add the divergence of momentum from the old timestep div(r u)^n
-        psrc <<= (*gradXOp_)( (*xMomOld_) );
-        if (timeIntInfo_->nStages > 1) divmomlatest <<= (*gradXOp_)(*xMom_);
+        psrc <<= (*gradXOp_)( xMomOld_->field_ref() );
+        if (timeIntInfo_->nStages > 1) divmomlatest <<= (*gradXOp_)(xMom_->field_ref());
       }
       else       psrc <<= 0.0;
       if( doY_ )
       {
-        psrc <<= psrc + (*gradYOp_)( (*yMomOld_) );
-        if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradYOp_)(*yMom_);
+        psrc <<= psrc + (*gradYOp_)( yMomOld_->field_ref() );
+        if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradYOp_)(yMom_->field_ref());
       }
       if( doZ_ )
       {
-        psrc <<= psrc + (*gradZOp_)( (*zMomOld_) );
-        if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradZOp_)(*zMom_);
+        psrc <<= psrc + (*gradZOp_)( zMomOld_->field_ref() );
+        if (timeIntInfo_->nStages > 1) divmomlatest <<= divmomlatest + (*gradZOp_)(zMom_->field_ref());
       }
       
-      psrc <<= cond( *rkStage_ == 1.0,                  psrc         )
-                   ( *rkStage_ == 2.0, a2* psrc + b2 * divmomlatest  )
-                   ( *rkStage_ == 3.0, a3* psrc + b3 * divmomlatest  )
+      psrc <<= cond( rkStage == 1.0,                  psrc         )
+                   ( rkStage == 2.0, a2* psrc + b2 * divmomlatest  )
+                   ( rkStage == 3.0, a3* psrc + b3 * divmomlatest  )
                    ( 0.0 ); // should never get here.
       
     } // 1D, 2D cases
 
     //
-    psrc <<= cond( *rkStage_ == 1.0, (psrc + drhodt)  / dt       )
-                 ( *rkStage_ == 2.0, (psrc + drhodt) / (b2 * dt) )
-                 ( *rkStage_ == 3.0, (psrc + drhodt) / (b3 * dt) )
+    psrc <<= cond( rkStage == 1.0, (psrc + drhodt)  / dt       )
+                 ( rkStage == 2.0, (psrc + drhodt) / (b2 * dt) )
+                 ( rkStage == 3.0, (psrc + drhodt) / (b3 * dt) )
                  ( 0.0 ); // should never get here.
 
   } // Variable density
@@ -328,11 +278,11 @@ PressureSource::Builder::Builder( const Expr::TagList& results,
                                   const Expr::TagList& velTags,
                                   const Expr::TagList& velStarTags,
                                   const bool isConstDensity,
-                                  const Expr::Tag densTag,
-                                  const Expr::Tag densStarTag,
-                                  const Expr::Tag dens2StarTag,
+                                  const Expr::Tag& densTag,
+                                  const Expr::Tag& densStarTag,
+                                  const Expr::Tag& dens2StarTag,
                                   const Wasatch::VarDenParameters varDenParams,
-                                  const Expr::Tag divmomstarTag)
+                                  const Expr::Tag& divmomstarTag)
 : ExpressionBuilder(results),
   isConstDens_( isConstDensity ),
   momTs_      ( densStarTag==Expr::Tag() ? Expr::TagList() : momTags     ),

@@ -20,11 +20,8 @@ template< typename ViscT >
 class ParticleResponseTime
  : public Expr::Expression<ParticleField>
 {
-
-  const Expr::Tag pDensityTag_, pSizeTag_, gViscTag_;
-  const Expr::TagList pPosTags_;
-  const ParticleField  *pdensity_,  *psize_, *px_, *py_, *pz_ ;
-  const ViscT *gVisc_;
+  DECLARE_FIELDS(ParticleField, pdensity_, psize_, px_, py_, pz_);
+  DECLARE_FIELD(ViscT, gVisc_);
 
   typedef typename SpatialOps::Particle::CellToParticle<ViscT> Scal2POpT;
   Scal2POpT* s2pOp_;
@@ -59,9 +56,6 @@ public:
   };
 
   ~ParticleResponseTime();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps);
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
@@ -78,13 +72,15 @@ ParticleResponseTime( const Expr::Tag& particleDensityTag,
                       const Expr::Tag& particleSizeTag,
                       const Expr::Tag& gasViscosityTag,
                       const Expr::TagList& particlePositionTags )
-  : Expr::Expression<ParticleField>(),
-    pDensityTag_( particleDensityTag ),
-    pSizeTag_   ( particleSizeTag    ),
-    gViscTag_   ( gasViscosityTag    ),
-    pPosTags_   (particlePositionTags)
+  : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable( false );  // not until we get particle interpolants GPU ready
+  this->template create_field_request(particleDensityTag, pdensity_);
+  this->template create_field_request(particleSizeTag, psize_);
+  this->template create_field_request(gasViscosityTag, gVisc_);
+  this->template create_field_request(particlePositionTags[0], px_);
+  this->template create_field_request(particlePositionTags[1], py_);
+  this->template create_field_request(particlePositionTags[2], pz_);
 }
 
 //--------------------------------------------------------------------
@@ -92,37 +88,6 @@ ParticleResponseTime( const Expr::Tag& particleDensityTag,
 template< typename ViscT >
 ParticleResponseTime<ViscT>::~ParticleResponseTime()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename ViscT >
-void
-ParticleResponseTime<ViscT>::advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( pDensityTag_ );
-  exprDeps.requires_expression( pSizeTag_    );
-  exprDeps.requires_expression( pPosTags_[0] );
-  exprDeps.requires_expression( pPosTags_[1] );
-  exprDeps.requires_expression( pPosTags_[2] );
-  exprDeps.requires_expression( gViscTag_    );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ViscT >
-void
-ParticleResponseTime<ViscT>::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ParticleField>::type& fm = fml.field_manager<ParticleField>();
-  
-  pdensity_ = &fm.field_ref( pDensityTag_ );
-  psize_    = &fm.field_ref( pSizeTag_    );
-  px_       = &fm.field_ref( pPosTags_[0] );
-  py_       = &fm.field_ref( pPosTags_[1] );
-  pz_       = &fm.field_ref( pPosTags_[2] );
-  
-  gVisc_ = &fml.field_ref<ViscT>( gViscTag_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -141,12 +106,19 @@ ParticleResponseTime<ViscT>::evaluate()
 {
   using namespace SpatialOps;
   ParticleField& result = this->value();
+  const ParticleField& psize = psize_->field_ref();
+  const ParticleField& px = px_->field_ref();
+  const ParticleField& py = py_->field_ref();
+  const ParticleField& pz = pz_->field_ref();
+  const ParticleField& pdensity = pdensity_->field_ref();
+  const ViscT& gVisc = gVisc_->field_ref();
+  
   SpatFldPtr<ParticleField> tmpvisc = SpatialFieldStore::get<ParticleField>( result );
   
-  s2pOp_->set_coordinate_information(px_,py_,pz_,psize_);
-  s2pOp_->apply_to_field( *gVisc_, *tmpvisc );
+  s2pOp_->set_coordinate_information(&px,&py,&pz,&psize);
+  s2pOp_->apply_to_field( gVisc, *tmpvisc );
 
-  result <<= *pdensity_ * *psize_ * *psize_ / ( 18.0 * *tmpvisc );
+  result <<= pdensity * psize * psize / ( 18.0 * *tmpvisc );
 }
 
 //--------------------------------------------------------------------

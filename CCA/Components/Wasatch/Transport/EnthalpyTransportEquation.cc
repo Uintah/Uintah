@@ -38,8 +38,7 @@ namespace Wasatch {
   class EnthDiffCoeff
    : public Expr::Expression<SVolField>
   {
-    const Expr::Tag thermCondTag_, cpTag_, turbViscTag_;
-    const SVolField *thermCond_, *cp_, *turbVisc_;
+    DECLARE_FIELDS(SVolField, thermCond_, cp_, turbVisc_);
     const double turbPr_;
     const bool isTurbulent_;
 
@@ -48,12 +47,13 @@ namespace Wasatch {
                    const Expr::Tag& turbViscTag,
                    const double turbPr )
     : Expr::Expression<SVolField>(),
-      thermCondTag_( thermCondTag ),
-      cpTag_( viscosityTag ),
-      turbViscTag_ ( turbViscTag ),
       turbPr_      ( turbPr ),
       isTurbulent_ ( turbViscTag != Expr::Tag() )
-    {}
+    {
+      create_field_request(thermCondTag, thermCond_);
+      create_field_request(viscosityTag, cp_);
+      if(isTurbulent_) create_field_request(turbViscTag, turbVisc_);
+    }
 
   public:
     class Builder : public Expr::ExpressionBuilder
@@ -90,24 +90,13 @@ namespace Wasatch {
 
     ~EnthDiffCoeff(){}
 
-    void advertise_dependents( Expr::ExprDeps& exprDeps ){
-      exprDeps.requires_expression( thermCondTag_ );
-      exprDeps.requires_expression( cpTag_ );
-      if( isTurbulent_ ) exprDeps.requires_expression( turbViscTag_  );
-    }
-
-    void bind_fields( const Expr::FieldManagerList& fml ){
-      const Expr::FieldMgrSelector<SVolField>::type& fm = fml.field_manager<SVolField>();
-      thermCond_ = &fm.field_ref( thermCondTag_ );
-      cp_ = &fm.field_ref( cpTag_ );
-      if( isTurbulent_ ) turbVisc_  = &fm.field_ref( turbViscTag_ );
-    }
-
     void evaluate(){
       using namespace SpatialOps;
       SVolField& result = this->value();
-      if( isTurbulent_ ) result <<= *thermCond_ / *cp_ + *turbVisc_/turbPr_;
-      else               result <<= *thermCond_ / *cp_;
+      const SVolField& thermCond = thermCond_->field_ref();
+      const SVolField& cp = cp_->field_ref();
+      if( isTurbulent_ ) result <<= thermCond / cp + turbVisc_->field_ref()/turbPr_;
+      else               result <<= thermCond / cp;
     }
   };
 

@@ -31,11 +31,17 @@ ScalabilityTestSrc<FieldT>::
 ScalabilityTestSrc( const Expr::Tag& varTag,
                     const int nvar )
 : Expr::Expression<FieldT>(),
-  phiTag_( varTag ),
   nvar_  ( nvar   )
 {
   this->set_gpu_runnable( true );
   tmpVec_.resize( nvar, 0.0 );
+  Expr::TagList phiTagList;
+  for (int i =0; i<nvar; ++i) {
+    std::ostringstream nam;
+    nam << varTag.name() << i;
+    phiTagList.push_back( Expr::Tag( nam.str(), varTag.context() ) );
+  }
+  this->template create_field_vector_request(phiTagList, phi_);
 }
 
 //------------------------------------------------------------------
@@ -48,33 +54,6 @@ ScalabilityTestSrc<FieldT>::~ScalabilityTestSrc()
 
 template< typename FieldT >
 void
-ScalabilityTestSrc<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  for( int i=0; i!=nvar_; ++i ){
-    std::ostringstream nam;
-    nam << phiTag_.name() << i;
-    exprDeps.requires_expression( Expr::Tag( nam.str(), phiTag_.context() ) );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ScalabilityTestSrc<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
-{
-  phi_.clear();
-  for( int i=0; i!=nvar_; ++i ){
-    std::ostringstream nam;
-    nam << phiTag_.name() << i;
-    phi_.push_back( &fml.field_manager<FieldT>().field_ref( Expr::Tag(nam.str(),phiTag_.context()) ) );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
 ScalabilityTestSrc<FieldT>::evaluate()
 {
   using namespace SpatialOps;
@@ -82,8 +61,8 @@ ScalabilityTestSrc<FieldT>::evaluate()
   FieldT& val = this->value();
   val <<= 0.0;
 
-  for( typename FieldVecT::const_iterator ifld=phi_.begin(); ifld!=phi_.end(); ++ifld ){
-    val <<= val + exp(**ifld);
+  for (int i =0; i < phi_.size(); ++i) {
+    val <<= val + exp(phi_[i]->field_ref());
   }
 
   // NOTE: the following commented code is a mockup for point-wise calls to a

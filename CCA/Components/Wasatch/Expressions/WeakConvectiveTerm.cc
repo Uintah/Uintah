@@ -10,13 +10,16 @@ template< typename FieldT >
 WeakConvectiveTerm<FieldT>::WeakConvectiveTerm( const Expr::Tag velTag,
                         const Expr::TagList velTags )
   : Expr::Expression<FieldT>(),
-    velt_    ( velTag      ),
-    velxt_   ( velTags[0]  ),
-    velyt_   ( velTags[1]  ),
-    velzt_   ( velTags[2]  ),
-    is3d_( velxt_ != Expr::Tag() && velyt_ != Expr::Tag() && velzt_ != Expr::Tag() )
+    doX_   ( velTags[0] != Expr::Tag()  ),
+    doY_   ( velTags[1] != Expr::Tag()  ),
+    doZ_   ( velTags[2] != Expr::Tag() ),
+    is3d_( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
+  this->template create_field_request(velTag, vel_);
+  if (doX_) this->template create_field_request(velTags[0], u_);
+  if (doY_) this->template create_field_request(velTags[1], v_);
+  if (doZ_) this->template create_field_request(velTags[2], w_);
 }
 
 //------------------------------------------------------------------
@@ -28,48 +31,19 @@ WeakConvectiveTerm<FieldT>::~WeakConvectiveTerm()
 //------------------------------------------------------------------
 
 template< typename FieldT >
-void WeakConvectiveTerm<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
-{  
-  exprDeps.requires_expression( velt_     );
-  
-  if( velxt_ != Expr::Tag() )  exprDeps.requires_expression( velxt_ );
-  if( velyt_ != Expr::Tag() )  exprDeps.requires_expression( velyt_ );
-  if( velzt_ != Expr::Tag() )  exprDeps.requires_expression( velzt_ );
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
-void WeakConvectiveTerm<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& FM    = fml.field_manager<FieldT>();
-  const typename Expr::FieldMgrSelector<XVolField>::type& xVolFM = fml.field_manager<XVolField>();
-  const typename Expr::FieldMgrSelector<YVolField>::type& yVolFM = fml.field_manager<YVolField>();
-  const typename Expr::FieldMgrSelector<ZVolField>::type& zVolFM = fml.field_manager<ZVolField>();
-  
-  vel_     = &FM.field_ref ( velt_ );    
-
-  if( velxt_ != Expr::Tag() )  velx_ = &xVolFM.field_ref ( velxt_ ); 
-  if( velyt_ != Expr::Tag() )  vely_ = &yVolFM.field_ref ( velyt_ ); 
-  if( velzt_ != Expr::Tag() )  velz_ = &zVolFM.field_ref ( velzt_ );
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
 void WeakConvectiveTerm<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( velxt_ != Expr::Tag() ) {
+  if( doX_ ) {
     xInterpOp_     = opDB.retrieve_operator<XInterpT>();
     xFaceInterpOp_ = opDB.retrieve_operator<XFaceInterpT>();
     gradXOp_       = opDB.retrieve_operator<GradXT>();
   }
-  if( velyt_ != Expr::Tag() ) {
+  if( doY_ ) {
     yInterpOp_     = opDB.retrieve_operator<YInterpT>();
     yFaceInterpOp_ = opDB.retrieve_operator<YFaceInterpT>();
     gradYOp_       = opDB.retrieve_operator<GradYT>();
   }
-  if( velzt_ != Expr::Tag() ) {
+  if( doZ_ ) {
     zInterpOp_     = opDB.retrieve_operator<ZInterpT>();
     zFaceInterpOp_ = opDB.retrieve_operator<ZFaceInterpT>();
     gradZOp_       = opDB.retrieve_operator<GradZT>();
@@ -84,16 +58,21 @@ void WeakConvectiveTerm<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
+  const FieldT& vel = vel_->field_ref();
+  
   if( is3d_ ){ // inline everything for 3D:
-    result <<= - (*xInterpOp_)(*velx_) * (*xFaceInterpOp_)( (*gradXOp_)(*vel_) )
-               - (*yInterpOp_)(*vely_) * (*yFaceInterpOp_)( (*gradYOp_)(*vel_) )
-               - (*zInterpOp_)(*velz_) * (*zFaceInterpOp_)( (*gradZOp_)(*vel_) );
+    const XVolField& u = u_->field_ref();
+    const YVolField& v = v_->field_ref();
+    const ZVolField& w = w_->field_ref();
+    result <<= - (*xInterpOp_)(u) * (*xFaceInterpOp_)( (*gradXOp_)(vel) )
+               - (*yInterpOp_)(v) * (*yFaceInterpOp_)( (*gradYOp_)(vel) )
+               - (*zInterpOp_)(w) * (*zFaceInterpOp_)( (*gradZOp_)(vel) );
   }
   else{ // not optimized in 2D and 1D:
-    if (velxt_ != Expr::Tag()) result <<=        - (*xInterpOp_)(*velx_) * (*xFaceInterpOp_)( (*gradXOp_)(*vel_) );
+    if (doX_) result <<=        - (*xInterpOp_)( u_->field_ref() ) * (*xFaceInterpOp_)( (*gradXOp_)(vel) );
     else                       result <<= 0.0;
-    if (velyt_ != Expr::Tag()) result <<= result - (*yInterpOp_)(*vely_) * (*yFaceInterpOp_)( (*gradYOp_)(*vel_) );
-    if (velzt_ != Expr::Tag()) result <<= result - (*zInterpOp_)(*velz_) * (*zFaceInterpOp_)( (*gradZOp_)(*vel_) );
+    if (doY_) result <<= result - (*yInterpOp_)( v_->field_ref() ) * (*yFaceInterpOp_)( (*gradYOp_)(vel) );
+    if (doZ_) result <<= result - (*zInterpOp_)( w_->field_ref() ) * (*zFaceInterpOp_)( (*gradZOp_)(vel) );
   }
 }
 

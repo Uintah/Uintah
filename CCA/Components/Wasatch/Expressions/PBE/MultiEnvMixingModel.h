@@ -47,10 +47,12 @@ class MultiEnvMixingModel
 : public Expr::Expression<FieldT>
 {
 
-  const Expr::Tag mixFracTag_, scalarVarTag_, scalarDissTag_;    //this will correspond to proper tags for mix frac & sclar var
-  const FieldT* mixFrac_; 											 // mixture fraction from grid
-  const FieldT* scalarVar_; 										 // sclar variance form grid
-  const FieldT* scalarDiss_;
+//  const Expr::Tag mixFracTag_, scalarVarTag_, scalarDissTag_;    //this will correspond to proper tags for mix frac & sclar var
+//  const FieldT* mixFrac_; 											 // mixture fraction from grid
+//  const FieldT* scalarVar_; 										 // sclar variance form grid
+//  const FieldT* scalarDiss_;
+  
+  DECLARE_FIELDS(FieldT, mixFrac_, scalarVar_, scalarDiss_);
   const double maxDt_;
   
   MultiEnvMixingModel( const Expr::Tag& mixFracTag_,
@@ -88,8 +90,6 @@ public:
 
   ~MultiEnvMixingModel();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -107,12 +107,12 @@ MultiEnvMixingModel( const Expr::Tag& mixFracTag,
                      const Expr::Tag& scalarDissTag,
                      const double& maxDt)
 : Expr::Expression<FieldT>(),
-  mixFracTag_(mixFracTag),
-  scalarVarTag_(scalarVarTag),
-  scalarDissTag_(scalarDissTag),
   maxDt_(maxDt)
 {
   this->set_gpu_runnable( true );
+  this->template create_field_request(mixFracTag, mixFrac_);
+  this->template create_field_request(scalarVarTag, scalarVar_);
+  this->template create_field_request(scalarDissTag, scalarDiss_);
 }
 
 //--------------------------------------------------------------------
@@ -127,67 +127,46 @@ MultiEnvMixingModel<FieldT>::
 template< typename FieldT >
 void
 MultiEnvMixingModel<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( mixFracTag_    );
-  exprDeps.requires_expression( scalarVarTag_  );
-  exprDeps.requires_expression( scalarDissTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvMixingModel<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  mixFrac_    = &fm.field_ref( mixFracTag_    );
-  scalarVar_  = &fm.field_ref( scalarVarTag_  );
-  scalarDiss_ = &fm.field_ref( scalarDissTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvMixingModel<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   typedef std::vector<FieldT*> ResultsVec;
 
   ResultsVec& results = this->get_value_vec();
+
+  const FieldT& mixFrac = mixFrac_->field_ref();
+  const FieldT& scalarVar = scalarVar_->field_ref();
+  const FieldT& scalarDiss = scalarDiss_->field_ref();
   
   double small = 1.0e-10;
   // w1
-  *results[0] <<= cond( *mixFrac_ <= small, 1.0  )
-                      ( *mixFrac_ >= 1.0-small, 0.0  )
-                      ( *scalarVar_/ *mixFrac_ );
+  *results[0] <<= cond( mixFrac <= small, 1.0  )
+                      ( mixFrac >= 1.0-small, 0.0  )
+                      ( scalarVar/ mixFrac );
   
   // dw1/dt
-  *results[1] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
-                      ( - *scalarDiss_/ *mixFrac_ > - *results[0]/maxDt_, - *scalarDiss_/ *mixFrac_ )
+  *results[1] <<= cond( mixFrac <= small || mixFrac >= 1.0-small, 0.0 )
+                      ( - scalarDiss/ mixFrac > - *results[0]/maxDt_, - scalarDiss/ mixFrac )
                       ( - *results[0]/maxDt_ );
 
   // w3
-  *results[4] <<= cond( *mixFrac_ <= small, 0.0 )
-                      ( *mixFrac_ >= 1.0-small, 1.0 )
-                      ( - *scalarVar_ / ( *mixFrac_ - 1.0 ) );
+  *results[4] <<= cond( mixFrac <= small, 0.0 )
+                      ( mixFrac >= 1.0-small, 1.0 )
+                      ( - scalarVar / ( mixFrac - 1.0 ) );
 
   // dw3/dt
-  *results[5] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
-                      ( - *scalarDiss_ / (1.0 - *mixFrac_) > - *results[4]/maxDt_, - *scalarDiss_ / (1.0 - *mixFrac_) )
+  *results[5] <<= cond( mixFrac <= small || mixFrac >= 1.0-small, 0.0 )
+                      ( - scalarDiss / (1.0 - mixFrac) > - *results[4]/maxDt_, - scalarDiss / (1.0 - mixFrac) )
                       ( - *results[4]/maxDt_);
   
   //weight 2 last, sicne stability requires w1&3 calc
   // w2
-  *results[2] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
-                      ( 1.0 + *scalarVar_ / (*mixFrac_ * *mixFrac_ - *mixFrac_) );
+  *results[2] <<= cond( mixFrac <= small || mixFrac >= 1.0-small, 0.0 )
+                      ( 1.0 + scalarVar / (mixFrac * mixFrac - mixFrac) );
   
   // dw2/dt
-  *results[3] <<= cond( *mixFrac_ <= small || *mixFrac_ >= 1.0-small, 0.0 )
-                      ( *scalarDiss_ / (*mixFrac_ - *mixFrac_ * *mixFrac_) < (*results[0] + *results[4])/maxDt_ , *scalarDiss_ / (*mixFrac_ - *mixFrac_ * *mixFrac_) )
+  *results[3] <<= cond( mixFrac <= small || mixFrac >= 1.0-small, 0.0 )
+                      ( scalarDiss / (mixFrac - mixFrac * mixFrac) < (*results[0] + *results[4])/maxDt_ , scalarDiss / (mixFrac - mixFrac * mixFrac) )
                       ( (*results[0] + *results[4])/maxDt_ );
 }
 

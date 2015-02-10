@@ -54,8 +54,6 @@ class StrainTensorSquare : Expr::Expression<SVolField> {
                       const Expr::Tag& s32Tag,
                       const Expr::Tag& s33Tag );
 
-  const Expr::Tag S11Tag_, S21Tag_, S31Tag_, S22Tag_, S32Tag_, S33Tag_;
-
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::XSurfXField, SVolField >::type XXInterpT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfYField, SVolField >::type YYInterpT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfZField, SVolField >::type ZZInterpT;
@@ -69,21 +67,29 @@ class StrainTensorSquare : Expr::Expression<SVolField> {
   // Although the tensor is symmetric at a point and there is no distinction between S_ij and S_ji,
   // this distinction is important when dealing with staggered grids where S_ij cannot really be compared to S_ji
   // because these quantities live on different grid locations.
-  // XVOL related strain rates
-  const SpatialOps::XSurfXField* S11_; // strain on x face in x direction
-  const SpatialOps::XSurfYField* S21_; // strain on y face in x direction
-  const SpatialOps::XSurfZField* S31_; // strain on z face in x direction
 
+  // XVOL related strain rates
+  typedef SpatialOps::XSurfXField S11T;
+  typedef SpatialOps::XSurfYField S21T;
+  typedef SpatialOps::XSurfZField S31T;
+  DECLARE_FIELD(S11T, S11_); // strain on x face in x direction
+  DECLARE_FIELD(S21T, S21_); // strain on y face in x direction
+  DECLARE_FIELD(S31T, S31_); // strain on z face in x direction
+  
   // YVOL related strain rates
-//  const SpatialOps::YSurfXField* S12_; // strain on x face in y direction
-  const SpatialOps::YSurfYField* S22_; // strain on y face in y direction
-  const SpatialOps::YSurfZField* S32_; // strain on z face in y direction
+  // const SpatialOps::YSurfXField* S12_; // strain on x face in y direction
+  typedef SpatialOps::YSurfYField S22T;
+  typedef SpatialOps::YSurfZField S32T;
+  DECLARE_FIELD(S22T, S22_); // strain on y face in Y direction
+  DECLARE_FIELD(S32T, S32_); // strain on z face in Y direction
   
   // ZVOL related strain rates
 //  const SpatialOps::ZSurfXField* S13_; // strain on x face in z direction
 //  const SpatialOps::ZSurfYField* S23_; // strain on y face in z direction
-  const SpatialOps::ZSurfZField* S33_; // strain on z face in z direction
+  typedef SpatialOps::ZSurfZField S33T;
+  DECLARE_FIELD(S33T, S33_); // strain on z face in Z direction
 //  const SVolField* dil_;
+  
   const XXInterpT* xxInterpOp_;
   const YYInterpT* yyInterpOp_;
   const ZZInterpT* zzInterpOp_;
@@ -111,9 +117,8 @@ public:
   };
   
   ~StrainTensorSquare();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );  
+
+  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 

@@ -770,7 +770,7 @@ namespace Wasatch{
         Expr::TagList ptags;
         ptags.push_back( pressure_tag() );
         ptags.push_back( Expr::Tag( pressure_tag().name() + "_rhs", pressure_tag().context() ) );
-        const Expr::ExpressionBuilder* const pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
+        Expr::ExpressionBuilder* pbuilder = new typename Pressure::Builder( ptags, fxt, fyt, fzt,
                                                                                         tagNames.pressuresrc, tagNames.dt, embedGeom.vol_frac_tag<SVolField>(),
                                                                                         embedGeom.has_moving_geometry(), usePressureRefPoint, refPressureValue,
                                                                                         refPressureLocation, use3DLaplacian,
@@ -858,21 +858,26 @@ namespace Wasatch{
     // functionality to inject new dependencies across patches.
     //
     {
+      // add time dummy modifier for outflow bcs...
+      bcHelper.create_dummy_dependency<SpatialOps::SingleValueField, FieldT>(rhs_part_tag(solnVarName_), tag_list(tagNames.time),ADVANCE_SOLUTION);
+      
       // add momentum dummy modifiers
       const Expr::Tag momTimeAdvanceTag(solnVarName_,Expr::STATE_NONE);
-      bcHelper.create_dummy_dependency<FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_,densityTag_),ADVANCE_SOLUTION);
+      bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(densityTag_),ADVANCE_SOLUTION);
+      bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_),ADVANCE_SOLUTION);
       if (initFactory.have_entry(thisVelTag_)) {
         const Expr::Tag densityStateNone(densityTag_.name(), Expr::STATE_NONE);
-        bcHelper.create_dummy_dependency<FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_,densityStateNone),INITIALIZATION);
+        bcHelper.create_dummy_dependency<SVolField, FieldT>(momTimeAdvanceTag, tag_list(densityStateNone),INITIALIZATION);
+        bcHelper.create_dummy_dependency<FieldT, FieldT>(momTimeAdvanceTag, tag_list(thisVelTag_),INITIALIZATION);
       }
 
       if (!isConstDensity_)
       {
         const Expr::Tag rhoTagInit(densityTag_.name(), Expr::STATE_NONE);
         const Expr::Tag rhoStarTag = tagNames.make_star(densityTag_); // get the tagname of rho*
-        bcHelper.create_dummy_dependency<SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
+        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagInit), INITIALIZATION);
         const Expr::Tag rhoTagAdv(densityTag_.name(), Expr::CARRY_FORWARD);
-        bcHelper.create_dummy_dependency<SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
+        bcHelper.create_dummy_dependency<SVolField, SVolField>(rhoStarTag, tag_list(rhoTagAdv), ADVANCE_SOLUTION);
       }
     }
     //
@@ -973,7 +978,7 @@ namespace Wasatch{
             throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
           } else if( myBndSpec.has_field(thisVelTag_.name()) && !myBndSpec.has_field(solnVarName_) ) {
             // tsaad: If this VELOCITY boundary has ONLY velocity specified, then infer momentum bc
-            const Expr::Tag momBCTag( solnVarName_ + "_bc_" + bndName, Expr::STATE_NONE);
+            const Expr::Tag momBCTag( solnVarName_ + "_bc_primvar_" + bndName, Expr::STATE_NONE);
             advSlnFactory.register_expression ( new typename BCPrimVar<FieldT>::Builder(momBCTag, thisVelTag_, densityTag_) );
             
             if (initFactory.have_entry(thisVelTag_)) {
@@ -1162,7 +1167,7 @@ namespace Wasatch{
     // and velocity boundary conditions, and momentum bcs will appropriately propagate.
     Expr::ExpressionFactory& icfactory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     //if ( !icfactory.have_entry(thisVelTag_) ) {
-      bcHelper.apply_boundary_condition<FieldT>(initial_condition_tag(), taskCat);
+    bcHelper.apply_boundary_condition<FieldT>(initial_condition_tag(), taskCat);
     //}
     
     if (!isConstDensity_) {

@@ -25,9 +25,12 @@
 #ifndef GeometryPieceWrapper_h
 #define GeometryPieceWrapper_h
 
+#include <expression/Expression.h>
+
+#include <CCA/Components/Wasatch/TagNames.h>
+
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
-#include <expression/Expression.h>
 /**
  *  \class   GeometryPieceWrapper
  *  \author  Tony Saad
@@ -55,8 +58,6 @@ public:
     const bool inverted_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -65,10 +66,7 @@ private:
                        const bool inverted);
   std::vector<Uintah::GeometryPieceP> geomObjects_;
   const bool inverted_;
-  const Expr::Tag xTag_, yTag_, zTag_;  
-  const SVolField* x_;
-  const SVolField* y_;
-  const SVolField* z_;
+  DECLARE_FIELDS(SVolField, x_, y_, z_);
 };
 
 
@@ -77,33 +75,13 @@ GeometryPieceWrapper( std::vector<Uintah::GeometryPieceP> geomObjects,
                      const bool inverted)
 : Expr::Expression<SVolField>(),
 geomObjects_(geomObjects),
-inverted_(inverted),
-xTag_(Expr::Tag("XSVOL",Expr::STATE_NONE)),
-yTag_(Expr::Tag("YSVOL",Expr::STATE_NONE)),
-zTag_(Expr::Tag("ZSVOL",Expr::STATE_NONE))
-{}
-
-//--------------------------------------------------------------------
-
-void
-GeometryPieceWrapper::
-advertise_dependents( Expr::ExprDeps& exprDeps )
+inverted_(inverted)
 {
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( zTag_ );
-}
+  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
+  create_field_request(tagNames.xsvolcoord, x_);
+  create_field_request(tagNames.ysvolcoord, y_);
+  create_field_request(tagNames.zsvolcoord, z_);
 
-//--------------------------------------------------------------------
-
-void
-GeometryPieceWrapper::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<SVolField>::type& fm = fml.field_manager<SVolField>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
-  z_ = &fm.field_ref( zTag_ );
 }
 
 //--------------------------------------------------------------------
@@ -113,26 +91,30 @@ GeometryPieceWrapper::
 evaluate()
 {
   using namespace SpatialOps;
+  const SVolField& x = x_->field_ref();
+  const SVolField& y = y_->field_ref();
+  const SVolField& z = z_->field_ref();
+  
   SVolField& result = this->value();
   result <<= 1.0;
   SVolField::iterator resultIter = result.begin();
   std::vector<Uintah::GeometryPieceP>::iterator geomIter = geomObjects_.begin();
   int i = 0;
   int ix,iy,iz;
-  double x,y,z;
+  double xc,yc,zc;
   bool isInside = false;
   SpatialOps::IntVec localCellIJK;
   
   while ( resultIter != result.end() ) {
     i = resultIter - result.begin();
     localCellIJK  = result.window_with_ghost().ijk_index_from_local(i);
-    ix = x_->window_with_ghost().flat_index(localCellIJK);
-    x = (*x_)[ix];
-    iy = y_->window_with_ghost().flat_index(localCellIJK);
-    y = (*y_)[iy];
-    iz = z_->window_with_ghost().flat_index(localCellIJK);
-    z = (*z_)[iz];
-    Uintah::Point p(x,y,z);
+    ix = x.window_with_ghost().flat_index(localCellIJK);
+    xc  = x[ix];
+    iy = y.window_with_ghost().flat_index(localCellIJK);
+    yc  = y[iy];
+    iz = z.window_with_ghost().flat_index(localCellIJK);
+    zc  = z[iz];
+    Uintah::Point p(xc,yc,zc);
 
     // loop over all geometry objects
     geomIter = geomObjects_.begin();

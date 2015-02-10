@@ -49,12 +49,11 @@ class TimeAdvance
 
   const Wasatch::TimeIntegrator timeIntInfo_;
   
-  const SingleValue* dt_;
-  const SingleValue* rkStage_;
+//  const SingleValue* dt_;
+//  const SingleValue* rkStage_;
   
-  const FieldT* phiOld_;
-  const FieldT* phiNew_;
-  const FieldT* rhs_;
+  DECLARE_FIELDS(FieldT, phiOld_, phiNew_, rhs_);
+  DECLARE_FIELDS(SingleValue, dt_, rkStage_);
   
   TimeAdvance( const std::string& solnVarName,
                const Expr::Tag& rhsTag,
@@ -94,9 +93,6 @@ public:
   };
 
   ~TimeAdvance();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 

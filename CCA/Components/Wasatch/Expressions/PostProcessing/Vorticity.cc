@@ -31,11 +31,11 @@ template< typename FieldT, typename Vel1T, typename Vel2T >
 Vorticity<FieldT,Vel1T,Vel2T>::
 Vorticity( const Expr::Tag& vel1tag,
            const Expr::Tag& vel2tag )
-: Expr::Expression<FieldT>(),
-  vel1t_( vel1tag ),
-  vel2t_( vel2tag )
+: Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
+  this->template create_field_request(vel1tag, u1_);
+  this->template create_field_request(vel2tag, u2_);
 }
 
 //--------------------------------------------------------------------
@@ -50,38 +50,12 @@ Vorticity<FieldT,Vel1T,Vel2T>::
 template< typename FieldT, typename Vel1T, typename Vel2T >
 void
 Vorticity<FieldT,Vel1T,Vel2T>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( vel1t_ != Expr::Tag() )  exprDeps.requires_expression( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  exprDeps.requires_expression( vel2t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T >
-void
-Vorticity<FieldT,Vel1T,Vel2T>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  if( vel1t_ != Expr::Tag() )  vel1_ = &fml.field_ref<Vel1T>( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  vel2_ = &fml.field_ref<Vel2T>( vel2t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T >
-void
-Vorticity<FieldT,Vel1T,Vel2T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( vel1t_ != Expr::Tag() ){
-    vel1GradTOp_              = opDB.retrieve_operator<Vel1GradT>();
-    interpVel1FaceT2FieldTOp_ = opDB.retrieve_operator<InterpVel1FaceT2FieldT>();
-  }
-  if( vel2t_ != Expr::Tag() ){
-    vel2GradTOp_              = opDB.retrieve_operator<Vel2GradT>();
-    interpVel2FaceT2FieldTOp_ = opDB.retrieve_operator<InterpVel2FaceT2FieldT>();
-  }
+  vel1GradTOp_              = opDB.retrieve_operator<Vel1GradT>();
+  interpVel1FaceT2FieldTOp_ = opDB.retrieve_operator<InterpVel1FaceT2FieldT>();
+  vel2GradTOp_              = opDB.retrieve_operator<Vel2GradT>();
+  interpVel2FaceT2FieldTOp_ = opDB.retrieve_operator<InterpVel2FaceT2FieldT>();
 }
 
 //--------------------------------------------------------------------
@@ -93,16 +67,9 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& vorticity = this->value();
-
-  if( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() ){
-    // fully inlined:
-    vorticity <<= (*interpVel1FaceT2FieldTOp_)( (*vel1GradTOp_)(*vel1_) )
-                - (*interpVel2FaceT2FieldTOp_)( (*vel2GradTOp_)(*vel2_) );
-  }
-  else{
-    if( vel1t_ != Expr::Tag() ) vorticity <<=  (*interpVel1FaceT2FieldTOp_)( (*vel1GradTOp_)(*vel1_) );
-    if( vel2t_ != Expr::Tag() ) vorticity <<= -(*interpVel2FaceT2FieldTOp_)( (*vel2GradTOp_)(*vel2_) );
-  }
+  const Vel1T& u1 = u1_->field_ref();
+  const Vel2T& u2 = u2_->field_ref();
+  vorticity <<= (*interpVel1FaceT2FieldTOp_)( (*vel1GradTOp_)(u1) ) - (*interpVel2FaceT2FieldTOp_)( (*vel2GradTOp_)(u2) );
 }
 
 //--------------------------------------------------------------------

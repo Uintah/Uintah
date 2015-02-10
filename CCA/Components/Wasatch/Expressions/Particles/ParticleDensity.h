@@ -15,8 +15,7 @@
 class ParticleDensity
 : public Expr::Expression<ParticleField>
 {
-  const Expr::Tag pmassTag_,psizeTag_;
-  const ParticleField *pmass_, *psize_;
+  DECLARE_FIELDS(ParticleField, pmass_, psize_);
   
   ParticleDensity( const Expr::Tag& pmassTag,
                    const Expr::Tag& psizeTag );
@@ -41,8 +40,6 @@ public:
   
   ~ParticleDensity();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -55,11 +52,11 @@ public:
 ParticleDensity::
 ParticleDensity( const Expr::Tag& pmassTag,
                  const Expr::Tag& psizeTag )
-: Expr::Expression<ParticleField>(),
-  pmassTag_( pmassTag ),
-  psizeTag_( psizeTag )
+: Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(true);
+  create_field_request(pmassTag, pmass_);
+  create_field_request(psizeTag, psize_);
 }
 
 //------------------------------------------------------------------
@@ -69,30 +66,14 @@ ParticleDensity::~ParticleDensity(){}
 //------------------------------------------------------------------
 
 void
-ParticleDensity::advertise_dependents( Expr::ExprDeps& exprDeps)
-{
-  exprDeps.requires_expression( pmassTag_  );
-  exprDeps.requires_expression( psizeTag_  );
-}
-
-//------------------------------------------------------------------
-
-void
-ParticleDensity::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.field_manager<ParticleField>();
-  pmass_ = &pfm.field_ref( pmassTag_ );
-  psize_ = &pfm.field_ref( psizeTag_ );
-}
-
-//------------------------------------------------------------------
-
-void
 ParticleDensity::evaluate()
 {
   using namespace SpatialOps;
   ParticleField& result = this->value();
-  result <<= *pmass_ / ( (22.0/42.0) * pow( *psize_, 3.0 )) ;
+  const ParticleField& pmass = pmass_->field_ref();
+  const ParticleField& psize = psize_->field_ref();
+  
+  result <<= pmass / ( (22.0/42.0) * pow( psize, 3.0 )) ;
 }
 
 //------------------------------------------------------------------

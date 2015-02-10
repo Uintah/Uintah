@@ -68,16 +68,11 @@ public:
   };
   
   ~TurbulentInletBC(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
-  // member variables
-  const TimeField *t_;
-  const TimeField *dt_;
-  const Expr::Tag timeTag_, timestepTag_;
-  const std::string velDir_;  
+  DECLARE_FIELDS(TimeField, t_, dt_);
+  const std::string velDir_;
   const int period_;
   const double timePeriod_;
   std::vector< std::vector< std::vector<double> > > fluct_; // velocity fluctuations
@@ -103,12 +98,14 @@ TurbulentInletBC( const std::string inputFileName,
                   const std::string velDir,
                   const int period,
                   const double timePeriod )
-  : timeTag_    ( Wasatch::TagNames::self().time ),
-    timestepTag_( Wasatch::TagNames::self().dt ),
-    velDir_(velDir),
+  : velDir_(velDir),
     period_(period),
     timePeriod_(timePeriod)
 {
+  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
+  this->template create_field_request(tagNames.time, t_);
+  this->template create_field_request(tagNames.timestep, dt_);
+  
   std::ifstream ifs( inputFileName.c_str() );
 
   if( !ifs ) {
@@ -157,39 +154,18 @@ TurbulentInletBC( const std::string inputFileName,
 //--------------------------------------------------------------------
 
 template< typename FieldT >
-void
-TurbulentInletBC<FieldT>::advertise_dependents(Expr::ExprDeps& exprDeps)
-{
-  exprDeps.requires_expression( timeTag_     );
-  exprDeps.requires_expression( timestepTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TurbulentInletBC<FieldT>::bind_fields(const Expr::FieldManagerList& fml)
-{
-  const typename Expr::FieldMgrSelector<TimeField>::type& fm = fml.template field_manager<TimeField>();
-  t_  = &fm.field_ref( timeTag_     );
-  dt_ = &fm.field_ref( timestepTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
 int
 TurbulentInletBC<FieldT>::calculate_time_index() {
-  
+  const TimeField& t = t_->field_ref();
   // floor - get the number of dxs into the data
-  int tindex =(int) std::floor((*t_)[0]/dx_);
+  int tindex =(int) std::floor(t[0]/dx_);
   
   while (tindex >= NT_- 1) {
     tindex -= (NT_-1);
   }
 
   // coordinate relative to the current turbulent data interval
-  coord_ = (*t_)[0] - tindex*dx_;
+  coord_ = t[0] - tindex*dx_;
 
   // OPTIONAL: make sure we match the data point at the begining of new turbulent data
   //if (coord_ < *dt_) coord_ = 0.0;

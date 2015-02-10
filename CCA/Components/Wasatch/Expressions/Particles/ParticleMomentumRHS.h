@@ -37,9 +37,8 @@
 class ParticleMomentumRHS
 : public Expr::Expression<SpatialOps::Particle::ParticleField>
 {
-  const Expr::Tag pBodyForceTag_, pDragTag_;
   const bool doBodyForce_, doDragForce_;
-  const ParticleField *pg_, *pdrag_;
+  DECLARE_FIELDS(ParticleField, pg_, pdrag_);
   
   ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
                        const Expr::Tag& ParticleDragForceTag );
@@ -57,11 +56,6 @@ public:
     const Expr::Tag pBodyForceTag_, pDragTag_;
   };
   
-  ~ParticleMomentumRHS();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
 };
@@ -81,49 +75,13 @@ ParticleMomentumRHS::
 ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
                      const Expr::Tag& ParticleDragForceTag )
 : Expr::Expression<ParticleField>(),
-  pBodyForceTag_( particleBodyForceTag ),
-  pDragTag_     ( ParticleDragForceTag ),
-  doBodyForce_  ( pBodyForceTag_ != Expr::Tag() ),
-  doDragForce_  ( pDragTag_ != Expr::Tag() )
+  doBodyForce_  ( particleBodyForceTag != Expr::Tag() ),
+  doDragForce_  ( ParticleDragForceTag != Expr::Tag() )
 {
   this->set_gpu_runnable(true);
+  if (doBodyForce_) create_field_request(particleBodyForceTag, pg_);
+  if (doDragForce_) create_field_request(ParticleDragForceTag, pdrag_);
 }
-
-//------------------------------------------------------------------
-
-ParticleMomentumRHS::
-~ParticleMomentumRHS()
-{}
-
-//------------------------------------------------------------------
-
-
-void
-ParticleMomentumRHS::
-advertise_dependents( Expr::ExprDeps& exprDeps)
-{
-  if( doDragForce_ ) exprDeps.requires_expression( pDragTag_      );
-  if( doBodyForce_ ) exprDeps.requires_expression( pBodyForceTag_ );
-}
-
-//------------------------------------------------------------------
-
-void
-ParticleMomentumRHS::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.field_manager<ParticleField>();
-  
-  if( doBodyForce_ ) pg_   = &pfm.field_ref( pBodyForceTag_ );
-  if( doDragForce_ ) pdrag_= &pfm.field_ref( pDragTag_      );
-}
-
-//------------------------------------------------------------------
-
-void
-ParticleMomentumRHS::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //------------------------------------------------------------------
 
@@ -135,13 +93,13 @@ evaluate()
   
   ParticleField& result = this->value();
   if( doBodyForce_ && doDragForce_ ){
-    result <<= *pdrag_ + *pg_;
+    result <<= pdrag_->field_ref() + pg_->field_ref();
   }
   else if( doDragForce_ ){
-    result <<= *pdrag_;
+    result <<= pdrag_->field_ref();
   }
   else if( doBodyForce_ ){
-    result <<= *pg_;
+    result <<= pg_->field_ref();
   }
   else{
     result <<= 0.0;
