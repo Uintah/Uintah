@@ -2061,7 +2061,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
         continue;
     
       //__________________________________
-      //  debugging otuput
+      //  debugging output
       dbg << "    "<<var->getName() << ", materials: ";
       for(int m=0;m<var_matls->size();m++){
         if(m != 0)
@@ -2405,8 +2405,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
                       matSubset->getVector().end());
 
      for(ConsecutiveRangeSet::iterator liter = levels.begin(); liter != levels.end(); liter++) {
-       ConsecutiveRangeSet& unionedVarMatls =
-         label_map[dep->var->getName()][*liter];
+       ConsecutiveRangeSet& unionedVarMatls = label_map[dep->var->getName()][*liter];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
      

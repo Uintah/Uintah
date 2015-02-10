@@ -1793,6 +1793,7 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
       cout << "!!          Fix your .ups file or update the ups_spec.xml\n";
       cout << "!!          specification.  Reason for failure is:\n";
       cout << "\n";
+      cout << pse.message() << "\n";
     }
     throw;
   }
