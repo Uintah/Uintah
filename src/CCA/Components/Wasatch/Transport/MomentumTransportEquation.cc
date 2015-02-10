@@ -858,8 +858,8 @@ namespace Wasatch{
     // functionality to inject new dependencies across patches.
     //
     {
-      // add time dummy modifier for outflow bcs...
-      bcHelper.create_dummy_dependency<SpatialOps::SingleValueField, FieldT>(rhs_part_tag(solnVarName_), tag_list(tagNames.time),ADVANCE_SOLUTION);
+      // add dt dummy modifier for outflow bcs...
+      bcHelper.create_dummy_dependency<SpatialOps::SingleValueField, FieldT>(rhs_part_tag(solnVarName_), tag_list(tagNames.dt),ADVANCE_SOLUTION);
       
       // add momentum dummy modifiers
       const Expr::Tag momTimeAdvanceTag(solnVarName_,Expr::STATE_NONE);
