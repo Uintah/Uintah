@@ -29,42 +29,42 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
 {
   set_gpu_runnable( true );
   
-  if( doX_ ) create_field_request(oldMomTags[0], xMomOld_);
-  if( doY_ ) create_field_request(oldMomTags[1], yMomOld_);
-  if( doZ_ ) create_field_request(oldMomTags[2], zMomOld_);
+  if( doX_ )  xMomOld_ = create_field_request<XVolField>(oldMomTags[0]);
+  if( doY_ )  yMomOld_ = create_field_request<YVolField>(oldMomTags[1]);
+  if( doZ_ )  zMomOld_ = create_field_request<ZVolField>(oldMomTags[2]);
   
   if (!isConstDensity_) {
     
     if( doX_ ){
-      create_field_request(momTags[0], xMom_);
-      create_field_request(velTags[0], xVel_);
-      create_field_request(velStarTags[0], uStar_);
+       xMom_ = create_field_request<XVolField>(momTags[0]);
+       xVel_ = create_field_request<XVolField>(velTags[0]);
+       uStar_ = create_field_request<XVolField>(velStarTags[0]);
     }
     if( doY_ ){
-      create_field_request(momTags[1], yMom_);
-      create_field_request(velTags[1], yVel_);
-      create_field_request(velStarTags[1], vStar_);
+       yMom_ = create_field_request<YVolField>(momTags[1]);
+       yVel_ = create_field_request<YVolField>(velTags[1]);
+       vStar_ = create_field_request<YVolField>(velStarTags[1]);
     }
     if( doZ_ ){
-      create_field_request(momTags[2], zMom_);
-      create_field_request(velTags[2], zVel_);
-      create_field_request(velStarTags[2], wStar_);
+       zMom_ = create_field_request<ZVolField>(momTags[2]);
+       zVel_ = create_field_request<ZVolField>(velTags[2]);
+       wStar_ = create_field_request<ZVolField>(velStarTags[2]);
     }
-    create_field_request(densStarTag, densStar_);
+     densStar_ = create_field_request<SVolField>(densStarTag);
 
     // if we are using more than one predictor then we will need rho**
-    if (!useOnePredictor_) create_field_request(dens2StarTag, dens2Star_);
-    create_field_request(divmomstarTag, divmomstar_);
+    if (!useOnePredictor_)  dens2Star_ = create_field_request<SVolField>(dens2StarTag);
+     divmomstar_ = create_field_request<SVolField>(divmomstarTag);
   }
   else {
     const Expr::Tag dilt = Wasatch::TagNames::self().dilatation;
-    create_field_request(dilt, dil_);
+     dil_ = create_field_request<SVolField>(dilt);
   }
-  create_field_request(densTag, dens_);
+   dens_ = create_field_request<SVolField>(densTag);
   const Expr::Tag dtt = Wasatch::TagNames::self().dt;
-  create_field_request(dtt, dt_);
+   dt_ = create_field_request<TimeField>(dtt);
   const Expr::Tag rkst = Wasatch::TagNames::self().rkstage;
-  create_field_request(rkst, rkStage_);
+   rkStage_ = create_field_request<TimeField>(rkst);
 }
 
 //------------------------------------------------------------------

@@ -16,10 +16,10 @@ WeakConvectiveTerm<FieldT>::WeakConvectiveTerm( const Expr::Tag velTag,
     is3d_( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(velTag, vel_);
-  if (doX_) this->template create_field_request(velTags[0], u_);
-  if (doY_) this->template create_field_request(velTags[1], v_);
-  if (doZ_) this->template create_field_request(velTags[2], w_);
+   vel_ = this->template create_field_request<FieldT>(velTag);
+  if (doX_)  u_ = this->template create_field_request<XVolField>(velTags[0]);
+  if (doY_)  v_ = this->template create_field_request<YVolField>(velTags[1]);
+  if (doZ_)  w_ = this->template create_field_request<ZVolField>(velTags[2]);
 }
 
 //------------------------------------------------------------------

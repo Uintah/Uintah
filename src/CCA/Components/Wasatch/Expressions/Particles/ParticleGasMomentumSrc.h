@@ -75,12 +75,12 @@ ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
                        const Expr::TagList& particlePositionTags)
 : Expr::Expression<GasVelT>()
 {
-  this->template create_field_request(particleDragTag, pDrag_);
-  this->template create_field_request(particleSizeTag, pSize_);
-  this->template create_field_request(particleMassTag, pMass_);
-  this->template create_field_request(particlePositionTags[0], px_);
-  this->template create_field_request(particlePositionTags[1], py_);
-  this->template create_field_request(particlePositionTags[2], pz_);
+   pDrag_ = this->template create_field_request<ParticleField>(particleDragTag);
+   pSize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+   pMass_ = this->template create_field_request<ParticleField>(particleMassTag);
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 }
 
 //------------------------------------------------------------------

@@ -79,8 +79,8 @@ ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
   doDragForce_  ( ParticleDragForceTag != Expr::Tag() )
 {
   this->set_gpu_runnable(true);
-  if (doBodyForce_) create_field_request(particleBodyForceTag, pg_);
-  if (doDragForce_) create_field_request(ParticleDragForceTag, pdrag_);
+  if (doBodyForce_)  pg_ = create_field_request<ParticleField>(particleBodyForceTag);
+  if (doDragForce_)  pdrag_ = create_field_request<ParticleField>(ParticleDragForceTag);
 }
 
 //------------------------------------------------------------------

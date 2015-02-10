@@ -100,8 +100,8 @@ TurbulentAggregationCoefficient( const Expr::Tag& kinViscTag,
   coefVal_(coefVal)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(kinViscTag, kinVisc_);
-  this->template create_field_request(dissipationTag, dissipation_);
+   kinVisc_ = this->template create_field_request<FieldT>(kinViscTag);
+   dissipation_ = this->template create_field_request<FieldT>(dissipationTag);
 }
 
 //--------------------------------------------------------------------

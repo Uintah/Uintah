@@ -125,9 +125,9 @@ TotalKineticEnergy( const Expr::Tag& resultTag,
   is3d_( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
-  if(doX_) this->template create_field_request(vel1tag, u_);
-  if(doY_) this->template create_field_request(vel2tag, v_);
-  if(doZ_) this->template create_field_request(vel3tag, w_);
+  if(doX_)  u_ = this->template create_field_request<Vel1T>(vel1tag);
+  if(doY_)  v_ = this->template create_field_request<Vel2T>(vel2tag);
+  if(doZ_)  w_ = this->template create_field_request<Vel3T>(vel3tag);
 }
 
 //--------------------------------------------------------------------

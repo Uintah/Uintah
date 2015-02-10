@@ -85,7 +85,7 @@ namespace Wasatch {
     phirhsLabel_( Uintah::VarLabel::create( phirhslocalt_.name(),
                                             Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
   {
-    create_field_request(phiRHSTag, phiRhs_);
+     phiRhs_ = create_field_request<SVolField>(phiRHSTag);
   }
 
   //--------------------------------------------------------------------

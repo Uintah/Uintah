@@ -108,8 +108,8 @@ Growth( const Expr::Tag& phiTag,
     doGrowth_(growthCoefTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(phiTag, phi_);
-  if (doGrowth_) this->template create_field_request(growthCoefTag, growthCoef_);
+   phi_ = this->template create_field_request<FieldT>(phiTag);
+  if (doGrowth_)  growthCoef_ = this->template create_field_request<FieldT>(growthCoefTag);
 }
 
 //--------------------------------------------------------------------

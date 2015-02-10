@@ -57,8 +57,8 @@ RadPropsEvaluator( const Expr::Tag& tempTag,
     }
   }
   
-  this->template create_field_request(tempTag, temp_);
-  this->template create_field_vector_request(indepVarNames, indepVars_);
+   temp_ = this->template create_field_request<FieldT>(tempTag);
+  this->template create_field_vector_request<FieldT>(indepVarNames, indepVars_);
 }
 
 //--------------------------------------------------------------------
@@ -148,8 +148,8 @@ ParticleRadProps( const ParticleRadProp prop,
                                   1 ) ),  // order of interpolant
     prop_      ( prop       )
 {
-  this->template create_field_request(tempTag, temp_);
-  this->template create_field_request(pRadiusTag, pRadius_);
+   temp_ = this->template create_field_request<FieldT>(tempTag);
+   pRadius_ = this->template create_field_request<FieldT>(pRadiusTag);
 }
 
 //--------------------------------------------------------------------

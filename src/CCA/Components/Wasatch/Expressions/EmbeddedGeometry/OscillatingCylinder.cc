@@ -59,9 +59,9 @@ OscillatingCylinder( const std::string& axis,
 
   this->set_gpu_runnable( false );
   
-  create_field_request(tag1, field1_);
-  create_field_request(tag2, field2_);
-  create_field_request(tagNames.time, t_);
+   field1_ = create_field_request<SVolField>(tag1);
+   field2_ = create_field_request<SVolField>(tag2);
+   t_ = create_field_request<TimeField>(tagNames.time);
 }
 
 //--------------------------------------------------------------------

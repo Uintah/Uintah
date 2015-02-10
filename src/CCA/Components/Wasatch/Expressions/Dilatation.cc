@@ -38,9 +38,9 @@ Dilatation( const Expr::TagList& velTags )
 {
   this->set_gpu_runnable( true );
   
-  if (doX_) this->template create_field_request(velTags[0], vel1_);
-  if (doY_) this->template create_field_request(velTags[1], vel2_);
-  if (doZ_) this->template create_field_request(velTags[2], vel3_);
+  if (doX_)  vel1_ = this->template create_field_request<Vel1T>(velTags[0]);
+  if (doY_)  vel2_ = this->template create_field_request<Vel2T>(velTags[1]);
+  if (doZ_)  vel3_ = this->template create_field_request<Vel3T>(velTags[2]);
 }
 
 //--------------------------------------------------------------------

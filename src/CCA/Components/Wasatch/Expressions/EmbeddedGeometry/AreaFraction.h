@@ -95,7 +95,7 @@ valid_(srctag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
   
-  if (valid_) this->template create_field_request(srctag, src_);
+  if (valid_)  src_ = this->template create_field_request<SVolField>(srctag);
 }
 
 //--------------------------------------------------------------------

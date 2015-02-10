@@ -44,8 +44,8 @@ ParticleMassIC( const Expr::Tag& pRhoTag,
                const Expr::Tag& pDiameterTag )
 : Expr::Expression<ParticleField>()
 {
-  create_field_request(pRhoTag, pRho_);
-  create_field_request(pDiameterTag, pDiameter_);
+   pRho_ = create_field_request<ParticleField>(pRhoTag);
+   pDiameter_ = create_field_request<ParticleField>(pDiameterTag);
 }
 
 //--------------------------------------------------------------------

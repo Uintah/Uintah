@@ -61,7 +61,7 @@ namespace Wasatch{
     max_(max),
     hasVolFrac_(volFracTag != Expr::Tag())
     {
-      if (hasVolFrac_) this->template create_field_request(volFracTag, volFrac_);
+      if (hasVolFrac_)  volFrac_ = this->template create_field_request<FieldT>(volFracTag);
     }
     
     class Builder : public Expr::ExpressionBuilder

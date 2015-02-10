@@ -98,8 +98,8 @@ MultiEnvSource( const Expr::TagList& weightAndDerivativeTags,
   initialMoment_(initialMoment)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(phiTag, phi_);
-  this->template create_field_vector_request(weightAndDerivativeTags, weightsAndDerivs_);
+   phi_ = this->template create_field_request<FieldT>(phiTag);
+  this->template create_field_vector_request<FieldT>(weightAndDerivativeTags, weightsAndDerivs_);
 }
 
 //--------------------------------------------------------------------

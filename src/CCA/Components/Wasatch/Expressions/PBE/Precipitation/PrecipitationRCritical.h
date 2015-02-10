@@ -104,8 +104,8 @@ PrecipitationRCritical( const Expr::Tag& superSatTag,
   doSurfEng_(surfaceEngTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(superSatTag, superSat_);
-  if (doSurfEng_) this->template create_field_request(surfaceEngTag, surfaceEng_);
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+  if (doSurfEng_)  surfaceEng_ = this->template create_field_request<FieldT>(surfaceEngTag);
 }
 
 //--------------------------------------------------------------------

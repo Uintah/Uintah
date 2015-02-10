@@ -43,8 +43,8 @@
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class VelocityX : public Expr::Expression<ValT>
+template< typename FieldT >
+class VelocityX : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -79,7 +79,7 @@ private:
              const double nu );
   const double a_, nu_;
   
-  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELDS(FieldT, x_, y_);
   DECLARE_FIELD(TimeField, t_);
 };
 
@@ -100,8 +100,8 @@ private:
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class VelocityY : public Expr::Expression<ValT>
+template< typename FieldT >
+class VelocityY : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -135,7 +135,7 @@ private:
              const double A,
              const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELDS(FieldT, x_, y_);
   DECLARE_FIELD(TimeField, t_);
 };
 
@@ -160,8 +160,8 @@ private:
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class GradPX : public Expr::Expression<ValT>
+template< typename FieldT >
+class GradPX : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -195,7 +195,7 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELDS(FieldT, x_, y_);
   DECLARE_FIELD(TimeField, t_);
 };
 
@@ -220,8 +220,8 @@ private:
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class GradPY : public Expr::Expression<ValT>
+template< typename FieldT >
+class GradPY : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -255,7 +255,7 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELDS(FieldT, x_, y_);
   DECLARE_FIELD(TimeField, t_);
 };
 
@@ -286,8 +286,8 @@ velocity field. This is usually used as an initial condition for the velocity.
  *    Brachet et. al., Small-scale structure of the Taylor-Green vortex,
  *    J. Fluid Mech, vol. 130, no. 41, p. 1452, 1983.
  */
-template< typename ValT >
-class TaylorGreenVel3D : public Expr::Expression<ValT>
+template< typename FieldT >
+class TaylorGreenVel3D : public Expr::Expression<FieldT>
 {
 public:
 
@@ -317,7 +317,7 @@ private:
                     const Expr::Tag& zTag,
                     const double angle );
   const double angle_;
-  DECLARE_FIELDS(ValT, x_, y_, z_);
+  DECLARE_FIELDS(FieldT, x_, y_, z_);
 };
 
 //====================================================================

@@ -154,9 +154,9 @@ HomogeneousNucleationCoefficient( const Expr::Tag& superSatTag,
   doSurfEng_(surfaceEngTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(superSatTag, superSat_);
-  this->template create_field_request(eqConcTag, eqConc_);
-  if(doSurfEng_) this->template create_field_request(surfaceEngTag, surfaceEng_);
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+   eqConc_ = this->template create_field_request<FieldT>(eqConcTag);
+  if(doSurfEng_)  surfaceEng_ = this->template create_field_request<FieldT>(surfaceEngTag);
 }
 
 //--------------------------------------------------------------------

@@ -125,10 +125,10 @@ Dissolution( const Expr::TagList& weightsTagList,
   momentOrder_(momentOrder),
   deathCoef_(deathCoef)
 {
-  this->template create_field_vector_request(weightsTagList, weights_);
-  this->template create_field_vector_request(abscissaeTagList, abscissae_);
-  this->template create_field_request(sBarTag, sBar_);
-  this->template create_field_request(superSatTag, superSat_);
+  this->template create_field_vector_request<FieldT>(weightsTagList, weights_);
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
+   sBar_ = this->template create_field_request<FieldT>(sBarTag);
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
 }
 
 //--------------------------------------------------------------------

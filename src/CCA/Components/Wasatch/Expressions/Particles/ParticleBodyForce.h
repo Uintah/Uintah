@@ -91,12 +91,12 @@ ParticleBodyForce( const Expr::Tag& gasDensityTag,
 : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(false);  // need new particle operators...
-  this->template create_field_request(particlePositionTags[0], px_);
-  this->template create_field_request(particlePositionTags[1], py_);
-  this->template create_field_request(particlePositionTags[2], pz_);
-  this->template create_field_request(particleSizeTag, psize_);
-  this->template create_field_request(particleDensityTag, prho_);
-  this->template create_field_request(gasDensityTag, grho_);
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+   prho_ = this->template create_field_request<ParticleField>(particleDensityTag);
+   grho_ = this->template create_field_request<ScalarT>(gasDensityTag);
 
 }
 

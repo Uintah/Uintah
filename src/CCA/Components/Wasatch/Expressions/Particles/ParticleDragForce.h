@@ -102,15 +102,15 @@ ParticleDragForce( const Expr::Tag& gasVelTag,
 {
   this->set_gpu_runnable(false);  // need new particle operators...
 
-  this->template create_field_request(particlePositionTags[0], px_);
-  this->template create_field_request(particlePositionTags[1], py_);
-  this->template create_field_request(particlePositionTags[2], pz_);
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 
-  this->template create_field_request(gasVelTag, gvel_);
-  this->template create_field_request(ParticleDragForceCoefTag, pfd_);
-  this->template create_field_request(particleTauTag, ptau_);
-  this->template create_field_request(particleVelTag, pvel_);
-  this->template create_field_request(particleSizeTag, psize_);
+   gvel_ = this->template create_field_request<GasVelT>(gasVelTag);
+   pfd_ = this->template create_field_request<ParticleField>(ParticleDragForceCoefTag);
+   ptau_ = this->template create_field_request<ParticleField>(particleTauTag);
+   pvel_ = this->template create_field_request<ParticleField>(particleVelTag);
+   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
 
   
 }

@@ -48,12 +48,12 @@ MonolithicRHS( const Expr::Tag& dCoefTag,
 {
   assert( dCoefTag != Expr::Tag() );
   this->set_gpu_runnable( true );
-  this->template create_field_request(dCoefTag, dCoef_);
-  if (doX_) this->template create_field_request(xconvFluxTag, convFluxX_);
-  if (doY_) this->template create_field_request(xconvFluxTag, convFluxY_);
-  if (doZ_) this->template create_field_request(xconvFluxTag, convFluxZ_);
-  if (doSrc_) this->template create_field_request(srcTag, src_);
-  this->template create_field_request(phiTag, phi_);
+   dCoef_ = this->template create_field_request<FieldT>(dCoefTag);
+  if (doX_)  convFluxX_ = this->template create_field_request<XFaceT>(xconvFluxTag);
+  if (doY_)  convFluxY_ = this->template create_field_request<YFaceT>(xconvFluxTag);
+  if (doZ_)  convFluxZ_ = this->template create_field_request<ZFaceT>(xconvFluxTag);
+  if (doSrc_)  src_ = this->template create_field_request<FieldT>(srcTag);
+   phi_ = this->template create_field_request<FieldT>(phiTag);
 }
 
 //--------------------------------------------------------------------

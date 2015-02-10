@@ -94,7 +94,7 @@ SineTime( const Expr::Tag& ttag )
 : Expr::Expression<ValT>()
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(ttag, t_);
+   t_ = this->template create_field_request<TimeField>(ttag);
 }
 
 //--------------------------------------------------------------------
@@ -187,9 +187,9 @@ ReadFromFileExpression( const Expr::Tag& xTag,
 : Expr::Expression<FieldT>(),
   filename_(fileName)
 {
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
-  this->template create_field_request(zTag, z_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   z_ = this->template create_field_request<FieldT>(zTag);
 }
 
 //--------------------------------------------------------------------
@@ -413,7 +413,7 @@ StepFunction( const Expr::Tag& indepVarTag,
   highValue_(highValue)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(indepVarTag, indepVar_);
+   indepVar_ = this->template create_field_request<FieldT>(indepVarTag);
 }
 
 //--------------------------------------------------------------------
@@ -538,9 +538,9 @@ f_(frequency),
 amp_(amplitude)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(indepVarTag, indepVar_);
-  this->template create_field_request(x1Tag, x1_);
-  this->template create_field_request(x2Tag, x2_);
+   indepVar_ = this->template create_field_request<FieldT>(indepVarTag);
+   x1_ = this->template create_field_request<FieldT>(x1Tag);
+   x2_ = this->template create_field_request<FieldT>(x2Tag);
 }
 
 //--------------------------------------------------------------------
@@ -794,8 +794,8 @@ ExponentialVortex( const Expr::Tag& xTag,
   velocityComponent_( velocityComponent )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
 }
 
 //--------------------------------------------------------------------
@@ -956,8 +956,8 @@ LambsDipole( const Expr::Tag& xTag,
   u_   ( u  ),
   velocityComponent_( velocityComponent )
 {
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
 }
 
 //--------------------------------------------------------------------
@@ -1117,9 +1117,9 @@ BurnsChristonAbskg( const Expr::Tag& xTag,
                    const Expr::Tag& zTag )
 : Expr::Expression<FieldT>()
 {
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
-  this->template create_field_request(zTag, z_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   z_ = this->template create_field_request<FieldT>(zTag);
 }
 
 //--------------------------------------------------------------------

@@ -75,12 +75,12 @@ ParticleResponseTime( const Expr::Tag& particleDensityTag,
   : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable( false );  // not until we get particle interpolants GPU ready
-  this->template create_field_request(particleDensityTag, pdensity_);
-  this->template create_field_request(particleSizeTag, psize_);
-  this->template create_field_request(gasViscosityTag, gVisc_);
-  this->template create_field_request(particlePositionTags[0], px_);
-  this->template create_field_request(particlePositionTags[1], py_);
-  this->template create_field_request(particlePositionTags[2], pz_);
+   pdensity_ = this->template create_field_request<ParticleField>(particleDensityTag);
+   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+   gVisc_ = this->template create_field_request<ViscT>(gasViscosityTag);
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
 }
 
 //--------------------------------------------------------------------

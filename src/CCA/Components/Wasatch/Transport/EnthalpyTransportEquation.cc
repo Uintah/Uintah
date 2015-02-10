@@ -50,9 +50,9 @@ namespace Wasatch {
       turbPr_      ( turbPr ),
       isTurbulent_ ( turbViscTag != Expr::Tag() )
     {
-      create_field_request(thermCondTag, thermCond_);
-      create_field_request(viscosityTag, cp_);
-      if(isTurbulent_) create_field_request(turbViscTag, turbVisc_);
+       thermCond_ = create_field_request<SVolField>(thermCondTag);
+       cp_ = create_field_request<SVolField>(viscosityTag);
+      if(isTurbulent_)  turbVisc_ = create_field_request<SVolField>(turbViscTag);
     }
 
   public:

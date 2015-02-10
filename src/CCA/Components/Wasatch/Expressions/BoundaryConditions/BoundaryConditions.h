@@ -132,7 +132,7 @@ class LinearBC : public BoundaryConditionBase<FieldT>
             const double b )
   : a_(a), b_(b)
   {
-    this->template create_field_request(indepVarTag, x_);
+     x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -179,7 +179,7 @@ class ParabolicBC : public BoundaryConditionBase<FieldT>
                const double c, const double x0 )
   : a_(a), b_(b), c_(c), x0_(x0)
   {
-    this->template create_field_request(indepVarTag, x_);
+     x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -233,7 +233,7 @@ class PowerLawBC : public BoundaryConditionBase<FieldT>
              const double halfHeight, const double n )
   : x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
   {
-    this->template create_field_request(indepVarTag, x_);
+     x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -276,7 +276,7 @@ class BCCopier : public BoundaryConditionBase<FieldT>
 {
   BCCopier( const Expr::Tag& srcTag )
   {
-    this->template create_field_request(srcTag, src_);
+     src_ = this->template create_field_request<FieldT>(srcTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -317,8 +317,8 @@ class BCPrimVar
            const Expr::Tag& densityTag) :
   hasDensity_(densityTag != Expr::Tag() )
   {
-    this->template create_field_request(srcTag, src_);
-    if (hasDensity_) this->template create_field_request(densityTag, rho_);
+     src_ = this->template create_field_request<FieldT>(srcTag);
+    if (hasDensity_)  rho_ = this->template create_field_request<SVolField>(densityTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder

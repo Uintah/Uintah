@@ -41,9 +41,9 @@ MomRHS( const Expr::Tag& pressureTag,
 {
   this->set_gpu_runnable( true );
   
-  if( hasP_ ) this->template create_field_request(pressureTag, pressure_);
-  this->template create_field_request(partRHSTag, rhsPart_);
-  if( hasIntrusion_ ) this->template create_field_request(volFracTag, volfrac_);
+  if( hasP_ )  pressure_ = this->template create_field_request<PFieldT>(pressureTag);
+   rhsPart_ = this->template create_field_request<FieldT>(partRHSTag);
+  if( hasIntrusion_ )  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------

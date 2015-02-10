@@ -43,21 +43,21 @@ TurbulentViscosity( const Expr::Tag rhoTag,
   isConstSmag_( turbParams.turbModelName != Wasatch::TurbulenceParameters::DYNAMIC ),
   turbParams_      ( turbParams         )
 {
-  create_field_request(rhoTag, rho_);
+   rho_ = create_field_request<SVolField>(rhoTag);
   switch( turbParams_.turbModelName ){
     case Wasatch::TurbulenceParameters::SMAGORINSKY :
-      create_field_request(strTsrSqTag, strTsrSq_);
+       strTsrSq_ = create_field_request<SVolField>(strTsrSqTag);
       break;
     case Wasatch::TurbulenceParameters::WALE :
-      create_field_request(strTsrSqTag, strTsrSq_);
-      create_field_request(waleTsrMagTag, waleTsrMag_);
+       strTsrSq_ = create_field_request<SVolField>(strTsrSqTag);
+       waleTsrMag_ = create_field_request<SVolField>(waleTsrMagTag);
       break;
     case Wasatch::TurbulenceParameters::DYNAMIC :
-      create_field_request(strTsrSqTag, strTsrSq_);
-      create_field_request(dynamicSmagCoefTag, dynCoef_);
+       strTsrSq_ = create_field_request<SVolField>(strTsrSqTag);
+       dynCoef_ = create_field_request<SVolField>(dynamicSmagCoefTag);
       break;
     case Wasatch::TurbulenceParameters::VREMAN :
-      create_field_request(vremanTsrMagTag, vremanTsrMag_);
+       vremanTsrMag_ = create_field_request<SVolField>(vremanTsrMagTag);
       break;
     case Wasatch::TurbulenceParameters::NOTURBULENCE :
       assert(false);

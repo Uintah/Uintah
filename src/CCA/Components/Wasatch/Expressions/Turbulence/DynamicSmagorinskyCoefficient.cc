@@ -61,7 +61,7 @@ DynamicSmagorinskyCoefficient( const Expr::TagList& velTags,
   doExtraFiltering_(false)
 {
   this->set_gpu_runnable(true);
-  if (!isConstDensity_) create_field_request(rhoTag, rho_);
+  if (!isConstDensity_)  rho_ = create_field_request<SVolField>(rhoTag);
 }
 
 //--------------------------------------------------------------------

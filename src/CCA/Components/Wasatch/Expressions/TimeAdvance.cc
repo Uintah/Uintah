@@ -43,10 +43,10 @@ TimeAdvance( const std::string& solnVarName,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(phiOldTag, phiOld_);
-  this->template create_field_request(rhsTag, rhs_);
-  this->template create_field_request(Wasatch::TagNames::self().dt, dt_);
-  this->template create_field_request(Wasatch::TagNames::self().rkstage, rkStage_);
+   phiOld_ = this->template create_field_request<FieldT>(phiOldTag);
+   rhs_ = this->template create_field_request<FieldT>(rhsTag);
+   dt_ = this->template create_field_request<SingleValue>(Wasatch::TagNames::self().dt);
+   rkStage_ = this->template create_field_request<SingleValue>(Wasatch::TagNames::self().rkstage);
 }
 
 //--------------------------------------------------------------------

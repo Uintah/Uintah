@@ -126,9 +126,9 @@ OstwaldRipening( const Expr::TagList weightsTagList,
   rCutOff_         (rCutOff)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_vector_request(weightsTagList, weights_);
-  this->template create_field_vector_request(abscissaeTagList, abscissae_);
-  this->template create_field_request(moment0Tag, m0_);
+  this->template create_field_vector_request<FieldT>(weightsTagList, weights_);
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
+   m0_ = this->template create_field_request<FieldT>(moment0Tag);
 }
 
 //--------------------------------------------------------------------

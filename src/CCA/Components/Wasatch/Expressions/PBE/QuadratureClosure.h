@@ -97,8 +97,8 @@ QuadratureClosure( const Expr::TagList& weightsTagList,
     momentOrder_(momentOrder)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_vector_request(weightsTagList, weights_);
-  this->template create_field_vector_request(abscissaeTagList, abscissae_);
+  this->template create_field_vector_request<FieldT>(weightsTagList, weights_);
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
 }
 
 //--------------------------------------------------------------------

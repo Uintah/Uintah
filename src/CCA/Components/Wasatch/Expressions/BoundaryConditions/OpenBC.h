@@ -36,8 +36,8 @@ class OpenBC
   OpenBC( const Expr::Tag& momTag )
   {
     this->set_gpu_runnable(false);
-    this->template create_field_request(momTag, u_);
-    this->template create_field_request(Wasatch::TagNames::self().dt, dt_);
+     u_ = this->template create_field_request<FieldT>(momTag);
+    this->template create_field_request<SpatialOps::SingleValueField>(Wasatch::TagNames::self().dt, dt_);
   }
 public:
   class Builder : public Expr::ExpressionBuilder

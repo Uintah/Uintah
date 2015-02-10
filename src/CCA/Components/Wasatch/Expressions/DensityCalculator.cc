@@ -85,7 +85,7 @@ DensFromMixfrac( const InterpT& rhoEval,
 {
   this->set_gpu_runnable(false);
   
-  this->template create_field_request(rhoFTag, rhoF_);
+   rhoF_ = this->template create_field_request<FieldT>(rhoFTag);
 }
 
 //--------------------------------------------------------------------
@@ -202,8 +202,8 @@ DensHeatLossMixfrac( const Expr::Tag& rhofTag,
     enthEval_( enthEvaluator ),
     bounds_( densEvaluator.get_bounds() )
 {
-  this->template create_field_request(rhofTag, rhof_);
-  this->template create_field_request(rhohTag, rhoh_);
+   rhof_ = this->template create_field_request<FieldT>(rhofTag);
+   rhoh_ = this->template create_field_request<FieldT>(rhohTag);
 }
 
 //--------------------------------------------------------------------
@@ -362,7 +362,7 @@ TwoStreamMixingDensity( const Expr::Tag& rhofTag,
 {
   this->set_gpu_runnable(true);
   
-  this->template create_field_request(rhofTag, rhof_);
+   rhof_ = this->template create_field_request<FieldT>(rhofTag);
 }
 
 //--------------------------------------------------------------------
@@ -410,7 +410,7 @@ TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
 {
   this->set_gpu_runnable(true);
   
-  this->create_field_request(mixfrTag, mixfr_);
+   mixfr_ = this->template create_field_request<FieldT>(mixfrTag);
 }
 
 //--------------------------------------------------------------------

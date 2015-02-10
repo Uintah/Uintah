@@ -46,8 +46,8 @@ TurbulentDiffusivity( const Expr::Tag rhoTag,
 : Expr::Expression<SVolField>(),
   tSchmidt_ ( tSchmidt )
 {
-  create_field_request(rhoTag, rho_);
-  create_field_request(tViscTag, tVisc_);
+   rho_ = create_field_request<SVolField>(rhoTag);
+   tVisc_ = create_field_request<SVolField>(tViscTag);
 }
 
 //--------------------------------------------------------------------

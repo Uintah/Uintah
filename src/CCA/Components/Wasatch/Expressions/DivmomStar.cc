@@ -16,10 +16,10 @@ DivmomStar::DivmomStar( const Expr::TagList& velStarTags,
 {
   set_gpu_runnable( true );
   
-  if(doX_) create_field_request(velStarTags[0], uStar_);
-  if(doY_) create_field_request(velStarTags[1], vStar_);
-  if(doZ_) create_field_request(velStarTags[2], wStar_);
-  create_field_request(densStarTag, densStar_);
+  if(doX_)  uStar_ = create_field_request<XVolField>(velStarTags[0]);
+  if(doY_)  vStar_ = create_field_request<YVolField>(velStarTags[1]);
+  if(doZ_)  wStar_ = create_field_request<ZVolField>(velStarTags[2]);
+   densStar_ = create_field_request<SVolField>(densStarTag);
 }
 
 //------------------------------------------------------------------

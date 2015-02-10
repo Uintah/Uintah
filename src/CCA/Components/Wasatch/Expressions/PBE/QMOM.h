@@ -122,7 +122,7 @@ QMOM( const Expr::TagList knownMomentsTaglist, const bool realizable)
     nMoments_( knownMomentsTaglist.size() ),
     realizable_ (realizable)
 {
-  this->template create_field_vector_request(knownMomentsTaglist, knownMoments_);
+  this->template create_field_vector_request<FieldT>(knownMomentsTaglist, knownMoments_);
   pmatrix_.resize(nMoments_);
   for (int i = 0; i<nMoments_; i++)
     pmatrix_[i].resize(nMoments_ + 1);

@@ -121,8 +121,8 @@ PrecipitateEffectiveViscosity( const Expr::Tag& volumeFractionTag,
   minStrain_(minStrain)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(volumeFractionTag, volumeFraction_);
-  this->template create_field_request(strainMagnitudeTag, strainMagnitude_);
+   volumeFraction_ = this->template create_field_request<FieldT>(volumeFractionTag);
+   strainMagnitude_ = this->template create_field_request<FieldT>(strainMagnitudeTag);
 }
 
 //--------------------------------------------------------------------

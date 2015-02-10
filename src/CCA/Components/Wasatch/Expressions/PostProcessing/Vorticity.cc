@@ -34,8 +34,8 @@ Vorticity( const Expr::Tag& vel1tag,
 : Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(vel1tag, u1_);
-  this->template create_field_request(vel2tag, u2_);
+   u1_ = this->template create_field_request<Vel1T>(vel1tag);
+   u2_ = this->template create_field_request<Vel2T>(vel2tag);
 }
 
 //--------------------------------------------------------------------
