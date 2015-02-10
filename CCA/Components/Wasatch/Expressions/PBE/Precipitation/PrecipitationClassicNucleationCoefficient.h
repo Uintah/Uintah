@@ -94,7 +94,7 @@ PrecipitationClassicNucleationCoefficient( const Expr::Tag& superSatTag,
   expConst_(expConst)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(superSatTag, superSat_);
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
 }
 
 //--------------------------------------------------------------------

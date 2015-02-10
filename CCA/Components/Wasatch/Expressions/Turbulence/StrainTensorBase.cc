@@ -37,9 +37,9 @@ StrainTensorBase( const Expr::TagList& velTags )
     std::cout << msg.str() << std::endl;
     throw std::runtime_error(msg.str());
   }
-  create_field_request(velTags[0], u_);
-  create_field_request(velTags[1], v_);
-  create_field_request(velTags[2], w_);
+   u_ = create_field_request<XVolField>(velTags[0]);
+   v_ = create_field_request<YVolField>(velTags[1]);
+   w_ = create_field_request<ZVolField>(velTags[2]);
 }
 
 //--------------------------------------------------------------------

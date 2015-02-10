@@ -106,7 +106,7 @@ WallDistance::
 WallDistance( const Expr::Tag& phitag )
 : Expr::Expression<SVolField>()
 {
-  create_field_request(phitag, phi_);
+   phi_ = create_field_request<SVolField>(phitag);
 }
 
 //--------------------------------------------------------------------

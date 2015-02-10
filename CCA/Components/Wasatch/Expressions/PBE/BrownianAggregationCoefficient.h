@@ -93,7 +93,7 @@ BrownianAggregationCoefficient( const Expr::Tag& densityTag,
   coefVal_(coefVal)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(densityTag, density_);
+   density_ = this->template create_field_request<FieldT>(densityTag);
 }
 
 //--------------------------------------------------------------------

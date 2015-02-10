@@ -76,9 +76,9 @@ namespace Wasatch {
   divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
   {
-    create_field_request(temperatureTag, temperature_);
-    create_field_request(absorptionTag, absCoef_);
-    //create_field_request(celltypeTag , cellType_);
+     temperature_ = create_field_request<SVolField>(temperatureTag);
+     absCoef_ = create_field_request<SVolField>(absorptionTag);
+    // cellType_ = create_field_request<FieldT>(celltypeTag );
     
     rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
     

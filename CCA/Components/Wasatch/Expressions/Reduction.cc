@@ -24,7 +24,7 @@ Reduction( const Expr::Tag& resultTag,
                  get_reduction_name<ReductionOpT>(),
                  printVar )
 {
-  this->template create_field_request(srcTag, src_);
+   src_ = this->template create_field_request<SrcFieldT>(srcTag);
 }
 
 //--------------------------------------------------------------------

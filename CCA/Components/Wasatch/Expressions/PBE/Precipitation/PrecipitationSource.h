@@ -116,10 +116,10 @@ PrecipitationSource( const Expr::TagList& sourceTagList,
   hasEnvWeight_(envWeightTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  this->template create_field_vector_request(sourceTagList, sources_);
-  this->template create_field_request(etaScaleTag, etaScale_);
-  this->template create_field_request(densityTag, density_);
-  if (hasEnvWeight_) this->template create_field_request(envWeightTag, envWeight_);
+  this->template create_field_vector_request<FieldT>(sourceTagList, sources_);
+   etaScale_ = this->template create_field_request<FieldT>(etaScaleTag);
+   density_ = this->template create_field_request<FieldT>(densityTag);
+  if (hasEnvWeight_)  envWeight_ = this->template create_field_request<FieldT>(envWeightTag);
 }
 
 //--------------------------------------------------------------------

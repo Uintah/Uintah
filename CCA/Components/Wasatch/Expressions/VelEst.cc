@@ -21,15 +21,15 @@ VelEst<FieldT>::VelEst( const Expr::Tag velTag,
     is3d_( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(velTag, vel_);
-  this->template create_field_request(convTermTag, convTerm_);
-  this->template create_field_request(densityTag, density_);
-  this->template create_field_request(pressureTag, pressure_);
-  this->template create_field_request(timeStepTag, dt_);
-  if (doX_ || doY_ || doZ_) this->template create_field_request(viscTag, visc_);
-  if (doX_) this->template create_field_request(tauTags[0], tauxi_);
-  if (doY_) this->template create_field_request(tauTags[1], tauyi_);
-  if (doZ_) this->template create_field_request(tauTags[2], tauzi_);
+   vel_ = this->template create_field_request<FieldT>(velTag);
+   convTerm_ = this->template create_field_request<FieldT>(convTermTag);
+   density_ = this->template create_field_request<SVolField>(densityTag);
+   pressure_ = this->template create_field_request<SVolField>(pressureTag);
+   dt_ = this->template create_field_request<TimeField>(timeStepTag);
+  if (doX_ || doY_ || doZ_)  visc_ = this->template create_field_request<SVolField>(viscTag);
+  if (doX_)  tauxi_ = this->template create_field_request<XFace>(tauTags[0]);
+  if (doY_)  tauyi_ = this->template create_field_request<YFace>(tauTags[1]);
+  if (doZ_)  tauzi_ = this->template create_field_request<ZFace>(tauTags[2]);
 }
 
 //------------------------------------------------------------------

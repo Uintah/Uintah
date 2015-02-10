@@ -170,9 +170,9 @@ namespace Wasatch {
   {
     this->set_gpu_runnable( false );
     
-    create_field_request(temperatureTag, temperature_);
-    if( hasAbsCoef_  )  create_field_request(absCoefTag, absCoef_);
-    if( hasScatCoef_ ) create_field_request(scatCoefTag, scatCoef_);
+     temperature_ = create_field_request<SVolField>(temperatureTag);
+    if( hasAbsCoef_  )   absCoef_ = create_field_request<SVolField>(absCoefTag);
+    if( hasScatCoef_ )  scatCoef_ = create_field_request<SVolField>(scatCoefTag);
 
   }
 
@@ -419,9 +419,9 @@ namespace Wasatch {
       hasAbsCoef_    ( absCoefTag != Expr::Tag() )
   {
     
-    create_field_vector_request(DORadSolver::intensityTags, intensity_);
-    create_field_request(temperatureTag, temperature_);
-    if (hasAbsCoef_) create_field_request(absCoefTag, absCoef_);
+    create_field_vector_request<SVolField>(DORadSolver::intensityTags, intensity_);
+     temperature_ = create_field_request<SVolField>(temperatureTag);
+    if (hasAbsCoef_)  absCoef_ = create_field_request<SVolField>(absCoefTag);
   }
 
   //--------------------------------------------------------------------

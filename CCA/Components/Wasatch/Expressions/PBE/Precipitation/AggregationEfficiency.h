@@ -123,10 +123,10 @@ AggregationEfficiency( const Expr::TagList& abscissaeTagList,
   growthModel_(growthModel)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_vector_request(abscissaeTagList, abscissae_);
-  this->template create_field_request(growthCoefTag, g0_);
-  this->template create_field_request(dissipationTag, eps_);
-  this->template create_field_request(densityTag, rho_);
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
+   g0_ = this->template create_field_request<FieldT>(growthCoefTag);
+   eps_ = this->template create_field_request<FieldT>(dissipationTag);
+   rho_ = this->template create_field_request<FieldT>(densityTag);
 }
 
 //--------------------------------------------------------------------

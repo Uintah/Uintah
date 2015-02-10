@@ -117,9 +117,9 @@ PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
   doSBar_(sBarTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(superSatTag, superSat_);
-  this->template create_field_request(eqConcTag, eqConc_);
-  if (doSBar_) this->template create_field_request(sBarTag, sBar_);  
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+   eqConc_ = this->template create_field_request<FieldT>(eqConcTag);
+  if (doSBar_)  sBar_ = this->template create_field_request<FieldT>(sBarTag);  
 }
 
 //--------------------------------------------------------------------

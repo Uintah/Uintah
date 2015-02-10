@@ -103,8 +103,8 @@ ParticleVolumeFraction( const Expr::TagList& zerothMomentTagList,
   convFac_(convFac)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_vector_request(zerothMomentTagList, zerothMoments_);
-  this->template create_field_vector_request(firstMomentTagList, firstMoments_);
+  this->template create_field_vector_request<FieldT>(zerothMomentTagList, zerothMoments_);
+  this->template create_field_vector_request<FieldT>(firstMomentTagList, firstMoments_);
 }
 
 //--------------------------------------------------------------------

@@ -110,9 +110,9 @@ MultiEnvMixingModel( const Expr::Tag& mixFracTag,
   maxDt_(maxDt)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(mixFracTag, mixFrac_);
-  this->template create_field_request(scalarVarTag, scalarVar_);
-  this->template create_field_request(scalarDissTag, scalarDiss_);
+   mixFrac_ = this->template create_field_request<FieldT>(mixFracTag);
+   scalarVar_ = this->template create_field_request<FieldT>(scalarVarTag);
+   scalarDiss_ = this->template create_field_request<FieldT>(scalarDissTag);
 }
 
 //--------------------------------------------------------------------

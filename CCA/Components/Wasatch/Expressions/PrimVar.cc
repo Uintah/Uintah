@@ -43,9 +43,9 @@ PrimVar( const Expr::Tag& rhoPhiTag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(rhoPhiTag, rhophi_);
-  this->template create_field_request(rhoTag, rho_);
-  if (hasIntrusion_) this->template create_field_request(volFracTag, volfrac_);
+   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
+   rho_ = this->template create_field_request<DensT>(rhoTag);
+  if (hasIntrusion_)  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 template< typename FieldT >
@@ -55,8 +55,8 @@ PrimVar( const Expr::Tag& rhoPhiTag,
   : Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(rhoPhiTag, rhophi_);
-  this->template create_field_request(rhoTag, rho_);
+   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
+   rho_ = this->template create_field_request<FieldT>(rhoTag);
 }
 
 //--------------------------------------------------------------------

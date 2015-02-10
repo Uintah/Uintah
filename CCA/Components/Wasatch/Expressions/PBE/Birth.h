@@ -149,8 +149,8 @@ Birth( const Expr::Tag& birthCoefTag,
   doBirth_     (birthCoefTag != Expr::Tag()),
   doRStar_     (birthCoefTag != Expr::Tag())
 {
-  if (doBirth_) this->template create_field_request(birthCoefTag, birthCoef_);
-  if (doRStar_) this->template create_field_request(rStarTag, rStar_);
+  if (doBirth_)  birthCoef_ = this->template create_field_request<FieldT>(birthCoefTag);
+  if (doRStar_)  rStar_ = this->template create_field_request<FieldT>(rStarTag);
 }
 
 //--------------------------------------------------------------------

@@ -41,8 +41,8 @@ ConvectiveFlux( const Expr::Tag& phiTag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(phiTag, phi_);
-  this->template create_field_request(velTag, vel_);
+   phi_ = this->template create_field_request<PhiVolT>(phiTag);
+   vel_ = this->template create_field_request<VelVolT>(velTag);
 }
 
 //--------------------------------------------------------------------
@@ -102,9 +102,9 @@ ConvectiveFluxLimiter( const Expr::Tag& phiTag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(phiTag, phi_);
-  this->template create_field_request(velTag, vel_);
-  if (hasEmbeddedBoundary_) this->template create_field_request(volFracTag, volFrac_);
+   phi_ = this->template create_field_request<PhiVolT>(phiTag);
+   vel_ = this->template create_field_request<VelVolT>(velTag);
+  if (hasEmbeddedBoundary_)  volFrac_ = this->template create_field_request<PhiVolT>(volFracTag);
 }
 
 //--------------------------------------------------------------------

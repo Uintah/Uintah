@@ -113,8 +113,8 @@ KineticGrowthCoefficient( const Expr::Tag& superSatTag,
   doSBar_       (sBarTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(superSatTag, superSat_);
-  if (doSBar_) this->template create_field_request(sBarTag, sBar_);
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+  if (doSBar_)  sBar_ = this->template create_field_request<FieldT>(sBarTag);
 }
 
 //--------------------------------------------------------------------

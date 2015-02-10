@@ -81,7 +81,7 @@ NullExpression<SrcT, TargetT>::
 NullExpression( const Expr::TagList& VarNameTags )
   : Expr::Expression<TargetT>()
 {
-  this->template create_field_vector_request(VarNameTags, f_);
+  this->template create_field_vector_request<SrcT>(VarNameTags, f_);
 }
 
 //--------------------------------------------------------------------

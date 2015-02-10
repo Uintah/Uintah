@@ -41,7 +41,7 @@ ScalabilityTestSrc( const Expr::Tag& varTag,
     nam << varTag.name() << i;
     phiTagList.push_back( Expr::Tag( nam.str(), varTag.context() ) );
   }
-  this->template create_field_vector_request(phiTagList, phi_);
+  this->template create_field_vector_request<FieldT>(phiTagList, phi_);
 }
 
 //------------------------------------------------------------------

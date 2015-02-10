@@ -39,11 +39,11 @@ StableTimestep( const Expr::Tag& rhoTag,
   isViscous_( viscTag != Expr::Tag() ),
   is3dconvdiff_( doX_ && doY_ && doZ_ && isViscous_ )
 {
-  create_field_request(rhoTag, rho_);
-  if (isViscous_) create_field_request(viscTag, visc_);
-  if (doX_) create_field_request(uTag, u_);
-  if (doY_) create_field_request(vTag, v_);
-  if (doZ_) create_field_request(wTag, w_);
+   rho_ = create_field_request<SVolField>(rhoTag);
+  if (isViscous_)  visc_ = create_field_request<SVolField>(viscTag);
+  if (doX_)  u_ = create_field_request<XVolField>(uTag);
+  if (doY_)  v_ = create_field_request<YVolField>(vTag);
+  if (doZ_)  w_ = create_field_request<ZVolField>(wTag);
 }
 
 //--------------------------------------------------------------------

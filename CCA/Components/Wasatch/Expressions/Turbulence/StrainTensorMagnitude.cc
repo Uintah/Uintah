@@ -42,14 +42,14 @@ StrainTensorSquare( const Expr::Tag& s11Tag,
   : Expr::Expression<SVolField>()
 {
   this->set_gpu_runnable( true );
-  create_field_request(s11Tag, S11_);
-  create_field_request(s21Tag, S21_);
-  create_field_request(s31Tag, S31_);
+   S11_ = create_field_request<S11T>(s11Tag);
+   S21_ = create_field_request<S21T>(s21Tag);
+   S31_ = create_field_request<S31T>(s31Tag);
   
-  create_field_request(s22Tag, S22_);
-  create_field_request(s32Tag, S32_);
+   S22_ = create_field_request<S22T>(s22Tag);
+   S32_ = create_field_request<S32T>(s32Tag);
 
-  create_field_request(s33Tag, S33_);
+   S33_ = create_field_request<S33T>(s33Tag);
 }
 
 //--------------------------------------------------------------------

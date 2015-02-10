@@ -157,10 +157,10 @@ Aggregation( const Expr::TagList& weightsTagList,
   hasAggCoef_(aggCoefTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
-  this->template create_field_vector_request(weightsTagList, weights_);
-  this->template create_field_vector_request(abscissaeTagList, abscissae_);
-  if (useEffTags_) this->template create_field_vector_request(efficiencyTagList, efficiency_);
-  if (hasAggCoef_) this->template create_field_request(aggCoefTag, aggCoef_);
+  this->template create_field_vector_request<FieldT>(weightsTagList, weights_);
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
+  if (useEffTags_) this->template create_field_vector_request<FieldT>(efficiencyTagList, efficiency_);
+  if (hasAggCoef_)  aggCoef_ = this->template create_field_request<FieldT>(aggCoefTag);
 }
 
 //--------------------------------------------------------------------

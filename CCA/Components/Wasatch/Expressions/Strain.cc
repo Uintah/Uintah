@@ -36,8 +36,8 @@ Strain( const Expr::Tag& vel1Tag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(vel1Tag, u1_);
-  this->template create_field_request(vel2Tag, u2_);
+   u1_ = this->template create_field_request<Vel1T>(vel1Tag);
+   u2_ = this->template create_field_request<Vel2T>(vel2Tag);
 }
 
 //--------------------------------------------------------------------
@@ -105,8 +105,8 @@ Strain( const Expr::Tag& velTag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(velTag, u_);
-  this->template create_field_request(dilTag, dil_);
+   u_ = this->template create_field_request<VelT>(velTag);
+   dil_ = this->template create_field_request<SVolField>(dilTag);
 }
 
 //--------------------------------------------------------------------

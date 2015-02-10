@@ -31,42 +31,42 @@
 
 //--------------------------------------------------------------------
 
-template<typename ValT>
-VelocityX<ValT>::
+template<typename FieldT>
+VelocityX<FieldT>::
 VelocityX( const Expr::Tag& xtag,
            const Expr::Tag& ytag,
            const Expr::Tag& ttag,
            const double A,
            const double nu )
-  : Expr::Expression<ValT>(),
+  : Expr::Expression<FieldT>(),
     a_(A), nu_(nu)
 {
   this->set_gpu_runnable(true);
   
-  this->template create_field_request(xtag, x_);
-  this->template create_field_request(ytag, y_);
-  this->template create_field_request(ttag, t_);
+   x_ = this->template create_field_request<FieldT>(xtag);
+   y_ = this->template create_field_request<FieldT>(ytag);
+   t_ = this->template create_field_request<TimeField>(ttag);
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 void
-VelocityX<ValT>::
+VelocityX<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  ValT& phi = this->value();
-  const ValT& x = x_->field_ref();
-  const ValT& y = y_->field_ref();
+  FieldT& phi = this->value();
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
   const TimeField& t = t_->field_ref();
   phi <<= 1.0 - a_ * cos( 2.0*PI * x - t ) * sin( 2.0*PI * y - t ) * exp( -2.0 * nu_ * t );
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
-VelocityX<ValT>::Builder::
+template< typename FieldT >
+VelocityX<FieldT>::Builder::
 Builder( const Expr::Tag& result,
          const Expr::Tag& xtag,
          const Expr::Tag& ytag,
@@ -83,12 +83,12 @@ Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 Expr::ExpressionBase*
-VelocityX<ValT>::Builder::
+VelocityX<FieldT>::Builder::
 build() const
 {
-  return new VelocityX<ValT>( xt_, yt_, tt_, A_, nu_ );
+  return new VelocityX<FieldT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -97,42 +97,42 @@ build() const
 
 //--------------------------------------------------------------------
 
-template<typename ValT>
-VelocityY<ValT>::
+template<typename FieldT>
+VelocityY<FieldT>::
 VelocityY( const Expr::Tag& xtag,
            const Expr::Tag& ytag,
            const Expr::Tag& ttag,
            const double A,
            const double nu )
-  : Expr::Expression<ValT>(),
+  : Expr::Expression<FieldT>(),
     a_(A), nu_(nu)
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(xtag, x_);
-  this->template create_field_request(ytag, y_);
-  this->template create_field_request(ttag, t_);
+   x_ = this->template create_field_request<FieldT>(xtag);
+   y_ = this->template create_field_request<FieldT>(ytag);
+   t_ = this->template create_field_request<TimeField>(ttag);
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 void
-VelocityY<ValT>::
+VelocityY<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  ValT& phi = this->value();
-  const ValT& x = x_->field_ref();
-  const ValT& y = y_->field_ref();
+  FieldT& phi = this->value();
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
   const TimeField& t = t_->field_ref();
   phi <<= 1.0 + a_ * sin( 2.0*PI * x - t ) * cos( 2.0*PI * y - t ) * exp( -2.0*nu_ * t );
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
-VelocityY<ValT>::Builder::
+template< typename FieldT >
+VelocityY<FieldT>::Builder::
 Builder( const Expr::Tag& result,
          const Expr::Tag& xtag,
          const Expr::Tag& ytag,
@@ -149,12 +149,12 @@ Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 Expr::ExpressionBase*
-VelocityY<ValT>::Builder::
+VelocityY<FieldT>::Builder::
 build() const
 {
-  return new VelocityY<ValT>( xt_, yt_, tt_, A_, nu_ );
+  return new VelocityY<FieldT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -163,41 +163,41 @@ build() const
 
 //--------------------------------------------------------------------
 
-template<typename ValT>
-GradPX<ValT>::
+template<typename FieldT>
+GradPX<FieldT>::
 GradPX( const Expr::Tag& xtag,
         const Expr::Tag& ytag,
         const Expr::Tag& ttag,
         const double A,
         const double nu )
-  : Expr::Expression<ValT>(),
+  : Expr::Expression<FieldT>(),
     a_(A), nu_(nu)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xtag,x_);
-  this->template create_field_request(ytag,y_);
-  this->template create_field_request(ttag,t_);
+  x_ = this->template create_field_request<FieldT>(xtag);
+  y_ = this->template create_field_request<FieldT>(ytag);
+  t_ = this->template create_field_request<TimeField>(ttag);
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 void
-GradPX<ValT>::
+GradPX<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  ValT& phi = this->value();
-  const ValT& x = x_->field_ref();
-  const ValT& y = y_->field_ref();
+  FieldT& phi = this->value();
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
   const TimeField& t = t_->field_ref();
   phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*( 2.0*PI * x - t ) ) * exp( -4.0*nu_ * t );
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
-GradPX<ValT>::Builder::
+template< typename FieldT >
+GradPX<FieldT>::Builder::
 Builder( const Expr::Tag& result,
          const Expr::Tag& xtag,
          const Expr::Tag& ytag,
@@ -214,12 +214,12 @@ Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 Expr::ExpressionBase*
-GradPX<ValT>::Builder::
+GradPX<FieldT>::Builder::
 build() const
 {
-  return new GradPX<ValT>( xt_, yt_, tt_, A_, nu_ );
+  return new GradPX<FieldT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -228,41 +228,41 @@ build() const
 
 //--------------------------------------------------------------------
 
-template<typename ValT>
-GradPY<ValT>::
+template<typename FieldT>
+GradPY<FieldT>::
 GradPY( const Expr::Tag& xtag,
         const Expr::Tag& ytag,
         const Expr::Tag& ttag,
         const double A,
         const double nu )
-  : Expr::Expression<ValT>(),
+  : Expr::Expression<FieldT>(),
     a_(A), nu_(nu)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xtag,x_);
-  this->template create_field_request(ytag,y_);
-  this->template create_field_request(ttag,t_);
+  x_ = this->template create_field_request<FieldT>(xtag);
+  y_ = this->template create_field_request<FieldT>(ytag);
+  t_ = this->template create_field_request<TimeField>(ttag);
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 void
-GradPY<ValT>::
+GradPY<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  ValT& phi = this->value();
-  const ValT& x = x_->field_ref();
-  const ValT& y = y_->field_ref();
+  FieldT& phi = this->value();
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
   const TimeField& t = t_->field_ref();
   phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*(2.0*PI * y- t) ) * exp(-4.0 * nu_ * t);
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
-GradPY<ValT>::Builder::
+template< typename FieldT >
+GradPY<FieldT>::Builder::
 Builder( const Expr::Tag& result,
          const Expr::Tag& xtag,
          const Expr::Tag& ytag,
@@ -279,12 +279,12 @@ Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 Expr::ExpressionBase*
-GradPY<ValT>::Builder::
+GradPY<FieldT>::Builder::
 build() const
 {
-  return new GradPY<ValT>( xt_, yt_, tt_, A_, nu_ );
+  return new GradPY<FieldT>( xt_, yt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -293,40 +293,40 @@ build() const
 
 //--------------------------------------------------------------------
 
-template<typename ValT>
-TaylorGreenVel3D<ValT>::
+template<typename FieldT>
+TaylorGreenVel3D<FieldT>::
 TaylorGreenVel3D( const Expr::Tag& xtag,
                   const Expr::Tag& ytag,
                   const Expr::Tag& ztag,
                   const double angle )
-: Expr::Expression<ValT>(),
+: Expr::Expression<FieldT>(),
   angle_(angle)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xtag, x_);
-  this->template create_field_request(ytag, y_);
-  this->template create_field_request(ztag, z_);
+   x_ = this->template create_field_request<FieldT>(xtag);
+   y_ = this->template create_field_request<FieldT>(ytag);
+   z_ = this->template create_field_request<FieldT>(ztag);
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 void
-TaylorGreenVel3D<ValT>::
+TaylorGreenVel3D<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  ValT& phi = this->value();
-  const ValT& x = x_->field_ref();
-  const ValT& y = y_->field_ref();
-  const ValT& z = z_->field_ref();
+  FieldT& phi = this->value();
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
+  const FieldT& z = z_->field_ref();
   phi <<= (2/sqrt(3.0))*sin(angle_) * sin(2.0*PI * x) * cos( 2.0*PI * y ) * cos(2.0*PI * z);
 }
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
-TaylorGreenVel3D<ValT>::Builder::
+template< typename FieldT >
+TaylorGreenVel3D<FieldT>::Builder::
 Builder( const Expr::Tag& result,
          const Expr::Tag& xtag,
          const Expr::Tag& ytag,
@@ -341,12 +341,12 @@ Builder( const Expr::Tag& result,
 
 //--------------------------------------------------------------------
 
-template< typename ValT >
+template< typename FieldT >
 Expr::ExpressionBase*
-TaylorGreenVel3D<ValT>::Builder::
+TaylorGreenVel3D<FieldT>::Builder::
 build() const
 {
-  return new TaylorGreenVel3D<ValT>( xt_, yt_, zt_, angle_ );
+  return new TaylorGreenVel3D<FieldT>( xt_, yt_, zt_, angle_ );
 }
 
 //--------------------------------------------------------------------

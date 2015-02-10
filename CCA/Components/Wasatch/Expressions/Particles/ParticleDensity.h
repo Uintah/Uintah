@@ -55,8 +55,8 @@ ParticleDensity( const Expr::Tag& pmassTag,
 : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(true);
-  create_field_request(pmassTag, pmass_);
-  create_field_request(psizeTag, psize_);
+   pmass_ = create_field_request<ParticleField>(pmassTag);
+   psize_ = create_field_request<ParticleField>(psizeTag);
 }
 
 //------------------------------------------------------------------

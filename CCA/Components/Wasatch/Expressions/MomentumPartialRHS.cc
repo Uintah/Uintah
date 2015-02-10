@@ -59,20 +59,20 @@ MomRHSPart( const Expr::Tag& convFluxX,
 {
   this->set_gpu_runnable( true );
   
-  if( doXConv_ )  this->template create_field_request(convFluxX, cFluxX_);
-  if( doYConv_ )  this->template create_field_request(convFluxY, cFluxY_);
-  if( doZConv_ )  this->template create_field_request(convFluxZ, cFluxZ_);
+  if( doXConv_ )   cFluxX_ = this->template create_field_request<XFluxT>(convFluxX);
+  if( doYConv_ )   cFluxY_ = this->template create_field_request<YFluxT>(convFluxY);
+  if( doZConv_ )   cFluxZ_ = this->template create_field_request<ZFluxT>(convFluxZ);
   
-  if( doXTau_ )  this->template create_field_request(tauX, tauX_);
-  if( doYTau_ )  this->template create_field_request(tauY, tauY_);
-  if( doZTau_ )  this->template create_field_request(tauZ, tauZ_);
+  if( doXTau_ )   tauX_ = this->template create_field_request<XFluxT>(tauX);
+  if( doYTau_ )   tauY_ = this->template create_field_request<YFluxT>(tauY);
+  if( doZTau_ )   tauZ_ = this->template create_field_request<ZFluxT>(tauZ);
 
-  if(doXTau_ || doYTau_ || doZTau_) this->template create_field_request(viscTag, visc_);
-  this->template create_field_request(densityTag, density_);
+  if(doXTau_ || doYTau_ || doZTau_)  visc_ = this->template create_field_request<SVolField>(viscTag);
+   density_ = this->template create_field_request<SVolField>(densityTag);
   
-  if( hasBodyF_ )  this->template create_field_request(bodyForceTag, bodyForce_);
-  if( hasSrcTerm_ )  this->template create_field_request(srcTermTag, srcTerm_);
-  if( hasIntrusion_ )  this->template create_field_request(volFracTag, volfrac_);
+  if( hasBodyF_ )   bodyForce_ = this->template create_field_request<FieldT>(bodyForceTag);
+  if( hasSrcTerm_ )   srcTerm_ = this->template create_field_request<FieldT>(srcTermTag);
+  if( hasIntrusion_ )   volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------

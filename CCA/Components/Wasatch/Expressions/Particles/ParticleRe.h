@@ -102,21 +102,21 @@ ParticleRe( const Expr::Tag& particleSizeTag,
   : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable( false );  // not until we get particle interpolants GPU ready
-  this->template create_field_request(gasDensityTag, gDensity_);
-  this->template create_field_request(particleSizeTag, psize_);
-  this->template create_field_request(gasViscosityTag, gVisc_);
+   gDensity_ = this->template create_field_request<ScalarT>(gasDensityTag);
+   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+   gVisc_ = this->template create_field_request<ScalarT>(gasViscosityTag);
   
-  this->template create_field_request(particlePositionTags[0], px_);
-  this->template create_field_request(particlePositionTags[1], py_);
-  this->template create_field_request(particlePositionTags[2], pz_);
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
   
-  this->template create_field_request(particleVelocityTags[0], pu_);
-  this->template create_field_request(particleVelocityTags[1], pv_);
-  this->template create_field_request(particleVelocityTags[2], pw_);
+   pu_ = this->template create_field_request<ParticleField>(particleVelocityTags[0]);
+   pv_ = this->template create_field_request<ParticleField>(particleVelocityTags[1]);
+   pw_ = this->template create_field_request<ParticleField>(particleVelocityTags[2]);
 
-  this->template create_field_request(gasVelocityTags[0], gu_);
-  this->template create_field_request(gasVelocityTags[1], gv_);
-  this->template create_field_request(gasVelocityTags[2], gw_);
+   gu_ = this->template create_field_request<GVel1T>(gasVelocityTags[0]);
+   gv_ = this->template create_field_request<GVel2T>(gasVelocityTags[1]);
+   gw_ = this->template create_field_request<GVel3T>(gasVelocityTags[2]);
 }
 
 //--------------------------------------------------------------------

@@ -56,7 +56,7 @@ ParticlePositionRHS( const Expr::Tag& particleVelocityTag )
 : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable( true );
-  create_field_request(particleVelocityTag, pvel_);
+   pvel_ = create_field_request<ParticleField>(particleVelocityTag);
 }
 
 //------------------------------------------------------------------

@@ -34,9 +34,9 @@ uf_ ( uf ),
 vf_ ( vf )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
-  this->template create_field_request(tTag, t_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
 }
 
 //--------------------------------------------------------------------
@@ -203,26 +203,26 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
   useOnePredictor_(varDenParams.onePredictor)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(densTag, dens_);
-  this->template create_field_request(densStarTag, densStar_);
-  if (!useOnePredictor_) this->template create_field_request(dens2StarTag, dens2Star_);
+   dens_ = this->template create_field_request<SVolField>(densTag);
+   densStar_ = this->template create_field_request<SVolField>(densStarTag);
+  if (!useOnePredictor_)  dens2Star_ = this->template create_field_request<SVolField>(dens2StarTag);
   
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
-  this->template create_field_request(tTag, t_);
-  this->template create_field_request(dtTag, dt_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
+   dt_ = this->template create_field_request<TimeField>(dtTag);
   
   if (doX_) {
-    this->template create_field_request(velTags[0], u_);
-    this->template create_field_request(velStarTags[0], uStar_);
+     u_ = this->template create_field_request<XVolField>(velTags[0]);
+     uStar_ = this->template create_field_request<XVolField>(velStarTags[0]);
   }
   if (doY_) {
-    this->template create_field_request(velTags[1], v_);
-    this->template create_field_request(velStarTags[1], vStar_);
+     v_ = this->template create_field_request<YVolField>(velTags[1]);
+     vStar_ = this->template create_field_request<YVolField>(velStarTags[1]);
   }
   if (doZ_) {
-    this->template create_field_request(velTags[2], w_);
-    this->template create_field_request(velStarTags[2], wStar_);
+     w_ = this->template create_field_request<ZVolField>(velTags[2]);
+     wStar_ = this->template create_field_request<ZVolField>(velStarTags[2]);
   }
   
 }
@@ -437,10 +437,10 @@ VarDenOscillatingMMSxVel( const Expr::Tag& rhoTag,
   vf_ ( vf )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
-  this->template create_field_request(tTag, t_);
-  this->template create_field_request(rhoTag, rho_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
+   rho_ = this->template create_field_request<SVolField>(rhoTag);
 }
 
 //--------------------------------------------------------------------
@@ -551,10 +551,10 @@ VarDenOscillatingMMSyVel( const Expr::Tag& rhoTag,
   vf_ ( vf )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
-  this->template create_field_request(tTag, t_);
-  this->template create_field_request(rhoTag, rho_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
+   rho_ = this->template create_field_request<SVolField>(rhoTag);
 }
 
 //--------------------------------------------------------------------
@@ -664,9 +664,9 @@ uf_ ( uf ),
 vf_ ( vf )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(yTag, y_);
-  this->template create_field_request(tTag, t_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
 }
 
 //--------------------------------------------------------------------
@@ -747,7 +747,7 @@ DiffusiveConstant( const Expr::Tag& rhoTag,
   d_(d)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(rhoTag, rho_);
+   rho_ = this->template create_field_request<FieldT>(rhoTag);
 }
 
 //--------------------------------------------------------------------

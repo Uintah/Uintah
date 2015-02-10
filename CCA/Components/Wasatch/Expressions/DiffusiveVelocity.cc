@@ -47,9 +47,9 @@ DiffusiveVelocity( const Expr::Tag& turbDiffTag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(phiTag, phi_);
-  if(!isConstCoef_ ) this->template create_field_request(coefTag, coef_);
-  if( isTurbulent_ ) this->template create_field_request(turbDiffTag, turbDiff_);
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+  if(!isConstCoef_ )  coef_ = this->template create_field_request<ScalarT>(coefTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
 }
 
 //--------------------------------------------------------------------
@@ -66,8 +66,8 @@ DiffusiveVelocity( const Expr::Tag& turbDiffTag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(phiTag, phi_);
-  if( isTurbulent_ ) this->template create_field_request(turbDiffTag, turbDiff_);
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
 }
 
 //--------------------------------------------------------------------

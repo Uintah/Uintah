@@ -101,13 +101,13 @@ Pressure::Pressure( const std::string& pressureName,
     prhsLabel_    ( Uintah::VarLabel::create( pressureRHSName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
 {
-  create_field_request(TagNames::self().timestep, timestep_);
-  create_field_request(TagNames::self().time, t_);
-  if(doX_) create_field_request(fxtag, fx_);
-  if(doY_) create_field_request(fytag, fy_);
-  if(doZ_) create_field_request(fztag, fz_);
-  create_field_request(pSourceTag, pSource_);
-  if (hasIntrusion_) create_field_request(volfractag, volfrac_);
+   timestep_ = create_field_request<TimeField>(TagNames::self().timestep);
+   t_ = create_field_request<TimeField>(TagNames::self().time);
+  if(doX_)  fx_ = create_field_request<XVolField>(fxtag);
+  if(doY_)  fy_ = create_field_request<YVolField>(fytag);
+  if(doZ_)  fz_ = create_field_request<ZVolField>(fztag);
+   pSource_ = create_field_request<SVolField>(pSourceTag);
+  if (hasIntrusion_)  volfrac_ = create_field_request<SVolField>(volfractag);
 }
 
 //--------------------------------------------------------------------

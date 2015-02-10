@@ -48,7 +48,7 @@ ParticleDragCoefficient::ParticleDragCoefficient( const Expr::Tag& pReTag )
   : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(true);
-  create_field_request(pReTag, pRe_);
+   pRe_ = create_field_request<ParticleField>(pReTag);
 }
 
 //--------------------------------------------------------------------

@@ -39,10 +39,10 @@ ContinuityResidual( const Expr::Tag&     drhodtTag,
     is3d_     ( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
-  if (!constDen_) this->template create_field_request(drhodtTag, drhodt_);
-  if (doX_) this->template create_field_request(velTags[0], u1_);
-  if (doY_) this->template create_field_request(velTags[1], u2_);
-  if (doZ_) this->template create_field_request(velTags[2], u3_);
+  if (!constDen_)  drhodt_ = this->template create_field_request<FieldT>(drhodtTag);
+  if (doX_)  u1_ = this->template create_field_request<Vel1T>(velTags[0]);
+  if (doY_)  u2_ = this->template create_field_request<Vel2T>(velTags[1]);
+  if (doZ_)  u3_ = this->template create_field_request<Vel3T>(velTags[2]);
 }
 
 //--------------------------------------------------------------------

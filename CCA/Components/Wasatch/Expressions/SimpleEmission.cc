@@ -43,9 +43,9 @@ SimpleEmission( const Expr::Tag& temperatureTag,
     hasAbsCoef_     ( absCoefTag != Expr::Tag() ),
     hasConstEnvTemp_( envTempTag == Expr::Tag() )
 {
-  this->template create_field_request(temperatureTag, temperature_);
-  if(!hasConstEnvTemp_) this->template create_field_request(envTempTag, envTemp_);
-  if(hasAbsCoef_) this->template create_field_request(absCoefTag, absCoef_);
+   temperature_ = this->template create_field_request<FieldT>(temperatureTag);
+  if(!hasConstEnvTemp_)  envTemp_ = this->template create_field_request<FieldT>(envTempTag);
+  if(hasAbsCoef_)  absCoef_ = this->template create_field_request<FieldT>(absCoefTag);
 }
 
 //--------------------------------------------------------------------

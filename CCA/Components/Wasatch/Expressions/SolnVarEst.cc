@@ -14,9 +14,9 @@ SolnVarEst<FieldT>::SolnVarEst( const Expr::Tag& solnVarOldTag,
 {
   this->set_gpu_runnable( true );
   
-  this->template create_field_request(solnVarOldTag, fOld_);
-  this->template create_field_request(solnVarRHSTag, rhs_);
-  this->template create_field_request(timeStepTag, dt_);
+   fOld_ = this->template create_field_request<FieldT>(solnVarOldTag);
+   rhs_ = this->template create_field_request<FieldT>(solnVarRHSTag);
+   dt_ = this->template create_field_request<TimeField>(timeStepTag);
 }
 
 //------------------------------------------------------------------

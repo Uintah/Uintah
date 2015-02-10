@@ -39,7 +39,7 @@ TabPropsHeatLossEvaluator( const InterpT* const adEnthInterp,
     adEnthEval_   ( adEnthInterp   ),
     sensEnthEval_ ( sensEnthInterp )
 {
-  this->template create_field_vector_request(ivarNames, indepVars_);
+  this->template create_field_vector_request<FieldT>(ivarNames, indepVars_);
 }
 
 //--------------------------------------------------------------------

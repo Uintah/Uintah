@@ -132,20 +132,20 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
   if( doZDiff_ )  zDiffFlux_ = this->template create_field_request<ZFluxT>( diffTagZ_ );
   
   if ( haveVolFrac_ ) {
-    this->template create_field_request( volFracTag_, volfrac_ );
+     volfrac_  = this->template create_field_request<FieldT>( volFracTag_);
   }
   
-  if ( doXDir_ && haveXAreaFrac_ ) this->template create_field_request( xAreaFracTag_, xareafrac_ );
-  if ( doYDir_ && haveYAreaFrac_ ) this->template create_field_request( yAreaFracTag_, yareafrac_ );
-  if ( doZDir_ && haveZAreaFrac_ ) this->template create_field_request( zAreaFracTag_, zareafrac_ );
+  if ( doXDir_ && haveXAreaFrac_ )  xareafrac_  = this->template create_field_request<XVolField>( xAreaFracTag_);
+  if ( doYDir_ && haveYAreaFrac_ )  yareafrac_  = this->template create_field_request<YVolField>( yAreaFracTag_);
+  if ( doZDir_ && haveZAreaFrac_ )  zareafrac_  = this->template create_field_request<ZVolField>( zAreaFracTag_);
 
   this->template create_field_vector_request<FieldT>(srcTags_, srcTerms_);
   
-  if( isConstDensity_ && (srcTerms_.size()>0 || !strongForm_) ) this->template create_field_request( densityTag_, rho_ );
+  if( isConstDensity_ && (srcTerms_.size()>0 || !strongForm_) )  rho_  = this->template create_field_request<SVolField>( densityTag_);
   
   if( !strongForm_ ){
-    this->template create_field_request( phiTag_, phi_ );
-    this->template create_field_request( drhodtTag_, drhodt_ );
+     phi_  = this->template create_field_request<SVolField>( phiTag_);
+     drhodt_  = this->template create_field_request<SVolField>( drhodtTag_);
   }
 }
 

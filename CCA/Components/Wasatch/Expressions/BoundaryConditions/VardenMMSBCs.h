@@ -54,7 +54,7 @@ class VarDen1DMMSDensity : public BoundaryConditionBase<FieldT>
     rho1_(rho1)
   {
     this->set_gpu_runnable(false);
-    this->template create_field_request(indepVarTag, t_);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
 
 public:
@@ -110,7 +110,7 @@ class VarDen1DMMSMixtureFraction
   VarDen1DMMSMixtureFraction( const Expr::Tag& indepVarTag )
   {
     this->set_gpu_runnable(false);
-    this->template create_field_request(indepVarTag, t_);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -196,7 +196,7 @@ private:
     side_( side )
   {
     this->set_gpu_runnable(false);
-    this->template create_field_request(indepVarTag, t_);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
   const double rho0_, rho1_;
   const SpatialOps::BCSide side_;
@@ -227,7 +227,7 @@ class VarDen1DMMSSolnVar
     rho1_( rho1 )
   {
     this->set_gpu_runnable(false);
-    this->template create_field_request(indepVarTag, t_);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -311,7 +311,7 @@ private:
   : side_(side)
   {
     this->set_gpu_runnable(false);
-    this->template create_field_request(indepVarTag, t_);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
   DECLARE_FIELD(TimeField, t_);
   const SpatialOps::BCSide side_;

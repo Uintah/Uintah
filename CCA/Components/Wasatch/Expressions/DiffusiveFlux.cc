@@ -44,10 +44,10 @@ DiffusiveFlux( const Expr::Tag& rhoTag,
     isConstCoef_( false       ),
     coefVal_    ( 0.0         )
 {
-  this->template create_field_request(phiTag, phi_);
-  this->template create_field_request(rhoTag, rho_);
-  if(!isConstCoef_ ) this->template create_field_request(coefTag, coef_);
-  if( isTurbulent_ ) this->template create_field_request(turbDiffTag, turbDiff_);
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+   rho_ = this->template create_field_request<ScalarT>(rhoTag);
+  if(!isConstCoef_ )  coef_ = this->template create_field_request<ScalarT>(coefTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
 
   this->set_gpu_runnable( true );
 }
@@ -63,9 +63,9 @@ DiffusiveFlux( const Expr::Tag& rhoTag,
     isConstCoef_( true        ),
     coefVal_    ( coefVal     )
 {
-  this->template create_field_request(phiTag, phi_);
-  this->template create_field_request(rhoTag, rho_);
-  if( isTurbulent_ ) this->template create_field_request(turbDiffTag, turbDiff_);
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+   rho_ = this->template create_field_request<ScalarT>(rhoTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
 
   this->set_gpu_runnable( true );
 }

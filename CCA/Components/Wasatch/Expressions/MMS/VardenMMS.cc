@@ -30,8 +30,8 @@ rho0_( rho0 ),
 rho1_( rho1 )
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(tTag, t_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
 }
 
 //--------------------------------------------------------------------
@@ -136,16 +136,16 @@ VarDen1DMMSContinuitySrc( const double rho0,
   useOnePredictor_(varDenParams.onePredictor)
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(xTag, x_);
-  this->template create_field_request(tTag, t_);
-  this->template create_field_request(dtTag, dt_);
+   x_ = this->template create_field_request<FieldT>(xTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
+   dt_ = this->template create_field_request<TimeField>(dtTag);
   if (model_ != Wasatch::VarDenParameters::CONSTANT) {
-    this->template create_field_request(densTag, dens_);
-    if (useOnePredictor_) this->template create_field_request(densStarTag, densStar_);
-    else                  this->template create_field_request(dens2StarTag, dens2Star_);
-    if (doX_) this->template create_field_request(velTags[0], u_);
-    if (doY_) this->template create_field_request(velTags[0], v_);
-    if (doZ_) this->template create_field_request(velTags[0], w_);
+     dens_ = this->template create_field_request<FieldT>(densTag);
+    if (useOnePredictor_)  densStar_ = this->template create_field_request<SVolField>(densStarTag);
+    else                   dens2Star_ = this->template create_field_request<SVolField>(dens2StarTag);
+    if (doX_)  u_ = this->template create_field_request<XVolField>(velTags[0]);
+    if (doY_)  v_ = this->template create_field_request<YVolField>(velTags[0]);
+    if (doZ_)  w_ = this->template create_field_request<ZVolField>(velTags[0]);
   }
 }
 
@@ -322,8 +322,8 @@ VarDen1DMMSPressureContSrc( const Expr::Tag continutySrcTag,
 : Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
-  this->template create_field_request(continutySrcTag, continutySrc_);
-  this->template create_field_request(dtTag, dt_);
+   continutySrc_ = this->template create_field_request<FieldT>(continutySrcTag);
+   dt_ = this->template create_field_request<TimeField>(dtTag);
 }
 
 //--------------------------------------------------------------------

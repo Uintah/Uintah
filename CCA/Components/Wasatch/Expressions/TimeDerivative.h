@@ -80,9 +80,9 @@ TimeDerivative( const Expr::Tag& newVarTag,
                 const Expr::Tag& dtTag )
 : Expr::Expression<ValT>()
 {
-  this->template create_field_request(newVarTag, newvar_);
-  this->template create_field_request(oldVarTag, oldvar_);
-  this->template create_field_request(dtTag, dt_);
+   newvar_ = this->template create_field_request<ValT>(newVarTag);
+   oldvar_ = this->template create_field_request<ValT>(oldVarTag);
+   dt_ = this->template create_field_request<TimeField>(dtTag);
 }
 
 //--------------------------------------------------------------------
