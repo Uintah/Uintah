@@ -48,8 +48,7 @@
 class WallDistance
 : public Expr::Expression<SVolField>
 {
-  const Expr::Tag phit_;
-  const SVolField* phi_;
+  DECLARE_FIELD(SVolField, phi_);
    
   // gradient operators are only here to extract spacing information out of them
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, XVolField >::type GradXT;
@@ -91,10 +90,6 @@ public:
     ~Builder(){}
   };
   
-  ~WallDistance();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -109,23 +104,9 @@ public:
 
 WallDistance::
 WallDistance( const Expr::Tag& phitag )
-: Expr::Expression<SVolField>(),
-  phit_(phitag)
-{}
-
-//--------------------------------------------------------------------
-
-WallDistance::
-~WallDistance()
-{}
-
-//--------------------------------------------------------------------
-
-void
-WallDistance::
-advertise_dependents( Expr::ExprDeps& exprDeps )
+: Expr::Expression<SVolField>()
 {
-  exprDeps.requires_expression( phit_ );
+  create_field_request(phitag, phi_);
 }
 
 //--------------------------------------------------------------------
@@ -147,27 +128,18 @@ bind_operators( const SpatialOps::OperatorDatabase& opDB )
 
 void
 WallDistance::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  phi_ = &fml.field_ref<SVolField>( phit_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-WallDistance::
 evaluate()
 {
   using namespace SpatialOps;
   SVolField& walld = this->value();
   walld <<= 0.0;
-  
+  const SVolField& phi = phi_->field_ref();
   SpatialOps::SpatFldPtr<SVolField> gradPhiSq = SpatialOps::SpatialFieldStore::get<SVolField>( walld );
-  *gradPhiSq <<=   (*xToSInterpOp_)((*gradXOp_)(*phi_)) * (*xToSInterpOp_)((*gradXOp_)(*phi_))
-                 + (*yToSInterpOp_)((*gradYOp_)(*phi_)) * (*yToSInterpOp_)((*gradYOp_)(*phi_))
-                 + (*zToSInterpOp_)((*gradZOp_)(*phi_)) * (*zToSInterpOp_)((*gradZOp_)(*phi_));
+  *gradPhiSq <<=   (*xToSInterpOp_)((*gradXOp_)(phi)) * (*xToSInterpOp_)((*gradXOp_)(phi))
+                 + (*yToSInterpOp_)((*gradYOp_)(phi)) * (*yToSInterpOp_)((*gradYOp_)(phi))
+                 + (*zToSInterpOp_)((*gradZOp_)(phi)) * (*zToSInterpOp_)((*gradZOp_)(phi));
   
-  walld <<= sqrt( *gradPhiSq + 2.0 * *phi_ ) - sqrt(*gradPhiSq);
+  walld <<= sqrt( *gradPhiSq + 2.0 * phi ) - sqrt(*gradPhiSq);
 }
 
 //--------------------------------------------------------------------

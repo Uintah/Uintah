@@ -41,13 +41,15 @@ VelocityMagnitude( const Expr::Tag& vel1tag,
                    const Expr::Tag& vel2tag,
                    const Expr::Tag& vel3tag )
 : Expr::Expression<FieldT>(),
-  vel1t_( vel1tag ),
-  vel2t_( vel2tag ),
-  vel3t_( vel3tag ),
-  is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
+  doX_( vel1tag != Expr::Tag() ),
+  doY_( vel2tag != Expr::Tag() ),
+  doZ_( vel3tag != Expr::Tag() ),
+  is3d_( doX_ && doY_ && doZ_ )
 {
-  vel1_=NULL;  vel2_=NULL;  vel3_=NULL;
   this->set_gpu_runnable( true );
+  if(doX_) this->template create_field_request(vel1tag, u_);
+  if(doY_) this->template create_field_request(vel2tag, v_);
+  if(doZ_) this->template create_field_request(vel3tag, w_);
 }
 
 //--------------------------------------------------------------------
@@ -62,39 +64,11 @@ VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 void
 VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( vel1t_ != Expr::Tag() )  exprDeps.requires_expression( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  exprDeps.requires_expression( vel2t_ );
-  if( vel3t_ != Expr::Tag() )  exprDeps.requires_expression( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
-void
-VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<Vel1T>::type& v1fm = fml.template field_manager<Vel1T>();
-  const typename Expr::FieldMgrSelector<Vel2T>::type& v2fm = fml.template field_manager<Vel2T>();
-  const typename Expr::FieldMgrSelector<Vel3T>::type& v3fm = fml.template field_manager<Vel3T>();
-
-  if( vel1t_ != Expr::Tag() )  vel1_ = &v1fm.field_ref( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  vel2_ = &v2fm.field_ref( vel2t_ );
-  if( vel3t_ != Expr::Tag() )  vel3_ = &v3fm.field_ref( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
-void
-VelocityMagnitude<FieldT,Vel1T,Vel2T,Vel3T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( vel1t_ != Expr::Tag() )  interpVel1T2FieldTOp_ = opDB.retrieve_operator<InterpVel1T2FieldT>();
-  if( vel2t_ != Expr::Tag() )  interpVel2T2FieldTOp_ = opDB.retrieve_operator<InterpVel2T2FieldT>();
-  if( vel3t_ != Expr::Tag() )  interpVel3T2FieldTOp_ = opDB.retrieve_operator<InterpVel3T2FieldT>();
+  if( doX_ )  interpVel1T2FieldTOp_ = opDB.retrieve_operator<InterpVel1T2FieldT>();
+  if( doY_ )  interpVel2T2FieldTOp_ = opDB.retrieve_operator<InterpVel2T2FieldT>();
+  if( doZ_ )  interpVel3T2FieldTOp_ = opDB.retrieve_operator<InterpVel3T2FieldT>();
 }
 
 //--------------------------------------------------------------------
@@ -108,18 +82,21 @@ evaluate()
   FieldT& velMag = this->value();
 
   if( is3d_ ){ // inline the 3D calculation for better performance:
+    const Vel1T& u = u_->field_ref();
+    const Vel2T& v = v_->field_ref();
+    const Vel3T& w = w_->field_ref();
     velMag <<= sqrt(
-        (*interpVel1T2FieldTOp_)(*vel1_) * (*interpVel1T2FieldTOp_)(*vel1_) +
-        (*interpVel2T2FieldTOp_)(*vel2_) * (*interpVel2T2FieldTOp_)(*vel2_) +
-        (*interpVel3T2FieldTOp_)(*vel3_) * (*interpVel3T2FieldTOp_)(*vel3_)
+        (*interpVel1T2FieldTOp_)(u) * (*interpVel1T2FieldTOp_)(u) +
+        (*interpVel2T2FieldTOp_)(v) * (*interpVel2T2FieldTOp_)(v) +
+        (*interpVel3T2FieldTOp_)(w) * (*interpVel3T2FieldTOp_)(w)
       );
   }
   else{ // 1D and 2D are assembled in pieces (slower):
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( velMag );
-    if( vel1t_ != Expr::Tag() ) velMag <<=          (*interpVel1T2FieldTOp_)(*vel1_) * (*interpVel1T2FieldTOp_)(*vel1_);
+    if( doX_ ) velMag <<=          (*interpVel1T2FieldTOp_)(u_->field_ref()) * (*interpVel1T2FieldTOp_)(u_->field_ref());
     else                        velMag <<= 0.0;
-    if( vel2t_ != Expr::Tag() ) velMag <<= velMag + (*interpVel2T2FieldTOp_)(*vel2_) * (*interpVel2T2FieldTOp_)(*vel2_);
-    if( vel3t_ != Expr::Tag() ) velMag <<= velMag + (*interpVel3T2FieldTOp_)(*vel3_) * (*interpVel3T2FieldTOp_)(*vel3_);
+    if( doY_ ) velMag <<= velMag + (*interpVel2T2FieldTOp_)(v_->field_ref()) * (*interpVel2T2FieldTOp_)(v_->field_ref());
+    if( doZ_ ) velMag <<= velMag + (*interpVel3T2FieldTOp_)(w_->field_ref()) * (*interpVel3T2FieldTOp_)(w_->field_ref());
     velMag <<= sqrt(velMag);
   }
 }

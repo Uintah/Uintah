@@ -39,35 +39,13 @@ VelocityX( const Expr::Tag& xtag,
            const double A,
            const double nu )
   : Expr::Expression<ValT>(),
-    a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
+    a_(A), nu_(nu)
 {
   this->set_gpu_runnable(true);
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-VelocityX<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-VelocityX<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
-
-  t_ = &fml.template field_ref<TimeField>( tTag_ );
+  
+  this->template create_field_request(xtag, x_);
+  this->template create_field_request(ytag, y_);
+  this->template create_field_request(ttag, t_);
 }
 
 //--------------------------------------------------------------------
@@ -79,7 +57,10 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= 1.0 - a_ * cos( 2.0*PI * *x_ - *t_ ) * sin( 2.0*PI * *y_ - *t_ ) * exp( -2.0 * nu_ * *t_ );
+  const ValT& x = x_->field_ref();
+  const ValT& y = y_->field_ref();
+  const TimeField& t = t_->field_ref();
+  phi <<= 1.0 - a_ * cos( 2.0*PI * x - t ) * sin( 2.0*PI * y - t ) * exp( -2.0 * nu_ * t );
 }
 
 //--------------------------------------------------------------------
@@ -124,35 +105,13 @@ VelocityY( const Expr::Tag& xtag,
            const double A,
            const double nu )
   : Expr::Expression<ValT>(),
-    a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
+    a_(A), nu_(nu)
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-VelocityY<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-VelocityY<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
-
-  t_ = &fml.template field_ref<TimeField>( tTag_ );
+  
+  this->template create_field_request(xtag, x_);
+  this->template create_field_request(ytag, y_);
+  this->template create_field_request(ttag, t_);
 }
 
 //--------------------------------------------------------------------
@@ -164,7 +123,10 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= 1.0 + a_ * sin( 2.0*PI * *x_ - *t_ ) * cos( 2.0*PI * *y_ - *t_ ) * exp( -2.0*nu_ * *t_ );
+  const ValT& x = x_->field_ref();
+  const ValT& y = y_->field_ref();
+  const TimeField& t = t_->field_ref();
+  phi <<= 1.0 + a_ * sin( 2.0*PI * x - t ) * cos( 2.0*PI * y - t ) * exp( -2.0*nu_ * t );
 }
 
 //--------------------------------------------------------------------
@@ -209,35 +171,12 @@ GradPX( const Expr::Tag& xtag,
         const double A,
         const double nu )
   : Expr::Expression<ValT>(),
-    a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
+    a_(A), nu_(nu)
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-GradPX<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-GradPX<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
-
-  t_ = &fml.template field_ref<TimeField>( tTag_ );
+  this->template create_field_request(xtag,x_);
+  this->template create_field_request(ytag,y_);
+  this->template create_field_request(ttag,t_);
 }
 
 //--------------------------------------------------------------------
@@ -249,7 +188,10 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*( 2.0*PI * *x_ - *t_ ) ) * exp( -4.0*nu_ * *t_ );
+  const ValT& x = x_->field_ref();
+  const ValT& y = y_->field_ref();
+  const TimeField& t = t_->field_ref();
+  phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*( 2.0*PI * x - t ) ) * exp( -4.0*nu_ * t );
 }
 
 //--------------------------------------------------------------------
@@ -294,35 +236,12 @@ GradPY( const Expr::Tag& xtag,
         const double A,
         const double nu )
   : Expr::Expression<ValT>(),
-    a_(A), nu_(nu), xTag_( xtag ), yTag_( ytag ), tTag_( ttag )
+    a_(A), nu_(nu)
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-GradPY<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-GradPY<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
-
-  t_ = &fml.template field_ref<TimeField>( tTag_ );
+  this->template create_field_request(xtag,x_);
+  this->template create_field_request(ytag,y_);
+  this->template create_field_request(ttag,t_);
 }
 
 //--------------------------------------------------------------------
@@ -334,7 +253,10 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*(2.0*PI * *y_-*t_) ) * exp(-4.0 * nu_ * *t_);
+  const ValT& x = x_->field_ref();
+  const ValT& y = y_->field_ref();
+  const TimeField& t = t_->field_ref();
+  phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*(2.0*PI * y- t) ) * exp(-4.0 * nu_ * t);
 }
 
 //--------------------------------------------------------------------
@@ -378,34 +300,12 @@ TaylorGreenVel3D( const Expr::Tag& xtag,
                   const Expr::Tag& ztag,
                   const double angle )
 : Expr::Expression<ValT>(),
-  angle_(angle), xTag_( xtag ), yTag_( ytag ), zTag_( ztag )
+  angle_(angle)
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-TaylorGreenVel3D<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( zTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-TaylorGreenVel3D<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ValT>::type& fm = fml.template field_manager<ValT>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
-  z_ = &fm.field_ref( zTag_ );
+  this->template create_field_request(xtag, x_);
+  this->template create_field_request(ytag, y_);
+  this->template create_field_request(ztag, z_);
 }
 
 //--------------------------------------------------------------------
@@ -417,7 +317,10 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= (2/sqrt(3.0))*sin(angle_) * sin(2.0*PI * *x_) * cos( 2.0*PI * *y_ ) * cos(2.0*PI * *z_);
+  const ValT& x = x_->field_ref();
+  const ValT& y = y_->field_ref();
+  const ValT& z = z_->field_ref();
+  phi <<= (2/sqrt(3.0))*sin(angle_) * sin(2.0*PI * x) * cos( 2.0*PI * y ) * cos(2.0*PI * z);
 }
 
 //--------------------------------------------------------------------

@@ -38,10 +38,10 @@
 template< typename SrcT, typename DestT >
 InterpolateExpression<SrcT, DestT>::
 InterpolateExpression( const Expr::Tag& srctag )
-: Expr::Expression<DestT>(),
-  srct_( srctag )
+: Expr::Expression<DestT>()
 {
   this->set_gpu_runnable( true );
+  this->template create_field_request(srctag, src_);
 }
 
 //--------------------------------------------------------------------
@@ -56,29 +56,9 @@ InterpolateExpression<SrcT, DestT>::
 template< typename SrcT, typename DestT >
 void
 InterpolateExpression<SrcT, DestT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( srct_ != Expr::Tag() )   exprDeps.requires_expression( srct_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename SrcT, typename DestT >
-void
-InterpolateExpression<SrcT, DestT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  if( srct_ != Expr::Tag() )  src_ = &fml.template field_ref<SrcT>( srct_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename SrcT, typename DestT >
-void
-InterpolateExpression<SrcT, DestT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( srct_ != Expr::Tag() ) interpSrcT2DestTOp_ = opDB.retrieve_operator<InterpSrcT2DestT>();
+  interpSrcT2DestTOp_ = opDB.retrieve_operator<InterpSrcT2DestT>();
 }
 
 //--------------------------------------------------------------------
@@ -90,7 +70,8 @@ evaluate()
 {
   using SpatialOps::operator<<=;
   DestT& destResult = this->value();
-  destResult <<= (*interpSrcT2DestTOp_)( *src_ );
+  const SrcT& src = src_->field_ref();
+  destResult <<= (*interpSrcT2DestTOp_)( src );
 }
 
 //--------------------------------------------------------------------
@@ -179,12 +160,14 @@ InterpolateParticleExpression<DestT>::
 InterpolateParticleExpression( const Expr::Tag& srctag,
                               const Expr::Tag& particleSizeTag,
                               const Expr::TagList& particlePositionTags)
-: Expr::Expression<DestT>(),
-srct_( srctag ),
-pSizeTag_(particleSizeTag),
-pPosTags_(particlePositionTags)
+: Expr::Expression<DestT>()
 {
-  this->set_gpu_runnable( true );
+  this->set_gpu_runnable( false );
+  this->template create_field_request(srctag, src_);
+  this->template create_field_request(particleSizeTag, psize_);
+  this->template create_field_request(particlePositionTags[0], px_);
+  this->template create_field_request(particlePositionTags[1], py_);
+  this->template create_field_request(particlePositionTags[2], pz_);
 }
 
 //--------------------------------------------------------------------
@@ -193,33 +176,6 @@ template< typename DestT >
 InterpolateParticleExpression<DestT>::
 ~InterpolateParticleExpression()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename DestT >
-void
-InterpolateParticleExpression<DestT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( srct_ != Expr::Tag() )   exprDeps.requires_expression( srct_ );
-  exprDeps.requires_expression( pSizeTag_ );
-  exprDeps.requires_expression( pPosTags_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename DestT >
-void
-InterpolateParticleExpression<DestT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.template field_manager<ParticleField>();
-  src_ = &pfm.field_ref( srct_ );
-  psize_ = &pfm.field_ref( pSizeTag_ );
-  px_ = &pfm.field_ref( pPosTags_[0] );
-  py_ = &pfm.field_ref( pPosTags_[1] );
-  pz_ = &pfm.field_ref( pPosTags_[2] );
-}
 
 //--------------------------------------------------------------------
 
@@ -240,15 +196,21 @@ InterpolateParticleExpression<DestT>::
 evaluate()
 {
   using namespace SpatialOps;
-  
   DestT& result = this->value();
+  
+  const ParticleField& px = px_->field_ref();
+  const ParticleField& py = py_->field_ref();
+  const ParticleField& pz = pz_->field_ref();
+  const ParticleField& psize = psize_->field_ref();
+  const ParticleField& src = src_->field_ref();
+  
   SpatFldPtr<DestT> nParticlesPerCell = SpatialFieldStore::get<DestT>( result );
   *nParticlesPerCell <<= 0.0;
-  pPerCellOp_->set_coordinate_information( px_,py_,pz_, psize_ );
+  pPerCellOp_->set_coordinate_information( &px,&py,&pz,&psize );
   pPerCellOp_->apply_to_field( *nParticlesPerCell );
   
-  p2CellOp_->set_coordinate_information( px_,py_,pz_, psize_ );
-  p2CellOp_->apply_to_field( *src_, result );
+  p2CellOp_->set_coordinate_information( &px,&py,&pz,&psize );
+  p2CellOp_->apply_to_field( src, result );
   result <<= cond( *nParticlesPerCell > 0.0, result/ *nParticlesPerCell )
                  ( result );
 }

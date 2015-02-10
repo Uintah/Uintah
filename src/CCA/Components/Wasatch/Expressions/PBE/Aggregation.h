@@ -28,10 +28,13 @@
 #include <expression/Expression.h>
 #include <boost/foreach.hpp>
 
-#define ri *abscissae_[i]
-#define rj *abscissae_[j]
-#define wi *weights_[i]
-#define wj *weights_[j]
+#ifndef QMOM_MACROS
+#define QMOM_MACROS
+#define ri abscissae_[i]->field_ref()
+#define rj abscissae_[j]->field_ref()
+#define wi weights_[i]->field_ref()
+#define wj weights_[j]->field_ref()
+#endif
 
 /**
  *  \class Aggregation
@@ -53,20 +56,25 @@ public:
   enum AggregationModel { CONSTANT, BROWNIAN, HYDRODYNAMIC };
   
 private:  
-  const Expr::TagList weightsTagList_; // these are the tags of all weights
-  const Expr::TagList abscissaeTagList_; // these are the tags of all abscissae
-  const Expr::TagList efficiencyTagList_; //tags for collison efficiencies
-  const Expr::Tag aggCoefTag_;    //optional coefficent which contaisn fluid properties
+//  const Expr::TagList weightsTagList_; // these are the tags of all weights
+//  const Expr::TagList abscissaeTagList_; // these are the tags of all abscissae
+//  const Expr::TagList efficiencyTagList_; //tags for collison efficiencies
+//  const Expr::Tag aggCoefTag_;    //optional coefficent which contain fluid properties
   const double momentOrder_;      // order of this moment
   const double effCoef_;          //efficiency coefficient of frequency
   const AggregationModel aggType_;   //enum for aggregation type
-  const bool useEffTags_;         //boolean to use efficiency tags
+  const bool useEffTags_, hasAggCoef_;         //boolean to use efficiency tags
   
-  typedef std::vector<const FieldT*> FieldVec;
-  FieldVec weights_;
-  FieldVec abscissae_;
-  FieldVec efficiency_;
-  const FieldT* aggCoef_;
+//  typedef std::vector<const FieldT*> FieldVec;
+//  FieldVec weights_;
+//  FieldVec abscissae_;
+//  FieldVec efficiency_;
+//  const FieldT* aggCoef_;
+  
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, efficiency_);
+  DECLARE_FIELD(FieldT, aggCoef_);
   
   Aggregation( const Expr::TagList& weightsTagList,
                const Expr::TagList& abscissaeTagList,
@@ -118,9 +126,6 @@ public:
   };
   
   ~Aggregation();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -145,16 +150,17 @@ Aggregation( const Expr::TagList& weightsTagList,
              const AggregationModel& aggType,
              const bool useEffTags)
 : Expr::Expression<FieldT>(),
-  weightsTagList_(weightsTagList),
-  abscissaeTagList_(abscissaeTagList),
-  efficiencyTagList_(efficiencyTagList),
-  aggCoefTag_(aggCoefTag),
   momentOrder_(momentOrder),
   effCoef_(effCoef),
   aggType_(aggType),
-  useEffTags_(useEffTags)
+  useEffTags_(useEffTags),
+  hasAggCoef_(aggCoefTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  this->template create_field_vector_request(weightsTagList, weights_);
+  this->template create_field_vector_request(abscissaeTagList, abscissae_);
+  if (useEffTags_) this->template create_field_vector_request(efficiencyTagList, efficiency_);
+  if (hasAggCoef_) this->template create_field_request(aggCoefTag, aggCoef_);
 }
 
 //--------------------------------------------------------------------
@@ -163,47 +169,6 @@ template< typename FieldT >
 Aggregation<FieldT>::
 ~Aggregation()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Aggregation<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( weightsTagList_ );
-  exprDeps.requires_expression( abscissaeTagList_ );
-  if ( aggCoefTag_ != Expr::Tag () ) 
-    exprDeps.requires_expression( aggCoefTag_ );
-  if ( useEffTags_ )
-    exprDeps.requires_expression( efficiencyTagList_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Aggregation<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& volfm = fml.template field_manager<FieldT>();
-  weights_.clear();
-  abscissae_.clear();
-  efficiency_.clear();
-  for( typename Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); ++iweight ){
-    weights_.push_back(&volfm.field_ref(*iweight));
-  }
-  for( typename Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); ++iabscissa){
-    abscissae_.push_back(&volfm.field_ref(*iabscissa));
-  }
-  if( aggCoefTag_ != Expr::Tag() )
-    aggCoef_ = &volfm.field_ref(aggCoefTag_) ;
-  if( useEffTags_ ){
-    for( typename Expr::TagList::const_iterator iefficiency=efficiencyTagList_.begin(); iefficiency!=efficiencyTagList_.end(); ++iefficiency){
-      efficiency_.push_back(&volfm.field_ref(*iefficiency));
-    }
-  }
-}
 
 //--------------------------------------------------------------------
 
@@ -226,7 +191,7 @@ evaluate()
         for( int i=0; i<nEnv; i++ ){
           for( int j =0 ; j<nEnv; j++ ){
             *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 ) - pow( ri, momentOrder_ ) * wi*wj;
-            if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
+            if( useEffTags_ ) *tmp <<= efficiency_[i*nEnv + j]->field_ref() * *tmp;
             result <<= result + *tmp;
           }
         }
@@ -234,7 +199,7 @@ evaluate()
         for( int i=0; i<nEnv; i++ ){
           for( int j =0 ; j<nEnv; j++ ){
             *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj) / (ri*rj) - pow( ri, momentOrder_ ) * wi*wj * (ri+rj) * (ri+rj) / (ri*rj);
-            if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
+            if( useEffTags_ ) *tmp <<= efficiency_[i*nEnv + j]->field_ref() * *tmp;
             result <<= result + *tmp;
           }
         }
@@ -243,7 +208,7 @@ evaluate()
         for( int i=0; i<nEnv; i++ ){
           for( int j =0 ; j<nEnv; j++ ){
             *tmp <<= 0.5 * wi*wj * pow( ri*ri*ri + rj*rj*rj, momentOrder_/3.0 )* (ri+rj) * (ri+rj)* (ri+rj) - pow( ri, momentOrder_ ) * wi*wj* (ri+rj) * (ri+rj)* (ri+rj);
-            if( useEffTags_ ) *tmp <<= *efficiency_[i*nEnv + j] * *tmp;
+            if( useEffTags_ ) *tmp <<= efficiency_[i*nEnv + j]->field_ref() * *tmp;
             result <<= result + *tmp;
           }
         }
@@ -258,8 +223,8 @@ evaluate()
 
   result <<= effCoef_ * result;
 
-  if ( aggCoefTag_ != Expr::Tag () )
-    result <<= result * *aggCoef_;  
+  if ( hasAggCoef_ )
+    result <<= result * aggCoef_->field_ref();
 }
 
 #endif // Aggregation_Expr_h

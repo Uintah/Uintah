@@ -54,12 +54,10 @@ template< typename DestT >
 class AreaFraction
 : public Expr::Expression<DestT>
 {
-  const Expr::Tag srct_;
-  
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, DestT >::type InpterpSrcT2DestT;
   
-  const SVolField* src_;
-  
+  DECLARE_FIELD(SVolField, src_);
+  const bool valid_;
   const InpterpSrcT2DestT* interpSrcT2DestTOp_;
   
   AreaFraction( const Expr::Tag& srctag );
@@ -84,8 +82,6 @@ public:
   
   ~AreaFraction();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
@@ -95,9 +91,11 @@ template< typename DestT >
 AreaFraction<DestT>::
 AreaFraction( const Expr::Tag& srctag )
 : Expr::Expression<DestT>(),
-  srct_( srctag )
+valid_(srctag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  
+  if (valid_) this->template create_field_request(srctag, src_);
 }
 
 //--------------------------------------------------------------------
@@ -112,30 +110,9 @@ AreaFraction<DestT>::
 template<typename DestT >
 void
 AreaFraction<DestT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( srct_ != Expr::Tag() )   exprDeps.requires_expression( srct_ );
-}
-
-//--------------------------------------------------------------------
-
-template<typename DestT >
-void
-AreaFraction<DestT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  if( srct_ != Expr::Tag() )  src_ = &fml.template field_ref<SVolField>( srct_ );
-}
-
-//--------------------------------------------------------------------
-
-template<typename DestT >
-void
-AreaFraction<DestT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( srct_ != Expr::Tag() )
-    interpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
+  if( valid_ ) interpSrcT2DestTOp_ = opDB.retrieve_operator<InpterpSrcT2DestT>();
 }
 
 //--------------------------------------------------------------------
@@ -147,9 +124,11 @@ evaluate()
 {
   using namespace SpatialOps;
   using SpatialOps::operator<<=;
+  if (!valid_) return;
+  const SVolField& src = src_->field_ref();
   DestT& destResult = this->value();
   destResult <<= 1.0; // this will ensure that the boundaries have an area fraction of 1.0. Wall BCs are NOT handled by volume fractions rather by the BCHelperTools.
-  destResult <<= cond ( (*interpSrcT2DestTOp_)(*src_) < 1.0, 0.0 )
+  destResult <<= cond ( (*interpSrcT2DestTOp_)(src) < 1.0, 0.0 )
                       ( 1.0 );
 }
 

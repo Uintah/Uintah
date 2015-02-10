@@ -68,8 +68,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -80,10 +78,9 @@ private:
              const double A,
              const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  
+  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELD(TimeField, t_);
 };
 
 //====================================================================
@@ -128,8 +125,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -140,10 +135,8 @@ private:
              const double A,
              const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELD(TimeField, t_);
 };
 
 //====================================================================
@@ -192,8 +185,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -204,10 +195,8 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELD(TimeField, t_);
 };
 
 //====================================================================
@@ -256,8 +245,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -268,10 +255,8 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(ValT, x_, y_);
+  DECLARE_FIELD(TimeField, t_);
 };
 
 /**
@@ -323,8 +308,6 @@ public:
     const Expr::Tag xt_, yt_, zt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -334,10 +317,7 @@ private:
                     const Expr::Tag& zTag,
                     const double angle );
   const double angle_;
-  const Expr::Tag xTag_, yTag_, zTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const ValT* z_;
+  DECLARE_FIELDS(ValT, x_, y_, z_);
 };
 
 //====================================================================

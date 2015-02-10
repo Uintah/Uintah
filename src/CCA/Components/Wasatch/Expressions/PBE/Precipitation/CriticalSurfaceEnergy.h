@@ -48,10 +48,9 @@ class CriticalSurfaceEnergy
 : public Expr::Expression<FieldT>
 {
   /* declare private variables such as fields, operators, etc. here */
-  const Expr::Tag superSatTag_;
   const double bulkSurfaceEnergy_;
   const double sqrtCoef_;
-  const FieldT* superSat_; //field from table of supersaturation
+  DECLARE_FIELD(FieldT, superSat_); //field from table of supersaturation
 
   CriticalSurfaceEnergy( const Expr::Tag& superSatTag,
                          const double bulkSurfaceEnergy_,
@@ -86,8 +85,6 @@ public:
   
   ~CriticalSurfaceEnergy();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -104,11 +101,11 @@ CriticalSurfaceEnergy( const Expr::Tag& superSatTag,
                        const double bulkSurfaceEnergy,
                        const double sqrtCoef)
 : Expr::Expression<FieldT>(),
-  superSatTag_(superSatTag),
   bulkSurfaceEnergy_(bulkSurfaceEnergy),
   sqrtCoef_(sqrtCoef)
 {
   this->set_gpu_runnable( true );
+  this->template create_field_request(superSatTag, superSat_);
 }
 
 //--------------------------------------------------------------------
@@ -123,31 +120,12 @@ CriticalSurfaceEnergy<FieldT>::
 template< typename FieldT >
 void
 CriticalSurfaceEnergy<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-CriticalSurfaceEnergy<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-CriticalSurfaceEnergy<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= cond( *superSat_ > 1.0, (bulkSurfaceEnergy_ + sqrt(bulkSurfaceEnergy_*bulkSurfaceEnergy_ - sqrtCoef_ * log(*superSat_)) )*0.5 )
+  const FieldT& S = superSat_->field_ref();
+  result <<= cond( S > 1.0, (bulkSurfaceEnergy_ + sqrt(bulkSurfaceEnergy_*bulkSurfaceEnergy_ - sqrtCoef_ * log(S)) )*0.5 )
                  ( bulkSurfaceEnergy_ ); //make equal to bulk
 }
 

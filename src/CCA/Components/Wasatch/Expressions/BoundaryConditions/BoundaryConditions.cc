@@ -126,8 +126,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
-  
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     
     std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
@@ -164,12 +163,12 @@ evaluate()
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
     std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-      for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii){
+    for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
       f(*ii) = bcValue_ ;
-        f(*ig) = bcValue_;
-      }
-      }
+      f(*ig) = bcValue_ ;
     }
+  }
+}
 
 // ###################################################################
 
@@ -181,22 +180,23 @@ evaluate()
   using namespace SpatialOps;
   
   FieldT& f = this->value();
+  const FieldT& x = x_->field_ref();
   
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     if( this->isStaggered_ ){
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
+      std::vector<IntVec> maskPoints;
+      this->build_mask_points(maskPoints);
       const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, a_ * *x_ + b_ )
+      f <<= cond( mask, a_ * x + b_ )
                 ( f                   );
-      }
+    }
     else{
       const double ci = this->ci_;
       const double cg = this->cg_;
       std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
       std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
-        f(*ig) = ( ( a_ * (*x_)(*ig) + b_ ) - ci*f(*ii) ) / cg;
+        f(*ig) = ( ( a_ * x(*ig) + b_ ) - ci*f(*ii) ) / cg;
       }
     }
   }
@@ -211,23 +211,23 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
-  
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+  const FieldT& x = x_->field_ref();
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     if( this->isStaggered_ ){
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
+      std::vector<IntVec> maskPoints;
+      this->build_mask_points(maskPoints);
       const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, a_ * (*x_ - x0_)*(*x_ - x0_) + b_ * (*x_ - x0_) + c_ )
-                (f );
-      }
+      f <<= cond( mask, a_ * (x - x0_)*(x - x0_) + b_ * (x - x0_) + c_ )
+                ( f );
+    }
     else{
       const double ci = this->ci_;
       const double cg = this->cg_;
       std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
       std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
-        const double x = (*x_)(*ig) - x0_;
-        f(*ig) = ( (a_ * x*x + b_ * x + c_) - ci*f(*ii) ) / cg;
+        const double xp = x(*ig) - x0_;
+        f(*ig) = ( (a_ * xp*xp + b_ * xp + c_) - ci*f(*ii) ) / cg;
       }
     }
   }
@@ -242,22 +242,22 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
-  
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+  const FieldT& x = x_->field_ref();
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     if(this->isStaggered_) {
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
+      std::vector<IntVec> maskPoints;
+      this->build_mask_points(maskPoints);
       const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, phic_ * pow( 1.0 - abs(*x_ - x0_) / R_ , 1.0/n_ ) )
-                (f                   );
-      }
+      f <<= cond( mask, phic_ * pow( 1.0 - abs(x - x0_) / R_ , 1.0/n_ ) )
+                ( f );
+    }
     else{
       const double ci = this->ci_;
       const double cg = this->cg_;
       std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
       std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
-        const double bcVal = phic_ * std::pow( 1.0 - std::fabs( (*x_)(*ig) - x0_ ) / R_ , 1.0/n_ );
+        const double bcVal = phic_ * std::pow( 1.0 - std::fabs( x(*ig) - x0_ ) / R_ , 1.0/n_ );
         f(*ig) = ( bcVal - ci*f(*ii) ) / cg;
       }
     }
@@ -273,21 +273,22 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
-  if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+  const FieldT& src = src_->field_ref();
+  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<IntVec> maskPoints;
     this->build_mask_points(maskPoints);
-    if (this->isStaggered_) {
+    if( this->isStaggered_ ){
       const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, *src_)
-                (f           );
-      }
+      f <<= cond( mask, src  )
+                ( f          );
+    }
     else{
       const SpatialMask<FieldT> mask(f, * this->neboGhostPts_);
-      f <<= cond( mask, *src_)
-                (f           );
-      }
+      f <<= cond( mask,  src )
+                ( f          );
     }
-  }
+  }  
+}
 
 // ###################################################################
 
@@ -297,29 +298,38 @@ BCPrimVar<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  FieldT& f = this->value();
+  FieldT& f = this->value();  
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
+    const FieldT& src = src_->field_ref();
+
     std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
     if (this->isStaggered_) {
-      if (densityTag_ == Expr::Tag() ) {
+      if (!hasDensity_) {
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
-          f(*ig) = (*src_)(*ig);
-          f(*ii) = (*src_)(*ii);
-          
+          f(*ig) = src(*ig);
+          f(*ii) = src(*ii);
         }
       } else {
+        const SVolField& rho = rho_->field_ref();
         SpatialOps::IntVec offset = this->isMinusFace_ ? IntVec(0,0,0) : this->bndNormal_;
         for( ; ii != (this->vecInteriorPts_)->end(); ++ig, ++ii ){
-          const double avrho = ((*rho_)(*ig - offset) + (*rho_)(*ii - offset))/2.0;
-          f(*ig) = avrho * (*src_)(*ig);
-          f(*ii) = avrho * (*src_)(*ii);
+          const double avrho = ( rho(*ig - offset) + rho(*ii - offset) )/2.0;
+          f(*ig) = avrho * src(*ig);
+          f(*ii) = avrho * src(*ii);
         }
       }
     } else {
+      if (hasDensity_) {
+        const SVolField& rho = rho_->field_ref();
+        for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
+          f(*ig) = rho(*ig) * src(*ig);
+        }
+      } else {
       for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
         //const double avrho = ((*rho_)(*ig) + (*rho_)(*ig + offset))/2.0;
-        f(*ig) = (*rho_)(*ig) * (*src_)(*ig);
+        f(*ig) = src(*ig);
+      }
       }
     }
   }
@@ -328,12 +338,12 @@ evaluate()
 // ###################################################################
 // EXPLICIT INSTANTIATION
 #include <CCA/Components/Wasatch/FieldTypes.h>
-#define INSTANTIATE_BC_PROFILES(VOLT) \
-template class ConstantBC<VOLT>;      \
+#define INSTANTIATE_BC_PROFILES(VOLT)       \
+template class ConstantBC         <VOLT>;   \
 template class OneSidedDirichletBC<VOLT>;   \
-template class LinearBC<VOLT>;        \
-template class ParabolicBC<VOLT>;     \
-template class PowerLawBC<VOLT>;     \
+template class LinearBC           <VOLT>;   \
+template class ParabolicBC        <VOLT>;   \
+template class PowerLawBC         <VOLT>;   \
 template class BCCopier<VOLT>;\
 template class BCPrimVar<VOLT>;
 INSTANTIATE_BC_PROFILES(SVolField)

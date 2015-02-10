@@ -45,12 +45,13 @@ template< typename FieldT >
 class CylindricalDiffusionCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag superSatTag_, eqConcTag_, sBarTag_;
   const double growthCoefVal_;
   const double sMin_;
-  const FieldT* superSat_; //field from table of supersaturation
-  const FieldT* eqConc_;   //field from table of equilibrium concentration
-  const FieldT* sBar_;     //S bar calculatino for ostwald ripening
+  const bool doSBar_;
+//  const FieldT* superSat_; //field from table of supersaturation
+//  const FieldT* eqConc_;   //field from table of equilibrium concentration
+//  const FieldT* sBar_;     //S bar calculatino for ostwald ripening
+  DECLARE_FIELDS(FieldT, superSat_, eqConc_, sBar_);
   
   CylindricalDiffusionCoefficient( const Expr::Tag& superSatTag,
                                    const Expr::Tag& eqConcTag,
@@ -89,9 +90,6 @@ public:
   };
   
   ~CylindricalDiffusionCoefficient();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -111,13 +109,14 @@ CylindricalDiffusionCoefficient( const Expr::Tag& superSatTag,
                                  const double growthCoefVal,
                                  const double sMin)
 : Expr::Expression<FieldT>(),
-  superSatTag_  (superSatTag),
-  eqConcTag_    (eqConcTag),
-  sBarTag_      (sBarTag),
   growthCoefVal_(growthCoefVal),
-  sMin_         (sMin)
+  sMin_         (sMin),
+  doSBar_(sBarTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  this->template create_field_request(superSatTag, superSat_);
+  this->template create_field_request(eqConcTag, eqConc_);
+  if (doSBar_) this->template create_field_request(sBarTag, sBar_);
 }
 
 //--------------------------------------------------------------------
@@ -128,33 +127,6 @@ CylindricalDiffusionCoefficient<FieldT>::
 {}
 
 //--------------------------------------------------------------------
- 
-template< typename FieldT >
-void
-CylindricalDiffusionCoefficient<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-  exprDeps.requires_expression( eqConcTag_ );
-  if ( sBarTag_ != Expr::Tag() )
-    exprDeps.requires_expression( sBarTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-CylindricalDiffusionCoefficient<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  superSat_ = &fm.field_ref( superSatTag_ );
-  eqConc_   = &fm.field_ref( eqConcTag_   );
-  if ( sBarTag_ != Expr::Tag() )
-    sBar_ = &fm.field_ref( sBarTag_ );
-}
-
-//--------------------------------------------------------------------
 
 template< typename FieldT >
 void
@@ -163,11 +135,14 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  if ( sBarTag_ != Expr::Tag() ) {
-    result <<= cond( *superSat_ > sMin_, growthCoefVal_ * *eqConc_ * ( *sBar_ - *superSat_ ) )
+  const FieldT& S = superSat_->field_ref();
+  const FieldT& eqConc = eqConc_->field_ref();
+  if ( doSBar_ ) {
+    const FieldT& sBar = sBar_->field_ref();
+    result <<= cond( S > sMin_, growthCoefVal_ * eqConc * ( sBar - S ) )
                    (0.0);
   } else {
-    result <<= cond( *superSat_ > sMin_, growthCoefVal_ * *eqConc_ * ( 1.0 - *superSat_ ) )
+    result <<= cond( S > sMin_, growthCoefVal_ * eqConc * ( 1.0 - S ) )
                    (0.0);
   }
 }

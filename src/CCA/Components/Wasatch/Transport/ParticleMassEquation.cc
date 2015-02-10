@@ -42,43 +42,11 @@
 ParticleMassIC::
 ParticleMassIC( const Expr::Tag& pRhoTag,
                const Expr::Tag& pDiameterTag )
-: Expr::Expression<ParticleField>(),
-pRhoTag_( pRhoTag ),
-pDiameterTag_( pDiameterTag )
-{}
-
-//--------------------------------------------------------------------
-
-ParticleMassIC::
-~ParticleMassIC()
-{}
-
-//--------------------------------------------------------------------
-
-void
-ParticleMassIC::
-advertise_dependents( Expr::ExprDeps& exprDeps )
+: Expr::Expression<ParticleField>()
 {
-  exprDeps.requires_expression( pRhoTag_ );
-  exprDeps.requires_expression( pDiameterTag_ );
+  create_field_request(pRhoTag, pRho_);
+  create_field_request(pDiameterTag, pDiameter_);
 }
-
-//--------------------------------------------------------------------
-
-void
-ParticleMassIC::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  pRho_ = &fml.field_ref< ParticleField >( pRhoTag_ );
-  pDiameter_ = &fml.field_ref< ParticleField >( pDiameterTag_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleMassIC::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 
@@ -88,7 +56,9 @@ evaluate()
 {
   using namespace SpatialOps;
   ParticleField& result = this->value();
-  result <<= (PI/6.0) * *pRho_ * pow(*pDiameter_,3);
+  const ParticleField& pRho = pRho_->field_ref();
+  const ParticleField& pDiameter = pDiameter_->field_ref();
+  result <<= (PI/6.0) * pRho * pow(pDiameter,3);
 }
 
 //--------------------------------------------------------------------

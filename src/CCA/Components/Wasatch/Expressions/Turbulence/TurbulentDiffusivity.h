@@ -56,11 +56,9 @@ class TurbulentDiffusivity
  : public Expr::Expression<SVolField>
 {
   
-  const Expr::Tag tViscTag_, rhoTag_;
   const double tSchmidt_;
-
-  const SVolField *tVisc_, *rho_;
-
+  DECLARE_FIELDS(SVolField, tVisc_, rho_);
+  
   TurbulentDiffusivity( const Expr::Tag rhoTag,
                         const double    tSchmidt,
                         const Expr::Tag tViscTag );
@@ -99,11 +97,6 @@ public:
     const double tSc_;
   };
 
-  ~TurbulentDiffusivity();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };

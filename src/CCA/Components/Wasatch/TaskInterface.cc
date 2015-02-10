@@ -32,6 +32,7 @@
 
 //-- expression library includes --//
 #include <expression/ExprLib.h>
+#include <expression/FieldRequest.h>
 #include <expression/ExpressionTree.h>
 
 
@@ -555,14 +556,21 @@ namespace Wasatch{
     // augment newDWFields to include any fields that are a result of tree cleaving
     {
       for( Expr::ExpressionTree::ExprFieldMap::const_iterator imp=tree->field_map().begin(); imp!=tree->field_map().end(); ++imp ){
-        const Expr::FieldDeps::FldHelpers& fh = imp->second->field_helpers();
-        for( Expr::FieldDeps::FldHelpers::const_iterator ifld=fh.begin(); ifld!=fh.end(); ++ifld ){
-          const Expr::FieldDeps::FieldHelperBase& fhb = **ifld;
-          const Expr::Tag& tag = fhb.tag();
+        const Expr::TagList tags = imp->second->get_tags();
+        for (Expr::TagList::const_iterator iTag = tags.begin(); iTag != tags.end(); ++iTag) {
+          const Expr::Tag& tag = *iTag;
           if( factory.retrieve_expression( tag, patchID, true ).is_placeholder() ) continue;
           newDWFields.insert( tag );
         }
-      }
+//        const Expr::FieldDeps::FldHelpers& fh = imp->second->field_helpers();
+//        for( Expr::FieldDeps::FldHelpers::const_iterator ifld=fh.begin(); ifld!=fh.end(); ++ifld ){
+//          const Expr::FieldDeps::FieldHelperBase& fhb = **ifld;
+//          const Expr::Tag& tag = fhb.tag();
+//          if( factory.retrieve_expression( tag, patchID, true ).is_placeholder() ) continue;
+//          newDWFields.insert( tag );
+//        }
+//      }
+    }
     }
 
     add_fields_to_task( *task, *tree, *fml_, pss, mss, newDWFields, rkStage );
@@ -762,22 +770,24 @@ namespace Wasatch{
       TreePtr tree( scinew Expr::ExpressionTree(roots,factory,patchID,taskName) );
       const TreeList treeList = tree->split_tree();
 
+      const int rank = Uintah::Parallel::getMPIRank();
+      const bool writeTreeDetails = dbg_tasks_on;
+      if( treeList.size() > 1 ){
+        std::ostringstream fnam;
+        fnam << tree->name() << "_r_" << rank << "_p_" << ip << "_original.dot";
+        proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
+        std::ofstream fout( fnam.str().c_str() );
+        tree->write_tree(fout,false,writeTreeDetails);
+      }
+      BOOST_FOREACH( TreePtr tr, treeList ){
+        std::ostringstream fnam;
+        fnam << tr->name() << "_r_" << rank << "_p_" << ip << ".dot";
+        std::ofstream fout( fnam.str().c_str() );
+        tr->write_tree(fout,false,writeTreeDetails);
+      }
+
       // write out graph information.
-      if( Uintah::Parallel::getMPIRank() == 0 && ip == 0 ){
-        const bool writeTreeDetails = dbg_tasks_on;
-          if( treeList.size() > 1 ){
-            std::ostringstream fnam;
-            fnam << tree->name() << "_original.dot";
-            proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-            std::ofstream fout( fnam.str().c_str() );
-            tree->write_tree(fout,false,writeTreeDetails);
-          }
-          BOOST_FOREACH( TreePtr tr, treeList ){
-            std::ostringstream fnam;
-            fnam << tr->name() << ".dot";
-            std::ofstream fout( fnam.str().c_str() );
-            tr->write_tree(fout,false,writeTreeDetails);
-          }
+      if( Uintah::Parallel::getMPIRank() == 1 && ip == 0 ){
         }
 
       // Transpose the storage so that we have a vector with each entry in the

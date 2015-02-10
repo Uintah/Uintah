@@ -37,13 +37,15 @@ class QuadratureClosure
  : public Expr::Expression<FieldT>
 {
 
-  const Expr::TagList weightsTagList_; // these are the tags of all the known moments
-  const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
+//  const Expr::TagList weightsTagList_; // these are the tags of all the known moments
+//  const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
   const double momentOrder_; // order of this unclosed moment. this will be used int he quadrature
 
-  typedef std::vector<const FieldT*> FieldVec;
-  FieldVec weights_;
-  FieldVec abscissae_;
+//  typedef std::vector<const FieldT*> FieldVec;
+//  FieldVec weights_;
+//  FieldVec abscissae_;
 
   QuadratureClosure( const Expr::TagList& weightsTagList_,
                      const Expr::TagList& abscissaeTagList_,
@@ -76,13 +78,9 @@ public:
 
   ~QuadratureClosure();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };
-
-
 
 // ###################################################################
 //
@@ -90,19 +88,17 @@ public:
 //
 // ###################################################################
 
-
-
 template< typename FieldT >
 QuadratureClosure<FieldT>::
 QuadratureClosure( const Expr::TagList& weightsTagList,
                    const Expr::TagList& abscissaeTagList,
                    const double momentOrder )
   : Expr::Expression<FieldT>(),
-    weightsTagList_(weightsTagList),
-    abscissaeTagList_(abscissaeTagList),
     momentOrder_(momentOrder)
 {
   this->set_gpu_runnable( true );
+  this->template create_field_vector_request(weightsTagList, weights_);
+  this->template create_field_vector_request(abscissaeTagList, abscissae_);
 }
 
 //--------------------------------------------------------------------
@@ -117,45 +113,16 @@ QuadratureClosure<FieldT>::
 template< typename FieldT >
 void
 QuadratureClosure<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( weightsTagList_ );
-  exprDeps.requires_expression( abscissaeTagList_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-QuadratureClosure<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& volfm = fml.template field_manager<FieldT>();
-  weights_.clear();
-  abscissae_.clear();
-  for (Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); iweight++) {
-    weights_.push_back(&volfm.field_ref(*iweight));
-  }
-  for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
-    abscissae_.push_back(&volfm.field_ref(*iabscissa));
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-QuadratureClosure<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= 0.0;
-  typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
-  for( typename FieldVec::const_iterator weightsIterator=weights_.begin();
-       weightsIterator!=weights_.end();
-       ++weightsIterator, ++abscissaeIterator) {
-    result <<= result + (**weightsIterator) * pow(**abscissaeIterator,momentOrder_);
+  assert(abscissae_.size() == weights_.size());  
+  for (size_t i=0; i<abscissae_.size(); ++i) {
+    const FieldT& a = abscissae_[i]->field_ref();
+    const FieldT& w = weights_[i]->field_ref();
+    result <<= result + w * pow(a, momentOrder_);
   }
 }
 

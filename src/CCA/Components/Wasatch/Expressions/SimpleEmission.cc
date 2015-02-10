@@ -39,13 +39,14 @@ SimpleEmission( const Expr::Tag& temperatureTag,
                 const double envTemp,
                 const Expr::Tag& absCoefTag )
   : Expr::Expression<FieldT>(),
-    temperatureTag_( temperatureTag ),
-    envTempTag_    ( envTempTag     ),
-    absCoefTag_    ( absCoefTag     ),
     envTempValue_  ( envTemp        ),
     hasAbsCoef_     ( absCoefTag != Expr::Tag() ),
     hasConstEnvTemp_( envTempTag == Expr::Tag() )
-{}
+{
+  this->template create_field_request(temperatureTag, temperature_);
+  if(!hasConstEnvTemp_) this->template create_field_request(envTempTag, envTemp_);
+  if(hasAbsCoef_) this->template create_field_request(absCoefTag, absCoef_);
+}
 
 //--------------------------------------------------------------------
 
@@ -59,43 +60,21 @@ SimpleEmission<FieldT>::
 template< typename FieldT >
 void
 SimpleEmission<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( temperatureTag_ );
-  if(!hasConstEnvTemp_ ) exprDeps.requires_expression( envTempTag_ );
-  if( hasAbsCoef_      ) exprDeps.requires_expression( absCoefTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-SimpleEmission<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  temperature_ = &fm.field_ref( temperatureTag_ );
-  if(!hasConstEnvTemp_ ) envTemp_ = &fm.field_ref( envTempTag_ );
-  if( hasAbsCoef_      ) absCoef_ = &fm.field_ref( absCoefTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-SimpleEmission<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& divQ = this->value();
+  const FieldT& temperature = temperature_->field_ref();
+  
   const double sigma = 5.67037321e-8; // Stefan-Boltzmann constant, W/(m^2 K^4)
   if( hasConstEnvTemp_ ){
-    if( hasAbsCoef_ ) divQ <<= *absCoef_ * sigma * ( pow( *temperature_, 4 ) - pow( envTempValue_, 4 ) );
-    else              divQ <<=             sigma * ( pow( *temperature_, 4 ) - pow( envTempValue_, 4 ) );
+    if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * sigma * ( pow( temperature, 4 ) - pow( envTempValue_, 4 ) );
+    else              divQ <<=             sigma * ( pow( temperature, 4 ) - pow( envTempValue_, 4 ) );
   }
   else{
-    if( hasAbsCoef_ ) divQ <<= *absCoef_ * sigma * ( pow( *temperature_, 4 ) - pow( *envTemp_, 4 ) );
-    else              divQ <<=             sigma * ( pow( *temperature_, 4 ) - pow( *envTemp_, 4 ) );
+    const FieldT& envTemp = envTemp_->field_ref();
+    if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
+    else              divQ <<=             sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
   }
 }
 

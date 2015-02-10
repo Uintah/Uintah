@@ -23,7 +23,9 @@ Reduction( const Expr::Tag& resultTag,
                  srcTag,
                  get_reduction_name<ReductionOpT>(),
                  printVar )
-{}
+{
+  this->template create_field_request(srcTag, src_);
+}
 
 //--------------------------------------------------------------------
 
@@ -31,26 +33,6 @@ template< typename SrcFieldT, typename ReductionOpT >
 Reduction<SrcFieldT,ReductionOpT>::
 ~Reduction()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename SrcFieldT, typename ReductionOpT >
-void
-Reduction<SrcFieldT,ReductionOpT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( this->srcTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename SrcFieldT, typename ReductionOpT >
-void
-Reduction<SrcFieldT,ReductionOpT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  src_ = &fml.template field_ref<SrcFieldT>( this->srcTag_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -81,12 +63,14 @@ struct populate_result<SpatialOps::SingleValueField,ReductionOpT>{
   }
 };
 
+//--------------------------------------------------------------------
+
 template< typename SrcFieldT, typename ReductionOpT >
 void
 Reduction<SrcFieldT,ReductionOpT>::
 evaluate()
 {
-  populate_result<SrcFieldT,ReductionOpT>::doit( *src_, reductionName_, this->value() );
+  populate_result<SrcFieldT,ReductionOpT>::doit( src_->field_ref(), reductionName_, this->value() );
 }
 
 //--------------------------------------------------------------------

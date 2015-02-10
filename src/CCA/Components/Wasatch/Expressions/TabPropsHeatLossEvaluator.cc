@@ -35,11 +35,12 @@ TabPropsHeatLossEvaluator( const InterpT* const adEnthInterp,
                            const Expr::TagList& ivarNames )
   : Expr::Expression<FieldT>(),
     hlIx_( hlIx ),
-    indepVarNames_( ivarNames      ),
     enthEval_     ( enthInterp     ),
     adEnthEval_   ( adEnthInterp   ),
     sensEnthEval_ ( sensEnthInterp )
-{}
+{
+  this->template create_field_vector_request(ivarNames, indepVars_);
+}
 
 //--------------------------------------------------------------------
 
@@ -57,34 +58,6 @@ TabPropsHeatLossEvaluator<FieldT>::
 template< typename FieldT >
 void
 TabPropsHeatLossEvaluator<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  // we depend on expressions for each of the independent variables.
-  for( Expr::TagList::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
-    exprDeps.requires_expression( *inam );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TabPropsHeatLossEvaluator<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-
-  indepVars_.clear();
-  for( Expr::TagList::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
-    indepVars_.push_back( &fm.field_ref( *inam ) );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TabPropsHeatLossEvaluator<FieldT>::
 evaluate()
 {
   FieldT& heatLoss = this->value();
@@ -92,10 +65,11 @@ evaluate()
   typedef std::vector< typename FieldT::const_iterator > IVarIter;
   IVarIter ivarIters;
 
-  for( typename IndepVarVec::const_iterator i=indepVars_.begin(); i!=indepVars_.end(); ++i ){
-    ivarIters.push_back( (*i)->begin() );
+  for (size_t i=0; i<indepVars_.size(); ++i) {
+    const FieldT& iVar = indepVars_[i]->field_ref();
+    ivarIters.push_back( iVar.begin() );
   }
-
+  
   // loop over grid points.
   const typename FieldT::iterator ihle = heatLoss.end();
   for( typename FieldT::iterator ihl=heatLoss.begin(); ihl!=ihle; ++ihl ){
