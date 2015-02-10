@@ -851,8 +851,9 @@ DataArchive::restartInitialize(int index, const GridP& grid, DataWarehouse* dw,
 
   *pTime = times[index];
 
-  if (lb)
+  if( lb ) {
     lb->restartInitialize(this, index, timedata.d_tstop, timedata.d_tsurl, grid);
+  }
 
   // set here instead of the SimCont because we need the DW ID to be set 
   // before saving particle subsets
