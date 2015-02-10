@@ -479,14 +479,6 @@ namespace Wasatch{
             fieldInfo.useOldDataWarehouse = false;
         }
 
-#       ifdef WASATCH_IN_ARCHES
-        // this was needed for Warches. When adding a placeholder expression with STATE_N,
-        // we must use the newdw in the initialization task graph.
-        if( tree.name() == "initialization" && fieldTag.context() == Expr::STATE_DYNAMIC ){
-          fieldInfo.useOldDataWarehouse = false;
-        }
-#       endif // WASATCH_IN_ARCHES
-
         const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? Uintah::Task::OldDW : Uintah::Task::NewDW;
 
         switch( fieldInfo.mode ){

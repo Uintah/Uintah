@@ -491,12 +491,6 @@ SCI_ARG_ENABLE(wasatch_3p,
   [wasatch_3p="yes"],
   [wasatch_3p="no"])
 
-SCI_ARG_ENABLE(wasatch_in_arches,
-  AC_HELP_STRING(--enable-wasatch-in-arches,
-                 Turn on the use of Wasatch objects in the Arches component.),
-  [wasatch_in_arches="yes"],
-  [wasatch_in_arches="no"])
-
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
                  Build a statically linked version of Uintah.  Set to 'full' to force full static link.),
@@ -4283,24 +4277,6 @@ AC_SUBST(DEF_RADPROPS)
 AC_SUBST(INC_RADPROPS_H)
 AC_SUBST(RADPROPS_LIB_FLAG)
 AC_SUBST(RADPROPS_LIB_DIR_FLAG)
-
-##  --  Handle --enable-wasatch-in-arches --------------------------------
-
-BUILD_WASATCH_IN_ARCHES=no
-
-if test "$wasatch_in_arches" = "yes"; then
-   if test "$BUILD_WASATCH" = "no"; then
-      AC_MSG_ERROR( [--enable-wasatch-in-arches specified, but Wasatch component not enabled.] )
-   fi
-   if test "$BUILD_ARCHES" = "no"; then
-      AC_MSG_ERROR( [--enable-wasatch-in-arches specified, but Arches component not enabled.] )
-   fi
-
-   DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
-   BUILD_WASATCH_IN_ARCHES=yes
-fi
-AC_SUBST(DEF_WASATCH_IN_ARCHES)
-AC_SUBST(BUILD_WASATCH_IN_ARCHES)
 
 ##  --  Make sure Wasatch 3P is found if WASATCH or ARCHES is requested -------
 
