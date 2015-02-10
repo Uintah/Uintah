@@ -116,6 +116,10 @@ namespace Uintah {
     
     void schedFaceCenteredFlux(const LevelP& level,SchedulerP& sched,  const int RK_step);
     
+    void schedSecondOrderFaceFlux(const LevelP& level,SchedulerP& sched,  const int RK_step);
+    
+    void schedSecondOrderDissipativeFaceFlux(const LevelP& level,SchedulerP& sched,  const int RK_step);
+
     void schedDissipativeFaceFlux(const LevelP& level,SchedulerP& sched,  const int RK_step);
     
     void schedUpdateResidual(const LevelP& level,SchedulerP& sched,  const int RK_step);
@@ -150,8 +154,22 @@ namespace Uintah {
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw,
                           const int RK_step);
+ 
+   void secondOrderFaceFlux(const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const int RK_step);
 
     void dissipativeFaceFlux(const ProcessorGroup*,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
+                     DataWarehouse* new_dw,
+                     const int RK_step);
+
+    void secondOrderDissipativeFaceFlux(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
@@ -273,6 +291,7 @@ namespace Uintah {
     double d_EVIL_NUM;
     double d_SMALL_NUM;
     bool d_viscousFlow;
+    bool d_secondOrder;
     
     // For Runge-Kutta
     int d_RKSteps;                    // number or RK stages
