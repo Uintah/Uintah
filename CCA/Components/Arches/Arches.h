@@ -96,14 +96,6 @@ WARNING
 //
 // #define ExactMPMArchesInitialize
 
-
-# ifdef WASATCH_IN_ARCHES
-  #include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
-  namespace Wasatch{
-    class Wasatch;
-  }
-# endif // WASATCH_IN_ARCHES
-
 namespace Uintah {
 
   class TaskFactoryBase; 
@@ -307,15 +299,10 @@ private:
   /** @brief Registers all possible Property Models by instantiating a builder in the factory */
   void registerPropertyModels( ProblemSpecP& db );
 
-# ifdef WASATCH_IN_ARCHES
-  Wasatch::Wasatch* const d_wasatch;
-# endif // WASATCH_IN_ARCHES
-
   std::string d_whichTurbModel;
   bool d_mixedModel;
   bool d_with_mpmarches;
   bool d_extraProjection;
-  bool d_useWasatchMomRHS;
   double d_initial_dt; 
 
   ScaleSimilarityModel* d_scaleSimilarityModel;

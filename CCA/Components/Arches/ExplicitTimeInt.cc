@@ -92,39 +92,20 @@ void ExplicitTimeInt::sched_fe_update( SchedulerP& sched,
                                        const MaterialSet* matls, 
                                        std::vector<std::string> phi,
                                        std::vector<std::string> rhs, 
-                                       int rkstep, const bool wasatch_update )
+                                       int rkstep )
 {
   
-  Task* tsk = scinew Task("ExplicitTimeInt::fe_update", this, &ExplicitTimeInt::fe_update, phi, rhs, rkstep, wasatch_update);
+  Task* tsk = scinew Task("ExplicitTimeInt::fe_update", this, &ExplicitTimeInt::fe_update, phi, rhs, rkstep);
   Ghost::GhostType ghost_type = Ghost::None; 
   int n_extra = 0;
   
-  if (wasatch_update) {
-    ghost_type = Uintah::Ghost::AroundCells;
-    n_extra = 1;
-  }
-
   // phi
   for ( std::vector<std::string>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
 
-    const VarLabel* lab = VarLabel::find( *iter ); 
-
-    if ( wasatch_update && rkstep == 0 ){ 
-
-      tsk->computes( lab ); 
-
-    } else { 
-
-      tsk->modifies( lab ); 
-
-    }
-    if (wasatch_update) {
-      if (rkstep==0) tsk->requires( Task::OldDW, lab, ghost_type, n_extra ); 
-      else tsk->requires( Task::NewDW, lab, ghost_type, n_extra ); 
-    } else {
-      tsk->requires( Task::OldDW, lab, ghost_type, n_extra );
-    }
-
+    const VarLabel* lab = VarLabel::find( *iter );
+    
+    tsk->modifies( lab );
+    tsk->requires( Task::OldDW, lab, ghost_type, n_extra );
   } 
   // rhs
   for ( std::vector<std::string>::iterator iter = rhs.begin(); iter != rhs.end(); iter++ ){ 
@@ -148,7 +129,7 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
                                  DataWarehouse* new_dw, 
                                  std::vector<std::string> phi_tag, 
                                  std::vector<std::string> rhs_tag, 
-                                 int rkstep, const bool wasatch_update )
+                                 int rkstep )
 { 
   int N = phi_tag.size(); 
   for (int p = 0; p < patches->size(); p++) {
@@ -158,11 +139,6 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
     int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     Ghost::GhostType ghost_type = Ghost::None; 
     int n_extra = 0;
-    
-    if (wasatch_update) {
-      ghost_type = Uintah::Ghost::AroundCells;
-      n_extra = 1;
-    }    
     
     for ( int i = 0; i < N; i++){ 
 
@@ -174,12 +150,7 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
       const VarLabel* rhs_lab = VarLabel::find( rhs_tag[i] ); 
       old_dw->get( phi_old           , phi_lab , indx , patch , ghost_type, n_extra  );
       
-      if ( wasatch_update && rkstep == 0 ){ 
-        new_dw->allocateAndPut( phi , phi_lab , indx , patch, ghost_type, n_extra );
-        phi.copyData(phi_old);
-      } else { 
-        new_dw->getModifiable ( phi , phi_lab , indx , patch, ghost_type, n_extra  );
-      } 
+      new_dw->getModifiable ( phi , phi_lab , indx , patch, ghost_type, n_extra  );
 
       new_dw->get( rhs               , rhs_lab , indx , patch , ghost_type, n_extra  );
 
@@ -196,7 +167,7 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
                           phi, 
                           rhs, 
                           dt, curr_ssp_time, 
-                          eqn_name, wasatch_update);       
+                          eqn_name);
     } 
   }
 } 
@@ -208,16 +179,12 @@ void ExplicitTimeInt::sched_time_ave( SchedulerP& sched,
                                       const PatchSet* patches, 
                                       const MaterialSet* matls, 
                                       std::vector<std::string> phi,
-                                      int rkstep, const bool wasatch_update)
+                                      int rkstep)
 {
   
-  Task* tsk = scinew Task("ExplicitTimeInt::time_ave", this, &ExplicitTimeInt::time_ave, phi, rkstep, wasatch_update); 
+  Task* tsk = scinew Task("ExplicitTimeInt::time_ave", this, &ExplicitTimeInt::time_ave, phi, rkstep);
   Ghost::GhostType ghost_type = Ghost::None; 
   int extra_cells = 0;
-  if (wasatch_update) {
-    ghost_type = Uintah::Ghost::AroundCells;
-    extra_cells = 1;
-  }
 
   for ( std::vector<std::string>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
 
@@ -240,14 +207,10 @@ void ExplicitTimeInt::time_ave( const ProcessorGroup*,
                                 DataWarehouse* old_dw, 
                                 DataWarehouse* new_dw, 
                                 std::vector<std::string> phi_tag, 
-                                int rkstep, const bool wasatch_update  )
+                                int rkstep )
 { 
   Ghost::GhostType ghost_type = Ghost::None; 
   int extra_cells = 0;
-  if (wasatch_update) {
-    ghost_type = Uintah::Ghost::AroundCells;
-    extra_cells = 1;
-  }
   
   for (int p = 0; p < patches->size(); p++) {
 
@@ -277,59 +240,4 @@ void ExplicitTimeInt::time_ave( const ProcessorGroup*,
 
     } 
   }
-} 
-
-//---------------------------------------------------------------------------
-// Method: schedule dummy initialize for wasatch transported variables
-//---------------------------------------------------------------------------
-void ExplicitTimeInt::sched_dummy_init( SchedulerP& sched, 
-                                      const PatchSet* patches, 
-                                      const MaterialSet* matls, 
-                                      std::vector<std::string> phi )
-{
-  
-  Task* tsk = scinew Task("ExplicitTimeInt::dummy_init", this, &ExplicitTimeInt::dummy_init, phi);
-  Ghost::GhostType ghost_type = Uintah::Ghost::AroundCells; 
-  int n_extra = 1;
-
-  // phi
-  for ( std::vector<std::string>::iterator iter = phi.begin(); iter != phi.end(); iter++ ){ 
-    
-    const VarLabel* lab = VarLabel::find( *iter ); 
-    tsk->requires(Task::OldDW, lab, ghost_type, n_extra);       
-    tsk->computes( lab ); 
-  } 
-    
-  sched->addTask( tsk, patches, matls ); 
-  
-}
-
-void ExplicitTimeInt::dummy_init( const ProcessorGroup*, 
-                                const PatchSubset* patches, 
-                                const MaterialSubset* matls, 
-                                DataWarehouse* old_dw, 
-                                DataWarehouse* new_dw, 
-                                std::vector<std::string> phi_tag )
-{ 
-  int N = phi_tag.size(); 
-  for (int p = 0; p < patches->size(); p++) {
-    
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; 
-    int indx = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-    Ghost::GhostType ghost_type = Ghost::AroundCells; 
-    int n_extra = 1;
-        
-    for ( int i = 0; i < N; i++){ 
-      
-      CCVariable<double> phi; 
-      constCCVariable<double> phi_old; 
-      
-      const VarLabel* phi_lab = VarLabel::find( phi_tag[i] ); 
-      old_dw->get( phi_old           , phi_lab , indx , patch , ghost_type, n_extra  );
-      
-      new_dw->allocateAndPut( phi , phi_lab , indx , patch, ghost_type, n_extra );
-      phi.copyData(phi_old);
-    } 
-  }
-} 
+}  
