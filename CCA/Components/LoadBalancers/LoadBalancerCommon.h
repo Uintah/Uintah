@@ -26,9 +26,11 @@
 #define UINTAH_HOMEBREW_LoadBalancerCommon_H
 
 #include <CCA/Ports/LoadBalancer.h>
-#include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/SFC.h>
+
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/UintahParallelComponent.h>
 
 #include <set>
 #include <string>
@@ -130,12 +132,43 @@ public:
   virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { return d_levelPerProcPatchSets[level->getIndex()].get_rep(); }
   virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { return d_gridPerProcPatchSet.get_rep(); }
   virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) { return d_outputPatchSets[level->getIndex()].get_rep(); };
-  
+
+  //! Assigns the patches to the processors they ended up on in the previous
+  //! Simulation.  Returns true if we need to re-load balance (if we have a 
+  //! different number of procs than were saved to disk
+  virtual void restartInitialize(       DataArchive  * archive,
+                                        int            time_index,
+                                        ProblemSpecP & pspec,
+                                  const std::string  & tsurl,
+                                  const GridP        & grid );
+   
 private:
   LoadBalancerCommon(const LoadBalancerCommon&);
   LoadBalancerCommon& operator=(const LoadBalancerCommon&);
 
 protected:
+
+  // Calls space-filling curve on level, and stores results in pre-allocated output
+  void useSFC(const LevelP& level, int* output);
+    
+  double d_lastLbTime;
+
+  double d_lbInterval;
+  
+  bool   d_checkAfterRestart;
+
+  // The assignment vectors are stored 0-n.  This stores the start patch number so we can
+  // detect if something has gone wrong when we go to look up what proc a patch is on.
+  int    d_assignmentBasePatch;   
+  int    d_oldAssignmentBasePatch;
+
+  std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
+  std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
+  std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
+
+  SFC <double> d_sfc;
+  bool         d_doSpaceCurve;
+
   /// Creates a patchset of all patches that have work done on each processor.
   //    - There are two versions of this function.  The first works on a per level
   //      basis.  The second works on the entire grid and will provide a PatchSet

@@ -24,9 +24,11 @@
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
+#include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Ports/Scheduler.h>
 
+#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Patch.h>
@@ -53,8 +55,13 @@ extern SCIRun::Mutex cerrLock;
 DebugStream lbDebug( "LoadBalancer", false );
 DebugStream neiDebug("Neighborhood", false );
 
-LoadBalancerCommon::LoadBalancerCommon(const ProcessorGroup* myworld)
-   : UintahParallelComponent(myworld)
+// If defined, the space-filling curve will be computed in parallel,
+// this may not be a good idea because the time to compute the
+// space-filling curve is so small that it might not parallelize well.
+#define SFC_PARALLEL
+
+LoadBalancerCommon::LoadBalancerCommon( const ProcessorGroup * myworld ) :
+  UintahParallelComponent( myworld ), d_sfc( myworld )
 {
 }
 
@@ -158,7 +165,259 @@ LoadBalancerCommon::assignResources( DetailedTasks & graph )
   
 }
 
-bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, int state)
+void
+LoadBalancerCommon::useSFC( const LevelP & level, int * order )
+{
+  vector<DistributedIndex> indices; //output
+  vector<double> positions;
+
+  //this should be removed when dimensions in shared state is done
+  int dim=d_sharedState->getNumDims();
+  int *dimensions=d_sharedState->getActiveDims();
+
+  IntVector min_patch_size(INT_MAX,INT_MAX,INT_MAX);  
+
+  // get the overall range in all dimensions from all patches
+  IntVector high(INT_MIN,INT_MIN,INT_MIN);
+  IntVector low(INT_MAX,INT_MAX,INT_MAX);
+#ifdef SFC_PARALLEL 
+  vector<int> originalPatchCount(d_myworld->size(),0); //store how many patches each patch has originally
+#endif
+  for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+    const Patch* patch = *iter;
+   
+    //calculate patchset bounds
+    high = Max(high, patch->getCellHighIndex());
+    low = Min(low, patch->getCellLowIndex());
+    
+    //calculate minimum patch size
+    IntVector size=patch->getCellHighIndex()-patch->getCellLowIndex();
+    min_patch_size=min(min_patch_size,size);
+    
+    //create positions vector
+
+#ifdef SFC_PARALLEL
+    //place in long longs to avoid overflows with large numbers of patches and processors
+    long long pindex=patch->getLevelIndex();
+    long long num_patches=d_myworld->size();
+    long long proc = (pindex*num_patches) /(long long)level->numPatches();
+
+    ASSERTRANGE(proc,0,d_myworld->size());
+    if(d_myworld->myrank()==(int)proc) {
+      Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
+      for(int d=0;d<dim;d++) {
+        positions.push_back(point[dimensions[d]]);
+      }
+    }
+    originalPatchCount[proc]++;
+#else
+    Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
+    for(int d=0;d<dim;d++) {
+      positions.push_back(point[dimensions[d]]);
+    }
+#endif
+  }
+
+#ifdef SFC_PARALLEL
+  //compute patch starting locations
+  vector<int> originalPatchStart(d_myworld->size(),0);
+  for(int p=1;p<d_myworld->size();p++) {
+    originalPatchStart[p]=originalPatchStart[p-1]+originalPatchCount[p-1];
+  }
+#endif
+
+  // Patchset dimensions
+  IntVector range = high-low;
+  
+  // Center of patchset
+  Vector center = (high+low).asVector()/2.0;
+ 
+  double r[3]     = {(double)range[dimensions[0]], (double)range[dimensions[1]], (double)range[dimensions[2]]};
+  double c[3]     = {(double)center[dimensions[0]],(double)center[dimensions[1]], (double)center[dimensions[2]]};
+  double delta[3] = {(double)min_patch_size[dimensions[0]], (double)min_patch_size[dimensions[1]], (double)min_patch_size[dimensions[2]]};
+
+  // Create SFC
+  d_sfc.SetDimensions(r);
+  d_sfc.SetCenter(c);
+  d_sfc.SetRefinementsByDelta(delta); 
+  d_sfc.SetLocations(&positions);
+  d_sfc.SetOutputVector(&indices);
+  
+#ifdef SFC_PARALLEL
+  d_sfc.SetLocalSize(originalPatchCount[d_myworld->myrank()]);
+  d_sfc.GenerateCurve();
+#else
+  d_sfc.SetLocalSize(level->numPatches());
+  d_sfc.GenerateCurve(SERIAL);
+#endif
+  
+#ifdef SFC_PARALLEL
+  if( d_myworld->size() > 1 ) {
+    vector<int> recvcounts(d_myworld->size(), 0);
+    vector<int> displs(d_myworld->size(), 0);
+    
+    for (unsigned i = 0; i < recvcounts.size(); i++) {
+      displs[i]=originalPatchStart[i]*sizeof(DistributedIndex);
+      if(displs[i]<0)
+        throw InternalError("Displacments < 0",__FILE__,__LINE__);
+      recvcounts[i]=originalPatchCount[i]*sizeof(DistributedIndex);
+      if(recvcounts[i]<0)
+        throw InternalError("Recvcounts < 0",__FILE__,__LINE__);
+    }
+
+    vector<DistributedIndex> rbuf(level->numPatches());
+
+    // Gather curve
+    MPI_Allgatherv(&indices[0], recvcounts[d_myworld->myrank()], MPI_BYTE, &rbuf[0], &recvcounts[0], 
+                   &displs[0], MPI_BYTE, d_myworld->getComm());
+
+    indices.swap(rbuf);
+  
+  }
+
+  // Convert distributed indices to normal indices.
+  for(unsigned int i=0;i<indices.size();i++) {
+    DistributedIndex di=indices[i];
+    order[i]=originalPatchStart[di.p]+di.i;
+  }
+#else
+  // Write order array
+  for(unsigned int i=0;i<indices.size();i++) {
+    order[i]=indices[i].i;
+  }
+#endif
+
+#if 0
+  cout << "SFC order: ";
+  for (int i = 0; i < level->numPatches(); i++) {
+    cout << order[i] << " ";
+  }
+  cout << endl;
+#endif
+#if 0
+  if(d_myworld->myrank()==0) {
+    cout << "Warning checking SFC correctness\n";
+  }
+  for (int i = 0; i < level->numPatches(); i++) {
+    for (int j = i+1; j < level->numPatches(); j++) {
+      if (order[i] == order[j]) 
+      {
+        cout << "Rank:" << d_myworld->myrank() <<  ":   ALERT!!!!!! index done twice: index " << i << " has the same value as index " << j << " " << order[i] << endl;
+        throw InternalError("SFC unsuccessful", __FILE__, __LINE__);
+      }
+    }
+  }
+#endif
+}
+
+void
+LoadBalancerCommon::restartInitialize(       DataArchive  * archive,
+                                             int            time_index,
+                                             ProblemSpecP & pspec,
+                                       const string       & tsurl,
+                                       const GridP        & grid )
+{
+  // Here we need to grab the uda data to reassign patch data to the processor that will get the data.
+  int num_patches = 0;
+  const Patch* first_patch = *(grid->getLevel(0)->patchesBegin());
+  int startingID = first_patch->getID();
+  int prevNumProcs = 0;
+
+  for(int l=0;l<grid->numLevels();l++){
+    const LevelP& level = grid->getLevel(l);
+    num_patches += level->numPatches();
+  }
+
+  d_processorAssignment.resize(num_patches);
+  d_assignmentBasePatch = startingID;
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++)
+    d_processorAssignment[i]= -1;
+
+  if (archive->queryPatchwiseProcessor(first_patch, time_index) != -1) {
+    // for uda 1.1 - if proc is saved with the patches
+    for(int l=0;l<grid->numLevels();l++){
+      const LevelP& level = grid->getLevel(l);
+      for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+        d_processorAssignment[(*iter)->getID()-startingID] = archive->queryPatchwiseProcessor(*iter, time_index) % d_myworld->size();
+      }
+    }
+  } // end queryPatchwiseProcessor
+  else {
+    // before uda 1.1
+    // strip off the timestep.xml
+    string dir = tsurl.substr(0, tsurl.find_last_of('/')+1);
+
+    ASSERT(pspec != 0);
+    ProblemSpecP datanode = pspec->findBlock("Data");
+    if(datanode == 0)
+      throw InternalError("Cannot find Data in timestep", __FILE__, __LINE__);
+    for(ProblemSpecP n = datanode->getFirstChild(); n != 0; 
+        n=n->getNextSibling()){
+      if(n->getNodeName() == "Datafile") {
+        map<string,string> attributes;
+        n->getAttributes(attributes);
+        string proc = attributes["proc"];
+        if (proc != "") {
+          int procnum = atoi(proc.c_str());
+          if (procnum+1 > prevNumProcs)
+            prevNumProcs = procnum+1;
+          string datafile = attributes["href"];
+          if(datafile == "")
+            throw InternalError("timestep href not found", __FILE__, __LINE__);
+          
+          string dataxml = dir + datafile;
+          // open the datafiles
+
+          ProblemSpecP dataDoc = ProblemSpecReader().readInputFile( dataxml );
+          if( !dataDoc ) {
+            throw InternalError( string( "Cannot open data file: " ) + dataxml, __FILE__, __LINE__);
+          }
+          for(ProblemSpecP r = dataDoc->getFirstChild(); r != 0; r=r->getNextSibling()){
+            if(r->getNodeName() == "Variable") {
+              int patchid;
+              if(!r->get("patch", patchid) && !r->get("region", patchid))
+                throw InternalError("Cannot get patch id", __FILE__, __LINE__);
+              if (d_processorAssignment[patchid-startingID] == -1) {
+                // assign the patch to the processor
+                // use the grid index
+                d_processorAssignment[patchid - startingID] = procnum % d_myworld->size();
+              }
+            }
+          }            
+        }
+      }
+    }
+  } // end else...
+  for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
+    if (d_processorAssignment[i] == -1)
+      cout << "index " << i << " == -1\n";
+    ASSERT(d_processorAssignment[i] != -1);
+  }
+  d_oldAssignment = d_processorAssignment;
+  d_oldAssignmentBasePatch = d_assignmentBasePatch;
+
+  if (prevNumProcs != d_myworld->size() || d_outputNthProc > 1) {
+    if (d_myworld->myrank() == 0) lbDebug << "  Original run had " << prevNumProcs << ", this has " << d_myworld->size() << endl;
+    d_checkAfterRestart = true;
+  }
+
+  if (d_myworld->myrank() == 0) {
+    lbDebug << d_myworld->myrank() << " check after restart: " << d_checkAfterRestart << "\n";
+#if 0
+    int startPatch = (int) (*grid->getLevel(0)->patchesBegin())->getID();
+    if (lb.active()) {
+      for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
+        lb <<d_myworld-> myrank() << " patch " << i << " (real " << i+startPatch << ") -> proc " 
+           << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " 
+           << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
+      }
+    }
+#endif
+  }
+}
+
+bool
+LoadBalancerCommon::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
   if (state != check) {
     // have it create a new patch set, and have the DLB version call this.
