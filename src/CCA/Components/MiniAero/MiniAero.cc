@@ -199,6 +199,7 @@ void MiniAero::problemSetup(const ProblemSpecP& params,
   ps->require("R",            d_R);
   ps->require("CFL",          d_CFL);
   ps->require("Is_visc_flow", d_viscousFlow);
+  ps->require("Is_second_order", d_secondOrder);
   ps->require("RKSteps",      d_RKSteps);
   
   if(d_RKSteps != 1 && d_RKSteps  != 4){
@@ -279,13 +280,21 @@ void MiniAero::scheduleTimeAdvance(const LevelP& level,
   
   for(int k=0; k<d_RKSteps; k++ ){
     printSchedule(level,dbg, "    scheduleTimeAdvance" );
-    
-    schedGradients(level, sched, k);
-    schedLimiters(level, sched, k);
+   
+    if(d_viscousFlow || d_secondOrder){
+      schedGradients(level, sched, k);
+    }
 
-    schedCellCenteredFlux(level, sched, k);
-    schedFaceCenteredFlux(level, sched, k);
-    schedDissipativeFaceFlux(level, sched, k);
+    if(d_secondOrder){
+      schedLimiters(level, sched, k);
+      schedSecondOrderFaceFlux(level, sched, k);
+      schedSecondOrderDissipativeFaceFlux(level, sched, k);
+    }
+    else{
+      schedCellCenteredFlux(level, sched, k);
+      schedFaceCenteredFlux(level, sched, k);
+      schedDissipativeFaceFlux(level, sched, k);
+    }
     
     if(d_viscousFlow){ 
       schedViscousFaceFlux(level, sched, k); 
@@ -474,6 +483,52 @@ void MiniAero::schedFaceCenteredFlux(const LevelP& level,
 
   sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
 }
+//______________________________________________________________________
+//
+void MiniAero::schedSecondOrderFaceFlux(const LevelP& level,
+                                     SchedulerP& sched,
+                                     const int RK_step)
+{
+  Task* task = scinew Task("MiniAero::secondOrderFaceFlux", this, 
+                           &MiniAero::secondOrderFaceFlux, RK_step);
+
+  printSchedule(level,dbg,"schedSecondOrderFaceFlux");
+
+  Task::WhichDW whichDW = getRK_DW(RK_step); 
+
+  task->requires(whichDW, rho_CClabel, Ghost::AroundCells, 1);
+  task->requires(whichDW, vel_CClabel, Ghost::AroundCells, 1);
+  task->requires(whichDW, temp_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, grad_rho_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, grad_vel_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, grad_temp_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, limiter_rho_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, limiter_vel_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, limiter_temp_CClabel,Ghost::AroundCells, 1);
+
+  if(RK_step == 0){            
+    task->computes(flux_mass_FCXlabel);
+    task->computes(flux_mom_FCXlabel);
+    task->computes(flux_energy_FCXlabel);
+    task->computes(flux_mass_FCYlabel);
+    task->computes(flux_mom_FCYlabel);
+    task->computes(flux_energy_FCYlabel);
+    task->computes(flux_mass_FCZlabel);
+    task->computes(flux_mom_FCZlabel);
+    task->computes(flux_energy_FCZlabel);
+  } else {
+    task->modifies(flux_mass_FCXlabel);
+    task->modifies(flux_mom_FCXlabel);
+    task->modifies(flux_energy_FCXlabel);
+    task->modifies(flux_mass_FCYlabel);
+    task->modifies(flux_mom_FCYlabel);
+    task->modifies(flux_energy_FCYlabel);
+    task->modifies(flux_mass_FCZlabel);
+    task->modifies(flux_mom_FCZlabel);
+    task->modifies(flux_energy_FCZlabel);
+  }
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+}
 
 //______________________________________________________________________
 //
@@ -490,6 +545,55 @@ void MiniAero::schedDissipativeFaceFlux(const LevelP& level,
   task->requires(whichDW, rho_CClabel,  Ghost::AroundCells, 1);
   task->requires(whichDW, vel_CClabel,  Ghost::AroundCells, 1);
   task->requires(whichDW, press_CClabel,Ghost::AroundCells, 1);
+
+  if(RK_step == 0 ){            // Clunky, could be compressed with a wrapper  -Todd
+    task->computes(dissipative_flux_mass_FCXlabel);
+    task->computes(dissipative_flux_mom_FCXlabel);
+    task->computes(dissipative_flux_energy_FCXlabel);
+    task->computes(dissipative_flux_mass_FCYlabel);
+    task->computes(dissipative_flux_mom_FCYlabel);
+    task->computes(dissipative_flux_energy_FCYlabel);
+    task->computes(dissipative_flux_mass_FCZlabel);
+    task->computes(dissipative_flux_mom_FCZlabel);
+    task->computes(dissipative_flux_energy_FCZlabel);
+  } else {
+    task->modifies(dissipative_flux_mass_FCXlabel);
+    task->modifies(dissipative_flux_mom_FCXlabel);
+    task->modifies(dissipative_flux_energy_FCXlabel);
+    task->modifies(dissipative_flux_mass_FCYlabel);
+    task->modifies(dissipative_flux_mom_FCYlabel);
+    task->modifies(dissipative_flux_energy_FCYlabel);
+    task->modifies(dissipative_flux_mass_FCZlabel);
+    task->modifies(dissipative_flux_mom_FCZlabel);
+    task->modifies(dissipative_flux_energy_FCZlabel);
+  }
+
+  sched->addTask(task,level->eachPatch(),sharedState_->allMaterials());
+
+}
+
+//______________________________________________________________________
+//
+void MiniAero::schedSecondOrderDissipativeFaceFlux(const LevelP& level,
+                                        SchedulerP& sched,
+                                        const int RK_step)
+{
+  Task* task = scinew Task("MiniAero::secondOrderDissipativeFaceFlux", this, 
+                           &MiniAero::secondOrderDissipativeFaceFlux, RK_step);
+
+  printSchedule(level,dbg,"schedSecondOrderDissipativeFaceFlux");
+   
+  Task::WhichDW whichDW = getRK_DW(RK_step);
+  task->requires(whichDW, rho_CClabel,  Ghost::AroundCells, 1);
+  task->requires(whichDW, vel_CClabel,  Ghost::AroundCells, 1);
+  task->requires(whichDW, press_CClabel,Ghost::AroundCells, 1);
+  task->requires(whichDW, temp_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, grad_rho_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, grad_vel_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, grad_temp_CClabel,Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, limiter_rho_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, limiter_vel_CClabel, Ghost::AroundCells, 1);
+  task->requires(Task::NewDW, limiter_temp_CClabel,Ghost::AroundCells, 1);
 
   if(RK_step == 0 ){            // Clunky, could be compressed with a wrapper  -Todd
     task->computes(dissipative_flux_mass_FCXlabel);
@@ -1042,11 +1146,12 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
     grad_rho_CC.initialize( Vector(0.0) );
     grad_temp_CC.initialize(Vector(0.0) );
     grad_vel_CC.initialize( Matrix3(0.0) );
-    
     //__________________________________
     // Compute cell centered gradients  
     // of primitive quantities 
+
     // uniform Cartesian mesh
+
     const Vector& cellSize = patch->getLevel()->dCell();
     const double dxdz = cellSize[0] * cellSize[2];
     const double dydz = cellSize[1] * cellSize[2];
@@ -1070,7 +1175,7 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
       grad_rho_CC[c][0] = 0.5*(rho_CC[R] - rho_CC[L])*dydz/cell_volume;
       grad_rho_CC[c][1] = 0.5*(rho_CC[Above] - rho_CC[Below])*dxdz/cell_volume;
       grad_rho_CC[c][2] = 0.5*(rho_CC[Front] - rho_CC[Back])*dydx/cell_volume;
-
+//TODO: maybe switch the order of this
       for (int jdim=0; jdim < 3; ++jdim) {
         grad_vel_CC[c](0,jdim) = 0.5*(vel_CC[R][jdim] - vel_CC[L][jdim])*dydz/cell_volume;
         grad_vel_CC[c](1,jdim) = 0.5*(vel_CC[Above][jdim] - vel_CC[Below][jdim])*dxdz/cell_volume;
@@ -1082,7 +1187,6 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
       grad_temp_CC[c][2] = 0.5*(Temp_CC[Front] - Temp_CC[Back])*dydx/cell_volume;
 
     } // Cell loop
-  
   }// Patch loop
 }
 
@@ -1386,6 +1490,138 @@ void MiniAero::faceCenteredFlux(const ProcessorGroup* /*pg*/,
 }
 //______________________________________________________________________
 //
+void MiniAero::secondOrderFaceFlux(const ProcessorGroup* /*pg*/,
+                                const PatchSubset* patches,
+                                const MaterialSubset* /*matls*/,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                const int RK_step)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg, "Doing MiniAero::secondOrderFaceFlux" );
+    
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+
+    constCCVariable<double> rho_CC, temp_CC;
+    constCCVariable<Vector> vel_CC;
+    constCCVariable<Vector> grad_rho_CC, grad_temp_CC;
+    constCCVariable<Matrix3> grad_vel_CC;
+    constCCVariable<double> limiter_rho_CC, limiter_temp_CC;
+    constCCVariable<Vector> limiter_vel_CC;
+
+    DataWarehouse* my_dw = getRK_DW(RK_step, old_dw, new_dw);
+
+    my_dw->get( rho_CC,  rho_CClabel, 0, patch, gac, 1 );
+    my_dw->get( vel_CC,  vel_CClabel, 0, patch, gac, 1 );
+    my_dw->get( temp_CC, temp_CClabel,0, patch, gac, 1 );
+
+    new_dw->get( grad_rho_CC,  grad_rho_CClabel, 0, patch, gac, 0);
+    new_dw->get( grad_vel_CC,  grad_vel_CClabel, 0, patch, gac, 0);
+    new_dw->get( grad_temp_CC, grad_temp_CClabel,0, patch, gac, 0);
+    
+    new_dw->get( limiter_rho_CC,  limiter_rho_CClabel, 0, patch, gac, 0);
+    new_dw->get( limiter_vel_CC,  limiter_vel_CClabel, 0, patch, gac, 0);
+    new_dw->get( limiter_temp_CC, limiter_temp_CClabel,0, patch, gac, 0);
+
+
+    SFCXVariable<double> flux_mass_FCX;
+    SFCXVariable<Vector> flux_mom_FCX;
+    SFCXVariable<double> flux_energy_FCX;
+    SFCYVariable<double> flux_mass_FCY;
+    SFCYVariable<Vector> flux_mom_FCY;
+    SFCYVariable<double> flux_energy_FCY;
+    SFCZVariable<double> flux_mass_FCZ;
+    SFCZVariable<Vector> flux_mom_FCZ;
+    SFCZVariable<double> flux_energy_FCZ;
+
+    if(RK_step == 0){                   // Clunky, could be compressed with a wrapper  -Todd
+      new_dw->allocateAndPut( flux_mass_FCX,   flux_mass_FCXlabel,   0,patch );
+      new_dw->allocateAndPut( flux_mom_FCX,    flux_mom_FCXlabel,    0,patch );
+      new_dw->allocateAndPut( flux_energy_FCX, flux_energy_FCXlabel, 0,patch );
+
+      new_dw->allocateAndPut( flux_mass_FCY,   flux_mass_FCYlabel,   0,patch );
+      new_dw->allocateAndPut( flux_mom_FCY,    flux_mom_FCYlabel,    0,patch );
+      new_dw->allocateAndPut( flux_energy_FCY, flux_energy_FCYlabel, 0,patch );
+
+      new_dw->allocateAndPut( flux_mass_FCZ,   flux_mass_FCZlabel,   0,patch );
+      new_dw->allocateAndPut( flux_mom_FCZ,    flux_mom_FCZlabel,    0,patch );
+      new_dw->allocateAndPut( flux_energy_FCZ, flux_energy_FCZlabel, 0,patch );
+    } else {
+      new_dw->getModifiable( flux_mass_FCX,   flux_mass_FCXlabel,   0,patch );
+      new_dw->getModifiable( flux_mom_FCX,    flux_mom_FCXlabel,    0,patch );
+      new_dw->getModifiable( flux_energy_FCX, flux_energy_FCXlabel, 0,patch );
+
+      new_dw->getModifiable( flux_mass_FCY,   flux_mass_FCYlabel,   0,patch );
+      new_dw->getModifiable( flux_mom_FCY,    flux_mom_FCYlabel,    0,patch );
+      new_dw->getModifiable( flux_energy_FCY, flux_energy_FCYlabel, 0,patch );
+
+      new_dw->getModifiable( flux_mass_FCZ,   flux_mass_FCZlabel,   0,patch );
+      new_dw->getModifiable( flux_mom_FCZ,    flux_mom_FCZlabel,    0,patch );
+      new_dw->getModifiable( flux_energy_FCZ, flux_energy_FCZlabel, 0,patch );    
+    
+    }
+
+    const Vector& cellSize = patch->getLevel()->dCell();
+    const double dx = cellSize[0];
+    const double dy = cellSize[1];
+    const double dz = cellSize[2];
+
+    //__________________________________
+    //Compute Face Centered Fluxes from Cell Centered
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(-1,0,0);
+
+      double extrap_velL[3];
+      double extrap_velR[3];
+      double extrap_rhoL = rho_CC[c+offset]+grad_rho_CC[c+offset][0]*limiter_rho_CC[c+offset]*dx/2.0;
+      double extrap_rhoR = rho_CC[c]-grad_rho_CC[c][0]*limiter_rho_CC[c]*dx/2.0;
+      double extrap_tempL = temp_CC[c+offset]+grad_temp_CC[c+offset][0]*limiter_temp_CC[c+offset]*dx/2.0;
+      double extrap_tempR = temp_CC[c]-grad_temp_CC[c][0]*limiter_temp_CC[c]*dx/2.0;
+      double extrap_pressureL = extrap_rhoL*d_R*extrap_tempL;
+      double extrap_pressureR = extrap_rhoR*d_R*extrap_tempR;
+      for(unsigned idir =0; idir < 3; ++idir) {
+        extrap_velL[idir] = vel_CC[c+offset][idir]+grad_vel_CC[c+offset](0,idir)*limiter_vel_CC[c+offset][idir]*dx/2.0;
+        extrap_velR[idir] = vel_CC[c][idir]-grad_vel_CC[c](0,idir)*limiter_vel_CC[c][idir]*dx/2.0;
+      }
+
+      flux_mass_FCX[c]    = 0.5*(extrap_rhoL*extrap_velL[0]+extrap_rhoR*extrap_velR[0]);
+      double KEL = 0.0;
+      double KER = 0.0;
+      for(int jdir=0; jdir<3; ++jdir) {
+        flux_mom_FCX   [c][jdir] = 0.5*(extrap_rhoL*extrap_velL[0]*extrap_velL[jdir]
+                                +extrap_rhoR*extrap_velR[0]*extrap_velR[jdir]);
+        KEL += 0.5*extrap_rhoL*extrap_velL[jdir]*extrap_velL[jdir];
+        KER += 0.5*extrap_rhoR*extrap_velR[jdir]*extrap_velR[jdir];
+      }
+      flux_mom_FCX[c][0] += 0.5*(extrap_pressureL + extrap_pressureR);
+      flux_energy_FCX[c]    = 0.5*(extrap_velL[0]*(KEL+extrap_pressureL*d_gamma/(d_gamma-1.0))+
+                                extrap_velR[0]*(KER+extrap_pressureR*d_gamma/(d_gamma-1.0)));
+    }
+    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,-1,0);
+      flux_mass_FCY  [c]    = 0.0; 
+      flux_mom_FCY   [c][0] = 0.0; 
+      flux_mom_FCY   [c][1] = 0.0; 
+      flux_mom_FCY   [c][2] = 0.0; 
+      flux_energy_FCY[c]    = 0.0; 
+    }
+    for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,0,-1);
+      flux_mass_FCZ  [c]    = 0.0; 
+      flux_mom_FCZ   [c][0] = 0.0;
+      flux_mom_FCZ   [c][1] = 0.0;
+      flux_mom_FCZ   [c][2] = 0.0;
+      flux_energy_FCZ[c]    = 0.0;
+    }
+  }
+}
+
+//______________________________________________________________________
+//
 void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
                              const PatchSubset* patches,
                              const MaterialSubset* /*matls*/,
@@ -1474,6 +1710,178 @@ void MiniAero::dissipativeFaceFlux(const ProcessorGroup* /*pg*/,
         diss_flux[i] = 0.0;
 
       compute_roe_dissipative_flux(primitives_l, primitives_r, diss_flux,
+        normal, binormal, tangent); 
+      diss_flux_mass_FCX  [c]    = -diss_flux[0];
+      diss_flux_mom_FCX   [c][0] = -diss_flux[1];
+      diss_flux_mom_FCX   [c][1] = -diss_flux[2];
+      diss_flux_mom_FCX   [c][2] = -diss_flux[3];
+      diss_flux_energy_FCX[c]    = -diss_flux[4];
+    }
+    for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,-1,0);
+      primitives_l[0] = rho_CC[c]; 
+      primitives_l[1] = vel_CC[c][0]; 
+      primitives_l[2] = vel_CC[c][1]; 
+      primitives_l[3] = vel_CC[c][2]; 
+      primitives_l[4] = pressure_CC[c]; 
+      primitives_r[0] = rho_CC[c+offset]; 
+      primitives_r[1] = vel_CC[c+offset][0]; 
+      primitives_r[2] = vel_CC[c+offset][1]; 
+      primitives_r[3] = vel_CC[c+offset][2]; 
+      primitives_r[4] = pressure_CC[c+offset];
+      double normal[] = {0.0, 1.0, 0.0};
+      double tangent[] = {1.0, 0.0, 0.0};
+      double binormal[] = {0.0, 0.0, 1.0};
+      for(int i=0; i<5; ++i)
+        diss_flux[i] = 0.0;
+
+      compute_roe_dissipative_flux(primitives_l, primitives_r, diss_flux,
+        normal, binormal, tangent); 
+      diss_flux_mass_FCY  [c]    = -diss_flux[0]; 
+      diss_flux_mom_FCY   [c][0] = -diss_flux[1];
+      diss_flux_mom_FCY   [c][1] = -diss_flux[2];
+      diss_flux_mom_FCY   [c][2] = -diss_flux[3];
+      diss_flux_energy_FCY[c]    = -diss_flux[4];
+    }
+    for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(0,0,-1);
+      primitives_l[0] = rho_CC[c]; 
+      primitives_l[1] = vel_CC[c][0]; 
+      primitives_l[2] = vel_CC[c][1]; 
+      primitives_l[3] = vel_CC[c][2]; 
+      primitives_l[4] = pressure_CC[c]; 
+      primitives_r[0] = rho_CC[c+offset]; 
+      primitives_r[1] = vel_CC[c+offset][0]; 
+      primitives_r[2] = vel_CC[c+offset][1]; 
+      primitives_r[3] = vel_CC[c+offset][2]; 
+      primitives_r[4] = pressure_CC[c+offset];
+      double normal[] = {0.0, 0.0, 1.0};
+      double tangent[] = {1.0, 0.0, 0.0};
+      double binormal[] = {0.0, 1.0, 0.0};
+      for(int i=0; i<5; ++i)
+        diss_flux[i] = 0.0;
+
+      compute_roe_dissipative_flux(primitives_l, primitives_r, diss_flux,
+        normal, binormal, tangent); 
+      diss_flux_mass_FCZ  [c]    = -diss_flux[0]; 
+      diss_flux_mom_FCZ   [c][0] = -diss_flux[1]; 
+      diss_flux_mom_FCZ   [c][1] = -diss_flux[2]; 
+      diss_flux_mom_FCZ   [c][2] = -diss_flux[3]; 
+      diss_flux_energy_FCZ[c]    = -diss_flux[4]; 
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+void MiniAero::secondOrderDissipativeFaceFlux(const ProcessorGroup* /*pg*/,
+                             const PatchSubset* patches,
+                             const MaterialSubset* /*matls*/,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw,
+                             const int RK_step)
+{
+  double diss_flux[5];
+  double primitives_l[5];
+  double primitives_r[5];
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch, dbg, "Doing MiniAero::dissipativeFaceFlux" );
+    
+    Ghost::GhostType  gac  = Ghost::AroundCells;
+
+    constCCVariable<double> rho_CC, pressure_CC, temp_CC;
+    constCCVariable<Vector> vel_CC;
+    constCCVariable<Vector> grad_rho_CC, grad_temp_CC;
+    constCCVariable<Matrix3> grad_vel_CC;
+    constCCVariable<double> limiter_rho_CC, limiter_temp_CC;
+    constCCVariable<Vector> limiter_vel_CC;
+
+    SFCXVariable<double> diss_flux_mass_FCX;
+    SFCXVariable<Vector> diss_flux_mom_FCX;
+    SFCXVariable<double> diss_flux_energy_FCX;
+    
+    SFCYVariable<double> diss_flux_mass_FCY;
+    SFCYVariable<Vector> diss_flux_mom_FCY;
+    SFCYVariable<double> diss_flux_energy_FCY;
+    
+    SFCZVariable<double> diss_flux_mass_FCZ;
+    SFCZVariable<Vector> diss_flux_mom_FCZ;
+    SFCZVariable<double> diss_flux_energy_FCZ;
+
+    DataWarehouse* my_dw = getRK_DW(RK_step, old_dw, new_dw);
+    my_dw->get( rho_CC,       rho_CClabel,   0, patch, gac, 1 );
+    my_dw->get( vel_CC,       vel_CClabel,   0, patch, gac, 1 );
+    my_dw->get( temp_CC,      temp_CClabel, 0, patch, gac, 1 );
+    my_dw->get( pressure_CC,  press_CClabel, 0, patch, gac, 1 );
+
+    new_dw->get( grad_rho_CC,  grad_rho_CClabel, 0, patch, gac, 0);
+    new_dw->get( grad_vel_CC,  grad_vel_CClabel, 0, patch, gac, 0);
+    new_dw->get( grad_temp_CC, grad_temp_CClabel,0, patch, gac, 0);
+    
+    new_dw->get( limiter_rho_CC,  limiter_rho_CClabel, 0, patch, gac, 0);
+    new_dw->get( limiter_vel_CC,  limiter_vel_CClabel, 0, patch, gac, 0);
+    new_dw->get( limiter_temp_CC, limiter_temp_CClabel,0, patch, gac, 0);
+
+    if( RK_step == 0 ) {
+      new_dw->allocateAndPut( diss_flux_mass_FCX,   dissipative_flux_mass_FCXlabel,   0,patch );
+      new_dw->allocateAndPut( diss_flux_mom_FCX,    dissipative_flux_mom_FCXlabel,    0,patch );
+      new_dw->allocateAndPut( diss_flux_energy_FCX, dissipative_flux_energy_FCXlabel, 0,patch );
+
+      new_dw->allocateAndPut( diss_flux_mass_FCY,   dissipative_flux_mass_FCYlabel,   0,patch );
+      new_dw->allocateAndPut( diss_flux_mom_FCY,    dissipative_flux_mom_FCYlabel,    0,patch );
+      new_dw->allocateAndPut( diss_flux_energy_FCY, dissipative_flux_energy_FCYlabel, 0,patch );
+
+      new_dw->allocateAndPut( diss_flux_mass_FCZ,   dissipative_flux_mass_FCZlabel,   0,patch );
+      new_dw->allocateAndPut( diss_flux_mom_FCZ,    dissipative_flux_mom_FCZlabel,    0,patch );
+      new_dw->allocateAndPut( diss_flux_energy_FCZ, dissipative_flux_energy_FCZlabel, 0,patch );
+    } else {
+      new_dw->getModifiable( diss_flux_mass_FCX,   dissipative_flux_mass_FCXlabel,   0,patch );
+      new_dw->getModifiable( diss_flux_mom_FCX,    dissipative_flux_mom_FCXlabel,    0,patch );
+      new_dw->getModifiable( diss_flux_energy_FCX, dissipative_flux_energy_FCXlabel, 0,patch );
+
+      new_dw->getModifiable( diss_flux_mass_FCY,   dissipative_flux_mass_FCYlabel,   0,patch );
+      new_dw->getModifiable( diss_flux_mom_FCY,    dissipative_flux_mom_FCYlabel,    0,patch );
+      new_dw->getModifiable( diss_flux_energy_FCY, dissipative_flux_energy_FCYlabel, 0,patch );
+
+      new_dw->getModifiable( diss_flux_mass_FCZ,   dissipative_flux_mass_FCZlabel,   0,patch );
+      new_dw->getModifiable( diss_flux_mom_FCZ,    dissipative_flux_mom_FCZlabel,    0,patch );
+      new_dw->getModifiable( diss_flux_energy_FCZ, dissipative_flux_energy_FCZlabel, 0,patch );
+    }    
+
+    const Vector& cellSize = patch->getLevel()->dCell();
+    const double dx = cellSize[0];
+    const double dy = cellSize[1];
+    const double dz = cellSize[2];
+    
+    //__________________________________
+    //Compute Face Centered Fluxes from Cell Centered
+
+    //This potentially could be separated to a different function or this
+    //function templated on the direction.
+    for(CellIterator iter = patch->getSFCXIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      IntVector offset(-1,0,0);
+      primitives_l[0] = rho_CC[c+offset]+grad_rho_CC[c+offset][0]*limiter_rho_CC[c+offset]*dx/2.0;
+      primitives_r[0] = rho_CC[c]-grad_rho_CC[c][0]*limiter_rho_CC[c]*dx/2.0;
+      double extrap_tempL = temp_CC[c+offset]+grad_temp_CC[c+offset][0]*limiter_temp_CC[c+offset]*dx/2.0;
+      double extrap_tempR = temp_CC[c]-grad_temp_CC[c][0]*limiter_temp_CC[c]*dx/2.0;
+      primitives_l[4] = primitives_l[0]*d_R*extrap_tempL;
+      primitives_r[4] = primitives_r[0]*d_R*extrap_tempR;
+      for(unsigned idir =0; idir < 3; ++idir) {
+        primitives_l[1+idir] = vel_CC[c+offset][idir]+grad_vel_CC[c+offset](0,idir)*limiter_vel_CC[c+offset][idir]*dx/2.0;
+        primitives_r[1+idir] = vel_CC[c][idir]-grad_vel_CC[c](0,idir)*limiter_vel_CC[c][idir]*dx/2.0;
+      }
+      double normal[] = {1.0, 0.0, 0.0};
+      double tangent[] = {0.0, 1.0, 0.0};
+      double binormal[] = {0.0, 0.0, 1.0};
+      for(int i=0; i<5; ++i)
+        diss_flux[i] = 0.0;
+
+      compute_roe_dissipative_flux(primitives_r, primitives_l, diss_flux,
         normal, binormal, tangent); 
       diss_flux_mass_FCX  [c]    = -diss_flux[0];
       diss_flux_mom_FCX   [c][0] = -diss_flux[1];

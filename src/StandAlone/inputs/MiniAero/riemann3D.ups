@@ -168,6 +168,7 @@
            <R>                287.0                     </R>
            <CFL>                0.25                    </CFL>
            <Is_visc_flow>      false                    </Is_visc_flow>
+           <Is_second_order>      false                 </Is_second_order>
            <RKSteps>            1                       </RKSteps>
            
            <geom_object>
