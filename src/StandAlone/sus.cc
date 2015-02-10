@@ -565,7 +565,7 @@ main( int argc, char *argv[], char *env[] )
       // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
       // instead of a UPS file.
       proc0cout   << "\n";
-      proc0cout   << "ERROR - Failed to open UPS file: " << filename << ".\n";
+      proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
       if( validDir( filename ) ) {
         proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
       }
