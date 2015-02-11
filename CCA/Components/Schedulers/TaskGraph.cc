@@ -1092,7 +1092,7 @@ TaskGraph::createDetailedDependencies()
     DetailedTask* task = dts_->getTask(i);
     task->task->d_phase = currphase;
     if (tgphasedbg.active()) {
-      tgphasedbg << "Rank: " << d_myworld->myrank() << " Task: " << *task << " phase: " << currphase << std::endl;
+      tgphasedbg << "Rank-" << d_myworld->myrank() << " Task: " << *task << " phase: " << currphase << std::endl;
     }
     if (task->task->getType() == Task::Reduction) {
       task->task->d_comm = currcomm;

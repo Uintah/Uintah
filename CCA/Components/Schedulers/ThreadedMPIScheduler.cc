@@ -40,7 +40,6 @@
 #define USE_PACKING
 
 using namespace Uintah;
-using namespace SCIRun;
 
 // sync cout/cerr so they are readable when output by multiple threads
 extern SCIRun::Mutex coutLock;
