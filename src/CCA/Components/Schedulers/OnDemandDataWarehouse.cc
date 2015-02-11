@@ -809,7 +809,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
   }
 
   if( mpidbg.active() ) {
-    mpidbg << d_myworld->myrank() << " allreduce, name " << label->getName() << " level "
+    mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, name " << label->getName() << " level "
            << (level ? level->getID() : -1) << std::endl;
   }
 
@@ -817,13 +817,13 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
                              d_myworld->getgComm( nComm ) );
 
   if( mpidbg.active() ) {
-    mpidbg << d_myworld->myrank() << " allreduce, done " << label->getName() << " level "
+    mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level "
            << (level ? level->getID() : -1) << std::endl;
   }
 
   if( mixedDebug.active() ) {
     coutLock.lock();
-    mixedDebug << "done with MPI_Allreduce\n";
+    mixedDebug << "done with MPI_Allreduce (" << label->getName() << ")\n";
     coutLock.unlock();
   }
 
