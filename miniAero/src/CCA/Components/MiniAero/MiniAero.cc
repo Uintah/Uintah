@@ -1602,20 +1602,60 @@ void MiniAero::secondOrderFaceFlux(const ProcessorGroup* /*pg*/,
     for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(0,-1,0);
-      flux_mass_FCY  [c]    = 0.0; 
-      flux_mom_FCY   [c][0] = 0.0; 
-      flux_mom_FCY   [c][1] = 0.0; 
-      flux_mom_FCY   [c][2] = 0.0; 
-      flux_energy_FCY[c]    = 0.0; 
+      double extrap_velL[3];
+      double extrap_velR[3];
+      double extrap_rhoL = rho_CC[c+offset]+grad_rho_CC[c+offset][1]*limiter_rho_CC[c+offset]*dy/2.0;
+      double extrap_rhoR = rho_CC[c]-grad_rho_CC[c][1]*limiter_rho_CC[c]*dy/2.0;
+      double extrap_tempL = temp_CC[c+offset]+grad_temp_CC[c+offset][1]*limiter_temp_CC[c+offset]*dy/2.0;
+      double extrap_tempR = temp_CC[c]-grad_temp_CC[c][1]*limiter_temp_CC[c]*dy/2.0;
+      double extrap_pressureL = extrap_rhoL*d_R*extrap_tempL;
+      double extrap_pressureR = extrap_rhoR*d_R*extrap_tempR;
+      for(unsigned idir =0; idir < 3; ++idir) {
+        extrap_velL[idir] = vel_CC[c+offset][idir]+grad_vel_CC[c+offset](1,idir)*limiter_vel_CC[c+offset][idir]*dy/2.0;
+        extrap_velR[idir] = vel_CC[c][idir]-grad_vel_CC[c](1,idir)*limiter_vel_CC[c][idir]*dy/2.0;
+      }
+
+      flux_mass_FCY[c]    = 0.5*(extrap_rhoL*extrap_velL[1]+extrap_rhoR*extrap_velR[1]);
+      double KEL = 0.0;
+      double KER = 0.0;
+      for(int jdir=0; jdir<3; ++jdir) {
+        flux_mom_FCY   [c][jdir] = 0.5*(extrap_rhoL*extrap_velL[1]*extrap_velL[jdir]
+                                +extrap_rhoR*extrap_velR[1]*extrap_velR[jdir]);
+        KEL += 0.5*extrap_rhoL*extrap_velL[jdir]*extrap_velL[jdir];
+        KER += 0.5*extrap_rhoR*extrap_velR[jdir]*extrap_velR[jdir];
+      }
+      flux_mom_FCY[c][1] += 0.5*(extrap_pressureL + extrap_pressureR);
+      flux_energy_FCY[c]    = 0.5*(extrap_velL[1]*(KEL+extrap_pressureL*d_gamma/(d_gamma-1.0))+
+                                extrap_velR[1]*(KER+extrap_pressureR*d_gamma/(d_gamma-1.0)));
     }
     for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(0,0,-1);
-      flux_mass_FCZ  [c]    = 0.0; 
-      flux_mom_FCZ   [c][0] = 0.0;
-      flux_mom_FCZ   [c][1] = 0.0;
-      flux_mom_FCZ   [c][2] = 0.0;
-      flux_energy_FCZ[c]    = 0.0;
+      double extrap_velL[3];
+      double extrap_velR[3];
+      double extrap_rhoL = rho_CC[c+offset]+grad_rho_CC[c+offset][2]*limiter_rho_CC[c+offset]*dz/2.0;
+      double extrap_rhoR = rho_CC[c]-grad_rho_CC[c][2]*limiter_rho_CC[c]*dz/2.0;
+      double extrap_tempL = temp_CC[c+offset]+grad_temp_CC[c+offset][2]*limiter_temp_CC[c+offset]*dz/2.0;
+      double extrap_tempR = temp_CC[c]-grad_temp_CC[c][2]*limiter_temp_CC[c]*dz/2.0;
+      double extrap_pressureL = extrap_rhoL*d_R*extrap_tempL;
+      double extrap_pressureR = extrap_rhoR*d_R*extrap_tempR;
+      for(unsigned idir =0; idir < 3; ++idir) {
+        extrap_velL[idir] = vel_CC[c+offset][idir]+grad_vel_CC[c+offset](2,idir)*limiter_vel_CC[c+offset][idir]*dz/2.0;
+        extrap_velR[idir] = vel_CC[c][idir]-grad_vel_CC[c](2,idir)*limiter_vel_CC[c][idir]*dz/2.0;
+      }
+
+      flux_mass_FCZ[c]    = 0.5*(extrap_rhoL*extrap_velL[2]+extrap_rhoR*extrap_velR[2]);
+      double KEL = 0.0;
+      double KER = 0.0;
+      for(int jdir=0; jdir<3; ++jdir) {
+        flux_mom_FCZ   [c][jdir] = 0.5*(extrap_rhoL*extrap_velL[2]*extrap_velL[jdir]
+                                +extrap_rhoR*extrap_velR[2]*extrap_velR[jdir]);
+        KEL += 0.5*extrap_rhoL*extrap_velL[jdir]*extrap_velL[jdir];
+        KER += 0.5*extrap_rhoR*extrap_velR[jdir]*extrap_velR[jdir];
+      }
+      flux_mom_FCZ[c][2] += 0.5*(extrap_pressureL + extrap_pressureR);
+      flux_energy_FCZ[c]    = 0.5*(extrap_velL[2]*(KEL+extrap_pressureL*d_gamma/(d_gamma-1.0))+
+                                extrap_velR[2]*(KER+extrap_pressureR*d_gamma/(d_gamma-1.0)));
     }
   }
 }
@@ -1892,6 +1932,16 @@ void MiniAero::secondOrderDissipativeFaceFlux(const ProcessorGroup* /*pg*/,
     for(CellIterator iter = patch->getSFCYIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(0,-1,0);
+      primitives_l[0] = rho_CC[c+offset]+grad_rho_CC[c+offset][1]*limiter_rho_CC[c+offset]*dy/2.0;
+      primitives_r[0] = rho_CC[c]-grad_rho_CC[c][1]*limiter_rho_CC[c]*dy/2.0;
+      double extrap_tempL = temp_CC[c+offset]+grad_temp_CC[c+offset][1]*limiter_temp_CC[c+offset]*dy/2.0;
+      double extrap_tempR = temp_CC[c]-grad_temp_CC[c][1]*limiter_temp_CC[c]*dy/2.0;
+      primitives_l[4] = primitives_l[0]*d_R*extrap_tempL;
+      primitives_r[4] = primitives_r[0]*d_R*extrap_tempR;
+      for(unsigned idir =0; idir < 3; ++idir) {
+        primitives_l[1+idir] = vel_CC[c+offset][idir]+grad_vel_CC[c+offset](1,idir)*limiter_vel_CC[c+offset][idir]*dy/2.0;
+        primitives_r[1+idir] = vel_CC[c][idir]-grad_vel_CC[c](1,idir)*limiter_vel_CC[c][idir]*dy/2.0;
+      }
       primitives_l[0] = rho_CC[c]; 
       primitives_l[1] = vel_CC[c][0]; 
       primitives_l[2] = vel_CC[c][1]; 
@@ -1919,6 +1969,16 @@ void MiniAero::secondOrderDissipativeFaceFlux(const ProcessorGroup* /*pg*/,
     for(CellIterator iter = patch->getSFCZIterator(); !iter.done(); iter++) {
       IntVector c = *iter;
       IntVector offset(0,0,-1);
+      primitives_l[0] = rho_CC[c+offset]+grad_rho_CC[c+offset][2]*limiter_rho_CC[c+offset]*dz/2.0;
+      primitives_r[0] = rho_CC[c]-grad_rho_CC[c][2]*limiter_rho_CC[c]*dz/2.0;
+      double extrap_tempL = temp_CC[c+offset]+grad_temp_CC[c+offset][2]*limiter_temp_CC[c+offset]*dz/2.0;
+      double extrap_tempR = temp_CC[c]-grad_temp_CC[c][2]*limiter_temp_CC[c]*dz/2.0;
+      primitives_l[4] = primitives_l[0]*d_R*extrap_tempL;
+      primitives_r[4] = primitives_r[0]*d_R*extrap_tempR;
+      for(unsigned idir =0; idir < 3; ++idir) {
+        primitives_l[1+idir] = vel_CC[c+offset][idir]+grad_vel_CC[c+offset](2,idir)*limiter_vel_CC[c+offset][idir]*dz/2.0;
+        primitives_r[1+idir] = vel_CC[c][idir]-grad_vel_CC[c](2,idir)*limiter_vel_CC[c][idir]*dz/2.0;
+      }
       primitives_l[0] = rho_CC[c]; 
       primitives_l[1] = vel_CC[c][0]; 
       primitives_l[2] = vel_CC[c][1]; 
