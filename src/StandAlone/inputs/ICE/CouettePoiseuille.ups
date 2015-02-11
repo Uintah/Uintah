@@ -21,6 +21,7 @@
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
        <timestep_multiplier>1.0         </timestep_multiplier>
+       <max_Timesteps>       75         </max_Timesteps>     <!-- for RT -->
    </Time>
    
     <!--____________________________________________________________________-->
@@ -125,13 +126,15 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
       <filebase>Couette-Poiseuille.uda</filebase>
-      <outputInterval>1</outputInterval>
+      <!-- <outputInterval>1</outputInterval>  -->
+      <outputTimestepInterval>10</outputTimestepInterval>       <!-- RT -->
       <save label="vel_CC"/>
       <save label="press_CC"/>
       <save label="delP_Dilatate"/>
       <save label="rho_CC"/>
       <save label="temp_CC"/>
-      <checkpoint interval="0.75" cycle="2"/>
+      <!--<checkpoint interval="0.75" cycle="2"/>  -->
+      <checkpoint interval="0.15" cycle="2"/>
    </DataArchiver>
 
     
