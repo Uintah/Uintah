@@ -354,11 +354,10 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
     return readGridData<VAR, int>(archive, patch, level, variable_name, material, timestep, low, high);
   case Uintah::TypeDescription::Vector:
     return readGridData<VAR, Vector>(archive, patch, level, variable_name, material, timestep, low, high);
-  case Uintah::TypeDescription::Other:
-    if (subtype->getName()=="Stencil7")
-      return readGridData<VAR, Stencil7>(archive, patch, level, variable_name, material, timestep, low, high);
-    if (subtype->getName()=="Stencil4")
-      return readGridData<VAR, Stencil4>(archive, patch, level, variable_name, material, timestep, low, high);
+  case Uintah::TypeDescription::Stencil7:
+    return readGridData<VAR, Stencil7>(archive, patch, level, variable_name, material, timestep, low, high);
+  case Uintah::TypeDescription::Stencil4:
+    return readGridData<VAR, Stencil4>(archive, patch, level, variable_name, material, timestep, low, high);
   case Uintah::TypeDescription::Matrix3:
     return readGridData<VAR, Matrix3>(archive, patch, level, variable_name, material, timestep, low, high);
   case Uintah::TypeDescription::bool_type:
@@ -368,7 +367,9 @@ GridDataRaw* getGridDataMainType(DataArchive *archive,
     cerr << "Subtype " << subtype->getName() << " is not implemented...\n";
     return NULL;
   default:
-    cerr << "Unknown subtype: "<<subtype->getName()<<"\n";
+    cerr << "Unknown subtype: "
+	 <<subtype->getType()<<"  "
+	 <<subtype->getName()<<"\n";
     return NULL;
   }
 }
@@ -538,11 +539,10 @@ getParticleData(DataArchive *archive,
     return readParticleData<Point>(archive, patch, variable_name, material, timestep);
   case Uintah::TypeDescription::Vector:
     return readParticleData<Vector>(archive, patch, variable_name, material, timestep);
-  case Uintah::TypeDescription::Other:
-    if (subtype->getName()=="Stencil7")
-      return readParticleData<Stencil7>(archive, patch, variable_name, material, timestep);
-    if (subtype->getName()=="Stencil4")
-      return readParticleData<Stencil4>(archive, patch, variable_name, material, timestep);
+  case Uintah::TypeDescription::Stencil7:
+    return readParticleData<Stencil7>(archive, patch, variable_name, material, timestep);
+  case Uintah::TypeDescription::Stencil4:
+    return readParticleData<Stencil4>(archive, patch, variable_name, material, timestep);
   case Uintah::TypeDescription::Matrix3:
     return readParticleData<Matrix3>(archive, patch, variable_name, material, timestep);
   default:
