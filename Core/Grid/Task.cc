@@ -23,16 +23,17 @@
  */
 
 #include <Core/Grid/Task.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Parallel/Parallel.h>
-#include <set>
 
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Util/StringUtil.h>
+
+#include <set>
 
 using namespace std;
 using namespace Uintah;
