@@ -34,8 +34,10 @@
  *
  */
 
+#include <Core/Util/StringUtil.h>
+
 #include <Core/Util/Assert.h>
-#include <Core/Containers/StringUtil.h>
+
 #include <cstdio>
 #include <cstdlib>
 #include <ctype.h> // for toupper() (at least for linux RH8)

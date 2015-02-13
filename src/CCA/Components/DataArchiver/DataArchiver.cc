@@ -33,7 +33,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
-#include <Core/Containers/StringUtil.h>
+#include <Core/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Box.h>
@@ -45,15 +46,13 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
-#include <Core/Util/Environment.h>
-#include <Core/Util/FileUtils.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Exceptions/ErrnoException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/Environment.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Util/FileUtils.h>
+#include <Core/Util/StringUtil.h>
 
 #include <iomanip>
 #include <cerrno>

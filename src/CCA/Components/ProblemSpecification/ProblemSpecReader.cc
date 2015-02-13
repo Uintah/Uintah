@@ -23,18 +23,16 @@
  */
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h> // Only used for MPI cerr
 #include <Core/Parallel/ProcessorGroup.h> // process determination
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
-#include <Core/Containers/StringUtil.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/FileUtils.h>
-
 #include <Core/Util/Environment.h> // for SCIRUN_SRCDIR
+#include <Core/Util/FileUtils.h>
+#include <Core/Util/StringUtil.h>
 
 #include <algorithm>
 #include <iomanip>
