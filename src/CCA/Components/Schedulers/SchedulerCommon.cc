@@ -1252,7 +1252,6 @@ void
 SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
                                               SimulationInterface* sim )
 {
-  
   TAU_PROFILE("SchedulerCommon::scheduleAndDoDataCopy()", " ", TAU_USER);
   TAU_PROFILE_TIMER(sched_timer,"schedule", "", TAU_USER);
   TAU_PROFILE_START(sched_timer);
@@ -1313,16 +1312,18 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           }
 
           // we don't want data with an invalid level, or requiring from a different level (remember, we are
-          // using an old task graph).  That willbe copied later (and chances are, it's to modify anyway).
-          if (level == -1 || level > grid->numLevels() - 1 || dep->patches_dom == Task::CoarseLevel
-              || dep->patches_dom == Task::FineLevel) {
+          // using an old task graph).  That will be copied later (and chances are, it's to modify anyway).
+          if( level == -1 ||
+              level > grid->numLevels() - 1 ||
+              dep->patches_dom == Task::CoarseLevel ||
+              dep->patches_dom == Task::FineLevel ) {
             continue;
           }
 
-          const MaterialSubset* matSubset = (dep->matls != 0) ? dep->matls : dep->task->getMaterialSet()->getUnion();
+          const MaterialSubset * matSubset = ( dep->matls != 0 ) ? dep->matls : dep->task->getMaterialSet()->getUnion();
 
           // if var was already found, make a union of the materials
-          MaterialSubset* matls = scinew MaterialSubset(matSubset->getVector());
+          MaterialSubset* matls = scinew MaterialSubset( matSubset->getVector() );
           matls->addReference();
 
           MaterialSubset* union_matls;
@@ -1345,27 +1346,28 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
     }
   }
 
-  this->initialize(1, 1);
-  this->advanceDataWarehouse(grid, true);
+  this->initialize( 1, 1 );
+  this->advanceDataWarehouse( grid, true );
   this->clearMappings();
-  this->mapDataWarehouse(Task::OldDW, 0);
-  this->mapDataWarehouse(Task::NewDW, 1);
-  this->mapDataWarehouse(Task::CoarseOldDW, 0);
-  this->mapDataWarehouse(Task::CoarseNewDW, 1);
+  this->mapDataWarehouse( Task::OldDW, 0 );
+  this->mapDataWarehouse( Task::NewDW, 1 );
+  this->mapDataWarehouse( Task::CoarseOldDW, 0 );
+  this->mapDataWarehouse( Task::CoarseNewDW, 1 );
 
   DataWarehouse* oldDataWarehouse = this->get_dw(0);
   DataWarehouse* newDataWarehouse = this->getLastDW();
 
-  oldDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
-  newDataWarehouse->setScrubbing(DataWarehouse::ScrubNone);
-  const Grid* oldGrid = oldDataWarehouse->getGrid();
+  oldDataWarehouse->setScrubbing( DataWarehouse::ScrubNone );
+  newDataWarehouse->setScrubbing( DataWarehouse::ScrubNone );
+
+  const Grid * oldGrid = oldDataWarehouse->getGrid();
 
   vector<Task*> dataTasks;
   vector<Handle<PatchSet> > refinePatchSets(grid->numLevels(), (PatchSet*)0);
   vector<Handle<PatchSet> > copyPatchSets(grid->numLevels(), (PatchSet*)0);
-  SchedulerP sched(dynamic_cast<Scheduler*>(this));
+  SchedulerP sched( dynamic_cast<Scheduler*>(this) );
 
-  d_sharedState->setCopyDataTimestep(true);
+  d_sharedState->setCopyDataTimestep( true );
 
   for (int L = 0; L < grid->numLevels(); L++) {
     LevelP newLevel = grid->getLevel(L);
@@ -1378,7 +1380,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
         copyPatchSets[L] = scinew PatchSet;
       }
 
-      // find patches with new space - but temporarily, refine everywhere... 
+      // Find patches with new space - but temporarily, refine everywhere... 
       else if (L < oldGrid->numLevels()) {
         refinePatchSets[L] = scinew PatchSet;
         copyPatchSets[L] = scinew PatchSet;
@@ -1386,7 +1388,7 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
         vector<int> myPatchIDs;
         LevelP oldLevel = oldDataWarehouse->getGrid()->getLevel(L);
 
-        // go through the patches, and find if there are patches that weren't entirely 
+        // Go through the patches, and find if there are patches that weren't entirely 
         // covered by patches on the old grid, and interpolate them.  
         // then after, copy the data, and if necessary, overwrite interpolated data
         const PatchSubset *ps = getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
