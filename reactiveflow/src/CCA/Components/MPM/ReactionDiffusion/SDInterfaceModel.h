@@ -47,6 +47,9 @@ namespace Uintah {
     SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     ~SDInterfaceModel();
 
+    virtual void scheduleInterpolateParticlesToGrid(Task* t, const PatchSet* patches,
+                                                    const MaterialSet* matls);
+
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;

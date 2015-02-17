@@ -117,6 +117,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   contactModel        = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
+  sdInterfaceModel = 0;
   NGP     = 1;
   NGN     = 1;
   d_recompile = false;
@@ -596,11 +597,6 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           all_matls);
   }
   scheduleComputeContactArea(             sched, patches, matls);
-
-	if(flags->d_doScalarDiffusion){
-	  scheduleDiffusionInterface(           sched, patches, matls);
-	}
-
   scheduleComputeInternalForce(           sched, patches, matls);
 
   scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
@@ -4998,6 +4994,8 @@ void SerialMPM::scheduleSDInterpolateParticlesToGrid(SchedulerP& sched,
   Task* t = scinew Task("MPM::sdInterpolateParticlesToGrid",
                         this,&SerialMPM::sdInterpolateParticlesToGrid);
 
+  sdInterfaceModel->scheduleInterpolateParticlesToGrid(t,patches,matls);
+
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -5027,11 +5025,6 @@ void SerialMPM::sdInterpolateParticlesToGrid(const ProcessorGroup*,
 	  }
   }
 
-}
-
-void SerialMPM::scheduleDiffusionInterface(SchedulerP& sched, const PatchSet* patches,
-                                           const MaterialSet* matls)
-{
 }
 
 void SerialMPM::scheduleComputeStep1(SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls)

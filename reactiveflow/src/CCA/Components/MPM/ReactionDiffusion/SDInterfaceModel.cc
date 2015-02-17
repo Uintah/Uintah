@@ -25,6 +25,7 @@
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <Core/Labels/MPMLabel.h>
+#include <Core/Grid/Task.h>
 
 using namespace Uintah;
 
@@ -55,4 +56,10 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
 SDInterfaceModel::~SDInterfaceModel(){
   delete(d_lb);
   delete(d_rdlb);
+}
+
+void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* t,
+                                                          const PatchSet* patches,
+                                                          const MaterialSet* matls)
+{ 
 }
