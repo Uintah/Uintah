@@ -144,10 +144,9 @@
               </geom_object>
          </material>
 
-         <contact>
-           <type>null</type>
-           <materials>              [0]         </materials>
-         </contact>
+				 <diffusion_interface>
+				   <type>null</type>
+				 </diffusion_interface>
        </MPM>
     </MaterialProperties>
 </Uintah_specification>
