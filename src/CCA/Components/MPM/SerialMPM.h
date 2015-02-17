@@ -590,9 +590,6 @@ protected:
                                             DataWarehouse* old_dw,
                                             DataWarehouse* new_dw);
 
-  virtual void scheduleDiffusionInterface(SchedulerP& sched, const PatchSet* patches,
-                                          const MaterialSet* matls);
-
   virtual void scheduleComputeStep1(SchedulerP&, const PatchSet*, const MaterialSet*);
 
   virtual void computeStep1(const ProcessorGroup*, const PatchSubset* patches,
