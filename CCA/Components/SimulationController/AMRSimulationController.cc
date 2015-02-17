@@ -754,7 +754,9 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 } // end doInitialTimestep()
 
 //______________________________________________________________________
-bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimestep)
+
+bool
+AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
   TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
@@ -825,8 +827,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 
     double scheduleTime = Time::currentSeconds();
     
-    if (!initialTimestep) {
-      d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
+    if( !initialTimestep ) {
+      d_scheduler->scheduleAndDoDataCopy( currentGrid, d_sim );
     }
     
     scheduleTime = Time::currentSeconds() - scheduleTime;

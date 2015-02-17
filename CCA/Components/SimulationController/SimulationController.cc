@@ -793,16 +793,14 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   if (d_myworld->size() > 1) {
     // If AMR and using dynamic dilation use an allreduce.
-    if(d_regridder && d_regridder->useDynamicDilation())
-      {
-        MPI_Allreduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    d_myworld->getComm() );
-        MPI_Allreduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm() );
-      }
-    else
-      {
-        MPI_Reduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    0, d_myworld->getComm() );
-        MPI_Reduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0, d_myworld->getComm() );
-      }
+    if(d_regridder && d_regridder->useDynamicDilation()) {
+      MPI_Allreduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    d_myworld->getComm() );
+      MPI_Allreduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, d_myworld->getComm() );
+    }
+    else {
+      MPI_Reduce( &toReduce[0],    &avgReduce[0], toReduce.size(),    MPI_DOUBLE,     MPI_SUM,    0, d_myworld->getComm() );
+      MPI_Reduce( &toReduceMax[0], &maxReduce[0], toReduceMax.size(), MPI_DOUBLE_INT, MPI_MAXLOC, 0, d_myworld->getComm() );
+    }
 
     // make sums averages
     for (unsigned i = 0; i < avgReduce.size(); i++) {
@@ -832,52 +830,49 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     //calculate percentage of time spent in overhead
     percent_overhead = overhead_time / total_time;
   }
-  else
-    {
-      // Sum up the times for simulation components.
-      total_time = d_sharedState->compilationTime +
-        d_sharedState->regriddingTime +
-        d_sharedState->regriddingCompilationTime +
-        d_sharedState->regriddingCopyDataTime +
-        d_sharedState->loadbalancerTime +
-        d_sharedState->taskExecTime +
-        d_sharedState->taskGlobalCommTime +
-        d_sharedState->taskLocalCommTime +
-        d_sharedState->taskWaitCommTime +
-        d_sharedState->taskWaitThreadTime;
+  else {
+    // Sum up the times for simulation components.
+    total_time = d_sharedState->compilationTime +
+                 d_sharedState->regriddingTime +
+                 d_sharedState->regriddingCompilationTime +
+                 d_sharedState->regriddingCopyDataTime +
+                 d_sharedState->loadbalancerTime +
+                 d_sharedState->taskExecTime +
+                 d_sharedState->taskGlobalCommTime +
+                 d_sharedState->taskLocalCommTime +
+                 d_sharedState->taskWaitCommTime +
+                 d_sharedState->taskWaitThreadTime;
 
-      // Sum up the average time for overhead related components.
-      overhead_time = d_sharedState->compilationTime +
-        d_sharedState->regriddingTime +
-        d_sharedState->regriddingCompilationTime +
-        d_sharedState->regriddingCopyDataTime +
-        d_sharedState->loadbalancerTime;
+    // Sum up the average time for overhead related components.
+    overhead_time = d_sharedState->compilationTime +
+                    d_sharedState->regriddingTime +
+                    d_sharedState->regriddingCompilationTime +
+                    d_sharedState->regriddingCopyDataTime +
+                    d_sharedState->loadbalancerTime;
 
-      // Calculate percentage of time spent in overhead.
-      percent_overhead = overhead_time / total_time;
-    }
+    // Calculate percentage of time spent in overhead.
+    percent_overhead = overhead_time / total_time;
+  }
 
   //set the overhead sample
-  if(d_n>2)  //ignore the first 3 samples, they are not good samples
-    {
-      d_sharedState->overhead[d_sharedState->overheadIndex]=percent_overhead;
-      //increment the overhead index
+  if( d_n > 2 ) { // Ignore the first 3 samples, they are not good samples.
+    d_sharedState->overhead[d_sharedState->overheadIndex]=percent_overhead;
+    // Increment the overhead index
 
-      double overhead=0;
-      double weight=0;
+    double overhead=0;
+    double weight=0;
 
-      int t=min(d_n-2,OVERHEAD_WINDOW);
-      //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
-      for(int i=0;i<t;i++)
-        {
-          overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
-          weight+=d_sharedState->overheadWeights[i];
-        }
-      d_sharedState->overheadAvg=overhead/weight; 
+    int t = min( d_n - 2, OVERHEAD_WINDOW );
+    //calcualte total weight by incrementing through the overhead sample array backwards and multiplying samples by the weights
+    for( int i = 0; i < t; i++ ) {
+      overhead+=d_sharedState->overhead[(d_sharedState->overheadIndex+OVERHEAD_WINDOW-i)%OVERHEAD_WINDOW]*d_sharedState->overheadWeights[i];
+      weight+=d_sharedState->overheadWeights[i];
+    }
+    d_sharedState->overheadAvg=overhead/weight; 
 
-      d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
-      //increase overhead size if needed
-    } 
+    d_sharedState->overheadIndex=(d_sharedState->overheadIndex+1)%OVERHEAD_WINDOW;
+    // Increase overhead size if needed.
+  } 
   d_sharedState->clearStats();
 
   // calculate mean/std dev
@@ -937,7 +932,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       if(avg_highwater) {
         message << "/" << ProcessInfo::toHumanUnits((unsigned long) avg_highwater);
       }
-    } else {
+    }
+    else {
       message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
         message << "/" << ProcessInfo::toHumanUnits((unsigned long)avg_highwater);
@@ -966,7 +962,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
                   << " : " << setw(10) << 100*(1-(avgReduce[i]/maxReduce[i].val)) << "\n";
           }
         }
-      }else {//runing in serial
+      }
+      else { // Runing in serial.
         for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
           if (toReduce[i] > 0){
             stats << "  "<< left << setw(19)<< statLabels[i]
@@ -981,7 +978,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
       }
     } 
-
 
     if ( d_n > 0 ) {
       double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
