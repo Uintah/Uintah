@@ -78,7 +78,7 @@
        <Level>
            <Box label="1">
               <lower>       [0,0,0]          </lower>
-              <upper>       [.4,.4,.4]  </upper>
+              <upper>       [.04,.04,.04]  </upper>
               <resolution>  [10,10,10]     </resolution>
               <extraCells> [1,1,1]            </extraCells>
               <patches>    [1,1,1]            </patches>
@@ -131,13 +131,13 @@
               <specific_heat>         234.0  </specific_heat>
 	         <diffusion_model type = "rf1">
 	           <diffusivity>                 1e-10   </diffusivity>
-	           <initial_chemical_potential>  1e-3   </initial_chemical_potential>
-		   <max_concentration>           1.0    </max_concentration>  
+	           <initial_chemical_potential>  1e-5   </initial_chemical_potential>
+		         <max_concentration>           1.0    </max_concentration>  
 	         </diffusion_model>
               <geom_object>
                 <box label="gpmpm">
-                  <min>           [0.10,0.00,0.10]   </min>
-                  <max>           [0.30,0.20,0.30]   </max>
+                  <min>           [0.010,0.000,0.010]   </min>
+                  <max>           [0.030,0.020,0.030]   </max>
                  </box>
                  <res>               [2,2,2]         </res>
                  <velocity>          [0.0,0.0,0.0]   </velocity>

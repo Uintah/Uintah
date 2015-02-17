@@ -21,12 +21,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
-#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
-#include <CCA/Components/MPM/ReactionDiffusion/JGConcentrationDiffusion.h>
-#include <CCA/Components/MPM/ReactionDiffusion/RFConcDiffusion1MPM.h>
-
-#include <sci_defs/uintah_defs.h> // For NO_FORTRAN
+#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
+#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
 
 #include <CCA/Components/MPM/MPMFlags.h>
 
@@ -41,16 +37,23 @@
 using namespace std;
 using namespace Uintah;
 
-ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
+SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
                                                           SimulationStateP& ss,
                                                           MPMFlags* flags)
 {
-  ProblemSpecP child = ps->findBlock("diffusion_model");
-  if(!child)
+  ProblemSpecP mpm_ps = 
+     ps->findBlockWithOutAttribute("MaterialProperties")->findBlock("MPM");
+	if(!mpm_ps)
     throw ProblemSetupException("Cannot find scalar_diffuion_model tag", __FILE__, __LINE__);
-  string mat_type;
-  if(!child->getAttribute("type", mat_type))
-    throw ProblemSetupException("No type for scalar_diffusion_model", __FILE__, __LINE__);
+
+  ProblemSpecP child = mpm_ps->findBlock("diffusion_interface");
+
+  if(!child)
+    throw ProblemSetupException("Cannot find diffusion_interface tag", __FILE__, __LINE__);
+	
+  string diff_interface_type;
+  if(!child->getWithDefault("type",diff_interface_type, "null"))
+    throw ProblemSetupException("No type for diffusion_interface", __FILE__, __LINE__);
 
   if (flags->d_integrator_type != "implicit" &&
       flags->d_integrator_type != "explicit"){
@@ -63,15 +66,13 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
 
-  if (mat_type == "linear")
-    return(scinew ScalarDiffusionModel(child, ss, flags));
-	else if (mat_type == "jg")
-    return(scinew JGConcentrationDiffusion(child, ss, flags));
-	else if (mat_type == "rf1")
-    return(scinew RFConcDiffusion1MPM(child, ss, flags));
-
-  else
-    throw ProblemSetupException("Unknown Scalar Diffusion Type ("+mat_type+")", __FILE__, __LINE__);
+  if (diff_interface_type == "shared"){
+    return(scinew SDInterfaceModel(child, ss, flags));
+	}else if (diff_interface_type == "paired"){
+    return(scinew SDInterfaceModel(child, ss, flags));
+  }else{
+    throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diff_interface_type+")", __FILE__, __LINE__);
+  }
 
   return 0;
 }

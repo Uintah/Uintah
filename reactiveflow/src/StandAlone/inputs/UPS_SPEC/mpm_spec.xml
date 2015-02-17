@@ -182,6 +182,7 @@
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
+      <include href="diffusion_interface.xml" />
     </MPM>
   </MaterialProperties>
 

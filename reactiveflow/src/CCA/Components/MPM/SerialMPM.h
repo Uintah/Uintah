@@ -56,6 +56,7 @@ using namespace SCIRun;
 class ThermalContact;
 class HeatConduction;
 class AnalysisModule;
+class SDInterfaceModel;
 
 /**************************************
 
@@ -93,6 +94,7 @@ public:
   Contact*         contactModel;
   ThermalContact*  thermalContactModel;
   HeatConduction* heatConductionModel;
+	SDInterfaceModel* sdInterfaceModel;
  
   //////////
   // Insert Documentation Here:
@@ -587,6 +589,9 @@ protected:
                                             const MaterialSubset* matls,
                                             DataWarehouse* old_dw,
                                             DataWarehouse* new_dw);
+
+  virtual void scheduleDiffusionInterface(SchedulerP& sched, const PatchSet* patches,
+                                          const MaterialSet* matls);
 
   virtual void scheduleComputeStep1(SchedulerP&, const PatchSet*, const MaterialSet*);
 

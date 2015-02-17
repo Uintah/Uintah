@@ -28,6 +28,8 @@
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
 #include <CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
 #include <CCA/Components/MPM/PhysicalBC/ForceBC.h>
@@ -125,6 +127,9 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
 
 SerialMPM::~SerialMPM()
 {
+	if(flags->d_doScalarDiffusion){
+	  delete sdInterfaceModel;
+	}
   delete lb;
   delete flags;
   delete contactModel;
@@ -242,7 +247,10 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 
   cohesiveZoneProblemSetup(restart_mat_ps, d_sharedState,flags);
-  
+
+  if(flags->d_doScalarDiffusion){
+    sdInterfaceModel = SDInterfaceModelFactory::create(restart_mat_ps, sharedState, flags);
+	}
   //__________________________________
   //  create analysis modules
   // call problemSetup  
@@ -588,6 +596,11 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
                                                           all_matls);
   }
   scheduleComputeContactArea(             sched, patches, matls);
+
+	if(flags->d_doScalarDiffusion){
+	  scheduleDiffusionInterface(           sched, patches, matls);
+	}
+
   scheduleComputeInternalForce(           sched, patches, matls);
 
   scheduleComputeAndIntegrateAcceleration(sched, patches, matls);
@@ -5014,6 +5027,11 @@ void SerialMPM::sdInterpolateParticlesToGrid(const ProcessorGroup*,
 	  }
   }
 
+}
+
+void SerialMPM::scheduleDiffusionInterface(SchedulerP& sched, const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
 }
 
 void SerialMPM::scheduleComputeStep1(SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls)
