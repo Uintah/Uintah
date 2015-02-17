@@ -633,8 +633,9 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   print "Command Line: %s %s" % (short_cmd, susinput)
   rc = system("env > sus.log.txt; %s %s >> sus.log.txt 2>&1" % (command, susinput))
   
-  # was an exception thrown
-  exception = system("grep -q 'Caught exception' sus.log.txt");
+  # Check to see if an exception was thrown.  (Use "grep -v 'cout'" to avoid false positive
+  # when source code line was that prints the exception is changed.)
+  exception = system("grep -q 'Caught exception' sus.log.txt | grep -v cout");
   if exception == 0:
     print "\t*** An exception was thrown ***";
     rc = -9
