@@ -88,7 +88,8 @@ if ( $#these != 0 ) then
         grep processors $X | awk -v nThreads=$nThreads -F" " '{ print $2*nThreads }' > $here/processors
 
         # extract the output between the start and ending timesteps
-        sed -n /"timestep $startTimestep"/,/"timestep $startTimestep"/p $X > $here/out.clean
+        @ endingTimestep = $endTimestep + 1
+        sed -n /"timestep $startTimestep"/,/"timestep $endingTimestep"/p $X > $here/out.clean
 
         set me = $here/out.clean
         grep TaskExec $me      | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskExec
