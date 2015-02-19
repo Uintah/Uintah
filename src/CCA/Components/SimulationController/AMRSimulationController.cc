@@ -83,10 +83,32 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
+  // If VisIt has been included into the build initialize the lib sim
+  // so that a user can conect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+  std::cerr << "****************************  "
+	    << "AMRSimulationController  InitLibSim  usingMPI = "
+	    << (Parallel::usingMPI() ? "Yes" : "No")
+	    << std::endl;
+
+#ifdef HAVE_MPICH
+  d_visit_simulation_data.isProc0 = isProc0_macro;
+#endif
+
+  visit_InitLibSim( &d_visit_simulation_data );
+#endif
 }
 
 AMRSimulationController::~AMRSimulationController()
 {
+  // If VisIt has been included into the build initialize the lib sim
+  // so that a user can conect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+  std::cerr << "****************************  "
+	    << "AMRSimulationController  EndLibSim" << std::endl;
+
+  visit_EndLibSim( &d_visit_simulation_data );
+#endif
 }
 
 double barrier_times[5]={0};
@@ -274,7 +296,43 @@ AMRSimulationController::run()
      if (d_reduceUda){
       currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
      }
+
+     // If VisIt has been included into the build check the lib sim state
+     // to see if there is a connection and if so if anything needs to be
+     // done.
+#ifdef HAVE_VISIT
+     d_visit_simulation_data.schedulerP = d_scheduler;
+     d_visit_simulation_data.gridP = currentGrid;
+     d_visit_simulation_data.time  = time;
+     d_visit_simulation_data.cycle =
+       d_sharedState->getCurrentTopLevelTimeStep();     
+
+     if( d_scheduler.get_rep() == 0 )
+     {
+       std::cerr << "****************************  "
+		 << "d_scheduler is null ?????    "
+		 << std::endl;
+     }
      
+     if( currentGrid.get_rep() == 0 )
+     {
+       std::cerr << "****************************  "
+		 << "currentGrid is null ?????    "
+		 << std::endl;
+     }
+     
+     std::cerr << "****************************  "
+	       << "AMRSimulationController  run  "
+#ifdef HAVE_MPICH
+	       << d_visit_simulation_data.isProc0 << "  "
+#endif
+	       << d_visit_simulation_data.time << "  "
+	       << d_visit_simulation_data.cycle << "  "
+	       << std::endl;
+
+     visit_CheckState( &d_visit_simulation_data );
+#endif
+
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse

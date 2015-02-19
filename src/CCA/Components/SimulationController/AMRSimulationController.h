@@ -35,6 +35,12 @@
 #include <CCA/Components/SimulationController/SimulationController.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 
+#include <sci_defs/visit_defs.h>
+
+#ifdef HAVE_VISIT
+#include <VisIt/libsim/visit_libsim.h>
+#endif
+
 namespace Uintah {
 
 class SimulationInterface;
@@ -110,6 +116,10 @@ class Regridder;
                                DataWarehouse  * /*old_dw*/,
                                DataWarehouse  * new_dw );
 
+
+#ifdef HAVE_VISIT
+     visit_simulation_data d_visit_simulation_data;
+#endif      
    };
 
 } // End namespace Uintah
