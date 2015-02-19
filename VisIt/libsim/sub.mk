@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2015 The University of Utah
+#  Copyright (c) 1997-2014 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -27,40 +27,34 @@
 # 
 # Makefile fragment for this subdirectory 
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR   := VisIt/libsim
 
-SRCDIR   := CCA/Components/SimulationController
+SRCS     := $(SRCDIR)/visit_libsim.cc
 
-SRCS     += $(SRCDIR)/SimulationController.cc \
-            $(SRCDIR)/AMRSimulationController.cc 
+INCLUDES += $(VISIT_INCLUDE)
 
-PSELIBS := \
-	Core/DataArchive \
-	Core/Disclosure  \
-	Core/Exceptions  \
-	Core/Grid        \
-	Core/Parallel    \
-	Core/ProblemSpec \
-	Core/Util        \
-	CCA/Components/DataArchiver    \
-	CCA/Components/ReduceUda       \
-	CCA/Components/Regridder       \
-	CCA/Ports        \
-	Core/OS       \
-	Core/Geometry \
-	Core/Thread   \
-	Core/Util     \
-	Core/Exceptions \
-	\
-	Core/Math
-
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(GPERFTOOLS_LIBRARY)
-
-ifeq ($(HAVE_VISIT),yes)
-  INCLUDES += $(VISIT_INCLUDE)
-  PSELIBS += VisIt/libsim
-  LIBS += $(VISIT_LIBRARY)
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+      CCA/Ports         \
+      CCA/Components/ProblemSpecification \
+      Core/Containers   \
+      Core/DataArchive  \
+      Core/Datatypes    \
+      Core/Disclosure   \
+      Core/Exceptions   \
+      Core/Geometry     \
+      Core/Grid         \
+      Core/Math         \
+      Core/Malloc       \
+      Core/Parallel     \
+      Core/ProblemSpec  \
+      Core/Thread       \
+      Core/Util         \
+      StandAlone/tools/uda2vis
 endif
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+LIBS := $(VISIT_LIBRARY) $(MPI_LIBRARY)
 
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

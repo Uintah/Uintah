@@ -89,6 +89,7 @@
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/uintah_defs.h>
+#include <sci_defs/visit_defs.h>
 #include <sci_defs/cuda_defs.h>
 
 #include <svn_info.h>
@@ -96,6 +97,11 @@
 #ifdef USE_VAMPIR
 #  include <Core/Parallel/Vampir.h>
 #endif
+
+#ifdef HAVE_VISIT
+#  include <VisIt/libsim/visit_libsim.h>
+#endif
+
 
 #if HAVE_IEEEFP_H
 #  include <ieeefp.h>
@@ -417,6 +423,26 @@ main( int argc, char *argv[], char *env[] )
         || arg == "-mpmf" || arg == "-rmpm" || arg == "-smpm" || arg == "-amrmpm" || arg == "-smpmice" || arg == "-rmpmice") {
       usage(string("'") + arg + "' is deprecated.  Simulation component must be specified " + "in the .ups file!", arg, argv[0]);
     }
+    // If VisIt is included then the user may send optional args to
+    // VisIt. The most important is the directory path to where VisIt
+    // is located.
+#ifdef HAVE_VISIT
+    else if (arg == "-dir" ) {
+      if (++i == argc) {
+        usage("You must provide a file name for -dir", arg, argv[0]);
+      }
+    }
+    else if (arg == "-option" ) {
+      if (++i == argc) {
+        usage("You must provide a string for -option", arg, argv[0]);
+      }
+    }
+    else if (arg == "-trace" ) {
+      if (++i == argc) {
+        usage("You must provide a file name for -trace", arg, argv[0]);
+      }
+    }
+#endif
     else {
       if (filename != "") {
         usage("", arg, argv[0]);
@@ -479,6 +505,13 @@ main( int argc, char *argv[], char *env[] )
   bool thrownException = false;
 
   try {
+
+    // If VisIt is included then the user may be attching into Visit's
+    // libsim for in-situ analysis and visualization. This call pass
+    // optional arguments that VisIt will interpert.
+#ifdef HAVE_VISIT
+    visit_LibSimArguments( argc, argv );
+#endif
 
 #ifndef HAVE_MPICH_OLD
     // If regular MPI, then initialize after parsing the args...

@@ -469,10 +469,11 @@ SCI_ARG_WITH(libxml2,
   
 SCI_ARG_WITH(visit,
   AC_HELP_STRING(--with-visit=DIR,
-                 Turn on VisIt visualization tool support.  Point to VisIt installation.),
-  [with_visit="$withval"],
+                 Use the visit installation in DIR),
+  [with_visit="$withval"
+   sci_required_visit=yes],
   [with_visit=""])
-
+  
 SCI_ARG_WITH(visus,
   AC_HELP_STRING(--with-visus=DIR,
                  Turn on ViSUS IDX support.  Point to ViSUS installation.),
@@ -2049,7 +2050,7 @@ AC_SUBST(DEF_RAY_SCATTER)
 if test "$with_visit" -o "$wasatch_3p" = "yes"; then
    which cmake > /dev/null 2>&1
    if test $? != 0; then
-      AC_MSG_ERROR( VisIt and/or Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!)
+      AC_MSG_ERROR( Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!)
    fi
    CMAKE_LOCATION=`which cmake`
 
@@ -2077,38 +2078,62 @@ if test "$with_visit" -o "$wasatch_3p" = "yes"; then
    fi
 fi
 
-##  --  With VisIt -----------------------------
+##  --  search for visit stuff  -------------------------------------------
+# local     - sim/V2/lib/VisItControlInterface_V2.h
+#           - lib/libsimV2.a
 
-if test "$with_visit"; then
+# installed - linux-x86_64/libsim/V2/include/VisItControlInterface_V2.h
+#           - linux-x86_64/libsim/V2/lib/libsimV2.a
 
-   AC_MSG_CHECKING(for VisIt)
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+if test "$sci_required_visit" = "yes"; then
+ 
+  if test "$with_visit" = "yes"; then
+    _sci_optional=required
+  else
+    _sci_optional=specific
+    _sci_lib="$with_visit"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+      _sci_inc="$with_visit/sim/V2/lib"
+    # Otherwise assume an installed version
+    else
+      _sci_inc="$with_visit/include"
+    fi
+  fi
 
-   if test "$with_visit" = "yes"; then 
-      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
-   fi
-   if ! test -f "$with_visit/bin/xml2cmake"; then 
-      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
-   fi
+  echo $_sci_inc
+  echo $_sci_lib
+ 
+  AC_LANG(C++)
+  SCI_TRY_LINK(VISIT, VISIT libraries and headers,
+               VisItControlInterface_V2.h VisItDataInterface_V2.h,		
+               $_sci_inc,
+               simV2,
+               $_sci_lib,
+               ,,
+               $_sci_optional)
+  AC_LANG(C)     
+  
+  if test "$HAVE_VISIT" = "yes"; then
+    DEF_VISIT="#define HAVE_VISIT 1"
+  else
+    DEF_VISIT="#define HAVE_VISIT 1"
+  fi
 
-   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
-      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
-      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
-      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory...)
-	 rm -rf ./VisIt
-      fi
-   fi
+fi #end sci_required_visit
 
-   sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_VISIT)
+AC_SUBST(DEF_VISIT)
+AC_SUBST(INC_VISIT_H)
+AC_SUBST(VISIT_LIB_DIR_FLAG)
+AC_SUBST(VISIT_LIB_FLAG)
 
-   BUILD_VISIT=yes
-   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.$SO_OR_ARCHIVE_EXTENSION
-   VISIT_INSTALL_DIR=$with_visit
-   AC_MSG_RESULT(found)
-fi
-
-AC_SUBST(BUILD_VISIT)
-AC_SUBST(UINTAH_UDA_TO_VIS_LIB)
-AC_SUBST(VISIT_INSTALL_DIR)
+sci_defs_files="$sci_defs_files include/sci_defs/visit_testdefs.h"
 
 ##  --  search for OFED (Infiniband Drivers) -----------------------------
 
