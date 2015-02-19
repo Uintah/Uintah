@@ -27,7 +27,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
-#include "StandAlone/tools/uda2vis/uda2Vis.h"
+#include "StandAlone/tools/uda2vis/uda2vis.h"
 
 #include <iostream.h>
 #include <stdio.h>
@@ -1119,6 +1119,212 @@ visit_handle visit_ReadMetaData(void *cbdata)
 }
 
 
+// ****************************************************************************
+//  Method: visit_CalculateDomainNesting
+//
+//  Purpose:
+//      Calculates two important data structures.  One is the structure domain
+//      nesting, which tells VisIt how the AMR patches are nested, which allows
+//      VisIt to ghost out coarse zones that are refined by smaller zones.
+//      The other structure is the rectilinear domain boundaries, which tells
+//      VisIt which patches are next to each other, allowing VisIt to create
+//      a layer of ghost zones around each patch.  Note that this only works
+//      within a refinement level, not across refinement levels.
+//  
+//
+// NOTE: The cache variable for the mesh MUST be called "any_mesh",
+// which is a problem when there are multiple meshes or one of them is
+// actually named "any_mesh" (see
+// https://visitbugs.ornl.gov/issues/52). Thus, for each mesh we keep
+// around our own cache variable and if this function finds it then it
+// just uses it again instead of recomputing it.
+//
+// ****************************************************************************
+void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
+				  std::map<std::string, void *> mesh_domains,
+				  std::map<std::string, void *> mesh_boundaries,
+				  bool &forceMeshReload,
+				  int timestate, const std::string &meshname)
+{
+#ifdef COMMENT_OUT_FOR_NOW
+  //lookup mesh in our cache and if it's not there, compute it
+  if (mesh_domains[meshname] == NULL || forceMeshReload == true)
+  {
+    //
+    // Calculate some info we will need in the rest of the routine.
+    //
+    int num_levels = stepInfo->levelInfo.size();
+    int totalPatches = 0;
+    for (int level = 0 ; level < num_levels ; level++)
+      totalPatches += stepInfo->levelInfo[level].patchInfo.size();
+
+    //
+    // Now set up the data structure for patch boundaries.  The data 
+    // does all the work ... it just needs to know the extents of each patch.
+    //
+    avtRectilinearDomainBoundaries *rdb =
+      new avtRectilinearDomainBoundaries(true);
+
+    // debug5 << "Calculating avtRectilinearDomainBoundaries for "
+    // 	   << meshname << " mesh (" << rdb << ")." << std::endl;
+
+    rdb->SetNumDomains(totalPatches);
+
+    for (int patch = 0 ; patch < totalPatches ; patch++) {
+      int my_level, local_patch;
+      GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
+
+      PatchInfo &patchInfo = stepInfo->levelInfo[my_level].patchInfo[local_patch];
+
+      int low[3],high[3];
+      patchInfo.getBounds(low,high,meshname);
+
+      int e[6] = { low[0], high[0],
+                   low[1], high[1],
+                   low[2], high[2] };
+      // debug5 << "\trdb->SetIndicesForAMRPatch(" << patch << ","
+      // 	     << my_level << ", <" << e[0] << "," << e[2] << "," << e[4]
+      // 	     << "> to <" << e[1] << "," << e[3] << "," << e[5] << ">)"
+      //             << std::endl;
+      rdb->SetIndicesForAMRPatch(patch, my_level, e);
+    }
+
+    rdb->CalculateBoundaries();
+
+    mesh_boundaries[meshname] =
+       void_ref_ptr(rdb, avtStructuredDomainBoundaries::Destruct);
+    
+    //
+    // Domain Nesting
+    //
+    avtStructuredDomainNesting *dn =
+      new avtStructuredDomainNesting(totalPatches, num_levels);
+
+    //debug5 << "Calculating avtStructuredDomainNesting for "
+    //       << meshname << " mesh (" << dn << ")." << std::endl;
+    dn->SetNumDimensions(3);
+
+    //
+    // Calculate what the refinement ratio is from one level to the next.
+    //
+    for (int level = 0 ; level < num_levels ; level++) {
+      // SetLevelRefinementRatios requires data as a vector<int>
+      vector<int> rr(3);
+      for (int i=0; i<3; i++)
+        rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
+
+      // debug5 << "\tdn->SetLevelRefinementRatios(" << level << ", <"
+      //        << rr[0] << "," << rr[1] << "," << rr[2] << ">)\n";
+      dn->SetLevelRefinementRatios(level, rr);
+    }
+
+    //
+    // Calculating the child patches really needs some better sorting than
+    // what I am doing here.  This is likely to become a bottleneck in extreme
+    // cases.  Although this routine has performed well for a previous 55K
+    // patch run.
+    //
+    vector< vector<int> > childPatches(totalPatches);
+
+    for (int level = num_levels-1 ; level > 0 ; level--)
+    {
+      int prev_level = level-1;
+      LevelInfo &levelInfoParent = stepInfo->levelInfo[prev_level];
+      LevelInfo &levelInfoChild = stepInfo->levelInfo[level];
+
+      for (int child=0; child<(int)levelInfoChild.patchInfo.size(); child++)
+      {
+        PatchInfo &childPatchInfo = levelInfoChild.patchInfo[child];
+        int child_low[3],child_high[3];
+        childPatchInfo.getBounds(child_low,child_high,meshname);
+
+        for (int parent = 0;
+	     parent<(int)levelInfoParent.patchInfo.size(); parent++)
+	{
+          PatchInfo &parentPatchInfo = levelInfoParent.patchInfo[parent];
+          int parent_low[3],parent_high[3];
+          parentPatchInfo.getBounds(parent_low,parent_high,meshname);
+
+          int mins[3], maxs[3];
+          for (int i=0; i<3; i++)
+	  {
+            mins[i] = max(child_low[i],
+			  parent_low[i] *levelInfoChild.refinementRatio[i]);
+            maxs[i] = min(child_high[i],
+			  parent_high[i]*levelInfoChild.refinementRatio[i]);
+          }
+
+          bool overlap = (mins[0]<maxs[0] &&
+                          mins[1]<maxs[1] &&
+                          mins[2]<maxs[2]);
+
+          if (overlap)
+	  {
+            int child_gpatch = GetGlobalDomainNumber(stepInfo, level, child);
+            int parent_gpatch = GetGlobalDomainNumber(stepInfo, prev_level, parent);
+            childPatches[parent_gpatch].push_back(child_gpatch);
+          }
+        }
+      }
+    }
+
+    //
+    // Now that we know the extents for each patch and what its children are,
+    // tell the structured domain boundary that information.
+    //
+    for (int p=0; p<totalPatches ; p++)
+    {
+      int my_level, local_patch;
+      GetLevelAndLocalPatchNumber(stepInfo, p, my_level, local_patch);
+
+      PatchInfo &patchInfo =
+	stepInfo->levelInfo[my_level].patchInfo[local_patch];
+      int low[3],high[3];
+      patchInfo.getBounds(low,high,meshname);
+
+      vector<int> e(6);
+      for (int i=0; i<3; i++) {
+        e[i+0] = low[i];
+        e[i+3] = high[i]-1;
+      }
+      //debug5<<"\tdn->SetNestingForDomain("<<p<<","<<my_level<<", <>, <"<<e[0]<<","<<e[1]<<","<<e[2]<<"> to <"<<e[3]<<","<<e[4]<<","<<e[5]<<">)\n";
+      dn->SetNestingForDomain(p, my_level, childPatches[p], e);
+    }
+
+    mesh_domains[meshname] =
+       void_ref_ptr(dn, avtStructuredDomainNesting::Destruct);
+
+    forceMeshReload = false;
+  }
+
+  //#ifdef COMMENT_OUT_FOR_NOW
+  //
+  // Register these structures with the generic database so that it knows
+  // to ghost out the right cells.
+  //
+  cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
+                      AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
+                      timestate, -1, mesh_boundaries[meshname]);
+  cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
+                      AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
+                      timestate, -1, mesh_domains[meshname]);
+
+  //VERIFY we got the mesh boundary and domain in there
+  void_ref_ptr vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
+                            AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
+                            timestate, -1);
+  if (*vrTmp == NULL || *vrTmp != mesh_boundaries[meshname])
+    throw InvalidFilesException("uda boundary mesh not registered");
+
+  vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
+                            AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
+                            timestate, -1);
+  if (*vrTmp == NULL || *vrTmp != mesh_domains[meshname])
+    throw InvalidFilesException("uda domain mesh not registered");
+#endif
+}
+
+
 //---------------------------------------------------------------------
 // visit_SimGetMesh
 //     Callback for processing a mesh
@@ -1290,8 +1496,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
   else //if (meshName.find("Particle_Mesh") == string::npos)
   {
     // make sure we have ghosting info for this mesh
-    CalculateDomainNesting( stepInfo, mesh_domains, mesh_boundaries,
-                            forceMeshReload, timestate, meshname );
+    visit_CalculateDomainNesting( stepInfo, mesh_domains, mesh_boundaries,
+				  forceMeshReload, timestate, meshname );
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
 

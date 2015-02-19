@@ -56,11 +56,6 @@ ParticleDataRaw* getParticleData2(SchedulerP schedulerP,
 				  int material,
 				  int timestep);
 
-void getBounds(int low[3], int high[3],
-	       const std::string meshName,
-	       const LevelInfo &levelInfo,
-	       int patch_id=-1);
-
 void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 				 int global_patch, 
 				 int &level, int &local_patch);
@@ -68,13 +63,12 @@ void GetLevelAndLocalPatchNumber(TimeStepInfo* stepInfo,
 int GetGlobalDomainNumber(TimeStepInfo* stepInfo,
 			  int level, int local_patch);
 
-void CheckNaNs(int num, double *data, int level, int patch);
+void getBounds(int low[3], int high[3],
+	       const std::string meshName,
+	       const LevelInfo &levelInfo,
+	       int patch_id=-1);
 
-void CalculateDomainNesting(TimeStepInfo* stepInfo,
-			    std::map<std::string, void *> mesh_domains,
-			    std::map<std::string, void *> mesh_boundaries,
-			    bool &forceMeshReload,
-			    int timestate, const std::string &meshname);
+void CheckNaNs(int num, double *data, int level, int patch);
 }
 
 #endif //UINTAH_UDA2VIS_H

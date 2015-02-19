@@ -117,21 +117,27 @@ void visit_SlaveProcessCallback();
 int visit_ProcessVisItCommand( visit_simulation_data *sim );
 #endif
 
-
-visit_handle visit_SimGetMetaData(void *cbdata);
-visit_handle visit_SimGetMesh(int domain, const char *name, void *cbdata);
-visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
-
 void
 visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata);
-
 
 void visit_LibSimArguments(int argc, char **argv);
 void visit_InitLibSim(visit_simulation_data *sim);
 void visit_EndLibSim(visit_simulation_data *sim);
 void visit_CheckState(visit_simulation_data *sim);
 
+
+void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
+				  std::map<std::string, void *> mesh_domains,
+				  std::map<std::string, void *> mesh_boundaries,
+				  bool &forceMeshReload,
+				  int timestate, const std::string &meshname);
+
 visit_handle visit_ReadMetaData(void *cbdata);
+
+visit_handle visit_SimGetMetaData(void *cbdata);
+visit_handle visit_SimGetMesh(int domain, const char *name, void *cbdata);
+visit_handle visit_SimGetVariable(int domain, const char *name, void *cbdata);
+
 
 } // End namespace Uintah
 
