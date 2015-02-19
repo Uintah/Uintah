@@ -22,44 +22,28 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef _WALLSHEARSTRESS_H
-#define _WALLSHEARSTRESS_H
+#ifndef _SMOOTHWALL_H_
+#define _SMOOTHWALL_H_
 
-#include <Core/Grid/Variables/CCVariable.h>
-#include <Core/Grid/Variables/SFCXVariable.h>
-#include <Core/Grid/Variables/SFCYVariable.h>
-#include <Core/Grid/Variables/SFCZVariable.h>
-
-#include <Core/Grid/GridP.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/SimulationStateP.h>
-
-#include <Core/Grid/Patch.h>
-#include <Core/Geometry/Vector.h>
-
+#include <CCA/Components/ICE/WallShearStressModel/WallShearStress.h>
 
 namespace Uintah {
 
-  class DataWarehouse;
-  class ICELabel;
-  class Material;
-  class Patch;
-  
-
-  class WallShearStress {
+  class smoothwall : public WallShearStress{
 
   public:
-    WallShearStress();
-    WallShearStress( ProblemSpecP& ps, SimulationStateP& sharedState);
-    virtual ~WallShearStress(); 
-
+  
+    smoothwall(ProblemSpecP& ps, SimulationStateP& sharedState);
+    
+    virtual ~smoothwall();
+    
     virtual void sched_Initialize(SchedulerP& sched, 
                                   const LevelP& level,
-                                  const MaterialSet* matls) = 0;
-    
+                                  const MaterialSet* matls);
+                                    
     virtual void sched_AddComputeRequires(Task* task, 
-                                          const MaterialSubset* matls) = 0;
-                                               
+                                          const MaterialSubset* matls);
+
     virtual
     void computeWallShearStresses( DataWarehouse* old_dw,
                                    DataWarehouse* new_dw,
@@ -67,15 +51,42 @@ namespace Uintah {
                                    const int indx,
                                    constCCVariable<double>& vol_frac_CC,  
                                    constCCVariable<Vector>& vel_CC,      
-                                   const CCVariable<double>& viscosity,        
-                                   constCCVariable<double>& rho_CC,    
+                                   const CCVariable<double>& viscosity,
+                                   constCCVariable<double>& rho_CC,      
                                    SFCXVariable<Vector>& tau_X_FC,
                                    SFCYVariable<Vector>& tau_Y_FC,
-                                   SFCZVariable<Vector>& tau_Z_FC ) = 0;
-  protected:
+                                   SFCZVariable<Vector>& tau_Z_FC );
+    private:
     
-  };// End class WallShearStress
+    //__________________________________
+    //
+    template<class T> 
+    void wallShearStresses(DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const Patch* patch,
+                           const int indx,
+                           const CCVariable<double>& viscosity,
+                           constCCVariable<double>& vol_frac_CC,
+                           constCCVariable<double>& rho_CC,
+                           constCCVariable<Vector>& vel_CC,
+                           T& Tau_FC);
+                           
+    void Initialize(const ProcessorGroup*, 
+                    const PatchSubset* ,
+                    const MaterialSubset* ,
+                    DataWarehouse*, 
+                    DataWarehouse*);
+      
+      SimulationStateP d_sharedState;
+      Patch::FaceType d_face;
+      
+      double d_invVonKarman;        // 1/VonKarman 
+      double d_B_const;
+      double d_convergence_uTau;    // convergence criteria
+      double d_uTau_guess;         
+      unsigned int d_max_iter;
+      
+    };// End class
 
 }// End namespace Uintah
-
 #endif

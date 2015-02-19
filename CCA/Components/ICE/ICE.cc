@@ -3969,16 +3969,18 @@ void ICE::viscousShearStress(const ProcessorGroup*,
         double viscosity_test = ice_matl->getViscosity();
         
         if(viscosity_test != 0.0) {
+          CCVariable<double>        tot_viscosity;     // total viscosity
           CCVariable<double>        viscosity;
-          constCCVariable<double>   viscosity_org;
+          constCCVariable<double>   molecularVis;      // molecular viscosity
           constCCVariable<Vector>   velTau_CC;
 
-          new_dw->get(viscosity_org, lb->viscosityLabel, indx, patch, gac,2); 
+          new_dw->get(molecularVis, lb->viscosityLabel, indx, patch, gac,2); 
           new_dw->get(velTau_CC,        lb->velTau_CCLabel,    indx, patch, gac,2); 
 
           // don't alter the original value
+          new_dw->allocateTemporary(tot_viscosity, patch, gac, 2);
           new_dw->allocateTemporary(viscosity, patch, gac, 2);
-          viscosity.copyData(viscosity_org);
+          viscosity.copyData(molecularVis);
           
           // Use temporary arrays to eliminate the communication of shear stress components
           // across the network.  Normally you would compute them in a separate task and then
@@ -4000,15 +4002,17 @@ void ICE::viscousShearStress(const ProcessorGroup*,
           // turbulence model
           if( d_turbulence ){ 
             d_turbulence->callTurb( new_dw, patch, velTau_CC, rho_CC, indx, lb,
-                                    d_sharedState, viscosity );                                   
+                                    d_sharedState, molecularVis, tot_viscosity );
+            viscosity.copyData(tot_viscosity);                                  
           }
 
           computeTauComponents( patch, vol_frac, velTau_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
           
+          
           // wall model
           if( d_WallShearStressModel ){
             d_WallShearStressModel -> computeWallShearStresses( old_dw, new_dw, patch, indx, 
-                                                                vol_frac, velTau_CC, viscosity, 
+                                                                vol_frac, velTau_CC, molecularVis, rho_CC,
                                                                 Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC); 
           }
 
