@@ -32,7 +32,7 @@
  *
  */
 
-#include <StandAlone/tools/uda2vis/uda2Vis.h>
+#include <StandAlone/tools/uda2vis/uda2vis.h>
 
 #include <Core/DataArchive/DataArchive.h>
 
