@@ -83,10 +83,15 @@ void setBC(CCVariable<T>& var_CC,
            nCells += setNeumannBC_CC< T >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
         }                                   
         //__________________________________
-        //  Symmetry
-        else if ( bc_kind == "symmetry" || bc_kind == "zeroNeumann" ) {
+        // zeroNeumann 
+        else if ( bc_kind == "zeroNeumann" ) {
           bc_value = 0.0;
           nCells += setNeumannBC_CC< T >( patch, face, var_CC, bound_ptr, bc_value, cell_dx);
+        }
+        //__________________________________
+        //  Symmetry
+        else if ( bc_kind == "symmetry") {
+          nCells += setSymmetryBC_CC( patch, face, var_CC, bound_ptr);
         }
         
         //__________________________________
@@ -128,6 +133,21 @@ void setBC(CCVariable<T>& var_CC,
   }  // faces loop
 }
 
+
+ int setSymmetryBC_CC( const Patch* patch,
+                       const Patch::FaceType face,
+                       CCVariable<double>& var_CC,               
+                       Iterator& bound_ptr)                  
+{
+   IntVector oneCell = patch->faceDirection(face);
+   for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+     IntVector adjCell = *bound_ptr - oneCell;
+     var_CC[*bound_ptr] = var_CC[adjCell];
+   }
+   int nCells = bound_ptr.size();
+   return nCells;
+}
+
 /* --------------------------------------------------------------------- 
  Function~  setSymmetryBC_CC--
  Tangent components Neumann = 0
@@ -139,16 +159,112 @@ void setBC(CCVariable<T>& var_CC,
                        Iterator& bound_ptr)                  
 {
    IntVector oneCell = patch->faceDirection(face);
-   int P_dir = patch->getFaceAxes(face)[0];  // principal direction
-   IntVector sign = IntVector(1,1,1);
-   sign[P_dir] = -1;
-
    for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
      IntVector adjCell = *bound_ptr - oneCell;
-     var_CC[*bound_ptr] = sign.asVector() * var_CC[adjCell];
+     var_CC[*bound_ptr] =  -var_CC[adjCell];
    }
    int nCells = bound_ptr.size();
    return nCells;
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setGradientBC--
+ Calculate the gradients in the extra cells.  Only need the normal
+component for now.
+ ---------------------------------------------------------------------  */
+
+void setGradientBC(
+           CCVariable<Vector> & gradient_var_CC,
+           constCCVariable<double> & var_CC,
+           const string& desc,
+           const Patch* patch,
+           const int mat_id )
+{
+  if(patch->hasBoundaryFaces() == false){
+    return;
+  }
+
+  BC_CC << "-------- setBC (double) \t"<< desc << " mat_id = " 
+             << mat_id <<  ", Patch: "<< patch->getID() << endl;
+  Vector cell_dx = patch->dCell();
+
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  // Iterate over the faces encompassing the domain
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    string bc_kind = "NotSet";      
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+
+    for (int child = 0;  child < numChildren; child++) {
+      Iterator bound_ptr;
+      double bc_value(-9); 
+      bool foundIterator = getIteratorBCValueBCKind<double>(patch, face, child, desc, mat_id,
+                                                        bc_value, bound_ptr,bc_kind);
+
+      if(foundIterator) {
+        IntVector oneCell = patch->faceDirection(face);
+        int P_dir = patch->getFaceAxes(face)[0];  // principal direction
+ 
+        //Update the normal gradient 
+        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+          IntVector adjCell = *bound_ptr - oneCell;
+          gradient_var_CC[*bound_ptr][P_dir] =  (var_CC[adjCell]-var_CC[*bound_ptr])/cell_dx[P_dir];
+        }
+      }
+    }
+  }
+}
+
+/* --------------------------------------------------------------------- 
+ Function~  setGradientBC--
+ Calculate the gradients in the extra cells for vector quantities(velocity).
+ ---------------------------------------------------------------------  */
+
+void setGradientBC(
+           CCVariable<Matrix3> & gradient_var_CC,
+           constCCVariable<Vector> & var_CC,
+           const string& desc,
+           const Patch* patch,
+           const int mat_id )
+{
+  if(patch->hasBoundaryFaces() == false){
+    return;
+  }
+
+  BC_CC << "-------- setBC (double) \t"<< desc << " mat_id = " 
+             << mat_id <<  ", Patch: "<< patch->getID() << endl;
+  Vector cell_dx = patch->dCell();
+
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  // Iterate over the faces encompassing the domain
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    string bc_kind = "NotSet";      
+    int numChildren = patch->getBCDataArray(face)->getNumberChildren(mat_id);
+
+    for (int child = 0;  child < numChildren; child++) {
+      Iterator bound_ptr;
+      double bc_value(-9); 
+      bool foundIterator = getIteratorBCValueBCKind<double>(patch, face, child, desc, mat_id,
+                                                        bc_value, bound_ptr,bc_kind);
+
+      if(foundIterator) {
+        IntVector oneCell = patch->faceDirection(face);
+        int P_dir = patch->getFaceAxes(face)[0];  // principal direction
+ 
+        //Update the normal gradient 
+        for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+          IntVector adjCell = *bound_ptr - oneCell;
+          for(int icomp = 0; icomp < 3; icomp++)
+            gradient_var_CC[*bound_ptr](P_dir, icomp) =  (var_CC[adjCell][icomp]-var_CC[*bound_ptr][icomp])/cell_dx[P_dir];
+        }
+      }
+    }
+  }
 }
 
 //______________________________________________________________________

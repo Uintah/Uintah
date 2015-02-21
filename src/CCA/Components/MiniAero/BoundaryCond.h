@@ -58,6 +58,25 @@ namespace MiniAeroNS {
              const Patch* patch,    
              const int mat_id);
 
+  void setGradientBC(
+    CCVariable<Vector> & gradient_var_CC,
+    constCCVariable<double> & var_CC,
+    const std::string & desc,
+    const Patch * patch,
+    const int mat_id);
+
+  void setGradientBC(
+    CCVariable<Matrix3> & gradient_var_CC,
+    constCCVariable<Vector> & var_CC,
+    const std::string & desc,
+    const Patch * patch,
+    const int mat_id);
+
+  int setSymmetryBC_CC( const Patch* patch,
+                        const Patch::FaceType face,
+                        CCVariable<double>& var_CC,               
+                        Iterator& bound_ptr);
+
   int setSymmetryBC_CC( const Patch* patch,
                         const Patch::FaceType face,
                         CCVariable<Vector>& var_CC,               
