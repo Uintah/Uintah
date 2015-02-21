@@ -91,13 +91,6 @@ typedef struct
   bool nodeCentered;
   bool forceMeshReload;
 
-  //VisIt meshes (see https://visitbugs.ornl.gov/issues/52)
-  // std::map<std::string, void_ref_ptr> mesh_domains;
-  // std::map<std::string, void_ref_ptr> mesh_boundaries;
-
-  std::map<std::string, void *> mesh_domains;
-  std::map<std::string, void *> mesh_boundaries;
-
   // Simulation control members
   int  runMode;
   int  simMode;
@@ -127,8 +120,6 @@ void visit_CheckState(visit_simulation_data *sim);
 
 
 void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
-				  std::map<std::string, void *> mesh_domains,
-				  std::map<std::string, void *> mesh_boundaries,
 				  bool &forceMeshReload,
 				  int timestate, const std::string &meshname);
 
