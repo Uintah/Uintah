@@ -1161,7 +1161,6 @@ mpirun -np 6 sus inputs/UintahRelease/MPMICE/pinWheel.ups
 
 \section*{\underline{Results}}
 
-
 \begin{figure}
   \centering
   \vspace{-40pt}
@@ -1174,6 +1173,91 @@ mpirun -np 6 sus inputs/UintahRelease/MPMICE/pinWheel.ups
 \end{figure}
 
 Figure~\ref{pinwheel1} shows a visualization of the pinwheel alongside the air jet represented by the velocity vectors. The air jet contacts a fin on the wheel causing it to continuously rotate counterclockwise as seen by the colored velocity of the boxes.  
+
+%__________________________________
+\newpage
+\section*{\center  Lizard Lung}
+\addcontentsline{toc}{subsection}{Lizard Lung}
+\subsection*{\underline{Problem Description}}
+This simulation provides an example of fluid-solid interaction using both a
+compliant MPM material, as well as a rigid material that is given a prescribed
+time-velocity profile.  The latter acts as a piston that pushes or pulls air
+though a pair of valves, one of which opens and the other of which closes,
+depending on the direction of the flow.  In addition to the input file, a
+second file, ``breathe.txt", describes the velocity of the piston.
+
+A post-processing script has been added, massFlowRateLL.m.  This allows one to 
+compute the mass flow rate through each of the valves.  The script runs through
+matlab, and requires minor editing to modify the uda name, and whether output is
+wanted regarding the top or bottom valve.
+
+\subsection*{\underline{Simulation Specifics}}
+\begin{description}
+\item [Component used:] \hfill mpmice (MPM-ICE)
+\item [Code modification required:]
+
+Because symmetry boundary conditions are used on the z- and z+ faces, without
+modification, the center section of the solid geometry, shown in
+Figure~\ref{lizard}, would rotate into a more favorable aerodynamic position,
+as there is nothing stopping it, other than its inertia.  Therefore,
+SerialMPM.cc was modified to keep a block within that section fixed in space.
+The particles to hold fixed are identified by their ``color":
+
+\begin{verbatim}
+        // Update the particle's position and velocity
+        if(pColor[idx] < 1.0){
+          pxnew[idx]           = px[idx]    + vel*delT*move_particles;
+          pdispnew[idx]        = pdisp[idx] + vel*delT;
+          pvelocitynew[idx]    = pvelocity[idx]    + acc*delT;
+          // pxx is only useful if we're not in normal grid resetting mode.
+          pxx[idx]             = px[idx]    + pdispnew[idx];
+          pTempNew[idx]        = pTemperature[idx] + tempRate*delT;
+          pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
+        } else {
+          pxnew[idx]           = px[idx];
+          pdispnew[idx]        = pdisp[idx];
+          pvelocitynew[idx]    = pvelocity[idx];
+          // pxx is only useful if we're not in normal grid resetting mode.
+          pxx[idx]             = px[idx];
+          pTempNew[idx]        = pTemperature[idx];
+          pTempPreNew[idx]     = pTemperature[idx]; // for thermal stress
+        }
+\end{verbatim}
+
+This modification occurs in interpolateToParticlesAndUpdate, around line 3450
+in this file.
+
+\item [Input file name:] \hfill \TT{lizardLung4.ups}
+\item [Command used to run input file:]\hfill 
+mpirun -np 16 sus inputs/UintahRelease/MPMICE/lizardLung4.ups
+
+\item [Simulation Domain:]\hfill    0.6 x 0.3 x 0.002 m
+
+\item [Example Runtimes:] \hfill \\
+ 18 hours   (16 processors, 2.40 GHz Xeon) (Much less time is needed to
+see the behavior, 18 hours is enough for many piston oscillations.)\\
+
+\item [Physical time simulated:] \hfill 10 seconds \\ 
+
+
+\end{description}
+
+\section*{\underline{Results}}
+
+
+\begin{figure}
+  \centering
+  \vspace{-40pt}
+  \subfloat[Air pushed and pulled by a piston through two check valves.]{\label{lizard}
+    \includegraphics[width=1.1\textwidth]{LizardLung.png}}
+  \hspace{10pt}
+  \caption{}
+  \label{}
+
+\end{figure}
+
+Figure~\ref{lizard} shows a visualization of the geometry having been deformed by the movement of air caused by the motion of the piston at about x=0.18.  The 
+piston moves sinusoidally according to the velocity table prescribed in ``breathe.txt".
 
 \bibliographystyle{plain}
 \bibliography{ice}
