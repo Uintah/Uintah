@@ -23,7 +23,8 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.25        </maxTime>
+<!--       <maxTime>            0.025        </maxTime> -->
+       <maxTime>            3.0e-6       </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -149,6 +150,7 @@
       <save label="density"/>
       <save label="pressure"/>
       <save label="speedsound"/>
+      <save label="rho_grad"/>
       <checkpoint interval="0.0125"  cycle="2"/>
    </DataArchiver>
 
