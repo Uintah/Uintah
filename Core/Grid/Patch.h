@@ -1645,10 +1645,17 @@ namespace Uintah {
     
     /**
      * Returns the patches on the level offset by levelOffset of this level
-     * that overlap with this patch.
+     * that overlap with this patch.  This version is for CellBased applications
      */
-    void getOtherLevelPatches(int levelOffset, selectType& patches, int numGhostCells = 0)
-    const;
+    void getOtherLevelPatches(int levelOffset, selectType& patches,
+                              int numGhostCells = 0) const;
+
+    /**
+     * Returns the patches on the level offset by levelOffset of this level
+     * that overlap with this patch.  This version is for NodeBased applications
+     */
+    void getOtherLevelPatchesNB(int levelOffset, selectType& patches,
+                                int numGhostCells = 0) const;
     
     /**
      * Returns the patches on the finer level that overlap
