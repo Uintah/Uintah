@@ -1187,6 +1187,10 @@ void MiniAero::Gradients(const ProcessorGroup* /*pg*/,
       grad_temp_CC[c][2] = 0.5*(Temp_CC[Front] - Temp_CC[Back])*dydx/cell_volume;
 
     } // Cell loop
+
+    MiniAeroNS::setGradientBC(grad_rho_CC, rho_CC, "Density", patch, 0);
+    MiniAeroNS::setGradientBC(grad_vel_CC, vel_CC, "Velocity", patch, 0);
+    MiniAeroNS::setGradientBC(grad_temp_CC, Temp_CC, "Temperature", patch, 0);
   }// Patch loop
 }
 
@@ -1516,13 +1520,13 @@ void MiniAero::secondOrderFaceFlux(const ProcessorGroup* /*pg*/,
     my_dw->get( vel_CC,  vel_CClabel, 0, patch, gac, 1 );
     my_dw->get( temp_CC, temp_CClabel,0, patch, gac, 1 );
 
-    new_dw->get( grad_rho_CC,  grad_rho_CClabel, 0, patch, gac, 0);
-    new_dw->get( grad_vel_CC,  grad_vel_CClabel, 0, patch, gac, 0);
-    new_dw->get( grad_temp_CC, grad_temp_CClabel,0, patch, gac, 0);
+    new_dw->get( grad_rho_CC,  grad_rho_CClabel, 0, patch, gac, 1);
+    new_dw->get( grad_vel_CC,  grad_vel_CClabel, 0, patch, gac, 1);
+    new_dw->get( grad_temp_CC, grad_temp_CClabel,0, patch, gac, 1);
     
-    new_dw->get( limiter_rho_CC,  limiter_rho_CClabel, 0, patch, gac, 0);
-    new_dw->get( limiter_vel_CC,  limiter_vel_CClabel, 0, patch, gac, 0);
-    new_dw->get( limiter_temp_CC, limiter_temp_CClabel,0, patch, gac, 0);
+    new_dw->get( limiter_rho_CC,  limiter_rho_CClabel, 0, patch, gac, 1);
+    new_dw->get( limiter_vel_CC,  limiter_vel_CClabel, 0, patch, gac, 1);
+    new_dw->get( limiter_temp_CC, limiter_temp_CClabel,0, patch, gac, 1);
 
 
     SFCXVariable<double> flux_mass_FCX;
@@ -1858,13 +1862,13 @@ void MiniAero::secondOrderDissipativeFaceFlux(const ProcessorGroup* /*pg*/,
     my_dw->get( temp_CC,      temp_CClabel, 0, patch, gac, 1 );
     my_dw->get( pressure_CC,  press_CClabel, 0, patch, gac, 1 );
 
-    new_dw->get( grad_rho_CC,  grad_rho_CClabel, 0, patch, gac, 0);
-    new_dw->get( grad_vel_CC,  grad_vel_CClabel, 0, patch, gac, 0);
-    new_dw->get( grad_temp_CC, grad_temp_CClabel,0, patch, gac, 0);
+    new_dw->get( grad_rho_CC,  grad_rho_CClabel, 0, patch, gac, 1);
+    new_dw->get( grad_vel_CC,  grad_vel_CClabel, 0, patch, gac, 1);
+    new_dw->get( grad_temp_CC, grad_temp_CClabel,0, patch, gac, 1);
     
-    new_dw->get( limiter_rho_CC,  limiter_rho_CClabel, 0, patch, gac, 0);
-    new_dw->get( limiter_vel_CC,  limiter_vel_CClabel, 0, patch, gac, 0);
-    new_dw->get( limiter_temp_CC, limiter_temp_CClabel,0, patch, gac, 0);
+    new_dw->get( limiter_rho_CC,  limiter_rho_CClabel, 0, patch, gac, 1);
+    new_dw->get( limiter_vel_CC,  limiter_vel_CClabel, 0, patch, gac, 1);
+    new_dw->get( limiter_temp_CC, limiter_temp_CClabel,0, patch, gac, 1);
 
     if( RK_step == 0 ) {
       new_dw->allocateAndPut( diss_flux_mass_FCX,   dissipative_flux_mass_FCXlabel,   0,patch );
