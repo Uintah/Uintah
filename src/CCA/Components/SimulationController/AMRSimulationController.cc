@@ -291,11 +291,17 @@ AMRSimulationController::run()
        barrier_times[2]+=Time::currentSeconds()-start;
      }
 
-     // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
-     //   Needs to be done before advanceDataWarehouse
+     // Yes, I know this is kind of hacky, but this is the only way to
+     // get a new grid from UdaReducer Needs to be done before
+     // advanceDataWarehouse
      if (d_reduceUda){
       currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
      }
+
+     // After one step (either timestep or initialization) and correction
+     // the delta we can finally, finalize our old timestep, eg. 
+     // finalize and advance the Datawarehouse
+     d_scheduler->advanceDataWarehouse(currentGrid);
 
      // If VisIt has been included into the build check the lib sim state
      // to see if there is a connection and if so if anything needs to be
@@ -332,11 +338,6 @@ AMRSimulationController::run()
 
      visit_CheckState( &d_visit_simulation_data );
 #endif
-
-     // After one step (either timestep or initialization) and correction
-     // the delta we can finally, finalize our old timestep, eg. 
-     // finalize and advance the Datawarehouse
-     d_scheduler->advanceDataWarehouse(currentGrid);
 
      // Put the current time into the shared state so other components
      // can access it.  Also increment (by one) the current time step

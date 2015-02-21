@@ -879,7 +879,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 		VisIt_MeshMetaData_addGroupId(mmd, groupIds[k]);
 
 	      // ARS - FIXME
-	      //	    VisIt_MeshMetaData_setBlockNames(mmd, pieceNames );
+	      // VisIt_MeshMetaData_setBlockNames(mmd, pieceNames );
 
 	      VisIt_MeshMetaData_setHasSpatialExtents(mmd, 1);
 
@@ -1141,14 +1141,12 @@ visit_handle visit_ReadMetaData(void *cbdata)
 //
 // ****************************************************************************
 void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
-				  std::map<std::string, void *> mesh_domains,
-				  std::map<std::string, void *> mesh_boundaries,
 				  bool &forceMeshReload,
 				  int timestate, const std::string &meshname)
 {
-#ifdef COMMENT_OUT_FOR_NOW
+  // ARS - FIX ME - NOT NEEDED
   //lookup mesh in our cache and if it's not there, compute it
-  if (mesh_domains[meshname] == NULL || forceMeshReload == true)
+  // if (mesh_domains[meshname] == NULL || forceMeshReload == true)
   {
     //
     // Calculate some info we will need in the rest of the routine.
@@ -1162,166 +1160,221 @@ void visit_CalculateDomainNesting(TimeStepInfo* stepInfo,
     // Now set up the data structure for patch boundaries.  The data 
     // does all the work ... it just needs to know the extents of each patch.
     //
-    avtRectilinearDomainBoundaries *rdb =
-      new avtRectilinearDomainBoundaries(true);
+    visit_handle rdb;
+    
+    if(VisIt_DomainBoundaries_alloc(&rdb) == VISIT_OKAY)
+    {
+      VisIt_DomainBoundaries_set_type(rdb, 0); // 0 = Rectilinear
+      VisIt_DomainBoundaries_set_numDomains(rdb, totalPatches );
 
-    // debug5 << "Calculating avtRectilinearDomainBoundaries for "
-    // 	   << meshname << " mesh (" << rdb << ")." << std::endl;
+      // debug5 << "Calculating avtRectilinearDomainBoundaries for "
+      // 	   << meshname << " mesh (" << rdb << ")." << std::endl;
 
-    rdb->SetNumDomains(totalPatches);
+      // avtRectilinearDomainBoundaries *rdb =
+      // 	new avtRectilinearDomainBoundaries(true);
+      // rdb->SetNumDomains(totalPatches);
 
-    for (int patch = 0 ; patch < totalPatches ; patch++) {
-      int my_level, local_patch;
-      GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
+      for (int patch = 0 ; patch < totalPatches ; patch++)
+      {
+	int my_level, local_patch;
+	GetLevelAndLocalPatchNumber(stepInfo, patch, my_level, local_patch);
+	
+	PatchInfo &patchInfo =
+	  stepInfo->levelInfo[my_level].patchInfo[local_patch];
 
-      PatchInfo &patchInfo = stepInfo->levelInfo[my_level].patchInfo[local_patch];
+	int low[3],high[3];
+	patchInfo.getBounds(low,high,meshname);
+	
+	int e[6] = { low[0], high[0],
+		     low[1], high[1],
+		     low[2], high[2] };
+	// debug5 << "\trdb->SetIndicesForAMRPatch(" << patch << ","
+	// 	     << my_level << ", <" << e[0] << "," << e[2] << "," << e[4]
+	// 	     << "> to <" << e[1] << "," << e[3] << "," << e[5] << ">)"
+	//             << std::endl;
 
-      int low[3],high[3];
-      patchInfo.getBounds(low,high,meshname);
+	VisIt_DomainBoundaries_set_amrIndices(rdb, patch, my_level, e);
+//	VisIt_DomainBoundaries_finish(rdb, patch);
+	// rdb->SetIndicesForAMRPatch(patch, my_level, e);
+      }
 
-      int e[6] = { low[0], high[0],
-                   low[1], high[1],
-                   low[2], high[2] };
-      // debug5 << "\trdb->SetIndicesForAMRPatch(" << patch << ","
-      // 	     << my_level << ", <" << e[0] << "," << e[2] << "," << e[4]
-      // 	     << "> to <" << e[1] << "," << e[3] << "," << e[5] << ">)"
-      //             << std::endl;
-      rdb->SetIndicesForAMRPatch(patch, my_level, e);
+      // rdb->CalculateBoundaries();
+      
+      // ARS - FIX ME - NOT NEEDED 
+      // mesh_boundaries[meshname] =
+      //    void_ref_ptr(rdb, avtStructuredDomainBoundaries::Destruct);
     }
 
-    rdb->CalculateBoundaries();
-
-    mesh_boundaries[meshname] =
-       void_ref_ptr(rdb, avtStructuredDomainBoundaries::Destruct);
+    std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
     
     //
     // Domain Nesting
     //
-    avtStructuredDomainNesting *dn =
-      new avtStructuredDomainNesting(totalPatches, num_levels);
-
-    //debug5 << "Calculating avtStructuredDomainNesting for "
-    //       << meshname << " mesh (" << dn << ")." << std::endl;
-    dn->SetNumDimensions(3);
-
-    //
-    // Calculate what the refinement ratio is from one level to the next.
-    //
-    for (int level = 0 ; level < num_levels ; level++) {
-      // SetLevelRefinementRatios requires data as a vector<int>
-      vector<int> rr(3);
-      for (int i=0; i<3; i++)
-        rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
-
-      // debug5 << "\tdn->SetLevelRefinementRatios(" << level << ", <"
-      //        << rr[0] << "," << rr[1] << "," << rr[2] << ">)\n";
-      dn->SetLevelRefinementRatios(level, rr);
-    }
-
-    //
-    // Calculating the child patches really needs some better sorting than
-    // what I am doing here.  This is likely to become a bottleneck in extreme
-    // cases.  Although this routine has performed well for a previous 55K
-    // patch run.
-    //
-    vector< vector<int> > childPatches(totalPatches);
-
-    for (int level = num_levels-1 ; level > 0 ; level--)
+    visit_handle dn;
+    
+    if(VisIt_DomainNesting_alloc(&dn) == VISIT_OKAY)
     {
-      int prev_level = level-1;
-      LevelInfo &levelInfoParent = stepInfo->levelInfo[prev_level];
-      LevelInfo &levelInfoChild = stepInfo->levelInfo[level];
+      VisIt_DomainNesting_set_dimensions(dn, totalPatches, num_levels, 3);
 
-      for (int child=0; child<(int)levelInfoChild.patchInfo.size(); child++)
+      // avtStructuredDomainNesting *dn =
+      // 	new avtStructuredDomainNesting(totalPatches, num_levels);
+      // dn->SetNumDimensions(3);
+
+      //debug5 << "Calculating avtStructuredDomainNesting for "
+      //       << meshname << " mesh (" << dn << ")." << std::endl;
+      
+      //
+      // Calculate what the refinement ratio is from one level to the next.
+      //
+      for (int level = 0 ; level < num_levels ; level++) {
+	// SetLevelRefinementRatios requires data as a vector<int>
+	int rr[3];
+	//vector<int> rr(3);
+	for (int i=0; i<3; i++)
+	  rr[i] = stepInfo->levelInfo[level].refinementRatio[i];
+	
+	// debug5 << "\tdn->SetLevelRefinementRatios(" << level << ", <"
+	//        << rr[0] << "," << rr[1] << "," << rr[2] << ">)\n";
+
+	VisIt_DomainNesting_set_levelRefinement(dn, level, rr);
+
+	// dn->SetLevelRefinementRatios(level, rr);
+      }      
+
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+
+      //
+      // Calculating the child patches really needs some better sorting than
+      // what I am doing here.  This is likely to become a bottleneck in extreme
+      // cases.  Although this routine has performed well for a previous 55K
+      // patch run.
+      //
+      vector< vector<int> > childPatches(totalPatches);
+      
+      for (int level = num_levels-1 ; level > 0 ; level--)
       {
-        PatchInfo &childPatchInfo = levelInfoChild.patchInfo[child];
-        int child_low[3],child_high[3];
-        childPatchInfo.getBounds(child_low,child_high,meshname);
-
-        for (int parent = 0;
-	     parent<(int)levelInfoParent.patchInfo.size(); parent++)
+	int prev_level = level-1;
+	LevelInfo &levelInfoParent = stepInfo->levelInfo[prev_level];
+	LevelInfo &levelInfoChild = stepInfo->levelInfo[level];
+	
+	for (int child=0; child<(int)levelInfoChild.patchInfo.size(); child++)
 	{
-          PatchInfo &parentPatchInfo = levelInfoParent.patchInfo[parent];
-          int parent_low[3],parent_high[3];
-          parentPatchInfo.getBounds(parent_low,parent_high,meshname);
-
-          int mins[3], maxs[3];
-          for (int i=0; i<3; i++)
+	  PatchInfo &childPatchInfo = levelInfoChild.patchInfo[child];
+	  int child_low[3],child_high[3];
+	  childPatchInfo.getBounds(child_low,child_high,meshname);
+	  
+	  for (int parent = 0;
+	       parent<(int)levelInfoParent.patchInfo.size(); parent++)
 	  {
-            mins[i] = max(child_low[i],
-			  parent_low[i] *levelInfoChild.refinementRatio[i]);
-            maxs[i] = min(child_high[i],
-			  parent_high[i]*levelInfoChild.refinementRatio[i]);
-          }
+	    PatchInfo &parentPatchInfo = levelInfoParent.patchInfo[parent];
+	    int parent_low[3],parent_high[3];
+	    parentPatchInfo.getBounds(parent_low,parent_high,meshname);
+	    
+	    int mins[3], maxs[3];
+	    for (int i=0; i<3; i++)
+	    {
+	      mins[i] = max(child_low[i],
+			    parent_low[i] *levelInfoChild.refinementRatio[i]);
+	      maxs[i] = min(child_high[i],
+			    parent_high[i]*levelInfoChild.refinementRatio[i]);
+	    }
+	    
+	    bool overlap = (mins[0]<maxs[0] &&
+			    mins[1]<maxs[1] &&
+			    mins[2]<maxs[2]);
+	    
+	    if (overlap)
+	    {
+	      int child_gpatch = GetGlobalDomainNumber(stepInfo, level, child);
+	      int parent_gpatch = GetGlobalDomainNumber(stepInfo, prev_level, parent);
+	      childPatches[parent_gpatch].push_back(child_gpatch);
+	    }
+	  }
+	}
+      }
 
-          bool overlap = (mins[0]<maxs[0] &&
-                          mins[1]<maxs[1] &&
-                          mins[2]<maxs[2]);
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
-          if (overlap)
-	  {
-            int child_gpatch = GetGlobalDomainNumber(stepInfo, level, child);
-            int parent_gpatch = GetGlobalDomainNumber(stepInfo, prev_level, parent);
-            childPatches[parent_gpatch].push_back(child_gpatch);
-          }
-        }
+      //
+      // Now that we know the extents for each patch and what its children are,
+      // tell the structured domain boundary that information.
+      //
+      for (int p=0; p<totalPatches ; p++)
+      {
+	int my_level, local_patch;
+	GetLevelAndLocalPatchNumber(stepInfo, p, my_level, local_patch);
+	
+	PatchInfo &patchInfo =
+	  stepInfo->levelInfo[my_level].patchInfo[local_patch];
+	int low[3],high[3];
+	patchInfo.getBounds(low,high,meshname);
+	
+	int e[6];
+	for (int i=0; i<3; i++) {
+	  e[i+0] = low[i];
+	  e[i+3] = high[i]-1;
+	}
+
+	// debug5 << "\tdn->SetNestingForDomain("
+	//        << p << "," << my_level << ", <>, <"
+	//        << e[0] << "," << e[1] << "," << e[2] << "> to <"
+	//        << e[3] << "," << e[4] << "," << e[5] << ">)\n";
+
+	std::cerr << __FUNCTION__ << "  " << __LINE__ << "  "
+		  << p << "  " << totalPatches << "  "
+		  << childPatches[p].size() << std::endl;
+
+	if( childPatches[p].size() )
+	{
+	  int *cp = new int[childPatches[p].size()];
+	  
+	  for (int i=0; i<3; i++) {
+	    cp[i] = childPatches[p][i];
+	    
+	    VisIt_DomainNesting_set_nestingForPatch(dn, p, my_level,
+						    cp, childPatches[p].size(), e);
+//	    delete cp;
+	    
+	    // dn->SetNestingForDomain(p, my_level, childPatches[p], e);
+	  }
+	}
       }
     }
-
-    //
-    // Now that we know the extents for each patch and what its children are,
-    // tell the structured domain boundary that information.
-    //
-    for (int p=0; p<totalPatches ; p++)
-    {
-      int my_level, local_patch;
-      GetLevelAndLocalPatchNumber(stepInfo, p, my_level, local_patch);
-
-      PatchInfo &patchInfo =
-	stepInfo->levelInfo[my_level].patchInfo[local_patch];
-      int low[3],high[3];
-      patchInfo.getBounds(low,high,meshname);
-
-      vector<int> e(6);
-      for (int i=0; i<3; i++) {
-        e[i+0] = low[i];
-        e[i+3] = high[i]-1;
-      }
-      //debug5<<"\tdn->SetNestingForDomain("<<p<<","<<my_level<<", <>, <"<<e[0]<<","<<e[1]<<","<<e[2]<<"> to <"<<e[3]<<","<<e[4]<<","<<e[5]<<">)\n";
-      dn->SetNestingForDomain(p, my_level, childPatches[p], e);
-    }
-
-    mesh_domains[meshname] =
-       void_ref_ptr(dn, avtStructuredDomainNesting::Destruct);
+    
+    // ARS - FIX ME - NOT NEEDED
+    // mesh_domains[meshname] =
+    //    void_ref_ptr(dn, avtStructuredDomainNesting::Destruct);
 
     forceMeshReload = false;
   }
 
-  //#ifdef COMMENT_OUT_FOR_NOW
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+
+  // ARS - FIX ME - NOT NEEDED
   //
   // Register these structures with the generic database so that it knows
   // to ghost out the right cells.
   //
-  cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
-                      AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
-                      timestate, -1, mesh_boundaries[meshname]);
-  cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
-                      AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
-                      timestate, -1, mesh_domains[meshname]);
+  // cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
+  //                     AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
+  //                     timestate, -1, mesh_boundaries[meshname]);
+  // cache->CacheVoidRef("any_mesh", // key MUST be called any_mesh
+  //                     AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
+  //                     timestate, -1, mesh_domains[meshname]);
 
   //VERIFY we got the mesh boundary and domain in there
-  void_ref_ptr vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
-                            AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
-                            timestate, -1);
-  if (*vrTmp == NULL || *vrTmp != mesh_boundaries[meshname])
-    throw InvalidFilesException("uda boundary mesh not registered");
+  // void_ref_ptr vrTmp =
+  //   cache->GetVoidRef("any_mesh", // MUST be called any_mesh
+  // 		      AUXILIARY_DATA_DOMAIN_BOUNDARY_INFORMATION,
+  // 		      timestate, -1);
+  // if (*vrTmp == NULL || *vrTmp != mesh_boundaries[meshname])
+  //   throw InvalidFilesException("uda boundary mesh not registered");
 
-  vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
-                            AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
-                            timestate, -1);
-  if (*vrTmp == NULL || *vrTmp != mesh_domains[meshname])
-    throw InvalidFilesException("uda domain mesh not registered");
-#endif
+  // vrTmp = cache->GetVoidRef("any_mesh", // MUST be called any_mesh
+  //                           AUXILIARY_DATA_DOMAIN_NESTING_INFORMATION,
+  //                           timestate, -1);
+  // if (*vrTmp == NULL || *vrTmp != mesh_domains[meshname])
+  //   throw InvalidFilesException("uda domain mesh not registered");
 }
 
 
@@ -1343,9 +1396,6 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
   TimeStepInfo* &stepInfo = sim->stepInfo;
 
   int timestate = sim->cycle;
-
-  std::map<std::string, void *> &mesh_domains = sim->mesh_domains;
-  std::map<std::string, void *> &mesh_boundaries = sim-> mesh_boundaries;
 
   std::cerr << "****************************  "
 	    << "get mesh data " << std::endl;
@@ -1369,10 +1419,11 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       matlNo = atoi(matl.c_str());
 
     // we always want p.x when setting up the mesh
-//    string vars = "p.x";
-    // ARS _ FIX ME
-    string vars;
-//    vars = getParticlePositionName(schedulerP);
+    string vars = "p.x";
+    // ARS - FIX ME
+//  string vars = getParticlePositionName(schedulerP);
+
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
     ParticleDataRaw *pd =
       getParticleData2(schedulerP, gridP, level, local_patch, vars,
@@ -1385,6 +1436,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       VisIt_VariableData_setDataD(cordsH, VISIT_OWNER_SIM,
 				  3, pd->num*pd->components, pd->data);
     }
+
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
     // Create the vtkPoints object and copy points into it.
     // vtkDoubleArray *doubleArray = vtkDoubleArray::New();
@@ -1409,8 +1462,9 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
     //   ugrid->InsertNextCell(VTK_VERTEX, 1, &onevertex); 
     // } 
 
+    // ARS - FIX ME - CHECK FOR LEAKS
     // don't delete pd->data - vtk owns it now!
-    delete pd;
+    // delete pd;
 
 #ifdef COMMENTOUT_FOR_NOW
     //try to retrieve existing cache ref
@@ -1495,8 +1549,9 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
   // volume data
   else //if (meshName.find("Particle_Mesh") == string::npos)
   {
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
     // make sure we have ghosting info for this mesh
-    visit_CalculateDomainNesting( stepInfo, mesh_domains, mesh_boundaries,
+    visit_CalculateDomainNesting( stepInfo,
 				  forceMeshReload, timestate, meshname );
 
     LevelInfo &levelInfo = stepInfo->levelInfo[level];
@@ -1539,6 +1594,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 			      VISIT_INVALID_HANDLE,
 			      VISIT_INVALID_HANDLE };
 
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+
     // Set the coordinates of the grid points in each direction.
     for (int c=0; c<3; c++)
     {
@@ -1546,12 +1603,16 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       // coords->SetNumberOfTuples(dims[c]); 
       // float *array = (float *) coords->GetVoidPointer(0);
 
-      float *array = new float[dims[c]];
+      float *array = new float[ dims[c] ];
+
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
       if(VisIt_VariableData_alloc(&cordH[c]) == VISIT_OKAY)
       {
 	for (int i=0; i<dims[c]; i++)
 	{
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
+
 	  // Face centered data gets shifted towards -inf by half a cell.
 	  // Boundary patches are special shifted to preserve global domain.
 	  // Internal patches are always just shifted.
@@ -1597,6 +1658,7 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 	VisIt_VariableData_setDataF(cordH[c], VISIT_OWNER_SIM,
 				    1, dims[c], array);
 
+
 	// switch(c) {
 	// case 0:
 	//   rgrid->SetXCoordinates(coords); break;
@@ -1607,11 +1669,13 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
 	// }
 
 	// coords->Delete();
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       }
     }
 
     if(VisIt_RectilinearMesh_alloc(&meshH) == VISIT_OKAY)
     {
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       /* Fill in the attributes of the RectilinearMesh. */
       VisIt_RectilinearMesh_setCoordsXYZ(meshH, cordH[0], cordH[1], cordH[2]);
       VisIt_RectilinearMesh_setRealIndices(meshH, base, dims);
@@ -1621,6 +1685,8 @@ visit_handle visit_SimGetMesh(int domain, const char *meshname, void *cbdata)
       // VisIt_RectilinearMesh_setGhostNodes(meshH, visit_handle gn);
     }
   }
+
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
   return meshH;
 }
@@ -1674,12 +1740,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       }
     }
 
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
     int level, local_patch;
     GetLevelAndLocalPatchNumber(stepInfo, domain, level, local_patch);
 
     // particle data
     if (isParticleVar)
     {
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       int matlNo = -1;
       if (matl.compare("*") != 0)
 	matlNo = atoi(matl.c_str());
@@ -1722,24 +1790,27 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       pd = getParticleData2(schedulerP, gridP, level, local_patch, varName,
 			    matlNo, timestate);
 #endif
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
       CheckNaNs(pd->num*pd->components,pd->data,level,local_patch);
 
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, pd->components,
        				  pd->num * pd->components, pd->data);
 
-      
       // vtkDoubleArray *rv = vtkDoubleArray::New();
       // rv->SetNumberOfComponents(pd->components);
       // rv->SetArray(pd->data, pd->num*pd->components, 0);
       
+      // ARS - FIX ME - CHECK FOR LEAKS
       // don't delete pd->data - vtk owns it now!
-      delete pd;
+      // delete pd;
     }
 
     // volume data
     else //if (!isParticleVar)
     {
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       LevelInfo &levelInfo = stepInfo->levelInfo[level];
       PatchInfo &patchInfo = levelInfo.patchInfo[local_patch];
 
@@ -1781,6 +1852,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 	      qhigh[j] = qhigh[j];
 	  }
 	}
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 
 #ifdef SERIALIZED_READS
 	int numProcs, rank;
@@ -1814,13 +1886,14 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 	// let the next read go
 	if (next>=0)
 	  MPI_Send(&msg, 1, MPI_INT, next, tag, VISIT_MPI_COMM);
-	
 #else
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
 	gd = getGridData2(schedulerP, gridP, level, local_patch, varName,
 			  atoi(matl.c_str()), timestate, qlow, qhigh);
 #endif
       }
 
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       int n = (qhigh[0]-qlow[0])*(qhigh[1]-qlow[1])*(qhigh[2]-qlow[2]);
       
       CheckNaNs(n*gd->components,gd->data,level,local_patch);
@@ -1828,6 +1901,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       VisIt_VariableData_setDataD(varH, VISIT_OWNER_SIM, gd->components,
        				  n * gd->components, gd->data);      
 
+  std::cerr << __FUNCTION__ << "  " << __LINE__ << std::endl;
       // vtkDoubleArray *rv = vtkDoubleArray::New();
       // rv->SetNumberOfComponents(gd->components);
       // rv->SetArray(gd->data, n*gd->components, 0);
