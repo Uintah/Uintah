@@ -99,7 +99,7 @@ namespace Uintah {
     bool allowsMultipleComputes() const
       { return d_allowMultipleComputes; }
     
-    static VarLabel* find(std::string name);
+    static VarLabel* find( const std::string & name );
 
     class Compare {
     public:

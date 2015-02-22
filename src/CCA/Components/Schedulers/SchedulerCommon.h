@@ -118,16 +118,10 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     virtual bool useSmallMessages() { return d_useSmallMessages; }
 
-    /// Get all of the requires needed from the old data warehouse
-    /// (carried forward).
-    virtual const std::vector<const Task::Dependency*>& getInitialRequires()
-      { return d_initRequires; }
-
-    virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const
-       { return d_initRequiredVars; }
-
-    virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const
-       { return d_computedVars; }
+    /// Get all of the requires needed from the old data warehouse (carried forward).
+    virtual const std::vector<const Task::Dependency*>&         getInitialRequires() const     { return d_initRequires; }
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const { return d_initRequiredVars; }
+    virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const        { return d_computedVars; }
 
     virtual LoadBalancer* getLoadBalancer();
 
