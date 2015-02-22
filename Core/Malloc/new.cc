@@ -53,51 +53,66 @@ using namespace SCIRun;
 // These stubs are needed when your code uses these functions but
 // DISABLE_SCI_MALLOC is set.
 namespace SCIRun {
-  const char* AllocatorSetDefaultTagNew(const char* /*tag*/) {
-    return
-      "AllocatorSetDefaultTagNew::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
-  }
 
-  void AllocatorResetDefaultTagNew() {}
-
-  const char* AllocatorSetDefaultTag(const char* /*tag*/) {
-    return
-      "AllocatorSetDefaultTag::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
-  }
-
-  void AllocatorResetDefaultTag() {}
-  int AllocatorSetDefaultTagLineNumber(int line_number) { return line_number; }
-  void AllocatorResetDefaultTagLineNumber() {}
-
+const
+char*
+AllocatorSetDefaultTagNew( const char* /*tag*/ ) {
+  return "AllocatorSetDefaultTagNew::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
 }
+
+void
+AllocatorResetDefaultTagNew() {}
+
+const char*
+AllocatorSetDefaultTag( const char* /*tag*/ ) {
+  return "AllocatorSetDefaultTag::NOT IMPLEMENTED.  DISABLE_SCI_MALLOC is set";
+}
+
+void AllocatorResetDefaultTag() {}
+int AllocatorSetDefaultTagLineNumber(int line_number) { return line_number; }
+void AllocatorResetDefaultTagLineNumber() {}
+
+} // end namespace SCIRun
+
 #ifndef MALLOC_TRACE
-void* operator new(size_t size, Allocator*, const char*, int)
+
+void*
+operator
+new( size_t size, Allocator*, const char*, int )
 {
-  void* mem=new char[size];
+  void* mem = new char[size];
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  for(unsigned int i=0;i<size;i++) {
+    static_cast<unsigned char*>(mem)[i] = MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void* operator new[](size_t size, Allocator*, const char*, int)
+void*
+operator
+new[]( size_t size, Allocator*, const char*, int )
 {
-  void* mem=new char[size];
+  void* mem = new char[size];
 
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  for(unsigned int i=0;i<size;i++) {
+    static_cast<unsigned char*>(mem)[i] = MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void operator delete(void* ptr, Allocator*, const char*, int)
+void
+operator
+delete(void* ptr, Allocator*, const char*, int)
 {
   free(ptr);
 }
 
-void operator delete[](void* ptr, Allocator*, const char*, int)
+void
+operator
+delete[](void* ptr, Allocator*, const char*, int)
 {
   free(ptr);
 }
@@ -108,185 +123,213 @@ void operator delete[](void* ptr, Allocator*, const char*, int)
 static const char* default_new_tag = "Unknown - operator new";
 static const char* default_new_array_tag = "Unknown - operator new[]";
 
-// the line number us an optional tag (on if configured with --enable-scinew-line-numbers)
-// that can also show some information (like an interation or timestep) for each tag
+// The line number is an optional tag (on if configured with --enable-scinew-line-numbers)
+// that can also show some information (like an iteration or timestep) for each tag.
+//
 int default_tag_line_number = 0;
 
 namespace SCIRun {
-  const char* AllocatorSetDefaultTagNew(const char* tag)
-  {
-    const char* old = default_new_tag;
-    default_new_tag=tag;
-    default_new_array_tag=tag;
-    return old;
-  }
 
-  void AllocatorResetDefaultTagNew()
-  {
-    default_new_tag = "Unknown - operator new";
-    default_new_array_tag = "Unknown - operator new[]";
-  }
-
-  const char* AllocatorSetDefaultTag(const char* tag)
-  {
-    AllocatorSetDefaultTagMalloc(tag);
-    return AllocatorSetDefaultTagNew(tag);
-  }
-
-  void AllocatorResetDefaultTag()
-  {
-    AllocatorResetDefaultTagMalloc();
-    AllocatorResetDefaultTagNew();
-  }
-  int AllocatorSetDefaultTagLineNumber(int line_number)
-  {
-    int old_num = default_tag_line_number;
-    default_tag_line_number = line_number;
-    return old_num;
-  }
-  void AllocatorResetDefaultTagLineNumber() 
-  {
-    default_tag_line_number = 0;
-  }
-}
-
-#ifdef __sgi
-
-// This is ugly, but necessary, since --LANG:std remaps the mangling
-// of the global operator new.  This provides the "old" operator new,
-// since the compiler insists on generating both.
-extern "C" {
-    void* __nw__GUi(size_t size)
-    {
-  if(!default_allocator)
-      MakeDefaultAllocator();
-  return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
-    }
-
-    void* __nwa__GUi(size_t size)
-    {
-  if(!default_allocator)
-      MakeDefaultAllocator();
-  return default_allocator->alloc(size, "unknown - operator new", default_tag_line_number);
-    }
-}
-#endif
-
-void* operator new(size_t size) throw(std::bad_alloc)
+const
+char*
+AllocatorSetDefaultTagNew( const char* tag )
 {
-  if(!default_allocator)
+  const char* old = default_new_tag;
+  default_new_tag=tag;
+  default_new_array_tag=tag;
+  return old;
+}
+
+void
+AllocatorResetDefaultTagNew()
+{
+  default_new_tag = "Unknown - operator new";
+  default_new_array_tag = "Unknown - operator new[]";
+}
+
+const
+char*
+AllocatorSetDefaultTag( const char* tag )
+{
+  AllocatorSetDefaultTagMalloc( tag );
+  return AllocatorSetDefaultTagNew( tag );
+}
+
+void
+AllocatorResetDefaultTag()
+{
+  AllocatorResetDefaultTagMalloc();
+  AllocatorResetDefaultTagNew();
+}
+
+int
+AllocatorSetDefaultTagLineNumber( int line_number )
+{
+  int old_num = default_tag_line_number;
+  default_tag_line_number = line_number;
+  return old_num;
+}
+
+void
+AllocatorResetDefaultTagLineNumber() 
+{
+  default_tag_line_number = 0;
+}
+
+} // end namespace SCIRun
+
+void*
+operator
+new( size_t size ) throw( std::bad_alloc )
+{
+  if(!default_allocator) {
     MakeDefaultAllocator();
+  }
    
-  void *mem=default_allocator->alloc(size, default_new_tag, default_tag_line_number);
+  void *mem = default_allocator->alloc( size, default_new_tag, default_tag_line_number );
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
+  for(unsigned int i=0;i<size;i++) {
     static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void* operator new[](size_t size) throw(std::bad_alloc)
+void*
+operator
+new[]( size_t size ) throw( std::bad_alloc )
 {
-  if(!default_allocator)
+  if(!default_allocator) {
     MakeDefaultAllocator();
+  }
   
-  void*  mem=default_allocator->alloc(size, default_new_array_tag, default_tag_line_number);
+  void* mem = default_allocator->alloc(size, default_new_array_tag, default_tag_line_number);
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
+  for(unsigned int i=0;i<size;i++) {
     static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void* operator new(size_t size, const std::nothrow_t&) throw()
+void*
+operator
+new( size_t size, const std::nothrow_t& ) throw()
 {
-  if(!default_allocator)
+  if(!default_allocator) {
     MakeDefaultAllocator();
+  }
   void* mem=default_allocator->alloc(size, "unknown - nothrow operator new", default_tag_line_number);
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  for(unsigned int i=0;i<size;i++) {
+    static_cast<unsigned char*>(mem)[i] = MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void* operator new[](size_t size, const std::nothrow_t&) throw()
+void*
+operator
+new[]( size_t size, const std::nothrow_t& ) throw()
 {
-  if(!default_allocator)
+  if(!default_allocator) {
     MakeDefaultAllocator();
+  }
   
-  void *mem=default_allocator->alloc(size, "unknown - nothrow operator new[]", default_tag_line_number);
+  void * mem = default_allocator->alloc( size, "unknown - nothrow operator new[]", default_tag_line_number );
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
+  for(unsigned int i=0;i<size;i++) {
     static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void operator delete(void* ptr) throw()
+void
+operator
+delete(void* ptr) throw()
 {
-    if(!default_allocator)
-  MakeDefaultAllocator();
-    default_allocator->free(ptr);
+  //  printf("delete called %p\n", ptr);
+  if( !default_allocator ) {
+    MakeDefaultAllocator();
+  }
+  default_allocator->free(ptr);
 }
 
-void operator delete[](void* ptr) throw()
+void
+operator
+delete[](void* ptr) throw()
 {
-    if(!default_allocator)
-  MakeDefaultAllocator();
-    default_allocator->free(ptr);
+  //  printf("delete [] called %p\n", ptr);
+  if( !default_allocator ) {
+    MakeDefaultAllocator();
+  }
+  default_allocator->free(ptr);
 }
 
-void* operator new(size_t size, Allocator* a, const char* tag, int linenum)
+void*
+operator
+new( size_t size, Allocator* a, const char* tag, int linenum )
 {
-  if(!a){
-    if(!default_allocator)
+  if( !a ) {
+    if( !default_allocator ) {
       MakeDefaultAllocator();
-      a=default_allocator;
+    }
+    a = default_allocator;
+  }
+  void * mem = a->alloc( size, tag, linenum );
+#ifdef INITIALIZE_MEMORY
+  for(unsigned int i=0;i<size;i++) {
+    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  }
+#endif
+  return mem;
+}
+
+void*
+operator
+new[]( size_t size, Allocator* a, const char* tag, int linenum )
+{
+  if( !a ){
+    if( !default_allocator ) {
+      MakeDefaultAllocator();
+    }
+    a = default_allocator;
   }
   void* mem=a->alloc(size, tag, linenum);
 #ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
+  for(unsigned int i=0;i<size;i++) {
+    static_cast<unsigned char*>(mem)[i] = MEMORY_INIT_NUMBER;
+  }
 #endif
   return mem;
 }
 
-void* operator new[](size_t size, Allocator* a, const char* tag, int linenum)
+void
+operator
+delete( void* ptr, Allocator* a, const char* tag, int linenum )
 {
-  if(!a){
-    if(!default_allocator)
+  if( !a ) {
+    if( !default_allocator ) {
       MakeDefaultAllocator();
-      a=default_allocator;
+    }
+    a = default_allocator;
   }
-  void* mem=a->alloc(size, tag, linenum);
-#ifdef INITIALIZE_MEMORY
-  for(unsigned int i=0;i<size;i++)
-    static_cast<unsigned char*>(mem)[i]=MEMORY_INIT_NUMBER;
-#endif
-  return mem;
+  a->free( ptr );
 }
 
-void operator delete(void* ptr, Allocator* a, const char* tag, int linenum)
+void
+operator
+delete[]( void* ptr, Allocator* a, const char* tag, int linenum )
 {
-  if(!a){
-    if(!default_allocator)
+  if( !a ){
+    if( !default_allocator ) {
       MakeDefaultAllocator();
-      a=default_allocator;
+    }
+    a = default_allocator;
   }
-  a->free(ptr);
+  a->free( ptr );
 }
-
-void operator delete[](void* ptr, Allocator* a, const char* tag, int linenum)
-{
-  if(!a){
-    if(!default_allocator)
-      MakeDefaultAllocator();
-      a=default_allocator;
-  }
-  a->free(ptr);
-}
-
 
 #ifdef MALLOC_TRACE
 #  include "MallocTraceOn.h"
