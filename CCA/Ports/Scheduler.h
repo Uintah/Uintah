@@ -185,12 +185,12 @@ class Scheduler : public UintahParallelPort {
                                               SimulationInterface* sim) = 0;
 
 
-    virtual void overrideVariableBehavior( std::string var,
-                                           bool treatAsOld,
-                                           bool copyData,
-                                           bool noScrub,
-                                           bool notCopyData,
-                                           bool noCheckpoint) = 0;
+    virtual void overrideVariableBehavior( const std::string & var,
+                                                 bool          treatAsOld,
+                                                 bool          copyData,
+                                                 bool          noScrub,
+                                                 bool          notCopyData,
+                                                 bool          noCheckpoint ) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing

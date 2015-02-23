@@ -97,6 +97,12 @@ public:
   LoadBalancerCommon(const ProcessorGroup* myworld);
   ~LoadBalancerCommon();
 
+  virtual int getPatchwiseProcessorAssignment( const Patch * patch );
+
+  //! The implementation in LoadBalancerCommon.cc is for dynamice load balancers.
+  //! The Simple and SingleProcessor override this function with default implementations.
+  virtual int getOldProcessorAssignment(       const Patch * patch );
+
   /// Goes through the Detailed tasks and assigns each to its own processor.
   virtual void assignResources( DetailedTasks & tg );
 
@@ -121,6 +127,19 @@ public:
   // grid might have changed and need to create a new perProcessorPatchSet
   virtual bool possiblyDynamicallyReallocate(const GridP&, int state);
 
+  // Cost profiling functions
+  // Update the contribution for this patch.
+  virtual void addContribution( DetailedTask * task, double cost );
+  
+  // Finalize the contributions (updates the weight, should be called once per timestep):
+  virtual void finalizeContributions( const GridP & currentGrid );
+
+  // Initializes the regions in the new level that are not in the old level.
+  virtual void initializeWeights( const Grid* oldgrid, const Grid* newgrid );
+
+  // Resets the profiler counters to zero
+  virtual void resetCostForecaster();
+
   //! Returns n - data gets output every n procs.
   virtual int getNthProc() { return d_outputNthProc; }
 
@@ -137,8 +156,7 @@ public:
   //! Simulation.  Returns true if we need to re-load balance (if we have a 
   //! different number of procs than were saved to disk
   virtual void restartInitialize(       DataArchive  * archive,
-                                        int            time_index,
-                                        ProblemSpecP & pspec,
+                                  const int            time_index,
                                   const std::string  & tsurl,
                                   const GridP        & grid );
    

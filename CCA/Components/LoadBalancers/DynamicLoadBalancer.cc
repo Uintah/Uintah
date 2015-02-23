@@ -1091,45 +1091,6 @@ DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 }
 
 
-int
-DynamicLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )
-{
-  // if on a copy-data timestep and we ask about an old patch, that could cause problems
-  if (d_sharedState->isCopyDataTimestep() && patch->getRealPatch()->getID() < d_assignmentBasePatch)
-    return -patch->getID();
- 
-  ASSERTRANGE(patch->getRealPatch()->getID(), d_assignmentBasePatch, d_assignmentBasePatch + (int) d_processorAssignment.size());
-  int proc = d_processorAssignment[patch->getRealPatch()->getGridIndex()];
-
-  ASSERTRANGE(proc, 0, d_myworld->size());
-  return proc;
-}
-
-int
-DynamicLoadBalancer::getOldProcessorAssignment( const VarLabel * var, 
-                                                const Patch    * patch, 
-                                                const int        /*matl*/ )
-{
-
-  if (var && var->typeDescription()->isReductionVariable()) {
-    return d_myworld->myrank();
-  }
-
-  // on an initial-regrid-timestep, this will get called from createNeighborhood
-  // and can have a patch with a higher index than we have
-  if ((int)patch->getRealPatch()->getID() < d_oldAssignmentBasePatch || patch->getRealPatch()->getID() >= d_oldAssignmentBasePatch + (int)d_oldAssignment.size()) {
-    return -9999;
-  }
-  
-  if (patch->getGridIndex() >= (int) d_oldAssignment.size()) {
-    return -999;
-  }
-
-  int proc = d_oldAssignment[patch->getRealPatch()->getGridIndex()];
-  ASSERTRANGE(proc, 0, d_myworld->size());
-  return proc;
-}
-
 bool 
 DynamicLoadBalancer::needRecompile(       double /*time*/,
                                           double /*delt*/, 

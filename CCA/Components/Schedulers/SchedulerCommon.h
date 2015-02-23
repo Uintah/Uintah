@@ -219,7 +219,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     virtual void scheduleAndDoDataCopy( const GridP& grid, SimulationInterface* sim );
 
     //! override default behavior of copying, scrubbing, and such
-    virtual void overrideVariableBehavior(std::string var,
+    virtual void overrideVariableBehavior(const std::string & var,
                                           bool treatAsOld,
                                           bool copyData,
                                           bool noScrub,

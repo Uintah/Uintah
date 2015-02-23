@@ -191,7 +191,7 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   if (mpm_soln_ps) {
 
     // Read all MPM flags (look in MPMFlags.cc)
-    flags->readMPMFlags(restart_mat_ps, dataArchiver);
+    flags->readMPMFlags( restart_mat_ps, dataArchiver );
      
     if (flags->d_integrator_type != "implicit") {
       throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
@@ -300,11 +300,13 @@ ImpMPM::problemSetup( const ProblemSpecP     & prob_spec,
   // Pull out from Time section
   d_initialDt = 10000.0;
   ProblemSpecP time_ps = restart_mat_ps->findBlock("Time");
-  time_ps->get("delt_init",d_initialDt);
+  if( time_ps ) {
+    time_ps->get("delt_init",d_initialDt);
+  }
 }
 
-
-void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
+void
+ImpMPM::outputProblemSpec( ProblemSpecP & root_ps )
 {
   ProblemSpecP root = root_ps->getRootNode();
 

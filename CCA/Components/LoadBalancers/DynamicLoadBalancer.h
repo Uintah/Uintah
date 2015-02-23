@@ -91,9 +91,7 @@ namespace Uintah {
   public:
     DynamicLoadBalancer(const ProcessorGroup* myworld);
     ~DynamicLoadBalancer();
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
-    virtual int getOldProcessorAssignment(const VarLabel* var,
-                                          const Patch* patch, const int matl);
+
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
@@ -116,16 +114,16 @@ namespace Uintah {
 
     // Cost profiling functions
     // Update the contribution for this patch.
-    void addContribution( DetailedTask * task ,double cost ) { d_costForecaster->addContribution(task,cost); }
+    virtual void addContribution( DetailedTask * task ,double cost ) { d_costForecaster->addContribution(task,cost); }
 
     // Finalize the contributions (updates the weight, should be called once per timestep):
-    void finalizeContributions( const GridP & currentGrid );
+    virtual void finalizeContributions( const GridP & currentGrid );
 
     // Initializes the regions in the new level that are not in the old level.
-    void initializeWeights(const Grid* oldgrid, const Grid* newgrid) { d_costForecaster->initializeWeights(oldgrid,newgrid); }
+    virtual void initializeWeights(const Grid* oldgrid, const Grid* newgrid) { d_costForecaster->initializeWeights(oldgrid,newgrid); }
 
     // Resets the profiler counters to zero
-    void resetCostForecaster() { d_costForecaster->reset(); }
+    virtual void resetCostForecaster() { d_costForecaster->reset(); }
     
     // Helper for assignPatchesFactor.  Collects each patch's particles
     void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);

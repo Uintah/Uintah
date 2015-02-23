@@ -71,9 +71,7 @@ namespace Uintah {
   public:
     ParticleLoadBalancer(const ProcessorGroup* myworld);
     ~ParticleLoadBalancer();
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
-    virtual int getOldProcessorAssignment(const VarLabel* var,
-					  const Patch* patch, const int matl);
+
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 

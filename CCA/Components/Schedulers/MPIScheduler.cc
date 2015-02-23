@@ -819,10 +819,9 @@ void MPIScheduler::processMPIRecvs(int how_much)
 //
 
 void
-MPIScheduler::execute( int tgnum /*=0*/,
-                       int iteration /*=0*/ )
+MPIScheduler::execute( int tgnum     /* = 0 */,
+                       int iteration /* = 0 */ )
 {
-
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::execute");
 
   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER);
