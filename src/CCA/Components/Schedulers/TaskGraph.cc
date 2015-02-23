@@ -1664,15 +1664,16 @@ TaskGraph::findVariableLocation(       Task::Dependency* req,
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.
   int proc;
-  if ((req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW) || iteration > 0
-      || (req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)) {
-    // provide some accommodation for Dynamic load balancers and sub schedulers.  We need to
-    // treat the requirement like a "old" dw req but it needs to be found on the current processor
-    // Same goes for successive executions of the same TG
-    proc = lb->getPatchwiseProcessorAssignment(patch);
+  if( ( req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW ) ||
+      iteration > 0 ||
+      ( req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph ) ) {
+    // Provide some accommodation for Dynamic load balancers and sub schedulers.  We need to
+    // treat the requirement like a "old" dw req but it needs to be found on the current processor.
+    // Same goes for successive executions of the same TG.
+    proc = lb->getPatchwiseProcessorAssignment( patch );
   }
   else {
-    proc = lb->getOldProcessorAssignment(req->var, patch, matl);
+    proc = lb->getOldProcessorAssignment( patch );
   }
   return proc;
 }

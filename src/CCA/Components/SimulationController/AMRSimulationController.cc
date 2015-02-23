@@ -146,19 +146,19 @@ AMRSimulationController::run()
 
   bool log_dw_mem=false;
 
-  if(dbg_dwmem.active()) {
-    log_dw_mem=true;
+  if( dbg_dwmem.active() ) {
+    log_dw_mem = true;
   }
 
-   // sets up sharedState, timeinfo, output, scheduler, lb
+   // Sets up sharedState, timeinfo, output, scheduler, lb.
    preGridSetup();
 
-   // create grid
+   // Create grid:
    GridP currentGrid = gridSetup();
 
-   d_scheduler->initialize(1, 1);
-   d_scheduler->advanceDataWarehouse(currentGrid, true);
-   d_scheduler->setInitTimestep(true);
+   d_scheduler->initialize( 1, 1 );
+   d_scheduler->advanceDataWarehouse( currentGrid, true );
+   d_scheduler->setInitTimestep( true );
 
    double time;
 
@@ -359,8 +359,8 @@ AMRSimulationController::run()
      bool nr;
      if( (nr=needRecompile( time, delt, currentGrid )) || first ){
         
-       if(nr){  // recompile taskgraph, re-assign BCs, reset recompile flag
-          currentGrid->assignBCS(d_grid_ps,d_lb);
+       if(nr){ // Recompile taskgraph, re-assign BCs, reset recompile flag.
+          currentGrid->assignBCS( d_grid_ps, d_lb );
           currentGrid->performConsistencyCheck();
           d_sharedState->setRecompileTaskGraph( false );
        }
@@ -754,11 +754,12 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         d_sim->scheduleTimeAdvance(grid->getLevel(i), d_scheduler);
       }
     }  
-  } else {
+  }
+  else {
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     // for dynamic lb's, set up initial patch config
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::init); 
-    grid->assignBCS(d_grid_ps,d_lb);
+    grid->assignBCS( d_grid_ps, d_lb );
     grid->performConsistencyCheck();
     t = d_timeinfo->initTime;
 
@@ -848,7 +849,7 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
       barrier_times[1]+=Time::currentSeconds()-start;
     }
     
-    currentGrid->assignBCS(d_grid_ps,d_lb);
+    currentGrid->assignBCS( d_grid_ps, d_lb );
     currentGrid->performConsistencyCheck();
 
     //__________________________________

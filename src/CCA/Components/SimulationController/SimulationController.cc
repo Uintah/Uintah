@@ -95,23 +95,23 @@ stdDeviation( double sum_of_x, double sum_of_x_squares, int n )
 SimulationController::SimulationController( const ProcessorGroup * myworld,
                                                   bool             doAMR,
                                                   ProblemSpecP     pspec ) :
-  UintahParallelComponent(myworld), d_ups(pspec), d_doAMR(doAMR)
+  UintahParallelComponent( myworld ), d_ups( pspec ), d_doAMR( doAMR )
 {
-  d_n = 0;
-  d_wallTime = 0;
-  d_startTime = 0;
-  d_prevWallTime = 0;
-  //d_sumOfWallTimes = 0;
+  d_n                      = 0;
+  d_wallTime               = 0;
+  d_startTime              = 0;
+  d_prevWallTime           = 0;
+  //d_sumOfWallTimes       = 0;
   //d_sumOfWallTimeSquares = 0;
-  d_movingAverage=0;
+  d_movingAverage          = 0;
 
-  d_restarting = false;
-  d_reduceUda = false;
-  d_doMultiTaskgraphing = false;
-  d_archive = NULL;
-  d_sim = 0;
+  d_restarting             = false;
+  d_reduceUda              = false;
+  d_doMultiTaskgraphing    = false;
+  d_archive                = NULL;
+  d_sim                    = 0;
 
-  d_grid_ps=d_ups->findBlock("Grid");
+  d_grid_ps                = d_ups->findBlock( "Grid" );
 
 #ifdef USE_PAPI_COUNTERS
   /*
@@ -297,15 +297,15 @@ SimulationController::preGridSetup( void )
     cout << "dynamic_cast of 'd_output' failed!\n";
     throw InternalError("dynamic_cast of 'd_output' failed!", __FILE__, __LINE__);
   }
-  d_output->problemSetup(d_ups, d_sharedState.get_rep());
+  d_output->problemSetup( d_ups, d_sharedState.get_rep() );
 
   ProblemSpecP amr_ps = d_ups->findBlock("AMR");
-  if (amr_ps) {
-    amr_ps->get("doMultiTaskgraphing", d_doMultiTaskgraphing);
+  if( amr_ps ) {
+    amr_ps->get( "doMultiTaskgraphing", d_doMultiTaskgraphing );
   }
   
   // Parse time struct
-  d_timeinfo = scinew SimulationTime(d_ups);
+  d_timeinfo = scinew SimulationTime( d_ups );
   d_sharedState->d_simTime = d_timeinfo;
 }
 
@@ -318,22 +318,23 @@ SimulationController::gridSetup( void )
   GridP grid;
 
   if( d_restarting ) {
-    // create the DataArchive here, and store it, as we use it a few times...
+    // Create the DataArchive here, and store it, as we use it a few times...
     // We need to read the grid before ProblemSetup, and we can't load all
     // the data until after problemSetup, so we have to do a few 
     // different DataArchive operations
 
-    Dir restartFromDir(d_fromDir);
-    Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
-    d_archive = scinew DataArchive(checkpointRestartDir.getName(),
-                                   d_myworld->myrank(), d_myworld->size());
+    Dir restartFromDir( d_fromDir );
+    Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
+    d_archive = scinew DataArchive( checkpointRestartDir.getName(),
+                                    d_myworld->myrank(), d_myworld->size() );
 
-    vector<int> indices;
+    vector<int>    indices;
     vector<double> times;
 
     try {
-      d_archive->queryTimesteps(indices, times);
-    } catch( InternalError & ie ) {
+      d_archive->queryTimesteps( indices, times );
+    }
+    catch( InternalError & ie ) {
       cerr << "\n";
       cerr << "An internal error was caught while trying to restart:\n";
       cerr << "\n";
@@ -345,7 +346,7 @@ SimulationController::gridSetup( void )
       Thread::exitAll(1);
     }
 
-    // find the right time to query the grid
+    // Find the right time to query the grid
     if (d_restartTimestep == 0) {
       d_restartIndex = 0; // timestep == 0 means use the first timestep
       // reset d_restartTimestep to what it really is
@@ -372,16 +373,17 @@ SimulationController::gridSetup( void )
     }
   }
 
-  if (!d_restarting) {
+  if( !d_restarting ) {
     grid = scinew Grid;
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
-    if(!d_sim)
+    if( !d_sim ) {
       throw InternalError("No simulation component", __FILE__, __LINE__);
+    }
     d_sim->preGridProblemSetup(d_ups, grid, d_sharedState);
     grid->problemSetup(d_ups, d_myworld, d_doAMR);
   }
   else {
-    grid = d_archive->queryGrid(d_restartIndex, d_ups.get_rep());
+    grid = d_archive->queryGrid( d_restartIndex, d_ups );
   }
   if(grid->numLevels() == 0){
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
@@ -412,76 +414,71 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   // do before sim - so that Switcher (being a sim) can reset the state of the regridder
   d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
   if (d_regridder) {
-    d_regridder->problemSetup(d_ups, grid, d_sharedState);
+    d_regridder->problemSetup( d_ups, grid, d_sharedState );
   }
     
   // Initialize load balancer.  Do here since we have the dimensionality in the shared state,
   // and we want that at initialization time. In addition do it after regridding since we need to 
   // know the minimum patch size that the regridder will create
   d_lb = d_scheduler->getLoadBalancer();
-  d_lb->problemSetup(d_ups, grid, d_sharedState);
+  d_lb->problemSetup( d_ups, grid, d_sharedState );
 
   // Initialize the CFD and/or MPM components
   d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
-  if(!d_sim)
+  if( !d_sim ) {
     throw InternalError("No simulation component", __FILE__, __LINE__);
-
-  ProblemSpecP restart_prob_spec = 0;
-
-  if (d_restarting) {
-    // do these before calling archive->restartInitialize, since problemSetup creates VarLabes the DA needs
-    restart_prob_spec = d_archive->getTimestepDoc(d_restartIndex);
   }
 
-  // Pass the restart_prob_spec to the problemSetup.  For restarting, 
-  // pull the <MaterialProperties> from the restart_prob_spec.  If it is not
-  // available, then we will pull the properties from the d_ups instead.
-  // Needs to be done before DataArchive::restartInitialize
-  d_sim->problemSetup(d_ups, restart_prob_spec, grid, d_sharedState);
+  ProblemSpecP restart_prob_spec_for_component = 0;
 
-  if (d_restarting) {
+  if( d_restarting ) {
+    // Do these before calling archive->restartInitialize, since problemSetup creates VarLabels the DA needs.
+    restart_prob_spec_for_component = d_archive->getTimestepDocForComponent( d_restartIndex );
+  }
+
+  // Pass the restart_prob_spec_for_component to the Component's
+  // problemSetup.  For restarting, pull the <MaterialProperties> from
+  // the restart_prob_spec.  If it is not available, then we will pull
+  // the properties from the d_ups instead.  Needs to be done before
+  // DataArchive::restartInitialize
+  d_sim->problemSetup(d_ups, restart_prob_spec_for_component, grid, d_sharedState);
+
+  if( d_restarting ) {
     simdbg << "Restarting... loading data\n";    
-    d_archive->restartInitialize(d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t);
+    d_archive->restartInitialize( d_restartIndex, grid, d_scheduler->get_dw(1), d_lb, &t );
       
-
-    // set prevDelt to what it was in the last simulation.  If in the last 
+    // Set prevDelt to what it was in the last simulation.  If in the last 
     // sim we were clamping delt based on the values of prevDelt, then
     // delt will be off if it doesn't match.
-    ProblemSpecP timeSpec = restart_prob_spec->findBlock("Time");
-    if (timeSpec) {
-      d_sharedState->d_prev_delt = 0.0;
-      if (!timeSpec->get("oldDelt", d_sharedState->d_prev_delt))
-        // the delt is deprecated since it is misleading, but older udas may have it...
-        timeSpec->get("delt", d_sharedState->d_prev_delt);
-    }
+    d_sharedState->d_prev_delt = d_archive->getOldDelt( d_restartIndex );
 
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
     // Tell the scheduler the generation of the re-started simulation.
     // (Add +1 because the scheduler will be starting on the next
     // timestep.)
-    d_scheduler->setGeneration( d_restartTimestep+1 );
+    d_scheduler->setGeneration( d_restartTimestep + 1 );
       
-    // just in case you want to change the delt on a restart....
+    // If the user wishes to change the delt on a restart....
     if (d_timeinfo->override_restart_delt != 0) {
       double newdelt = d_timeinfo->override_restart_delt;
-      if (d_myworld->myrank() == 0)
-        cout << "Overriding restart delt with " << newdelt << endl;
-      d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
-                                       d_sharedState->get_delt_label());
+      proc0cout << "Overriding restart delt with " << newdelt << "\n";
+      d_scheduler->get_dw(1)->override( delt_vartype(newdelt), d_sharedState->get_delt_label() );
+
       double delt_fine = newdelt;
-      for(int i=0;i<grid->numLevels();i++){
+      for( int i = 0; i < grid->numLevels(); i++ ) {
         const Level* level = grid->getLevel(i).get_rep();
-        if(i != 0 && !d_sharedState->isLockstepAMR()) {
+        if( i != 0 && !d_sharedState->isLockstepAMR() ) {
           delt_fine /= level->getRefinementRatioMaxDim();
         }
-        d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
-                                         level);
+        d_scheduler->get_dw(1)->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
       }
     }
     d_scheduler->get_dw(1)->finalize();
       
-    // don't need it anymore...
-    //      delete d_archive; // This was moved to the destructor
+    // This delete is an enigma... I think if it is called then memory is not leaked, but sometimes if it
+    // it is called, then everything segfaults...
+    //
+    // delete d_archive;
   }
 
   // Finalize the shared state/materials
@@ -491,12 +488,10 @@ SimulationController::postGridSetup( GridP& grid, double& t )
   // input.xml, which it writes along with index.xml
   d_output->initializeOutput(d_ups);
 
-  if (d_restarting) {
+  if( d_restarting ) {
     Dir dir(d_fromDir);
-    d_output->restartSetup(dir, 0, d_restartTimestep, t,
-                           d_restartFromScratch, d_restartRemoveOldDir);
+    d_output->restartSetup( dir, 0, d_restartTimestep, t, d_restartFromScratch, d_restartRemoveOldDir );
   }
-
 } // end postGridSetup()
 
 //______________________________________________________________________
@@ -521,37 +516,30 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
 
   delt *= d_timeinfo->delt_factor;
       
-  if(delt < d_timeinfo->delt_min){
-    if(d_myworld->myrank() == 0)
-      cout << "WARNING: raising delt from " << delt
-           << " to minimum: " << d_timeinfo->delt_min << '\n';
+  if( delt < d_timeinfo->delt_min ) {
+    proc0cout << "WARNING: raising delt from " << delt << " to minimum: " << d_timeinfo->delt_min << '\n';
     delt = d_timeinfo->delt_min;
   }
   if( !first && 
       d_timeinfo->max_delt_increase < 1.e90 &&
       delt > (1+d_timeinfo->max_delt_increase)*prev_delt) {
-    if(d_myworld->myrank() == 0)
-      cout << "WARNING (a): lowering delt from " << delt 
-           << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
-           << " (maximum increase of " << d_timeinfo->max_delt_increase
-           << ")\n";
+    proc0cout << "WARNING (a): lowering delt from " << delt 
+              << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
+              << " (maximum increase of " << d_timeinfo->max_delt_increase
+              << ")\n";
     delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
   }
   if( t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt ) {
-    if(d_myworld->myrank() == 0)
-      cout << "WARNING (b): lowering delt from " << delt 
-           << " to maximum: " << d_timeinfo->max_initial_delt
-           << " (for initial timesteps)\n";
+    proc0cout << "WARNING (b): lowering delt from " << delt 
+              << " to maximum: " << d_timeinfo->max_initial_delt
+              << " (for initial timesteps)\n";
     delt = d_timeinfo->max_initial_delt;
   }
   if( delt > d_timeinfo->delt_max ) {
-    if(d_myworld->myrank() == 0) {
-      cout << "WARNING (c): lowering delt from " << delt 
-           << " to maximum: " << d_timeinfo->delt_max << '\n';
-    }
+    proc0cout << "WARNING (c): lowering delt from " << delt << " to maximum: " << d_timeinfo->delt_max << '\n';
     delt = d_timeinfo->delt_max;
   }
-  // clamp timestep to output/checkpoint
+  // Clamp timestep to output/checkpoint.
   if( d_timeinfo->timestep_clamping && d_output ) {
     double orig_delt = delt;
     double nextOutput = d_output->getNextOutputTime();
@@ -563,10 +551,9 @@ SimulationController::adjustDelT( double& delt, double prev_delt, bool first, do
       delt = nextCheckpoint - t;
     }
     if (delt != orig_delt) {
-      if(d_myworld->myrank() == 0)
-        cout << "WARNING (d): lowering delt from " << orig_delt 
-             << " to " << delt
-             << " to line up with output/checkpoint time\n";
+      proc0cout << "WARNING (d): lowering delt from " << orig_delt 
+                << " to " << delt
+                << " to line up with output/checkpoint time\n";
     }
   }
   if (d_timeinfo->end_on_max_time && t + delt > d_timeinfo->maxTime){
@@ -627,7 +614,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   unsigned long memuse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
 
-  // get memory stats for each proc if MALLOC_PERPROC is in the environent
+  // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
   if ( getenv( "MALLOC_PERPROC" ) ) {
     ostream* mallocPerProcStream = NULL;
     char* filenamePrefix = getenv( "MALLOC_PERPROC" );
@@ -670,12 +657,11 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   retp = PAPI_read(d_eventSet, d_eventValues);
   if (retp != PAPI_OK) {
-    if (d_myworld->myrank() == 0) {
-      cout << "Error: Cannot read PAPI event set!" << endl
-           << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
-    }
+    proc0cout << "Error: Cannot read PAPI event set!" << endl
+              << "       Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     throw PapiInitializationError("PAPI read error. Unable to read hardware event set values.", __FILE__, __LINE__);
-  } else {
+  }
+  else {
     flop      = (double) d_eventValues[d_papiEvents.find(PAPI_FP_OPS)->second.eventValueIndex];
     vflop     = (double) d_eventValues[d_papiEvents.find(PAPI_DP_OPS)->second.eventValueIndex];
     l2_misses = (double) d_eventValues[d_papiEvents.find(PAPI_L2_TCM)->second.eventValueIndex];
@@ -685,10 +671,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   // zero the values in the hardware counter event set array
   retp = PAPI_reset(d_eventSet);
   if (retp != PAPI_OK) {
-    if (d_myworld->myrank() == 0) {
-      cout << "WARNNING: Cannot reset PAPI event set!" << endl
-           << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
-    }
+    proc0cout << "WARNNING: Cannot reset PAPI event set!" << endl
+              << "          Error code = " << retp << " (" << d_papiErrorCodes.find(retp)->second << ")" << endl;
     throw PapiInitializationError("PAPI reset error on hardware event set. Unable to reset event set values.", __FILE__, __LINE__);
   }
 #endif
@@ -964,8 +948,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         }
       }
       else { // Runing in serial.
-        for (unsigned i = 1; i < statLabels.size(); i++) { // index 0 is memuse
-          if (toReduce[i] > 0){
+        for ( unsigned int i = 1; i < statLabels.size(); i++ ) { // index 0 is memuse
+          if( toReduce[i] > 0 ) {
             stats << "  "<< left << setw(19)<< statLabels[i]
                   << " : " << setw(12) << toReduce[i]
                   << " : " << setw(12) << toReduce[i]
@@ -974,7 +958,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
           }
         }
       }
-      if(d_n>2 && !isnan(d_sharedState->overheadAvg)){
+      if( d_n > 2 && !isnan(d_sharedState->overheadAvg) ) {
         stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
       }
     } 

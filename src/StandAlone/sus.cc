@@ -631,7 +631,7 @@ main( int argc, char *argv[], char *env[] )
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController(world, do_AMR, ups);
+    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
     RegridderCommon* reg = 0;
     if(do_AMR) {
@@ -743,45 +743,54 @@ main( int argc, char *argv[], char *env[] )
 #ifndef NO_ICE
     delete modelmaker;
 #endif
-  } catch (ProblemSetupException& e) {
+  }
+  catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     cerrLock.lock();
     cout << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
     cerrLock.unlock();
     thrownException = true;
-  } catch (Exception& e) {
+  }
+  catch (Exception& e) {
     cerrLock.lock();
     cout << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
-    if(e.stackTrace())
+    if(e.stackTrace()) {
       stackDebug << "Stack trace: " << e.stackTrace() << '\n';
+    }
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::bad_alloc& e) {
+  }
+  catch (std::bad_alloc& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::bad_exception& e) {
+  }
+  catch (std::bad_exception& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::ios_base::failure& e) {
+  }
+  catch (std::ios_base::failure& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::runtime_error& e) {
+  }
+  catch (std::runtime_error& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::exception& e) {
+  }
+  catch (std::exception& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch(...) {
+  }
+  catch(...) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
     cerrLock.unlock();
