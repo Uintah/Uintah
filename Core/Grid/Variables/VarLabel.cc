@@ -44,6 +44,8 @@ using std::vector;
 static DebugStream dbg( "VarLabel", false );
 
 static map<string, VarLabel*> allLabels;
+string VarLabel::d_particlePositionName = "p.x";
+
 string VarLabel::d_defaultCompressionMode = "none";
 static Mutex lock("VarLabel create/destroy lock");
 
@@ -139,6 +141,11 @@ VarLabel::find( const string &  name )
    }
 }
 
+VarLabel*
+VarLabel::particlePositionLabel()
+{
+  return find(d_particlePositionName);
+}
 
 string
 VarLabel::getFullName( int matlIndex, const Patch * patch ) const
