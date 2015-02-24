@@ -6954,10 +6954,17 @@ EOF
 
 # Verify that the compiler accepts the -fopenmp flag:
 $CXX $CXXFLAGS -fopenmp conftest-openmp.cc -o conftest-openmp 2>&5
+
 if test $? = 0; then
-   add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
-   CFLAGS="$CFLAGS -fopenmp"
-   CXXFLAGS="$CXXFLAGS -fopenmp"
+   if test "$IS_OSX" = "no"; then
+      add_important_warning "Automatically added -fopenmp compiler option to C/CXXFLAGS."
+      CFLAGS="$CFLAGS -fopenmp"
+      CXXFLAGS="$CXXFLAGS -fopenmp"
+   else
+      add_important_warning "Automatically removing the openmp compiler option to C/CXXFLAGS."
+      CFLAGS="$CFLAGS"
+      CXXFLAGS="$CXXFLAGS"
+   fi
 else
    rm -f conftest-openmp conftest-openmp.cc
    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: Tried to add the -fopenmp flag but the compiler ($CXX) failed to accept it...\n " >&5

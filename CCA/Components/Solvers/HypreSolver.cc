@@ -94,18 +94,18 @@ namespace Uintah {
   template<class Types>
   class HypreStencil7 : public RefCounted {
   public:
-    HypreStencil7(const Level* level,
-                  const MaterialSet* matlset,
-                  const VarLabel* A, 
-                  Task::WhichDW which_A_dw,
-                  const VarLabel* x, 
-                  bool modifies_x,
-                  const VarLabel* b, 
-                  Task::WhichDW which_b_dw,
-                  const VarLabel* guess,
-                  Task::WhichDW which_guess_dw,
-                  const HypreSolver2Params* params,
-                  bool modifies_hypre)
+    HypreStencil7(const Level              * level,
+                  const MaterialSet        * matlset,
+                  const VarLabel           * A, 
+                        Task::WhichDW        which_A_dw,
+                  const VarLabel           * x, 
+                        bool                 modifies_x,
+                  const VarLabel           * b, 
+                        Task::WhichDW        which_b_dw,
+                  const VarLabel           * guess,
+                        Task::WhichDW        which_guess_dw,
+                  const HypreSolver2Params * params,
+                        bool                 modifies_hypre)
       : level(level), matlset(matlset),
         A_label(A), which_A_dw(which_A_dw),
         X_label(x), 
@@ -117,8 +117,8 @@ namespace Uintah {
         hypre_solver_label = VarLabel::create("hypre_solver_label",
                    SoleVariable<hypre_solver_structP>::getTypeDescription());
                    
-      firstPassThrough = true;
-      movingAverage_   = 0.0;
+      firstPassThrough_ = true;
+      movingAverage_    = 0.0;
     }
 
     virtual ~HypreStencil7() {
@@ -145,9 +145,9 @@ namespace Uintah {
       bool do_setup = ((timestep == 1) || ! mod_setup);
       
       // always setup on first pass through
-      if(firstPassThrough){
+      if( firstPassThrough_ ){
         do_setup = true;
-        firstPassThrough = false;
+        firstPassThrough_ = false;
       }
       
       struct hypre_solver_struct* hypre_solver_s = 0;
@@ -158,12 +158,17 @@ namespace Uintah {
         new_dw->get(d_hypre_solverP_,hypre_solver_label);
         hypre_solver_s =  d_hypre_solverP_.get().get_rep();
 
-      }  else if (old_dw->exists(hypre_solver_label)) {
+      }
+      else if (old_dw->exists(hypre_solver_label)) {
+
         old_dw->get(d_hypre_solverP_,hypre_solver_label);
         
         hypre_solver_s =  d_hypre_solverP_.get().get_rep();
         new_dw->put(d_hypre_solverP_, hypre_solver_label);
-      } else {
+
+      }
+      else {
+
         SoleVariable<hypre_solver_structP> hypre_solverP_;
         hypre_solver_struct* hypre_solver_ = scinew hypre_solver_struct;
         
@@ -1117,7 +1122,7 @@ namespace Uintah {
 
     const VarLabel* hypre_solver_label;
     SoleVariable<hypre_solver_structP> d_hypre_solverP_;
-    bool firstPassThrough;
+    bool   firstPassThrough_;
     double movingAverage_;
   };
   
@@ -1196,8 +1201,6 @@ namespace Uintah {
                    sched->getLoadBalancer()->getPerProcessorPatchSet(level), 
                    matls);
 
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
-                                    false,true,true);
   }
 
   void HypreSolver2::allocateHypreMatrices(DataWarehouse* new_dw)
@@ -1219,30 +1222,32 @@ namespace Uintah {
 
   }
 
-
-  void HypreSolver2::initialize(const ProcessorGroup*,
-                                const PatchSubset* patches,
-                                const MaterialSubset* matls,
-                                DataWarehouse*, DataWarehouse* new_dw)
+  void
+  HypreSolver2::initialize( const ProcessorGroup *,
+                            const PatchSubset    * patches,
+                            const MaterialSubset * matls,
+                                  DataWarehouse  *,
+                                  DataWarehouse  * new_dw )
   {
-    //cout << "Doing Hypre Initialize " << endl;
-
-    allocateHypreMatrices(new_dw);
-
+    allocateHypreMatrices( new_dw );
   } 
 
 
   //______________________________________________________________________
-  void HypreSolver2::scheduleSolve(const LevelP& level, SchedulerP& sched,
-                                   const MaterialSet* matls,
-                                   const VarLabel* A,Task::WhichDW which_A_dw,  
-                                   const VarLabel* x,
-                                   bool modifies_x,
-                                   const VarLabel* b,Task::WhichDW which_b_dw,  
-                                   const VarLabel* guess,
-                                   Task::WhichDW which_guess_dw,
-                                   const SolverParameters* params,
-                                   bool modifies_hypre)
+  void
+  HypreSolver2::scheduleSolve( const LevelP           & level,
+                                     SchedulerP       & sched,
+                               const MaterialSet      * matls,
+                               const VarLabel         * A,    
+                                     Task::WhichDW      which_A_dw,  
+                               const VarLabel         * x,
+                                     bool               modifies_x,
+                               const VarLabel         * b,    
+                                     Task::WhichDW      which_b_dw,  
+                               const VarLabel         * guess,
+                                     Task::WhichDW      which_guess_dw,
+                               const SolverParameters * params,
+                                     bool               modifies_hypre /* = false */ )
   {
     printSchedule(level, cout_doing, "HypreSolver:scheduleSolve");
     
@@ -1261,11 +1266,11 @@ namespace Uintah {
     if(periodic != IntVector(0,0,0)){
       IntVector l,h;
       level->findCellIndexRange( l, h );
-      IntVector range = h - l;
+      IntVector range = (h - l ) * periodic;
       if( fmodf(range.x(),2) !=0 || fmodf(range.y(),2) != 0 || fmodf(range.z(),2) != 0) {
         ostringstream warn;
         warn << "\nINPUT FILE ERROR: hypre solver: \n"
-             << "With periodic boundary conditions the resolution of your grid "<<range<<", in each direction, must be a power of 2 (i.e. 2^n), \n"
+             << "With periodic boundary conditions the resolution of your grid "<<range<<", in each periodic direction, must be a power of 2 (i.e. 2^n), \n"
              << "e.g., 16,32,64,128....";
             
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__);

@@ -384,6 +384,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     
     d_ice->scheduleMaxMach_on_Lodi_BC_Faces(        sched, ice_level,ice_matls);
   }
+  
+  // diagnostic task
+  //d_mpm->scheduleTotalParticleCount(          sched, mpm_patches, mpm_matls);
    
   d_mpm->scheduleApplyExternalLoads(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleInterpolateParticlesToGrid(  sched, mpm_patches, mpm_matls);
@@ -439,9 +442,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
       const PatchSet* ice_patches = ice_level->eachPatch();
 
-      sched->overrideVariableBehavior("hypre_solver_label",false,
-                                      false,false,true,true);
-
       d_ice->scheduleSetupRHS(                sched, ice_patches, one_matl, 
                                                                   all_matls,
                                                                   false,
@@ -484,6 +484,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->scheduleComputePressFC(            sched, ice_patches, press_matl,
                                                                     all_matls);
                                                                     
+    d_ice->scheduleVelTau_CC(                 sched, ice_patches, ice_matls);
+    
     d_ice->scheduleViscousShearStress(        sched, ice_patches, ice_matls);
    
     d_ice->scheduleAccumulateMomentumSourceSinks(

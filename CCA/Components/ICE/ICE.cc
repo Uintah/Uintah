@@ -339,11 +339,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
     d_subsched->mapDataWarehouse(Task::OldDW, 2);
     d_subsched->mapDataWarehouse(Task::NewDW, 3);
-
-#ifdef HAVE_HYPRE
-    d_subsched->overrideVariableBehavior(hypre_solver_label->getName(),false,
-                                         false,false,true,true);
-#endif
   
     d_recompileSubsched = true;
 
@@ -411,7 +406,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
     if( !id ) {
       // stringstream parsing failed... on many (most) systems, the
       // original value assigned to index_val would be left
-      // intact... but on some systems (redstorm) it inserts garbage,
+      // intact... but on some systems it inserts garbage,
       // so we have to manually restore the value.
       index_val = DEFAULT_VALUE;
     }
@@ -856,11 +851,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                                          false);
                                                           
   if(d_impICE) {        //  I M P L I C I T
-  
-#ifdef HAVE_HYPRE
-    sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
-                                    false,true,true);
-#endif
 
     scheduleSetupRHS(                     sched, patches,  one_matl, 
                                                            all_matls,
@@ -893,6 +883,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   
   scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                           all_matls);
+
+  scheduleVelTau_CC(                      sched, patches, ice_matls);
 
   scheduleViscousShearStress(             sched, patches, ice_matls);
 
@@ -1312,6 +1304,28 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
 
 //______________________________________________________________________
 //
+
+void ICE::scheduleVelTau_CC( SchedulerP& sched,
+                             const PatchSet* patches,              
+                             const MaterialSet* ice_matls )         
+{ 
+  if( !d_viscousFlow ){
+    return;
+  }
+  printSchedule(patches,cout_doing,"ICE::scheduleVelTau_CC");
+                                
+  Task* t = scinew Task("ICE::VelTau_CC",
+                  this, &ICE::VelTau_CC);
+                  
+  Ghost::GhostType  gn= Ghost::None;
+  t->requires( Task::OldDW, lb->vel_CCLabel, gn, 0 );
+  t->computes( lb->velTau_CCLabel );
+  
+  sched->addTask(t, patches, ice_matls);
+}
+
+//______________________________________________________________________
+//
 void ICE::scheduleViscousShearStress(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* ice_matls)
@@ -1327,7 +1341,7 @@ void ICE::scheduleViscousShearStress(SchedulerP& sched,
 
   if(d_viscousFlow){
     t->requires( Task::NewDW, lb->viscosityLabel,   gac, 2);
-    t->requires( Task::OldDW, lb->vel_CCLabel,      gac, 2);
+    t->requires( Task::NewDW, lb->velTau_CCLabel,   gac, 2);  
     t->requires( Task::NewDW, lb->rho_CCLabel,      gac, 2);
     t->requires( Task::NewDW, lb->vol_frac_CCLabel, gac, 2);
     
@@ -1340,6 +1354,7 @@ void ICE::scheduleViscousShearStress(SchedulerP& sched,
     t->requires( Task::NewDW,lb->vvel_FCMELabel,    gac, 3);
     t->requires( Task::NewDW,lb->wvel_FCMELabel,    gac, 3);
     t->computes( lb->turb_viscosity_CCLabel );
+    t->computes( lb->total_viscosity_CCLabel );
 #if 0
     t->computes( lb->scratch0Label );
     t->computes( lb->scratch1Label );
@@ -3785,6 +3800,119 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
+//    See comments in ICE::VelTau_CC()
+//______________________________________________________________________
+void ICE::computeVelTau_CCFace( const Patch* patch,
+                                const Patch::FaceType face,
+                                constCCVariable<Vector>& vel_CC,
+                                CCVariable<Vector>& velTau_CC)
+{
+  CellIterator iterLimits=patch->getFaceIterator(face, Patch::ExtraMinusEdgeCells);
+  IntVector oneCell = patch->faceDirection(face);
+  
+  for(CellIterator iter = iterLimits;!iter.done();iter++){
+    IntVector c = *iter;        // extra cell index
+    IntVector in = c - oneCell; // interior cell index
+    
+    velTau_CC[c] = 2. * vel_CC[c] - vel_CC[in];
+  }
+}
+
+//______________________________________________________________________
+//  Modify the vel_CC in the extra cells so that it behaves 
+//     vel_FC[FC] = (vel_CC(c) + vel_CC(ec) )/2        (1)
+//  
+//  Note that at the edge of the domain we assume that vel_FC = vel_CC[ec]
+//  so (1) becomes:
+//     vel_CC[ec]    = (vel_CC(c) + velTau_CC(ec) )/2
+//            or
+//     velTau_CC[ec] = (2 * vel_CC(ec) - velTau_CC(c) );
+//      
+//  You need this so the viscous shear stress terms tau_xy = tau_yx.
+//             
+//               |           |
+//    ___________|___________|_______________
+//               |           |
+//         o     |     o     |      o         Vel_CC
+//               |     c     |  
+//               |           |    
+//               |           |  
+//    ===========|====FC=====|==============      Edge of computational Domain
+//               |           | 
+//               |           |
+//         *     |     o     |      o          Vel_CC in extraCell
+//               |    ec     |
+//               |           |
+//    ___________|___________|_______________
+//
+//   A fundamental assumption is that the boundary conditions
+//  have been vel_CC[ec] in the old_dw.
+//______________________________________________________________________
+void ICE::VelTau_CC(const ProcessorGroup*,  
+                    const PatchSubset* patches,              
+                    const MaterialSubset* /*matls*/,         
+                    DataWarehouse* old_dw,                   
+                    DataWarehouse* new_dw)                   
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch, cout_doing, "Doing VelTau_CC" );
+    
+    //__________________________________
+    //  ICE matl loop 
+    int numMatls = d_sharedState->getNumICEMatls();
+    Ghost::GhostType  gn  = Ghost::None;
+      
+    for (int m = 0; m < numMatls; m++) {
+      ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+      int indx = ice_matl->getDWIndex();
+      
+      constCCVariable<Vector> vel_CC;
+      CCVariable<Vector>   velTau_CC;
+      old_dw->get(             vel_CC,    lb->vel_CCLabel,    indx, patch, gn, 0);           
+      new_dw->allocateAndPut( velTau_CC,  lb->velTau_CCLabel, indx, patch);
+      
+      velTau_CC.copyData( vel_CC );           // copy interior values over
+      
+      if( patch->hasBoundaryFaces() ){
+      
+        // Iterate over the faces encompassing the domain
+        vector<Patch::FaceType> bf;
+        patch->getBoundaryFaces(bf);
+        
+        for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+          Patch::FaceType face = *iter;
+
+          //__________________________________
+          //           X faces
+          if (face == Patch::xminus || face == Patch::xplus) {
+            computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
+            continue;
+          }
+
+          //__________________________________
+          //           Y faces
+          if (face == Patch::yminus || face == Patch::yplus) {
+            computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
+            continue;
+          }
+
+          //__________________________________
+          //           Z faces
+          if (face == Patch::zminus || face == Patch::zplus) {
+            computeVelTau_CCFace( patch, face, vel_CC, velTau_CC );
+            continue;
+          }
+
+        }  // face loop
+      }  // has boundary face
+    }  // matl loop
+  }  // patch loop
+}
+
+
+
+//______________________________________________________________________
 //
 void ICE::viscousShearStress(const ProcessorGroup*,  
                              const PatchSubset* patches,
@@ -3842,16 +3970,18 @@ void ICE::viscousShearStress(const ProcessorGroup*,
         double viscosity_test = ice_matl->getViscosity();
         
         if(viscosity_test != 0.0) {
-          CCVariable<double>        viscosity;
-          constCCVariable<double>   viscosity_org;
-          constCCVariable<Vector>   vel_CC;
+          CCVariable<double>        tot_viscosity;     // total viscosity
+          CCVariable<double>        viscosity;         // total *OR* molecular viscosity;
+          constCCVariable<double>   molecularVis;      // molecular viscosity
+          constCCVariable<Vector>   velTau_CC;
 
-          new_dw->get(viscosity_org, lb->viscosityLabel, indx, patch, gac,2); 
-          old_dw->get(vel_CC,        lb->vel_CCLabel,    indx, patch, gac,2); 
+          new_dw->get(molecularVis, lb->viscosityLabel, indx, patch, gac,2); 
+          new_dw->get(velTau_CC,    lb->velTau_CCLabel, indx, patch, gac,2); 
 
           // don't alter the original value
-          new_dw->allocateTemporary(viscosity, patch, gac, 2);
-          viscosity.copyData(viscosity_org);
+          new_dw->allocateTemporary(tot_viscosity, patch, gac, 2);
+          new_dw->allocateTemporary(viscosity,     patch, gac, 2);
+          viscosity.copyData(molecularVis);
           
           // Use temporary arrays to eliminate the communication of shear stress components
           // across the network.  Normally you would compute them in a separate task and then
@@ -3872,16 +4002,18 @@ void ICE::viscousShearStress(const ProcessorGroup*,
   
           // turbulence model
           if( d_turbulence ){ 
-            d_turbulence->callTurb( new_dw, patch, vel_CC, rho_CC, indx, lb,
-                                    d_sharedState, viscosity );                                   
+            d_turbulence->callTurb( new_dw, patch, velTau_CC, rho_CC, vol_frac, indx, lb,
+                                    d_sharedState, molecularVis, tot_viscosity );
+            viscosity.copyData(tot_viscosity);                                  
           }
 
-          computeTauComponents( patch, vol_frac, vel_CC,viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
+          computeTauComponents( patch, vol_frac, velTau_CC, viscosity, Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC);
+          
           
           // wall model
           if( d_WallShearStressModel ){
             d_WallShearStressModel -> computeWallShearStresses( old_dw, new_dw, patch, indx, 
-                                                                vol_frac, vel_CC, viscosity, 
+                                                                vol_frac, velTau_CC, molecularVis, rho_CC,
                                                                 Ttau_X_FC, Ttau_Y_FC, Ttau_Z_FC); 
           }
 

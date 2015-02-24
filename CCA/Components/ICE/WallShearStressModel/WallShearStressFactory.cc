@@ -25,6 +25,8 @@
 
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 #include <CCA/Components/ICE/WallShearStressModel/logLawModel.h>
+#include <CCA/Components/ICE/WallShearStressModel/smoothWall.h>
+
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -56,7 +58,11 @@ WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps,
     
     if (WSS_model == "logLawModel"){
       return( scinew logLawModel( wss_ps, sharedState ) );
-    }else{
+    }
+    else if (WSS_model == "smoothWall"){
+      return( scinew smoothwall( wss_ps, sharedState) );
+    }
+else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown WallShearStress model ("<< WSS_model << " )\n"
          << "Valid models are:\n" 

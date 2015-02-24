@@ -30,11 +30,14 @@
 
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Util/RefCounted.h>
 #include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
+
 #include <HYPRE_struct_ls.h>
 #include <HYPRE_krylov.h>
+
 #include <iostream>
+
 /**
  *  @class  HypreSolver2
  *  @author Steve Parker
@@ -61,13 +64,13 @@ namespace Uintah {
     // Parameters common for all Hypre Solvers
     std::string solvertype;         // String corresponding to solver type
     std::string precondtype;        // String corresponding to preconditioner type
-    double tolerance;          // Residual tolerance for solver
-    int    maxiterations;      // Maximum # iterations allowed
-    int    logging;            // Log Hypre solver (using Hypre options)
-    bool   symmetric;          // Is LHS matrix symmetric
-    bool   restart;            // Allow solver to restart if not converged
-    int    setupFrequency;     // Frequency for calling hypre setup calls
-    int    relax_type;         // relaxation type
+    double      tolerance;          // Residual tolerance for solver
+    int         maxiterations;      // Maximum # iterations allowed
+    int         logging;            // Log Hypre solver (using Hypre options)
+    bool        symmetric;          // Is LHS matrix symmetric
+    bool        restart;            // Allow solver to restart if not converged
+    int         setupFrequency;     // Frequency for calling hypre setup calls
+    int         relax_type;         // relaxation type
     
     // SMG parameters
     int    npre;               // # pre relaxations for Hypre SMG solver
@@ -100,36 +103,37 @@ namespace Uintah {
     gmres,
     jacobi,
     diagonal
-    };
+  };
 
 
   struct hypre_solver_struct : public RefCounted {
-    bool created_solver;
-    bool created_precond_solver;
-    SolverType solver_type;
-    SolverType precond_solver_type;
-    HYPRE_StructSolver* solver;
-    HYPRE_StructSolver* precond_solver;
-    HYPRE_StructMatrix* HA;
-    HYPRE_StructVector* HB;
-    HYPRE_StructVector* HX;
+    bool                 created_solver;
+    bool                 created_precond_solver;
+    SolverType           solver_type;
+    SolverType           precond_solver_type;
+    HYPRE_StructSolver * solver;
+    HYPRE_StructSolver * precond_solver;
+    HYPRE_StructMatrix * HA;
+    HYPRE_StructVector * HB;
+    HYPRE_StructVector * HX;
     
     hypre_solver_struct() {
-      created_solver=false;
-      created_precond_solver=false;
-      solver_type=smg;
-      precond_solver_type=diagonal;
-      solver=0;
-      precond_solver=0;
-      HA=0;
-      HB=0;
-      HX=0;
+      created_solver         = false;
+      created_precond_solver = false;
+      solver_type            = smg;
+      precond_solver_type    = diagonal;
+      solver                 = 0;
+      precond_solver         = 0;
+      HA = 0;
+      HB = 0;
+      HX = 0;
     };
+
     virtual ~hypre_solver_struct() {
       if (created_solver) {
-        HYPRE_StructMatrixDestroy(*HA);
-        HYPRE_StructVectorDestroy(*HB);
-        HYPRE_StructVectorDestroy(*HX);
+        HYPRE_StructMatrixDestroy( *HA );
+        HYPRE_StructVectorDestroy( *HB );
+        HYPRE_StructVectorDestroy( *HX );
       }
       if (created_solver)
         switch (solver_type) {
@@ -152,8 +156,8 @@ namespace Uintah {
           HYPRE_StructJacobiDestroy(*solver);
           break;
         default:
-          throw InternalError("HypreSolver given a bad solver type!", 
-                              __FILE__, __LINE__);
+          throw InternalError( "HypreSolver given a bad solver type!", 
+                               __FILE__, __LINE__ );
         }
 
       if (created_precond_solver)
@@ -194,12 +198,12 @@ namespace Uintah {
         HX = 0;
       }
       if (solver) {
-      delete solver;
-      solver = 0;
+        delete solver;
+        solver = 0;
       }
       if (precond_solver) {
-      delete precond_solver;
-      precond_solver = 0;
+        delete precond_solver;
+        precond_solver = 0;
       }
     };
   };
@@ -211,9 +215,9 @@ namespace Uintah {
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
-    virtual SolverParameters* readParameters(ProblemSpecP& params,
-                                             const std::string& name,
-                                             SimulationStateP& state);
+    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
+                                              const std::string      & name,
+                                                    SimulationStateP & state );
 
     /**
      *  @brief Schedules the solution of the linear system \[ \mathbf{A} \mathbf{x} = \mathbf{b}\].
@@ -236,32 +240,36 @@ namespace Uintah {
      * @param params Specifies the solver parameters usually parsed from the input file.
      *
      */    
-    virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,
-                               const MaterialSet* matls,
-                               const VarLabel* A,    
-                               Task::WhichDW which_A_dw,  
-                               const VarLabel* x,
-                               bool modifies_x,
-                               const VarLabel* b,    
-                               Task::WhichDW which_b_dw,  
-                               const VarLabel* guess,
-                               Task::WhichDW guess_dw,
-                               const SolverParameters* params,
-                               bool modifies_hypre = false);
+    virtual void scheduleSolve( const LevelP           & level,
+                                      SchedulerP       & sched,
+                                const MaterialSet      * matls,
+                                const VarLabel         * A,    
+                                      Task::WhichDW      which_A_dw,  
+                                const VarLabel         * x,
+                                      bool               modifies_x,
+                                const VarLabel         * b,    
+                                      Task::WhichDW      which_b_dw,  
+                                const VarLabel         * guess,
+                                      Task::WhichDW      which_guess_dw,
+                                const SolverParameters * params,
+                                      bool               modifies_hypre = false );
 
-    virtual void scheduleInitialize(const LevelP& level, SchedulerP& sched,
-                                    const MaterialSet* matls);
+    virtual void scheduleInitialize( const LevelP      & level,
+                                           SchedulerP  & sched,
+                                     const MaterialSet * matls );
 
     virtual std::string getName();
 
-    void allocateHypreMatrices(DataWarehouse* new_dw);
+    void allocateHypreMatrices( DataWarehouse * new_dw );
 
   private:
-    void initialize(const ProcessorGroup*,
-                    const PatchSubset* patches, const MaterialSubset* matls,
-                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+    void initialize( const ProcessorGroup *,
+                     const PatchSubset    * patches,
+                     const MaterialSubset * matls,
+                           DataWarehouse  * old_dw,
+                           DataWarehouse  * new_dw );
 
-    const VarLabel* hypre_solver_label;
+    const VarLabel * hypre_solver_label;
   };
 }
 

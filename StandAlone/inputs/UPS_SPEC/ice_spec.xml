@@ -25,9 +25,9 @@
       </turbulence>
 
       <wallShearStress                  spec="OPTIONAL NO_DATA"
-                                          attribute1="model  REQUIRED STRING 'logLawModel'">
+                                          attribute1="model  REQUIRED STRING 'logLawModel smoothWall'">
         
-        <domainFace                     spec="REQUIRED STRING 'x-, x+, y-, y+, z-, z+'" need_applies_to="model  logLawModel"/>
+        <domainFace                     spec="REQUIRED STRING 'x-, x+, y-, y+, z-, z+'" need_applies_to="model  logLawModel  smoothWall"/>
         <roughnessConstant              spec="OPTIONAL DOUBLE 'positive'"               need_applies_to="model  logLawModel"/>
         <roughnessInputFile             spec="OPTIONAL STRING"                          need_applies_to="model  logLawModel"/>
         <vonKarmanConstant              spec="OPTIONAL DOUBLE '0,0.5'"                  need_applies_to="model  logLawModel"/>
@@ -60,6 +60,19 @@
           <strainRate                   spec="REQUIRED DOUBLE 'positive'"/>
           <referenceCell                spec="REQUIRED VECTOR"/>
         </counterflow>
+        
+        <powerLawProfile                spec="OPTIONAL NO_DATA">
+          <material                     spec="REQUIRED STRING" /> 
+          <verticalDirection            spec="REQUIRED INTEGER '0,2'" />
+          <maxHeight                    spec="REQUIRED DOUBLE" />
+          <U_infinity                   spec="REQUIRED VECTOR" />su
+          <exponent                     spec="REQUIRED DOUBLE 'positive'" />
+          <variance                     spec="OPTIONAL NO_DATA">
+            <C_mu                       spec="REQUIRED DOUBLE 'positive'"/>
+            <frictionVel                spec="REQUIRED DOUBLE 'positive'"/>
+          </variance>
+        </powerLawProfile>
+        
       </customInitialization>
       
       <ImplicitSolver                   spec="OPTIONAL NO_DATA">

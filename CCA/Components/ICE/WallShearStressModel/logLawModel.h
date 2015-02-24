@@ -51,7 +51,8 @@ namespace Uintah {
                                    const int indx,
                                    constCCVariable<double>& vol_frac_CC,  
                                    constCCVariable<Vector>& vel_CC,      
-                                   const CCVariable<double>& viscosity,        
+                                   const CCVariable<double>& viscosity,
+                                   constCCVariable<double>&,        
                                    SFCXVariable<Vector>& tau_X_FC,
                                    SFCYVariable<Vector>& tau_Y_FC,
                                    SFCZVariable<Vector>& tau_Z_FC );

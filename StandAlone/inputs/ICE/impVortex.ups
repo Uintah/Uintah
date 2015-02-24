@@ -105,7 +105,7 @@
               <lower>        [-1.,-1.,-0.005]    </lower>
               <upper>        [1.,  1., 0.005]    </upper>
               <extraCells>   [1,1,1]             </extraCells>
-              <patches>      [1,1,1]             </patches>
+              <patches>      [4,4,1]             </patches>
               <resolution>   [164,164,1]         </resolution>
            </Box>
        </Level>
