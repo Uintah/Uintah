@@ -407,7 +407,7 @@ visit_handle visit_SimGetMetaData(void *cbdata)
 
   MPI_Comm_size(VISIT_MPI_COMM, &numProcs);
   MPI_Comm_rank(VISIT_MPI_COMM, &rank);
-  //debug5 << "Proc: " << rank << " sent to mdserver" << endl;  
+  //debug5 << "Proc: " << rank << " sent to mdserver" << std::endl;  
 
   if (rank == 0) {
     ReadMetaData(md, timeState);
@@ -490,7 +490,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
     int totalPatches = 0;
     for (int i = 0; i < numLevels; i++)
       totalPatches +=  stepInfo->levelInfo[i].patchInfo.size();
-  //debug5 << "avtUintahFileFormat::ReadMetaData: Levels: " << numLevels << " Patches: " << totalPatches << endl;
+  //debug5 << "avtUintahFileFormat::ReadMetaData: Levels: " << numLevels << " Patches: " << totalPatches << std::endl;
 
     std::vector<int> groupIds(totalPatches);
     std::vector<std::string> pieceNames(totalPatches);
@@ -592,7 +592,7 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	}
 	else
 	  std::cerr << "Uintah/VisIt Libsim Error: unknown vartype: "
-		    << vartype << endl;
+		    << vartype << std::endl;
 
 	if (meshes_added.find(mesh_for_this_var) == meshes_added.end())
 	{
@@ -1672,7 +1672,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
       // domain 0 always reads right away
       if (domain==0)
 	prev = -1;
-      //debug5 << "Proc: " << rank << " sent to GetVar" << endl;
+      //debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
       
       // wait for previous read to finish
       if (prev>=0)
@@ -1767,7 +1767,7 @@ visit_handle visit_SimGetVariable(int domain, const char *varname, void *cbdata)
 	// domain 0 always reads right away
 	if (domain==0)
 	  prev = -1;
-	//debug5 << "Proc: " << rank << " sent to GetVar" << endl;
+	//debug5 << "Proc: " << rank << " sent to GetVar" << std::endl;
 	
 	// wait for previous read to finish
 	if (prev>=0)
