@@ -29,9 +29,8 @@
 
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
-#include <iostream.h>
-#include <stdio.h>
-#include <string.h>
+#include <iostream>
+#include <string>
 
 namespace Uintah {
 
