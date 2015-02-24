@@ -30,7 +30,7 @@
 
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <CCA/Ports/SchedulerP.h>
-#include <Core/grid/GridP.h>
+#include <Core/Grid/GridP.h>
 
 #include <sci_defs/mpi_defs.h>
 
