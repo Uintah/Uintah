@@ -22,6 +22,16 @@
  * IN THE SOFTWARE.
  */
 
+/*
+ *  uda2vis.cc: Provides an interface between VisIt's libsim and Uintah.
+ *
+ *  Written by:
+ *   Department of Computer Science
+ *   University of Utah
+ *   March 2015
+ *
+ */
+
 #ifndef UINTAH_UDA2VIS_H
 #define UINTAH_UDA2VIS_H
 
