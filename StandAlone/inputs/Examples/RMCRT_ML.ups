@@ -9,11 +9,11 @@
   <SimulationComponent type="RMCRT_Test" />
   <!--__________________________________-->
   <Time>
-    <maxTime>       1.0       </maxTime>
+    <maxTime>       10.0      </maxTime>
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 100       </max_Timesteps>
+    <max_Timesteps> 4         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
