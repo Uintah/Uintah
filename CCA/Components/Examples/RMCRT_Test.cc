@@ -77,6 +77,7 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_wall_cell = 8; //<----HARD CODED WALL CELL
   d_flow_cell = -1; //<----HARD CODED FLOW CELL
 
+  d_RMCRT = 0;
   d_old_uda = 0;
 }
 //______________________________________________________________________
