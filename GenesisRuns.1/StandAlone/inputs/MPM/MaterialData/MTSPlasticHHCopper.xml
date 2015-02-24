@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Half Hard Copper -->
+<Uintah_Include>
+  <flow_model type="mts_model">
+    <sigma_a>40.0e6</sigma_a>
+    <mu_0>47.7e9</mu_0>
+    <D>3.0e9</D>
+    <T_0>180</T_0>
+    <koverbcubed>0.823e6</koverbcubed>
+    <g_0i>0.0</g_0i>
+    <g_0e>0.6</g_0e>
+    <edot_0i>0.0</edot_0i>
+    <edot_0e>1.0e7</edot_0e>
+    <p_i>0.0</p_i>
+    <q_i>0.0</q_i>
+    <p_e>0.666667</p_e>
+    <q_e>1.0</q_e>
+    <sigma_i>0.0</sigma_i>
+    <a_0>2390.0e6</a_0>
+    <a_1>12.0e6</a_1>
+    <a_2>1.696e6</a_2>
+    <a_3>0.0</a_3>
+    <theta_IV>0.0</theta_IV>
+    <alpha>2</alpha>
+    <edot_es0>1.0e7</edot_es0>
+    <g_0es>0.2625</g_0es>
+    <sigma_es0>770.0e6</sigma_es0>
+  </flow_model>
+</Uintah_Include>

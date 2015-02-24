@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>none</title>
+   </Meta>
+
+   <SimulationComponent type="ice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            1e-3        </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0e-6      </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <max_Timesteps>      100          </max_Timesteps> 
+   </Time>
+   
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "y-">
+        <BCType id = "0"   label = "Symmetric"  var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "y+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+	</BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0"   label = "Symmetric"  var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z+">
+        <BCType id = "0"   label = "Symmetric" var = "symmetry">
+	</BCType>
+      </Face>
+    </BoundaryConditions>
+       <Level>
+           <Box label="1">
+              <lower>        [-0.5,-0.05,-0.05]    </lower>
+              <upper>        [ 0.5, 0.05, 0.05]    </upper>
+              <extraCells>   [0,1,1]              </extraCells>
+              <patches>      [1,1,1]              </patches>
+              <resolution>    [10000,1,1]          </resolution>
+           </Box>
+           <periodic>    [1,0,0]    </periodic>
+       </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>r10_v100.uda</filebase>
+      <outputTimestepInterval>1</outputTimestepInterval>
+      <outputInitTimestep/>
+      <save label="press_equil_CC"/>
+      <save label="delP_Dilatate"/>
+      <save label="press_CC"/>
+      <save label="mom_L_ME_CC"/>
+      <save label="rho_CC"/>
+      <save label="vel_CC"/> 
+      <save label="scalar-f"/>
+      <save label="sum_scalar_f"/>
+      <save label="temp_CC"/>
+      <save label="scalar-f"/>
+      <save label="sum_scalar_f"/>
+   </DataArchiver>
+    
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+         <cfl>0.2</cfl>
+      <ICE>
+        <advection type = "SecondOrder" />
+        
+        
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0            </knob_for_speedSound>
+        </TimeStepControl>
+        
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-8 </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver> 
+      </ICE>
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure> 101325.0  </reference_pressure>
+    </PhysicalConstants>
+    
+    <!--____________________________________________________________________-->
+    <!--      material Properties and Initial Conditions                    -->
+    <!--____________________________________________________________________-->                      
+    <MaterialProperties>
+       <ICE>
+         <material name = "BackgroundGas">
+           <EOS type = "ideal_gas">                     </EOS>
+           <dynamic_viscosity>   0.0                    </dynamic_viscosity>
+           <thermal_conductivity>0.0                    </thermal_conductivity>
+           <specific_heat>      716.0                   </specific_heat>
+           <gamma>              1.4                     </gamma>
+           <geom_object>
+                <box label="wholeDomain">
+                    <min>       [ -10., -10., -10. ]       </min>
+                    <max>       [  10.,  10.,  10. ]       </max>
+                </box>
+               <res>                 [2,2,2]            </res>
+               <velocity>      [100,0.,0.]               </velocity>
+               <density>       1.1792946927374306000e+00</density>
+               <pressure>      101325.0                 </pressure>     
+               <temperature>   300.0                    </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+    </MaterialProperties> 
+    <!--____________________________________________________________________-->
+    <!--  Use passiveScalar model to advect a scalar around                -->      
+    <Models>
+       <Model type="PassiveScalar">
+        <material>BackgroundGas</material>
+        <scalar name="f">
+        <test_conservation>       true            </test_conservation>
+        <constants>
+          <diffusivity>              0.0           </diffusivity>
+          <initialize_diffusion_knob>  0    </initialize_diffusion_knob>
+          <AMR_Refinement_Criteria>    1    </AMR_Refinement_Criteria>
+        </constants>
+         <geom_object>
+            <difference>
+            <box label="wholeDomain">             </box>
+            <box label="scalarSlug">
+              <min>         [-0.4,-0.4,-0.4]       </min>
+              <max>         [ 0.4, 0.4, 0.4]       </max>
+            </box>
+            </difference>
+            <scalar>    0.00   </scalar>
+         </geom_object>
+          <geom_object>
+            <box label="scalarSlug">  </box>
+            <scalar>    1.00   </scalar>
+            <sinusoidalInitialize>     false      </sinusoidalInitialize>
+            <freq> [1,0,0]    </freq>
+            <linearInitialize>         false      </linearInitialize>
+            <slope> [1,0,0]   </slope>
+            <triangularInitialize>     false      </triangularInitialize>
+            <cubicInitialize>          false      </cubicInitialize>
+            <exponentialInitialize_1D> true       </exponentialInitialize_1D>
+           <coeff> [20,0,0]  </coeff>
+         </geom_object>
+       </scalar>
+      </Model>
+    </Models>
+
+</Uintah_specification>

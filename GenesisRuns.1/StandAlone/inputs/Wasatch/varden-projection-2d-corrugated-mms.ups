@@ -1,0 +1,343 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>MMS for verifying the Pressure projection method in wasatch</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+
+    <Density>
+      <NameTag name="density" state="CARRY_FORWARD"/>
+    </Density>
+
+    <!-- Setup the parameters for variable density MMS -->
+    <VarDenCorrugatedMMS rho0="10.0" rho1="1.0" w="1.5" k="12.56637061435917" d="0.001" a="0.2" b="20" uf="1" vf="0.5">
+       <DiffusionCoefficient>
+          <NameTag name="diffcoef" state="STATE_NONE"/>
+       </DiffusionCoefficient>
+       <Scalar>f</Scalar>    
+       <ConservedScalar>rhof</ConservedScalar>           
+    </VarDenCorrugatedMMS>
+
+    <TwoStreamMixing rho0="10.0" rho1="1.0">
+      <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
+      <MixtureFraction> <NameTag name="f" state="STATE_NONE"/> </MixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>
+    </TwoStreamMixing>  
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>
+    	<NameTag name="rho-bottom" state="STATE_NONE"/>
+    	<VDCorMMSRho/>
+    </BCExpression>
+            
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+    	<NameTag name="u-inlet" state="STATE_NONE"/>
+    	<VDCorMMSVelocity/>
+    </BCExpression>
+
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+    	<NameTag name="u*-inlet" state="STATE_NONE"/>
+    	<VDCorMMSVelocity/>
+    </BCExpression>
+
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+    	<NameTag name="u-bottom" state="STATE_NONE"/>
+    	<VDCorMMSVelocity/>
+    </BCExpression>
+    
+        <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>
+    	<NameTag name="u*-bottom" state="STATE_NONE"/>
+    	<VDCorMMSVelocity/>
+    </BCExpression>
+    
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>    
+    	<NameTag name="xmom-inlet" state="STATE_NONE"/>
+    	<VDCorMMSMomentum/>
+    </BCExpression>
+    
+    <BCExpression type="XVOL">
+      <TaskList>initialization advance_solution</TaskList>    
+    	<NameTag name="xmom-bottom" state="STATE_NONE"/>
+    	<VDCorMMSMomentum/>
+    </BCExpression>
+
+    
+        <BCExpression type="YVOL">
+      <TaskList>initialization advance_solution</TaskList>    
+    	<NameTag name="ymom-inlet" state="STATE_NONE"/>
+    	<VDCorMMSYMomentum/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>    
+    	<NameTag name="f-bottom" state="STATE_NONE"/>
+    	<VDCorMMSMixtureFraction/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>    
+    	<NameTag name="rhof-bottom" state="STATE_NONE"/>
+    	<VDCorMMSRhof/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>    
+    	<NameTag name="f-top" state="STATE_NONE"/>
+    	<VDCorMMSMixtureFraction/>
+    </BCExpression>
+
+    <BCExpression type="SVOL">
+      <TaskList>initialization advance_solution</TaskList>    
+    	<NameTag name="rhof-top" state="STATE_NONE"/>
+    	<VDCorMMSRhof/>
+    </BCExpression>
+
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+
+      <DiffusiveFluxExpression>
+        <Direction>X</Direction>
+        <DiffusionCoefficient>
+          <NameTag name="diffcoef" state="STATE_NONE" />
+        </DiffusionCoefficient>
+      </DiffusiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method>
+        <Direction>X</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="u" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+      
+      <DiffusiveFluxExpression>
+        <Direction>Y</Direction>
+        <DiffusionCoefficient>
+          <NameTag name="diffcoef" state="STATE_NONE" />
+        </DiffusionCoefficient>
+      </DiffusiveFluxExpression>
+
+      <ConvectiveFluxExpression>
+        <Method>UPWIND</Method> 
+        <Direction>Y</Direction>
+        <AdvectiveVelocity>
+            <NameTag name="v" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFluxExpression>
+      
+    </TransportEquation>   
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f" state="STATE_NONE"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f*" state="STATE_NONE"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="rhof" state="STATE_N"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="rhof*" state="STATE_NONE"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="rhof**" state="STATE_NONE"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+        
+      
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+        <NameTag name="viscosity" state="STATE_NONE"/>
+      <Constant>0.001</Constant>
+    </BasicExpression>
+        
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+         
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE"/>
+      </Viscosity>
+      <ComputeMassResidual/>
+      <Pressure>
+        <Use3DLaplacian>   false</Use3DLaplacian>
+
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  100   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>0.0005</delt_min>
+    <delt_max>0.0005</delt_max>
+    <max_Timesteps> 2000 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-projection-2d-corrugated-mms.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="0.001"/>
+    <save label="density"/>
+    <save label="u*"/>
+    <save label="v*"/>
+    <save label="density*"/>
+    <save label="density**"/>
+    <save label="varden_alpha"/>    
+    <save label="varden_beta"/>        
+    <save label="divmom*"/>            
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <save label="x-mom_rhs_partial"/>
+    <save label="x-mom_rhs"/>
+    
+    <save label="u"/>
+    <save label="v"/>
+    <save label="diffcoef"/>    
+<!--     <save label="mms_mixture_fraction_src"/> -->
+    <save label="f"/>
+    <save label="f*"/>
+    
+    <save label="rhof"/>
+    <save label="rhof*"/>    
+    <save label="rhof**"/>    
+    <save label="rhof_rhs"/>    
+    <save label="rhof*_rhs"/>      
+
+    <save label="rhof_convective_flux_Y"/>
+    
+    <save label="pressure"/>
+    <save label="pressure_src"/>
+    <save label="pressure_rhs"/>    
+    <save label="f_diffFlux_X"/>
+    <save label="f_diffFlux_Y"/>
+    <save label="f_diffFlux_X*"/>
+    <save label="f_diffFlux_Y*"/>    
+  </DataArchiver> 
+
+  <Grid>
+  
+        <BoundaryConditions>
+      <DefaultMaterial>all</DefaultMaterial>
+      <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
+      <Face side="x-">
+        <BCType var="Dirichlet" label="u" value="u-inlet"/>
+        <BCType var="Dirichlet" label="x-mom" value="xmom-inlet"/>        
+        <BCType var="Dirichlet" label="u*" value="u*-inlet"/>        
+
+        <BCType var="Dirichlet" label="f" value="1.0"/>        
+        <BCType var="Dirichlet" label="f*" value="1.0"/>                
+
+        <BCType var="Dirichlet" label="rhof_rhs" value="0.0"/>        
+        <BCType var="Dirichlet" label="rhof_rhs*" value="0.0"/>        
+        <BCType var="Dirichlet" label="rhof_rhs**" value="0.0"/>        
+
+        <BCType var="Dirichlet" label="v" value="0.5"/>
+        <BCType var="Dirichlet" label="v*" value="0.5"/>        
+        <BCType var="Dirichlet" label="y-mom" value="0.5"/>        
+
+        <BCType var="Dirichlet" label="x-mom_rhs_partial" value="0.0"/>
+        <BCType var="Dirichlet" label="x-mom_rhs" value="0.0"/>
+        <BCType var="Neumann" label="pressure" value="0.0"/>
+      </Face>
+      
+      <Face side="x+" type="Outflow">
+        <BCType var="Neumann" label="rhof_rhs" value="0.0"/>
+        <BCType var="Neumann" label="f" value="0.0"/>
+      </Face>
+
+      <Face side="y+">
+        <BCType var="Neumann" label="x-mom" value="0.0"/>      
+        <BCType var="Neumann" label="u" value="0.0"/>      
+        <BCType var="Neumann" label="u*" value="0.0"/>              
+        <BCType var="Neumann" label="v" value="0.0"/>              
+        <BCType var="Neumann" label="v*" value="0.0"/>              
+        <BCType var="Neumann" label="y-mom" value="0.0"/>
+        
+        <BCType var="Neumann" label="rhof_rhs" value="0.0"/>
+        <BCType var="Neumann" label="f" value="0"/>
+        <BCType var="Neumann" label="rhof" value="0"/>        
+
+        <BCType var="Dirichlet" label="pressure" value="0.0"/>
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" value="0.0"/>
+      </Face>
+
+      <Face side="y-">
+        <BCType var="Dirichlet" label="x-mom" value="xmom-bottom"/>              
+        <BCType var="Dirichlet" label="u" value="u-bottom"/>      
+        <BCType var="Dirichlet" label="u*" value="u*-bottom"/>              
+        
+        <BCType var="Dirichlet" label="v"   value="0.5"/>     
+        <BCType var="Dirichlet" label="v*" value="0.5"/>     
+        
+        <BCType var="Dirichlet" label="y-mom" value = "ymom-inlet"/>
+        
+        <BCType var="Dirichlet" label="rhof_rhs" value="0.0"/>
+        <BCType var="Dirichlet" label="rhof_rhs*" value="0.0"/>
+
+        <BCType var="Dirichlet" label="f" value="f-bottom"/>
+        <BCType var="Dirichlet" label="f*" value="f-bottom"/>
+        
+        <BCType var="Neumann" label="pressure" value="0.0"/>
+<!--         <BCType var="Dirichlet" label="density" value="rho-bottom"/> -->
+        <BCType var="Dirichlet" label="rhof" value="rhof-bottom"/>        
+        
+        <BCType var="Dirichlet" label="y-mom_rhs_partial" value="0.0"/>
+        <BCType var="Dirichlet" label="y-mom_rhs" value="0.0"/>        
+      </Face>
+      
+      </BoundaryConditions>
+
+      <Level>
+      <Box label="1">
+        <lower>[-1, -0.5, 0]</lower>
+        <upper>[3 ,  0.5, 1]</upper>
+        <resolution>[128,36,2]</resolution>
+        <patches>[1,1,1]</patches>
+      </Box>
+      <periodic>[0,0,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

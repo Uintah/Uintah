@@ -1,0 +1,272 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 7/31/00-->
+<Uintah_specification>
+   <Meta>
+       <title>2D CCJ 3mat</title>
+   </Meta>
+   <SimulationComponent type="mpm" />
+   <Time>
+       <maxTime>500.e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.5e-15</delt_min>
+       <delt_max>0.001</delt_max>
+       <timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+       <filebase> output_jet_penetration_axisymmetric_berea.sandstone.uda </filebase>
+       <outputInterval>10.0e-6</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.deformationMeasure"/>
+       <save label = "p.volume"/>
+       <save label = "p.particleID"/>
+       <save label = "p.velocity"/>
+       <save label = "p.stress"/>
+       <save label = "p.externalforce"/>
+       <save label = "p.mass"/>
+       <save label = "p.localized"/>
+       <save label = "p.particleID"/>
+       <save label = "p.temperature"/>
+       <save label = "p.color"/>
+       <save label = "TotalMass"/>
+       <save label = "TotalMomentum"/>
+       <save label = "KineticEnergy"/>
+       <checkpoint cycle = "2" interval = "5.0e-6"/>
+   </DataArchiver>
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+       <interpolator>gimp</interpolator>
+       <DoExplicitHeatConduction>false</DoExplicitHeatConduction>
+       <artificial_viscosity>true</artificial_viscosity>
+       <artificial_viscosity_heating>false</artificial_viscosity_heating>
+       <do_contact_friction_heating>false</do_contact_friction_heating>
+       <axisymmetric>true</axisymmetric>
+       <withColor>      true      </withColor>
+       <InsertParticles>    true   </InsertParticles>
+       <InsertParticlesFile>InsertParticles.dat </InsertParticlesFile>
+       <erosion algorithm = "RemoveMass"/>
+       <use_load_curves> true </use_load_curves>
+    </MPM>
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+    <MaterialProperties>
+       <MPM>
+         <material name="target">
+	     <include href= "aluminum.xml" />
+	     <geom_object>
+	       <difference>
+                 <cylinder label="outer_section">
+                   <bottom>           [0.0,0.0127,0.0]   </bottom>
+                   <top>              [0.0,0.4,   0.0]   </top>
+                   <radius>           0.0508             </radius>
+                 </cylinder>
+                 <cylinder label="center_section">
+                   <bottom>           [0.0,0.0127,0.0]   </bottom>
+                   <top>              [0.0,0.4,   0.0]   </top>
+                   <radius>           0.01905            </radius>
+                 </cylinder>
+<!--
+		 <box label="outer_section">
+		   <min>[ 0.0,   0.0127,0.0]</min>
+		   <max>[ 0.0508,0.4   ,0.0005]</max>
+		 </box>
+		 <box label="center_section">
+		   <min>[-0.01905,0.0127,0.0000]</min>
+		   <max>[ 0.01905,0.4   ,0.0005]</max>
+		 </box>
+-->
+	       </difference>
+	       <res>[2,2,1]</res>
+	       <velocity>[0.0,0.0,0.0]</velocity>
+	       <temperature>294.0</temperature>
+	       <color>-1</color>
+	     </geom_object>
+	     <geom_object>
+	       <cylinder label = "center_section"/>
+	       <res>[2,2,1]</res>
+	       <velocity>[0.0,0.0,0.0]</velocity>
+	       <temperature>294.0</temperature>
+	       <color>-1</color>
+	     </geom_object>
+           </material>
+      <material name="steel"> 
+        <include href="steel.xml"/>
+	<geom_object>
+	  <difference>
+                 <cylinder label="outer_section_steel">
+                   <bottom>           [0.0,0.0,   0.0]   </bottom>
+                   <top>              [0.0,0.0127,0.0]   </top>
+                   <radius>           0.0508             </radius>
+                 </cylinder>
+                 <cylinder label="center_section_steel">
+                   <bottom>           [0.0,0.0,   0.0]   </bottom>
+                   <top>              [0.0,0.0127,0.0]   </top>
+                   <radius>           0.01905            </radius>
+                 </cylinder>
+<!--
+	    <box label="outer_section_steel">
+	      <min>[ 0.0,   0.0,   0.0]</min>
+	      <max>[ 0.0508,0.0127,0.001]</max>
+	    </box>
+	    <box label="center_section_steel">
+	      <min>[ 0.0,    0.0,   0.0]</min>
+	      <max>[ 0.01905,0.0127,0.001]</max>
+	    </box>
+-->
+	  </difference>
+	  <res>[2,2,1]</res>
+	  <velocity>[0.0,0.0,0.0]</velocity>
+	  <temperature>294.0</temperature>
+	  <color>-1</color>
+	</geom_object>
+	<geom_object>
+	  <cylinder label = "center_section_steel"/>
+	  <res>[2,2,1]</res>
+	  <velocity>[0.0,0.0,0.0]</velocity>
+	  <temperature>294.0</temperature>
+	  <color>-1</color>
+	</geom_object>
+      </material> 
+      <material> 
+        <include href="cold_tungsten.xml"/>
+        <include href="cylinders.xml"/>
+      </material>
+<!--
+-->
+       <contact>
+         <type>single_velocity</type>
+         <mu>0.0</mu>
+       </contact>
+       </MPM>
+    </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <cylinder label = "outer cylinder">
+             <bottom>           [0.0,0.0,0.0]   </bottom>
+             <top>              [0.0,0.4,0.0]   </top>
+             <radius>           0.0508          </radius>
+             <cylinder_end>false</cylinder_end>
+             <axisymmetric_end>false</axisymmetric_end>
+             <axisymmetric_side>true</axisymmetric_side>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 2.0e-4 </time>
+             <load> -6.895e7 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-1 </time>
+             <load> -6.895e7 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+
+       <pressure>
+         <geom_object>
+           <cylinder label = "bottom cylinder">
+             <bottom>           [0.0,-.0001,0.0]   </bottom>
+             <top>              [0.0,0.0001,0.0]   </top>
+             <radius>           0.0508               </radius>
+             <axisymmetric_end>true</axisymmetric_end>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 2.0e-4 </time>
+             <load> 6.895e7 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-1 </time>
+             <load> 6.895e7 </load>
+           </time_point>
+<!-- 6.895e7 -->
+         </load_curve>
+       </pressure>
+
+       <pressure>
+         <geom_object>
+           <cylinder label = "top cylinder">
+             <bottom>           [0.0,0.3999,0.0]   </bottom>
+             <top>              [0.0,0.4001,0.0]   </top>
+             <radius>           0.0508             </radius>
+             <axisymmetric_end>true</axisymmetric_end>
+           </cylinder>
+         </geom_object>
+         <load_curve>
+           <id>3</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+           <time_point>
+             <time> 2.0e-4 </time>
+             <load> -6.895e7 </load>
+           </time_point>
+           <time_point>
+             <time> 1.0e-1 </time>
+             <load> -6.895e7 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+     </MPM>
+   </PhysicalBC>
+
+    <Grid>
+         <BoundaryConditions>
+          <Face side = "x-">
+             <BCType id = "all" var = "symmetry" label = "Symmetric">
+                     <value> [0.0,0.0,0.0] </value>
+             </BCType>
+           </Face>
+           <Face side = "x+">
+             <BCType id = "all" var = "Neumann" label = "Velocity">
+                     <value>[0.0,0.0,0.0]</value>
+             </BCType>
+           </Face>
+           <Face side = "y-">
+                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                           <value>[0.0,0.0,0.0]</value>
+                   </BCType>
+           </Face>
+           <Face side = "y+">
+                   <BCType id = "all" var = "Dirichlet" label = "Velocity">
+                           <value>[0.0,0.0,0.0]</value>
+                   </BCType>
+           </Face>                           
+           <Face side = "z-">
+                  <BCType id = "all" var = "symmetry" label = "Symmetric">
+                           <value>[0.0,0.0,0.0]</value>
+                  </BCType>
+           </Face>                  
+          <Face side = "z+">
+                   <BCType id = "all" var = "symmetry" label = "Symmetric">
+                          <value>[0.0,0.0,0.0]</value>
+                  </BCType>
+           </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,-0.04,0.0]</lower>
+              <upper>[0.06,0.404,0.0005]</upper>
+              <patches>[1,8,1]</patches>
+              <extraCells> [1,1,1]            </extraCells>
+           </Box>
+           <spacing>[ 0.0005, 0.0005, 0.0005]</spacing>
+       </Level>
+    </Grid>
+</Uintah_specification> 

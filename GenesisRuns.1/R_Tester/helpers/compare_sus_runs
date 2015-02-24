@@ -1,0 +1,67 @@
+#!/bin/bash
+
+TEST=$1
+TEST_DIR=$2
+COMPARE_ROOT=$3
+SUS_DIR=$4
+ABS_TOL=$5 # Absolute tolerance 
+REL_TOL=$6 # Relative tolerance
+
+WD=`pwd`
+cd $TEST_DIR
+UDADIR=`ls -d *.uda`
+cd $WD
+command
+TEST_UDADIR=$TEST_DIR/$UDADIR
+COMPARE_UDADIR=$COMPARE_ROOT/$TEST/$UDADIR
+
+
+if [ -d "$TEST_UDADIR" ]; then
+  if [ ! -d "$COMPARE_ROOT" ]; then
+    echo "Creating $COMPARE_ROOT directory"
+    COMPARE_PARENT_DIR=`echo "$COMPARE_ROOT" | sed 's|/[^/]*$||'`
+    cd $COMPARE_PARENT_DIR
+    COMPARE_DIR=`echo "$COMPARE_ROOT" | sed "s|.*/||"`
+    mkdir $COMPARE_DIR
+#    cvs add $COMPARE_DIR
+  fi
+  if [ ! -d "$COMPARE_ROOT/$TEST" ]; then
+    echo "Creating $COMPARE_ROOT/$TEST directory"
+    cd $COMPARE_ROOT
+    mkdir $TEST
+#    cvs add $TEST
+  fi
+  if [ ! -d "$COMPARE_UDADIR" ]; then
+    echo "Storing uda directory: $COMPARE_UDADIR"
+
+    # try to remove it in case it exists as a non-directory
+    /bin/rm $COMPARE_UDADIR 
+
+    # if cp has a --dereference option, then us it
+    cp -r --dereference $TEST_UDADIR $COMPARE_UDADIR
+    if [ $? != "0" ]; then
+	# try without --dereference -- not all cp's have this option
+	cp -r $TEST_UDADIR $COMPARE_UDADIR
+    fi
+    
+    # copy text files to the goldStandard
+    cp $TEST_DIR/sus.log.txt  $TEST_DIR/timestamp $TEST_DIR/restart_timestamp $COMPARE_ROOT/$TEST >/dev/null 2>&1
+    cp $TEST_DIR/malloc_stats $TEST_DIR/restart_malloc_stats $COMPARE_ROOT/$TEST >/dev/null 2>&1
+
+    chgrp -R $COMMON_GROUP "$COMPARE_ROOT/$TEST"
+    chmod -R g+rwX "$COMPARE_ROOT/$TEST"
+
+    exit -2
+    
+  else
+      echo "Testing $TEST"
+      compare_sus_runs_by_udas $TEST_UDADIR $COMPARE_UDADIR $SUS_DIR $ABS_TOL $REL_TOL
+      exit $?
+  fi
+else
+  echo "$TEST_UDADIR was not created"
+  exit 1
+fi
+
+exit 0
+

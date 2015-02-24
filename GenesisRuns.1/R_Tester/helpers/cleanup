@@ -1,0 +1,65 @@
+#!/bin/bash
+
+#__________________________________
+#  This script is called as a cronjob before the startTester
+#  script and cleans up all previous SCI.* directories.
+#  It will send mail to the user if a file can't be removed.
+#
+
+OS=`uname -s`
+MACHINE=`hostname`
+
+if [ "$MACHINE" == "rt" ]; then
+  BUILD_DIR=/home/csafe-tester/"$OS"
+fi
+
+cd $BUILD_DIR
+
+#__________________________________
+# delete all SCIRun.* directories
+# First move them to the trash directory
+
+if [ ! -d "trash" ]; then
+  mkdir trash
+fi
+
+mv SCIRun.* trash/.
+
+# delete whatever we own.  Note other users may have
+# compiled code or run tests in this directory, screwing up the 
+# permissions
+/bin/rm -rf trash > /dev/null 2>&1
+
+if [ ! -d "trash" ]; then
+  exit 0 # cleanup was successful
+fi
+
+#__________________________________
+# find out who owns the files that can't be removed and 
+# send them a message
+find trash \( ! -user `id -un` \) -prune > trash/need_removal
+
+# I'm sure there is a better way to get at the user names, but I've spent
+# too much time trying to figure it out.
+cat trash/need_removal | xargs ls -ld | awk '{ print $3 }' | sort -u > trash/usernames
+
+for username in `cat trash/usernames`; do
+    sendto=${username}@sci.utah.edu
+    cat > trash/userRemoval <<EOF
+Subject: Cleanup needed for regression tester
+To: $sendto
+
+This is an automated e-mail.
+Please remove the following directories in order to clean out the regression tester.
+
+Under `pwd` on `hostname`:
+
+EOF
+     find trash -user $username -prune -exec echo "rm -rf `pwd`/{}" \; >> trash/userRemoval    
+    sendmail $sendto < trash/userRemoval
+    /bin/rm trash/userRemoval
+done
+
+#cat trash/uids | xargs -i{UID} find trash -user {UID} -prune > trash/uid{UID}
+
+
