@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <string>
+#include <stdio.h>
 
 namespace Uintah {
 
