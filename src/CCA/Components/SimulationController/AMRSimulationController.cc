@@ -86,10 +86,6 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
   // If VisIt has been included into the build initialize the lib sim
   // so that a user can conect to the simulation via VisIt.
 #ifdef HAVE_VISIT
-  std::cerr << "****************************  "
-	    << "AMRSimulationController  InitLibSim  usingMPI = "
-	    << (Parallel::usingMPI() ? "Yes" : "No")
-	    << std::endl;
 
 #ifdef HAVE_MPICH
   d_visit_simulation_data.isProc0 = isProc0_macro;
@@ -104,9 +100,6 @@ AMRSimulationController::~AMRSimulationController()
   // If VisIt has been included into the build initialize the lib sim
   // so that a user can conect to the simulation via VisIt.
 #ifdef HAVE_VISIT
-  std::cerr << "****************************  "
-	    << "AMRSimulationController  EndLibSim" << std::endl;
-
   visit_EndLibSim( &d_visit_simulation_data );
 #endif
 }
@@ -312,29 +305,6 @@ AMRSimulationController::run()
      d_visit_simulation_data.time  = time;
      d_visit_simulation_data.cycle =
        d_sharedState->getCurrentTopLevelTimeStep();     
-
-     if( d_scheduler.get_rep() == 0 )
-     {
-       std::cerr << "****************************  "
-		 << "d_scheduler is null ?????    "
-		 << std::endl;
-     }
-     
-     if( currentGrid.get_rep() == 0 )
-     {
-       std::cerr << "****************************  "
-		 << "currentGrid is null ?????    "
-		 << std::endl;
-     }
-     
-     std::cerr << "****************************  "
-	       << "AMRSimulationController  run  "
-#ifdef HAVE_MPICH
-	       << d_visit_simulation_data.isProc0 << "  "
-#endif
-	       << d_visit_simulation_data.time << "  "
-	       << d_visit_simulation_data.cycle << "  "
-	       << std::endl;
 
      visit_CheckState( &d_visit_simulation_data );
 #endif
