@@ -43,6 +43,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <iostream>
 #include <fstream>
@@ -78,6 +79,9 @@ void printStress(DataArchive* da,
 
 int main(int argc, char** argv)
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
+
   string partVar;
   int matID = -1;
   string partIDFile;
