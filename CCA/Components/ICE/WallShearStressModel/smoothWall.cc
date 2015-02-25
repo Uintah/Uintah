@@ -191,7 +191,7 @@ void smoothwall::wallShearStresses(DataWarehouse* old_dw,
         IntVector c = *iter;
         IntVector adj  = c - oneCell;                           // for x+, y+, z+ faces use the velocity from the adjacent cell
         
-        if (vol_frac_CC[c] < 0.5 ) {                           
+        if (vol_frac_CC[c] < 0.9 ) {                           
           //cout << "  smoothWallModel: skipping cell: " << c << endl;
           continue;
         }
