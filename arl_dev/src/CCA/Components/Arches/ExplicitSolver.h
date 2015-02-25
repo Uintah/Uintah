@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -107,13 +107,7 @@ public:
 
   /** @brief Solve the nonlinear system. (also does some actual computations) **/
   virtual int nonlinearSolve( const LevelP& level,
-                              SchedulerP& sched
-#                             ifdef WASATCH_IN_ARCHES
-                              , Wasatch::Wasatch& wasatch,
-                              ExplicitTimeInt* d_timeIntegrator,
-                              SimulationStateP& state
-#                             endif // WASATCH_IN_ARCHES
-                             );
+                              SchedulerP& sched );
 
 
   /** @brief Sets the initial guess for several variables **/ 

@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -45,7 +45,7 @@ PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)  \
           $(PAPI_LIBRARY) $(M_LIBRARY)
@@ -54,7 +54,7 @@ else
           $(CANTERA_LIBRARY) \
           $(PETSC_LIBRARY)  $(LAPACK_LIBRARY) $(BLAS_LIBRARY) \
           $(MPI_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY) \
-          $(TEEM_LIBRARY) $(CUDA_LIBRARY)
+          $(CUDA_LIBRARY)
   ifeq ($(HAVE_TIFF),yes)
     LIBS := $(LIBS) $(TIFF_LIBRARY)
   endif

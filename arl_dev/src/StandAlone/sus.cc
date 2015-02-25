@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -81,7 +81,6 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Tracker/TrackerClient.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
@@ -90,6 +89,7 @@
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/uintah_defs.h>
+#include <sci_defs/visit_defs.h>
 #include <sci_defs/cuda_defs.h>
 
 #include <svn_info.h>
@@ -98,6 +98,11 @@
 #  include <Core/Parallel/Vampir.h>
 #endif
 
+#ifdef HAVE_VISIT
+#  include <VisIt/libsim/visit_libsim.h>
+#endif
+
+
 #if HAVE_IEEEFP_H
 #  include <ieeefp.h>
 #endif
@@ -105,6 +110,7 @@
 #  include <fenv.h>
 #endif
 
+#include <iomanip>
 #include <iostream>
 #include <cstdio>
 #include <string>
@@ -192,8 +198,6 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
     cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
     cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
     cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
-    cerr << "-track               : Turns on (external) simulation tracking... continues w/o tracking if connection fails.\n";
-    cerr << "-TRACK               : Turns on (external) simulation tracking... dies if connection fails.\n";
     cerr << "\n\n";
   }
   quit();
@@ -230,7 +234,6 @@ abortCleanupFunc()
   Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 }
 
-#include <iomanip>
 int
 main( int argc, char *argv[], char *env[] )
 {
@@ -289,8 +292,6 @@ main( int argc, char *argv[], char *env[] )
   string solver              = ""; // Empty string defaults to CGSolver
   bool   validateUps         = true;
   bool   onlyValidateUps     = false;
-  bool   track               = false;
-  bool   track_or_die        = false;
     
   IntVector layout(1,1,1);
 
@@ -414,13 +415,6 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-do_not_validate") {
       validateUps = false;
     }
-    else if (arg == "-track") {
-      track = true;
-    }
-    else if (arg == "-TRACK") {
-      track = true;
-      track_or_die = true;
-    }
     else if (arg == "-reduce_uda" || arg == "-reduceUda") {
       reduce_uda = true;
     }
@@ -429,6 +423,26 @@ main( int argc, char *argv[], char *env[] )
         || arg == "-mpmf" || arg == "-rmpm" || arg == "-smpm" || arg == "-amrmpm" || arg == "-smpmice" || arg == "-rmpmice") {
       usage(string("'") + arg + "' is deprecated.  Simulation component must be specified " + "in the .ups file!", arg, argv[0]);
     }
+    // If VisIt is included then the user may send optional args to
+    // VisIt. The most important is the directory path to where VisIt
+    // is located.
+#ifdef HAVE_VISIT
+    else if (arg == "-dir" ) {
+      if (++i == argc) {
+        usage("You must provide a file name for -dir", arg, argv[0]);
+      }
+    }
+    else if (arg == "-option" ) {
+      if (++i == argc) {
+        usage("You must provide a string for -option", arg, argv[0]);
+      }
+    }
+    else if (arg == "-trace" ) {
+      if (++i == argc) {
+        usage("You must provide a file name for -trace", arg, argv[0]);
+      }
+    }
+#endif
     else {
       if (filename != "") {
         usage("", arg, argv[0]);
@@ -450,26 +464,6 @@ main( int argc, char *argv[], char *env[] )
 
   if( filename == "" ) {
     usage("No input file specified", "", argv[0]);
-  }
-
-  if( track ) {
-    string server  = "updraft1.privatearch.arches";
-    bool   initialized = TrackerClient::initialize( server );
-
-    if( !initialized ) {
-      if ( track_or_die ) {
-        cout << "\n";
-        cout << "Error: Tracking initialization failed... Good bye.\n";
-        cout << "\n";
-        Uintah::Parallel::finalizeManager();
-        Thread::exitAll( 1 );
-      }
-      else {
-        cout << "\n";
-        cout << "WARNING: Tracking initialization failed... (Could not contact Server).  Tracking will not take place.\n";
-        cout << "\n";
-      }
-    }
   }
 
   if(dbgwait.active()) {
@@ -512,6 +506,13 @@ main( int argc, char *argv[], char *env[] )
 
   try {
 
+    // If VisIt is included then the user may be attching into Visit's
+    // libsim for in-situ analysis and visualization. This call pass
+    // optional arguments that VisIt will interpert.
+#ifdef HAVE_VISIT
+    visit_LibSimArguments( argc, argv );
+#endif
+
 #ifndef HAVE_MPICH_OLD
     // If regular MPI, then initialize after parsing the args...
     Uintah::Parallel::initializeManager( argc, argv );
@@ -551,7 +552,6 @@ main( int argc, char *argv[], char *env[] )
 
       cout << "Date:    " << time_string;  // has its own newline
       cout << "Machine: " << name << "\n";
-
       cout << "SVN: " << SVN_REVISION << "\n";
       cout << "SVN: " << SVN_DATE << "\n";
       cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
@@ -590,7 +590,22 @@ main( int argc, char *argv[], char *env[] )
     }
     //__________________________________
     // Read input file
-    ProblemSpecP ups = ProblemSpecReader().readInputFile( filename, validateUps );
+    ProblemSpecP ups;
+    try {
+      ups = ProblemSpecReader().readInputFile( filename, validateUps );
+    }
+    catch( ... ) {
+      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
+      // instead of a UPS file.
+      proc0cout   << "\n";
+      proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
+      if( validDir( filename ) ) {
+        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
+      }
+      proc0cout   << "\n";
+      Uintah::Parallel::finalizeManager();
+      Thread::exitAll( 0 );
+    }
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
@@ -616,7 +631,7 @@ main( int argc, char *argv[], char *env[] )
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController(world, do_AMR, ups);
+    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
     RegridderCommon* reg = 0;
     if(do_AMR) {
@@ -728,45 +743,54 @@ main( int argc, char *argv[], char *env[] )
 #ifndef NO_ICE
     delete modelmaker;
 #endif
-  } catch (ProblemSetupException& e) {
+  }
+  catch (ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     cerrLock.lock();
-    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
+    cout << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
     cerrLock.unlock();
     thrownException = true;
-  } catch (Exception& e) {
+  }
+  catch (Exception& e) {
     cerrLock.lock();
-    cout << "\n\n" << Uintah::Parallel::getMPIRank() << " Caught exception: " << e.message() << "\n\n";
-    if(e.stackTrace())
+    cout << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
+    if(e.stackTrace()) {
       stackDebug << "Stack trace: " << e.stackTrace() << '\n';
+    }
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::bad_alloc& e) {
+  }
+  catch (std::bad_alloc& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::bad_exception& e) {
+  }
+  catch (std::bad_exception& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::ios_base::failure& e) {
+  }
+  catch (std::ios_base::failure& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::runtime_error& e) {
+  }
+  catch (std::runtime_error& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch (std::exception& e) {
+  }
+  catch (std::exception& e) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
-  } catch(...) {
+  }
+  catch(...) {
     cerrLock.lock();
     cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
     cerrLock.unlock();
@@ -774,7 +798,7 @@ main( int argc, char *argv[], char *env[] )
   }
   
   Uintah::TypeDescription::deleteAll();
-  
+
   /*
    * Finalize MPI
    */

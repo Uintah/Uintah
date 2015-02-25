@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -208,23 +208,40 @@ template<class LOCS> struct Binner<3,LOCS>
 };
 
 /********************************************************************/
-template<class LOCS>
-class SFC
-{
-public:
-  SFC(const ProcessorGroup *d_myworld,int dim=0,Curve curve=HILBERT) : curve(curve),n(INT_MAX),refinements(-1), locsv(0), locs(0), orders(0), d_myworld(d_myworld), comm_block_size(3000), blocks_in_transit(3), merge_block_size(100), sample_percent(.1), cleanup(BATCHERS), mergemode(1)
-  {
-      dimensions[0]=INT_MAX;
-      dimensions[1]=INT_MAX;
-      dimensions[2]=INT_MAX;
-      center[0]=INT_MAX;
-      center[1]=INT_MAX;
-      center[2]=INT_MAX;
 
-      SetNumDimensions(dim);
+template<class LOCS>
+class SFC {
+public:
+  SFC( const ProcessorGroup * d_myworld,
+             int              dim = 0,
+             Curve            curve = HILBERT ) :
+    curve(curve),
+    n(INT_MAX),
+    refinements(-1),
+    locsv(0),
+    locs(0),
+    orders(0),
+    d_myworld(d_myworld),
+    comm_block_size(3000),
+    blocks_in_transit(3),
+    merge_block_size(100),
+    sample_percent(.1),
+    cleanup(BATCHERS),
+    mergemode(1)
+  {
+    dimensions[0]=INT_MAX;
+    dimensions[1]=INT_MAX;
+    dimensions[2]=INT_MAX;
+    center[0]=INT_MAX;
+    center[1]=INT_MAX;
+    center[2]=INT_MAX;
+
+    SetNumDimensions(dim);
   }
+
+  ~SFC() {}
+
   void SetCurve(Curve curve);
-  ~SFC() {};
   void GenerateCurve(int mode=0);
   void SetRefinements(int refinements);
   void SetLocalSize(unsigned int n);
@@ -242,7 +259,8 @@ public:
   void SetCenter(LOCS *center);
   void SetRefinementsByDelta(LOCS *deltax);
 
-  template<int DIM> void ProfileMergeParameters(int repeat=21);
+  template<int DIM> void ProfileMergeParameters( int repeat = 21 );
+
 protected:
 
   int dim;

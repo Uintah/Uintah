@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -426,27 +426,26 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
   for(Level::patchIterator patch=level->patchesBegin();patch<level->patchesEnd();patch++)
   {
     IntVector size=(*patch)->getCellHighIndex()-(*patch)->getCellLowIndex();
-    if(patch_size==IntVector(0,0,0))
-      patch_size=size;
+    if( patch_size == IntVector(0,0,0) ) {
+      patch_size = size;
+    }
   }
   d_minTileSize.insert(d_minTileSize.begin(),patch_size);
 
   d_tileSize=d_minTileSize;
   
   //set target patches
-  if(d_myworld->size()==1)
-  {
+  if( d_myworld->size() == 1 ) {
     //if there is only 1 processor attempt for minimum number of patches
     target_patches_=1;
   }
-  else
-  {
+  else {
     int patches_per_proc=4;
     regrid_spec->get("patches_per_level_per_proc",patches_per_proc);
-    if (patches_per_proc<1)
-    {
-      if (d_myworld->myrank() == 0)
+    if ( patches_per_proc < 1 ) {
+      if ( d_myworld->myrank() == 0 ) {
         cout << "  Bounding patches_per_level_per_proc to [1,infinity]\n";
+      }
       patches_per_proc=1;
     }
     target_patches_=patches_per_proc*d_myworld->size();
@@ -457,11 +456,12 @@ void TiledRegridder::problemSetup(const ProblemSpecP& params,
       problemSetup_BulletProofing(k);
     }
   }
-  
 }
 
 //_________________________________________________________________
-void TiledRegridder::problemSetup_BulletProofing(const int L)
+
+void
+TiledRegridder::problemSetup_BulletProofing( const int L )
 {
   RegridderCommon::problemSetup_BulletProofing(L);
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,18 +25,21 @@
 
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Thread.h>
-#include   <iostream>
+
+#include <iostream>
 
 
 using namespace Uintah;
-using std::cerr;
 using SCIRun::Thread;
 
-ProcessorGroup::ProcessorGroup(const ProcessorGroup* parent,
-			       MPI_Comm comm, bool allmpi,
-			       int rank, int size, int threads)
-   : d_parent(parent), d_rank(rank), d_size(size),  d_threads(threads),
-     d_comm(comm),  d_allmpi(allmpi)
+ProcessorGroup::ProcessorGroup( const ProcessorGroup* parent,
+			                                MPI_Comm comm,
+			                                bool allmpi,
+			                                int rank,
+			                                int size,
+			                                int threads )
+  : d_parent(parent), d_rank(rank), d_size(size),  d_threads(threads),
+    d_comm(comm),  d_allmpi(allmpi)
 {
 }
 
@@ -44,16 +47,21 @@ ProcessorGroup::~ProcessorGroup()
 {
 }
 
-void
-ProcessorGroup::setgComm(int nComm) const
+void ProcessorGroup::setgComm( int nComm ) const
 {
-  if (d_threads <= 1  || !d_allmpi ) return;
-  int curr_size=d_gComms.size();
-  if (nComm <= curr_size) return;
+  if (d_threads <= 1 || !d_allmpi) {
+    return;
+  }
+
+  int curr_size = d_gComms.size();
+  if (nComm <= curr_size) {
+    return;
+  }
+
   d_gComms.resize(nComm);
-  for (int i=curr_size; i< nComm; i++){
-    if(MPI_Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS){
-      std::cerr << "MPI Error in MPI_Comm_dup\n" ;
+  for (int i = curr_size; i < nComm; i++) {
+    if (MPI_Comm_dup(d_comm, &d_gComms[i]) != MPI_SUCCESS) {
+      std::cerr << "Rank: " << d_rank << " - MPI Error in MPI_Comm_dup\n";
       Thread::exitAll(1);
     }
   }

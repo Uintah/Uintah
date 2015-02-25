@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,9 +38,9 @@
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
 #include <CCA/Components/Arches/CoalModels/BTDevol.h>
+#include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
-#include <CCA/Components/Arches/CoalModels/ShaddixHeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/DragModel.h>
@@ -49,6 +49,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/ScalarEqn.h>
 #include <CCA/Components/Arches/ArchesParticlesHelper.h>
+#include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
 //NOTE: new includes for CQMOM
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
@@ -128,63 +129,6 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
 
-#ifdef WASATCH_IN_ARCHES
-
-#define CREATE_NAMETAG_SPEC(parentSpec, name, state) { \
-  Uintah::ProblemSpecP tagSpec = parentSpec->appendChild("NameTag"); \
-    tagSpec->setAttribute("name",name); \
-    tagSpec->setAttribute("state",state); \
-}
-
-#define CREATE_WASATCH_VISCOSITY_SPEC(visVal, task) \
-{\
-  const std::string viscName = d_lab->d_viscosityCTSLabel->getName(); \
-  Uintah::ProblemSpecP viscSpec = params->findBlock("Wasatch")->appendChild("BasicExpression"); \
-    viscSpec->setAttribute("type","SVOL"); \
-    viscSpec->appendElement("TaskList",task); \
-  CREATE_NAMETAG_SPEC(viscSpec, viscName, "STATE_NONE"); \
-  viscSpec->appendElement("Constant",visVal); \
-  if ( (std::string) task == "initialization") { \
-    Uintah::ProblemSpecP forceSpec = params->findBlock("Wasatch")->appendChild("ForceOnGraph"); \
-    forceSpec->setAttribute("tasklist","initialization"); \
-    CREATE_NAMETAG_SPEC(forceSpec, viscName, "STATE_NONE"); \
-  } \
-}
-
-
-#define CREATE_WASATCH_MOM_SPEC { \
-  const std::string viscName = d_lab->d_viscosityCTSLabel->getName(); \
-  Uintah::ProblemSpecP momSpec = params->findBlock("Wasatch")->appendChild("MomentumEquations"); \
-  momSpec->appendChild("DisablePressureSolve"); \
-  momSpec->appendElement("X-Velocity",d_lab->d_uVelocitySPBCLabel->getName()); \
-  momSpec->appendElement("Y-Velocity",d_lab->d_vVelocitySPBCLabel->getName()); \
-  momSpec->appendElement("Z-Velocity",d_lab->d_wVelocitySPBCLabel->getName()); \
-  momSpec->appendElement("X-Momentum",d_lab->d_uMomLabel->getName()); \
-  momSpec->appendElement("Y-Momentum",d_lab->d_vMomLabel->getName()); \
-  momSpec->appendElement("Z-Momentum",d_lab->d_wMomLabel->getName()); \
-  CREATE_NAMETAG_SPEC(momSpec->appendChild("Viscosity"), viscName, "STATE_NONE");\
-  momSpec->appendChild("Pressure"); \
-}
-//
-#include <CCA/Components/Arches/NonlinearSolver.h>
-#include <expression/ExprLib.h>
-#include <expression/ExpressionFactory.h>
-//
-#include <CCA/Components/Wasatch/Wasatch.h>
-#include <CCA/Components/Wasatch/ParseTools.h>
-#include <CCA/Components/Wasatch/TagNames.h>
-#include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/Transport/EquationBase.h>
-#include <CCA/Components/Wasatch/Transport/TransportEquation.h>
-#include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
-#include <CCA/Components/Wasatch/Transport/ParseEquation.h>
-#include <CCA/Components/Wasatch/GraphHelperTools.h>
-#include <CCA/Components/Wasatch/TaskInterface.h>
-#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulenceParameters.h>
-#include <CCA/Components/Wasatch/Expressions/Turbulence/TurbulentViscosity.h>
-#include <CCA/Components/Wasatch/Expressions/Dilatation.h>
-#endif // WASATCH_IN_ARCHES
-
 #include <iostream>
 #include <fstream>
 
@@ -210,9 +154,6 @@ const int Arches::NDIM = 3;
 // ****************************************************************************
 Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   UintahParallelComponent(myworld)
-# ifdef WASATCH_IN_ARCHES
-  , d_wasatch( new Wasatch::Wasatch(myworld) )
-# endif // WASATCH_IN_ARCHES
 {
   d_lab =  scinew  ArchesLabel();
   d_MAlab                 =  0;      //will  be  set  by  setMPMArchesLabel
@@ -232,7 +173,6 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_with_mpmarches                 =  false;
   d_do_dummy_solve                 =  false; 
   d_doAMR                          = doAMR;
-  d_useWasatchMomRHS               = false;
   
   CQMOMEqnFactory& cqmomfactory    = CQMOMEqnFactory::self();
   cqmomfactory.set_number_moments(0);
@@ -257,6 +197,9 @@ Arches::~Arches()
   delete d_nlSolver;
   delete d_physicalConsts;
 
+  Operators& opr = Operators::self();
+  opr.delete_patch_set(); 
+
   if (init_timelabel_allocated)
     delete init_timelabel;
 
@@ -280,11 +223,6 @@ Arches::~Arches()
   }
   releasePort("solver");
 
-#ifdef WASATCH_IN_ARCHES
-  d_wasatch->releasePort("solver");
-  delete d_wasatch;
-#endif // WASATCH_IN_ARCHES
-
   delete _particlesHelper; 
 
 }
@@ -306,6 +244,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   _arches_spec = db; 
   d_lab->problemSetup( db );
 
+  //Look for coal information 
+  CoalHelper& coal_helper = CoalHelper::self(); 
+  coal_helper.parse_for_coal_info( db ); 
+
   //==============NEW TASK STUFF
   //build the factories
   boost::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory()); 
@@ -313,7 +255,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory()); 
   boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory()); 
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory()); 
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2()); 
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(sharedState)); 
 
   _boost_factory_map.clear(); 
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF)); 
@@ -321,7 +263,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("initialize_factory",InitF)); 
   _boost_factory_map.insert(std::make_pair("particle_model_factory",PartModF)); 
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
-  _boost_factory_map.insert(std::make_pair("property_models", PropModels)); 
+  _boost_factory_map.insert(std::make_pair("property_models_factory", PropModels)); 
 
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
@@ -344,7 +286,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   //Checking for lagrangian particles:
   _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
   if ( _doLagrangianParticles ){ 
-    _particlesHelper->problem_setup(_arches_spec->findBlock("LagrangianParticles"), sharedState);
+    _particlesHelper->problem_setup(params,_arches_spec->findBlock("LagrangianParticles"), sharedState);
   }
 
   //__________________________________
@@ -394,184 +336,6 @@ Arches::problemSetup(const ProblemSpecP& params,
     d_timeIntegrator->problemSetup(time_db);
   }
 
-//------------------------------------------------------------------------------
-//   WASATCH CODE BLOCK
-//------------------------------------------------------------------------------
-# ifdef WASATCH_IN_ARCHES
-
-  // we must attach the solver to Wasatch "manually"
-  d_wasatch->attachPort("solver",  dynamic_cast<SolverInterface*>(getPort("solver")));
-  d_wasatch->disable_timestepper_creation();
-  d_wasatch->disable_wasatch_material();
-  // let Wasatch parse its xml block to setup the transport equations. Here, we
-  // should pass the entire uintah input file params.
-
-  Uintah::IntVector extraCells;
-  bool isPeriodic;
-  Wasatch::check_periodicity_extra_cells( params, extraCells, isPeriodic);
-
-  Wasatch::GraphHelper* const solngh = d_wasatch->graph_categories()[Wasatch::ADVANCE_SOLUTION];
-  Wasatch::GraphHelper* const initgh = d_wasatch->graph_categories()[Wasatch::INITIALIZATION];
-
-  typedef Expr::PlaceHolder<SVolField>  SVolExprT;
-  typedef Expr::PlaceHolder<XVolField>  XVolExprT;
-  typedef Expr::PlaceHolder<YVolField>  YVolExprT;
-  typedef Expr::PlaceHolder<ZVolField>  ZVolExprT;
-  
-  const std::string xMomName = d_lab->d_uMomLabel->getName();
-  const std::string yMomName = d_lab->d_vMomLabel->getName();
-  const std::string zMomName = d_lab->d_wMomLabel->getName();
-  const Expr::Tag xMomTagN(xMomName,Expr::STATE_NONE);
-  initgh->exprFactory->register_expression( new XVolExprT::Builder(xMomTagN));
-  const Expr::Tag yMomTagN(yMomName,Expr::STATE_NONE);
-  initgh->exprFactory->register_expression( new YVolExprT::Builder(yMomTagN));
-  const Expr::Tag zMomTagN( zMomName, Expr::STATE_NONE);
-  initgh->exprFactory->register_expression( new ZVolExprT::Builder(zMomTagN));
-
-  const Expr::Tag xMomTagDN(xMomName,Expr::STATE_DYNAMIC);
-  solngh->exprFactory->register_expression( new XVolExprT::Builder(xMomTagDN));
-  const Expr::Tag yMomTagDN(yMomName,Expr::STATE_DYNAMIC);
-  solngh->exprFactory->register_expression( new YVolExprT::Builder(yMomTagDN));
-  const Expr::Tag zMomTagDN( zMomName, Expr::STATE_DYNAMIC);
-  solngh->exprFactory->register_expression( new ZVolExprT::Builder(zMomTagDN));
-
-  // construct the problemspec for the momentum equations. This includes the <MomentumEquations> block
-  // as well a two <BasicExpression> blocks for viscosity (initialization, advance_solution) and finally,
-  // a <ForceOnGraph> on the initialization task for viscosity
-  // make sure that the xml spec for momentum is NOT in the input file already. This is necessary
-  // for restarts
-  d_useWasatchMomRHS = (db->findBlock("ExplicitSolver")->findBlock("MomentumSolver")->findBlock("use_wasatch_momentum_rhs")) ? true : false;
-  if ( !(params->findBlock("Wasatch")->findBlock("MomentumEquations")) && d_useWasatchMomRHS ) {
-    // grab the viscosity from Arches and pass it on to Wasatch
-    double viscVal;
-    params->findBlock("PhysicalConstants")->get("viscosity",viscVal);
-    CREATE_WASATCH_VISCOSITY_SPEC(viscVal,"initialization");   // need an initial condition for Viscosity in Arches
-    CREATE_WASATCH_VISCOSITY_SPEC(viscVal,"advance_solution");
-    CREATE_WASATCH_MOM_SPEC;
-  }
-
-  // lock viscosity
-  d_wasatch->lock_field(d_lab->d_viscosityCTSLabel->getName());
-//  d_wasatch->lock_field(d_lab->d_uVelocitySPBCLabel->getName());
-
-  // now proceed with the Wassatch problemsetup
-  d_wasatch->problemSetup( params, materials_ps, grid, sharedState );
-
-  // cleave the viscosity from its parents.
-//  solngh->exprFactory->cleave_from_parents( solngh->exprFactory->get_id(Expr::Tag(d_lab->d_viscosityCTSLabel->getName(),Expr::STATE_NONE) ) );
-  
-  //____________________________________________________________________________
-  // Register the velocity and momentum fields from Arches as placeholder expressions.
-  // put these in the advance solution graph
-  
-  const std::string xVelName = d_lab->d_uVelocitySPBCLabel->getName();
-  const Expr::Tag xVelTag( xVelName, Expr::STATE_NONE );
-  // NOTE: we will need to replace the PrimVar expressions for velocity that were
-  // created by Wasatch, hence the "true" flag at the end of the following register_expression call
-  solngh->exprFactory->register_expression( new XVolExprT::Builder(xVelTag), true );
-  const Expr::Tag xVelTagN( xVelName, Expr::STATE_N );
-  solngh->exprFactory->register_expression( new XVolExprT::Builder(xVelTagN), true );
-  solngh->exprFactory->register_expression( new XVolExprT::Builder(xMomTagN));
-
-  //
-  const std::string yVelName = d_lab->d_vVelocitySPBCLabel->getName();
-  const Expr::Tag yVelTag( yVelName, Expr::STATE_NONE );
-  solngh->exprFactory->register_expression( new YVolExprT::Builder(yVelTag), true );
-  const Expr::Tag yVelTagN( yVelName, Expr::STATE_N );
-  solngh->exprFactory->register_expression( new YVolExprT::Builder(yVelTagN), true );
-  solngh->exprFactory->register_expression( new YVolExprT::Builder(yMomTagN));
-  
-  //
-  std::string zVelName = d_lab->d_wVelocitySPBCLabel->getName();
-  const Expr::Tag zVelTag( zVelName, Expr::STATE_NONE );
-  solngh->exprFactory->register_expression( new ZVolExprT::Builder(zVelTag), true );
-  const Expr::Tag zVelTagN( zVelName, Expr::STATE_N );
-  solngh->exprFactory->register_expression( new ZVolExprT::Builder(zVelTagN), true );
-  solngh->exprFactory->register_expression( new ZVolExprT::Builder(zMomTagN));
-  
-  //____________________________________________________________________________
-  // Register the volume and area fractions for embedded geometry
-  // volume fraction
-  std::string volFractionName = d_lab->d_volFractionLabel->getName();
-  const Expr::Tag volFractionTag( volFractionName, Expr::STATE_NONE );
-
-  initgh->exprFactory->register_expression( new SVolExprT::Builder(volFractionTag) );
-  solngh->exprFactory->register_expression( new SVolExprT::Builder(volFractionTag) );
-
-  // x area fraction
-  std::string xAreaFractionName = d_lab->d_areaFractionFXLabel->getName();
-  const Expr::Tag xAreaFractionTag( xAreaFractionName, Expr::STATE_NONE );
-  solngh->exprFactory->register_expression( new XVolExprT::Builder(xAreaFractionTag) );
-
-  // y area fraction
-  std::string yAreaFractionName = d_lab->d_areaFractionFYLabel->getName();
-  const Expr::Tag yAreaFractionTag( yAreaFractionName, Expr::STATE_NONE );
-  solngh->exprFactory->register_expression( new YVolExprT::Builder(yAreaFractionTag) );
-
-  // z area fraction
-  std::string zAreaFractionName = d_lab->d_areaFractionFZLabel->getName();
-  const Expr::Tag zAreaFractionTag( zAreaFractionName, Expr::STATE_NONE );
-  solngh->exprFactory->register_expression( new ZVolExprT::Builder(zAreaFractionTag) );
-
-  // time
-  // WARNING: currently this time expression holds NOTHING - it is needed just to get the momentum graphs setup
-  // it will not be used in any of the wasatch graphs at the moment. this will likely
-  // need to be fixed if we have time dependent sources among other things
-  const Expr::Tag timeTag( "time", Expr::STATE_NONE );
-  const Expr::Tag timeStepTag( "timestep", Expr::STATE_NONE );
-  if( !(solngh->exprFactory->have_entry( timeTag )) ) {
-    // register placeholder expressions for time and timestep
-    typedef Expr::PlaceHolder<SpatialOps::SingleValueField>  TimeT;
-    solngh->exprFactory->register_expression( new TimeT::Builder(timeTag) );
-    solngh->exprFactory->register_expression( new TimeT::Builder(timeStepTag) );    
-  }
-
-  //____________________________________________________________________________
-  // Register density - Wasatch MUST specify the name of the density that ARCHES is
-  // pulling out from tables
-  //
-  Uintah::ProblemSpecP densitySpec = params->findBlock("Wasatch")->findBlock("Density");
-  
-  if( densitySpec ){
-    Expr::Tag densityTag = Expr::Tag();
-    if( densitySpec->findBlock("NameTag") ){
-      densityTag = Wasatch::parse_nametag( densitySpec->findBlock("NameTag") );
-    }
-    else{
-      std::string densName;
-      densitySpec->findBlock("Constant")->getAttribute( "name", densName );
-      densityTag = Expr::Tag( densName, Expr::STATE_NONE );
-    }
-    
-    if( !(solngh->exprFactory->have_entry( densityTag )) ) {
-      // register placeholder expressions for density field
-      solngh->exprFactory->register_expression( new SVolExprT::Builder(densityTag) );
-    }
-
-    if( !(initgh->exprFactory->have_entry( densityTag )) ) {
-      initgh->exprFactory->register_expression( new SVolExprT::Builder(densityTag) );
-    }
-  }
-
-  //____________________________________________________________________________
-  // Register the Wasatch transported variables as placeholder expressions.
-  // Because we will NOT build a Wasatch timestepper, we should register the
-  // transported Wasatch variables as placeholder expressions. We can grab those
-  // from the equation adaptors after parsing the Wasatch xml block.
-  const Wasatch::Wasatch::EquationAdaptors& adaptors = d_wasatch->equation_adaptors();
-  for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-    Wasatch::EquationBase* transEq = (*ia)->equation();
-    if ( !(transEq->dir_name() == "") ) continue; // skip all momentum equations for the time being...
-    std::string solnVarName = transEq->solution_variable_name();
-    if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_DYNAMIC  ) ) )
-      solngh->exprFactory->register_expression( new SVolExprT::Builder(Expr::Tag(solnVarName,Expr::STATE_DYNAMIC)) );
-    if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_N  ) ) )
-      solngh->exprFactory->register_expression( new SVolExprT::Builder(Expr::Tag(solnVarName,Expr::STATE_N)) );
-    if( !solngh->exprFactory->have_entry( Expr::Tag(solnVarName,Expr::STATE_NP1  ) ) )
-      solngh->exprFactory->register_expression( new SVolExprT::Builder(Expr::Tag(solnVarName,Expr::STATE_NP1)) );
-  }
-
-# endif // WASATCH_IN_ARCHES
 //------------------------------------------------------------------------------
 //
 
@@ -721,39 +485,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   }
 
-#ifdef WASATCH_IN_ARCHES
-  //create expressions to export dependent table vals into wasatch
-  typedef std::vector<std::string> StringVec;
-  if (d_props->getMixRxnModel() ) {
-    MixingRxnModel* d_mixingTable = d_props->getMixRxnModel();
-    if (d_props->getMixingModelType() == "ClassicTable" ) {
-      StringVec DepVarsString = d_mixingTable->getAllDepVars();
-      for (size_t i=0; i<DepVarsString.size(); i++) {
-        proc0cout << "Creating Wasatch Expression for " << DepVarsString[i] << "... ";
-        const Expr::Tag WasTableTag( DepVarsString[i] , Expr::STATE_NONE );
-        if( !(solngh->exprFactory->have_entry( WasTableTag )) ) {
-          solngh->exprFactory->register_expression( new SVolExprT::Builder(WasTableTag));
-          proc0cout << " done" << endl;
-        }
-      }
-      //create constant expressions for table header constants
-      typedef std::map< string, double > doubleMap;
-      doubleMap d_mixconsts = d_mixingTable->getAllConstants();
-      doubleMap::iterator ConstIter;
-      for ( ConstIter = d_mixconsts.begin(); ConstIter != d_mixconsts.end(); ConstIter++) {
-        std::string tabConst = ConstIter->first;
-        proc0cout << "Creating Wasatch Expression for " << tabConst << "... ";
-        const Expr::Tag TableConstTag( tabConst , Expr::STATE_NONE );
-        double constVal = ConstIter->second;
-        typedef Expr::ConstantExpr<SVolField>::Builder Builder;
-        solngh->exprFactory->register_expression( new Builder( TableConstTag, constVal ) );
-        proc0cout << " done" << endl;
-      }
-    }
-  }
-
-#endif //WASATCH-IN-ARCHES
-
   // read boundary condition information
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props );
@@ -818,10 +549,6 @@ Arches::problemSetup(const ProblemSpecP& params,
   else{
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
   }
-#ifdef WASATCH_IN_ARCHES
-  d_nlSolver->set_use_wasatch_mom_rhs(d_useWasatchMomRHS);
-#endif
-  
   d_nlSolver->problemSetup(db,sharedState);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
   //__________________
@@ -1094,41 +821,6 @@ Arches::problemSetup(const ProblemSpecP& params,
         << " inside of the <AMR> section for multi-level ARCHES & MPMARCHES. \n"; 
     throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
   }
-  
- 
-#ifdef WASATCH_IN_ARCHES
-  // This block of code will allow for any arches varlabel, or any used defined variable name to be used in wasatch.
-  // This should be used temporarily until a better way to share variables across the codes is made
-  Uintah::ProblemSpecP db_warchesVars;
-  if (db->findBlock("ExtraWarchesVariables") ) {
-    db_warchesVars=db->findBlock("ExtraWarchesVariables");
-    for ( ProblemSpecP var_db = db_warchesVars->findBlock("NameTag");
-         var_db != 0; var_db = var_db->findNextBlock("NameTag") ){
-      std::string varName, exprType;
-      var_db->getAttribute("name",varName);
-      var_db->getAttribute("state",exprType);
-      
-      proc0cout << "Creating Wasatch Expression for " << varName << " ... ";
-      Expr::Tag WasExprTag;
-      if ( exprType == "STATE_N" ) {
-        WasExprTag =  Expr::Tag( varName , Expr::STATE_N );
-      } else if ( exprType == "STATE_NONE" ) {
-        WasExprTag = Expr::Tag( varName , Expr::STATE_NONE );
-      } else {
-        ostringstream msg;
-        msg << "\n ERROR invalid state type for " << varName 
-            << "\n use STATE_N or STATE_NONE \n";
-        throw ProblemSetupException( msg.str(),__FILE__, __LINE__);
-      }
-
-      if( !(solngh->exprFactory->have_entry( WasExprTag )) ) {
-        solngh->exprFactory->register_expression( new SVolExprT::Builder(WasExprTag));
-        proc0cout << " done" << endl;
-      }
-    }
-  }
-#endif
-
 }
 
 // ****************************************************************************
@@ -1144,7 +836,8 @@ Arches::scheduleInitialize(const LevelP& level,
   const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
   Operators& opr = Operators::self(); 
-  opr.sched_create_patch_operators( level, sched, matls ); 
+  opr.set_my_world( d_myworld ); 
+  opr.create_patch_operators( level, sched, matls ); 
 
   if ( _doLagrangianParticles ){ 
     _particlesHelper->set_materials(d_sharedState->allArchesMaterials()); 
@@ -1171,6 +864,8 @@ Arches::scheduleInitialize(const LevelP& level,
 
   d_turbModel->sched_computeFilterVol( sched, level, matls ); 
 
+  //Particle models are initialized after DQMOM/CQMOM initialization 
+
   //=========== NEW TASK INTERFACE ==============================
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   BFM::iterator i_util_fac = _boost_factory_map.find("utility_factory"); 
@@ -1178,7 +873,7 @@ Arches::scheduleInitialize(const LevelP& level,
   BFM::iterator i_init_fac = _boost_factory_map.find("initialize_factory"); 
   BFM::iterator i_partmod_fac = _boost_factory_map.find("particle_model_factory"); 
   BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
-  BFM::iterator i_property_models = _boost_factory_map.find("property_models"); 
+  BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory"); 
 
   //utility factory
   TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
@@ -1211,23 +906,25 @@ Arches::scheduleInitialize(const LevelP& level,
   TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
   if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
 
-  //particle models
-  all_tasks.clear(); 
-  all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
-  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
-  }
-
   //lagrangian particles
   all_tasks.clear();
   all_tasks = i_lag_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
     i->second->schedule_init(level, sched, matls ); 
   }
+
+  sched_scalarInit(level, sched);
+  //property models
+  all_tasks.clear();
+  all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
+  }
+
   //===============================================================
 
   // base initialization of all scalars
-  sched_scalarInit(level, sched);
+ // sched_scalarInit(level, sched);
 
   //pass some periodic stuff around.
   IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -1274,20 +971,16 @@ Arches::scheduleInitialize(const LevelP& level,
 
   sched_getCCVelocities(level, sched);
 
-#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  if (!d_useWasatchMomRHS) {
-    if (!d_MAlab) {
-      
-      if (d_mixedModel) {
-        d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, level, matls,
-                                                            init_timelabel);
-      }
-      
-      d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, init_timelabel);
-      
+  if (!d_MAlab) {
+    
+    if (d_mixedModel) {
+      d_scaleSimilarityModel->sched_reComputeTurbSubmodel(sched, level, matls,
+                                                          init_timelabel);
     }
+    
+    d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls, init_timelabel);
+    
   }
-#endif // WASATCH_IN_ARCHES
 
   //______________________
   //Data Analysis
@@ -1341,11 +1034,11 @@ Arches::scheduleInitialize(const LevelP& level,
   //=================================================================================
   //NEW TASK INTERFACE 
   //
-  //Initialization of COAL property models
-  std::vector<std::string> coal_property_tasks = i_property_models->second->retrieve_task_subset("coal_models"); 
-  for ( std::vector<std::string>::iterator i = coal_property_tasks.begin(); i != coal_property_tasks.end(); i++){ 
-    TaskInterface* tsk = i_property_models->second->retrieve_task(*i); 
-    tsk->schedule_init(level, sched, matls ); 
+  //particle models
+  all_tasks.clear(); 
+  all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls ); 
   }
   //=================================================================================
 
@@ -1371,36 +1064,14 @@ Arches::scheduleInitialize(const LevelP& level,
     _particlesHelper->schedule_sync_particle_position(level,sched,true);
   }
 
-  //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true ); 
-
-# ifdef WASATCH_IN_ARCHES
-  // must set wasatch materials after problemsetup so that we can access
-  // sharedState->allArchesMaterials(). This is dictated by Uintah.
-  // NOTE: you must also disable wasatch material creation in the problemsetup.
-  // the wasatch initialization must be called after Arches initializes its params
-  // in case you want to use any of those in the wasatch initialization. For example,
-  // if you want to use the volume fraction in the initialization of a wasatch transported
-  // variable, then arches must first schedule a calculation for the volume fraction
-  // before wasatch could use it.
-  d_nlSolver->get_momentum_solver()->sched_computeMomentum( level, sched, 0, true );
-  d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());
-  d_wasatch->scheduleInitialize( level, sched );
-# endif // WASATCH_IN_ARCHES
-
+  //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true );
 }
 
 void
 Arches::restartInitialize()
 {
-
   d_doingRestart = true;
   d_lab->recompile_taskgraph = true; //always recompile on restart...
-
-# ifdef WASATCH_IN_ARCHES
-  d_wasatch->restartInitialize();
-  d_wasatch->set_wasatch_materials(d_sharedState->allArchesMaterials());  
-# endif // WASATCH_IN_ARCHES
-
 }
 
 // ****************************************************************************
@@ -1439,10 +1110,7 @@ Arches::sched_paramInit(const LevelP& level,
     }
 
     tsk->computes(d_lab->d_densityCPLabel);
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-  if (!d_useWasatchMomRHS)
     tsk->computes(d_lab->d_viscosityCTSLabel);
-//#endif
     tsk->computes(d_lab->d_turbViscosLabel);
     tsk->computes(d_lab->d_oldDeltaTLabel);
     // for reacting flows save temperature and co2
@@ -1548,9 +1216,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     }
 
     new_dw->allocateAndPut(density,   d_lab->d_densityCPLabel,    indx, patch);
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    if (!d_useWasatchMomRHS) new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
-//#endif // WASATCH_IN_ARCHES
+    new_dw->allocateAndPut(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
     new_dw->allocateAndPut(turb_viscosity,    d_lab->d_turbViscosLabel,       indx, patch);
 
     uVelocity.initialize(0.0);
@@ -1559,9 +1225,7 @@ Arches::paramInit(const ProcessorGroup* pg,
     density.initialize(0.0);
     pressure.initialize(0.0);
     double visVal = d_physicalConsts->getMolecularViscosity();
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    if (!d_useWasatchMomRHS) viscosity.initialize(visVal);
-//#endif // WASATCH_IN_ARCHES
+    viscosity.initialize(visVal);
     turb_viscosity.initialize(0.0);
 
     //----- momentum initial condition
@@ -1846,18 +1510,10 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
     Operators& opr = Operators::self();
-    opr.sched_create_patch_operators( level, sched, matls );
+    opr.set_my_world( d_myworld ); 
+    opr.create_patch_operators( level, sched, matls );
   }
   
-#ifdef WASATCH_IN_ARCHES
-
-  // disable Wasatch's time integrator because Arches is handling it.
-  d_wasatch->scheduleTimeAdvance( level, sched );
-  d_nlSolver->nonlinearSolve(level, sched, *d_wasatch, d_timeIntegrator, d_sharedState );
-
-#else 
-
-
   d_nlSolver->nonlinearSolve(level, sched);
 
   if ( _doLagrangianParticles ){ 
@@ -1883,8 +1539,6 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     _particlesHelper->schedule_add_particles(level, sched); 
 
   }
-
-#endif 
 
   //__________________________________
   //  on the fly analysis
@@ -2642,14 +2296,14 @@ void Arches::registerModels(ProblemSpecP& db)
         } else if ( model_type == "CharOxidationShaddix" ) {
           ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "ShaddixHeatTransfer" ) {
-          ModelBuilder* modelBuilder = scinew ShaddixHeatTransferBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
-          model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
           ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "SimpleBirth" ) {
+          ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;

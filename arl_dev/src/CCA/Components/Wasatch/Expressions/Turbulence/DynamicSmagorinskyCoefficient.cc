@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -57,11 +57,11 @@ DynamicSmagorinskyCoefficient( const Expr::TagList& velTags,
                                const Expr::Tag& rhoTag,
                                const bool isConstDensity )
 : StrainTensorBase( velTags     ),
-  rhot_           ( rhoTag      ),
   isConstDensity_ (isConstDensity),
   doExtraFiltering_(false)
 {
   this->set_gpu_runnable(true);
+  if (!isConstDensity_)  rho_ = create_field_request<SVolField>(rhoTag);
 }
 
 //--------------------------------------------------------------------
@@ -69,28 +69,6 @@ DynamicSmagorinskyCoefficient( const Expr::TagList& velTags,
 DynamicSmagorinskyCoefficient::
 ~DynamicSmagorinskyCoefficient()
 {}
-
-//--------------------------------------------------------------------
-
-void
-DynamicSmagorinskyCoefficient::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  StrainTensorBase::advertise_dependents(exprDeps);
-  if(!isConstDensity_)
-    exprDeps.requires_expression( rhot_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-DynamicSmagorinskyCoefficient::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  StrainTensorBase::bind_fields(fml);
-  if(!isConstDensity_)
-    rho_ = &fml.field_ref<SVolField>(rhot_);
-}
 
 //--------------------------------------------------------------------
 
@@ -138,22 +116,27 @@ evaluate()
   SVolFldPtr rhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
   SVolFldPtr invRhoHat = SpatialFieldStore::get<SVolField>( dynSmagConst );
   if (!isConstDensity_) {
-    *rhoHat <<= (*boxFilterOp_)( *rho_ );
+    const SVolField& rho = rho_->field_ref();
+    *rhoHat <<= (*boxFilterOp_)( rho );
     // pay attention to this. may require fine tuning.
     exOp_->apply_to_field(*rhoHat, 0.0);
-    *invRhoHat <<= cond( *rhoHat<=2*eps, 1.0/ *rho_ )
+    *invRhoHat <<= cond( *rhoHat<=2*eps, 1.0/ rho )
                        ( 1.0/ *rhoHat );
   }
   
   //----------------------------------------------------------------------------
   // CALCULATE test filtered staggered velocities. Filter(ui)
   //----------------------------------------------------------------------------
+  const XVolField& u = u_->field_ref();
+  const YVolField& v = v_->field_ref();
+  const ZVolField& w = w_->field_ref();
+
   SpatFldPtr<XVolField> uhat = SpatialFieldStore::get<XVolField>( dynSmagConst );
   SpatFldPtr<YVolField> vhat = SpatialFieldStore::get<YVolField>( dynSmagConst );
   SpatFldPtr<ZVolField> what = SpatialFieldStore::get<ZVolField>( dynSmagConst );
-  *uhat <<= (*xBoxFilterOp_)( *vel1_ );
-  *vhat <<= (*yBoxFilterOp_)( *vel2_ );
-  *what <<= (*zBoxFilterOp_)( *vel3_ );
+  *uhat <<= (*xBoxFilterOp_)( u );
+  *vhat <<= (*yBoxFilterOp_)( v );
+  *what <<= (*zBoxFilterOp_)( w );
   
   // extrapolate filtered, staggered, velocities from the interior.
   xexOp_->apply_to_field(*uhat);
@@ -167,14 +150,15 @@ evaluate()
   ALLOCATE_VECTOR_FIELD(rhoVelCC); // allocate cell centered velocity field
   
   if( isConstDensity_ ){
-    *rhoVelCC[0] <<= (*vel1InterpOp_)( *vel1_);  // u cell centered
-    *rhoVelCC[1] <<= (*vel2InterpOp_)( *vel2_);  // v cell centered
-    *rhoVelCC[2] <<= (*vel3InterpOp_)( *vel3_);  // w cell centered
+    *rhoVelCC[0] <<= (*vel1InterpOp_)(u);  // u cell centered
+    *rhoVelCC[1] <<= (*vel2InterpOp_)(v);  // v cell centered
+    *rhoVelCC[2] <<= (*vel3InterpOp_)(w);  // w cell centered
   }
   else{
-    *rhoVelCC[0] <<= *rho_ * (*vel1InterpOp_)( *vel1_);  // u cell centered
-    *rhoVelCC[1] <<= *rho_ * (*vel2InterpOp_)( *vel2_);  // v cell centered
-    *rhoVelCC[2] <<= *rho_ * (*vel3InterpOp_)( *vel3_);  // w cell centered
+    const SVolField& rho = rho_->field_ref();
+    *rhoVelCC[0] <<= rho * (*vel1InterpOp_)(u);  // u cell centered
+    *rhoVelCC[1] <<= rho * (*vel2InterpOp_)(v);  // v cell centered
+    *rhoVelCC[2] <<= rho * (*vel3InterpOp_)(w);  // w cell centered
   }
 
   // extrapolate cell centered velocities to ghost cells
@@ -278,7 +262,7 @@ evaluate()
   // S22 = Sij[1][0], S23 = Sij[1][1]
   // S33 = Sij[2][0]
   ALLOCATE_TENSOR_FIELD(Sij);
-  calculate_strain_tensor_components(strTsrMag,*vel1_,*vel2_,*vel3_,*Sij[0][0],*Sij[0][1],*Sij[0][2],*Sij[1][0],*Sij[1][1],*Sij[2][0]);
+  calculate_strain_tensor_components(strTsrMag,u,v,w,*Sij[0][0],*Sij[0][1],*Sij[0][2],*Sij[1][0],*Sij[1][1],*Sij[2][0]);
   exOp_->apply_to_field(strTsrMag, 0.0);
   
   jmin=0;
@@ -293,7 +277,8 @@ evaluate()
           *Sij[i][j-jmin] <<= (*boxFilterOp_)( *tmp );
         }
         else{
-          *Sij[i][j-jmin] <<= (*boxFilterOp_)( *rho_ * *tmp );
+          const SVolField& rho = rho_->field_ref();
+          *Sij[i][j-jmin] <<= (*boxFilterOp_)( rho * *tmp );
         }
       }
       ++jmin;

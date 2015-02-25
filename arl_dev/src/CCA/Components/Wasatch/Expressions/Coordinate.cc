@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,24 +56,10 @@ namespace Wasatch {
   
   template < typename FieldT >
   void
-  Coordinates<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
-  {}
-  
-  //--------------------------------------------------------------------
-  
-  template < typename FieldT >
-  void
   Coordinates<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB )
   {
     patchContainer_ = opDB.retrieve_operator<UintahPatchContainer>();
   }
-
-  //--------------------------------------------------------------------
-
-  template < typename FieldT >
-  void
-  Coordinates<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
-  {}
   
   //--------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -68,6 +68,8 @@ public:
   inline Vector& operator=(const double&);
   inline Vector& operator=(const int&);
   
+  static Vector fromString( const std::string & source ); // Creates a Vector from a string that looksl like "[Num, Num, Num]".
+
 #ifdef COMMENT_OUT
   /* !!!
   () index from 0

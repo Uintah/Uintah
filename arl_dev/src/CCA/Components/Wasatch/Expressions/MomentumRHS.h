@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -49,12 +49,9 @@ class MomRHS
   typedef SpatialOps::SVolField PFieldT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, PFieldT, FieldT >::type Grad;
 
-  const Expr::Tag pressuret_, rhspartt_, volfract_, emptyTag_;
-
-  const FieldT  *rhsPart_;
-  const FieldT  *volfrac_;
-  const PFieldT *pressure_;
-
+  DECLARE_FIELDS(FieldT, rhsPart_, volfrac_);
+  DECLARE_FIELD(PFieldT, pressure_);
+  const bool hasP_, hasIntrusion_;
   const Grad* gradOp_;
 
   MomRHS( const Expr::Tag& pressure,
@@ -83,8 +80,6 @@ public:
 
   ~MomRHS();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,13 +32,17 @@ ContinuityResidual<FieldT,Vel1T,Vel2T,Vel3T>::
 ContinuityResidual( const Expr::Tag&     drhodtTag,
                     const Expr::TagList& velTags    )
   : Expr::Expression<FieldT>(),
-    drhodtTag_( drhodtTag),
-    vel1t_    ( velTags[0] ),
-    vel2t_    ( velTags[1] ),
-    vel3t_    ( velTags[2] ),
-    is3d_     ( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
+    constDen_ ( drhodtTag == Expr::Tag() ),
+    doX_      ( velTags[0] != Expr::Tag() ),
+    doY_      ( velTags[1] != Expr::Tag() ),
+    doZ_      ( velTags[2] != Expr::Tag() ),
+    is3d_     ( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
+  if (!constDen_)  drhodt_ = this->template create_field_request<FieldT>(drhodtTag);
+  if (doX_)  u1_ = this->template create_field_request<Vel1T>(velTags[0]);
+  if (doY_)  u2_ = this->template create_field_request<Vel2T>(velTags[1]);
+  if (doZ_)  u3_ = this->template create_field_request<Vel3T>(velTags[2]);
 }
 
 //--------------------------------------------------------------------
@@ -53,42 +57,11 @@ ContinuityResidual<FieldT,Vel1T,Vel2T,Vel3T>::
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 void
 ContinuityResidual<FieldT,Vel1T,Vel2T,Vel3T>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( drhodtTag_ != Expr::Tag() )  exprDeps.requires_expression( drhodtTag_ );
-  if( vel1t_     != Expr::Tag() )  exprDeps.requires_expression( vel1t_     );
-  if( vel2t_     != Expr::Tag() )  exprDeps.requires_expression( vel2t_     );
-  if( vel3t_     != Expr::Tag() )  exprDeps.requires_expression( vel3t_     );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
-void
-ContinuityResidual<FieldT,Vel1T,Vel2T,Vel3T>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& svfm = fml.template field_manager<FieldT>();
-  const typename Expr::FieldMgrSelector<Vel1T>::type& v1fm = fml.template field_manager<Vel1T>();
-  const typename Expr::FieldMgrSelector<Vel2T>::type& v2fm = fml.template field_manager<Vel2T>();
-  const typename Expr::FieldMgrSelector<Vel3T>::type& v3fm = fml.template field_manager<Vel3T>();
-
-  if( drhodtTag_ != Expr::Tag() )  drhodt_ = &svfm.field_ref( drhodtTag_ );
-  if( vel1t_ != Expr::Tag() )  vel1_ = &v1fm.field_ref( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  vel2_ = &v2fm.field_ref( vel2t_ );
-  if( vel3t_ != Expr::Tag() )  vel3_ = &v3fm.field_ref( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
-void
-ContinuityResidual<FieldT,Vel1T,Vel2T,Vel3T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( vel1t_ != Expr::Tag() )  vel1GradOp_ = opDB.retrieve_operator<Vel1GradT>();
-  if( vel2t_ != Expr::Tag() )  vel2GradOp_ = opDB.retrieve_operator<Vel2GradT>();
-  if( vel3t_ != Expr::Tag() )  vel3GradOp_ = opDB.retrieve_operator<Vel3GradT>();
+  if( doX_ )  vel1GradOp_ = opDB.retrieve_operator<Vel1GradT>();
+  if( doY_ )  vel2GradOp_ = opDB.retrieve_operator<Vel2GradT>();
+  if( doZ_ )  vel3GradOp_ = opDB.retrieve_operator<Vel3GradT>();
 }
 
 //--------------------------------------------------------------------
@@ -103,15 +76,18 @@ evaluate()
 
   cont <<= 0.0; // avoid potential garbage in extra/ghost cells
 
-  if (drhodtTag_ != Expr::Tag()) cont <<= *drhodt_;
+  if (!constDen_) cont <<= drhodt_->field_ref();
   
   if( is3d_ ){ // fully inline for 3D
-    cont <<= cont + (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) + (*vel3GradOp_)(*vel3_);
+    const Vel1T& u1 = u1_->field_ref();
+    const Vel2T& u2 = u2_->field_ref();
+    const Vel3T& u3 = u3_->field_ref();
+    cont <<= cont + (*vel1GradOp_)(u1) + (*vel2GradOp_)(u2) + (*vel3GradOp_)(u3);
   }
   else{ // for 2D and 1D, assemble in pieces
-    if( vel1t_ != Expr::Tag() ) cont <<= cont + (*vel1GradOp_)(*vel1_);
-    if( vel2t_ != Expr::Tag() ) cont <<= cont + (*vel2GradOp_)(*vel2_);
-    if( vel3t_ != Expr::Tag() ) cont <<= cont + (*vel3GradOp_)(*vel3_);
+    if( doX_ ) cont <<= cont + (*vel1GradOp_)(u1_->field_ref());
+    if( doY_ ) cont <<= cont + (*vel2GradOp_)(u2_->field_ref());
+    if( doZ_ ) cont <<= cont + (*vel3GradOp_)(u3_->field_ref());
   }
 }
 

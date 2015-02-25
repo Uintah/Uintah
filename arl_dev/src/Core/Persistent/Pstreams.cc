@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,28 +38,21 @@
  */
 
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Containers/StringUtil.h>
 
-#include <sci_defs/teem_defs.h>
-
-#ifdef HAVE_TEEM
-#include <teem/air.h>
-#include <teem/nrrd.h>
-#else
-#include <Core/Util/Endian.h>
 #include <Core/Exceptions/InternalError.h>
-#endif
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/StringUtil.h>
 
 #include <fstream>
 #include <iostream>
-using namespace std;
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <cstring>
 
+using namespace std;
 
 namespace SCIRun {
 
@@ -262,11 +255,7 @@ BinaryPiostream::reset_post_header()
 const char *
 BinaryPiostream::endianness()
 {
-#ifdef HAVE_TEEM
-  if (airMyEndian == airEndianLittle)
-#else
   if( isLittleEndian() )
-#endif
     return "LIT\n";
   else
     return "BIG\n";
@@ -596,11 +585,7 @@ BinarySwapPiostream::~BinarySwapPiostream()
 const char *
 BinarySwapPiostream::endianness()
 {
-#ifdef HAVE_TEEM
-  if (airMyEndian == airEndianLittle)
-#else
   if ( isLittleEndian() )
-#endif
     return "LIT\n";
   else
     return "BIG\n";
@@ -1404,129 +1389,15 @@ TextPiostream::io(unsigned long long& data)
 void
 TextPiostream::io(double& data)
 {
-#ifndef HAVE_TEEM
   throw InternalError("Using PTextPiostream with Teem undefined", __FILE__, __LINE__);
-#else
-  if (err) return;
-  if (dir==Read)
-  {
-    istream& in=*istr;
-    in >> data;
 
-    if (!in)
-    {
-      char ibuf[5];
-      in.clear();
-      in.get(ibuf,4);
-      // Set the last character to null for airToLower.
-      ibuf[3] = '\0';
-      // Make sure the comparison is case insensitive.
-      airToLower(ibuf);
-
-      if (strcmp(ibuf,"nan")==0)
-      {
-        data = (double) AIR_NAN;
-      }
-      else if (strcmp(ibuf,"inf")==0)
-      {
-        data = (double) AIR_POS_INF;
-      }
-      else
-      {
-        in.clear();
-        in.get(&(ibuf[3]),2);
-        // Set the last character to null for airToLower.
-        ibuf[4] = '\0';
-        airToLower(ibuf);
-        if (strcmp(ibuf,"-inf")==0)
-        {
-          data = (double) AIR_NEG_INF;
-        }
-        else
-        {
-          char buf[100];
-          reporter_->error("Error reading double.");
-          in.clear();
-          in.getline(buf, 100);
-          reporter_->error(string("Rest of line is: ") + ibuf + buf);
-          err = true;
-          return;
-        }
-      }
-    }
-    expect(' ');
-  }
-  else
-  {
-    ostream& out=*ostr;
-    out.precision(16);
-    out << data << " ";
-  }
-#endif
 }
 
 
 void
 TextPiostream::io(float& data)
 {
-#ifndef HAVE_TEEM
   throw InternalError("Using PTextPiostream with Teem undefined", __FILE__, __LINE__);
-#else
-
-  if (err) return;
-  if (dir==Read)
-  {
-    istream& in=*istr;
-    in >> data;
-    if (!in)
-    {
-      char ibuf[5];
-      in.clear();
-      in.get(ibuf,4);
-      // Set the last character to null for airToLower.
-      ibuf[3] = '\0';
-      // Make sure the comparison is case insensitive.
-      airToLower(ibuf);
-      if (strcmp(ibuf,"nan")==0)
-      {
-        data = AIR_NAN;
-      }
-      else if (strcmp(ibuf,"inf")==0)
-      {
-        data = AIR_POS_INF;
-      }
-      else
-      {
-        in.clear();
-        in.get(&(ibuf[3]),2);
-        // Set the last character to null for airToLower.
-        ibuf[4] = '\0';
-        airToLower(ibuf);
-        if (strcmp(ibuf,"-inf")==0)
-        {
-          data = AIR_NEG_INF;
-        }  	  	
-        else
-        {
-          char buf[100];
-          reporter_->error("Error reading float.");
-          in.clear();
-          in.getline(buf, 100);
-          reporter_->error(string("Rest of line is: ") + ibuf + buf);
-          err = true;
-          return;
-        }
-      }
-    }
-    expect(' ');
-  }
-  else
-  {
-    ostream& out=*ostr;
-    out.precision(16);
-    out << data << " ";
-  }
-#endif
 }
 
 
@@ -1706,11 +1577,7 @@ FastPiostream::FastPiostream(const string& filename, Direction dir,
     if (version() > 1)
     {
       char hdr[16];
-#ifdef HAVE_TEEM
-      if (airMyEndian == airEndianLittle)
-#else
       if ( isLittleEndian() )
-#endif
 	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version_);
       else
 	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version_);
@@ -1779,11 +1646,7 @@ FastPiostream::FastPiostream(int fd, Direction dir, ProgressReporter *pr)
     if (version() > 1)
     {
       char hdr[16];
-#ifdef HAVE_TEEM
-      if (airMyEndian == airEndianLittle)
-#else
       if ( isLittleEndian() )
-#endif
 	sprintf(hdr, "SCI\nFAS\n%03d\nLIT\n", version_);
       else
 	sprintf(hdr, "SCI\nFAS\n%03d\nBIG\n", version_);

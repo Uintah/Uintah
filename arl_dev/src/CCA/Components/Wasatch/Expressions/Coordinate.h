@@ -1,10 +1,7 @@
-#ifndef Coordinates_h
-#define Coordinates_h
-
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +21,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+#ifndef Coordinates_h
+#define Coordinates_h
 
 //-- ExprLib Includes --//
 #include <expression/Expression.h>
@@ -79,9 +79,7 @@ namespace Wasatch{
     
     ~Coordinates();
         
-    void advertise_dependents( Expr::ExprDeps& exprDeps );
     void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-    void bind_fields( const Expr::FieldManagerList& fml );
     void evaluate();
     
   };

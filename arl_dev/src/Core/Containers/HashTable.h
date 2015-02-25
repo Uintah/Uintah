@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -391,11 +391,12 @@ HashKey<Key, Data>::HashKey(const Key& k, const Data& d, HashKey<Key, Data>* n)
 }
 
 template<class Key, class Data>
-HashTableIter<Key, Data>::HashTableIter(HashTable<Key, Data>* hash_table)
-  : hash_table(hash_table)
+HashTableIter<Key, Data>::HashTableIter( HashTable<Key, Data> * hash_table )
+  : hash_table( hash_table )
 {
   current_key=0;
   current_index=0;
+  first();
 }
 
 // Set the iterator to the beginning

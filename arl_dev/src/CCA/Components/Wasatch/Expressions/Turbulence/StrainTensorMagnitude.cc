@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,15 +39,17 @@ StrainTensorSquare( const Expr::Tag& s11Tag,
                     const Expr::Tag& s22Tag,
                     const Expr::Tag& s32Tag,
                     const Expr::Tag& s33Tag )
-  : Expr::Expression<SVolField>(),
-    S11Tag_(s11Tag),
-    S21Tag_(s21Tag),
-    S31Tag_(s31Tag),
-    S22Tag_(s22Tag),
-    S32Tag_(s32Tag),
-    S33Tag_(s33Tag)
+  : Expr::Expression<SVolField>()
 {
   this->set_gpu_runnable( true );
+   S11_ = create_field_request<S11T>(s11Tag);
+   S21_ = create_field_request<S21T>(s21Tag);
+   S31_ = create_field_request<S31T>(s31Tag);
+  
+   S22_ = create_field_request<S22T>(s22Tag);
+   S32_ = create_field_request<S32T>(s32Tag);
+
+   S33_ = create_field_request<S33T>(s33Tag);
 }
 
 //--------------------------------------------------------------------
@@ -55,40 +57,6 @@ StrainTensorSquare( const Expr::Tag& s11Tag,
 StrainTensorSquare::
 ~StrainTensorSquare()
 {}
-
-//--------------------------------------------------------------------
-
-void
-StrainTensorSquare::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( S11Tag_ );
-  exprDeps.requires_expression( S21Tag_ );
-  exprDeps.requires_expression( S31Tag_ );
-
-  exprDeps.requires_expression( S22Tag_ );
-  exprDeps.requires_expression( S32Tag_ );
-
-  exprDeps.requires_expression( S33Tag_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-StrainTensorSquare::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  namespace so = SpatialOps;
-  
-  S11_ = &fml.field_ref<so::XSurfXField>(S11Tag_);
-  S21_ = &fml.field_ref<so::XSurfYField>(S21Tag_);
-  S31_ = &fml.field_ref<so::XSurfZField>(S31Tag_);
-
-  S22_ = &fml.field_ref<so::YSurfYField>(S22Tag_);
-  S32_ = &fml.field_ref<so::YSurfZField>(S32Tag_);
-
-  S33_ = &fml.field_ref<so::ZSurfZField>(S33Tag_);
-}
 
 //--------------------------------------------------------------------
 
@@ -112,13 +80,23 @@ evaluate()
 {
   using namespace SpatialOps;
   SVolField& strTsrMag = this->value();
+  
+  const S11T& S11 = S11_->field_ref();
+  const S21T& S21 = S21_->field_ref();
+  const S31T& S31 = S31_->field_ref();
+
+  const S22T& S22 = S22_->field_ref();
+  const S32T& S32 = S32_->field_ref();
+
+  const S33T& S33 = S33_->field_ref();
+  
   strTsrMag <<= 0.0;
-  strTsrMag <<= (*xxInterpOp_)(*S11_) * (*xxInterpOp_)(*S11_) // S11*S11
-              + (*yyInterpOp_)(*S22_) * (*yyInterpOp_)(*S22_) // S22*S22
-              + (*zzInterpOp_)(*S33_) * (*zzInterpOp_)(*S33_) // S33*S33
-              + 2.0 * (*xyInterpOp_)(*S21_) * (*xyInterpOp_)(*S21_) // S12*S12 + S21*S21 = 2.0*S21*S21
-              + 2.0 * (*xzInterpOp_)(*S31_) * (*xzInterpOp_)(*S31_) // S13*S13 + S31*S31 = 2.0*S31*S31
-              + 2.0 * (*yzInterpOp_)(*S32_) * (*yzInterpOp_)(*S32_);// S23*S23 + S32*S32 = 2.0*S32*S32 */
+  strTsrMag <<= (*xxInterpOp_)(S11) * (*xxInterpOp_)(S11) // S11*S11
+              + (*yyInterpOp_)(S22) * (*yyInterpOp_)(S22) // S22*S22
+              + (*zzInterpOp_)(S33) * (*zzInterpOp_)(S33) // S33*S33
+              + 2.0 * (*xyInterpOp_)(S21) * (*xyInterpOp_)(S21) // S12*S12 + S21*S21 = 2.0*S21*S21
+              + 2.0 * (*xzInterpOp_)(S31) * (*xzInterpOp_)(S31) // S13*S13 + S31*S31 = 2.0*S31*S31
+              + 2.0 * (*yzInterpOp_)(S32) * (*yzInterpOp_)(S32);// S23*S23 + S32*S32 = 2.0*S32*S32 */
 }
 
 //--------------------------------------------------------------------
@@ -176,6 +154,10 @@ evaluate()
   using namespace SpatialOps;
   SVolField& waleTsrMag = this->value();
 
+  const XVolField& u = u_->field_ref();
+  const YVolField& v = v_->field_ref();
+  const ZVolField& w = w_->field_ref();
+  
   // gij = dui/dxj is the velocity gradient tensor
   SpatFldPtr<SVolField> g11 = SpatialFieldStore::get<SVolField>( waleTsrMag );
   SpatFldPtr<SVolField> g12 = SpatialFieldStore::get<SVolField>( waleTsrMag );
@@ -188,19 +170,19 @@ evaluate()
   SpatFldPtr<SVolField> g33 = SpatialFieldStore::get<SVolField>( waleTsrMag );
 
   // dui/dxi fields
-  *g11 <<= (*dudxOp_)(*vel1_); // dudx
-  *g22 <<= (*dvdyOp_)(*vel2_); // dvdy
-  *g33 <<= (*dwdzOp_)(*vel3_); // dwdz
+  *g11 <<= (*dudxOp_)(u); // dudx
+  *g22 <<= (*dvdyOp_)(v); // dvdy
+  *g33 <<= (*dwdzOp_)(w); // dwdz
 
   // cell centered dui/dxj fields
-  *g12 <<= (*xyInterpOp_)( (*dudyOp_)(*vel1_) ); // cell centered dudy
-  *g21 <<= (*yxInterpOp_)( (*dvdxOp_)(*vel2_) ); // cell centered dvdx
+  *g12 <<= (*xyInterpOp_)( (*dudyOp_)(u) ); // cell centered dudy
+  *g21 <<= (*yxInterpOp_)( (*dvdxOp_)(v) ); // cell centered dvdx
   
-  *g13 <<= (*xzInterpOp_)( (*dudzOp_)(*vel1_) ); // cell centered dudz
-  *g31 <<= (*zxInterpOp_)( (*dwdxOp_)(*vel3_) ); // cell centered dwdx
+  *g13 <<= (*xzInterpOp_)( (*dudzOp_)(u) ); // cell centered dudz
+  *g31 <<= (*zxInterpOp_)( (*dwdxOp_)(w) ); // cell centered dwdx
   
-  *g23 <<= (*yzInterpOp_)( (*dvdzOp_)(*vel2_) ); // cell centered dvdz
-  *g32 <<= (*zyInterpOp_)( (*dwdyOp_)(*vel3_) ); // cell centered dwdy
+  *g23 <<= (*yzInterpOp_)( (*dvdzOp_)(v) ); // cell centered dvdz
+  *g32 <<= (*zyInterpOp_)( (*dwdyOp_)(w) ); // cell centered dwdy
 
   // NOTE: the gd_ij tensor corresponds to the \bar(g^2)_ij tensor in the 
   // Nicoud and Ducros original paper.
@@ -281,6 +263,10 @@ evaluate()
   using namespace SpatialOps;
   SVolField& vremanTsrMag = this->value();
   
+  const XVolField& u = u_->field_ref();
+  const YVolField& v = v_->field_ref();
+  const ZVolField& w = w_->field_ref();
+
   // aij corresponds to alpha_ij in the Vreman paper (eq. 6)
   SpatFldPtr<SVolField> a11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   SpatFldPtr<SVolField> a12 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
@@ -293,19 +279,19 @@ evaluate()
   SpatFldPtr<SVolField> a33 = SpatialFieldStore::get<SVolField>( vremanTsrMag );
   
   // dui/dxi fields
-  *a11 <<= (*dudxOp_)(*vel1_); // dudx
-  *a22 <<= (*dvdyOp_)(*vel2_); // dvdy
-  *a33 <<= (*dwdzOp_)(*vel3_); // dwdz
+  *a11 <<= (*dudxOp_)(u); // dudx
+  *a22 <<= (*dvdyOp_)(v); // dvdy
+  *a33 <<= (*dwdzOp_)(w); // dwdz
   
   // cell centered duj/dxi fields
-  *a21 <<= (*xyInterpOp_)( (*dudyOp_)(*vel1_) ); // cell centered dudy
-  *a12 <<= (*yxInterpOp_)( (*dvdxOp_)(*vel2_) ); // cell centered dvdx
+  *a21 <<= (*xyInterpOp_)( (*dudyOp_)(u) ); // cell centered dudy
+  *a12 <<= (*yxInterpOp_)( (*dvdxOp_)(v) ); // cell centered dvdx
   
-  *a31 <<= (*xzInterpOp_)( (*dudzOp_)(*vel1_) ); // cell centered dudz
-  *a13 <<= (*zxInterpOp_)( (*dwdxOp_)(*vel3_) ); // cell centered dwdx
+  *a31 <<= (*xzInterpOp_)( (*dudzOp_)(u) ); // cell centered dudz
+  *a13 <<= (*zxInterpOp_)( (*dwdxOp_)(w) ); // cell centered dwdx
 
-  *a32 <<= (*yzInterpOp_)( (*dvdzOp_)(*vel2_) ); // cell centered dvdz
-  *a23 <<= (*zyInterpOp_)( (*dwdyOp_)(*vel3_) ); // cell centered dwdy
+  *a32 <<= (*yzInterpOp_)( (*dvdzOp_)(v) ); // cell centered dvdz
+  *a23 <<= (*zyInterpOp_)( (*dwdyOp_)(w) ); // cell centered dwdy
   
   // bij corresponds to beta_ij in the Vreman paper (eq. 7)
   SpatFldPtr<SVolField> b11 = SpatialFieldStore::get<SVolField>( vremanTsrMag );

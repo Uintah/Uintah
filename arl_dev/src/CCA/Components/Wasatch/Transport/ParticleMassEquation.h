@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -35,9 +35,7 @@
 class ParticleMassIC
 : public Expr::Expression<ParticleField>
 {
-  const Expr::Tag pRhoTag_, pDiameterTag_;
-  const ParticleField* pRho_;
-  const ParticleField* pDiameter_;
+  DECLARE_FIELDS(ParticleField, pRho_, pDiameter_);
   
   /* declare operators associated with this expression here */
   
@@ -61,10 +59,6 @@ public:
     const Expr::Tag pRhoTag_, pDiameterTag_;
   };
   
-  ~ParticleMassIC();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 

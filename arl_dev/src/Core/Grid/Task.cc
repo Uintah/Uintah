@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,16 +23,17 @@
  */
 
 #include <Core/Grid/Task.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Grid/Patch.h>
-#include <Core/Grid/Level.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Parallel/Parallel.h>
-#include <set>
 
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Util/StringUtil.h>
+
+#include <set>
 
 using namespace std;
 using namespace Uintah;

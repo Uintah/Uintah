@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -69,8 +69,6 @@ namespace Uintah {
     bool        d_useCBDI; // Flag for using CBDI boundary condition treatment
     bool        d_useCPTI; // Flag for using CPTI interpolator 
     bool        d_useCohesiveZones; // Flag for using cohesive zones
-    bool        d_createNewParticles; // Flag to decide whether to create
-                                         // new particles after failure
     bool        d_doErosion; // Flag to decide whether to erode or not
     bool        d_deleteRogueParticles;// Flag to delete rogue particles
     bool        d_doThermalExpansion; // Decide whether to do thermExp or not
@@ -80,6 +78,7 @@ namespace Uintah {
     int         d_minGridLevel; // Only do MPM on this grid level
     int         d_maxGridLevel; // Only do MPM on this grid level
     bool        doMPMOnLevel(int level, int numLevels) const;
+    bool        d_refineParticles;  // Refine particles, step toward AMR
    
     std::string d_erosionAlgorithm; // Algorithm to erode material points
  
@@ -90,7 +89,7 @@ namespace Uintah {
     bool        d_do_contact_friction;
     double      d_addFrictionWork;     // 1 == add , 0 == do not add
 
-    int         d_extraSolverFlushes;  // Have PETSc do more flushes to save memory
+    int         d_extraSolverFlushes;  // Have PETSc flush more to save memory
     bool        d_doImplicitHeatConduction;
     bool        d_doTransientImplicitHeatConduction;
     bool        d_doExplicitHeatConduction;

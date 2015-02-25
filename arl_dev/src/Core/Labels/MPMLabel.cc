@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -162,6 +162,12 @@ MPMLabel::MPMLabel()
 			ParticleVariable<int>::getTypeDescription() );
   
   pLocalizedMPMLabel_preReloc  = VarLabel::create( "p.localizedMPM+",
+			ParticleVariable<int>::getTypeDescription() );
+  
+  pRefinedLabel       = VarLabel::create( "p.refinedMPM",
+			ParticleVariable<int>::getTypeDescription() );
+  
+  pRefinedLabel_preReloc  = VarLabel::create( "p.refinedMPM+",
 			ParticleVariable<int>::getTypeDescription() );
   
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
@@ -784,6 +790,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pScaleFactorLabel_preReloc);
   VarLabel::destroy(pLocalizedMPMLabel);
   VarLabel::destroy(pLocalizedMPMLabel_preReloc);
+  VarLabel::destroy(pRefinedLabel);
+  VarLabel::destroy(pRefinedLabel_preReloc);
   VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);

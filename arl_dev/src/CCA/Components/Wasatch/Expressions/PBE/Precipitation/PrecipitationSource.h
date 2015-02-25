@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,18 +47,15 @@ template< typename FieldT >
 class PrecipitationSource
 : public Expr::Expression<FieldT>
 {
-  const Expr::TagList sourceTagList_;      ///< these are the tags of all the known sources
-  const Expr::Tag etaScaleTag_;            ///< this expression value can be read table header and takign inverse
-  const Expr::Tag densityTag_;             ///< rho to multiply source term by, since scalar solution is for dphirho/dt
-  const Expr::Tag envWeightTag_;           // weight tag for middle environment of multi mix model (optional)
+//  const Expr::TagList sourceTagList_;      ///< these are the tags of all the known sources
+//  const Expr::Tag etaScaleTag_;            ///< this expression value can be read table header and takign inverse
+//  const Expr::Tag densityTag_;             ///< rho to multiply source term by, since scalar solution is for dphirho/dt
+//  const Expr::Tag envWeightTag_;           // weight tag for middle environment of multi mix model (optional)
   const std::vector< double > molecVols_;  ///< \f$\nu\f$ in the source evaluation
-
-  typedef std::vector<const FieldT*> FieldVec;
-  FieldVec sources_;
-  const FieldT* etaScale_;
-  const FieldT* density_;
-  const FieldT* envWeight_;
-
+  const bool hasEnvWeight_;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, sources_);
+  DECLARE_FIELDS(FieldT, etaScale_, density_, envWeight_);
+  
   PrecipitationSource( const Expr::TagList& sourceTagList_,
                        const Expr::Tag& etaScaleTag_,
                        const Expr::Tag& densityTag_,
@@ -97,9 +94,6 @@ public:
   };
 
   ~PrecipitationSource();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };
@@ -118,13 +112,14 @@ PrecipitationSource( const Expr::TagList& sourceTagList,
                      const Expr::Tag& envWeightTag,
                      const std::vector<double>& molecVols)
 : Expr::Expression<FieldT>(),
-  sourceTagList_(sourceTagList),
-  etaScaleTag_  (etaScaleTag),
-  densityTag_   (densityTag),
-  envWeightTag_ (envWeightTag),
-  molecVols_    (molecVols)
+  molecVols_    (molecVols),
+  hasEnvWeight_(envWeightTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  this->template create_field_vector_request<FieldT>(sourceTagList, sources_);
+   etaScale_ = this->template create_field_request<FieldT>(etaScaleTag);
+   density_ = this->template create_field_request<FieldT>(densityTag);
+  if (hasEnvWeight_)  envWeight_ = this->template create_field_request<FieldT>(envWeightTag);
 }
 
 //--------------------------------------------------------------------
@@ -139,38 +134,6 @@ PrecipitationSource<FieldT>::
 template< typename FieldT >
 void
 PrecipitationSource<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( sourceTagList_ );
-  exprDeps.requires_expression( etaScaleTag_ );
-  exprDeps.requires_expression( densityTag_ );
-  if ( envWeightTag_ != Expr::Tag() )
-    exprDeps.requires_expression( envWeightTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationSource<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  sources_.clear();
-  for (Expr::TagList::const_iterator isource=sourceTagList_.begin(); isource!=sourceTagList_.end(); isource++) {
-    sources_.push_back(&fm.field_ref(*isource) );
-  }
-  etaScale_ = &fm.field_ref( etaScaleTag_ );
-  density_ = &fm.field_ref( densityTag_ );
-  if ( envWeightTag_ != Expr::Tag() )
-    envWeight_ = &fm.field_ref( envWeightTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationSource<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -178,17 +141,21 @@ evaluate()
   result <<= 0.0;
   
   const size_t nSources_ = molecVols_.size();
-  typename FieldVec::const_iterator sourceIterator = sources_.begin();
+//  typename FieldVec::const_iterator sourceIterator = sources_.begin();
+  
+  const FieldT& etaScale = etaScale_->field_ref();
+  const FieldT& rho = density_->field_ref();
   
   for (size_t i = 0; i < nSources_; i++) {
-    if (envWeightTag_ != Expr::Tag () ) {
-      result <<= cond( *etaScale_ > 0.0, result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ * *envWeight_ / *etaScale_ )
+    const FieldT& src = sources_[i]->field_ref();
+    if ( hasEnvWeight_ ) {
+      const FieldT& envW = envWeight_->field_ref();
+      result <<= cond( etaScale > 0.0, result + 4.0/3.0*PI * molecVols_[i] * src * rho * envW / etaScale )
                      (0.0);
     } else {
-      result <<= cond( *etaScale_ > 0.0, result + 4.0/3.0*PI * molecVols_[i] * **sourceIterator * *density_ / *etaScale_ )
+      result <<= cond( etaScale > 0.0, result + 4.0/3.0*PI * molecVols_[i] * src * rho / etaScale )
                      (0.0);
     }
-    ++sourceIterator;
   }
 }
 

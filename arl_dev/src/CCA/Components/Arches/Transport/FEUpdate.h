@@ -95,10 +95,6 @@ private:
   template <typename T>
   void FEUpdate<T>::problemSetup( ProblemSpecP& db ){ 
 
-    _do_ts_init_task = false;
-    _do_init_task    = false;
-    _do_bcs_task     = false;
-
   }
 
 

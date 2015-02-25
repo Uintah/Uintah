@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -26,18 +26,17 @@
 #ifndef UINTAH_HOMEBREW_LOADBALANCER_H
 #define UINTAH_HOMEBREW_LOADBALANCER_H
 
-#include <Core/Parallel/UintahParallelPort.h>
-#include <Core/Grid/Variables/ComputeSet.h>
+#include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/GridP.h>
 #include <Core/Grid/LevelP.h>
-#include <Core/Grid/SimulationStateP.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/Region.h>
-#include <string>
-
+#include <Core/Grid/SimulationStateP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Parallel/UintahParallelPort.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 
 #include <set>
+#include <string>
 
 namespace Uintah {
 
@@ -50,6 +49,7 @@ namespace Uintah {
   class DetailedTask;
 
   typedef std::vector<SCIRun::IntVector> SizeList;
+
 /****************************************
 
 CLASS
@@ -95,16 +95,11 @@ WARNING
     virtual int getPatchwiseProcessorAssignment(const Patch* patch) = 0;
 
     //! Gets the processor that this patch was assigned to on the last timestep.
-    //! This is the same as getPatchwiseProcessorAssignment for non-dynamic load balancers.
-    //! See getPatchwiseProcessorAssignment.
-    virtual int getOldProcessorAssignment(const VarLabel*,
-					  const Patch* patch, const int)
-      { return getPatchwiseProcessorAssignment(patch); }
+    virtual int getOldProcessorAssignment( const Patch * patch ) = 0;
 
     //! Determines if the Load Balancer requests a taskgraph recompile.
     //! Only possible for Dynamic Load Balancers.
-    virtual bool needRecompile(double, double, const GridP&)
-      { return false; }
+    virtual bool needRecompile( double, double, const GridP& ) { return false; }
 
     //! In AMR, we need to tell the Load balancer that we're regridding
     //    virtual void doRegridTimestep() {}
@@ -143,25 +138,30 @@ WARNING
 
     //! Returns the processor the patch will be output on (not patchwiseProcessor
     //! if outputNthProc is set)
-    virtual int getOutputProc(const Patch* patch) = 0;
+    virtual int getOutputProc( const Patch * patch ) = 0;
 
     //! Tells the load balancer on which procs data was output.
-    virtual void restartInitialize(DataArchive* archive, int time_index, ProblemSpecP& pspec, std::string, const GridP& grid) {}
+    virtual void restartInitialize( DataArchive * archive, const int time_index, const std::string & ts_url, const GridP & grid ) = 0;
     
     // state variables
     enum {
       check = 0, init, regrid, restart
     };
 
-  //cost profiling functions
-    //update the contribution for this patch
-    virtual void addContribution(DetailedTask *task, double cost) {};
-    //finalize the contributions (updates the weight, should be called once per timestep)
-    virtual void finalizeContributions(const GridP currentgrid) {};
-    //initializes the weights in regions in the new grid that are not in the old level
-    virtual void initializeWeights(const Grid* oldgrid, const Grid* newgrid) {};
-    //resets forecaster to the defaults
-    virtual void resetCostForecaster() {};
+    //////////////////////////////////////////////////
+    // Cost profiling functions:
+
+    // Update the contribution for this patch.
+    virtual void addContribution( DetailedTask *task, double cost ) = 0;
+
+    // Finalize the contributions (updates the weight, should be called once per timestep).
+    virtual void finalizeContributions( const GridP & currentgrid ) = 0;
+
+    // Initializes the weights in regions in the new grid that are not in the old level.
+    virtual void initializeWeights( const Grid* oldgrid, const Grid* newgrid ) = 0;
+
+    // Resets forecaster to the defaults.
+    virtual void resetCostForecaster() = 0;
     
   private:
     LoadBalancer(const LoadBalancer&);

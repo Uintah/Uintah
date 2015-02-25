@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -90,10 +90,8 @@ namespace Wasatch{
     const Uintah::VarLabel* phiLabel_;
     const Uintah::VarLabel* phirhsLabel_;
     
-    const double* timestep_;
+    DECLARE_FIELD(SVolField, phiRhs_);
     
-    const SVolField* phirhs_;
-        
     typedef Uintah::CCVariable<Uintah::Stencil4> MatType;
     MatType matrix_;
     const Uintah::Patch* patch_;
@@ -178,7 +176,7 @@ namespace Wasatch{
      *  are very uintah-specific and only used internally to this
      *  expression.  Specifically, the PoissonExpression-rhs field and the LHS
      *  matrix.  All other variables should be expressed as dependencies
-     *  through the advertise_dependents method.
+     *  through the DECLARE_FIELD macro.
      */
     void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
@@ -200,9 +198,6 @@ namespace Wasatch{
                        Uintah::DataWarehouse* const oldDW,
                        Uintah::DataWarehouse* const newDW);
     
-    //Uintah::CCVariable<Uintah::Stencil7> PoissonExpression_matrix(){ return matrix_ ;}
-    void advertise_dependents( Expr::ExprDeps& exprDeps );
-    void bind_fields( const Expr::FieldManagerList& fml );
     void evaluate();
     
   };

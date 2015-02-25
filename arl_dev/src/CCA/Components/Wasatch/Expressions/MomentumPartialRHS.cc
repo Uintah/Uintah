@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,22 +43,36 @@ MomRHSPart( const Expr::Tag& convFluxX,
             const Expr::Tag& srcTermTag,
             const Expr::Tag& volFracTag )
   : Expr::Expression<FieldT>(),
-    cfluxXt_   ( convFluxX    ),
-    cfluxYt_   ( convFluxY    ),
-    cfluxZt_   ( convFluxZ    ),
-    viscTag_   ( viscTag      ),
-    tauXt_     ( tauX         ),
-    tauYt_     ( tauY         ),
-    tauZt_     ( tauZ         ),
-    densityt_  ( densityTag   ),
-    bodyForcet_( bodyForceTag ),
-    srcTermt_  ( srcTermTag   ),
-    emptyTag_  ( Expr::Tag()  ),
-    volfract_  ( volFracTag   ),
-    is3dconvdiff_( cfluxXt_ != emptyTag_ && cfluxYt_ != emptyTag_ && cfluxZt_ != emptyTag_ &&
-                   tauXt_   != emptyTag_ && tauYt_   != emptyTag_ && tauZt_   != emptyTag_ )
+    doXConv_( convFluxX != Expr::Tag()),
+    doYConv_( convFluxY != Expr::Tag()),
+    doZConv_( convFluxZ != Expr::Tag()),
+
+    doXTau_( tauX != Expr::Tag()),
+    doYTau_( tauY != Expr::Tag()),
+    doZTau_( tauZ != Expr::Tag()),
+
+    is3dconvdiff_( doXConv_ && doYConv_ && doZConv_ && doXTau_ && doYTau_ && doZTau_ ),
+
+    hasBodyF_(bodyForceTag != Expr::Tag()),
+    hasSrcTerm_(srcTermTag != Expr::Tag()),
+    hasIntrusion_(volFracTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  
+  if( doXConv_ )   cFluxX_ = this->template create_field_request<XFluxT>(convFluxX);
+  if( doYConv_ )   cFluxY_ = this->template create_field_request<YFluxT>(convFluxY);
+  if( doZConv_ )   cFluxZ_ = this->template create_field_request<ZFluxT>(convFluxZ);
+  
+  if( doXTau_ )   tauX_ = this->template create_field_request<XFluxT>(tauX);
+  if( doYTau_ )   tauY_ = this->template create_field_request<YFluxT>(tauY);
+  if( doZTau_ )   tauZ_ = this->template create_field_request<ZFluxT>(tauZ);
+
+  if(doXTau_ || doYTau_ || doZTau_)  visc_ = this->template create_field_request<SVolField>(viscTag);
+   density_ = this->template create_field_request<SVolField>(densityTag);
+  
+  if( hasBodyF_ )   bodyForce_ = this->template create_field_request<FieldT>(bodyForceTag);
+  if( hasSrcTerm_ )   srcTerm_ = this->template create_field_request<FieldT>(srcTermTag);
+  if( hasIntrusion_ )   volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------
@@ -73,66 +87,17 @@ MomRHSPart<FieldT>::
 template< typename FieldT >
 void
 MomRHSPart<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if ( cfluxXt_ != emptyTag_ )  exprDeps.requires_expression( cfluxXt_ );
-  if ( cfluxYt_ != emptyTag_ )  exprDeps.requires_expression( cfluxYt_ );
-  if ( cfluxZt_ != emptyTag_ )  exprDeps.requires_expression( cfluxZt_ );
-  if ( tauXt_   != emptyTag_ )  exprDeps.requires_expression( tauXt_   );
-  if ( tauYt_   != emptyTag_ )  exprDeps.requires_expression( tauYt_   );
-  if ( tauZt_   != emptyTag_ )  exprDeps.requires_expression( tauZt_   );
-  exprDeps.requires_expression( densityt_);
-  exprDeps.requires_expression( viscTag_);
-  if ( bodyForcet_ != emptyTag_ )  exprDeps.requires_expression( bodyForcet_);
-  if ( srcTermt_   != emptyTag_ )  exprDeps.requires_expression( srcTermt_  );
-  if ( volfract_   != emptyTag_ )  exprDeps.requires_expression( volfract_  );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MomRHSPart<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<XFluxT>::type& xfm = fml.template field_manager<XFluxT>();
-  const typename Expr::FieldMgrSelector<YFluxT>::type& yfm = fml.template field_manager<YFluxT>();
-  const typename Expr::FieldMgrSelector<ZFluxT>::type& zfm = fml.template field_manager<ZFluxT>();
-
-  if( cfluxXt_ != emptyTag_ )  cFluxX_ = &xfm.field_ref(cfluxXt_);
-  if( cfluxYt_ != emptyTag_ )  cFluxY_ = &yfm.field_ref(cfluxYt_);
-  if( cfluxZt_ != emptyTag_ )  cFluxZ_ = &zfm.field_ref(cfluxZt_);
-
-  if( tauXt_ != emptyTag_ )  tauX_ = &xfm.field_ref(tauXt_);
-  if( tauYt_ != emptyTag_ )  tauY_ = &yfm.field_ref(tauYt_);
-  if( tauZt_ != emptyTag_ )  tauZ_ = &zfm.field_ref(tauZt_);
-
-  const typename Expr::FieldMgrSelector<SVolField>::type& svfm= fml.template field_manager<SVolField>();
-  density_ = &svfm.field_ref( densityt_ );
-  visc_    = &svfm.field_ref( viscTag_ );
-  
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  if( bodyForcet_ != emptyTag_ )  bodyForce_ = &fm.field_ref( bodyForcet_ );
-  if( srcTermt_   != emptyTag_ )  srcTerm_   = &fm.field_ref( srcTermt_   );
-  if( volfract_   != emptyTag_ )  volfrac_   = &fm.field_ref( volfract_   );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MomRHSPart<FieldT>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   densityInterpOp_ = opDB.retrieve_operator<DensityInterpT>();
 
-  if( cfluxXt_ != emptyTag_ || tauXt_ != emptyTag_ )  divXOp_ = opDB.retrieve_operator<DivX>();
-  if( cfluxYt_ != emptyTag_ || tauYt_ != emptyTag_ )  divYOp_ = opDB.retrieve_operator<DivY>();
-  if( cfluxZt_ != emptyTag_ || tauZt_ != emptyTag_ )  divZOp_ = opDB.retrieve_operator<DivZ>();
+  if( doXConv_ || doXTau_ )  divXOp_ = opDB.retrieve_operator<DivX>();
+  if( doYConv_ || doYTau_ )  divYOp_ = opDB.retrieve_operator<DivY>();
+  if( doZConv_ || doZTau_ )  divZOp_ = opDB.retrieve_operator<DivZ>();
 
-  if( tauXt_ != emptyTag_ ) sVol2XFluxInterpOp_ = opDB.retrieve_operator<SVol2XFluxInterpT>();
-  if( tauYt_ != emptyTag_ ) sVol2YFluxInterpOp_ = opDB.retrieve_operator<SVol2YFluxInterpT>();
-  if( tauZt_ != emptyTag_ ) sVol2ZFluxInterpOp_ = opDB.retrieve_operator<SVol2ZFluxInterpT>();
+  if( doXTau_ ) sVol2XFluxInterpOp_ = opDB.retrieve_operator<SVol2XFluxInterpT>();
+  if( doYTau_ ) sVol2YFluxInterpOp_ = opDB.retrieve_operator<SVol2YFluxInterpT>();
+  if( doZTau_ ) sVol2ZFluxInterpOp_ = opDB.retrieve_operator<SVol2ZFluxInterpT>();
 }
 
 //--------------------------------------------------------------------
@@ -148,32 +113,41 @@ evaluate()
   result <<= 0.0;
 
   if( is3dconvdiff_ ){ // inline all convective and diffusive contributions
+    const XFluxT& cfx = cFluxX_->field_ref();
+    const YFluxT& cfy = cFluxY_->field_ref();
+    const ZFluxT& cfz = cFluxZ_->field_ref();
+    
+    const XFluxT& tx = tauX_->field_ref();
+    const YFluxT& ty = tauY_->field_ref();
+    const ZFluxT& tz = tauZ_->field_ref();
+
+    const SVolField& mu = visc_->field_ref();
     // note: this does not diff, but is slow:
-    result <<= (*divXOp_)(-*cFluxX_)
-              +(*divYOp_)(-*cFluxY_)
-              +(*divZOp_)(-*cFluxZ_)
-              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(*visc_) * *tauX_ )
-              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(*visc_) * *tauY_ )
-              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
+    result <<= (*divXOp_)(-cfx)
+              +(*divYOp_)(-cfy)
+              +(*divZOp_)(-cfz)
+              + 2.0 * (*divXOp_)((*sVol2XFluxInterpOp_)(mu) * tx )
+              + 2.0 * (*divYOp_)((*sVol2YFluxInterpOp_)(mu) * ty )
+              + 2.0 * (*divZOp_)((*sVol2ZFluxInterpOp_)(mu) * tz );
 //    // this is the fully inlined version, which causes diffs on ~9 tests.
-//    result <<= (*divXOp_)( -*cFluxX_ + 2.0 * (*sVol2XFluxInterpOp_)(*visc_) * *tauX_ ) +
-//               (*divYOp_)( -*cFluxY_ + 2.0 * (*sVol2YFluxInterpOp_)(*visc_) * *tauY_ ) +
-//               (*divZOp_)( -*cFluxZ_ + 2.0 * (*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_ );
+//    result <<= (*divXOp_)( -cfx + 2.0 * (*sVol2XFluxInterpOp_)(mu) * tx ) +
+//               (*divYOp_)( -cfy + 2.0 * (*sVol2YFluxInterpOp_)(mu) * ty ) +
+//               (*divZOp_)( -cfz + 2.0 * (*sVol2ZFluxInterpOp_)(mu) * tz );
   }
   else{ // 1D and 2D cases, or cases with only convection or diffusion - not optimized for these...
-    if( cfluxXt_ != emptyTag_ ) result <<= result - (*divXOp_)(*cFluxX_);
-    if( cfluxYt_ != emptyTag_ ) result <<= result - (*divYOp_)(*cFluxY_);
-    if( cfluxZt_ != emptyTag_ ) result <<= result - (*divZOp_)(*cFluxZ_);
+    if( doXConv_ ) result <<= result - (*divXOp_)(cFluxX_->field_ref());
+    if( doYConv_ ) result <<= result - (*divYOp_)(cFluxY_->field_ref());
+    if( doZConv_ ) result <<= result - (*divZOp_)(cFluxZ_->field_ref());
 
-    if( tauXt_ != emptyTag_ ) result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(*visc_) * *tauX_); // + 2*div(mu*S_xi)
-    if( tauYt_ != emptyTag_ ) result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(*visc_) * *tauY_); // + 2*div(mu*S_yi)
-    if( tauZt_ != emptyTag_ ) result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(*visc_) * *tauZ_); // + 2*div(mu*S_zi)
+    if( doXTau_ ) result <<= result + 2.0 * (*divXOp_)( (*sVol2XFluxInterpOp_)(visc_->field_ref()) * tauX_->field_ref()); // + 2*div(mu*S_xi)
+    if( doYTau_ ) result <<= result + 2.0 * (*divYOp_)( (*sVol2YFluxInterpOp_)(visc_->field_ref()) * tauY_->field_ref()); // + 2*div(mu*S_yi)
+    if( doZTau_ ) result <<= result + 2.0 * (*divZOp_)( (*sVol2ZFluxInterpOp_)(visc_->field_ref()) * tauZ_->field_ref()); // + 2*div(mu*S_zi)
   }
   
   // sum in other terms as required
-  if( bodyForcet_ != emptyTag_ ) result <<= result + (*densityInterpOp_)(*density_) * *bodyForce_;
-  if( srcTermt_   != emptyTag_ ) result <<= result + *srcTerm_;
-  if ( volfract_  != emptyTag_ ) result <<= result * *volfrac_;
+  if( hasBodyF_ ) result <<= result + (*densityInterpOp_)(density_->field_ref()) * bodyForce_->field_ref();
+  if( hasSrcTerm_ ) result <<= result + srcTerm_->field_ref();
+  if ( hasIntrusion_ ) result <<= result * volfrac_->field_ref();
 }
 
 //--------------------------------------------------------------------

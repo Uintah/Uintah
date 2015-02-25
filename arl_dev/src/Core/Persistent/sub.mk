@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -38,7 +38,7 @@ SRCS     += $(SRCDIR)/Persistent.cc     \
 	    $(SRCDIR)/Pstreams.cc 
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Util
-LIBS := $(TEEM_LIBRARY) $(Z_LIBRARY)
+LIBS := $(Z_LIBRARY)
 
 # See commit message for while hacking in the MPI_LIBRARY is necessary.
 ifeq ($(IS_OSX),yes)

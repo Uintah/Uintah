@@ -16,8 +16,7 @@
 class ParticlePositionRHS :
 public Expr::Expression<ParticleField>
 {
-  const Expr::Tag pvelTag_;
-  const ParticleField* pvel_;
+  DECLARE_FIELD(ParticleField, pvel_);
   
   ParticlePositionRHS( const Expr::Tag& particleVelocity );
   
@@ -45,8 +44,6 @@ public:
   
   ~ParticlePositionRHS();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -55,34 +52,16 @@ public:
 //==================================================================
 
 ParticlePositionRHS::
-ParticlePositionRHS( const Expr::Tag& particleVelocity )
-: Expr::Expression<ParticleField>(),
-  pvelTag_( particleVelocity )
+ParticlePositionRHS( const Expr::Tag& particleVelocityTag )
+: Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable( true );
+   pvel_ = create_field_request<ParticleField>(particleVelocityTag);
 }
 
 //------------------------------------------------------------------
 
 ParticlePositionRHS::~ParticlePositionRHS(){}
-
-//------------------------------------------------------------------
-
-void
-ParticlePositionRHS::
-advertise_dependents( Expr::ExprDeps& exprDeps)
-{
-  exprDeps.requires_expression( pvelTag_ );
-}
-
-//------------------------------------------------------------------
-
-void
-ParticlePositionRHS::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  pvel_ = &fml.field_manager<ParticleField>().field_ref( pvelTag_ );
-}
 
 //------------------------------------------------------------------
 
@@ -96,7 +75,7 @@ ParticlePositionRHS::evaluate()
 {
   using SpatialOps::operator<<=;
   ParticleField& rhs = this->value();
-  rhs <<= *pvel_;
+  rhs <<= pvel_->field_ref();
 }
 
 //------------------------------------------------------------------

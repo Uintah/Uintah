@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -56,11 +56,9 @@ class TurbulentDiffusivity
  : public Expr::Expression<SVolField>
 {
   
-  const Expr::Tag tViscTag_, rhoTag_;
   const double tSchmidt_;
-
-  const SVolField *tVisc_, *rho_;
-
+  DECLARE_FIELDS(SVolField, tVisc_, rho_);
+  
   TurbulentDiffusivity( const Expr::Tag rhoTag,
                         const double    tSchmidt,
                         const Expr::Tag tViscTag );
@@ -99,11 +97,6 @@ public:
     const double tSc_;
   };
 
-  ~TurbulentDiffusivity();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
 };

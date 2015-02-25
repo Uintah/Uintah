@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -153,7 +153,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   d_sharedState = sharedState;
   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
 
-  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  dataArchiver = dynamic_cast<Output*>(getPort("output"));
 
   if(!dataArchiver){
     throw InternalError("AMRMPM:couldn't get output port", __FILE__, __LINE__);
@@ -325,6 +325,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pStressLabel);
   t->computes(lb->pVelGradLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pRefinedLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
   t->computes(lb->pCellNAPIDLabel,zeroth_matl);
@@ -501,6 +502,13 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleComputeStressTensor(            sched, patches, matls);
   }
  
+  if(flags->d_computeScaleFactor){
+    for (int l = 0; l < maxLevels; l++) {
+      const LevelP& level = grid->getLevel(l);
+      const PatchSet* patches = level->eachPatch();
+      scheduleComputeParticleScaleFactor(       sched, patches, matls);
+    }
+  }
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -1113,6 +1121,30 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
   }
 }
 
+
+void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
+                                                const PatchSet* patches,
+                                                const MaterialSet* matls)
+
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,
+                        "AMRMPM::scheduleComputeParticleScaleFactor");
+
+  Task* t=scinew Task("AMRMPM::computeParticleScaleFactor",this,
+                      &AMRMPM::computeParticleScaleFactor);
+
+  t->requires(Task::NewDW, lb->pSizeLabel_preReloc,                Ghost::None);
+  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None);
+  t->computes(lb->pScaleFactorLabel_preReloc);
+
+  sched->addTask(t, patches, matls);
+}
+
+
 void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls)
@@ -1130,7 +1162,7 @@ void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
 
   Ghost::GhostType gnone = Ghost::None;
-  t->requires(Task::NewDW, lb->pdTdtLabel_preReloc,             gnone);
+  t->requires(Task::NewDW, lb->pdTdtLabel,                      gnone);
   t->requires(Task::NewDW, lb->pMassLabel_preReloc,             gnone);
 
   t->modifies(lb->pTemperatureLabel_preReloc);
@@ -1559,7 +1591,8 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
         old_dw->get(pDefMeasure_coarse,    lb->pDeformationMeasureLabel, pset);
         new_dw->get(pExternalforce_coarse, lb->pExtForceLabel_preReloc,  pset);
 
-        for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+        for (ParticleSubset::iterator iter  = pset->begin();
+                                      iter != pset->end(); iter++){
           particleIndex idx = *iter;
 
           // Get the node indices that surround the fine patch cell
@@ -1574,9 +1607,7 @@ void AMRMPM::interpolateParticlesToGrid_CFI(const ProcessorGroup*,
           IntVector fineNode;
           for(int k = 0; k < (int) ni.size(); k++) {
             fineNode = ni[k];
-            
-            //S[k] *= pErosion[idx];
-            
+
             gMass_fine[fineNode]          += pMass_coarse[idx]          * S[k];
             gVelocity_fine[fineNode]      += pmom                       * S[k];
             gVolume_fine[fineNode]        += pVolume_coarse[idx]        * S[k];
@@ -1666,13 +1697,12 @@ void AMRMPM::coarsenNodalData_CFI(const ProcessorGroup*,
         const Patch* finePatch = finePatches[fp];
         if(finePatch->hasCoarseFaces() ){
 
-          // get fine level data                                                                                  
-          constNCVariable<double> gMass_fine;                                                                     
+          // get fine level data
+          constNCVariable<double> gMass_fine;
           constNCVariable<double> gVolume_fine;
           constNCVariable<Vector> gVelocity_fine;
           constNCVariable<Vector> gExternalforce_fine;
           constNCVariable<double> gTemperature_fine;
-//          Ghost::GhostType  gn = Ghost::None; 
 
           if(flag == coarsenData){
             // use getRegion() instead of get().  They should be equivalent but 
@@ -2406,7 +2436,7 @@ void AMRMPM::setGridBoundaryConditions(const ProcessorGroup*,
   }  // patch loop
 }
 //______________________________________________________________________
-//
+
 void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                     const PatchSubset* patches,
                                     const MaterialSubset*,
@@ -2475,7 +2505,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
             bool isRight_CP_FP_pair;
             
             coarseLevel_CFI_NodeIterator( patchFace,patch, finePatch, fineLevel,
-                                          n_iter ,isRight_CP_FP_pair);
+                                          n_iter, isRight_CP_FP_pair);
 
             // The ZOI element is opposite
             // of the patch face
@@ -2550,12 +2580,9 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
                                           n_iter ,isRight_CP_FP_pair);
                                           
             int element = patchFace;
-            
-            IntVector dir = finePatch->getFaceAxes(patchFace);        // face axes
-            int p_dir = dir[0];                                       // normal direction 
-            
+            IntVector dir = finePatch->getFaceAxes(patchFace); // face axes
+            int p_dir = dir[0];                                // normal dir 
 
-            
             // Is this the right coarse/fine patch pair
             if (isRight_CP_FP_pair){
               setFace = true; 
@@ -2574,16 +2601,15 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
           }  // coarsePatches loop
           
           // bulletproofing
-          if( !setFace ){                                                               
-              ostringstream warn;                                                      
+          if( !setFace ){ 
+              ostringstream warn;
               warn << "\n ERROR: computeZoneOfInfluence:Fine Level: Did not find node   iterator! "
-                   << "\n coarse: L-" << level->getIndex()                       
-                   << "\n coarePatches size: " << coarsePatches.size()                              
-                   << "\n fine patch:   " << *finePatch                                
-                   << "\n fine patch face: " << finePatch->getFaceName(patchFace);     
-
-              throw ProblemSetupException(warn.str(), __FILE__, __LINE__);             
-          }                                                                            
+                   << "\n coarse: L-" << level->getIndex()
+                   << "\n coarePatches size: " << coarsePatches.size()
+                   << "\n fine patch:   " << *finePatch
+                   << "\n fine patch face: " << finePatch->getFaceName(patchFace);
+              throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+          }
         }  // face interator
       }  // patch has coarse face 
     }  // has finer level
@@ -3194,7 +3220,7 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
 
-      new_dw->get(pdTdt,        lb->pdTdtLabel_preReloc,             pset);
+      new_dw->get(pdTdt,        lb->pdTdtLabel,                      pset);
       new_dw->get(pmassNew,     lb->pMassLabel_preReloc,             pset);
 
       new_dw->getModifiable(pTempNew, lb->pTemperatureLabel_preReloc,pset);
@@ -3215,6 +3241,47 @@ void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
       new_dw->deleteParticles(delset);
     } // materials
   } // patches
+}
+
+void AMRMPM::computeParticleScaleFactor(const ProcessorGroup*,
+                                        const PatchSubset* patches,
+                                        const MaterialSubset* ,
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
+{
+  // This task computes the particles initial physical size, to be used
+  // in scaling particles for the deformed particle vis feature
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing, "Doing computeParticleScaleFactor");
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+      constParticleVariable<Matrix3> psize,pF;
+      ParticleVariable<Matrix3> pScaleFactor;
+      new_dw->get(psize,        lb->pSizeLabel_preReloc,                  pset);
+      new_dw->get(pF,           lb->pDeformationMeasureLabel_preReloc,    pset);
+      new_dw->allocateAndPut(pScaleFactor, lb->pScaleFactorLabel_preReloc,pset);
+
+      if(dataArchiver->isOutputTimestep()){
+        Vector dx = patch->dCell();
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          pScaleFactor[idx] = (pF[idx]*psize[idx]*Matrix3(dx[0],0,0,
+                                                          0,dx[1],0,
+                                                          0,0,dx[2]));
+
+        } // for particles
+      } // isOutputTimestep
+    } // matls
+  } // patches
+
 }
 
 //______________________________________________________________________

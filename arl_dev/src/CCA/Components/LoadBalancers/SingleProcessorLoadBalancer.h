@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -65,6 +65,10 @@ namespace Uintah {
 
     virtual void assignResources( DetailedTasks & tg );
     virtual int  getPatchwiseProcessorAssignment( const Patch * patch );
+
+    //! The old processor is the same as the current for this load balancer.
+    virtual int  getOldProcessorAssignment( const Patch * patch ) { return getPatchwiseProcessorAssignment( patch ); }
+
             void createNeighborhood( const GridP & grid );
 
     virtual bool inNeighborhood( const PatchSubset* );

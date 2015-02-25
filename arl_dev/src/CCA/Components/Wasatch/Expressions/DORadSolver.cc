@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -146,13 +146,8 @@ namespace Wasatch {
                             Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
 
-    intensityTag_  ( intensityName, Expr::STATE_NONE ),
-    absCoefTag_    ( absCoefTag     ),
-    scatCoefTag_   ( scatCoefTag    ),
-    temperatureTag_( temperatureTag ),
-
     svec_( svec ),
-
+    temperatureTag_(temperatureTag),
     hasAbsCoef_ (  absCoefTag != Expr::Tag() ),
     hasScatCoef_( scatCoefTag != Expr::Tag() ),
 
@@ -174,6 +169,11 @@ namespace Wasatch {
                                                Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
   {
     this->set_gpu_runnable( false );
+    
+     temperature_ = create_field_request<SVolField>(temperatureTag);
+    if( hasAbsCoef_  )   absCoef_ = create_field_request<SVolField>(absCoefTag);
+    if( hasScatCoef_ )  scatCoef_ = create_field_request<SVolField>(scatCoefTag);
+
   }
 
   //--------------------------------------------------------------------
@@ -235,26 +235,6 @@ namespace Wasatch {
 
   //--------------------------------------------------------------------
 
-  void DORadSolver::advertise_dependents( Expr::ExprDeps& exprDeps )
-  {
-    exprDeps.requires_expression( temperatureTag_ );
-
-    if( hasAbsCoef_  ) exprDeps.requires_expression( absCoefTag_  );
-    if( hasScatCoef_ ) exprDeps.requires_expression( scatCoefTag_ );
-  }
-
-  //--------------------------------------------------------------------
-
-  void DORadSolver::bind_fields( const Expr::FieldManagerList& fml )
-  {
-    const Expr::FieldMgrSelector<SVolField>::type& fm = fml.field_manager<SVolField>();
-    temperature_ = &fm.field_ref( temperatureTag_ );
-    if( hasAbsCoef_  )  absCoef_ = &fm.field_ref(  absCoefTag_ );
-    if( hasScatCoef_ ) scatCoef_ = &fm.field_ref( scatCoefTag_ );
-  }
-
-  //--------------------------------------------------------------------
-
   void DORadSolver::setup_matrix( SVolField& rhs, const SVolField& temperature )
   {
     std::cout << "DORadSolver::setup_matrix() for " << this->get_tags() << "\n";
@@ -292,9 +272,9 @@ namespace Wasatch {
 
       // jcs the absCoef_ and scatCoef_ fields are SpatialFields. We need to index them appropriately.
       const SpatialOps::IntVec index( iCell[0], iCell[1], iCell[2] );
-      p -= hasAbsCoef_ ? (*absCoef_)(index) : 1.0;
+      p -= hasAbsCoef_ ? (absCoef_->field_ref())(index) : 1.0;
 
-      if( hasScatCoef_ ) p += (*scatCoef_)(index);
+      if( hasScatCoef_ ) p += (scatCoef_->field_ref())(index);
 
       // This only applies when a boundary is not present.
       // For boundaries, we set the intensity directly.
@@ -362,7 +342,7 @@ namespace Wasatch {
             const double t = temperature(soIndex);
             const double t2 = t*t;
             const double t4 = t2*t2;
-            const double abscoef = hasAbsCoef_ ? (*absCoef_)(soIndex) : 1.0;
+            const double abscoef = hasAbsCoef_ ? (absCoef_->field_ref())(soIndex) : 1.0;
 
             // rhs is the black body intensity
             rhs(soIndex) = sigma * abscoef * t4 / pi;
@@ -387,13 +367,14 @@ namespace Wasatch {
 
     const double sigma = 5.67037321e-8; // Stefan-Boltzmann constant, W/(m^2 K^4)
     const double pi = 3.141592653589793;
-    if( hasAbsCoef_ ) rhs <<= *absCoef_ * sigma * pow(*temperature_,4) / pi;
-    else              rhs <<=             sigma * pow(*temperature_,4) / pi;
+    const SVolField& temperature = temperature_->field_ref();
+    if( hasAbsCoef_ ) rhs <<= absCoef_->field_ref() * sigma * pow(temperature,4) / pi;
+    else              rhs <<=             sigma * pow(temperature,4) / pi;
 
-    setup_matrix( rhs, *temperature_ );
+    setup_matrix( rhs, temperature );
 
     // jcs set guess to be sigma * T^4
-    intensity <<= sigma * pow( *temperature_, 4 );
+    intensity <<= sigma * pow( temperature, 4 );
 
     // the linear system is solved after this...
   }
@@ -434,41 +415,18 @@ namespace Wasatch {
             const Expr::Tag& absCoefTag,
             const OrdinateDirections& ord )
     : Expr::Expression<SVolField>(),
-      temperatureTag_( temperatureTag ),
-      absCoefTag_    ( absCoefTag     ),
       ord_           ( ord            ),
       hasAbsCoef_    ( absCoefTag != Expr::Tag() )
-  {}
+  {
+    
+    create_field_vector_request<SVolField>(DORadSolver::intensityTags, intensity_);
+     temperature_ = create_field_request<SVolField>(temperatureTag);
+    if (hasAbsCoef_)  absCoef_ = create_field_request<SVolField>(absCoefTag);
+  }
 
   //--------------------------------------------------------------------
 
   DORadSrc::~DORadSrc(){}
-
-  //--------------------------------------------------------------------
-
-  void DORadSrc::advertise_dependents( Expr::ExprDeps& exprDeps )
-  {
-    exprDeps.requires_expression( DORadSolver::intensityTags );
-    exprDeps.requires_expression( temperatureTag_            );
-
-    if( hasAbsCoef_ ) exprDeps.requires_expression( absCoefTag_ );
-  }
-
-  //--------------------------------------------------------------------
-
-  void DORadSrc::bind_fields( const Expr::FieldManagerList& fml )
-  {
-    const Expr::FieldMgrSelector<SVolField>::type& fm = fml.field_manager<SVolField>();
-
-    intensity_.clear();
-    BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
-      intensity_.push_back( &fm.field_ref(tag) );
-    }
-
-    temperature_ = &fm.field_ref( temperatureTag_ );
-
-    if( hasAbsCoef_ ) absCoef_ = &fm.field_ref( absCoefTag_ );
-  }
 
   //--------------------------------------------------------------------
 
@@ -477,17 +435,18 @@ namespace Wasatch {
     using namespace SpatialOps;
     SVolField& divQ = this->value();
 
+    const SVolField& temperature = temperature_->field_ref();
     // First, store the scalar flux in divQ.  The scalar flux is:
     //  G = \sum \omega_\ell I^{(\ell)}
-    divQ <<= *intensity_[0] * ord_.get_ordinate_information(0).w;
+    divQ <<= intensity_[0]->field_ref() * ord_.get_ordinate_information(0).w;
     for( size_t i=1; i<intensity_.size(); ++i ){
-      divQ <<= divQ + *intensity_[i] * ord_.get_ordinate_information(i).w;
+      divQ <<= divQ + intensity_[i]->field_ref() * ord_.get_ordinate_information(i).w;
     }
 
     // now calculate div Q:  divQ = \kappa ( 4\sigma T^4 - G )
     const double sigma = 5.67037321e-8; // Stefan-Boltzmann constant, W/(m^2 K^4)
-    if( hasAbsCoef_ ) divQ <<= *absCoef_ * ( 4 * sigma * pow(*temperature_,4) - divQ );
-    else              divQ <<=             ( 4 * sigma * pow(*temperature_,4) - divQ );
+    if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * ( 4 * sigma * pow(temperature,4) - divQ );
+    else              divQ <<=             ( 4 * sigma * pow(temperature,4) - divQ );
   }
 
   //--------------------------------------------------------------------

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -68,6 +68,7 @@ namespace Uintah {
                                    constCCVariable<double>& vol_frac_CC,  
                                    constCCVariable<Vector>& vel_CC,      
                                    const CCVariable<double>& viscosity,        
+                                   constCCVariable<double>& rho_CC,    
                                    SFCXVariable<Vector>& tau_X_FC,
                                    SFCYVariable<Vector>& tau_Y_FC,
                                    SFCZVariable<Vector>& tau_Z_FC ) = 0;

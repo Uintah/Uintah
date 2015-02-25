@@ -272,19 +272,19 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="x-mom" state="STATE_NONE"/>
+       <NameTag name="u" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="y-mom" state="STATE_NONE"/>
+       <NameTag name="v" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="z-mom" state="STATE_NONE"/>
+       <NameTag name="w" state="STATE_NONE"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
@@ -418,281 +418,201 @@
       </Face>
 
       <Face rectangle="y-" lower="0.3000 0.0000 0.0000" upper="0.3500 0.0000 0.0500" name="b1" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="11.7230"/>
-        <BCType label="z-mom" var="Dirichlet" value="10.0833"/>
         <BCType label="v" var="Dirichlet" value="11.7230"/>
         <BCType label="w" var="Dirichlet" value="10.0833"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.3000 0.0000 0.0000" upper="0.3500 0.0500 0.0000" name="b2" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="11.7230"/>
-        <BCType label="z-mom" var="Dirichlet" value="10.0833"/>
         <BCType label="v" var="Dirichlet" value="11.7230"/>
         <BCType label="w" var="Dirichlet" value="10.0833"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.3000 0.8400 0.9500" upper="0.3500 0.8400 1.0000" name="b3" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-11.7230"/>
-        <BCType label="z-mom" var="Dirichlet" value="-10.0833"/>
         <BCType label="v" var="Dirichlet" value="-11.7230"/>
         <BCType label="w" var="Dirichlet" value="-10.0833"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.3000 0.7900 1.0000" upper="0.3500 0.8400 1.0000" name="b4" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-11.7230"/>
-        <BCType label="z-mom" var="Dirichlet" value="-10.0833"/>
         <BCType label="v" var="Dirichlet" value="-11.7230"/>
         <BCType label="w" var="Dirichlet" value="-10.0833"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.3000 0.7900 0.0000" upper="0.3500 0.8400 0.0000" name="b5" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-9.0394"/>
-        <BCType label="z-mom" var="Dirichlet" value="12.7668"/>
         <BCType label="v" var="Dirichlet" value="-9.0394"/>
         <BCType label="w" var="Dirichlet" value="12.7668"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.3000 0.8400 0.0000" upper="0.3500 0.8400 0.0500" name="b6" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-9.0394"/>
-        <BCType label="z-mom" var="Dirichlet" value="12.7668"/>
         <BCType label="v" var="Dirichlet" value="-9.0394"/>
         <BCType label="w" var="Dirichlet" value="12.7668"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.3000 0.0000 1.0000" upper="0.3500 0.0500 1.0000" name="b7" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="9.0394"/>
-        <BCType label="z-mom" var="Dirichlet" value="-12.7668"/>
         <BCType label="v" var="Dirichlet" value="9.0394"/>
         <BCType label="w" var="Dirichlet" value="-12.7668"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.3000 0.0000 0.9500" upper="0.3500 0.0000 1.0000" name="b8" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="9.0394"/>
-        <BCType label="z-mom" var="Dirichlet" value="-12.7668"/>
         <BCType label="v" var="Dirichlet" value="9.0394"/>
         <BCType label="w" var="Dirichlet" value="-12.7668"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.4500 0.0000 0.0000" upper="0.4900 0.0000 0.0400" name="b9" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="16.7831"/>
-        <BCType label="z-mom" var="Dirichlet" value="14.4357"/>
         <BCType label="v" var="Dirichlet" value="16.7831"/>
         <BCType label="w" var="Dirichlet" value="14.4357"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.4500 0.0000 0.0000" upper="0.4900 0.0400 0.0000" name="b10" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="16.7831"/>
-        <BCType label="z-mom" var="Dirichlet" value="14.4357"/>
         <BCType label="v" var="Dirichlet" value="16.7831"/>
         <BCType label="w" var="Dirichlet" value="14.4357"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.4500 0.8400 0.9600" upper="0.4900 0.8400 1.0000" name="b11" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-16.7831"/>
-        <BCType label="z-mom" var="Dirichlet" value="-14.4357"/>
         <BCType label="v" var="Dirichlet" value="-16.7831"/>
         <BCType label="w" var="Dirichlet" value="-14.4357"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.4500 0.8000 1.0000" upper="0.4900 0.8400 1.0000" name="b12" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-16.7831"/>
-        <BCType label="z-mom" var="Dirichlet" value="-14.4357"/>
         <BCType label="v" var="Dirichlet" value="-16.7831"/>
         <BCType label="w" var="Dirichlet" value="-14.4357"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.4500 0.8000 0.0000" upper="0.4900 0.8400 0.0000" name="b13" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-12.9412"/>
-        <BCType label="z-mom" var="Dirichlet" value="18.2776"/>
         <BCType label="v" var="Dirichlet" value="-12.9412"/>
         <BCType label="w" var="Dirichlet" value="18.2776"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.4500 0.8400 0.0000" upper="0.4900 0.8400 0.0400" name="b14" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-12.9412"/>
-        <BCType label="z-mom" var="Dirichlet" value="18.2776"/>
         <BCType label="v" var="Dirichlet" value="-12.9412"/>
         <BCType label="w" var="Dirichlet" value="18.2776"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.4500 0.0000 1.0000" upper="0.4900 0.0400 1.0000" name="b15" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="12.9412"/>
-        <BCType label="z-mom" var="Dirichlet" value="-18.2776"/>
         <BCType label="v" var="Dirichlet" value="12.9412"/>
         <BCType label="w" var="Dirichlet" value="-18.2776"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.4500 0.0000 0.9600" upper="0.4900 0.0000 1.0000" name="b16" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="12.9412"/>
-        <BCType label="z-mom" var="Dirichlet" value="-18.2776"/>
         <BCType label="v" var="Dirichlet" value="12.9412"/>
         <BCType label="w" var="Dirichlet" value="-18.2776"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.2800 0.0000 0.0000" upper="0.2900 0.0000 0.0500" name="b17" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="17.4152"/>
         <BCType label="v" var="Dirichlet" value="20.2471"/>
         <BCType label="w" var="Dirichlet" value="17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.2800 0.0000 0.0000" upper="0.2900 0.0500 0.0000" name="b18" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="17.4152"/>
         <BCType label="v" var="Dirichlet" value="20.2471"/>
         <BCType label="w" var="Dirichlet" value="17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.2800 0.8400 0.9500" upper="0.2900 0.8400 1.0000" name="b19" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="-17.4152"/>
         <BCType label="v" var="Dirichlet" value="-20.2471"/>
         <BCType label="w" var="Dirichlet" value="-17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.2800 0.7900 1.0000" upper="0.2900 0.8400 1.0000" name="b20" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="-17.4152"/>
         <BCType label="v" var="Dirichlet" value="-20.2471"/>
         <BCType label="w" var="Dirichlet" value="-17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.2800 0.7900 0.0000" upper="0.2900 0.8400 0.0000" name="b21" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="22.0500"/>
         <BCType label="v" var="Dirichlet" value="-15.6123"/>
         <BCType label="w" var="Dirichlet" value="22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.2800 0.8400 0.0000" upper="0.2900 0.8400 0.0500" name="b22" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="22.0500"/>
         <BCType label="v" var="Dirichlet" value="-15.6123"/>
         <BCType label="w" var="Dirichlet" value="22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.2800 0.0000 1.0000" upper="0.2900 0.0500 1.0000" name="b23" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="-22.0500"/>
         <BCType label="v" var="Dirichlet" value="15.6123"/>
         <BCType label="w" var="Dirichlet" value="-22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.2800 0.0000 0.9500" upper="0.2900 0.0000 1.0000" name="b24" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="-22.0500"/>
         <BCType label="v" var="Dirichlet" value="15.6123"/>
         <BCType label="w" var="Dirichlet" value="-22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.3600 0.0000 0.0000" upper="0.3700 0.0000 0.0500" name="b25" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="17.4152"/>
         <BCType label="v" var="Dirichlet" value="20.2471"/>
         <BCType label="w" var="Dirichlet" value="17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.3600 0.0000 0.0000" upper="0.3700 0.0500 0.0000" name="b26" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="17.4152"/>
         <BCType label="v" var="Dirichlet" value="20.2471"/>
         <BCType label="w" var="Dirichlet" value="17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.3600 0.8400 0.9500" upper="0.3700 0.8400 1.0000" name="b27" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="-17.4152"/>
         <BCType label="v" var="Dirichlet" value="-20.2471"/>
         <BCType label="w" var="Dirichlet" value="-17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.3600 0.7900 1.0000" upper="0.3700 0.8400 1.0000" name="b28" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-20.2471"/>
-        <BCType label="z-mom" var="Dirichlet" value="-17.4152"/>
         <BCType label="v" var="Dirichlet" value="-20.2471"/>
         <BCType label="w" var="Dirichlet" value="-17.4152"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.3600 0.7900 0.0000" upper="0.3700 0.8400 0.0000" name="b29" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="22.0500"/>
         <BCType label="v" var="Dirichlet" value="-15.6123"/>
         <BCType label="w" var="Dirichlet" value="22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.3600 0.8400 0.0000" upper="0.3700 0.8400 0.0500" name="b30" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="22.0500"/>
         <BCType label="v" var="Dirichlet" value="-15.6123"/>
         <BCType label="w" var="Dirichlet" value="22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.3600 0.0000 1.0000" upper="0.3700 0.0500 1.0000" name="b31" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="-22.0500"/>
         <BCType label="v" var="Dirichlet" value="15.6123"/>
         <BCType label="w" var="Dirichlet" value="-22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.3600 0.0000 0.9500" upper="0.3700 0.0000 1.0000" name="b32" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="15.6123"/>
-        <BCType label="z-mom" var="Dirichlet" value="-22.0500"/>
         <BCType label="v" var="Dirichlet" value="15.6123"/>
         <BCType label="w" var="Dirichlet" value="-22.0500"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.8000 0.0000 0.0000" upper="0.8600 0.0000 0.0700" name="b33" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="6.0916"/>
-        <BCType label="z-mom" var="Dirichlet" value="5.2396"/>
         <BCType label="v" var="Dirichlet" value="6.0916"/>
         <BCType label="w" var="Dirichlet" value="5.2396"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.8000 0.0000 0.0000" upper="0.8600 0.0700 0.0000" name="b34" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="6.0916"/>
-        <BCType label="z-mom" var="Dirichlet" value="5.2396"/>
         <BCType label="v" var="Dirichlet" value="6.0916"/>
         <BCType label="w" var="Dirichlet" value="5.2396"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.8000 0.8400 0.9300" upper="0.8600 0.8400 1.0000" name="b35" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-6.0916"/>
-        <BCType label="z-mom" var="Dirichlet" value="-5.2396"/>
         <BCType label="v" var="Dirichlet" value="-6.0916"/>
         <BCType label="w" var="Dirichlet" value="-5.2396"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.8000 0.7700 1.0000" upper="0.8600 0.8400 1.0000" name="b36" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-6.0916"/>
-        <BCType label="z-mom" var="Dirichlet" value="-5.2396"/>
         <BCType label="v" var="Dirichlet" value="-6.0916"/>
         <BCType label="w" var="Dirichlet" value="-5.2396"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z-" lower="0.8000 0.7700 0.0000" upper="0.8600 0.8400 0.0000" name="b37" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-4.6972"/>
-        <BCType label="z-mom" var="Dirichlet" value="6.6340"/>
         <BCType label="v" var="Dirichlet" value="-4.6972"/>
         <BCType label="w" var="Dirichlet" value="6.6340"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y+" lower="0.8000 0.8400 0.0000" upper="0.8600 0.8400 0.0700" name="b38" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="-4.6972"/>
-        <BCType label="z-mom" var="Dirichlet" value="6.6340"/>
         <BCType label="v" var="Dirichlet" value="-4.6972"/>
         <BCType label="w" var="Dirichlet" value="6.6340"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="z+" lower="0.8000 0.0000 1.0000" upper="0.8600 0.0700 1.0000" name="b39" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="4.6972"/>
-        <BCType label="z-mom" var="Dirichlet" value="-6.6340"/>
         <BCType label="v" var="Dirichlet" value="4.6972"/>
         <BCType label="w" var="Dirichlet" value="-6.6340"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>
       </Face>
       <Face rectangle="y-" lower="0.8000 0.0000 0.9300" upper="0.8600 0.0000 1.0000" name="b40" type="Velocity">
-        <BCType label="y-mom" var="Dirichlet" value="4.6972"/>
-        <BCType label="z-mom" var="Dirichlet" value="-6.6340"/>
         <BCType label="v" var="Dirichlet" value="4.6972"/>
         <BCType label="w" var="Dirichlet" value="-6.6340"/>
         <BCType label="phi-scalar" var="Dirichlet" value="10.0"/>

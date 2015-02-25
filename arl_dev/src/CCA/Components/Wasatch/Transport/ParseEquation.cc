@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -269,8 +269,8 @@ namespace Wasatch{
     
     PoissonExpression::poissonTagList.push_back(poissonVariableTag);
     
-    const Expr::ExpressionBuilder* const pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
-    const Expr::ExpressionBuilder* const pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
+    Expr::ExpressionBuilder* pbuilder  = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
+    Expr::ExpressionBuilder* pbuilder1 = new PoissonExpression::Builder( poissontags, rhsTag, useRefPoint, refValue, refLocation, use3DLaplacian, *sparams, linSolver);
     
     GraphHelper* const icgraphHelper  = gc[INITIALIZATION  ];
     GraphHelper* const slngraphHelper = gc[ADVANCE_SOLUTION];    

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1360,6 +1360,67 @@ void Patch::getOtherLevelPatches(int levelOffset,
     }
   }
 }
+
+void Patch::getOtherLevelPatchesNB(int levelOffset,
+                                   Patch::selectType& selected_patches,
+                                   int nPaddingCells /*=0*/) const
+{
+  ASSERT(levelOffset !=0);
+
+  // include the padding cells in the final low/high indices
+  IntVector pc(nPaddingCells, nPaddingCells, nPaddingCells);
+  
+  Point lowPt = getLevel()->getNodePosition(getExtraNodeLowIndex());
+  Point hiPt  = getLevel()->getNodePosition(getExtraNodeHighIndex());
+
+  const LevelP& otherLevel = getLevel()->getRelativeLevel(levelOffset);
+  IntVector low  = otherLevel->getCellIndex(lowPt);
+  IntVector high = otherLevel->getCellIndex(hiPt);
+
+  if (levelOffset < 0) {
+    // we don't grab enough in the high direction if the fine extra cell
+    // is on the other side of a coarse boundary
+
+    // refinement ratio between the two levels
+    IntVector crr = IntVector(1,1,1);
+    for (int i=1;i<=(-levelOffset);i++){
+      crr = crr * otherLevel->getRelativeLevel(i)->getRefinementRatio();
+    }
+    IntVector highIndex = getExtraNodeHighIndex();
+    IntVector offset((highIndex.x() % crr.x()) == 0 ? 0 : 1,
+                     (highIndex.y() % crr.y()) == 0 ? 0 : 1,
+                     (highIndex.z() % crr.z()) == 0 ? 0 : 1);
+    high += offset;
+  }
+  
+  if (levelOffset > 0) {
+    // the getCellPosition->getCellIndex seems to always add one...
+    // maybe we should just separate this back to coarser/finer patches
+    // and use mapCellToFiner...
+    
+    // also subtract more from low and keep high where it is to get extra 
+    // cells, since selectPatches doesn't 
+    // use extra cells. 
+    low = low - IntVector(2,2,2);
+  }
+
+  //cout << "  Patch:Golp: " << low-pc << " " << high+pc << endl;
+  Level::selectType patches;
+  otherLevel->selectPatches(low-pc, high+pc, patches); 
+  
+  // based on the expanded range above to search for extra cells, we might
+  // have grabbed more patches than we wanted, so refine them here
+  for (int i = 0; i < patches.size(); i++) {
+    IntVector lo = patches[i]->getExtraNodeLowIndex();
+    IntVector hi = patches[i]->getExtraNodeHighIndex();
+    bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
+    
+    if (levelOffset < 0 || intersect) {
+      selected_patches.push_back(patches[i]);
+    }
+  }
+}
+
 /**
  * Returns the VariableBasis for the TypeDescription::type specified
  * in type.  If mustExist is true this function will throw an exception

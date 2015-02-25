@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -671,7 +671,6 @@ ElasticPlasticHP::addComputesAndRequires(Task* task,
 
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
-
   task->requires(Task::OldDW, pRotationLabel,         matlset, gnone);
   task->requires(Task::OldDW, pStrainRateLabel,       matlset, gnone);
   task->requires(Task::OldDW, pPlasticStrainLabel,    matlset, gnone);
@@ -819,7 +818,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pStress_new,      
                            lb->pStressLabel_preReloc,             pset);
 
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,        pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel,                 pset);
     new_dw->allocateAndPut(p_q,   lb->p_qLabel_preReloc,          pset);
     new_dw->allocateAndPut(pEnergy_new, pEnergyLabel_preReloc,    pset);
 
@@ -1696,7 +1695,7 @@ ElasticPlasticHP::computeStressTensorImplicit(const PatchSubset* patches,
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pVolume_deformed, 
                            lb->pVolumeDeformedLabel,              pset);
-    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt, lb->pdTdtLabel,            pset);
 
     // LOCAL
     new_dw->allocateAndPut(pRotation_new,    

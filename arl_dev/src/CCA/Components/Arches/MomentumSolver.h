@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -156,10 +156,6 @@ public:
                                 const int timesubstep,
                                 const bool isInitialization=false );
 
-  void sched_computeVelHatWarches( const LevelP& level,
-                                 SchedulerP& sched, 
-                                 const int timesubstep );
-
   void setInitVelCondition( const Patch* patch, 
                             SFCXVariable<double>& uvel, 
                             SFCYVariable<double>& vvel, 
@@ -171,9 +167,6 @@ public:
   inline void setMomentumCoupling(bool doMC) {
     d_momentum_coupling = doMC;
   }
-
-  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS; }
-  inline bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS; }
   
 private:
 
@@ -224,14 +217,6 @@ private:
                           const int timesubstep,
                           const bool isInitialization=false);
 
-  void computeVelHatWarches( const ProcessorGroup* pc,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse* old_dw,
-                           DataWarehouse* new_dw,
-                           const int timesubstep );
-
-
   // const VarLabel* (required)
   const ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
@@ -254,7 +239,6 @@ private:
   bool d_filter_divergence_constraint;
   bool d_mixedModel;
   std::vector<std::string> d_new_sources;
-  bool d_useWasatchMomRHS;
 
   const VarLabel* _u_mom; 
   const VarLabel* _v_mom; 

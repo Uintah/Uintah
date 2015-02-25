@@ -14,7 +14,7 @@
       <initTime>        0.0     </initTime>    
       <delt_min>        1e-10   </delt_min>    
       <delt_max>        0.001   </delt_max>    
-      <max_Timesteps>  120      </max_Timesteps>
+      <max_Timesteps>   120     </max_Timesteps>
       <timestep_multiplier> 0.1 </timestep_multiplier>
   </Time>
 
@@ -42,13 +42,14 @@
     <save label = "p.color"/>
     <save label = "p.stress"/>
     <save label = "p.mass"/>
+    <save label = "p.scalefactor"/>
     <save label = "p.temperature"/>
 
     <save label = "p.displacement"/>
     <save label = "p.deformationMeasure"/>
     <save label = "p.velocity"/>
 
-     <checkpoint cycle = "2" timestepInterval = "20"/>
+     <checkpoint cycle = "2" timestepInterval = "10"/>
   </DataArchiver>
    <!--__________________________________-->
   <AMR>
@@ -60,10 +61,10 @@
 
    <!--__________________________________-->
    <MPM>
-     <time_integrator>explicit</time_integrator>
+     <time_integrator>       explicit  </time_integrator>
      <interpolator>          linear    </interpolator>
      <withColor>             true      </withColor>
-     <minimum_mass_for_acc>  1.0e-15  </minimum_mass_for_acc>
+     <minimum_mass_for_acc>  1.0e-15   </minimum_mass_for_acc>
    </MPM>
 
    <PhysicalConstants>
@@ -126,10 +127,10 @@
           
       <Level>
         <Box label = "2">
-           <lower>       [-0.2, -0.2, -0.012]   </lower>
-           <upper>       [0.2,   0.2,  0.012]   </upper>
-           <resolution>  [32,32,1]              </resolution>
-           <patches>     [1,1,1]                </patches>
+           <lower>       [-0.25, -0.25, -0.05]   </lower>
+           <upper>       [ 0.25,  0.25,  0.05]   </upper>
+           <resolution>  [20,20,1]              </resolution>
+           <patches>     [2,2,1]                </patches>
            <extraCells>  [0,0,0]                </extraCells>
         </Box>
       </Level>

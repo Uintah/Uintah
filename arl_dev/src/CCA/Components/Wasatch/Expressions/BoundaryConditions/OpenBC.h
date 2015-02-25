@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,9 +33,11 @@ template< typename FieldT >
 class OpenBC
 : public BoundaryConditionBase<FieldT>
 {
-  OpenBC( const Expr::Tag& momTag ) : momTag_ (momTag)
+  OpenBC( const Expr::Tag& momTag )
   {
     this->set_gpu_runnable(false);
+    u_  = this->template create_field_request<FieldT>(momTag);
+    dt_ = this->template create_field_request<SpatialOps::SingleValueField>(Wasatch::TagNames::self().dt);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -52,15 +54,11 @@ public:
   };
   
   ~OpenBC(){}
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
-  const FieldT* u_;
-  const SpatialOps::SingleValueField* dt_;
-  const Expr::Tag momTag_;
+  DECLARE_FIELD(FieldT, u_);
+  DECLARE_FIELD(SpatialOps::SingleValueField, dt_);
 };
 
 #endif // OpenBC_Expr_h

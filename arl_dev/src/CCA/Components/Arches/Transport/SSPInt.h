@@ -143,10 +143,6 @@ private:
       throw InvalidValue("Error: <TimeIntegrator> must have value: 1, 2, or 3 (representing the order).",__FILE__, __LINE__);             
     }
 
-    _do_ts_init_task = false;
-    _do_init_task    = false;
-    _do_bcs_task     = false;
-
   }
 
 

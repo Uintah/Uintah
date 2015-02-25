@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,6 +43,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/Array3.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <iostream>
 #include <fstream>
@@ -78,6 +79,9 @@ void printStress(DataArchive* da,
 
 int main(int argc, char** argv)
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
+
   string partVar;
   int matID = -1;
   string partIDFile;

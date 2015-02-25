@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -99,8 +99,11 @@ namespace Uintah {
     bool allowsMultipleComputes() const
       { return d_allowMultipleComputes; }
     
-    static VarLabel* find(std::string name);
-
+    static VarLabel* find(const std::string& name);
+    static VarLabel* particlePositionLabel();
+    static void setParticlePositionName(const std::string& pPosName){d_particlePositionName = pPosName;}
+    static std::string& getParticlePositionName(){return d_particlePositionName;}
+    
     class Compare {
     public:
       inline bool operator()(const VarLabel* v1, const VarLabel* v2) const {
@@ -154,7 +157,7 @@ namespace Uintah {
             VarType             d_vartype;
     mutable std::string         d_compressionMode;
     static  std::string         d_defaultCompressionMode;
-
+    static  std::string         d_particlePositionName;
     // Allow a variable of this label to be computed multiple
     // times in a TaskGraph without complaining.
     bool                        d_allowMultipleComputes;

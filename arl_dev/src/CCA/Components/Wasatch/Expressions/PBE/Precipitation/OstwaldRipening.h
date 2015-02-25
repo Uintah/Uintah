@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -48,17 +48,17 @@ template< typename FieldT >
 class OstwaldRipening
 : public Expr::Expression<FieldT>
 {
-  const Expr::TagList weightsTagList_;   // these are the tags of all the known moments
-  const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
-  const Expr::Tag moment0Tag_;
+//  const Expr::TagList weightsTagList_;   // these are the tags of all the known moments
+//  const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
+//  const Expr::Tag moment0Tag_;
   const double expCoef_;                 // exponential coefficient (r0 = 2 nu gamma/R T )
   const double tolmanLength_;            // tolman length
   const double rCutOff_;                 // size to swap r correlation 1/r to r^2
 
-  typedef std::vector<const FieldT*> FieldVec;
-  FieldVec weights_;
-  FieldVec abscissae_;
-  const FieldT* moment0_;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
+  DECLARE_FIELD(FieldT, m0_)
+  
 
   OstwaldRipening( const Expr::TagList weightsTagList_,
                    const Expr::TagList abscissaeTagList_,
@@ -102,9 +102,6 @@ public:
   };
 
   ~OstwaldRipening();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };
@@ -124,14 +121,14 @@ OstwaldRipening( const Expr::TagList weightsTagList,
                  const double tolmanLength,
                  const double rCutOff)
 : Expr::Expression<FieldT>(),
-  weightsTagList_  (weightsTagList),
-  abscissaeTagList_(abscissaeTagList),
-  moment0Tag_      (moment0Tag),
   expCoef_         (expCoef),
   tolmanLength_    (tolmanLength),
   rCutOff_         (rCutOff)
 {
   this->set_gpu_runnable( true );
+  this->template create_field_vector_request<FieldT>(weightsTagList, weights_);
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
+   m0_ = this->template create_field_request<FieldT>(moment0Tag);
 }
 
 //--------------------------------------------------------------------
@@ -146,55 +143,21 @@ OstwaldRipening<FieldT>::
 template< typename FieldT >
 void
 OstwaldRipening<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( weightsTagList_ );
-  exprDeps.requires_expression( abscissaeTagList_ );
-  exprDeps.requires_expression( moment0Tag_);
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-OstwaldRipening<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-//  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  
-  
-  const typename Expr::FieldMgrSelector<FieldT>::type& volfm = fml.template field_manager<FieldT>();
-  moment0_ = &volfm.field_ref( moment0Tag_ );
-  weights_.clear();
-  abscissae_.clear();
-  for (Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); iweight++) {
-    weights_.push_back(&volfm.field_ref(*iweight));
-  }
-  for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
-    abscissae_.push_back(&volfm.field_ref(*iabscissa));
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-OstwaldRipening<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-
+  const FieldT& m0 = m0_->field_ref();
   result <<= 0.0;
   SpatFldPtr<FieldT> surfaceEnergyModification = SpatialFieldStore::get<FieldT>( result );
-  typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
-  for( typename FieldVec::const_iterator weightsIterator=weights_.begin();
-      weightsIterator!=weights_.end();
-      ++weightsIterator, ++abscissaeIterator) {
-    *surfaceEnergyModification <<=  1.0 - tolmanLength_ / **abscissaeIterator ;
-    result <<= cond( *moment0_ > 0.0 , result + cond(**abscissaeIterator > rCutOff_, (**weightsIterator) / *moment0_ * exp( *surfaceEnergyModification *  expCoef_ / **abscissaeIterator ) )
-                                                    ( 0.0 ) )
-                   (0.0);
+  
+  for (size_t i=0; i<weights_.size(); ++i) {
+    const FieldT& w = weights_[i]->field_ref();
+    const FieldT& a = abscissae_[i]->field_ref();
+    *surfaceEnergyModification <<=  1.0 - tolmanLength_ / a ;
+    result <<= cond( m0 > 0.0 , result + cond(a > rCutOff_, (w) / m0 * exp( *surfaceEnergyModification *  expCoef_ / a ) )
+                    ( 0.0 ) )
+    (0.0);
   }
 }
 

@@ -1,10 +1,7 @@
-#ifndef VardenMMSBCs_h
-#define VardenMMSBCs_h
-
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +21,9 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+#ifndef VardenMMSBCs_h
+#define VardenMMSBCs_h
 
 #include <expression/Expression.h>
 #include <spatialops/structured/FVStaggered.h>
@@ -50,11 +50,11 @@ class VarDen1DMMSDensity : public BoundaryConditionBase<FieldT>
   VarDen1DMMSDensity( const Expr::Tag& indepVarTag,
                       const double rho0,
                       const double rho1 )
-  : indepVarTag_ (indepVarTag),
-    rho0_(rho0),
+  : rho0_(rho0),
     rho1_(rho1)
   {
     this->set_gpu_runnable(false);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
 
 public:
@@ -84,17 +84,10 @@ public:
   };
   
   ~VarDen1DMMSDensity(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){
-    exprDeps.requires_expression( indepVarTag_ );
-  }
-  void bind_fields( const Expr::FieldManagerList& fml ){
-    t_ = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
-  }
   void evaluate();
 private:
-  const TimeField* t_;
-  const Expr::Tag indepVarTag_;
   const double rho0_, rho1_;
+  DECLARE_FIELD(TimeField, t_);
 };
 
 /***********************************************************************************************/
@@ -115,9 +108,9 @@ class VarDen1DMMSMixtureFraction
 {
   typedef typename SpatialOps::SingleValueField TimeField;
   VarDen1DMMSMixtureFraction( const Expr::Tag& indepVarTag )
-  : indepVarTag_(indepVarTag)
   {
     this->set_gpu_runnable(false);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -139,16 +132,9 @@ public:
   };
   
   ~VarDen1DMMSMixtureFraction(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){
-    exprDeps.requires_expression( indepVarTag_ );
-  }
-  void bind_fields( const Expr::FieldManagerList& fml ){
-    t_ = &fml.template field_manager<TimeField>().field_ref( indepVarTag_ );
-  }
   void evaluate();
 private:
-  const TimeField* t_;
-  const Expr::Tag indepVarTag_;
+  DECLARE_FIELD(TimeField, t_);
 };
 
 /***********************************************************************************************/
@@ -199,25 +185,22 @@ public:
   };
   
   ~VarDen1DMMSMomentum(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ ); }
-  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ ); }
   void evaluate();
 private:
   VarDen1DMMSMomentum( const Expr::Tag& indepVarTag,
                        const double rho0,
                        const double rho1,
                        const SpatialOps::BCSide side )
-  : indepVarTag_( indepVarTag ),
-    rho0_( rho0 ),
+  : rho0_( rho0 ),
     rho1_( rho1 ),
     side_( side )
   {
     this->set_gpu_runnable(false);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
-  const TimeField* t_;
-  const Expr::Tag indepVarTag_;
   const double rho0_, rho1_;
   const SpatialOps::BCSide side_;
+  DECLARE_FIELD(TimeField, t_);
 };
 
 /***********************************************************************************************/
@@ -240,11 +223,11 @@ class VarDen1DMMSSolnVar
   VarDen1DMMSSolnVar( const Expr::Tag& indepVarTag,
                      const double rho0,
                      const double rho1  )
-  : indepVarTag_( indepVarTag ),
-    rho0_( rho0 ),
+  : rho0_( rho0 ),
     rho1_( rho1 )
   {
     this->set_gpu_runnable(false);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -272,13 +255,10 @@ public:
   };
   
   ~VarDen1DMMSSolnVar(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ ); }
-  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ ); }
   void evaluate();
 private:
-  const TimeField* t_;
-  const Expr::Tag indepVarTag_;
   const double rho0_, rho1_;
+  DECLARE_FIELD(TimeField, t_);
 };
 
 /***********************************************************************************************/
@@ -324,19 +304,16 @@ public:
   };
   
   ~VarDen1DMMSVelocity(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){ exprDeps.requires_expression( indepVarTag_ );}
-  void bind_fields( const Expr::FieldManagerList& fml ){ t_ = &fml.template field_ref<TimeField>( indepVarTag_ );}
   void evaluate();
 private:
   VarDen1DMMSVelocity( const Expr::Tag& indepVarTag,
                        const SpatialOps::BCSide side )
-  : indepVarTag_(indepVarTag),
-    side_(side)
+  : side_(side)
   {
     this->set_gpu_runnable(false);
+     t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
-  const TimeField* t_;
-  const Expr::Tag indepVarTag_;
+  DECLARE_FIELD(TimeField, t_);
   const SpatialOps::BCSide side_;
 };
 

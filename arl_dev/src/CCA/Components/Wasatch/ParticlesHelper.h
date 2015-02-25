@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013-2014 The University of Utah
+ * Copyright (c) 2013-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -174,7 +174,8 @@ namespace Uintah {
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
      that MUST be called during Wasatch::ProblemSetup
      */
-    void problem_setup(Uintah::ProblemSpecP particleEqsSpec,
+    void problem_setup(Uintah::ProblemSpecP uintahSpec,
+                       Uintah::ProblemSpecP particleEqsSpec,
                        Uintah::SimulationStateP sharedState);
     
     void set_materials(const Uintah::MaterialSet* const materials)

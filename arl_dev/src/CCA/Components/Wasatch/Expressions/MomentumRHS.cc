@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,16 +32,18 @@
 
 template< typename FieldT >
 MomRHS<FieldT>::
-MomRHS( const Expr::Tag& pressure,
-        const Expr::Tag& partRHS,
+MomRHS( const Expr::Tag& pressureTag,
+        const Expr::Tag& partRHSTag,
         const Expr::Tag& volFracTag )
   : Expr::Expression<FieldT>(),
-    pressuret_( pressure ),
-    rhspartt_( partRHS ),
-    volfract_( volFracTag ),
-    emptyTag_( Expr::Tag() )
+    hasP_(pressureTag != Expr::Tag()),
+    hasIntrusion_(volFracTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  
+  if( hasP_ )  pressure_ = this->template create_field_request<PFieldT>(pressureTag);
+   rhsPart_ = this->template create_field_request<FieldT>(partRHSTag);
+  if( hasIntrusion_ )  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------
@@ -50,31 +52,6 @@ template< typename FieldT >
 MomRHS<FieldT>::
 ~MomRHS()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MomRHS<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( pressuret_ != emptyTag_ )    exprDeps.requires_expression( pressuret_ );;
-  exprDeps.requires_expression( rhspartt_ );
-  if( volfract_ != emptyTag_ )    exprDeps.requires_expression( volfract_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MomRHS<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
-  rhsPart_ = &fm.field_ref( rhspartt_ );
-  if( volfract_  != emptyTag_ )  volfrac_  = &fm.field_ref( volfract_ );
-  if( pressuret_ != emptyTag_ )  pressure_ = &fml.field_ref<PFieldT>( pressuret_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -95,14 +72,17 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
+  result <<= 0.0;
+  const FieldT&  rhsPart = rhsPart_->field_ref();
 
-  if ( pressuret_ != emptyTag_ ){
-    if( volfract_ != emptyTag_ )  result <<= *volfrac_ * ( *rhsPart_ - (*gradOp_)(*pressure_) );
-    else                          result <<= *rhsPart_ - (*gradOp_)(*pressure_);
+  if ( hasP_ ){
+    const PFieldT& p = pressure_->field_ref();
+    if( hasIntrusion_ )  result <<= volfrac_->field_ref() * ( rhsPart - (*gradOp_)(p) );
+    else                          result <<= rhsPart - (*gradOp_)(p);
   }
   else{
-    if( volfract_ != emptyTag_ ) result <<= *volfrac_ * *rhsPart_;
-    else                         result <<= *rhsPart_;
+    if( hasIntrusion_ ) result <<= volfrac_->field_ref() * rhsPart;
+    else                         result <<= rhsPart;
   }
 }
 

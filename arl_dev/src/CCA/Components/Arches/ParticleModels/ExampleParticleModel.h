@@ -126,9 +126,6 @@ private:
   template <typename IT, typename DT>
   void ExampleParticleModel<IT, DT>::problemSetup( ProblemSpecP& db ){ 
 
-    _do_ts_init_task = false; 
-    _do_bcs_task = false; 
-
     db->require("A",_A); 
     db->require("ER",_ER); 
     db->require("m",_m); 

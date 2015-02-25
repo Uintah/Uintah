@@ -17,17 +17,11 @@ template< typename FieldT >
 class RadPropsEvaluator
  : public Expr::Expression<FieldT>
 {
-  typedef std::vector<const FieldT*>  IndepVarVec;
-  typedef std::vector<Expr::Tag>      VarNames;
 
-  const Expr::Tag tempTag_;
   GreyGas* greyGas_;
-
-  VarNames indepVarNames_;
-
-  IndepVarVec indepVars_;
-
-  const FieldT* temp_;
+  
+  DECLARE_FIELD(FieldT, temp_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_);
 
   RadPropsEvaluator( const Expr::Tag& tempTag,
                      const RadSpecMap& species,
@@ -59,8 +53,6 @@ public:
 
   ~RadPropsEvaluator();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -83,10 +75,9 @@ class ParticleRadProps
 {
   const ParticleRadCoeffs* const props_;
   const ParticleRadProp prop_;
-  const Expr::Tag tempTag_, pRadiusTag_;
-  const FieldT* temp_;
-  const FieldT* pRadius_;
 
+  DECLARE_FIELDS(FieldT, temp_, pRadius_);
+  
   ParticleRadProps( const ParticleRadProp prop,
                     const Expr::Tag& tempTag,
                     const Expr::Tag& pRadiusTag,
@@ -117,8 +108,6 @@ public:
   };
 
   ~ParticleRadProps();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 

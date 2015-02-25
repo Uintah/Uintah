@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -125,10 +125,11 @@ namespace Wasatch{
   class DORadSolver
   : public Expr::Expression<SVolField>
   {
-    const Expr::Tag intensityTag_, absCoefTag_, scatCoefTag_, temperatureTag_;
     const OrdinateDirections::SVec svec_;
     const bool hasAbsCoef_, hasScatCoef_;
 
+    const Expr::Tag temperatureTag_;
+    
     const bool doX_, doY_, doZ_;
     bool didAllocateMatrix_;
     int  materialID_;
@@ -138,8 +139,8 @@ namespace Wasatch{
     Uintah::SolverInterface& solver_;
     const Uintah::VarLabel *matrixLabel_, *intensityLabel_, *rhsLabel_;
     
-    const SVolField *temperature_, *absCoef_, *scatCoef_;
-        
+    DECLARE_FIELDS(SVolField, temperature_, absCoef_, scatCoef_);
+    
     typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
     MatType matrix_;
     const Uintah::Patch* patch_;
@@ -156,7 +157,7 @@ namespace Wasatch{
                  const Uintah::SolverParameters& solverParams,
                  Uintah::SolverInterface& solver );
     
-  public:  
+  public:
 
     static Expr::TagList intensityTags;
 
@@ -211,7 +212,7 @@ namespace Wasatch{
      *  are very uintah-specific and only used internally to this
      *  expression.  Specifically, the rhs field and the LHS matrix.
      *  All other variables should be expressed as dependencies
-     *  through the advertise_dependents method.
+     *  through the declare_field macro.
      */
     void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                            const Uintah::Patch* const patch,
@@ -221,9 +222,6 @@ namespace Wasatch{
      * \brief Calculates DORadSolver coefficient matrix.
      */
     void setup_matrix( SVolField& rhs, const SVolField& temperature );
-
-    void advertise_dependents( Expr::ExprDeps& exprDeps );
-    void bind_fields( const Expr::FieldManagerList& fml );
     void evaluate();
   };
 
@@ -243,8 +241,8 @@ namespace Wasatch{
     const OrdinateDirections& ord_;
     const bool hasAbsCoef_;
 
-    std::vector<const SVolField*> intensity_;
-    const SVolField *temperature_, *absCoef_;
+    DECLARE_FIELDS(SVolField, temperature_, absCoef_);
+    DECLARE_VECTOR_OF_FIELDS(SVolField, intensity_);
 
     DORadSrc( const Expr::Tag& temperatureTag,
               const Expr::Tag& absCoefTag,
@@ -274,8 +272,6 @@ namespace Wasatch{
     };
 
     ~DORadSrc();
-    void advertise_dependents( Expr::ExprDeps& exprDeps );
-    void bind_fields( const Expr::FieldManagerList& fml );
     void evaluate();
   };
 

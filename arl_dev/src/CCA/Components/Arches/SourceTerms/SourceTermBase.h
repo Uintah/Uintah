@@ -77,14 +77,14 @@ public:
   inline const std::vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }
 
-	/** @brief Return the grid type of source (CC, FCX, etc... ) **/
+  /** @brief Return the grid type of source (CC, FCX, etc... ) **/
   inline MY_GRID_TYPE getSourceGridType(){ return _source_grid_type; }
 
   /** @brief Return the type of source (constant, do_radation, etc... ) **/ 
   inline std::string getSourceType(){ return _type; }
 
-	/** @brief Return the list of table lookup species needed for this source term **/ 
-	inline ChemHelper::TableLookup* get_tablelookup_species(){ return _table_lookup_species; };  
+  /** @brief Return the list of table lookup species needed for this source term **/ 
+  inline ChemHelper::TableLookup* get_tablelookup_species(){ return _table_lookup_species; };  
 
   /** @brief Return an int indicating the stage this source should be executed **/
   int stage_compute() const { return _stage; } 
@@ -120,8 +120,6 @@ protected:
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
   ChemHelper::TableLookup* _table_lookup_species;         ///< List of table lookup species
   MY_GRID_TYPE _source_grid_type;                         ///< Source grid type
-  std::vector<std::string> _wasatch_expr_names;           ///< List of wasatch exprs to be used as sources
-
 }; // end SourceTermBase
 }  // end namespace Uintah
 

@@ -915,6 +915,270 @@ namespace Uintah{
       }; 
 
       // ---------------------------------------------------------------------------
+      // Second Order Upwind Interpolation 
+      //
+      /** @brief Second Order Upwind interolation -- should work for all cell types */ 
+      template <typename phiT>
+      class SecondOrderUpwindInterpolation { 
+
+        public: 
+
+        SecondOrderUpwindInterpolation(){};
+        ~SecondOrderUpwindInterpolation(){}; 
+
+        FaceData1D no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        { 
+
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+          const double tiny = 1.0e-16; 
+
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+          IntVector cxpp = c + coord + coord; 
+
+          int dim = 0;
+          if (coord[0] == 1){
+            dim =0; 
+          } else if (coord[1] == 1) { 
+            dim = 1; 
+          } else {  
+            dim = 2;
+          }
+
+          // - FACE 
+          if ( vel.minus > 0 ){ 
+
+            face_values.minus = (1.0 - areaFraction[cxm][dim])*phi[cxm] + areaFraction[cxm][dim]*( 
+              ( 3.0 * phi[cxm] - phi[cxmm] )/2.0);
+
+          } else if ( vel.minus < 0 ){
+          //} else {
+
+            face_values.minus = ( 3.0 * phi[c] - phi[cxp] )/2.0;  
+
+          }
+          
+          // + FACE 
+          if ( vel.plus > 0 ){ 
+
+            face_values.plus = ( 3.0 * phi[c] - phi[cxm] )/2.0; 
+
+          } else if ( vel.plus < 0 ){
+          //} else {
+
+            face_values.plus = (1.0 - areaFraction[cxpp][dim])*phi[cxp] + areaFraction[cxpp][dim]*(
+              ( 3.0 * phi[cxp] - phi[cxpp] )/2.0);  
+
+          }
+
+          return face_values; 
+
+        }; 
+
+        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        { 
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+
+          const double tiny = 1.0e-16; 
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+          IntVector cxpp = c + coord + coord; 
+
+          int dim = 0;
+          if (coord[0] == 1){
+            dim =0; 
+          } else if (coord[1] == 1) { 
+            dim = 1; 
+          } else {  
+            dim = 2;
+          }
+
+          // - FACE 
+          if ( isBoundary.minus ){ 
+
+            face_values.minus = 0.5*(phi[c] + phi[cxm]);
+
+          } else { 
+
+            if ( vel.minus > 0 ){ 
+
+              face_values.minus = (1.0 - areaFraction[cxm][dim])*phi[cxm] + areaFraction[cxm][dim]*( 
+                ( 3.0 * phi[cxm] - phi[cxmm] )/2.0);
+
+            //} else if ( vel.minus < 0 ){
+            } else {
+
+              face_values.minus = ( 3.0 * phi[c] - phi[cxp] )/2.0;  
+
+            }
+
+          }
+
+          // + FACE 
+          if ( isBoundary.plus ){ 
+
+            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+            
+          } else { 
+
+            if ( vel.plus > 0 ){ 
+
+              face_values.plus = ( 3.0 * phi[c] - phi[cxm] )/2.0; 
+
+            //} else if ( vel.plus < 0 ){
+            } else {
+
+              face_values.plus = (1.0 - areaFraction[cxpp][dim])*phi[cxp] + areaFraction[cxpp][dim]*(
+                ( 3.0 * phi[cxp] - phi[cxpp] )/2.0);  
+
+            }
+
+          }
+
+          return face_values; 
+
+        }; 
+      }; 
+
+      // ---------------------------------------------------------------------------
+      // QUICK    
+      //
+      /** @brief QUICK interolation -- should work for all cell types */ 
+      template <typename phiT>
+      class QUICKInterpolation { 
+
+        public: 
+
+        QUICKInterpolation(){};
+        ~QUICKInterpolation(){}; 
+
+        FaceData1D no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        { 
+
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+          const double tiny = 1.0e-16; 
+
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+          IntVector cxpp = c + coord + coord; 
+
+          int dim = 0;
+          if (coord[0] == 1){
+            dim =0; 
+          } else if (coord[1] == 1) { 
+            dim = 1; 
+          } else {  
+            dim = 2;
+          }
+
+          // - FACE 
+          if ( vel.minus > 0 ){ 
+
+            face_values.minus = (1.0 - areaFraction[cxm][dim])*phi[cxm] + areaFraction[cxm][dim]*( 
+                .375 * phi[c] + 0.75 * phi[cxm] - 0.125 * phi[cxmm] );
+
+          } else if ( vel.minus < 0 ){
+
+            face_values.minus = .375 * phi[cxm] + 0.75 * phi[c] - 0.125 * phi[cxp];  
+
+          }
+          
+          // + FACE 
+          if ( vel.plus > 0 ){ 
+
+            face_values.plus = .375 * phi[cxp] + 0.75 * phi[c] - 0.125 * phi[cxm]; 
+
+          } else if ( vel.plus < 0 ){
+
+            face_values.plus = (1.0 - areaFraction[cxpp][dim])*phi[cxp] + areaFraction[cxpp][dim]*(
+              0.375 * phi[c] + 0.75 * phi[cxp] - 0.125 * phi[cxpp] );  
+
+          }
+
+          return face_values; 
+
+        }; 
+
+        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        { 
+          Discretization_new::FaceData1D face_values; 
+          face_values.minus = 0.0;
+          face_values.plus = 0.0;
+
+          const double tiny = 1.0e-16; 
+          IntVector cxp = c + coord; 
+          IntVector cxm = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+          IntVector cxpp = c + coord + coord; 
+
+          int dim = 0;
+          if (coord[0] == 1){
+            dim =0; 
+          } else if (coord[1] == 1) { 
+            dim = 1; 
+          } else {  
+            dim = 2;
+          }
+
+          // - FACE 
+          if ( isBoundary.minus ){ 
+
+            face_values.minus = 0.5*(phi[c] + phi[cxm]);
+
+          } else { 
+
+            if ( vel.minus > 0 ){ 
+
+              face_values.minus = (1.0 - areaFraction[cxm][dim])*phi[cxm] + areaFraction[cxm][dim]*( 
+                  .375 * phi[c] + 0.75 * phi[cxm] - 0.125 * phi[cxmm] );
+
+            } else if ( vel.minus < 0 ){
+
+              face_values.minus = .375 * phi[cxm] + 0.75 * phi[c] - 0.125 * phi[cxp];  
+
+            }
+
+          }
+
+          // + FACE 
+          if ( isBoundary.plus ){ 
+
+            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+            
+          } else { 
+
+            if ( vel.plus > 0 ){ 
+
+              face_values.plus = .375 * phi[cxp] + 0.75 * phi[c] - 0.125 * phi[cxm]; 
+
+            } else if ( vel.plus < 0 ){
+
+              face_values.plus = (1.0 - areaFraction[cxpp][dim])*phi[cxp] + areaFraction[cxpp][dim]*(
+                0.375 * phi[c] + 0.75 * phi[cxp] - 0.125 * phi[cxpp] );  
+
+            }
+
+          }
+
+          return face_values; 
+
+        }; 
+      }; 
+
+      // ---------------------------------------------------------------------------
       // Central Interpolation 
       //
       /** @brief Cell-centered interolation -- should work for all cell types */ 
@@ -1040,8 +1304,11 @@ namespace Uintah{
 
             double psi = 2.0; // when r = infinity
 
-            if ( r < _huge ) { 
+            if ( r < _huge && r >= 0.0 ) { 
               psi = ( r + std::abs(r) ) / ( 1.0 + std::abs(r) ); 
+            } else { 
+              // r went to -inf
+              psi = 0;
             }
 
             return psi; 
@@ -1049,6 +1316,248 @@ namespace Uintah{
           };
       }; 
       //--- end functions --- below is the actual interpolation for all limiters
+
+      /** @brief Generalized Flux Limiter */ 
+      template <typename phiT>
+      class FluxLimiterInterpolationWallUpwind { 
+
+        public: 
+
+        FluxLimiterInterpolationWallUpwind( std::string type ){
+       
+          if ( type == "super_bee" ) { 
+
+            _limiter_function = scinew SuperBeeFunction(); 
+
+          } else if ( type == "roe_minmod" ) { 
+
+            _limiter_function = scinew RoeMindModFunction(); 
+
+          } else if ( type == "vanleer" ) { 
+
+            _limiter_function = scinew VanLeerFunction(); 
+
+          } else { 
+
+            throw InternalError("ERROR: Limiter function not recognized.", __FILE__, __LINE__);
+
+          } 
+        
+        };
+        ~FluxLimiterInterpolationWallUpwind(){
+        
+          delete _limiter_function; 
+
+        }; 
+
+        FaceData1D inline no_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction ) 
+        { 
+          FaceData1D face_values;
+          face_values.plus  = 0.0;
+          face_values.minus = 0.0;
+
+          double r   = 0.0; 
+          double psi = 0.0; 
+          double Sup = 0.0;
+          double Sdn = 0.0;
+          const double tiny = 1.0e-16; 
+
+          IntVector cxp  = c + coord; 
+          IntVector cxpp = c + coord + coord; 
+          IntVector cxm  = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+
+          int dim = 0;
+          int t1dim = 0;
+          int t2dim = 0;
+          if (coord[0] == 1){
+            dim =0; 
+            t1dim = 1;
+            t2dim = 2;
+          } else if (coord[1] == 1) { 
+            dim = 1; 
+            t1dim = 0;
+            t2dim = 2;
+          } else {  
+            dim = 2;
+            t1dim = 0;
+            t2dim = 1;
+          }
+
+          // - FACE
+          if ( vel.minus > 0.0 ) {
+            Sup = phi[cxm];
+            Sdn = phi[c];
+            r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny ){
+              r = 0.0;
+            }
+
+          } else if ( vel.minus < 0.0 ) {
+            Sup = phi[c];
+            Sdn = phi[cxm];
+            r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+
+            if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny ){
+              r = 0.0;
+            }
+          }
+
+          if ( areaFraction[c][t1dim] < tiny || areaFraction[c][t2dim] < tiny ){ 
+            r = 0.0;
+          } 
+
+          psi = _limiter_function->get_psi( r ); 
+
+          face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+
+          Sup = 0.0;
+          Sdn = 0.0;
+          r = 0.0;
+
+          // + FACE
+          if ( vel.plus > 0.0 ) {
+            r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+            Sup = phi[c];
+            Sdn = phi[cxp];
+
+            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny ) {
+              r = 0.0;
+            }
+
+          } else if ( vel.plus < 0.0 ) {
+            r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+            Sup = phi[cxp];
+            Sdn = phi[c]; 
+
+            if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny ){
+              r = 0.0; 
+            }
+          }
+
+          if ( areaFraction[c][t1dim] < tiny || areaFraction[c][t2dim] < tiny ){ 
+            r = 0.0;
+          } 
+
+          psi = _limiter_function->get_psi( r ); 
+
+          face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+
+          return face_values; 
+        }; 
+
+        FaceData1D inline with_bc( const IntVector c, const IntVector coord, phiT& phi, 
+            FaceData1D vel, constCCVariable<Vector>& areaFraction, FaceBoundaryBool isBoundary ) 
+        { 
+          FaceData1D face_values;
+          face_values.plus  = 0.0;
+          face_values.minus = 0.0;
+
+          double r   = 0.0; 
+          double psi = 0.0; 
+          double Sup = 0.0;
+          double Sdn = 0.0;
+          const double tiny = 1.0e-16; 
+
+          IntVector cxp  = c + coord; 
+          IntVector cxpp = c + coord + coord; 
+          IntVector cxm  = c - coord; 
+          IntVector cxmm = c - coord - coord; 
+
+          int dim = 0; 
+          int t1dim = 0;
+          int t2dim = 0;
+          if (coord[0] == 1){
+            dim =0; 
+            t1dim = 1;
+            t2dim = 2;
+          } else if (coord[1] == 1) { 
+            dim = 1; 
+            t1dim = 0;
+            t2dim = 2;
+          } else {  
+            dim = 2;
+            t1dim = 0;
+            t2dim = 1;
+          }
+
+          // - FACE
+          if (isBoundary.minus) {
+            face_values.minus = 0.5*(phi[c]+phi[cxm]);
+          } else { 
+            if ( vel.minus > 0.0 ) {
+              Sup = phi[cxm];
+              Sdn = phi[c];
+              r = ( phi[cxm] - phi[cxmm] ) / ( phi[c] - phi[cxm] ); 
+
+              if ( areaFraction[cxm][dim] < tiny || areaFraction[c][dim] < tiny ){
+                r = 0.0;
+              }
+
+            } else if ( vel.minus < 0.0 ) {
+              Sup = phi[c];
+              Sdn = phi[cxm];
+              r = ( phi[cxp] - phi[c] ) / ( phi[c] - phi[cxm] );
+
+              if ( areaFraction[cxp][dim] < tiny || areaFraction[c][dim] < tiny ){
+                r = 0.0;
+              }
+            }
+
+            if ( areaFraction[c][t1dim] < tiny || areaFraction[c][t2dim] < tiny ){ 
+              r = 0.0;
+            } 
+
+            psi = _limiter_function->get_psi( r ); 
+
+            face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
+          }
+
+          Sup = 0.0; 
+          Sdn = 0.0; 
+
+          // + FACE
+          if (isBoundary.plus) {
+            face_values.plus = 0.5*(phi[c] + phi[cxp]);
+          } else { 
+            if ( vel.plus > 0.0 ) {
+              r = ( phi[c] - phi[cxm] ) / ( phi[cxp] - phi[c] );
+              Sup = phi[c];
+              Sdn = phi[cxp];
+
+            if ( areaFraction[c][dim] < tiny || areaFraction[cxp][dim] < tiny ){
+              r = 0.0;
+            }
+
+            } else if ( vel.plus < 0.0 ) {
+              r = ( phi[cxpp] - phi[cxp] ) / ( phi[cxp] - phi[c] );
+              Sup = phi[cxp];
+              Sdn = phi[c]; 
+
+              if ( areaFraction[cxpp][dim] < tiny || areaFraction[cxp][dim] < tiny ){
+                r = 0.0; 
+              }
+            }
+
+            if ( areaFraction[c][t1dim] < tiny || areaFraction[c][t2dim] < tiny ){ 
+              r = 0.0;
+            } 
+
+            psi = _limiter_function->get_psi( r ); 
+
+            face_values.plus = Sup + 0.5*psi*( Sdn - Sup );
+          }
+
+          return face_values; 
+        };
+
+        private: 
+
+          LimiterFunctionBase* _limiter_function; 
+
+      }; 
 
       /** @brief Generalized Flux Limiter */ 
       template <typename phiT>
@@ -1101,7 +1610,7 @@ namespace Uintah{
           IntVector cxm  = c - coord; 
           IntVector cxmm = c - coord - coord; 
 
-          int dim = 0; 
+          int dim = 0;
           if (coord[0] == 1){
             dim =0; 
           } else if (coord[1] == 1) { 
@@ -1135,7 +1644,8 @@ namespace Uintah{
           face_values.minus = Sup + 0.5*psi*( Sdn - Sup );
 
           Sup = 0.0;
-          Sdn = 0.0; 
+          Sdn = 0.0;
+          r = 0.0;
 
           // + FACE
           if ( vel.plus > 0.0 ) {
@@ -1259,7 +1769,6 @@ namespace Uintah{
           LimiterFunctionBase* _limiter_function; 
 
       }; 
-
       
 
       // ---------------------------------------------------------------------------
@@ -1551,11 +2060,53 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
+      } else if ( convScheme == "2upwind" ){ 
+
+       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = scinew SecondOrderUpwindInterpolation<oldPhiT>(); 
+       ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+      } else if ( convScheme == "quick" ){ 
+
+       QUICKInterpolation<oldPhiT>* the_interpolant = scinew QUICKInterpolation<oldPhiT>(); 
+       ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
       } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
        FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
          scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+      } else if ( convScheme == "super_bee_wall_upwind" || convScheme == "roe_minmod_wall_upwind" || convScheme == "vanleer_wall_upwind"){
+
+       std::string mod_convScheme; 
+       if ( convScheme == "super_bee_wall_upwind"){ 
+         mod_convScheme = "super_bee"; 
+       } else if ( convScheme == "roe_minmod_wall_upwind"){ 
+         mod_convScheme = "roal_minmod"; 
+       } else if ( convScheme == "vanleer_wall_upwind"){
+         mod_convScheme = "vanleer";
+       }
+
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, den, areaFraction, this ); 
 
@@ -1612,11 +2163,55 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
+      } else if ( convScheme == "2upwind"){ 
+
+       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = scinew SecondOrderUpwindInterpolation<oldPhiT>(); 
+       ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+      } else if ( convScheme == "quick"){ 
+
+       QUICKInterpolation<oldPhiT>* the_interpolant = scinew QUICKInterpolation<oldPhiT>(); 
+       ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+
+
       } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
        FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
        ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
          scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+      } else if ( convScheme == "super_bee_wall_upwind" || convScheme == "roe_minmod_wall_upwind" || convScheme == "vanleer_wall_upwind"){
+
+       std::string mod_convScheme; 
+       if ( convScheme == "super_bee_wall_upwind"){ 
+         mod_convScheme = "super_bee"; 
+       } else if ( convScheme == "roe_minmod_wall_upwind"){ 
+         mod_convScheme = "roal_minmod"; 
+       } else if ( convScheme == "vanleer_wall_upwind"){
+         mod_convScheme = "vanleer";
+       }
+
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
 
        convection_helper->do_convection( p, Fconv, uVel, vVel, wVel, areaFraction, this ); 
 
@@ -1663,6 +2258,29 @@ namespace Uintah{
        delete convection_helper; 
        delete the_interpolant; 
 
+      } else if ( convScheme == "2upwind" ){ 
+
+       SecondOrderUpwindInterpolation<oldPhiT>* the_interpolant = scinew SecondOrderUpwindInterpolation<oldPhiT>(); 
+       ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<SecondOrderUpwindInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+      } else if ( convScheme == "quick" ){ 
+
+       QUICKInterpolation<oldPhiT>* the_interpolant = scinew QUICKInterpolation<oldPhiT>(); 
+       ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<QUICKInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+
       } else if ( convScheme == "super_bee" || convScheme == "roe_minmod" || convScheme == "vanleer" ) { 
 
        FluxLimiterInterpolation<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolation<oldPhiT>( convScheme ); 
@@ -1670,6 +2288,26 @@ namespace Uintah{
          scinew ConvHelper1<FluxLimiterInterpolation<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
  
        convection_helper->do_convection( p, Fconv, partVel,  areaFraction, this );
+
+       delete convection_helper; 
+       delete the_interpolant; 
+
+      } else if ( convScheme == "super_bee_wall_upwind" || convScheme == "roe_minmod_wall_upwind" || convScheme == "vanleer_wall_upwind"){
+
+       std::string mod_convScheme; 
+       if ( convScheme == "super_bee_wall_upwind"){ 
+         mod_convScheme = "super_bee"; 
+       } else if ( convScheme == "roe_minmod_wall_upwind"){ 
+         mod_convScheme = "roal_minmod"; 
+       } else if ( convScheme == "vanleer_wall_upwind"){
+         mod_convScheme = "vanleer";
+       }
+
+       FluxLimiterInterpolationWallUpwind<oldPhiT>* the_interpolant = scinew FluxLimiterInterpolationWallUpwind<oldPhiT>( mod_convScheme ); 
+       ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>* convection_helper = 
+         scinew ConvHelper1<FluxLimiterInterpolationWallUpwind<oldPhiT>, oldPhiT>(the_interpolant, oldPhi);
+
+       convection_helper->do_convection( p, Fconv, partVel, areaFraction, this ); 
 
        delete convection_helper; 
        delete the_interpolant; 

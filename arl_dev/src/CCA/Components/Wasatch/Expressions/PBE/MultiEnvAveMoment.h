@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,11 +43,10 @@ template< typename FieldT >
 class MultiEnvAveMoment
 : public Expr::Expression<FieldT>
 {
-  typedef std::vector<const FieldT*> FieldTVec;
-  FieldTVec weightsAndDerivs_;
-  const Expr::TagList weightAndDerivativeTags_; //this tag list has wieghts and derivatives [w0 dw0/dt w1 dw1/dt w2 dw2/dt]
-  const Expr::Tag phiTag_;                      //tag for this moment in 2nd env
-  const FieldT* phi_;
+//  weightAndDerivativeTags_; //this tag list has wieghts and derivatives [w0 dw0/dt w1 dw1/dt w2 dw2/dt]
+//  phiTag_;                      //tag for this moment in 2nd env
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weightsAndDerivs_);
+  DECLARE_FIELD(FieldT, phi_);
   const double initialMoment_;
 
   MultiEnvAveMoment( const Expr::TagList weightAndDerivativeTags,
@@ -83,8 +82,6 @@ public:
 
   ~MultiEnvAveMoment();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -102,11 +99,11 @@ MultiEnvAveMoment( const Expr::TagList weightAndDerivativeTags,
                    const Expr::Tag phiTag,
                    const double initialMoment )
 : Expr::Expression<FieldT>(),
-  weightAndDerivativeTags_(weightAndDerivativeTags),
-  phiTag_(phiTag),
   initialMoment_(initialMoment)
 {
   this->set_gpu_runnable( true );
+   phi_ = this->template create_field_request<FieldT>(phiTag);
+  this->template create_field_vector_request<FieldT>(weightAndDerivativeTags, weightsAndDerivs_);
 }
 
 //--------------------------------------------------------------------
@@ -121,39 +118,11 @@ MultiEnvAveMoment<FieldT>::
 template< typename FieldT >
 void
 MultiEnvAveMoment<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( weightAndDerivativeTags_ );
-  exprDeps.requires_expression( phiTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvAveMoment<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
-  weightsAndDerivs_.clear();
-  for( Expr::TagList::const_iterator iW=weightAndDerivativeTags_.begin();
-      iW!=weightAndDerivativeTags_.end();
-      ++iW ){
-    weightsAndDerivs_.push_back( &fm.field_ref(*iW) );
-  }
-  phi_ = &fm.field_ref( phiTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvAveMoment<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= ( *weightsAndDerivs_[0] + *weightsAndDerivs_[4] ) * initialMoment_ + *weightsAndDerivs_[2] * *phi_;
+  result <<= ( weightsAndDerivs_[0]->field_ref() + weightsAndDerivs_[4]->field_ref() ) * initialMoment_ + weightsAndDerivs_[2]->field_ref() * phi_->field_ref();
 }
 
 #endif

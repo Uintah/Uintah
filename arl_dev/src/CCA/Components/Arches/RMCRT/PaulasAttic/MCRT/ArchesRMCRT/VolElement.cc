@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -30,10 +30,10 @@ VolElement::VolElement(){
 
 
 VolElement::VolElement(const int &iIndex,
-		       const int &jIndex,
-		       const int &kIndex,
-		       const int &Ncx_,
-		       const int &Ncy_){
+           const int &jIndex,
+           const int &kIndex,
+           const int &Ncx_,
+           const int &Ncy_){
   
   VoliIndex = iIndex;
   VoljIndex = jIndex;
@@ -55,8 +55,8 @@ VolElement::~VolElement(){
 
   
 double VolElement::VolumeEmissFluxBlack(const int &vIndex,
-					const double *T_Vol,
-					const double *a_Vol){
+          const double *T_Vol,
+          const double *a_Vol){
     
   
   // we need either the emission position or hit position
@@ -75,9 +75,9 @@ double VolElement::VolumeEmissFluxBlack(const int &vIndex,
 
   
 double VolElement::VolumeEmissFlux(const int &vIndex,
-				   const double *kl_Vol,
-				   const double *T_Vol,
-				   const double *a_Vol){
+           const double *kl_Vol,
+           const double *T_Vol,
+           const double *a_Vol){
   
   
   // we need either the emission position or hit position
@@ -100,8 +100,8 @@ double VolElement::VolumeEmissFlux(const int &vIndex,
 
  
 double VolElement::VolumeIntensityBlack(const int &vIndex,
-					const double *T_Vol,
-					const double *a_Vol){
+          const double *T_Vol,
+          const double *a_Vol){
   
   double Ts, VolInten;
   
@@ -116,7 +116,7 @@ double VolElement::VolumeIntensityBlack(const int &vIndex,
 
   
 double VolElement::VolumeIntensityBlack(const double &TVol,
-					const double &aVol){
+          const double &aVol){
   
   double Ts, VolInten;
   
@@ -130,9 +130,9 @@ double VolElement::VolumeIntensityBlack(const double &TVol,
   
   
 double VolElement::VolumeIntensity(const int &vIndex,
-				   const double *kl_Vol,
-				   const double *T_Vol,
-				   const double *a_Vol){
+           const double *kl_Vol,
+           const double *T_Vol,
+           const double *a_Vol){
   
     double Ts, VolInten;
     

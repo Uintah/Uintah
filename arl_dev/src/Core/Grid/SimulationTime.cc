@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,14 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Containers/StringUtil.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
 #include <Core/Thread/Thread.h>
+#include <Core/Util/StringUtil.h>
 
 #include <sci_values.h>
+
 #include <string>
 #include <iostream>
 

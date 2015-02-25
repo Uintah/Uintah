@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,45 +44,11 @@ TurbulentDiffusivity( const Expr::Tag rhoTag,
                       const double tSchmidt,
                       const Expr::Tag tViscTag )
 : Expr::Expression<SVolField>(),
-  tViscTag_ ( tViscTag ),
-  rhoTag_   ( rhoTag   ),
   tSchmidt_ ( tSchmidt )
-{}
-
-//--------------------------------------------------------------------
-
-TurbulentDiffusivity::
-~TurbulentDiffusivity()
-{}
-
-//--------------------------------------------------------------------
-
-void
-TurbulentDiffusivity::
-advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( rhoTag_   );
-  exprDeps.requires_expression( tViscTag_ );
+   rho_ = create_field_request<SVolField>(rhoTag);
+   tVisc_ = create_field_request<SVolField>(tViscTag);
 }
-
-//--------------------------------------------------------------------
-
-void
-TurbulentDiffusivity::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<SVolField>::type& scalarfm = fml.field_manager<SVolField>();
-
-  rho_   = &scalarfm.field_ref( rhoTag_   );
-  tVisc_ = &scalarfm.field_ref( tViscTag_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-TurbulentDiffusivity::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 
@@ -93,6 +59,7 @@ evaluate()
   using namespace SpatialOps;
   SVolField& result = this->value();
   result <<= 0.0;
-
-  result <<= *tVisc_ / (tSchmidt_ * *rho_);
+  const SVolField& mut = tVisc_->field_ref();
+  const SVolField& rho = rho_->field_ref();
+  result <<= mut / (tSchmidt_ * rho);
 }

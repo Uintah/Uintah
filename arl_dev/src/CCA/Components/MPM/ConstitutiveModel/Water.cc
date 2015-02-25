@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -163,7 +163,7 @@ void Water::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
     new_dw->allocateAndPut(pstress,  lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pdTdt,    lb->pdTdtLabel,               pset);
     new_dw->allocateAndPut(p_q,      lb->p_qLabel_preReloc,        pset);
     new_dw->get(deformationGradient_new,
                             lb->pDeformationMeasureLabel_preReloc, pset);

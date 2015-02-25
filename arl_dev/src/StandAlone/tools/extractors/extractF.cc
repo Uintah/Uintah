@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,6 +44,8 @@
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
 
+#include <Core/Parallel/Parallel.h>
+
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
@@ -75,8 +77,12 @@ void printDefGrad(DataArchive* da,
                    vector<long64>& partID,
                    string outFile);
 
-int main(int argc, char** argv)
+int
+main(int argc, char** argv)
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
+
   string partVar;
   int matID = 0;
   string partIDFile;

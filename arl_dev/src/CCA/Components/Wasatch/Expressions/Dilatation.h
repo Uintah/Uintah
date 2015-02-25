@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -47,16 +47,15 @@ template< typename FieldT,
 class Dilatation
  : public Expr::Expression<FieldT>
 {
-  const Expr::Tag vel1t_, vel2t_, vel3t_;
-  const bool is3d_;
+  const bool doX_, doY_, doZ_, is3d_;
 
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, FieldT >::type Vel1GradT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, FieldT >::type Vel2GradT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, FieldT >::type Vel3GradT;
 
-  const Vel1T* vel1_;
-  const Vel2T* vel2_;
-  const Vel3T* vel3_;
+  DECLARE_FIELD(Vel1T, vel1_);
+  DECLARE_FIELD(Vel2T, vel2_);
+  DECLARE_FIELD(Vel3T, vel3_);
 
   const Vel1GradT* vel1GradOp_;
   const Vel2GradT* vel2GradOp_;
@@ -85,8 +84,6 @@ public:
 
   ~Dilatation();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

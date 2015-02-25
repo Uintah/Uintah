@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -25,6 +25,8 @@
 
 #include <CCA/Components/ICE/WallShearStressModel/WallShearStressFactory.h>
 #include <CCA/Components/ICE/WallShearStressModel/logLawModel.h>
+#include <CCA/Components/ICE/WallShearStressModel/smoothWall.h>
+
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -56,7 +58,11 @@ WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps,
     
     if (WSS_model == "logLawModel"){
       return( scinew logLawModel( wss_ps, sharedState ) );
-    }else{
+    }
+    else if (WSS_model == "smoothWall"){
+      return( scinew smoothwall( wss_ps, sharedState) );
+    }
+else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown WallShearStress model ("<< WSS_model << " )\n"
          << "Valid models are:\n" 

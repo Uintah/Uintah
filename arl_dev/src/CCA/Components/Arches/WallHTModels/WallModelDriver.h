@@ -256,7 +256,7 @@ namespace Uintah{
           struct WallInfo { 
               double k; 
               double dy;
-	      double emissivity; 
+        double emissivity; 
               double T_inner; 
               double relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
               double max_TW;     ///< maximum wall temperature

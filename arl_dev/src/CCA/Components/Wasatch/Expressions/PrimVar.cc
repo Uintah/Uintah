@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -39,22 +39,24 @@ PrimVar( const Expr::Tag& rhoPhiTag,
          const Expr::Tag& rhoTag,
          const Expr::Tag& volFracTag)
   : Expr::Expression<FieldT>(),
-    rhophit_( rhoPhiTag ),
-    rhot_   ( rhoTag    ),
-    volfract_(volFracTag)
+    hasIntrusion_(volFracTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+  
+   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
+   rho_ = this->template create_field_request<DensT>(rhoTag);
+  if (hasIntrusion_)  volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 template< typename FieldT >
 PrimVar<FieldT,FieldT>::
 PrimVar( const Expr::Tag& rhoPhiTag,
          const Expr::Tag& rhoTag )
-  : Expr::Expression<FieldT>(),
-    rhophit_( rhoPhiTag ),
-    rhot_   ( rhoTag    )
+  : Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
+   rhophi_ = this->template create_field_request<FieldT>(rhoPhiTag);
+   rho_ = this->template create_field_request<FieldT>(rhoTag);
 }
 
 //--------------------------------------------------------------------
@@ -68,53 +70,6 @@ template< typename FieldT >
 PrimVar<FieldT,FieldT>::
 ~PrimVar()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename DensT >
-void
-PrimVar<FieldT,DensT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( rhophit_ );
-  exprDeps.requires_expression( rhot_    );
-  if (volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
-}
-
-template< typename FieldT >
-void
-PrimVar<FieldT,FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( rhophit_ );
-  exprDeps.requires_expression( rhot_    );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename DensT >
-void
-PrimVar<FieldT,DensT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
-  const typename Expr::FieldMgrSelector<DensT >::type& denfm = fml.template field_manager<DensT >();
-
-  rhophi_ = &phifm.field_ref( rhophit_ );
-  rho_    = &denfm.field_ref( rhot_    );
-  
-  if( volfract_ != Expr::Tag() ) volfrac_ = &phifm.field_ref( volfract_ );
-}
-
-template< typename FieldT >
-void
-PrimVar<FieldT,FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& phifm = fml.template field_manager<FieldT>();
-  rhophi_ = &phifm.field_ref( rhophit_ );
-  rho_    = &phifm.field_ref( rhot_    );
-}
 
 //--------------------------------------------------------------------
 
@@ -135,12 +90,14 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& phi = this->value();
-
+  const DensT& rho = rho_->field_ref();
+  const FieldT& rhophi = rhophi_->field_ref();
+  
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( phi );
   *tmp <<= 1.0; // we need to set this to 1.0 so that we don't get random values in out-of-domain faces
-  *tmp <<= (*interpOp_)( *rho_ );
-  if( volfract_ != Expr::Tag() ) phi <<= *volfrac_ * *rhophi_ / *tmp;
-  else                           phi <<= *rhophi_ / *tmp;
+  *tmp <<= (*interpOp_)( rho );
+  if( hasIntrusion_ ) phi <<= volfrac_->field_ref() * rhophi / *tmp;
+  else                        phi <<= rhophi / *tmp;
 }
 
 template< typename FieldT >
@@ -150,7 +107,9 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& phi = this->value();
-  phi <<= *rhophi_ / *rho_;
+  const FieldT& rho = rho_->field_ref();
+  const FieldT& rhophi = rhophi_->field_ref();
+  phi <<= rhophi / rho;
 }
 
 //--------------------------------------------------------------------

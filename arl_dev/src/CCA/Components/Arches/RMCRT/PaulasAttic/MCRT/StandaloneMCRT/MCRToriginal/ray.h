@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -67,9 +67,9 @@ public:
 
   inline
   void set_emissP(MTRand &MTrng,
-		  const double &xlow, const double &xup,
-		  const double &ylow, const double &yup,
-		  const double &zlow, const double &zup){
+      const double &xlow, const double &xup,
+      const double &ylow, const double &yup,
+      const double &zlow, const double &zup){
     
     xemiss = xlow + ( xup - xlow ) * MTrng.randExc();
     yemiss = ylow + ( yup - ylow ) * MTrng.randExc();
@@ -80,7 +80,7 @@ public:
   
  
   void set_emissS_vol(MTRand &MTrng,
-		      double *sVol);
+          double *sVol);
   
   
   // Travelling Ray's Emission Point
@@ -118,8 +118,8 @@ public:
   inline
   double ray_length(){
     length = sqrt ( ( xhit - xemiss ) * ( xhit - xemiss ) +
-		    ( yhit - yemiss ) * ( yhit - yemiss ) +
-		    ( zhit - zemiss ) * ( zhit - zemiss ) );
+        ( yhit - yemiss ) * ( yhit - yemiss ) +
+        ( zhit - zemiss ) * ( zhit - zemiss ) );
     return length;
   } 
 
@@ -139,8 +139,8 @@ public:
 
   inline
   void set_currentvIndex(const int &iIndex_,
-			 const int &jIndex_,
-			 const int &kIndex_){
+       const int &jIndex_,
+       const int &kIndex_){
     iIndex = iIndex_;
     jIndex = jIndex_;
     kIndex = kIndex_;
@@ -163,8 +163,8 @@ public:
   
   inline
   void set_futurevIndex(const int &iIndex_,
-			const int &jIndex_,
-			const int &kIndex_){
+      const int &jIndex_,
+      const int &kIndex_){
     
     futureViIndex = iIndex_;
     futureVjIndex = jIndex_;
@@ -223,21 +223,21 @@ public:
 
   
   void hitRealSurfaceInten(MTRand &MTrng,
-			   const double *absorb_surface,
-			   const double *rs_surface,
-			   const double *rd_surface,
-			   double &PathSurfaceLeft);
+         const double *absorb_surface,
+         const double *rs_surface,
+         const double *rd_surface,
+         double &PathSurfaceLeft);
   
   void TravelInMediumInten(MTRand &MTrng,
-			   VirtualSurface &obVirtual,
-			   const double *kl_Vol,
-			   const double *scatter_Vol,			   
-			   const double *X,
-			   const double *Y,
-			   const double *Z,
-			   const int *VolFeature,
-			   double &PathLeft,
-			   double &PathSurfaceLeft);
+         VirtualSurface &obVirtual,
+         const double *kl_Vol,
+         const double *scatter_Vol,        
+         const double *X,
+         const double *Y,
+         const double *Z,
+         const int *VolFeature,
+         double &PathLeft,
+         double &PathSurfaceLeft);
   
   
 

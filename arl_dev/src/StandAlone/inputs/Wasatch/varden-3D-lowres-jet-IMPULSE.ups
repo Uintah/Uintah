@@ -192,9 +192,6 @@
       
       <DefaultMaterial>all</DefaultMaterial>
       <Face circle="x-" origin="0 0.0 0.0" radius="0.05" name="circle-inlet" type="Velocity">
-        <BCType label="x-mom" var="Dirichlet" value="5.0"/>
-        <BCType label="y-mom" var="Dirichlet" value="0.0"/>
-        <BCType label="z-mom" var="Dirichlet" value="0.0"/>
         <BCType label="u" var="Dirichlet" value="1.0"/>
         <BCType label="v" var="Dirichlet" value="0.0"/>
         <BCType label="w" var="Dirichlet" value="0.0"/>

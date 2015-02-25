@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,12 +38,11 @@
  See the RMCRT benchmark interface for a use-case on this.
  */
 
-template< typename FieldT >
+template< typename SrcT, typename TargetT >
 class NullExpression
- : public Expr::Expression<FieldT>
+ : public Expr::Expression<TargetT>
 {
-  const Expr::TagList VarNameTags_;
-
+  DECLARE_VECTOR_OF_FIELDS(SrcT, f_);
   /* declare operators associated with this expression here */
 
     NullExpression( const Expr::TagList& VarNameTags );
@@ -64,10 +63,6 @@ public:
     const Expr::TagList VarNameTags_;
   };
 
-  ~NullExpression();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -81,58 +76,26 @@ public:
 
 
 
-template< typename FieldT >
-NullExpression<FieldT>::
+template< typename SrcT, typename TargetT >
+NullExpression<SrcT, TargetT>::
 NullExpression( const Expr::TagList& VarNameTags )
-  : Expr::Expression<FieldT>(),
-    VarNameTags_( VarNameTags )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-NullExpression<FieldT>::
-~NullExpression()
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-NullExpression<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
+  : Expr::Expression<TargetT>()
 {
-  exprDeps.requires_expression( VarNameTags_ );
+  this->template create_field_vector_request<SrcT>(VarNameTags, f_);
 }
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename SrcT, typename TargetT >
 void
-NullExpression<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-NullExpression<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-NullExpression<FieldT>::
+NullExpression<SrcT, TargetT>::
 evaluate()
 {}
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
-NullExpression<FieldT>::
+template< typename SrcT, typename TargetT >
+NullExpression<SrcT, TargetT>::
 Builder::Builder( const Expr::Tag& resultTag,
                   const Expr::TagList& VarNameTags )
   : ExpressionBuilder( resultTag ),
@@ -141,12 +104,12 @@ Builder::Builder( const Expr::Tag& resultTag,
 
 //--------------------------------------------------------------------
 
-template< typename FieldT >
+template< typename SrcT, typename TargetT >
 Expr::ExpressionBase*
-NullExpression<FieldT>::
+NullExpression<SrcT, TargetT>::
 Builder::build() const
 {
-  return new NullExpression<FieldT>( VarNameTags_ );
+  return new NullExpression<SrcT, TargetT>( VarNameTags_ );
 }
 
 

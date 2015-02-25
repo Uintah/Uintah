@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -141,14 +141,15 @@ void LinearInterpolator::findCellAndWeights_CFI(const Point& pos,
       
         IntVector extraCell_node = IntVector(ix + x, iy + y, iz + z);
          // this is an inside test
-         if(extraCell_node == Max(extraCell_node, finePatch_lo) && extraCell_node == Min(extraCell_node, finePatch_hi) ) {  
-          CFI_ni.push_back(extraCell_node);
+         if(extraCell_node == Max(extraCell_node, finePatch_lo) && 
+            extraCell_node == Min(extraCell_node, finePatch_hi) ) {  
+            CFI_ni.push_back(extraCell_node);
           //cout << "    ni " << extraCell_node << endl;
         } 
       }
     }
   }
-  
+
   //__________________________________
   // Reference Nomenclature: Stencil7 Mapping
   // Lx- :  L.w

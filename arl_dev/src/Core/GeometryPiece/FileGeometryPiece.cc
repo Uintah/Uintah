@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -462,7 +462,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
     d_size.push_back(tmpsize);
   }
   else {
-    // CPTI and CPDI populate psize matrix with Rvectors in columns
+    // CPTI and CPDI populate size matrix with Rvectors in columns
     // normalized by the grid spacing for interpolators in ParticleCreator.cc
     d_size.push_back(size);
   }

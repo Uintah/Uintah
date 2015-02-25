@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -41,16 +41,19 @@ SingleProcessorLoadBalancer::~SingleProcessorLoadBalancer()
 {
 }
 
-void SingleProcessorLoadBalancer::assignResources(DetailedTasks& graph)
+void
+SingleProcessorLoadBalancer::assignResources( DetailedTasks & graph )
 {
   int ntasks = graph.numTasks();
-  for(int i=0;i<ntasks;i++)
-    graph.getTask(i)->assignResource(0);
+  for( int i = 0; i < ntasks; i++ ) {
+    graph.getTask(i)->assignResource( 0 );
+  }
 }
 
-int SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment(const Patch*)
+int
+SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment( const Patch * )
 {
-   return 0;
+  return 0;
 }
 
 const PatchSet*
@@ -77,3 +80,4 @@ SingleProcessorLoadBalancer::inNeighborhood( const Patch* )
 {
   return true;
 }
+

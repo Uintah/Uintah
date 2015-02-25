@@ -31,24 +31,18 @@ tau
 TODO
 exclude.txt
 scripts
+autom4te.cache
 
 build_scripts/*.release
 
-CCA/Components/*.orig
-CCA/Components/*.release
-
-CCA/Components/Parent/*.orig
-CCA/Components/Parent/*.release
-
-CCA/Components/Arches/*.orig
-CCA/Components/Arches/*.release
-
-Core/Grid/*.orig
-Core/Grid/*.release
-
-StandAlone/*.release
-
-CCA/Components/ICE/CodeAttic
-CCA/Components/ICE/PressureSolve
+src/CCA/Components/MPMICE/CodeAttic
+src/CCA/Components/Arches/RMCRT/PaulasAttic
+src/CCA/Components/Arches/Attic
+src/CCA/Components/ICE/CodeAttic
+src/CCA/Components/ICE/PressureSolve
+src/StandAlone/inputs/ARCHES/Attic
 
 StandAlone/inputs/UCF/*.xml
+StandAlone/UintahUI
+
+
