@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -34,19 +34,22 @@
  *
  */
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Util/Assert.h>
-#include <Core/Persistent/Persistent.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/MiscMath.h>
+#include <Core/Persistent/Persistent.h>
+#include <Core/Util/Assert.h>
+#include <Core/Util/TypeDescription.h>
+#include <Core/Util/XMLUtils.h>
+
 #include <iostream>
 #include <cstdio>
 
-using std::istream;
-using std::ostream;
-using std::string;
+#include <stdlib.h>
+
+using namespace Uintah;
+using namespace std;
 
 namespace SCIRun {
 
@@ -67,6 +70,34 @@ Vector::vec_rint() const
    v.z(rint(z_));
 
    return v;
+}
+
+Vector
+Vector::fromString( const string & source ) // Creates a Vector from a string that looksl like "[Num, Num, Num]".
+{
+  Vector result;
+
+  // Parse out the [num,num,num]
+  // Now pull apart the source string.
+
+  string::size_type i1 = source.find("[");
+  string::size_type i2 = source.find_first_of(",");
+  string::size_type i3 = source.find_last_of(",");
+  string::size_type i4 = source.find("]");
+    
+  string x_val(source,i1+1,i2-i1-1);
+  string y_val(source,i2+1,i3-i2-1);
+  string z_val(source,i3+1,i4-i3-1);
+    
+  UintahXML::validateType( x_val, UintahXML::FLOAT_TYPE ); 
+  UintahXML::validateType( y_val, UintahXML::FLOAT_TYPE );
+  UintahXML::validateType( z_val, UintahXML::FLOAT_TYPE );
+    
+  result.x( atof(x_val.c_str()) );
+  result.y( atof(y_val.c_str()) );
+  result.z( atof(z_val.c_str()) );
+
+  return result;
 }
 
 void

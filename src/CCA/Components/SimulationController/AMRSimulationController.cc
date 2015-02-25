@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -50,7 +50,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Thread/Time.h>
-#include <Core/Tracker/TrackerClient.h>
 
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -84,10 +83,25 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
+  // If VisIt has been included into the build initialize the lib sim
+  // so that a user can conect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+
+#ifdef HAVE_MPICH
+  d_visit_simulation_data.isProc0 = isProc0_macro;
+#endif
+
+  visit_InitLibSim( &d_visit_simulation_data );
+#endif
 }
 
 AMRSimulationController::~AMRSimulationController()
 {
+  // If VisIt has been included into the build initialize the lib sim
+  // so that a user can conect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+  visit_EndLibSim( &d_visit_simulation_data );
+#endif
 }
 
 double barrier_times[5]={0};
@@ -125,19 +139,19 @@ AMRSimulationController::run()
 
   bool log_dw_mem=false;
 
-  if(dbg_dwmem.active()) {
-    log_dw_mem=true;
+  if( dbg_dwmem.active() ) {
+    log_dw_mem = true;
   }
 
-   // sets up sharedState, timeinfo, output, scheduler, lb
+   // Sets up sharedState, timeinfo, output, scheduler, lb.
    preGridSetup();
 
-   // create grid
+   // Create grid:
    GridP currentGrid = gridSetup();
 
-   d_scheduler->initialize(1, 1);
-   d_scheduler->advanceDataWarehouse(currentGrid, true);
-   d_scheduler->setInitTimestep(true);
+   d_scheduler->initialize( 1, 1 );
+   d_scheduler->advanceDataWarehouse( currentGrid, true );
+   d_scheduler->setInitTimestep( true );
 
    double time;
 
@@ -199,8 +213,7 @@ AMRSimulationController::run()
        HeapProfilerDump(heapename);
      }
 #endif
-     TrackerClient::trackEvent( Tracker::TIMESTEP_STARTED, time );
-
+     
      MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()::control loop");
      if(dbg_barrier.active()) {
        for(int i=0;i<5;i++) {
@@ -271,16 +284,30 @@ AMRSimulationController::run()
        barrier_times[2]+=Time::currentSeconds()-start;
      }
 
-     // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
-     //   Needs to be done before advanceDataWarehouse
+     // Yes, I know this is kind of hacky, but this is the only way to
+     // get a new grid from UdaReducer Needs to be done before
+     // advanceDataWarehouse
      if (d_reduceUda){
       currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
      }
-     
+
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
      d_scheduler->advanceDataWarehouse(currentGrid);
+
+     // If VisIt has been included into the build check the lib sim state
+     // to see if there is a connection and if so if anything needs to be
+     // done.
+#ifdef HAVE_VISIT
+     d_visit_simulation_data.schedulerP = d_scheduler;
+     d_visit_simulation_data.gridP = currentGrid;
+     d_visit_simulation_data.time  = time;
+     d_visit_simulation_data.cycle =
+       d_sharedState->getCurrentTopLevelTimeStep();     
+
+     visit_CheckState( &d_visit_simulation_data );
+#endif
 
      // Put the current time into the shared state so other components
      // can access it.  Also increment (by one) the current time step
@@ -302,8 +329,8 @@ AMRSimulationController::run()
      bool nr;
      if( (nr=needRecompile( time, delt, currentGrid )) || first ){
         
-       if(nr){  // recompile taskgraph, re-assign BCs, reset recompile flag
-          currentGrid->assignBCS(d_grid_ps,d_lb);
+       if(nr){ // Recompile taskgraph, re-assign BCs, reset recompile flag.
+          currentGrid->assignBCS( d_grid_ps, d_lb );
           currentGrid->performConsistencyCheck();
           d_sharedState->setRecompileTaskGraph( false );
        }
@@ -697,11 +724,12 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         d_sim->scheduleTimeAdvance(grid->getLevel(i), d_scheduler);
       }
     }  
-  } else {
+  }
+  else {
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     // for dynamic lb's, set up initial patch config
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::init); 
-    grid->assignBCS(d_grid_ps,d_lb);
+    grid->assignBCS( d_grid_ps, d_lb );
     grid->performConsistencyCheck();
     t = d_timeinfo->initTime;
 
@@ -756,7 +784,9 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 } // end doInitialTimestep()
 
 //______________________________________________________________________
-bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimestep)
+
+bool
+AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
   TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
@@ -789,7 +819,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
       barrier_times[1]+=Time::currentSeconds()-start;
     }
     
-    currentGrid->assignBCS(d_grid_ps,d_lb);
+    currentGrid->assignBCS( d_grid_ps, d_lb );
     currentGrid->performConsistencyCheck();
 
     //__________________________________
@@ -827,8 +857,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 
     double scheduleTime = Time::currentSeconds();
     
-    if (!initialTimestep) {
-      d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
+    if( !initialTimestep ) {
+      d_scheduler->scheduleAndDoDataCopy( currentGrid, d_sim );
     }
     
     scheduleTime = Time::currentSeconds() - scheduleTime;

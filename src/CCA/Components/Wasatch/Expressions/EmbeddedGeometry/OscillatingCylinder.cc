@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,6 +23,7 @@
  */
 
 #include "OscillatingCylinder.h"
+#include <CCA/Components/Wasatch/TagNames.h>
 //--------------------------------------------------------------------
 
 OscillatingCylinder::
@@ -41,47 +42,26 @@ OscillatingCylinder( const std::string& axis,
   outsidevalue_(outsideValue),
   radius_(radius),
   frequency_(frequency),
-  amplitude_(amplitude),
-  timet_( "time", Expr::STATE_NONE )
+  amplitude_(amplitude)
 {
+  Expr::Tag tag1, tag2;
+  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
   if ( axis == "X" ) {
-    tag1_ = Expr::Tag("YSVOL", Expr::STATE_NONE);
-    tag2_ = Expr::Tag("ZSVOL", Expr::STATE_NONE);
+    tag1 = tagNames.ysvolcoord;
+    tag2 = tagNames.zsvolcoord;
   } else if ( axis == "Y" ) {
-    tag1_ = Expr::Tag("XSVOL", Expr::STATE_NONE);
-    tag2_ = Expr::Tag("ZSVOL", Expr::STATE_NONE);    
+    tag1 = tagNames.xsvolcoord;
+    tag2 = tagNames.zsvolcoord;
   } else if ( axis == "Z" ) {
-    tag1_ = Expr::Tag("XSVOL", Expr::STATE_NONE);
-    tag2_ = Expr::Tag("YSVOL", Expr::STATE_NONE);
+    tag1 = tagNames.xsvolcoord;
+    tag2 = tagNames.ysvolcoord;
   }
 
   this->set_gpu_runnable( false );
-}
-
-//--------------------------------------------------------------------
-
-void
-OscillatingCylinder::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( tag1_ );
-  exprDeps.requires_expression( tag2_ );
-  const Expr::Tag timeVarTag( "time", Expr::STATE_NONE );
-  exprDeps.requires_expression(timeVarTag);
-}
-
-//--------------------------------------------------------------------
-
-void
-OscillatingCylinder::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<SVolField>::type& fm = fml.field_manager<SVolField>();
-  field1_ = &fm.field_ref( tag1_ );
-  field2_ = &fm.field_ref( tag2_ );
   
-  // get the time tag
-  t_ = &fml.field_ref<TimeField>( timet_ );
+   field1_ = create_field_request<SVolField>(tag1);
+   field2_ = create_field_request<SVolField>(tag2);
+   t_ = create_field_request<TimeField>(tagNames.time);
 }
 
 //--------------------------------------------------------------------
@@ -92,10 +72,15 @@ evaluate()
 {
   using namespace SpatialOps;
   // jcs need to fold all of this into cond before it is GPU runnable.
-  const double orig0 = origin_[0] + oscillatingdir_[0]*amplitude_*sin(frequency_ * (*t_)[0] );
-  const double orig1 = origin_[1] + oscillatingdir_[1]*amplitude_*sin(frequency_ * (*t_)[0] );
+  const TimeField& t = t_->field_ref();
+  const double orig0 = origin_[0] + oscillatingdir_[0]*amplitude_*sin(frequency_ * t[0] );
+  const double orig1 = origin_[1] + oscillatingdir_[1]*amplitude_*sin(frequency_ * t[0] );
+  
+  const SVolField& field1 = field1_->field_ref();
+  const SVolField& field2 = field2_->field_ref();
+
   SVolField& result = this->value();
-  result <<= cond( (*field1_ - orig0) * (*field1_ - orig0) + (*field2_ - orig1)*(*field2_ - orig1) - radius_*radius_ <= 0,
+  result <<= cond( (field1 - orig0) * (field1 - orig0) + (field2 - orig1)*(field2 - orig1) - radius_*radius_ <= 0,
                    insidevalue_)
                  ( outsidevalue_ );
 }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,7 +33,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
-#include <Core/Containers/StringUtil.h>
+#include <Core/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Box.h>
@@ -45,15 +46,13 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
-#include <Core/Util/Environment.h>
-#include <Core/Util/FileUtils.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Exceptions/ErrnoException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/Environment.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Util/FileUtils.h>
+#include <Core/Util/StringUtil.h>
 
 #include <iomanip>
 #include <cerrno>
@@ -220,13 +219,13 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       //__________________________________
       //  bullet proofing: must save p.x 
       //  in addition to other particle variables "p.*"
-      if (saveItem.labelName == "p.x" || saveItem.labelName == "p.xx") {
+      if (saveItem.labelName == d_particlePositionName || saveItem.labelName == "p.xx") {
          d_saveP_x = true;
       }
 
 
       string::size_type pos = saveItem.labelName.find("p.");
-      if ( pos != string::npos &&  saveItem.labelName != "p.x") {
+      if ( pos != string::npos &&  saveItem.labelName != d_particlePositionName) {
         d_saveParticleVariables = true;
       }
       
@@ -235,7 +234,7 @@ DataArchiver::problemSetup( const ProblemSpecP    & params,
       save = save->findNextBlock("save");
    }
    if(d_saveP_x == false && d_saveParticleVariables == true) {
-     throw ProblemSetupException(" You must save p.x when saving other particle variables",
+     throw ProblemSetupException(" You must save " + d_particlePositionName + " when saving other particle variables",
                                  __FILE__, __LINE__);
    }     
    
@@ -2062,7 +2061,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
         continue;
     
       //__________________________________
-      //  debugging otuput
+      //  debugging output
       dbg << "    "<<var->getName() << ", materials: ";
       for(int m=0;m<var_matls->size();m++){
         if(m != 0)
@@ -2405,8 +2404,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
                       matSubset->getVector().end());
 
      for(ConsecutiveRangeSet::iterator liter = levels.begin(); liter != levels.end(); liter++) {
-       ConsecutiveRangeSet& unionedVarMatls =
-         label_map[dep->var->getName()][*liter];
+       ConsecutiveRangeSet& unionedVarMatls = label_map[dep->var->getName()][*liter];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
      

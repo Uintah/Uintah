@@ -69,15 +69,15 @@ main()
             cout<<"Pressure:"<<Water.Pressure<<"Pa"<<"\n";
             cout<<"Enthalpy:"<<Water.Enthalpy<<"J/kg"<<"\n";
             cout<<"Temperature:"<<Water.Temperature-273.15<<"cc"<<"\n";
-            cout<<"Specic volume:"<<Water.SV<<"m3/kg"<<"\n";	
+            cout<<"Specic volume:"<<Water.SV<<"m3/kg"<<"\n";  
         }
         nd=Water.Dynamic_Viscosity(Water.Temperature,1/Water.SV);
-	cout<<"dynamic viscosity:"<<nd<<"kg/(m.s)\n";
-	lam=Water.Conductivity(Water.Temperature,1/Water.SV);
-	cout<<"Conductivity:"<<lam<<"W/(m.k)\n";
-	//Specific heat J/(kg.K)
-	cp=Water.Heat_Cp(Water.Temperature,Water.Pressure,Water.Steam_Fraction);
-	cout<<"Specific heat Cp="<<cp<<"J/(kg.K)\n";
+  cout<<"dynamic viscosity:"<<nd<<"kg/(m.s)\n";
+  lam=Water.Conductivity(Water.Temperature,1/Water.SV);
+  cout<<"Conductivity:"<<lam<<"W/(m.k)\n";
+  //Specific heat J/(kg.K)
+  cp=Water.Heat_Cp(Water.Temperature,Water.Pressure,Water.Steam_Fraction);
+  cout<<"Specific heat Cp="<<cp<<"J/(kg.K)\n";
         cout<<"\n\nplease input your choice:";
         cin>>I;
     }

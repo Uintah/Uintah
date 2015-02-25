@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -31,21 +31,23 @@ SRCDIR := Core/Util
 
 SRCS += \
         $(SRCDIR)/DebugStream.cc        \
+        $(SRCDIR)/DynamicLoader.cc      \
         $(SRCDIR)/Endian.cc             \
         $(SRCDIR)/Environment.cc        \
         $(SRCDIR)/FileUtils.cc          \
-        $(SRCDIR)/SizeTypeConvert.cc    \
-        $(SRCDIR)/RWS.cc                \
-        $(SRCDIR)/sci_system.cc         \
-        $(SRCDIR)/Signals.cc            \
-        $(SRCDIR)/Timer.cc              \
-        $(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/ProgressiveWarning.cc \
         $(SRCDIR)/ProgressReporter.cc   \
-        $(SRCDIR)/Util.cc               \
-        $(SRCDIR)/DynamicLoader.cc      \
+        $(SRCDIR)/RWS.cc                \
+        $(SRCDIR)/sci_system.cc         \
+        $(SRCDIR)/SizeTypeConvert.cc    \
+        $(SRCDIR)/Signals.cc            \
+        $(SRCDIR)/Socket.cc             \
         $(SRCDIR)/soloader.cc           \
-        $(SRCDIR)/Socket.cc  
+        $(SRCDIR)/StringUtil.cc         \
+        $(SRCDIR)/Timer.cc              \
+        $(SRCDIR)/TypeDescription.cc    \
+        $(SRCDIR)/XMLUtils.cc           \
+        $(SRCDIR)/Util.cc               
 
 SRCS += $(REFCOUNT_IMPL)
 

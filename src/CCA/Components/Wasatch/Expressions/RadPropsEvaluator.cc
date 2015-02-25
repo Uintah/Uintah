@@ -6,7 +6,7 @@
  *
  * The MIT License
  *
- * Copyright (c) 2013 The University of Utah
+ * Copyright (c) 2013-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,10 +38,10 @@ RadPropsEvaluator( const Expr::Tag& tempTag,
                    const RadSpecMap& species,
                    const std::string& fileName )
   : Expr::Expression<FieldT>(),
-    tempTag_( tempTag ),
     greyGas_( new GreyGas(fileName) )
 {
   // obtain the list of species from the file:
+  Expr::TagList indepVarNames;
   const std::vector<RadiativeSpecies>& specOrder = greyGas_->species();
   BOOST_FOREACH( const RadiativeSpecies& sp, specOrder ){
     const RadSpecMap::const_iterator isp = species.find(sp);
@@ -53,9 +53,12 @@ RadPropsEvaluator( const Expr::Tag& tempTag,
       throw std::invalid_argument( msg.str() );
     }
     else{
-      indepVarNames_.push_back( isp->second );
+      indepVarNames.push_back( isp->second );
     }
   }
+  
+   temp_ = this->template create_field_request<FieldT>(tempTag);
+  this->template create_field_vector_request<FieldT>(indepVarNames, indepVars_);
 }
 
 //--------------------------------------------------------------------
@@ -72,35 +75,6 @@ RadPropsEvaluator<FieldT>::
 template< typename FieldT >
 void
 RadPropsEvaluator<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  BOOST_FOREACH( const Expr::Tag& tag, indepVarNames_ ){
-    exprDeps.requires_expression( tag );
-  }
-  exprDeps.requires_expression( tempTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-RadPropsEvaluator<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-
-  indepVars_.clear();
-  BOOST_FOREACH( const Expr::Tag& tag, indepVarNames_ ){
-    indepVars_.push_back( &fm.field_ref(tag) );
-  }
-  temp_ = &fm.field_ref( tempTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-RadPropsEvaluator<FieldT>::
 evaluate()
 {
   FieldT& result = this->value();
@@ -109,14 +83,15 @@ evaluate()
   typedef std::vector<Iterator> IVarIter;
 
   IVarIter ivarIters;
-  for( typename IndepVarVec::const_iterator i=indepVars_.begin(); i!=indepVars_.end(); ++i ){
-    ivarIters.push_back( (*i)->begin() );
+  for (size_t i=0; i<indepVars_.size(); ++i) {
+    const FieldT iVar = indepVars_[i]->field_ref();
+    ivarIters.push_back(iVar.begin());
   }
 
   std::vector<double> ivarsPoint( indepVars_.size(), 0.0 );
-
+  const FieldT& temp = temp_->field_ref();
   // loop over grid points.  iii is a dummy variable.
-  Iterator itemp=temp_->begin();
+  Iterator itemp=temp.begin();
   for( typename FieldT::iterator iprop=result.begin(); iprop!=result.end(); ++iprop, ++itemp ){
 
     // extract indep vars at this grid point
@@ -166,11 +141,16 @@ ParticleRadProps( const ParticleRadProp prop,
                   const Expr::Tag& pRadiusTag,
                   const std::complex<double>& refIndex )
   : Expr::Expression<FieldT>(),
-    props_( new ParticleRadCoeffs(refIndex) ),
-    prop_      ( prop       ),
-    tempTag_   ( tempTag    ),
-    pRadiusTag_( pRadiusTag )
-{}
+    props_( new ParticleRadCoeffs(refIndex,
+                                  1e-7,   /// min particle size
+                                  1e-4,   // max particle size
+                                  10,     // number of sizes
+                                  1 ) ),  // order of interpolant
+    prop_      ( prop       )
+{
+   temp_ = this->template create_field_request<FieldT>(tempTag);
+   pRadius_ = this->template create_field_request<FieldT>(pRadiusTag);
+}
 
 //--------------------------------------------------------------------
 
@@ -184,38 +164,16 @@ ParticleRadProps<FieldT>::
 template< typename FieldT >
 void
 ParticleRadProps<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( tempTag_ );
-  exprDeps.requires_expression( pRadiusTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ParticleRadProps<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-
-  temp_    = &fm.field_ref( tempTag_    );
-  pRadius_ = &fm.field_ref( pRadiusTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ParticleRadProps<FieldT>::
 evaluate()
 {
   FieldT& result = this->value();
 
   typedef typename FieldT::const_iterator Iterator;
 
-  Iterator itemp=temp_->begin(), irad=pRadius_->begin();
-  const Iterator ite=temp_->end();
+  const FieldT& temp = temp_->field_ref();
+  const FieldT& pRadius = pRadius_->field_ref();
+  Iterator itemp=temp.begin(), irad = pRadius.begin();
+  const Iterator ite=temp.end();
   for( typename FieldT::iterator iprop=result.begin(); itemp!=ite; ++iprop, ++itemp, ++irad ){
 
     switch( prop_ ){

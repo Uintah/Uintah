@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -371,6 +371,15 @@ protected:
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw);
 
+  //////////
+  // Add new particles to the simulation based on criteria TBD:
+  virtual void addParticles(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
+
+
   // Used to compute the particles initial physical size
   // for use in deformed particle visualization
   virtual void computeParticleScaleFactor(const ProcessorGroup*,
@@ -506,6 +515,10 @@ protected:
                                        const PatchSet*,
                                        const MaterialSet*);
 
+  virtual void scheduleAddParticles(SchedulerP&, 
+                                    const PatchSet*,
+                                    const MaterialSet*);
+
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
                                                   const MaterialSet*);
@@ -604,7 +617,6 @@ protected:
   std::vector<double> d_IPColor;
   std::vector<Vector> d_IPTranslate;
   std::vector<Vector> d_IPVelNew;
-
 
 
   bool             d_fracture;

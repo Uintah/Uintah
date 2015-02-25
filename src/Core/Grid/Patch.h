@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1650,10 +1650,17 @@ namespace Uintah {
     
     /**
      * Returns the patches on the level offset by levelOffset of this level
-     * that overlap with this patch.
+     * that overlap with this patch.  This version is for CellBased applications
      */
-    void getOtherLevelPatches(int levelOffset, selectType& patches, int numGhostCells = 0)
-    const;
+    void getOtherLevelPatches(int levelOffset, selectType& patches,
+                              int numGhostCells = 0) const;
+
+    /**
+     * Returns the patches on the level offset by levelOffset of this level
+     * that overlap with this patch.  This version is for NodeBased applications
+     */
+    void getOtherLevelPatchesNB(int levelOffset, selectType& patches,
+                                int numGhostCells = 0) const;
     
     /**
      * Returns the patches on the finer level that overlap

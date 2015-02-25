@@ -1,10 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
 
-  <Wasatch                             spec="OPTIONAL NO_DATA" >
-    <include href="wasatch_spec.xml" section="Wasatch"/>
-  </Wasatch>
-
   <CFD>
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
@@ -23,13 +19,11 @@
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'coal_density, 
-                                                                          coal_temperature,
-                                                                          coal_temperature_nebo,
-                                                                          const_environment'">
+                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable'">
 
-          <constants                    spec="REQUIRED MULTIPLE_DOUBLES"
-                                        need_applies_to="type const_environment"/>
+          <frequency                    spec="OPTIONAL INTEGER 'positive'"
+                                        need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps). 
+                                                                                             Otherwise it just copies old fluxes forward. Default = 1. -->
 
         </model>
       </PropertyModelsV2>
@@ -194,7 +188,7 @@
                                         attribute1="type REQUIRED STRING 'constant, burns_christon, radprops, hottel_sarofim'"
                                         need_applies_to="type radiation_properties">
 
-            <abskg                        spec="OPTIONAL NO_DATA" 
+            <abskg                        spec="REQUIRED NO_DATA" 
                                           attribute1="label REQUIRED STRING"/> <!-- the name you want to give the abskg (gas only) variable.  Default value is abskg. -->
             <temperature                  spec="OPTIONAL NO_DATA"
                                           attribute1="label REQUIRED STRING"/> <!-- The label (table) name of temperature -->
@@ -273,7 +267,15 @@
       <EulerianParticles                   spec="OPTIONAL NO_DATA">
         <ParticleVariables                 spec="OPTIONAL NO_DATA">
           <variable                        spec="MULTIPLE NO_DATA"
-                                           attribute1="role REQUIRED STRING 'raw_coal, char, size, density, uvel, vvel, wvel, enthalpy, temperature, dTdt'"
+                                           attribute1="role REQUIRED STRING 'raw_coal, 
+                                                                             char, 
+                                                                             size, 
+                                                                             density, 
+                                                                             uvel, vvel, wvel, 
+                                                                             enthalpy, 
+                                                                             temperature, 
+                                                                             dTdt, 
+                                                                             total_number_density'"
                                            attribute2="label REQUIRED STRING"/>
           
         </ParticleVariables>
@@ -672,7 +674,6 @@
         <extra_table_lookup             spec="OPTIONAL NO_DATA"/> <!-- perform an extra table lookup at Stage 2 of the algorithm --> 
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
-          <use_wasatch_momentum_rhs spec="OPTIONAL NO_DATA" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, old_central, old_upwind'" /> 
           <!-- wallupwind = upwinding on walls, central otherwise (cheap wall model)--> 
@@ -880,12 +881,26 @@
 
         <model                        spec="MULTIPLE NO_DATA"
                                       attribute1="label REQUIRED STRING"
-                                      attribute2="type REQUIRED STRING 'simple_rate, drag, gravity, constant'">
+                                      attribute2="type REQUIRED STRING 'simple_rate, 
+                                                                        drag, 
+                                                                        gravity, 
+                                                                        constant, 
+                                                                        coal_density, 
+                                                                        coal_temperature_nebo, 
+                                                                        coal_temperature, 
+                                                                        coal_mass_clip, 
+                                                                        total_number_density'">
 
-          <!-- Simple rate expression -->
+            <!-- The grid parameter is used for templated properties -->
             <grid                       spec="REQUIRED NO_DATA"
                                         attribute1="dependent_type REQUIRED STRING 'svol'"
-                                        attribute2="independent_type REQUIRED STRING 'svol'"/>
+                                        attribute2="independent_type REQUIRED STRING 'svol'"
+                                        need_applies_to="type drag, gravity, constant"/>
+
+            <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this model affects -->
+
+
+            <!-- Simple rate expression -->
             <A                          spec="REQUIRED DOUBLE 'positive'"
                                         need_applies_to="type simple_rate"/>       <!-- Pre-exponential factor -->
             <ER                         spec="REQUIRED DOUBLE 'positive'"
@@ -899,8 +914,7 @@
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
             
-            <IC                         spec="OPTIONAL STRING" />      <!-- base label for which internal coordiante this source affects -->
-          <!-- drag model -->
+            <!-- drag model -->
             <particle_density           spec="REQUIRED NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, node_specific'"
                                         need_applies_to="type drag, gravity"> <!-- use a constant density for all particles, or use a model for each-->
@@ -927,7 +941,9 @@
                                         need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
             <w_velocity_label           spec="OPTIONAL STRING"
                                         need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
-            <constant                   spec="REQUIRED DOUBLE"
+
+            <!-- constant property model: set a constant/environment -->
+            <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
                                         need_applies_to="type constant"/>
         </model>
 
@@ -950,10 +966,20 @@
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" /> <!-- Turbulence closure (D_T = mu_t/(Sc_t or Pr_t)), default = 0.4 -->    
           <doDiff                       spec="OPTIONAL BOOLEAN"/> <!-- Turn diffusion on/off --> 
           <doConv                       spec="OPTIONAL BOOLEAN"/> <!-- Turn convection on/off --> 
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee, central, old_super_bee'"/> <!-- VAN LEER not working --> 
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind, 
+                                                               2upwind,
+                                                               quick,
+                                                               roe_minmod, 
+                                                               super_bee, 
+                                                               vanleer, 
+                                                               central, 
+                                                               old_super_bee, 
+                                                               super_bee_wall_upwind,
+                                                               vanleer_wall_upwind, 
+                                                               roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <!--use_laminar_pr               spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/-->
-          <scaling_const                spec="OPTIONAL DOUBLE"/>  <!-- Not used at the moment -->                               
+          <scaling_const                spec="OPTIONAL MULTIPLE_DOUBLES"/>  <!-- Not used at the moment -->                               
           <!-- Regarding the density guess (next two specs): If the equation is enthalpy or a table parameter, then density_guess=true is automatically set for you.
                You don't need to set it again if you don't want to. --> 
           <use_density_guess            spec="OPTIONAL NO_DATA"/> <!-- Uses a guessed density to get \phi^{n+1}, default=false -->
@@ -1038,7 +1064,6 @@
                                                                            do_radiation,                                                           
                                                                            rmcrt_radiation, 
                                                                            bowman_nox,
-                                                                           wasatch_expr,
                                                                            pc_transport,
                                                                            moment2_mixture_fraction_src,
                                                                            dissipation_src,
@@ -1054,9 +1079,6 @@
             <!-- Tabulated reaction rate --> 
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
             
-            <!-- Wasatch expression as a source - needs ForceOnGraph in Wasatch block -->
-            <expr                       spec="REQUIRED STRING" need_applies_to="type wasatch_expr" />
-
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
@@ -1089,6 +1111,7 @@
 
             <!-- Radiation models --> 
             <calc_frequency             spec="OPTIONAL INTEGER" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every N steps, default = 3 --> 
+            <checkForMissingIntensities spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation" /> <!-- This flag is designed to assist users using DOR with scattering, and changing their ordinate number on a restart --> 
             <!--abskp_label                spec="OPTIONAL STRING"  need_applies_to="type do_radiation rmcrt_radiation" /--> <!-- Derek -->  
             <calc_on_all_RKsteps        spec="OPTIONAL BOOLEAN" need_applies_to="type do_radiation rmcrt_radiation" /> <!-- calculate radiation every RK step, default = false --> 
             <abskg                      spec="OPTIONAL NO_DATA"  
@@ -1312,7 +1335,8 @@
 
         <VelModel                       spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
-                                        attribute2="type REQUIRED STRING 'Balachandar, Dragforce'">
+                                        attribute2="type REQUIRED STRING 'Balachandar, 
+                                                                          Dragforce'">
 
           <kinematic_viscosity          spec="OPTIONAL DOUBLE 'positive'"/>
           <L                            spec="OPTIONAL DOUBLE 'positive'"/>
@@ -1334,9 +1358,16 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'BTDevol, RichardsFletcherDevol, KobayashiSarofimDevol, YamamotoDevol, ConstantModel, 
+                                        attribute2="type REQUIRED STRING 'BTDevol, 
+                                                                          RichardsFletcherDevol, 
+                                                                          KobayashiSarofimDevol, 
+                                                                          YamamotoDevol, 
+                                                                          ConstantModel, 
                                                                           Drag,
-                                                                          ShaddixHeatTransfer, EnthalpyShaddix, CharOxidationShaddix'">
+                                                                          ShaddixHeatTransfer, 
+                                                                          EnthalpyShaddix, 
+                                                                          CharOxidationShaddix, 
+                                                                          SimpleBirth'">
 
             <ICVars                     spec="OPTIONAL NO_DATA"> <!-- block containing list of internal coordinates the DQMOM model depends on -->
               <variable                 spec="MULTIPLE NO_DATA"
@@ -1363,13 +1394,33 @@
             <direction                  spec="REQUIRED STRING 'x,X,y,Y,z,Z'" 
                                         need_applies_to="type Drag"/>
 
+            <!-- Simple Birth -->
+            <small_weight               spec="REQUIRED DOUBLE"
+                                        need_applies_to="type SimpleBirth"/> <!-- The smallest weight value allowed -->
+            <is_weight                  spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type SimpleBirth"/> <!-- Model birth term for the weight -->
+            <abscissa                   spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type SimpleBirth"/> <!-- If not a weight, then the root of the abscissa name -->
+
+
           </model>
         </Models>
 
         <Weights                        spec="REQUIRED NO_DATA">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind,
+                                                               2upwind,
+                                                               quick,
+                                                               roe_minmod, 
+                                                               vanleer, 
+                                                               super_bee, 
+                                                               central, 
+                                                               old_super_bee, 
+                                                               super_bee_wall_upwind, 
+                                                               vanleer_wall_upwind,
+                                                               roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <initialization               spec="OPTIONAL NO_DATA"
@@ -1391,12 +1442,14 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
-          <scaling_const                spec="REQUIRED DOUBLE"/>                              
+          <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
             <high                       spec="OPTIONAL DOUBLE"/> <!-- High clipping value for SCALED value of DQMOM internal coordinate -->
             <tol                        spec="OPTIONAL DOUBLE"/> <!-- Tolerance on the clipping (low+tol, high-tol) --> 
           </Clipping>
+          <model                        spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
         </Weights>
 
 
@@ -1404,7 +1457,17 @@
                                         attribute1="label REQUIRED STRING">
           <doDiff                       spec="OPTIONAL BOOLEAN"/>
           <doConv                       spec="OPTIONAL BOOLEAN"/>
-          <conv_scheme                  spec="OPTIONAL STRING 'upwind, roe_minmod, super_bee'"/>
+          <conv_scheme                  spec="OPTIONAL STRING 'upwind,
+                                                               2upwind,
+                                                               quick,
+                                                               roe_minmod, 
+                                                               vanleer, 
+                                                               super_bee, 
+                                                               central, 
+                                                               old_super_bee, 
+                                                               super_bee_wall_upwind, 
+                                                               vanleer_wall_upwind,
+                                                               roe_minmod_wall_upwind'"/> <!-- VAN LEER not working?? --> 
           <turbulentPrandtlNumber       spec="OPTIONAL DOUBLE" />
           <molecular_diffusivity        spec="OPTIONAL DOUBLE 'positive'"/>
           <nominal_values               spec="REQUIRED MULTIPLE_DOUBLES"/> <!-- nominal values for each of the internal coordinates when the weight goes to zero -->
@@ -1437,7 +1500,7 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
-          <scaling_const                spec="REQUIRED DOUBLE"/>                              
+          <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>                              
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
           <Clipping                     spec="OPTIONAL NO_DATA">
@@ -1518,11 +1581,6 @@
         </Moment>
         
       </CQMOM>
-
-      <!-- Use this block for wasatch-in-arches builds only to create placeholders for arbitrary variables -->
-      <ExtraWarchesVariables            spec="OPTIONAL NO_DATA">
-        <NameTag                        spec="MULTIPLE"/>
-      </ExtraWarchesVariables>
     </ARCHES>
   </CFD>
 

@@ -1,10 +1,7 @@
-#ifndef Uintah_Component_Arches_Arches_h
-#define Uintah_Component_Arches_Arches_h
-
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -24,6 +21,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+
+#ifndef Uintah_Component_Arches_Arches_h
+#define Uintah_Component_Arches_Arches_h
+
 /**
  * \file
  *
@@ -94,14 +95,6 @@ WARNING
 // sudden appearance of mass in second step
 //
 // #define ExactMPMArchesInitialize
-
-
-# ifdef WASATCH_IN_ARCHES
-  #include <CCA/Components/Wasatch/Transport/MomentumTransportEquation.h>
-  namespace Wasatch{
-    class Wasatch;
-  }
-# endif // WASATCH_IN_ARCHES
 
 namespace Uintah {
 
@@ -306,15 +299,10 @@ private:
   /** @brief Registers all possible Property Models by instantiating a builder in the factory */
   void registerPropertyModels( ProblemSpecP& db );
 
-# ifdef WASATCH_IN_ARCHES
-  Wasatch::Wasatch* const d_wasatch;
-# endif // WASATCH_IN_ARCHES
-
   std::string d_whichTurbModel;
   bool d_mixedModel;
   bool d_with_mpmarches;
   bool d_extraProjection;
-  bool d_useWasatchMomRHS;
   double d_initial_dt; 
 
   ScaleSimilarityModel* d_scaleSimilarityModel;

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -62,18 +62,21 @@ evaluate()
   FieldT& kE = this->value();
     
   if( this->is3d_ ){ // inline the 3D calculation for better performance:
+    const Vel1T& u = this->u_->field_ref();
+    const Vel2T& v = this->v_->field_ref();
+    const Vel3T& w = this->w_->field_ref();
     kE <<= 0.5 * (
-        (*this->interpVel1T2FieldTOp_)(*this->vel1_) * (*this->interpVel1T2FieldTOp_)(*this->vel1_) +
-        (*this->interpVel2T2FieldTOp_)(*this->vel2_) * (*this->interpVel2T2FieldTOp_)(*this->vel2_) +
-        (*this->interpVel3T2FieldTOp_)(*this->vel3_) * (*this->interpVel3T2FieldTOp_)(*this->vel3_)
+        (*this->interpVel1T2FieldTOp_)(u) * (*this->interpVel1T2FieldTOp_)(u) +
+        (*this->interpVel2T2FieldTOp_)(v) * (*this->interpVel2T2FieldTOp_)(v) +
+        (*this->interpVel3T2FieldTOp_)(w) * (*this->interpVel3T2FieldTOp_)(w)
       );
   }
   else{ // 1D and 2D are assembled in pieces (slower):
     SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( kE );
-    if( this->vel1t_ != Expr::Tag() ) kE <<=      (*this->interpVel1T2FieldTOp_)(*this->vel1_) * (*this->interpVel1T2FieldTOp_)(*this->vel1_);
+    if( this->doX_ ) kE <<=      (*this->interpVel1T2FieldTOp_)(this->u_->field_ref()) * (*this->interpVel1T2FieldTOp_)(this->u_->field_ref());
     else                              kE <<= 0.0;
-    if( this->vel2t_ != Expr::Tag() ) kE <<= kE + (*this->interpVel2T2FieldTOp_)(*this->vel2_) * (*this->interpVel2T2FieldTOp_)(*this->vel2_);
-    if( this->vel3t_ != Expr::Tag() ) kE <<= kE + (*this->interpVel3T2FieldTOp_)(*this->vel3_) * (*this->interpVel3T2FieldTOp_)(*this->vel3_);
+    if( this->doY_ ) kE <<= kE + (*this->interpVel2T2FieldTOp_)(this->v_->field_ref()) * (*this->interpVel2T2FieldTOp_)(this->v_->field_ref());
+    if( this->doZ_ ) kE <<= kE + (*this->interpVel3T2FieldTOp_)(this->w_->field_ref()) * (*this->interpVel3T2FieldTOp_)(this->w_->field_ref());
     kE <<= 0.5 * kE;
   }
 }
@@ -116,12 +119,15 @@ TotalKineticEnergy( const Expr::Tag& resultTag,
                     const Expr::Tag& vel2tag,
                     const Expr::Tag& vel3tag )
 : Expr::Expression<SpatialOps::SingleValueField>(),
-  vel1t_( vel1tag ),
-  vel2t_( vel2tag ),
-  vel3t_( vel3tag ),
-  is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
+  doX_( vel1tag != Expr::Tag() ),
+  doY_( vel2tag != Expr::Tag() ),
+  doZ_( vel3tag != Expr::Tag() ),
+  is3d_( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
+  if(doX_)  u_ = this->template create_field_request<Vel1T>(vel1tag);
+  if(doY_)  v_ = this->template create_field_request<Vel2T>(vel2tag);
+  if(doZ_)  w_ = this->template create_field_request<Vel3T>(vel3tag);
 }
 
 //--------------------------------------------------------------------
@@ -136,48 +142,24 @@ TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
 template< typename Vel1T, typename Vel2T, typename Vel3T >
 void
 TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( vel1t_ != Expr::Tag() )  exprDeps.requires_expression( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  exprDeps.requires_expression( vel2t_ );
-  if( vel3t_ != Expr::Tag() )  exprDeps.requires_expression( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename Vel1T, typename Vel2T, typename Vel3T >
-void
-TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<Vel1T>::type& v1fm = fml.template field_manager<Vel1T>();
-  const typename Expr::FieldMgrSelector<Vel2T>::type& v2fm = fml.template field_manager<Vel2T>();
-  const typename Expr::FieldMgrSelector<Vel3T>::type& v3fm = fml.template field_manager<Vel3T>();
-  
-  if( vel1t_ != Expr::Tag() )  vel1_ = &v1fm.field_ref( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  vel2_ = &v2fm.field_ref( vel2t_ );
-  if( vel3t_ != Expr::Tag() )  vel3_ = &v3fm.field_ref( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename Vel1T, typename Vel2T, typename Vel3T >
-void
-TotalKineticEnergy<Vel1T,Vel2T,Vel3T>::
 evaluate()
 {
   using namespace SpatialOps;
   SpatialOps::SingleValueField& tKE = this->value();
   
   if (is3d_) {
-    tKE <<= 0.5 * ( field_sum_interior(*vel1_ * *vel1_)
-                  + field_sum_interior(*vel2_ * *vel2_)
-                  + field_sum_interior(*vel3_ * *vel3_) );
+    const Vel1T& u = this->u_->field_ref();
+    const Vel2T& v = this->v_->field_ref();
+    const Vel3T& w = this->w_->field_ref();
+
+    tKE <<= 0.5 * ( field_sum_interior(u * u)
+                  + field_sum_interior(v * v)
+                  + field_sum_interior(w * w) );
   } else {
     tKE <<= 0.0;
-    if( vel1t_ != Expr::Tag() ) tKE <<= tKE + field_sum_interior(*vel1_ * *vel1_);
-    if( vel2t_ != Expr::Tag() ) tKE <<= tKE + field_sum_interior(*vel2_ * *vel2_);
-    if( vel3t_ != Expr::Tag() ) tKE <<= tKE + field_sum_interior(*vel3_ * *vel3_);
+    if( doX_ ) tKE <<= tKE + field_sum_interior(u_->field_ref() * u_->field_ref());
+    if( doY_ ) tKE <<= tKE + field_sum_interior(v_->field_ref() * v_->field_ref());
+    if( doZ_ ) tKE <<= tKE + field_sum_interior(w_->field_ref() * w_->field_ref());
     tKE <<= 0.5*tKE;
   }
 }

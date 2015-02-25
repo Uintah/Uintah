@@ -3,10 +3,7 @@
 SRCDIR   := CCA/Components/Arches/PropertyModelsV2
 
 SRCS += \
-				$(SRCDIR)/CoalDensity.cc \
-				$(SRCDIR)/CoalTemperature.cc \
-				$(SRCDIR)/CoalTemperatureNebo.cc \
-				$(SRCDIR)/ConstEnvProperty.cc \
+				$(SRCDIR)/WallHFVariable.cc \
         $(SRCDIR)/PropertyModelFactoryV2.cc 
 
 

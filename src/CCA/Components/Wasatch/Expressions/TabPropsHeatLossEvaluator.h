@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2013 The University of Utah
+ * Copyright (c) 2013-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -46,15 +46,10 @@ template< typename FieldT >
 class TabPropsHeatLossEvaluator
  : public Expr::Expression<FieldT>
 {
-  typedef std::vector<const FieldT*>  IndepVarVec;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_);
 
   const size_t hlIx_;
-  const Expr::TagList indepVarNames_;
-
   std::vector<double> ivarsPoint_;
-
-  IndepVarVec indepVars_;
-
   const InterpT* const enthEval_;
   const InterpT* const adEnthEval_;
   const InterpT* const sensEnthEval_;
@@ -85,9 +80,6 @@ public:
   };
 
   ~TabPropsHeatLossEvaluator();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 

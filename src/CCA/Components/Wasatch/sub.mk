@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2010-2012 The University of Utah
+#  Copyright (c) 2010-2015 The University of Utah
 #
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -97,7 +97,7 @@ LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
         $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
-            $(HDF5_INCLUDE) $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) \
+            $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) \
             $(BOOST_INCLUDE) $(LAPACK_INCLUDE)
 
 SUBDIRS :=                      \

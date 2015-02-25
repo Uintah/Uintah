@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -123,7 +123,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
   task->computes(d_lb->pStressLabel_preReloc,             matlset);  
   task->computes(d_lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(d_lb->pVolumeDeformedLabel,              matlset);
-  task->computes(d_lb->pdTdtLabel_preReloc,               matlset);
+  task->computes(d_lb->pdTdtLabel,                        matlset);
   task->computes(d_lb->pdCdtLabel_preReloc,               matlset);
 }
 
@@ -161,7 +161,7 @@ ImplicitCM::addSharedCRForImplicit(Task* task,
     task->computes(d_lb->pStressLabel_preReloc,                 matlset);  
     task->computes(d_lb->pDeformationMeasureLabel_preReloc,     matlset);
     task->computes(d_lb->pVolumeDeformedLabel,                  matlset);
-    task->computes(d_lb->pdTdtLabel_preReloc,                   matlset);
+    task->computes(d_lb->pdTdtLabel,                            matlset);
     task->computes(d_lb->pdCdtLabel_preReloc,                   matlset);
     if(reset){
       task->requires(Task::OldDW,     d_lb->dispNewLabel,      matlset, gac,1);
@@ -215,7 +215,7 @@ ImplicitCM::carryForwardSharedDataImplicit(ParticleSubset* pset,
   ParticleVariable<double>  pIntHeatRate_new, pVol_Def_new;
   ParticleVariable<Matrix3> pDefGrad_new, pStress_new;
   new_dw->allocateAndPut(pVol_Def_new,     d_lb->pVolumeDeformedLabel,   pset);
-  new_dw->allocateAndPut(pIntHeatRate_new, d_lb->pdTdtLabel_preReloc,    pset);
+  new_dw->allocateAndPut(pIntHeatRate_new, d_lb->pdTdtLabel,             pset);
   new_dw->allocateAndPut(pDefGrad_new,  d_lb->pDeformationMeasureLabel_preReloc,
                          pset);
   new_dw->allocateAndPut(pStress_new,   d_lb->pStressLabel_preReloc, pset);

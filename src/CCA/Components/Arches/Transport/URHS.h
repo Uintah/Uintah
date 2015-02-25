@@ -179,7 +179,7 @@ private:
   template <typename UT>
   URHS<UT>::URHS( std::string task_name, int matl_index, 
                   const std::string u_name, const std::string v_name, const std::string w_name ) : 
-    _u_name(u_name), _v_name(v_name), _w_name(w_name), TaskInterface( task_name, matl_index ){ 
+    TaskInterface( task_name, matl_index ), _u_name(u_name), _v_name(v_name), _w_name(w_name) { 
 
     _rhs_name = task_name + "_RHS";
     _rhou_name = task_name; 

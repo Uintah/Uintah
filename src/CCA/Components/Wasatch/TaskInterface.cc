@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012-2014 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -32,6 +32,7 @@
 
 //-- expression library includes --//
 #include <expression/ExprLib.h>
+#include <expression/FieldRequest.h>
 #include <expression/ExpressionTree.h>
 
 
@@ -478,14 +479,6 @@ namespace Wasatch{
             fieldInfo.useOldDataWarehouse = false;
         }
 
-#       ifdef WASATCH_IN_ARCHES
-        // this was needed for Warches. When adding a placeholder expression with STATE_N,
-        // we must use the newdw in the initialization task graph.
-        if( tree.name() == "initialization" && fieldTag.context() == Expr::STATE_DYNAMIC ){
-          fieldInfo.useOldDataWarehouse = false;
-        }
-#       endif // WASATCH_IN_ARCHES
-
         const Uintah::Task::WhichDW dw = ( fieldInfo.useOldDataWarehouse ) ? Uintah::Task::OldDW : Uintah::Task::NewDW;
 
         switch( fieldInfo.mode ){
@@ -555,10 +548,9 @@ namespace Wasatch{
     // augment newDWFields to include any fields that are a result of tree cleaving
     {
       for( Expr::ExpressionTree::ExprFieldMap::const_iterator imp=tree->field_map().begin(); imp!=tree->field_map().end(); ++imp ){
-        const Expr::FieldDeps::FldHelpers& fh = imp->second->field_helpers();
-        for( Expr::FieldDeps::FldHelpers::const_iterator ifld=fh.begin(); ifld!=fh.end(); ++ifld ){
-          const Expr::FieldDeps::FieldHelperBase& fhb = **ifld;
-          const Expr::Tag& tag = fhb.tag();
+        const Expr::TagList tags = imp->second->get_tags();
+        for (Expr::TagList::const_iterator iTag = tags.begin(); iTag != tags.end(); ++iTag) {
+          const Expr::Tag& tag = *iTag;
           if( factory.retrieve_expression( tag, patchID, true ).is_placeholder() ) continue;
           newDWFields.insert( tag );
         }
@@ -764,20 +756,20 @@ namespace Wasatch{
 
       // write out graph information.
       if( Uintah::Parallel::getMPIRank() == 0 && ip == 0 ){
-        const bool writeTreeDetails = dbg_tasks_on;
-          if( treeList.size() > 1 ){
-            std::ostringstream fnam;
+      const bool writeTreeDetails = dbg_tasks_on;
+      if( treeList.size() > 1 ){
+        std::ostringstream fnam;
             fnam << tree->name() << "_original.dot";
-            proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
-            std::ofstream fout( fnam.str().c_str() );
-            tree->write_tree(fout,false,writeTreeDetails);
-          }
-          BOOST_FOREACH( TreePtr tr, treeList ){
-            std::ostringstream fnam;
+        proc0cout << "writing pre-cleave tree to " << fnam.str() << endl;
+        std::ofstream fout( fnam.str().c_str() );
+        tree->write_tree(fout,false,writeTreeDetails);
+      }
+      BOOST_FOREACH( TreePtr tr, treeList ){
+        std::ostringstream fnam;
             fnam << tr->name() << ".dot";
-            std::ofstream fout( fnam.str().c_str() );
-            tr->write_tree(fout,false,writeTreeDetails);
-          }
+        std::ofstream fout( fnam.str().c_str() );
+        tr->write_tree(fout,false,writeTreeDetails);
+      }
         }
 
       // Transpose the storage so that we have a vector with each entry in the

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -37,11 +37,12 @@ ExprAlgebra( const Expr::TagList srcTagList,
             const OperationType algebraicOperation,
             const bool isModifierExpr)
 : Expr::Expression<FieldT>(),
-  srcTagList_ (srcTagList),
   algebraicOperation_( algebraicOperation ),
   isModifierExpr_( isModifierExpr )
 {
   this->set_gpu_runnable( true );
+
+  this->template create_field_vector_request<FieldT>(srcTagList, srcFields_);
 }
 
 //--------------------------------------------------------------------
@@ -56,36 +57,6 @@ ExprAlgebra<FieldT>::
 template< typename FieldT >
 void
 ExprAlgebra<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  for( Expr::TagList::const_iterator iSrcTag=srcTagList_.begin();
-      iSrcTag!=srcTagList_.end();
-      ++iSrcTag ){
-    exprDeps.requires_expression( *iSrcTag );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ExprAlgebra<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
-  srcFields_.clear();
-  for( Expr::TagList::const_iterator iSrcTag=srcTagList_.begin();
-      iSrcTag!=srcTagList_.end();
-      ++iSrcTag ){
-    srcFields_.push_back( &fm.field_ref(*iSrcTag) );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ExprAlgebra<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
@@ -94,15 +65,14 @@ evaluate()
     if( algebraicOperation_ == PRODUCT ) result <<= 1.0;
     else                                 result <<= 0.0;
   }
-  
-  typename std::vector<const FieldT*>::const_iterator srcFieldsIter = srcFields_.begin();
-  while (srcFieldsIter != srcFields_.end()) {
+
+  for (size_t i=0; i<srcFields_.size(); ++i) {
+    const FieldT& f = srcFields_[i]->field_ref();
     switch( algebraicOperation_ ){
-      case SUM       : result <<= result + **srcFieldsIter;  break;
-      case DIFFERENCE: result <<= result - **srcFieldsIter;  break;
-      case PRODUCT   : result <<= result * **srcFieldsIter;  break;
+      case SUM       : result <<= result + f;  break;
+      case DIFFERENCE: result <<= result - f;  break;
+      case PRODUCT   : result <<= result * f;  break;
     }
-    ++srcFieldsIter;
   }
 }
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -84,7 +84,9 @@ namespace Wasatch {
                                             Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     phirhsLabel_( Uintah::VarLabel::create( phirhslocalt_.name(),
                                             Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
-  {}
+  {
+     phiRhs_ = create_field_request<SVolField>(phiRHSTag);
+  }
 
   //--------------------------------------------------------------------
 
@@ -165,24 +167,6 @@ namespace Wasatch {
   //--------------------------------------------------------------------
 
   void
-  PoissonExpression::advertise_dependents( Expr::ExprDeps& exprDeps )
-  {
-    if(phirhst_ != Expr::Tag()) exprDeps.requires_expression( phirhst_ );
-  }
-
-  //--------------------------------------------------------------------
-
-  void
-  PoissonExpression::bind_fields( const Expr::FieldManagerList& fml )
-  {
-    if( phirhst_ != Expr::Tag() ){
-      phirhs_ = &fml.field_ref<SVolField>( phirhst_ );
-    }
-  }
-
-  //--------------------------------------------------------------------
-
-  void
   PoissonExpression::setup_matrix()
   {
     // construct the coefficient matrix: \nabla^2
@@ -248,7 +232,7 @@ namespace Wasatch {
 
     SVolField& rhs = *results[1];
     rhs <<= 0.0;
-    rhs <<= - *phirhs_;
+    rhs <<= - phiRhs_->field_ref();
 
     // update poisson rhs for reference value
     if (useRefPhi_) set_ref_poisson_rhs( rhs, patch_, refPhiValue_, refPhiLocation_ );

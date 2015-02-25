@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,9 +38,10 @@ VarDen1DMMSDensity<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
+  const TimeField& time = t_->field_ref();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  const double t = (*t_)[0];
+  const double t = time[0];
 
   const double bcValue = -1 / ( (5/(exp(1125/( t + 10)) * (2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125 / (t + 10)) * (2 * t + 5)));
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
@@ -64,10 +65,11 @@ VarDen1DMMSMixtureFraction<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
+  const TimeField& time = t_->field_ref();
   const double ci = this->ci_;
   const double cg = this->cg_;
   
-  const double t = (*t_)[0];  // this breaks GPU.
+  const double t = time[0];  // this breaks GPU.
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
@@ -93,7 +95,8 @@ VarDen1DMMSMomentum<FieldT>::evaluate()
   FieldT& f = this->value();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  const double t = (*t_)[0];
+  const TimeField& time = t_->field_ref();
+  const double t = time[0];
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
@@ -143,9 +146,10 @@ VarDen1DMMSSolnVar<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
+  const TimeField& time = t_->field_ref();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  const double t = (*t_)[0];  // this breaks GPU
+  const double t = time[0];  // this breaks GPU
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
@@ -170,9 +174,10 @@ VarDen1DMMSVelocity<FieldT>::evaluate()
   using namespace SpatialOps;
   
   FieldT& f = this->value();
+  const TimeField& time = t_->field_ref();
   const double ci = this->ci_;
   const double cg = this->cg_;
-  const double t = (*t_)[0];  // this breaks GPU
+  const double t = time[0];  // this breaks GPU
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index

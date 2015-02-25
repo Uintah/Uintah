@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1100,9 +1100,9 @@ void Allocator::init_bin(AllocBin* bin, size_t maxsize, size_t minsize)
 
 static void printObjectAllocMessage(Tag* obj) {
 #  ifdef USE_TAG_LINENUM
-  fprintf(stderr, "Object was allocated with this tag:\n%s at this line number:%d\n", obj->tag, obj->linenum);
+  fprintf( stderr, "Object was allocated with this tag: %s\nat this line number: %d\n", obj->tag, obj->linenum );
 #  else
-  fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+  fprintf( stderr, "Object was allocated with this tag: %s\n", obj->tag );
 #  endif
 
 }
@@ -1118,8 +1118,7 @@ void Allocator::audit(Tag* obj, int what)
     data+=obj_maxsize(obj);
   Sentinel* sent2=(Sentinel*)data;
 
-  //    fprintf(stderr, "sentinels: %x %x %x %x\n", sent1->first_word, sent1->second_word, sent2->first_word, sent2->second_word);
-
+  // fprintf( stderr, "sentinels: %x %x %x %x\n", sent1->first_word, sent1->second_word, sent2->first_word, sent2->second_word );
 
   // Check that the sentinels are OK...
   if(what == OBJFREE){
@@ -1156,10 +1155,9 @@ void Allocator::audit(Tag* obj, int what)
           AllocError("Object should be inuse, but is tagged as FREE");
         }
       } else {
-        fprintf(stderr, "Object has been corrupted within\n");
-        fprintf(stderr, "the 8 bytes before the allocated region\n");
-        printObjectAllocMessage(obj);
-        AllocError("Memory Object corrupt");
+        fprintf( stderr, "1) Object has been corrupted within the 8 bytes before the allocated region.\n" );
+        printObjectAllocMessage( obj );
+        AllocError( "Memory Object corrupt" );
       }
     }
     if(what != OBJMEMALIGNFREEING){
@@ -1174,10 +1172,9 @@ void Allocator::audit(Tag* obj, int what)
             AllocError("Object should be inuse, but is tagged as FREE");
           }
         } else {
-          fprintf(stderr, "Object has been corrupted within\n");
-          fprintf(stderr, "the 8 bytes after the allocated region\n");
-          printObjectAllocMessage(obj);
-          AllocError("Memory Object corrupt");
+          fprintf( stderr, "2) Object has been corrupted within the 8 bytes after the allocated region\n" );
+          printObjectAllocMessage( obj );
+          AllocError( "Memory Object corrupt" );
         }
       }
     }

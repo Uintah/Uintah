@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -38,28 +38,29 @@
 #  define _ISOC99_SOURCE
 #endif
 
+#include <Core/Containers/Array3.h>
+#include <Core/DataArchive/DataArchive.h>
+#include <Core/Disclosure/TypeDescription.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Math/Matrix3.h>
-#include <Core/Math/SymmMatrix3.h>
-#include <Core/DataArchive/DataArchive.h>
 #include <Core/Grid/Variables/ShareAssignParticleVariable.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Grid/Box.h>
-#include <Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/Vector.h>
+#include <Core/Math/SymmMatrix3.h>
 #include <Core/OS/Dir.h>
-#include <Core/Containers/Array3.h>
+#include <Core/Parallel/Parallel.h>
 
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
-#include <sstream>
-#include <iomanip>
-#include <cstdio>
-#include <cmath>
-#include <algorithm>
 
 #include <stdlib.h> // for strtoll
 
@@ -85,9 +86,12 @@ void computeGreenAlmansiStrain(const Matrix3& F, Matrix3& e);
 void computeStretchRotation(const Matrix3& F, Matrix3& R, Matrix3& U);
 void printCauchyStress(const Matrix3& stress);
 
-// Main
-int main(int argc, char** argv)
+int
+main( int argc, char** argv )
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
+
   /*
    * Default values
    */

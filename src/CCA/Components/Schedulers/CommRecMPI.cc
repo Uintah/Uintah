@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -28,8 +28,7 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Parallel/ProcessorGroup.h>
-
-#include "Core/Thread/Time.h"
+#include <Core/Thread/Time.h>
 
 using namespace std;
 using namespace Uintah;
@@ -94,7 +93,7 @@ bool
 CommRecMPI::waitsome( const ProcessorGroup * pg, 
                             list<int>      * finishedGroups /* = 0 */ )
 {
-  if( ids_.size() == 0 ){
+  if( ids_.size() == 0 ) {
     return false; // no more to test
   }
 
@@ -261,8 +260,6 @@ CommRecMPI::donesome( const ProcessorGroup     * pg,
   int  numReceived = 0;
   int  volReceived = 0;
 
-  //  mixedDebug << me << " Done calling testsome with " << ids_.size() 
-  //      << " waiters and got " << donecount << " done\n";
   ASSERT(donecount != MPI_UNDEFINED);
 
   for( int i = 0; i < donecount; i++ ) {

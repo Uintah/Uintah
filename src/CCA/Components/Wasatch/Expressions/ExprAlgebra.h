@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -81,15 +81,10 @@ public:
   };
   
   ~ExprAlgebra();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB ){}
   void evaluate();
   
 private:
-  const Expr::TagList srcTagList_;
-  typedef std::vector<const FieldT*> FieldTVec;
-  FieldTVec srcFields_;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, srcFields_);
   
   const OperationType algebraicOperation_;
   const bool isModifierExpr_;

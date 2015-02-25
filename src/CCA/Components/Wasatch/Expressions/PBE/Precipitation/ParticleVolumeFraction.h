@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,14 +44,13 @@ template< typename FieldT >
 class ParticleVolumeFraction
 : public Expr::Expression<FieldT>
 {
-  const Expr::TagList zerothMomentTagList_;            //list of all m0s
-  const Expr::TagList firstMomentTagList_;             //list of all m1s
-  const double convFac_; 														   //Conversion factor for consistent units
+  DECLARE_VECTOR_OF_FIELDS(FieldT, zerothMoments_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, firstMoments_);
 
-  typedef std::vector<const FieldT*> FieldVec;
-  FieldVec zerothMoments_;
-  FieldVec firstMoments_;
-  
+//  const Expr::TagList zerothMomentTagList_;            //list of all m0s
+//  const Expr::TagList firstMomentTagList_;             //list of all m1s
+  const double convFac_; 														   //Conversion factor for consistent units
+ 
   ParticleVolumeFraction( const Expr::TagList& zerothMomentTagList_,
                           const Expr::TagList& firstMomentTagList_,
                           const double convFac );
@@ -84,9 +83,6 @@ public:
   };
   
   ~ParticleVolumeFraction();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -104,11 +100,11 @@ ParticleVolumeFraction( const Expr::TagList& zerothMomentTagList,
                         const Expr::TagList& firstMomentTagList,
                         const double convFac)
 : Expr::Expression<FieldT>(),
-  zerothMomentTagList_(zerothMomentTagList),
-  firstMomentTagList_(firstMomentTagList),
   convFac_(convFac)
 {
   this->set_gpu_runnable( true );
+  this->template create_field_vector_request<FieldT>(zerothMomentTagList, zerothMoments_);
+  this->template create_field_vector_request<FieldT>(firstMomentTagList, firstMoments_);
 }
 
 //--------------------------------------------------------------------
@@ -123,51 +119,19 @@ ParticleVolumeFraction<FieldT>::
 template< typename FieldT >
 void
 ParticleVolumeFraction<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( zerothMomentTagList_ );
-  exprDeps.requires_expression( firstMomentTagList_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ParticleVolumeFraction<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  zerothMoments_.clear();
-  firstMoments_.clear();
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  
-  for (Expr::TagList::const_iterator iM0=zerothMomentTagList_.begin(); iM0 != zerothMomentTagList_.end(); iM0++) {
-    zerothMoments_.push_back(&fm.field_ref(*iM0) ); 
-  }
-  for (Expr::TagList::const_iterator iM1=firstMomentTagList_.begin(); iM1 != firstMomentTagList_.end(); iM1++) {
-    firstMoments_.push_back(&fm.field_ref(*iM1)); 
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ParticleVolumeFraction<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
   result <<= 0 ;
-  
-  typename FieldVec::const_iterator firstMomentIterator = firstMoments_.begin();
-  for ( typename FieldVec::const_iterator zerothMomentIterator=zerothMoments_.begin();
-       zerothMomentIterator!=zerothMoments_.end();
-       ++zerothMomentIterator, ++firstMomentIterator) {
-    result <<= result + 4.0/3.0 * PI * ( **firstMomentIterator * convFac_ ) * ( **firstMomentIterator * convFac_ ) *
-                       ( **firstMomentIterator * convFac_ ) / **zerothMomentIterator / **zerothMomentIterator;
-                                   
+  assert(zerothMoments_.size() == firstMoments_.size());
+  for (size_t i=0; i<zerothMoments_.size(); ++i) {
+    const FieldT& m0 = zerothMoments_[i]->field_ref();
+    const FieldT& m1 = firstMoments_[i]->field_ref();
+    result <<= result + 4.0/3.0 * PI * ( m1 * convFac_ ) * ( m1 * convFac_ ) *
+                        ( m1 * convFac_ ) / m0 / m0;
   }
-}  
+}
 
 #endif
 

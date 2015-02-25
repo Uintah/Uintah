@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,21 +27,19 @@
 StrainTensorBase::
 StrainTensorBase( const Expr::TagList& velTags )
 : Expr::Expression<SVolField>(),
-  velTags_( velTags ),
   doX_  ( velTags[0] != Expr::Tag() ),
   doY_  ( velTags[1] != Expr::Tag() ),
   doZ_  ( velTags[2] != Expr::Tag() )
 {
-  vel1_ = NULL;
-  vel2_ = NULL;
-  vel3_ = NULL;
-
   if (!(doX_ && doY_ && doZ_)) {
     std::ostringstream msg;
     msg << "WARNING: You cannot use the Dynamic Smagorinsky Model in one or two dimensions. Please revise your input file and make sure that you specify all three velocity/momentum components." << std::endl;
     std::cout << msg.str() << std::endl;
     throw std::runtime_error(msg.str());
   }
+   u_ = create_field_request<XVolField>(velTags[0]);
+   v_ = create_field_request<YVolField>(velTags[1]);
+   w_ = create_field_request<ZVolField>(velTags[2]);
 }
 
 //--------------------------------------------------------------------
@@ -49,26 +47,6 @@ StrainTensorBase( const Expr::TagList& velTags )
 StrainTensorBase::
 ~StrainTensorBase()
 {}
-
-//--------------------------------------------------------------------
-
-void
-StrainTensorBase::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( velTags_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-StrainTensorBase::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  vel1_ = &fml.field_ref<XVolField>( velTags_[0] );
-  vel2_ = &fml.field_ref<YVolField>( velTags_[1] );
-  vel3_ = &fml.field_ref<ZVolField>( velTags_[2] );
-}
 
 //--------------------------------------------------------------------
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2014 The University of Utah
+ * Copyright (c) 2014-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -42,6 +42,11 @@ TimeAdvance( const std::string& solnVarName,
   timeIntInfo_( timeIntInfo                       )
 {
   this->set_gpu_runnable( true );
+  
+   phiOld_ = this->template create_field_request<FieldT>(phiOldTag);
+   rhs_ = this->template create_field_request<FieldT>(rhsTag);
+   dt_ = this->template create_field_request<SingleValue>(Wasatch::TagNames::self().dt);
+   rkStage_ = this->template create_field_request<SingleValue>(Wasatch::TagNames::self().rkstage);
 }
 
 //--------------------------------------------------------------------
@@ -50,35 +55,6 @@ template< typename FieldT >
 TimeAdvance<FieldT>::
 ~TimeAdvance()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TimeAdvance<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( phiOldt_  );
-  exprDeps.requires_expression( rhst_     );
-  exprDeps.requires_expression( dtt_      );
-  exprDeps.requires_expression( rkstaget_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TimeAdvance<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& svfm = fml.template field_manager<FieldT>();
-  phiOld_ = &svfm.field_ref( phiOldt_ );
-  rhs_    = &svfm.field_ref( rhst_    );
-  
-  const Expr::FieldMgrSelector<SingleValue>::type& doublefm = fml.field_manager<SingleValue>();
-  dt_     = &doublefm.field_ref( dtt_      );
-  rkStage_= &doublefm.field_ref( rkstaget_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -96,15 +72,19 @@ evaluate()
   const double b2 = timeIntInfo_.beta[1];
   const double b3 = timeIntInfo_.beta[2];
 
+  const SingleValue& rkStage = rkStage_->field_ref();
+  const SingleValue& dt = dt_->field_ref();
+  const FieldT& phiOld = phiOld_->field_ref();
+  const FieldT& rhs = rhs_->field_ref();
   // Since rkStage_ is a SpatialField, we cannot dereference it and use "if"
   // statements since that will break GPU execution. Therefore, we use cond here
   // to allow GPU execution of this expression, despite the fact that it causes
   // branching on the inner loop.  However, the same branch is followed for all
   // points in the loop, which shouldn't degrade GPU execution and branch
   // prediction on CPU should limit performance degradation.
-  phi <<= cond( *rkStage_ == 1.0,      *phiOld_ +              *dt_ * *rhs_ )
-              ( *rkStage_ == 2.0, a2 * *phiOld_ + b2 * ( phi + *dt_ * *rhs_ ) )
-              ( *rkStage_ == 3.0, a3 * *phiOld_ + b3 * ( phi + *dt_ * *rhs_ ) )
+  phi <<= cond( rkStage == 1.0,      phiOld +              dt * rhs )
+              ( rkStage == 2.0, a2 * phiOld + b2 * ( phi + dt * rhs ) )
+              ( rkStage == 3.0, a3 * phiOld + b3 * ( phi + dt * rhs ) )
               ( 0.0 ); // should never get here.
 }
 

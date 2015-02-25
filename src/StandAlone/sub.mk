@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -57,7 +57,7 @@ endif
 
 ifeq ($(IS_STATIC_BUILD),yes)
   LIBS := $(CORE_OS) $(CORE_STATIC_LIBS) $(ZOLTAN_LIBRARY)    \
-          $(HDF5_LIBRARY) $(BOOST_LIBRARY)         \
+          $(BOOST_LIBRARY)         \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY) \
           $(RADPROPS_LIBRARY) $(TABPROPS_LIBRARY) \
           $(PAPI_LIBRARY) $(M_LIBRARY)
@@ -68,12 +68,17 @@ else
           $(M_LIBRARY) $(THREAD_LIBRARY) $(Z_LIBRARY)                   \
           $(EXPRLIB_LIBRARY) $(SPATIALOPS_LIBRARY)                      \
           $(TABPROPS_LIBRARY) $(RADPROPS_LIBRARY)                       \
-          $(TEEM_LIBRARY)                                               \
           $(BOOST_LIBRARY) $(CUDA_LIBRARY)                              \
           $(PAPI_LIBRARY) $(GPERFTOOLS_LIBRARY)
 endif
 
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
+
+ifeq ($(HAVE_VISIT),yes)
+  INCLUDES += $(VISIT_INCLUDE)
+  PSELIBS += VisIt/libsim
+  LIBS += $(VISIT_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -141,7 +146,7 @@ SRCS := $(SRCDIR)/selectpart.cc
 PROGRAM := StandAlone/selectpart
 
 ifeq ($(IS_STATIC_BUILD),yes)
-  PSELIBS := Core/Tracker $(CORE_STATIC_PSELIBS)
+  PSELIBS := $(CORE_STATIC_PSELIBS)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -149,11 +154,6 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ##############################################
 # Uintah
 # Convenience targets for Specific executables 
-
-ifeq ($(BUILD_VISIT),yes)
-  # 'visit_stuff' is defined in .../src/VisIt/udaReaderMTMD/sub.mk
-  VISIT_STUFF=visit_stuff
-endif
 
 uintah: sus \
         puda \
@@ -178,8 +178,7 @@ uintah: sus \
         link_inputs \
         link_scripts \
         link_tools \
-        link_localRT \
-	$(VISIT_STUFF)
+        link_localRT
 
 ###############################################
 

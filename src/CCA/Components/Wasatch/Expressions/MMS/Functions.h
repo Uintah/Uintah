@@ -1,8 +1,7 @@
-
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -78,15 +77,12 @@ public:
     const Expr::Tag tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
   typedef typename SpatialOps::SingleValueField TimeField;
   SineTime( const Expr::Tag& tTag );
-  const Expr::Tag tTag_;
-  const TimeField* t_;
+  DECLARE_FIELD(TimeField, t_);
 };
 
 //====================================================================
@@ -95,30 +91,10 @@ private:
 template<typename ValT>
 SineTime<ValT>::
 SineTime( const Expr::Tag& ttag )
-: Expr::Expression<ValT>(),
-  tTag_( ttag )
+: Expr::Expression<ValT>()
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-SineTime<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-SineTime<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  t_ = &fml.field_ref<TimeField>( tTag_ );
+   t_ = this->template create_field_request<TimeField>(ttag);
 }
 
 //--------------------------------------------------------------------
@@ -130,7 +106,8 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= sin( *t_ );
+  const TimeField& t = t_->field_ref();
+  phi <<= sin( t );
 }
 
 //--------------------------------------------------------------------
@@ -186,8 +163,6 @@ public:
     const std::string filename_;    
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
@@ -196,11 +171,8 @@ private:
                           const Expr::Tag& yTag,
                           const Expr::Tag& zTag,
                           const std::string fileName );
-  const Expr::Tag xtag_, ytag_, ztag_;
-  const std::string filename_;  
-  const FieldT* x_;
-  const FieldT* y_;  
-  const FieldT* z_;
+  const std::string filename_;
+  DECLARE_FIELDS(FieldT, x_, y_, z_);
   Wasatch::UintahPatchContainer* patchContainer_;
 };
 
@@ -213,35 +185,11 @@ ReadFromFileExpression( const Expr::Tag& xTag,
                         const Expr::Tag& zTag,                       
                         const std::string fileName )
 : Expr::Expression<FieldT>(),
-  xtag_( xTag ),
-  ytag_( yTag ),
-  ztag_( zTag	),
   filename_(fileName)
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ReadFromFileExpression<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( xtag_ );
-  exprDeps.requires_expression( ytag_ );
-  exprDeps.requires_expression( ztag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ReadFromFileExpression<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  x_ = &fm.field_ref( xtag_ );
-  y_ = &fm.field_ref( ytag_ );
-  z_ = &fm.field_ref( ztag_ );
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   z_ = this->template create_field_request<FieldT>(zTag);
 }
 
 //--------------------------------------------------------------------
@@ -285,7 +233,11 @@ evaluate()
   FieldT& phi = this->value();
   const Uintah::Patch* const patch = patchContainer_->get_uintah_patch();
   phi <<= 0.0;
-
+  
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
+  const FieldT& z = z_->field_ref();
+  
   // use gzFile utilities as they can handle both gzip and ascii files.
   gzFile inputFile = gzopen( filename_.c_str(), "r" );
   
@@ -321,31 +273,31 @@ evaluate()
       }
     }
   } else if (inputFormat == "XYZ") {
-    const double xMax = field_max_interior(*x_);
-    const double xMin = field_min_interior(*x_);
-    const double yMax = field_max_interior(*y_);
-    const double yMin = field_min_interior(*y_);
-    const double zMax = field_max_interior(*z_);
-    const double zMin = field_min_interior(*z_);
+    const double xMax = field_max_interior(x);
+    const double xMin = field_min_interior(x);
+    const double yMax = field_max_interior(y);
+    const double yMin = field_min_interior(y);
+    const double zMax = field_max_interior(z);
+    const double zMin = field_min_interior(z);
     typename FieldT::iterator phiiter = phi.interior_begin();
     
-    const double dx = (*x_)(IntVec(1,0,0)) - (*x_)(IntVec(0,0,0));
-    const double dy = (*y_)(IntVec(0,1,0)) - (*y_)(IntVec(0,0,0));
-    const double dz = (*z_)(IntVec(0,0,1)) - (*z_)(IntVec(0,0,0));
-    double x,y,z;
+    const double dx = x(IntVec(1,0,0)) - x(IntVec(0,0,0));
+    const double dy = y(IntVec(0,1,0)) - y(IntVec(0,0,0));
+    const double dz = z(IntVec(0,0,1)) - z(IntVec(0,0,0));
+    double xp,yp,zp;
     // to take care of comparing doubles, use a tolerance value for min & max (see below)
     const double epsx = dx/2.0;
     const double epsy = dy/2.0;
     const double epsz = dz/2.0;
     while ( !gzeof( inputFile ) ) { // check for end of file
-      x   = Uintah::getDouble(inputFile);
-      y   = Uintah::getDouble(inputFile);
-      z   = Uintah::getDouble(inputFile);
+      xp   = Uintah::getDouble(inputFile);
+      yp   = Uintah::getDouble(inputFile);
+      zp   = Uintah::getDouble(inputFile);
       val = Uintah::getDouble(inputFile);
       
-      const bool containsValue =     x >= (xMin - epsx) && x <= (xMax + epsx)
-      && y >= (yMin - epsy) && y <= (yMax + epsy)
-      && z >= (zMin - epsz) && z <= (zMax + epsz);
+      const bool containsValue =     xp >= (xMin - epsx) && xp <= (xMax + epsx)
+      && yp >= (yMin - epsy) && yp <= (yMax + epsy)
+      && zp >= (zMin - epsz) && zp <= (zMax + epsz);
       
       if( containsValue && phiiter != phi.interior_end() ){
         // this assumes that the input file data is structured in the x, y, and z directions, respectively.
@@ -435,8 +387,6 @@ public:
     const double transitionPoint_, lowValue_, highValue_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -445,9 +395,8 @@ private:
                const double transitionPoint,
                const double lowValue,
                const double highValue);
-  const Expr::Tag indepVarTag_;
   const double transitionPoint_, lowValue_, highValue_;
-  const FieldT* indepVar_;
+  DECLARE_FIELD(FieldT, indepVar_);
 };
 
 //--------------------------------------------------------------------
@@ -459,33 +408,12 @@ StepFunction( const Expr::Tag& indepVarTag,
              const double lowValue,
              const double highValue)
 : Expr::Expression<FieldT>(),
-  indepVarTag_(indepVarTag),
   transitionPoint_(transitionPoint),
   lowValue_(lowValue),
   highValue_(highValue)
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-StepFunction<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( indepVarTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-StepFunction<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  indepVar_ = &fm.field_ref( indepVarTag_ );
+   indepVar_ = this->template create_field_request<FieldT>(indepVarTag);
 }
 
 //--------------------------------------------------------------------
@@ -497,7 +425,8 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= cond( (*indepVar_ < transitionPoint_), lowValue_ )
+  const FieldT& indepVar = indepVar_->field_ref();
+  result <<= cond( (indepVar < transitionPoint_), lowValue_ )
                  ( highValue_ );
 }
 
@@ -572,8 +501,6 @@ public:
     const double trans_, lo_, hi_, f_, amp_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -586,9 +513,9 @@ private:
                   const double highValue,
                   const double frequency=2.0*PI,
                   const double amplitude=1.0);
-  const Expr::Tag indepVarTag_, x1Tag_, x2Tag_;
+  
   const double trans_, lo_, hi_, f_, amp_;
-  const FieldT *indepVar_, *x1_, *x2_;
+  DECLARE_FIELDS(FieldT, indepVar_, x1_, x2_);
 };
 
 //--------------------------------------------------------------------
@@ -604,9 +531,6 @@ RayleighTaylor( const Expr::Tag& indepVarTag,
                 const double frequency,
                 const double amplitude)
 : Expr::Expression<FieldT>(),
-indepVarTag_(indepVarTag),
-x1Tag_(x1Tag),
-x2Tag_(x2Tag),
 trans_(transitionPoint),
 lo_(lowValue),
 hi_(highValue),
@@ -614,31 +538,9 @@ f_(frequency),
 amp_(amplitude)
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-RayleighTaylor<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( indepVarTag_ );
-  exprDeps.requires_expression( x1Tag_       );
-  exprDeps.requires_expression( x2Tag_       );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-RayleighTaylor<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  indepVar_ = &fm.field_ref( indepVarTag_ );
-  x1_ = &fm.field_ref( x1Tag_ );
-  x2_ = &fm.field_ref( x2Tag_ );
+   indepVar_ = this->template create_field_request<FieldT>(indepVarTag);
+   x1_ = this->template create_field_request<FieldT>(x1Tag);
+   x2_ = this->template create_field_request<FieldT>(x2Tag);
 }
 
 //--------------------------------------------------------------------
@@ -650,7 +552,10 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= cond( *indepVar_ < trans_ + amp_ * sin(2*PI*f_ * *x1_) * sin(2*PI*f_ * *x2_), lo_ )
+  const FieldT& indepVar = indepVar_->field_ref();
+  const FieldT& x1 = x1_->field_ref();
+  const FieldT& x2 = x2_->field_ref();
+  result <<= cond( indepVar < trans_ + amp_ * sin(2*PI*f_ * x1) * sin(2*PI*f_ * x2), lo_ )
                  ( hi_ );
 }
 
@@ -716,8 +621,6 @@ public:
     const double lo_, hi_, seed_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -738,22 +641,6 @@ RandomField(const double lo,
   lo_(lo),
   hi_(hi),
   seed_(seed)
-{}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-RandomField<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-RandomField<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
 {}
 
 //--------------------------------------------------------------------
@@ -865,8 +752,6 @@ public:
     const VelocityComponent velocityComponent_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -880,10 +765,10 @@ private:
                      const double U,
                      const double V,
                      const VelocityComponent velocityComponent);
-  const Expr::Tag xTag_, yTag_;
+  
   const double xCenter_, yCenter_, vortexStrength_,  vortexRadius_, u_, v_;
   const VelocityComponent velocityComponent_;
-  const FieldT *x_, *y_;
+  DECLARE_FIELDS(FieldT, x_, y_);
 };
 
 //--------------------------------------------------------------------
@@ -900,8 +785,6 @@ ExponentialVortex( const Expr::Tag& xTag,
                    const double V,
                    const VelocityComponent velocityComponent)
 : Expr::Expression<FieldT>(),
-  xTag_   ( xTag    ),
-  yTag_   ( yTag    ),
   xCenter_( xCenter ),
   yCenter_( yCenter ),
   vortexStrength_( vortexStrength ),
@@ -911,29 +794,8 @@ ExponentialVortex( const Expr::Tag& xTag,
   velocityComponent_( velocityComponent )
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ExponentialVortex<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-ExponentialVortex<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
 }
 
 //--------------------------------------------------------------------
@@ -950,18 +812,21 @@ evaluate()
   const double expFactor = 2.0 * vortexStrength_/denom;
   SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );
 
-  *tmp <<= (*x_ - xCenter_)*(*x_ - xCenter_) + (*y_ - yCenter_)*(*y_- yCenter_);
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
+  
+  *tmp <<= (x - xCenter_)*(x - xCenter_) + (y - yCenter_)*(y- yCenter_);
 
   result <<= expFactor * exp(- *tmp/denom );
 
   switch (velocityComponent_) {
     case X1:
       // jcs why do the work above if we only reset it here?
-      result <<= u_ - (*y_ - yCenter_)*result;
+      result <<= u_ - (y - yCenter_)*result;
       break;
     case X2:
       // jcs why do the work above if we only reset it here?
-      result <<= v_ + (*x_ - xCenter_)*result;
+      result <<= v_ + (x - xCenter_)*result;
       break;
     default:
       break;
@@ -1053,9 +918,7 @@ public:
     const double x0_, y0_, G_, R_, U_;
     const VelocityComponent velocityComponent_;
   };
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
+
   void evaluate();
   
 private:
@@ -1068,10 +931,9 @@ private:
                const double vortexRadius,
                const double U,
                const VelocityComponent velocityComponent );
-  const Expr::Tag xTag_, yTag_;
   const double x0_, y0_, g_, r_, u_;
   const VelocityComponent velocityComponent_;
-  const FieldT *x_, *y_;
+  DECLARE_FIELDS(FieldT, x_, y_);
 };
 
 //--------------------------------------------------------------------
@@ -1087,37 +949,15 @@ LambsDipole( const Expr::Tag& xTag,
              const double u,
              const VelocityComponent velocityComponent )
 : Expr::Expression<FieldT>(),
-  xTag_( xTag ),
-  yTag_( yTag ),
   x0_  ( x0 ),
   y0_  ( y0 ),
   g_   ( g  ),
   r_   ( r  ),
   u_   ( u  ),
   velocityComponent_( velocityComponent )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-LambsDipole<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-LambsDipole<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
 }
 
 //--------------------------------------------------------------------
@@ -1131,6 +971,9 @@ evaluate()
   FieldT& result = this->value();
   result <<= 0.0;
   
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
+  
   const double kR = 3.831705970207515;
   const double k = kR/r_;
   const double denom = boost::math::cyl_bessel_j(0, kR);
@@ -1138,8 +981,8 @@ evaluate()
   SpatFldPtr<FieldT> xx0 = SpatialFieldStore::get<FieldT>( result );
   SpatFldPtr<FieldT> yy0 = SpatialFieldStore::get<FieldT>( result );
 
-  *xx0 <<= *x_ - x0_;
-  *yy0 <<= *y_ - y0_;
+  *xx0 <<= x - x0_;
+  *yy0 <<= y - y0_;
   
   SpatFldPtr<FieldT> r = SpatialFieldStore::get<FieldT>( result );
   *r <<= sqrt(*xx0 * *xx0 + *yy0 * *yy0);
@@ -1226,10 +1069,7 @@ template< typename FieldT >
 class BurnsChristonAbskg
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag xTag_, yTag_, zTag_;
-  const FieldT* x_;
-  const FieldT* y_;
-  const FieldT* z_;
+  DECLARE_FIELDS(FieldT, x_, y_, z_);
   
   /* declare operators associated with this expression here */
   
@@ -1256,9 +1096,7 @@ public:
   };
   
   ~BurnsChristonAbskg();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
+
   void evaluate();
 };
 
@@ -1277,11 +1115,12 @@ BurnsChristonAbskg<FieldT>::
 BurnsChristonAbskg( const Expr::Tag& xTag,
                    const Expr::Tag& yTag,
                    const Expr::Tag& zTag )
-: Expr::Expression<FieldT>(),
-xTag_( xTag ),
-yTag_( yTag ),
-zTag_( zTag )
-{}
+: Expr::Expression<FieldT>()
+{
+   x_ = this->template create_field_request<FieldT>(xTag);
+   y_ = this->template create_field_request<FieldT>(yTag);
+   z_ = this->template create_field_request<FieldT>(zTag);
+}
 
 //--------------------------------------------------------------------
 
@@ -1295,45 +1134,17 @@ BurnsChristonAbskg<FieldT>::
 template< typename FieldT >
 void
 BurnsChristonAbskg<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( zTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-BurnsChristonAbskg<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  x_ = &fml.template field_ref< FieldT >( xTag_ );
-  y_ = &fml.template field_ref< FieldT >( yTag_ );
-  z_ = &fml.template field_ref< FieldT >( zTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-BurnsChristonAbskg<FieldT>::
-bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-BurnsChristonAbskg<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.9 * ( 1.0 - 2.0 * abs(*x_) )
-                 * ( 1.0 - 2.0 * abs(*y_) )
-                 * ( 1.0 - 2.0 * abs(*z_) ) + 0.1;
+  const FieldT& x = x_->field_ref();
+  const FieldT& y = y_->field_ref();
+  const FieldT& z = z_->field_ref();
+  
+  result <<= 0.9 * ( 1.0 - 2.0 * abs(x) )
+                 * ( 1.0 - 2.0 * abs(y) )
+                 * ( 1.0 - 2.0 * abs(z) ) + 0.1;
 }
 
 //--------------------------------------------------------------------

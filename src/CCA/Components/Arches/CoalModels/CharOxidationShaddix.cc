@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/PropertyModelsV2/PropertyHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -74,30 +74,30 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
   
   // create raw coal mass var label 
-  std::string rcmass_root = PropertyHelper::parse_for_role_to_label(db, "raw_coal"); 
-  std::string rcmass_name = PropertyHelper::append_env( rcmass_root, d_quadNode ); 
+  std::string rcmass_root = ParticleHelper::parse_for_role_to_label(db, "raw_coal"); 
+  std::string rcmass_name = ParticleHelper::append_env( rcmass_root, d_quadNode ); 
   _rcmass_varlabel = VarLabel::find(rcmass_name);
  
   // check for char mass and get scaling constant
-  std::string char_root = PropertyHelper::parse_for_role_to_label(db, "char"); 
-  std::string char_name = PropertyHelper::append_env( char_root, d_quadNode ); 
-  std::string charqn_name = PropertyHelper::append_qn_env( char_root, d_quadNode ); 
+  std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
+  std::string char_name = ParticleHelper::append_env( char_root, d_quadNode ); 
+  std::string charqn_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
   _char_varlabel = VarLabel::find(char_name);
   EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
   DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
-  _char_scaling_constant = char_eqn.getScalingConstant();
+  _char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
 
   // check for particle temperature 
-  std::string temperature_root = PropertyHelper::parse_for_role_to_label(db, "temperature"); 
-  std::string temperature_name = PropertyHelper::append_env( temperature_root, d_quadNode ); 
+  std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
+  std::string temperature_name = ParticleHelper::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__); 
   }
  
   // check for length  
-  std::string length_root = PropertyHelper::parse_for_role_to_label(db, "size"); 
-  std::string length_name = PropertyHelper::append_env( length_root, d_quadNode ); 
+  std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
+  std::string length_name = ParticleHelper::append_env( length_root, d_quadNode ); 
   _length_varlabel = VarLabel::find(length_name);
   
   // get model coefficients  
@@ -120,13 +120,13 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // get weight scaling constant
-  std::string weightqn_name = PropertyHelper::append_qn_env("w", d_quadNode); 
-  std::string weight_name = PropertyHelper::append_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
   _weight_varlabel = VarLabel::find(weight_name); 
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
-  _weight_small = weight_eqn.getSmallClipCriteria();
-  _weight_scaling_constant = weight_eqn.getScalingConstant();
+  _weight_small = weight_eqn.getSmallClipPlusTol();
+  _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
   // get Char source term label from the devolatilization model
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 

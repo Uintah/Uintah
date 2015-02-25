@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,9 +44,8 @@ template< typename FieldT >
 class BrownianAggregationCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag densityTag_;
   const double coefVal_;
-  const FieldT* density_; 
+  DECLARE_FIELD(FieldT, density_);
   
   BrownianAggregationCoefficient( const Expr::Tag& densityTag,
                                   const double coefVal );
@@ -76,14 +75,9 @@ public:
   };
   
   ~BrownianAggregationCoefficient();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 };
-
-
 
 // ###################################################################
 //
@@ -91,17 +85,15 @@ public:
 //
 // ###################################################################
 
-
-
 template< typename FieldT >
 BrownianAggregationCoefficient<FieldT>::
 BrownianAggregationCoefficient( const Expr::Tag& densityTag,
                                 const double coefVal )
 : Expr::Expression<FieldT>(),
-  densityTag_(densityTag),
   coefVal_(coefVal)
 {
   this->set_gpu_runnable( true );
+   density_ = this->template create_field_request<FieldT>(densityTag);
 }
 
 //--------------------------------------------------------------------
@@ -116,32 +108,11 @@ BrownianAggregationCoefficient<FieldT>::
 template< typename FieldT >
 void
 BrownianAggregationCoefficient<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( densityTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-BrownianAggregationCoefficient<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  density_ = &fm.field_ref( densityTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-BrownianAggregationCoefficient<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= cond( *density_ > 0.0, coefVal_ / *density_ )
+  result <<= cond( density_->field_ref() > 0.0, coefVal_ / density_->field_ref() )
                  (0.0);
 }
 

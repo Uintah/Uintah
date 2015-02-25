@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -45,10 +45,9 @@ template< typename FieldT >
 class PrecipitationMonosurfaceCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag superSatTag_;
   const double growthCoefVal_;
   const double expConst_;
-  const FieldT* superSat_; //field from table of supersaturation
+  DECLARE_FIELD(FieldT, superSat_);
 
   PrecipitationMonosurfaceCoefficient( const Expr::Tag& superSatTag,
                                        const double growthCoefVal,
@@ -82,9 +81,6 @@ public:
   };
 
   ~PrecipitationMonosurfaceCoefficient();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };
@@ -105,11 +101,11 @@ PrecipitationMonosurfaceCoefficient( const Expr::Tag& superSatTag,
                                      const double growthCoefVal,
                                      const double expConst)
 : Expr::Expression<FieldT>(),
-  superSatTag_(superSatTag),
   growthCoefVal_(growthCoefVal),
   expConst_(expConst)
 {
   this->set_gpu_runnable( true );
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
 }
 
 //--------------------------------------------------------------------
@@ -124,31 +120,12 @@ PrecipitationMonosurfaceCoefficient<FieldT>::
 template< typename FieldT >
 void
 PrecipitationMonosurfaceCoefficient<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationMonosurfaceCoefficient<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  superSat_ = &fml.template field_ref<FieldT>( superSatTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationMonosurfaceCoefficient<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
+  const FieldT& S = superSat_->field_ref();
   FieldT& result = this->value();
-  result <<= cond( *superSat_ > 1.0, growthCoefVal_ * exp(expConst_ /  log(*superSat_) ) )
+  result <<= cond( S > 1.0, growthCoefVal_ * exp(expConst_ /  log(S) ) )
                  ( 0.0 );
 }
 

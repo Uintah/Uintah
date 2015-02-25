@@ -1,7 +1,7 @@
 /* 
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -156,12 +156,6 @@ ArchesLabel::ArchesLabel()
   // Sum of the relative pressure and the hydrostatic contribution
   d_pressPlusHydroLabel = VarLabel::create("pPlusHydro",  CC_double);
 
-#ifdef WASATCH_IN_ARCHES
-  d_uVelRhoHatRHSPartLabel =  VarLabel::create("Umom_rhs_partial",     SFCX_double);
-  d_vVelRhoHatRHSPartLabel =  VarLabel::create("Vmom_rhs_partial",     SFCY_double);
-  d_wVelRhoHatRHSPartLabel =  VarLabel::create("Wmom_rhs_partial",     SFCZ_double);  
-#endif
-
   // for corrector step
   d_uVelRhoHatLabel     =  VarLabel::create("uvelRhoHat",     SFCX_double);
   d_vVelRhoHatLabel     =  VarLabel::create("vvelRhoHat",     SFCY_double);
@@ -294,12 +288,6 @@ ArchesLabel::~ArchesLabel()
       iA != CQMOMAbscissas.end(); ++iA ) {
     VarLabel::destroy(iA->second);
   }
-
-#ifdef WASATCH_IN_ARCHES
-  VarLabel::destroy(d_uVelRhoHatRHSPartLabel);
-  VarLabel::destroy(d_vVelRhoHatRHSPartLabel);
-  VarLabel::destroy(d_wVelRhoHatRHSPartLabel);
-#endif
   
   VarLabel::destroy(d_strainMagnitudeLabel);
   VarLabel::destroy(d_strainMagnitudeMLLabel);

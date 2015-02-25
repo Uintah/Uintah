@@ -1,7 +1,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 1997-2014 The University of Utah
+#  Copyright (c) 1997-2015 The University of Utah
 # 
 #  Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -41,7 +41,6 @@ PSELIBS := \
 	Core/Grid        \
 	Core/Parallel    \
 	Core/ProblemSpec \
-	Core/Tracker     \
 	Core/Util        \
 	CCA/Components/DataArchiver    \
 	CCA/Components/ReduceUda       \
@@ -56,6 +55,12 @@ PSELIBS := \
 	Core/Math
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(GPERFTOOLS_LIBRARY)
+
+ifeq ($(HAVE_VISIT),yes)
+  INCLUDES += $(VISIT_INCLUDE)
+  PSELIBS += VisIt/libsim
+  LIBS += $(VISIT_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -49,13 +49,12 @@ template< typename FieldT,
 class PrimVar
  : public Expr::Expression<FieldT>
 {
-  const Expr::Tag rhophit_, rhot_, volfract_;
-
   typedef typename OperatorTypeBuilder< Interpolant, DensT, FieldT >::type  InterpT;
 
-  const DensT* rho_;
-  const FieldT* rhophi_;
-  const FieldT* volfrac_;
+  const bool hasIntrusion_;
+  DECLARE_FIELDS(FieldT, rhophi_, volfrac_);
+  DECLARE_FIELD(DensT, rho_);
+
   const InterpT* interpOp_;
 
   PrimVar( const Expr::Tag& rhoPhiTag,
@@ -79,8 +78,6 @@ public:
 
   ~PrimVar();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
@@ -92,10 +89,7 @@ template< typename FieldT >
 class PrimVar<FieldT,FieldT>
  : public Expr::Expression<FieldT>
 {
-  const Expr::Tag rhophit_, rhot_;
-
-  const FieldT* rho_;
-  const FieldT* rhophi_;
+  DECLARE_FIELDS(FieldT, rhophi_, rho_);
 
   PrimVar( const Expr::Tag& rhoPhiTag,
            const Expr::Tag& rhoTag );
@@ -116,8 +110,6 @@ public:
 
   ~PrimVar();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 

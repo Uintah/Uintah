@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -318,7 +318,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                  CCVariable<double>& divQ,
                                  int wall_type, int matlIndex,  
                                  DataWarehouse* new_dw, 
-                                 DataWarehouse* old_dw)
+                                 DataWarehouse* old_dw,
+                                 bool old_DW_isMissingIntensities)
 {
 
   proc0cout << " Radiation Solve: " << endl;
@@ -377,7 +378,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   }
 
 
-  StaticArray< constCCVariable<double> > Intensities(_scatteringOn ? d_totalOrds : 0);
+  StaticArray< constCCVariable<double> > Intensities((_scatteringOn && !old_DW_isMissingIntensities) ? d_totalOrds : 0);
+
+  StaticArray< CCVariable<double> > IntensitiesRestart((_scatteringOn && old_DW_isMissingIntensities) ? d_totalOrds : 0);
 
   CCVariable<double> scatIntensitySource;  
   constCCVariable<double> scatkt;   //total scattering coefficient
@@ -388,11 +391,19 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
 
   if(_scatteringOn){
-    for( int ix=0;  ix<d_totalOrds ;ix++)
-      old_dw->get(Intensities[ix],_IntensityLabels[ix], matlIndex , patch,Ghost::None, 0  );
-      old_dw->get(asymmetryParam,_asymmetryLabel, matlIndex , patch,Ghost::None, 0);
-      old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
+    if(old_DW_isMissingIntensities){
+      for( int ix=0;  ix<d_totalOrds ;ix++){
+        IntensitiesRestart[ix].allocate(domLo,domHi);
+        IntensitiesRestart[ix].initialize(0.0);
+      }
+    }else{
+      for( int ix=0;  ix<d_totalOrds ;ix++){
+        old_dw->get(Intensities[ix],_IntensityLabels[ix], matlIndex , patch,Ghost::None, 0  );
+      }
     }
+    old_dw->get(asymmetryParam,_asymmetryLabel, matlIndex , patch,Ghost::None, 0);
+    old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
+  }
 
   StaticArray< constCCVariable<double> > abskp(_nQn_part);
   StaticArray< constCCVariable<double> > partTemp(_nQn_part);
@@ -434,8 +445,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     computeIntensitySource(patch,abskp,partTemp,constvars->ABSKG,constvars->temperature,vars->ESRCG);
 
     for (int direcn = 1; direcn <=d_totalOrds; direcn++){
-
-      if(_usePreviousIntensity ){
+      if(_usePreviousIntensity  && !old_DW_isMissingIntensities){
         old_dw->get(constvars->cenint,_IntensityLabels[direcn-1], matlIndex , patch,Ghost::None, 0  );
         new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
       }
@@ -458,6 +468,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       bool plusX, plusY, plusZ;
 
       if(_scatteringOn){
+           
+      if(old_DW_isMissingIntensities) 
+        computeScatteringIntensities(direcn,scatkt, IntensitiesRestart,scatIntensitySource,asymmetryParam, patch, vars->ESRCG);
+      else
         computeScatteringIntensities(direcn,scatkt, Intensities,scatIntensitySource,asymmetryParam, patch, vars->ESRCG);
       }
                                                          
@@ -558,9 +572,10 @@ DORadiationModel::setLabels(){
   }
   return;
 }
-
+template<class TYPE> 
 void
-DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
+//DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
+DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     b_sourceArray[*iter]-=scatIntensitySource[*iter];

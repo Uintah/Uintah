@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -27,30 +27,12 @@
 template<typename FieldT>
 void
 OutflowBC<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( momTag_ );
-  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-  exprDeps.requires_expression( tagNames.dt );
-}
-
-template<typename FieldT>
-void
-OutflowBC<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  u_ = &fml.template field_ref<FieldT>( momTag_ );
-  const Wasatch::TagNames& tagNames = Wasatch::TagNames::self();
-  dt_ = &fml.template field_ref<SpatialOps::SingleValueField>( tagNames.dt );
-}
-
-template<typename FieldT>
-void
-OutflowBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& f = this->value();
+  const FieldT& u = u_->field_ref();
+  const SpatialOps::SingleValueField dts = dt_->field_ref();
   
   if ( (this->vecGhostPts_) && (this->vecInteriorPts_) ) {
     std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost ijk index
@@ -58,12 +40,12 @@ evaluate()
     const IntVec& offset = this->bndNormal_;
     const double sign = (offset[0] >=0 && offset[1] >= 0 && offset[2] >= 0) ? 1.0 : -1.0;
     
-    const double dt = (*dt_)[0];  // jcs we should be using this directly in nebo assignments rather than pulling it out if we want GPU execution
+    const double dt = dts[0];  // jcs we should be using this directly in nebo assignments rather than pulling it out if we want GPU execution
     
     if(this->isStaggered_) {
       for( ; ii != (this->vecInteriorPts_)->end(); ++ii, ++ig ){
-        const double ub  = (*u_)(*ii);            // boundary cell
-        const double ui  = (*u_)(*ii - offset);   // interior cell
+        const double ub  = u(*ii);            // boundary cell
+        const double ui  = u(*ii - offset);   // interior cell
         const double fi  = f(*ii - offset);
         
         // uncomment the following two lines if you want to use second order one-sided difference
@@ -81,7 +63,7 @@ evaluate()
       if (this->interiorEdgePoints_) {
         std::vector<IntVec>::const_iterator ic = (this->interiorEdgePoints_)->begin(); // ii is the interior ijk index
         for (; ic != (this->interiorEdgePoints_)->end(); ++ic) {
-          const double ub  = (*u_)(*ic);            // boundary cell
+          const double ub  = u(*ic);            // boundary cell
           f(*ic) = -(1.0/ dt) * ub;
         }
       }

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -29,9 +29,11 @@ using namespace Uintah;
 using namespace std;
 
 DependencyException::DependencyException(const Task* task,
-					 const VarLabel* label, int matlIndex,
-					 const Patch* patch,
-					 string has, string needs,
+                                         const VarLabel* label,
+                                               int matlIndex,
+                                         const Patch* patch,
+                                               string has,
+                                               string needs,
                                          const char* file, int line)
   : task_(task), label_(label), matlIndex_(matlIndex), patch_(patch)
 {
@@ -45,14 +47,16 @@ DependencyException::DependencyException(const Task* task,
 }
 
 string DependencyException::makeMessage(const Task* task,
-					const VarLabel* label, int matlIndex,
-					const Patch* patch,
-					string has, string needs)
+                                        const VarLabel* label,
+                                              int matlIndex,
+                                        const Patch* patch,
+                                              string has,
+                                              string needs)
 {
   ostringstream str;
   str << "Task Dependency Error: (" << has << ") has no corresponding (";
   str << needs << ") for " << label->getName();
-  if (patch){
+  if (patch) {
     str << " on patch " << patch->getID();
     str << ", Level-" << patch->getLevel()->getIndex();
   }

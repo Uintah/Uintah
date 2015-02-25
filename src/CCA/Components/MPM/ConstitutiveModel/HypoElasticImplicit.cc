@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -174,7 +174,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
   
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,  pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,   pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,            pset);
     new_dw->allocateTemporary(deformationGradient_new,pset);
 
     double G = d_initialData.G;
@@ -354,7 +354,7 @@ HypoElasticImplicit::computeStressTensorImplicit(const PatchSubset* patches,
 
     new_dw->allocateAndPut(pstress_new,      lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pdTdt,            lb->pdTdtLabel,             pset);
     new_dw->allocateAndPut(deformationGradient_new,
                            lb->pDeformationMeasureLabel_preReloc,        pset);
  

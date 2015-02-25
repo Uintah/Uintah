@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -244,10 +244,10 @@ namespace Uintah {
         ComputeSet(const ComputeSet&);
         ComputeSet& operator=(const ComputeSet&);
 
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
     };  // end class ComputeSet
 

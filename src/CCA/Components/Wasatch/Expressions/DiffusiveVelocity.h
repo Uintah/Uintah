@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -52,12 +52,11 @@ class DiffusiveVelocity : public Expr::Expression<VelT>
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,ScalarT,  VelT>::type  InterpT;
 
   const bool isTurbulent_, isConstCoef_;
-  const Expr::Tag phiTag_, coefTag_, turbDiffTag_;
 
   const GradT* gradOp_;
   const InterpT* interpOp_;
   
-  const ScalarT *phi_, *coef_, *turbDiff_;
+  DECLARE_FIELDS(ScalarT, phi_, turbDiff_, coef_);
   const double coefVal_;  ///< the value of the diffusion coefficient if constant
 
   DiffusiveVelocity( const Expr::Tag& turbDiffTag,
@@ -108,8 +107,6 @@ public:
   };
 
   ~DiffusiveVelocity();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 

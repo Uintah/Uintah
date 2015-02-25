@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -22,19 +22,15 @@
  * IN THE SOFTWARE.
  */
 
-
-
 #include <Core/OS/Dir.h>
 
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
-//#include <Core/Util/FileUtils.h>
 
 #include <sci_defs/boost_defs.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
-//#include <sys/syscall.h>
 
 #include <cerrno>
 #include <cstring>
@@ -57,25 +53,27 @@ namespace bsys = boost::system;
 using namespace std;
 using namespace SCIRun;
 
-Dir Dir::create(const string& name)
+Dir
+Dir::create( const string & name )
 {
-   int code = MKDIR(name.c_str(), 0777);
-   if(code != 0)
-      throw ErrnoException("Dir::create (mkdir call): " + name, errno, __FILE__, __LINE__);
-   return Dir(name);
+  int code = MKDIR(name.c_str(), 0777);
+  if( code != 0 ) {
+    throw ErrnoException("Dir::create (mkdir call): " + name, errno, __FILE__, __LINE__);
+  }
+  return Dir( name );
 }
 
 Dir::Dir()
 {
 }
 
-Dir::Dir(const string& name)
-   : name_(name)
+Dir::Dir( const string & name ) :
+  name_( name )
 {
 }
 
-Dir::Dir(const Dir& dir)
-  : name_(dir.name_)
+Dir::Dir( const Dir & dir ) :
+  name_( dir.name_ )
 {
 }
 
@@ -83,22 +81,25 @@ Dir::~Dir()
 {
 }
 
-Dir& Dir::operator=(const Dir& copy)
+Dir&
+Dir::operator=( const Dir & copy )
 {
-   name_ = copy.name_;
-   return *this;
+  name_ = copy.name_;
+  return *this;
 }
 
 void
-Dir::remove(bool throwOnError)
+Dir::remove( bool throwOnError /* = true */ ) const
 {
   int code = rmdir(name_.c_str());
   if (code != 0) {
     ErrnoException exception("Dir::remove()::rmdir: " + name_, errno, __FILE__, __LINE__);
-    if (throwOnError)
+    if( throwOnError ) {
       throw exception;
-    else
+    }
+    else {
       cerr << "WARNING: " << exception.message() << "\n";
+    }
   }
   return;
 }
@@ -128,15 +129,15 @@ Dir::removeDir( const char * dirName )
       // Have to use 'stat' under AIX
       struct stat entryInfo;
       if( lstat( fullpath.c_str(), &entryInfo ) == 0 ) {
-	if( S_ISDIR( entryInfo.st_mode ) ) {
-	  isDir = true;
-	}
+        if( S_ISDIR( entryInfo.st_mode ) ) {
+          isDir = true;
+        }
       } else {
-	printf( "Error statting %s: %s\n", fullpath, strerror( errno ) );
+        printf( "Error statting %s: %s\n", fullpath, strerror( errno ) );
       }
 #else
       if( file->d_type & DT_DIR ) {
-	isDir = true;
+        isDir = true;
       }
 #endif
       if( isDir ) {
@@ -179,7 +180,7 @@ Dir::forceRemove(bool throwOnError)
 }
 
 void
-Dir::remove(const string& filename, bool throwOnError)
+Dir::remove( const string & filename, bool throwOnError /* = true */ ) const
 {
    string filepath = name_ + "/" + filename;
    bfs::path p(filepath);
@@ -200,14 +201,14 @@ Dir::createSubdir(const string& sub)
 }
 
 Dir
-Dir::getSubdir(const string& sub)
+Dir::getSubdir( const string & sub ) const
 {
-   // This should probably do more
-   return Dir(name_+"/"+sub);
+  // This should probably do more
+  return Dir( name_ + "/" + sub );
 }
 
 void
-Dir::copy(Dir& destDir)
+Dir::copy( const Dir & destDir ) const
 {
    bfs::path from(name_);  
    bfs::path to(destDir.name_);
@@ -230,9 +231,9 @@ Dir::copy(Dir& destDir)
 
    // Iterate over all entries in the directory and sub directories
    while (it!=end) {
-     std::string it_string = it->path().c_str();
+     string it_string = it->path().c_str();
      unsigned int pos = it_string.find(from.filename().c_str());
-     std::string to_string = it_string.substr (pos);
+     string to_string = it_string.substr (pos);
 
      bfs::path new_entry = to/to_string;
      
@@ -272,25 +273,26 @@ Dir::move(Dir& destDir)
 }
 
 void
-Dir::copy(const std::string& filename, Dir& destDir)
+Dir::copy( const string & filename, const Dir & destDir ) const
 {
-   string filepath = name_ + "/" + filename;
-   bfs::path from(filepath);  
-   bfs::path to(destDir.name_ + "/" + filename);
+  const string filepath = name_ + "/" + filename;
+  bfs::path    from(filepath);  
+  bfs::path    to(destDir.name_ + "/" + filename);
 
+  bsys::error_code ec;
+  if( bfs::exists(to) ) {
+    bfs::remove( to );
+  }
+  bfs::copy(from,to,ec);
 
-   bsys::error_code ec;
-   if (bfs::exists(to))
-     bfs::remove(to);
-   bfs::copy(from,to,ec);
-
-   if (ec != 0)
-      throw InternalError(string("Dir::copy failed to copy: ") + filepath + " to " + destDir.name_, __FILE__, __LINE__);
-   return;
+  if( ec != 0 ) {
+    throw InternalError(string("Dir::copy failed to copy: ") + filepath + " to " + destDir.name_, __FILE__, __LINE__);
+  }
+  return;
 }
 
 void
-Dir::move(const std::string& filename, Dir& destDir)
+Dir::move( const string & filename, Dir & destDir )
 {
    string filepath = name_ + "/" + filename;
    bfs::path from(filepath);  
@@ -303,8 +305,8 @@ Dir::move(const std::string& filename, Dir& destDir)
 }
 
 void
-Dir::getFilenamesBySuffix( const std::string& suffix,
-                           vector<string>& filenames )
+Dir::getFilenamesBySuffix( const string         & suffix,
+                                 vector<string> & filenames ) const
 {
   DIR* dir = opendir(name_.c_str());
   if (!dir){ 
@@ -314,7 +316,7 @@ Dir::getFilenamesBySuffix( const std::string& suffix,
   const char* ext = suffix.c_str();
   for(dirent* file = readdir(dir); file != 0; file = readdir(dir)){
     if ((strlen(file->d_name)>=strlen(ext)) && 
-	(strcmp(file->d_name+strlen(file->d_name)-strlen(ext),ext)==0)) {
+        (strcmp(file->d_name+strlen(file->d_name)-strlen(ext),ext)==0)) {
       filenames.push_back(file->d_name);
       //cout << "  Found " << file->d_name << "\n";
     }
@@ -326,9 +328,11 @@ bool
 Dir::exists()
 {
   struct stat buf;
-  if(LSTAT(name_.c_str(),&buf) != 0)
+  if( LSTAT(name_.c_str(), &buf ) != 0) {
     return false;
-  if (S_ISDIR(buf.st_mode))
+  }
+  if( S_ISDIR(buf.st_mode) ) {
     return true;
+  }
   return false;
 }

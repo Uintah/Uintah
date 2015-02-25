@@ -404,7 +404,7 @@
   <Unit                   spec="OPTIONAL NO_DATA"
                             attribute1="name REQUIRED STRING 'KG^2'" />  <!-- FIXME: is this a good idea?  If so, how to specify?  Make required! -->
 
-	<ParticlePosition spec="OPTIONAL STRING"
+	<ParticlePosition spec="OPTIONAL NO_DATA"
 										attribute1="label REQUIRED STRING"/>
 										
   <Time                   spec="REQUIRED NO_DATA">
@@ -794,7 +794,7 @@
   <!-- Scheduler Options -->
   
   <Scheduler              spec="OPTIONAL NO_DATA"
-                            attribute1="type OPTIONAL STRING 'SingleProcessor MPI DynamicMPI Unified'">
+                            attribute1="type OPTIONAL STRING 'SingleProcessor MPI DynamicMPI ThreadedMPI Unified'">
     <small_messages       spec="OPTIONAL BOOLEAN" />
     <taskReadyQueueAlg    spec="OPTIONAL STRING 'MostChildren LeastChildren MostAllChildren LeastAllChildren MostL2Children LeastL2Children PatchOrder PatchOrderRandom MostMessages LeastMessages Random FCFS Stack'" />
     <VarTracker           spec="OPTIONAL NO_DATA">
@@ -805,7 +805,7 @@
       <end_index          spec="REQUIRED VECTOR" />
       <var                spec="MULTIPLE NO_DATA"
                             attribute1="label REQUIRED STRING"
-                            attribute2="dw    REQUIRED STRING 'NewDW, OldDW'" />
+                            attribute2="dw    REQUIRED STRING 'NewDW OldDW CoarseNewDW CoarseOldDW ParentOldDW ParentNewDW'" />
       <locations          spec="OPTIONAL NO_DATA"
                             attribute1="before_comm OPTIONAL BOOLEAN"
                             attribute2="before_exec OPTIONAL BOOLEAN"

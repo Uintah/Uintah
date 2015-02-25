@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -1091,10 +1091,10 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
     offset.x(1);
   }
 
-  if (idx.y()< 0 && r_ratio.y() > 1){   // If the coarse cell index is negative
-    offset.y(1);                        // you must add an offset to get the right
-  }
-                                       // fine cell. -Todd
+  if (idx.y()< 0 && r_ratio.y() > 1){ // If the coarse cell index is negative
+    offset.y(1);                      // you must add an offset to get the right
+  }                                   // fine cell. -Todd
+
   if (idx.z()< 0 && r_ratio.z() > 1){
     offset.z(1);
   }    

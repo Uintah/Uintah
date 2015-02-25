@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -44,11 +44,12 @@ class PrecipitationRCritical
 : public Expr::Expression<FieldT>
 {
   /* declare private variables such as fields, operators, etc. here */
-  const Expr::Tag superSatTag_;
-  const Expr::Tag surfaceEngTag_;
   const double rKnotVal_;
-  const FieldT* superSat_;    //field from table of supersaturation
-  const FieldT* surfaceEng_;  //critcal value of surface energy for small radii
+  const bool doSurfEng_;
+//  const FieldT* superSat_;    //field from table of supersaturation
+//  const FieldT* surfaceEng_;  //critcal value of surface energy for small radii
+  
+  DECLARE_FIELDS(FieldT, superSat_, surfaceEng_);
   
   PrecipitationRCritical( const Expr::Tag& superSatTag,
                           const Expr::Tag& surfaceEng,
@@ -82,9 +83,6 @@ public:
   };
 
   ~PrecipitationRCritical();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };
@@ -102,11 +100,12 @@ PrecipitationRCritical( const Expr::Tag& superSatTag,
                         const Expr::Tag& surfaceEngTag,
                         const double rKnotVal)
 : Expr::Expression<FieldT>(),
-  superSatTag_(superSatTag),
-  surfaceEngTag_(surfaceEngTag),
-  rKnotVal_(rKnotVal)
+  rKnotVal_(rKnotVal),
+  doSurfEng_(surfaceEngTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+  if (doSurfEng_)  surfaceEng_ = this->template create_field_request<FieldT>(surfaceEngTag);
 }
 
 //--------------------------------------------------------------------
@@ -121,40 +120,18 @@ PrecipitationRCritical<FieldT>::
 template< typename FieldT >
 void
 PrecipitationRCritical<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-  if (surfaceEngTag_ != Expr::Tag() )
-    exprDeps.requires_expression( surfaceEngTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationRCritical<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
-  superSat_ = &fm.field_ref( superSatTag_ );
-  if( surfaceEngTag_ != Expr::Tag() )
-    surfaceEng_ = &fm.field_ref( surfaceEngTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationRCritical<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  if (surfaceEngTag_ != Expr::Tag() ) {
-    result <<= cond( *superSat_ > 1.0, rKnotVal_ * *surfaceEng_ / log(*superSat_ ) )
+  const FieldT& S = superSat_->field_ref();
+  
+  if (doSurfEng_) {
+    const FieldT& surfEng = surfaceEng_->field_ref();
+    result <<= cond( S > 1.0, rKnotVal_ * surfEng / log(S) )
                    ( 0.0 );
   } else {
-    result <<= cond( *superSat_ > 1.0, rKnotVal_ / log(*superSat_ ) )
+    result <<= cond( S > 1.0, rKnotVal_ / log(S) )
                    ( 0.0 ); //this is r*
   }
 }

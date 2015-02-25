@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -43,12 +43,13 @@ DiffusiveVelocity( const Expr::Tag& turbDiffTag,
   : Expr::Expression<VelT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( false       ),
-    phiTag_     ( phiTag      ),
-    coefTag_    ( coefTag     ),
-    turbDiffTag_( turbDiffTag ),
     coefVal_    ( 0.0         )
 {
   this->set_gpu_runnable( true );
+  
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+  if(!isConstCoef_ )  coef_ = this->template create_field_request<ScalarT>(coefTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
 }
 
 //--------------------------------------------------------------------
@@ -61,12 +62,12 @@ DiffusiveVelocity( const Expr::Tag& turbDiffTag,
   : Expr::Expression<VelT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( true        ),
-    phiTag_     ( phiTag      ),
-    coefTag_    (             ),
-    turbDiffTag_( turbDiffTag ),
     coefVal_    ( coefVal     )
 {
   this->set_gpu_runnable( true );
+  
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
 }
 
 //--------------------------------------------------------------------
@@ -75,32 +76,6 @@ template< typename VelT >
 DiffusiveVelocity<VelT>::
 ~DiffusiveVelocity()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename VelT >
-void
-DiffusiveVelocity<VelT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( phiTag_ );
-  if(!isConstCoef_ ) exprDeps.requires_expression( coefTag_     );
-  if( isTurbulent_ ) exprDeps.requires_expression( turbDiffTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename VelT >
-void
-DiffusiveVelocity<VelT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT>();
-  phi_  = &scalarFM.field_ref( phiTag_  );
-  if(!isConstCoef_ ) coef_     = &scalarFM.field_ref( coefTag_     );
-  if( isTurbulent_ ) turbDiff_ = &scalarFM.field_ref( turbDiffTag_ );
-
-}
 
 //--------------------------------------------------------------------
 
@@ -123,12 +98,12 @@ evaluate()
   using namespace SpatialOps;
   VelT& result = this->value();
   if( isTurbulent_ ){
-    if( isConstCoef_ ) result <<= - (*interpOp_)( coefVal_ + *turbDiff_ ) * (*gradOp_)(*phi_);
-    else               result <<= - (*interpOp_)( *coef_   + *turbDiff_ ) * (*gradOp_)(*phi_);
+    if( isConstCoef_ ) result <<= - (*interpOp_)( coefVal_ + turbDiff_->field_ref() ) * (*gradOp_)(phi_->field_ref());
+    else               result <<= - (*interpOp_)( coef_->field_ref()   + turbDiff_->field_ref() ) * (*gradOp_)(phi_->field_ref());
   }
   else{
-    if( isConstCoef_ ) result <<= - coefVal_             * (*gradOp_)(*phi_);
-    else               result <<= - (*interpOp_)(*coef_) * (*gradOp_)(*phi_);
+    if( isConstCoef_ ) result <<= - coefVal_             * (*gradOp_)(phi_->field_ref());
+    else               result <<= - (*interpOp_)(coef_->field_ref()) * (*gradOp_)(phi_->field_ref());
   }
 }
 

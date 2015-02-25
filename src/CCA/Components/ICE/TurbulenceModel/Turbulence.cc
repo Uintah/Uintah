@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -86,6 +86,7 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
                           const int indx,
                           ICELabel* lb,
                           SimulationStateP&  d_sharedState,
+                          constCCVariable<double>& molecularVis,
                           CCVariable<double>& tot_viscosity)
 {
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -107,37 +108,52 @@ void Turbulence::callTurb(DataWarehouse* new_dw,
   computeTurbViscosity(new_dw, patch, lb, vel_CC,
                        uvel_FC, vvel_FC, wvel_FC, rho_CC, 
                        indx, d_sharedState, turb_viscosity );
-    
-  setBC(turb_viscosity, "zeroNeumann",  patch, d_sharedState, indx, new_dw);
-  
 
+  //__________________________________
+  // Set the boundary conditions on the total viscosity such that
+  // the turbulent viscosity is 0 at the face.  To compute the viscosity at the face
+  // we use:
+  //  term1 =  viscosity_tot[left] * vol_frac_CC[left];
+  //  term2 =  viscosity_tot[c] * vol_frac_CC[c];
+  //  double vis_tot_FC = (2.0 * term1 * term2)/(term1 + term2);
+  //
+  //  total_vis_EC = moleVis_CC[adj] * (moleVis_CC[adj] + turb_visc[adj]) / ( moleVis_CC[adj] + 2 * turb_visc[adj])
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator iter = bf.begin(); iter != bf.end(); ++iter ){
+    Patch::FaceType face = *iter;
+    
+    IntVector oneCell = patch->faceDirection(face);
+    Patch::FaceIteratorType MEC = Patch::ExtraMinusEdgeCells;
+    
+    for(CellIterator itr = patch->getFaceIterator(face, MEC); !itr.done(); itr++){
+      IntVector ec  = *itr;
+      IntVector adj = ec - oneCell;
+      
+      double m_Vis = molecularVis[adj];           // for readability;
+      double t_Vis = turb_viscosity[adj];
+      
+      tot_viscosity[ec] = m_Vis * (m_Vis + t_Vis) / ( m_Vis + 2 * t_Vis);
+    }
+  }
+  
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  double maxvis  = 0;
-  double maxturb = 0;
-  double maxtot  = 0;
-  
+
   int NGC =1;  // number of ghostCells
   for(CellIterator iter = patch->getCellIterator(NGC); !iter.done(); iter++) { 
-    IntVector c = *iter;    
-    if(tot_viscosity[c] > maxvis) {
-      maxvis = tot_viscosity[c];
-    }
-    tot_viscosity[c] += turb_viscosity[c];         
-    
-    if(turb_viscosity[c] > maxturb) {
-      maxturb = turb_viscosity[c];
-    }
-    if(tot_viscosity[c] > maxtot) {
-      maxtot = tot_viscosity[c];
-    }
+    IntVector c = *iter; 
+    tot_viscosity[c] = molecularVis[c] + turb_viscosity[c];  
   } 
   
   // make copy for visualization.
   for(CellIterator iter = patch->getExtraCellIterator(); !iter.done();iter++){
     IntVector c = *iter;    
-    turb_viscosity_copy[c] = tot_viscosity[c];         
+    turb_viscosity_copy[c] = turb_viscosity[c];         
   }
 }
 

@@ -1,7 +1,7 @@
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2014 The University of Utah
+## Copyright (c) 1997-2015 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -44,10 +44,6 @@
 ##    configure packages
 ##    generate output files
 ##
-##  FOR AN EXAMPLE OF ADDING A NEW LIBRARY LOOK AT THE HDF5 LIBRARY
-##  IT IS DOCUMENTED AND CAN BE USED AS A COPY PASTE EXAMPLE.
-##  IF YOU NEED MORE HELP SEE DAV, MARTY, ALLEN, OR YARDEN.
-##
 ##  PLEASE DO NOT COMMIT ANY CHANGES WITH OUT HAVING ONE OF THE 
 ##  ABOVE REVIEW YOUR CHANGES.
 ##
@@ -58,7 +54,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([Uintah],[1.5],[uintah-developer@gforge.sci.utah.edu])
+AC_INIT([Uintah],[1.6],[uintah-developer@gforge.sci.utah.edu])
 
 ##  require autoconf version 2.69
 ##     The reason to require the latest autoconf is to try and get everyone who
@@ -74,7 +70,7 @@ AC_COPYRIGHT(
 ##
 ## The MIT License
 ##
-## Copyright (c) 1997-2014 The University of Utah
+## Copyright (c) 1997-2015 The University of Utah
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -207,7 +203,6 @@ sci_arg_enable_list=""
 
 # Setting variables to 'no' isn't required, but is useful in displaying
 # some error condition information to the user.
-HAVE_HDF5=no
 HAVE_BOOST=no
 HAVE_TABPROPS=no
 HAVE_SPATIALOPS=no
@@ -276,13 +271,6 @@ SCI_ARG_WITH(lapack,
   [with_lapack="$withval"
    sci_required_lapack=yes],
   [with_lapack=""])
-  
-SCI_ARG_WITH(teem,
-  AC_HELP_STRING(--with-teem=DIR, 
-                 Use the teem installation in DIR/lib),
-  [with_teem="$withval"
-   sci_required_teem=yes],
-  [with_teem=""])
   
 SCI_ARG_WITH(fortran,
   AC_HELP_STRING(--with-fortran=DIR, 
@@ -451,13 +439,6 @@ SCI_ARG_WITH(magma,
    sci_required_magma=yes],
   [with_magma=""]) 
   
-SCI_ARG_WITH(unp,
-  AC_HELP_STRING(--with-unp=DIR,
-                 Use the unp installation in DIR),
-  [with_unp="$withval"
-   sci_required_unp=yes],
-  [with_unp=""])
-
 SCI_ARG_WITH(zlib,
   AC_HELP_STRING(--with-zlib=DIR,
                  Use the zlib installation in DIR),
@@ -492,35 +473,14 @@ SCI_ARG_WITH(libxml2,
   [with_libxml2="$withval"
    sci_required_libxml2=yes],
   [with_libxml2=""])
-
-SCI_ARG_WITH(hdf5,
-  AC_HELP_STRING(--with-hdf5=DIR,
-                 Use the hdf5 installation in DIR),
-  [with_hdf5="$withval"               # with_hdf5 is the directory var
-   sci_required_hdf5=yes],            # flag to check for the libs
-  [with_hdf5=""])                     # undefined otherwise
-
-SCI_ARG_WITH(freetype,
-  AC_HELP_STRING(--with-freetype=DIR,
-                 Use the Freetype2 installation in DIR),
-  [with_freetype="$withval"
-   sci_required_freetype=yes],
-  [with_freetype=""])
-  
-SCI_ARG_WITH(ftgl,
-  AC_HELP_STRING(--with-ftgl=DIR,
-                 Use the Freetype GL installation in DIR),
-  [with_ftgl="$withval"
-   sci_required_ftgl=yes
-   sci_required_freetype=yes],
-  [with_ftgl=""])
   
 SCI_ARG_WITH(visit,
   AC_HELP_STRING(--with-visit=DIR,
-                 Turn on VisIt visualization tool support.  Point to VisIt installation.),
-  [with_visit="$withval"],
+                 Use the visit installation in DIR),
+  [with_visit="$withval"
+   sci_required_visit=yes],
   [with_visit=""])
-
+  
 SCI_ARG_WITH(visus,
   AC_HELP_STRING(--with-visus=DIR,
                  Turn on ViSUS IDX support.  Point to ViSUS installation.),
@@ -538,12 +498,6 @@ SCI_ARG_ENABLE(wasatch_3p,
                  Download and build the Wasatch Thirdparty libraries - TabProps ExprLibs SpatialOps RadProps.),
   [wasatch_3p="yes"],
   [wasatch_3p="no"])
-
-SCI_ARG_ENABLE(wasatch_in_arches,
-  AC_HELP_STRING(--enable-wasatch-in-arches,
-                 Turn on the use of Wasatch objects in the Arches component.),
-  [wasatch_in_arches="yes"],
-  [wasatch_in_arches="no"])
 
 SCI_ARG_ENABLE(static,
   AC_HELP_STRING(--enable-static,
@@ -829,7 +783,6 @@ fi
 
 IS_OSX="no"
 IS_VC="no"
-IS_AIX="no"
 
 unset NUM_CPUS
 
@@ -841,9 +794,6 @@ case $host in
       configure: error: wrong Linux version. exiting.;exit)
     NUM_CPUS="`cat /proc/cpuinfo | fgrep processor | wc | cut -c1-7`"
     ;;
-  *-dec*)
-    NUM_CPUS=4
-    ;;
   *-darwin*)
     NUM_CPUS=2
     IS_OSX="yes"
@@ -853,10 +803,6 @@ case $host in
     if test $? = 0; then
       altivec="" 
     fi
-    ;;
-  *-aix*)
-    NUM_CPUS=4
-    IS_AIX="yes"
     ;;
   *)
     echo
@@ -868,7 +814,6 @@ esac
 
 AC_SUBST(IS_OSX)
 AC_SUBST(DEF_OSX)
-AC_SUBST(IS_AIX)
 
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
@@ -1093,11 +1038,6 @@ case $host in
         fi
 	;;
 	
-     *-aix*)
-        # On AIX, doesn't automatically generate .so's.  Make .a's and then
-        # later we will make .so's from them.
-	SO_OR_ARCHIVE_EXTENSION=a
-	;;
      *)
 	SO_OR_ARCHIVE_EXTENSION=so 
         ;;
@@ -1304,7 +1244,7 @@ fi
 
 IS_STATIC_BUILD="no"
 
-# If --enable-static, or if lib extension already set to 'a' (eg: AIX):
+# If --enable-static, or if lib extension already set to 'a' :
 if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
   AC_MSG_WARN( Building a statically linked version of Uintah! )
   IS_STATIC_BUILD="yes"
@@ -1556,7 +1496,7 @@ case $host in
 
     case $F77 in
       *xlf*)
-         FFLAGS="-WF,-D_AIX $extra_cflags $FFLAGS"
+         FFLAGS="-WF, $extra_cflags $FFLAGS"
          ;;
       *)
          FFLAGS="$extra_cflags $FFLAGS"
@@ -1993,25 +1933,6 @@ case $host in
   *linux*)
     no_optimize_flag=-O0
     ;;
-  *-aix*)
-
-    AC_MSG_WARN(AIX is not completely supported!)
-    no_optimize_flag=-O0
-    case $CXX in
-      *xlC*)
-         # xlC does not know the -O0 flag.
-         no_optimize_flag=""
-	 ;;
-      *KCC*)
-         ;;
-      *g++*)
-	 ;;
-      *)
-         AC_MSG_WARN(Do not know this compiler.)
-         AC_MSG_WARN(Defaulting to -O0 for the no optimize flag.)
-         ;;
-    esac
-    ;;
   *)
     ;;
 esac
@@ -2177,7 +2098,7 @@ AC_SUBST(DEF_RAY_SCATTER)
 if test "$with_visit" -o "$wasatch_3p" = "yes"; then
    which cmake > /dev/null 2>&1
    if test $? != 0; then
-      AC_MSG_ERROR( VisIt and/or Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!)
+      AC_MSG_ERROR( Wasatch 3P requires CMake. Please make sure 'cmake' is in your path!)
    fi
    CMAKE_LOCATION=`which cmake`
 
@@ -2205,38 +2126,62 @@ if test "$with_visit" -o "$wasatch_3p" = "yes"; then
    fi
 fi
 
-##  --  With VisIt -----------------------------
+##  --  search for visit stuff  -------------------------------------------
+# local     - sim/V2/lib/VisItControlInterface_V2.h
+#           - lib/libsimV2.a
 
-if test "$with_visit"; then
+# installed - linux-x86_64/libsim/V2/include/VisItControlInterface_V2.h
+#           - linux-x86_64/libsim/V2/lib/libsimV2.a
 
-   AC_MSG_CHECKING(for VisIt)
+_sci_lib=
+_sci_inc=
+_sci_optional=optional
+if test "$sci_required_visit" = "yes"; then
+ 
+  if test "$with_visit" = "yes"; then
+    _sci_optional=required
+  else
+    _sci_optional=specific
+    _sci_lib="$with_visit"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+      _sci_inc="$with_visit/sim/V2/lib"
+    # Otherwise assume an installed version
+    else
+      _sci_inc="$with_visit/include"
+    fi
+  fi
 
-   if test "$with_visit" = "yes"; then 
-      AC_MSG_ERROR( You must provide a DIRECTORY when using --with-visit=DIR. )
-   fi
-   if ! test -f "$with_visit/bin/xml2cmake"; then 
-      AC_MSG_ERROR( Could not find xml2cmake in $with_visit/bin/... )
-   fi
+  echo $_sci_inc
+  echo $_sci_lib
+ 
+  AC_LANG(C++)
+  SCI_TRY_LINK(VISIT, VISIT libraries and headers,
+               VisItControlInterface_V2.h VisItDataInterface_V2.h,		
+               $_sci_inc,
+               simV2,
+               $_sci_lib,
+               ,,
+               $_sci_optional)
+  AC_LANG(C)     
+  
+  if test "$HAVE_VISIT" = "yes"; then
+    DEF_VISIT="#define HAVE_VISIT 1"
+  else
+    DEF_VISIT="#define HAVE_VISIT 1"
+  fi
 
-   if test -f "./VisIt/udaReaderMTMD/Makefile.visit"; then
-      old_visit_dir=`grep TOPDIR ./VisIt/udaReaderMTMD/Makefile.visit`
-      if test "$old_visit_dir" != "TOPDIR=$with_visit/src"; then
-      	 AC_MSG_WARN(VisIt target directory has changed - removing old VisIt build directory...)
-	 rm -rf ./VisIt
-      fi
-   fi
+fi #end sci_required_visit
 
-   sci_defs_files="$sci_defs_files VisIt/udaReaderMTMD/avtudaReaderMTMDFileFormat.C"
+# these are all defined after the call to SCI_COMPILE_LINK_TEST
+AC_SUBST(HAVE_VISIT)
+AC_SUBST(DEF_VISIT)
+AC_SUBST(INC_VISIT_H)
+AC_SUBST(VISIT_LIB_DIR_FLAG)
+AC_SUBST(VISIT_LIB_FLAG)
 
-   BUILD_VISIT=yes
-   UINTAH_UDA_TO_VIS_LIB=`pwd`/lib/libStandAlone_tools_uda2vis.$SO_OR_ARCHIVE_EXTENSION
-   VISIT_INSTALL_DIR=$with_visit
-   AC_MSG_RESULT(found)
-fi
-
-AC_SUBST(BUILD_VISIT)
-AC_SUBST(UINTAH_UDA_TO_VIS_LIB)
-AC_SUBST(VISIT_INSTALL_DIR)
+sci_defs_files="$sci_defs_files include/sci_defs/visit_testdefs.h"
 
 ##  --  search for OFED (Infiniband Drivers) -----------------------------
 
@@ -2491,9 +2436,6 @@ sci_defs_files="$sci_defs_files include/sci_defs/exe_testdefs.h"
 
 ##  --  search for gzopen (and related)  ----------------------------------
 
-## Since variables create by this section are used to check for PNG
-## and TEEM stuff this section needs to preceed them.
-
 _sci_optional=required
 _sci_lib=
 _sci_inc=
@@ -2570,15 +2512,6 @@ AC_SUBST(TIFF_LIB_FLAG)
 AC_SUBST(TIFF_LIB_DIR_FLAG)
 AC_SUBST(HAVE_TIFF)
 
-##  --  search for png --------------------------------------
-
-
-if test "$with_png"; then
-
-    AC_MSG_ERROR(--with-png is not used by Uintah any more.)
-
-fi
-
 ##  --  check if exceptions work properly --------------------------------
 
 AC_MSG_CHECKING(for working exceptions.)
@@ -2620,26 +2553,6 @@ AC_SUBST(INC_SCISOCK_H)
 
 sci_defs_files="$sci_defs_files include/sci_defs/scisock_testdefs.h"
 
-##  --  search for unp --------------------------------------
-
-if test "$with_unp" = "yes"; then
-  AC_MSG_ERROR(Please provide the location of the UNP package: --with-unp=<dir>)
-fi
-
-if test "$with_unp"; then
-  _sci_lib="$with_unp/lib"
-  _sci_inc="$with_unp/include"
-fi
-
-SCI_TRY_LINK(UNP,unp socket library and headers,extern_C unpv12e/unp.h unpv12e/unpthread.h,$_sci_inc,
-             unp scisock,$_sci_lib,,[
-  Connect(0, NULL, 0);
-],optional)
-
-AC_SUBST(UNP_LIB_FLAG)
-AC_SUBST(UNP_LIB_DIR_FLAG)
-AC_SUBST(INC_UNP_H)
-
 ##  --  search for the fortran library  ----------------------------------
 # Always check for fortran, since we now always try to enable blas
 
@@ -2664,10 +2577,6 @@ fi
 
 if test "$with_fortran" != "no"; then
   case $host in 
-    *aix*)
-      # AIX Fortran Library Check
-      SCI_TRY_LINK(F,fortran libraries (aix),,,xlf90,$_sci_lib,,,$_sci_optional)
-      ;;
     *linux*)
       F77TEST=$F77
       case $F77 in
@@ -3473,9 +3382,9 @@ else
      DEF_PETSC="#define HAVE_PETSC 1"
   else
     # Make sure we have either mpi, blas, and lapack
-    # (It seems that under AIX and OSF, the libs that cover blas also cover lapack)
+    # (It seems that under OSF, the libs that cover blas also cover lapack)
     if (test "$HAVE_MPI" = "yes" ) && test "$HAVE_BLAS" = "yes" && 
-         (test "$PETSC_ARCH" = "aix5.1.0.0" || test "$PETSC_ARCH" = "dec" || test "$HAVE_LAPACK" = "yes"); then
+         (test "$HAVE_LAPACK" = "yes"); then
       _sci_lib_dir=
 
       if test "$with_petsc"; then
@@ -3945,11 +3854,18 @@ int main(int argc, char **argv) {
 }
 EOF
 
+# use different set of libs if doing a static build
+if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+	_cudart_lib="cudart_static dl pthread rt"
+else
+	_cudart_lib="cudart"
+fi
+
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA libraries and headers,
                              cuda.h,
                              $_cuda_inc,
-                             cudart,
+                             $_cudart_lib,
                              $_cuda_lib,
                              ,
                              cuda_conf_test.cu,
@@ -4059,127 +3975,6 @@ AC_SUBST(MAGMA_LIB_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/magma_testdefs.h"
 
-
-##  --  search for freetype stuff  -------------------------------------------
-# Default values:
-_sci_lib=
-_sci_inc=
-_sci_optional=optional
-
-if test "$with_freetype" = "yes"; then
-  # If --with-freetype is specified without a parameter, then it makes it required
-  _sci_optional=required
-elif test "$with_freetype"; then
-  # If --with-freetype has a parameter, then use it
-  _sci_lib="$with_freetype/lib"
-  _sci_inc="$with_freetype/include"
-  _sci_optional=specific
-fi
-
-AC_MSG_CHECKING(for $_sci_optional freetype)
-
-found_freetype_config="no"
-
-if test -z "$_sci_lib"; then
-   freetype_bin=/usr/bin
-else
-   freetype_bin=$_sci_lib/../bin
-fi
-
-if test -e $freetype_bin/freetype-config; then
-    found_freetype_config="yes"
-    echo
-    AC_MSG_RESULT(Using $freetype_bin/freetype-config to set freetype variables.)
-
-    includes=`$freetype_bin/freetype-config --cflags`
-elif test -e $sci_thirdparty_dir/bin/freetype-config; then
-    AC_MSG_RESULT(Using $sci_thirdparty_dir/bin/freetype-config to set freetype variables.)
-    found_freetype_config="yes"
-    includes=`$sci_thirdparty_dir/bin/freetype-config --cflags`
-    _sci_lib="$sci_thirdparty_lib"
-else
-    AC_MSG_RESULT(No 'freetype-config' file found in $freetype_bin.)
-    _sci_lib="$sci_thirdparty_lib"
-    _sci_inc="$sci_thirdparty_include"
-    includes=""
-fi
-SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-             $_sci_inc,freetype,$_sci_lib,$includes,,$_sci_optional)
-
-if test "$HAVE_FREETYPE" = "yes"; then
-  INC_FREETYPE_H="$INC_FREETYPE_H $includes"
-  DEF_FREETYPE="#define HAVE_FREETYPE 1"
-elif test "$found_freetype_config" = "no"; then
-   if test "$_sci_optional" != "optional"; then
-     echo
-     AC_MSG_WARN(Cannot find a freetype-config file to get freetype variables.)
-     AC_MSG_WARN(This file usually resides in freetypelib_dir/../bin/freetype-config.)
-     AC_MSG_WARN(Please install freetype and then reconfigure.)
-   fi
-fi
-
-if test "$with_freetype" && test ! "$DEF_FREETYPE"; then
-  echo
-  AC_MSG_ERROR(One or more of the freetype components is missing.)
-fi
-
-AC_SUBST(FREETYPE_LIB_FLAG)
-AC_SUBST(FREETYPE_LIB_DIR_FLAG)
-AC_SUBST(DEF_FREETYPE)
-AC_SUBST(INC_FREETYPE_H)
-
-##  --  search for teem  -------------------------------------------------
-
-# Default values: (Really required, but need to give info to user if fails.)
-#                 (See below.)
-_sci_optional=optional
-_sci_lib=
-_sci_inc=
-
-if test "$with_teem"; then
-  if test "$with_teem" = "yes"; then
-    AC_MSG_WARN(Teem is already required - you do not need to specify --with-teem.)
-  else
-    # If --with-teem has a parameter, then use it
-    _sci_lib="$with_teem"
-    _sci_inc="$with_teem/include"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_optional=required
-  fi 
-
-  # Determine if teem is using png.  Assume teem is either in the 3rd Party
-  # or where the user has specified (as we are going to use nm to look at its
-  # symbols and are not trying to link against it (at this point.))
-
-  result=`nm $_sci_lib/libteem.so | grep png_write_info`
-  if test _sci_optional != "optional" && test -n "$result" && test "$HAVE_PNG" != "yes"; then
-    AC_MSG_WARN(Teem was built with PNG support.  However the Uintah configure)
-    AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
-    AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
-    AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
-    AC_MSG_ERROR(Please fix this problem and then configure again.)
-  fi
-
-  SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h teem/ten.h,$_sci_inc,teem,$_sci_lib,
-               $M_LIB_DIR_FLAG $M_LIB_FLAG,
-               [
-                 float a[3], b[9], c[7];
-                 tenEigensolve_f(a,b,c);
-               ]
-               ,$_sci_optional)
-
-  if test "$HAVE_TEEM" = "yes"; then
-     DEF_TEEM="#define HAVE_TEEM 1"
-  fi
-fi
-
-AC_SUBST(HAVE_TEEM)
-AC_SUBST(DEF_TEEM)
-AC_SUBST(INC_TEEM_H)
-AC_SUBST(TEEM_LIB_FLAG)
-AC_SUBST(TEEM_LIB_DIR_FLAG)
-sci_defs_files="$sci_defs_files include/sci_defs/teem_testdefs.h"
-
 ##  --  search for visus  -------------------------------------------------
 AC_LANG(C++)
 
@@ -4252,39 +4047,6 @@ AC_SUBST(PIDX_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/pidx_testdefs.h"
 AC_LANG(C)
 
-##  --  search for hdf5  -------------------------------------------------
-AC_LANG(C++)
-# The sci_required_hdf5 could have been set to yes when using the
-# with_hdf5 agument or from a package in the aclocal.m4 it.
-# These are the only two locations that the sci_required_* should be set.
-
-if test "$sci_required_hdf5" = "yes"; then 
-
-  _sci_optional=required
-  if test "$with_hdf5"; then
-    if test "$with_hdf5" != "yes"; then
-      _sci_lib="$with_hdf5/lib"			# user defined directory
-      _sci_inc="$with_hdf5/include"
-      _sci_optional=specific
-    fi
-  fi
-
-  SCI_TRY_LINK(HDF5,hdf5 library and headers,hdf5.h H5Cpp.h,$_sci_inc,hdf5 hdf5_cpp,$_sci_lib,,,$_sci_optional)
-
-  # Set the DEF_HDF5 var which is placed in the hdf5_testdefs.h.in
-  # Incude hdf5_defs.h in your code to optionally use the library.
-  if test "$HAVE_HDF5" = "yes"; then
-     DEF_HDF5="#define HAVE_HDF5 1"
-  fi
-  
-fi #end sci_required_hdf5
-
-AC_SUBST(DEF_HDF5)		# Place this var in the hdf5_testdefs.h.in
-AC_SUBST(INC_HDF5_H)		# Place this var in the configVars.mk.in
-AC_SUBST(HDF5_LIB_FLAG)		# Place this var in the configVars.mk.in
-AC_SUBST(HDF5_LIB_DIR_FLAG)	# Place this var in the configVars.mk.in
-sci_defs_files="$sci_defs_files include/sci_defs/hdf5_testdefs.h"
-AC_LANG(C)
 
 ##  --  search for Boost ------------------------
 AC_LANG([C++])
@@ -4457,9 +4219,6 @@ if test "$wasatch_3p" = "yes"; then
   if test "$HAVE_BOOST" != "yes"; then
       AC_MSG_ERROR( Option --enable-wasatch_3p requires Boost... <--with-boost=DIR> )
   fi
-#  if test "$HAVE_HDF5" != "yes"; then
-#      AC_MSG_ERROR( Option --enable-wasatch_3p requires HDF5... <--with-hdf5=DIR> )
-#  fi
   if test "$with_radprops"; then
      AC_MSG_ERROR( Do NOT specify both --with-radprops and --enable-wasatch_3p )
   fi
@@ -4553,7 +4312,7 @@ if test "$with_exprlib"; then
     SPOPS_INCLUDE_DIR="include/expression"
     # Check includes
     for file in ExprDeps.h ExprLib.h Context.h Expression.h ExpressionID.h FieldManagerList.h \
-                ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldDeps.h FieldManager.h FieldManagerBase.h \
+                ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldManager.h FieldManagerBase.h \
                 Functions.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
@@ -4638,24 +4397,6 @@ AC_SUBST(DEF_RADPROPS)
 AC_SUBST(INC_RADPROPS_H)
 AC_SUBST(RADPROPS_LIB_FLAG)
 AC_SUBST(RADPROPS_LIB_DIR_FLAG)
-
-##  --  Handle --enable-wasatch-in-arches --------------------------------
-
-BUILD_WASATCH_IN_ARCHES=no
-
-if test "$wasatch_in_arches" = "yes"; then
-   if test "$BUILD_WASATCH" = "no"; then
-      AC_MSG_ERROR( [--enable-wasatch-in-arches specified, but Wasatch component not enabled.] )
-   fi
-   if test "$BUILD_ARCHES" = "no"; then
-      AC_MSG_ERROR( [--enable-wasatch-in-arches specified, but Arches component not enabled.] )
-   fi
-
-   DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
-   BUILD_WASATCH_IN_ARCHES=yes
-fi
-AC_SUBST(DEF_WASATCH_IN_ARCHES)
-AC_SUBST(BUILD_WASATCH_IN_ARCHES)
 
 ##  --  Make sure Wasatch 3P is found if WASATCH or ARCHES is requested -------
 
@@ -4753,27 +4494,6 @@ AC_SUBST(HYPRE_LIB_FLAG)
 AC_SUBST(HYPRE_LIB_DIR_FLAG)
 
 sci_defs_files="$sci_defs_files include/sci_defs/hypre_testdefs.h"
-
-##  ---------------------------------------------------------------------
-##  --------------------  Fix Frost config vars  ------------------------
-##  ---------------------------------------------------------------------
-##  Now that we have run configure with the (xlc,xlC,xlf) compilers, we
-##  need to change those to (mpxlc,mpxlC,mpxlf) which automatically use
-##  the mpi libraries, so we need to set the MPI variables to be blank.
-##  ---------------------------------------------------------------------
-
-case $host in
-  *aix*)
-      AC_MSG_WARN(Changing the compiler for AIX computers...)
-      AC_MSG_WARN( [...to (probably) mpxlC, etc, and removing MPI flags...] )
-      CC=`echo $CC | sed 's,x,mpx,g'`
-      CXX=`echo $CXX | sed 's,x,mpx,g'`
-      F77=`echo $F77 | sed 's,x,mpx,g'`
-      MPI_LIB_FLAG=""
-      MPI_LIB_DIR_FLAG=""
-      INC_MPI_H=""
-      ;;
-esac
 
 ##  ---------------------------------------------------------------------
 ##  --------------------  generate output files  ------------------------

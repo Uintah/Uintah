@@ -17,7 +17,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-7      </delt_init>
-       <max_Timesteps>      500         </max_Timesteps>
+       <max_Timesteps>      250         </max_Timesteps>
        <timestep_multiplier>0.8         </timestep_multiplier>
    </Time>
 
@@ -142,9 +142,9 @@
        <Level>
            <Box label = "1">
               <lower>        [0.0,0.0,-0.005]   </lower>
-              <upper>        [1.0,0.25,0.005]   </upper>
+              <upper>        [0.5,0.25,0.005]   </upper>
               <extraCells>   [1,1,1]                  </extraCells>
-              <patches>      [1,1,1]                  </patches>
+              <patches>      [2,2,1]                  </patches>
             </Box>
            <spacing>         [0.01,0.01,0.01]       </spacing>
        </Level>
@@ -170,7 +170,7 @@
       <save label = "p.x"/>
       <save label = "p.volume"/>
       <save label = "p.velocity"/>
-      <checkpoint cycle = "2" timestepInterval = "50"/>
+      <checkpoint cycle = "2" timestepInterval = "30"/>
    </DataArchiver>
 
     <!--____________________________________________________________________-->

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -208,7 +208,7 @@ HypoElasticFortran::computeStressTensor( const PatchSubset* patches,
     ParticleVariable<double> pdTdt,p_q;
 
     new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,   pset);
-    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel_preReloc,     pset);
+    new_dw->allocateAndPut(pdTdt,           lb->pdTdtLabel,              pset);
     new_dw->allocateAndPut(p_q,             lb->p_qLabel_preReloc,       pset);
     new_dw->get(pvolume_new,                lb->pVolumeLabel_preReloc,   pset);
     new_dw->get(velGrad,                    lb->pVelGradLabel_preReloc,  pset);

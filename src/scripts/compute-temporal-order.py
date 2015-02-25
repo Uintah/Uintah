@@ -139,7 +139,7 @@ for fname in fnames:
   #    #EXTRACT THE variables
   for var in myvars:                      
     outFile = str(var) + '-t' + str(counter) + '.txt'
-    the_command = './lineextract -pr 32 -v ' + str(var) + ' -timestep ' + str(maxSteps*refinement) + ' -istart 0 0 0 -iend ' + str(Nx)+' '+str(Ny)+' '+str(Nz)+ ' -o ' + outFile +' -uda '+udaName
+    the_command = './lineextract -pr 32 -v ' + str(var) + ' -timestep ' + str(maxSteps*refinement) + ' -istart 0 0 0 -iend ' + str(Nx-1)+' '+str(Ny-1)+' '+str(Nz-1)+ ' -o ' + outFile +' -uda '+udaName
     print 'Executing command: ', the_command
     os.system(the_command)
     
@@ -154,7 +154,7 @@ for var in myvars:
   for i in range(0,nLevels):
     datname = str(var) + '-t' + str(i) + '.txt'
     phi = np.loadtxt(datname)
-    phiAll.append(phi)
+    phiAll.append(phi[:,3])
     os.system('rm ' + datname)
 
   # local errors

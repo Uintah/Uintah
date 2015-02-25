@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 2012 The University of Utah
+ * Copyright (c) 2012-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -157,7 +157,7 @@ public:
      */
     Builder( const Expr::Tag& result,
              const FieldTagInfo& fieldInfo,
-             const std::vector<Expr::Tag>& srcTags,
+             const Expr::TagList srcTags,
              const Expr::Tag& densityTag,
              const bool isConstDensity,
              const bool isStrongForm=true,
@@ -166,14 +166,12 @@ public:
     virtual Expr::ExpressionBase* build() const;
   protected:
     const FieldTagInfo info_;
-    const std::vector<Expr::Tag> srcT_;
+    const Expr::TagList srcT_;
     const Expr::Tag densityT_, drhodtTag_;
     const bool isConstDensity_, isStrongForm_;
   };
 
   virtual void evaluate();
-  virtual void advertise_dependents( Expr::ExprDeps& exprDeps );
-  virtual void bind_fields( const Expr::FieldManagerList& fml );
   virtual void bind_operators( const SpatialOps::OperatorDatabase& opDB );
 
 protected:
@@ -191,11 +189,12 @@ protected:
 
   const Expr::Tag densityTag_;
 
-  const SVolField* rho_;
-  const SVolField* volfrac_;
-  const XVolField* xareafrac_;
-  const YVolField* yareafrac_;
-  const ZVolField* zareafrac_;
+  DECLARE_FIELDS( SVolField, rho_, volfrac_, drhodt_, phi_ )
+  DECLARE_FIELD( XVolField, xareafrac_  )
+  DECLARE_FIELD( YVolField, yareafrac_  )
+  DECLARE_FIELD( ZVolField, zareafrac_  )
+
+  // Operators
   const SVolToFieldTInterpT* volFracInterpOp_;
   const XVolToXFluxInterpT* xAreaFracInterpOp_;
   const YVolToYFluxInterpT* yAreaFracInterpOp_;
@@ -206,26 +205,20 @@ protected:
 
   // things requried for weak form:
   const Expr::Tag phiTag_, drhodtTag_;
-  const FieldT    *phi_;
-  const SVolField *drhodt_;
 
-  std::vector<Expr::Tag> srcTags_;
+  Expr::TagList srcTags_;
 
   const DivX* divOpX_;
   const DivY* divOpY_;
   const DivZ* divOpZ_;
 
-  const XFluxT *xConvFlux_, *xDiffFlux_;
-  const YFluxT *yConvFlux_, *yDiffFlux_;
-  const ZFluxT *zConvFlux_, *zDiffFlux_;
-
-  typedef std::vector<const FieldT*> SrcVec;
-  SrcVec srcTerm_;
-
-  void nullify_fields();
+  DECLARE_FIELDS( XFluxT, xConvFlux_, xDiffFlux_  )
+  DECLARE_FIELDS( YFluxT, yConvFlux_, yDiffFlux_  )
+  DECLARE_FIELDS( ZFluxT, zConvFlux_, zDiffFlux_  )
+  DECLARE_VECTOR_OF_FIELDS(FieldT, srcTerms_);
 
   ScalarRHS( const FieldTagInfo& fieldTags,
-             const std::vector<Expr::Tag>& srcTags,
+             const Expr::TagList srcTags,
              const Expr::Tag& densityTag,
              const Expr::Tag& drhodtTag,
              const bool isConstDensity,

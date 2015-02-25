@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2014 The University of Utah
+ * Copyright (c) 1997-2015 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -104,13 +104,7 @@ public:
   //    [out] 
   //        documentation here
   virtual int nonlinearSolve( const LevelP& level,
-                              SchedulerP& sched
-#                             ifdef WASATCH_IN_ARCHES
-                              , Wasatch::Wasatch& wasatch,
-                              ExplicitTimeInt* d_timeIntegrator,
-                              SimulationStateP& state
-#                             endif // WASATCH_IN_ARCHES
-                              ) = 0;
+                              SchedulerP& sched ) = 0;
 
 
   const std::string& getTimeIntegratorType() const
@@ -140,15 +134,11 @@ public:
                             const LevelP& level,
                             const MaterialSet* matls) = 0;
   
-  inline void set_use_wasatch_mom_rhs(const bool useWasatchMomRHS) { d_useWasatchMomRHS = useWasatchMomRHS; }
-  inline bool get_use_wasatch_mom_rhs() { return d_useWasatchMomRHS; }
-
 protected:
    const ProcessorGroup * d_myworld;
    std::string            d_timeIntegratorType;
 
    EnthalpySolver       * d_enthalpySolver;
-   bool                   d_useWasatchMomRHS;
 
 private:
 
