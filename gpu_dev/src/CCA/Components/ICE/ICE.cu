@@ -29,11 +29,9 @@
 #include <stdio.h>
 #include <sci_defs/cuda_defs.h>
 #include <CCA/Components/ICE/GpuModule.h>
-#include <Core/Grid/Variables/GPUGridVariable.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 //no linker for device code, need to include the whole source...
 #include <CCA/Components/Schedulers/GPUDataWarehouse.cu>
-#include <Core/Grid/Variables/GPUGridVariable.cu>
 #ifdef __cplusplus
 extern "C" {
 #endif
