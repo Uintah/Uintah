@@ -31,7 +31,16 @@
 
 #include <sci_defs/cuda_defs.h>
 
+#include <string>
+
 namespace Uintah {
+
+using std::vector;
+using std::map;
+using std::queue;
+using std::set;
+using std::ofstream;
+using std::string;
 
 class Task;
 class DetailedTask;
@@ -132,7 +141,7 @@ class UnifiedScheduler : public MPIScheduler  {
     UnifiedScheduler( const UnifiedScheduler& );
     UnifiedScheduler& operator=( const UnifiedScheduler& );
 
-    int getAviableThreadNum();
+    int getAvailableThreadNum();
 
     int  pendingMPIRecvs();
 
@@ -145,30 +154,98 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void gpuInitialize( bool reset=false );
 
+    void performInternalGhostCellCopies(DetailedTask* dtask);
+
+    void initiateH2DCopies(DetailedTask* dtask);
+
+    void markDeviceRequiresDataAsValid(DetailedTask* dtask);
+
+    void markDeviceComputesDataAsValid(DetailedTask* dtask);
+
+    void markHostRequiresDataAsValid(DetailedTask* dtask);
+
+    bool initiateD2H(DetailedTask* dtask);
+
+    void copyAllDataD2H(DetailedTask* dtask);
+
+    void processD2HCopies(DetailedTask* dtask);
+
     void postD2HCopies( DetailedTask* dtask );
     
+    void postH2DCopies(DetailedTask* dtask);
+
     void preallocateDeviceMemory( DetailedTask* dtask );
 
-    void postH2DCopies( DetailedTask* dtask );
-
-    void createCudaStreams( int device, int numStreams = 1 );
+    void createCudaStreams(int numStreams, int device);
 
     void reclaimCudaStreams( DetailedTask* dtask );
 
-    cudaError_t unregisterPageLockedHostMem();
+    void addCudaStream(cudaStream_t* stream, int device);
+
+    void addCudaEvent(cudaEvent_t* event, int device);
 
     void freeCudaStreams();
 
+    cudaError_t freeDeviceRequiresMem();
+
+    cudaError_t freeComputesMem();
+
+    cudaError_t unregisterPageLockedHostMem();
+
+
+
+    void freeCudaEvents();
+
+    void clearGpuDBMaps();
+
+    void assignDevice(DetailedTask* task);
+
+    void prepareGPUDependencies( DetailedTask* task, int iteration, int t_id);
+
+    void copyGPUInternalDependencies(DetailedTask * task, int iteration, int t_id);
+
+    struct GPUGridVariableInfo {
+      DetailedTask* dtask;
+      double*       ptr;
+      IntVector     size;
+      int           device;
+      GPUGridVariableInfo(DetailedTask* _dtask, double* _ptr, IntVector _size, int _device)
+        : dtask(_dtask), ptr(_ptr), size(_size), device(_device) {
+      }
+    };
+
+    map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceRequiresPtrs;
+    map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceComputesPtrs;
+    map<string, GPUGridVariableInfo> deviceComputesTemporaryPtrs;
+    vector<VarLabel*> temporaryVarLabels;
+
+    vector<GPUGridVariableInfo> deviceRequiresAllocationPtrs;
+    vector<GPUGridVariableInfo> deviceComputesAllocationPtrs;
+    vector<double*> hostComputesAllocationPtrs;
+
+    map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostRequiresPtrs;
+    map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostComputesPtrs;
+    vector<queue<cudaEvent_t*> >   idleEvents;
     int  numDevices_;
     int  currentDevice_;
 
+    /* thread shared data, needs lock protection when accessed */
     std::vector<std::queue<cudaStream_t*> >  idleStreams;
     std::set<void*>                          pinnedHostPtrs;
 
+    std::vector< std::string > materialsNames;
+
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor idleStreamsLock_;
     mutable CrowdMonitor d2hComputesLock_;
+    mutable CrowdMonitor idleStreamsLock_;
     mutable CrowdMonitor h2dRequiresLock_;
+    /*mutable CrowdMonitor deviceComputesLock_;
+    mutable CrowdMonitor hostComputesLock_;
+    mutable CrowdMonitor deviceRequiresLock_;
+    mutable CrowdMonitor hostRequiresLock_;
+    mutable CrowdMonitor deviceComputesAllocationLock_;
+    mutable CrowdMonitor hostComputesAllocationLock_;
+    mutable CrowdMonitor deviceComputesTemporaryLock_;*/
 
 #endif
 };

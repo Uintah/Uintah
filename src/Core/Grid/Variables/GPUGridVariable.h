@@ -63,14 +63,38 @@ namespace Uintah {
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];
       }
 
-      HOST_DEVICE T* getPointer() const
-      {
+      HOST_DEVICE const T& operator()(const int& x, const int& y, const int& z, const int& m) const { //get data from global index
+        CHECK_INSIDE3(x,y,z,d_offset, d_size)
+        return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
+      }
+
+      HOST_DEVICE T& operator()(const int& x, const int& y, const int& z, const int& m) { //get data from global index
+        CHECK_INSIDE3(x,y,z,d_offset, d_size)
+        //TODO: Get materials working with the offsets.
+        //return d_data[ x-d_offset.x + d_size.x*(y-d_offset.y + (z-d_offset.z)*d_size.y)];
+        return d_data[ m * d_size.x * d_size.y * d_size.z + x + d_size.x*(y + (z)*d_size.y)];
+      }
+
+
+      HOST_DEVICE void* getPointer() const {
+      //HOST_DEVICE T* getPointer() const {
         return d_data;
       }
+
+      HOST_DEVICE void copyZSliceData(const GPUArray3& copyFromVar);
+
 
       HOST_DEVICE size_t getMemSize() const
       {
         return d_size.x * d_size.y * d_size.z * sizeof(T);
+      }
+
+      HOST_DEVICE void getSizes(int3& low, int3& high, int3& siz) const {
+        low = d_offset;
+        high.x = d_size.x - d_offset.x;
+        high.y = d_size.y - d_offset.y;
+        high.z = d_size.z - d_offset.z;
+        siz = d_size;
       }
 
     protected:
@@ -117,6 +141,14 @@ namespace Uintah {
       HOST_DEVICE virtual size_t getMemSize()
       {
         return GPUArray3<T>::getMemSize();
+      }
+
+      HOST_DEVICE void getSizes(int3& low, int3& high, int3& siz) const {
+        GPUArray3<T>::getSizes(low, high, siz);
+      }
+
+      HOST_DEVICE void* getPointer() {
+        return GPUArray3<T>::getPointer();
       }
 
     private:

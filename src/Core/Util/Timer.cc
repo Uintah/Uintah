@@ -46,8 +46,12 @@
 #include <unistd.h>
 #include <climits>
 #include <iostream>
+#include <Core/Thread/Thread.h>
 
 #include <time.h>
+using namespace std;
+using namespace SCIRun;
+
 
 using std::cerr;
 using std::endl;
@@ -159,6 +163,8 @@ WallClockTimer::WallClockTimer()
 #endif
 }
 
+WallClockTimer::~WallClockTimer() {}
+
 double WallClockTimer::get_time()
 {
 #if 0
@@ -173,9 +179,7 @@ double WallClockTimer::get_time()
   return time;
 }
 
-WallClockTimer::~WallClockTimer()
-{
-}
+
 
 CPUTimer::~CPUTimer()
 {
@@ -217,3 +221,85 @@ void TimeThrottle::wait_for_time(double endtime)
   } while (nanosleep(&delay, &remaining) != 0);
 #endif
 }
+
+MultiThreadedTimer::MultiThreadedTimer(int numberOfThreads): timerLock("timerLock")  {
+  //create by passing the number of threads.  You can determine this with:
+  //int numThreads = Uintah::Parallel::getNumThreads();
+  //if (numThreads == -1) {
+  //  numThreads = 1;
+ // }
+
+  //To make sense of times, it helps to have the number of patches >= the number of threads.
+  this->numberOfThreads = numberOfThreads;
+  timers = new WallClockTimer[this->numberOfThreads];
+  accumulatedTimes = new double[this->numberOfThreads];
+  for (int i = 0; i < this->numberOfThreads; i++) {
+    accumulatedTimes[i] = 0;
+  }
+}
+
+MultiThreadedTimer::~MultiThreadedTimer() {
+  delete[] timers;
+  delete[] accumulatedTimes;
+}
+void MultiThreadedTimer::start() {
+
+  int threadID = SCIRun::Thread::self()->myid();
+  timers[threadID].start();
+}
+
+void MultiThreadedTimer::stop(){
+  timers[SCIRun::Thread::self()->myid()].stop();
+}
+void MultiThreadedTimer::clear(){
+  int threadID = SCIRun::Thread::self()->myid();
+  accumulatedTimes[threadID] += time();
+  timers[threadID].clear();
+}
+
+void MultiThreadedTimer::clearAll(){
+  //To get accurate results, only call when you know one
+  //thread will be accessing methods of this class.
+  for (int i = 0; i < numberOfThreads; i++) {
+    accumulatedTimes[i] += timers[i].time();
+    timers[i].clear();
+  }
+}
+
+
+double MultiThreadedTimer::time(){
+  //timerLock.writeLock();
+  return timers[SCIRun::Thread::self()->myid()].time();
+  //timerLock.writeUnlock();
+}
+
+double MultiThreadedTimer::getElapsedSeconds(){
+  int threadID = SCIRun::Thread::self()->myid();
+  return timers[threadID].time();
+}
+
+double MultiThreadedTimer::getElapsedAccumulatedSeconds(){
+  int threadID = SCIRun::Thread::self()->myid();
+  return accumulatedTimes[threadID] + timers[threadID].time();
+}
+
+double MultiThreadedTimer::getAllThreadsElapsedSeconds(){
+  //To get accurate results, only call when all other
+  //threads have finished their times.  Also read the last
+  //entry.
+  //timerLock.readLock();
+
+  double total = 0.0;
+  for (int i = 0; i < numberOfThreads; i++) {
+    total += timers[i].time();
+  }
+  //timerLock.readUnlock();
+  return total;
+
+
+}
+
+double MultiThreadedTimer::get_time(){
+  return 0;
+}
+

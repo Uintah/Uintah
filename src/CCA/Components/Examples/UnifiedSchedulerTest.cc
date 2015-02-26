@@ -39,6 +39,7 @@
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <sci_defs/cuda_defs.h>
+#include <Core/Thread/Thread.h>
 
 #define BLOCKSIZE 16
 
@@ -77,7 +78,8 @@ void UnifiedSchedulerTest::scheduleInitialize(const LevelP& level,
 {
   Task* multiTask = scinew Task("UnifiedSchedulerTest::initialize", this, &UnifiedSchedulerTest::initialize);
 
-  multiTask->computes(phi_label);
+  multiTask->computesWithScratchGhost(phi_label, NULL, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
+  //multiTask->computes(phi_label);
   multiTask->computes(residual_label);
   sched->addTask(multiTask, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -109,7 +111,7 @@ void UnifiedSchedulerTest::scheduleTimeAdvance(const LevelP& level,
 #endif
 
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
-  task->computes(phi_label);
+  task->computesWithScratchGhost(phi_label, NULL, Uintah::Task::NormalDomain, Ghost::AroundNodes, 1);
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -143,7 +145,8 @@ void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
     const Patch* patch = patches->get(p);
 
     NCVariable<double> phi;
-    new_dw->allocateAndPut(phi, phi_label, matl, patch);
+    //new_dw->allocateAndPut(phi, phi_label, matl, patch);
+    new_dw->allocateAndPut(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
     phi.initialize(0.);
 
     for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace; face = Patch::nextFace(face)) {
@@ -161,6 +164,8 @@ void UnifiedSchedulerTest::initialize(const ProcessorGroup* pg,
         }
       }
     }
+    //printf("cpu - phi(%d, %d, %d) for patch %d is %1.6lf\n", 0, 1, 9, patch->getID(), phi[IntVector(0, 1, 9)]);
+    //printf("cpu - phi(%d, %d, %d) for patch %d is %1.6lf\n", 0, 1, 10, patch->getID(), phi[IntVector(0, 1, 10)]);
     new_dw->put(sum_vartype(-1), residual_label);
   }
 }
@@ -185,11 +190,14 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       constNCVariable<double> phi;
 
       old_dw->get(phi, phi_label, matl, patch, Ghost::AroundNodes, 1);
+      //printf("after cpu - phi(%d, %d, %d) for patch %d is %1.6lf\n", 0, 1, 9, patch->getID(), phi[IntVector(0, 1, 9)]);
+      //printf("after cpu - phi(%d, %d, %d) for patch %d is %1.6lf\n", 0, 1, 10, patch->getID(), phi[IntVector(0, 1, 10)]);
       NCVariable<double> newphi;
 
       new_dw->allocateAndPut(newphi, phi_label, matl, patch);
       newphi.copyPatch(phi, newphi.getLowIndex(), newphi.getHighIndex());
-
+      //printf("cpu - newphi(%d, %d, %d) for patch %d is %1.6lf\n", 0, 1, 9, patch->getID(), newphi[IntVector(0, 1, 9)]);
+      //printf("cpu - newphi(%d, %d, %d) for patch %d is %1.6lf\n", 0, 1, 10, patch->getID(), newphi[IntVector(0, 1, 10)]);
       double residual = 0;
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex();
@@ -210,6 +218,12 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
         newphi[n] = (1. / 6)
                 * (phi[n + IntVector(1, 0, 0)] + phi[n + IntVector(-1, 0, 0)] + phi[n + IntVector(0, 1, 0)]
                 + phi[n + IntVector(0, -1, 0)] + phi[n + IntVector(0, 0, 1)] + phi[n + IntVector(0, 0, -1)]);
+        //if (n.x() == 1 && n.y() == 1 && n.z() == 1) {
+        //  printf("cpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", n.x(), n.y(), n.z(), newphi[n], phi[n + IntVector(-1, 0, 0)], phi[n + IntVector(1, 0, 0)], phi[n + IntVector(0, -1, 0)], phi[n + IntVector(0, 1, 0)], phi[n + IntVector(0, 0, -1)], phi[n + IntVector(0, 0, 1)]);
+        //}
+        //if (n.x() == 1 && n.y() == 1 && (n.z() == 9 || n.z() == 10)) {
+        //  printf("cpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", n.x(), n.y(), n.z(), newphi[n], phi[n + IntVector(-1, 0, 0)], phi[n + IntVector(1, 0, 0)], phi[n + IntVector(0, -1, 0)], phi[n + IntVector(0, 1, 0)], phi[n + IntVector(0, 0, -1)], phi[n + IntVector(0, 0, 1)]);
+        //}
         double diff = newphi[n] - phi[n];
         residual += diff * diff;
       }
@@ -239,8 +253,11 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
       dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
       dim3 dimGrid(xblocks, yblocks, 1);
+      //dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+      //dim3 dimGrid(xblocks, yblocks, 1);
 
       //now calculate the computation domain (ignoring the outside cell regions)
+
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
               patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
               patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
@@ -253,8 +270,16 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
 
       // setup and launch kernel
-      GPUDataWarehouse* old_gpudw = old_dw->getGPUDW()->getdevice_ptr();
-      GPUDataWarehouse* new_gpudw = new_dw->getGPUDW()->getdevice_ptr();
+      GPUDataWarehouse* old_gpudw = old_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->getdevice_ptr();
+      GPUDataWarehouse* new_gpudw = new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->getdevice_ptr();
+      GPUGridVariable<double> device_var;
+      new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
+        int3 device_offset;
+        int3 device_size;
+        void* device_ptr = NULL;
+        //device_var.getArray3(device_offset, device_size, device_ptr);
+        device_ptr = device_var.getPointer();
+        //printf("Calling unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
 
       launchUnifiedSchedulerTestKernel(dimGrid,
                                        dimBlock,
@@ -272,6 +297,57 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
 
     } // end patch for loop
   } //end GPU
+  if (event == Task::postGPU) {
+    int numPatches = patches->size();
+        for (int p = 0; p < numPatches; p++) {
+
+          const Patch* patch = patches->get(p);
+
+          // Calculate the memory block size
+          IntVector l = patch->getNodeLowIndex();
+          IntVector h = patch->getNodeHighIndex();
+
+          uint3 patchNodeLowIndex = make_uint3(l.x(), l.y(), l.z());
+          uint3 patchNodeHighIndex = make_uint3(h.x(), h.y(), h.z());
+          IntVector s = h - l;
+          int xdim = s.x();
+          int ydim = s.y();
+
+          // define dimensions of the thread grid to be launched
+          int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
+          int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
+          dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+          dim3 dimGrid(xblocks, yblocks, 1);
+          //dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);
+          //dim3 dimGrid(xblocks, yblocks, 1);
+
+          //now calculate the computation domain (ignoring the outside cell regions)
+
+          l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::yminus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::zminus) == Patch::Neighbor ? 0 : 1);
+          h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::yplus) == Patch::Neighbor ? 0 : 1,
+                  patch->getBCType(Patch::zplus) == Patch::Neighbor ? 0 : 1);
+
+          // Domain extents used by the kernel to prevent out of bounds accesses.
+          uint3 domainLow = make_uint3(l.x(), l.y(), l.z());
+          uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
+
+          // setup and launch kernel
+          GPUDataWarehouse* old_gpudw = old_dw->getGPUDW()->getdevice_ptr();
+          GPUDataWarehouse* new_gpudw = new_dw->getGPUDW()->getdevice_ptr();
+          GPUGridVariable<double> device_var;
+          new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
+            int3 device_offset;
+            int3 device_size;
+            void* device_ptr = NULL;
+            //device_var.getArray3(device_offset, device_size, device_ptr);
+            device_ptr = device_var.getPointer();
+
+          //printf("Finished unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
+    }
+  }
 }
 
 //______________________________________________________________________

@@ -212,8 +212,11 @@ class TaskGraph {
 
   private:
 
-#ifdef HAVE_GNU_HASHMAP
+#ifdef __PGI
+     //PGI won't compile with hash_multimap, so it will use multimap
     typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
+#elif HAVE_GNU_HASHMAP
+     typedef std::multimap<const VarLabel*, Task::Dependency*> CompMap;
 #else
     typedef hash_multimap<const VarLabel*, Task::Dependency*> CompMap;
 #endif
