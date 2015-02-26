@@ -137,6 +137,9 @@ AMRSimulationController::run()
    d_scheduler->initialize(1, 1);
    d_scheduler->advanceDataWarehouse(currentGrid, true);
    d_scheduler->setInitTimestep(true);
+#ifdef HAVE_CUDA
+   d_scheduler->assignPatchesToGpus(currentGrid);
+#endif
 
    double time;
 

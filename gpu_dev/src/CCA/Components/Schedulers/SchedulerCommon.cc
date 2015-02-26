@@ -71,7 +71,8 @@ using namespace SCIRun;
 using namespace std;
 
 static DebugStream schedulercommon_dbg("SchedulerCommon_DBG", false);
-
+extern DebugStream use_single_device;
+extern DebugStream simulate_multiple_gpus;
 // for calculating memory usage when sci-malloc is disabled.
 char* SchedulerCommon::start_addr = NULL;
 
@@ -1983,3 +1984,65 @@ SchedulerCommon::printTaskLevels( const ProcessorGroup* d_myworld,
     }
   }  // debugstream active
 } 
+
+#ifdef HAVE_CUDA
+
+void SchedulerCommon::uintahSetCudaDevice(int deviceNum) {
+  if (simulate_multiple_gpus.active()) {
+    CUDA_RT_SAFE_CALL( cudaSetDevice(0) );
+  } else {
+    CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
+  }
+}
+
+int SchedulerCommon::getNumDevices() {
+  int numDevices = 0;
+  cudaError_t retVal;
+
+  if (Uintah::Parallel::usingDevice()) {
+    if (simulate_multiple_gpus.active()) {
+      numDevices = 3;
+    } else if (!use_single_device.active()) {
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+    } else {
+      numDevices = 1;
+    }
+  }
+  return numDevices;
+}
+void SchedulerCommon::assignPatchesToGpus(const GridP& grid){
+
+  currentAcceleratorCounter = 0;
+  int numDevices = getNumDevices();
+  if (numDevices > 0) {
+    std::map<const Patch *, int>::iterator it;
+    for (int i = 0; i < grid->numLevels(); i++) {
+      LevelP level = grid->getLevel(i);
+      for (Level::patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); ++iter){
+        //TODO: Clean up so that instead of assigning round robin, it assigns in blocks.
+        const Patch* patch = *iter;
+        it = patchAcceleratorLocation.find(patch);
+        if (it == patchAcceleratorLocation.end()) {
+          //this patch has not been assigned, so assign it.
+          //assign it to a gpu in a round robin fashion.
+          patchAcceleratorLocation.insert(std::pair<const Patch *,int>(patch,currentAcceleratorCounter));
+          currentAcceleratorCounter++;
+          currentAcceleratorCounter %= numDevices;
+        }
+      }
+    }
+  }
+}
+
+int SchedulerCommon::getGpuIndexForPatch(const Patch* patch) {
+  std::map<const Patch *, int>::iterator it;
+  it = patchAcceleratorLocation.find(patch);
+  if (it != patchAcceleratorLocation.end()) {
+    return it->second;
+  }
+  return -1;
+}
+
+std::map<const Patch *, int> SchedulerCommon::patchAcceleratorLocation;
+unsigned int SchedulerCommon::currentAcceleratorCounter;
+#endif

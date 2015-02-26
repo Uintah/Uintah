@@ -33,6 +33,8 @@ SRCS += \
         $(SRCDIR)/DependencyException.cc      \
         $(SRCDIR)/DetailedTasks.cc            \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
+        $(SRCDIR)/GPUGridVariableInfo.cc      \
+        $(SRCDIR)/GPUGridVariableGhosts.cc    \
         $(SRCDIR)/IncorrectAllocation.cc      \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MessageLog.cc               \

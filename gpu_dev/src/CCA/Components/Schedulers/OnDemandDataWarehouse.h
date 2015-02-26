@@ -309,6 +309,13 @@ public:
 
    void exchangeParticleQuantities(DetailedTasks* dts, LoadBalancer* lb, 
                                    const VarLabel* pos_var, int iteration);
+
+#ifdef HAVE_CUDA
+   static GPUGridVariableBase* createGPUGridVariable(int sizeOfDataType);
+   void prepareGPUDependencies(DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
+                   OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
+   void copyGPUGhostCellsBetweenDevices(DetailedTask* dtask, int numDevices);
+#endif
    void sendMPI(DependencyBatch* batch, const VarLabel* pos_var, BufferInfo& buffer, 
                 OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void recvMPI(DependencyBatch* batch, BufferInfo& buffer,
@@ -390,6 +397,16 @@ private:
    };  
    
   virtual DataWarehouse* getOtherDataWarehouse(Task::WhichDW,RunningTaskInfo *info);
+
+  struct ValidNeighbors {
+    GridVariableBase* validNeighbor;
+    const Patch* neighborPatch;
+    IntVector low;
+    IntVector high;
+
+  };
+  void getValidNeighbors(const VarLabel* label, int matlIndex, const Patch* patch,
+           Ghost::GhostType gtype, int numGhostCells, std::vector<ValidNeighbors>& validNeighbors);
 
   void getGridVar(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
            Ghost::GhostType gtype, int numGhostCells);
@@ -484,6 +501,9 @@ private:
 
    // Whether this (Old) DW is being used for a restarted timestep (the new DWs are cleared out)
    bool hasRestarted_;
+#ifdef HAVE_CUDA
+   std::map<Patch*, bool> assignedPatches;
+#endif
 
 };
 

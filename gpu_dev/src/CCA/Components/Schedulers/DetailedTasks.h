@@ -266,11 +266,17 @@ namespace Uintah {
 
     std::map<DependencyBatch*, DependencyBatch*>& getRequires() { return reqs; }
 
+    std::map<DependencyBatch*, DependencyBatch*>& getInternalRequires() { return internal_reqs; }  
+  
     DependencyBatch* getComputes() const { return comp_head; }
 
+    DependencyBatch* getInternalComputes() const { return internal_comp_head; }
+    
     void findRequiringTasks( const VarLabel* var, std::list<DetailedTask*>& requiringTasks );
 
     void emitEdges( ProblemSpecP edgesElement ) ;
+    bool addInternalRequires(DependencyBatch*);
+    void addInternalComputes(DependencyBatch*);
 
     bool addRequires( DependencyBatch* );
 
@@ -297,11 +303,29 @@ namespace Uintah {
 
 #ifdef HAVE_CUDA
 
-    void assignDevice(int device);
+    void assignDevice (int device);
+
     int getDeviceNum() const;
+
+    //For tasks where there are multiple devices for the task (i.e. data archiver output tasks)
+    std::set<int> getDeviceNums() const;
+
     cudaStream_t* getCUDAStream() const;
+
+    cudaStream_t* getCUDAStream(int deviceNum) const;
+
+    //bool queryCUDAStreamCompletion();
+
     void setCUDAStream(cudaStream_t* s);
-    bool queryCUDAStreamCompletion();
+
+    void setCUDAStream(int deviceNum, cudaStream_t* s);
+
+    bool checkCUDAStreamDone();
+
+    bool checkCUDAStreamDone(int deviceNum);
+
+    bool checkAllCUDAStreamsDone();
+
 
 #endif
 
@@ -318,7 +342,9 @@ namespace Uintah {
     const PatchSubset*                           patches;
     const MaterialSubset*                        matls;
     std::map<DependencyBatch*, DependencyBatch*> reqs;
+    std::map<DependencyBatch*, DependencyBatch*> internal_reqs;
     DependencyBatch*                             comp_head;
+    DependencyBatch*                             internal_comp_head;
     DetailedTasks*                               taskGroup;
 
     bool initiated_;
@@ -358,7 +384,9 @@ namespace Uintah {
     bool deviceExternallyReady_;
     bool completed_;
     int  deviceNum_;
-    cudaStream_t* d_cudaStream;
+    std::set <int> deviceNums_;
+    //cudaStream_t*   d_cudaStream;
+    std::map <int, cudaStream_t*> d_cudaStreams;
 #endif
 
   }; // end class DetailedTask
@@ -458,14 +486,40 @@ namespace Uintah {
     QueueAlg getTaskPriorityAlg() { return taskPriorityAlg_; }
 
 #ifdef HAVE_CUDA
+    void addFinalizeDevicePreparation(DetailedTask* dtask);
     void addInitiallyReadyDeviceTask( DetailedTask* dtask );
     void addCompletionPendingDeviceTask( DetailedTask* dtask );
+    void addInitiallyReadyHostTask(DetailedTask* dtask);
+
+    DetailedTask* getNextFinalizeDevicePreparationTask();
     DetailedTask* getNextInitiallyReadyDeviceTask();
     DetailedTask* getNextCompletionPendingDeviceTask();
+    DetailedTask* getNextInitiallyReadyHostTask();
+
+    DetailedTask* peekNextFinalizeDevicePreparationTask();
     DetailedTask* peekNextInitiallyReadyDeviceTask();
     DetailedTask* peekNextCompletionPendingDeviceTask();
+    DetailedTask* peekNextInitiallyReadyHostTask();
+
+    int numFinalizeDevicePreparation() { return finalizeDevicePreparationTasks_.size(); }
     int numInitiallyReadyDeviceTasks() { return initiallyReadyDeviceTasks_.size(); }
     int numCompletionPendingDeviceTasks() { return completionPendingDeviceTasks_.size(); }
+    int numInitiallyReadyHostTasks() { return initiallyReadyHostTasks_.size(); }
+
+    void createInternalDependencyBatch(DetailedTask* from,
+                                   Task::Dependency* comp,
+                                   const Patch* fromPatch,
+                                   DetailedTask* to,
+                                   Task::Dependency* req,
+                                   const Patch *toPatch,
+                                   int matl,
+                                   const IntVector& low,
+                                   const IntVector& high,
+                                   DetailedDep::CommCondition cond);
+    // helper of possiblyCreateDependency
+    DetailedDep* findMatchingInternalDetailedDep(DependencyBatch* batch, DetailedTask* toTask, Task::Dependency* req,
+                                         const Patch* fromPatch, int matl, IntVector low, IntVector high,
+                                         IntVector& totalLow, IntVector& totalHigh, DetailedDep* &parent_dep);
 #endif
 
   protected:
@@ -560,10 +614,15 @@ namespace Uintah {
     DetailedTasks& operator=( const DetailedTasks& );
 
 #ifdef HAVE_CUDA
-    TaskPQueue            initiallyReadyDeviceTasks_;     // initially ready, h2d copies pending
-    TaskPQueue            completionPendingDeviceTasks_;  // execution and d2h copies pending
+    TaskPQueue            initiallyReadyDeviceTasks_;       // initially ready, h2d copies pending
+    TaskPQueue            finalizeDevicePreparationTasks_;  // h2d copies completed, need to mark gpu data as valid and copy gpu ghost cell data internall on device
+    TaskPQueue            completionPendingDeviceTasks_;    // execution and d2h copies pending
+    TaskPQueue            initiallyReadyHostTasks_;         // initially ready cpu task, d2h copies pending
+
+    mutable CrowdMonitor  deviceFinalizePreparationQueueLock_;
     mutable CrowdMonitor  deviceReadyQueueLock_;
     mutable CrowdMonitor  deviceCompletedQueueLock_;
+    mutable CrowdMonitor  hostReadyQueueLock_;
 #endif
 
   }; // end class DetailedTasks
