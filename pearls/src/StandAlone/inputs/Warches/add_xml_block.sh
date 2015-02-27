@@ -1,0 +1,1 @@
+sed -i '/<MomentumSolver/a \ \t \t \t \t \t \t <use_wasatch_momentum_rhs\/>' *.ups 

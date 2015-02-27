@@ -1,0 +1,8 @@
+
+Placed these files here to get them out of the way.  If they are still
+needed, please "svn mv" them to the appropriate location (or copy
+their content into the appropriate file).  (The "svn mv" will keep
+history intact.)  If you know that they are no longer needed, please
+delete them.
+
+     - Dav (Jul 13 2009)
