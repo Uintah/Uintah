@@ -69,7 +69,7 @@ WARNING
    This scheduler is still EXPERIMENTAL and undergoing extensive
    development, not all tasks/components are GPU/MIC-enabled and/or thread-safe yet.
    
-   Requires MPI THREAD MULTIPLE support.
+   Requires MPI_THREAD_MULTIPLE support.
   
 ****************************************/
 
@@ -136,8 +136,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     int  pendingMPIRecvs();
 
-    const Output*  oport_t;
-    CommRecMPI     sends_[MAX_THREADS];
     QueueAlg       taskQueueAlg_;
     int            numThreads_;
 
@@ -180,13 +178,9 @@ public:
   
   UnifiedSchedulerWorker( UnifiedScheduler* scheduler, int thread_id );
 
-  void assignTask( DetailedTask* task, int iteration );
-
-  DetailedTask* getTask();
-
   void run();
 
-  void quit() { d_quit=true; };
+  void quit() { d_quit = true; };
 
   double getWaittime();
 

@@ -83,8 +83,8 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
-  // If VisIt has been included into the build initialize the lib sim
-  // so that a user can conect to the simulation via VisIt.
+  // If VisIt has been included into the build, initialize the lib sim
+  // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
 
 #ifdef HAVE_MPICH
@@ -97,11 +97,6 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
 
 AMRSimulationController::~AMRSimulationController()
 {
-  // If VisIt has been included into the build initialize the lib sim
-  // so that a user can conect to the simulation via VisIt.
-#ifdef HAVE_VISIT
-  visit_EndLibSim( &d_visit_simulation_data );
-#endif
 }
 
 double barrier_times[5]={0};
@@ -264,7 +259,7 @@ AMRSimulationController::run()
      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
-     // printSimulationStats( d_sharedState, delt, t );
+     // printSimulationStats( d_sharedState, delt, time );
 
      if(log_dw_mem){
        // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
@@ -295,19 +290,6 @@ AMRSimulationController::run()
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
      d_scheduler->advanceDataWarehouse(currentGrid);
-
-     // If VisIt has been included into the build check the lib sim state
-     // to see if there is a connection and if so if anything needs to be
-     // done.
-#ifdef HAVE_VISIT
-     d_visit_simulation_data.schedulerP = d_scheduler;
-     d_visit_simulation_data.gridP = currentGrid;
-     d_visit_simulation_data.time  = time;
-     d_visit_simulation_data.cycle =
-       d_sharedState->getCurrentTopLevelTimeStep();     
-
-     visit_CheckState( &d_visit_simulation_data );
-#endif
 
      // Put the current time into the shared state so other components
      // can access it.  Also increment (by one) the current time step
@@ -406,8 +388,8 @@ AMRSimulationController::run()
      }
      
      calcWallTime();
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time, "\nStarting execution: " );
 
-     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
      // Execute the current timestep, restarting if necessary
      d_sharedState->d_current_delt = delt;
 
@@ -454,15 +436,35 @@ AMRSimulationController::run()
      time += delt;
      TAU_DB_DUMP();
 
+     calcWallTime();
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time, "Finished execution: " );
+     // If VisIt has been included into the build, check the lib sim state
+     // to see if there is a connection and if so if anything needs to be
+     // done.
+#ifdef HAVE_VISIT
+     d_visit_simulation_data.schedulerP = d_scheduler;
+     d_visit_simulation_data.gridP = currentGrid;
+     d_visit_simulation_data.time  = time;
+     d_visit_simulation_data.cycle =
+       d_sharedState->getCurrentTopLevelTimeStep();     
+
+     visit_CheckState( &d_visit_simulation_data );
+#endif
    } // end while ( time is not up, etc )
 
+  // If VisIt has been included into the build, stop here so the
+  // user can have once last chance see their data via VisIt.
+#ifdef HAVE_VISIT
+   visit_EndLibSim( &d_visit_simulation_data );
+#endif
+
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
-   delt_vartype delt_var;
-   d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
-   delt = delt_var;
-   adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
-   calcWallTime();
-   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
+   // delt_vartype delt_var;
+   // d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
+   // delt = delt_var;
+   // adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
+   // calcWallTime();
+   // printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
    // d_ups->releaseDocument();
 #ifdef USE_GPERFTOOLS

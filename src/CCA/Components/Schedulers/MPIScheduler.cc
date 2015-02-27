@@ -308,7 +308,7 @@ MPIScheduler::runTask( DetailedTask* task,
   }
   dlbLock.unlock();
 
-  postMPISends(task, iteration);
+  postMPISends(task, iteration, thread_id);
 
   task->done(dws);  // should this be timed with taskstart? - BJW
   double teststart = Time::currentSeconds();
@@ -475,7 +475,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
 
       // TODO need to determine if this is actually true now - I don't think it is, APH - 01/07/15
       //only send message if size is greater than zero
-      //we need this empty message to enforce modify after read dependencies 
+      //we need this empty message to enforce modify after read dependencies
       //if(count>0)
       //{
 
