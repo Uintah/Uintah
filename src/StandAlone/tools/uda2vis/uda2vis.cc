@@ -634,7 +634,7 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
   LoadBalancer* lb = schedulerP->getLoadBalancer();
 
   // probably index is just 0 or 1
-  int index = 0;
+  int index = 1;
   DataWarehouse *dw = schedulerP->get_dw( index );
 
   int numLevels = gridP->numLevels();
@@ -924,7 +924,7 @@ static GridDataRaw* readGridData(SchedulerP schedulerP,
   std::string variable_name = varLabel->getName();
 
   // probably index is just 0 or 1
-  int index = 0;
+  int index = 1;
   DataWarehouse *dw = schedulerP->get_dw( index );
 
 
@@ -1121,7 +1121,7 @@ ParticleDataRaw* readParticleData(SchedulerP schedulerP,
   std::string variable_name = varLabel->getName();
 
   // probably index is just 0 or 1
-  int index = 0;
+  int index = 1;
   DataWarehouse *dw = schedulerP->get_dw( index );
 
 
