@@ -609,7 +609,7 @@ SimulationController::initSimulationStatsVars ( void )
 //
 
 void
-SimulationController::printSimulationStats ( int timestep, double delt, double time )
+SimulationController::printSimulationStats ( int timestep, double delt, double time, std::string prefix_msg )
 {
   unsigned long memuse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
@@ -906,7 +906,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
     ostringstream message;
 
-    message << "Time="        << time
+    message << prefix_msg << "  "
+	    << "Time="        << time
             << " (timestep "  << timestep 
             << "), delT="     << delt
             << walltime;
