@@ -632,6 +632,7 @@ Ray::rayTrace( const ProcessorGroup* pc,
       double sumI = 0;
 
       // ray loop
+      //#pragma simd
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
         Vector direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
