@@ -1,0 +1,12 @@
+<BasicExpression type="YVOL">        
+  <TaskList>initialization</TaskList>        
+  <NameTag name="y-mom" state="STATE_N" />        
+  <ExponentialVortex x0="0.5" y0="0.5" G="1e-3" R="0.1" U="1" V="0" velocityComponent="X2"> 		  
+    <Coordinate1> 
+      <NameTag name="XYVOL" state="STATE_NONE"/> 		   
+    </Coordinate1> 		   
+    <Coordinate2> 				
+      <NameTag name="YYVOL" state="STATE_NONE"/> 		  
+    </Coordinate2>		          
+  </ExponentialVortex>     
+</BasicExpression>

@@ -1,0 +1,137 @@
+VisIt Issues
+============
+
+1) Intents
+----------
+Issues with VisIt visualization software will inevitably arise in day to day use.
+Herein exist the issues known when using VisIt on uda's created with sus.
+
+The general format that should be adopted for documenting such an issue is as 
+follows:
+
+a) Date reported
+b) Visit Version 
+c) Uintah Revision 
+d) Description of the issue
+e) A list of any images that demonstrate the issue
+
+
+2) Issues
+---------
+
+01/13/11
+Visit 2.1.0
+Uintah r4650
+VisIt will sometime complain that a number of data blocks are missing and
+has inserted 0's to compensate.  This results missing portions of the plot.
+The issue occurs when plotting a large number of different variable in a
+display.  It occurs when visualizing particle data, such as p.x or p.crackRad
+or p.velocity, as a "Pseudocolor Plot" with the "Transform" operator applied.
+
+
+The typical error may be: "The compute engine running on host localhost
+issued the following warning: In domain 0, your zonal variable "press_CC/0"
+has 400 values, but it should have 0.  Some values were removed to ensure
+VisIt runs smoothly."
+
+As you may note, the visual artifacts do not occur in the press_CC plot,
+but rather in the p.crackRad.
+
+An update -- 01/17/11 -- this problem only appears to be an issue when you have
+applied a "Threshold" operator that uses another variable in its conditional.
+
+See: pseudoTearing.png
+
+*****************
+02/09/11
+Visit 2.1.0
+Uintah r4650
+When drawing a bounding box around the colormap of a plot and 'Title' option
+is turned off, the bounding box is just short of the top of the colormap.
+If 'Title' is on, the top of the bounding box appears to be good.
+
+See: CTOrtho.noTitle.png and CTOrtho.Title.png 
+
+
+*****************
+10 Feb 2011 - Robert Jackson, rjackson@novatek.com
+Visit 2.0.1
+In using "molecule" plot to plot "p.localized" with rigid body contact (MPM
+module) you must NOT select p.localized/*.  For my MPM solution I was using
+a rigid body (platen) to compress simulated rock samples. The platen is the
+rigid body and therefore has no p.localized values, but if p.localized/*
+was selected for the plot then a warning like this is given:
+ 	
+     The compute engine running on host N04122 issued the following warning: In
+     domain 0, your nodal variaable "p.localized/*" has 3160 values, but it should
+     have 3318.  Extra 0.'s were added to ensure VisIT runs smoothly.
+
+What appears to happen is that visit reads the p.localized values first
+into material 0 (rigid body) and then into material 1 and since there are
+no values for material 0 it runs out before completing material 1 so it
+uses 0's to finish.  And of course the real values are not in the porper
+location. Select only the materials with p.localized values and it works fine
+
+Note: this means if you have multiple materials with p.localized values you
+must select each of them separately and set up the appropriate properties
+for each separately as well which is combersome, but it works.
+
+
+*****************
+02/10/11
+Scott Bardenhagen  bard@wasatchmolecular.com>
+For particle variables there is the option to plot 0 and *  
+"versions", i.e. p.volume/0 and p.volume/*.  They look the same.   
+disks.ups has only one material.  What is the difference?  Similarly  
+g.mass/0 and g.mass/1.
+
+
+There are two types of particle entity scaling.  You can specify a  
+physical characteristic length or # of pixels.  The problem with # of  
+pixels is that as you zoom in the particles get rescaled.  So they  
+appear to shrink as you zoom.  This is probably desirable for  
+"points" (for viz efficiency reasons, at least that's when I use  
+points, when nothing else will display fast enough).  But for other  
+objects (box, icosahedron, axis and sphere) I'd like them to stay the  
+same size.  And this is how visit does it for box/icosahedron/axis,  
+but STRANGELY NOT FOR SPHERES.
+
+
+
+
+3)  Additional capabilities 
+__________________________________
+Todd Harman, t.harman@utah.edu, 01/2011
+In SCIRun you can select a point in the computational domain and the grid
+visualizer module will display the cell-centered or node-centered index of
+that point.  This can be done on a per level basis and it is very useful
+for debugging.  Additionally,  the grid visualizer module allows the user
+to input the cell-centered or node centered index along with the level and
+it will display that location with a marker.  This is really handy when you
+have a complex multilevel AMR grid.  I poked around in VisIT and I couldn't
+see how to do this.  --Todd
+
+_________________________Improvement in particle rendering _____
+Jim Guilkey, 2/8/2011
+A good suggestion was made that it would be nice if particles could be
+rendered as polygons rather than spheres.  Namely, quads in 2D or hexahedra
+in 3D.  Attached is an example of rendering particles as quads that have
+been deformed according to their deformation gradient.  Roni Choudhury,
+Mike Steffen, Steve Parker and I published a paper on this last year.
+
+Rebecca's postdoc Ali made the figure CPDIsnapshot.png (you'll need to zoom
+in to appreciate) using Matlab.  He's offered to share those scripts if it
+would make someone's life easier in the implementation.
+
+*****************
+10 Feb 2011 - Robert Jackson rjackson@novatek.com
+1. It would be nice to have the Uintah-Visit interface be able to recognize
+when variables are not applicable/available for given materials (see my note
+above on issues), so that Visit doesn't try and read in data to the wrong
+material points.
+
+2. The "molecule" option for material points (in MPM module) works but often
+takes a bit of trial and error to arrive at the right "atom/molecule" size so
+that plots look good when rendered.  It would be nice to have an option to
+automatically size the material points based on the mesh and the resolution
+of material points.

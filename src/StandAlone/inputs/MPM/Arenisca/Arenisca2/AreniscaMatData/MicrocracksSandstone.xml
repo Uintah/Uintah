@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Sandstone -->
+<Uintah_Include>
+  <FSLOPE> 0.435438 </FSLOPE>
+  <PEAKI1> 20.9882e6 </PEAKI1>
+</Uintah_Include>

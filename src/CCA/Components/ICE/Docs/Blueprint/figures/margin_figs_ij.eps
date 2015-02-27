@@ -1,0 +1,1206 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%BoundingBox: 166 619 243 700
+%%Title: /usr/people/harman/Csafe/Uintah_cfd_doc/margin_figs_ij.eps
+%%CreationDate: 5:40 PM February 12, 1999
+%%Pages: 1
+%%EndComments
+%%BeginProlog
+%%BeginResource ShowcaseResource
+1 setlinejoin
+/M  { moveto } bind def /S { show  } bind def
+/R { rmoveto } bind def /L { lineto } bind def
+/B { newpath 0 0 M 0 1 L 1 1 L 1 0 L closepath } bind def
+/CS { closepath stroke } bind def
+/S {
+    /fixwidth exch def
+    dup length /nchars exch def
+    dup stringwidth pop
+    fixwidth exch sub nchars div
+    exch 0 exch ashow
+} def
+/bwproc {
+	rgbproc
+	dup length 3 idiv string 0 3 0
+	5 -1 roll {
+	add 2 1 roll 1 sub dup 0 eq
+	{ pop 3 idiv 3 -1 roll dup 4 -1 roll dup
+	  3 1 roll 5 -1 roll put 1 add 3 0 }
+	{ 2 1 roll } ifelse
+	} forall
+	pop pop pop
+} def
+systemdict /colorimage known not {
+	/colorimage {
+		pop
+		pop
+		/rgbproc exch def
+		{ bwproc } image
+	} def
+} if
+1 1 scale
+0 setlinewidth
+/drawtri {
+/y3 exch def
+/x3 exch def
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+0 setgray
+newpath
+x1 y1 moveto
+x2 y2 lineto
+x3 y3 lineto
+closepath
+stroke
+} bind def
+/filltri {
+/y3 exch def
+/x3 exch def
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+newpath
+x1 y1 moveto
+x2 y2 lineto
+x3 y3 lineto
+closepath
+fill
+} bind def
+/cliptri {
+/y3 exch def
+/x3 exch def
+/y2 exch def
+/x2 exch def
+/y1 exch def
+/x1 exch def
+0 setgray
+newpath
+x1 y1 moveto
+x2 y2 lineto
+x3 y3 lineto
+closepath
+clip
+} bind def
+/imgscanrgb {
+gsave
+translate
+/scandy exch def
+/scandx exch def
+/istr scandx 3 mul string def
+scandx scandy scale
+scandx scandy 8
+[scandx 0 0 scandy neg 0 scandy]
+{currentfile istr readhexstring pop}
+false 3
+colorimage
+grestore
+} bind def
+/imgscanbw {
+gsave
+translate
+/scandy exch def
+/scandx exch def
+/istr scandx string def
+scandx scandy scale
+scandx scandy 8
+[scandx 0 0 scandy neg 0 scandy]
+{currentfile istr readhexstring pop}
+image
+grestore
+} bind def
+/showcaseisoencoding [
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/space /exclam /quotedbl /numbersign
+/dollar /percent /ampersand /quoteright
+/parenleft /parenright /asterisk /plus
+/comma /minus /period /slash
+/zero /one /two /three /four /five /six /seven
+/eight /nine /colon /semicolon
+/less /equal /greater /question
+/at /A /B /C /D /E /F /G
+/H /I /J /K /L /M /N /O
+/P /Q /R /S /T /U /V /W
+/X /Y /Z /bracketleft
+/backslash /bracketright /asciicircum /underscore
+/quoteleft /a /b /c /d /e /f /g
+/h /i /j /k /l /m /n /o
+/p /q /r /s /t /u /v /w
+/x /y /z /braceleft
+/bar /braceright /asciitilde /guilsinglright
+/fraction /florin /quotesingle /quotedblleft
+/guilsinglleft /fi /fl /endash
+/dagger /daggerdbl /bullet /quotesinglbase
+/quotedblbase /quotedblright /ellipsis /trademark
+/dotlessi /grave /acute /circumflex
+/tilde /macron /breve /dotaccent
+/dieresis /perthousand /ring /cedilla
+/Ydieresis /hungarumlaut /ogonek /caron
+/emdash /exclamdown /cent /sterling
+/currency /yen /brokenbar /section
+/dieresis /copyright /ordfeminine /guillemotleft
+/logicalnot /hyphen /registered /macron
+/degree /plusminus /twosuperior /threesuperior
+/acute /mu /paragraph /periodcentered
+/cedilla /onesuperior /ordmasculine /guillemotright
+/onequarter /onehalf /threequarters /questiondown
+/Agrave /Aacute /Acircumflex /Atilde
+/Adieresis /Aring /AE /Ccedilla
+/Egrave /Eacute /Ecircumflex /Edieresis
+/Igrave /Iacute /Icircumflex /Idieresis
+/Eth /Ntilde /Ograve /Oacute
+/Ocircumflex /Otilde /Odieresis /multiply
+/Oslash /Ugrave /Uacute /Ucircumflex
+/Udieresis /Yacute /Thorn /germandbls
+/agrave /aacute /acircumflex /atilde
+/adieresis /aring /ae /ccedilla
+/egrave /eacute /ecircumflex /edieresis
+/igrave /iacute /icircumflex /idieresis
+/eth /ntilde /ograve /oacute
+/ocircumflex /otilde /odieresis /divide
+/oslash /ugrave /uacute /ucircumflex
+/udieresis /yacute /thorn /ydieresis ] def
+/showcasedingbatencoding [
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef
+/.notdef /a1 /a2 /a202 /a3 /a4 /a5 /a119 /a118 /a117
+/a11 /a12 /a13 /a14 /a15 /a16 /a105 /a17 /a18 /a19
+/a20 /a21 /a22 /a23 /a24 /a25 /a26 /a27 /a28 /a6 /a7
+/a8 /a9 /a10 /a29
+/a30 /a31 /a32 /a33 /a34 /a35 /a36 /a37 /a38 /a39
+/a40 /a41 /a42 /a43 /a44 /a45 /a46 /a47 /a48 /a49
+/a50 /a51 /a52 /a53 /a54 /a55 /a56 /a57 /a58 /a59
+/a60 /a61 /a62 /a63 /a64 /a65 /a66 /a67 /a68 /a69
+/a70 /a71 /a72 /a73 /a74 /a203 /a75 /a204 /a76 /a77 /a78
+/a79 /a81 /a82 /a83 /a84 /a97 /a98 /a99 /a100 /.notdef
+/a205 /a85 /a206 /a86 /a87 /a88 /a89 /a90 /a91 /a92 /a93
+/a94 /a95 /a96
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef
+/.notdef /a101 /a102 /a103 /a104 /a106 /a107 /a108
+/a112 /a111 /a110 /a109
+/a120 /a121 /a122 /a123 /a124 /a125 /a126 /a127 /a128 /a129
+/a130 /a131 /a132 /a133 /a134 /a135 /a136 /a137 /a138 /a139
+/a140 /a141 /a142 /a143 /a144 /a145 /a146 /a147 /a148 /a149
+/a150 /a151 /a152 /a153 /a154 /a155 /a156 /a157 /a158 /a159
+/a160 /a161 /a163 /a164 /a196 /a165 /a192 /a166 /a167 /a168
+/a169 /a170 /a171 /a172 /a173 /a162 /a174 /a175 /a176 /a177
+/a178 /a179 /a193 /a180 /a199 /a181 /a200 /a182 /.notdef
+/a201 /a183 /a184 /a197 /a185 /a194 /a198 /a186 /a195 /a187
+/a188 /a189 /a190 /a191 /.notdef
+] def
+/newfont 10 dict def
+newfont begin
+
+ /FontType 3 def
+ /FontMatrix [1 0 0 1 0 0] def
+ /FontBBox [0 0 1 1] def
+ /Encoding 256 array def
+ 0 1 255 {Encoding exch /.notdef put} for
+
+ /CharProcs 1 dict def
+ CharProcs begin
+ /.notdef {} def
+
+end
+
+ /BuildChar {
+  1 0
+  0 0 1 1
+  setcachedevice
+  exch begin
+  Encoding exch get
+  CharProcs exch get
+  end
+  exec
+ } def
+end
+/PatternFont newfont definefont pop
+
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%EndSetup
+%%Page: label 1
+gsave
+/saveit save def
+gsave
+gsave
+gsave
+matrix currentmatrix
+[1.06868 0 0 1.0641 189.427 693.505] concat
+newpath
+0 0 M 0 6 L 5.6 6 L 5.6 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+187.557 691.642 M 187.557 701.751 L 197.282 701.751 L 197.282 691.642 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1.06868 0 0 1.0641 189.427 693.505] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (i) 3.6 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 204.108 692.738] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+202.358 690.988 M 202.358 700.488 L 218.658 700.488 L 218.658 690.988 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 204.108 692.738] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (i+1) 10.8 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 166.923 693.252] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+165.173 691.502 M 165.173 701.002 L 181.473 701.002 L 181.473 691.502 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 166.923 693.252] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (i-1) 10.8 S
+setmatrix
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+173.886 682.846 M
+227.886 682.846 L
+stroke
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+172.886 691.846 M
+172.886 620.846 L
+stroke
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+190.886 691.846 M
+190.886 620.846 L
+stroke
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+208.886 691.846 M
+208.886 619.735 L
+stroke
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+226.886 689.846 M
+226.886 621.068 L
+stroke
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+172.778 648.333 M
+226.778 648.333 L
+stroke
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+173.889 631.667 M
+227.889 631.667 L
+stroke
+grestore
+gsave
+0 0 0 setrgbcolor
+0.500000 setlinewidth
+newpath
+174.886 664.846 M
+228.886 664.846 L
+stroke
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 176.479 648.44] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+174.729 646.69 M 174.729 656.19 L 191.029 656.19 L 191.029 646.69 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 176.479 648.44] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (I-1) 10.8 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 197.96 648.812] concat
+newpath
+0 0 M 0 6 L 5.6 6 L 5.6 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+196.21 647.062 M 196.21 656.562 L 205.31 656.562 L 205.31 647.062 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 197.96 648.812] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (I) 3.6 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 212.405 648.442] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+210.655 646.692 M 210.655 656.192 L 226.955 656.192 L 226.955 646.692 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 212.405 648.442] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (I+1) 10.8 S
+setmatrix
+grestore
+gsave
+0 0 0 setrgbcolor
+newpath
+200.048 656.89 M
+200.02 656.935 L
+199.99 656.978 L
+199.956 657.019 L
+199.919 657.059 L
+199.879 657.097 L
+199.837 657.132 L
+199.792 657.164 L
+199.745 657.193 L
+199.696 657.22 L
+199.645 657.242 L
+199.594 657.261 L
+199.541 657.277 L
+199.488 657.289 L
+199.435 657.298 L
+199.383 657.303 L
+199.331 657.304 L
+199.331 657.304 L
+199.278 657.303 L
+199.226 657.298 L
+199.173 657.289 L
+199.12 657.277 L
+199.067 657.262 L
+199.016 657.242 L
+198.965 657.22 L
+198.916 657.193 L
+198.869 657.164 L
+198.824 657.132 L
+198.782 657.097 L
+198.742 657.059 L
+198.705 657.019 L
+198.671 656.978 L
+198.641 656.935 L
+198.613 656.89 L
+198.613 656.89 L
+198.589 656.844 L
+198.567 656.796 L
+198.548 656.746 L
+198.532 656.694 L
+198.519 656.641 L
+198.51 656.587 L
+198.504 656.532 L
+198.502 656.476 L
+198.504 656.421 L
+198.51 656.366 L
+198.519 656.312 L
+198.532 656.258 L
+198.548 656.207 L
+198.567 656.156 L
+198.589 656.108 L
+198.613 656.062 L
+198.613 656.062 L
+198.641 656.018 L
+198.671 655.975 L
+198.705 655.933 L
+198.742 655.893 L
+198.782 655.856 L
+198.824 655.821 L
+198.869 655.788 L
+198.916 655.759 L
+198.965 655.733 L
+199.016 655.71 L
+199.067 655.691 L
+199.12 655.675 L
+199.173 655.663 L
+199.226 655.655 L
+199.278 655.65 L
+199.331 655.648 L
+199.331 655.648 L
+199.383 655.65 L
+199.435 655.655 L
+199.488 655.663 L
+199.541 655.675 L
+199.594 655.691 L
+199.645 655.71 L
+199.696 655.733 L
+199.745 655.759 L
+199.792 655.788 L
+199.837 655.821 L
+199.879 655.856 L
+199.919 655.893 L
+199.956 655.933 L
+199.99 655.975 L
+200.02 656.018 L
+200.048 656.062 L
+200.048 656.062 L
+200.072 656.108 L
+200.094 656.156 L
+200.113 656.206 L
+200.129 656.258 L
+200.142 656.312 L
+200.151 656.366 L
+200.157 656.421 L
+200.159 656.476 L
+200.157 656.532 L
+200.151 656.587 L
+200.142 656.641 L
+200.129 656.694 L
+200.113 656.746 L
+200.094 656.796 L
+200.072 656.844 L
+200.048 656.89 L
+closepath
+eofill
+0 0 0 setrgbcolor
+grestore
+gsave
+0 0 0 setrgbcolor
+newpath
+217.913 657.348 M
+217.885 657.393 L
+217.855 657.436 L
+217.821 657.477 L
+217.784 657.517 L
+217.744 657.555 L
+217.702 657.59 L
+217.657 657.622 L
+217.61 657.651 L
+217.561 657.677 L
+217.51 657.7 L
+217.459 657.719 L
+217.406 657.735 L
+217.354 657.747 L
+217.301 657.756 L
+217.248 657.761 L
+217.196 657.762 L
+217.196 657.762 L
+217.144 657.761 L
+217.091 657.756 L
+217.038 657.747 L
+216.985 657.735 L
+216.933 657.719 L
+216.881 657.7 L
+216.831 657.677 L
+216.782 657.651 L
+216.735 657.622 L
+216.69 657.59 L
+216.647 657.555 L
+216.607 657.517 L
+216.571 657.477 L
+216.537 657.436 L
+216.506 657.393 L
+216.478 657.348 L
+216.478 657.348 L
+216.454 657.302 L
+216.432 657.254 L
+216.413 657.204 L
+216.397 657.152 L
+216.384 657.099 L
+216.375 657.044 L
+216.369 656.99 L
+216.368 656.934 L
+216.369 656.879 L
+216.375 656.824 L
+216.384 656.769 L
+216.397 656.716 L
+216.413 656.664 L
+216.432 656.614 L
+216.454 656.566 L
+216.478 656.52 L
+216.478 656.52 L
+216.506 656.476 L
+216.537 656.433 L
+216.571 656.391 L
+216.607 656.351 L
+216.647 656.314 L
+216.69 656.279 L
+216.735 656.246 L
+216.782 656.217 L
+216.831 656.191 L
+216.881 656.168 L
+216.933 656.149 L
+216.985 656.133 L
+217.038 656.121 L
+217.091 656.113 L
+217.144 656.108 L
+217.196 656.106 L
+217.196 656.106 L
+217.248 656.108 L
+217.301 656.113 L
+217.354 656.121 L
+217.406 656.133 L
+217.459 656.149 L
+217.51 656.168 L
+217.561 656.191 L
+217.61 656.217 L
+217.657 656.246 L
+217.702 656.279 L
+217.744 656.314 L
+217.784 656.351 L
+217.821 656.391 L
+217.855 656.433 L
+217.885 656.476 L
+217.913 656.52 L
+217.913 656.52 L
+217.938 656.566 L
+217.96 656.614 L
+217.979 656.664 L
+217.995 656.716 L
+218.007 656.769 L
+218.016 656.824 L
+218.022 656.879 L
+218.024 656.934 L
+218.022 656.99 L
+218.016 657.044 L
+218.007 657.099 L
+217.995 657.152 L
+217.979 657.204 L
+217.96 657.254 L
+217.938 657.302 L
+217.913 657.348 L
+closepath
+eofill
+0 0 0 setrgbcolor
+grestore
+gsave
+0 0 0 setrgbcolor
+newpath
+182.728 656.607 M
+182.7 656.652 L
+182.669 656.695 L
+182.636 656.736 L
+182.599 656.776 L
+182.559 656.814 L
+182.517 656.849 L
+182.472 656.881 L
+182.425 656.911 L
+182.376 656.937 L
+182.325 656.959 L
+182.274 656.979 L
+182.221 656.994 L
+182.168 657.006 L
+182.115 657.015 L
+182.063 657.02 L
+182.01 657.021 L
+182.01 657.021 L
+181.958 657.02 L
+181.906 657.015 L
+181.853 657.006 L
+181.8 656.994 L
+181.747 656.979 L
+181.696 656.959 L
+181.645 656.937 L
+181.596 656.911 L
+181.549 656.881 L
+181.504 656.849 L
+181.462 656.814 L
+181.422 656.776 L
+181.385 656.736 L
+181.351 656.695 L
+181.321 656.652 L
+181.293 656.607 L
+181.293 656.607 L
+181.269 656.561 L
+181.247 656.513 L
+181.228 656.463 L
+181.212 656.411 L
+181.199 656.358 L
+181.19 656.304 L
+181.184 656.249 L
+181.182 656.193 L
+181.184 656.138 L
+181.19 656.083 L
+181.199 656.029 L
+181.212 655.975 L
+181.228 655.923 L
+181.247 655.873 L
+181.269 655.825 L
+181.293 655.779 L
+181.293 655.779 L
+181.321 655.735 L
+181.351 655.692 L
+181.385 655.65 L
+181.422 655.61 L
+181.462 655.573 L
+181.504 655.538 L
+181.549 655.505 L
+181.596 655.476 L
+181.645 655.45 L
+181.696 655.427 L
+181.747 655.408 L
+181.8 655.392 L
+181.853 655.38 L
+181.906 655.372 L
+181.958 655.367 L
+182.01 655.365 L
+182.01 655.365 L
+182.063 655.367 L
+182.115 655.372 L
+182.168 655.38 L
+182.221 655.392 L
+182.274 655.408 L
+182.325 655.427 L
+182.376 655.45 L
+182.425 655.476 L
+182.472 655.505 L
+182.517 655.538 L
+182.559 655.573 L
+182.599 655.61 L
+182.636 655.65 L
+182.669 655.692 L
+182.7 655.735 L
+182.728 655.779 L
+182.728 655.779 L
+182.752 655.825 L
+182.774 655.873 L
+182.793 655.923 L
+182.809 655.975 L
+182.822 656.029 L
+182.831 656.083 L
+182.837 656.138 L
+182.839 656.193 L
+182.837 656.249 L
+182.831 656.304 L
+182.822 656.358 L
+182.809 656.411 L
+182.793 656.463 L
+182.774 656.513 L
+182.752 656.561 L
+182.728 656.607 L
+closepath
+eofill
+0 0 0 setrgbcolor
+grestore
+gsave
+0 0 0 setrgbcolor
+newpath
+198.863 657.416 M
+198.819 657.389 L
+198.776 657.358 L
+198.734 657.324 L
+198.695 657.287 L
+198.657 657.248 L
+198.622 657.205 L
+198.59 657.16 L
+198.56 657.113 L
+198.534 657.064 L
+198.511 657.014 L
+198.492 656.962 L
+198.477 656.91 L
+198.465 656.857 L
+198.456 656.804 L
+198.451 656.751 L
+198.449 656.699 L
+198.449 656.699 L
+198.451 656.647 L
+198.456 656.594 L
+198.465 656.541 L
+198.477 656.488 L
+198.492 656.436 L
+198.511 656.384 L
+198.534 656.334 L
+198.56 656.285 L
+198.59 656.238 L
+198.622 656.193 L
+198.657 656.151 L
+198.695 656.111 L
+198.734 656.074 L
+198.776 656.04 L
+198.819 656.009 L
+198.863 655.982 L
+198.863 655.982 L
+198.909 655.957 L
+198.958 655.935 L
+199.008 655.916 L
+199.06 655.9 L
+199.113 655.887 L
+199.167 655.878 L
+199.222 655.873 L
+199.277 655.871 L
+199.333 655.873 L
+199.388 655.878 L
+199.442 655.888 L
+199.495 655.9 L
+199.547 655.916 L
+199.597 655.935 L
+199.646 655.957 L
+199.692 655.982 L
+199.692 655.982 L
+199.736 656.009 L
+199.779 656.04 L
+199.821 656.074 L
+199.86 656.111 L
+199.898 656.151 L
+199.933 656.193 L
+199.965 656.238 L
+199.995 656.285 L
+200.021 656.334 L
+200.044 656.384 L
+200.063 656.436 L
+200.078 656.488 L
+200.091 656.541 L
+200.099 656.594 L
+200.104 656.647 L
+200.106 656.699 L
+200.106 656.699 L
+200.104 656.751 L
+200.099 656.804 L
+200.091 656.857 L
+200.078 656.91 L
+200.063 656.962 L
+200.044 657.014 L
+200.021 657.064 L
+199.995 657.113 L
+199.965 657.16 L
+199.933 657.205 L
+199.898 657.248 L
+199.86 657.287 L
+199.821 657.324 L
+199.779 657.358 L
+199.736 657.389 L
+199.692 657.416 L
+199.692 657.416 L
+199.646 657.441 L
+199.597 657.463 L
+199.547 657.482 L
+199.495 657.498 L
+199.442 657.511 L
+199.388 657.52 L
+199.333 657.525 L
+199.277 657.527 L
+199.222 657.525 L
+199.167 657.52 L
+199.113 657.511 L
+199.06 657.498 L
+199.008 657.482 L
+198.958 657.463 L
+198.909 657.441 L
+198.863 657.416 L
+closepath
+eofill
+0 0 0 setrgbcolor
+grestore
+gsave
+0 0 0 setrgbcolor
+newpath
+198.406 675.281 M
+198.361 675.254 L
+198.318 675.223 L
+198.277 675.189 L
+198.237 675.153 L
+198.199 675.113 L
+198.164 675.07 L
+198.132 675.025 L
+198.103 674.978 L
+198.076 674.929 L
+198.054 674.879 L
+198.034 674.827 L
+198.019 674.775 L
+198.007 674.722 L
+197.998 674.669 L
+197.993 674.616 L
+197.991 674.564 L
+197.991 674.564 L
+197.993 674.512 L
+197.998 674.459 L
+198.007 674.407 L
+198.019 674.354 L
+198.034 674.301 L
+198.054 674.25 L
+198.076 674.199 L
+198.103 674.15 L
+198.132 674.103 L
+198.164 674.058 L
+198.199 674.016 L
+198.237 673.976 L
+198.277 673.939 L
+198.318 673.905 L
+198.361 673.875 L
+198.406 673.847 L
+198.406 673.847 L
+198.452 673.822 L
+198.5 673.8 L
+198.55 673.781 L
+198.602 673.765 L
+198.655 673.753 L
+198.709 673.743 L
+198.764 673.738 L
+198.82 673.736 L
+198.875 673.738 L
+198.93 673.743 L
+198.984 673.753 L
+199.038 673.765 L
+199.089 673.781 L
+199.14 673.8 L
+199.188 673.822 L
+199.234 673.847 L
+199.234 673.847 L
+199.278 673.875 L
+199.321 673.905 L
+199.363 673.939 L
+199.403 673.976 L
+199.44 674.016 L
+199.475 674.058 L
+199.508 674.103 L
+199.537 674.15 L
+199.563 674.199 L
+199.586 674.25 L
+199.605 674.301 L
+199.621 674.354 L
+199.633 674.406 L
+199.641 674.459 L
+199.646 674.512 L
+199.648 674.564 L
+199.648 674.564 L
+199.646 674.616 L
+199.641 674.669 L
+199.633 674.722 L
+199.621 674.775 L
+199.605 674.827 L
+199.586 674.879 L
+199.563 674.929 L
+199.537 674.978 L
+199.508 675.025 L
+199.475 675.07 L
+199.44 675.113 L
+199.403 675.153 L
+199.363 675.189 L
+199.321 675.223 L
+199.278 675.254 L
+199.234 675.281 L
+199.234 675.281 L
+199.188 675.306 L
+199.14 675.328 L
+199.089 675.347 L
+199.038 675.363 L
+198.984 675.376 L
+198.93 675.385 L
+198.875 675.391 L
+198.82 675.392 L
+198.764 675.391 L
+198.709 675.385 L
+198.655 675.376 L
+198.602 675.363 L
+198.55 675.347 L
+198.5 675.328 L
+198.452 675.306 L
+198.406 675.281 L
+closepath
+eofill
+0 0 0 setrgbcolor
+grestore
+gsave
+0 0 0 setrgbcolor
+newpath
+199.146 640.096 M
+199.102 640.069 L
+199.059 640.038 L
+199.017 640.004 L
+198.978 639.967 L
+198.94 639.927 L
+198.905 639.885 L
+198.873 639.84 L
+198.843 639.793 L
+198.817 639.744 L
+198.794 639.694 L
+198.775 639.642 L
+198.759 639.59 L
+198.747 639.537 L
+198.739 639.484 L
+198.734 639.431 L
+198.732 639.379 L
+198.732 639.379 L
+198.734 639.327 L
+198.739 639.274 L
+198.747 639.221 L
+198.759 639.168 L
+198.775 639.116 L
+198.794 639.064 L
+198.817 639.014 L
+198.843 638.965 L
+198.873 638.918 L
+198.905 638.873 L
+198.94 638.831 L
+198.978 638.791 L
+199.017 638.754 L
+199.059 638.72 L
+199.102 638.689 L
+199.146 638.662 L
+199.146 638.662 L
+199.192 638.637 L
+199.241 638.615 L
+199.291 638.596 L
+199.342 638.58 L
+199.396 638.567 L
+199.45 638.558 L
+199.505 638.553 L
+199.56 638.551 L
+199.616 638.553 L
+199.671 638.558 L
+199.725 638.567 L
+199.778 638.58 L
+199.83 638.596 L
+199.88 638.615 L
+199.929 638.637 L
+199.975 638.662 L
+199.975 638.662 L
+200.019 638.689 L
+200.062 638.72 L
+200.104 638.754 L
+200.143 638.791 L
+200.181 638.831 L
+200.216 638.873 L
+200.248 638.918 L
+200.278 638.965 L
+200.304 639.014 L
+200.326 639.064 L
+200.346 639.116 L
+200.361 639.168 L
+200.373 639.221 L
+200.382 639.274 L
+200.387 639.327 L
+200.389 639.379 L
+200.389 639.379 L
+200.387 639.431 L
+200.382 639.484 L
+200.373 639.537 L
+200.361 639.59 L
+200.346 639.642 L
+200.326 639.694 L
+200.304 639.744 L
+200.278 639.793 L
+200.248 639.84 L
+200.216 639.885 L
+200.181 639.927 L
+200.143 639.967 L
+200.104 640.004 L
+200.062 640.038 L
+200.019 640.069 L
+199.975 640.096 L
+199.975 640.096 L
+199.929 640.121 L
+199.88 640.143 L
+199.83 640.162 L
+199.778 640.178 L
+199.725 640.191 L
+199.671 640.2 L
+199.616 640.205 L
+199.56 640.207 L
+199.505 640.205 L
+199.45 640.2 L
+199.396 640.191 L
+199.342 640.178 L
+199.291 640.162 L
+199.241 640.143 L
+199.192 640.121 L
+199.146 640.096 L
+closepath
+eofill
+0 0 0 setrgbcolor
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 193.615 675.652] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+191.615 673.652 M 191.615 683.652 L 208.415 683.652 L 208.415 673.652 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 193.615 675.652] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (J+1) 10.8 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 194.615 633.46] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+192.615 631.46 M 192.615 641.46 L 209.415 641.46 L 209.415 631.46 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 194.615 633.46] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (J-) 7.2 S
+7.2 1 M (1) 3.6 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 198.231 657.847] concat
+newpath
+0 0 M 0 6 L 5.6 6 L 5.6 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+196.231 655.847 M 196.231 665.847 L 205.831 665.847 L 205.831 655.847 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 198.231 657.847] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (J) 3.6 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 229 645.539] concat
+newpath
+0 0 M 0 6 L 5.6 6 L 5.6 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+227 643.539 M 227 653.539 L 236.6 653.539 L 236.6 643.539 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 229 645.539] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (j) 3.6 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 230.154 662.844] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+228.154 660.844 M 228.154 670.844 L 244.954 670.844 L 244.954 660.844 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 230.154 662.844] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (j+1) 10.8 S
+setmatrix
+grestore
+gsave
+gsave
+matrix currentmatrix
+[1 0 0 1 229.385 629.766] concat
+newpath
+0 0 M 0 6 L 12.8 6 L 12.8 0 L
+closepath setmatrix
+0 0 0 setrgbcolor
+grestore
+newpath
+227.385 627.766 M 227.385 637.766 L 244.185 637.766 L 244.185 627.766 L
+closepath clip newpath
+0 0 0 setrgbcolor
+matrix currentmatrix
+[1 0 0 1 229.385 629.766] concat
+/Courier-Bold-SHOWISO findfont 6 scalefont setfont
+0 0 0 setrgbcolor
+0 1 M (j-1) 10.8 S
+setmatrix
+grestore
+grestore
+showpage
+saveit restore
+grestore
+%%EOF
