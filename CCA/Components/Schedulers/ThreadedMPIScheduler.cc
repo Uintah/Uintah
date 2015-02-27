@@ -180,15 +180,11 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
               << plural + " for task execution." << std::endl;
   }
 
-  // Reset Uintah thread ID (to reflect number of last physical core used)
-  Thread::self()->set_myid(numThreads_);
-
   if (threadedmpi_compactaffinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-      threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
-                            << ") to CPU/MIC core " << numThreads_ << "\n";
+      threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid() << ") to core 0\n";
     }
-    Thread::self()->set_affinity(numThreads_);   // CPU/MIC - bind main thread to last physical core
+    Thread::self()->set_affinity(0);   // bind main thread to core 0
   }
 
   // Create the TaskWorkers here (pinned to cores in TaskWorker::run())
@@ -218,9 +214,6 @@ ThreadedMPIScheduler::createSubScheduler()
 
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
-  // Reset Uintah subscheduler thread ID (to reflect number of last physical core used)
-  Thread::self()->set_myid(numThreads_);
-
   if (subsched->numThreads_ > 0) {
 
     std::string plural = (numThreads_ == 1) ? " thread" : " threads";
@@ -233,11 +226,9 @@ ThreadedMPIScheduler::createSubScheduler()
     // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
     if (threadedmpi_compactaffinity.active()) {
       if ((threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0)) {
-        threadedmpi_threaddbg << "Binding main subscheduler thread (ID "
-                              << Thread::self()->myid() << ") to CPU/MIC core "
-                              << subsched->numThreads_ << "\n";
+        threadedmpi_threaddbg << "Binding main subscheduler thread (ID " << Thread::self()->myid() << ") to core 0\n";
       }
-      Thread::self()->set_affinity(numThreads_);    // CPU/MIC - bind main subscheduler thread to last physical core
+      Thread::self()->set_affinity(0);    // bind subscheduler main thread to core 0
     }
 
     // Create TaskWorker threads for the subscheduler
@@ -817,18 +808,19 @@ TaskWorker::TaskWorker( ThreadedMPIScheduler* scheduler,
 void
 TaskWorker::run()
 {
-  // set Uintah thread ID
-  Thread::self()->set_myid(d_thread_id);
+  // set Uintah thread ID, offset by 1 because main execution thread is already threadID 0
+  int offsetThreadID = d_thread_id + 1;
+  Thread::self()->set_myid(offsetThreadID);
 
-  // CPU/MIC compact affinity
+  // compact affinity
   if (threadedmpi_compactaffinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
       std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to CPU/MIC core " << d_thread_id << "\n";
+      threadedmpi_threaddbg << "Binding" << threadType << "TaskWorker thread ID " << offsetThreadID << " to core " << offsetThreadID << "\n";
       cerrLock.unlock();
     }
-    Thread::self()->set_affinity(d_thread_id);
+    Thread::self()->set_affinity(offsetThreadID);
   }
 
   while (true) {
@@ -839,7 +831,7 @@ TaskWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_thread_id << " quitting\n";
+        taskdbg << "TaskWorker " << d_rank << "-" << d_thread_id << " quitting\n";
         cerrLock.unlock();
       }
       return;
@@ -847,7 +839,7 @@ TaskWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": began executing task: " << *d_task << "\n";
+      taskdbg << "TaskWorker " << d_rank << "-" << d_thread_id << ": began executing task: " << *d_task << "\n";
       cerrLock.unlock();
     }
 
@@ -862,7 +854,7 @@ TaskWorker::run()
     }
     catch (Exception& e) {
       cerrLock.lock();
-      std::cerr << "Worker " << d_rank << "-" << d_thread_id << ": Caught exception: " << e.message() << "\n";
+      std::cerr << "TaskWorker " << d_rank << "-" << d_thread_id << ": Caught exception: " << e.message() << "\n";
       if (e.stackTrace()) {
         std::cerr << "Stack trace: " << e.stackTrace() << '\n';
       }
