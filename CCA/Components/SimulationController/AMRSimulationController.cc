@@ -388,6 +388,7 @@ AMRSimulationController::run()
      }
      
      calcWallTime();
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time, "\nStarting execution: " );
 
      // Execute the current timestep, restarting if necessary
      d_sharedState->d_current_delt = delt;
@@ -435,7 +436,8 @@ AMRSimulationController::run()
      time += delt;
      TAU_DB_DUMP();
 
-     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
+     calcWallTime();
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time, "Finished execution: " );
      // If VisIt has been included into the build, check the lib sim state
      // to see if there is a connection and if so if anything needs to be
      // done.
