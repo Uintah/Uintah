@@ -36,7 +36,7 @@ ComponentTimings  SCI_DEBUG     output overall mpi and cpu times
 BCR_dbg           SCI_DEBUG     print out some information regarding the BC setup
 
 
-Schedulers:                              NOTE: The default is "MPI" without threads and "UnifiedScheduler" with threads.
+Schedulers:                              NOTE: The default is "MPI" without threads and "ThreadedMPI" with threads.
                                                These flags invoke specific schedulers and are semantically equivalent to
                                                adding a <Scheduler> section to an input file.
 __________________________________
@@ -63,25 +63,94 @@ DynamicMPI_QueueLength     SCI_DEBUG     Prints the average task queue length
 
 ThreadedMPIScheduler Related:
 __________________________________
-ThreadedMPI_DBG                 SCI_DEBUG     Prints general debugging information
-ThreadedMPI_TimingsOut          SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
-                                                e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
-ThreadedMPI_QueueLength         SCI_DEBUG     Prints the average task queue length
-ThreadedMPI_ThreadDBG           SCI_DEBUG     Prints thread pinning information
-ThreadedMPI_CompactAffinity     SCI_DEBUG     Binds the main thread to core <nthreads-1> and TaskWorkers to core <Uintah thread id>
-                                                NOTE: This is ENABLED by default. This affinity pattern is modeled after OpenMP's compact 
-                                                      affinity, which binds threads incrementally across logical cores. 
+ThreadedMPI_DBG                  SCI_DEBUG     Prints general debugging information
+ThreadedMPI_TimingsOut           SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
+                                                 e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
+ThreadedMPI_QueueLength          SCI_DEBUG     Prints the average task queue length
+ThreadedMPI_ThreadDBG            SCI_DEBUG     Prints thread pinning information
+ThreadedMPI_CompactAffinity      SCI_DEBUG     Modeled after OpenMP's compact affinity, this affinity pattern binds task execution threads
+                                               incrementally across logical cores 0 through nThreads-2. The logical core corresponding
+                                               to the value of nThreads-1 is reserved for the control thread.
+                                                 NOTE 1: This is ENABLED by default. To run simulations with no affinity, explicitly
+                                                         disable this environmental flag by setting it with a "-" as opposed to a "+"
+                                                 NOTE 2: This affinity pattern corresponds to the host-side implementation of the Compact
+                                                         affinity pattern described within the High Performance Parallelism Pearls chapter
+ThreadedMPI_ScatterAffinity      SCI_DEBUG     Modeled after OpenMP's scatter affinity, this affinity pattern binds task execution threads
+                                               incrementally across physical cores 1 through 8 first and then across logical cores for
+                                               logical cores 0 through nThreads-2. The logical core corresponding to the value of nThreads-1
+                                               is reserved for the control thread.
+                                                 NOTE: This affinity pattern corresponds to the host-side implementation of the Scatter
+                                                       affinity pattern described within the High Performance Parallelism Pearls chapter.
+ThreadedMPI_SelectiveAffinity    SCI_DEBUG     This affinity pattern allows task execution threads to run anywhere among logical cores 0
+                                               through nThreads-2. The logical core corresponding to the value of nThreads-1 is reserved
+                                               for the control thread.
+                                                 NOTE: This affinity pattern corresponds to the host-side implementation of the Selective
+                                                       affinity described within the High Performance Parallelism Pearls chapter.
+ThreadedMPI_MICCompactAffinity   SCI_DEBUG     Modeled after OpenMP's compact affinity, this affinity pattern binds task execution threads
+                                               incrementally across logical cores 1 through nThreads-1. The logical core corresponding
+                                               to the value of nThreads is reserved for the control thread.
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Compact
+                                                         affinity described within the High Performance Parallelism Pearls chapter.
+                                                 NOTE 2: nThreads = 244 results in the control thread being bound to logical core 0.
+ThreadedMPI_MICScatterAffinity   SCI_DEBUG     Modeled after OpenMP's scatter affinity, this affinity pattern binds task execution threads
+                                               incrementally across physical cores 1 through 60 first and then across logical cores for
+                                               logical cores 1 through nThreads-1. The logical core corresponding to the value of nThreads
+                                               is reserved for the control thread.
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Scatter
+                                                         affinity pattern described within the High Performance Parallelism Pearls chapter.
+                                                 NOTE 2: nThreads = 244 results in the control thread being bound to logical core 0.
+ThreadedMPI_MICSelectiveAffinity SCI_DEBUG     This affinity pattern allows task execution threads to run anywhere among logical cores 1
+                                               through nThreads-1. The logical core corresponding to the value of nThreads is reserved
+                                               for the control thread.
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Selective
+                                                         affinity described within the High Performance Parallelism Pearls chapter.
+                                                 NOTE 2: nThreads = 244 results in the control thread being bound to logical core 0.
+
 
 UnifiedScheduler Related:
 __________________________________
-Unified_DBG                SCI_DEBUG     Prints general debugging information
-Unified_TimingsOut         SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
-                                           e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
-Unified_QueueLength        SCI_DEBUG     Prints the average task queue length
-Unified_ThreadDBG          SCI_DEBUG     Prints thread pinning information
-Unified_CompactAffinity    SCI_DEBUG     Binds the main thread to core <nthreads-1> and UnifiedWorkers to core <Uintah thread id>
-                                           NOTE: This is ENABLED by default. This affinity pattern is modeled after OpenMP's compact 
-                                                 affinity, which binds threads incrementally across logical cores. 
+Unified_DBG                  SCI_DEBUG     Prints general debugging information
+Unified_TimingsOut           SCI_DEBUG     Outputs fine-grained communication timings to file per rank (e.g. MPI recv time, MPI send time, etc)
+                                             e.g. timingStats.<rank>, timingStats.<rank>.avg, timingStats.<rank>.max
+Unified_QueueLength          SCI_DEBUG     Prints the average task queue length
+Unified_ThreadDBG            SCI_DEBUG     Prints thread pinning information
+Unified_CompactAffinity      SCI_DEBUG     Modeled after OpenMP's compact affinity, this affinity pattern binds task execution threads
+                                           incrementally across logical cores 0 through nThreads-2. The logical core corresponding
+                                           to the value of nThreads-1 is reserved for the main thread.
+                                             NOTE 1: This is ENABLED by default. To run simulations with no affinity, explicitly
+                                                     disable this environmental flag by setting it with a "-" as opposed to a "+"
+                                             NOTE 2: This affinity pattern corresponds to the host-side implementation of the Compact
+                                                     affinity pattern described within the High Performance Parallelism Pearls chapter.
+Unified_ScatterAffinity      SCI_DEBUG     Modeled after OpenMP's scatter affinity, this affinity pattern binds task execution threads
+                                           incrementally across physical cores 1 through 8 first and then across logical cores for
+                                           logical cores 0 through nThreads-2. The logical core corresponding to the value of nThreads-1
+                                           is reserved for the main thread.
+                                             NOTE: This affinity pattern corresponds to the host-side implementation of the Scatter
+                                                   affinity pattern described within the High Performance Parallelism Pearls chapter.
+Unified_SelectiveAffinity    SCI_DEBUG    This affinity pattern allows task execution threads to run anywhere among logical cores 0
+                                          through nThreads-2. The logical core corresponding to the value of nThreads-1 is reserved
+                                          for the main thread.
+                                          NOTE: This affinity pattern corresponds to the host-side implementation of the Selective
+                                                affinity described within the High Performance Parallelism Pearls chapter.
+Unified_MICCompactAffinity   SCI_DEBUG    Modeled after OpenMP's compact affinity, this affinity pattern binds task execution threads
+                                          incrementally across logical cores 1 through nThreads-1. The logical core corresponding
+                                          to the value of nThreads is reserved for the main thread.
+                                            NOTE1 : This affinity pattern corresponds to the coprocessor-side implementation of the Compact
+                                                    affinity described within the High Performance Parallelism Pearls chapter.
+                                            NOTE 2: nThreads = 244 results in the main thread being bound to logical core 0.
+Unified_MICScatterAffinity   SCI_DEBUG    Modeled after OpenMP's scatter affinity, this affinity pattern binds task execution threads
+                                          incrementally across physical cores 1 through 60 first and then across logical cores for
+                                          logical cores 1 through nThreads-1. The logical core corresponding to the value of nThreads
+                                          is reserved for the main thread.
+                                            NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Scatter
+                                                    affinity pattern described within the High Performance Parallelism Pearls chapter.
+                                            NOTE 2: nThreads = 244 results in the main thread being bound to logical core 0.
+Unified_MICSelectiveAffinity SCI_DEBUG    This affinity pattern allows task execution threads to run anywhere among logical cores 1
+                                          through	nThreads-1. The logical core corresponding to the value of nThreads is reserved
+                                          for the main thread.
+                                            NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Selective
+                                                    affinity described within the High Performance Parallelism Pearls chapter.
+                                            NOTE 2: nThreads = 244 results in the main thread being bound to logical core 0.
 
 
 GPU Related:

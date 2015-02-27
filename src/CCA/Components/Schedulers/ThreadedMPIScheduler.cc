@@ -54,16 +54,16 @@ extern DebugStream execout;
 extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
-static DebugStream threadedmpi_dbg(                 "ThreadedMPI_DBG",                 false);
-static DebugStream threadedmpi_timeout(             "ThreadedMPI_TimingsOut",          false);
-static DebugStream threadedmpi_queuelength(         "ThreadedMPI_QueueLength",         false);
-static DebugStream threadedmpi_threaddbg(           "ThreadedMPI_ThreadDBG",           false);
-static DebugStream threadedmpi_compactaffinity(     "ThreadedMPI_CompactAffinity",     true);
-static DebugStream threadedmpi_mainonlyaffinity(    "ThreadedMPI_MainOnlyAffinity",    false);
-static DebugStream threadedmpi_scatteraffinity(     "ThreadedMPI_ScatterAffinity",     false);
-static DebugStream threadedmpi_miccompactaffinity(  "ThreadedMPI_MICCompactAffinity",  false);
-static DebugStream threadedmpi_micmainonlyaffinity( "ThreadedMPI_MICMainOnlyAffinity", false);
-static DebugStream threadedmpi_micscatteraffinity(  "ThreadedMPI_MICScatterAffinity",  false);
+static DebugStream threadedmpi_dbg(                  "ThreadedMPI_DBG",                  false);
+static DebugStream threadedmpi_timeout(              "ThreadedMPI_TimingsOut",           false);
+static DebugStream threadedmpi_queuelength(          "ThreadedMPI_QueueLength",          false);
+static DebugStream threadedmpi_threaddbg(            "ThreadedMPI_ThreadDBG",            false);
+static DebugStream threadedmpi_compactaffinity(      "ThreadedMPI_CompactAffinity",      true);
+static DebugStream threadedmpi_scatteraffinity(      "ThreadedMPI_ScatterAffinity",      false);
+static DebugStream threadedmpi_selectiveaffinity(    "ThreadedMPI_SelectiveAffinity",    false);
+static DebugStream threadedmpi_miccompactaffinity(   "ThreadedMPI_MICCompactAffinity",   false);
+static DebugStream threadedmpi_micscatteraffinity(   "ThreadedMPI_MICScatterAffinity",   false);
+static DebugStream threadedmpi_micselectiveaffinity( "ThreadedMPI_MICSelectiveAffinity", false);
 
 
 ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup*       myworld,
@@ -188,9 +188,9 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // Reset Uintah thread ID (to reflect number of last physical core used)
-  if ( threadedmpi_miccompactaffinity.active()  ||
-       threadedmpi_micmainonlyaffinity.active() ||
-       threadedmpi_micscatteraffinity.active()  ) {
+  if ( threadedmpi_miccompactaffinity.active()   ||
+       threadedmpi_micscatteraffinity.active()   ||
+       threadedmpi_micselectiveaffinity.active() ) {
 
     // These affinity types are hard-coded for a 61-core Xeon Phi where the
     // the lastmost physical core contains logical cores 241, 242, 243, and 0
@@ -204,19 +204,19 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // Disable CPU compact affinity to eliminate the need to explicitly disable this via SCI_DEBUG
-  if ( threadedmpi_mainonlyaffinity.active()    ||
-       threadedmpi_scatteraffinity.active()     ||
-       threadedmpi_miccompactaffinity.active()  ||
-       threadedmpi_micmainonlyaffinity.active() ||
-       threadedmpi_micscatteraffinity.active()  ) {
+  if ( threadedmpi_scatteraffinity.active()      ||
+       threadedmpi_selectiveaffinity.active()    ||
+       threadedmpi_miccompactaffinity.active()   ||
+       threadedmpi_micscatteraffinity.active()   ||
+       threadedmpi_micselectiveaffinity.active() ) {
 
     threadedmpi_compactaffinity.setActive(false);
   }
 
   // CPU-specific binding of the main thread to the last physical core used
-  if ( threadedmpi_compactaffinity.active()  ||
-       threadedmpi_mainonlyaffinity.active() ||
-       threadedmpi_scatteraffinity.active()  ) {
+  if ( threadedmpi_compactaffinity.active()   ||
+       threadedmpi_scatteraffinity.active()   ||
+       threadedmpi_selectiveaffinity.active() ) {
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
                             << ") to CPU core " << numThreads_ << "\n";
@@ -225,9 +225,9 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // MIC-specific binding of the main thread to the last logical core used
-  if ( threadedmpi_miccompactaffinity.active()  ||
-       threadedmpi_micmainonlyaffinity.active() ||
-       threadedmpi_micscatteraffinity.active() ) {
+  if ( threadedmpi_miccompactaffinity.active()   ||
+       threadedmpi_micscatteraffinity.active()   ||
+       threadedmpi_micselectiveaffinity.active() ) {
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
 
       threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
@@ -240,9 +240,9 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   char name[1024];
 
   // MIC-specific TaskWorker indexing
-  if (threadedmpi_miccompactaffinity.active()  ||
-      threadedmpi_micmainonlyaffinity.active() ||
-      threadedmpi_micscatteraffinity.active() ) {
+  if (threadedmpi_miccompactaffinity.active()   ||
+      threadedmpi_micscatteraffinity.active()   ||
+      threadedmpi_micselectiveaffinity.active() ) {
     for (int i = 0; i < numThreads_; i++) {
           TaskWorker* worker = scinew TaskWorker(this, i + 1); // MIC-specific TaskWorkers are indexed from core 1
           t_worker[i] = worker;
@@ -893,17 +893,6 @@ TaskWorker::run()
     Thread::self()->set_affinity(d_thread_id);
   }
 
-  // CPU-specific main thread affinity
-  if (threadedmpi_mainonlyaffinity.active()) {
-    if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
-      cerrLock.lock();
-      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any CPU core between 0 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
-      cerrLock.unlock();
-    }
-    Thread::self()->set_affinityMainOnly(Uintah::Parallel::getNumThreads());
-  }
-
   // CPU-specific scatter affinity
   if (threadedmpi_scatteraffinity.active()) {
 
@@ -971,6 +960,17 @@ TaskWorker::run()
     }
   }
 
+  // CPU-specific selective affinity
+  if (threadedmpi_selectiveaffinity.active()) {
+    if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+      cerrLock.lock();
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+      threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any CPU core between 0 and " << Uintah::Parallel::getNumThreads() - 2 << "\n";
+      cerrLock.unlock();
+    }
+    Thread::self()->set_affinityMainOnly(Uintah::Parallel::getNumThreads());
+  }
+
   // MIC-specific compact affinity
   if (threadedmpi_miccompactaffinity.active()) {
     if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
@@ -980,17 +980,6 @@ TaskWorker::run()
       cerrLock.unlock();
     }
     Thread::self()->set_affinity(d_thread_id);
-  }
-
-  // MIC-specific main thread affinity
-  if (threadedmpi_micmainonlyaffinity.active()) {
-    if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
-      cerrLock.lock();
-      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
-      cerrLock.unlock();
-    }
-    Thread::self()->set_affinityMICMainOnly(Uintah::Parallel::getNumThreads());
   }
 
   // MIC-specific scatter affinity
@@ -1033,6 +1022,17 @@ TaskWorker::run()
       }
       Thread::self()->set_affinity(overallIndex);
     }
+  }
+
+  // MIC-specific selective affinity
+  if (threadedmpi_micselectiveaffinity.active()) {
+    if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+      cerrLock.lock();
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+      threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
+      cerrLock.unlock();
+    }
+    Thread::self()->set_affinityMICMainOnly(Uintah::Parallel::getNumThreads());
   }
 
   while (true) {

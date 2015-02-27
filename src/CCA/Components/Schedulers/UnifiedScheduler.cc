@@ -70,16 +70,16 @@ extern std::map<std::string, double> exectimes;
 
 static double Unified_CurrentWaitTime = 0;
 
-static DebugStream unified_dbg(                 "Unified_DBG",                 false);
-static DebugStream unified_timeout(             "Unified_TimingsOut",          false);
-static DebugStream unified_queuelength(         "Unified_QueueLength",         false);
-static DebugStream unified_threaddbg(           "Unified_ThreadDBG",           false);
-static DebugStream unified_compactaffinity(     "Unified_CompactAffinity",     true);
-static DebugStream unified_mainonlyaffinity(    "Unified_MainOnlyAffinity",    false);
-static DebugStream unified_scatteraffinity(     "Unified_ScatterAffinity",     false);
-static DebugStream unified_miccompactaffinity(  "Unified_MICCompactAffinity",  false);
-static DebugStream unified_micmainonlyaffinity( "Unified_MICMainOnlyAffinity", false);
-static DebugStream unified_micscatteraffinity(  "Unified_MICScatterAffinity",  false);
+static DebugStream unified_dbg(                  "Unified_DBG",                  false);
+static DebugStream unified_timeout(              "Unified_TimingsOut",           false);
+static DebugStream unified_queuelength(          "Unified_QueueLength",          false);
+static DebugStream unified_threaddbg(            "Unified_ThreadDBG",            false);
+static DebugStream unified_compactaffinity(      "Unified_CompactAffinity",      true);
+static DebugStream unified_scatteraffinity(      "Unified_ScatterAffinity",      false);
+static DebugStream unified_selectiveaffinity(    "Unified_SelectiveAffinity",    false);
+static DebugStream unified_miccompactaffinity(   "Unified_MICCompactAffinity",   false);
+static DebugStream unified_micscatteraffinity(   "Unified_MICScatterAffinity",   false);
+static DebugStream unified_micselectiveaffinity( "Unified_MICSelectiveAffinity", false);
 
 #ifdef HAVE_CUDA
   static DebugStream gpu_stats(        "Unified_GPUStats",     false);
@@ -243,9 +243,9 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // Reset Uintah thread ID (to reflect number of last physical core used)
-  if ( unified_miccompactaffinity.active()  ||
-       unified_micmainonlyaffinity.active() ||
-       unified_micscatteraffinity.active()  ) {
+  if ( unified_miccompactaffinity.active()   ||
+       unified_micscatteraffinity.active()   ||
+       unified_micselectiveaffinity.active() ) {
 
     // These affinity types are hard-coded for a 61-core Xeon Phi where the
     // the lastmost physical core contains logical cores 241, 242, 243, and 0
@@ -259,19 +259,19 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // Disable CPU compact affinity to eliminate the need to explicitly disable this via SCI_DEBUG
-  if ( unified_mainonlyaffinity.active()    ||
-       unified_scatteraffinity.active()     ||
-       unified_miccompactaffinity.active()  ||
-       unified_micmainonlyaffinity.active() ||
-       unified_micscatteraffinity.active()  ) {
+  if ( unified_scatteraffinity.active()      ||
+       unified_selectiveaffinity.active()    ||
+       unified_miccompactaffinity.active()   ||
+       unified_micscatteraffinity.active()   ||
+       unified_micselectiveaffinity.active() ) {
 
     unified_compactaffinity.setActive(false);
   }
 
   // CPU-specific binding of the main thread to the last physical core used
-  if ( unified_compactaffinity.active()  ||
-       unified_mainonlyaffinity.active() ||
-       unified_scatteraffinity.active()  ) {
+  if ( unified_compactaffinity.active()   ||
+       unified_scatteraffinity.active()   ||
+       unified_selectiveaffinity.active() ) {
     if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
                         << ") to CPU core " << numThreads_ << "\n";
@@ -280,9 +280,9 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // MIC-specific binding of the main thread to the last logical core used
-  if ( unified_miccompactaffinity.active()  ||
-       unified_micmainonlyaffinity.active() ||
-       unified_micscatteraffinity.active()  ) {
+  if ( unified_miccompactaffinity.active()   ||
+       unified_micscatteraffinity.active()   ||
+       unified_micselectiveaffinity.active() ) {
     if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
 
       unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
@@ -295,9 +295,9 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   char name[1024];
 
   // MIC-specific TaskWorker indexing
-  if (unified_miccompactaffinity.active()  ||
-      unified_micmainonlyaffinity.active() ||
-      unified_micscatteraffinity.active() ) {
+  if (unified_miccompactaffinity.active()   ||
+      unified_micscatteraffinity.active()   ||
+      unified_micselectiveaffinity.active() ) {
     for (int i = 0; i < numThreads_; i++) {
           UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(this, i + 1); // MIC-specific UnifiedSchedulerWorkers are indexed from core 1
           t_worker[i] = worker;
@@ -2136,17 +2136,6 @@ UnifiedSchedulerWorker::run()
     Thread::self()->set_affinity(d_thread_id);
   }
 
-  // CPU-specific main thread affinity
-  if (unified_mainonlyaffinity.active()) {
-    if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
-      cerrLock.lock();
-      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      unified_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any CPU core between 0 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
-      cerrLock.unlock();
-    }
-    Thread::self()->set_affinityMainOnly(Uintah::Parallel::getNumThreads());
-  }
-
   // CPU-specific scatter affinity
   if (unified_scatteraffinity.active()) {
 
@@ -2214,6 +2203,17 @@ UnifiedSchedulerWorker::run()
     }
   }
 
+  // CPU-specific selective affinity
+  if (unified_selectiveaffinity.active()) {
+    if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+      cerrLock.lock();
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+      unified_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any CPU core between 0 and " << Uintah::Parallel::getNumThreads() - 2 << "\n";
+      cerrLock.unlock();
+    }
+    Thread::self()->set_affinityMainOnly(Uintah::Parallel::getNumThreads());
+  }
+
   // MIC-specific compact affinity
   if (unified_miccompactaffinity.active()) {
     if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
@@ -2223,17 +2223,6 @@ UnifiedSchedulerWorker::run()
       cerrLock.unlock();
     }
     Thread::self()->set_affinity(d_thread_id);
-  }
-
-  // MIC-specific main thread affinity
-  if (unified_micmainonlyaffinity.active()) {
-    if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
-      cerrLock.lock();
-      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      unified_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
-      cerrLock.unlock();
-    }
-    Thread::self()->set_affinityMICMainOnly(Uintah::Parallel::getNumThreads());
   }
 
   // MIC-specific scatter affinity
@@ -2276,6 +2265,17 @@ UnifiedSchedulerWorker::run()
       }
     Thread::self()->set_affinity(overallIndex);
     }
+  }
+
+  // MIC-specific selective affinity
+  if (unified_micselectiveaffinity.active()) {
+    if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+      cerrLock.lock();
+      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+      unified_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
+      cerrLock.unlock();
+    }
+    Thread::self()->set_affinityMICMainOnly(Uintah::Parallel::getNumThreads());
   }
 
   while( true ) {
