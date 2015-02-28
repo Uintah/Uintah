@@ -107,7 +107,7 @@ namespace Uintah {
 
   typedef multimap<pair<const Patch*, int>, ScatterRecord*> maptype;
 
-
+#if 0 // Not used???
   struct CompareScatterRecord {
   
     bool operator()(const ScatterRecord* sr1, const ScatterRecord* sr2) const
@@ -126,6 +126,7 @@ namespace Uintah {
              (v1.z() < v2.z()));
     }    
   };
+#endif
 
   typedef vector<const Patch*> patchestype;
 
@@ -458,6 +459,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* fromPatch,
   
   IntVector vectorToNeighbor = toPatch->getExtraCellLowIndex() - fromPatch->getExtraCellLowIndex();
   const Patch* realToPatch = toPatch->getRealPatch();
+  const Patch* realFromPatch = fromPatch->getRealPatch();
 
   pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(realToPatch, matl));
   
@@ -471,6 +473,7 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* fromPatch,
        (curLevelIndex    == sr->levelIndex) && 
        (matl             == sr->matl) &&
        (vectorToNeighbor == sr->vectorToNeighbor) &&
+       (realFromPatch    == sr->fromPatch->getRealPatch()) &&
        (fromPatch        != toPatch)) {
       return sr;
     }
