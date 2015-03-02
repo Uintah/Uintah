@@ -120,8 +120,6 @@ protected:
   std::vector<const VarLabel*> _extra_local_labels;       ///< Extra labels that might be useful for storage
   ChemHelper::TableLookup* _table_lookup_species;         ///< List of table lookup species
   MY_GRID_TYPE _source_grid_type;                         ///< Source grid type
-  std::vector<std::string> _wasatch_expr_names;           ///< List of wasatch exprs to be used as sources
-
 }; // end SourceTermBase
 }  // end namespace Uintah
 

@@ -82,17 +82,11 @@ class MomRHSPart
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,YFluxT>::type  SVol2YFluxInterpT;
   typedef typename SpatialOps::OperatorTypeBuilder<SpatialOps::Interpolant,SVolField,ZFluxT>::type  SVol2ZFluxInterpT;
 
-  const Expr::Tag cfluxXt_, cfluxYt_, cfluxZt_, viscTag_, tauXt_, tauYt_, tauZt_, densityt_, bodyForcet_, srcTermt_, emptyTag_;
-  const Expr::Tag volfract_;
-
-  const XFluxT    *cFluxX_, *tauX_;
-  const YFluxT    *cFluxY_, *tauY_;
-  const ZFluxT    *cFluxZ_, *tauZ_;
-  const SVolField *density_, *visc_;
-  const FieldT    *bodyForce_;
-  const FieldT    *srcTerm_;
-
-  const FieldT* volfrac_;
+  DECLARE_FIELDS(XFluxT, cFluxX_, tauX_ )
+  DECLARE_FIELDS(YFluxT, cFluxY_, tauY_ )
+  DECLARE_FIELDS(ZFluxT, cFluxZ_, tauZ_ )
+  DECLARE_FIELDS(SVolField, density_, visc_ );
+  DECLARE_FIELDS(FieldT, bodyForce_, srcTerm_, volfrac_ );
   
   const DivX* divXOp_;
   const DivY* divYOp_;
@@ -104,7 +98,7 @@ class MomRHSPart
   
   const DensityInterpT* densityInterpOp_;
   
-  const bool is3dconvdiff_;
+  const bool doXConv_, doYConv_, doZConv_, doXTau_, doYTau_, doZTau_, is3dconvdiff_, hasBodyF_, hasSrcTerm_, hasIntrusion_;
 
   MomRHSPart( const Expr::Tag& convFluxX,
               const Expr::Tag& convFluxY,
@@ -143,8 +137,6 @@ public:
 
   ~MomRHSPart();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 

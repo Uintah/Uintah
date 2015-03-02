@@ -31,21 +31,23 @@ SRCDIR := Core/Util
 
 SRCS += \
         $(SRCDIR)/DebugStream.cc        \
+        $(SRCDIR)/DynamicLoader.cc      \
         $(SRCDIR)/Endian.cc             \
         $(SRCDIR)/Environment.cc        \
         $(SRCDIR)/FileUtils.cc          \
-        $(SRCDIR)/SizeTypeConvert.cc    \
-        $(SRCDIR)/RWS.cc                \
-        $(SRCDIR)/sci_system.cc         \
-        $(SRCDIR)/Signals.cc            \
-        $(SRCDIR)/Timer.cc              \
-        $(SRCDIR)/TypeDescription.cc    \
         $(SRCDIR)/ProgressiveWarning.cc \
         $(SRCDIR)/ProgressReporter.cc   \
-        $(SRCDIR)/Util.cc               \
-        $(SRCDIR)/DynamicLoader.cc      \
+        $(SRCDIR)/RWS.cc                \
+        $(SRCDIR)/sci_system.cc         \
+        $(SRCDIR)/SizeTypeConvert.cc    \
+        $(SRCDIR)/Signals.cc            \
+        $(SRCDIR)/Socket.cc             \
         $(SRCDIR)/soloader.cc           \
-        $(SRCDIR)/Socket.cc  
+        $(SRCDIR)/StringUtil.cc         \
+        $(SRCDIR)/Timer.cc              \
+        $(SRCDIR)/TypeDescription.cc    \
+        $(SRCDIR)/XMLUtils.cc           \
+        $(SRCDIR)/Util.cc               
 
 SRCS += $(REFCOUNT_IMPL)
 

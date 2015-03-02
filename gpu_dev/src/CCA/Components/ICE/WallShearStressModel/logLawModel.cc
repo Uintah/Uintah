@@ -157,6 +157,7 @@ void logLawModel::computeWallShearStresses( DataWarehouse* old_dw,
                                             constCCVariable<double>& vol_frac_CC,  
                                             constCCVariable<Vector>& vel_CC,      
                                             const CCVariable<double>& viscosity,    
+                                            constCCVariable<double>& /* rho_CC */,    
                                             SFCXVariable<Vector>& tau_X_FC,
                                             SFCYVariable<Vector>& tau_Y_FC,
                                             SFCZVariable<Vector>& tau_Z_FC )

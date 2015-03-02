@@ -18,15 +18,14 @@
 class StableTimestep
  : public Expr::Expression<SpatialOps::SingleValueField>
 {
-  const Expr::Tag rhoTag_, viscTag_, uTag_, vTag_, wTag_;
+  DECLARE_FIELDS(SVolField, rho_, visc_);
+  DECLARE_FIELD(XVolField, u_);
+  DECLARE_FIELD(YVolField, v_);
+  DECLARE_FIELD(ZVolField, w_);
+
   double invDx_, invDy_, invDz_; // 1/dx, 1/dy, 1/dz
   const bool doX_, doY_, doZ_, isViscous_;
   const bool is3dconvdiff_;
-  const SVolField* rho_;
-  const SVolField* visc_;
-  const XVolField* u_;
-  const YVolField* v_;
-  const ZVolField* w_;
   
   
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, XVolField, SVolField >::type X2SOpT;
@@ -71,8 +70,6 @@ public:
   };
 
   ~StableTimestep();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

@@ -61,17 +61,13 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
 
-  const XVolField *xMom_, *xMomOld_, *uStar_, *xVel_;
-  const YVolField *yMom_, *yMomOld_, *vStar_, *yVel_;
-  const ZVolField *zMom_, *zMomOld_, *wStar_, *zVel_;
-  const SVolField *dens_, *densStar_, *dens2Star_, *divmomstar_;
-  const SVolField *dil_;
-  const TimeField *timestep_, *rkStage_;
+  DECLARE_FIELDS(XVolField, xMom_, xMomOld_, uStar_, xVel_);
+  DECLARE_FIELDS(YVolField, yMom_, yMomOld_, vStar_, yVel_);
+  DECLARE_FIELDS(ZVolField, zMom_, zMomOld_, wStar_, zVel_);
+  DECLARE_FIELDS(SVolField, dil_, dens_, densStar_, dens2Star_, divmomstar_);
+  DECLARE_FIELDS(TimeField, dt_, rkStage_);
   
   const bool isConstDensity_, doX_, doY_, doZ_, is3d_, useOnePredictor_;
-  
-  const Expr::Tag xMomt_, yMomt_, zMomt_, xMomOldt_, yMomOldt_, zMomOldt_;
-  const Expr::Tag xVelt_, yVelt_, zVelt_, xVelStart_, yVelStart_, zVelStart_, denst_, densStart_, dens2Start_, dilt_, timestept_,rkstaget_, divmomstart_;
   
   const Wasatch::TimeIntegrator* timeIntInfo_;
 
@@ -96,11 +92,11 @@ class PressureSource : public Expr::Expression<SVolField>
                   const Expr::TagList& velTags,
                   const Expr::TagList& velStarTags,
                   const bool isConstDensity,
-                  const Expr::Tag densTag,
-                  const Expr::Tag densStarTag,
-                  const Expr::Tag dens2StarTag,
+                  const Expr::Tag& densTag,
+                  const Expr::Tag& densStarTag,
+                  const Expr::Tag& dens2StarTag,
                   const Wasatch::VarDenParameters varDenParams,
-                  const Expr::Tag divmomstarTag);
+                  const Expr::Tag& divmomstarTag);
 public:
   
   /**
@@ -138,11 +134,11 @@ public:
              const Expr::TagList& velTags,
              const Expr::TagList& velStarTags,
              const bool isConstDensity,
-             const Expr::Tag densTag,
-             const Expr::Tag densStarTag,
-             const Expr::Tag dens2StarTag,
+             const Expr::Tag& densTag,
+             const Expr::Tag& densStarTag,
+             const Expr::Tag& dens2StarTag,
              const Wasatch::VarDenParameters varDenParams,
-             const Expr::Tag divMomStarTag);
+             const Expr::Tag& divMomStarTag);
     
     ~Builder(){}
     
@@ -156,8 +152,6 @@ public:
   };
   
   ~PressureSource();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   

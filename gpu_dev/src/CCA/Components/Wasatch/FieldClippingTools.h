@@ -49,20 +49,20 @@ namespace Wasatch{
   : public Expr::Expression<FieldT>
   {
   private:
-    const Expr::Tag volFracTag_;
     const double min_, max_;
     const bool hasVolFrac_;
-    const FieldT* volFrac_;
+    DECLARE_FIELD(FieldT, volFrac_);
     
   public:
     MinMaxClip( const Expr::Tag& volFracTag,
                 const double min,
                 const double max ) :
-    volFracTag_(volFracTag),
     min_(min),
     max_(max),
     hasVolFrac_(volFracTag != Expr::Tag())
-    {}
+    {
+      if (hasVolFrac_)  volFrac_ = this->template create_field_request<FieldT>(volFracTag);
+    }
     
     class Builder : public Expr::ExpressionBuilder
     {
@@ -91,8 +91,6 @@ namespace Wasatch{
     };
     
     ~MinMaxClip(){}
-    void advertise_dependents( Expr::ExprDeps& exprDeps );
-    void bind_fields( const Expr::FieldManagerList& fml );
     void evaluate();
   };
   
@@ -107,33 +105,13 @@ namespace Wasatch{
   //------------------------------------------------------------------
   
   template< typename FieldT >
-  void
-  MinMaxClip<FieldT>::
-  advertise_dependents( Expr::ExprDeps& exprDeps )
-  {
-    if (hasVolFrac_) exprDeps.requires_expression( volFracTag_ );
-  }
-
-  //------------------------------------------------------------------
-
-  template< typename FieldT >
-  void MinMaxClip<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
-  {
-    if (hasVolFrac_) {
-      const typename Expr::FieldMgrSelector<FieldT>::type& fm  = fml.field_manager<FieldT>();
-      volFrac_      = &fm.field_ref ( volFracTag_ );
-    }
-  }
-  
-  //------------------------------------------------------------------
-  
-  template< typename FieldT >
   void MinMaxClip<FieldT>::evaluate()
   {
     using namespace SpatialOps;
     FieldT& f = this->value();
     if (hasVolFrac_) {
-      f <<= *volFrac_ * cond( f < min_, min_ )
+      const FieldT& volFrac = volFrac_->field_ref();
+      f <<= volFrac * cond( f < min_, min_ )
                 ( f > max_, max_ )
                 ( f );
     } else {

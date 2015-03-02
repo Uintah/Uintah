@@ -43,10 +43,8 @@ template< typename FieldT >
 class PrecipitationClassicNucleationCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag phiTag_, superSatTag_;
-  const FieldT* phi_; // this will correspond to m(k+1)
-  const FieldT* superSat_;
   const double expConst_;
+  DECLARE_FIELD(FieldT, superSat_);
 
   PrecipitationClassicNucleationCoefficient( const Expr::Tag& superSatTag,
                                              const double expConst);
@@ -76,9 +74,6 @@ class PrecipitationClassicNucleationCoefficient
   };
 
   ~PrecipitationClassicNucleationCoefficient();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };
@@ -96,10 +91,10 @@ PrecipitationClassicNucleationCoefficient<FieldT>::
 PrecipitationClassicNucleationCoefficient( const Expr::Tag& superSatTag,
                                            const double expConst)
 : Expr::Expression<FieldT>(),
-  superSatTag_(superSatTag),
   expConst_(expConst)
 {
   this->set_gpu_runnable( true );
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
 }
 
 //--------------------------------------------------------------------
@@ -114,31 +109,12 @@ PrecipitationClassicNucleationCoefficient<FieldT>::
 template< typename FieldT >
 void
 PrecipitationClassicNucleationCoefficient<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationClassicNucleationCoefficient<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationClassicNucleationCoefficient<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= cond( *superSat_ > 1.0, exp(expConst_ / log(*superSat_) / log(*superSat_) ) )
+  const FieldT& S = superSat_->field_ref();
+  result <<= cond( S > 1.0, exp(expConst_ / log(S) / log(S) ) )
                  ( 0.0 );
 }
 

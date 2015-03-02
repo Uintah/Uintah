@@ -43,11 +43,13 @@ class Growth
 : public Expr::Expression<FieldT>
 {
 
-  const Expr::Tag phiTag_, growthCoefTag_;  // this will correspond to proper tags for constant calc & momnet dependency
+//  const Expr::Tag phiTag_, growthCoefTag_;  // this will correspond to proper tags for constant calc & momnet dependency
   const double momentOrder_;    ///< this is the order of the moment equation in which the growth model is used
   const double constCoef_;
-  const FieldT* phi_;           ///< this will correspond to m(k + i), i depends on which growth model is used
-  const FieldT* growthCoef_;    ///< this will correspond to the coefficient in the growth rate term
+  const bool doGrowth_;
+//  const FieldT* phi_;           ///< this will correspond to m(k + i), i depends on which growth model is used
+//  const FieldT* growthCoef_;    ///< this will correspond to the coefficient in the growth rate term
+  DECLARE_FIELDS(FieldT, phi_, growthCoef_);
 
   Growth( const Expr::Tag& phiTag,
           const Expr::Tag& growthCoefTag,
@@ -85,12 +87,8 @@ public:
 
   ~Growth();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
-
-
 
 // ###################################################################
 //
@@ -105,12 +103,13 @@ Growth( const Expr::Tag& phiTag,
         const double momentOrder,
         const double constCoef)
   : Expr::Expression<FieldT>(),
-    phiTag_(phiTag),
-    growthCoefTag_(growthCoefTag),
     momentOrder_(momentOrder),
-    constCoef_(constCoef)
+    constCoef_(constCoef),
+    doGrowth_(growthCoefTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+   phi_ = this->template create_field_request<FieldT>(phiTag);
+  if (doGrowth_)  growthCoef_ = this->template create_field_request<FieldT>(growthCoefTag);
 }
 
 //--------------------------------------------------------------------
@@ -125,44 +124,19 @@ Growth<FieldT>::
 template< typename FieldT >
 void
 Growth<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( phiTag_ );
-  if ( growthCoefTag_ != Expr::Tag () )
-    exprDeps.requires_expression( growthCoefTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Growth<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  phi_ = &fm.field_ref( phiTag_ );
-  if ( growthCoefTag_ != Expr::Tag () )
-    growthCoef_ = &fm.field_ref( growthCoefTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Growth<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  if ( growthCoefTag_ != Expr::Tag () ) {
+  if ( doGrowth_ ) {
     if (momentOrder_ != 0 ) {
-      result <<= constCoef_ * momentOrder_ * *growthCoef_ * *phi_; //this corresponds to source of G
+      result <<= constCoef_ * momentOrder_ * growthCoef_->field_ref() * phi_->field_ref(); //this corresponds to source of G
     } else {
       result <<= 0.0; //zero growth for m_0
     }
   } else {
     if (momentOrder_ != 0 ) {
-      result <<= constCoef_ * momentOrder_ * *phi_; //this corresponds to source of G
+      result <<= constCoef_ * momentOrder_ * phi_->field_ref(); //this corresponds to source of G
     } else {
       result <<= 0.0; //zero growth for m_0
     }

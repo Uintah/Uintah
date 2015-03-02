@@ -78,21 +78,6 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Math/MiscMath.h>
 #include <CCA/Components/Arches/Filter.h>
-
-#ifdef WASATCH_IN_ARCHES
-#  include <expression/ExprLib.h>
-
-#  include <CCA/Components/Wasatch/Wasatch.h>
-#  include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/Transport/EquationBase.h>
-#  include <CCA/Components/Wasatch/Transport/TransportEquation.h>
-#  include <CCA/Components/Wasatch/Transport/ParseEquation.h>
-#  include <CCA/Components/Wasatch/GraphHelperTools.h>
-#  include <CCA/Components/Wasatch/TaskInterface.h>
-#  include <CCA/Components/Wasatch/TagNames.h>
-#endif // WASATCH_IN_ARCHES
-
-
 #include <cmath>
 
 using namespace std;
@@ -182,8 +167,6 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
   d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
                                         d_turbModel, d_boundaryCondition,
                                         d_physicalConsts);
-  
-  d_momSolver->set_use_wasatch_mom_rhs(this->get_use_wasatch_mom_rhs());
   
   d_momSolver->problemSetup(db);
 
@@ -300,13 +283,7 @@ ExplicitSolver::checkMomBCs( SchedulerP& sched,
 // Schedule non linear solve and carry out some actual operations
 // ****************************************************************************
 int ExplicitSolver::nonlinearSolve(const LevelP& level,
-                                   SchedulerP& sched
-#                                  ifdef WASATCH_IN_ARCHES
-                                   , Wasatch::Wasatch& wasatch, 
-                                   ExplicitTimeInt* d_timeIntegrator,
-                                   SimulationStateP& state
-#                                  endif // WASATCH_IN_ARCHES
-                                   )
+                                   SchedulerP& sched)
 {
 
   typedef std::vector<std::string> SVec; 
@@ -700,46 +677,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // linearizes and solves pressure eqn
     // first computes, hatted velocities and then computes
     // the pressure poisson equation
-#ifdef WASATCH_IN_ARCHES
-    {
-      //____________________________________________________________________________
-      // check if wasatch momentum equations were specified
-      if ( wasatch.get_wasatch_spec()->findBlock("MomentumEquations") && this->get_use_wasatch_mom_rhs() ) {
-        // if momentum equations were specified in Wasatch, then we only care about the partial RHS. Hence, we need to
-        // modify the root IDs a bit and generate a new set of rootIDs with wchich we can construct the required taskinterface
-        // get the ID of the momentum RHS
-        Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
-        
-        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_uMomLabel->getName()+ "_rhs",Expr::STATE_NONE) ) );
-        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_vMomLabel->getName()+ "_rhs",Expr::STATE_NONE) ) );
-        gh->rootIDs.erase(gh->exprFactory->get_id(Expr::Tag(d_lab->d_wMomLabel->getName()+ "_rhs",Expr::STATE_NONE) ) );
-                
-        // manually insert the root ids for the wasatch momentum partial rhs.
-        // the wasatch rhs_partial expressions are used to construct the provisional arches
-        // velocity fields, i.e. hat(rho u) = (rho u)_n + dt * rhs_partial
-        std::set< Expr::ExpressionID > momRootIDs;
-        momRootIDs.insert(gh->exprFactory->get_id(Expr::Tag(d_lab->d_uVelRhoHatRHSPartLabel->getName(),Expr::STATE_NONE) ) );
-        momRootIDs.insert(gh->exprFactory->get_id(Expr::Tag(d_lab->d_vVelRhoHatRHSPartLabel->getName(),Expr::STATE_NONE) ) );
-        momRootIDs.insert(gh->exprFactory->get_id(Expr::Tag(d_lab->d_wVelRhoHatRHSPartLabel->getName(),Expr::STATE_NONE) ) );
-        //
-        std::stringstream strRKStage;
-        strRKStage << curr_level;
-        Wasatch::TaskInterface* wasatchMomRHSTask =
-        scinew Wasatch::TaskInterface( momRootIDs,
-                                       "warches_mom_rhs_partial_task_stage_" + strRKStage.str(),
-                                       *(gh->exprFactory),
-                                       level, sched, patches, matls,
-                                       wasatch.patch_info_map(),
-                                       curr_level+1,
-                                       state,
-                                       wasatch.locked_fields() );
-        wasatch.task_interface_list().push_back( wasatchMomRHSTask );
-        wasatchMomRHSTask->schedule( curr_level +1 );
-        d_momSolver->sched_computeVelHatWarches( level, sched, curr_level );
-      }
-    }
-#endif
-    
     d_momSolver->solveVelHat(level, sched, d_timeIntegratorLabels[curr_level] );
 
     for (EqnFactory::EqnMap::iterator iter = scalar_eqns.begin(); iter != scalar_eqns.end(); iter++){
@@ -857,88 +794,18 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     // Schedule an interpolation of the face centered velocity data
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    if (!(this->get_use_wasatch_mom_rhs())) sched_interpolateFromFCToCC(sched, patches, matls,
-                                                                        d_timeIntegratorLabels[curr_level]);
-//#endif // WASATCH_IN_ARCHES
+    sched_interpolateFromFCToCC(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+
     if (d_mixedModel) {
       d_scaleSimilarityModel->sched_reComputeTurbSubmodel( sched, level, matls,
                                                            d_timeIntegratorLabels[curr_level]);
     }
-
-#   ifdef WASATCH_IN_ARCHES
-    /* hook in construction of task interface for wasatch scalar transport equations here.
-     * This is within the RK loop, so we need to pass the stage as well.
-     *
-     * Note that at this point we should also build Expr::PlaceHolder objects
-     * for all "out-edges" in the Wasatch graph (required quantities from Arches)
-     * such as advecting velocity, etc.  These need to be consistent with the
-     * names given in the input file, which is a bit of a pain.  We will have
-     * to trust the user to get those right.
-     */
-    {
-      const Wasatch::Wasatch::EquationAdaptors& adaptors = wasatch.equation_adaptors();
-      Wasatch::GraphHelper* const gh = wasatch.graph_categories()[Wasatch::ADVANCE_SOLUTION];
-      
-      std::vector<std::string> phi;
-      std::vector<std::string> phi_rhs;
-      
-      std::set< Expr::ExpressionID > scalRHSIDs;
-      for( Wasatch::Wasatch::EquationAdaptors::const_iterator ia=adaptors.begin(); ia!=adaptors.end(); ++ia ) {
-        Wasatch::EquationBase* transEq = (*ia)->equation();
-        if ( !(transEq->dir_name() == "") ) continue; // skip momentum equations
-        std::string solnVarName = transEq->solution_variable_name();
-        phi.push_back(solnVarName);
-        std::string rhsName =solnVarName + "_rhs";
-        phi_rhs.push_back(rhsName);
-        //
-        scalRHSIDs.insert( gh->exprFactory->get_id(Expr::Tag(rhsName,Expr::STATE_NONE) ) );
-      }
-      //
-      std::stringstream strRKStage;
-      strRKStage << curr_level;
-      const std::set<std::string>& ioFieldSet = wasatch.locked_fields();
-
-      if (!(scalRHSIDs.empty())) {
-        // ADD THE FORCE-ON-GRAPH EXPRESSIONS TO THIS TASK. THERE IS A MAJOR LIMITATION HERE:
-        // IF ANY OF THE FORCED DEPENDENCIES ARE SHARED WITH ANOTHER TASKINTERFACE, THEN WE WILL
-        // GET MULTIPLE COMPUTES ERRORS FROM UINTAH.
-        if ( !( gh->rootIDs.empty() ) ) scalRHSIDs.insert(gh->rootIDs.begin(), gh->rootIDs.end());
-        Wasatch::TaskInterface* wasatchRHSTask =
-        scinew Wasatch::TaskInterface( scalRHSIDs,
-                                      "warches_scalar_rhs_task_stage_" + strRKStage.str(),
-                                      *(gh->exprFactory),
-                                      level, sched, patches, matls,
-                                      wasatch.patch_info_map(),
-                                      curr_level+1,
-                                      state,
-                                      ioFieldSet
-                                      );
-        
-        // jcs need to build a CoordHelper (or graph the one from wasatch?) - see Wasatch::TimeStepper.cc...
-        wasatch.task_interface_list().push_back( wasatchRHSTask );
-        wasatchRHSTask->schedule( curr_level +1 );
-        // note that there is another interface for this if we need some fields from the new DW.
-        d_timeIntegrator->sched_fe_update(sched, patches, matls, phi, phi_rhs, curr_level, true);
-        if(curr_level>0) d_timeIntegrator->sched_time_ave(sched, patches, matls, phi, curr_level, true);
-        //d_timeIntegrator->sched_wasatch_time_ave(sched, patches, matls, phi, phi_rhs, curr_level);
-      }
-      
-    }
-#   endif // WASATCH_IN_ARCHES
 
     d_turbCounter = d_lab->d_sharedState->getCurrentTopLevelTimeStep();
     if ((d_turbCounter%d_turbModelCalcFreq == 0)&&
         ((curr_level==0)||((!(curr_level==0))&&d_turbModelRKsteps)))
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
-
-
-#ifdef WASATCH_IN_ARCHES
-    // wee need this so that the values of momenum in the OldDW on the next timestep are correct
-    if (wasatch.get_wasatch_spec()->findBlock("MomentumEquations"))
-      d_momSolver->sched_computeMomentum( level, sched, curr_level );
-#endif
 
   }
 
@@ -972,9 +839,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,     gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_viscosityCTSLabel,  gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_turbViscosLabel,  gn, 0);
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  if (!(this->get_use_wasatch_mom_rhs())) tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
-//#endif // WASATCH_IN_ARCHES
+  tsk->requires(Task::OldDW, d_lab->d_CCVelocityLabel, gn, 0);
   tsk->requires(Task::OldDW, d_lab->d_densityGuessLabel,  gn, 0);
 
   if (!(d_MAlab))
@@ -986,17 +851,11 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_uVelocitySPBCLabel);
   tsk->computes(d_lab->d_vVelocitySPBCLabel);
   tsk->computes(d_lab->d_wVelocitySPBCLabel);
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  if (!(this->get_use_wasatch_mom_rhs())) {
-    tsk->computes(d_lab->d_uVelRhoHatLabel);
-    tsk->computes(d_lab->d_vVelRhoHatLabel);
-    tsk->computes(d_lab->d_wVelRhoHatLabel);
-  }
-//#endif // WASATCH_IN_ARCHES
+  tsk->computes(d_lab->d_uVelRhoHatLabel);
+  tsk->computes(d_lab->d_vVelRhoHatLabel);
+  tsk->computes(d_lab->d_wVelRhoHatLabel);
   tsk->computes(d_lab->d_densityCPLabel);
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-  if (!(this->get_use_wasatch_mom_rhs())) tsk->computes(d_lab->d_viscosityCTSLabel);
-//#endif // WASATCH_IN_ARCHES
+  tsk->computes(d_lab->d_viscosityCTSLabel);
   tsk->computes(d_lab->d_turbViscosLabel);
 
   //__________________________________
@@ -1494,10 +1353,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(density,   d_lab->d_densityCPLabel,     indx, patch, gn, 0);
     old_dw->get(viscosity, d_lab->d_viscosityCTSLabel,  indx, patch, gn, 0);
     old_dw->get(turb_viscosity,    d_lab->d_turbViscosLabel,  indx, patch, gn, 0);
-
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    if (!(this->get_use_wasatch_mom_rhs())) old_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gn, 0);
-//#endif // WASATCH_IN_ARCHES
+    old_dw->get(ccVel,     d_lab->d_CCVelocityLabel, indx, patch, gn, 0);
 
   // Create vars for new_dw ***warning changed new_dw to old_dw...check
     CCVariable<int> cellType_new;
@@ -1525,19 +1381,15 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(wVelocity_new, d_lab->d_wVelocitySPBCLabel, indx, patch);
     wVelocity_new.copyData(wVelocity); // copy old into new
 
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    if (!(this->get_use_wasatch_mom_rhs())) {
-      SFCXVariable<double> uVelRhoHat_new;
-      new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, indx, patch);
-      uVelRhoHat_new.initialize(0.0);     // copy old into new
-      SFCYVariable<double> vVelRhoHat_new;
-      new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel, indx, patch);
-      vVelRhoHat_new.initialize(0.0); // copy old into new
-      SFCZVariable<double> wVelRhoHat_new;
-      new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, indx, patch);
-      wVelRhoHat_new.initialize(0.0); // copy old into new
-    }
-//#endif // WASATCH_IN_ARCHES
+    SFCXVariable<double> uVelRhoHat_new;
+    new_dw->allocateAndPut(uVelRhoHat_new, d_lab->d_uVelRhoHatLabel, indx, patch);
+    uVelRhoHat_new.initialize(0.0);     // copy old into new
+    SFCYVariable<double> vVelRhoHat_new;
+    new_dw->allocateAndPut(vVelRhoHat_new, d_lab->d_vVelRhoHatLabel, indx, patch);
+    vVelRhoHat_new.initialize(0.0); // copy old into new
+    SFCZVariable<double> wVelRhoHat_new;
+    new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, indx, patch);
+    wVelRhoHat_new.initialize(0.0); // copy old into new
 
     CCVariable<double> density_new;
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, indx, patch);
@@ -1547,13 +1399,9 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, indx, patch);
     density_temp.copyData(density); // copy old into new
 
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
-    if (!(this->get_use_wasatch_mom_rhs())) {
-      CCVariable<double> viscosity_new;
-      new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
-      viscosity_new.copyData(viscosity); // copy old into new
-    }
-//#endif // WASATCH_IN_ARCHES
+    CCVariable<double> viscosity_new;
+    new_dw->allocateAndPut(viscosity_new, d_lab->d_viscosityCTSLabel, indx, patch);
+    viscosity_new.copyData(viscosity); // copy old into new
 
     CCVariable<double> turb_viscosity_new;
     new_dw->allocateAndPut(turb_viscosity_new, d_lab->d_turbViscosLabel, indx, patch);

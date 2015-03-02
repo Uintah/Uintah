@@ -47,12 +47,8 @@ template< typename FieldT >
 class TabPropsEvaluator
  : public Expr::Expression<FieldT>
 {
-  typedef std::vector<const FieldT*>  IndepVarVec;
-
-  const Expr::TagList indepVarNames_;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_);
   const InterpT& evaluator_;
-
-  IndepVarVec indepVars_;
 
   TabPropsEvaluator( const InterpT& interp,
                      const Expr::TagList& ivarNames );
@@ -138,8 +134,6 @@ public:
 
   ~TabPropsEvaluator();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -158,9 +152,10 @@ TabPropsEvaluator<FieldT>::
 TabPropsEvaluator( const InterpT& interp,
                    const Expr::TagList& ivarNames )
   : Expr::Expression<FieldT>(),
-    indepVarNames_( ivarNames ),
     evaluator_( interp )
-{}
+{
+  this->template create_field_vector_request<FieldT>(ivarNames, indepVars_);
+}
 
 //--------------------------------------------------------------------
 
@@ -174,34 +169,6 @@ TabPropsEvaluator<FieldT>::
 template< typename FieldT >
 void
 TabPropsEvaluator<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  // we depend on expressions for each of the independent variables.
-  for( Expr::TagList::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
-    exprDeps.requires_expression( *inam );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TabPropsEvaluator<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-
-  indepVars_.clear();
-  for( Expr::TagList::const_iterator inam=indepVarNames_.begin(); inam!=indepVarNames_.end(); ++inam ){
-    indepVars_.push_back( &fm.field_ref( *inam ) );
-  }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TabPropsEvaluator<FieldT>::
 evaluate()
 {
   FieldT& result = this->value();
@@ -209,27 +176,27 @@ evaluate()
   switch( indepVars_.size() ){
     case 1:{
       Functor1D::set_evaluator( &evaluator_ );
-      result <<= SpatialOps::apply_pointwise<Functor1D>( *indepVars_[0] );
+      result <<= SpatialOps::apply_pointwise<Functor1D>( indepVars_[0]->field_ref() );
       break;
     }
     case 2:{
       Functor2D::set_evaluator( &evaluator_ );
-      result <<= SpatialOps::apply_pointwise<Functor2D>( *indepVars_[0], *indepVars_[1] );
+      result <<= SpatialOps::apply_pointwise<Functor2D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
       break;
     }
     case 3:{
       Functor3D::set_evaluator( &evaluator_ );
-      result <<= SpatialOps::apply_pointwise<Functor3D>( *indepVars_[0], *indepVars_[1], *indepVars_[2] );
+      result <<= SpatialOps::apply_pointwise<Functor3D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref() );
       break;
     }
     case 4:{
       Functor4D::set_evaluator( &evaluator_ );
-      result <<= SpatialOps::apply_pointwise<Functor4D>( *indepVars_[0], *indepVars_[1], *indepVars_[2], *indepVars_[3] );
+      result <<= SpatialOps::apply_pointwise<Functor4D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref() );
       break;
     }
     case 5:{
       Functor5D::set_evaluator( &evaluator_ );
-      result <<= SpatialOps::apply_pointwise<Functor5D>( *indepVars_[0], *indepVars_[1], *indepVars_[2], *indepVars_[3], *indepVars_[4] );
+      result <<= SpatialOps::apply_pointwise<Functor5D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref(), indepVars_[4]->field_ref() );
       break;
     }
     default:

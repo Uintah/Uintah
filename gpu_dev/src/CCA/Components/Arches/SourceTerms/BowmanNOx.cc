@@ -5,17 +5,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
-
 #include <sci_defs/uintah_defs.h>
-#ifdef WASATCH_IN_ARCHES
-//-- SpatialOps includes --//
-#include <spatialops/Nebo.h>
-#include <CCA/Components/Wasatch/FieldTypes.h>
-#include <CCA/Components/Wasatch/FieldAdaptor.h>
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/SpatialFieldStore.h>
-#endif
-
 //===========================================================================
 
 using namespace std;
@@ -74,26 +64,13 @@ BowmanNOx::sched_computeSource( const LevelP& level, SchedulerP& sched, int time
   Ghost::GhostType  gType;
   int nGhosts;
   
-#ifdef WASATCH_IN_ARCHES
-  gType = Ghost::AroundCells;
-  nGhosts = Wasatch::get_n_ghost<SVolField>();
-#else
   gType = Ghost::None;
   nGhosts = 0;
-#endif
 
   if (timeSubStep == 0) {
     tsk->computes(_src_label);
   } else {
-#ifdef WASATCH_IN_ARCHES
-    
-    tsk->modifiesWithScratchGhost( _src_label,
-                                  level->eachPatch()->getUnion(), Uintah::Task::ThisLevel,
-                                  _shared_state->allArchesMaterials()->getUnion(), Uintah::Task::NormalDomain,
-                                  gType, nGhosts);
-#else
     tsk->modifies(_src_label);
-#endif
   }
 
   // resolve some labels: 
@@ -133,14 +110,8 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     CCVariable<double> rate; 
     Ghost::GhostType  gType;
     int nGhosts;
-
-#ifdef WASATCH_IN_ARCHES
-    gType = Ghost::AroundCells;
-    nGhosts = Wasatch::get_n_ghost<SVolField>();
-#else
     gType = Ghost::None;
     nGhosts = 0;
-#endif
 
     if ( new_dw->exists(_src_label, matlIndex, patch ) ){
       new_dw->getModifiable( rate, _src_label, matlIndex, patch, gType, nGhosts );
@@ -160,28 +131,6 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
     old_dw->get( rho , _rho_label         , matlIndex , patch , gType , nGhosts );
     old_dw->get( T   , _temperature_label , matlIndex , patch , gType , nGhosts );
     old_dw->get( vol_fraction, _field_labels->d_volFractionLabel, matlIndex, patch, gType, nGhosts );
-
-
-#   ifdef WASATCH_IN_ARCHES
-    using namespace Wasatch;
-    using namespace SpatialOps;
-    using SpatialOps::operator *;
-    typedef SpatFldPtr<SVolField> SVolPtr;
-
-    // SVolField = CCVariable<double>
-    const Wasatch::AllocInfo ainfo( old_dw, new_dw, matlIndex, patch, pc );
-    const SpatialOps::GhostData gd( nGhosts );
-    SVolPtr rate_        = wrap_uintah_field_as_spatialops<SVolField>(rate,ainfo, gd );
-    const SVolPtr N2_    = wrap_uintah_field_as_spatialops<SVolField>(N2,  ainfo, gd );
-    const SVolPtr O2_    = wrap_uintah_field_as_spatialops<SVolField>(O2,  ainfo, gd );
-    const SVolPtr rho_   = wrap_uintah_field_as_spatialops<SVolField>(rho, ainfo, gd );
-    const SVolPtr T_     = wrap_uintah_field_as_spatialops<SVolField>(T,   ainfo, gd );
-    const SVolPtr vfrac_ = wrap_uintah_field_as_spatialops<SVolField>(vol_fraction,ainfo,gd);
-    
-    *rate_ <<= 30000.0 * _A / ( sqrt(*T_) ) * exp(-_E_R/ *T_) * (1.0e-3/_MW_N2 * *N2_ * *rho_) * sqrt(1.0e-3/_MW_O2 * *O2_ * *rho_);
-    *rate_ <<= cond( *rate_ < 1.0e-16, 0.0)
-                   ( *rate_ );
-#   else
 //    delt_vartype DT;
 //    old_dw->get(DT, _field_labels->d_sharedState->get_delt_label()); 
 //    double dt = DT;
@@ -208,7 +157,6 @@ BowmanNOx::computeSource( const ProcessorGroup* pc,
         rate[c] = 0.0;
       } 
     }
-#   endif
   }
 }
 //---------------------------------------------------------------------------

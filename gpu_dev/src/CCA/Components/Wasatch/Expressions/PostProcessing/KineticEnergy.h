@@ -114,13 +114,12 @@ class TotalKineticEnergy
 {
   
 private:
-  const Expr::Tag resultTag_, vel1t_, vel2t_, vel3t_;
-  const bool is3d_;
+  DECLARE_FIELD(Vel1T, u_);
+  DECLARE_FIELD(Vel2T, v_);
+  DECLARE_FIELD(Vel3T, w_);
   
-  const Vel1T* vel1_;
-  const Vel2T* vel2_;
-  const Vel3T* vel3_;
-    
+  const bool doX_, doY_, doZ_, is3d_;
+  
   TotalKineticEnergy( const Expr::Tag& resultTag,
                       const Expr::Tag& vel1Tag,
                       const Expr::Tag& vel2Tag,
@@ -149,9 +148,7 @@ public:
   };
   
   ~TotalKineticEnergy();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
+
   void evaluate();
 }; // Class TotalKineticEnergy
 

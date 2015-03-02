@@ -14,7 +14,7 @@ fi
 
 if ! test "$DATE"; then
   echo "Error, please set env var DATE for install dir suffix!"
-  echo "   Something like: setenv DATE Dec_12_2014"
+  echo "   Something like: setenv DATE Dec_12_2015"
   exit
 fi
 
@@ -137,10 +137,24 @@ if test "$MACHINE" = "Baja"; then
   INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
   BOOST_LOC=/usr
 else
+if test "$MACHINE" = "Vulcan"; then
+  if [[ $host != vulcanlac* ]]; then
+     echo "Error: hostname did not return vulcanlac*... Goodbye."
+     exit
+  fi
+  CC=`which mpigcc`
+  CXX=`which mpig++`
+  COMP=gcc-4.4.7
+
+  NAME2="Vulcan"
+  INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/vulcan/Wasatch3P
+  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/vulcan/Boost/v1_55_0
+else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi

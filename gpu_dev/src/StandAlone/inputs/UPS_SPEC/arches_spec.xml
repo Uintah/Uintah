@@ -1,10 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>
 
-  <Wasatch                             spec="OPTIONAL NO_DATA" >
-    <include href="wasatch_spec.xml" section="Wasatch"/>
-  </Wasatch>
-
   <CFD>
 
     <ARCHES                             spec="OPTIONAL NO_DATA" >
@@ -678,7 +674,6 @@
         <extra_table_lookup             spec="OPTIONAL NO_DATA"/> <!-- perform an extra table lookup at Stage 2 of the algorithm --> 
 
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
-          <use_wasatch_momentum_rhs spec="OPTIONAL NO_DATA" />
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, old_central, old_upwind'" /> 
           <!-- wallupwind = upwinding on walls, central otherwise (cheap wall model)--> 
@@ -1069,7 +1064,6 @@
                                                                            do_radiation,                                                           
                                                                            rmcrt_radiation, 
                                                                            bowman_nox,
-                                                                           wasatch_expr,
                                                                            pc_transport,
                                                                            moment2_mixture_fraction_src,
                                                                            dissipation_src,
@@ -1085,9 +1079,6 @@
             <!-- Tabulated reaction rate --> 
             <rxn_rate                   spec="REQUIRED STRING" need_applies_to="type tab_rxn_rate" />
             
-            <!-- Wasatch expression as a source - needs ForceOnGraph in Wasatch block -->
-            <expr                       spec="REQUIRED STRING" need_applies_to="type wasatch_expr" />
-
             <!-- Spec for constant and multi-point constant source term model -->
             <constant                   spec="OPTIONAL DOUBLE" need_applies_to="type constant_src, fx_inject_src, fy_inject_src, fz_inject_src, cc_inject_src" />
 
@@ -1590,11 +1581,6 @@
         </Moment>
         
       </CQMOM>
-
-      <!-- Use this block for wasatch-in-arches builds only to create placeholders for arbitrary variables -->
-      <ExtraWarchesVariables            spec="OPTIONAL NO_DATA">
-        <NameTag                        spec="MULTIPLE"/>
-      </ExtraWarchesVariables>
     </ARCHES>
   </CFD>
 
