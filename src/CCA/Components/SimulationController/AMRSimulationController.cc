@@ -83,6 +83,16 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
+  // If VisIt has been included into the build, initialize the lib sim
+  // so that a user can connect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+
+#ifdef HAVE_MPICH
+  d_visit_simulation_data.isProc0 = isProc0_macro;
+#endif
+
+  visit_InitLibSim( &d_visit_simulation_data );
+#endif
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -124,19 +134,19 @@ AMRSimulationController::run()
 
   bool log_dw_mem=false;
 
-  if(dbg_dwmem.active()) {
-    log_dw_mem=true;
+  if( dbg_dwmem.active() ) {
+    log_dw_mem = true;
   }
 
-   // sets up sharedState, timeinfo, output, scheduler, lb
+   // Sets up sharedState, timeinfo, output, scheduler, lb.
    preGridSetup();
 
-   // create grid
+   // Create grid:
    GridP currentGrid = gridSetup();
 
-   d_scheduler->initialize(1, 1);
-   d_scheduler->advanceDataWarehouse(currentGrid, true);
-   d_scheduler->setInitTimestep(true);
+   d_scheduler->initialize( 1, 1 );
+   d_scheduler->advanceDataWarehouse( currentGrid, true );
+   d_scheduler->setInitTimestep( true );
 #ifdef HAVE_CUDA
    d_scheduler->assignPatchesToGpus(currentGrid);
 #endif
@@ -252,7 +262,7 @@ AMRSimulationController::run()
      adjustDelT( delt, d_sharedState->d_prev_delt, first, time );
      newDW->override(delt_vartype(delt), d_sharedState->get_delt_label());
 
-     // printSimulationStats( d_sharedState, delt, t );
+     // printSimulationStats( d_sharedState, delt, time );
 
      if(log_dw_mem){
        // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
@@ -272,12 +282,13 @@ AMRSimulationController::run()
        barrier_times[2]+=Time::currentSeconds()-start;
      }
 
-     // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
-     //   Needs to be done before advanceDataWarehouse
+     // Yes, I know this is kind of hacky, but this is the only way to
+     // get a new grid from UdaReducer Needs to be done before
+     // advanceDataWarehouse
      if (d_reduceUda){
       currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
      }
-     
+
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
@@ -303,8 +314,8 @@ AMRSimulationController::run()
      bool nr;
      if( (nr=needRecompile( time, delt, currentGrid )) || first ){
         
-       if(nr){  // recompile taskgraph, re-assign BCs, reset recompile flag
-          currentGrid->assignBCS(d_grid_ps,d_lb);
+       if(nr){ // Recompile taskgraph, re-assign BCs, reset recompile flag.
+          currentGrid->assignBCS( d_grid_ps, d_lb );
           currentGrid->performConsistencyCheck();
           d_sharedState->setRecompileTaskGraph( false );
        }
@@ -380,8 +391,8 @@ AMRSimulationController::run()
      }
      
      calcWallTime();
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time, "\nStarting execution: " );
 
-     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
      // Execute the current timestep, restarting if necessary
      d_sharedState->d_current_delt = delt;
 
@@ -428,15 +439,35 @@ AMRSimulationController::run()
      time += delt;
      TAU_DB_DUMP();
 
+     calcWallTime();
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time, "Finished execution: " );
+     // If VisIt has been included into the build, check the lib sim state
+     // to see if there is a connection and if so if anything needs to be
+     // done.
+#ifdef HAVE_VISIT
+     d_visit_simulation_data.schedulerP = d_scheduler;
+     d_visit_simulation_data.gridP = currentGrid;
+     d_visit_simulation_data.time  = time;
+     d_visit_simulation_data.cycle =
+       d_sharedState->getCurrentTopLevelTimeStep();     
+
+     visit_CheckState( &d_visit_simulation_data );
+#endif
    } // end while ( time is not up, etc )
 
+  // If VisIt has been included into the build, stop here so the
+  // user can have once last chance see their data via VisIt.
+#ifdef HAVE_VISIT
+   visit_EndLibSim( &d_visit_simulation_data );
+#endif
+
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
-   delt_vartype delt_var;
-   d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
-   delt = delt_var;
-   adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
-   calcWallTime();
-   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
+   // delt_vartype delt_var;
+   // d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
+   // delt = delt_var;
+   // adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
+   // calcWallTime();
+   // printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
    // d_ups->releaseDocument();
 #ifdef USE_GPERFTOOLS
@@ -698,11 +729,12 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         d_sim->scheduleTimeAdvance(grid->getLevel(i), d_scheduler);
       }
     }  
-  } else {
+  }
+  else {
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     // for dynamic lb's, set up initial patch config
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::init); 
-    grid->assignBCS(d_grid_ps,d_lb);
+    grid->assignBCS( d_grid_ps, d_lb );
     grid->performConsistencyCheck();
     t = d_timeinfo->initTime;
 
@@ -757,7 +789,9 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 } // end doInitialTimestep()
 
 //______________________________________________________________________
-bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimestep)
+
+bool
+AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep )
 {
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::doRegridding()");
   TAU_PROFILE("AMRSimulationController::doRegridding()", " ", TAU_USER);
@@ -790,7 +824,7 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
       barrier_times[1]+=Time::currentSeconds()-start;
     }
     
-    currentGrid->assignBCS(d_grid_ps,d_lb);
+    currentGrid->assignBCS( d_grid_ps, d_lb );
     currentGrid->performConsistencyCheck();
 
     //__________________________________
@@ -828,8 +862,8 @@ bool AMRSimulationController::doRegridding(GridP& currentGrid, bool initialTimes
 
     double scheduleTime = Time::currentSeconds();
     
-    if (!initialTimestep) {
-      d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
+    if( !initialTimestep ) {
+      d_scheduler->scheduleAndDoDataCopy( currentGrid, d_sim );
     }
     
     scheduleTime = Time::currentSeconds() - scheduleTime;

@@ -30,8 +30,7 @@ public:
                               phiT& phi, 
                               constphiT& RHS, 
                               double dt, double time, 
-                              const std::string eqnName,
-                              const bool wasatch_update=false);
+                              const std::string eqnName);
    /** @brief A template forward Euler update for a single 
                variable for a single patch */ 
     template <class phiT, class constphiT>
@@ -91,7 +90,7 @@ public:
                          const MaterialSet* matls, 
                          std::vector<std::string> phi,
                          std::vector<std::string> rhs, 
-                         int rkstep,const bool wasatch_update=false );
+                         int rkstep);
   
     void fe_update( const ProcessorGroup*, 
                     const PatchSubset* patches, 
@@ -100,14 +99,14 @@ public:
                     DataWarehouse* new_dw,
                     std::vector<std::string> phi_lab,
                     std::vector<std::string> rhs_lab, 
-                    int rkstep, const bool wasatch_update=false );
+                    int rkstep);
     
     /** @brief A task interface to the timeAvePhi */ 
     void sched_time_ave( SchedulerP& sched, 
                          const PatchSet* patches, 
                          const MaterialSet* matls, 
                          std::vector<std::string> phi,
-                         int rkstep, const bool wasatch_update=false );
+                         int rkstep );
   
     void time_ave( const ProcessorGroup*, 
                    const PatchSubset* patches, 
@@ -115,22 +114,7 @@ public:
                    DataWarehouse* old_dw, 
                    DataWarehouse* new_dw,
                    std::vector<std::string> phi_lab,
-                   int rkstep, const bool wasatch_update=false );
-  
-  /** @brief Schedule the dummy initialize for wasatch */ 
-  void sched_dummy_init( SchedulerP& sched, 
-                       const PatchSet* patches, 
-                       const MaterialSet* matls, 
-                       std::vector<std::string> phi);
-
-  /** @brief Dummy initialize task for wasatch */   
-  void dummy_init( const ProcessorGroup*, 
-                 const PatchSubset* patches, 
-                 const MaterialSubset* matls, 
-                 DataWarehouse* old_dw, 
-                 DataWarehouse* new_dw,
-                 std::vector<std::string> phi_lab );
-  
+                   int rkstep );
 
     Vector ssp_beta, ssp_alpha; 
     Vector time_factor; 
@@ -152,20 +136,8 @@ private:
                                              phiT& phi, 
                                              constphiT& RHS, 
                                              double dt, double time, 
-                                             const std::string eqnName,
-                                             const bool wasatch_update)
+                                             const std::string eqnName)
   {
-    
-    // tsaad: to avoid the multiplications in calculating the volume in the 
-    // cell iterator loop, I separated the wasatch FE update from the arches
-    // FE update loop below.
-    if (wasatch_update) {
-      for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-        IntVector c = *iter; 
-        phi[c] += dt*RHS[c]; 
-      } 
-      return;
-    }
     
 #ifdef VERIFY_TIMEINT
     std::cout << "**********************************************************************" << std::endl;

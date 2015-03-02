@@ -47,17 +47,15 @@ template< typename FieldT,
 class ContinuityResidual
  : public Expr::Expression<FieldT>
 {
-  const Expr::Tag drhodtTag_, vel1t_, vel2t_, vel3t_;
-  const bool is3d_;
+  DECLARE_FIELD(FieldT, drhodt_);
+  DECLARE_FIELD(Vel1T, u1_);
+  DECLARE_FIELD(Vel2T, u2_);
+  DECLARE_FIELD(Vel3T, u3_);
+  const bool constDen_, doX_, doY_, doZ_, is3d_;
 
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, FieldT >::type Vel1GradT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, FieldT >::type Vel2GradT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, FieldT >::type Vel3GradT;
-
-  const FieldT* drhodt_;
-  const Vel1T*  vel1_;
-  const Vel2T*  vel2_;
-  const Vel3T*  vel3_;
 
   const Vel1GradT* vel1GradOp_;
   const Vel2GradT* vel2GradOp_;
@@ -89,8 +87,6 @@ public:
 
   ~ContinuityResidual();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

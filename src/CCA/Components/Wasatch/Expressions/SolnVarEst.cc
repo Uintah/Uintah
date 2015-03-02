@@ -10,12 +10,13 @@ template< typename FieldT >
 SolnVarEst<FieldT>::SolnVarEst( const Expr::Tag& solnVarOldTag,
                                 const Expr::Tag& solnVarRHSTag,
                                 const Expr::Tag& timeStepTag )
-  : Expr::Expression<FieldT>(),
-    solnVarOldt_ ( solnVarOldTag ),
-    solnVarRHSt_ ( solnVarRHSTag ),
-    tStept_      ( timeStepTag   )
+  : Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
+  
+   fOld_ = this->template create_field_request<FieldT>(solnVarOldTag);
+   rhs_ = this->template create_field_request<FieldT>(solnVarRHSTag);
+   dt_ = this->template create_field_request<TimeField>(timeStepTag);
 }
 
 //------------------------------------------------------------------
@@ -27,34 +28,14 @@ SolnVarEst<FieldT>::~SolnVarEst()
 //------------------------------------------------------------------
 
 template< typename FieldT >
-void SolnVarEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
-{  
-  exprDeps.requires_expression( solnVarOldt_ );
-  exprDeps.requires_expression( solnVarRHSt_ );
-  exprDeps.requires_expression( tStept_      );  
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
-void SolnVarEst<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& FM = fml.field_manager<FieldT>();
-  
-  solnVarOld_ = &FM.field_ref ( solnVarOldt_ );    
-  solnVarRHS_ = &FM.field_ref ( solnVarRHSt_ );    
-
-  tStep_ = &fml.field_ref<TimeField>( tStept_ );
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
 void SolnVarEst<FieldT>::evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= *solnVarOld_ + *tStep_ * *solnVarRHS_ ;
+  const FieldT& fOld = fOld_->field_ref();
+  const FieldT& rhs  = rhs_->field_ref();
+  const TimeField& dt = dt_->field_ref();
+  result <<= fOld + dt * rhs;
 }
 
 //------------------------------------------------------------------

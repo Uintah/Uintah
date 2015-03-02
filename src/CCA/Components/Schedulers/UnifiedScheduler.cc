@@ -55,7 +55,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 // sync cout/cerr so they are readable when output by multiple threads
 extern SCIRun::Mutex coutLock;
@@ -247,15 +246,11 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
               << numThreads_ + 1 << ")." << std::endl;
   }
 
-  // Reset Uintah thread ID (to reflect number of last physical core)
-  Thread::self()->set_myid(numThreads_);
-
   if (unified_compactaffinity.active()) {
     if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-      unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
-                        << ") to CPU/MIC core " << numThreads_ << "\n";
+      unified_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid() << ") to core 0\n";
     }
-    Thread::self()->set_affinity(numThreads_);  // CPU/MIC - bind main thread to last physical core
+    Thread::self()->set_affinity(0);  // Bind main thread to core 0
   }
 
   // Create the UnifiedWorkers here (pinned to cores in UnifiedSchedulerWorker::run())
@@ -310,10 +305,7 @@ UnifiedScheduler::createSubScheduler()
   UintahParallelPort* lbp = getPort("load balancer");
   subsched->attachPort("load balancer", lbp);
   subsched->d_sharedState = d_sharedState;
-
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
-
-  Thread::self()->set_myid(numThreads_);
 
   if (subsched->numThreads_ > 0) {
 
@@ -322,14 +314,12 @@ UnifiedScheduler::createSubScheduler()
               << "   WARNING: Component tasks must be thread safe.\n"
               << "   Creating " << subsched->numThreads_ << " subscheduler threads for task execution.\n\n" << std::endl;
 
-    // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
+    // Bind main execution thread
     if (unified_compactaffinity.active()) {
       if ( (unified_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
-        unified_threaddbg << "Binding main subscheduler thread (ID "
-                          << Thread::self()->myid() << ") to CPU/MIC core "
-                          << subsched->numThreads_ << "\n";
+        unified_threaddbg << "Binding main subscheduler thread (ID " << Thread::self()->myid() << ") to core 0\n";
       }
-      Thread::self()->set_affinity(numThreads_);  // CPU/MIC - bind main subscheduler thread to last physical core
+      Thread::self()->set_affinity(0);    // bind subscheduler main thread to core 0
     }
 
     // Create UnifiedWorker threads for the subscheduler
@@ -460,7 +450,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 {
   // copy data timestep must be single threaded for now
   if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
-    MPIScheduler::execute(tgnum, iteration);
+    MPIScheduler::execute( tgnum, iteration );
     return;
   }
 
@@ -3529,7 +3519,7 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
     d_runmutex( "run mutex" ),
     d_quit( false ),
     d_idle( true ),
-    d_thread_id( thread_id ),
+    d_thread_id( thread_id + 1),
     d_rank( scheduler->getProcessorGroup()->myrank() ),
     d_waittime( 0.0 ),
     d_waitstart( 0.0 )
@@ -3543,15 +3533,14 @@ UnifiedSchedulerWorker::UnifiedSchedulerWorker( UnifiedScheduler*  scheduler,
 void
 UnifiedSchedulerWorker::run()
 {
-  // set thread ID
   Thread::self()->set_myid(d_thread_id);
 
-  // CPU/MIC compact affinity
+  // Set affinity
   if (unified_compactaffinity.active()) {
     if ( (unified_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
       std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to CPU/MIC core " << d_thread_id << "\n";
+      unified_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to core " << d_thread_id << "\n";
       cerrLock.unlock();
     }
     Thread::self()->set_affinity(d_thread_id);

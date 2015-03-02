@@ -244,10 +244,10 @@ namespace Uintah {
         ComputeSet(const ComputeSet&);
         ComputeSet& operator=(const ComputeSet&);
 
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-         friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+        friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
     };  // end class ComputeSet
 

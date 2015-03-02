@@ -141,14 +141,15 @@ void LinearInterpolator::findCellAndWeights_CFI(const Point& pos,
       
         IntVector extraCell_node = IntVector(ix + x, iy + y, iz + z);
          // this is an inside test
-         if(extraCell_node == Max(extraCell_node, finePatch_lo) && extraCell_node == Min(extraCell_node, finePatch_hi) ) {  
-          CFI_ni.push_back(extraCell_node);
+         if(extraCell_node == Max(extraCell_node, finePatch_lo) && 
+            extraCell_node == Min(extraCell_node, finePatch_hi) ) {  
+            CFI_ni.push_back(extraCell_node);
           //cout << "    ni " << extraCell_node << endl;
         } 
       }
     }
   }
-  
+
   //__________________________________
   // Reference Nomenclature: Stencil7 Mapping
   // Lx- :  L.w

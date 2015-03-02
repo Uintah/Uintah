@@ -56,15 +56,14 @@ class VelEst
   const DivYT* divYOp_;
   const DivZT* divZOp_;
   
-  const XFace *tauxi_;
-  const YFace *tauyi_;
-  const ZFace *tauzi_;
-  const FieldT *vel_, *convTerm_;
-  const SVolField *density_, *pressure_, *visc_;
-  const TimeField *tStep_;
-
-  const Expr::Tag velt_, convTermt_, densityt_, visct_, tauxit_, tauyit_, tauzit_, pressuret_, tStept_;
-  const bool is3d_;
+  DECLARE_FIELDS(SVolField, density_, pressure_, visc_);
+  DECLARE_FIELDS(FieldT, vel_, convTerm_);
+  DECLARE_FIELD(XFace, tauxi_);
+  DECLARE_FIELD(YFace, tauyi_);
+  DECLARE_FIELD(ZFace, tauzi_);
+  DECLARE_FIELD(TimeField, dt_);
+  
+  const bool doX_, doY_, doZ_, is3d_;
   
   VelEst( const Expr::Tag velTag,
           const Expr::Tag convTermTag,
@@ -115,8 +114,7 @@ public:
   };
 
   ~VelEst();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
+
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 

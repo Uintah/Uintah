@@ -44,20 +44,6 @@ ReductionBase::
 
 void
 ReductionBase::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{}
-
-//--------------------------------------------------------------------
-
-void
-ReductionBase::
-bind_fields( const Expr::FieldManagerList& fml )
-{}
-
-//--------------------------------------------------------------------
-
-void
-ReductionBase::
 evaluate()
 {}
 

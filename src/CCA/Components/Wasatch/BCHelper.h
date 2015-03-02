@@ -561,7 +561,7 @@ namespace Wasatch {
      *  \param taskCat      The task in which the dependencies are to be added
      *
      */
-    template<typename FieldT>
+    template<typename SrcT, typename TargetT >
     void create_dummy_dependency(const Expr::Tag& targetTag,
                                  const Expr::TagList dependencies,
                                  const Category taskCat);

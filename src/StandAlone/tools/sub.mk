@@ -81,12 +81,4 @@ SUBDIRS := \
 #  SUBDIRS += $(SRCDIR)/pidx
 #endif 
 
-# Build the uda2vis regardless as it does depend on VisIt
-# However VisIt depends on it.
-#ifeq ($(BUILD_VISIT),yes)
-#  SUBDIRS += $(SRCDIR)/uda2vis
-#endif
-
-
-
 include $(SCIRUN_SCRIPTS)/recurse.mk

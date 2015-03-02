@@ -729,7 +729,7 @@ OnDemandDataWarehouse::sendMPI( DependencyBatch* batch,
       // if data is relocating (of a regrid or re-load-balance), then the other
       // proc may already have it (since in most cases particle data comes from the old dw)
       // if lb is non-null, that means the particle data is on the old dw
-      if( lb && lb->getOldProcessorAssignment( 0, patch, 0 ) == dest ) {
+      if( lb && lb->getOldProcessorAssignment( patch ) == dest ) {
         if( this == old_dw ) {
           // We don't need to know how many particles there are OR send any particle data...
           return;
@@ -925,7 +925,7 @@ OnDemandDataWarehouse::exchangeParticleQuantities( DetailedTasks* dts,
           data[i] = -2;
         }
         else if( pmg.dwid_ == DetailedDep::FirstIteration && iteration == 0
-            && lb->getOldProcessorAssignment( 0, pmg.patch_, 0 ) == iter->first ) {
+            && lb->getOldProcessorAssignment( pmg.patch_ ) == iter->first ) {
           // signify that the recving proc already has this data.  Only use for the FirstIteration after a LB
           // send -1 rather than force the recving end above to iterate through its set
           data[i] = -1;
@@ -1045,7 +1045,7 @@ OnDemandDataWarehouse::recvMPI( DependencyBatch* batch,
       // in getting another one (and if we did, it would cause synchronization problems - see
       // comment in sendMPI)
       ParticleSubset* recvset = 0;
-      if( lb && (lb->getOldProcessorAssignment( 0, patch, 0 ) == d_myworld->myrank()
+      if( lb && (lb->getOldProcessorAssignment( patch ) == d_myworld->myrank()
              || lb->getPatchwiseProcessorAssignment( patch ) == d_myworld->myrank()) ) {
         // first part of the conditional means "we used to own the ghost data so use the same particles"
         // second part means "we were just assigned to this patch and need to receive the whole thing"
@@ -1084,7 +1084,7 @@ OnDemandDataWarehouse::recvMPI( DependencyBatch* batch,
         d_varDB.put( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep(), true );
       }
 
-      if( recvset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment( 0, patch, 0 ) == d_myworld->myrank()
+      if( recvset->numParticles() > 0 && !(lb && lb->getOldProcessorAssignment( patch ) == d_myworld->myrank()
                                       && this == old_dw) ) {
         var->getMPIBuffer( buffer, recvset );
       }
@@ -1213,7 +1213,7 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
   }
 
   if( mpidbg.active() ) {
-    mpidbg << d_myworld->myrank() << " allreduce, name " << label->getName() << " level "
+    mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, name " << label->getName() << " level "
            << (level ? level->getID() : -1) << std::endl;
   }
 
@@ -1221,13 +1221,13 @@ OnDemandDataWarehouse::reduceMPI( const VarLabel       * label,
                              d_myworld->getgComm( nComm ) );
 
   if( mpidbg.active() ) {
-    mpidbg << d_myworld->myrank() << " allreduce, done " << label->getName() << " level "
+    mpidbg << "Rank-" << d_myworld->myrank() << " allreduce, done " << label->getName() << " level "
            << (level ? level->getID() : -1) << std::endl;
   }
 
   if( mixedDebug.active() ) {
     coutLock.lock();
-    mixedDebug << "done with MPI_Allreduce\n";
+    mixedDebug << "done with MPI_Allreduce (" << label->getName() << ")\n";
     coutLock.unlock();
   }
 
@@ -1278,18 +1278,32 @@ OnDemandDataWarehouse::put( const ReductionVariableBase& var,
   bool init = (d_scheduler->isCopyDataTimestep()) || !(d_levelDB.exists( label, matlIndex, level ));
   d_levelDB.putReduce( label, matlIndex, level, var.clone(), init );
 }
+
 //______________________________________________________________________
 //
+
 void
-OnDemandDataWarehouse::override( const ReductionVariableBase& var,
-                                 const VarLabel* label,
-                                 const Level* level,
-                                 int matlIndex /*=-1*/)
+OnDemandDataWarehouse::override( const ReductionVariableBase & var,
+                                 const VarLabel              * label,
+                                 const Level                 * level     /* =  0 */,
+                                       int                     matlIndex /* = -1 */ )
 {
   checkPutAccess( label, matlIndex, 0, true );
 
   // Put it in the database, replace whatever may already be there
   d_levelDB.put( label, matlIndex, level, var.clone(), true, true );
+}
+
+void
+OnDemandDataWarehouse::override( const SoleVariableBase & var,
+                                 const VarLabel         * label,
+                                 const Level            * level     /* =  0 */,
+                                       int                matlIndex /* = -1 */ )
+{
+  checkPutAccess( label, matlIndex, 0, true );
+
+  // Put it in the database, replace whatever may already be there
+  d_levelDB.put( label, matlIndex, level, var.clone(), d_scheduler->isCopyDataTimestep(), true );
 }
 
 //______________________________________________________________________
@@ -1311,20 +1325,6 @@ OnDemandDataWarehouse::put( const SoleVariableBase& var,
   if( !d_levelDB.exists( label, matlIndex, level ) ) {
     d_levelDB.put( label, matlIndex, level, var.clone(), d_scheduler->isCopyDataTimestep(), false );
   }
-}
-
-//______________________________________________________________________
-//
-void
-OnDemandDataWarehouse::override( const SoleVariableBase& var,
-                                 const VarLabel* label,
-                                 const Level* level,
-                                 int matlIndex /*=-1*/)
-{
-  checkPutAccess( label, matlIndex, 0, true );
-
-  // Put it in the database, replace whatever may already be there
-  d_levelDB.put( label, matlIndex, level, var.clone(), d_scheduler->isCopyDataTimestep(), true );
 }
 
 //______________________________________________________________________

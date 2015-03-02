@@ -67,7 +67,7 @@ class TaskWorker;
 
  WARNING
    Tasks must be thread-safe when using this Scheduler.
-   Requires MPI THREAD MULTIPLE support.
+   Requires MPI_THREAD_MULTIPLE support.
 
  ****************************************/
 
@@ -87,12 +87,7 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
 
-            void assignTask( DetailedTask* task, int iteration );
-
-    ConditionVariable d_nextsignal;
-    Mutex             d_nextmutex;             // conditional wait mutex
-    TaskWorker*       t_worker[MAX_THREADS];   // workers
-    Thread*           t_thread[MAX_THREADS];   // actual threads
+    friend class TaskWorker;
 
   private:
 
@@ -100,11 +95,16 @@ class ThreadedMPIScheduler : public MPIScheduler {
     ThreadedMPIScheduler( const ThreadedMPIScheduler& );
     ThreadedMPIScheduler& operator=( const ThreadedMPIScheduler& );
 
-    Output*    oport_t;
-    QueueAlg   taskQueueAlg_;
-    int        numThreads_;
+    void assignTask( DetailedTask* task, int iteration );
 
     int getAviableThreadNum();
+
+    ConditionVariable d_nextsignal;
+    Mutex             d_nextmutex;             // conditional wait mutex
+    TaskWorker*       t_worker[MAX_THREADS];   // workers
+    Thread*           t_thread[MAX_THREADS];   // actual threads
+    QueueAlg          taskQueueAlg_;
+    int               numThreads_;
 };
 
 
@@ -113,10 +113,6 @@ class TaskWorker : public Runnable {
   public:
 
     TaskWorker( ThreadedMPIScheduler* scheduler, int thread_id ) ;
-
-    void assignTask( DetailedTask* task, int iteration );
-
-    DetailedTask* getTask();
 
     void run();
 

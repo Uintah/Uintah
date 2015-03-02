@@ -34,7 +34,7 @@ using namespace Uintah;
 // Interface constructor for NonlinearSolver
 //****************************************************************************
 NonlinearSolver::NonlinearSolver(const ProcessorGroup* myworld)
-   : d_myworld(myworld), d_useWasatchMomRHS(false)
+   : d_myworld(myworld)
 {
 }
 

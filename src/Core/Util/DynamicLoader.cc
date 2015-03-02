@@ -31,7 +31,7 @@
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/Environment.h>
-#include <Core/Containers/StringUtil.h>
+#include <Core/Util/StringUtil.h>
 
 #include <fstream>
 #include <string>

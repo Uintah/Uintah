@@ -66,20 +66,20 @@ namespace Wasatch {
                                    Uintah::GridP grid)
   : Expr::Expression<SVolField>(),
   
-  temperatureTag_( temperatureTag ),
-  absorptionTag_( absorptionTag ),
-  celltypeTag_( celltypeTag),
-  
   // note that this does not provide any ghost entries in the matrix...
-  temperatureLabel_( Uintah::VarLabel::create( temperatureTag_.name(),
+  temperatureLabel_( Uintah::VarLabel::create( temperatureTag.name(),
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
-  absorptionLabel_ ( Uintah::VarLabel::create( absorptionTag_.name(),
+  absorptionLabel_ ( Uintah::VarLabel::create( absorptionTag.name(),
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
-  celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag_.name(),
+  celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag.name(),
                                               Wasatch::get_uintah_field_type_descriptor<int>() ) ),
   divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
   {
+     temperature_ = create_field_request<SVolField>(temperatureTag);
+     absCoef_ = create_field_request<SVolField>(absorptionTag);
+    // cellType_ = create_field_request<FieldT>(celltypeTag );
+    
     rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
     
     rmcrt_->registerVarLabels( 0,
@@ -215,21 +215,6 @@ namespace Wasatch {
                                     const Uintah::Patch* const patch,
                                     const int material,
                                     const int RKStage )
-  {}
-  
-  //--------------------------------------------------------------------
-  
-  void
-  RadiationSource::advertise_dependents( Expr::ExprDeps& exprDeps )
-  {
-    exprDeps.requires_expression( temperatureTag_ );
-    exprDeps.requires_expression( absorptionTag_ );
-  }
-  
-  //--------------------------------------------------------------------
-  
-  void
-  RadiationSource::bind_fields( const Expr::FieldManagerList& fml )
   {}
   
   //--------------------------------------------------------------------

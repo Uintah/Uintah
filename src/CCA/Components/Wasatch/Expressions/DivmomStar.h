@@ -49,14 +49,12 @@ class DivmomStar : public Expr::Expression<SVolField>
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
-  const XVolField *uStar_;
-  const YVolField *vStar_;
-  const ZVolField *wStar_;
-  const SVolField *densStar_;
+  DECLARE_FIELD(XVolField, uStar_);
+  DECLARE_FIELD(YVolField, vStar_);
+  DECLARE_FIELD(ZVolField, wStar_);
+  DECLARE_FIELD(SVolField, densStar_);
   
   const bool doX_, doY_, doZ_, is3d_;
-  
-  const Expr::Tag xVelStart_, yVelStart_, zVelStart_, densStart_;
   
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
@@ -99,8 +97,6 @@ public:
   };
   
   ~DivmomStar();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   

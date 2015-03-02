@@ -74,6 +74,12 @@ endif
 
 PSELIBS := $(GPU_EXTRA_LINK) $(PSELIBS)
 
+ifeq ($(HAVE_VISIT),yes)
+  INCLUDES += $(VISIT_INCLUDE)
+  PSELIBS += VisIt/libsim
+  LIBS += $(VISIT_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ##############################################
@@ -149,11 +155,6 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # Uintah
 # Convenience targets for Specific executables 
 
-ifeq ($(BUILD_VISIT),yes)
-  # 'visit_stuff' is defined in .../src/VisIt/udaReaderMTMD/sub.mk
-  VISIT_STUFF=visit_stuff
-endif
-
 uintah: sus \
         puda \
         dumpfields \
@@ -177,8 +178,7 @@ uintah: sus \
         link_inputs \
         link_scripts \
         link_tools \
-        link_localRT \
-	$(VISIT_STUFF)
+        link_localRT
 
 ###############################################
 

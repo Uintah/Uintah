@@ -56,5 +56,11 @@ PSELIBS := \
 
 LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(GPERFTOOLS_LIBRARY)
 
+ifeq ($(HAVE_VISIT),yes)
+  INCLUDES += $(VISIT_INCLUDE)
+  PSELIBS += VisIt/libsim
+  LIBS += $(VISIT_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

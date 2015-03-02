@@ -76,12 +76,11 @@ class RadiationSource
  : public Expr::Expression<SVolField>
 {
 
-  const Expr::Tag temperatureTag_, absorptionTag_, celltypeTag_;
-
+  DECLARE_FIELDS(SVolField, divQ_, absCoef_, temperature_, cellType_);
+  
   const Uintah::VarLabel *temperatureLabel_, *absorptionLabel_, *celltypeLabel_, *divqLabel_, *VRFluxLabel_,
   *boundFluxLabel_, *radiationVolqLabel_;
   
-  const SVolField* divQ_;
   Uintah::Ray* rmcrt_;
   void schedule_setup_bndflux( const Uintah::LevelP& level,
                               Uintah::SchedulerP sched,
@@ -149,7 +148,7 @@ public:
    *  are very uintah-specific and only used internally to this
    *  expression.  Specifically, the RadiationSource-rhs field and the LHS
    *  matrix.  All other variables should be expressed as dependencies
-   *  through the advertise_dependents method.
+   *  through the DECLARE_FIELD macro.
    */
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                          const Uintah::Patch* const patch,
@@ -162,8 +161,6 @@ public:
                       Uintah::DataWarehouse* const oldDW,
                       Uintah::DataWarehouse* const newDW );
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 

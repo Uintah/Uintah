@@ -59,8 +59,6 @@ public:
     const double frequency_, amplitude_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
@@ -74,14 +72,13 @@ private:
                        const double radius,
                        const double frequency,
                        const double amplitude );
-  Expr::Tag tag1_, tag2_;
+
   const std::vector<double> origin_;
   const std::vector<double> oscillatingdir_;
   const double insidevalue_, outsidevalue_, radius_;
   const double frequency_, amplitude_;
-  const SVolField* field1_;
-  const SVolField* field2_;
-  const TimeField* t_;
-  const Expr::Tag timet_;
+
+  DECLARE_FIELDS(SVolField, field1_, field2_);
+  DECLARE_FIELD(TimeField, t_);
 };
 #endif

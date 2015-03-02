@@ -23,18 +23,16 @@
  */
 #include <CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Parallel/Parallel.h> // Only used for MPI cerr
 #include <Core/Parallel/ProcessorGroup.h> // process determination
-#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
-#include <Core/Containers/StringUtil.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/FileUtils.h>
-
 #include <Core/Util/Environment.h> // for SCIRUN_SRCDIR
+#include <Core/Util/FileUtils.h>
+#include <Core/Util/StringUtil.h>
 
 #include <algorithm>
 #include <iomanip>
@@ -85,6 +83,7 @@ indent( ostream & out, unsigned int depth )
   }
 }
 
+static
 string
 getErrorInfo( const xmlNode * node )
 {
@@ -1793,6 +1792,7 @@ ProblemSpecReader::validateProblemSpec( ProblemSpecP & prob_spec )
       cout << "!!          Fix your .ups file or update the ups_spec.xml\n";
       cout << "!!          specification.  Reason for failure is:\n";
       cout << "\n";
+      cout << pse.message() << "\n";
     }
     throw;
   }
@@ -1854,8 +1854,7 @@ validateFilename( const string & filename, const xmlNode * parent )
       }
       if( !validFile( fullFilename ) ) {
         filenameIsBad = true;
-        errorMsg = "Couldn't find include file: '" + fullFilename + 
-                   "' or '" + fullFilename + "'\n";
+        errorMsg = "Couldn't find include file: '" + filename + "' or '" + fullFilename + "'\n";
       }
     }
   }
@@ -1928,23 +1927,116 @@ printDoc( xmlNode * node, int depth )
 ProblemSpecP
 ProblemSpecReader::readInputFile( const string & filename, bool validate /* = false */ )
 {
+  vector<int> patches;
+  return readInputFile( filename, patches, validate );
+}
+
+ProblemSpecP
+ProblemSpecReader::readInputFile( const string & filename, const vector<int> & patches, bool validate /* = false */ )
+{
   MALLOC_TRACE_TAG_SCOPE( "ProblemSpecReader::readInputFile" );
   if( d_xmlData != 0 ) {
     return d_xmlData;
   }
 
   static bool initialized = false;
-  if (!initialized) {
+  if( !initialized ) {
     LIBXML_TEST_VERSION;
     initialized = true;
   }
 
   string full_filename = validateFilename( filename, NULL );
 
-  xmlDocPtr doc = xmlReadFile( full_filename.c_str(), 0, XML_PARSE_PEDANTIC );
+  xmlDocPtr doc;
+
+  if( patches.size() == 0 ) {
+    doc = xmlReadFile( full_filename.c_str(), 0, XML_PARSE_PEDANTIC | XML_PARSE_NOBLANKS );
+  }
+  else {
+
+    // Currently the following block of code is not used (as no one calls readInputFile with a list of patches.
+    // The purpose of this section of code is to stream throught the input file and copy only the relevant
+    // sections into a memory buffer, that will then be turned into a XML DOM.
+    // 
+    // WARNING, the following code strips out the <Patch> sections of the input xml file... though <Patch>,
+    // I believe, only exists in the timestep.xml file, which in most cases is not read in through
+    // this routine.
+    //
+    // I think this block of code was written in the early stages of investigating the XML memory bloat
+    // and probably should just be removed.
     
-  // you must free doc when you are done.
-  // Add the parser contents to the ProblemSpecP
+    const int        LINE_LENGTH = 4096;
+
+    char             line1[ LINE_LENGTH ];
+    char             line2[ LINE_LENGTH ];
+    char             line3[ LINE_LENGTH ];
+    char           * result;
+    int              length;
+    vector< char >   my_xml_data;
+    bool             done = false;
+
+    FILE           * the_xml_file = fopen( filename.c_str(), "r" );
+
+    while( !done ) {
+      result = fgets( line1, LINE_LENGTH, the_xml_file );
+      if( result == NULL ) {
+	done = true;
+      }
+      else {
+	length = strlen( result );
+	if( length >= LINE_LENGTH-2 ) {
+	  throw ProblemSetupException( "Line too long... Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
+	}
+
+	string node_name = line1;
+	collapse( node_name );
+	if( node_name == "<Patch>" ) {
+
+	  result = fgets( line2, LINE_LENGTH, the_xml_file );
+	  result = fgets( line3, LINE_LENGTH, the_xml_file );
+
+	  string proc = line3;
+	  collapse( proc );
+
+	  if( proc.substr( 0, 6 ) == "<proc>" ) {
+
+	    vector<char>   separators;
+	    separators.push_back( '<' );
+	    separators.push_back( '>' );
+	    vector<string> pieces = split_string( proc, separators );
+	    string         num_str = pieces[3];
+
+	    int            num = atoi( num_str.c_str() );
+
+	    if( num == patches[ 1 ] ) { /// QWERTY FIXME actually search the vector...
+
+	      vector<char> temp_line1( line1, line1 + length );
+	      my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
+
+	      length = strlen( line2 );
+	      vector<char> temp_line2( line2, line2 + length );
+	      my_xml_data.insert( my_xml_data.end(), temp_line2.begin(), temp_line2.end() );
+
+	      length = strlen( line3 );
+	      vector<char> temp_line3( line3, line3 + length );
+	      my_xml_data.insert( my_xml_data.end(), temp_line3.begin(), temp_line3.end() );
+	    }
+	  
+	  }
+	  else {
+	    throw ProblemSetupException( "Did not find <proc>... Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );
+	  }
+	}
+	else {
+	  vector<char> temp_line1( line1, line1 + length );
+	  my_xml_data.insert( my_xml_data.end(), temp_line1.begin(), temp_line1.end() );
+	}
+      }
+    } // end while()
+
+    fclose( the_xml_file );
+    doc = xmlReadMemory( &my_xml_data[0], my_xml_data.size(), NULL, NULL, XML_PARSE_PEDANTIC | XML_PARSE_NOBLANKS );
+  } // end else
 
   if (doc == 0) {
     throw ProblemSetupException( "Error parsing .ups file: " + full_filename , __FILE__, __LINE__ );

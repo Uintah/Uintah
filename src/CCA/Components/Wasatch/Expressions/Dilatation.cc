@@ -31,12 +31,16 @@ template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
 Dilatation( const Expr::TagList& velTags )
   : Expr::Expression<FieldT>(),
-    vel1t_( velTags[0] ),
-    vel2t_( velTags[1] ),
-    vel3t_( velTags[2] ),
-    is3d_( vel1t_ != Expr::Tag() && vel2t_ != Expr::Tag() && vel3t_ != Expr::Tag() )
+    doX_ (velTags[0] != Expr::Tag()),
+    doY_ (velTags[1] != Expr::Tag()),
+    doZ_ (velTags[2] != Expr::Tag()),
+    is3d_( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
+  
+  if (doX_)  vel1_ = this->template create_field_request<Vel1T>(velTags[0]);
+  if (doY_)  vel2_ = this->template create_field_request<Vel2T>(velTags[1]);
+  if (doZ_)  vel3_ = this->template create_field_request<Vel3T>(velTags[2]);
 }
 
 //--------------------------------------------------------------------
@@ -51,39 +55,11 @@ Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
 template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
 void
 Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( vel1t_ != Expr::Tag() )  exprDeps.requires_expression( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  exprDeps.requires_expression( vel2t_ );
-  if( vel3t_ != Expr::Tag() )  exprDeps.requires_expression( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
-void
-Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<Vel1T>::type& v1fm = fml.template field_manager<Vel1T>();
-  const typename Expr::FieldMgrSelector<Vel2T>::type& v2fm = fml.template field_manager<Vel2T>();
-  const typename Expr::FieldMgrSelector<Vel3T>::type& v3fm = fml.template field_manager<Vel3T>();
-
-  if( vel1t_ != Expr::Tag() )  vel1_ = &v1fm.field_ref( vel1t_ );
-  if( vel2t_ != Expr::Tag() )  vel2_ = &v2fm.field_ref( vel2t_ );
-  if( vel3t_ != Expr::Tag() )  vel3_ = &v3fm.field_ref( vel3t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT, typename Vel1T, typename Vel2T, typename Vel3T >
-void
-Dilatation<FieldT,Vel1T,Vel2T,Vel3T>::
 bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
-  if( vel1t_ != Expr::Tag() )  vel1GradOp_ = opDB.retrieve_operator<Vel1GradT>();
-  if( vel2t_ != Expr::Tag() )  vel2GradOp_ = opDB.retrieve_operator<Vel2GradT>();
-  if( vel3t_ != Expr::Tag() )  vel3GradOp_ = opDB.retrieve_operator<Vel3GradT>();
+  if (doX_) vel1GradOp_ = opDB.retrieve_operator<Vel1GradT>();
+  if (doY_) vel2GradOp_ = opDB.retrieve_operator<Vel2GradT>();
+  if (doZ_) vel3GradOp_ = opDB.retrieve_operator<Vel3GradT>();
 }
 
 //--------------------------------------------------------------------
@@ -99,12 +75,15 @@ evaluate()
   dil <<= 0.0; // avoid potential garbage in extra/ghost cells
 
   if( is3d_ ){ // fully inline for 3D
-    dil <<= (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) + (*vel3GradOp_)(*vel3_);
+    const Vel1T& u = vel1_->field_ref();
+    const Vel2T& v = vel2_->field_ref();
+    const Vel3T& w = vel3_->field_ref();
+    dil <<= (*vel1GradOp_)(u) + (*vel2GradOp_)(v) + (*vel3GradOp_)(w);
   }
   else{ // for 2D and 1D, assemble in pieces
-    if( vel1t_ != Expr::Tag() ) dil <<=       (*vel1GradOp_)(*vel1_);
-    if( vel2t_ != Expr::Tag() ) dil <<= dil + (*vel2GradOp_)(*vel2_);
-    if( vel3t_ != Expr::Tag() ) dil <<= dil + (*vel3GradOp_)(*vel3_);
+    if( doX_ ) dil <<=       (*vel1GradOp_)(vel1_->field_ref());
+    if( doY_ ) dil <<= dil + (*vel2GradOp_)(vel2_->field_ref());
+    if( doZ_ ) dil <<= dil + (*vel3GradOp_)(vel3_->field_ref());
   }
 }
 
