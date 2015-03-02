@@ -184,7 +184,7 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid() << ") to core 0\n";
     }
-    Thread::self()->set_affinity(0);   // bind main thread to core 0
+    Thread::self()->set_affinity(0);   // Bind main thread to core 0
   }
 
   // Create the TaskWorkers here (pinned to cores in TaskWorker::run())
@@ -211,7 +211,6 @@ ThreadedMPIScheduler::createSubScheduler()
   UintahParallelPort* lbp = getPort("load balancer");
   subsched->attachPort("load balancer", lbp);
   subsched->d_sharedState = d_sharedState;
-
   subsched->numThreads_ = Uintah::Parallel::getNumThreads() - 1;
 
   if (subsched->numThreads_ > 0) {
@@ -223,12 +222,12 @@ ThreadedMPIScheduler::createSubScheduler()
               << "   Using 1 thread for scheduling.\n"
               << "   Creating " << subsched->numThreads_ << plural << " for task execution.\n\n" << std::endl;
 
-    // Bind main execution thread and reset Uintah thread ID (to reflect number of last physical core)
+    // Bind main execution thread
     if (threadedmpi_compactaffinity.active()) {
       if ((threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0)) {
         threadedmpi_threaddbg << "Binding main subscheduler thread (ID " << Thread::self()->myid() << ") to core 0\n";
       }
-      Thread::self()->set_affinity(0);    // bind subscheduler main thread to core 0
+      Thread::self()->set_affinity(0);    // Bind subscheduler main thread to core 0
     }
 
     // Create TaskWorker threads for the subscheduler
