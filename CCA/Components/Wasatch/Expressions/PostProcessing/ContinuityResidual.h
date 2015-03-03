@@ -47,10 +47,10 @@ template< typename FieldT,
 class ContinuityResidual
  : public Expr::Expression<FieldT>
 {
-  DECLARE_FIELD(FieldT, drhodt_);
-  DECLARE_FIELD(Vel1T, u1_);
-  DECLARE_FIELD(Vel2T, u2_);
-  DECLARE_FIELD(Vel3T, u3_);
+  DECLARE_FIELD(FieldT, drhodt_)
+  DECLARE_FIELD(Vel1T, u1_)
+  DECLARE_FIELD(Vel2T, u2_)
+  DECLARE_FIELD(Vel3T, u3_)
   const bool constDen_, doX_, doY_, doZ_, is3d_;
 
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel1T, FieldT >::type Vel1GradT;

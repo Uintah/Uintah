@@ -65,7 +65,7 @@ class HomogeneousNucleationCoefficient
 //  const FieldT* superSat_; 
 //  const FieldT* eqConc_;
 //  const FieldT* surfaceEng_;      //field for variable surface energy
-  DECLARE_FIELDS(FieldT, superSat_, eqConc_, surfaceEng_);
+  DECLARE_FIELDS(FieldT, superSat_, eqConc_, surfaceEng_)
   
   const double molecularVolume_;
   const double surfaceEnergy_;    //value if constant surface energy

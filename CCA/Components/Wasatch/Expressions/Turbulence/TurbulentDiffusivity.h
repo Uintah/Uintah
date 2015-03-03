@@ -57,7 +57,7 @@ class TurbulentDiffusivity
 {
   
   const double tSchmidt_;
-  DECLARE_FIELDS(SVolField, tVisc_, rho_);
+  DECLARE_FIELDS(SVolField, tVisc_, rho_)
   
   TurbulentDiffusivity( const Expr::Tag rhoTag,
                         const double    tSchmidt,

@@ -51,7 +51,7 @@ namespace Wasatch{
   private:
     const double min_, max_;
     const bool hasVolFrac_;
-    DECLARE_FIELD(FieldT, volFrac_);
+    DECLARE_FIELD(FieldT, volFrac_)
     
   public:
     MinMaxClip( const Expr::Tag& volFracTag,

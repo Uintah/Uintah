@@ -69,12 +69,12 @@ evaluate()
   const double sigma = 5.67037321e-8; // Stefan-Boltzmann constant, W/(m^2 K^4)
   if( hasConstEnvTemp_ ){
     if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * sigma * ( pow( temperature, 4 ) - pow( envTempValue_, 4 ) );
-    else              divQ <<=             sigma * ( pow( temperature, 4 ) - pow( envTempValue_, 4 ) );
+    else              divQ <<=                         sigma * ( pow( temperature, 4 ) - pow( envTempValue_, 4 ) );
   }
   else{
     const FieldT& envTemp = envTemp_->field_ref();
     if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
-    else              divQ <<=             sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
+    else              divQ <<=                         sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
   }
 }
 

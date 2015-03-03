@@ -48,8 +48,8 @@ class PrecipitateEffectiveViscosity
   const double baseViscosity_;         // \mu_0
   const double power_;                 //power law exponent (n)
   const double minStrain_;             //cutoff so that vscosity does not go too high
-  DECLARE_FIELD(FieldT, volumeFraction_);
-  DECLARE_FIELD(FieldT, strainMagnitude_);
+  DECLARE_FIELD(FieldT, volumeFraction_)
+  DECLARE_FIELD(FieldT, strainMagnitude_)
   
   PrecipitateEffectiveViscosity( const Expr::Tag& volumeFractionTag,
                                  const Expr::Tag& strainMagnitudeTag,

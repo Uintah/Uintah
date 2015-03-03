@@ -66,7 +66,7 @@ private:
                        const bool inverted);
   std::vector<Uintah::GeometryPieceP> geomObjects_;
   const bool inverted_;
-  DECLARE_FIELDS(SVolField, x_, y_, z_);
+  DECLARE_FIELDS(SVolField, x_, y_, z_)
 };
 
 

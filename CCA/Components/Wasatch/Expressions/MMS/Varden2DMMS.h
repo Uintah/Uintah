@@ -98,8 +98,8 @@ private:
                                  const double uf,
                                  const double vf);
   const double r0_, r1_, d_, w_, k_, uf_, vf_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD (TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD (TimeField, t_)
 };
 
 //**********************************************************************
@@ -196,12 +196,12 @@ private:
   const Wasatch::VarDenParameters::VariableDensityModels model_;
   const bool useOnePredictor_;
   
-  DECLARE_FIELDS(XVolField, uStar_, u_);
-  DECLARE_FIELDS(YVolField, vStar_, v_);
-  DECLARE_FIELDS(ZVolField, wStar_, w_);
-  DECLARE_FIELDS(SVolField, dens_, densStar_, dens2Star_);
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELDS(TimeField, t_, dt_);
+  DECLARE_FIELDS(XVolField, uStar_, u_)
+  DECLARE_FIELDS(YVolField, vStar_, v_)
+  DECLARE_FIELDS(ZVolField, wStar_, w_)
+  DECLARE_FIELDS(SVolField, dens_, densStar_, dens2Star_)
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELDS(TimeField, t_, dt_)
   
   // Operators
   const GradXT* gradXOp_;
@@ -283,9 +283,9 @@ private:
                             const double uf,
                             const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(SVolField, rho_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(SVolField, rho_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //**********************************************************************
@@ -353,9 +353,9 @@ private:
         const double uf,
         const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(SVolField, rho_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(SVolField, rho_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //**********************************************************************
@@ -417,8 +417,8 @@ private:
                    const double uf,
                    const double vf );
   const double r0_, r1_, w_, k_, uf_, vf_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD (TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD (TimeField, t_)
 };
 
 //**********************************************************************
@@ -462,7 +462,7 @@ private:
   DiffusiveConstant( const Expr::Tag& rhoTag,
                      const double d);
   const double d_;
-  DECLARE_FIELD(FieldT, rho_);
+  DECLARE_FIELD(FieldT, rho_)
 };
 
 #endif //VarDen_2D_MMS_Expressions

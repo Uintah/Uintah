@@ -51,7 +51,7 @@ class PrecipitationBulkDiffusionCoefficient
 //  const FieldT* eqConc_;   //field form table of equilibrium concentration
 //  const FieldT* sBar_;     //S Bar term for ostwald ripening
 
-  DECLARE_FIELDS(FieldT, superSat_, eqConc_, sBar_);
+  DECLARE_FIELDS(FieldT, superSat_, eqConc_, sBar_)
   
   PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                          const Expr::Tag& eqConcTag,

@@ -16,7 +16,7 @@
 class ParticlePositionRHS :
 public Expr::Expression<ParticleField>
 {
-  DECLARE_FIELD(ParticleField, pvel_);
+  DECLARE_FIELD(ParticleField, pvel_)
   
   ParticlePositionRHS( const Expr::Tag& particleVelocity );
   

@@ -56,7 +56,7 @@ class AreaFraction
 {
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, DestT >::type InpterpSrcT2DestT;
   
-  DECLARE_FIELD(SVolField, src_);
+  DECLARE_FIELD(SVolField, src_)
   const bool valid_;
   const InpterpSrcT2DestT* interpSrcT2DestTOp_;
   

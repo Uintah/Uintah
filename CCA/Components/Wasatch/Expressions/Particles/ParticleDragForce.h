@@ -34,8 +34,8 @@ template< typename GasVelT >
 class ParticleDragForce : public Expr::Expression<ParticleField>
 {
   
-  DECLARE_FIELDS(ParticleField, pfd_, px_, py_, pz_, ptau_, pvel_, psize_);
-  DECLARE_FIELD (GasVelT, gvel_);
+  DECLARE_FIELDS(ParticleField, pfd_, px_, py_, pz_, ptau_, pvel_, psize_)
+  DECLARE_FIELD (GasVelT, gvel_)
   
   typedef typename SpatialOps::Particle::CellToParticle<GasVelT> GVel2POpT;
   GVel2POpT* gvOp_;

@@ -57,8 +57,8 @@ public:
   void evaluate();
   
 private:
-  DECLARE_FIELD(FieldT, u_);
-  DECLARE_FIELD(SpatialOps::SingleValueField, dt_);
+  DECLARE_FIELD(FieldT, u_)
+  DECLARE_FIELD(SpatialOps::SingleValueField, dt_)
 };
 
 #endif // OpenBC_Expr_h

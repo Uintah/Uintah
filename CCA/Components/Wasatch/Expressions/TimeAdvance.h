@@ -52,8 +52,8 @@ class TimeAdvance
 //  const SingleValue* dt_;
 //  const SingleValue* rkStage_;
   
-  DECLARE_FIELDS(FieldT, phiOld_, phiNew_, rhs_);
-  DECLARE_FIELDS(SingleValue, dt_, rkStage_);
+  DECLARE_FIELDS(FieldT, phiOld_, phiNew_, rhs_)
+  DECLARE_FIELDS(SingleValue, dt_, rkStage_)
   
   TimeAdvance( const std::string& solnVarName,
                const Expr::Tag& rhsTag,

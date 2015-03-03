@@ -47,7 +47,7 @@ class PrecipitationMonosurfaceCoefficient
 {
   const double growthCoefVal_;
   const double expConst_;
-  DECLARE_FIELD(FieldT, superSat_);
+  DECLARE_FIELD(FieldT, superSat_)
 
   PrecipitationMonosurfaceCoefficient( const Expr::Tag& superSatTag,
                                        const double growthCoefVal,
