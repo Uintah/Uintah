@@ -69,7 +69,7 @@ WARNING
    This scheduler is still EXPERIMENTAL and undergoing extensive
    development, not all tasks/components are GPU/MIC-enabled and/or thread-safe yet.
    
-   Requires MPI THREAD MULTIPLE support.
+   Requires MPI_THREAD_MULTIPLE support.
   
 ****************************************/
 
@@ -95,39 +95,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
     friend class UnifiedSchedulerWorker;
 
-  protected:
-
-    ConditionVariable        d_nextsignal;           // conditional wait mutex
-    Mutex                    d_nextmutex;            // mutex
-    UnifiedSchedulerWorker*  t_worker[MAX_THREADS];  // the workers
-    Thread*                  t_thread[MAX_THREADS];  // the threads themselves
-
-    // NOTE: A Mutex is not recursive
-    Mutex                    schedulerLock;          // scheduler lock (acquire and release quickly)
-
-#ifdef HAVE_CUDA
-
-    cudaStream_t* getCudaStream(int device);
-
-#endif
-
-    // thread shared data, needs lock protection when accessed
-    std::vector<int>           phaseTasks;
-    std::vector<int>           phaseTasksDone;
-    std::vector<DetailedTask*> phaseSyncTask;
-    std::vector<int>           histogram;
-    DetailedTasks*             dts;
-
-    int   currentIteration;
-    int   numTasksDone;
-    int   ntasks;
-    int   currphase;
-    int   numPhase;
-    bool  abort;
-    int   abort_point;
-
   private:
-    
+
     // Disable copy and assignment
     UnifiedScheduler( const UnifiedScheduler& );
     UnifiedScheduler& operator=( const UnifiedScheduler& );
@@ -136,10 +105,28 @@ class UnifiedScheduler : public MPIScheduler  {
 
     int  pendingMPIRecvs();
 
-    const Output*  oport_t;
-    CommRecMPI     sends_[MAX_THREADS];
-    QueueAlg       taskQueueAlg_;
-    int            numThreads_;
+    ConditionVariable          d_nextsignal;           // conditional wait mutex
+    Mutex                      d_nextmutex;            // next mutex
+    Mutex                      schedulerLock;          // scheduler lock (acquire and release quickly)
+    UnifiedSchedulerWorker*    t_worker[MAX_THREADS];  // the workers
+    Thread*                    t_thread[MAX_THREADS];  // the threads themselves
+
+    // thread shared data, needs lock protection when accessed
+    std::vector<int>           phaseTasks;
+    std::vector<int>           phaseTasksDone;
+    std::vector<DetailedTask*> phaseSyncTask;
+    std::vector<int>           histogram;
+    DetailedTasks*             dts;
+
+    QueueAlg taskQueueAlg_;
+    int      currentIteration;
+    int      numTasksDone;
+    int      ntasks;
+    int      currphase;
+    int      numPhases;
+    bool     abort;
+    int      abort_point;
+    int      numThreads_;
 
 #ifdef HAVE_CUDA
 
@@ -152,6 +139,8 @@ class UnifiedScheduler : public MPIScheduler  {
     void postH2DCopies( DetailedTask* dtask );
 
     void createCudaStreams( int device, int numStreams = 1 );
+
+    cudaStream_t* getCudaStream(int device);
 
     void reclaimCudaStreams( DetailedTask* dtask );
 
@@ -180,13 +169,9 @@ public:
   
   UnifiedSchedulerWorker( UnifiedScheduler* scheduler, int thread_id );
 
-  void assignTask( DetailedTask* task, int iteration );
-
-  DetailedTask* getTask();
-
   void run();
 
-  void quit() { d_quit=true; };
+  void quit() { d_quit = true; };
 
   double getWaittime();
 

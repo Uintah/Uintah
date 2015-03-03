@@ -41,8 +41,8 @@ using namespace Uintah;
 extern SCIRun::Mutex cerrLock;
 extern SCIRun::DebugStream lbDebug;
 
-SimpleLoadBalancer::SimpleLoadBalancer(const ProcessorGroup* myworld)
-   : LoadBalancerCommon(myworld)
+SimpleLoadBalancer::SimpleLoadBalancer( const ProcessorGroup * myworld ) :
+  LoadBalancerCommon( myworld )
 {
 }
 
@@ -51,11 +51,14 @@ SimpleLoadBalancer::~SimpleLoadBalancer()
 }
 
 int
-SimpleLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch)
+SimpleLoadBalancer::getPatchwiseProcessorAssignment( const Patch * patch )
 {
-  long long numProcs = d_myworld->size();
-  const Patch* realPatch = patch->getRealPatch();
-  int proc = (realPatch->getLevelIndex()*numProcs)/(long long)realPatch->getLevel()->numPatches();
-  ASSERTRANGE(proc, 0, d_myworld->size());
+  long long     numProcs  = d_myworld->size();
+  const Patch * realPatch = patch->getRealPatch();
+  int           proc      = (realPatch->getLevelIndex()*numProcs)/(long long)realPatch->getLevel()->numPatches();
+
+  ASSERTRANGE( proc, 0, d_myworld->size() );
+
   return proc;
 }
+

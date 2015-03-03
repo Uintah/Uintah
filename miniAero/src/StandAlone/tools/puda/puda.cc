@@ -35,49 +35,47 @@
 
 #include <StandAlone/tools/puda/puda.h>
 
+#include <Core/Containers/Array3.h>
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Disclosure/TypeDescription.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Math/Matrix3.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <StandAlone/tools/puda/AA_MMS.h>
+#include <StandAlone/tools/puda/asci.h>
 #include <StandAlone/tools/puda/ER_MMS.h>
 #include <StandAlone/tools/puda/GV_MMS.h>
-#include <StandAlone/tools/puda/PIC.h>
-#include <StandAlone/tools/puda/POL.h>
-#include <StandAlone/tools/puda/asci.h>
+#include <StandAlone/tools/puda/ICE_momentum.h>
 #include <StandAlone/tools/puda/jacquie.h>
-#include <StandAlone/tools/puda/pressure.h>
 #include <StandAlone/tools/puda/jim1.h>
 #include <StandAlone/tools/puda/jim2.h>
 #include <StandAlone/tools/puda/monica1.h>
 #include <StandAlone/tools/puda/monica2.h>
+#include <StandAlone/tools/puda/PIC.h>
+#include <StandAlone/tools/puda/POL.h>
+#include <StandAlone/tools/puda/pressure.h>
 #include <StandAlone/tools/puda/todd1.h>
-#include <StandAlone/tools/puda/ICE_momentum.h>
-
 #include <StandAlone/tools/puda/util.h>
 #include <StandAlone/tools/puda/varsummary.h>
 
-#include <Core/Containers/Array3.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
-
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <vector>
-#include <sstream>
-#include <iomanip>
 #include <algorithm>
-
 #include <cstdio>
 #include <cmath>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using namespace SCIRun;
 using namespace std;
@@ -97,8 +95,9 @@ void printParticleVariable(DataArchive* da,
 void
 usage( const std::string& badarg, const std::string& progname )
 {
-  if(badarg != "")
+  if(badarg != "") {
     cerr << "Error parsing argument: " << badarg << "\n";
+  }
   cerr << "Usage: " << progname << " [options] <archive file>\n\n";
   cerr << "Valid options are:\n";
   cerr << "  -h[elp]\n";
@@ -222,6 +221,9 @@ gridstats( DataArchive* da,
 int
 main(int argc, char** argv)
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
+
   if (argc <= 1) {
     // Print out the usage and die
     usage("", argv[0]);

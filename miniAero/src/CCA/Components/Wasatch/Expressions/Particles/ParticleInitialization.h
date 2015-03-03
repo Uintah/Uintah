@@ -142,8 +142,6 @@ public:
     std::vector <Uintah::GeometryPieceP > geomObjects_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -166,22 +164,6 @@ ParticleGeometryBased( const std::string& coord, const int seed, GeomValueMapT g
   coord_(coord),
   seed_(seed),
   geomObjects_(geomObjects)
-{}
-
-//--------------------------------------------------------------------
-
-
-void
-ParticleGeometryBased::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{}
-
-//--------------------------------------------------------------------
-
-
-void
-ParticleGeometryBased::
-bind_fields( const Expr::FieldManagerList& fml )
 {}
 
 //--------------------------------------------------------------------
@@ -240,7 +222,6 @@ evaluate()
 }
 
 //--------------------------------------------------------------------
-
 
 ParticleGeometryBased::Builder::
 Builder( const Expr::Tag& result,
@@ -314,8 +295,6 @@ public:
     const bool usePatchBounds_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -356,24 +335,10 @@ ParticleRandomIC( const std::string& coord,
 //--------------------------------------------------------------------
 
 void
-ParticleRandomIC::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{}
-
-//--------------------------------------------------------------------
-
-void
 ParticleRandomIC::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   patchContainer_ = opDB.retrieve_operator<Wasatch::UintahPatchContainer>();
 }
-
-//--------------------------------------------------------------------
-
-void
-ParticleRandomIC::
-bind_fields( const Expr::FieldManagerList& fml )
-{}
 
 //--------------------------------------------------------------------
 
@@ -500,8 +465,6 @@ public:
     const bool usePatchBounds_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -536,20 +499,6 @@ ParticleUniformIC( const double lo,
 {
   this->set_gpu_runnable( false );
 }
-
-//--------------------------------------------------------------------
-
-void
-ParticleUniformIC::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{}
-
-//--------------------------------------------------------------------
-
-void
-ParticleUniformIC::
-bind_fields( const Expr::FieldManagerList& fml )
-{}
 
 //--------------------------------------------------------------------
 

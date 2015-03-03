@@ -42,12 +42,13 @@ DiffusiveFlux( const Expr::Tag& rhoTag,
   : Expr::Expression<FluxT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( false       ),
-    phiTag_     ( phiTag      ),
-    coefTag_    ( coefTag     ),
-    rhoTag_     ( rhoTag      ),
-    turbDiffTag_( turbDiffTag ),
     coefVal_    ( 0.0         )
 {
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+   rho_ = this->template create_field_request<ScalarT>(rhoTag);
+  if(!isConstCoef_ )  coef_ = this->template create_field_request<ScalarT>(coefTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
+
   this->set_gpu_runnable( true );
 }
 
@@ -60,12 +61,12 @@ DiffusiveFlux( const Expr::Tag& rhoTag,
   : Expr::Expression<FluxT>(),
     isTurbulent_( turbDiffTag != Expr::Tag() ),
     isConstCoef_( true        ),
-    phiTag_     ( phiTag      ),
-    coefTag_    (             ),
-    rhoTag_     ( rhoTag      ),
-    turbDiffTag_( turbDiffTag ),
     coefVal_    ( coefVal     )
 {
+   phi_ = this->template create_field_request<ScalarT>(phiTag);
+   rho_ = this->template create_field_request<ScalarT>(rhoTag);
+  if( isTurbulent_ )  turbDiff_ = this->template create_field_request<ScalarT>(turbDiffTag);
+
   this->set_gpu_runnable( true );
 }
 
@@ -76,32 +77,6 @@ DiffusiveFlux<FluxT>::
 ~DiffusiveFlux()
 {}
 
-//--------------------------------------------------------------------
-
-template< typename FluxT >
-void
-DiffusiveFlux<FluxT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( phiTag_ );
-  exprDeps.requires_expression( rhoTag_ );
-  if(!isConstCoef_ ) exprDeps.requires_expression( coefTag_     );
-  if( isTurbulent_ ) exprDeps.requires_expression( turbDiffTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FluxT >
-void
-DiffusiveFlux<FluxT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ScalarT>::type& scalarFM = fml.template field_manager<ScalarT  >();
-  phi_  = &scalarFM.field_ref( phiTag_  );
-  rho_  = &scalarFM.field_ref( rhoTag_  );
-  if(!isConstCoef_ ) coef_     = &scalarFM.field_ref( coefTag_ );
-  if( isTurbulent_ ) turbDiff_ = &scalarFM.field_ref( turbDiffTag_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -124,12 +99,12 @@ evaluate()
   using namespace SpatialOps;
   FluxT& result = this->value();
   if( isTurbulent_ ){
-    if( isConstCoef_ ) result <<= - (*interpOp_)( *rho_ * (coefVal_ + *turbDiff_)) * (*gradOp_)(*phi_);
-    else               result <<= - (*interpOp_)( *rho_ * (*coef_   + *turbDiff_)) * (*gradOp_)(*phi_);
+    if( isConstCoef_ ) result <<= - (*interpOp_)( rho_->field_ref() * (coefVal_ + turbDiff_->field_ref())) * (*gradOp_)(phi_->field_ref());
+    else               result <<= - (*interpOp_)( rho_->field_ref() * (coef_->field_ref()   + turbDiff_->field_ref())) * (*gradOp_)(phi_->field_ref());
   }
   else{
-    if( isConstCoef_ ) result <<= - (*interpOp_)( *rho_ * coefVal_ ) * (*gradOp_)(*phi_);
-    else               result <<= - (*interpOp_)( *rho_ * *coef_   ) * (*gradOp_)(*phi_);
+    if( isConstCoef_ ) result <<= - (*interpOp_)( rho_->field_ref() * coefVal_ ) * (*gradOp_)(phi_->field_ref());
+    else               result <<= - (*interpOp_)( rho_->field_ref() * coef_->field_ref()   ) * (*gradOp_)(phi_->field_ref());
   }
 }
 

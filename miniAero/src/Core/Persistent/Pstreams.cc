@@ -38,21 +38,21 @@
  */
 
 #include <Core/Persistent/Pstreams.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Util/Endian.h>
-#include <Core/Exceptions/InternalError.h>
 
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/StringUtil.h>
 
 #include <fstream>
 #include <iostream>
-using namespace std;
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <cstring>
 
+using namespace std;
 
 namespace SCIRun {
 

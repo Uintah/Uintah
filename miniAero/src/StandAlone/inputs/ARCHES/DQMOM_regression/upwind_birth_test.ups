@@ -15,13 +15,12 @@
     <delt_min>0.01</delt_min>
     <delt_max>0.01</delt_max>
     <timestep_multiplier>0.3</timestep_multiplier>
-    <max_Timesteps>30</max_Timesteps>
+    <max_Timesteps>34</max_Timesteps>
   </Time>
 
   <DataArchiver>
     <filebase>upwind_birth_test.uda</filebase>
-    <outputTimestepInterval>2</outputTimestepInterval>
-    <outputInitTimestep/>
+    <outputTimestepInterval>5</outputTimestepInterval>
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
@@ -52,7 +51,7 @@
     <save label="weight_birth_qn1"/>
     <save label="length_birth_qn0"/>
     <save label="length_birth_qn1"/>
-    <checkpoint cycle="2" interval="0.05"/>
+    <checkpoint cycle="2" interval="0.03"/>
     <compression>gzip</compression>
   </DataArchiver>
 

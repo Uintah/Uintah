@@ -36,7 +36,7 @@ using namespace std;
 cptiInterpolator::cptiInterpolator()
 {
   d_size = 32; //number of grid nodes that might be affected by a particle corner
-  d_patch = 0; //xxxxx
+  d_patch = 0; 
   d_lcrit = 1.e10;  //set large value for critical particle size beyond which cpdi domain freezes
 }
 
@@ -69,11 +69,10 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: p
                                             const Matrix3& size,      //input: reference size r-vectors of the particle
                                             const Matrix3& defgrad)   //input: deformation gradient tensor
 {
-  Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos)); //Point(pos) is particle center location; positionToIndex tells xxxxx
+  Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));   //Point(pos) is particle center location
 
-  // Apply equation $\vectr=\DefGrad\daht\vectr_0$ to get edges of deformed parallelepiped
   Matrix3 dsize=defgrad*size;  //dsize is matrix of r vectors, created by F dotted into initial r0 vectors (in size array)
-  vector<Vector> relative_node_location(4,Vector(0.0,0.0,0.0));
+  Vector relative_node_location[4];
 
 
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
@@ -140,10 +139,10 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: p
   double fz1;
   int ix,iy,iz;
 
-  const double one_fourth = 1.0/(4.0);
-  vector<double> phi(8);
+  const double one_fourth = 0.25;
+  double phi[8];
 
- // now  we will loop over each of these corners and use the deformation gradient to find the current location:
+  // now  we will loop over each of these corners and use the deformation gradient to find the current location:
   for(int i=0;i<4;i++){
     int i8  = i*8;  //array integer cell number for 0th corner
     int i81 = i*8+1; // etc.
@@ -185,7 +184,7 @@ void cptiInterpolator::findCellAndWeights(const Point& pos,           //input: p
     phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
     phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
 
-    S[i8]   = one_fourth*phi[0];
+    S[i8]  = one_fourth*phi[0];
     S[i81] = one_fourth*phi[1];
     S[i82] = one_fourth*phi[2];
     S[i83] = one_fourth*phi[3];
@@ -205,7 +204,7 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
   Matrix3 dsize=defgrad*size;
-  vector<Vector> relative_node_location(4,Vector(0.0,0.0,0.0));
+  Vector relative_node_location[4];
 
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
@@ -276,11 +275,11 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   Vector r2=Vector(dsize(0,1),dsize(1,1),dsize(2,1));
   Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
 
-  double volume = dsize.Determinant()/(6.0);
+  double volume = dsize.Determinant()/6.0;
 
   double one_over_6V = 1.0/(6.0*volume);
-  vector<Vector> alpha(4,Vector(0.0,0.0,0.0));
-  vector<double> phi(8);
+  Vector alpha[4];
+  double phi[8];
   // construct the vectors necessary for the gradient calculation:
 
   alpha[1][0]   =  one_over_6V*(r2[1]*r3[2]-r2[2]*r3[1]);
@@ -309,7 +308,7 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     int i85 = i*8+5;
     int i86 = i*8+6;
     int i87 = i*8+7;
-    //    first we need to find the position vector of the ith corner of the particle with respect to the particle center:
+    // first we need to find the position vector of the ith corner of the particle with respect to the particle center:
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
     ix = Floor(current_corner_pos.x());
     iy = Floor(current_corner_pos.y());
@@ -340,9 +339,9 @@ void cptiInterpolator::findCellAndShapeDerivatives(const Point& pos,
     phi[6] = fx *fy *fz;  // x1+r1x, y1+r2y, z1+r3z
     phi[7] = fx1*fy *fz;  // x1    , y1+r2y, z1+r3z
 
-    d_S[i8][0]   = alpha[i][0]*phi[0];
-    d_S[i8][1]   = alpha[i][1]*phi[0];
-    d_S[i8][2]   = alpha[i][2]*phi[0];
+    d_S[i8][0]  = alpha[i][0]*phi[0];
+    d_S[i8][1]  = alpha[i][1]*phi[0];
+    d_S[i8][2]  = alpha[i][2]*phi[0];
 
     d_S[i81][0] = alpha[i][0]*phi[1];
     d_S[i81][1] = alpha[i][1]*phi[1];
@@ -385,7 +384,7 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, /
 
   Matrix3 dsize=defgrad*size;
 
-  vector<Vector> relative_node_location(4,Vector(0.0,0.0,0.0));  //allocate scratch variable
+  Vector relative_node_location[4];  
 
   relative_node_location[0]=Vector(-dsize(0,0)-dsize(0,1)-dsize(0,2),
                                     -dsize(1,0)-dsize(1,1)-dsize(1,2),
@@ -456,9 +455,9 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, /
   Vector r3=Vector(dsize(0,2),dsize(1,2),dsize(2,2));
   double volume = dsize.Determinant()/6.0;
   double one_over_6V = 1.0/(6.0*volume);
-  const double one_fourth = 1.0/(4.0);
-  vector<Vector> alpha(4,Vector(0.0,0.0,0.0));
-  vector<double> phi(8);
+  const double one_fourth = 0.25;
+  Vector alpha[4];
+  double phi[8];
   // construct the vectors necessary for the gradient calculation:
   alpha[1][0]   =  one_over_6V*(r2[1]*r3[2]-r2[2]*r3[1]);
   alpha[1][1]   =  one_over_6V*(r2[2]*r3[0]-r2[0]*r3[2]);
@@ -478,7 +477,7 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, /
 
   // now  we will loop over each of these "nodes" and use the deformation gradient to find the current location: 
   for(int i=0;i<4;i++){
-    //    first we need to find the position vector of the ith corner of the particle:
+    // first we need to find the position vector of the ith corner of the particle:
     current_corner_pos = Vector(cellpos) + relative_node_location[i];
     int i8  = i*8;
     int i81 = i*8+1;
@@ -526,9 +525,9 @@ void cptiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos, /
     S[i86] = one_fourth*phi[6];
     S[i87] = one_fourth*phi[7];
 
-    d_S[i8][0]   = alpha[i][0]*phi[0];
-    d_S[i8][1]   = alpha[i][1]*phi[0];
-    d_S[i8][2]   = alpha[i][2]*phi[0];
+    d_S[i8][0]  = alpha[i][0]*phi[0];
+    d_S[i8][1]  = alpha[i][1]*phi[0];
+    d_S[i8][2]  = alpha[i][2]*phi[0];
 
     d_S[i81][0] = alpha[i][0]*phi[1];
     d_S[i81][1] = alpha[i][1]*phi[1];

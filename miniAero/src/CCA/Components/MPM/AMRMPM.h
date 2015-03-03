@@ -246,6 +246,14 @@ protected:
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw);
 
+  // Used to compute the particles initial physical size
+  // for use in deformed particle visualization
+  virtual void computeParticleScaleFactor(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw);
+
   // Update particle quantities only
   virtual void finalParticleUpdate(const ProcessorGroup*,
                                    const PatchSubset* patches,
@@ -340,6 +348,10 @@ protected:
   void scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP&, 
                                                    const PatchSet*,
                                                    const MaterialSet*);
+
+  virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
+                                                  const PatchSet*,
+                                                  const MaterialSet*);
 
   virtual void scheduleFinalParticleUpdate(SchedulerP&,
                                            const PatchSet*,

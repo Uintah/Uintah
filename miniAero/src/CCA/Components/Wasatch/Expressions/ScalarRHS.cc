@@ -44,7 +44,7 @@ resolve_field_tag( const FieldSelector field,
 
 template< typename FieldT >
 ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
-                              const std::vector<Expr::Tag>& srcTags,
+                              const Expr::TagList srcTags,
                               const Expr::Tag& densityTag,
                               const Expr::Tag& drhodtTag,
                               const bool isConstDensity,
@@ -92,8 +92,7 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 
     srcTags_( srcTags )
 {
-  srcTags_.push_back( resolve_field_tag( SOURCE_TERM, fieldTags ) );
-  nullify_fields();
+//  srcTags_.push_back( resolve_field_tag( SOURCE_TERM, fieldTags ) );
 
   if( !strongForm_ ){
     if( phiTag_ == Expr::Tag() ){
@@ -123,6 +122,31 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
   }
 
   this->set_gpu_runnable( true );
+  
+  if( doXConv_ )  xConvFlux_ = this->template create_field_request<XFluxT>( convTagX_ );
+  if( doYConv_ )  yConvFlux_ = this->template create_field_request<YFluxT>( convTagY_ );
+  if( doZConv_ )  zConvFlux_ = this->template create_field_request<ZFluxT>( convTagZ_ );
+  
+  if( doXDiff_ )  xDiffFlux_ = this->template create_field_request<XFluxT>( diffTagX_ );
+  if( doYDiff_ )  yDiffFlux_ = this->template create_field_request<YFluxT>( diffTagY_ );
+  if( doZDiff_ )  zDiffFlux_ = this->template create_field_request<ZFluxT>( diffTagZ_ );
+  
+  if ( haveVolFrac_ ) {
+     volfrac_  = this->template create_field_request<FieldT>( volFracTag_);
+  }
+  
+  if ( doXDir_ && haveXAreaFrac_ )  xareafrac_  = this->template create_field_request<XVolField>( xAreaFracTag_);
+  if ( doYDir_ && haveYAreaFrac_ )  yareafrac_  = this->template create_field_request<YVolField>( yAreaFracTag_);
+  if ( doZDir_ && haveZAreaFrac_ )  zareafrac_  = this->template create_field_request<ZVolField>( zAreaFracTag_);
+
+  this->template create_field_vector_request<FieldT>(srcTags_, srcTerms_);
+  
+  if( isConstDensity_ && (srcTerms_.size()>0 || !strongForm_) )  rho_  = this->template create_field_request<SVolField>( densityTag_);
+  
+  if( !strongForm_ ){
+     phi_  = this->template create_field_request<SVolField>( phiTag_);
+     drhodt_  = this->template create_field_request<SVolField>( drhodtTag_);
+  }
 }
 
 //------------------------------------------------------------------
@@ -130,95 +154,6 @@ ScalarRHS<FieldT>::ScalarRHS( const FieldTagInfo& fieldTags,
 template< typename FieldT >
 ScalarRHS<FieldT>::~ScalarRHS()
 {}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
-void ScalarRHS<FieldT>::nullify_fields()
-{
-  xConvFlux_ = NULL;  yConvFlux_ = NULL;  zConvFlux_ = NULL;
-  xDiffFlux_ = NULL;  yDiffFlux_ = NULL;  zDiffFlux_ = NULL;
-  divOpX_    = NULL;  divOpY_    = NULL;  divOpZ_    = NULL;
-  phi_       = NULL;  drhodt_    = NULL;
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
-void ScalarRHS<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<XFluxT   >::type& xFluxFM  = fml.field_manager<XFluxT   >();
-  const typename Expr::FieldMgrSelector<YFluxT   >::type& yFluxFM  = fml.field_manager<YFluxT   >();
-  const typename Expr::FieldMgrSelector<ZFluxT   >::type& zFluxFM  = fml.field_manager<ZFluxT   >();
-  const typename Expr::FieldMgrSelector<FieldT   >::type& scalarFM = fml.field_manager<FieldT   >();
-  const typename Expr::FieldMgrSelector<XVolField>::type& xVolFM   = fml.field_manager<XVolField>();
-  const typename Expr::FieldMgrSelector<YVolField>::type& yVolFM   = fml.field_manager<YVolField>();
-  const typename Expr::FieldMgrSelector<ZVolField>::type& zVolFM   = fml.field_manager<ZVolField>();
-  const typename Expr::FieldMgrSelector<SVolField>::type& sVolFM   = fml.field_manager<SVolField>();
-
-  if( doXConv_ )  xConvFlux_ = &xFluxFM.field_ref( convTagX_ );
-  if( doYConv_ )  yConvFlux_ = &yFluxFM.field_ref( convTagY_ );
-  if( doZConv_ )  zConvFlux_ = &zFluxFM.field_ref( convTagZ_ );
-  
-  if( doXDiff_ )  xDiffFlux_ = &xFluxFM.field_ref( diffTagX_ );
-  if( doYDiff_ )  yDiffFlux_ = &yFluxFM.field_ref( diffTagY_ );
-  if( doZDiff_ )  zDiffFlux_ = &zFluxFM.field_ref( diffTagZ_ );
-
-  if ( haveVolFrac_ ) {
-    volfrac_ = &sVolFM.field_ref( volFracTag_ );
-  }
-
-  if ( doXDir_ && haveXAreaFrac_ ) xareafrac_ = &xVolFM.field_ref( xAreaFracTag_ );
-  if ( doYDir_ && haveYAreaFrac_ ) yareafrac_ = &yVolFM.field_ref( yAreaFracTag_ );
-  if ( doZDir_ && haveZAreaFrac_ ) zareafrac_ = &zVolFM.field_ref( zAreaFracTag_ );
-
-  srcTerm_.clear();
-  for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
-    if( isrc->context() != Expr::INVALID_CONTEXT ) {
-      srcTerm_.push_back( &scalarFM.field_ref( *isrc ) );
-    }
-  }
-
-  if( isConstDensity_ && (srcTerm_.size()>0 || !strongForm_) )
-    rho_ = &sVolFM.field_ref( densityTag_ );
-
-  if( !strongForm_ ){
-    phi_    = &fml.field_ref<FieldT>( phiTag_ );
-    drhodt_ = &sVolFM.field_ref( drhodtTag_ );
-  }
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
-void ScalarRHS<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( doXConv_ )  exprDeps.requires_expression( convTagX_ );
-  if( doYConv_ )  exprDeps.requires_expression( convTagY_ );
-  if( doZConv_ )  exprDeps.requires_expression( convTagZ_ );
-
-  if( doXDiff_ )  exprDeps.requires_expression( diffTagX_ );
-  if( doYDiff_ )  exprDeps.requires_expression( diffTagY_ );
-  if( doZDiff_ )  exprDeps.requires_expression( diffTagZ_ );
-
-  if( haveVolFrac_              ) exprDeps.requires_expression( volFracTag_   );
-  if( doXDir_ && haveXAreaFrac_ ) exprDeps.requires_expression( xAreaFracTag_ );
-  if( doYDir_ && haveYAreaFrac_ ) exprDeps.requires_expression( yAreaFracTag_ );
-  if( doZDir_ && haveZAreaFrac_ ) exprDeps.requires_expression( zAreaFracTag_ );
-
-  for( std::vector<Expr::Tag>::const_iterator isrc=srcTags_.begin(); isrc!=srcTags_.end(); ++isrc ){
-    if( isrc->context() != Expr::INVALID_CONTEXT ){
-      exprDeps.requires_expression( *isrc );
-      if( isConstDensity_ ) exprDeps.requires_expression( densityTag_ );
-    }
-  }
-
-  if( !strongForm_ ){
-    exprDeps.requires_expression( densityTag_ );
-    exprDeps.requires_expression( drhodtTag_  );
-    exprDeps.requires_expression( phiTag_     );
-  }
-}
 
 //------------------------------------------------------------------
 
@@ -255,15 +190,27 @@ void ScalarRHS<FieldT>::evaluate()
 
   if( doXConv_ &&  doYConv_ && doZConv_ && doXDiff_ && doYDiff_ && doZDiff_ ){
     // inline everything
+    
+    const XFluxT& xConvFlux  =  xConvFlux_->field_ref();
+    const YFluxT& yConvFlux  =  yConvFlux_->field_ref();
+    const ZFluxT& zConvFlux  =  zConvFlux_->field_ref();
+    
+    const XFluxT& xDiffFlux  =  xDiffFlux_->field_ref();
+    const YFluxT& yDiffFlux  =  yDiffFlux_->field_ref();
+    const ZFluxT& zDiffFlux  =  zDiffFlux_->field_ref();
+    
     if( haveXAreaFrac_ ){ // previous error checking enforces that y and z area fractions are also present
-      rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * ( *xConvFlux_ + *xDiffFlux_ ) )
-              -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * ( *yConvFlux_ + *yDiffFlux_ ) )
-              -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * ( *zConvFlux_ + *zDiffFlux_ ) );
+      const XVolField& xAreaFrac = xareafrac_->field_ref();
+      const YVolField& yAreaFrac = yareafrac_->field_ref();
+      const ZVolField& zAreaFrac = zareafrac_->field_ref();
+      rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(xAreaFrac) * ( xConvFlux + xDiffFlux ) )
+              -(*divOpY_)( (*yAreaFracInterpOp_)(yAreaFrac) * ( yConvFlux + yDiffFlux ) )
+              -(*divOpZ_)( (*zAreaFracInterpOp_)(zAreaFrac) * ( zConvFlux + zDiffFlux ) );
     }
     else{
-        rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ )
-                -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ )
-                -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
+        rhs <<= -(*divOpX_)( xConvFlux + xDiffFlux )
+                -(*divOpY_)( yConvFlux + yDiffFlux )
+                -(*divOpZ_)( zConvFlux + zDiffFlux );
     }
   }
   else{
@@ -271,58 +218,59 @@ void ScalarRHS<FieldT>::evaluate()
     // running as many production scale calculations in these configurations
     
     if (doXConv_ && doXDiff_) {
-      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * (*xConvFlux_ + *xDiffFlux_) );
-      else                 rhs <<= -(*divOpX_)( *xConvFlux_ + *xDiffFlux_ );
+      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(xareafrac_->field_ref()) * (xConvFlux_->field_ref() + xDiffFlux_->field_ref()) );
+      else                 rhs <<= -(*divOpX_)( xConvFlux_->field_ref() + xDiffFlux_->field_ref() );
     } else if (doXConv_) {
-      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xConvFlux_ );
-      else                 rhs <<= -(*divOpX_)( *xConvFlux_ );
+      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(xareafrac_->field_ref()) * xConvFlux_->field_ref() );
+      else                 rhs <<= -(*divOpX_)( xConvFlux_->field_ref() );
     } else if (doXDiff_) {
-      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(*xareafrac_) * *xDiffFlux_ );
-      else                 rhs <<= -(*divOpX_)( *xDiffFlux_ );
+      if( haveXAreaFrac_ ) rhs <<= -(*divOpX_)( (*xAreaFracInterpOp_)(xareafrac_->field_ref()) * xDiffFlux_->field_ref() );
+      else                 rhs <<= -(*divOpX_)( xDiffFlux_->field_ref() );
     } else{
       rhs <<= 0.0; // zero so that we can sum in Y and Z contributions as necessary
     }
 
     if (doYConv_ && doYDiff_) {
-      if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * (*yConvFlux_ + *yDiffFlux_) );
-      else                 rhs <<= rhs -(*divOpY_)( *yConvFlux_ + *yDiffFlux_ );
+      if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(yareafrac_->field_ref()) * (yConvFlux_->field_ref() + yDiffFlux_->field_ref()) );
+      else                 rhs <<= rhs -(*divOpY_)( yConvFlux_->field_ref() + yDiffFlux_->field_ref() );
     } else if (doYConv_) {
-      if( haveYAreaFrac_ ) rhs <<= rhs - (*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yConvFlux_ );
-      else                 rhs <<= rhs - (*divOpY_)( *yConvFlux_ );
+      if( haveYAreaFrac_ ) rhs <<= rhs - (*divOpY_)( (*yAreaFracInterpOp_)(yareafrac_->field_ref()) * yConvFlux_->field_ref() );
+      else                 rhs <<= rhs - (*divOpY_)( yConvFlux_->field_ref() );
     } else if (doYDiff_) {
-      if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(*yareafrac_) * *yDiffFlux_ );
-      else                 rhs <<= rhs -(*divOpY_)( *yDiffFlux_ );
+      if( haveYAreaFrac_ ) rhs <<= rhs -(*divOpY_)( (*yAreaFracInterpOp_)(yareafrac_->field_ref()) * yDiffFlux_->field_ref() );
+      else                 rhs <<= rhs -(*divOpY_)( yDiffFlux_->field_ref() );
     }
 
     if (doZConv_ && doZDiff_) {
-      if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * (*zConvFlux_ + *zDiffFlux_) );
-      else                 rhs <<= rhs -(*divOpZ_)( *zConvFlux_ + *zDiffFlux_ );
+      if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(zareafrac_->field_ref()) * (zConvFlux_->field_ref() + zDiffFlux_->field_ref()) );
+      else                 rhs <<= rhs -(*divOpZ_)( zConvFlux_->field_ref() + zDiffFlux_->field_ref() );
     } else if (doZConv_) {
-      if( haveZAreaFrac_ ) rhs <<= rhs - (*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zConvFlux_ );
-      else                 rhs <<= rhs - (*divOpZ_)( *zConvFlux_ );
+      if( haveZAreaFrac_ ) rhs <<= rhs - (*divOpZ_)( (*zAreaFracInterpOp_)(zareafrac_->field_ref()) * zConvFlux_->field_ref() );
+      else                 rhs <<= rhs - (*divOpZ_)( zConvFlux_->field_ref() );
     } else if (doZDiff_) {
-      if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(*zareafrac_) * *zDiffFlux_ );
-      else                 rhs <<= rhs -(*divOpZ_)( *zDiffFlux_ );
+      if( haveZAreaFrac_ ) rhs <<= rhs -(*divOpZ_)( (*zAreaFracInterpOp_)(zareafrac_->field_ref()) * zDiffFlux_->field_ref() );
+      else                 rhs <<= rhs -(*divOpZ_)( zDiffFlux_->field_ref() );
     }
   } // 2D and 1D cases
 
   // accumulate source terms in.  This isn't quite as efficient
   // because we don't have a great way to inline all of this yet.
-  typename SrcVec::const_iterator isrc;
-  for( isrc=srcTerm_.begin(); isrc!=srcTerm_.end(); ++isrc ) {
+  typename std::vector<FieldT>::const_iterator isrc;
+
+  for( size_t i=0; i<srcTerms_.size(); ++i ) {
     // for constant density cases, scale by density
     if( isConstDensity_ ){
-      if( haveVolFrac_ )  rhs <<= rhs + **isrc * (*volFracInterpOp_)(*volfrac_) / *rho_;
-      else                rhs <<= rhs + **isrc / *rho_;
+      if( haveVolFrac_ )  rhs <<= rhs + srcTerms_[i]->field_ref() * (*volFracInterpOp_)(volfrac_->field_ref()) / rho_->field_ref();
+      else                rhs <<= rhs + srcTerms_[i]->field_ref() / rho_->field_ref();
     }
     else{
-      if( haveVolFrac_ )  rhs <<= rhs + **isrc * (*volFracInterpOp_)(*volfrac_);
-      else                rhs <<= rhs + **isrc;
+      if( haveVolFrac_ )  rhs <<= rhs + srcTerms_[i]->field_ref() * (*volFracInterpOp_)(volfrac_->field_ref());
+      else                rhs <<= rhs + srcTerms_[i]->field_ref();
     }
   }
 
   // for weak form (variable density) cases, augment with drhodt term and scale by density
-  if( !strongForm_ && !isConstDensity_ ) rhs <<= ( rhs - *phi_ * *drhodt_ ) / *rho_;
+  if( !strongForm_ && !isConstDensity_ ) rhs <<= ( rhs - phi_->field_ref() * drhodt_->field_ref() ) / rho_->field_ref();
 }
 
 //------------------------------------------------------------------
@@ -330,7 +278,7 @@ void ScalarRHS<FieldT>::evaluate()
 template< typename FieldT >
 ScalarRHS<FieldT>::Builder::Builder( const Expr::Tag& result,
                                      const FieldTagInfo& fieldInfo,
-                                     const std::vector<Expr::Tag>& sources,
+                                     const Expr::TagList sources,
                                      const Expr::Tag& densityTag,
                                      const bool isConstDensity,
                                      const bool isStrongForm,

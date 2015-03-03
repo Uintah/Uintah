@@ -25,7 +25,7 @@
 #ifndef Dissolution_Expr_h
 #define Dissolution_Expr_h
 
-#define KAYDISSOLUTION 30.0 * 0.25 * (1.0 - erf(8.0 * log(**abscissaeIterator / rMin_))) * (1.0 - erf(5.0 * (-2.5-log10(**weightsIterator)))) * (**weightsIterator) * pow((**abscissaeIterator),momentOrder_)
+#define KAYDISSOLUTION 30.0 * 0.25 * (1.0 - erf(8.0 * log(a / rMin_))) * (1.0 - erf(5.0 * (-2.5-log10(w)))) * (w) * pow((a),momentOrder_)
 #include <expression/Expression.h>
 
 /**
@@ -39,20 +39,17 @@ class Dissolution
 : public Expr::Expression<FieldT>
 {
   
-  const Expr::TagList weightsTagList_;   // these are the tags of all the known weights
-  const Expr::TagList abscissaeTagList_; // these are the tags of all the known absicissae
-  const Expr::Tag sBarTag_;              // SBar form teh ostwald ripening term
-  const Expr::Tag superSatTag_;          // Supersaturation in aqueous phase
-  const FieldT* sBar_;
-  const FieldT* superSat_;
+//  const Expr::TagList weightsTagList_;   // these are the tags of all the known weights
+//  const Expr::TagList abscissaeTagList_; // these are the tags of all the known absicissae
+//  const Expr::Tag sBarTag_;              // SBar form teh ostwald ripening term
+//  const Expr::Tag superSatTag_;          // Supersaturation in aqueous phase
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
+  DECLARE_FIELDS(FieldT, sBar_, superSat_);
   
   const double rMin_;           //smallest radius possible before deaht occurs
   const double momentOrder_;    // order of the current moment
   const double deathCoef_; 
-  
-  typedef std::vector<const FieldT*> FieldVec;
-  FieldVec weights_;
-  FieldVec abscissae_;
   
   Dissolution( const Expr::TagList& weightsTagList,
                const Expr::TagList& abscissaeTagList,
@@ -100,8 +97,6 @@ public:
   
   ~Dissolution(){}
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 };
@@ -126,46 +121,14 @@ Dissolution( const Expr::TagList& weightsTagList,
              const double momentOrder,
              const double deathCoef )
 : Expr::Expression<FieldT>(),
-  weightsTagList_(weightsTagList),
-  abscissaeTagList_(abscissaeTagList),
-  sBarTag_(sBarTag),
-  superSatTag_(superSatTag),
   rMin_(rMin),
   momentOrder_(momentOrder),
   deathCoef_(deathCoef)
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Dissolution<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
 {
-  exprDeps.requires_expression( weightsTagList_ );
-  exprDeps.requires_expression( abscissaeTagList_ );
-  exprDeps.requires_expression( sBarTag_ );
-  exprDeps.requires_expression( superSatTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-Dissolution<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& volfm = fml.template field_manager<FieldT>();
-  weights_.clear();
-  abscissae_.clear();
-  for (Expr::TagList::const_iterator iweight=weightsTagList_.begin(); iweight!=weightsTagList_.end(); iweight++) {
-    weights_.push_back(&volfm.field_ref(*iweight));
-  }
-  for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
-    abscissae_.push_back(&volfm.field_ref(*iabscissa));
-  }
-  sBar_     = &volfm.field_ref( sBarTag_ );
-  superSat_ = &volfm.field_ref( superSatTag_ );
+  this->template create_field_vector_request<FieldT>(weightsTagList, weights_);
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
+   sBar_ = this->template create_field_request<FieldT>(sBarTag);
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
 }
 
 //--------------------------------------------------------------------
@@ -179,15 +142,13 @@ evaluate()
   FieldT& result = this->value();
   result <<= 0.0;
   
-  typename FieldVec::const_iterator abscissaeIterator = abscissae_.begin();
-  for( typename FieldVec::const_iterator weightsIterator=weights_.begin();
-      weightsIterator!=weights_.end();
-      ++weightsIterator, ++abscissaeIterator) {
-    const FieldT& w = **weightsIterator;
-    const FieldT& a = **abscissaeIterator;
-	  result <<= result - cond( *sBar_ > *superSat_ && a < rMin_ && a > 0.0 && w > 1e-3, deathCoef_ * KAYDISSOLUTION)
+  const FieldT& sBar = sBar_->field_ref();
+  const FieldT& S = superSat_->field_ref();
+  for (size_t i = 0; i<weights_.size(); ++i) {
+    const FieldT& w = weights_[i]->field_ref();
+    const FieldT& a = abscissae_[i]->field_ref();
+	  result <<= result - cond( sBar > S && a < rMin_ && a > 0.0 && w > 1e-3, deathCoef_ * KAYDISSOLUTION)
                             (  0.0 );
-    
   }
 }
 

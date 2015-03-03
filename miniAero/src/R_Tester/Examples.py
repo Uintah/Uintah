@@ -53,11 +53,13 @@ NIGHTLYTESTS = [   ("poisson1",         "poisson1.ups",         1, "ALL"),
                    ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"]),
                    ("RMCRT_1L_perf",    "RMCRT_1L_perf.ups",    1, "ALL", ["do_performance_test"]),
                    ("RMCRT_DO_perf",    "RMCRT_DO_perf.ups",    1, "ALL", ["do_performance_test"]),
-#
+
 # multi-threaded tests
-                   ("RMCRT_test_1L_thread", "RMCRT_test_1L.ups", 1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-                   ("RMCRT_bm1_DO_thread",  "RMCRT_bm1_DO.ups",  1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
-                   ("RMCRT_ML_thread",      "RMCRT_ML.ups",      1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_test_1L_thread",       "RMCRT_test_1L.ups", 1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_bm1_DO_thread",        "RMCRT_bm1_DO.ups",  1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
+                   ("RMCRT_bm1_DO_thread_2proc",  "RMCRT_bm1_DO.ups",  2,   "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread",            "RMCRT_ML.ups",      1.1, "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+                   ("RMCRT_ML_thread_2proc",      "RMCRT_ML.ups",      2,   "ALL", ["no_restart", "exactComparison", "sus_options=-nthreads 4"])
                ]
 
 # Tests that are run during local regression testing
@@ -68,7 +70,7 @@ LOCALTESTS   = [   ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1, "ALL", ["exac
                    ("RMCRT_radiometer", "RMCRT_radiometer.ups", 8, "ALL", ["exactComparison"]),
                    ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1, "ALL", ["exactComparison"]),
                    ("RMCRT_isoScat",    "RMCRT_isoScat.ups",    1, "ALL", ["exactComparison"]),
-                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"]),
+                   ("RMCRT_udaInit",    "RMCRT_udaInit.ups",    1, "ALL", ["exactComparison","no_restart"])
                ]
 
 FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_test_1L.ups",    1.1, "ALL", ["exactComparison"]),

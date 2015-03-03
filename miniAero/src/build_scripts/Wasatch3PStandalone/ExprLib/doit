@@ -9,6 +9,7 @@ rm -rf ${INSTALL_HERE}/*
 
 cmake                                             \
   -DENABLE_TESTS=OFF                              \
+  -DBUILD_GUI=OFF                                 \
                                                   \
   -DSpatialOps_DIR=$INSTALL_BASE/SpatialOps/$COMP/share \
                                                   \

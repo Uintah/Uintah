@@ -56,13 +56,10 @@
 #define USE_PACKING
 
 using namespace Uintah;
-using namespace SCIRun;
 
 // Used to sync cout/cerr so it is readable when output by multiple threads
 extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
-
-extern DebugStream mixedDebug;
 
 static DebugStream dbg(          "MPIScheduler_DBG",     false );
 static DebugStream dbgst(        "SendTiming",           false );
@@ -194,7 +191,7 @@ MPIScheduler::verifyChecksum()
 
     if (checksum != result_checksum) {
       std::cerr << "Failed task checksum comparison! Not all processes are executing the same taskgraph\n";
-      std::cerr << "  Rank: " << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
+      std::cerr << "  Rank-" << d_myworld->myrank() << " of " << d_myworld->size() - 1 << ": has sum " << checksum
                 << "  and global is " << result_checksum << '\n';
       MPI_Abort(d_myworld->getComm(), 1);
     }
@@ -311,7 +308,7 @@ MPIScheduler::runTask( DetailedTask* task,
   }
   dlbLock.unlock();
 
-  postMPISends(task, iteration);
+  postMPISends(task, iteration, thread_id);
 
   task->done(dws);  // should this be timed with taskstart? - BJW
   double teststart = Time::currentSeconds();
@@ -366,9 +363,10 @@ MPIScheduler::postMPISends( DetailedTask* task,
   double sendstart = Time::currentSeconds();
   bool dbg_active = dbg.active();
 
+  int me = d_myworld->myrank();
   if (dbg_active) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
+    dbg << "Rank-" << me << " postMPISends - task " << *task << '\n';
     cerrLock.unlock();
   }
 
@@ -393,12 +391,14 @@ MPIScheduler::postMPISends( DetailedTask* task,
 
     for (DetailedDep* req = batch->head; req != 0; req = req->next) {
 
+      ostr << *req << ' '; // for CommRecMPI::add()
+
       if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
           && iteration == 0) || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
         // See comment in DetailedDep about CommCondition
         if (dbg_active) {
           cerrLock.lock();
-          dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << std::endl;
+          dbg << "Rank-" << me << "   Ignoring conditional send for " << *req << "\n";
           cerrLock.unlock();
         }
         continue;
@@ -409,18 +409,22 @@ MPIScheduler::postMPISends( DetailedTask* task,
           && !oport_->isCheckpointTimestep()) {
         if (dbg_active) {
           cerrLock.lock();
-          dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << std::endl;
+          dbg << "Rank-" << me << "   Ignoring non-output-timestep send for " << *req << "\n";
           cerrLock.unlock();
         }
         continue;
       }
 
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
-      if (dbg.active()) {
+      if (dbg_active) {
         cerrLock.lock();
-        ostr << *req << ' ';
-        dbg << d_myworld->myrank() << " --> sending " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells
-            << " from dw " << dw->getID() << '\n';
+        {
+          dbg << "Rank-" << me << " --> sending " << *req << ", ghost type: " << "\""
+              << Ghost::getGhostTypeName(req->req->gtype) << "\", " << "num req ghost "
+              << Ghost::getGhostTypeName(req->req->gtype) << ": " << req->req->numGhostCells
+              << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->gtype)
+              << ", from dw " << dw->getID() << '\n';
+        }
         cerrLock.unlock();
       }
 
@@ -470,21 +474,15 @@ MPIScheduler::postMPISends( DetailedTask* task,
 #endif
 
       // TODO need to determine if this is actually true now - I don't think it is, APH - 01/07/15
-      //only send message if size is greather than zero
-      //we need this empty message to enforce modify after read dependencies 
+      //only send message if size is greater than zero
+      //we need this empty message to enforce modify after read dependencies
       //if(count>0)
       //{
 
-      if (dbg_active) {
-        cerrLock.lock();
-        dbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << " to " << to << ": " << ostr.str() << "\n";
-        cerrLock.unlock();
-      }
-
       if (mpidbg.active()) {
         cerrLock.lock();
-        mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count
-               << "\n";
+        mpidbg << "Rank-" << me << " Posting send for message number " << batch->messageTag << " to   rank-" << to << ", length: " << count
+               << " (bytes)\n";
         cerrLock.unlock();
       }
 
@@ -561,7 +559,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
   if (dbg_active) {
     cerrLock.lock();
-    dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
+    dbg << "Rank-" << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
     cerrLock.unlock();
   }
 
@@ -630,6 +628,9 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
       // Create the MPI type
       for (DetailedDep* req = batch->head; req != 0; req = req->next) {
+
+        ostr << *req << ' ';  // for CommRecMPI::add()
+
         OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
         if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || (req->condition == DetailedDep::SubsequentIterations
             && iteration == 0) || (notCopyDataVars_.count(req->req->var->getName()) > 0)) {
@@ -637,7 +638,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
           // See comment in DetailedDep about CommCondition
           if (dbg_active) {
             cerrLock.lock();
-            dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << std::endl;
+            dbg << "Rank-" << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << std::endl;
           }
           continue;
         }
@@ -645,15 +646,19 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep()
             && !oport_->isCheckpointTimestep()) {
           cerrLock.lock();
-          dbg << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << std::endl;
+          dbg << "Rank-" << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << std::endl;
           cerrLock.unlock();
           continue;
         }
         if (dbg_active) {
-          ostr << *req << ' ';
           cerrLock.lock();
-          dbg  << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", "
-               << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
+          {
+            dbg << "Rank-" << d_myworld->myrank() << " <-- receiving " << *req << ", ghost type: " << "\""
+                << Ghost::getGhostTypeName(req->req->gtype) << "\", " << "num req ghost "
+                << Ghost::getGhostTypeName(req->req->gtype) << ": " << req->req->numGhostCells
+                << ", Ghost::direction: " << Ghost::getGhostTypeDir(req->req->gtype)
+                << ", into dw " << dw->getID() << '\n';
+          }
           cerrLock.unlock();
         }
 
@@ -707,21 +712,15 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         //we need this empty message to enforce modify after read dependencies
         //if(count>0)
         //{
+
         int from = batch->fromTask->getAssignedResourceIndex();
         ASSERTRANGE(from, 0, d_myworld->size());
         MPI_Request requestid;
 
-        // TODO - do we both of these? (APH 01/22/15)
-        if (dbg_active) {
-          cerrLock.lock();
-          dbg << d_myworld->myrank() << " Receiving message number " << batch->messageTag << " from " << from << ": " << ostr.str()
-              << "\n";
-          cerrLock.unlock();
-        }
         if (mpidbg.active()) {
         cerrLock.lock();
-        mpidbg << d_myworld->myrank() << " Posting receive for message number " << batch->messageTag << " from " << from
-               << ", length=" << count << "\n";
+        mpidbg << "Rank-" << d_myworld->myrank() << " Posting recv for message number " << batch->messageTag << " from rank-" << from
+               << ", length: " << count << " (bytes)\n";
         cerrLock.unlock();
         }
 
@@ -729,6 +728,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         int bytes = count;
         recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
         mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
+
         /*}
          else
          {
@@ -778,21 +778,33 @@ void MPIScheduler::processMPIRecvs(int how_much)
         recvs_.testsome(d_myworld);
         break;
       case WAIT_ONCE :
-        mpidbg << d_myworld->myrank() << " Start waiting once...\n";
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << " Start waiting once (WAIT_ONCE)...\n";
+        coutLock.unlock();
+
         recvs_.waitsome(d_myworld);
-        mpidbg << d_myworld->myrank() << " Done  waiting once...\n";
+
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << " Done waiting once (WAIT_ONCE)...\n";
+        coutLock.unlock();
         break;
       case WAIT_ALL :
         // This will allow some receives to be "handled" by their
         // AfterCommincationHandler while waiting for others.
-        mpidbg << d_myworld->myrank() << "  Start waiting...\n";
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << "  Start waiting (WAIT_ALL)...\n";
+        coutLock.unlock();
+
         while ((recvs_.numRequests() > 0)) {
           bool keep_waiting = recvs_.waitsome(d_myworld);
           if (!keep_waiting) {
             break;
           }
         }
-        mpidbg << d_myworld->myrank() << "  Done  waiting...\n";
+
+        coutLock.lock();
+        mpidbg << "Rank-" << d_myworld->myrank() << "  Done waiting (WAIT_ALL)...\n";
+        coutLock.unlock();
         break;
     } // end switch
   }
@@ -807,10 +819,9 @@ void MPIScheduler::processMPIRecvs(int how_much)
 //
 
 void
-MPIScheduler::execute( int tgnum /*=0*/,
-                       int iteration /*=0*/ )
+MPIScheduler::execute( int tgnum     /* = 0 */,
+                       int iteration /* = 0 */ )
 {
-
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::execute");
 
   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER);

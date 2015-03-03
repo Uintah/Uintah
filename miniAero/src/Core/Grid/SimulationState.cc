@@ -21,25 +21,28 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-#include <Core/Exceptions/ProblemSetupException.h>
+
 #include <Core/Grid/SimulationState.h>
-#include <Core/Grid/Variables/VarLabel.h>
-#include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Grid/Variables/ReductionVariable.h>
-#include <Core/Grid/Variables/Reductions.h>
-#include <Core/Grid/Variables/PerPatch.h>
-#include <Core/Grid/Material.h>
+
+#include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
+#include <Core/Grid/Material.h>
 #include <Core/Grid/SimpleMaterial.h>
+#include <Core/Grid/Variables/PerPatch.h>
+#include <Core/Grid/Variables/Reductions.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+#include <Core/Grid/Variables/VarLabel.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Util/StringUtil.h>
+
+#include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/ICE/ICEMaterial.h>
 #include <CCA/Components/ICE_sm/ICEMaterial.h>
-#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/CohesiveZone/CZMaterial.h>
-#include <CCA/Components/Arches/ArchesMaterial.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/Wasatch/WasatchMaterial.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace Uintah;
 using namespace std;

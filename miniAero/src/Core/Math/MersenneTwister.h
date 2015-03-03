@@ -295,6 +295,16 @@ inline void MTRand::seed( uint32 *const bigSeed, const uint32 seedLength )
 
 inline void MTRand::seed()
 {
+//______________________________________________________________________
+//  WARNING: LARGE CORE COUNT BOMB
+//  The default seed method opens a file and reads it.
+//  You never want to open files on large scale runs.
+//  Currently, with RMCRT every patch is executing this code every timestep!!
+// 
+//  I've removed the default method for setting the seed.
+//  -Todd
+//______________________________________________________________________
+#if 0
 	// Seed the generator with an array from /dev/urandom if available
 	// Otherwise use a hash of time() and clock() values
 	
@@ -311,7 +321,7 @@ inline void MTRand::seed()
 		fclose(urandom);
 		if( success ) { seed( bigSeed, N );  return; }
 	}
-	
+#endif	
 	// Was not successful, so use time() and clock() instead
 	seed( hash( time(NULL), clock() ) );
 }

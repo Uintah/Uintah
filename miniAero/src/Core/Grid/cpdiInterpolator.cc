@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -72,7 +72,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
   Matrix3 dsize=defgrad*size;
-  vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+  Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
@@ -175,7 +175,7 @@ void cpdiInterpolator::findCellAndWeights(const Point& pos,
   int ix,iy,iz;
 
   double one_over_8 = .125;
-  vector<double> phi(8);
+  double phi[8];
 
  // now  we will loop over each of these "nodes" or corners and use the deformation gradient to find the current location: 
   for(int i=0;i<8;i++){
@@ -238,7 +238,7 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
   Matrix3 dsize=defgrad*size;
-  vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+  Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
@@ -347,8 +347,8 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double volume = dsize.Determinant();
 
   double one_over_4V = 1.0/(4.0*volume);
-  vector<Vector> alpha(8,Vector(0.0,0.0,0.0));
-  vector<double> phi(8);
+  Vector alpha[8];
+  double phi[8];
   // conw we construct the vectors necessary for the gradient calculation:
   alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
@@ -458,17 +458,16 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
 }
 
 void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
-                                                          vector<IntVector>& ni,
-                                                          vector<double>& S,
-                                                          vector<Vector>& d_S,
-                                                          const Matrix3& size,
-                                                          const Matrix3& defgrad)
+                                                         vector<IntVector>& ni,
+                                                         vector<double>& S,
+                                                         vector<Vector>& d_S,
+                                                         const Matrix3& size,
+                                                         const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(Point(pos));
 
   Matrix3 dsize=defgrad*size;
-
-  vector<Vector> relative_node_location(8,Vector(0.0,0.0,0.0));
+  Vector relative_node_location[8];
 
   relative_node_location[4]=Vector(-dsize(0,0)-dsize(0,1)+dsize(0,2),
                                    -dsize(1,0)-dsize(1,1)+dsize(1,2),
@@ -575,8 +574,8 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double volume = dsize.Determinant();
   double one_over_4V = 1.0/(4.0*volume);
   double one_over_8 = .125;
-  vector<Vector> alpha(8,Vector(0.0,0.0,0.0));
-  vector<double> phi(8);
+  Vector alpha[8];
+  double phi[8];
   // conw we construct the vectors necessary for the gradient calculation:
   alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);

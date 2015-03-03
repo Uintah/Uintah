@@ -270,19 +270,6 @@ namespace Wasatch{
     const bool isYPeriodic = periodicityVector.y() == 1;
     const bool isZPeriodic = periodicityVector.z() == 1;
     isPeriodic = isXPeriodic || isYPeriodic || isZPeriodic;
-#   ifdef WASATCH_IN_ARCHES
-    // we are only allowing for a single extra cell :(
-    // make sure that extra cell and periodicity are consistent
-    proc0cout << "periodicity = " << isPeriodic << std::endl;
-    
-    if( !foundExtraCells && !isPeriodic ){
-      msg << endl
-      << "  Specification of 'extraCells' is required when wasatch-in-arches is enabled." << endl
-      << "  Please add an 'extraCells' block to your input file" << endl
-      << endl;
-      throw std::runtime_error( msg.str() );
-    }
-#   else
     if( foundExtraCells ){
       msg << endl
       << "  Specification of 'extraCells' is forbidden in Wasatch. The number of extraCells is automatically determined." << endl
@@ -290,8 +277,6 @@ namespace Wasatch{
       << endl;
       throw std::runtime_error( msg.str() );
     }
-#   endif
-        
     extraCells = Uintah::IntVector( (isXPeriodic) ? 0 : 1,
                                     (isYPeriodic) ? 0 : 1,
                                     (isZPeriodic) ? 0 : 1 );
@@ -806,13 +791,6 @@ namespace Wasatch{
     const Uintah::PatchSet* const allPatches   = get_patchset( USE_FOR_TASKS, level, sched );
     const Uintah::PatchSet* const localPatches = get_patchset( USE_FOR_OPERATORS, level, sched );
     
-#   ifndef WASATCH_IN_ARCHES // this is a bit annoying... when warches is turned on, disable any linearsolver calls from Wasatch
-    if( linSolver_ ) {
-      linSolver_->scheduleInitialize( level, sched, 
-                                      sharedState_->allMaterials() );
-    }
-#   endif
-
     GraphHelper* const icGraphHelper = graphCategories_[ INITIALIZATION ];
 
     Expr::ExpressionFactory& exprFactory = *icGraphHelper->exprFactory;
@@ -821,7 +799,6 @@ namespace Wasatch{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
@@ -1033,7 +1010,6 @@ namespace Wasatch{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
-      //bcHelper_ = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
       bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     

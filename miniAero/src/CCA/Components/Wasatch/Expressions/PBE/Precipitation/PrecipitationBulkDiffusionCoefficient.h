@@ -45,12 +45,14 @@ template< typename FieldT >
 class PrecipitationBulkDiffusionCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag superSatTag_, eqConcTag_, sBarTag_;
   const double growthCoefVal_, sMin_;
-  const FieldT* superSat_; //field from table of supersaturation
-  const FieldT* eqConc_;   //field form table of equilibrium concentration
-  const FieldT* sBar_;     //S Bar term for ostwald ripening
+  const bool doSBar_;
+//  const FieldT* superSat_; //field from table of supersaturation
+//  const FieldT* eqConc_;   //field form table of equilibrium concentration
+//  const FieldT* sBar_;     //S Bar term for ostwald ripening
 
+  DECLARE_FIELDS(FieldT, superSat_, eqConc_, sBar_);
+  
   PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                          const Expr::Tag& eqConcTag,
                                          const Expr::Tag& sBarTag,
@@ -88,9 +90,6 @@ public:
   };
 
   ~PrecipitationBulkDiffusionCoefficient();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };
@@ -113,13 +112,14 @@ PrecipitationBulkDiffusionCoefficient( const Expr::Tag& superSatTag,
                                        const double growthCoefVal,
                                        const double sMin)
 : Expr::Expression<FieldT>(),
-  superSatTag_(superSatTag),
-  eqConcTag_(eqConcTag),
-  sBarTag_(sBarTag),
   growthCoefVal_(growthCoefVal),
-  sMin_(sMin)
+  sMin_(sMin),
+  doSBar_(sBarTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+   eqConc_ = this->template create_field_request<FieldT>(eqConcTag);
+  if (doSBar_)  sBar_ = this->template create_field_request<FieldT>(sBarTag);  
 }
 
 //--------------------------------------------------------------------
@@ -134,43 +134,19 @@ PrecipitationBulkDiffusionCoefficient<FieldT>::
 template< typename FieldT >
 void
 PrecipitationBulkDiffusionCoefficient<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-  exprDeps.requires_expression( eqConcTag_ );
-  if ( sBarTag_ != Expr::Tag() )
-    exprDeps.requires_expression( sBarTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationBulkDiffusionCoefficient<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  superSat_ = &fm.field_ref( superSatTag_ );
-  eqConc_   = &fm.field_ref( eqConcTag_   );
-  if ( sBarTag_ != Expr::Tag() )
-    sBar_ = &fm.field_ref( sBarTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-PrecipitationBulkDiffusionCoefficient<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
+  const FieldT& S = superSat_->field_ref();
+  const FieldT& eqConc = eqConc_->field_ref();
   
-  if ( sBarTag_ != Expr::Tag() ) {
-    result <<= cond( *superSat_ > sMin_, growthCoefVal_ * *eqConc_ * ( *superSat_ - *sBar_) )
+  if ( doSBar_ ) {
+    const FieldT& sBar = sBar_->field_ref();
+    result <<= cond( S > sMin_, growthCoefVal_ * eqConc * ( S - sBar) )
                    (0.0);
   } else {
-    result <<= cond( *superSat_ > sMin_, growthCoefVal_ * *eqConc_ * ( *superSat_ - 1.0 ) )
+    result <<= cond( S > sMin_, growthCoefVal_ * eqConc * ( S - 1.0 ) )
                    (0.0);
   }         
 }

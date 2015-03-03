@@ -81,10 +81,11 @@ DensFromMixfrac( const InterpT& rhoEval,
   : Expr::Expression<FieldT>(),
     DensityCalculatorBase( 1, 1e-6, 5 ),
     rhoEval_( rhoEval ),
-    rhoFTag_( rhoFTag ),
     bounds_( rhoEval.get_bounds()[0] )
 {
   this->set_gpu_runnable(false);
+  
+   rhoF_ = this->template create_field_request<FieldT>(rhoFTag);
 }
 
 //--------------------------------------------------------------------
@@ -99,32 +100,12 @@ DensFromMixfrac<FieldT>::
 template< typename FieldT >
 void
 DensFromMixfrac<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( rhoFTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensFromMixfrac<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  rhoF_ = &fm.field_ref( rhoFTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensFromMixfrac<FieldT>::
 evaluate()
 {
   FieldT& rho = this->value();
 
-  typename FieldT::const_iterator irhoF = rhoF_->begin();
+  const FieldT& rhoF = rhoF_->field_ref();
+  typename FieldT::const_iterator irhoF = rhoF.begin();
   typename FieldT::iterator irho = rho.begin();
   const typename FieldT::iterator irhoe = rho.end();
   size_t nbad = 0;
@@ -184,8 +165,8 @@ Builder::Builder( const InterpT& rhoEval,
                   const Expr::Tag& resultTag,
                   const Expr::Tag& rhoFTag  )
   : ExpressionBuilder( resultTag ),
-    rhoEval_( rhoEval.clone() ),
-    rhoFTag_( rhoFTag )
+    rhoFTag_(rhoFTag),
+    rhoEval_( rhoEval.clone() )
 {
   if( resultTag.context() != Expr::CARRY_FORWARD ){
     std::ostringstream msg;
@@ -217,12 +198,13 @@ DensHeatLossMixfrac( const Expr::Tag& rhofTag,
                      const InterpT& enthEvaluator )
   : Expr::Expression<FieldT>(),
     DensityCalculatorBase( 2, 1e-6, 5 ),
-    rhofTag_( rhofTag ),
-    rhohTag_( rhohTag ),
     densEval_( densEvaluator ),
     enthEval_( enthEvaluator ),
     bounds_( densEvaluator.get_bounds() )
-{}
+{
+   rhof_ = this->template create_field_request<FieldT>(rhofTag);
+   rhoh_ = this->template create_field_request<FieldT>(rhohTag);
+}
 
 //--------------------------------------------------------------------
 
@@ -236,37 +218,17 @@ DensHeatLossMixfrac<FieldT>::
 template< typename FieldT >
 void
 DensHeatLossMixfrac<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( rhofTag_ );
-  exprDeps.requires_expression( rhohTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensHeatLossMixfrac<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  rhof_ = &fm.field_ref( rhofTag_ );
-  rhoh_ = &fm.field_ref( rhohTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-DensHeatLossMixfrac<FieldT>::
 evaluate()
 {
   typename Expr::Expression<FieldT>::ValVec& result  = this->get_value_vec();
   FieldT& density = *result[0];
   FieldT& gamma   = *result[1];
 
-  typename FieldT::const_iterator irhof = rhof_->begin();
-  typename FieldT::const_iterator irhoh = rhoh_->begin();
+  const FieldT& rhof = rhof_->field_ref();
+  const FieldT& rhoh = rhoh_->field_ref();
+  
+  typename FieldT::const_iterator irhof = rhof.begin();
+  typename FieldT::const_iterator irhoh = rhoh.begin();
   typename FieldT::iterator irho = density.begin();
   typename FieldT::iterator igam = gamma.begin();
   const typename FieldT::iterator irhoe = density.end();
@@ -358,8 +320,6 @@ Builder::Builder( const Expr::Tag& rhoTag,
                   const InterpT& densEvaluator,
                   const InterpT& enthEvaluator )
   : ExpressionBuilder( tag_list(rhoTag,gammaTag) ),
-    rhofTag_( rhofTag ),
-    rhohTag_( rhohTag ),
     densEval_( densEvaluator.clone() ),
     enthEval_( enthEvaluator.clone() )
 {
@@ -398,30 +358,11 @@ TwoStreamMixingDensity( const Expr::Tag& rhofTag,
                         const double rho0,
                         const double rho1 )
   : Expr::Expression<FieldT>(),
-    rho0_(rho0), rho1_(rho1),
-    rhofTag_( rhofTag )
+    rho0_(rho0), rho1_(rho1)
 {
   this->set_gpu_runnable(true);
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TwoStreamMixingDensity<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( rhofTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TwoStreamMixingDensity<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  rhof_ = &fml.template field_ref< FieldT >( rhofTag_ );
+  
+   rhof_ = this->template create_field_request<FieldT>(rhofTag);
 }
 
 //--------------------------------------------------------------------
@@ -433,7 +374,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  const FieldT& rf = *rhof_;
+  const FieldT& rf = rhof_->field_ref();
   const double tmp = (1/rho0_ - 1/rho1_);
 
   // first calculate the mixture fraction:
@@ -465,30 +406,11 @@ TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
                         const double rho0,
                         const double rho1 )
   : Expr::Expression<FieldT>(),
-    rho0_(rho0), rho1_(rho1),
-    mixfrTag_( mixfrTag )
+    rho0_(rho0), rho1_(rho1)
 {
   this->set_gpu_runnable(true);
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TwoStreamDensFromMixfr<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( mixfrTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-TwoStreamDensFromMixfr<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  mixfr_ = &fml.template field_ref< FieldT >( mixfrTag_ );
+  
+   mixfr_ = this->template create_field_request<FieldT>(mixfrTag);
 }
 
 //--------------------------------------------------------------------
@@ -500,7 +422,7 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  const FieldT& f = *mixfr_;
+  const FieldT& f = mixfr_->field_ref();
   result <<= 1.0 / ( f/rho1_ + (1.0-f)/rho0_ );
 }
 

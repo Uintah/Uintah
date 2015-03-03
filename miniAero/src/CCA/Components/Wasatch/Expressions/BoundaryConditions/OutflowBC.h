@@ -33,9 +33,11 @@ template< typename FieldT >
 class OutflowBC
 : public BoundaryConditionBase<FieldT>
 {
-  OutflowBC( const Expr::Tag& momTag ) : momTag_ (momTag)
+  OutflowBC( const Expr::Tag& momTag )
   {
     this->set_gpu_runnable(false);
+    u_  = this->template create_field_request<FieldT>(momTag);
+    dt_ = this->template create_field_request<SpatialOps::SingleValueField>(Wasatch::TagNames::self().dt);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -53,14 +55,11 @@ public:
   
   ~OutflowBC(){}
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
-  const FieldT* u_;
-  const SpatialOps::SingleValueField* dt_;
-  const Expr::Tag momTag_;
+  DECLARE_FIELD(FieldT, u_);
+  DECLARE_FIELD(SpatialOps::SingleValueField, dt_);
 };
 
 #endif // OutflowBC_Expr_h

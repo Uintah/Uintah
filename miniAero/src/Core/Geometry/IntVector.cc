@@ -25,9 +25,14 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Persistent/Persistent.h>
 #include <Core/Util/TypeDescription.h>
+#include <Core/Util/XMLUtils.h>
+
+#include <stdlib.h>
+
 #include <iostream>
 
 using namespace std;
+using namespace Uintah::UintahXML;
 
 namespace SCIRun{
 
@@ -40,8 +45,6 @@ Pio(Piostream& stream, IntVector& p)
   Pio(stream, p.value_[2]);
   stream.end_cheap_delim();
 }
-
-
 
 const string& 
 IntVector::get_h_file_path() {
@@ -64,6 +67,33 @@ operator<<(std::ostream& out, const SCIRun::IntVector& v)
 {
   out << "[int " << v.x() << ", " << v.y() << ", " << v.z() << ']';
   return out;
+}
+
+IntVector
+IntVector::fromString( const string & source )
+{
+  IntVector result;
+
+  // Parse out the [num,num,num]
+
+  string::size_type i1 = source.find("[");
+  string::size_type i2 = source.find_first_of(",");
+  string::size_type i3 = source.find_last_of(",");
+  string::size_type i4 = source.find("]");
+  
+  string x_val(source,i1+1,i2-i1-1);
+  string y_val(source,i2+1,i3-i2-1);
+  string z_val(source,i3+1,i4-i3-1);
+
+  validateType( x_val, INT_TYPE );
+  validateType( y_val, INT_TYPE );
+  validateType( z_val, INT_TYPE );
+          
+  result.x( atoi(x_val.c_str()) );
+  result.y( atoi(y_val.c_str()) );
+  result.z( atoi(z_val.c_str()) );
+
+  return result;
 }
 
 } //end namespace SCIRun

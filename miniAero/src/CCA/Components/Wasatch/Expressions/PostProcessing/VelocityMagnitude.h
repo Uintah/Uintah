@@ -53,16 +53,16 @@ class VelocityMagnitude
 {
   
 protected:
-  const Expr::Tag vel1t_, vel2t_, vel3t_;
-  const bool is3d_;
+
+  DECLARE_FIELD(Vel1T, u_);
+  DECLARE_FIELD(Vel2T, v_);
+  DECLARE_FIELD(Vel3T, w_);
+
+  const bool doX_, doY_, doZ_, is3d_;
 
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1T, FieldT >::type InterpVel1T2FieldT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2T, FieldT >::type InterpVel2T2FieldT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel3T, FieldT >::type InterpVel3T2FieldT;
-    
-  const Vel1T* vel1_;
-  const Vel2T* vel2_;
-  const Vel3T* vel3_;
   
   const InterpVel1T2FieldT* interpVel1T2FieldTOp_;
   const InterpVel2T2FieldT* interpVel2T2FieldTOp_;
@@ -95,8 +95,6 @@ public:
   
   ~VelocityMagnitude();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

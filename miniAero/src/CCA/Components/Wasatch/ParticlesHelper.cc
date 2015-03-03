@@ -155,6 +155,7 @@ namespace Uintah {
     ProblemSpecP uintahPPosSpec = uintahSpec->findBlock("ParticlePosition");
     if (uintahPPosSpec) uintahPPosSpec->getAttribute("label",pPosName_);
     else pPosName_ = "p.x";
+    Uintah::VarLabel::setParticlePositionName(pPosName_);
     
     pPosLabel_ = VarLabel::create(pPosName_,
                                   ParticleVariable<Uintah::Point>::getTypeDescription(),

@@ -69,8 +69,6 @@ public:
   };
   
   ~ParticleWallBC(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){}
-  void bind_fields( const Expr::FieldManagerList& fml ){}
   void evaluate();
 private:
   const double restCoef_;

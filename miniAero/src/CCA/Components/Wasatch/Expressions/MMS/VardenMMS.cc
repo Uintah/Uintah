@@ -27,33 +27,11 @@ VarDen1DMMSMixFracSrc( const Expr::Tag& xTag,
 : Expr::Expression<FieldT>(),
 d_   ( D    ),
 rho0_( rho0 ),
-rho1_( rho1 ),
-xTag_( xTag ),
-tTag_( tTag )
+rho1_( rho1 )
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDen1DMMSMixFracSrc<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( tTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDen1DMMSMixFracSrc<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  x_ = &fml.template field_manager<FieldT   >().field_ref( xTag_ );
-  t_ = &fml.template field_manager<TimeField>().field_ref( tTag_ );
+   x_ = this->template create_field_request<FieldT>(xTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
 }
 
 //--------------------------------------------------------------------
@@ -65,40 +43,41 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  
+  const FieldT& x = x_->field_ref();
+  const TimeField& t = t_->field_ref();
   result <<=
   (
-   ( 5 * rho0_ * (rho1_ * rho1_) * exp( (5 * (*x_ * *x_))/(*t_ + 10.))
-    * ( 1500. * d_ - 120. * *t_ + 75. * (*t_ * *t_) * (*x_ * *x_)
-       + 30. * (*t_ * *t_ * *t_) * (*x_ * *x_) + 750 * d_ * *t_
-       + 1560. * d_ * (*t_ * *t_) + 750 * d_ * (*t_ * *t_ * *t_)
-       + 60. * d_ * (*t_ * *t_ * *t_ * *t_) - 1500 * d_ * (*x_ * *x_)
-       + 30. * *t_ * (*x_ * *x_) - 606. * (*t_ * *t_) - 120. * (*t_ * *t_ * *t_)
-       - 6. * (*t_ * *t_ * *t_ * *t_) + 75 * (*x_ * *x_)
-       + 7500. * *t_ * *x_ * sin((2 * PI * *x_)/(3. * (*t_ + 10.)))
-       - 250. * PI * (*t_ * *t_) * cos((2 * PI * *x_)/(3.*(*t_ + 10.)))
-       - 20. * PI * (*t_ * *t_ * *t_)*cos((2 * PI * *x_)/(3.*(*t_ + 10.)))
-       - 1500. * d_ * (*t_ * *t_) * (*x_ * *x_)
-       - 600. * d_ * (*t_ * *t_ * *t_) * (*x_ * *x_)
-       + 3750. * (*t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3. * (*t_ + 10.)))
-       + 300. * (*t_ * *t_ * *t_) * *x_ * sin((2 * PI * *x_)/(3.*(*t_ + 10.)))
-       - 500. * PI * *t_ * cos((2 * PI * *x_)/(3. * (*t_ + 10.)))
-       - 600. * d_ * *t_ * (*x_ * *x_) - 600
+   ( 5 * rho0_ * (rho1_ * rho1_) * exp( (5 * (x * x))/(t + 10.))
+    * ( 1500. * d_ - 120. * t + 75. * (t * t) * (x * x)
+       + 30. * (t * t * t) * (x * x) + 750 * d_ * t
+       + 1560. * d_ * (t * t) + 750 * d_ * (t * t * t)
+       + 60. * d_ * (t * t * t * t) - 1500 * d_ * (x * x)
+       + 30. * t * (x * x) - 606. * (t * t) - 120. * (t * t * t)
+       - 6. * (t * t * t * t) + 75 * (x * x)
+       + 7500. * t * x * sin((2 * PI * x)/(3. * (t + 10.)))
+       - 250. * PI * (t * t) * cos((2 * PI * x)/(3.*(t + 10.)))
+       - 20. * PI * (t * t * t)*cos((2 * PI * x)/(3.*(t + 10.)))
+       - 1500. * d_ * (t * t) * (x * x)
+       - 600. * d_ * (t * t * t) * (x * x)
+       + 3750. * (t * t) * x * sin((2 * PI * x)/(3. * (t + 10.)))
+       + 300. * (t * t * t) * x * sin((2 * PI * x)/(3.*(t + 10.)))
+       - 500. * PI * t * cos((2 * PI * x)/(3. * (t + 10.)))
+       - 600. * d_ * t * (x * x) - 600
        )
     )/3
    +
-   ( 250 * rho0_ * rho1_ * (rho0_ - rho1_) * (*t_ + 10.) * (3 * d_ + 3 * d_ * (*t_ * *t_)
-                                                            - PI * *t_ * cos(
-                                                                             (2 * PI * *x_)/(3. * (*t_ + 10.))))
+   ( 250 * rho0_ * rho1_ * (rho0_ - rho1_) * (t + 10.) * (3 * d_ + 3 * d_ * (t * t)
+                                                            - PI * t * cos(
+                                                                             (2 * PI * x)/(3. * (t + 10.))))
     )/ 3
    )
   /
   (
-   ( (*t_ * *t_) + 1.)*((*t_ + 10.) * (*t_ + 10.))
+   ( (t * t) + 1.)*((t + 10.) * (t + 10.))
    *
    (
-    (5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10.)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10.)))
-    *(5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (*x_ * *x_))/(*t_ + 10.)) + 2 * rho1_ * *t_ * exp((5 * (*x_ * *x_))/(*t_ + 10.)))
+    (5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (x * x))/(t + 10.)) + 2 * rho1_ * t * exp((5 * (x * x))/(t + 10.)))
+    *(5 * rho0_ - 5 * rho1_ + 5 * rho1_ * exp((5 * (x * x))/(t + 10.)) + 2 * rho1_ * t * exp((5 * (x * x))/(t + 10.)))
     )
    );
 }
@@ -143,20 +122,11 @@ VarDen1DMMSContinuitySrc( const double rho0,
                           const Expr::TagList& velTags,
                           const Expr::Tag& xTag,
                           const Expr::Tag& tTag,
-                          const Expr::Tag& timestepTag,
+                          const Expr::Tag& dtTag,
                           const Wasatch::VarDenParameters varDenParams)
 : Expr::Expression<FieldT>(),
   rho0_( rho0 ),
   rho1_( rho1 ),
-  densTag_(densTag),
-  densStarTag_(densStarTag),
-  dens2StarTag_(dens2StarTag),
-  xTag_( xTag ),
-  tTag_( tTag ),
-  timestepTag_( timestepTag ),
-  xVelt_( velTags[0] ),
-  yVelt_( velTags[1] ),
-  zVelt_( velTags[2] ),
   doX_( velTags[0]!=Expr::Tag() ),
   doY_( velTags[1]!=Expr::Tag() ),
   doZ_( velTags[2]!=Expr::Tag() ),
@@ -166,52 +136,17 @@ VarDen1DMMSContinuitySrc( const double rho0,
   useOnePredictor_(varDenParams.onePredictor)
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDen1DMMSContinuitySrc<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( tTag_ );
-  exprDeps.requires_expression( timestepTag_ );
+   x_ = this->template create_field_request<FieldT>(xTag);
+   t_ = this->template create_field_request<TimeField>(tTag);
+   dt_ = this->template create_field_request<TimeField>(dtTag);
   if (model_ != Wasatch::VarDenParameters::CONSTANT) {
-    exprDeps.requires_expression( densTag_ );
-    exprDeps.requires_expression( useOnePredictor_ ? densStarTag_ : dens2StarTag_ );
-    if( doX_ ) exprDeps.requires_expression( xVelt_ );
-    if( doY_ ) exprDeps.requires_expression( yVelt_ );
-    if( doZ_ ) exprDeps.requires_expression( zVelt_ );
+     dens_ = this->template create_field_request<FieldT>(densTag);
+    if (useOnePredictor_)  densStar_ = this->template create_field_request<SVolField>(densStarTag);
+    else                   dens2Star_ = this->template create_field_request<SVolField>(dens2StarTag);
+    if (doX_)  u_ = this->template create_field_request<XVolField>(velTags[0]);
+    if (doY_)  v_ = this->template create_field_request<YVolField>(velTags[0]);
+    if (doZ_)  w_ = this->template create_field_request<ZVolField>(velTags[0]);
   }
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDen1DMMSContinuitySrc<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  x_ = &fml.template field_manager<FieldT>().field_ref( xTag_ );
-  
-  const typename Expr::FieldMgrSelector<TimeField>::type& tfm = fml.field_manager<TimeField>();
-  t_        = &tfm.field_ref( tTag_        );
-  timestep_ = &tfm.field_ref( timestepTag_ );
-  
-  if (model_ != Wasatch::VarDenParameters::CONSTANT) {
-    const typename Expr::FieldMgrSelector<SVolField>::type& sfm = fml.field_manager<SVolField>();
-    dens_ = &sfm.field_ref( densTag_ );
-    
-    if   (useOnePredictor_) densStar_  = &sfm.field_ref( densStarTag_ );
-    else                    dens2Star_ = &sfm.field_ref( dens2StarTag_ );
-    
-    if( doX_ ) xVel_  = &fml.field_ref<XVolField>( xVelt_ );
-    if( doY_ ) yVel_  = &fml.field_ref<YVolField>( yVelt_ );
-    if( doZ_ ) zVel_  = &fml.field_ref<ZVolField>( zVelt_ );
-  }
-
 }
 
 //--------------------------------------------------------------------
@@ -243,9 +178,13 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
+  const TimeField& time = t_->field_ref();
+  const TimeField& dt = dt_->field_ref();
+
+  const FieldT& x = x_->field_ref();
   
-  SpatFldPtr<TimeField> t = SpatialFieldStore::get<TimeField>( *t_ );
-  *t <<= *t_ + *timestep_;
+  SpatFldPtr<TimeField> t = SpatialFieldStore::get<TimeField>( time );
+  *t <<= time + dt;
   
 
   SpatialOps::SpatFldPtr<SVolField> alpha = SpatialOps::SpatialFieldStore::get<SVolField>( result );
@@ -256,28 +195,30 @@ evaluate()
       break;
     case Wasatch::VarDenParameters::IMPULSE:
     {
+      const SVolField& dens = dens_->field_ref();
       SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-      if (useOnePredictor_)  *drhodtstar <<= (*densStar_  - *dens_) / *timestep_;
-      else                   *drhodtstar <<= (*dens2Star_ - *dens_) / (2. * *timestep_);
+      if (useOnePredictor_)  *drhodtstar <<= (densStar_->field_ref()  - dens) / dt;
+      else                   *drhodtstar <<= (dens2Star_->field_ref() - dens) / (2. * dt);
       *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
     }
       break;
     case Wasatch::VarDenParameters::DYNAMIC:
     {
+      const SVolField& dens = dens_->field_ref();
       SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
       SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
 
-      if (useOnePredictor_)  *drhodtstar <<= (*densStar_  - *dens_) / *timestep_;
-      else                   *drhodtstar <<= (*dens2Star_ - *dens_) / (2. * *timestep_);
+      if (useOnePredictor_)  *drhodtstar <<= (densStar_->field_ref()  - dens) / dt;
+      else                   *drhodtstar <<= (dens2Star_->field_ref() - dens) / (2. * dt);
       
       if( is3d_ ){ // for 3D cases, inline the whole thing
-        *velDotDensGrad <<= (*x2SInterpOp_)(*xVel_) * (*gradXOp_)(*dens_) + (*y2SInterpOp_)(*yVel_) * (*gradYOp_)(*dens_) + (*z2SInterpOp_)(*zVel_) * (*gradZOp_)(*dens_);
+        *velDotDensGrad <<= (*x2SInterpOp_)(u_->field_ref()) * (*gradXOp_)(dens) + (*y2SInterpOp_)(v_->field_ref()) * (*gradYOp_)(dens) + (*z2SInterpOp_)(w_->field_ref()) * (*gradZOp_)(dens);
       } else {
         // for 1D and 2D cases, we are not as efficient - add terms as needed...
-        if( doX_ ) *velDotDensGrad <<= (*x2SInterpOp_)(*xVel_) * (*gradXOp_)(*dens_);
+        if( doX_ ) *velDotDensGrad <<= (*x2SInterpOp_)(u_->field_ref()) * (*gradXOp_)(dens);
         else       *velDotDensGrad <<= 0.0;
-        if( doY_ ) *velDotDensGrad <<= *velDotDensGrad + (*y2SInterpOp_)(*yVel_) * (*gradYOp_)(*dens_);
-        if( doZ_ ) *velDotDensGrad <<= *velDotDensGrad + (*z2SInterpOp_)(*zVel_) * (*gradZOp_)(*dens_);
+        if( doY_ ) *velDotDensGrad <<= *velDotDensGrad + (*y2SInterpOp_)(v_->field_ref()) * (*gradYOp_)(dens);
+        if( doZ_ ) *velDotDensGrad <<= *velDotDensGrad + (*z2SInterpOp_)(w_->field_ref()) * (*gradZOp_)(dens);
       } // 1D, 2D cases
       *velDotDensGrad <<= abs(*velDotDensGrad);
       *alpha <<= cond(*drhodtstar == 0.0, 1.0)( (1.0 - a0_) * ((0.1 * *velDotDensGrad) / ( 0.1 * *velDotDensGrad + 1)) + a0_ );
@@ -299,36 +240,36 @@ evaluate()
   result <<= *alpha *
   (
    (
-    ( 10/( exp((5 * (*x_ * *x_))/( *t + 10)) * ((2 * *t + 5) * (2 * *t + 5)) )
-     - (25 * (*x_ * *x_))/(exp(( 5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5) * ((*t + 10) * (*t + 10)) )
+    ( 10/( exp((5 * (x * x))/( *t + 10)) * ((2 * *t + 5) * (2 * *t + 5)) )
+     - (25 * (x * x))/(exp(( 5 * (x * x))/(*t + 10)) * (2 * *t + 5) * ((*t + 10) * (*t + 10)) )
      ) / rho0_
-    - 10/( rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * ((2 * *t + 5) * (2 * *t + 5)) )
-    + (25 * (*x_ * *x_)) / (rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5) * ((*t + 10) * (*t + 10)) )
+    - 10/( rho1_ * exp((5 * (x * x))/(*t + 10)) * ((2 * *t + 5) * (2 * *t + 5)) )
+    + (25 * (x * x)) / (rho1_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5) * ((*t + 10) * (*t + 10)) )
     )
    /
    (
-    ( (5 / (exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_
-     - 5/(rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5))
+    ( (5 / (exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_
+     - 5/(rho1_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5))
      )
     *
-    ((5 / (exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)))
+    ((5 / (exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)))
     )
    -
-   ( 5 * *t * sin((2 * PI * *x_)/(3 * *t + 30)) *
-    ((50 * *x_) / (rho0_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5) * (*t + 10)) - (50 * *x_)/(rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5) * (*t + 10)))
+   ( 5 * *t * sin((2 * PI * x)/(3 * *t + 30)) *
+    ((50 * x) / (rho0_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5) * (*t + 10)) - (50 * x)/(rho1_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5) * (*t + 10)))
     )
    /
    ( ( (*t * *t) + 1.)
-    * ( ((5/(exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)))
-       * ((5/(exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)))
+    * ( ((5/(exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)))
+       * ((5/(exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_ - 5/(rho1_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)))
        )
     )
    -
-   ( 10 * PI * *t * cos((2 * PI * *x_)/(3 * *t + 30)))
+   ( 10 * PI * *t * cos((2 * PI * x)/(3 * *t + 30)))
    /
    ( (3 * *t + 30) * ((*t * *t) + 1.)
-    * ( (5/(exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_
-       - 5/(rho1_ * exp((5 * (*x_ * *x_))/(*t + 10)) * (2 * *t + 5))
+    * ( (5/(exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5)) - 1)/rho0_
+       - 5/(rho1_ * exp((5 * (x * x))/(*t + 10)) * (2 * *t + 5))
        )
     )
    );
@@ -377,36 +318,12 @@ build() const
 template<typename FieldT>
 VarDen1DMMSPressureContSrc<FieldT>::
 VarDen1DMMSPressureContSrc( const Expr::Tag continutySrcTag,
-                          const Expr::Tag& timestepTag)
-: Expr::Expression<FieldT>(),
-continutySrcTag_( continutySrcTag ),
-timestepTag_    ( timestepTag     )
+                          const Expr::Tag& dtTag)
+: Expr::Expression<FieldT>()
 {
   this->set_gpu_runnable( true );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDen1DMMSPressureContSrc<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( continutySrcTag_ );
-  exprDeps.requires_expression( timestepTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-VarDen1DMMSPressureContSrc<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  continutySrc_ = &fml.template field_manager<FieldT>().field_ref( continutySrcTag_ );
-  
-  const typename Expr::FieldMgrSelector<TimeField>::type& dfm = fml.field_manager<TimeField>();
-  timestep_ = &dfm.field_ref( timestepTag_ );
+   continutySrc_ = this->template create_field_request<FieldT>(continutySrcTag);
+   dt_ = this->template create_field_request<TimeField>(dtTag);
 }
 
 //--------------------------------------------------------------------
@@ -419,7 +336,7 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   
-  result <<= *continutySrc_ / *timestep_;
+  result <<= continutySrc_->field_ref() / dt_->field_ref();
 }
 
 //--------------------------------------------------------------------
