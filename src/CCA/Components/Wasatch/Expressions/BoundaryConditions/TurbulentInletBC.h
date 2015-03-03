@@ -71,7 +71,7 @@ public:
   void evaluate();
   
 private:
-  DECLARE_FIELDS(TimeField, t_, dt_);
+  DECLARE_FIELDS(TimeField, t_, dt_)
   const std::string velDir_;
   const int period_;
   const double timePeriod_;

@@ -82,7 +82,7 @@ public:
 private:
   typedef typename SpatialOps::SingleValueField TimeField;
   SineTime( const Expr::Tag& tTag );
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -172,7 +172,7 @@ private:
                           const Expr::Tag& zTag,
                           const std::string fileName );
   const std::string filename_;
-  DECLARE_FIELDS(FieldT, x_, y_, z_);
+  DECLARE_FIELDS(FieldT, x_, y_, z_)
   Wasatch::UintahPatchContainer* patchContainer_;
 };
 
@@ -396,7 +396,7 @@ private:
                const double lowValue,
                const double highValue);
   const double transitionPoint_, lowValue_, highValue_;
-  DECLARE_FIELD(FieldT, indepVar_);
+  DECLARE_FIELD(FieldT, indepVar_)
 };
 
 //--------------------------------------------------------------------
@@ -515,7 +515,7 @@ private:
                   const double amplitude=1.0);
   
   const double trans_, lo_, hi_, f_, amp_;
-  DECLARE_FIELDS(FieldT, indepVar_, x1_, x2_);
+  DECLARE_FIELDS(FieldT, indepVar_, x1_, x2_)
 };
 
 //--------------------------------------------------------------------
@@ -768,7 +768,7 @@ private:
   
   const double xCenter_, yCenter_, vortexStrength_,  vortexRadius_, u_, v_;
   const VelocityComponent velocityComponent_;
-  DECLARE_FIELDS(FieldT, x_, y_);
+  DECLARE_FIELDS(FieldT, x_, y_)
 };
 
 //--------------------------------------------------------------------
@@ -933,7 +933,7 @@ private:
                const VelocityComponent velocityComponent );
   const double x0_, y0_, g_, r_, u_;
   const VelocityComponent velocityComponent_;
-  DECLARE_FIELDS(FieldT, x_, y_);
+  DECLARE_FIELDS(FieldT, x_, y_)
 };
 
 //--------------------------------------------------------------------
@@ -1069,7 +1069,7 @@ template< typename FieldT >
 class BurnsChristonAbskg
 : public Expr::Expression<FieldT>
 {
-  DECLARE_FIELDS(FieldT, x_, y_, z_);
+  DECLARE_FIELDS(FieldT, x_, y_, z_)
   
   /* declare operators associated with this expression here */
   

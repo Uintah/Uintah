@@ -50,7 +50,7 @@ class CriticalSurfaceEnergy
   /* declare private variables such as fields, operators, etc. here */
   const double bulkSurfaceEnergy_;
   const double sqrtCoef_;
-  DECLARE_FIELD(FieldT, superSat_); //field from table of supersaturation
+  DECLARE_FIELD(FieldT, superSat_) //field from table of supersaturation
 
   CriticalSurfaceEnergy( const Expr::Tag& superSatTag,
                          const double bulkSurfaceEnergy_,

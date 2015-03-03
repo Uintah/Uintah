@@ -156,7 +156,7 @@ public:
   void evaluate();
   
 private:
-  DECLARE_FIELD(FieldT, x_);
+  DECLARE_FIELD(FieldT, x_)
   const double a_, b_;
 };
 
@@ -211,7 +211,7 @@ public:
   void evaluate();
   
 private:
-  DECLARE_FIELD(FieldT, x_);
+  DECLARE_FIELD(FieldT, x_)
   const double a_, b_, c_, x0_;
 };
 
@@ -257,7 +257,7 @@ public:
   void evaluate();
   
 private:
-  DECLARE_FIELD(FieldT, x_);
+  DECLARE_FIELD(FieldT, x_)
   const double    x0_, phic_, R_, n_;
 };
 
@@ -295,7 +295,7 @@ public:
   ~BCCopier(){}
   void evaluate();
 private:
-  DECLARE_FIELD(FieldT, src_);
+  DECLARE_FIELD(FieldT, src_)
 };
 
 
@@ -340,8 +340,8 @@ public:
   void evaluate();
 private:
   const bool hasDensity_;
-  DECLARE_FIELD(FieldT, src_);
-  DECLARE_FIELD(SVolField, rho_);
+  DECLARE_FIELD(FieldT, src_)
+  DECLARE_FIELD(SVolField, rho_)
 };
 
 #endif // BoundaryConditions_h

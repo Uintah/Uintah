@@ -79,8 +79,8 @@ private:
              const double nu );
   const double a_, nu_;
   
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -135,8 +135,8 @@ private:
              const double A,
              const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -195,8 +195,8 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -255,8 +255,8 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 /**
@@ -317,7 +317,7 @@ private:
                     const Expr::Tag& zTag,
                     const double angle );
   const double angle_;
-  DECLARE_FIELDS(FieldT, x_, y_, z_);
+  DECLARE_FIELDS(FieldT, x_, y_, z_)
 };
 
 //====================================================================

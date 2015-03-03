@@ -76,7 +76,7 @@ class RadiationSource
  : public Expr::Expression<SVolField>
 {
 
-  DECLARE_FIELDS(SVolField, divQ_, absCoef_, temperature_, cellType_);
+  DECLARE_FIELDS(SVolField, divQ_, absCoef_, temperature_, cellType_)
   
   const Uintah::VarLabel *temperatureLabel_, *absorptionLabel_, *celltypeLabel_, *divqLabel_, *VRFluxLabel_,
   *boundFluxLabel_, *radiationVolqLabel_;

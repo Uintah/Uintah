@@ -90,7 +90,7 @@ namespace Wasatch{
     const Uintah::VarLabel* phiLabel_;
     const Uintah::VarLabel* phirhsLabel_;
     
-    DECLARE_FIELD(SVolField, phiRhs_);
+    DECLARE_FIELD(SVolField, phiRhs_)
     
     typedef Uintah::CCVariable<Uintah::Stencil4> MatType;
     MatType matrix_;
