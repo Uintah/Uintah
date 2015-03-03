@@ -35,13 +35,6 @@
 
 namespace Uintah {
 
-using std::vector;
-using std::map;
-using std::queue;
-using std::set;
-using std::ofstream;
-using std::string;
-
 class Task;
 class DetailedTask;
 class UnifiedSchedulerWorker;
@@ -110,7 +103,7 @@ class UnifiedScheduler : public MPIScheduler  {
     UnifiedScheduler( const UnifiedScheduler& );
     UnifiedScheduler& operator=( const UnifiedScheduler& );
 
-    int getAviableThreadNum();
+    int getAvailableThreadNum();
 
     int  pendingMPIRecvs();
 
@@ -181,8 +174,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     cudaError_t unregisterPageLockedHostMem();
 
-
-
     void freeCudaEvents();
 
     void clearGpuDBMaps();
@@ -203,18 +194,18 @@ class UnifiedScheduler : public MPIScheduler  {
       }
     };
 
-    map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceRequiresPtrs;
-    map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceComputesPtrs;
-    map<string, GPUGridVariableInfo> deviceComputesTemporaryPtrs;
-    vector<VarLabel*> temporaryVarLabels;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceRequiresPtrs;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> deviceComputesPtrs;
+    std::map<std::string, GPUGridVariableInfo> deviceComputesTemporaryPtrs;
+    std::vector<VarLabel*> temporaryVarLabels;
 
-    vector<GPUGridVariableInfo> deviceRequiresAllocationPtrs;
-    vector<GPUGridVariableInfo> deviceComputesAllocationPtrs;
-    vector<double*> hostComputesAllocationPtrs;
+    std::vector<GPUGridVariableInfo> deviceRequiresAllocationPtrs;
+    std::vector<GPUGridVariableInfo> deviceComputesAllocationPtrs;
+    std::vector<double*> hostComputesAllocationPtrs;
 
-    map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostRequiresPtrs;
-    map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostComputesPtrs;
-    vector<queue<cudaEvent_t*> >   idleEvents;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostRequiresPtrs;
+    std::map<VarLabelMatl<Patch>, GPUGridVariableInfo> hostComputesPtrs;
+    std::vector<std::queue<cudaEvent_t*> >   idleEvents;
     int  numDevices_;
     int  currentDevice_;
 
