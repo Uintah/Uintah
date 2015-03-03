@@ -39,21 +39,14 @@ SimpleEmission( const Expr::Tag& temperatureTag,
                 const double envTemp,
                 const Expr::Tag& absCoefTag )
   : Expr::Expression<FieldT>(),
-    envTempValue_  ( envTemp        ),
+    envTempValue_   ( envTemp ),
     hasAbsCoef_     ( absCoefTag != Expr::Tag() ),
     hasConstEnvTemp_( envTempTag == Expr::Tag() )
 {
-   temperature_ = this->template create_field_request<FieldT>(temperatureTag);
+  temperature_ = this->template create_field_request<FieldT>(temperatureTag);
   if(!hasConstEnvTemp_)  envTemp_ = this->template create_field_request<FieldT>(envTempTag);
-  if(hasAbsCoef_)  absCoef_ = this->template create_field_request<FieldT>(absCoefTag);
+  if( hasAbsCoef_     )  absCoef_ = this->template create_field_request<FieldT>(absCoefTag);
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-SimpleEmission<FieldT>::
-~SimpleEmission()
-{}
 
 //--------------------------------------------------------------------
 
@@ -89,9 +82,9 @@ Builder::Builder( const Expr::Tag divQTag,
                   const Expr::Tag absCoefTag )
   : ExpressionBuilder( divQTag ),
     temperatureTag_( temperatureTag ),
-    envTempTag_( envTempTag ),
-    absCoefTag_( absCoefTag ),
-    envTemp_   ( 0.0        )
+    envTempTag_    ( envTempTag     ),
+    absCoefTag_    ( absCoefTag     ),
+    envTemp_       ( 0.0            )
 {}
 
 template< typename FieldT >
