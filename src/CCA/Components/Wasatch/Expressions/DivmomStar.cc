@@ -12,63 +12,20 @@ DivmomStar::DivmomStar( const Expr::TagList& velStarTags,
   doX_      ( velStarTags[0]!=Expr::Tag() ),
   doY_      ( velStarTags[1]!=Expr::Tag() ),
   doZ_      ( velStarTags[2]!=Expr::Tag() ),
-  is3d_     ( doX_ && doY_ && doZ_    ),
-  xVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[0] ),
-  yVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[1] ),
-  zVelStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : velStarTags[2] ),
-  densStart_  ( densStarTag==Expr::Tag() ? Expr::Tag() : densStarTag    )
+  is3d_     ( doX_ && doY_ && doZ_    )
 {
   set_gpu_runnable( true );
+  
+  if(doX_)  uStar_ = create_field_request<XVolField>(velStarTags[0]);
+  if(doY_)  vStar_ = create_field_request<YVolField>(velStarTags[1]);
+  if(doZ_)  wStar_ = create_field_request<ZVolField>(velStarTags[2]);
+   densStar_ = create_field_request<SVolField>(densStarTag);
 }
 
 //------------------------------------------------------------------
 
 DivmomStar::~DivmomStar()
 {}
-
-//------------------------------------------------------------------
-
-void DivmomStar::advertise_dependents( Expr::ExprDeps& exprDeps )
-{  
-    if( doX_ )
-    {
-      exprDeps.requires_expression( xVelStart_ );
-    }
-    if( doY_ )
-    {
-      exprDeps.requires_expression( yVelStart_ );
-    }  
-    if( doZ_ )
-    {
-      exprDeps.requires_expression( zVelStart_ );
-    }  
-    
-    exprDeps.requires_expression( densStart_ );
-  
-}
-
-//------------------------------------------------------------------
-
-void DivmomStar::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
-  
-    const Expr::FieldMgrSelector<XVolField>::type& xVolFM  = fml.field_manager<XVolField>();
-    const Expr::FieldMgrSelector<YVolField>::type& yVolFM  = fml.field_manager<YVolField>();
-    const Expr::FieldMgrSelector<ZVolField>::type& zVolFM  = fml.field_manager<ZVolField>(); 
-    
-    if( doX_ ){
-      uStar_  = &xVolFM.field_ref( xVelStart_ );
-    }
-    if( doY_ ){
-      vStar_ = &yVolFM.field_ref( yVelStart_ );
-    }
-    if( doZ_ ){
-      wStar_ = &zVolFM.field_ref( zVelStart_ );
-    }
-    
-    densStar_  = &scalarFM.field_ref( densStart_ );
-}
 
 //------------------------------------------------------------------
 
@@ -95,17 +52,20 @@ void DivmomStar::evaluate()
   using namespace SpatialOps;
   SVolField& divmomstar = this->value();
   
-  
-    if (is3d_) {
-      divmomstar <<=   (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * (*uStar_) )
-                     + (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * (*vStar_) )
-                     + (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * (*wStar_) );
-    } else {
-      if(doX_) divmomstar <<=              (*gradXOp_) ( (*s2XInterpOp_)(*densStar_) * (*uStar_) );
-      else     divmomstar <<= 0.0;
-      if(doY_) divmomstar <<= divmomstar + (*gradYOp_) ( (*s2YInterpOp_)(*densStar_) * (*vStar_) );
-      if(doZ_) divmomstar <<= divmomstar + (*gradZOp_) ( (*s2ZInterpOp_)(*densStar_) * (*wStar_) );
-    }
+  const SVolField& rho = densStar_->field_ref();
+  if (is3d_) {
+    const XVolField& u = uStar_->field_ref();
+    const YVolField& v = vStar_->field_ref();
+    const ZVolField& w = wStar_->field_ref();
+    divmomstar <<=   (*gradXOp_) ( (*s2XInterpOp_)(rho) * (u) )
+                   + (*gradYOp_) ( (*s2YInterpOp_)(rho) * (v) )
+                   + (*gradZOp_) ( (*s2ZInterpOp_)(rho) * (w) );
+  } else {
+    if(doX_) divmomstar <<=              (*gradXOp_) ( (*s2XInterpOp_)(rho) * (uStar_->field_ref()) );
+    else     divmomstar <<= 0.0;
+    if(doY_) divmomstar <<= divmomstar + (*gradYOp_) ( (*s2YInterpOp_)(rho) * (vStar_->field_ref()) );
+    if(doZ_) divmomstar <<= divmomstar + (*gradZOp_) ( (*s2ZInterpOp_)(rho) * (wStar_->field_ref()) );
+  }
 }
 
 //------------------------------------------------------------------

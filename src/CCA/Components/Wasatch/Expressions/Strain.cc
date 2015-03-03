@@ -32,11 +32,12 @@ template< typename StrainT, typename Vel1T, typename Vel2T >
 Strain<StrainT,Vel1T,Vel2T>::
 Strain( const Expr::Tag& vel1Tag,
         const Expr::Tag& vel2Tag )
-  : Expr::Expression<StrainT>(),
-    vel1t_     ( vel1Tag ),
-    vel2t_     ( vel2Tag )
+  : Expr::Expression<StrainT>()
 {
   this->set_gpu_runnable( true );
+  
+   u1_ = this->template create_field_request<Vel1T>(vel1Tag);
+   u2_ = this->template create_field_request<Vel2T>(vel2Tag);
 }
 
 //--------------------------------------------------------------------
@@ -45,31 +46,6 @@ template< typename StrainT, typename Vel1T, typename Vel2T >
 Strain<StrainT,Vel1T,Vel2T>::
 ~Strain()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename StrainT, typename Vel1T, typename Vel2T >
-void
-Strain<StrainT,Vel1T,Vel2T>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( vel1t_ );
-  exprDeps.requires_expression( vel2t_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename StrainT, typename Vel1T, typename Vel2T >
-void
-Strain<StrainT,Vel1T,Vel2T>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<Vel1T>::type& vel1fm = fml.template field_manager<Vel1T>();
-  const typename Expr::FieldMgrSelector<Vel2T>::type& vel2fm = fml.template field_manager<Vel2T>();
-
-  vel1_ = &vel1fm.field_ref( vel1t_ );
-  vel2_ = &vel2fm.field_ref( vel2t_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -92,7 +68,7 @@ evaluate()
   using namespace SpatialOps;
   StrainT& strain = this->value();
   strain <<= 0.0; // avoid potential garbage in extra/ghost cells
-  strain <<= 0.5 * ( (*vel1GradOp_)(*vel1_) + (*vel2GradOp_)(*vel2_) );
+  strain <<= 0.5 * ( (*vel1GradOp_)(u1_->field_ref()) + (*vel2GradOp_)(u2_->field_ref()) );
 }
 
 //--------------------------------------------------------------------
@@ -125,11 +101,12 @@ template< typename StrainT, typename VelT >
 Strain<StrainT,VelT,VelT>::
 Strain( const Expr::Tag& velTag,
         const Expr::Tag& dilTag )
-  : Expr::Expression<StrainT>(),
-    velt_     ( velTag  ),
-    dilt_     ( dilTag  )
+  : Expr::Expression<StrainT>()
 {
   this->set_gpu_runnable( true );
+  
+   u_ = this->template create_field_request<VelT>(velTag);
+   dil_ = this->template create_field_request<SVolField>(dilTag);
 }
 
 //--------------------------------------------------------------------
@@ -138,31 +115,6 @@ template< typename StrainT, typename VelT >
 Strain<StrainT,VelT,VelT>::
 ~Strain()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename StrainT, typename VelT >
-void
-Strain<StrainT,VelT,VelT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( velt_  );
-  exprDeps.requires_expression( dilt_  );
-}
-
-//--------------------------------------------------------------------
-
-template< typename StrainT, typename VelT >
-void
-Strain<StrainT,VelT,VelT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<SVolField>::type& svolfm = fml.template field_manager<SVolField>();
-  const typename Expr::FieldMgrSelector<VelT >::type& velfm  = fml.template field_manager<VelT >();
-
-  vel_  = &velfm. field_ref( velt_  );
-  dil_  = &svolfm.field_ref( dilt_  );
-}
 
 //--------------------------------------------------------------------
 
@@ -184,7 +136,7 @@ evaluate()
 {
   using namespace SpatialOps;
   StrainT& strain = this->value();
-  strain <<= (*velGradOp_)(*vel_) - 1.0/3.0*((*svolInterpOp_)(*dil_));
+  strain <<= (*velGradOp_)(u_->field_ref()) - 1.0/3.0*((*svolInterpOp_)(dil_->field_ref()));
 }
 
 //--------------------------------------------------------------------

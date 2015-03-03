@@ -79,9 +79,7 @@ namespace Wasatch{
     
     ~Coordinates();
         
-    void advertise_dependents( Expr::ExprDeps& exprDeps );
     void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-    void bind_fields( const Expr::FieldManagerList& fml );
     void evaluate();
     
   };

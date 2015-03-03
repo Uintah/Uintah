@@ -125,13 +125,10 @@ class Scheduler : public UintahParallelPort {
     
     virtual void addTask( Task* t, const PatchSet*, const MaterialSet* ) = 0;
     
-    virtual const std::vector<const Task::Dependency*>& getInitialRequires() = 0;
-
+    virtual const std::vector<const Task::Dependency*>&         getInitialRequires() const = 0;
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const = 0;
-
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const = 0;
-
-    virtual const std::set<std::string>& getNotCheckPointVars() const = 0;    
+    virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
     virtual LoadBalancer* getLoadBalancer() = 0;
 
@@ -188,12 +185,12 @@ class Scheduler : public UintahParallelPort {
                                               SimulationInterface* sim) = 0;
 
 
-    virtual void overrideVariableBehavior( std::string var,
-                                           bool treatAsOld,
-                                           bool copyData,
-                                           bool noScrub,
-                                           bool notCopyData,
-                                           bool noCheckpoint) = 0;
+    virtual void overrideVariableBehavior( const std::string & var,
+                                                 bool          treatAsOld,
+                                                 bool          copyData,
+                                                 bool          noScrub,
+                                                 bool          notCopyData,
+                                                 bool          noCheckpoint ) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing

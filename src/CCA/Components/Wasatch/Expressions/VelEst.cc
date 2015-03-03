@@ -15,18 +15,21 @@ VelEst<FieldT>::VelEst( const Expr::Tag velTag,
                         const Expr::Tag pressureTag,
                         const Expr::Tag timeStepTag )
   : Expr::Expression<FieldT>(),
-    velt_     ( velTag      ),
-    convTermt_( convTermTag ),
-    densityt_ ( densityTag  ),
-    visct_    ( viscTag     ),
-    tauxit_   ( tauTags[0]  ),
-    tauyit_   ( tauTags[1]  ),
-    tauzit_   ( tauTags[2]  ),
-    pressuret_(pressureTag ),
-    tStept_   ( timeStepTag ),
-    is3d_( tauxit_ != Expr::Tag() && tauyit_ != Expr::Tag() && tauzit_ != Expr::Tag() )
+    doX_   ( tauTags[0] != Expr::Tag()  ),
+    doY_   ( tauTags[1] != Expr::Tag() ),
+    doZ_   ( tauTags[2] != Expr::Tag() ),
+    is3d_( doX_ && doY_ && doZ_ )
 {
   this->set_gpu_runnable( true );
+   vel_ = this->template create_field_request<FieldT>(velTag);
+   convTerm_ = this->template create_field_request<FieldT>(convTermTag);
+   density_ = this->template create_field_request<SVolField>(densityTag);
+   pressure_ = this->template create_field_request<SVolField>(pressureTag);
+   dt_ = this->template create_field_request<TimeField>(timeStepTag);
+  if (doX_ || doY_ || doZ_)  visc_ = this->template create_field_request<SVolField>(viscTag);
+  if (doX_)  tauxi_ = this->template create_field_request<XFace>(tauTags[0]);
+  if (doY_)  tauyi_ = this->template create_field_request<YFace>(tauTags[1]);
+  if (doZ_)  tauzi_ = this->template create_field_request<ZFace>(tauTags[2]);
 }
 
 //------------------------------------------------------------------
@@ -38,65 +41,19 @@ VelEst<FieldT>::~VelEst()
 //------------------------------------------------------------------
 
 template< typename FieldT >
-void VelEst<FieldT>::advertise_dependents( Expr::ExprDeps& exprDeps )
-{  
-  exprDeps.requires_expression( velt_      );
-  exprDeps.requires_expression( convTermt_ );
-  exprDeps.requires_expression( densityt_  );
-  exprDeps.requires_expression( pressuret_ );
-  exprDeps.requires_expression( tStept_    );  
-  
-  if( tauxit_ != Expr::Tag() || tauyit_ != Expr::Tag() || tauzit_ != Expr::Tag()) 
-    exprDeps.requires_expression( visct_ );
-    
-  if( tauxit_ != Expr::Tag() )  exprDeps.requires_expression( tauxit_ );
-  if( tauyit_ != Expr::Tag() )  exprDeps.requires_expression( tauyit_ );
-  if( tauzit_ != Expr::Tag() )  exprDeps.requires_expression( tauzit_ );
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
-void VelEst<FieldT>::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm          = fml.field_manager<FieldT>();
-  const typename Expr::FieldMgrSelector<SVolField>::type& scalarFM = fml.field_manager<SVolField>();
-  const typename Expr::FieldMgrSelector<XFace>::type& xFaceFM      = fml.field_manager<XFace>();
-  const typename Expr::FieldMgrSelector<YFace>::type& yFaceFM      = fml.field_manager<YFace>();
-  const typename Expr::FieldMgrSelector<ZFace>::type& zFaceFM      = fml.field_manager<ZFace>();
-  const typename Expr::FieldMgrSelector<TimeField>::type& tFM      = fml.field_manager<TimeField>();
-  
-  vel_      = &fm.field_ref ( velt_ );    
-  convTerm_ = &fm.field_ref ( convTermt_ );    
-  density_  = &scalarFM.field_ref ( densityt_ );    
-  pressure_ = &scalarFM.field_ref ( pressuret_ );    
-  tStep_    = &tFM.field_ref( tStept_      );
-
-  if( tauxit_ != Expr::Tag() || tauyit_ != Expr::Tag() || tauzit_ != Expr::Tag()) 
-    visc_ = &scalarFM.field_ref ( visct_ );    
-  
-  if( tauxit_ != Expr::Tag() )  tauxi_ = &xFaceFM.field_ref ( tauxit_ );
-  if( tauyit_ != Expr::Tag() )  tauyi_ = &yFaceFM.field_ref ( tauyit_ );
-  if( tauzit_ != Expr::Tag() )  tauzi_ = &zFaceFM.field_ref ( tauzit_ );
-  
-}
-
-//------------------------------------------------------------------
-
-template< typename FieldT >
 void VelEst<FieldT>::bind_operators( const SpatialOps::OperatorDatabase& opDB )
 {
   scalarInterpOp_ = opDB.retrieve_operator<ScalarInterpT>();
   
-  if( tauxit_ != Expr::Tag() ) {
+  if( doX_ ) {
     s2XFInterpOp_     = opDB.retrieve_operator<S2XFInterpT>();
     divXOp_ = opDB.retrieve_operator<DivXT>();
   }
-  if( tauyit_ != Expr::Tag() ) {
+  if( doY_ ) {
     s2YFInterpOp_     = opDB.retrieve_operator<S2YFInterpT>();
     divYOp_ = opDB.retrieve_operator<DivYT>();
   }
-  if( tauzit_ != Expr::Tag() ) {
+  if( doZ_ ) {
     s2ZFInterpOp_     = opDB.retrieve_operator<S2ZFInterpT>();
     divZOp_ = opDB.retrieve_operator<DivZT>();
   }
@@ -115,22 +72,33 @@ void VelEst<FieldT>::evaluate()
 
   result <<= 0.0;  // jcs without this, the variable density tests go haywire.
 
+  const SVolField& rho = density_->field_ref();
+  const SVolField& p = pressure_->field_ref();
+  const FieldT& vel = vel_->field_ref();
+  const FieldT& convTerm = convTerm_->field_ref();
+  const TimeField& dt = dt_->field_ref();
+  
   if( is3d_ ){ // optimize the 3D calculation since that is what we have most commonly:
-    result <<= *vel_ + *tStep_ * ( *convTerm_ - ( 1 / (*scalarInterpOp_)(*density_) )
-        * ( (*divXOp_)( (*s2XFInterpOp_)(*visc_) * *tauxi_ )
-          + (*divYOp_)( (*s2YFInterpOp_)(*visc_) * *tauyi_ )
-          + (*divZOp_)( (*s2ZFInterpOp_)(*visc_) * *tauzi_ )
-          + (*gradPOp_)(*pressure_)
+    const SVolField& visc = visc_->field_ref();
+    const XFace& tauxi = tauxi_->field_ref();
+    const YFace& tauyi = tauyi_->field_ref();
+    const ZFace& tauzi = tauzi_->field_ref();
+    
+    result <<= vel + dt * ( convTerm - ( 1 / (*scalarInterpOp_)(rho) )
+        * ( (*divXOp_)( (*s2XFInterpOp_)(visc) * tauxi )
+          + (*divYOp_)( (*s2YFInterpOp_)(visc) * tauyi )
+          + (*divZOp_)( (*s2ZFInterpOp_)(visc) * tauzi )
+          + (*gradPOp_)(p)
           )
         );
   }
   else{ // for 2D and 1D, things aren't as fast:
     SpatFldPtr<FieldT> tmp = SpatialFieldStore::get<FieldT>( result );
-    if( tauxit_ != Expr::Tag() ) *tmp <<=        (*divXOp_)( (*s2XFInterpOp_)(*visc_) * *tauxi_ );
+    if( doX_ ) *tmp <<=        (*divXOp_)( (*s2XFInterpOp_)( visc_->field_ref() ) * tauxi_->field_ref() );
     else                         *tmp <<= 0.0;
-    if( tauyit_ != Expr::Tag() ) *tmp <<= *tmp + (*divYOp_)( (*s2YFInterpOp_)(*visc_) * *tauyi_ );
-    if( tauzit_ != Expr::Tag() ) *tmp <<= *tmp + (*divZOp_)( (*s2ZFInterpOp_)(*visc_) * *tauzi_ );
-    result <<= *vel_ + *tStep_ * ( *convTerm_ - ( 1 / (*scalarInterpOp_)(*density_) ) * ( *tmp + (*gradPOp_)(*pressure_) ) );
+    if( doY_ ) *tmp <<= *tmp + (*divYOp_)( (*s2YFInterpOp_)( visc_->field_ref() ) * tauyi_->field_ref() );
+    if( doZ_ ) *tmp <<= *tmp + (*divZOp_)( (*s2ZFInterpOp_)( visc_->field_ref() ) * tauzi_->field_ref() );
+    result <<= vel + dt * ( convTerm - ( 1 / (*scalarInterpOp_)(rho) ) * ( *tmp + (*gradPOp_)(p) ) );
   }
 }
 

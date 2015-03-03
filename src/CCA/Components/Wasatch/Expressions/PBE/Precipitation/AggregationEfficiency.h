@@ -42,20 +42,16 @@ template< typename FieldT >
 class AggregationEfficiency
 : public Expr::Expression<FieldT>
 {
-  const Expr::TagList efficiencyTagList_; //tags of efficiencies, nEnv^2
-  const Expr::TagList abscissaeTagList_;  // these are the tags of all abscissae
-  const Expr::Tag growthCoefTag_;         //coefficient tag for growth
-  const Expr::Tag dissipationTag_;        //energy dissipation tag
-  const Expr::Tag densityTag_;            //fluid density tag
+//  const Expr::TagList abscissaeTagList_;  // these are the tags of all abscissae
+//  const Expr::Tag growthCoefTag_;         //coefficient tag for growth
+//  const Expr::Tag dissipationTag_;        //energy dissipation tag
+//  const Expr::Tag densityTag_;            //fluid density tag
 
   const double l_;                        //parameter for scaling the efficiency model and matching units
   const std::string growthModel_;         //string with type of growth rate model to use 
   
-  typedef std::vector<const FieldT*> FieldVec;
-  FieldVec abscissae_;
-  const FieldT* g0_;
-  const FieldT* eps_;
-  const FieldT* rho_;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
+  DECLARE_FIELDS(FieldT, g0_, eps_, rho_);
   
   AggregationEfficiency(const Expr::TagList& abscissaeTagList,
                         const Expr::Tag& growthCoefTag,
@@ -100,8 +96,6 @@ public:
   
   ~AggregationEfficiency();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 };
@@ -125,14 +119,14 @@ AggregationEfficiency( const Expr::TagList& abscissaeTagList,
                        const double lengthParam,
                        const std::string growthModel)
 : Expr::Expression<FieldT>(),
-  abscissaeTagList_(abscissaeTagList),
-  growthCoefTag_(growthCoefTag),
-  dissipationTag_(dissipationTag),
-  densityTag_(densityTag),
   l_(lengthParam),
   growthModel_(growthModel)
 {
   this->set_gpu_runnable( true );
+  this->template create_field_vector_request<FieldT>(abscissaeTagList, abscissae_);
+   g0_ = this->template create_field_request<FieldT>(growthCoefTag);
+   eps_ = this->template create_field_request<FieldT>(dissipationTag);
+   rho_ = this->template create_field_request<FieldT>(densityTag);
 }
 
 //--------------------------------------------------------------------
@@ -147,58 +141,30 @@ AggregationEfficiency<FieldT>::
 template< typename FieldT >
 void
 AggregationEfficiency<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( abscissaeTagList_ );
-  exprDeps.requires_expression( growthCoefTag_ );
-  exprDeps.requires_expression( dissipationTag_ );
-  exprDeps.requires_expression( densityTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-AggregationEfficiency<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& volfm = fml.template field_manager<FieldT>();
-  abscissae_.clear();
-  for (Expr::TagList::const_iterator iabscissa=abscissaeTagList_.begin(); iabscissa!=abscissaeTagList_.end(); iabscissa++) {
-    abscissae_.push_back(&volfm.field_ref(*iabscissa));
-  }
-  g0_  = &volfm.field_ref( growthCoefTag_) ;
-  eps_ = &volfm.field_ref( dissipationTag_ );
-  rho_ = &volfm.field_ref( densityTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-AggregationEfficiency<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   typedef std::vector<FieldT*> ResultsVec;
   ResultsVec& results = this->get_value_vec();
-  
+  const FieldT& rho = rho_->field_ref();
+  const FieldT& g0 = g0_->field_ref();
+  const FieldT& eps = eps_->field_ref();
   SpatialOps::SpatFldPtr<FieldT> tmp = SpatialOps::SpatialFieldStore::get<FieldT>( *results[0] );
 
   int nEnv = abscissae_.size();
 
   int idx = 0;
 
-#define ri *abscissae_[i]
-#define rj *abscissae_[j]
+//#define ri abscissae_[i]->field_ref()
+//#define rj abscissae_[j]->field_ref()
 
   if (growthModel_ == "BULK_DIFFUSION") {
     
     for (int i=0; i<nEnv; i++) {
       for (int j =0 ; j<nEnv; j++) {
-        *tmp <<= cond( *rho_ > 0.0 && *eps_ > 0.0,
-                       cond ( ri > rj, l_ * *g0_ / (ri * *rho_ * (ri + rj) * (ri + rj) * *eps_) )
-                            ( l_ * *g0_ / (rj * *rho_ * (ri + rj) * (ri + rj) * *eps_) ) )
+        *tmp <<= cond( rho > 0.0 && eps > 0.0,
+                       cond ( ri > rj, l_ * g0 / (ri * rho * (ri + rj) * (ri + rj) * eps) )
+                            ( l_ * g0 / (rj * rho * (ri + rj) * (ri + rj) * eps) ) )
                      ( 0.0 );
         *tmp <<= cond( *tmp > 0.0, *tmp)
                      (0.0); 
@@ -210,9 +176,9 @@ evaluate()
     
     for (int i=0; i<nEnv; i++) {
       for (int j =0 ; j<nEnv; j++) {
-        *tmp <<= cond( *rho_ > 0.0 && *eps_ > 0.0,
-                       cond ( ri > rj, l_ * *g0_ / (ri * *rho_ * (ri + rj) * (ri + rj) * *eps_) )
-                            ( l_ * *g0_ / (rj * *rho_ * (ri + rj) * (ri + rj) * *eps_) ) )
+        *tmp <<= cond( rho > 0.0 && eps > 0.0,
+                       cond ( ri > rj, l_ * g0 / (ri * rho * (ri + rj) * (ri + rj) * eps) )
+                            ( l_ * g0 / (rj * rho * (ri + rj) * (ri + rj) * eps) ) )
                      ( 0.0 );
         *tmp <<= cond( *tmp > 0.0, *tmp)
                      (0.0);
@@ -224,7 +190,7 @@ evaluate()
     
     for (int i=0; i<nEnv; i++) {
       for (int j =0 ; j<nEnv; j++) {
-        *tmp <<= cond( *rho_ > 0.0 && *eps_ > 0.0, l_ * *g0_  / ( *rho_ * (ri + rj)  * (ri + rj) * *eps_) )
+        *tmp <<= cond( rho > 0.0 && eps > 0.0, l_ * g0  / ( rho * (ri + rj)  * (ri + rj) * eps) )
                      ( 0.0 );
         *tmp <<= cond( *tmp > 0.0, *tmp)
                      (0.0);

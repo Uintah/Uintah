@@ -449,7 +449,7 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
     d_size.push_back(tmpsize);
   }
   else {
-    // CPTI and CPDI populate psize matrix with Rvectors in columns
+    // CPTI and CPDI populate size matrix with Rvectors in columns
     // normalized by the grid spacing for interpolators in ParticleCreator.cc
     d_size.push_back(size);
   }

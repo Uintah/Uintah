@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_PROCESSORGROUP_H
-#define UINTAH_HOMEBREW_PROCESSORGROUP_H
+#ifndef CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
+#define CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <vector>
@@ -34,7 +34,6 @@ namespace Uintah {
 CLASS
    ProcessorGroup
    
-   Short description...
 
 GENERAL INFORMATION
 
@@ -50,65 +49,69 @@ GENERAL INFORMATION
 KEYWORDS
    Processor_Group
 
+
 DESCRIPTION
-   Long description...
   
+
 WARNING
   
 ****************************************/
 
-   class Parallel;
+class Parallel;
 
-   class ProcessorGroup {
-   public:
-      ~ProcessorGroup();
-      
-      //////////
-      // Insert Documentation Here:
-      int size() const {
-	 return d_size;
+class ProcessorGroup {
+
+  public:
+
+    ~ProcessorGroup();
+
+    int size() const { return d_size; }
+
+    int myrank() const { return d_rank; }
+
+    MPI_Comm getComm() const
+    {
+      return d_comm;
+    }
+
+    MPI_Comm getgComm( int i ) const
+    {
+      if (d_threads < 1 || i == -1) {
+        return d_comm;
       }
-
-      //////////
-      // Insert Documentation Here:
-      int myrank() const {
-	 return d_rank;
+      else {
+        return d_gComms[i];
       }
+    }
 
-      MPI_Comm getComm() const {
-	 return d_comm;
-      }
+    void setgComm( int i ) const;
 
-      MPI_Comm getgComm(int i) const {
-        if (d_threads < 1 || i == -1) return d_comm; 
-        else return d_gComms[i];
-      }
+  private:
 
-      void setgComm (int i) const; 
+    const ProcessorGroup* d_parent;
 
+    friend class Parallel;
 
-   private:
-      //////////
-      // Insert Documentation Here:
-      const ProcessorGroup*  d_parent;
-      
-      friend class Parallel;
-      ProcessorGroup(const ProcessorGroup* parent,
-		     MPI_Comm comm, bool allmpi,
-		     int rank, int size, int threads);
+    ProcessorGroup( const ProcessorGroup* parent,
+                          MPI_Comm        comm,
+                          bool            allmpi,
+                          int             rank,
+                          int             size,
+                          int             threads );
 
-      int d_rank;
-      int d_size;
-      int d_threads;
-      MPI_Comm d_comm;
-      mutable std::vector<MPI_Comm> d_gComms;
-      bool d_allmpi;
-      
-      ProcessorGroup(const ProcessorGroup&);
-      ProcessorGroup& operator=(const ProcessorGroup&);
-   };
+    int                           d_rank;
+    int                           d_size;
+    int                           d_threads;
+    MPI_Comm                      d_comm;
+    mutable std::vector<MPI_Comm> d_gComms;
+    bool                          d_allmpi;
+
+    // disable copy and assignment
+    ProcessorGroup(const ProcessorGroup&);
+    ProcessorGroup& operator=(const ProcessorGroup&);
+};
+
 } // End namespace Uintah
-   
 
 
-#endif
+#endif // end CCA_COMPONENTS_SCHEDULERS_PROCESSORGROUP_H

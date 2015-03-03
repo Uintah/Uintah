@@ -60,16 +60,19 @@ template< typename FieldT >
 class HomogeneousNucleationCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag superSatTag_, eqConcTag_; //Tag for supersturation and equilibrium concentration
-  const Expr::Tag surfaceEngTag_; //Tag for variable surface energy
-  const FieldT* superSat_; 
-  const FieldT* eqConc_;
-  const FieldT* surfaceEng_;      //field for variable surface energy
+//  const Expr::Tag superSatTag_, eqConcTag_; //Tag for supersturation and equilibrium concentration
+//  const Expr::Tag surfaceEngTag_; //Tag for variable surface energy
+//  const FieldT* superSat_; 
+//  const FieldT* eqConc_;
+//  const FieldT* surfaceEng_;      //field for variable surface energy
+  DECLARE_FIELDS(FieldT, superSat_, eqConc_, surfaceEng_);
+  
   const double molecularVolume_;
   const double surfaceEnergy_;    //value if constant surface energy
   const double temperature_; 
   const double diffusionCoef_; //diffusion coefficient
   const double sRatio_;
+  const bool doSurfEng_;
   
   HomogeneousNucleationCoefficient( const Expr::Tag& superSatTag,
                                     const Expr::Tag& eqConcTag,
@@ -121,9 +124,6 @@ public:
   };
   
   ~HomogeneousNucleationCoefficient();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -146,16 +146,17 @@ HomogeneousNucleationCoefficient( const Expr::Tag& superSatTag,
                                   const double diffusionCoef,
                                   const double sRatio)
 : Expr::Expression<FieldT>(),
-  superSatTag_(superSatTag),
-  eqConcTag_(eqConcTag),
-  surfaceEngTag_(surfaceEngTag),
   molecularVolume_(molecularVolume),
   surfaceEnergy_(surfaceEnergy),
   temperature_(temperature),
   diffusionCoef_(diffusionCoef),
-  sRatio_(sRatio)
+  sRatio_(sRatio),
+  doSurfEng_(surfaceEngTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+   eqConc_ = this->template create_field_request<FieldT>(eqConcTag);
+  if(doSurfEng_)  surfaceEng_ = this->template create_field_request<FieldT>(surfaceEngTag);
 }
 
 //--------------------------------------------------------------------
@@ -170,36 +171,13 @@ HomogeneousNucleationCoefficient<FieldT>::
 template< typename FieldT >
 void
 HomogeneousNucleationCoefficient<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-  exprDeps.requires_expression( eqConcTag_);
-  if ( surfaceEngTag_ != Expr::Tag() )
-    exprDeps.requires_expression( surfaceEngTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-HomogeneousNucleationCoefficient<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  superSat_ = &fml.template field_manager<FieldT>().field_ref( superSatTag_ );
-  eqConc_ = &fml.template field_manager<FieldT>().field_ref( eqConcTag_ );
-  if ( surfaceEngTag_ != Expr::Tag() )
-    surfaceEng_ = &fml.template field_manager<FieldT>().field_ref( surfaceEngTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-HomogeneousNucleationCoefficient<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
+  
+  const FieldT& S = superSat_->field_ref();
+  const FieldT& eqConc = eqConc_->field_ref();
   
   //temporary fields to set before calculating coefficient
   SpatFldPtr<FieldT> delG = SpatialFieldStore::get<FieldT>( result );
@@ -208,18 +186,19 @@ evaluate()
   SpatFldPtr<FieldT> kF = SpatialFieldStore::get<FieldT>( result );
   SpatFldPtr<FieldT> N1 = SpatialFieldStore::get<FieldT>( result );
   
-  if ( surfaceEngTag_ != Expr::Tag() ) {
-    *delG <<= 16.0*PI/3.0* molecularVolume_ * molecularVolume_ * *surfaceEng_ * *surfaceEng_ * *surfaceEng_ / (KB * KB * temperature_ * temperature_ * log(*superSat_) * log(*superSat_) )+
-              KB*temperature_*log(*superSat_) - *surfaceEng_ * pow(36.0*PI*molecularVolume_*molecularVolume_, 1.0/3.0);
+  if ( doSurfEng_ ) {
+    const FieldT& surfEng = surfaceEng_->field_ref();
+    *delG <<= 16.0*PI/3.0* molecularVolume_ * molecularVolume_ * surfEng * surfEng * surfEng / (KB * KB * temperature_ * temperature_ * log(S) * log(S) )+
+              KB*temperature_*log(S) - surfEng * pow(36.0*PI*molecularVolume_*molecularVolume_, 1.0/3.0);
     
-    *iC <<= 32.0*PI/3.0* molecularVolume_ * molecularVolume_ * *surfaceEng_ * *surfaceEng_ * *surfaceEng_ / 
-            (KB*KB*KB *temperature_*temperature_*temperature_ *log(*superSat_) *log(*superSat_)* log(*superSat_) );
+    *iC <<= 32.0*PI/3.0* molecularVolume_ * molecularVolume_ * surfEng * surfEng * surfEng / 
+            (KB*KB*KB *temperature_*temperature_*temperature_ *log(S) *log(S)* log(S) );
   } else {
-    *delG <<= 16.0*PI/3.0* molecularVolume_ * molecularVolume_ * surfaceEnergy_ * surfaceEnergy_ * surfaceEnergy_ / (KB * KB * temperature_ * temperature_ * log(*superSat_) * log(*superSat_) )+
-              KB*temperature_*log(*superSat_) - surfaceEnergy_ * pow(36.0*PI*molecularVolume_*molecularVolume_, 1.0/3.0);
+    *delG <<= 16.0*PI/3.0* molecularVolume_ * molecularVolume_ * surfaceEnergy_ * surfaceEnergy_ * surfaceEnergy_ / (KB * KB * temperature_ * temperature_ * log(S) * log(S) )+
+              KB*temperature_*log(S) - surfaceEnergy_ * pow(36.0*PI*molecularVolume_*molecularVolume_, 1.0/3.0);
   
     *iC <<= 32.0*PI/3.0* molecularVolume_ * molecularVolume_ * surfaceEnergy_ * surfaceEnergy_ * surfaceEnergy_ / 
-            (KB*KB*KB *temperature_*temperature_*temperature_ *log(*superSat_) *log(*superSat_)* log(*superSat_) );
+            (KB*KB*KB *temperature_*temperature_*temperature_ *log(S) *log(S)* log(S) );
   }
   //add in a check for gibb's energy < 0 for stability
   *z <<= cond( *delG > 0.0, sqrt( *delG/ (3.0*PI*KB*temperature_* *iC * *iC) ) )
@@ -228,9 +207,9 @@ evaluate()
                 (0.0);
   
   *kF <<= diffusionCoef_ * pow(48.0*PI*PI*molecularVolume_ * *iC, 1.0/3.0);
-  *N1 <<= NA * *eqConc_ * *superSat_ / sRatio_;
+  *N1 <<= NA * eqConc * S / sRatio_;
 
-  result <<= cond( *superSat_ > 1.0, *z * *kF * *N1 * *N1 * exp( - *delG/ KB /temperature_ ) )
+  result <<= cond( S > 1.0, *z * *kF * *N1 * *N1 * exp( - *delG/ KB /temperature_ ) )
                  ( 0.0 );
 }
 

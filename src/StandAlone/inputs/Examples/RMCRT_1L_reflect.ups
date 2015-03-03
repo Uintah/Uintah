@@ -15,7 +15,7 @@
     <initTime>      0.0       </initTime>
     <delt_min>      0.00001   </delt_min>
     <delt_max>      1         </delt_max>
-    <max_Timesteps> 10         </max_Timesteps>
+    <max_Timesteps> 5         </max_Timesteps>
     <timestep_multiplier>  1  </timestep_multiplier>
   </Time>
   <!--__________________________________-->
@@ -107,7 +107,7 @@
       <save label = "divQ"    />
       <save label = "abskg"   />
       <save label = "sigmaT4" />
-      <checkpoint cycle = "2" timestepInterval = "2"/>
+      <checkpoint cycle = "2" timestepInterval = "3"/>
   </DataArchiver>
   
   

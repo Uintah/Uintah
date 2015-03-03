@@ -5,16 +5,16 @@ host=`hostname`
 echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
-   echo "  At Utah: Ember or Ash"
+   echo "  At Utah: Ember, Ash, or Baja"
    echo "  At LLNL: Vulcan or Cab"
-   echo "  At LANL: Mustang or Mapache"
+   echo "  At LANL: Mustang, Mapache, or Wolf"
    echo
    exit
 fi
 
 if ! test "$DATE"; then
   echo "Error, please set env var DATE for install dir suffix!"
-  echo "   Something like: setenv DATE Dec_12_2014"
+  echo "   Something like: setenv DATE Dec_12_2015"
   exit
 fi
 
@@ -108,12 +108,55 @@ if test "$MACHINE" = "Mapache"; then
 
   NAME2="Mapache"
   INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
-  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/Mapache/Boost/v1_56_0-$COMP
+  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
+else
+if test "$MACHINE" = "Wolf"; then
+  if [[ $host != wf-fe* ]]; then
+     echo "Error: hostname did not return wf-fe*... Goodbye."
+     exit
+  fi
+  #COMP=gcc4.7.2
+  echo
+  echo "Have you run the appropriate 'module load' commands? Eg:"
+  echo "   * module load intel/14.0.4"
+  echo "   * module load cmake/3.0.0"
+  echo
+  sleep 1
+
+  NAME2="Wolf"
+  INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
+else
+if test "$MACHINE" = "Baja"; then
+  if [[ $host != baja* ]]; then
+     echo "Error: hostname did not return baja*... Goodbye."
+     exit
+  fi
+  COMP=gcc4.9.1
+  NAME2="Baja"
+  INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr
+else
+if test "$MACHINE" = "Vulcan"; then
+  if [[ $host != vulcanlac* ]]; then
+     echo "Error: hostname did not return vulcanlac*... Goodbye."
+     exit
+  fi
+  CC=`which mpigcc`
+  CXX=`which mpig++`
+  COMP=gcc-4.4.7
+
+  NAME2="Vulcan"
+  INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/vulcan/Wasatch3P
+  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/vulcan/Boost/v1_55_0
 else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
+fi
+fi
 fi
 fi
 fi

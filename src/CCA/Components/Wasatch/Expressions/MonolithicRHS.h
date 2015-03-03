@@ -18,21 +18,16 @@ template< typename FieldT >
 class MonolithicRHS
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag dCoefTag_, xconvFluxTag_, yconvFluxTag_, zconvFluxTag_, phiTag_, srcTag_;
-
-  const bool is3d_;
+  const bool doX_, doY_, doZ_, doSrc_, is3d_;
 
   typedef typename FaceTypes<FieldT>::XFace  XFaceT;
   typedef typename FaceTypes<FieldT>::YFace  YFaceT;
   typedef typename FaceTypes<FieldT>::ZFace  ZFaceT;
 
-  const FieldT* dCoef_;
-  const FieldT* phi_;
-  const FieldT* src_;
-
-  const XFaceT* convFluxX_;  ///< x-direction convective flux
-  const YFaceT* convFluxY_;  ///< y-direction convective flux
-  const ZFaceT* convFluxZ_;  ///< z-direction convective flux
+  DECLARE_FIELDS(FieldT, dCoef_, phi_, src_);
+  DECLARE_FIELD(XFaceT, convFluxX_);
+  DECLARE_FIELD(YFaceT, convFluxY_);
+  DECLARE_FIELD(ZFaceT, convFluxZ_);
 
   typedef SpatialOps::BasicOpTypes<FieldT>  OpTypes;
 
@@ -91,8 +86,6 @@ public:
   };
 
   ~MonolithicRHS();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

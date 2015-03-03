@@ -37,11 +37,12 @@ template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFlux<PhiInterpT, VelInterpT>::
 ConvectiveFlux( const Expr::Tag& phiTag,
                 const Expr::Tag& velTag )
-: Expr::Expression<PhiFaceT>(),
-phiTag_( phiTag ),
-velTag_( velTag )
+: Expr::Expression<PhiFaceT>()
 {
   this->set_gpu_runnable( true );
+  
+   phi_ = this->template create_field_request<PhiVolT>(phiTag);
+   vel_ = this->template create_field_request<VelVolT>(velTag);
 }
 
 //--------------------------------------------------------------------
@@ -50,26 +51,6 @@ template< typename PhiInterpT, typename VelInterpT >
 ConvectiveFlux<PhiInterpT, VelInterpT>::
 ~ConvectiveFlux()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename PhiInterpT, typename VelInterpT >
-void ConvectiveFlux<PhiInterpT, VelInterpT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression(phiTag_);
-  exprDeps.requires_expression(velTag_);
-}
-
-//--------------------------------------------------------------------
-
-template< typename PhiInterpT, typename VelInterpT >
-void ConvectiveFlux<PhiInterpT, VelInterpT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  phi_ = &fml.template field_manager<PhiVolT>().field_ref( phiTag_ );
-  vel_ = &fml.template field_manager<VelVolT>().field_ref( velTag_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -90,7 +71,9 @@ void ConvectiveFlux<PhiInterpT, VelInterpT>::evaluate()
 
   PhiFaceT& result = this->value();
   result <<= 0.0;
-  result <<= (*phiInterpOp_)(*phi_) * (*velInterpOp_)(*vel_);
+  const PhiVolT& phi = phi_->field_ref();
+  const VelVolT& vel = vel_->field_ref();
+  result <<= (*phiInterpOp_)(phi) * (*velInterpOp_)(vel);
 }
 
 //--------------------------------------------------------------------
@@ -112,15 +95,16 @@ ConvectiveFluxLimiter( const Expr::Tag& phiTag,
                       const Wasatch::ConvInterpMethods limiterType,
                       const Expr::Tag& volFracTag )
 : Expr::Expression<PhiFaceT>(),
-  phiTag_             ( phiTag     ),
-  velTag_             ( velTag     ),
-  volFracTag_         ( volFracTag ),
   limiterType_        ( limiterType ),
   isUpwind_           ( limiterType_ == Wasatch::UPWIND  ),
   isCentral_          ( limiterType_ == Wasatch::CENTRAL ),
   hasEmbeddedBoundary_( volFracTag != Expr::Tag() )
 {
   this->set_gpu_runnable( true );
+  
+   phi_ = this->template create_field_request<PhiVolT>(phiTag);
+   vel_ = this->template create_field_request<VelVolT>(velTag);
+  if (hasEmbeddedBoundary_)  volFrac_ = this->template create_field_request<PhiVolT>(volFracTag);
 }
 
 //--------------------------------------------------------------------
@@ -130,33 +114,6 @@ typename PhiInterpHiT, typename VelInterpT >
 ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
 ~ConvectiveFluxLimiter()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename LimiterInterpT, typename PhiInterpLowT,
-typename PhiInterpHiT, typename VelInterpT >
-void
-ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression(phiTag_);
-  exprDeps.requires_expression(velTag_);
-  if ( hasEmbeddedBoundary_ ) exprDeps.requires_expression( volFracTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename LimiterInterpT, typename PhiInterpLowT,
-typename PhiInterpHiT, typename VelInterpT >
-void
-ConvectiveFluxLimiter<LimiterInterpT, PhiInterpLowT, PhiInterpHiT, VelInterpT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  phi_ = &fml.template field_ref<PhiVolT>( phiTag_ );
-  vel_ = &fml.template field_ref<VelVolT>( velTag_ );
-  
-  if (hasEmbeddedBoundary_) volFrac_ = &fml.template field_ref<PhiVolT>( volFracTag_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -183,6 +140,8 @@ evaluate()
   using namespace SpatialOps;
   PhiFaceT& result = this->value();
   
+  const PhiVolT& phi = phi_->field_ref();
+  const VelVolT& vel = vel_->field_ref();
   // here we write the interpolated phi as follows:
   // phi = phi_low - psi * (phi_low - phi_high)
   // where phi is the interpolated value at the face
@@ -194,30 +153,30 @@ evaluate()
   SpatialOps::SpatFldPtr<PhiFaceT> phiHi = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
 
   // second order interpolant - for central and other flux limiters
-  phiInterpHiOp_->apply_to_field( *phi_, *phiHi );
+  phiInterpHiOp_->apply_to_field( phi, *phiHi );
 
   // result
   if ( isCentral_ ){
-    result <<= *phiHi * (*velInterpOp_)(*vel_);
+    result <<= *phiHi * (*velInterpOp_)(vel);
   }
   else{
     // flux limiter function calculation. only calculate for flux limiters
     SpatialOps::SpatFldPtr<VelFaceT> velInterp = SpatialOps::SpatialFieldStore::get<VelFaceT>( result );
-    *velInterp <<= (*velInterpOp_)(*vel_);
+    *velInterp <<= (*velInterpOp_)(vel);
 
     // psi is the flux limiter function. This lives on scalar volume faces
     SpatialOps::SpatFldPtr<PhiFaceT> psi = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
     psiInterpOp_->set_advective_velocity( *velInterp );
     psiInterpOp_->set_flux_limiter_type( limiterType_ );
-    psiInterpOp_->apply_to_field( *phi_, *psi);
+    psiInterpOp_->apply_to_field( phi, *psi);
 
-    if (hasEmbeddedBoundary_) psiInterpOp_->apply_embedded_boundaries( *volFrac_, *psi);
+    if (hasEmbeddedBoundary_) psiInterpOp_->apply_embedded_boundaries( volFrac_->field_ref(), *psi);
   
     // low order interpolant for phi (e.g. upwind). This lives on scalar volume faces
     SpatialOps::SpatFldPtr<PhiFaceT> phiLow = SpatialOps::SpatialFieldStore::get<PhiFaceT>( result );
 
     phiInterpLowOp_->set_advective_velocity( *velInterp );
-    phiInterpLowOp_->apply_to_field( *phi_, *phiLow );
+    phiInterpLowOp_->apply_to_field( phi, *phiLow );
 
     result <<= (*phiLow - *psi * (*phiLow - *phiHi) ) * *velInterp;
   }

@@ -16,9 +16,7 @@ class ParticleDragCoefficient
  : public Expr::Expression<ParticleField>
 {
   ParticleDragCoefficient( const Expr::Tag& pReTag );
-
-  const Expr::Tag pReTag_;
-  const ParticleField  *pRe_;
+  DECLARE_FIELD(ParticleField, pRe_);
 
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -37,11 +35,6 @@ public:
 
   };
 
-  ~ParticleDragCoefficient();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 
@@ -52,38 +45,11 @@ public:
 //##########################################################
 
 ParticleDragCoefficient::ParticleDragCoefficient( const Expr::Tag& pReTag )
-  : Expr::Expression<ParticleField>(),
-    pReTag_(pReTag)
+  : Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(true);
+   pRe_ = create_field_request<ParticleField>(pReTag);
 }
-
-//--------------------------------------------------------------------
-
-ParticleDragCoefficient::~ParticleDragCoefficient()
-{}
-
-//--------------------------------------------------------------------
-
-void
-ParticleDragCoefficient::advertise_dependents( Expr::ExprDeps& exprDeps)
-{
-  exprDeps.requires_expression( pReTag_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleDragCoefficient::bind_fields( const Expr::FieldManagerList& fml )
-{
-  pRe_ = &fml.field_ref<ParticleField>( pReTag_  );
-}
-
-//--------------------------------------------------------------------
-
-void
-ParticleDragCoefficient::bind_operators( const SpatialOps::OperatorDatabase& opDB )
-{}
 
 //--------------------------------------------------------------------
 
@@ -92,10 +58,11 @@ ParticleDragCoefficient::evaluate()
 {
   using namespace SpatialOps;
   ParticleField& result = this->value();
-
-  result <<= cond( *pRe_ <= 1.0,  1.0 )
-                 ( *pRe_ <= 1000, 1.0 + 0.15 * pow( *pRe_ , 0.687 ) )
-                 ( 0.0183 * *pRe_ );
+  const ParticleField& pRe = pRe_->field_ref();
+  
+  result <<= cond( pRe <= 1.0,  1.0 )
+                 ( pRe <= 1000, 1.0 + 0.15 * pow( pRe , 0.687 ) )
+                 ( 0.0183 * pRe );
 }
 
 //--------------------------------------------------------------------
