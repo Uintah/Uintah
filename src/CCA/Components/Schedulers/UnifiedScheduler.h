@@ -101,7 +101,7 @@ class UnifiedScheduler : public MPIScheduler  {
     UnifiedScheduler( const UnifiedScheduler& );
     UnifiedScheduler& operator=( const UnifiedScheduler& );
 
-    int getAviableThreadNum();
+    int getAvailableThreadNum();
 
     int  pendingMPIRecvs();
 
