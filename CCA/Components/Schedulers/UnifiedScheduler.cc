@@ -528,7 +528,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   if (!d_isInitTimestep && !d_isRestartInitTimestep) {
     // wait for all tasks to finish
     d_nextmutex.lock();
-    while (getAviableThreadNum() < numThreads_) {
+    while (getAvailableThreadNum() < numThreads_) {
       // if any thread is busy, conditional wait here
       d_nextsignal.wait(d_nextmutex);
     }
@@ -1081,7 +1081,7 @@ UnifiedScheduler::pendingMPIRecvs()
 //______________________________________________________________________
 //
 
-int UnifiedScheduler::getAviableThreadNum()
+int UnifiedScheduler::getAvailableThreadNum()
 {
   int num = 0;
   for (int i = 0; i < numThreads_; i++) {
