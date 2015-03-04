@@ -24,94 +24,105 @@
 
 #include <CCA/Components/Wasatch/Expressions/BoundaryConditions/BoundaryConditions.h>
 #include <spatialops/structured/SpatialMask.h>
+#include <spatialops/NeboStencilBuilder.h>
 
-#define APPLY_BC(BCVALUE)                                                                   \
-{                                                                                           \
-if (this->setInExtraCellsOnly_)                                                             \
-{                                                                                           \
-  const SpatialMask<FieldT> mask(f, maskPoints);                                              \
-  f <<= cond( mask, BCVALUE )                                                              \
-            ( f              );                                                             \
-} else {                                                                                    \
-  typedef Wasatch::BCOpTypeSelector<FieldT> OpT;                                            \
-  switch (this->bcTypeEnum_) {                                                              \
-    case Wasatch::DIRICHLET:                                                                \
-    {                                                                                       \
-      switch (this->faceTypeEnum_) {                                                        \
-        case Uintah::Patch::xminus:                                                         \
-        case Uintah::Patch::xplus:                                                          \
-        {                                                                                   \
-          typedef typename OpT::DirichletX::DestFieldType DesT;                             \
-          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
-          (*this->diriXOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
-          break;                                                                            \
-        }                                                                                   \
-        case Uintah::Patch::yminus:                                                         \
-        case Uintah::Patch::yplus:                                                          \
-        {                                                                                   \
-          typedef typename OpT::DirichletY::DestFieldType DesT;                             \
-          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
-          (*this->diriYOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
-          break;                                                                            \
-        }                                                                                   \
-        case Uintah::Patch::zminus:                                                         \
-        case Uintah::Patch::zplus:                                                          \
-        {                                                                                   \
-          typedef typename OpT::DirichletZ::DestFieldType DesT;                             \
-          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
-          (*this->diriZOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
-          break;                                                                            \
-        }                                                                                   \
-        default:                                                                            \
-        {                                                                                   \
-          break;                                                                            \
-        }                                                                                   \
-      }                                                                                     \
-      break;                                                                                \
-    }                                                                                       \
-    case Wasatch::NEUMANN:                                                                  \
-    {                                                                                       \
-      switch (this->faceTypeEnum_) {                                                        \
-        case Uintah::Patch::xminus:                                                         \
-        case Uintah::Patch::xplus:                                                          \
-        {                                                                                   \
-          typedef typename OpT::NeumannX::DestFieldType DesT;                               \
-          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
-          (*this->neumXOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
-          break;                                                                            \
-        }                                                                                   \
-        case Uintah::Patch::yminus:                                                         \
-        case Uintah::Patch::yplus:                                                          \
-        {                                                                                   \
-          typedef typename OpT::NeumannY::DestFieldType DesT;                               \
-          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
-          (*this->neumYOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
-          break;                                                                            \
-        }                                                                                   \
-        case Uintah::Patch::zminus:                                                         \
-        case Uintah::Patch::zplus:                                                          \
-        {                                                                                   \
-          typedef typename OpT::NeumannZ::DestFieldType DesT;                               \
-          const SpatialMask<DesT> mask = SpatialMask<DesT>::build(f, maskPoints);   \
-          (*this->neumZOp_)(mask, f, BCVALUE, this->isMinusFace_);                          \
-          break;                                                                            \
-        }                                                                                   \
-        default:                                                                            \
-        {                                                                                   \
-          break;                                                                            \
-        }                                                                                   \
-      }                                                                                     \
-      break;                                                                                \
-    }                                                                                       \
-    default:                                                                                \
-    {                                                                                       \
-      std::ostringstream msg;                                                               \
-      msg << "ERROR: It looks like you have specified an UNSUPPORTED boundary condition type!"  \
-      << "Basic boundary types can only be either DIRICHLET or NEUMANN. Please revise your input file." << std::endl; \
-      break;                                                                                \
-      }                                                                                     \
-    }                                                                                       \
-  }                                                                                         \
+#define STAGGERED_MASK \
+  convert<FieldT>( *(this->svolSpatialMask_),SpatialOps::MINUS_SIDE, SpatialOps::PLUS_SIDE)
+
+#define APPLY_BC(BCVALUE)                                                                     \
+{                                                                                             \
+  if (this->setInExtraCellsOnly_)                                                             \
+  {                                                                                           \
+    masked_assign( *(this->spatialMask_), f, BCVALUE);                                        \
+  } else {                                                                                    \
+    typedef Wasatch::BCOpTypeSelector<FieldT> OpT;                                            \
+    switch (this->bcTypeEnum_) {                                                              \
+      case Wasatch::DIRICHLET:                                                                \
+      {                                                                                       \
+        switch (this->faceTypeEnum_) {                                                        \
+          case Uintah::Patch::xminus:                                                         \
+          case Uintah::Patch::xplus:                                                          \
+          {                                                                                   \
+            typedef typename OpT::DirichletX::DestFieldType DesT;                             \
+            (*this->diriXOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+            break;                                                                            \
+          }                                                                                   \
+          case Uintah::Patch::yminus:                                                         \
+          case Uintah::Patch::yplus:                                                          \
+          {                                                                                   \
+            typedef typename OpT::DirichletY::DestFieldType DesT;                             \
+            (*this->diriYOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+            break;                                                                            \
+          }                                                                                   \
+          case Uintah::Patch::zminus:                                                         \
+          case Uintah::Patch::zplus:                                                          \
+          {                                                                                   \
+            typedef typename OpT::DirichletZ::DestFieldType DesT;                             \
+            (*this->diriZOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+            break;                                                                            \
+          }                                                                                   \
+          default:                                                                            \
+          {                                                                                   \
+            break;                                                                            \
+          }                                                                                   \
+        }                                                                                     \
+        break;                                                                                \
+      }                                                                                       \
+      case Wasatch::NEUMANN:                                                                  \
+      {                                                                                       \
+        switch (this->faceTypeEnum_) {                                                        \
+          case Uintah::Patch::xminus:                                                         \
+          case Uintah::Patch::xplus:                                                          \
+          {                                                                                   \
+            typedef typename OpT::NeumannX::DestFieldType DesT;                               \
+            if (this->isStaggered_)                                                           \
+            {                                                                                 \
+              (*this->neumXOp_)(convert<DesT>( *(this->svolSpatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+            } else {                                                                                                          \
+              (*this->neumXOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);      \
+            }                                                                                 \
+            break;                                                                            \
+          }                                                                                   \
+          case Uintah::Patch::yminus:                                                         \
+          case Uintah::Patch::yplus:                                                          \
+          {                                                                                   \
+            typedef typename OpT::NeumannY::DestFieldType DesT;                               \
+            if (this->isStaggered_)                                                           \
+            {                                                                                 \
+              (*this->neumYOp_)(convert<DesT>( *(this->svolSpatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+            } else {                                                                                                          \
+              (*this->neumYOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);      \
+            }                                                                                 \
+            break;                                                                            \
+          }                                                                                   \
+          case Uintah::Patch::zminus:                                                         \
+          case Uintah::Patch::zplus:                                                          \
+          {                                                                                   \
+            typedef typename OpT::NeumannZ::DestFieldType DesT;                               \
+            if (this->isStaggered_)                                                           \
+            {                                                                                 \
+              (*this->neumZOp_)(convert<DesT>( *(this->svolSpatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);  \
+            } else {                                                                          \
+              (*this->neumZOp_)(convert<DesT>( *(this->spatialMask_),this->shiftSide_), f, BCVALUE, this->isMinusFace_);      \
+            }                                                                                 \
+            break;                                                                            \
+          }                                                                                   \
+          default:                                                                            \
+          {                                                                                   \
+            break;                                                                            \
+          }                                                                                   \
+        }                                                                                     \
+        break;                                                                                \
+      }                                                                                       \
+      default:                                                                                \
+      {                                                                                       \
+        std::ostringstream msg;                                                               \
+        msg << "ERROR: It looks like you have specified an UNSUPPORTED boundary condition type!"  \
+        << "Basic boundary types can only be either DIRICHLET or NEUMANN. Please revise your input file." << std::endl; \
+        break;                                                                                \
+        }                                                                                     \
+      }                                                                                       \
+    }                                                                                         \
 }
 // ###################################################################
 //
@@ -125,15 +136,10 @@ ConstantBC<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
-  FieldT& f = this->value();
-  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
-    
+  if (this->spatialMask_) {
+    FieldT& f = this->value();
     if( this->isStaggered_ && this->bcTypeEnum_ != Wasatch::NEUMANN ){
-      const SpatialMask<FieldT> mask(f, maskPoints);
-      masked_assign( mask, f, bcValue_ );
+      masked_assign ( STAGGERED_MASK, f, bcValue_ );
     }
     else{
       APPLY_BC(bcValue_);
@@ -184,13 +190,10 @@ evaluate()
   
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     if( this->isStaggered_ ){
-      std::vector<IntVec> maskPoints;
-      this->build_mask_points(maskPoints);
-      const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, a_ * x + b_ )
-                ( f                   );
+      masked_assign(STAGGERED_MASK, f, a_*x + b_);
     }
-    else{
+    else {
+      //APPLY_BC(a_ * (*interp)(x) + b_);
       const double ci = this->ci_;
       const double cg = this->cg_;
       std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
@@ -214,11 +217,7 @@ evaluate()
   const FieldT& x = x_->field_ref();
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     if( this->isStaggered_ ){
-      std::vector<IntVec> maskPoints;
-      this->build_mask_points(maskPoints);
-      const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, a_ * (x - x0_)*(x - x0_) + b_ * (x - x0_) + c_ )
-                ( f );
+      masked_assign(STAGGERED_MASK, f, a_ * (x - x0_)*(x - x0_) + b_ * (x - x0_) + c_);
     }
     else{
       const double ci = this->ci_;
@@ -245,11 +244,7 @@ evaluate()
   const FieldT& x = x_->field_ref();
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     if(this->isStaggered_) {
-      std::vector<IntVec> maskPoints;
-      this->build_mask_points(maskPoints);
-      const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, phic_ * pow( 1.0 - abs(x - x0_) / R_ , 1.0/n_ ) )
-                ( f );
+      masked_assign(STAGGERED_MASK, f, phic_ * pow( 1.0 - abs(x - x0_) / R_ , 1.0/n_ ));
     }
     else{
       const double ci = this->ci_;
@@ -275,16 +270,11 @@ evaluate()
   FieldT& f = this->value();
   const FieldT& src = src_->field_ref();
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<IntVec> maskPoints;
-    this->build_mask_points(maskPoints);
     if( this->isStaggered_ ){
-      const SpatialMask<FieldT> mask(f, maskPoints);
-      f <<= cond( mask, src  )
-                ( f          );
+      masked_assign(STAGGERED_MASK, f, src);
     }
     else{
-      const SpatialMask<FieldT> mask(f, * this->neboGhostPts_);
-      f <<= cond( mask,  src )
+      f <<= cond( *this->spatialMask_,  src )
                 ( f          );
     }
   }  

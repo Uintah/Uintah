@@ -241,9 +241,17 @@ namespace Wasatch {
     std::vector<SpatialOps::IntVec> extraPlusBndCells;      // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
     std::vector<SpatialOps::IntVec> interiorBndCells;       // iterator for interior cells. These are zero-based on the extra cell
     
-    std::vector<SpatialOps::IntVec> neboExtraBndCells;      // iterator for extra cells. These are zero-based on the first interior cell.
-    std::vector<SpatialOps::IntVec> neboExtraPlusBndCells;  // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
-    std::vector<SpatialOps::IntVec> neboInteriorBndCells;   // iterator for interior cells. These are zero-based on the first interior cell.
+    SpatialOps::SpatialMask<SVolField>* svolExtraCellSpatialMask; // iterator for svol/ccvar extra cells.
+    SpatialOps::SpatialMask<XVolField>* xvolExtraCellSpatialMask; // iterator for xvol/sfcxvar extra cells.
+    SpatialOps::SpatialMask<YVolField>* yvolExtraCellSpatialMask; // iterator for yvol/sfcyvar extra cells.
+    SpatialOps::SpatialMask<ZVolField>* zvolExtraCellSpatialMask; // iterator for zvol/sfczvar extra cells.
+
+    /**
+     \brief Helper function to return the appropriate spatial mask given a field type
+     */
+    template<typename FieldT>
+    SpatialOps::SpatialMask<FieldT>*
+    get_spatial_mask() const;
 
     std::vector<SpatialOps::IntVec> interiorEdgeCells;      // iterator for interior edge (domain edges) cells
     Uintah::Iterator extraBndCellsUintah;                   // We still need the Unitah iterator
@@ -404,19 +412,10 @@ namespace Wasatch {
     const std::vector<IntVecT>* get_interior_bnd_mask( const BndSpec& myBndSpec,
                                                       const int& patchID ) const;
 
-    // returns the nebo-friendly extra cell iterator. These are zero-based on the first
-    // interior cell. If FieldT is staggered and normal to the boundary, this will
-    // return the extra faces (those outside the domain).
+    // returns the cell centered extra cell SpatialMask associated with this boundary
     template<typename FieldT>
-    const std::vector<IntVecT>* get_nebo_extra_bnd_mask( const BndSpec& myBndSpec,
-                                                   const int& patchID ) const;
-
-    // returns the nebo-friendly interior cell iterator. These are zero-based on the first
-    // interior cell. If FieldT is staggered and normal to the boundary, this will return
-    // the boundary faces.
-    template<typename FieldT>
-    const std::vector<IntVecT>* get_nebo_interior_bnd_mask( const BndSpec& myBndSpec,
-                                                      const int& patchID ) const;
+    const SpatialOps::SpatialMask<FieldT>* get_spatial_mask( const BndSpec& myBndSpec,
+                                                             const int& patchID ) const;
 
     Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                                  const int& patchID );
