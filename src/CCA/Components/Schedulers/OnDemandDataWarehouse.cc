@@ -373,19 +373,24 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
 
 #ifdef HAVE_CUDA
 
-GPUGridVariableBase* OnDemandDataWarehouse::createGPUGridVariable(int sizeOfDataType){
+GPUGridVariableBase*
+OnDemandDataWarehouse::createGPUGridVariable(int sizeOfDataType)
+{
   GPUGridVariableBase* device_var = NULL;
-  switch (sizeOfDataType) {
+  switch ( sizeOfDataType ) {
     case sizeof(int) : {
       device_var = new GPUGridVariable<int>();
       break;
-    }case sizeof(double) : {
+    }
+    case sizeof(double) : {
       device_var = new GPUGridVariable<double>();
       break;
-    }case sizeof(GPUStencil7) : {
+    }
+    case sizeof(GPUStencil7) : {
       device_var = new GPUGridVariable<GPUStencil7>();
       break;
-    }default : {
+    }
+    default : {
       SCI_THROW(InternalError("createGPUGridVariable, unsupported GPUGridVariable type: ", __FILE__, __LINE__));
     }
   }
