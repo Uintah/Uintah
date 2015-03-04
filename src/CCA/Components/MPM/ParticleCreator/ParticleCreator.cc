@@ -239,7 +239,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
           Matrix3 size(1./((double) dxcc.x()),0.,0.,
                        0.,1./((double) dxcc.y()),0.,
                        0.,0.,1./((double) dxcc.z()));
-          pvars.psize[pidx]= pvars.psize[pidx]*size;
+          // Jim commented this out because the smooth geometry pieces
+          // create the "correct" size.  The operation below results in
+          // a double scaling by the size tensor
+          //pvars.psize[pidx]= pvars.psize[pidx]*size;
+          pvars.psize[pidx]= pvars.psize[pidx];
           ++sizeiter;
         }
       }
@@ -512,8 +516,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
           affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
           affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
           affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
-  // The size matrix is used for storing particle domain sizes (Rvectors for CPDI
-  // and CPTI) normalized by the grid spacing
+  // The size matrix is used for storing particle domain sizes (Rvectors for
+  // CPDI and CPTI) normalized by the grid spacing
   Matrix3 size(1./((double) ppc.x()),0.,0.,
                0.,1./((double) ppc.y()),0.,
                0.,0.,1./((double) ppc.z()));
@@ -539,7 +543,19 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
-  pvars.prefined[i]     = 0;
+
+  // AMR stuff
+  // I don't like putting this here, a conditional around each particle.
+  // A better solution would be to pass in the value for prefined.  Make
+  // prefined = 1 on the finest level (unless there is only 1 level),
+  // so that particles don't get refined
+  // to smaller than they start in that region initially.
+  const Level* curLevel = patch->getLevel();
+  if(curLevel->hasFinerLevel() || curLevel->getID()==0){
+    pvars.prefined[i]     = 0;
+  } else{
+    pvars.prefined[i]     = 1;
+  }
 
   //MMS
   string mms_type = d_flags->d_mms_type;
@@ -782,16 +798,16 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
   }
 
+  if (d_flags->d_refineParticles) {
+    particle_state.push_back(d_lb->pRefinedLabel);
+    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
+  }
+
   particle_state.push_back(d_lb->pStressLabel);
   particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
 
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
-
-  if (d_flags->d_refineParticles) {
-    particle_state.push_back(d_lb->pRefinedLabel);
-    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
-  }
 
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);
