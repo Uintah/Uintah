@@ -1394,8 +1394,6 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
         // then after, copy the data, and if necessary, overwrite interpolated data
         const PatchSubset *ps = getLoadBalancer()->getPerProcessorPatchSet(newLevel)->getSubset(d_myworld->myrank());
 
-        proc0cout << "here: " << *ps << "\n";
-
         // for each patch I own
         for (int p = 0; p < ps->size(); p++) {
           const Patch *newPatch = ps->get(p);
@@ -1405,8 +1403,6 @@ SchedulerCommon::scheduleAndDoDataCopy( const GridP&               grid,
           //newPatch->computeVariableExtents(Patch::CellBased, IntVector(0,0,0), Ghost::None, 0, lowIndex, highIndex);
           lowIndex = newPatch->getCellLowIndex();
           highIndex = newPatch->getCellHighIndex();
-
-          proc0cout << "1 here: " << lowIndex << ", " << highIndex << "\n";
 
           // find if area on the new patch was not covered by the old patches
           IntVector dist = highIndex - lowIndex;
