@@ -1243,6 +1243,7 @@ void
 SchedulerCommon::finalizeTimestep()
 {
   finalizeNodes(d_myworld->myrank());
+
   for (unsigned int i = numOldDWs; i < dws.size(); i++) {
     dws[i]->finalize();
   }

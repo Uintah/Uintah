@@ -72,16 +72,16 @@ extern std::map<std::string, double> exectimes;
 
 static double Unified_CurrentWaitTime = 0;
 
-static DebugStream unified_dbg(             "Unified_DBG",             false);
-static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
-static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
-static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
-static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
+static DebugStream unified_dbg(              "Unified_DBG",             false);
+static DebugStream unified_timeout(          "Unified_TimingsOut",      false);
+static DebugStream unified_queuelength(      "Unified_QueueLength",     false);
+static DebugStream unified_threaddbg(        "Unified_ThreadDBG",       false);
+static DebugStream unified_compactaffinity(  "Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
-  static DebugStream gpu_stats(        "Unified_GPUStats",     false);
-         DebugStream use_single_device("Unified_SingleDevice", false);
-         DebugStream simulate_multiple_gpus("SimulateMultipleGPUs", false);
+  static DebugStream gpu_stats(              "Unified_GPUStats",        false);
+         DebugStream use_single_device(      "Unified_SingleDevice",    false);
+         DebugStream simulate_multiple_gpus( "SimulateMultipleGPUs",    false);
 
 #endif
 
@@ -97,8 +97,8 @@ UnifiedScheduler::UnifiedScheduler( const ProcessorGroup*   myworld,
     schedulerLock("scheduler lock")
 #ifdef HAVE_CUDA
   ,
-  idleStreamsLock_("CUDA streams lock"),
   d2hComputesLock_("Device-DB computes copy lock"),
+  idleStreamsLock_("CUDA streams lock"),
   h2dRequiresLock_("Device-DB requires copy lock")
 #endif
 {
@@ -405,7 +405,6 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     }
 #endif
     if (Uintah::Parallel::usingMPI()) {
-
       postMPISends(task, iteration, thread_id);
     }
 #ifdef HAVE_CUDA
@@ -1219,9 +1218,7 @@ UnifiedScheduler::runTasks( int thread_id )
         } else {
 
           //See comment above why this exists
-          if (usingDevice == true &&
-              (m_outPort->isOutputTimestep() || (readyTask->getName() != "DataArchiver::outputVariables"))
-             ){
+          if (usingDevice == true && (m_outPort->isOutputTimestep() || (readyTask->getName() != "DataArchiver::outputVariables"))) {
             markHostRequiresDataAsValid(readyTask);
           }
 #endif
@@ -2303,9 +2300,23 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
               IntVector size = high - low;
               size_t stride_x = 0;
               switch(curDependency->var->typeDescription()->getSubType()->getType()){
-                case TypeDescription::double_type:
+                case TypeDescription::double_type : {
                   stride_x = sizeof(double);
+                  break;
+                }
+                case TypeDescription::int_type : {
+                  stride_x = sizeof(int);
+                  break;
+                }
+                case TypeDescription::Stencil7 : {
+                  stride_x = 7 * sizeof(double);
+                  break;
+                }
+                default : {
+                  SCI_THROW(InternalError("Unsupported GPU Variable base type: " + curDependency->var->typeDescription()->getSubType()->getType(), __FILE__, __LINE__));
+                }
               }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -3364,7 +3375,7 @@ void UnifiedScheduler::prepareGPUDependencies( DetailedTask* task, int iteration
     }
 
     // Prepare internal dependencies.  Only makes sense if we have GPUs that we are using.
-    //if (task->getTask()->usesDevice()) {
+//    if (task->getTask()->usesDevice()) {
     if (Uintah::Parallel::usingDevice()) {
       //If we have ghost cells coming from a GPU to another GPU on the same node
       //This does not cover going to another node (the loop below handles external
