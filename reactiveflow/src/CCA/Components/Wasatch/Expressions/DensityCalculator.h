@@ -89,10 +89,9 @@ template< typename FieldT >
 class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalculatorBase
 {
   const InterpT& rhoEval_;
-  const Expr::Tag rhoFTag_;
   const std::pair<double,double> bounds_;
-  const FieldT* rhoF_;
-
+  DECLARE_FIELD(FieldT, rhoF_)
+  
   DensFromMixfrac( const InterpT& rhoEval,
                    const Expr::Tag& rhoFTag );
 
@@ -128,9 +127,6 @@ public:
   };
 
   ~DensFromMixfrac();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -173,8 +169,7 @@ template< typename FieldT >
 class DensHeatLossMixfrac
  : public Expr::Expression<FieldT>, protected DensityCalculatorBase
 {
-  const Expr::Tag rhofTag_, rhohTag_;
-  const FieldT *rhoh_, *rhof_;
+  DECLARE_FIELDS(FieldT, rhof_, rhoh_)
   const InterpT &densEval_, &enthEval_;
   const std::vector< std::pair<double,double> > bounds_;
 
@@ -222,8 +217,6 @@ public:
   };
 
   ~DensHeatLossMixfrac();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -255,8 +248,8 @@ template< typename FieldT >
 class TwoStreamMixingDensity : public Expr::Expression<FieldT>
 {
   const double rho0_, rho1_;
-  const Expr::Tag rhofTag_, mixfrTag_;
-  const FieldT* rhof_;
+  DECLARE_FIELD(FieldT, rhof_)
+  
   TwoStreamMixingDensity( const Expr::Tag& rhofTag,
                           const double rho0,
                           const double rho1  );
@@ -281,8 +274,6 @@ public:
   };
 
   ~TwoStreamMixingDensity(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -297,9 +288,8 @@ template< typename FieldT >
 class TwoStreamDensFromMixfr : public Expr::Expression<FieldT>
 {
   const double rho0_, rho1_;
-  const Expr::Tag mixfrTag_;
-  const FieldT* mixfr_;
-
+  DECLARE_FIELD(FieldT, mixfr_)
+  
   TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
                           const double rho0,
                           const double rho1 );
@@ -324,8 +314,6 @@ public:
   };
 
   ~TwoStreamDensFromMixfr(){}
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 

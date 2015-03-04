@@ -21,12 +21,11 @@
 class DynamicSmagorinskyCoefficient
 : public StrainTensorBase
 {
-  const Expr::Tag rhot_;
   const bool isConstDensity_;
   const bool doExtraFiltering_; // experimental
   
-  const SVolField* rho_;
-
+  DECLARE_FIELD(SVolField, rho_)
+  
   // filtering operators
   typedef  SpatialOps::OperatorTypeBuilder< SpatialOps::Filter, SVolField, SVolField >::type BoxFilterT;
   typedef  SpatialOps::OperatorTypeBuilder< SpatialOps::Filter, XVolField, XVolField >::type XBoxFilterT;
@@ -90,8 +89,6 @@ public:
   
   ~DynamicSmagorinskyCoefficient();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();  
 };

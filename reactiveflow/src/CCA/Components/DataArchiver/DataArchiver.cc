@@ -33,7 +33,8 @@
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SimulationInterface.h>
 
-#include <Core/Containers/StringUtil.h>
+#include <Core/Exceptions/ErrnoException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 #include <Core/Grid/Box.h>
@@ -45,15 +46,13 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
-#include <Core/Util/Environment.h>
-#include <Core/Util/FileUtils.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Exceptions/ErrnoException.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/FancyAssert.h>
-#include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/Endian.h>
+#include <Core/Util/Environment.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Util/FileUtils.h>
+#include <Core/Util/StringUtil.h>
 
 #include <iomanip>
 #include <cerrno>
@@ -2061,7 +2060,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
         continue;
     
       //__________________________________
-      //  debugging otuput
+      //  debugging output
       dbg << "    "<<var->getName() << ", materials: ";
       for(int m=0;m<var_matls->size();m++){
         if(m != 0)
@@ -2405,8 +2404,7 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
                       matSubset->getVector().end());
 
      for(ConsecutiveRangeSet::iterator liter = levels.begin(); liter != levels.end(); liter++) {
-       ConsecutiveRangeSet& unionedVarMatls =
-         label_map[dep->var->getName()][*liter];
+       ConsecutiveRangeSet& unionedVarMatls = label_map[dep->var->getName()][*liter];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
      

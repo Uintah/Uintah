@@ -45,10 +45,11 @@ template< typename FieldT >
 class KineticGrowthCoefficient
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag superSatTag_, sBarTag_;
   const double growthCoefVal_, sMax_, sMin_;
-  const FieldT* superSat_; //field from table of supersaturation
-  const FieldT* sBar_;     //S bar calculatino for ostwald ripening
+  const bool doSBar_;
+//  const FieldT* superSat_; //field from table of supersaturation
+//  const FieldT* sBar_;     //S bar calculatino for ostwald ripening
+  DECLARE_FIELDS(FieldT, sBar_, superSat_)
   
   KineticGrowthCoefficient( const Expr::Tag& superSatTag,
                             const Expr::Tag& sBarTag,
@@ -87,9 +88,6 @@ public:
   };
   
   ~KineticGrowthCoefficient();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -109,13 +107,14 @@ KineticGrowthCoefficient( const Expr::Tag& superSatTag,
                           const double sMax,
                           const double sMin)
 : Expr::Expression<FieldT>(),
-  superSatTag_  (superSatTag),
-  sBarTag_      (sBarTag),
   growthCoefVal_(growthCoefVal),
   sMax_         (sMax),
-  sMin_         (sMin)
+  sMin_         (sMin),
+  doSBar_       (sBarTag != Expr::Tag())
 {
   this->set_gpu_runnable( true );
+   superSat_ = this->template create_field_request<FieldT>(superSatTag);
+  if (doSBar_)  sBar_ = this->template create_field_request<FieldT>(sBarTag);
 }
 
 //--------------------------------------------------------------------
@@ -130,40 +129,18 @@ KineticGrowthCoefficient<FieldT>::
 template< typename FieldT >
 void
 KineticGrowthCoefficient<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( superSatTag_ );
-  if ( sBarTag_ != Expr::Tag() )
-    exprDeps.requires_expression( sBarTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-KineticGrowthCoefficient<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  superSat_ = &fm.field_ref( superSatTag_ );
-  if ( sBarTag_ != Expr::Tag() )
-    sBar_ = &fm.field_ref( sBarTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-KineticGrowthCoefficient<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
+  const FieldT& S = superSat_->field_ref();
   FieldT& result = this->value();
-  if ( sBarTag_ != Expr::Tag() ) {
-    result <<= cond( *superSat_ < sMax_ && *superSat_ > sMin_ , growthCoefVal_  * ( *superSat_ - *sBar_ ) * ( *superSat_ - *sBar_ )  )
+  
+  if ( doSBar_ ) {
+    const FieldT& sBar = sBar_->field_ref();
+    result <<= cond( S < sMax_ && S > sMin_ , growthCoefVal_  * ( S - sBar ) * ( S - sBar )  )
                    (0.0);  
   } else {
-    result <<= cond( *superSat_ < sMax_ && *superSat_ > sMin_ , growthCoefVal_ * ( *superSat_ - 1.0) * ( *superSat_ - 1.0) )
+    result <<= cond( S < sMax_ && S > sMin_ , growthCoefVal_ * ( S - 1.0) * ( S - 1.0) )
                    (0.0);  
   }
 }

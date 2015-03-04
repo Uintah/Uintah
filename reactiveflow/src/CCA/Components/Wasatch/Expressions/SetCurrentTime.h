@@ -57,8 +57,6 @@ public:
 
   ~SetCurrentTime();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps ){}
-  void bind_fields( const Expr::FieldManagerList& fml ){}
   void evaluate();
   void set_integrator_stage( const int rkStage ){rkStage_ = rkStage;}
   void set_deltat( const double deltat ) { deltat_ = deltat; }

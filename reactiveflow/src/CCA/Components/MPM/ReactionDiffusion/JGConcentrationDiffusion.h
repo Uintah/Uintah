@@ -62,16 +62,16 @@ namespace Uintah {
     virtual void interpolateParticlesToGrid(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw);
 
-    virtual void scheduleComputeStep1(Task* task, const MPMMaterial* matl, 
+    virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                      const PatchSet* patch) const;
 
-    virtual void computeStep1(const Patch* patch, const MPMMaterial* matl,
+    virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
 
-    virtual void scheduleComputeStep2(Task* task, const MPMMaterial* matl, 
+    virtual void scheduleComputeDivergence(Task* task, const MPMMaterial* matl, 
 		                                      const PatchSet* patch) const;
 
-    virtual void computeStep2(const Patch* patch, const MPMMaterial* matl,
+    virtual void computeDivergence(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     virtual void scheduleInterpolateToParticlesAndUpdate(Task* task, const MPMMaterial* matl, 

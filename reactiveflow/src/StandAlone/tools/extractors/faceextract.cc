@@ -38,7 +38,8 @@
 
 #include <Core/DataArchive/DataArchive.h>
 #include <Core/Disclosure/TypeDescription.h>
-#include <Core/Math/Matrix3.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
@@ -48,11 +49,10 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
-
+#include <Core/Math/Matrix3.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h>
+#include <Core/Parallel/Parallel.h>
 
 #include <iostream>
 #include <fstream>
@@ -503,8 +503,11 @@ void printData(DataArchive* archive, string& variable_name,
 } 
 
 
-int main(int argc, char** argv)
+int
+main( int argc, char** argv )
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
 
   //__________________________________
   //  Default Values

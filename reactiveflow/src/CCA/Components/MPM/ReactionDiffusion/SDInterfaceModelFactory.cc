@@ -23,6 +23,7 @@
  */
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/CommonIFConcDiff.h>
 
 #include <CCA/Components/MPM/MPMFlags.h>
 
@@ -66,8 +67,8 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
 
-  if (diff_interface_type == "shared"){
-    return(scinew SDInterfaceModel(child, ss, flags));
+  if (diff_interface_type == "common"){
+    return(scinew CommonIFConcDiff(child, ss, flags));
 	}else if (diff_interface_type == "paired"){
     return(scinew SDInterfaceModel(child, ss, flags));
   }else{

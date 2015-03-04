@@ -94,25 +94,25 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch, const 
 }
 
 
-void ScalarDiffusionModel::scheduleComputeStep1(Task* task, const MPMMaterial* matl, 
+void ScalarDiffusionModel::scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                                const PatchSet* patch) const
 {
 
 }
 
-void ScalarDiffusionModel::computeStep1(const Patch* patch, const MPMMaterial* matl,
+void ScalarDiffusionModel::computeFlux(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 
 }
 
-void ScalarDiffusionModel::scheduleComputeStep2(Task* task, const MPMMaterial* matl, 
+void ScalarDiffusionModel::scheduleComputeDivergence(Task* task, const MPMMaterial* matl, 
 		                                                const PatchSet* patch) const
 {
 
 }
 
-void ScalarDiffusionModel::computeStep2(const Patch* patch, const MPMMaterial* matl,
+void ScalarDiffusionModel::computeDivergence(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 

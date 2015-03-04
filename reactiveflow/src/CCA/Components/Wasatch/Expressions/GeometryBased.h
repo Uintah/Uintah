@@ -25,11 +25,17 @@
 #ifndef GeometryBased_h
 #define GeometryBased_h
 
+// Framework Includes
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/GeometryPiece/GeometryPieceFactory.h>
 
+// Wasatch Includes
+#include <CCA/Components/Wasatch/TagNames.h>
+
+// ExprLib Includes
 #include <expression/Expression.h>
 
+// SpatialOps Includes
 #include <spatialops/OperatorDatabase.h>
 
 /**
@@ -58,8 +64,6 @@ public:
     const double outsideValue_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -68,11 +72,8 @@ private:
   GeometryBased( GeomValueMapT geomObjects,const double outsideValue);
   GeomValueMapT geomObjects_;
   const double outsideValue_;
-  const Expr::Tag xTag_, yTag_, zTag_;  
-  const SVolField* x_;
-  const SVolField* y_;
-  const SVolField* z_;
-  
+  DECLARE_FIELDS(SVolField, x_, y_, z_)
+
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type InpterpSrcT2DestT;
   const InpterpSrcT2DestT* interpSrcT2DestTOp_;
 
@@ -87,35 +88,12 @@ GeometryBased( GeomValueMapT geomObjects,
                const double outsideValue )
 : Expr::Expression<FieldT>(),
   geomObjects_(geomObjects),
-  outsideValue_(outsideValue),
-  xTag_(Expr::Tag("XSVOL",Expr::STATE_NONE)),
-  yTag_(Expr::Tag("YSVOL",Expr::STATE_NONE)),
-  zTag_(Expr::Tag("ZSVOL",Expr::STATE_NONE))
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-GeometryBased<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
+  outsideValue_(outsideValue)
 {
-  exprDeps.requires_expression( xTag_ );
-  exprDeps.requires_expression( yTag_ );
-  exprDeps.requires_expression( zTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-GeometryBased<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<SVolField>::type& fm = fml.field_manager<SVolField>();
-  x_ = &fm.field_ref( xTag_ );
-  y_ = &fm.field_ref( yTag_ );
-  z_ = &fm.field_ref( zTag_ );
+  const Wasatch::TagNames& tags = Wasatch::TagNames::self();
+   x_ = this->template create_field_request<SVolField>(tags.xsvolcoord);
+   y_ = this->template create_field_request<SVolField>(tags.ysvolcoord);
+   z_ = this->template create_field_request<SVolField>(tags.zsvolcoord);
 }
 
 //--------------------------------------------------------------------
@@ -142,20 +120,24 @@ compute_volume_fraction(SVolField& volFrac)
   
   int i = 0;
   int ix,iy,iz;
-  double x,y,z;
+  double xp,yp,zp;
   bool isInside = false;
   SpatialOps::IntVec localCellIJK;
+  
+  const SVolField& x = x_->field_ref();
+  const SVolField& y = y_->field_ref();
+  const SVolField& z = z_->field_ref();
   
   while ( resultIter != volFrac.end() ) {
     i = resultIter - volFrac.begin();
     localCellIJK  = volFrac.window_with_ghost().ijk_index_from_local(i);
-    ix = x_->window_with_ghost().flat_index(localCellIJK);
-    x = (*x_)[ix];
-    iy = y_->window_with_ghost().flat_index(localCellIJK);
-    y = (*y_)[iy];
-    iz = z_->window_with_ghost().flat_index(localCellIJK);
-    z = (*z_)[iz];
-    Uintah::Point p(x,y,z);
+    ix = x.window_with_ghost().flat_index(localCellIJK);
+    xp = x[ix];
+    iy = y.window_with_ghost().flat_index(localCellIJK);
+    yp = y[iy];
+    iz = z.window_with_ghost().flat_index(localCellIJK);
+    zp = z[iz];
+    Uintah::Point p(xp,yp,zp);
     
     // loop over all geometry objects
     geomIter = geomObjects_.begin();

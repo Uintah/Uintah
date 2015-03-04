@@ -50,12 +50,9 @@ template< typename SrcT, typename DestT >
 class InterpolateExpression
 : public Expr::Expression<DestT>
 {
-  const Expr::Tag srct_;
+  DECLARE_FIELD(SrcT, src_)
   
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InterpSrcT2DestT;
-  
-  const SrcT* src_;
-  
   const InterpSrcT2DestT* interpSrcT2DestTOp_;
   
   InterpolateExpression( const Expr::Tag& srctag );
@@ -80,8 +77,6 @@ public:
   
   ~InterpolateExpression();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
@@ -100,16 +95,13 @@ template< typename DestT >
 class InterpolateParticleExpression
 : public Expr::Expression<DestT>
 {
-  const Expr::Tag srct_, pSizeTag_;
-  const Expr::TagList pPosTags_;
+  DECLARE_FIELDS(ParticleField, src_, psize_, px_, py_, pz_)
   
   typedef typename SpatialOps::Particle::ParticleToCell<DestT> P2CellOpT;
   P2CellOpT* p2CellOp_; // particle to cell operator
 
   typedef typename SpatialOps::Particle::ParticlesPerCell<DestT> PPerCellOpT;
   PPerCellOpT* pPerCellOp_; // operator that counts the number of particles per cell
-
-  const ParticleField *src_, *psize_, *px_, *py_, *pz_;
   
   InterpolateParticleExpression( const Expr::Tag& srctag,
                                  const Expr::Tag& particleSizeTag,
@@ -137,8 +129,6 @@ public:
   
   ~InterpolateParticleExpression();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

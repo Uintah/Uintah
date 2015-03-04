@@ -35,11 +35,8 @@ template< typename ScalarT >
 class ParticleBodyForce
 : public Expr::Expression<ParticleField>
 {
-  const Expr::Tag gDensityTag_, pDensityTag_,pSizeTag_;
-  const Expr::TagList pPosTags_;
-
-  const ParticleField *prho_, *px_, *py_, *pz_, *psize_;
-  const ScalarT *grho_;
+  DECLARE_FIELDS(ParticleField, prho_, px_, py_, pz_, psize_)
+  DECLARE_FIELD (ScalarT, grho_)
   
   typedef typename SpatialOps::Particle::CellToParticle<ScalarT> S2POpT;
   S2POpT* sOp_;
@@ -74,8 +71,6 @@ public:
   
   ~ParticleBodyForce();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
   
@@ -93,13 +88,16 @@ ParticleBodyForce( const Expr::Tag& gasDensityTag,
                    const Expr::Tag& particleDensityTag,
                    const Expr::Tag& particleSizeTag,
                    const Expr::TagList& particlePositionTags )
-: Expr::Expression<ParticleField>(),
-  gDensityTag_ ( gasDensityTag        ),
-  pDensityTag_ ( particleDensityTag   ),
-  pSizeTag_    ( particleSizeTag      ),
-  pPosTags_    ( particlePositionTags )
+: Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(false);  // need new particle operators...
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+   prho_ = this->template create_field_request<ParticleField>(particleDensityTag);
+   grho_ = this->template create_field_request<ScalarT>(gasDensityTag);
+
 }
 
 //------------------------------------------------------------------
@@ -108,36 +106,6 @@ template<typename ScalarT>
 ParticleBodyForce<ScalarT>::
 ~ParticleBodyForce()
 {}
-
-//------------------------------------------------------------------
-
-template<typename ScalarT>
-void
-ParticleBodyForce<ScalarT>::
-advertise_dependents( Expr::ExprDeps& exprDeps)
-{
-  exprDeps.requires_expression( gDensityTag_);
-  exprDeps.requires_expression( pPosTags_   );
-  exprDeps.requires_expression( pSizeTag_   );
-  exprDeps.requires_expression( pDensityTag_);
-}
-
-//------------------------------------------------------------------
-
-template<typename ScalarT>
-void
-ParticleBodyForce<ScalarT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.template field_manager<ParticleField>();
-  px_    = &pfm.field_ref( pPosTags_[0] );
-  py_    = &pfm.field_ref( pPosTags_[1] );
-  pz_    = &pfm.field_ref( pPosTags_[2] );
-  psize_ = &pfm.field_ref( pSizeTag_    );
-  prho_  = &pfm.field_ref( pDensityTag_ );
-
-  grho_  = &fml.field_ref<ScalarT>( gDensityTag_ );
-}
 
 //------------------------------------------------------------------
 
@@ -159,12 +127,19 @@ evaluate()
   using namespace SpatialOps;
   ParticleField& result = this->value();
   
+  const ParticleField& px = px_->field_ref();
+  const ParticleField& py = py_->field_ref();
+  const ParticleField& pz = pz_->field_ref();
+  const ParticleField& prho = prho_->field_ref();
+  const ParticleField& psize = psize_->field_ref();
+  const ScalarT& grho = grho_->field_ref();
+  
   SpatFldPtr<ParticleField> tmprho = SpatialFieldStore::get<ParticleField>( result );
   
-  sOp_->set_coordinate_information(px_,py_,pz_,psize_);
-  sOp_->apply_to_field( *grho_, *tmprho );
+  sOp_->set_coordinate_information(&px,&py,&pz,&psize);
+  sOp_->apply_to_field( grho, *tmprho );
   
-  result <<= -9.81 * (*prho_ - *tmprho) / *prho_;
+  result <<= -9.81 * (prho - *tmprho) / prho;
 }
 
 //------------------------------------------------------------------

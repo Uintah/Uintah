@@ -80,8 +80,6 @@ typename Vel2T >
 class Vorticity
 : public Expr::Expression<FieldT>
 {
-  const Expr::Tag vel1t_, vel2t_;
-
   typedef typename VorticityFaceSelector<Vel1T, Vel2T>::Vel1FaceT Vel1FaceT;
   typedef typename VorticityFaceSelector<Vel1T, Vel2T>::Vel2FaceT Vel2FaceT;
 
@@ -91,8 +89,8 @@ class Vorticity
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1FaceT, FieldT >::type InterpVel1FaceT2FieldT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2FaceT, FieldT >::type InterpVel2FaceT2FieldT;
 
-  const Vel1T* vel1_;
-  const Vel2T* vel2_;
+  DECLARE_FIELD(Vel1T, u1_)
+  DECLARE_FIELD(Vel2T, u2_)
 
   const Vel1GradT* vel1GradTOp_;
   const Vel2GradT* vel2GradTOp_;
@@ -124,8 +122,6 @@ public:
 
   ~Vorticity();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

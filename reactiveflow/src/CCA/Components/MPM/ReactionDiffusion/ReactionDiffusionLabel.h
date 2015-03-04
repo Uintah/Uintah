@@ -39,7 +39,7 @@ namespace Uintah {
     const VarLabel* pConcentrationLabel;
     const VarLabel* pConcPreviousLabel;
     const VarLabel* pdCdtLabel;
-    const VarLabel* pConcentrationGradientLabel;
+    const VarLabel* pConcGradientLabel;
     const VarLabel* pHydroStressLabel;
 
     const VarLabel* pConcentrationLabel_preReloc;

@@ -590,17 +590,17 @@ protected:
                                             DataWarehouse* old_dw,
                                             DataWarehouse* new_dw);
 
-  virtual void scheduleComputeStep1(SchedulerP&, const PatchSet*, const MaterialSet*);
+  virtual void scheduleComputeFlux(SchedulerP&, const PatchSet*, const MaterialSet*);
 
-  virtual void computeStep1(const ProcessorGroup*, const PatchSubset* patches,
-                            const MaterialSubset* matls, DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+  virtual void computeFlux(const ProcessorGroup*, const PatchSubset* patches,
+                           const MaterialSubset* matls, DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
   
-  virtual void scheduleComputeStep2(SchedulerP&, const PatchSet*, const MaterialSet*);
+  virtual void scheduleComputeDivergence(SchedulerP&, const PatchSet*, const MaterialSet*);
 
-  virtual void computeStep2(const ProcessorGroup*, const PatchSubset* patches,
-                            const MaterialSubset* matls, DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+  virtual void computeDivergence(const ProcessorGroup*, const PatchSubset* patches,
+                                 const MaterialSubset* matls, DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
 
   virtual void scheduleSDInterpolateToParticlesAndUpdate(SchedulerP& sched,
                                                           const PatchSet* patches,

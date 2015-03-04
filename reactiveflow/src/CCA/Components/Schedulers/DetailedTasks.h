@@ -478,7 +478,7 @@ namespace Uintah {
 
   private:
 
-    std::map<int,int>   sendoldmap;
+    std::map<int,int>   sendoldmap_;
     ParticleExchangeVar particleSends_;
     ParticleExchangeVar particleRecvs_;
 

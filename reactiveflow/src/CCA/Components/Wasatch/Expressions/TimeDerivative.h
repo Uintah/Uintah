@@ -56,22 +56,17 @@ public:
     const Expr::Tag timesteptag_;
   };
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
   
 private:
   typedef typename SpatialOps::SingleValueField TimeField;
+  DECLARE_FIELDS(ValT, newvar_, oldvar_)
+  DECLARE_FIELD (TimeField, dt_)
   
   TimeDerivative( const Expr::Tag& newVarTag,
                  const Expr::Tag& oldVarTag,
                  const Expr::Tag& timestepTag );
-  const Expr::Tag newvartag_;
-  const Expr::Tag oldvartag_;
-  const Expr::Tag timesteptag_;
-  const ValT* newvar_;
-  const ValT* oldvar_;
-  const TimeField* dt_;
+  
 };
 
 //====================================================================
@@ -82,36 +77,12 @@ template<typename ValT>
 TimeDerivative<ValT>::
 TimeDerivative( const Expr::Tag& newVarTag,
                 const Expr::Tag& oldVarTag,
-                const Expr::Tag& timestepTag )
-: Expr::Expression<ValT>(),
-  newvartag_  ( newVarTag ),
-  oldvartag_  ( oldVarTag ),
-  timesteptag_( timestepTag )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-TimeDerivative<ValT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
+                const Expr::Tag& dtTag )
+: Expr::Expression<ValT>()
 {
-  exprDeps.requires_expression( newvartag_ );
-  exprDeps.requires_expression( oldvartag_ );  
-  exprDeps.requires_expression( timesteptag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename ValT >
-void
-TimeDerivative<ValT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{  
-  const typename Expr::FieldMgrSelector<ValT>::type& valtfm = fml.template field_manager<ValT>();
-  newvar_ = &valtfm.field_ref( newvartag_ );
-  oldvar_ = &valtfm.field_ref( oldvartag_ );
-  dt_     = &fml.template field_ref<TimeField>( timesteptag_ );
+   newvar_ = this->template create_field_request<ValT>(newVarTag);
+   oldvar_ = this->template create_field_request<ValT>(oldVarTag);
+   dt_ = this->template create_field_request<TimeField>(dtTag);
 }
 
 //--------------------------------------------------------------------
@@ -123,7 +94,7 @@ evaluate()
 {
   using namespace SpatialOps;
   ValT& phi = this->value();
-  phi <<= (*newvar_ - *oldvar_)/ *dt_;
+  phi <<= (newvar_->field_ref() - oldvar_->field_ref())/ dt_->field_ref();
 }
 
 //--------------------------------------------------------------------

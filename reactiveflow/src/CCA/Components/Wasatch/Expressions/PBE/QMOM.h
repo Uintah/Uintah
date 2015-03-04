@@ -62,9 +62,10 @@ extern "C"{
 template<typename FieldT>
 class QMOM : public Expr::Expression<FieldT>
 {
-  typedef std::vector<const FieldT*> FieldTVec;
-  FieldTVec knownMoments_;
+//  typedef std::vector<const FieldT*> FieldTVec;
+//  FieldTVec knownMoments_;
   const Expr::TagList knownMomentsTagList_;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, knownMoments_);
 
   const int nMoments_;
 
@@ -102,8 +103,6 @@ public:
 
   ~QMOM();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -119,10 +118,11 @@ template<typename FieldT>
 QMOM<FieldT>::
 QMOM( const Expr::TagList knownMomentsTaglist, const bool realizable)
   : Expr::Expression<FieldT>(),
-    knownMomentsTagList_( knownMomentsTaglist ),
+    knownMomentsTagList_(knownMomentsTaglist),
     nMoments_( knownMomentsTaglist.size() ),
     realizable_ (realizable)
 {
+  this->template create_field_vector_request<FieldT>(knownMomentsTaglist, knownMoments_);
   pmatrix_.resize(nMoments_);
   for (int i = 0; i<nMoments_; i++)
     pmatrix_[i].resize(nMoments_ + 1);
@@ -138,34 +138,11 @@ QMOM( const Expr::TagList knownMomentsTaglist, const bool realizable)
 }
 
 //--------------------------------------------------------------------
+
 template<typename FieldT>
 QMOM<FieldT>::
 ~QMOM()
 {}
-
-//--------------------------------------------------------------------
-template< typename FieldT >
-void
-QMOM<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( knownMomentsTagList_ );
-}
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-QMOM<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
-  knownMoments_.clear();
-  for( Expr::TagList::const_iterator iMomTag=knownMomentsTagList_.begin();
-       iMomTag!=knownMomentsTagList_.end();
-       ++iMomTag ){
-    knownMoments_.push_back( &fm.field_ref(*iMomTag) );
-  }
-}
 
 //--------------------------------------------------------------------
 
@@ -185,8 +162,8 @@ evaluate()
   
   // loop over interior points in the patch. To do this, we grab a sample
   // iterator from any of the exisiting fields, for example, m0.
-  const FieldT* sampleField = knownMoments_[0];
-  typename FieldT::const_iterator sampleIterator = sampleField->interior_begin();
+  const FieldT& sampleField = knownMoments_[0]->field_ref();
+  typename FieldT::const_iterator sampleIterator = sampleField.interior_begin();
 
   //
   // create a vector of iterators for the known moments and for the results
@@ -194,7 +171,7 @@ evaluate()
   std::vector<typename FieldT::const_iterator> knownMomentsIterators;
   std::vector<typename FieldT::iterator> resultsIterators;
   for (int i=0; i<nMoments_; ++i) {
-    typename FieldT::const_iterator thisIterator = knownMoments_[i]->interior_begin();
+    typename FieldT::const_iterator thisIterator = knownMoments_[i]->field_ref().interior_begin();
     knownMomentsIterators.push_back(thisIterator);
 
     typename FieldT::iterator thisResultsIterator = results[i]->interior_begin();
@@ -204,7 +181,7 @@ evaluate()
   //
   // now loop over the interior points, construct the matrix, and solve for the weights & abscissae
   //
-  while (sampleIterator!=sampleField->interior_end()) {
+  while (sampleIterator != sampleField.interior_end()) {
 
     if (  *knownMomentsIterators[0] == 0 ) {
       // in case m_0 is zero, set the weights to zero and abscissae to 1
@@ -252,7 +229,7 @@ evaluate()
       resultsIterators[i] += 1;
     }
   } // end interior points loop
-  
+//
   if(nonRealizablePoints_ > 0) dbg_qmom << "WARNING QMOM: I found " << nonRealizablePoints_ << " nonrealizable points." << std::endl;
 }
 

@@ -72,6 +72,7 @@ namespace Uintah {
                  const int indx,
                  ICELabel* lb,
                  SimulationStateP&  d_sharedState,
+                 constCCVariable<double>& molecularVis,
                  CCVariable<double>& tot_viscosity);
 
     template<class T>

@@ -41,11 +41,9 @@ template< typename FieldT >
 class MultiEnvSource
 : public Expr::Expression<FieldT>
 {
-  typedef std::vector<const FieldT*> FieldTVec;
-  FieldTVec weightsAndDerivs_;
-  const Expr::TagList weightAndDerivativeTags_; //this tag list has wieghts and derivatives [w0 dw0/dt w1 dw1/dt w2 dw2/dt]
-  const Expr::Tag phiTag_;                      //tag for this moment in 2nd env
-  const FieldT* phi_;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weightsAndDerivs_);
+  DECLARE_FIELD(FieldT, phi_)
+  
   const double initialMoment_;
 
   MultiEnvSource( const Expr::TagList& weightAndDerivativeTags,
@@ -80,9 +78,6 @@ public:
   };
 
   ~MultiEnvSource();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 
@@ -100,11 +95,11 @@ MultiEnvSource( const Expr::TagList& weightAndDerivativeTags,
                 const Expr::Tag& phiTag,
                 const double initialMoment)
 : Expr::Expression<FieldT>(),
-  weightAndDerivativeTags_(weightAndDerivativeTags),
-  phiTag_(phiTag),
   initialMoment_(initialMoment)
 {
   this->set_gpu_runnable( true );
+   phi_ = this->template create_field_request<FieldT>(phiTag);
+  this->template create_field_vector_request<FieldT>(weightAndDerivativeTags, weightsAndDerivs_);
 }
 
 //--------------------------------------------------------------------
@@ -119,42 +114,13 @@ MultiEnvSource<FieldT>::
 template< typename FieldT >
 void
 MultiEnvSource<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( weightAndDerivativeTags_ );
-  exprDeps.requires_expression( phiTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvSource<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.field_manager<FieldT>();
-
-  weightsAndDerivs_.clear();
-  for( Expr::TagList::const_iterator iW=weightAndDerivativeTags_.begin();
-      iW!=weightAndDerivativeTags_.end();
-      ++iW ){
-    weightsAndDerivs_.push_back( &fm.field_ref(*iW) );
-  }
-  phi_ = &fm.field_ref( phiTag_ );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MultiEnvSource<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
   double small = 1.0e-10;
-  result <<= cond(  *weightsAndDerivs_[2] <= small || *weightsAndDerivs_[2] >= 1.0-small, 0.0 )
-                 ( - (*weightsAndDerivs_[1] + *weightsAndDerivs_[5]) / *weightsAndDerivs_[2] * (initialMoment_ - *phi_));  
+  result <<= cond(  weightsAndDerivs_[2]->field_ref() <= small || weightsAndDerivs_[2]->field_ref() >= 1.0-small, 0.0 )
+                 ( - (weightsAndDerivs_[1]->field_ref() + weightsAndDerivs_[5]->field_ref()) / weightsAndDerivs_[2]->field_ref() * (initialMoment_ - phi_->field_ref()));
 }
 
 #endif

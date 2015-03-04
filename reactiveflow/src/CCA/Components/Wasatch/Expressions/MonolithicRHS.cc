@@ -40,16 +40,20 @@ MonolithicRHS( const Expr::Tag& dCoefTag,
                const Expr::Tag& phiTag,
                const Expr::Tag& srcTag )
   : Expr::Expression<FieldT>(),
-    dCoefTag_    ( dCoefTag     ),
-    xconvFluxTag_( xconvFluxTag ),
-    yconvFluxTag_( yconvFluxTag ),
-    zconvFluxTag_( zconvFluxTag ),
-    phiTag_      ( phiTag       ),
-    srcTag_      ( srcTag       ),
-    is3d_( xconvFluxTag != Expr::Tag() && yconvFluxTag != Expr::Tag() && zconvFluxTag != Expr::Tag() && dCoefTag != Expr::Tag() )
+    doX_( xconvFluxTag != Expr::Tag()),
+    doY_( yconvFluxTag != Expr::Tag()),
+    doZ_( zconvFluxTag != Expr::Tag()),
+    doSrc_      ( srcTag != Expr::Tag() ),
+    is3d_( doX_ && doY_ && doZ_ )
 {
   assert( dCoefTag != Expr::Tag() );
   this->set_gpu_runnable( true );
+   dCoef_ = this->template create_field_request<FieldT>(dCoefTag);
+  if (doX_)  convFluxX_ = this->template create_field_request<XFaceT>(xconvFluxTag);
+  if (doY_)  convFluxY_ = this->template create_field_request<YFaceT>(xconvFluxTag);
+  if (doZ_)  convFluxZ_ = this->template create_field_request<ZFaceT>(xconvFluxTag);
+  if (doSrc_)  src_ = this->template create_field_request<FieldT>(srcTag);
+   phi_ = this->template create_field_request<FieldT>(phiTag);
 }
 
 //--------------------------------------------------------------------
@@ -58,39 +62,6 @@ template< typename FieldT >
 MonolithicRHS<FieldT>::
 ~MonolithicRHS()
 {}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MonolithicRHS<FieldT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( dCoefTag_    );
-  exprDeps.requires_expression( phiTag_      );
-  if( xconvFluxTag_ != Expr::Tag() ) exprDeps.requires_expression( xconvFluxTag_ );
-  if( yconvFluxTag_ != Expr::Tag() ) exprDeps.requires_expression( yconvFluxTag_ );
-  if( zconvFluxTag_ != Expr::Tag() ) exprDeps.requires_expression( zconvFluxTag_ );
-  if( srcTag_       != Expr::Tag() ) exprDeps.requires_expression( srcTag_       );
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-MonolithicRHS<FieldT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<FieldT>::type& fm = fml.template field_manager<FieldT>();
-  dCoef_ = &fm.field_ref( dCoefTag_ );
-  phi_   = &fm.field_ref( phiTag_   );
-
-  if( srcTag_ != Expr::Tag() ) src_ = &fm.field_ref( srcTag_ );
-
-  if( xconvFluxTag_ != Expr::Tag() ) convFluxX_ = &fml.template field_manager<XFaceT>().field_ref( xconvFluxTag_ );
-  if( yconvFluxTag_ != Expr::Tag() ) convFluxY_ = &fml.template field_manager<YFaceT>().field_ref( yconvFluxTag_ );
-  if( zconvFluxTag_ != Expr::Tag() ) convFluxZ_ = &fml.template field_manager<ZFaceT>().field_ref( zconvFluxTag_ );
-}
 
 //--------------------------------------------------------------------
 
@@ -129,26 +100,34 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   const Expr::Tag nullTag = Expr::Tag();
+  const FieldT& coef = dCoef_->field_ref();
+  const FieldT& phi = phi_->field_ref();
 
   if( is3d_ ){ // inline everything for speed:
-    if( srcTag_ == nullTag )
-      result <<= -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) + *convFluxX_ )
-                 -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ )
-                 -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) + *convFluxZ_ );
-    else
-      result <<= -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) + *convFluxX_ )
-                 -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ )
-                 -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) + *convFluxZ_ )
-                 + *src_;
+    const XFaceT& cfx = convFluxX_->field_ref();
+    const YFaceT& cfy = convFluxY_->field_ref();
+    const ZFaceT& cfz = convFluxZ_->field_ref();
+    
+    if( !doSrc_ ) {
+      result <<= -(*divX_)( -(*interpX_)(coef) * (*gradX_)(phi) + cfx )
+                 -(*divY_)( -(*interpY_)(coef) * (*gradY_)(phi) + cfy )
+                 -(*divZ_)( -(*interpZ_)(coef) * (*gradZ_)(phi) + cfz );
+    } else {
+      const FieldT& src = src_->field_ref();
+      result <<= -(*divX_)( -(*interpX_)(coef) * (*gradX_)(phi) + cfx )
+                 -(*divY_)( -(*interpY_)(coef) * (*gradY_)(phi) + cfy )
+                 -(*divZ_)( -(*interpZ_)(coef) * (*gradZ_)(phi) + cfz )
+                  + src;
+    }
   }
   else{
-    if( xconvFluxTag_ == nullTag ) result <<=        -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) );
-    else                           result <<=        -(*divX_)( -(*interpX_)(*dCoef_) * (*gradX_)(*phi_) + *convFluxX_ );
-    if( yconvFluxTag_ == nullTag ) result <<= result -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) );
-    else                           result <<= result -(*divY_)( -(*interpY_)(*dCoef_) * (*gradY_)(*phi_) + *convFluxY_ );
-    if( zconvFluxTag_ == nullTag ) result <<= result -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) );
-    else                           result <<= result -(*divZ_)( -(*interpZ_)(*dCoef_) * (*gradZ_)(*phi_) + *convFluxZ_ );
-    if( srcTag_ != nullTag ) result <<= result + *src_;
+    if( !doX_ ) result <<=        -(*divX_)( -(*interpX_)(coef) * (*gradX_)(phi) );
+    else        result <<=        -(*divX_)( -(*interpX_)(coef) * (*gradX_)(phi) + convFluxX_->field_ref() );
+    if( !doY_ ) result <<= result -(*divY_)( -(*interpY_)(coef) * (*gradY_)(phi) );
+    else        result <<= result -(*divY_)( -(*interpY_)(coef) * (*gradY_)(phi) + convFluxY_->field_ref() );
+    if( !doZ_ ) result <<= result -(*divZ_)( -(*interpZ_)(coef) * (*gradZ_)(phi) );
+    else        result <<= result -(*divZ_)( -(*interpZ_)(coef) * (*gradZ_)(phi) + convFluxZ_->field_ref() );
+    if( doSrc_ ) result <<= result + src_->field_ref();
   }
 
 }

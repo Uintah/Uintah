@@ -79,9 +79,8 @@ class Pressure
 {
   typedef SpatialOps::SingleValueField TimeField;
 
-  const Expr::Tag fxt_, fyt_, fzt_, pSourcet_, dtt_, currenttimet_, timestept_, volfract_;
-
-  const bool doX_, doY_, doZ_;
+  const Expr::Tag volFracTag_;
+  const bool doX_, doY_, doZ_, hasIntrusion_;
   bool didAllocateMatrix_;
   bool didMatrixUpdate_;
   bool hasMovingGeometry_;
@@ -98,16 +97,11 @@ class Pressure
   const Uintah::VarLabel* pressureLabel_;
   const Uintah::VarLabel* prhsLabel_;
   
-  const SVolField* pSource_;
-  const TimeField* dt_;
-  const TimeField* timestep_;
-  const TimeField* currenttime_;
-
-  const SVolField* volfrac_;
-  
-  const XVolField* fx_;
-  const YVolField* fy_;
-  const ZVolField* fz_;
+  DECLARE_FIELDS(TimeField, timestep_, t_)
+  DECLARE_FIELDS(SVolField, pSource_, volfrac_)
+  DECLARE_FIELD(XVolField, fx_)
+  DECLARE_FIELD(YVolField, fy_)
+  DECLARE_FIELD(ZVolField, fz_)
 
   // interpolant operators
   typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::SSurfXField >::type  FxInterp;
@@ -221,7 +215,7 @@ public:
    *  are very uintah-specific and only used internally to this
    *  expression.  Specifically, the pressure-rhs field and the LHS
    *  matrix.  All other variables should be expressed as dependencies
-   *  through the advertise_dependents method.
+   *  through the DECLARE_FIELD MACRO.
    */
   void bind_uintah_vars( Uintah::DataWarehouse* const dw,
                          const Uintah::Patch* const patch,
@@ -246,9 +240,6 @@ public:
                      Uintah::DataWarehouse* const newDW );
   
   //Uintah::CCVariable<Uintah::Stencil7> pressure_matrix(){ return matrix_ ;}
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 

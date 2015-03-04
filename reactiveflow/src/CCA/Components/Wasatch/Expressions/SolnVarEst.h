@@ -10,7 +10,7 @@
 /**
  *  \ingroup WasatchExpressions
  *  \class  SolnVarEst
- *  \author Amir Biglari
+ *  \author Amir Biglari, Tony Saad
  *  \date	Mar, 2012
  *
  *  \brief Estimates the value of the solution variable in the next time step
@@ -26,11 +26,8 @@ class SolnVarEst
 {  
   typedef SpatialOps::SingleValueField TimeField;
 
-  const FieldT *solnVarOld_, *solnVarRHS_;
-
-  const Expr::Tag solnVarOldt_, solnVarRHSt_, tStept_;
-  const TimeField *tStep_;
-
+  DECLARE_FIELD(TimeField, dt_)
+  DECLARE_FIELDS(FieldT, fOld_, rhs_)
   
   SolnVarEst( const Expr::Tag& solnVarOldTag,
               const Expr::Tag& solnVarRHSTag,
@@ -70,8 +67,6 @@ public:
   };
 
   ~SolnVarEst();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 };

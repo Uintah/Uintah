@@ -72,22 +72,11 @@ Pressure::Pressure( const std::string& pressureName,
                     Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
-
-    fxt_( fxtag ),
-    fyt_( fytag ),
-    fzt_( fztag ),
-
-    pSourcet_( pSourceTag ),
-
-    dtt_         ( dtTag                     ),
-    currenttimet_( TagNames::self().time     ),
-    timestept_   ( TagNames::self().timestep ),
-
-    volfract_(volfractag),
-
+    volFracTag_(volfractag),
     doX_( fxtag != Expr::Tag() ),
     doY_( fytag != Expr::Tag() ),
     doZ_( fztag != Expr::Tag() ),
+    hasIntrusion_(volfractag != Expr::Tag()),
 
     didAllocateMatrix_(false),
     didMatrixUpdate_(false),
@@ -111,7 +100,15 @@ Pressure::Pressure( const std::string& pressureName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
     prhsLabel_    ( Uintah::VarLabel::create( pressureRHSName,
                                               Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
-{}
+{
+   timestep_ = create_field_request<TimeField>(TagNames::self().timestep);
+   t_ = create_field_request<TimeField>(TagNames::self().time);
+  if(doX_)  fx_ = create_field_request<XVolField>(fxtag);
+  if(doY_)  fy_ = create_field_request<YVolField>(fytag);
+  if(doZ_)  fz_ = create_field_request<ZVolField>(fztag);
+   pSource_ = create_field_request<SVolField>(pSourceTag);
+  if (hasIntrusion_)  volfrac_ = create_field_request<SVolField>(volfractag);
+}
 
 //--------------------------------------------------------------------
 
@@ -166,10 +163,10 @@ Pressure::declare_uintah_vars( Uintah::Task& task,
 {
   if( RKStage == 1 ) task.computes( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
   else               task.modifies( matrixLabel_, patches, Uintah::Task::ThisLevel, materials, Uintah::Task::NormalDomain );
-  if ( volfract_ != Expr::Tag() ) {
+  if ( hasIntrusion_ ) {
     const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
     const int ng = get_n_ghost<SVolField>();
-    task.requires(Uintah::Task::NewDW, Uintah::VarLabel::find(volfract_.name()), gt, ng);
+    task.requires(Uintah::Task::NewDW, Uintah::VarLabel::find(volFracTag_.name()), gt, ng);
   }
 }
 
@@ -197,10 +194,10 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
     typedef SelectUintahFieldType<SVolField>::const_type ConstUintahField;
     ConstUintahField svolFrac;
     SpatialOps::SpatFldPtr<SVolField> volfrac;
-    if( volfract_ != Expr::Tag() ){
+    if( volFracTag_ != Expr::Tag() ){
       const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
       const int ng = get_n_ghost<SVolField>();
-      dw->get( svolFrac, Uintah::VarLabel::find(volfract_.name()), material, patch, gt, ng );
+      dw->get( svolFrac, Uintah::VarLabel::find(volFracTag_.name()), material, patch, gt, ng );
       const AllocInfo ainfo( dw, dw, material, patch, NULL );
       const SpatialOps::GhostData gd( get_n_ghost<SVolField>() );
       volfrac = wrap_uintah_field_as_spatialops<SVolField>( svolFrac, ainfo, gd );
@@ -209,46 +206,6 @@ Pressure::bind_uintah_vars( Uintah::DataWarehouse* const dw,
   }
   
   didAllocateMatrix_=true;
-}
-
-//--------------------------------------------------------------------
-
-void
-Pressure::advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  if( doX_ )  exprDeps.requires_expression( fxt_ );
-  if( doY_ )  exprDeps.requires_expression( fyt_ );
-  if( doZ_ )  exprDeps.requires_expression( fzt_ );
-
-  if( volfract_ != Expr::Tag() ) exprDeps.requires_expression( volfract_ );
-  
-  exprDeps.requires_expression( pSourcet_ );
-  exprDeps.requires_expression( dtt_ );
-  exprDeps.requires_expression( currenttimet_ );
-  exprDeps.requires_expression( timestept_ );
-}
-
-//--------------------------------------------------------------------
-
-void
-Pressure::bind_fields( const Expr::FieldManagerList& fml )
-{
-  const Expr::FieldMgrSelector<SVolField>::type& svfm = fml.field_manager<SVolField>();
-  const Expr::FieldMgrSelector<XVolField>::type& xvfm = fml.field_manager<XVolField>();
-  const Expr::FieldMgrSelector<YVolField>::type& yvfm = fml.field_manager<YVolField>();
-  const Expr::FieldMgrSelector<ZVolField>::type& zvfm = fml.field_manager<ZVolField>();
-
-  if( doX_ )  fx_ = &xvfm.field_ref( fxt_ );
-  if( doY_ )  fy_ = &yvfm.field_ref( fyt_ );
-  if( doZ_ )  fz_ = &zvfm.field_ref( fzt_ );
-  pSource_ = &svfm.field_ref( pSourcet_  );
-
-  if( volfract_ != Expr::Tag() ) volfrac_ = &svfm.field_ref( volfract_ );
-
-  const Expr::FieldMgrSelector<TimeField>::type& doublefm = fml.field_manager<TimeField>();
-  dt_    = &doublefm.field_ref( dtt_    );
-  currenttime_ = &doublefm.field_ref( currenttimet_ );
-  timestep_ = &doublefm.field_ref( timestept_ );
 }
 
 //--------------------------------------------------------------------
@@ -312,7 +269,7 @@ Pressure::setup_matrix( const SVolField* const volfrac )
   }
 
   // update the coefficient matrix with intrusion information
-  if( volfract_ != Expr::Tag() && volfrac )
+  if( hasIntrusion_ && volfrac )
     process_embedded_boundaries( *volfrac );
 
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
@@ -344,14 +301,17 @@ Pressure::evaluate()
 
   SVolField& rhs = *results[1];
 
+  const TimeField& tstep = timestep_->field_ref();
+  const TimeField& t = t_->field_ref();
   std::ostringstream strs;
-  strs << "_timestep_"<< (int)(*timestep_)[0] << "_rkstage_"<< rkStage_ << "_patch";
+  strs << "_timestep_"<< (int) tstep[0] << "_rkstage_"<< rkStage_ << "_patch";
 
   solverParams_.setOutputFileName( "_WASATCH" + strs.str() );
 
   // NOTE THE NEGATIVE SIGN! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
-  rhs <<= - *pSource_;
+  const SVolField& pSrc = pSource_->field_ref();
+  rhs <<= - pSrc;
 //  rhs <<= 0.0;
   
   //___________________________________________________
@@ -360,10 +320,10 @@ Pressure::evaluate()
   // the solver in the "schedule_solver" method.
   // NOTE THE NEGATIVE SIGNS! SINCE WE ARE USING CG SOLVER, WE MUST SOLVE FOR
   // - Laplacian(p) = - p_rhs
-  if( doX_ ) rhs <<= rhs - (*divXOp_)((*interpX_)(*fx_));
-  if( doY_ ) rhs <<= rhs - (*divYOp_)((*interpY_)(*fy_));
-  if( doZ_ ) rhs <<= rhs - (*divZOp_)((*interpZ_)(*fz_));
-  if( volfract_ != Expr::Tag() ) rhs <<= rhs* *volfrac_;
+  if( doX_ ) rhs <<= rhs - (*divXOp_)((*interpX_)(fx_->field_ref()));
+  if( doY_ ) rhs <<= rhs - (*divYOp_)((*interpY_)(fy_->field_ref()));
+  if( doZ_ ) rhs <<= rhs - (*divZOp_)((*interpZ_)(fz_->field_ref()));
+  if( hasIntrusion_) rhs <<= rhs * volfrac_->field_ref();
 
   // update pressure rhs for reference pressure
   if( useRefPressure_ )
@@ -374,8 +334,8 @@ Pressure::evaluate()
     bcHelper_->update_pressure_rhs(rhs, patch_); // this will update the rhs with relevant boundary conditions.
 
   // if we have moving geometry, then we need to update the coefficient matrix
-  if( hasMovingGeometry_ && volfract_ != Expr::Tag() )
-    setup_matrix( volfrac_ );
+  if( hasMovingGeometry_ && hasIntrusion_ )
+    setup_matrix( &(volfrac_->field_ref()) );
 }
 
 //--------------------------------------------------------------------

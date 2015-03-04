@@ -146,162 +146,167 @@ ImpMPM::~ImpMPM()
   MPMPhysicalBCFactory::clean();
 }
 
-void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, 
-                          const ProblemSpecP& restart_prob_spec,GridP& grid,
-                          SimulationStateP& sharedState)
+void
+ImpMPM::problemSetup( const ProblemSpecP     & prob_spec, 
+                      const ProblemSpecP     & restart_prob_spec,
+                            GridP            & grid,
+                            SimulationStateP & sharedState )
 {
-   cout_doing << " Doing ImpMPM::problemSetup " << endl;
-   d_sharedState = sharedState;
-   dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
+  cout_doing << " Doing ImpMPM::problemSetup\n";
+
+  d_sharedState = sharedState;
+  dynamic_cast<Scheduler*>(getPort("scheduler"))->setPositionVar(lb->pXLabel);
   
-   Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
-   if(!dataArchiver){
-     throw InternalError("ImpMPM:couldn't get output port", __FILE__, __LINE__);
-   }
+  Output* dataArchiver = dynamic_cast<Output*>(getPort("output"));
+  if(!dataArchiver){
+    throw InternalError("ImpMPM:couldn't get output port", __FILE__, __LINE__);
+  }
 
-   ProblemSpecP mpm_ps = 0;
-   ProblemSpecP restart_mat_ps = 0;
+  ProblemSpecP mpm_ps = 0;
+  ProblemSpecP restart_mat_ps = 0;
 
-  ProblemSpecP prob_spec_mat_ps = 
-    prob_spec->findBlockWithOutAttribute("MaterialProperties");
-  if (prob_spec_mat_ps)
+  ProblemSpecP prob_spec_mat_ps = prob_spec->findBlockWithOutAttribute("MaterialProperties");
+  if (prob_spec_mat_ps) {
     restart_mat_ps = prob_spec;
-  else if (restart_prob_spec)
+  }
+  else if (restart_prob_spec) {
     restart_mat_ps = restart_prob_spec;
-  else
+  }
+  else {
     restart_mat_ps = prob_spec;
+  }
 
 #if 0
-   if (restart_prob_spec)
-     restart_mat_ps = restart_prob_spec;
-   else
-     restart_mat_ps = prob_spec;
+  if (restart_prob_spec) {
+    restart_mat_ps = restart_prob_spec;
+  }
+  else {
+    restart_mat_ps = prob_spec;
+  }
 #endif
 
-   ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
+  ProblemSpecP mpm_soln_ps = restart_mat_ps->findBlock("MPM");
 
-   string integrator_type;
-   if (mpm_soln_ps) {
+  string integrator_type;
+  if (mpm_soln_ps) {
 
-     // Read all MPM flags (look in MPMFlags.cc)
-     flags->readMPMFlags(restart_mat_ps, dataArchiver);
+    // Read all MPM flags (look in MPMFlags.cc)
+    flags->readMPMFlags( restart_mat_ps, dataArchiver );
      
-     if (flags->d_integrator_type != "implicit")
-       throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
-
-     // convert text representation of face into FaceType
-     std::vector<std::string>::const_iterator ftit;
-     for(ftit=flags->d_bndy_face_txt_list.begin();ftit!=flags->d_bndy_face_txt_list.end();ftit++){
-        Patch::FaceType face = Patch::invalidFace;
-        for(Patch::FaceType ft=Patch::startFace;ft<=Patch::endFace;
-                                                ft=Patch::nextFace(ft)) {
-          if(Patch::getFaceName(ft)==*ftit) face =  ft;
-        }
-        if(face!=Patch::invalidFace) {
-          d_bndy_traction_faces.push_back(face);
-        } else {
-          std::cerr << "warning: ignoring unknown face '" 
-                    << *ftit<< "'" << std::endl;
-        }
-     }
-   }
-   
-   // read in AMR flags from the main ups file
-   ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
-   if (amr_ps) {
-      ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
-      mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
-      mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
+    if (flags->d_integrator_type != "implicit") {
+      throw ProblemSetupException("Can't use explicit integration with -impm", __FILE__, __LINE__);
     }
+
+    // convert text representation of face into FaceType
+    std::vector<std::string>::const_iterator ftit;
+    for(ftit=flags->d_bndy_face_txt_list.begin();ftit!=flags->d_bndy_face_txt_list.end();ftit++){
+      Patch::FaceType face = Patch::invalidFace;
+      for( Patch::FaceType ft = Patch::startFace; ft <= Patch::endFace; ft = Patch::nextFace(ft) ) {
+          if(Patch::getFaceName(ft)==*ftit) face =  ft;
+      }
+      if(face!=Patch::invalidFace) {
+        d_bndy_traction_faces.push_back(face);
+      }
+      else {
+        std::cerr << "warning: ignoring unknown face '" << *ftit<< "'" << std::endl;
+      }
+    }
+  }
+   
+  // read in AMR flags from the main ups file
+  ProblemSpecP amr_ps = prob_spec->findBlock("AMR");
+  if (amr_ps) {
+    ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
+    mpm_amr_ps->getWithDefault("min_grid_level", flags->d_minGridLevel, 0);
+    mpm_amr_ps->getWithDefault("max_grid_level", flags->d_maxGridLevel, 1000);
+  }
 
   if(flags->d_8or27==8){
     NGP=1;
     NGN=1;
-  } else if(flags->d_8or27==27 || flags->d_8or27==64){
+  }
+  else if(flags->d_8or27==27 || flags->d_8or27==64){
     NGP=2;
     NGN=2;
   }
 
-   //Search for the MaterialProperties block and then get the MPM section
-   ProblemSpecP mat_ps =  
-     restart_mat_ps->findBlockWithOutAttribute("MaterialProperties");
+  //Search for the MaterialProperties block and then get the MPM section
+  ProblemSpecP mat_ps =  restart_mat_ps->findBlockWithOutAttribute("MaterialProperties");
 
-   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
+  ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
 
-   ProblemSpecP child = mpm_mat_ps->findBlock("contact");
+  ProblemSpecP child = mpm_mat_ps->findBlock("contact");
 
-   d_con_type = "null";
-   if(child){
-     child->getWithDefault("type",d_con_type, "null");
-   }
-   d_rigid_body = false;
+  d_con_type = "null";
+  if(child){
+    child->getWithDefault("type",d_con_type, "null");
+  }
+  d_rigid_body = false;
 
-   if (d_con_type == "rigid"){
-      d_rigid_body = true;
-      Vector defaultDir(1,1,1);
-      child->getWithDefault("direction",d_contact_dirs, defaultDir);
-      child->getWithDefault("stop_time",d_stop_time, 
-                                        std::numeric_limits<double>::max());
-      child->getWithDefault("velocity_after_stop",d_vel_after_stop, 
-                                                  Vector(0,0,0));
-   }
+  if (d_con_type == "rigid"){
+    d_rigid_body = true;
+    Vector defaultDir(1,1,1);
+    child->getWithDefault("direction",d_contact_dirs, defaultDir);
+    child->getWithDefault("stop_time",d_stop_time, std::numeric_limits<double>::max());
+    child->getWithDefault("velocity_after_stop",d_vel_after_stop, Vector(0,0,0));
+  }
+  
+  d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, 1);
 
-   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, 1);
-
-   MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
-   if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
-     if(flags->d_useLoadCurves){
-       throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
+  MPMPhysicalBCFactory::create(restart_mat_ps, grid, flags);
+  if( (int)MPMPhysicalBCFactory::mpmPhysicalBCs.size()==0) {
+    if(flags->d_useLoadCurves){
+      throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
     }
-   }
+  }
 
-   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
    
-   if (flags->d_solver_type == "petsc") {
-     d_solver = scinew MPMPetscSolver();
-   } else {
-     d_solver = scinew SimpleSolver();
-   }
+  if (flags->d_solver_type == "petsc") {
+    d_solver = scinew MPMPetscSolver();
+  }
+  else {
+    d_solver = scinew SimpleSolver();
+  }
 
+  d_solver->initialize();
 
-   d_solver->initialize();
+  // setup sub scheduler
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  sched->setRestartable(true);
 
-   // setup sub scheduler
-   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
-   sched->setRestartable(true);
-
-   d_subsched = sched->createSubScheduler();
-   d_subsched->initialize(3,1);
-   d_subsched->clearMappings();
-   d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
-   d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
-   d_subsched->mapDataWarehouse(Task::OldDW, 2);
-   d_subsched->mapDataWarehouse(Task::NewDW, 3);
+  d_subsched = sched->createSubScheduler();
+  d_subsched->initialize(3,1);
+  d_subsched->clearMappings();
+  d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
+  d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
+  d_subsched->mapDataWarehouse(Task::OldDW, 2);
+  d_subsched->mapDataWarehouse(Task::NewDW, 3);
    
-   d_recompileSubsched = true;
+  d_recompileSubsched = true;
 
-   heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
+  heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
 
-   heatConductionModel->problemSetup(flags->d_solver_type);
+  heatConductionModel->problemSetup(flags->d_solver_type);
 
-   thermalContactModel =
-     ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
+  thermalContactModel = ThermalContactFactory::create(restart_mat_ps, sharedState, lb,flags);
 
-   d_switchCriteria = dynamic_cast<SwitchingCriteria*>
-     (getPort("switch_criteria"));
+  d_switchCriteria = dynamic_cast<SwitchingCriteria*>( getPort("switch_criteria") );
    
-   if (d_switchCriteria) {
-     d_switchCriteria->problemSetup(restart_mat_ps,restart_prob_spec,d_sharedState);
-   }
+  if (d_switchCriteria) {
+    d_switchCriteria->problemSetup(restart_mat_ps,restart_prob_spec,d_sharedState);
+  }
 
-   // Pull out from Time section
-   d_initialDt = 10000.0;
-   ProblemSpecP time_ps = restart_mat_ps->findBlock("Time");
-   time_ps->get("delt_init",d_initialDt);
+  // Pull out from Time section
+  d_initialDt = 10000.0;
+  ProblemSpecP time_ps = restart_mat_ps->findBlock("Time");
+  if( time_ps ) {
+    time_ps->get("delt_init",d_initialDt);
+  }
 }
 
-
-void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
+void
+ImpMPM::outputProblemSpec( ProblemSpecP & root_ps )
 {
   ProblemSpecP root = root_ps->getRootNode();
 

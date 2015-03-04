@@ -1059,35 +1059,40 @@ namespace Wasatch {
   }
 
   //------------------------------------------------------------------------------------------------
-  template<typename FieldT>
+  template<typename SrcT, typename TargetT>
   void BCHelper::create_dummy_dependency( const Expr::Tag& attachDepToThisTag,
                                           const Expr::TagList dependencies,
                                           const Category taskCat)
   {
     Expr::ExpressionFactory& factory = *(grafCat_[taskCat]->exprFactory);
     std::string phiName = attachDepToThisTag.name();
-    // create null dependency
-    typedef typename NullExpression<FieldT>::Builder NullExpr;
-    const Expr::Tag dummyTag(phiName + "_dummy_dependency", Expr::STATE_NONE );
-    const std::string functorName = dummyTag.name();
     
-    // if the dependency was already adde then return
+    // check if we already have an entry for phiname
+    BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
+    size_t nMods = 0;
+
+    Expr::Tag dummyTag(phiName + "_dummy_dependency", Expr::STATE_NONE );
+    
+    if ( iter != bcFunctorMap_.end() ) {
+      (*iter).second.insert(dummyTag.name());
+    } else {
+      BCFunctorMap::mapped_type functorSet;
+      nMods = (*iter).second.size();
+      std::ostringstream msg;
+      msg << nMods;
+      dummyTag.name() = phiName + "_dummy_dependency_" + msg.str();
+      functorSet.insert( dummyTag.name() );
+      bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
+    }
+
+    // if the dependency was already added then return
     if (factory.have_entry(dummyTag)) {
       return;
     }
     
+    // register the null dependency
+    typedef typename NullExpression<SrcT, TargetT>::Builder NullExpr;
     factory.register_expression(scinew NullExpr(dummyTag, dependencies), true);
-    // check if we already have an entry for phiname
-    BCFunctorMap::iterator iter = bcFunctorMap_.find(phiName);
-    
-    if ( iter != bcFunctorMap_.end() ) {
-      (*iter).second.insert(functorName);
-    }
-    else{
-      BCFunctorMap::mapped_type functorSet;
-      functorSet.insert( functorName );
-      bcFunctorMap_.insert( BCFunctorMap::value_type(phiName,functorSet) );
-    }
   }
   
   //------------------------------------------------------------------------------------------------
@@ -1130,9 +1135,11 @@ namespace Wasatch {
                 BCFunctorMap::mapped_type::const_iterator functorIter = (*iter).second.begin();
                 while( functorIter != (*iter).second.end() ){
                   const string& functorName = *functorIter;
-                  DBGBC << "attaching dummy modifier " << functorName << " on field " << varTag << endl;                  
                   const Expr::Tag modTag = Expr::Tag(functorName,Expr::STATE_NONE);
-                  if (factory.have_entry(modTag)) factory.attach_modifier_expression( modTag, varTag, patchID, true );
+                  if (factory.have_entry(modTag)) {
+                    DBGBC << "attaching dummy modifier " << functorName << " on field " << varTag << " on patch " << patchID << endl;
+                    factory.attach_modifier_expression( modTag, varTag, patchID, true );
+                  }
                   ++functorIter;
                 } // while
               } // if
@@ -1438,9 +1445,22 @@ namespace Wasatch {
   template void BCHelper::apply_boundary_condition< VOLT >( const Expr::Tag& varTag,            \
                                                             const Category& taskCat,            \
                                                             const bool setOnExtraOnly);         \
-  template void BCHelper::create_dummy_dependency< VOLT >( const Expr::Tag& attachDepToThisTag, \
-                                                           const Expr::TagList dependencies,    \
-                                                           const Category taskCat );
+  template void BCHelper::create_dummy_dependency< VOLT, SpatialOps::SVolField >( const Expr::Tag& attachDepToThisTag, \
+                                                                                  const Expr::TagList dependencies,    \
+                                                                                  const Category taskCat );            \
+  template void BCHelper::create_dummy_dependency< VOLT, SpatialOps::XVolField >( const Expr::Tag& attachDepToThisTag, \
+                                                                                  const Expr::TagList dependencies,    \
+                                                                                  const Category taskCat );            \
+  template void BCHelper::create_dummy_dependency< VOLT, SpatialOps::YVolField >( const Expr::Tag& attachDepToThisTag, \
+                                                                                  const Expr::TagList dependencies,    \
+                                                                                  const Category taskCat );            \
+  template void BCHelper::create_dummy_dependency< VOLT, SpatialOps::ZVolField >( const Expr::Tag& attachDepToThisTag, \
+                                                                                  const Expr::TagList dependencies,    \
+                                                                                  const Category taskCat );            \
+  template void BCHelper::create_dummy_dependency< SpatialOps::SingleValueField, VOLT >( const Expr::Tag& attachDepToThisTag, \
+                                                                                 const Expr::TagList dependencies,     \
+                                                                                 const Category taskCat );
+
   INSTANTIATE_BC_TYPES(ParticleField);
   INSTANTIATE_BC_TYPES(SpatialOps::SVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::XVolField);

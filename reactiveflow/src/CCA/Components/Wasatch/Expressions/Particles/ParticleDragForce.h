@@ -33,11 +33,9 @@
 template< typename GasVelT >
 class ParticleDragForce : public Expr::Expression<ParticleField>
 {
-  const Expr::Tag gVelTag_, pDragCoefTag_, pTauTag_, pVelTag_, pSizeTag_;
-  const Expr::TagList pPosTags_;
   
-  const ParticleField *pfd_, *px_, *py_, *pz_, *ptau_, *pvel_, *psize_;
-  const GasVelT *gvel_;
+  DECLARE_FIELDS(ParticleField, pfd_, px_, py_, pz_, ptau_, pvel_, psize_)
+  DECLARE_FIELD (GasVelT, gvel_)
   
   typedef typename SpatialOps::Particle::CellToParticle<GasVelT> GVel2POpT;
   GVel2POpT* gvOp_;
@@ -77,9 +75,7 @@ public:
   };
   
   ~ParticleDragForce();
-  
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
+
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
@@ -102,15 +98,21 @@ ParticleDragForce( const Expr::Tag& gasVelTag,
                    const Expr::Tag& particleVelTag,
                    const Expr::Tag& particleSizeTag,
                    const Expr::TagList& particlePositionTags )
-: Expr::Expression<ParticleField>(),
-  gVelTag_     ( gasVelTag            ),
-  pDragCoefTag_( ParticleDragForceCoefTag ),
-  pTauTag_     ( particleTauTag       ),
-  pVelTag_     ( particleVelTag       ),
-  pSizeTag_    ( particleSizeTag      ),
-  pPosTags_    ( particlePositionTags )
+: Expr::Expression<ParticleField>()
 {
   this->set_gpu_runnable(false);  // need new particle operators...
+
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+
+   gvel_ = this->template create_field_request<GasVelT>(gasVelTag);
+   pfd_ = this->template create_field_request<ParticleField>(ParticleDragForceCoefTag);
+   ptau_ = this->template create_field_request<ParticleField>(particleTauTag);
+   pvel_ = this->template create_field_request<ParticleField>(particleVelTag);
+   psize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+
+  
 }
 
 //------------------------------------------------------------------
@@ -119,41 +121,6 @@ template<typename GasVelT>
 ParticleDragForce<GasVelT>::
 ~ParticleDragForce()
 {}
-
-//------------------------------------------------------------------
-
-template<typename GasVelT>
-void
-ParticleDragForce<GasVelT>::
-advertise_dependents( Expr::ExprDeps& exprDeps)
-{
-  exprDeps.requires_expression( pDragCoefTag_ );
-  exprDeps.requires_expression( pPosTags_     );
-  exprDeps.requires_expression( pTauTag_      );
-  exprDeps.requires_expression( pVelTag_      );
-  exprDeps.requires_expression( pSizeTag_     );
-  
-  exprDeps.requires_expression( gVelTag_);
-}
-
-//------------------------------------------------------------------
-
-template<typename GasVelT>
-void
-ParticleDragForce<GasVelT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.template field_manager<ParticleField>();
-  pfd_   = &pfm.field_ref( pDragCoefTag_ );
-  px_    = &pfm.field_ref( pPosTags_[0]  );
-  py_    = &pfm.field_ref( pPosTags_[1]  );
-  pz_    = &pfm.field_ref( pPosTags_[2]  );
-  ptau_  = &pfm.field_ref( pTauTag_      );
-  pvel_  = &pfm.field_ref( pVelTag_      );
-  psize_ = &pfm.field_ref( pSizeTag_     );
-  
-  gvel_ = &fml.field_ref<GasVelT>( gVelTag_ );
-}
 
 //------------------------------------------------------------------
 
@@ -175,13 +142,23 @@ evaluate()
   ParticleField& result = this->value();
   
   using namespace SpatialOps;
+  
+  const ParticleField& px = px_->field_ref();
+  const ParticleField& py = py_->field_ref();
+  const ParticleField& pz = pz_->field_ref();
+  const ParticleField& psize = psize_->field_ref();
+  const ParticleField& pvel = pvel_->field_ref();
+  const ParticleField& pfd = pfd_->field_ref();
+  const ParticleField& ptau = ptau_->field_ref();
+  const GasVelT& gvel = gvel_->field_ref();
+
   SpatFldPtr<ParticleField> tmpu = SpatialFieldStore::get<ParticleField>( result );
   
   // assemble drag term: cd * A/2*rho*(v-up) = cd * 3/(4r) * m * (v-up)  (assumes a spherical particle)
-  gvOp_->set_coordinate_information( px_, py_, pz_, psize_ );
-  gvOp_->apply_to_field( *gvel_, *tmpu );
+  gvOp_->set_coordinate_information(&px,&py,&pz,&psize);
+  gvOp_->apply_to_field( gvel, *tmpu );
   
-  result <<= ( *tmpu - *pvel_ ) * *pfd_ / *ptau_;
+  result <<= ( *tmpu - pvel ) * pfd / ptau;
 }
 
 //------------------------------------------------------------------

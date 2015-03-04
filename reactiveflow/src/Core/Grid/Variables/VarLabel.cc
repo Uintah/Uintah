@@ -35,13 +35,17 @@
 using namespace Uintah;
 using namespace SCIRun;
 
-using std::map;         using std::ostringstream;
-using std::vector;      using std::string;
+using std::map;
 using std::ostream;
+using std::ostringstream;
+using std::string;
+using std::vector;
 
-static DebugStream dbg("VarLabel", false);
+static DebugStream dbg( "VarLabel", false );
 
 static map<string, VarLabel*> allLabels;
+string VarLabel::d_particlePositionName = "p.x";
+
 string VarLabel::d_defaultCompressionMode = "none";
 static Mutex lock("VarLabel create/destroy lock");
 
@@ -125,27 +129,37 @@ VarLabel::printAll()
 }
 
 VarLabel*
-VarLabel::find(string name)
+VarLabel::find( const string &  name )
 {
-   map<string, VarLabel*>::iterator found = allLabels.find(name);
-   if (found == allLabels.end())
+   map<string, VarLabel*>::iterator found = allLabels.find( name );
+
+   if( found == allLabels.end() ) {
       return NULL;
-   else
+   }
+   else {
       return found->second;
+   }
 }
 
+VarLabel*
+VarLabel::particlePositionLabel()
+{
+  return find(d_particlePositionName);
+}
 
 string
-VarLabel::getFullName(int matlIndex, const Patch* patch) const
+VarLabel::getFullName( int matlIndex, const Patch * patch ) const
 {
-   ostringstream out;
-        out << d_name << "(matl=" << matlIndex;
-   if(patch)
-        out << ", patch=" << patch->getID();
-   else
-        out << ", no patch";
-   out << ")";
-        return out.str();
+  ostringstream out;
+  out << d_name << "(matl=" << matlIndex;
+  if( patch ) {
+    out << ", patch=" << patch->getID();
+  }
+  else {
+    out << ", no patch";
+  }
+  out << ")";
+  return out.str();
 }                             
 
 void

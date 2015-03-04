@@ -71,7 +71,6 @@ MomentumSolver(const ArchesLabel* label,
   d_source = 0;
   d_rhsSolver = 0;
   _init_type = "none";
-  d_useWasatchMomRHS = false;
   _u_mom = VarLabel::create( "Umom", SFCXVariable<double>::getTypeDescription() ); 
   _v_mom = VarLabel::create( "Vmom", SFCYVariable<double>::getTypeDescription() ); 
   _w_mom = VarLabel::create( "Wmom", SFCZVariable<double>::getTypeDescription() ); 
@@ -415,17 +414,14 @@ void MomentumSolver::solveVelHat(const LevelP& level,
   else if ( timelabels->integrator_step_number == TimeIntegratorStepNumber::Third )
     timeSubStep = 2; 
 
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-  if (!(this->get_use_wasatch_mom_rhs())) {
-    // Schedule additional sources for evaluation
-    SourceTermFactory& factory = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-        iter != d_new_sources.end(); iter++){
-      SourceTermBase& src = factory.retrieve_source_term( *iter ); 
-      src.sched_computeSource( level, sched, timeSubStep ); 
-    }
+  // Schedule additional sources for evaluation
+  SourceTermFactory& factory = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+      iter != d_new_sources.end(); iter++){
+    SourceTermBase& src = factory.retrieve_source_term( *iter ); 
+    src.sched_computeSource( level, sched, timeSubStep ); 
   }
-//#endif // WASATCH_IN_ARCHES
+  
   sched_buildLinearMatrixVelHat(sched, patches, matls,
                                 timelabels);
 
@@ -490,9 +486,9 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   }
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-  if (!(this->get_use_wasatch_mom_rhs())) tsk->requires(Task::OldDW, d_lab->d_denRefArrayLabel,   gac, 1);
-//#endif // WASATCH_IN_ARCHES
+
+  tsk->requires(Task::OldDW, d_lab->d_denRefArrayLabel,   gac, 1);
+
   tsk->requires(Task::NewDW, d_lab->d_viscosityCTSLabel,  gac, 2);
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 2);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 2);
@@ -527,20 +523,16 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
   tsk->modifies(d_lab->d_vVelRhoHatLabel);
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
     
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-  if (!(this->get_use_wasatch_mom_rhs())) {
+  // Adding new sources from factory:
+  SourceTermFactory& factor = SourceTermFactory::self(); 
+  for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+      iter != d_new_sources.end(); iter++){
 
-    // Adding new sources from factory:
-    SourceTermFactory& factor = SourceTermFactory::self(); 
-    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-        iter != d_new_sources.end(); iter++){
-
-      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
-      const VarLabel* srcLabel = src.getSrcLabel(); 
-      tsk->requires(Task::NewDW, srcLabel, gn, 0); 
-    }
+    SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+    const VarLabel* srcLabel = src.getSrcLabel(); 
+    tsk->requires(Task::NewDW, srcLabel, gn, 0); 
   }
-//#endif // WASATCH_IN_ARCHES
+
   sched->addTask(tsk, patches, matls);
 }
 
@@ -608,17 +600,16 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
     old_values_dw->get(constVelocityVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, indx, patch, gn, 0);
 
     new_dw->get(constVelocityVars.new_density, d_lab->d_densityCPLabel,     indx, patch, gac, 1);
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    if (!(this->get_use_wasatch_mom_rhs())) old_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
-//#endif // WASATCH_IN_ARCHES
+    old_dw->get(constVelocityVars.denRefArray, d_lab->d_denRefArrayLabel,   indx, patch, gac, 1);
+
     new_dw->get(constVelocityVars.viscosity,   d_lab->d_viscosityCTSLabel,  indx, patch, gac, 2);
     new_dw->get(constVelocityVars.uVelocity,   d_lab->d_uVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.vVelocity,   d_lab->d_vVelocitySPBCLabel, indx, patch, gaf, 2);
     new_dw->get(constVelocityVars.wVelocity,   d_lab->d_wVelocitySPBCLabel, indx, patch, gaf, 2);
 
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS TO TRIGGER WASATCH MOM_RHS CALC
+
     constCCVariable<double> old_divergence;
-//#endif // WASATCH_IN_ARCHES
+
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -635,71 +626,64 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
       new_dw->get(constVelocityVars.mmvVelSp, d_MAlab->d_vVel_mmLinSrcLabel,   indx, patch,gn, 0);
       new_dw->get(constVelocityVars.mmwVelSp, d_MAlab->d_wVel_mmLinSrcLabel,   indx, patch,gn, 0);
     }
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
-    if (!(this->get_use_wasatch_mom_rhs())) {
-      for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
-        new_dw->allocateTemporary(velocityVars.uVelocityCoeff[ii],         patch);
-        new_dw->allocateTemporary(velocityVars.vVelocityCoeff[ii],         patch);
-        new_dw->allocateTemporary(velocityVars.wVelocityCoeff[ii],         patch);
-        new_dw->allocateTemporary(velocityVars.uVelocityConvectCoeff[ii],  patch);
-        new_dw->allocateTemporary(velocityVars.vVelocityConvectCoeff[ii],  patch);
-        new_dw->allocateTemporary(velocityVars.wVelocityConvectCoeff[ii],  patch);
-        velocityVars.uVelocityCoeff[ii].initialize(0.0); 
-        velocityVars.vVelocityCoeff[ii].initialize(0.0); 
-        velocityVars.wVelocityCoeff[ii].initialize(0.0); 
-        velocityVars.uVelocityConvectCoeff[ii].initialize(0.0); 
-        velocityVars.vVelocityConvectCoeff[ii].initialize(0.0); 
-        velocityVars.wVelocityConvectCoeff[ii].initialize(0.0); 
-      }
-     
-      new_dw->allocateTemporary(velocityVars.uVelLinearSrc,     patch);
-      new_dw->allocateTemporary(velocityVars.vVelLinearSrc,     patch);
-      new_dw->allocateTemporary(velocityVars.wVelLinearSrc,     patch);
 
-      velocityVars.uVelLinearSrc.initialize(0.0);
-      velocityVars.vVelLinearSrc.initialize(0.0);
-      velocityVars.wVelLinearSrc.initialize(0.0);
-      
-      new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
-      new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
-      new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
-
-      velocityVars.uVelNonlinearSrc.initialize(0.0);
-      velocityVars.vVelNonlinearSrc.initialize(0.0);
-      velocityVars.wVelNonlinearSrc.initialize(0.0);
+    for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
+      new_dw->allocateTemporary(velocityVars.uVelocityCoeff[ii],         patch);
+      new_dw->allocateTemporary(velocityVars.vVelocityCoeff[ii],         patch);
+      new_dw->allocateTemporary(velocityVars.wVelocityCoeff[ii],         patch);
+      new_dw->allocateTemporary(velocityVars.uVelocityConvectCoeff[ii],  patch);
+      new_dw->allocateTemporary(velocityVars.vVelocityConvectCoeff[ii],  patch);
+      new_dw->allocateTemporary(velocityVars.wVelocityConvectCoeff[ii],  patch);
+      velocityVars.uVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.vVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.wVelocityCoeff[ii].initialize(0.0); 
+      velocityVars.uVelocityConvectCoeff[ii].initialize(0.0); 
+      velocityVars.vVelocityConvectCoeff[ii].initialize(0.0); 
+      velocityVars.wVelocityConvectCoeff[ii].initialize(0.0); 
     }
-//#endif // WASATCH_IN_ARCHES
+   
+    new_dw->allocateTemporary(velocityVars.uVelLinearSrc,     patch);
+    new_dw->allocateTemporary(velocityVars.vVelLinearSrc,     patch);
+    new_dw->allocateTemporary(velocityVars.wVelLinearSrc,     patch);
+
+    velocityVars.uVelLinearSrc.initialize(0.0);
+    velocityVars.vVelLinearSrc.initialize(0.0);
+    velocityVars.wVelLinearSrc.initialize(0.0);
+    
+    new_dw->allocateTemporary(velocityVars.uVelNonlinearSrc,  patch);
+    new_dw->allocateTemporary(velocityVars.vVelNonlinearSrc,  patch);
+    new_dw->allocateTemporary(velocityVars.wVelNonlinearSrc,  patch);
+
+    velocityVars.uVelNonlinearSrc.initialize(0.0);
+    velocityVars.vVelNonlinearSrc.initialize(0.0);
+    velocityVars.wVelNonlinearSrc.initialize(0.0);
 
     new_dw->getModifiable(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel,indx, patch);
     new_dw->getModifiable(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel,indx, patch);
 
-//#ifndef WASATCH_IN_ARCHES // UNCOMMENT THIS LINE TO TURN ON WASATCH MOMENTUM RHS CONSTRUCTION
+    //This copy is needed for BCs that are reapplied using the
+    //extra cell value. 
+    velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
+                                 velocityVars.uVelRhoHat.getLowIndex(),
+                                 velocityVars.uVelRhoHat.getHighIndex());
+                                 
+    velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
+                                 velocityVars.vVelRhoHat.getLowIndex(),
+                                 velocityVars.vVelRhoHat.getHighIndex());
+                                 
+    velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
+                                 velocityVars.wVelRhoHat.getLowIndex(),
+                                 velocityVars.wVelRhoHat.getHighIndex());
 
-    if (!(this->get_use_wasatch_mom_rhs())) {
-
-      //This copy is needed for BCs that are reapplied using the 
-      //extra cell value. 
-      velocityVars.uVelRhoHat.copy(constVelocityVars.old_uVelocity,
-                                   velocityVars.uVelRhoHat.getLowIndex(),
-                                   velocityVars.uVelRhoHat.getHighIndex());
-                                   
-      velocityVars.vVelRhoHat.copy(constVelocityVars.old_vVelocity,
-                                   velocityVars.vVelRhoHat.getLowIndex(),
-                                   velocityVars.vVelRhoHat.getHighIndex());
-                                   
-      velocityVars.wVelRhoHat.copy(constVelocityVars.old_wVelocity,
-                                   velocityVars.wVelRhoHat.getLowIndex(),
-                                   velocityVars.wVelRhoHat.getHighIndex());
-
-      //__________________________________
-      //  compute coefficients and vel src
-      d_discretize->calculateVelocityCoeff( patch, 
-                                            delta_t, d_central, 
-                                            cellinfo, &velocityVars,
-                                            &constVelocityVars, volFraction, d_conv_scheme, 
-                                            d_re_limit );
-      
+    //__________________________________
+    //  compute coefficients and vel src
+    d_discretize->calculateVelocityCoeff( patch, 
+                                          delta_t, d_central, 
+                                          cellinfo, &velocityVars,
+                                          &constVelocityVars, volFraction, d_conv_scheme, 
+                                          d_re_limit );
+    
 //      //__________________________________
 //      //  Compute the sources
 //      d_source->calculateVelocitySource( patch, 
@@ -707,206 +691,206 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 //                                         cellinfo, &velocityVars,
 //                                         &constVelocityVars);
 
-      //----------------------------------
-      // If not doing MPMArches, then need to 
-      // take of the wall shear stress
-      // This adds the contribution to the nonLinearSrc of each 
-      // direction depending on the boundary conditions. 
-      if ( !d_MAlab ){
-        d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction );
-      } 
+    //----------------------------------
+    // If not doing MPMArches, then need to 
+    // take of the wall shear stress
+    // This adds the contribution to the nonLinearSrc of each 
+    // direction depending on the boundary conditions. 
+    if ( !d_MAlab ){
+      d_boundaryCondition->wallStress( patch, &velocityVars, &constVelocityVars, volFraction );
+    } 
 
-      //__________________________________
-      // ---- This needs to get moved somewhere else ----
-      // for scalesimilarity model add stress tensor to the source of velocity eqn.
-      if (d_mixedModel) {
-        StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
-        if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-          for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
-            old_dw->get(stressTensor[ii], 
-                        d_lab->d_stressTensorCompLabel, ii, patch,
-                        gac, 1);
-          }
-        }else{
-          for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
-            new_dw->get(stressTensor[ii], 
-                        d_lab->d_stressTensorCompLabel, ii, patch,
-                        gac, 1);
-          }
+    //__________________________________
+    // ---- This needs to get moved somewhere else ----
+    // for scalesimilarity model add stress tensor to the source of velocity eqn.
+    if (d_mixedModel) {
+      StencilMatrix<constCCVariable<double> > stressTensor; //9 point tensor
+      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
+        for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
+          old_dw->get(stressTensor[ii], 
+                      d_lab->d_stressTensorCompLabel, ii, patch,
+                      gac, 1);
         }
-
-        
-        double sue, suw, sun, sus, sut, sub;
-        //__________________________________
-        //      u velocity
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-          IntVector c = *iter;
-          int colX = c.x();
-          int colY = c.y();
-          int colZ = c.z();
-          IntVector prevXCell(colX-1, colY, colZ);
-
-          sue = cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                       (stressTensor[0])[c];
-          suw = cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                       (stressTensor[0])[prevXCell];
-          sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                       ((stressTensor[1])[c]+
-                        (stressTensor[1])[prevXCell]+
-                        (stressTensor[1])[IntVector(colX,colY+1,colZ)]+
-                        (stressTensor[1])[IntVector(colX-1,colY+1,colZ)]);
-          sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                       ((stressTensor[1])[c]+
-                        (stressTensor[1])[prevXCell]+
-                        (stressTensor[1])[IntVector(colX,colY-1,colZ)]+
-                        (stressTensor[1])[IntVector(colX-1,colY-1,colZ)]);
-          sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-                       ((stressTensor[2])[c]+
-                        (stressTensor[2])[prevXCell]+
-                        (stressTensor[2])[IntVector(colX,colY,colZ+1)]+
-                        (stressTensor[2])[IntVector(colX-1,colY,colZ+1)]);
-          sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-                       ((stressTensor[2])[c]+
-                        (stressTensor[2])[prevXCell]+
-                        (stressTensor[2])[IntVector(colX,colY,colZ-1)]+
-                        (stressTensor[2])[IntVector(colX-1,colY,colZ-1)]);
-          velocityVars.uVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
+      }else{
+        for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
+          new_dw->get(stressTensor[ii], 
+                      d_lab->d_stressTensorCompLabel, ii, patch,
+                      gac, 1);
         }
+      }
+
       
-        //__________________________________
-        //      v velocity
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-          IntVector c = *iter;
-          int colX = c.x();
-          int colY = c.y();
-          int colZ = c.z();
-          IntVector prevYCell(colX, colY-1, colZ);
-
-          sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                     ((stressTensor[3])[c]+
-                      (stressTensor[3])[prevYCell]+
-                      (stressTensor[3])[IntVector(colX+1,colY,colZ)]+
-                      (stressTensor[3])[IntVector(colX+1,colY-1,colZ)]);
-          suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                      ((stressTensor[3])[c]+
-                       (stressTensor[3])[prevYCell]+
-                       (stressTensor[3])[IntVector(colX-1,colY,colZ)]+
-                       (stressTensor[3])[IntVector(colX-1,colY-1,colZ)]);
-          sun = cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                       (stressTensor[4])[c];
-          sus = cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                       (stressTensor[4])[prevYCell];
-          sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-                      ((stressTensor[5])[c]+
-                       (stressTensor[5])[prevYCell]+
-                       (stressTensor[5])[IntVector(colX,colY,colZ+1)]+
-                       (stressTensor[5])[IntVector(colX,colY-1,colZ+1)]);
-          sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
-                      ((stressTensor[5])[c]+
-                       (stressTensor[5])[prevYCell]+
-                       (stressTensor[5])[IntVector(colX,colY,colZ-1)]+
-                       (stressTensor[5])[IntVector(colX,colY-1,colZ-1)]);
-          velocityVars.vVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
-        }
-       
-        //__________________________________
-        //       w velocity
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-          IntVector c = *iter;
-          int colX = c.x();
-          int colY = c.y();
-          int colZ = c.z();
-          IntVector prevZCell(colX, colY, colZ-1);
-
-          sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                       ((stressTensor[6])[c]+
-                        (stressTensor[6])[prevZCell]+
-                        (stressTensor[6])[IntVector(colX+1,colY,colZ)]+
-                        (stressTensor[6])[IntVector(colX+1,colY,colZ-1)]);
-          suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
-                       ((stressTensor[6])[c]+
-                        (stressTensor[6])[prevZCell]+
-                        (stressTensor[6])[IntVector(colX-1,colY,colZ)]+
-                        (stressTensor[6])[IntVector(colX-1,colY,colZ-1)]);
-          sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                       ((stressTensor[7])[c]+
-                        (stressTensor[7])[prevZCell]+
-                        (stressTensor[7])[IntVector(colX,colY+1,colZ)]+
-                        (stressTensor[7])[IntVector(colX,colY+1,colZ-1)]);
-          sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
-                       ((stressTensor[7])[c]+
-                        (stressTensor[7])[prevZCell]+
-                        (stressTensor[7])[IntVector(colX,colY-1,colZ)]+
-                        (stressTensor[7])[IntVector(colX,colY-1,colZ-1)]);
-          sut = cellinfo->sew[colX]*cellinfo->sns[colY]*
-                       (stressTensor[8])[c];
-          sub = cellinfo->sew[colX]*cellinfo->sns[colY]*
-                       (stressTensor[8])[prevZCell];
-          velocityVars.wVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
-        }
-      }
+      double sue, suw, sun, sus, sut, sub;
       //__________________________________
+      //      u velocity
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        int colX = c.x();
+        int colY = c.y();
+        int colZ = c.z();
+        IntVector prevXCell(colX-1, colY, colZ);
 
-      // add multimaterial momentum source term
-      if (d_MAlab){
-        d_source->computemmMomentumSource(pc, patch, cellinfo,
-                                          &velocityVars, &constVelocityVars);
+        sue = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     (stressTensor[0])[c];
+        suw = cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     (stressTensor[0])[prevXCell];
+        sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[1])[c]+
+                      (stressTensor[1])[prevXCell]+
+                      (stressTensor[1])[IntVector(colX,colY+1,colZ)]+
+                      (stressTensor[1])[IntVector(colX-1,colY+1,colZ)]);
+        sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[1])[c]+
+                      (stressTensor[1])[prevXCell]+
+                      (stressTensor[1])[IntVector(colX,colY-1,colZ)]+
+                      (stressTensor[1])[IntVector(colX-1,colY-1,colZ)]);
+        sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                     ((stressTensor[2])[c]+
+                      (stressTensor[2])[prevXCell]+
+                      (stressTensor[2])[IntVector(colX,colY,colZ+1)]+
+                      (stressTensor[2])[IntVector(colX-1,colY,colZ+1)]);
+        sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                     ((stressTensor[2])[c]+
+                      (stressTensor[2])[prevXCell]+
+                      (stressTensor[2])[IntVector(colX,colY,colZ-1)]+
+                      (stressTensor[2])[IntVector(colX-1,colY,colZ-1)]);
+        velocityVars.uVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
       }
+    
+      //__________________________________
+      //      v velocity
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        int colX = c.x();
+        int colY = c.y();
+        int colZ = c.z();
+        IntVector prevYCell(colX, colY-1, colZ);
 
-      // Adding new sources from factory:
-      SourceTermFactory& factor = SourceTermFactory::self(); 
-      for (vector<std::string>::iterator iter = d_new_sources.begin(); 
-         iter != d_new_sources.end(); iter++){
-
-        SourceTermBase& src = factor.retrieve_source_term( *iter ); 
-        const VarLabel* srcLabel = src.getSrcLabel(); 
-        SourceTermBase::MY_GRID_TYPE src_type = src.getSourceGridType(); 
-
-        switch (src_type) {
-          case SourceTermBase::CCVECTOR_SRC: 
-            { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
-            Vector Dx  = patch->dCell();
-            double vol = Dx.x()*Dx.y()*Dx.z();
-            for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-              IntVector c = *iter;
-              velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].x()*vol;
-              velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
-              velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
-            }} 
-            break; 
-          case SourceTermBase::FX_SRC:
-            { new_dw->get( velocityVars.otherFxSource, srcLabel, indx, patch, Ghost::None, 0);
-            Vector Dx  = patch->dCell();
-            double vol = Dx.x()*Dx.y()*Dx.z();
-            for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
-              IntVector c = *iter;
-              velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherFxSource[c]*vol;
-            }} 
-            break; 
-          case SourceTermBase::FY_SRC: 
-            { new_dw->get( velocityVars.otherFySource, srcLabel, indx, patch, Ghost::None, 0);
-            Vector Dx  = patch->dCell();
-            double vol = Dx.x()*Dx.y()*Dx.z();
-            for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
-              IntVector c = *iter;
-              velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherFySource[c]*vol;
-            }} 
-            break; 
-          case SourceTermBase::FZ_SRC:
-            { new_dw->get( velocityVars.otherFzSource, srcLabel, indx, patch, Ghost::None, 0);
-            Vector Dx  = patch->dCell();
-            double vol = Dx.x()*Dx.y()*Dx.z();
-            for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
-              IntVector c = *iter;
-              velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherFzSource[c]*vol;
-            }} 
-            break; 
-          default: 
-            proc0cout << "For source term of type: " << src_type << endl;
-            throw InvalidValue("Error: Trying to add a source term to momentum equation with incompatible type",__FILE__, __LINE__); 
-
-        }
+        sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                   ((stressTensor[3])[c]+
+                    (stressTensor[3])[prevYCell]+
+                    (stressTensor[3])[IntVector(colX+1,colY,colZ)]+
+                    (stressTensor[3])[IntVector(colX+1,colY-1,colZ)]);
+        suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                    ((stressTensor[3])[c]+
+                     (stressTensor[3])[prevYCell]+
+                     (stressTensor[3])[IntVector(colX-1,colY,colZ)]+
+                     (stressTensor[3])[IntVector(colX-1,colY-1,colZ)]);
+        sun = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     (stressTensor[4])[c];
+        sus = cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     (stressTensor[4])[prevYCell];
+        sut = 0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                    ((stressTensor[5])[c]+
+                     (stressTensor[5])[prevYCell]+
+                     (stressTensor[5])[IntVector(colX,colY,colZ+1)]+
+                     (stressTensor[5])[IntVector(colX,colY-1,colZ+1)]);
+        sub =  0.25*cellinfo->sns[colY]*cellinfo->sew[colX]*
+                    ((stressTensor[5])[c]+
+                     (stressTensor[5])[prevYCell]+
+                     (stressTensor[5])[IntVector(colX,colY,colZ-1)]+
+                     (stressTensor[5])[IntVector(colX,colY-1,colZ-1)]);
+        velocityVars.vVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
       }
+     
+      //__________________________________
+      //       w velocity
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
+        IntVector c = *iter;
+        int colX = c.x();
+        int colY = c.y();
+        int colZ = c.z();
+        IntVector prevZCell(colX, colY, colZ-1);
+
+        sue = 0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     ((stressTensor[6])[c]+
+                      (stressTensor[6])[prevZCell]+
+                      (stressTensor[6])[IntVector(colX+1,colY,colZ)]+
+                      (stressTensor[6])[IntVector(colX+1,colY,colZ-1)]);
+        suw =  0.25*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+                     ((stressTensor[6])[c]+
+                      (stressTensor[6])[prevZCell]+
+                      (stressTensor[6])[IntVector(colX-1,colY,colZ)]+
+                      (stressTensor[6])[IntVector(colX-1,colY,colZ-1)]);
+        sun = 0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[7])[c]+
+                      (stressTensor[7])[prevZCell]+
+                      (stressTensor[7])[IntVector(colX,colY+1,colZ)]+
+                      (stressTensor[7])[IntVector(colX,colY+1,colZ-1)]);
+        sus =  0.25*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+                     ((stressTensor[7])[c]+
+                      (stressTensor[7])[prevZCell]+
+                      (stressTensor[7])[IntVector(colX,colY-1,colZ)]+
+                      (stressTensor[7])[IntVector(colX,colY-1,colZ-1)]);
+        sut = cellinfo->sew[colX]*cellinfo->sns[colY]*
+                     (stressTensor[8])[c];
+        sub = cellinfo->sew[colX]*cellinfo->sns[colY]*
+                     (stressTensor[8])[prevZCell];
+        velocityVars.wVelNonlinearSrc[c] += suw-sue+sus-sun+sub-sut;
+      }
+    }
+    //__________________________________
+
+    // add multimaterial momentum source term
+    if (d_MAlab){
+      d_source->computemmMomentumSource(pc, patch, cellinfo,
+                                        &velocityVars, &constVelocityVars);
+    }
+
+    // Adding new sources from factory:
+    SourceTermFactory& factor = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_new_sources.begin(); 
+       iter != d_new_sources.end(); iter++){
+
+      SourceTermBase& src = factor.retrieve_source_term( *iter ); 
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      SourceTermBase::MY_GRID_TYPE src_type = src.getSourceGridType(); 
+
+      switch (src_type) {
+        case SourceTermBase::CCVECTOR_SRC: 
+          { new_dw->get( velocityVars.otherVectorSource, srcLabel, indx, patch, Ghost::None, 0); 
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].x()*vol;
+            velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].y()*vol;
+            velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherVectorSource[c].z()*vol;
+          }} 
+          break; 
+        case SourceTermBase::FX_SRC:
+          { new_dw->get( velocityVars.otherFxSource, srcLabel, indx, patch, Ghost::None, 0);
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.uVelNonlinearSrc[c]  += velocityVars.otherFxSource[c]*vol;
+          }} 
+          break; 
+        case SourceTermBase::FY_SRC: 
+          { new_dw->get( velocityVars.otherFySource, srcLabel, indx, patch, Ghost::None, 0);
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.vVelNonlinearSrc[c]  += velocityVars.otherFySource[c]*vol;
+          }} 
+          break; 
+        case SourceTermBase::FZ_SRC:
+          { new_dw->get( velocityVars.otherFzSource, srcLabel, indx, patch, Ghost::None, 0);
+          Vector Dx  = patch->dCell();
+          double vol = Dx.x()*Dx.y()*Dx.z();
+          for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){
+            IntVector c = *iter;
+            velocityVars.wVelNonlinearSrc[c]  += velocityVars.otherFzSource[c]*vol;
+          }} 
+          break; 
+        default: 
+          proc0cout << "For source term of type: " << src_type << endl;
+          throw InvalidValue("Error: Trying to add a source term to momentum equation with incompatible type",__FILE__, __LINE__); 
+
+      }
+    }
 
 //      // sets coefs in the direction of the wall to zero
 //      d_boundaryCondition->wallVelocityBC(patch, cellinfo,
@@ -915,24 +899,20 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 //      d_source->modifyVelMassSource(patch, volFraction, 
 //                                    &velocityVars, &constVelocityVars);
 
-      d_discretize->calculateVelDiagonal(patch,&velocityVars);
+    d_discretize->calculateVelDiagonal(patch,&velocityVars);
 
-      if (d_MAlab) {
-        d_boundaryCondition->calculateVelRhoHat_mm(patch, delta_t,
-                                                   cellinfo, &velocityVars,
-                                                   &constVelocityVars);
-      } else {
-        d_rhsSolver->calculateHatVelocity(patch, delta_t,
-                                         cellinfo, &velocityVars, &constVelocityVars, volFraction);
-      }
-      
-      d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat,
-                                                      velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density );
-
+    if (d_MAlab) {
+      d_boundaryCondition->calculateVelRhoHat_mm(patch, delta_t,
+                                                 cellinfo, &velocityVars,
+                                                 &constVelocityVars);
+    } else {
+      d_rhsSolver->calculateHatVelocity(patch, delta_t,
+                                       cellinfo, &velocityVars, &constVelocityVars, volFraction);
     }
+    
+    d_boundaryCondition->setHattedIntrusionVelocity( patch, velocityVars.uVelRhoHat,
+                                                    velocityVars.vVelRhoHat, velocityVars.wVelRhoHat, constVelocityVars.new_density );
 
-
-//#endif // WASATCH_IN_ARCHES
 
 
     double time_shift = 0.0;
@@ -1314,122 +1294,4 @@ void MomentumSolver::computeMomentum( const ProcessorGroup* pc,
 }
 
 //
-//------------------------------------------------------------------------------------------------
-
-void MomentumSolver::sched_computeVelHatWarches( const LevelP& level,
-                                               SchedulerP& sched, 
-                                               const int timesubstep )
-{
-  Task* tsk = scinew Task( "MomentumSolver::computeVelHatWarches", this,
-                            &MomentumSolver::computeVelHatWarches, timesubstep );
-
-  Task::WhichDW which_dw;
-  if ( timesubstep == 0 ){
-    which_dw = Task::OldDW;
-  } else {
-    which_dw = Task::NewDW;
-  }
-  tsk->requires( which_dw, d_lab->d_uMomLabel, Ghost::None, 0 );
-  tsk->requires( which_dw, d_lab->d_vMomLabel, Ghost::None, 0 );
-  tsk->requires( which_dw, d_lab->d_wMomLabel, Ghost::None, 0 );
-
-  tsk->requires( Task::NewDW, d_lab->d_uVelRhoHatRHSPartLabel, Ghost::None, 0 );
-  tsk->requires( Task::NewDW, d_lab->d_vVelRhoHatRHSPartLabel, Ghost::None, 0 );
-  tsk->requires( Task::NewDW, d_lab->d_wVelRhoHatRHSPartLabel, Ghost::None, 0 );
-  
-  tsk->requires( Task::NewDW, VarLabel::find("density"), Ghost::AroundCells, 1 );
-  
-  tsk->requires( Task::OldDW, d_lab->d_sharedState->get_delt_label() );
-
-  if ( timesubstep == 0 ){
-    tsk->computes( d_lab->d_uVelRhoHatLabel );
-    tsk->computes( d_lab->d_vVelRhoHatLabel );
-    tsk->computes( d_lab->d_wVelRhoHatLabel );
-  } else {
-    tsk->modifies( d_lab->d_uVelRhoHatLabel );
-    tsk->modifies( d_lab->d_vVelRhoHatLabel );
-    tsk->modifies( d_lab->d_wVelRhoHatLabel );
-  }
-
-  sched->addTask( tsk, level->eachPatch(), d_lab->d_sharedState->allArchesMaterials() ); 
-}
-
-//
 //------------------------------------------------------------------------------
-
-void MomentumSolver::computeVelHatWarches( const ProcessorGroup* pc,
-                                         const PatchSubset* patches,
-                                         const MaterialSubset*,
-                                         DataWarehouse* old_dw,
-                                         DataWarehouse* new_dw,
-                                         const int timesubstep )
-{
-  //patch loop
-  for (int p=0; p < patches->size(); p++){
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0;
-    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-
-    DataWarehouse* which_dw = (timesubstep==0) ? old_dw : new_dw;
-
-    constSFCXVariable<double> umom;
-    constSFCYVariable<double> vmom;
-    constSFCZVariable<double> wmom;
-    
-    which_dw->get( umom, d_lab->d_uMomLabel, matlIndex, patch, Ghost::None, 0 );
-    which_dw->get( vmom, d_lab->d_vMomLabel, matlIndex, patch, Ghost::None, 0 );
-    which_dw->get( wmom, d_lab->d_wMomLabel, matlIndex, patch, Ghost::None, 0 );
-
-    constSFCXVariable<double> umomRhsPart;
-    constSFCYVariable<double> vmomRhsPart;
-    constSFCZVariable<double> wmomRhsPart;
-    
-    new_dw->get( umomRhsPart, d_lab->d_uVelRhoHatRHSPartLabel, matlIndex, patch, Ghost::None, 0 );
-    new_dw->get( vmomRhsPart, d_lab->d_vVelRhoHatRHSPartLabel, matlIndex, patch, Ghost::None, 0 );
-    new_dw->get( wmomRhsPart, d_lab->d_wVelRhoHatRHSPartLabel, matlIndex, patch, Ghost::None, 0 );
-    
-    constCCVariable<double> rho;
-    new_dw->get( rho, VarLabel::find("density"),   matlIndex, patch, Ghost::AroundCells, 1 );
-    
-    SFCXVariable<double> uhat;
-    SFCYVariable<double> vhat;
-    SFCZVariable<double> what;
-    if (timesubstep==0) {
-      new_dw->allocateAndPut( uhat, d_lab->d_uVelRhoHatLabel, matlIndex, patch );
-      new_dw->allocateAndPut( vhat, d_lab->d_vVelRhoHatLabel, matlIndex, patch );
-      new_dw->allocateAndPut( what, d_lab->d_wVelRhoHatLabel, matlIndex, patch );
-      uhat.initialize(0.0);
-      vhat.initialize(0.0);
-      what.initialize(0.0);
-    } else {
-      new_dw->getModifiable( uhat, d_lab->d_uVelRhoHatLabel, matlIndex, patch );
-      new_dw->getModifiable( vhat, d_lab->d_vVelRhoHatLabel, matlIndex, patch );
-      new_dw->getModifiable( what, d_lab->d_wVelRhoHatLabel, matlIndex, patch );
-    }
-    
-    delt_vartype DT; 
-    old_dw->get( DT, d_lab->d_sharedState->get_delt_label() ); 
-    double dt = DT;
-
-    
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-      IntVector c = *iter;
-      
-      IntVector west = c - IntVector(1,0,0);
-      IntVector south = c - IntVector(0,1,0);
-      IntVector bottom = c - IntVector(0,0,1);
-      const double rhox = 0.5 * (rho[c] + rho[west]);
-      const double rhoy = 0.5 * (rho[c] + rho[south]);
-      const double rhoz = 0.5 * (rho[c] + rho[bottom]);
-      // the incoming uhat = convective + diffusive fluxes calculated by wasatch
-      // to construct the vel-hat velocities, we do the following calculation
-      uhat[c] = (umom[c] + dt * umomRhsPart[c])/rhox;
-      vhat[c] = (vmom[c] + dt * vmomRhsPart[c])/rhoy;
-      what[c] = (wmom[c] + dt * wmomRhsPart[c])/rhoz;
-    }
-  }
-}
-
-
-

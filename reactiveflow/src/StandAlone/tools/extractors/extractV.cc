@@ -46,6 +46,8 @@
 #include <Core/Math/MinMax.h>
 #include <Core/OS/Dir.h>
 
+#include <Core/Parallel/Parallel.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -76,8 +78,12 @@ void printVelocity(DataArchive* da,
                    vector<long64>& partID,
                    string outFile);
 
-int main(int argc, char** argv)
+int
+main( int argc, char** argv )
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
+
   string partVar;
   int matID = 0;
   string partIDFile;

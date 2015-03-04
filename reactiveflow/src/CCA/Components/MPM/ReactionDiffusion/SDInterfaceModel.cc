@@ -23,7 +23,9 @@
  */
 
 #include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
+#include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Task.h>
 
@@ -58,8 +60,145 @@ SDInterfaceModel::~SDInterfaceModel(){
   delete(d_rdlb);
 }
 
-void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* t,
-                                                          const PatchSet* patches,
-                                                          const MaterialSet* matls)
-{ 
+void SDInterfaceModel::addInitialComputesAndRequires(Task* task,
+                                                     const PatchSet* patches) const
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->addInitialComputesAndRequires(task, mpm_matl, patches);
+  }
 }
+
+void SDInterfaceModel::initializeSDMData(const Patch* patch, DataWarehouse* new_dw)
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->initializeSDMData(patch, mpm_matl, new_dw);
+  }
+
+}
+
+void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* task,
+                                                         const PatchSet* patches) const
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleInterpolateParticlesToGrid(task, mpm_matl, patches);
+  }
+
+}
+
+void SDInterfaceModel::interpolateParticlesToGrid(const Patch* patch, DataWarehouse* old_dw,
+                                                  DataWarehouse* new_dw)
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->interpolateParticlesToGrid(patch, mpm_matl, old_dw, new_dw);
+	}
+
+}
+
+
+void SDInterfaceModel::scheduleComputeFlux(Task* task, const PatchSet* patches) const
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleComputeFlux(task, mpm_matl, patches);
+  }
+
+}
+
+void SDInterfaceModel::computeFlux(const Patch* patch, DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->computeFlux(patch, mpm_matl, old_dw, new_dw);
+  }
+}
+
+void SDInterfaceModel::scheduleComputeDivergence(Task* task, const PatchSet* patches) const
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleComputeDivergence(task, mpm_matl, patches);
+  }
+
+}
+
+void SDInterfaceModel::computeDivergence(const Patch* patch, DataWarehouse* old_dw,
+                                         DataWarehouse* new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->computeDivergence(patch, mpm_matl, old_dw, new_dw);
+  }
+}
+
+void SDInterfaceModel::scheduleInterpolateToParticlesAndUpdate(Task* task,
+		                                                           const PatchSet* patches) const
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleInterpolateToParticlesAndUpdate(task, mpm_matl, patches);
+  }
+}
+
+void SDInterfaceModel::interpolateToParticlesAndUpdate(const Patch* patch,
+                                                       DataWarehouse* old_dw,
+                                                       DataWarehouse* new_dw)
+{
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->interpolateToParticlesAndUpdate(patch, mpm_matl, old_dw, new_dw);
+  }
+
+}
+
+void SDInterfaceModel::scheduleFinalParticleUpdate(Task* task, const PatchSet* patches) const
+{
+  int numMPM = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->scheduleFinalParticleUpdate(task, mpm_matl, patches);
+  }
+}
+
+void SDInterfaceModel::finalParticleUpdate(const Patch* patch, DataWarehouse* old_dw,
+                                           DataWarehouse* new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+    sdm->finalParticleUpdate(patch, mpm_matl, old_dw, new_dw);
+  }
+}
+

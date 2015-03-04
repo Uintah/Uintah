@@ -35,9 +35,7 @@
 class ParticleMassIC
 : public Expr::Expression<ParticleField>
 {
-  const Expr::Tag pRhoTag_, pDiameterTag_;
-  const ParticleField* pRho_;
-  const ParticleField* pDiameter_;
+  DECLARE_FIELDS(ParticleField, pRho_, pDiameter_)
   
   /* declare operators associated with this expression here */
   
@@ -61,10 +59,6 @@ public:
     const Expr::Tag pRhoTag_, pDiameterTag_;
   };
   
-  ~ParticleMassIC();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
-  void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };
 

@@ -16,52 +16,46 @@
  */
 template< typename GasVelT >
 class ParticleGasMomentumSrc
-  : public Expr::Expression<GasVelT>
+: public Expr::Expression<GasVelT>
 {
-
+  
 public:
-
+  
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag     pDragTag_, pMassTag_, pSizeTag_;
     const Expr::TagList pPosTags_;
-
+    
   public:
-
+    
     Builder( const Expr::Tag& resultTag,
-             const Expr::Tag& particleDragTag,
-             const Expr::Tag& particleMassTag,
-             const Expr::Tag& particleSizeTag,
-             const Expr::TagList& particlePositionTags );
+            const Expr::Tag& particleDragTag,
+            const Expr::Tag& particleMassTag,
+            const Expr::Tag& particleSizeTag,
+            const Expr::TagList& particlePositionTags );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   };
-
+  
   ~ParticleGasMomentumSrc();
 
-  void evaluate();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
-
+  void evaluate();
+  
 private:
-
+  
   ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
-                        const Expr::Tag& particleMassTag,
-                        const Expr::Tag& particleSizeTag,
-                        const Expr::TagList& particlePositionTags);
-
-  const Expr::Tag     pDragTag_, pMassTag_, pSizeTag_;
-  const Expr::TagList pPosTags_;
+                         const Expr::Tag& particleMassTag,
+                         const Expr::Tag& particleSizeTag,
+                         const Expr::TagList& particlePositionTags);
+  
+  DECLARE_FIELDS(ParticleField, px_, py_, pz_, pDrag_, pSize_, pMass_)
   double vol_; // cell volume
   
   typedef typename SpatialOps::Particle::ParticleToCell<GasVelT> P2GVelT;
   P2GVelT* p2gvOp_; // particle to gas velocity operator
-
-  Wasatch::UintahPatchContainer* patchContainer_;
   
-  const ParticleField *px_, *py_, *pz_, *pDrag_, *pSize_, *pMass_;
-
+  Wasatch::UintahPatchContainer* patchContainer_;
 };
 
 // ###################################################################
@@ -76,51 +70,25 @@ private:
 template< typename GasVelT >
 ParticleGasMomentumSrc<GasVelT>::
 ParticleGasMomentumSrc( const Expr::Tag& particleDragTag,
-                      const Expr::Tag& particleMassTag,
-                      const Expr::Tag& particleSizeTag,
-                      const Expr::TagList& particlePositionTags)
-  : Expr::Expression<GasVelT>(),
-    pDragTag_( particleDragTag ),
-    pMassTag_  ( particleMassTag        ),
-    pSizeTag_  ( particleSizeTag        ),
-    pPosTags_  ( particlePositionTags   )
+                       const Expr::Tag& particleMassTag,
+                       const Expr::Tag& particleSizeTag,
+                       const Expr::TagList& particlePositionTags)
+: Expr::Expression<GasVelT>()
+{
+   pDrag_ = this->template create_field_request<ParticleField>(particleDragTag);
+   pSize_ = this->template create_field_request<ParticleField>(particleSizeTag);
+   pMass_ = this->template create_field_request<ParticleField>(particleMassTag);
+   px_ = this->template create_field_request<ParticleField>(particlePositionTags[0]);
+   py_ = this->template create_field_request<ParticleField>(particlePositionTags[1]);
+   pz_ = this->template create_field_request<ParticleField>(particlePositionTags[2]);
+}
+
+//------------------------------------------------------------------
+
+template<typename GasVelT>
+ParticleGasMomentumSrc<GasVelT>::
+~ParticleGasMomentumSrc()
 {}
-
- //------------------------------------------------------------------
-
-  template<typename GasVelT>
-  ParticleGasMomentumSrc<GasVelT>::
-  ~ParticleGasMomentumSrc()
-  {}
-//--------------------------------------------------------------------
-
-template< typename GasVelT >
-void
-ParticleGasMomentumSrc<GasVelT>::
-advertise_dependents( Expr::ExprDeps& exprDeps )
-{
-  exprDeps.requires_expression( pDragTag_     );
-  exprDeps.requires_expression( pMassTag_     );
-  exprDeps.requires_expression( pSizeTag_     );
-  exprDeps.requires_expression( pPosTags_     );
-}
-
-//--------------------------------------------------------------------
-
-template< typename GasVelT >
-void
-ParticleGasMomentumSrc<GasVelT>::
-bind_fields( const Expr::FieldManagerList& fml )
-{
-  const typename Expr::FieldMgrSelector<ParticleField>::type& pfm = fml.template field_manager<ParticleField>();
-
-  pDrag_ = &pfm.field_ref( pDragTag_ );
-  pMass_ =  &pfm.field_ref( pMassTag_ );
-  pSize_  = &pfm.field_ref( pSizeTag_  );
-  px_  = &pfm.field_ref( pPosTags_[0]  );
-  py_  = &pfm.field_ref( pPosTags_[1]  );
-  pz_  = &pfm.field_ref( pPosTags_[2]  );
-}
 
 //--------------------------------------------------------------------
 
@@ -142,17 +110,25 @@ ParticleGasMomentumSrc<GasVelT>::
 evaluate()
 {
   GasVelT& result = this->value();
-
+  
   using namespace SpatialOps;
+  
+  const ParticleField& psize = pSize_->field_ref();
+  const ParticleField& pdrag = pDrag_->field_ref();
+  const ParticleField& pmass = pMass_->field_ref();
+  const ParticleField& px = px_->field_ref();
+  const ParticleField& py = py_->field_ref();
+  const ParticleField& pz = pz_->field_ref();
 
+  
   SpatFldPtr<GasVelT     >  gasmomsrc = SpatialFieldStore::get<GasVelT     >( result );
-  SpatFldPtr<ParticleField> pforcetmp    = SpatialFieldStore::get<ParticleField>( *px_ );
-
-  *pforcetmp <<= *pDrag_ * *pMass_; // multiply by mass
-
-  p2gvOp_->set_coordinate_information( px_,py_,pz_, pSize_ );
+  SpatFldPtr<ParticleField> pforcetmp = SpatialFieldStore::get<ParticleField>( px );
+  
+  *pforcetmp <<= pdrag * pmass; // multiply by mass
+  
+  p2gvOp_->set_coordinate_information(&px,&py,&pz,&psize);
   p2gvOp_->apply_to_field( *pforcetmp, *gasmomsrc );
-
+  
   result <<= - *gasmomsrc / vol_;
 }
 
@@ -165,11 +141,11 @@ Builder( const Expr::Tag& resultTag,
         const Expr::Tag& particleMassTag,
         const Expr::Tag& particleSizeTag,
         const Expr::TagList& particlePositionTags)
-  : ExpressionBuilder(resultTag),
-    pDragTag_( particleDragTag ),
-    pMassTag_(particleMassTag),
-    pSizeTag_(particleSizeTag),
-    pPosTags_(particlePositionTags)
+: ExpressionBuilder(resultTag),
+pDragTag_( particleDragTag ),
+pMassTag_(particleMassTag),
+pSizeTag_(particleSizeTag),
+pPosTags_(particlePositionTags)
 {}
 
 //--------------------------------------------------------------------

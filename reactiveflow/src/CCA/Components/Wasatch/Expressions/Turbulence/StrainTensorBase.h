@@ -49,8 +49,6 @@ class StrainTensorBase : public Expr::Expression<SVolField>
 {
 protected:
   
-  const Expr::TagList velTags_;
-  
   //A_SURF_B_Field = A vol, B surface
   typedef SpatialOps::SpatFldPtr<SVolField> SVolPtr;
   typedef std::vector< SVolPtr  > SVolVecT;
@@ -78,9 +76,9 @@ protected:
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfZField, SVolField >::type YZInterpT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfYField, SVolField >::type ZYInterpT;
   
-  const XVolField* vel1_;
-  const YVolField* vel2_;
-  const ZVolField* vel3_;
+  DECLARE_FIELD(XVolField, u_)
+  DECLARE_FIELD(YVolField, v_)
+  DECLARE_FIELD(ZVolField, w_)
   
   const bool doX_, doY_, doZ_;
   
@@ -119,8 +117,6 @@ protected:
 public:  
   ~StrainTensorBase();
   
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 }; // class StrainTensorBase

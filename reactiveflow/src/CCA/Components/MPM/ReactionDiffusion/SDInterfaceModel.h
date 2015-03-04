@@ -46,9 +46,39 @@ namespace Uintah {
     
     SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
     ~SDInterfaceModel();
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const PatchSet* patch) const;
 
-    virtual void scheduleInterpolateParticlesToGrid(Task* t, const PatchSet* patches,
-                                                    const MaterialSet* matls);
+    virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
+
+    virtual void scheduleInterpolateParticlesToGrid(Task* task,
+                                                    const PatchSet* patches) const;
+
+    virtual void interpolateParticlesToGrid(const Patch* patch,
+                                            DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    virtual void scheduleComputeFlux(Task* task, const PatchSet* patch) const;
+
+    virtual void computeFlux(const Patch* patch, DataWarehouse* old_dw,
+		                         DataWarehouse* new_dw);
+
+    virtual void scheduleComputeDivergence(Task* task, const PatchSet* patch) const;
+
+    virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
+		                               DataWarehouse* new_dw);
+
+    virtual void scheduleInterpolateToParticlesAndUpdate(Task* task,
+		                                                     const PatchSet* patch) const;
+
+    virtual void interpolateToParticlesAndUpdate(const Patch* patch, 
+                                                 DataWarehouse* old_dw,
+                                                 DataWarehouse* new_dw);
+
+    virtual void scheduleFinalParticleUpdate(Task* task, const PatchSet* patch) const;
+
+    virtual void finalParticleUpdate(const Patch* patch, DataWarehouse* old_dw,
+		                                 DataWarehouse* new_dw);
+ 
 
   protected:
     MPMLabel* d_lb;

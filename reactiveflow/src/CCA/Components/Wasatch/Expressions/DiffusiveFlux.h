@@ -59,14 +59,13 @@ class DiffusiveFlux
 
   const bool isTurbulent_, isConstCoef_;
 
-  const Expr::Tag phiTag_, coefTag_, rhoTag_, turbDiffTag_;
   const double coefVal_;
 
   const GradT* gradOp_;
   const InterpT* interpOp_;
 
-  const ScalarT *phi_, *turbDiff_, *rho_, *coef_;
-
+  DECLARE_FIELDS(ScalarT, phi_, turbDiff_, rho_, coef_)
+  
   DiffusiveFlux( const Expr::Tag& rhoTag,
                  const Expr::Tag& turbDiffTag,
                  const Expr::Tag& phiTag,
@@ -149,8 +148,6 @@ public:
   };
 
   ~DiffusiveFlux();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
