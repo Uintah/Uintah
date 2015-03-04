@@ -41,16 +41,19 @@ SingleProcessorLoadBalancer::~SingleProcessorLoadBalancer()
 {
 }
 
-void SingleProcessorLoadBalancer::assignResources(DetailedTasks& graph)
+void
+SingleProcessorLoadBalancer::assignResources( DetailedTasks & graph )
 {
   int ntasks = graph.numTasks();
-  for(int i=0;i<ntasks;i++)
-    graph.getTask(i)->assignResource(0);
+  for( int i = 0; i < ntasks; i++ ) {
+    graph.getTask(i)->assignResource( 0 );
+  }
 }
 
-int SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment(const Patch*)
+int
+SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment( const Patch * )
 {
-   return 0;
+  return 0;
 }
 
 const PatchSet*
@@ -77,3 +80,4 @@ SingleProcessorLoadBalancer::inNeighborhood( const Patch* )
 {
   return true;
 }
+

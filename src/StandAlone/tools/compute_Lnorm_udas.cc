@@ -35,24 +35,26 @@
  */
 
 #include <Core/DataArchive/DataArchive.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Grid/Level.h>
-#include <Core/Grid/Variables/GridIterator.h>
-#include <Core/Grid/Variables/NodeIterator.h>
-#include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/CCVariable.h>
+#include <Core/Grid/Variables/CellIterator.h>
+#include <Core/Grid/Variables/GridIterator.h>
 #include <Core/Grid/Variables/NCVariable.h>
+#include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
 #include <Core/Grid/Variables/Stencil7.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Core/OS/Dir.h> // for MKDIR
+#include <Core/Parallel/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/ProgressiveWarning.h>
+
 #include <dirent.h>
 #include <iostream>
 #include <fstream>
@@ -459,6 +461,9 @@ void createFile(string& filename, const int timestep)
 int
 main(int argc, char** argv)
 {
+  Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+  Uintah::Parallel::initializeManager(argc, argv);
+
   Thread::setDefaultAbortMode("exit");
   string ignoreVar = "none";
   string filebase1;

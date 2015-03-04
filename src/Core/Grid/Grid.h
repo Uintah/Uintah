@@ -25,19 +25,21 @@
 #ifndef UINTAH_HOMEBREW_GRID_H
 #define UINTAH_HOMEBREW_GRID_H
 
-#include <Core/Grid/GridP.h>
-#include <Core/Util/Handle.h>
-#include <Core/Grid/LevelP.h>
-#include <Core/Util/RefCounted.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <CCA/Ports/LoadBalancer.h>
 
-#include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Grid/GridP.h>
+#include <Core/Grid/LevelP.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
+#include <Core/Util/Handle.h>
+#include <Core/Util/RefCounted.h>
 
-#include <vector>
 #include <list>
+#include <string>
+#include <vector>
 
 namespace Uintah {
 
@@ -79,7 +81,7 @@ WARNING
     
     //////////
     // Returns the number of levels in this grid.
-    int numLevels() const;
+    int numLevels() const { return d_levels.size(); }
     
     //////////
     // Returns a "Handle" to the "idx"th level 
@@ -89,6 +91,9 @@ WARNING
     // Adds a level to the grid.
     Level* addLevel( const SCIRun::Point  & anchor,
                      const SCIRun::Vector & dcell, int id = -1 );
+
+    // Reads in XML data line by line to create a level...
+    void readLevelsFromFile( FILE * fp, std::vector< std::vector<int> > & procMap );
    
     void performConsistencyCheck() const;
     void printStatistics() const;
@@ -107,8 +112,8 @@ WARNING
     
     //////////
     // Computes the length of the grid
-    void getLength(SCIRun::Vector& length,
-                   const std::string flag = "plusExtraCells") const;
+    void getLength(       SCIRun::Vector & length,
+                    const std::string    & flag = "plusExtraCells" ) const;
     
     //////////
     // Problem setup functions called from simulation controller
@@ -142,16 +147,21 @@ WARNING
     // af_, bf_, cf_, and nf_, then start the recursive call.  You should never
     // explicitly call partition(), only run_partition().
     IntVector run_partition3D(std::list<int> primes);
-    void partition3D(std::list<int> primes, int a, int b, int c);
+    void      partition3D(std::list<int> primes, int a, int b, int c);
     
     IntVector run_partition2D(std::list<int> primes);
-    void partition2D(std::list<int> primes, int a, int b);
+    void      partition2D(std::list<int> primes, int a, int b);
+
+    // Helper function for reading in xml specification of the grid from timestep.xml.
+    bool      parseGridFromFile(  FILE * fp, std::vector< std::vector<int> > & procMap );         // returns true if "</Grid>" found.
+    bool      parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel );                // returns true if "</Level>" found.
+    bool      parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapForLevel );  // returns true if "</Patch>" found.
 
     // The current (final) values of a,b,c, and norm for the partitian function.
     // Used to hold data between recursive calls.
-    int af_;
-    int bf_;
-    int cf_;
+    int    af_;
+    int    bf_;
+    int    cf_;
     double nf_;
 
     // Temporary storage of the resolution values for use in the norm functions

@@ -45,7 +45,7 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
   pdCdtLabel = VarLabel::create( "p.dCdt",
 		  ParticleVariable<double>::getTypeDescription() );
 
-  pConcentrationGradientLabel = VarLabel::create("p.concentrationGradient",
+  pConcGradientLabel = VarLabel::create("p.concentrationGradient",
 	    ParticleVariable<Vector>::getTypeDescription());
 
   pHydroStressLabel = VarLabel::create( "p.hydroStress",
@@ -59,6 +59,7 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
 
   pdCdtLabel_preReloc = VarLabel::create( "p.dCdt+",
 		  ParticleVariable<double>::getTypeDescription() );
+
 
 	// Grid Variables
   gConcentrationLabel = VarLabel::create( "g.concentration",
@@ -89,7 +90,7 @@ ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(pConcentrationLabel);
   VarLabel::destroy(pConcPreviousLabel);
   VarLabel::destroy(pdCdtLabel);
-  VarLabel::destroy(pConcentrationGradientLabel);
+  VarLabel::destroy(pConcGradientLabel);
   VarLabel::destroy(pHydroStressLabel);
 
   VarLabel::destroy(pConcentrationLabel_preReloc);

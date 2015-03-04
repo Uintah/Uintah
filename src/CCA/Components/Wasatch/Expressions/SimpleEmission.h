@@ -13,11 +13,10 @@ template< typename FieldT >
 class SimpleEmission
  : public Expr::Expression<FieldT>
 {
-  const Expr::Tag temperatureTag_, envTempTag_, absCoefTag_;
   const double envTempValue_;
   const bool hasAbsCoef_, hasConstEnvTemp_;
-
-  const FieldT *temperature_, *envTemp_, *absCoef_;
+  
+  DECLARE_FIELDS( FieldT, temperature_, envTemp_, absCoef_ )
 
   SimpleEmission( const Expr::Tag& temperatureTag,
                   const Expr::Tag& envTempTag,
@@ -58,9 +57,6 @@ public:
     const double envTemp_;
   };
 
-  ~SimpleEmission();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 

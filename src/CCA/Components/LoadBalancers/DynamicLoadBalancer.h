@@ -1,3 +1,6 @@
+#ifndef UINTAH_HOMEBREW_DynamicLoadBalancer_H
+#define UINTAH_HOMEBREW_DynamicLoadBalancer_H
+
 /*
  * The MIT License
  *
@@ -22,13 +25,9 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef UINTAH_HOMEBREW_DynamicLoadBalancer_H
-#define UINTAH_HOMEBREW_DynamicLoadBalancer_H
-
 #include <CCA/Components/LoadBalancers/CostForecasterBase.h>
 #include <CCA/Components/LoadBalancers/CostProfiler.h>
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
-#include <CCA/Ports/SFC.h>
 
 #include <Core/Grid/Grid.h>
 #include <Core/Parallel/UintahParallelComponent.h>
@@ -92,9 +91,7 @@ namespace Uintah {
   public:
     DynamicLoadBalancer(const ProcessorGroup* myworld);
     ~DynamicLoadBalancer();
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
-    virtual int getOldProcessorAssignment(const VarLabel* var,
-                                          const Patch* patch, const int matl);
+
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
@@ -115,25 +112,18 @@ namespace Uintah {
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
-    //! Assigns the patches to the processors they ended up on in the previous
-    //! Simulation.  Returns true if we need to re-load balance (if we have a 
-    //! different number of procs than were saved to disk
-    virtual void restartInitialize( DataArchive* archive, int time_index,
-                                    ProblemSpecP& pspec,
-                                    std::string tsurl, const GridP& grid );
-   
     // Cost profiling functions
     // Update the contribution for this patch.
-    void addContribution( DetailedTask * task ,double cost ) { d_costForecaster->addContribution(task,cost); }
+    virtual void addContribution( DetailedTask * task ,double cost ) { d_costForecaster->addContribution(task,cost); }
 
     // Finalize the contributions (updates the weight, should be called once per timestep):
-    void finalizeContributions( const GridP & currentGrid );
+    virtual void finalizeContributions( const GridP & currentGrid );
 
     // Initializes the regions in the new level that are not in the old level.
-    void initializeWeights(const Grid* oldgrid, const Grid* newgrid) { d_costForecaster->initializeWeights(oldgrid,newgrid); }
+    virtual void initializeWeights(const Grid* oldgrid, const Grid* newgrid) { d_costForecaster->initializeWeights(oldgrid,newgrid); }
 
     // Resets the profiler counters to zero
-    void resetCostForecaster() { d_costForecaster->reset(); }
+    virtual void resetCostForecaster() { d_costForecaster->reset(); }
     
     // Helper for assignPatchesFactor.  Collects each patch's particles
     void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);
@@ -167,24 +157,10 @@ namespace Uintah {
     bool assignPatchesCyclic(const GridP& grid, bool force);
     bool assignPatchesZoltanSFC(const GridP& grid, bool force);
 
-    // calls space-filling curve on level, and stores results in pre-allocated output
-    void useSFC(const LevelP& level, int* output);
     bool thresholdExceeded(const std::vector<std::vector<double> >& patch_costs);
 
     //Assign costs to a list of patches
     void getCosts(const Grid* grid, std::vector<std::vector<double> >&costs);
-
-    std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
-    std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
-    std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
-
-    // The assignment vectors are stored 0-n.  This stores the start patch number so we can
-    // detect if something has gone wrong when we go to look up what proc a patch is on.
-    int d_assignmentBasePatch;   
-    int d_oldAssignmentBasePatch;
-
-    double d_lbInterval;
-    double d_lastLbTime;
 
     bool   d_levelIndependent;
     
@@ -202,11 +178,7 @@ namespace Uintah {
     double d_patchCost;     //cost weight per patch
     
     int  d_dynamicAlgorithm;
-    bool d_doSpaceCurve;
     bool d_collectParticles;
-    bool d_checkAfterRestart;
-
-    SFC <double> sfc;
 
 #if defined( HAVE_ZOLTAN )    
     // Zoltan global vars
@@ -217,6 +189,4 @@ namespace Uintah {
   };
 } // End namespace Uintah
 
-
 #endif
-

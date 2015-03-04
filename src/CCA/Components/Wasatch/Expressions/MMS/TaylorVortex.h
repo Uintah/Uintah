@@ -43,8 +43,8 @@
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class VelocityX : public Expr::Expression<ValT>
+template< typename FieldT >
+class VelocityX : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -68,8 +68,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -80,10 +78,9 @@ private:
              const double A,
              const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -103,8 +100,8 @@ private:
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class VelocityY : public Expr::Expression<ValT>
+template< typename FieldT >
+class VelocityY : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -128,8 +125,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -140,10 +135,8 @@ private:
              const double A,
              const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -167,8 +160,8 @@ private:
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class GradPX : public Expr::Expression<ValT>
+template< typename FieldT >
+class GradPX : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -192,8 +185,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -204,10 +195,8 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -231,8 +220,8 @@ private:
  *   - \f$t\f$ is the time variable
  *   - \f$\nu\f$ is kinematic viscosity
  */
-template< typename ValT >
-class GradPY : public Expr::Expression<ValT>
+template< typename FieldT >
+class GradPY : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -256,8 +245,6 @@ public:
     const Expr::Tag xt_, yt_, tt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -268,10 +255,8 @@ private:
           const double A,
           const double nu );
   const double a_, nu_;
-  const Expr::Tag xTag_, yTag_, tTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const TimeField* t_;
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 /**
@@ -301,8 +286,8 @@ velocity field. This is usually used as an initial condition for the velocity.
  *    Brachet et. al., Small-scale structure of the Taylor-Green vortex,
  *    J. Fluid Mech, vol. 130, no. 41, p. 1452, 1983.
  */
-template< typename ValT >
-class TaylorGreenVel3D : public Expr::Expression<ValT>
+template< typename FieldT >
+class TaylorGreenVel3D : public Expr::Expression<FieldT>
 {
 public:
 
@@ -323,8 +308,6 @@ public:
     const Expr::Tag xt_, yt_, zt_;
   };
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 
 private:
@@ -334,10 +317,7 @@ private:
                     const Expr::Tag& zTag,
                     const double angle );
   const double angle_;
-  const Expr::Tag xTag_, yTag_, zTag_;
-  const ValT* x_;
-  const ValT* y_;
-  const ValT* z_;
+  DECLARE_FIELDS(FieldT, x_, y_, z_)
 };
 
 //====================================================================

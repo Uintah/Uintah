@@ -1091,10 +1091,10 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
     offset.x(1);
   }
 
-  if (idx.y()< 0 && r_ratio.y() > 1){   // If the coarse cell index is negative
-    offset.y(1);                        // you must add an offset to get the right
-  }
-                                       // fine cell. -Todd
+  if (idx.y()< 0 && r_ratio.y() > 1){ // If the coarse cell index is negative
+    offset.y(1);                      // you must add an offset to get the right
+  }                                   // fine cell. -Todd
+
   if (idx.z()< 0 && r_ratio.z() > 1){
     offset.z(1);
   }    

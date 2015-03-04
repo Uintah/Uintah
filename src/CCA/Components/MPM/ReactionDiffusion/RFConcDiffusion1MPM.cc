@@ -196,7 +196,7 @@ void RFConcDiffusion1MPM::interpolateParticlesToGrid(const Patch* patch,
 }
 
 
-void RFConcDiffusion1MPM::scheduleComputeStep1(Task* task, const MPMMaterial* matl, 
+void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                                    const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
@@ -217,7 +217,7 @@ void RFConcDiffusion1MPM::scheduleComputeStep1(Task* task, const MPMMaterial* ma
 
 }
 
-void RFConcDiffusion1MPM::computeStep1(const Patch* patch, const MPMMaterial* matl,
+void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* matl,
                                                 DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
 
@@ -235,8 +235,7 @@ void RFConcDiffusion1MPM::computeStep1(const Patch* patch, const MPMMaterial* ma
   oodx[0] = 1.0/dx.x();
   oodx[1] = 1.0/dx.y();
   oodx[2] = 1.0/dx.z();
-
-
+           
   int dwi = matl->getDWIndex();
   constParticleVariable<Point>   px;
   constParticleVariable<double>  pvol,pMass;
@@ -320,7 +319,7 @@ void RFConcDiffusion1MPM::computeStep1(const Patch* patch, const MPMMaterial* ma
 	delete interpolator;
 }
 
-void RFConcDiffusion1MPM::scheduleComputeStep2(Task* task, const MPMMaterial* matl, 
+void RFConcDiffusion1MPM::scheduleComputeDivergence(Task* task, const MPMMaterial* matl, 
 		                                                const PatchSet* patch) const
 {
   Ghost::GhostType  gnone = Ghost::None;
@@ -335,7 +334,7 @@ void RFConcDiffusion1MPM::scheduleComputeStep2(Task* task, const MPMMaterial* ma
   task->computes(d_rdlb->gConcentrationStarLabel, matlset);
 }
 
-void RFConcDiffusion1MPM::computeStep2(const Patch* patch, const MPMMaterial* matl,
+void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMaterial* matl,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   Ghost::GhostType  gnone = Ghost::None;

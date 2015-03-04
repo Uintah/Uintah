@@ -72,9 +72,9 @@ class ConvectiveFlux
   typedef typename VelInterpT::DestFieldType VelFaceT;
   // the destination field of VelInterpT should be a PhiFaceT
 
-  const Expr::Tag phiTag_, velTag_;
-  const PhiVolT* phi_;
-  const VelVolT* vel_;
+  DECLARE_FIELD(PhiVolT, phi_)
+  DECLARE_FIELD(VelVolT, vel_)
+  
   PhiInterpT* phiInterpOp_;
   const VelInterpT* velInterpOp_;
 
@@ -83,8 +83,6 @@ public:
                   const Expr::Tag& velTag );
   ~ConvectiveFlux();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
@@ -153,12 +151,10 @@ class ConvectiveFluxLimiter
   typedef typename VelInterpT::SrcFieldType  VelVolT;  ///< source field is always a staggered volume field.
   typedef typename VelInterpT::DestFieldType VelFaceT;
 
-  const Expr::Tag phiTag_, velTag_, volFracTag_;
   const Wasatch::ConvInterpMethods limiterType_;
 
-  const PhiVolT* phi_;
-  const VelVolT* vel_;
-  const PhiVolT* volFrac_;
+  DECLARE_FIELDS(PhiVolT, phi_, volFrac_)
+  DECLARE_FIELD(VelVolT, vel_)
 
   const bool isUpwind_;
   const bool isCentral_;
@@ -209,8 +205,6 @@ public:
 
   ~ConvectiveFluxLimiter();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 };

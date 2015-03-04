@@ -50,13 +50,12 @@ class WeakConvectiveTerm
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
     
-  const XVolField *velx_;
-  const YVolField *vely_;
-  const ZVolField *velz_;  
-  const FieldT *vel_;
-
-  const Expr::Tag velt_, velxt_, velyt_, velzt_;
-  const bool is3d_;
+  DECLARE_FIELD(XVolField, u_)
+  DECLARE_FIELD(YVolField, v_)
+  DECLARE_FIELD(ZVolField, w_)
+  DECLARE_FIELD(FieldT, vel_)
+  
+  const bool doX_, doY_, doZ_, is3d_;
   
   WeakConvectiveTerm( const Expr::Tag velTag,
           const Expr::TagList velTags );
@@ -90,8 +89,6 @@ public:
   };
 
   ~WeakConvectiveTerm();
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 

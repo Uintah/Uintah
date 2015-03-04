@@ -46,15 +46,10 @@ template< typename FieldT >
 class TabPropsHeatLossEvaluator
  : public Expr::Expression<FieldT>
 {
-  typedef std::vector<const FieldT*>  IndepVarVec;
+  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_);
 
   const size_t hlIx_;
-  const Expr::TagList indepVarNames_;
-
   std::vector<double> ivarsPoint_;
-
-  IndepVarVec indepVars_;
-
   const InterpT* const enthEval_;
   const InterpT* const adEnthEval_;
   const InterpT* const sensEnthEval_;
@@ -85,9 +80,6 @@ public:
   };
 
   ~TabPropsHeatLossEvaluator();
-
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void evaluate();
 };
 

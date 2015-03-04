@@ -206,12 +206,6 @@ namespace Uintah {
       const VarLabel* d_uVelRhoHatLabel;
       const VarLabel* d_vVelRhoHatLabel;
       const VarLabel* d_wVelRhoHatLabel;
-
-      // the following three labels are used when WArches is enabled. They refer
-      // to the momentum partial rhs that is calculated by Wasatch
-      const VarLabel* d_uVelRhoHatRHSPartLabel;
-      const VarLabel* d_vVelRhoHatRHSPartLabel;
-      const VarLabel* d_wVelRhoHatRHSPartLabel;
       
       const VarLabel* d_uVelRhoHat_CCLabel;
       const VarLabel* d_vVelRhoHat_CCLabel;

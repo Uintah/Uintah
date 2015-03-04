@@ -63,8 +63,10 @@ namespace Uintah {
     SimpleLoadBalancer(const ProcessorGroup* myworld);
     ~SimpleLoadBalancer();
     
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
-    
+    virtual int getPatchwiseProcessorAssignment( const Patch * patch );
+
+    //! The old processor is the same as the current for this load balancer.
+    virtual int getOldProcessorAssignment(       const Patch * patch ) { return getPatchwiseProcessorAssignment( patch ); }
   private:
     SimpleLoadBalancer(const SimpleLoadBalancer&);
     SimpleLoadBalancer& operator=(const SimpleLoadBalancer&);

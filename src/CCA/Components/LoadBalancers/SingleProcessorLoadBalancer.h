@@ -65,6 +65,10 @@ namespace Uintah {
 
     virtual void assignResources( DetailedTasks & tg );
     virtual int  getPatchwiseProcessorAssignment( const Patch * patch );
+
+    //! The old processor is the same as the current for this load balancer.
+    virtual int  getOldProcessorAssignment( const Patch * patch ) { return getPatchwiseProcessorAssignment( patch ); }
+
             void createNeighborhood( const GridP & grid );
 
     virtual bool inNeighborhood( const PatchSubset* );

@@ -37,5 +37,6 @@ SRCS     += \
 	$(SRCDIR)/RFConcDiffusion1MPM.cc \
 	$(SRCDIR)/ScalarDiffusionModelFactory.cc \
 	$(SRCDIR)/SDInterfaceModel.cc \
+	$(SRCDIR)/CommonIFConcDiff.cc \
 	$(SRCDIR)/SDInterfaceModelFactory.cc
 

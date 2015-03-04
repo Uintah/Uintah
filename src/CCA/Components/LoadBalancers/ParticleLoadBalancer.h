@@ -27,7 +27,6 @@
 
 #include <CCA/Components/LoadBalancers/LoadBalancerCommon.h>
 
-#include <CCA/Ports/SFC.h>
 #include <Core/Grid/Grid.h>
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
@@ -72,9 +71,7 @@ namespace Uintah {
   public:
     ParticleLoadBalancer(const ProcessorGroup* myworld);
     ~ParticleLoadBalancer();
-    virtual int getPatchwiseProcessorAssignment(const Patch* patch);
-    virtual int getOldProcessorAssignment(const VarLabel* var,
-					  const Patch* patch, const int matl);
+
     virtual void problemSetup(ProblemSpecP& pspec, GridP& grid, SimulationStateP& state);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
 
@@ -95,13 +92,6 @@ namespace Uintah {
     //! Asks the load balancer if it is dynamic.
     virtual bool isDynamic() { return true; }
 
-    //! Assigns the patches to the processors they ended up on in the previous
-    //! Simulation.  Returns true if we need to re-load balance (if we have a 
-    //! different number of procs than were saved to disk
-    virtual void restartInitialize( DataArchive* archive, int time_index,
-                                    ProblemSpecP& pspec,
-                                    std::string tsurl, const GridP& grid );
-   
     //Collects each patch's particles
     void collectParticles(const Grid* grid, std::vector<std::vector<int> >& num_particles);
     
@@ -138,9 +128,6 @@ namespace Uintah {
     //sets processor "assignments" for "patches" based on the "patchCosts" and "previousProcCosts"
     void assignPatches( const std::vector<double> &previousProcCosts, const std::vector<double> &patchCosts, std::vector<int> &patches, std::vector<int> &assignments );
 
-    // calls space-filling curve on level, and stores results in pre-allocated output
-    void useSFC(const LevelP& level, int* output);
-    
     //compute the percent improvement of the assignments in d_tempAssignment vs d_processorAssignment for the given cost array
     double computePercentImprovement(const std::vector<std::vector<double> >& costs, double &avg, double &max);
 
@@ -150,18 +137,6 @@ namespace Uintah {
     //given the two cost arrays determine if the new load balance is better than the previous
     bool thresholdExceeded(const std::vector<std::vector<double> >& cellCosts, const std::vector<std::vector<double> >& particleCosts);
 
-    std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
-    std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
-    std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
-
-    // the assignment vectors are stored 0-n.  This stores the start patch number so we can
-    // detect if something has gone wrong when we go to look up what proc a patch is on.
-    int d_assignmentBasePatch;   
-    int d_oldAssignmentBasePatch;
-
-    double d_lbInterval;
-    double d_lastLbTime;
-
     int d_lbTimestepInterval;
     int d_lastLbTimestep;
     
@@ -169,19 +144,12 @@ namespace Uintah {
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     
-    bool d_doSpaceCurve;
-    bool d_checkAfterRestart;
-
-    //the weighting factor placed on particles and cells, for example if d_particleCost is 2 
-    //and d_cellCost is 1 then a particle has twice as much weight as a cell
+    // The weighting factor placed on particles and cells, for example if d_particleCost is 2 
+    // and d_cellCost is 1 then a particle has twice as much weight as a cell.
     double d_particleCost,d_cellCost; 
-    
-
-    SFC <double> sfc;
 
   };
+
 } // End namespace Uintah
 
-
 #endif
-

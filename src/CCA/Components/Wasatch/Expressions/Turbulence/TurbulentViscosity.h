@@ -31,7 +31,6 @@ class TurbulentViscosity
   
   const bool isConstSmag_;
   const Wasatch::TurbulenceParameters turbParams_;
-  const Expr::Tag strTsrSqTag_, waleTsrMagTag_, vremanTsrMagTag_, dynCoefTag_, rhoTag_;
 
   // gradient operators are only here to extract spacing information out of them
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, XVolField, SVolField >::type GradXT;
@@ -44,8 +43,8 @@ class TurbulentViscosity
   const GradYT*  gradYOp_;            ///< y-component of the gradient operator  
   const GradZT*  gradZOp_;            ///< z-component of the gradient operator
   ExOpT*   exOp_;
-
-  const SVolField *dynCoef_, *rho_, *strTsrSq_, *waleTsrMag_, *vremanTsrMag_;
+  
+  DECLARE_FIELDS(SVolField, dynCoef_, rho_, strTsrSq_, waleTsrMag_, vremanTsrMag_)
 
   TurbulentViscosity( const Expr::Tag rhoTag,
                       const Expr::Tag strTsrSqTag,
@@ -105,8 +104,6 @@ public:
 
   ~TurbulentViscosity();
 
-  void advertise_dependents( Expr::ExprDeps& exprDeps );
-  void bind_fields( const Expr::FieldManagerList& fml );
   void bind_operators( const SpatialOps::OperatorDatabase& opDB );
   void evaluate();
 
