@@ -300,7 +300,7 @@ public:
   // prepareGPUDependencies is invoked, and it discovers all external dependencies.  It then calls
   // the correct GPU DW's prepareGpuGhostCellIntoGpuArray which stages the ghost cell into an array on
   // that GPU.  Then sendMPI() is called, which calls copyTempGhostCellsToHostVar(), which finds the
-  // correct array previously made and copies it to a host grid var.  From there the receiving host \
+  // correct array previously made and copies it to a host grid var.  From there the receiving host
   // moves onto scenario #6.
 
   //Scenario 6: ghost cell different GPU -> var on current host's GPU: recvMPI() is called and processes
