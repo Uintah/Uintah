@@ -427,17 +427,17 @@ main( int argc, char *argv[], char *env[] )
     // VisIt. The most important is the directory path to where VisIt
     // is located.
 #ifdef HAVE_VISIT
-    else if (arg == "-dir" ) {
+    else if (arg == "-visit_dir" ) {
       if (++i == argc) {
         usage("You must provide a file name for -dir", arg, argv[0]);
       }
     }
-    else if (arg == "-option" ) {
+    else if (arg == "-visit_option" ) {
       if (++i == argc) {
         usage("You must provide a string for -option", arg, argv[0]);
       }
     }
-    else if (arg == "-trace" ) {
+    else if (arg == "-visit_trace" ) {
       if (++i == argc) {
         usage("You must provide a file name for -trace", arg, argv[0]);
       }
