@@ -47,7 +47,9 @@ class ConstantBC : public BoundaryConditionBase<FieldT>
 public:
   ConstantBC( const double bcValue) :
   bcValue_(bcValue)
-  {}
+  {
+    this->set_gpu_runnable(true);
+  }
   
   class Builder : public Expr::ExpressionBuilder
   {

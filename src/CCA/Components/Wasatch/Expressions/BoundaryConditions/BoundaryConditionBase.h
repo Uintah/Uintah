@@ -321,6 +321,7 @@ public:
 
   BoundaryConditionBase()
   {
+    this->set_gpu_runnable(false);
     isStaggered_ = false;
     isMinusFace_ = false;
     setInExtraCellsOnly_ = false;
