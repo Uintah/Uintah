@@ -249,7 +249,7 @@ public:
   HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex);
   HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex);
 
-  HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
+  //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
   HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
   HOST_DEVICE void allocate(const char* indexID, size_t size);
 private:

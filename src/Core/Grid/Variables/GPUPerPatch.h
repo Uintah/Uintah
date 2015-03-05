@@ -63,6 +63,10 @@ class GPUPerPatch : public GPUPerPatchBase {
       return d_value;
     }
 
+    HOST_DEVICE void* getVoidPointer() const {
+      return d_value;
+    }
+
     HOST_DEVICE void getSizeInfo(std::string& elems, unsigned long& totsize, void* &ptr) const
     {
       elems = "1";

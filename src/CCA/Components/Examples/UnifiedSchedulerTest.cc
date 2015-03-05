@@ -276,9 +276,9 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
         int3 device_offset;
         int3 device_size;
-        void* device_ptr = NULL;
+        //void* device_ptr = NULL;
         //device_var.getArray3(device_offset, device_size, device_ptr);
-        device_ptr = device_var.getPointer();
+        //device_ptr = device_var.getPointer();
         //printf("Calling unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
 
       launchUnifiedSchedulerTestKernel(dimGrid,
@@ -341,9 +341,9 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
           new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
             int3 device_offset;
             int3 device_size;
-            void* device_ptr = NULL;
+            //void* device_ptr = NULL;
             //device_var.getArray3(device_offset, device_size, device_ptr);
-            device_ptr = device_var.getPointer();
+            //device_ptr = device_var.getPointer();
 
           //printf("Finished unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
     }
