@@ -76,10 +76,10 @@ namespace Uintah {
       }
 
 
-      HOST_DEVICE void* getPointer() const {
-      //HOST_DEVICE T* getPointer() const {
+      HOST_DEVICE T* getPointer() const {
         return d_data;
       }
+
 
       HOST_DEVICE void copyZSliceData(const GPUArray3& copyFromVar);
 
@@ -87,14 +87,6 @@ namespace Uintah {
       HOST_DEVICE size_t getMemSize() const
       {
         return d_size.x * d_size.y * d_size.z * sizeof(T);
-      }
-
-      HOST_DEVICE void getSizes(int3& low, int3& high, int3& siz) const {
-        low = d_offset;
-        high.x = d_size.x - d_offset.x;
-        high.y = d_size.y - d_offset.y;
-        high.z = d_size.z - d_offset.z;
-        siz = d_size;
       }
 
     protected:
@@ -115,13 +107,14 @@ namespace Uintah {
         ptr = (void*)d_data;
       }
 
+      mutable T*    d_data;
+
     private:
 
       //---------------------------------------------------------------
       // global high = d_offset+d_data
       // global low  = d_offset
       //---------------------------------------------------------------
-      mutable T*    d_data;
       mutable int3  d_offset;  //offset from global index to local index
       mutable int3  d_size;    //size of local storage 
 
@@ -143,12 +136,8 @@ namespace Uintah {
         return GPUArray3<T>::getMemSize();
       }
 
-      HOST_DEVICE void getSizes(int3& low, int3& high, int3& siz) const {
-        GPUArray3<T>::getSizes(low, high, siz);
-      }
-
-      HOST_DEVICE void* getPointer() {
-        return GPUArray3<T>::getPointer();
+      HOST_DEVICE void* getVoidPointer() const {
+        return GPUArray3<T>::d_data;
       }
 
     private:

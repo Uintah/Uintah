@@ -525,7 +525,7 @@ GPUDataWarehouse::copyHostContiguousToHost(GPUGridVariableBase& device_var, Grid
 
 }
 
-
+/*
 HOST_DEVICE void*
 GPUDataWarehouse::getPointer(char const* label, int patchID, int matlIndex)
 
@@ -584,7 +584,7 @@ GPUDataWarehouse::getPointer(char const* label, int patchID, int matlIndex)
 //if (d_debug) printf("host got %s loc 0x%x from GPUDW 0x%x on device %d\n", label, d_varDB[i].var_ptr, device_copy, device_id);
 #endif
 }
-
+*/
 
 //______________________________________________________________________
 //

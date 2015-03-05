@@ -2078,8 +2078,9 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
   const Task* task = dtask->getTask();
 
   //Store information about each set of grid variables.
-  //Later we will put all this information in the GPU contiguously, so
-  //we need all the grid variable information to compute how much space
+  //This will help later when we figure out the best way to store data into the GPU.
+  //It may be stored contiguously.  It may handle material data.  It just helps to gather it all up
+  //in one bunch in case we need some piece of data.
   //it all takes
   deviceGridVariables deviceVars;
   deviceGhostCells ghostVars;
@@ -2407,7 +2408,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
                                        deviceVars.getSizeOfDataType(i),
                                        (GPUDataWarehouse::GhostType)deviceVars.getGhostType(i),
                                        deviceVars.getNumGhostCells(i));
-        device_ptr = device_var->getPointer();
+        device_ptr = device_var->getVoidPointer();
         delete device_var;
 
         //If it's a requires, copy the data on over.  If it's a computes, leave it as unallocated space.

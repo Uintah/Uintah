@@ -50,6 +50,10 @@ class GPUParticleVariable : public GPUParticleVariableBase {
       return d_data;
     }
 
+    HOST_DEVICE void* getVoidPointer() const {
+      return d_data;
+    }
+
   private:
 
     mutable T* d_data;
