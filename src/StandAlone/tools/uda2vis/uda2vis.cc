@@ -671,14 +671,17 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
     
     for (matIter = materials.begin(); matIter != materials.end(); ++matIter)
     {
-      bool exists = true;
+      bool exists;
 
       // Check to make sure the variable exists on all patches and on
-      // all labels.
+      // all levels.
       for (int l=0; l<numLevels; ++l)
       {
 	LevelP level = gridP->getLevel(l);
     
+	// Assume the variable exists for this level.
+	exists = true;
+
 	// patch info
 	int numPatches = level->numPatches();
 
@@ -688,10 +691,16 @@ TimeStepInfo* getTimeStepInfo2(SchedulerP schedulerP,
 
 	  if( !dw->exists( *varIter, *matIter, patch) )
 	  {
+	    // The variable does exists on this patch for this level.
 	    exists = false;
 	    break;
 	  }
 	}
+
+	// If the variable exists on all patches for this level then
+	// display to the user.
+	if( exists == true )
+	  break;
       }
 
       if( exists )

@@ -87,6 +87,8 @@ typedef struct
   int cycle;
   double time;
 
+  int blocking;
+
   bool useExtraCells;
   bool nodeCentered;
   bool forceMeshReload;

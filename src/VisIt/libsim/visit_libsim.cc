@@ -24,6 +24,7 @@
 
 #include "visit_libsim.h"
 
+#include <Core/Util/DebugStream.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
@@ -32,6 +33,8 @@
 #include <iostream>
 #include <string>
 #include <stdio.h>
+
+static SCIRun::DebugStream visitdbg( "VisItLibSim", true );
 
 namespace Uintah {
 
@@ -50,15 +53,15 @@ void visit_LibSimArguments(int argc, char **argv)
 {
   for( int i=1; i<argc; ++i )
   {
-    if( strcmp( argv[i], "-dir" ) == 0 )
+    if( strcmp( argv[i], "-visit_dir" ) == 0 )
     {
       VisItSetDirectory(argv[++i]);
     }
-    else if( strcmp( argv[i], "-options" ) == 0 )
+    else if( strcmp( argv[i], "-visit_options" ) == 0 )
     {
       VisItSetOptions(argv[++i]);
     }
-    else if( strcmp( argv[i], "-trace" ) == 0 )
+    else if( strcmp( argv[i], "-visit_trace" ) == 0 )
     {
       VisItOpenTraceFile(argv[++i]);
     }
@@ -89,9 +92,10 @@ void visit_InitLibSim( visit_simulation_data *sim )
   VisItSetupEnvironment();
 
 #ifdef HAVE_MPICH
-  std::cerr << "****************************  "
+  visitdbg << "****************************  "
 	    << "usingMPI " << (Parallel::usingMPI() ? "Yes" : "No")
 	    << std::endl;
+  visitdbg.flush();
       
   if( Parallel::usingMPI() )
   {
@@ -107,11 +111,13 @@ void visit_InitLibSim( visit_simulation_data *sim )
     VisItSetParallel( par_size > 1 );
     VisItSetParallelRank( par_rank );
 
-    std::cerr << "****************************  "
-	      << " isProc0 " << isProc0_macro << "  "
-	      << "par_size " << par_size << "  " 
-	      << "par_rank " << par_rank << "  " 
-	      << std::cerr;
+    visitdbg << "****************************  "
+	     << " isProc0 " << isProc0_macro << "  "
+	     << "par_size " << par_size << "  " 
+	     << "par_rank " << par_rank << "  " 
+	     << std::endl;
+
+    visitdbg.flush();
 
     // Install callback functions for global communication.
     VisItSetBroadcastIntFunction( visit_BroadcastIntCallback );
@@ -185,6 +191,24 @@ void visit_CheckState( visit_simulation_data *sim )
     /* If running do not block */
     int blocking = (sim->runMode == VISIT_SIMMODE_RUNNING) ? 0 : 1;
 
+    std::ostringstream message;
+    
+#ifdef HAVE_MPICH
+    if(sim->isProc0)
+#endif
+    if( sim->blocking != blocking )
+    {
+      sim->blocking = blocking;
+
+      message << "VisIt libsim stopped the execution at  "
+	<< "Time="        << sim->time
+	<< " (timestep "  << sim->cycle 
+	<< ")";
+
+      visitdbg << message.str() << std::endl;
+      visitdbg.flush();
+    }
+
     /* Get input from VisIt or timeout so the simulation can run. */
     int visitstate;
 
@@ -201,7 +225,10 @@ void visit_CheckState( visit_simulation_data *sim )
     /* Do different things depending on the output from VisItDetectInput. */
     if(visitstate <= -1 || 5 <= visitstate)
     {
-      fprintf(stderr, "Can’t recover from error!\n");
+      visitdbg << "Visit libsim check state cannot recover from error!"
+	       << std::endl;
+      visitdbg.flush();
+
       err = 1;
     }
     else if(visitstate == 0)
@@ -220,7 +247,8 @@ void visit_CheckState( visit_simulation_data *sim )
 	/* Register command callback */
 	VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
-	fprintf(stderr, "VisIt connected\n");
+	visitdbg << "VisIt libsim is connected" << std::endl;
+	visitdbg.flush();
 
 	/* Register data access callbacks */
 	VisItSetGetMetaData(visit_SimGetMetaData, (void*)sim);
@@ -231,7 +259,8 @@ void visit_CheckState( visit_simulation_data *sim )
       }
       else
       {
-	fprintf(stderr, "VisIt did not connect\n");
+	visitdbg << "VisIt libsim can not connect" << std::endl;
+	visitdbg.flush();
       }
     }
     else if(visitstate == 2)
@@ -253,7 +282,11 @@ void visit_CheckState( visit_simulation_data *sim )
 	 simulation. */
       if( sim->runMode == VISIT_SIMMODE_STEP ||
 	  sim->runMode == VISIT_SIMMODE_FINISHED )
+      {
+	sim->blocking = 0;
+
 	return;
+      }
     }
   } while(err == 0);
 }
@@ -333,10 +366,12 @@ visit_ControlCommandCallback(const char *cmd, const char *args, void *cbdata)
   else if(strcmp(cmd, "Exit") == 0)
     exit( 0 );
   // Only allow the runMode to finish if the simulation is finished.
-  else if(strcmp(cmd, "Finish") == 0 && 
-	  sim->simMode == VISIT_SIMMODE_FINISHED)
+  else if(strcmp(cmd, "Finish") == 0 )
   {
-    sim->runMode = VISIT_SIMMODE_FINISHED;
+    if(sim->simMode == VISIT_SIMMODE_FINISHED)
+      sim->runMode = VISIT_SIMMODE_FINISHED;
+    else
+      sim->runMode = VISIT_SIMMODE_RUNNING;
   }
 }
 
@@ -591,8 +626,11 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	    mesh_for_this_var.assign("SFCZ_Mesh");
 	}
 	else
-	  std::cerr << "Uintah/VisIt Libsim Error: unknown vartype: "
+	{
+	  visitdbg << "Uintah/VisIt libsim Error: unknown vartype: "
 		    << vartype << std::endl;
+	  visitdbg.flush();
+	}
 
 	if (meshes_added.find(mesh_for_this_var) == meshes_added.end())
 	{
