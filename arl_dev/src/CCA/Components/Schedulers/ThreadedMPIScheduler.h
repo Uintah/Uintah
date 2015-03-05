@@ -87,10 +87,7 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     virtual bool useInternalDeps() { return !d_sharedState->isCopyDataTimestep(); }
 
-    ConditionVariable d_nextsignal;
-    Mutex             d_nextmutex;             // conditional wait mutex
-    TaskWorker*       t_worker[MAX_THREADS];   // workers
-    Thread*           t_thread[MAX_THREADS];   // actual threads
+    friend class TaskWorker;
 
   private:
 
@@ -102,8 +99,12 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     int getAviableThreadNum();
 
-    QueueAlg   taskQueueAlg_;
-    int        numThreads_;
+    ConditionVariable d_nextsignal;
+    Mutex             d_nextmutex;             // conditional wait mutex
+    TaskWorker*       t_worker[MAX_THREADS];   // workers
+    Thread*           t_thread[MAX_THREADS];   // actual threads
+    QueueAlg          taskQueueAlg_;
+    int               numThreads_;
 };
 
 
