@@ -35,7 +35,7 @@
 
 #define MAX_ITEM   100
 #define MAX_LVITEM 10
-#define MAX_NAME   20
+#define MAX_NAME   32
 
 namespace Uintah {
 
