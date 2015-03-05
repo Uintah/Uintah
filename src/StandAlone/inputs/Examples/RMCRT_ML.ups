@@ -20,10 +20,10 @@
   <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "0"   label = "color"     var = "Neumann"> 
+        <BCType id = "0"   label = "color"     var = "Dirichlet"> 
                             <value> 0. </value> 
         </BCType> 
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                             <value> 1.0 </value>
         </BCType>
         <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
@@ -31,10 +31,10 @@
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>                
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1.0 </value>
         </BCType>
         <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
@@ -42,10 +42,10 @@
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1.0 </value>
         </BCType>
         <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
@@ -53,10 +53,10 @@
         </BCType> 
       </Face>               
       <Face side = "y+">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                             <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1.0 </value>
         </BCType>
         <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
@@ -64,10 +64,10 @@
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1.0 </value>
         </BCType>
         <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
@@ -75,10 +75,10 @@
         </BCType>
       </Face>
       <Face side = "z+">
-        <BCType id = "0"   label = "color"     var = "Neumann">
+        <BCType id = "0"   label = "color"     var = "Dirichlet">
                            <value> 0. </value>
         </BCType>
-        <BCType id = "0"   label = "abskg"     var = "Neumann">
+        <BCType id = "0"   label = "abskg"     var = "Dirichlet">
                            <value> 1.0 </value>
         </BCType>
         <BCType id = "0"   label = "cellType"   var = "Dirichlet" type = "int">
