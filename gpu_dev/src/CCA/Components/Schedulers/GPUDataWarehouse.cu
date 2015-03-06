@@ -141,7 +141,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* label, int patchID, 
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n",label);
 #else
-  //varLock's writeLock() needs to be turned on prior to calling this function.
+  //NOTE!! varLock's writeLock() needs to be turned on prior to calling this function.
   //__________________________________
   //cpu code 
   if (d_numItems==MAX_ITEM) {
@@ -627,26 +627,66 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int 
   printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All device memory should be allocated on the CPU with cudaMalloc\n", label);
 #else
 
+  //NOTE!! varLock's writeLock() needs to be turned on prior to calling this function.
   //__________________________________
   //cpu code
-  if (d_numItems == MAX_ITEM) {
-    printf("out of GPUDataWarehouse space.  You can try increasing GPUDataWarehouse.h: #define MAX_ITEMS");
+  if (d_numItems==MAX_ITEM) {
+    printf("ERROR:  out of GPUDataWarehouse space");
+    varLock.writeUnlock();
+
     exit(-1);
   }
 
-  int i = d_numItems;
+  //first check if this patch/var/matl is in the process of loading in.
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  //for (std::map<charlabelPatchMatl, allVarPointersInfo>::iterator it = varPointers.begin(); it != varPointers.end();  ++it) {
+  //    printf("For label %s patch %d matl %d on device %d I have an entry\n", (*it).first.label.c_str(), d_device_id, (*it).first.patchID, (*it).first.matlIndex);
+  //}
+
+  int i=d_numItems;
   d_numItems++;
   strncpy(d_varDB[i].label, label, MAX_LABEL);
   d_varDB[i].domainID = patchID;
   d_varDB[i].matlIndex = matlIndex;
+  d_varDB[i].xstride = xstride;
+  d_varDB[i].validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+  d_varDB[i].queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
+  d_varDB[i].validOnCPU = false; //We don't know here if the data is on the CPU.
+  d_varDB[i].gtype = GhostType::None;  //PerPatch has no ghost cells
+  d_varDB[i].numGhostCells = 0;
+  var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
 
-  var.getData(d_varDB[i].var_ptr);
+  //Now store them in a map for easier lookups on the host
+  //Without this map, we would have to loop through hundreds of array
+  //The above is a good idea when we start implementing modified instead of just required and compute
+  //elements looking for the right key.  With a map, we can find
+  //our matching data faster, and we can store far more information
+  //that the host should know and the device doesn't need to know about.
+  allVarPointersInfo vp;
+  vp.gridVar = gridVar;
+  vp.host_contiguousArrayPtr = host_ptr;
+  vp.device_ptr = d_varDB[i].var_ptr;
+  vp.device_offset = d_varDB[i].var_offset;
+  vp.device_size = d_varDB[i].var_size;
+  vp.varDB_index = i;
 
-  if (d_debug) {
-    printf("host put \"%s\" (patch: %d) loc %p into GPUDW %p on device %d\n", label, patchID, d_varDB[i].var_ptr, d_device_copy,
-           d_device_id);
+
+  if (varPointers.find(lpm) == varPointers.end()) {
+    //printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d on device %d\n",label, label, patchID, matlIndex, d_device_id);
+    varPointers.insert( std::map<charlabelPatchMatl, allVarPointersInfo>::value_type( lpm, vp ) );
+  } else {
+    printf("ERROR:\nGPUDataWarehouse::put( %s )  This gpudw database already has a variable for label %s patch %d matl %d on device %d in GPUDW at %p\n",label, label, patchID, matlIndex, d_device_id, d_device_copy);
+    varLock.writeUnlock();
+    exit(-1);
   }
-  d_dirty = true;
+
+  //if (strcmp(label, "sp_vol_CC") == 0) {
+  //  printf("host put %s (patch: %d) loc %p into GPUDW %p on device %d, size [%d,%d,%d] with data %1.15e\n", label, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z, *((double *)vp.host_contiguousArrayPtr));
+  //}
+  if (d_debug){
+    printf("host put perPatch \"%s\" (patch: %d) material %d, location %p into GPUDW %p into d_varDB index %d on device %d, size [%d,%d,%d]\n", label, patchID, matlIndex, d_varDB[i].var_ptr, d_device_copy, i, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+  }
+  d_dirty=true;
 #endif
 }
 
@@ -686,19 +726,49 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
 #else
   //__________________________________
   //  cpu code
-  cudaError_t retVal;
-  void* addr = NULL;
+  //check if it exists prior to allocating memory for it.
+  //One scenario in which we need to handle is when two patches need ghost cells from the
+  //same neighbor patch.  Suppose thread A's GPU patch 1 needs data from CPU patch 0, and
+  //thread B's GPU patch 2 needs data from CPU patch 0.  This is a messy scenario, but the cleanest
+  //is to have the first arriver between A and B to allocate memory on the GPU,
+  //then the second arriver will use the same memory. The simplest approach is to have
+  //threads A and B both copy patch 0 into this GPU memory.  This should be ok as ghost cell
+  //data cannot be modified, so in case of a race condition, nothing will be modified
+  //if a memory chunk is being both read and written to simultaneously.
+  //So allow duplicates if the data is read only, otherwise don't allow duplicates.
+  varLock.writeLock();
+  //first check if this patch/var/matl is in the process of loading in.
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    int index = varPointers[lpm].varDB_index;
+    if (d_varDB[index].queueingOnGPU == true) {
+     //It's loading up, use that and return.
+     if (d_debug){
+       printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
+      }
+     var.setArray3(d_varDB[index].var_offset, d_varDB[index].var_size, d_varDB[index].var_ptr);
+     varLock.writeUnlock();
+     return;
+   }
+  }
+  //It's not in the database, so create it.
+  int3 size   = make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
+  int3 offset = low;
+  void* addr  = NULL;
 
+  //This prepares the var with the offset and size.  The actual address will come next.
+  var.setArray3(offset, size, addr);
   SchedulerCommon::uintahSetCudaDevice(d_device_id);
-  CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
+  CUDA_RT_SAFE_CALL( cudaMalloc(&addr, var.getMemSize()) );
 
-  if (d_debug && retVal == cudaSuccess) {
-    printf("In allocateAndPut() cudaMalloc for \"%s\", size %ld", label, var.getMemSize());
+  if (d_debug) {
+    printf("In allocateAndPut(), cudaMalloc for \"%s\ patch %d size %ld from (%d,%d,%d) to (%d,%d,%d) on thread %d ", label, patchID, var.getMemSize(),
+            low.x, low.y, low.z, high.x, high.y, high.z, SCIRun::Thread::self()->myid());
     printf(" at %p on device %d\n", addr, d_device_id);
   }
-
-  var.setData(addr);
-  put(var, label, patchID, matlIndex);
+  var.setArray3(offset, size, addr);
+  put(var, label, patchID, matlIndex, sizeOfDataType, gtype, numGhostCells);
+  varLock.writeUnlock();
 #endif
 }
 

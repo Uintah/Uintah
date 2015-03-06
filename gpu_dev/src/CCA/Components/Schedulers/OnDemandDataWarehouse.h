@@ -312,6 +312,7 @@ public:
 
 #ifdef HAVE_CUDA
    static GPUGridVariableBase* createGPUGridVariable(int sizeOfDataType);
+   static GPUPerPatchBase* createGPUPerPatch(int sizeOfDataType);
    void prepareGPUDependencies(DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
                    OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void copyGPUGhostCellsBetweenDevices(DetailedTask* dtask, int numDevices);
