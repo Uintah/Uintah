@@ -260,6 +260,12 @@ public:
    void put(GridVariableBase& var, const VarLabel* label, int matlIndex, const Patch* patch,
             bool replace = false);
 
+   // returns the constGridVariable for all patches on the level
+   virtual void getLevel(constGridVariableBase&, 
+                         const VarLabel*,
+                         int matlIndex, 
+                         const Level* level );
+                          
    virtual void getRegion(constGridVariableBase&, const VarLabel*,
                           int matlIndex, const Level* level,
                           const IntVector& low, const IntVector& high,
