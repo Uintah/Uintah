@@ -36,6 +36,7 @@ class GPUVariable {
   public:
     HOST_DEVICE virtual ~GPUVariable() {};
     HOST_DEVICE virtual size_t getMemSize() = 0;
+    HOST_DEVICE virtual void* getVoidPointer() const = 0;
 
   protected:
     HOST_DEVICE GPUVariable() {};

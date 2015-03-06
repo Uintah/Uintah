@@ -2112,7 +2112,8 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
     TypeDescription::Type type = curDependency->var->typeDescription()->getType();
 
     if (type == TypeDescription::CCVariable || type == TypeDescription::NCVariable || type == TypeDescription::SFCXVariable
-        || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+        || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable ||
+        type == TypeDescription::PerPatch) {
 
 
       int dwIndex = curDependency->mapDataWarehouse();
@@ -2131,7 +2132,8 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
 
           int matlID = matls->get(j);
           if (type == TypeDescription::CCVariable || type == TypeDescription::NCVariable ||
-              type == TypeDescription::SFCXVariable || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable) {
+              type == TypeDescription::SFCXVariable || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable  ||
+              type == TypeDescription::PerPatch) {
             if (curDependency->deptype == Task::Requires) {
               //See if this grid variable still exists on the device from some prior task and
               //never got copied back to the host.
@@ -2333,11 +2335,17 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
               //Allocate it on the host side, but we won't use the host side for anything.  (At worst, this uses space on the host, but
               //there probably won't be a scenario in which the device side memory needs is greater than what the host can hold)
               //In the future, this could be replaced
-              GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(curDependency->var->typeDescription()->createInstance());
-              dw->allocateAndPut(*gridVar, curDependency->var, matlID, patches->get(i), curDependency->gtype, curDependency->numGhostCells);
-              //dw->put(*gridVar, curDependency->var, matlID, patches->get(i));
-              delete gridVar;
-              gridVar = NULL;
+              if (type == TypeDescription::PerPatch) {
+                PerPatchBase* patchVar = dynamic_cast<PerPatchBase*>(curDependency->var->typeDescription()->createInstance());
+                dw->put(*patchVar, curDependency->var, matlID, patches->get(i));
+                delete patchVar;
+                patchVar = NULL;
+              } else {
+                GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(curDependency->var->typeDescription()->createInstance());
+                dw->allocateAndPut(*gridVar, curDependency->var, matlID, patches->get(i), curDependency->gtype, curDependency->numGhostCells);
+                delete gridVar;
+                gridVar = NULL;
+              }
 
               /*
               //Create a grid variable on the host just so we can get the sizes and offsets.
@@ -2399,17 +2407,36 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
 
         //Skip the host allocate step entirely.  We'll use the existing host data.
 
-        //It will need device allocations though.
-        GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(deviceVars.getSizeOfDataType(i));
+        switch (deviceVars.getDependency(i)->var->typeDescription()->getType()) {
+        case TypeDescription::PerPatch : {
+         	GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(deviceVars.getSizeOfDataType(i));
+         	dws[dwIndex]->getGPUDW(deviceVars.getWhichGPU(i))->allocateAndPut(*patchVar, dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i));
+            device_ptr = patchVar->getVoidPointer();
+			delete patchVar;
+          }
+          break;
+        case TypeDescription::CCVariable :
+	    case TypeDescription::NCVariable :
+	    case TypeDescription::SFCXVariable :
+	    case TypeDescription::SFCYVariable :
+	    case TypeDescription::SFCZVariable : {
+            GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(deviceVars.getSizeOfDataType(i));
+            dws[dwIndex]->getGPUDW(deviceVars.getWhichGPU(i))->allocateAndPut(*device_var, dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+                                           make_int3(low.x(), low.y(), low.z()),
+                                           make_int3(high.x(), high.y(), high.z()),
+                                           deviceVars.getSizeOfDataType(i),
+                                           (GPUDataWarehouse::GhostType)deviceVars.getGhostType(i),
+                                           deviceVars.getNumGhostCells(i));
+            device_ptr = device_var->getVoidPointer();
+            delete device_var;
+          }
+	      break;
+        }
 
-        dws[dwIndex]->getGPUDW(deviceVars.getWhichGPU(i))->allocateAndPut(*device_var, dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                                       make_int3(low.x(), low.y(), low.z()),
-                                       make_int3(high.x(), high.y(), high.z()),
-                                       deviceVars.getSizeOfDataType(i),
-                                       (GPUDataWarehouse::GhostType)deviceVars.getGhostType(i),
-                                       deviceVars.getNumGhostCells(i));
-        device_ptr = device_var->getVoidPointer();
-        delete device_var;
+
+
+
+
 
         //If it's a requires, copy the data on over.  If it's a computes, leave it as unallocated space.
         if (deviceVars.getDependency(i)->deptype == Task::Requires) {

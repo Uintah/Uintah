@@ -397,6 +397,26 @@ OnDemandDataWarehouse::createGPUGridVariable(int sizeOfDataType)
   return device_var;
 }
 
+GPUPerPatchBase*
+OnDemandDataWarehouse::createGPUPerPatch(int sizeOfDataType)
+{
+  GPUPerPatchBase* device_var = NULL;
+  switch ( sizeOfDataType ) {
+    case sizeof(int) : {
+      device_var = new GPUPerPatch<int>();
+      break;
+    }
+    case sizeof(double) : {
+      device_var = new GPUPerPatch<double>();
+      break;
+    }
+    default : {
+      SCI_THROW(InternalError("createGPUPerPatch, unsupported GPUPerPatch type: ", __FILE__, __LINE__));
+    }
+  }
+  return device_var;
+}
+
 //______________________________________________________________________
 //
 void
