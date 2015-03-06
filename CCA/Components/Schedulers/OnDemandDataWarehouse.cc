@@ -1994,6 +1994,139 @@ OnDemandDataWarehouse::put( PerPatchBase& var,
 }
 
 //______________________________________________________________________
+// This returns a constGridVariable for *ALL* patches on a level.
+// This method is essentially identical to "getRegion" except the call to 
+// level->selectPatches( ) has been replaced by level->allPactches()
+// For grids containing a large number of patches selectPatches() is very slow
+// This assumes that the variable is not in the DWDatabase<Level>  d_levelDB;
+//______________________________________________________________________
+void
+OnDemandDataWarehouse::getLevel( constGridVariableBase& constGridVar,
+                                  const VarLabel* label,
+                                  int matlIndex,
+                                  const Level* level)
+{
+  MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::getLevel(Grid Variable):" + label->getName() );
+
+  IntVector level_lowIndex, level_highIndex;
+  level->findCellIndexRange( level_lowIndex, level_highIndex);  // including extra cells
+   
+  GridVariableBase* gridVar = constGridVar.cloneType();
+  gridVar->allocate( level_lowIndex, level_highIndex );
+  Patch::VariableBasis basis = Patch::translateTypeToBasis( label->typeDescription()->getType(), false );
+
+  
+  vector<const Patch*> missing_patches;     // for bulletproofing
+
+  //__________________________________
+  // define the patches for the entire level
+  const PatchSet* myPatchesSet = level->allPatches();
+  vector<const Patch*> patches( level->numPatches() );
+  for(int m=0; m<myPatchesSet->size(); m++) {
+    const PatchSubset* myPatches = myPatchesSet->getSubset(m);
+   
+    for(int p=0;p<myPatches->size();p++){
+      patches[p] = myPatches->get(p); 
+    }  
+  }
+  
+  int totalCells = 0;
+  
+  for( int i = 0; i < patches.size(); i++ ) {
+    const Patch* patch = patches[i];
+    
+    vector<Variable*> varlist;
+    d_varDB.getlist( label, matlIndex, patch, varlist );
+    GridVariableBase* this_var = NULL;
+
+    //__________________________________
+    //  is this variable on this patch?
+    for( vector<Variable*>::iterator rit = varlist.begin();; ++rit ) {
+      if( rit == varlist.end() ) {
+        this_var = NULL;
+        break;
+      }
+      
+      //verify that the variable is valid
+      this_var = dynamic_cast<GridVariableBase*>( *rit );
+      
+      if( (this_var != NULL) && this_var->isValid() ) {
+        break;
+      }
+    }
+
+    // just like a "missing patch": got data on this patch, but it either corresponds to a different
+    // region or is incomplete"
+    if( this_var == NULL ) {
+      missing_patches.push_back( patch->getRealPatch() );
+      continue;
+    }
+
+    GridVariableBase* tmpVar = gridVar->cloneType();
+    tmpVar->copyPointer( *this_var );
+      
+    // if patch is virtual, it is probably a boundary layer/extra cell that has been requested (from AMR)
+    if( patch->isVirtual() ) {
+      tmpVar->offset( patch->getVirtualOffset() );
+    }
+    
+    
+    //__________________________________
+    //  copy this patch's data
+    IntVector lo = patch->getExtraLowIndex( basis, label->getBoundaryLayer() ); 
+    IntVector hi = patch->getExtraHighIndex( basis, label->getBoundaryLayer() );
+    
+    try {
+      gridVar->copyPatch( tmpVar, lo, hi );
+    }
+    catch( InternalError& e ) {
+      cout << " getLevel("<< label->getName() << "): copyPatch Bad range.\n"
+           << " actual patch lo:" << lo << " hi:" << hi
+           << " variable range: " << tmpVar->getLow() << " " << tmpVar->getHigh() << endl;
+      throw e;
+    }
+
+    delete tmpVar;
+    IntVector diff( hi - lo );
+    totalCells += diff.x() * diff.y() * diff.z();
+  }  // patches loop
+  
+  long totalLevelCells = level->totalCells();
+
+#ifdef  BULLETPROOFING_FOR_CUBIC_DOMAINS
+  //__________________________________
+  //  This is not a valid check on non-cubic domains
+  if( totalLevelCells != totalCells && missing_patches.size() > 0 ) {
+    cout << d_myworld->myrank() << "  Unknown Variable " << *label << ", matl " << matlIndex
+         << ", L-" << level->getIndex() << ", for patch(es): ";
+
+    for( size_t i = 0; i < missing_patches.size(); i++ ) {
+      cout << *missing_patches[i] << " ";
+    }
+    cout << " copied cells: " << totalCells << " requested cells: "<< totalLevelCells << endl;
+    cout << "  *** If the computational domain is non-cubic, (L-shaped or necked down)  you can remove this bulletproofing" << endl;
+    throw InternalError( "Missing patches in getRegion", __FILE__, __LINE__ );
+  }
+#endif
+
+  //__________________________________
+  //  Diagnostics
+  if( dbg.active() ) {
+    cerrLock.lock();
+    dbg << d_myworld->myrank() << "getLevel:  Variable " << *label << ", matl " << matlIndex << ", L-"<< level->getIndex() << endl;
+    cerrLock.unlock();
+  }
+
+  ASSERT( totalLevelCells <= totalCells );
+
+  constGridVar = *dynamic_cast<GridVariableBase*>( gridVar );
+  delete gridVar;
+}
+
+
+
+
+//______________________________________________________________________
 //
 void
 OnDemandDataWarehouse::getRegion( constGridVariableBase& constVar,
