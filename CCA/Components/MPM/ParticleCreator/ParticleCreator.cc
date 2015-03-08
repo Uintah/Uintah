@@ -392,6 +392,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
   }
+  if(d_flags->d_AMR){
+     new_dw->allocateAndPut(pvars.pLastLevel, d_lb->pLastLevelLabel,    subset);
+  }
   return subset;
 }
 
@@ -420,7 +423,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       const Point CC = patch->cellPosition(c);
       bool includeExtraCells=true;
       const Patch* patchExists = fineLevel->getPatchFromPoint(CC,
-                                                              includeExtraCells);
+                                                             includeExtraCells);
       if(patchExists != 0){
        continue;
       }
@@ -603,6 +606,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
   }
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
+  }
+  if(d_flags->d_AMR){
+    pvars.pLastLevel[i] = curLevel->getID();
   }
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
@@ -812,6 +818,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);
     particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
+  }
+
+  if (d_flags->d_AMR) {
+    particle_state.push_back(d_lb->pLastLevelLabel);
+    particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
   }
 
   if (d_computeScaleFactor) {
