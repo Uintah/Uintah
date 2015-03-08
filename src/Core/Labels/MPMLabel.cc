@@ -720,6 +720,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pExternalHeatFluxLabel_preReloc);
   VarLabel::destroy(pSurfLabel);
   VarLabel::destroy(pSurfLabel_preReloc);
+  VarLabel::destroy(pLastLevelLabel);
+  VarLabel::destroy(pLastLevelLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(czIDLabel);
