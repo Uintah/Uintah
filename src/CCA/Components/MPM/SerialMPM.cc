@@ -1013,7 +1013,6 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-
 void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -1024,6 +1023,7 @@ void SerialMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   printSchedule(patches,cout_doing,"MPM::scheduleComputeInternalHeatRate");
   heatConductionModel->scheduleComputeInternalHeatRate(sched,patches,matls);
 }
+
 void SerialMPM::scheduleComputeNodalHeatFlux(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -1457,9 +1457,6 @@ void SerialMPM::scheduleInsertParticles(SchedulerP& sched,
   }
 }
 
-
-
-
 void SerialMPM::scheduleAddParticles(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls)
@@ -1500,8 +1497,6 @@ void SerialMPM::scheduleAddParticles(SchedulerP& sched,
 
     sched->addTask(t, patches, matls);
 }
-
-
 
 void SerialMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
                                                    const PatchSet* patches,
