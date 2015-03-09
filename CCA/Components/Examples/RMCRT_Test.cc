@@ -379,9 +379,10 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     //  on the finest level
     d_RMCRT->sched_ROI_Extents( fineLevel, sched );
 
-    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
+    Task::WhichDW celltype_dw = Task::NewDW;
     const bool modifies_divQ = false;
-    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ, d_radCalc_freq);
+    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq);
 
   }
 

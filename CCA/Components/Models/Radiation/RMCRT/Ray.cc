@@ -676,6 +676,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                SchedulerP& sched,
                                Task::WhichDW abskg_dw,
                                Task::WhichDW sigma_dw,
+                               Task::WhichDW celltype_dw,
                                bool modifies_divQ,
                                const int radCalc_freq )
 {
@@ -691,10 +692,10 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
     tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<double>,
-                        modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
   } else {
     tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<float>,
-                       modifies_divQ, abskg_dw, sigma_dw, radCalc_freq );
+                       modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
   }
 
 
@@ -712,11 +713,13 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   if ( d_whichROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
 
     int maxElem = Max( d_halo.x(), d_halo.y(), d_halo.z() );
-    tsk->requires(abskg_dw, d_abskgLabel,     gac, maxElem);
-    tsk->requires(sigma_dw, d_sigmaT4Label,   gac, maxElem);
+    tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem);
+    tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem);
+    tsk->requires( celltype_dw , d_cellTypeLabel , gac, maxElem);
   } else {                                        // we don't know the number of ghostCells so get everything
-    tsk->requires(abskg_dw, d_abskgLabel,     gac, SHRT_MAX);
-    tsk->requires(sigma_dw, d_sigmaT4Label,   gac, SHRT_MAX);
+    tsk->requires( abskg_dw,      d_abskgLabel,     gac, SHRT_MAX);
+    tsk->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX);
+    tsk->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX);
   }
 
   // needed for carry Forward
@@ -732,8 +735,9 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // coarser level
   int nCoarseLevels = maxLevels;
   for (int l=1; l<=nCoarseLevels; ++l){
-    tsk->requires(abskg_dw, d_abskgLabel,   allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
-    tsk->requires(sigma_dw, d_sigmaT4Label, allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
+    tsk->requires(abskg_dw,    d_abskgLabel,    allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
+    tsk->requires(sigma_dw,    d_sigmaT4Label,  allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
+    tsk->requires(celltype_dw, d_cellTypeLabel, allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
   }
 
   if( modifies_divQ ){
@@ -764,7 +768,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
                          DataWarehouse* new_dw,
                          bool modifies_divQ,
                          Task::WhichDW which_abskg_dw,
-                         Task::WhichDW whichd_sigmaT4_dw,
+                         Task::WhichDW which_sigmaT4_dw,
+                         Task::WhichDW which_celltype_dw,
                          const int radCalc_freq )
 {
 
@@ -791,11 +796,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   // compute the level dependent variables that are constant
   StaticArray< constCCVariable< T > > abskg(maxLevels);
   StaticArray< constCCVariable< T > >sigmaT4OverPi(maxLevels);
+  StaticArray< constCCVariable<int> >cellType(maxLevels);
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
-
-  DataWarehouse* abskg_dw   = new_dw->getOtherDataWarehouse(which_abskg_dw);
-  DataWarehouse* sigmaT4_dw = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
+  constCCVariable< int > cellType_fine;
+  
+  DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
+  DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
+  DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
 
   vector<Vector> Dx(maxLevels);
   double DyDx[maxLevels];
@@ -808,6 +816,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
+      celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
       dbg << " getting coarse level data L-" <<L<< endl;
     }
     Vector dx = level->dCell();
@@ -834,6 +843,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
     dbg << " getting fine level data across L-" <<L<< " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi<<endl;
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
   }
 
   abskg_fine         = abskg[maxLevels-1];
@@ -865,8 +875,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+      celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl ,fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       abskg_fine         = abskg[L];
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
+      cellType_fine      = cellType[L];
     }
 
     CCVariable<double> divQ_fine;
