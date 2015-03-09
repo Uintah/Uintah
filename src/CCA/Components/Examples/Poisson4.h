@@ -119,7 +119,7 @@ WARNING
 
     Poisson4(const Poisson4&);
     Poisson4& operator=(const Poisson4&);
-	 
+         
   };
 }
 

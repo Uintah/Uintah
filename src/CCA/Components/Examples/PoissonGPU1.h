@@ -152,7 +152,7 @@ WARNING
     PoissonGPU1(const PoissonGPU1&);
 
     PoissonGPU1& operator=(const PoissonGPU1&);
-	 
+         
   };
 }
 

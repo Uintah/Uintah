@@ -123,10 +123,10 @@ void Wave::problemSetup(const ProblemSpecP& params,
 //______________________________________________________________________
 //
 void Wave::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                               SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &Wave::initialize);
+                           this, &Wave::initialize);
   task->computes(phi_label);
   task->computes(pi_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -134,10 +134,10 @@ void Wave::scheduleInitialize(const LevelP& level,
 //______________________________________________________________________
 // 
 void Wave::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &Wave::computeStableTimestep);
+                           this, &Wave::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -198,9 +198,9 @@ Wave::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 //______________________________________________________________________
 //
 void Wave::initialize(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse*, DataWarehouse* new_dw)
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -230,9 +230,9 @@ void Wave::initialize(const ProcessorGroup*,
 //______________________________________________________________________
 //
 void Wave::computeStableTimestep(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset*,
-				  DataWarehouse*, DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

@@ -77,29 +77,37 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
+                              
     virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP& sched);
+                                    SchedulerP& sched);
+                                           
     virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&);
+                                               SchedulerP&);
+                                               
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&);
+                                      SchedulerP&);
   private:
     void initialize(const ProcessorGroup*,
-		    const PatchSubset* patches, const MaterialSubset* matls,
-		    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                    const PatchSubset* patches, const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                    
     void computeStableTimestep(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw, DataWarehouse* new_dw);
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw, 
+                               DataWarehouse* new_dw);
+                               
     void timeAdvance(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw, 
+                     DataWarehouse* new_dw);
 
     void iterate(const ProcessorGroup*,
-		 const PatchSubset* patches,
-		 const MaterialSubset* matls,
-		 DataWarehouse* old_dw, DataWarehouse* new_dw);
+                 const PatchSubset* patches,
+                 const MaterialSubset* matls,
+                 DataWarehouse* old_dw, 
+                 DataWarehouse* new_dw);
 
     const VarLabel* mass_label;
     const VarLabel* massAdvected_label;
@@ -119,7 +127,7 @@ WARNING
     
     AdvectSlabs(const AdvectSlabs&);
     AdvectSlabs& operator=(const AdvectSlabs&);
-	 
+         
   };
 }
 

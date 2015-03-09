@@ -99,14 +99,14 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
 //__________________________________
 // 
 void SolverTest1::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                               SchedulerP& sched)
 {
   solver->scheduleInitialize(level,sched,sharedState_->allMaterials());
 }
 //__________________________________
 // 
 void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",this, 
                            &SolverTest1::computeStableTimestep);
@@ -119,8 +119,8 @@ void
 SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
-			   this, &SolverTest1::timeAdvance,
-			   level, sched.get_rep());
+                           this, &SolverTest1::timeAdvance,
+                           level, sched.get_rep());
   task->computes(lb_->pressure_matrix);
   task->computes(lb_->pressure_rhs);
 
@@ -135,27 +135,27 @@ SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 //__________________________________
 //
 void SolverTest1::computeStableTimestep(const ProcessorGroup*,
-				  const PatchSubset* pss,
-				  const MaterialSubset*,
-				  DataWarehouse*, DataWarehouse* new_dw)
+                                  const PatchSubset* pss,
+                                  const MaterialSubset*,
+                                  DataWarehouse*, DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(pss));
 }
 //__________________________________
 //
 void SolverTest1::initialize(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse*, DataWarehouse* new_dw)
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*, DataWarehouse* new_dw)
 {
 }
 //______________________________________________________________________
 //
 void SolverTest1::timeAdvance(const ProcessorGroup* pg,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw, DataWarehouse* new_dw,
-			   LevelP level, Scheduler* sched)
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw, DataWarehouse* new_dw,
+                           LevelP level, Scheduler* sched)
 {
   int center = 0;
   int n=0, s=0, e=0, w=0, t=0, b=0;

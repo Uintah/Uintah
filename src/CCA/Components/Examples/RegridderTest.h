@@ -83,23 +83,23 @@ WARNING
 
   private:
     void initialize ( const ProcessorGroup*,
-		      const PatchSubset* patches, const MaterialSubset* matls,
-		      DataWarehouse* old_dw, DataWarehouse* new_dw );
+                      const PatchSubset* patches, const MaterialSubset* matls,
+                      DataWarehouse* old_dw, DataWarehouse* new_dw );
 
     void computeStableTimestep ( const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw, DataWarehouse* new_dw );
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw, DataWarehouse* new_dw );
 
     void timeAdvance ( const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw);
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     void errorEstimate ( const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse*, DataWarehouse* new_dw, bool initial);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse*, DataWarehouse* new_dw, bool initial);
 
     void coarsen ( const ProcessorGroup*,
                    const PatchSubset* patches,
@@ -107,9 +107,9 @@ WARNING
                    DataWarehouse*, DataWarehouse* new_dw);
 
     void refine ( const ProcessorGroup*,
-		  const PatchSubset* patches,
-		  const MaterialSubset* matls,
-		  DataWarehouse*, DataWarehouse* new_dw);
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*, DataWarehouse* new_dw);
 
     ExamplesLabel*   d_examplesLabel;
     SimulationStateP d_sharedState;

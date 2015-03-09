@@ -112,7 +112,7 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
 //______________________________________________________________________
 //
 void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
-				       SchedulerP& sched)
+                                       SchedulerP& sched)
 {
   Task* task = scinew Task("errorEstimate", this, &AMRWave::errorEstimate);
   task->requires(Task::NewDW, phi_label, Ghost::AroundCells, 1);
@@ -384,20 +384,20 @@ void AMRWave::addRefineDependencies(Task* task, const VarLabel* var,
 
   if(needCoarseOld)
     task->requires(Task::CoarseOldDW, var,
-		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
+                   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
   if(needCoarseNew)
     task->requires(Task::CoarseNewDW, var,
-		   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
+                   0, Task::CoarseLevel, 0, Task::NormalDomain, gc, 1);
 }
 //______________________________________________________________________
 //
 void AMRWave::refineFaces(const Patch* finePatch, 
                  const Level* fineLevel,
-		 const Level* coarseLevel, 
-		 CCVariable<double>& finevar, 
+                 const Level* coarseLevel, 
+                 CCVariable<double>& finevar, 
                  const VarLabel* label, int matl, 
                  DataWarehouse* coarse_old_dw,
-		 DataWarehouse* coarse_new_dw)
+                 DataWarehouse* coarse_new_dw)
 {
   DataWarehouse* fine_new_dw = coarse_old_dw->getOtherDataWarehouse(Task::NewDW);
   double subCycleProgress = getSubCycleProgress(fine_new_dw);
