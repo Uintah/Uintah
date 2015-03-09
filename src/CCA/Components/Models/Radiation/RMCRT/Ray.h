@@ -94,6 +94,7 @@ namespace Uintah{
                                      SchedulerP& sched,
                                      Task::WhichDW abskg_dw,
                                      Task::WhichDW sigma_dw,
+                                     Task::WhichDW celltype_dw,
                                      bool modifies_divQ,
                                      const int radCalc_freq );
 
@@ -230,6 +231,7 @@ namespace Uintah{
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW whichd_sigmaT4_dw,
+                               Task::WhichDW which_celltype_dw,
                                const int radCalc_freq );
       //__________________________________
       template<class T>
