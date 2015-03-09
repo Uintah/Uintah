@@ -67,38 +67,38 @@ RegionDB::problemSetup(ProblemSpecP& ps, const GridP& grid)
   addRegion(new BoxGeometryPiece(outer_lower, outer_upper), "entire_domain");
   addRegion(new BoxGeometryPiece(inner_lower, inner_upper), "interior");
   addRegion(new DifferenceGeometryPiece(new BoxGeometryPiece(outer_lower, outer_upper),
-					new BoxGeometryPiece(inner_lower, inner_upper)),
-	    "allfaces");
+                                        new BoxGeometryPiece(inner_lower, inner_upper)),
+            "allfaces");
   addRegion(new BoxGeometryPiece(outer_lower,
-				 Point(inner_lower.x(), outer_upper.y(), outer_upper.z())),
-	    "x-");
+                                 Point(inner_lower.x(), outer_upper.y(), outer_upper.z())),
+            "x-");
   addRegion(new BoxGeometryPiece(Point(inner_upper.x(), outer_lower.y(), outer_lower.z()),
-				 Point(outer_upper)),
-	    "x+");
+                                 Point(outer_upper)),
+            "x+");
   addRegion(new BoxGeometryPiece(outer_lower,
-				 Point(outer_upper.x(), inner_lower.y(), outer_upper.z())),
-	    "y-");
+                                 Point(outer_upper.x(), inner_lower.y(), outer_upper.z())),
+            "y-");
   addRegion(new BoxGeometryPiece(Point(outer_lower.x(), inner_upper.y(), outer_lower.z()),
-				 Point(outer_upper)),
-	    "y+");
+                                 Point(outer_upper)),
+            "y+");
   addRegion(new BoxGeometryPiece(outer_lower,
-				 Point(inner_lower.x(), outer_upper.y(), inner_lower.z())),
-	    "z-");
+                                 Point(inner_lower.x(), outer_upper.y(), inner_lower.z())),
+            "z-");
   addRegion(new BoxGeometryPiece(Point(outer_lower.x(), outer_lower.y(), inner_upper.z()),
-				 Point(outer_upper)),
-	    "z+");
+                                 Point(outer_upper)),
+            "z+");
   addRegion(new DifferenceGeometryPiece(new BoxGeometryPiece(outer_lower, outer_upper),
-					new BoxGeometryPiece(Point(inner_lower.x(), outer_lower.y(), outer_lower.z()),
-							     Point(inner_upper.x(), outer_upper.y(), outer_upper.z()))),
-	    "xfaces");
+                                        new BoxGeometryPiece(Point(inner_lower.x(), outer_lower.y(), outer_lower.z()),
+                                                             Point(inner_upper.x(), outer_upper.y(), outer_upper.z()))),
+            "xfaces");
   addRegion(new DifferenceGeometryPiece(new BoxGeometryPiece(outer_lower, outer_upper),
-					new BoxGeometryPiece(Point(outer_lower.x(), inner_lower.y(), outer_lower.z()),
-						Point(outer_upper.x(), inner_upper.y(), outer_upper.z()))),
-	    "yfaces");
+                                        new BoxGeometryPiece(Point(outer_lower.x(), inner_lower.y(), outer_lower.z()),
+                                                Point(outer_upper.x(), inner_upper.y(), outer_upper.z()))),
+            "yfaces");
   addRegion(new DifferenceGeometryPiece(new BoxGeometryPiece(outer_lower, outer_upper),
-					new BoxGeometryPiece(Point(outer_lower.x(), outer_lower.y(), inner_lower.z()),
-						Point(outer_upper.x(), outer_upper.y(), inner_upper.z()))),
-	    "zfaces");
+                                        new BoxGeometryPiece(Point(outer_lower.x(), outer_lower.y(), inner_lower.z()),
+                                                Point(outer_upper.x(), outer_upper.y(), inner_upper.z()))),
+            "zfaces");
 }
 
 void

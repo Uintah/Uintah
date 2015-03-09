@@ -72,19 +72,19 @@ void Poisson2::problemSetup(const ProblemSpecP& params,
 }
  
 void Poisson2::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                               SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &Poisson2::initialize);
+                           this, &Poisson2::initialize);
   task->computes(phi_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
  
 void Poisson2::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &Poisson2::computeStableTimestep);
+                           this, &Poisson2::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -93,8 +93,8 @@ void
 Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
-			   this, &Poisson2::timeAdvance,
-			   level, sched.get_rep());
+                           this, &Poisson2::timeAdvance,
+                           level, sched.get_rep());
   task->hasSubScheduler();
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
@@ -104,17 +104,17 @@ Poisson2::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 
 void Poisson2::computeStableTimestep(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset*,
-				  DataWarehouse*, DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*, DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
 }
 
 void Poisson2::initialize(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse*, DataWarehouse* new_dw)
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -149,10 +149,10 @@ void Poisson2::initialize(const ProcessorGroup*,
       }    
 #if 0        
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
-	IntVector l,h;
-	patch->getFaceNodes(Patch::xminus, 0, l, h);
-	for(NodeIterator iter(l,h); !iter.done(); iter++)
-	  phi[*iter]=1;
+        IntVector l,h;
+        patch->getFaceNodes(Patch::xminus, 0, l, h);
+        for(NodeIterator iter(l,h); !iter.done(); iter++)
+          phi[*iter]=1;
       }
 #endif
 
@@ -161,10 +161,10 @@ void Poisson2::initialize(const ProcessorGroup*,
 }
 
 void Poisson2::timeAdvance(const ProcessorGroup* pg,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw, DataWarehouse* new_dw,
-			   LevelP level, Scheduler* sched)
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw, DataWarehouse* new_dw,
+                           LevelP level, Scheduler* sched)
 {
   SchedulerP subsched = sched->createSubScheduler();
   subsched->initialize();
@@ -172,7 +172,7 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
 
   // Create the tasks
   Task* task = scinew Task("iterate",
-			   this, &Poisson2::iterate);
+                           this, &Poisson2::iterate);
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);
   task->computes(phi_label);
   task->computes(residual_label);
@@ -205,9 +205,9 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
 
 
 void Poisson2::iterate(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw)
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -222,30 +222,30 @@ void Poisson2::iterate(const ProcessorGroup*,
       IntVector l = patch->getNodeLowIndex();
       IntVector h = patch->getNodeHighIndex(); 
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
+                     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
       h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1);
+                     patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1);
       for(NodeIterator iter(l, h);!iter.done(); iter++){
-	newphi[*iter]=(1./6)*(
-	  phi[*iter+IntVector(1,0,0)]+phi[*iter+IntVector(-1,0,0)]+
-	  phi[*iter+IntVector(0,1,0)]+phi[*iter+IntVector(0,-1,0)]+
-	  phi[*iter+IntVector(0,0,1)]+phi[*iter+IntVector(0,0,-1)]);
-	double diff = newphi[*iter]-phi[*iter];
-	residual += diff*diff;
+        newphi[*iter]=(1./6)*(
+          phi[*iter+IntVector(1,0,0)]+phi[*iter+IntVector(-1,0,0)]+
+          phi[*iter+IntVector(0,1,0)]+phi[*iter+IntVector(0,-1,0)]+
+          phi[*iter+IntVector(0,0,1)]+phi[*iter+IntVector(0,0,-1)]);
+        double diff = newphi[*iter]-phi[*iter];
+        residual += diff*diff;
       }
 #if 0
       foreach boundary that exists on this patch {
-	count face boundaries;
-	switch(kind of bc for boundary){
-	case Dirichlet:
-	  set the value accordingly;
-	  break;
-	case Neumann:
-	  Do the different derivative;
-	  break;
-	}
+        count face boundaries;
+        switch(kind of bc for boundary){
+        case Dirichlet:
+          set the value accordingly;
+          break;
+        case Neumann:
+          Do the different derivative;
+          break;
+        }
       }
       ASSERT(numFaceBoundaries == patch->getNumBoundaryFaces());
 #endif

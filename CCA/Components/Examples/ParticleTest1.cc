@@ -70,10 +70,10 @@ void ParticleTest1::problemSetup(const ProblemSpecP& params,
 }
  
 void ParticleTest1::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                               SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &ParticleTest1::initialize);
+                           this, &ParticleTest1::initialize);
   task->computes(lb_->pXLabel);
   task->computes(lb_->pMassLabel);
   task->computes(lb_->pParticleIDLabel);
@@ -81,10 +81,10 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
 }
  
 void ParticleTest1::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &ParticleTest1::computeStableTimestep);
+                           this, &ParticleTest1::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
@@ -96,7 +96,7 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   const MaterialSet* matls = sharedState_->allMaterials();
 
   Task* task = scinew Task("timeAdvance",
-			   this, &ParticleTest1::timeAdvance);
+                           this, &ParticleTest1::timeAdvance);
 
   // set this in problemSetup.  0 is no ghost cells, 1 is all with 1 ghost
   // atound-node, and 2 mixes them
@@ -138,25 +138,25 @@ ParticleTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   }
 
   sched->scheduleParticleRelocation(level, lb_->pXLabel_preReloc,
-				    lb_->d_particleState_preReloc,
-				    lb_->pXLabel, lb_->d_particleState,
-				    lb_->pParticleIDLabel, matls);
+                                    lb_->d_particleState_preReloc,
+                                    lb_->pXLabel, lb_->d_particleState,
+                                    lb_->pParticleIDLabel, matls);
 
 }
 
 void ParticleTest1::computeStableTimestep(const ProcessorGroup* /*pg*/,
-				     const PatchSubset* patches,
-				     const MaterialSubset* /*matls*/,
-				     DataWarehouse*,
-				     DataWarehouse* new_dw)
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* /*matls*/,
+                                     DataWarehouse*,
+                                     DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(1), sharedState_->get_delt_label(),getLevel(patches));
 }
 
 void ParticleTest1::initialize(const ProcessorGroup*,
-			  const PatchSubset* patches,
-			  const MaterialSubset* matls,
-			  DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* /*old_dw*/, DataWarehouse* new_dw)
 {
   for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
@@ -189,9 +189,9 @@ void ParticleTest1::initialize(const ProcessorGroup*,
 }
 
 void ParticleTest1::timeAdvance(const ProcessorGroup*,
-			const PatchSubset* patches,
-			const MaterialSubset* matls,
-			DataWarehouse* old_dw, DataWarehouse* new_dw)
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   for( int p=0; p<patches->size(); ++p ){
     const Patch* patch = patches->get(p);
