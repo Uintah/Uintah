@@ -397,6 +397,15 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec,
       }
     }
   }
+
+  // If small_messages not specified in UP Scheduler block, still report what's used
+  if( d_useSmallMessages ) {
+    proc0cout << "   Using small, individual MPI messages (no message combining)\n";
+  }
+  else {
+    proc0cout << "   Using large, combined MPI messages\n";
+  }
+
   noScrubVars_.insert("refineFlag");
   noScrubVars_.insert("refinePatchFlag");
 }
