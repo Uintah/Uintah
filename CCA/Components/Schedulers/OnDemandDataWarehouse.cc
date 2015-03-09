@@ -1983,7 +1983,7 @@ OnDemandDataWarehouse::put( PerPatchBase& var,
                             const VarLabel* label,
                             int matlIndex,
                             const Patch* patch,
-                            bool replace /*= false*/)
+                            bool replace /*= false*/ )
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::put(Per Patch Variable):" + label->getName() );
   ASSERT( !d_finalized );
@@ -2004,7 +2004,7 @@ void
 OnDemandDataWarehouse::getLevel( constGridVariableBase& constGridVar,
                                   const VarLabel* label,
                                   int matlIndex,
-                                  const Level* level)
+                                  const Level* level )
 {
   MALLOC_TRACE_TAG_SCOPE( "OnDemandDataWarehouse::getLevel(Grid Variable):" + label->getName() );
 
@@ -2032,7 +2032,7 @@ OnDemandDataWarehouse::getLevel( constGridVariableBase& constGridVar,
   
   int totalCells = 0;
   
-  for( int i = 0; i < patches.size(); i++ ) {
+  for( size_t i = 0; i < patches.size(); i++ ) {
     const Patch* patch = patches[i];
     
     vector<Variable*> varlist;
