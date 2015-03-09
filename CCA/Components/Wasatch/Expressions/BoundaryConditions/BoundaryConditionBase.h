@@ -55,23 +55,29 @@ public:
 
   inline void bind_operators( const SpatialOps::OperatorDatabase& opdb )
   {
+    // operators
+    typedef Wasatch::BCOpTypeSelector<FieldT> OpT;
+
     switch (faceTypeEnum_) {
       case Uintah::Patch::xminus:
       case Uintah::Patch::xplus:
       {
-        interpXOp_ = opdb.retrieve_operator<DiriXOpT>();
+        interpXOp_ = opdb.retrieve_operator<typename OpT::DirichletX>();
+        interpNeuXOp_ = opdb.retrieve_operator<typename OpT::InterpX>();
         break;
       }
       case Uintah::Patch::yminus:
       case Uintah::Patch::yplus:
       {
-        interpYOp_ = opdb.retrieve_operator<DiriYOpT>();
+        interpYOp_ = opdb.retrieve_operator<typename OpT::DirichletY>();
+        interpNeuYOp_ = opdb.retrieve_operator<typename OpT::InterpY>();
         break;
       }
       case Uintah::Patch::zminus:
       case Uintah::Patch::zplus:
       {
-        interpZOp_ = opdb.retrieve_operator<DiriZOpT>();
+        interpZOp_ = opdb.retrieve_operator<typename OpT::DirichletZ>();
+        interpNeuZOp_ = opdb.retrieve_operator<typename OpT::InterpZ>();
         break;
       }
       default:
@@ -377,10 +383,14 @@ protected:
   const NeumZOpT* neumZOp_;
   
   // interpolants that will be used for independent variables when used for complex boundary conditions (i.e. a*x + b -> a*interp(x) + b)
-  const DiriXOpT* interpXOp_;
-  const DiriYOpT* interpYOp_;
-  const DiriZOpT* interpZOp_;
-  
+  const typename OpT::DirichletX* interpXOp_;
+  const typename OpT::DirichletY* interpYOp_;
+  const typename OpT::DirichletZ* interpZOp_;
+
+  const typename OpT::InterpX* interpNeuXOp_;
+  const typename OpT::InterpY* interpNeuYOp_;
+  const typename OpT::InterpZ* interpNeuZOp_;
+
   const std::vector<SpatialOps::IntVec>* vecInteriorPts_;
   const std::vector<SpatialOps::IntVec>* vecGhostPts_;
   

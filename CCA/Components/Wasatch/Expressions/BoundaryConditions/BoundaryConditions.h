@@ -137,7 +137,8 @@ class LinearBC : public BoundaryConditionBase<FieldT>
             const double b )
   : a_(a), b_(b)
   {
-     x_ = this->template create_field_request<FieldT>(indepVarTag);
+    this->set_gpu_runnable(true);
+    x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -184,7 +185,8 @@ class ParabolicBC : public BoundaryConditionBase<FieldT>
                const double c, const double x0 )
   : a_(a), b_(b), c_(c), x0_(x0)
   {
-     x_ = this->template create_field_request<FieldT>(indepVarTag);
+    this->set_gpu_runnable(true);
+    x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -239,7 +241,8 @@ class PowerLawBC : public BoundaryConditionBase<FieldT>
              const double halfHeight, const double n )
   : x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
   {
-     x_ = this->template create_field_request<FieldT>(indepVarTag);
+    this->set_gpu_runnable(true);
+    x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder

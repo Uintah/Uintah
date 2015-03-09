@@ -275,6 +275,10 @@ namespace Wasatch {
     typedef OpTypes<FieldT> Ops;
     
   public:
+    typedef typename Ops::InterpC2FX   InterpX;
+    typedef typename Ops::InterpC2FY   InterpY;
+    typedef typename Ops::InterpC2FZ   InterpZ;
+    
     typedef typename Ops::InterpC2FX   DirichletX;
     typedef typename Ops::InterpC2FY   DirichletY;
     typedef typename Ops::InterpC2FZ   DirichletZ;
@@ -298,6 +302,7 @@ namespace Wasatch {
   template<>
   struct BCOpTypeSelector<XVolField> : public BCOpTypeSelectorBase<XVolField>
   {
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, XVolField, XVolField >::type InterpX;
     typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type NeumannX;
   };
   
@@ -305,6 +310,7 @@ namespace Wasatch {
   template<>
   struct BCOpTypeSelector<YVolField> : public BCOpTypeSelectorBase<YVolField>
   {
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, YVolField, YVolField >::type InterpY;
     typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type NeumannY;
   };
   
@@ -312,6 +318,7 @@ namespace Wasatch {
   template<>
   struct BCOpTypeSelector<ZVolField> : public BCOpTypeSelectorBase<ZVolField>
   {
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, ZVolField, ZVolField >::type InterpZ;
     typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
   };
   
@@ -321,6 +328,7 @@ namespace Wasatch {
   {
   public:
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type DirichletX;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type InterpX;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
   };
   //
@@ -328,6 +336,7 @@ namespace Wasatch {
   struct BCOpTypeSelector<FaceTypes<YVolField>::YFace>
   {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type DirichletY;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type InterpY;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
   };
   //
@@ -335,6 +344,7 @@ namespace Wasatch {
   struct BCOpTypeSelector<FaceTypes<ZVolField>::ZFace>
   {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type DirichletZ;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type InterpZ;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
   };
 
