@@ -645,8 +645,10 @@ Ray::rayTrace( const ProcessorGroup* pc,
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
+  if( origin == IntVector(20,20,20) ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
+  }
 #endif
 /*===========TESTING==========`*/
     }  // end cell iterator
@@ -1317,10 +1319,13 @@ void Ray::setBC(CCVariable< T >& Q_CC,
   if(patch->hasBoundaryFaces() == false || d_onOff_SetBCs == false){
     return;
   }
-
-  dbg_BC << "setBC \t"<< desc <<" "
-        << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << endl;
-
+  
+  if( dbg_BC.active() ){
+    const Level* level = patch->getLevel();
+    dbg_BC << "setBC \t"<< desc <<" "
+           << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getID()<< endl;
+  }
+  
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
@@ -1375,8 +1380,10 @@ void Ray::setBC(CCVariable< T >& Q_CC,
       }  // if iterator found
     }  // child loop
 
-    dbg_BC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
-               << " nCellsTouched: " << nCells << endl;
+    if( dbg_BC.active() ){
+      dbg_BC << "    "<< patch->getFaceName(face) << " \t " << bc_kind << " numChildren: " << numChildren
+             << " nCellsTouched: " << nCells << endl;
+    }
     //__________________________________
     //  bulletproofing
 #if 0
@@ -1591,7 +1598,7 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
 {
   if(coarseLevel->hasFinerLevel()){
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
-    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel,    radCalc_freq );
+    sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel,   radCalc_freq );
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4,  d_sigmaT4Label, radCalc_freq );
 
     //__________________________________
@@ -1724,7 +1731,7 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
 
     CCVariable< int > cellType;
     new_dw->allocateAndPut( cellType, d_cellTypeLabel, d_matl, patch );
-    cellType.initialize( 0 );
+    cellType.initialize( 0 );             // HARD WIRE UNTIL WE DECIDE HOW TO COARSEN cellType
   }
 }
 
