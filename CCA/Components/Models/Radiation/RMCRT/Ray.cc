@@ -28,7 +28,6 @@
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Geometry/BBox.h>
 #include <Core/Grid/AMR.h>
 #include <Core/Grid/AMR_CoarsenRefine.h>
 #include <Core/Grid/BoundaryConditions/BCUtils.h>
@@ -851,10 +850,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
   abskg_fine         = abskg[maxLevels-1];
   sigmaT4OverPi_fine = sigmaT4OverPi[maxLevels-1];
 
-  // Determine the size of the domain.
-  BBox domain_BB;
-  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
-
   double start=clock();
 
   //__________________________________
@@ -905,7 +900,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       IntVector origin = *iter;
 
 /*`==========TESTING==========*/
-      if(origin == IntVector(2,4,16) && d_isDbgOn ){
+      if(origin == IntVector(20,20,20) && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
@@ -921,12 +916,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
         //dbg2 << "iRay: " << iRay << " " ;
 
         Vector ray_location;
-        //rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);            // THIS IS NOT RIGHT!!!!
+        int my_L = maxLevels - 1;
+        rayLocation( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, ray_location);
 
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
-        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
-                       fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, nRaySteps, sumI, mTwister);
+        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, maxLevels, fineLevel, DyDx,DzDx,
+                       fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType, 
+                       nRaySteps, sumI, mTwister);
 
 
       }  // Ray loop
@@ -939,6 +936,14 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
       radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;
 
       //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/d_nDivQRays) << endl;
+/*`==========TESTING==========*/
+#if DEBUG == 1
+  if( origin == IntVector(20,20,20) ) {
+          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
+                    origin.x(), origin.y(), origin.z(), sumI,divQ_fine[origin], radiationVolq_fine[origin],abskg_fine[origin], sigmaT4OverPi_fine[origin]);
+  }
+#endif
+/*===========TESTING==========`*/
     }  // end cell iterator
 
     //__________________________________
@@ -1731,7 +1736,11 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
 
     CCVariable< int > cellType;
     new_dw->allocateAndPut( cellType, d_cellTypeLabel, d_matl, patch );
-    cellType.initialize( 0 );             // HARD WIRE UNTIL WE DECIDE HOW TO COARSEN cellType
+//    cellType.initialize( d_flowCell );             // Use this for multilevel and DO calculations
+
+    cellType.initialize( 0.0 );                     // Once ARCHES is setting cellType on the 
+                                                    // coarse level delete this
+
   }
 }
 
@@ -1742,7 +1751,6 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
                            Vector& ray_location,
                            const IntVector& origin,
                            const vector<Vector>& Dx,
-                           const BBox& domain_BB,
                            const int maxLevels,
                            const Level* fineLevel,
                            double DyDx[],
@@ -1753,11 +1761,20 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
                            vector<IntVector>& regionHi,
                            StaticArray< constCCVariable< T > >& sigmaT4OverPi,
                            StaticArray< constCCVariable< T > >& abskg,
+                           StaticArray< constCCVariable< int > >& cellType,
                            unsigned long int& nRaySteps,
                            double& sumI,
                            MTRand& mTwister)
 {
 
+
+/*`==========TESTING==========*/
+#if DEBUG == 1
+  if( origin == IntVector(20,20,20) ) {
+    printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
+  }
+#endif
+/*===========TESTING==========`*/
   int L       = maxLevels -1;  // finest level
   int prevLev = L;
 
@@ -1776,17 +1793,16 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
   // with 1L rayTrace results.
 
   Vector tMax;
+  tMax.x( (origin[0] + sign[0]           - ray_location[0]) * inv_direction[0] ); 
+  tMax.y( (origin[1] + sign[1] * DyDx[L] - ray_location[1]) * inv_direction[1] ); 
+  tMax.z( (origin[2] + sign[2] * DzDx[L] - ray_location[2]) * inv_direction[2] ); 
+  
   vector<Vector> tDelta(maxLevels);
-
-  tMax.x( (sign[0]  - mTwister.rand())            * inv_direction[0] );
-  tMax.y( (sign[1]  - mTwister.rand()) * DyDx[L]  * inv_direction[1] );
-  tMax.z( (sign[2]  - mTwister.rand()) * DzDx[L]  * inv_direction[2] );
-
   for(int Lev = maxLevels-1; Lev>-1; Lev--){
     //Length of t to traverse one cell
-    tDelta[Lev].x( abs(inv_direction[0]) );
-    tDelta[Lev].y( abs(inv_direction[1]) * DyDx[Lev] );
-    tDelta[Lev].z( abs(inv_direction[2]) * DzDx[Lev] );
+    tDelta[Lev].x( fabs(inv_direction[0]) );
+    tDelta[Lev].y( fabs(inv_direction[1]) * DyDx[Lev] );
+    tDelta[Lev].z( fabs(inv_direction[2]) * DzDx[Lev] );
   }
 
   //Initializes the following values for each ray
@@ -1833,9 +1849,7 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
 
       // next cell index and position
       cur[dir]  = cur[dir] + step[dir];
-      Point pos = level->getCellPosition(cur);
-      Vector dx_prev = Dx[L];  //  Used to compute coarsenRatio
-
+      Vector dx_prev = Dx[L];           //  Used to compute coarsenRatio
 
       //__________________________________
       // Logic for moving between levels
@@ -1872,6 +1886,10 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
       tMax_prev     = tMax[dir];
       tMax[dir]     = tMax[dir] + tDelta[L][dir];
 
+      ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
+      ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
+      ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
+       
       //__________________________________
       // Account for uniqueness of first step after reaching a new level
       Vector dx = level->dCell();
@@ -1893,15 +1911,23 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
 
       tMax += lineup * tDelta[prevLev];
 
-      in_domain = domain_BB.inside(pos);
+ /*`==========TESTING==========*/
+#if DEBUG == 1
+if(origin == IntVector(20,20,20)){
+    printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+    printf( " face %d ", dir );
+    printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
+    printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
+    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
+    printf( "disMin %g \n",disMin );
 
-      //__________________________________
-      //  Update the ray location
-      //this is necessary to find the absorb_coef at the endpoints of each step if doing interpolations
-      //ray_location_prev = ray_location;
-      //ray_location      = ray_location + (disMin * direction_vector);
-      // If this line is used,  make sure that direction_vector is adjusted after a reflection
+    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
+    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
+}
+#endif
+/*===========TESTING==========`*/
 
+      in_domain = (cellType[L][cur] == d_flowCell);
 
       optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
       nRaySteps++;
@@ -1931,14 +1957,25 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
 
     intensity = intensity * fs;
 
-     // when a ray reaches the end of the domain, we force it to terminate.
-     if(!d_allowReflect) intensity = 0;
+    // when a ray reaches the end of the domain, we force it to terminate.
+    if(!d_allowReflect) intensity = 0;
+
+
+/*`==========TESTING==========*/
+#if DEBUG == 1
+if( origin == IntVector(20,20,20) ){
+    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
+           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
+
+}
+#endif
+/*===========TESTING==========`*/
 
     //__________________________________
     //  Reflections
     if (intensity > d_threshold && d_allowReflect ){
       ++nReflect;
-      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], inv_direction[dir] );
+      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir] );
 
     }
   }  // threshold while loop.
@@ -2075,7 +2112,6 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              Vector&,
                                              const IntVector&,
                                              const vector<Vector>&,
-                                             const BBox&,
                                              const int,
                                              const Level* ,
                                              double DyDx[],
@@ -2086,6 +2122,7 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              vector<IntVector>&,
                                              StaticArray< constCCVariable< double > >& sigmaT4OverPi,
                                              StaticArray< constCCVariable<double> >& abskg,
+                                             StaticArray< constCCVariable< int > >& cellType,
                                              unsigned long int& ,
                                              double& ,
                                              MTRand&);
@@ -2094,7 +2131,6 @@ template void  Ray::updateSumI_ML< float> ( Vector&,
                                              Vector&,
                                              const IntVector&,
                                              const vector<Vector>&,
-                                             const BBox&,
                                              const int,
                                              const Level* ,
                                              double DyDx[],
@@ -2105,6 +2141,7 @@ template void  Ray::updateSumI_ML< float> ( Vector&,
                                              vector<IntVector>&,
                                              StaticArray< constCCVariable< float > >& sigmaT4OverPi,
                                              StaticArray< constCCVariable< float > >& abskg,
+                                             StaticArray< constCCVariable< int > >& cellType,
                                              unsigned long int& ,
                                              double& ,
                                              MTRand&);

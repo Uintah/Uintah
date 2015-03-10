@@ -239,7 +239,6 @@ namespace Uintah{
                             Vector& ray_location,
                             const IntVector& origin,
                             const std::vector<Vector>& Dx,
-                            const BBox& domain_BB,
                             const int maxLevels,
                             const Level* fineLevel,
                             double DyDx[],
@@ -250,6 +249,7 @@ namespace Uintah{
                             std::vector<IntVector>& regionHi,
                             StaticArray< constCCVariable< T > >& sigmaT4Pi,
                             StaticArray< constCCVariable< T > >& abskg,
+                            StaticArray< constCCVariable< int > >& cellType,
                             unsigned long int& size,
                             double& sumI,
                             MTRand& mTwister);

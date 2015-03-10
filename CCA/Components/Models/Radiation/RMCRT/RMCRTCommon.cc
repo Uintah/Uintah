@@ -85,6 +85,7 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 
   d_gac     = Ghost::AroundCells;
   d_gn      = Ghost::None;
+  d_flowCell = -1; //<----HARD CODED FLOW CELL
 }
 
 //______________________________________________________________________
@@ -506,7 +507,7 @@ if(origin == IntVector(20,20,20)){
 //cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location <<
 //        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
 
-       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
+       in_domain = (celltype[cur] == d_flowCell);
 
 
        optical_thickness += Dx.x() * abskg_prev*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
