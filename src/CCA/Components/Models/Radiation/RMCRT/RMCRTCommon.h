@@ -174,6 +174,7 @@ namespace Uintah{
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};     
       double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
+      int d_flowCell;                       // HARDWIRED 
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
 
