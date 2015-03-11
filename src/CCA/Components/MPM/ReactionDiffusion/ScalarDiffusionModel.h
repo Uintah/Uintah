@@ -30,6 +30,9 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/VarLabel.h>
 
+#include <string>
+
+using namespace std;
 namespace Uintah {
 
   class Task;
@@ -44,8 +47,11 @@ namespace Uintah {
   class ScalarDiffusionModel {
   public:
     
-    ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
+    ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
+                         string diff_type);
     ~ScalarDiffusionModel();
+
+    virtual string getDiffusionType();
 
     virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
                                                const PatchSet* patches) const;
@@ -94,6 +100,7 @@ namespace Uintah {
 
     int NGP, NGN;
     bool do_explicit;
+    string diffusion_type;
 
     ScalarDiffusionModel(const ScalarDiffusionModel&);
     ScalarDiffusionModel& operator=(const ScalarDiffusionModel&);

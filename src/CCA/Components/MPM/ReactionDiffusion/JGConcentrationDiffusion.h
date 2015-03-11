@@ -44,8 +44,11 @@ namespace Uintah {
   class JGConcentrationDiffusion : public ScalarDiffusionModel {
   public:
     
-    JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
+    JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
+                             string diff_type);
     ~JGConcentrationDiffusion();
+
+    virtual void setIncludeHydroStress(bool value);
 
     virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
                                                const PatchSet* patch) const;
@@ -88,6 +91,7 @@ namespace Uintah {
 
   private:
 		double diffusivity;
+    bool include_hydrostress;
 
     JGConcentrationDiffusion(const JGConcentrationDiffusion&);
     JGConcentrationDiffusion& operator=(const JGConcentrationDiffusion&);

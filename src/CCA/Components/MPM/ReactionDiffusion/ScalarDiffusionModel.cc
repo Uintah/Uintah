@@ -34,7 +34,7 @@ using namespace std;
 using namespace Uintah;
 
 
-ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag)
+ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type)
 {
   d_Mflag = Mflag;
   d_sharedState = sS;
@@ -55,11 +55,17 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
   }else{
     do_explicit = false;
   }
+
+  diffusion_type = diff_type;
 }
 
 ScalarDiffusionModel::~ScalarDiffusionModel() {
   delete d_lb;
   delete d_rdlb;
+}
+
+string ScalarDiffusionModel::getDiffusionType(){
+  return diffusion_type;
 }
 
 void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
