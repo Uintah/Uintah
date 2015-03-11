@@ -79,12 +79,12 @@ namespace Uintah {
     virtual std::string getType() const { return TYPE_NAME; }
 
     //////////////////////////////////////////////////////////////////////
-    /*! Determines whether a point is inside the cylinder.              */
+    /*! Determines whether a point is inside the geometry.              */
     //////////////////////////////////////////////////////////////////////
     virtual bool inside(const Point &p) const = 0;
 	 
     //////////////////////////////////////////////////////////////////////
-    /*! Returns the bounding box surrounding the box.                   */
+    /*! Returns the bounding box surrounding the particle domain.       */
     //////////////////////////////////////////////////////////////////////
     virtual Box getBoundingBox() const = 0;
 
@@ -184,12 +184,12 @@ namespace Uintah {
     void writePoints(const std::string& f_name, const std::string& var);
 
     std::vector<Point> d_points;
-    std::vector<double> d_volume; // CPDI or CPTI calculates
+    std::vector<double> d_volume;// CPDI or CPTI
     std::vector<double> d_temperature;
     std::vector<double> d_color;
     std::vector<Vector> d_forces;
     std::vector<Vector> d_fiberdirs;
-    std::vector<Vector> d_velocity;    // gcd adds
+    std::vector<Vector> d_velocity; // gcd adds
     std::vector<Vector> d_rvec1; // CPDI or CPTI
     std::vector<Vector> d_rvec2; // CPDI or CPTI
     std::vector<Vector> d_rvec3; // CPDI or CPTI
