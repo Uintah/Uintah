@@ -68,7 +68,7 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   }
 
   if (diff_interface_type == "common"){
-    return(scinew CommonIFConcDiff(child, ss, flags));
+    return(scinew CommonIFConcDiff(mpm_ps, ss, flags));
 	}else if (diff_interface_type == "paired"){
     return(scinew SDInterfaceModel(child, ss, flags));
   }else{

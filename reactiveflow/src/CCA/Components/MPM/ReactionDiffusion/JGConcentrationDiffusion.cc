@@ -36,16 +36,21 @@ using namespace std;
 using namespace Uintah;
 
 
-JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag):
-  ScalarDiffusionModel(ps, sS, Mflag) {
+JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type ):
+  ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 	
   ps->require("diffusivity",diffusivity);
+
+  include_hydrostress = false;
 }
 
 JGConcentrationDiffusion::~JGConcentrationDiffusion() {
 
 }
 
+void JGConcentrationDiffusion::setIncludeHydroStress(bool value){
+  include_hydrostress = value;
+}
 void JGConcentrationDiffusion::addInitialComputesAndRequires(Task* task,
                                                       const MPMMaterial* matl,
                                                       const PatchSet* patch) const{
@@ -101,6 +106,11 @@ void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gConcentrationRateLabel,  matlset);
 
+  if(include_hydrostress){
+    task->requires(Task::OldDW, d_lb->pStressLabel, matlset, gan, NGP);
+    task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
+  }
+
 }
 
 void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
@@ -121,22 +131,25 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   constParticleVariable<double> pConcentration;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pFOld;
+  constParticleVariable<Matrix3> pStress;
 	constNCVariable<double>       gmass;
 
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
 	                                                 d_lb->pXLabel);
 
-  old_dw->get(px,             d_lb->pXLabel,                pset);
-  old_dw->get(pmass,          d_lb->pMassLabel,             pset);
-  old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,  pset);
-  old_dw->get(psize,          d_lb->pSizeLabel,             pset);
-  old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel,pset);
+  old_dw->get(px,             d_lb->pXLabel,                  pset);
+  old_dw->get(pmass,          d_lb->pMassLabel,               pset);
+  old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,    pset);
+  old_dw->get(psize,          d_lb->pSizeLabel,               pset);
+  old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
+  old_dw->get(pStress,        d_lb->pStressLabel,             pset);
   new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> gconcentrationRate;
+  NCVariable<double> ghydrostaticstress;
 
 
   new_dw->allocateAndPut(gconcentration,      d_rdlb->gConcentrationLabel,
@@ -150,6 +163,12 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
   gconcentrationRate.initialize(0);
+
+  if(include_hydrostress){
+    new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
+	                         dwi,  patch);
+    ghydrostaticstress.initialize(0);
+   }
   
   int n8or27 = d_Mflag->d_8or27;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
@@ -162,6 +181,10 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
       node = ni[k];
       if(patch->containsNode(node)) {
         gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
+        if(include_hydrostress){
+          double hydrostress = (pStress[idx].Trace())/3;
+          ghydrostaticstress[node] += hydrostress * pmass[idx] * S[k];
+        }
       }
     }
   }
@@ -170,6 +193,9 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
     IntVector c = *iter; 
     gconcentration[c]   /= gmass[c];
     gconcentrationNoBC[c] = gconcentration[c];
+    if(include_hydrostress){
+      ghydrostaticstress[c] /= gmass[c];
+    }
   }
 
   MPMBoundCond bc;

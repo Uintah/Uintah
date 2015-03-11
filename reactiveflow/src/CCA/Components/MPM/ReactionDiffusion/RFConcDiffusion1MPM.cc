@@ -36,16 +36,22 @@ using namespace std;
 using namespace Uintah;
 
 
-RFConcDiffusion1MPM::RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag):
-  ScalarDiffusionModel(ps, sS, Mflag) {
+RFConcDiffusion1MPM::RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type):
+  ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 	
   ps->require("diffusivity", diffusivity);
   ps->require("initial_chemical_potential", init_potential);
   ps->require("max_concentration", max_concentration);
+
+  include_hydrostress = false;
 }
 
 RFConcDiffusion1MPM::~RFConcDiffusion1MPM() {
 
+}
+
+void RFConcDiffusion1MPM::setIncludeHydroStress(bool value){
+  include_hydrostress = value;
 }
 
 void RFConcDiffusion1MPM::addInitialComputesAndRequires(Task* task,

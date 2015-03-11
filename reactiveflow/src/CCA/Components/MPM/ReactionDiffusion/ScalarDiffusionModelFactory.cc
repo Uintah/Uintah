@@ -48,8 +48,8 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
   ProblemSpecP child = ps->findBlock("diffusion_model");
   if(!child)
     throw ProblemSetupException("Cannot find scalar_diffuion_model tag", __FILE__, __LINE__);
-  string mat_type;
-  if(!child->getAttribute("type", mat_type))
+  string diffusion_type;
+  if(!child->getAttribute("type", diffusion_type))
     throw ProblemSetupException("No type for scalar_diffusion_model", __FILE__, __LINE__);
 
   if (flags->d_integrator_type != "implicit" &&
@@ -63,15 +63,15 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }
 
-  if (mat_type == "linear")
-    return(scinew ScalarDiffusionModel(child, ss, flags));
-	else if (mat_type == "jg")
-    return(scinew JGConcentrationDiffusion(child, ss, flags));
-	else if (mat_type == "rf1")
-    return(scinew RFConcDiffusion1MPM(child, ss, flags));
+  if (diffusion_type == "linear")
+    return(scinew ScalarDiffusionModel(child, ss, flags, diffusion_type));
+	else if (diffusion_type == "jg")
+    return(scinew JGConcentrationDiffusion(child, ss, flags, diffusion_type));
+	else if (diffusion_type == "rf1")
+    return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
 
   else
-    throw ProblemSetupException("Unknown Scalar Diffusion Type ("+mat_type+")", __FILE__, __LINE__);
+    throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);
 
   return 0;
 }

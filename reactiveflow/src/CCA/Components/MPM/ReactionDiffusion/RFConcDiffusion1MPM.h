@@ -44,8 +44,11 @@ namespace Uintah {
   class RFConcDiffusion1MPM : public ScalarDiffusionModel {
   public:
     
-    RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
+    RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
+                        string diff_type);
     ~RFConcDiffusion1MPM();
+
+    virtual void setIncludeHydroStress(bool value);
 
     virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
                                                const PatchSet* patch) const;
@@ -90,6 +93,7 @@ namespace Uintah {
 		double diffusivity;
 		double init_potential;
     double max_concentration;
+    bool include_hydrostress;
 
     RFConcDiffusion1MPM(const RFConcDiffusion1MPM&);
     RFConcDiffusion1MPM& operator=(const RFConcDiffusion1MPM&);
