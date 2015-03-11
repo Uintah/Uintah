@@ -218,32 +218,10 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      // CPDI or CPTI
-      if (psizes && ((d_flags->d_interpolator_type=="cpdi") || d_useCPTI)) {
-        // Read psize from file
+      if (psizes) {
+        // Read psize from file or get from a smooth geometry piece
         if (!psizes->empty()) {
-          Vector dxcc = patch->dCell(); 
           pvars.psize[pidx] = *sizeiter;
-          if (volumes->empty()) {
-            // Calculate CPDI hexahedron volume from psize 
-            double volFactor=1.0;
-            if (d_useCPTI) {
-              // Calculate CPTI tetrahedron volume from psize 
-              volFactor=6.0;
-            }
-            // (if volume not passed from FileGeometryPiece)
-            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant()/volFactor);
-            pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
-          }
-          // Modify psize (CPDI R-vectors) to be normalized by cell spacing
-          Matrix3 size(1./((double) dxcc.x()),0.,0.,
-                       0.,1./((double) dxcc.y()),0.,
-                       0.,0.,1./((double) dxcc.z()));
-          // Jim commented this out because the smooth geometry pieces
-          // create the "correct" size.  The operation below results in
-          // a double scaling by the size tensor
-          //pvars.psize[pidx]= pvars.psize[pidx]*size;
-          pvars.psize[pidx]= pvars.psize[pidx];
           ++sizeiter;
         }
       }
@@ -652,17 +630,15 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   if (sgp) {
     int numPts = 0;
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
+    sgp->setCellSize(patch->dCell());
     if(fgp){
-      if (d_useCPTI) {
-        proc0cout << "*** Reading CPTI file ***" << endl;
-      }
+      fgp->setCpti(d_useCPTI);
       fgp->readPoints(patch->getID());
       numPts = fgp->returnPointCount();
     } else {
       Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");    
       double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
       sgp->setParticleSpacing(dx);
-      sgp->setCellSize(patch->dCell());
       numPts = sgp->createPoints();
     }
     vector<Point>* points      = sgp->getPoints();
