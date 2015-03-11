@@ -343,14 +343,29 @@ namespace Wasatch{
     const SCIRun::IntVector fieldSize   = uintahVar.getWindow()->getData()->size();
     const SCIRun::IntVector fieldOffset = uintahVar.getWindow()->getOffset();
     const SCIRun::IntVector fieldExtent = highIx - lowIx;
-
+    
     const so::IntVec   size(   fieldSize[0],   fieldSize[1],   fieldSize[2] );
     const so::IntVec extent( fieldExtent[0], fieldExtent[1], fieldExtent[2] );
     const so::IntVec offset( lowIx[0]-fieldOffset[0], lowIx[1]-fieldOffset[1], lowIx[2]-fieldOffset[2] );
 
     so::IntVec bcMinus, bcPlus;
     get_bc_logicals( ainfo.patch, bcMinus, bcPlus );
-
+    
+    // In certain cases, when the number of ghosts is different from the number of extra cells,
+    // one must change the ghostData to reflect this discrepancy. The general rule is that, at physical boundaries,
+    // the number of extra cells superseeds the number of ghost cells. At processor boundaries, then number
+    // of ghost cells takes over.
+    const SCIRun::IntVector extraCells = ainfo.patch->getExtraCells(); // get the extra cells associated with this patch
+    SpatialOps::GhostData newGData = ghostData; // copy ghost data
+    so::IntVec gMinus = ghostData.get_minus();
+    so::IntVec gPlus = ghostData.get_plus();
+    for (int i = 0; i < 3; ++i) {
+      gMinus[i] = bcMinus[i] == 0 ? gMinus[i] : extraCells[i];
+      gPlus[i]  = bcPlus[i]  == 0 ? gPlus[i]  : extraCells[i];
+    }
+    newGData.set_minus(gMinus);
+    newGData.set_plus(gPlus);
+    
     double* fieldValues_ = NULL;
     FieldT* field;
     if( ainfo.isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
@@ -360,7 +375,7 @@ namespace Wasatch{
                 << offset << ", extent=" << extent << std::endl;
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
-                          ghostData,
+                          newGData,
                           fieldValues_,
                           so::ExternalStorage,
                           deviceIndex );
@@ -369,7 +384,7 @@ namespace Wasatch{
       fieldValues_ = const_cast<typename FieldT::value_type*>( uintahVar.getPointer() );
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
-                          ghostData,
+                          newGData,
                           fieldValues_,
                           so::ExternalStorage,
                           CPU_INDEX );
