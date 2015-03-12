@@ -42,7 +42,7 @@ evaluate()
     
     const double dt = dts[0];  // jcs we should be using this directly in nebo assignments rather than pulling it out if we want GPU execution
     
-    if(this->isStaggered_) {
+    if(this->isStaggeredNormal_) {
       for( ; ii != (this->vecInteriorPts_)->end(); ++ii, ++ig ){
         const double ub  = u(*ii);            // boundary cell
         const double ui  = u(*ii - offset);   // interior cell

@@ -327,7 +327,8 @@ class BCPrimVar
            const Expr::Tag& densityTag) :
   hasDensity_(densityTag != Expr::Tag() )
   {
-     src_ = this->template create_field_request<FieldT>(srcTag);
+    this->set_gpu_runnable(true);
+    src_ = this->template create_field_request<FieldT>(srcTag);
     if (hasDensity_)  rho_ = this->template create_field_request<SVolField>(densityTag);
   }
 public:
@@ -348,8 +349,23 @@ public:
   
   ~BCPrimVar(){}
   void evaluate();
+  void bind_operators( const SpatialOps::OperatorDatabase& opdb );
 private:
   const bool hasDensity_;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type DenInterpT;
+  const DenInterpT* rhoInterpOp_;
+
+  typedef typename SpatialOps::BasicOpTypes<FieldT>::GradX      GradX;
+  typedef typename SpatialOps::BasicOpTypes<FieldT>::GradY      GradY;
+  typedef typename SpatialOps::BasicOpTypes<FieldT>::GradZ      GradZ;
+  
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<GradX> Neum2XOpT;
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<GradY> Neum2YOpT;
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<GradZ> Neum2ZOpT;
+  const Neum2XOpT* neux_;
+  const Neum2YOpT* neuy_;
+  const Neum2ZOpT* neuz_;
+  
   DECLARE_FIELD(FieldT, src_)
   DECLARE_FIELD(SVolField, rho_)
 };

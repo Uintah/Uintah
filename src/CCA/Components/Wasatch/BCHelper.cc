@@ -1265,7 +1265,7 @@ namespace Wasatch {
               // check if this is a staggered field on a face in the same staggered direction (XVolField on x- Face)
               // and whether this a Neumann bc or not.
               const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);// && myBndCondSpec->bcType!=NEUMANN;
-              modExpr.set_staggered(isStagNorm);
+              modExpr.set_staggered_normal(isStagNorm);
               
               // set the ghost and interior points as well as coefficients
               double ci, cg;

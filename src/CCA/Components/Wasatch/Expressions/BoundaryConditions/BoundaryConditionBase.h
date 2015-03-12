@@ -169,9 +169,9 @@ public:
    *  \param staggered Boolean that specifies whether this field in staggered and normal (see documentation above).
    *
    */
-  inline void set_staggered( const bool staggered )
+  inline void set_staggered_normal( const bool staggeredNormal )
   {
-    isStaggered_ = staggered;
+    isStaggeredNormal_ = staggeredNormal;
   }
 
   /**
@@ -328,7 +328,7 @@ public:
   BoundaryConditionBase()
   {
     this->set_gpu_runnable(false);
-    isStaggered_ = false;
+    isStaggeredNormal_ = false;
     isMinusFace_ = false;
     setInExtraCellsOnly_ = false;
     ci_ = 0.0;
@@ -353,7 +353,7 @@ public:
   virtual ~BoundaryConditionBase(){}
 
 protected:
-  bool isStaggered_, isMinusFace_, setInExtraCellsOnly_;
+  bool isStaggeredNormal_, isMinusFace_, setInExtraCellsOnly_;
   double ci_, cg_;
 
   SpatialOps::IntVec patchCellOffset_;
