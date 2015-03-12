@@ -711,9 +711,9 @@ main( int argc, char *argv[], char *env[] )
     }
 
     MALLOC_TRACE_TAG(oldTag);
-    /*
-     * Start the simulation controller
-     */
+
+    //__________________________________
+    // Start the simulation controller
     if (restart) {
       ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }
