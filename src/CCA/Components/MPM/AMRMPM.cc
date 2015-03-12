@@ -1222,6 +1222,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pTempPreviousLabel_preReloc);
     t->modifies(lb->pDeformationMeasureLabel_preReloc);
     t->modifies(lb->pRefinedLabel_preReloc);
+    t->modifies(lb->pScaleFactorLabel_preReloc);
     t->modifies(lb->pLastLevelLabel_preReloc);
     t->modifies(lb->pVelGradLabel_preReloc);
 
@@ -3389,7 +3390,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
       ParticleVariable<Point> px;
-      ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad;
+      ParticleVariable<Matrix3> pF,pSize,pstress,pvelgrad,pscalefac;
       ParticleVariable<long64> pids;
       ParticleVariable<double> pvolume,pmass,ptemp,ptempP,pcolor;
       ParticleVariable<Vector> pvelocity,pextforce,pdisp;
@@ -3403,6 +3404,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->getModifiable(pcolor,   lb->pColorLabel_preReloc,        pset);
       new_dw->getModifiable(pvolume,  lb->pVolumeLabel_preReloc,       pset);
       new_dw->getModifiable(pvelocity,lb->pVelocityLabel_preReloc,     pset);
+      new_dw->getModifiable(pscalefac,lb->pScaleFactorLabel_preReloc,  pset);
       new_dw->getModifiable(pextforce,lb->pExtForceLabel_preReloc,     pset);
       new_dw->getModifiable(ptemp,    lb->pTemperatureLabel_preReloc,  pset);
       new_dw->getModifiable(ptempP,   lb->pTempPreviousLabel_preReloc, pset);
@@ -3426,7 +3428,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       const unsigned int oldNumPar = pset->addParticles(numNewPartNeeded);
 
       ParticleVariable<Point> pxtmp;
-      ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp;
+      ParticleVariable<Matrix3> pFtmp,psizetmp,pstrstmp,pvgradtmp,pSFtmp;
       ParticleVariable<long64> pidstmp;
       ParticleVariable<double> pvoltmp, pmasstmp,ptemptmp,ptempPtmp,pcolortmp;
       ParticleVariable<Vector> pveltmp,pextFtmp,pdisptmp;
@@ -3435,6 +3437,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(pxtmp,    pset);
       new_dw->allocateTemporary(pvoltmp,  pset);
       new_dw->allocateTemporary(pveltmp,  pset);
+      new_dw->allocateTemporary(pSFtmp,   pset);
       new_dw->allocateTemporary(pextFtmp, pset);
       new_dw->allocateTemporary(ptemptmp, pset);
       new_dw->allocateTemporary(ptempPtmp,pset);
@@ -3454,6 +3457,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         pxtmp[pp]    = px[pp];
         pvoltmp[pp]  = pvolume[pp];
         pveltmp[pp]  = pvelocity[pp];
+        pSFtmp[pp]   = pscalefac[pp];
         pextFtmp[pp] = pextforce[pp];
         ptemptmp[pp] = ptemp[pp];
         ptempPtmp[pp]= ptempP[pp];
@@ -3534,6 +3538,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           pvoltmp[new_index]    = .125*pvolume[idx];
           pmasstmp[new_index]   = .125*pmass[idx];
           pveltmp[new_index]    = pvelocity[idx];
+          pSFtmp[new_index]     = 0.5*pscalefac[idx];
           pextFtmp[new_index]   = pextforce[idx];
           pFtmp[new_index]      = pF[idx];
           psizetmp[new_index]   = 0.5*pSize[idx];
@@ -3557,6 +3562,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pxtmp,    lb->pXLabel_preReloc,                    true);
       new_dw->put(pvoltmp,  lb->pVolumeLabel_preReloc,               true);
       new_dw->put(pveltmp,  lb->pVelocityLabel_preReloc,             true);
+      new_dw->put(pSFtmp,   lb->pScaleFactorLabel_preReloc,          true);
       new_dw->put(pextFtmp, lb->pExtForceLabel_preReloc,             true);
       new_dw->put(pmasstmp, lb->pMassLabel_preReloc,                 true);
       new_dw->put(ptemptmp, lb->pTemperatureLabel_preReloc,          true);
