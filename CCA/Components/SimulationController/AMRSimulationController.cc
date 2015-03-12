@@ -715,6 +715,16 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     grid->performConsistencyCheck();
   
     d_sim->restartInitialize();
+
+    for (int i = grid->numLevels() - 1; i >= 0; i--) {
+      d_sim->scheduleRestartInitialize(grid->getLevel(i), d_scheduler);
+    }
+    d_scheduler->compile();
+    d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+    d_scheduler->execute();
+
+    // Now we know we're done with any additions to the new DW - finalize it
+    d_scheduler->get_dw(1)->finalize();
   
     if (d_regridder && d_regridder->isAdaptive()) {
       // On restart:

@@ -1184,6 +1184,12 @@ SchedulerCommon::compile()
     verifyChecksum();
     schedulercommon_dbg << d_myworld->myrank() << " SchedulerCommon finished compile\n";
   }
+  else {
+    // NOTE: this was added with scheduleRestartInititalize() support (for empty TGs)
+    //  Even when numTasks_ <= 0, the code below executed and did nothing worthwhile... seemingly
+    //  Shouldn't need to do this work without tasks though -APH 03/12/15
+    return; // no tasks and nothing to do
+  }
 
   m_locallyComputedPatchVarMap->reset();
 
