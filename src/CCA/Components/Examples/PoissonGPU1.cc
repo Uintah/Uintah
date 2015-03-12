@@ -81,6 +81,12 @@ void PoissonGPU1::scheduleInitialize(const LevelP& level, SchedulerP& sched) {
 }
 //______________________________________________________________________
 //
+void PoissonGPU1::scheduleRestartInitialize(const LevelP& level,
+                                            SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
 void PoissonGPU1::scheduleComputeStableTimestep(const LevelP& level, SchedulerP& sched) {
                                                
   Task * task = scinew Task("PoissonGPU1::computeStableTimestep", this, &PoissonGPU1::computeStableTimestep);

@@ -1067,6 +1067,16 @@ Arches::scheduleInitialize(const LevelP& level,
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true );
 }
 
+
+// ****************************************************************************
+// 
+// ****************************************************************************
+void 
+Arches::scheduleRestartInitialize(const LevelP& level,
+                                     SchedulerP& sched)
+{
+}
+
 void
 Arches::restartInitialize()
 {

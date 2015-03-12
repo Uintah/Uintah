@@ -79,6 +79,11 @@ void Poisson2::scheduleInitialize(const LevelP& level,
   task->computes(phi_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
+
+void Poisson2::scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched)
+{
+}
  
 void Poisson2::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)

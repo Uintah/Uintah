@@ -88,7 +88,12 @@ void Poisson4::scheduleInitialize(const LevelP& level,
   task->computes(residual_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
-
+//______________________________________________________________________
+//
+void Poisson4::scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched)
+{
+}
 //______________________________________________________________________
 //
 void Poisson4::scheduleComputeStableTimestep(const LevelP& level,

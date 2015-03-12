@@ -80,6 +80,11 @@ void ParticleTest1::scheduleInitialize(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
  
+void ParticleTest1::scheduleRestartInitialize(const LevelP& level,
+                                              SchedulerP& sched)
+{
+}
+
 void ParticleTest1::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {

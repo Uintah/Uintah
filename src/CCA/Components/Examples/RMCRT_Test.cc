@@ -315,6 +315,13 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 //______________________________________________________________________
 //
 //______________________________________________________________________
+void RMCRT_Test::scheduleRestartInitialize(const LevelP& level,
+                                     SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
+//______________________________________________________________________
 void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
 {
   printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");

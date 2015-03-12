@@ -96,6 +96,11 @@ void AdvectSlabs::scheduleInitialize(const LevelP& level,
   task->computes(massAdvected_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
+
+void AdvectSlabs::scheduleRestartInitialize(const LevelP& level,
+                                            SchedulerP& sched)
+{
+}
  
 void AdvectSlabs::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)

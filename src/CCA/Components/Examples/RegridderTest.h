@@ -73,6 +73,7 @@ WARNING
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP& state );
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
+    virtual void scheduleRestartInitialize     ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler);
     virtual void scheduleErrorEstimate         ( const LevelP& level, SchedulerP& scheduler );

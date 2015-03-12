@@ -404,7 +404,12 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   }
 
 }
-
+//______________________________________________________________________
+//
+void SerialMPM::scheduleRestartInitialize(const LevelP& level,
+                                          SchedulerP& sched)
+{
+}
 /* _____________________________________________________________________
  Purpose:   Set variables that are normally set during the initialization
             phase, but get wiped clean when you restart
