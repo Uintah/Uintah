@@ -23,11 +23,12 @@
  */
 
 #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
-#include <Core/Grid/Variables/GPUGridVariable.h>
-
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
-#include <Core/Grid/Variables/Stencil7.h>
+
+#include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
+#include <Core/Grid/Variables/Stencil7.h>
+
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <curand.h>
@@ -49,26 +50,23 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
-
 //---------------------------------------------------------------------------
 // Kernel: The GPU ray tracer kernel
 //---------------------------------------------------------------------------
 template< class T>
-__global__ void rayTraceKernel(dim3 dimGrid,
-                               dim3 dimBlock,
-                               int matl,
-                               patchParams patch,
-                               curandState* randNumStates,
-                               RMCRT_flags RT_flags,
-                               varLabelNames labelNames,
-                               GPUDataWarehouse* abskg_gdw,
-                               GPUDataWarehouse* sigmaT4_gdw,
-                               GPUDataWarehouse* celltype_gdw,
-                               GPUDataWarehouse* old_gdw,
-                               GPUDataWarehouse* new_gdw)
+__global__ void rayTraceKernel( dim3 dimGrid,
+                                dim3 dimBlock,
+                                int matl,
+                                patchParams patch,
+                                curandState* randNumStates,
+                                RMCRT_flags RT_flags,
+                                varLabelNames labelNames,
+                                GPUDataWarehouse* abskg_gdw,
+                                GPUDataWarehouse* sigmaT4_gdw,
+                                GPUDataWarehouse* celltype_gdw,
+                                GPUDataWarehouse* old_gdw,
+                                GPUDataWarehouse* new_gdw )
 {
-
   int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   
@@ -86,7 +84,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
  
     
   sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );       // Should be using labelNames struct
-  celltype_gdw->get( celltype,     "cellType", patch.ID, matl );
+  celltype_gdw->get( celltype,      "cellType", patch.ID, matl );
   
   if(RT_flags.usingFloats){
     abskg_gdw->get( abskg , "abskgRMCRT",   patch.ID, matl );
@@ -108,7 +106,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
     if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
       #pragma unroll
       for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
-        gpuIntVector c = make_int3(tidX, tidY, z);
+        GPUIntVector c = make_int3(tidX, tidY, z);
         divQ[c]          = 0.0;
         radiationVolQ[c] = 0.0;
       }
@@ -128,7 +126,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
   
   if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
     for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
-      gpuIntVector c = make_int3(tidX, tidY, z);
+      GPUIntVector c = make_int3(tidX, tidY, z);
       divQ[c] = 0;
 
       if (c.y == 2 && c.z == 2 ) {
@@ -139,7 +137,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
 
   if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
     for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
-      gpuIntVector c = make_int3(tidX, tidY, z);
+      GPUIntVector c = make_int3(tidX, tidY, z);
       if (c.y == 2 && c.z == 2 ) {
         printf( " int thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
       }
@@ -208,7 +206,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
       #pragma unroll
       for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
       
-        gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         
         boundFlux[origin].initialize(0.0);
 
@@ -240,7 +238,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
           #pragma unroll
           for (int iRay=0; iRay < RT_flags.nFluxRays; iRay++){
 
-            gpuVector direction_vector, ray_location; 
+            GPUVector direction_vector, ray_location;
             double cosTheta;
 
             rayDirection_cellFaceDevice( randNumStates, origin, dirIndexOrder[RayFace], dirSignSwap[RayFace], iRay,
@@ -284,7 +282,7 @@ __global__ void rayTraceKernel(dim3 dimGrid,
       #pragma unroll
       for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
 
-        gpuIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
         
         //__________________________________
@@ -292,9 +290,9 @@ __global__ void rayTraceKernel(dim3 dimGrid,
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
         
-          gpuVector direction_vector = findRayDirectionDevice( randNumStates );
+          GPUVector direction_vector = findRayDirectionDevice( randNumStates );
           
-          gpuVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
+          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
          
           updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
         } //Ray loop
@@ -315,13 +313,32 @@ __global__ void rayTraceKernel(dim3 dimGrid,
       }  // end z-slice loop
     }  // end domain boundary check
   }  // solve divQ
-//}  // thread1
 }  // end ray trace kernel
+
+//---------------------------------------------------------------------------
+// Kernel: The GPU ray tracer data onion kernel
+//---------------------------------------------------------------------------
+template< class T>
+__global__ void rayTraceDataOnionKernel( dim3 dimGrid,
+                                         dim3 dimBlock,
+                                         int matl,
+                                         patchParams patch,
+                                         curandState* randNumStates,
+                                         RMCRT_flags RT_flags,
+                                         varLabelNames labelNames,
+                                         GPUDataWarehouse* abskg_gdw,
+                                         GPUDataWarehouse* sigmaT4_gdw,
+                                         GPUDataWarehouse* celltype_gdw,
+                                         GPUDataWarehouse* old_gdw,
+                                         GPUDataWarehouse* new_gdw )
+{
+    // Stub
+}
 
 //______________________________________________________________________
 //
 //______________________________________________________________________
-__device__ gpuVector findRayDirectionDevice( curandState* randNumStates )
+__device__ GPUVector findRayDirectionDevice( curandState* randNumStates )
 {
   // Random Points On Sphere
   // add fuzz to prevent infs in 1/dirVector calculation
@@ -329,7 +346,7 @@ __device__ gpuVector findRayDirectionDevice( curandState* randNumStates )
   double r = sqrt(1.0 - plusMinus_one * plusMinus_one);             // Radius of circle at z
   double theta = 2.0 * M_PI * randDblExcDevice( randNumStates );    // Uniform betwen 0-2Pi
 
-  gpuVector dirVector;
+  GPUVector dirVector;
   dirVector.x = r*cos(theta);   // Convert to cartesian coordinates
   dirVector.y = r*sin(theta);
   dirVector.z = plusMinus_one;
@@ -340,25 +357,24 @@ __device__ gpuVector findRayDirectionDevice( curandState* randNumStates )
 //______________________________________________________________________
 // Compute the Ray direction from a cell face
 __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
-                                             const gpuIntVector& origin,
-                                             const gpuIntVector& indexOrder, 
-                                             const gpuIntVector& signOrder,
+                                             const GPUIntVector& origin,
+                                             const GPUIntVector& indexOrder,
+                                             const GPUIntVector& signOrder,
                                              const int iRay,
-                                             gpuVector& directionVector,
-                                             double& cosTheta)
+                                             GPUVector& directionVector,
+                                             double& cosTheta )
 {
-
   // Surface Way to generate a ray direction from the positive z face
-  double phi   = 2 * M_PI * randDevice( randNumStates ); // azimuthal angle.  Range of 0 to 2pi
-  double theta = acos( randDevice( randNumStates ) );      // polar angle for the hemisphere
-  cosTheta = cos( theta );
-  double sinTheta = sin( theta );
+  double phi = 2 * M_PI * randDevice(randNumStates);  // azimuthal angle.  Range of 0 to 2pi
+  double theta = acos(randDevice(randNumStates));     // polar angle for the hemisphere
+  cosTheta = cos(theta);
+  double sinTheta = sin(theta);
 
   //Convert to Cartesian
-  gpuVector tmp;
-  tmp[0] =  sinTheta * cos( phi );
-  tmp[1] =  sinTheta * sin( phi );
-  tmp[2] =  cosTheta;
+  GPUVector tmp;
+  tmp[0] = sinTheta * cos(phi);
+  tmp[1] = sinTheta * sin(phi);
+  tmp[2] = cosTheta;
 
   // Put direction vector as coming from correct face,
   directionVector[0] = tmp[indexOrder[0]] * signOrder[0];
@@ -369,21 +385,22 @@ __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
 
 //______________________________________________________________________
 //
-__device__ gpuVector rayLocationDevice( curandState* randNumStates,
-                                      const gpuIntVector origin,
-                                      const double DyDx, 
-                                      const double DzDx,
-                                      const bool useCCRays)
+__device__ GPUVector rayLocationDevice( curandState* randNumStates,
+                                        const GPUIntVector origin,
+                                        const double DyDx,
+                                        const double DzDx,
+                                        const bool useCCRays )
 {
-  gpuVector location;
-  if( useCCRays == false ){
-    location.x =   (double) origin.x +  randDevice( randNumStates ) ;
-    location.y =   (double) origin.y +  randDevice( randNumStates ) * DyDx ;
-    location.z =   (double) origin.z +  randDevice( randNumStates)  * DzDx ;
-  }else{
-    location.x =   origin.x +  0.5 ;
-    location.y =   origin.y +  0.5 * DyDx ;
-    location.z =   origin.z +  0.5 * DzDx ;
+  GPUVector location;
+  if (useCCRays == false) {
+    location.x = (double)origin.x + randDevice(randNumStates);
+    location.y = (double)origin.y + randDevice(randNumStates) * DyDx;
+    location.z = (double)origin.z + randDevice(randNumStates) * DzDx;
+  }
+  else {
+    location.x = origin.x + 0.5;
+    location.y = origin.y + 0.5 * DyDx;
+    location.z = origin.z + 0.5 * DzDx;
   }
   return location;
 }
@@ -391,35 +408,35 @@ __device__ gpuVector rayLocationDevice( curandState* randNumStates,
 //______________________________________________________________________
 //  Compute the Ray location from a cell face
 __device__ void rayLocation_cellFaceDevice( curandState* randNumStates,
-                                            const gpuIntVector& origin,
-                                            const gpuIntVector &indexOrder, 
-                                            const gpuIntVector &shift, 
+                                            const GPUIntVector& origin,
+                                            const GPUIntVector &indexOrder,
+                                            const GPUIntVector &shift,
                                             const double &DyDx, 
                                             const double &DzDx,
-                                            gpuVector& location)
+                                            GPUVector& location )
 {
-  gpuVector tmp;
-  tmp[0] =  randDevice( randNumStates ) ;
-  tmp[1] =  0;
-  tmp[2] =  randDevice( randNumStates ) * DzDx ;
-  
+  GPUVector tmp;
+  tmp[0] = randDevice(randNumStates);
+  tmp[1] = 0;
+  tmp[2] = randDevice(randNumStates) * DzDx;
+
   // Put point on correct face
   location[0] = tmp[indexOrder[0]] + (double)shift[0];
   location[1] = tmp[indexOrder[1]] + (double)shift[1] * DyDx;
   location[2] = tmp[indexOrder[2]] + (double)shift[2] * DzDx;
 
-  location[0] += (double) origin.x;
-  location[1] += (double) origin.y;
-  location[2] += (double) origin.z;
+  location[0] += (double)origin.x;
+  location[1] += (double)origin.y;
+  location[2] += (double)origin.z;
 }
 
 //______________________________________________________________________
 //
-__device__ bool has_a_boundaryDevice(const gpuIntVector &c, 
+__device__ bool has_a_boundaryDevice(const GPUIntVector &c,
                                      const GPUGridVariable<int>& celltype, 
                                      BoundaryFaces &boundaryFaces){
 
-  gpuIntVector adj = c;
+  GPUIntVector adj = c;
   bool hasBoundary = false;
 
   adj[0] = c[0] - 1;     // west
@@ -474,7 +491,7 @@ __device__ bool has_a_boundaryDevice(const gpuIntVector &c,
 //
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
-                                   const gpuVector& inv_direction_vector){
+                                   const GPUVector& inv_direction_vector){
   // get new step and sign
   for ( int d= 0; d<3; d++ ){
   
@@ -492,8 +509,8 @@ __device__ void findStepSizeDevice(int step[],
 //______________________________________________________________________
 //
 __device__ void reflect(double& fs,
-                         gpuIntVector& cur,
-                         gpuIntVector& prevCell,
+                         GPUIntVector& cur,
+                         GPUIntVector& prevCell,
                          const double abskg,
                          bool& in_domain,
                          int& step,
@@ -514,10 +531,10 @@ __device__ void reflect(double& fs,
 
 //______________________________________________________________________
 template< class T >
-__device__ void updateSumIDevice ( gpuVector& ray_direction,
-                                   gpuVector& ray_location,
-                                   const gpuIntVector& origin,
-                                   const gpuVector& Dx,
+__device__ void updateSumIDevice ( GPUVector& ray_direction,
+                                   GPUVector& ray_location,
+                                   const GPUIntVector& origin,
+                                   const GPUVector& Dx,
                                    const GPUGridVariable< T >& sigmaT4OverPi,
                                    const GPUGridVariable< T >& abskg,
                                    const GPUGridVariable<int>& celltype,
@@ -528,13 +545,13 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
 {
 
  
-  gpuIntVector cur = origin;
-  gpuIntVector prevCell = cur;
+  GPUIntVector cur = origin;
+  GPUIntVector prevCell = cur;
   // Step and sign for ray marching
   int step[3];                                          // Gives +1 or -1 based on sign    
   bool sign[3];                                                                            
                                                                                            
-  gpuVector inv_ray_direction = 1.0/ray_direction;
+  GPUVector inv_ray_direction = 1.0/ray_direction;
 /*`==========TESTING==========*/
 #if DEBUG == 1
   printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
@@ -543,15 +560,15 @@ __device__ void updateSumIDevice ( gpuVector& ray_direction,
 /*===========TESTING==========`*/  
 
   findStepSizeDevice(step, sign, inv_ray_direction);
-  gpuVector D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
+  GPUVector D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
 
-  gpuVector tMax;         // (mixing bools, ints and doubles)
+  GPUVector tMax;         // (mixing bools, ints and doubles)
   tMax.x = (origin.x + sign[0]               - ray_location.x) * inv_ray_direction.x ; 
   tMax.y = (origin.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y ; 
   tMax.z = (origin.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z ; 
 
   //Length of t to traverse one cell
-  gpuVector tDelta;
+  GPUVector tDelta;
   tDelta   = Abs(inv_ray_direction) * D_DxRatio;                              
 
   //Initializes the following values for each ray
@@ -767,13 +784,14 @@ __device__ double randDblExcDevice(curandState* globalState)
 //______________________________________________________________________
 //  Each thread gets same seed, a different sequence number, no offset 
 //  This will create repeatable results.
-__global__ void setupRandNum_kernel(curandState* randNumStates)
+__global__ void setupRandNumKernel(curandState* randNumStates)
 {
   int tID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   curand_init(1234, tID, 0, &randNumStates[tID]);
 }
 
 //______________________________________________________________________
+//
 template< class T>
 __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
@@ -794,20 +812,60 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
   CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
   
   
-  setupRandNum_kernel<<< dimGrid, dimBlock>>>( randNumStates );
+  setupRandNumKernel<<< dimGrid, dimBlock>>>( randNumStates );
   
-  rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>(dimGrid, 
-                                                      dimBlock, 
-                                                      matlIndex,
-                                                      patch,
-                                                      randNumStates,
-                                                      RT_flags,
-                                                      labelNames,
-                                                      abskg_gdw,
-                                                      sigmaT4_gdw,
-                                                      celltype_gdw,
-                                                      old_gdw,
-                                                      new_gdw);
+  rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
+                                                            dimBlock,
+                                                            matlIndex,
+                                                            patch,
+                                                            randNumStates,
+                                                            RT_flags,
+                                                            labelNames,
+                                                            abskg_gdw,
+                                                            sigmaT4_gdw,
+                                                            celltype_gdw,
+                                                            old_gdw,
+                                                            new_gdw);
+    // free device-side RNG states
+    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+}
+
+//______________________________________________________________________
+//
+template< class T>
+__host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
+                                             dim3 dimBlock,
+                                             int matlIndex,
+                                             patchParams patch,
+                                             cudaStream_t* stream,
+                                             RMCRT_flags RT_flags,
+                                             varLabelNames labelNames,
+                                             GPUDataWarehouse* abskg_gdw,
+                                             GPUDataWarehouse* sigmaT4_gdw,
+                                             GPUDataWarehouse* celltype_gdw,
+                                             GPUDataWarehouse* old_gdw,
+                                             GPUDataWarehouse* new_gdw )
+{
+  // setup random number generator states on the device, 1 for each thread
+  curandState* randNumStates;
+  int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
+  CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
+
+
+  setupRandNumKernel<<< dimGrid, dimBlock>>>( randNumStates );
+
+  rayTraceDataOnionKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
+                                                                     dimBlock,
+                                                                     matlIndex,
+                                                                     patch,
+                                                                     randNumStates,
+                                                                     RT_flags,
+                                                                     labelNames,
+                                                                     abskg_gdw,
+                                                                     sigmaT4_gdw,
+                                                                     celltype_gdw,
+                                                                     old_gdw,
+                                                                     new_gdw);
     // free device-side RNG states
     CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
 }
@@ -816,7 +874,23 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
 //  Explicit template instantiations
 
 template
-__host__ void launchRayTraceKernel<double>(dim3 dimGrid,
+__host__ void launchRayTraceKernel<double>( dim3 dimGrid,
+                                            dim3 dimBlock,
+                                            int matlIndex,
+                                            patchParams patch,
+                                            cudaStream_t* stream,
+                                            RMCRT_flags RT_flags,
+                                            varLabelNames labelNames,
+                                            GPUDataWarehouse* abskg_gdw,
+                                            GPUDataWarehouse* sigmaT4_gdw,
+                                            GPUDataWarehouse* celltype_gdw,
+                                            GPUDataWarehouse* old_gdw,
+                                            GPUDataWarehouse* new_gdw );
+
+//______________________________________________________________________
+//
+template
+__host__ void launchRayTraceKernel<float>( dim3 dimGrid,
                                            dim3 dimBlock,
                                            int matlIndex,
                                            patchParams patch,
@@ -827,20 +901,38 @@ __host__ void launchRayTraceKernel<double>(dim3 dimGrid,
                                            GPUDataWarehouse* sigmaT4_gdw,
                                            GPUDataWarehouse* celltype_gdw,
                                            GPUDataWarehouse* old_gdw,
-                                           GPUDataWarehouse* new_gdw);
-                                   
+                                           GPUDataWarehouse* new_gdw );
+
+//______________________________________________________________________
+//
 template
-__host__ void launchRayTraceKernel<float>(dim3 dimGrid,
-                                          dim3 dimBlock,
-                                          int matlIndex,
-                                          patchParams patch,
-                                          cudaStream_t* stream,
-                                          RMCRT_flags RT_flags,
-                                          varLabelNames labelNames,
-                                          GPUDataWarehouse* abskg_gdw,
-                                          GPUDataWarehouse* sigmaT4_gdw,
-                                          GPUDataWarehouse* celltype_gdw,
-                                          GPUDataWarehouse* old_gdw,
-                                          GPUDataWarehouse* new_gdw);
+__host__ void launchRayTraceDataOnionKernel<double>( dim3 dimGrid,
+                                                     dim3 dimBlock,
+                                                     int matlIndex,
+                                                     patchParams patch,
+                                                     cudaStream_t* stream,
+                                                     RMCRT_flags RT_flags,
+                                                     varLabelNames labelNames,
+                                                     GPUDataWarehouse* abskg_gdw,
+                                                     GPUDataWarehouse* sigmaT4_gdw,
+                                                     GPUDataWarehouse* celltype_gdw,
+                                                     GPUDataWarehouse* old_gdw,
+                                                     GPUDataWarehouse* new_gdw );
+
+//______________________________________________________________________
+//
+template
+__host__ void launchRayTraceDataOnionKernel<float>( dim3 dimGrid,
+                                                    dim3 dimBlock,
+                                                    int matlIndex,
+                                                    patchParams patch,
+                                                    cudaStream_t* stream,
+                                                    RMCRT_flags RT_flags,
+                                                    varLabelNames labelNames,
+                                                    GPUDataWarehouse* abskg_gdw,
+                                                    GPUDataWarehouse* sigmaT4_gdw,
+                                                    GPUDataWarehouse* celltype_gdw,
+                                                    GPUDataWarehouse* old_gdw,
+                                                    GPUDataWarehouse* new_gdw );
 
 } //end namespace Uintah

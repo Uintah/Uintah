@@ -93,7 +93,7 @@ namespace Uintah{
       //__________________________________
       //
       template< class T>
-      void sigmaT4( const ProcessorGroup* pc,
+      void sigmaT4( const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
