@@ -61,7 +61,7 @@
  *
  *
  */
-class MTRand; //forward declaration for use in updateSumI
+class MTRand; // forward declaration for use in updateSumI
 
 namespace Uintah{
 
@@ -194,7 +194,7 @@ namespace Uintah{
 
       //__________________________________
       template<class T>
-      void rayTrace( const ProcessorGroup* pc,
+      void rayTrace( const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
@@ -219,11 +219,11 @@ namespace Uintah{
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
-                        const int radCalc_freq);
+                        const int radCalc_freq );
 
       //__________________________________
       template<class T>
-      void rayTrace_dataOnion( const ProcessorGroup* pc,
+      void rayTrace_dataOnion( const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
@@ -233,39 +233,55 @@ namespace Uintah{
                                Task::WhichDW whichd_sigmaT4_dw,
                                Task::WhichDW which_celltype_dw,
                                const int radCalc_freq );
-      //__________________________________
-      template<class T>
-      void  updateSumI_ML ( Vector& ray_direction,
-                            Vector& ray_location,
-                            const IntVector& origin,
-                            const std::vector<Vector>& Dx,
-                            const int maxLevels,
-                            const Level* fineLevel,
-                            double DyDx[],
-                            double DzDx[],
-                            const IntVector& fineLevel_ROI_Lo,
-                            const IntVector& fineLevel_ROI_Hi,
-                            std::vector<IntVector>& regionLo,
-                            std::vector<IntVector>& regionHi,
-                            StaticArray< constCCVariable< T > >& sigmaT4Pi,
-                            StaticArray< constCCVariable< T > >& abskg,
-                            StaticArray< constCCVariable< int > >& cellType,
-                            unsigned long int& size,
-                            double& sumI,
-                            MTRand& mTwister);
-     //__________________________________
-     void computeExtents(LevelP level_0,
-                        const Level* fineLevel,
-                        const Patch* patch,
-                        const int maxlevels,
-                        DataWarehouse* new_dw,
-                        IntVector& fineLevel_ROI_Lo,
-                        IntVector& fineLevel_ROI_Hi,
-                        std::vector<IntVector>& regionLo,
-                        std::vector<IntVector>& regionHi);
 
       //__________________________________
-      void filter( const ProcessorGroup* pc,
+      template<class T>
+      void rayTraceDataOnionGPU( Task::CallBackEvent event,
+                                 const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 void* stream,
+                                 int deviceID,
+                                 bool modifies_divQ,
+                                 Task::WhichDW which_abskg_dw,
+                                 Task::WhichDW whichd_sigmaT4_dw,
+                                 Task::WhichDW which_celltype_dw,
+                                 const int radCalc_freq );
+      //__________________________________
+      template<class T>
+      void updateSumI_ML ( Vector& ray_direction,
+                           Vector& ray_location,
+                           const IntVector& origin,
+                           const std::vector<Vector>& Dx,
+                           const int maxLevels,
+                           const Level* fineLevel,
+                           double DyDx[],
+                           double DzDx[],
+                           const IntVector& fineLevel_ROI_Lo,
+                           const IntVector& fineLevel_ROI_Hi,
+                           std::vector<IntVector>& regionLo,
+                           std::vector<IntVector>& regionHi,
+                           StaticArray< constCCVariable< T > >& sigmaT4Pi,
+                           StaticArray< constCCVariable< T > >& abskg,
+                           StaticArray< constCCVariable< int > >& cellType,
+                           unsigned long int& size,
+                           double& sumI,
+                           MTRand& mTwister);
+     //__________________________________
+     void computeExtents( LevelP level_0,
+                          const Level* fineLevel,
+                          const Patch* patch,
+                          const int maxlevels,
+                          DataWarehouse* new_dw,
+                          IntVector& fineLevel_ROI_Lo,
+                          IntVector& fineLevel_ROI_Hi,
+                          std::vector<IntVector>& regionLo,
+                          std::vector<IntVector>& regionHi );
+
+      //__________________________________
+      void filter( const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
@@ -275,10 +291,10 @@ namespace Uintah{
                     bool modifies_divQFilt);
 
       //__________________________________
-      inline bool containsCell(const IntVector &low,
-                               const IntVector &high,
-                               const IntVector &cell,
-                               const int &dir);
+      inline bool containsCell( const IntVector &low,
+                                const IntVector &high,
+                                const IntVector &cell,
+                                const int &dir );
 
       //__________________________________
       /** @brief Adjust the location of a ray origin depending on the cell face */

@@ -389,7 +389,7 @@ Ray::sched_rayTrace( const LevelP& level,
   Task *tsk = NULL;
 
   if (Parallel::usingDevice()) {          // G P U
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     } else {
@@ -400,7 +400,7 @@ Ray::sched_rayTrace( const LevelP& level,
     tsk->usesDevice(true);
   } else {                                // C P U
 
-    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     } else {
@@ -465,7 +465,7 @@ Ray::sched_rayTrace( const LevelP& level,
 //---------------------------------------------------------------------------
 template< class T >
 void
-Ray::rayTrace( const ProcessorGroup* pc,
+Ray::rayTrace( const ProcessorGroup* pg,
                const PatchSubset* patches,
                const MaterialSubset* matls,
                DataWarehouse* old_dw,
@@ -681,22 +681,35 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
                                bool modifies_divQ,
                                const int radCalc_freq )
 {
-  int maxLevels = level->getGrid()->numLevels() -1;
+  int maxLevels = level->getGrid()->numLevels() - 1;
   int L_indx = level->getIndex();
 
-  if(L_indx != maxLevels){     // only schedule on the finest level
+  if (L_indx != maxLevels) {     // only schedule on the finest level
     return;
   }
-  std::string taskname = "Ray::rayTrace_dataOnion";
-
+  std::string taskname = "";
   Task* tsk = NULL;
 
-  if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<double>,
-                        modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
-  } else {
-    tsk = scinew Task( taskname, this, &Ray::rayTrace_dataOnion<float>,
-                       modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+  if (Parallel::usingDevice()) {          // G P U
+    taskname = "Ray::rayTraceDataOnionGPU";
+    if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
+      tsk = scinew Task( taskname, this, &Ray::rayTraceDataOnionGPU< double >,
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    } else {
+      tsk = scinew Task( taskname, this, &Ray::rayTraceDataOnionGPU< float >,
+                         modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
+    }
+    tsk->usesDevice(true);
+  } else {                                // CPU
+    taskname = "Ray::rayTrace_dataOnion";
+    if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
+      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
+                        radCalc_freq);
+    }
+    else {
+      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
+                        radCalc_freq);
+    }
   }
 
 
@@ -762,7 +775,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 //---------------------------------------------------------------------------
 template< class T>
 void
-Ray::rayTrace_dataOnion( const ProcessorGroup* pc,
+Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                          const PatchSubset* finePatches,
                          const MaterialSubset* matls,
                          DataWarehouse* old_dw,
