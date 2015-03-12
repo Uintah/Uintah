@@ -78,6 +78,11 @@ void HeatEquation::scheduleInitialize(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
  
+void HeatEquation::scheduleRestartInitialize(const LevelP& level,
+                                             SchedulerP& sched)
+{
+}
+
 void HeatEquation::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {

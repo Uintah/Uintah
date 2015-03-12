@@ -473,6 +473,21 @@ SimulationController::postGridSetup( GridP& grid, double& t )
         d_scheduler->get_dw(1)->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
       }
     }
+    
+/*`==========TESTING==========*/
+#if 0
+    for(int i=grid->numLevels()-1; i >= 0; i--) {
+      d_sim->scheduleRestartInitialize(grid->getLevel(i), d_scheduler);
+    }
+    cout << " //__________________________________AAA " << endl;
+    d_scheduler->compile();
+    // No scrubbing for initial step
+    d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+    d_scheduler->get_dw(1)->unfinalize();
+    d_scheduler->execute();
+#endif 
+/*===========TESTING==========`*/
+    
     d_scheduler->get_dw(1)->finalize();
       
     // This delete is an enigma... I think if it is called then memory is not leaked, but sometimes if it

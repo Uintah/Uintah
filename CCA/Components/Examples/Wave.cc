@@ -132,6 +132,13 @@ void Wave::scheduleInitialize(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
+//
+void Wave::scheduleRestartInitialize(const LevelP& level,
+                                     SchedulerP& sched)
+{
+}
+
+//______________________________________________________________________
 // 
 void Wave::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)

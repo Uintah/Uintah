@@ -210,6 +210,11 @@ namespace Wasatch{
      */
     void scheduleInitialize( const Uintah::LevelP& level,
                              Uintah::SchedulerP& sched );
+    /**
+     *  \brief Set up initial condition task(s) on a restart
+     */
+    void scheduleRestartInitialize( const Uintah::LevelP& level,
+                                    Uintah::SchedulerP& sched );
 
     /**
      *  \brief Set up things that need to be done on a restart

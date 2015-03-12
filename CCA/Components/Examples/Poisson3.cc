@@ -91,6 +91,11 @@ void Poisson3::scheduleInitialize(const LevelP& level,
     scheduleRefine(level, sched);
   }
 }
+
+void Poisson3::scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched)
+{
+}
  
 void Poisson3::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)

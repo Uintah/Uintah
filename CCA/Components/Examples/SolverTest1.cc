@@ -104,6 +104,12 @@ void SolverTest1::scheduleInitialize(const LevelP& level,
   solver->scheduleInitialize(level,sched,sharedState_->allMaterials());
 }
 //__________________________________
+//
+void SolverTest1::scheduleRestartInitialize(const LevelP& level,
+                                            SchedulerP& sched)
+{
+}
+//__________________________________
 // 
 void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)

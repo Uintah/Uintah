@@ -883,6 +883,13 @@ namespace Wasatch{
   }
 
   //--------------------------------------------------------------------
+
+  void Wasatch::scheduleRestartInitialize( const Uintah::LevelP& level,
+                                           Uintah::SchedulerP& sched )
+  {
+  }
+
+  //--------------------------------------------------------------------
   
   void Wasatch::restartInitialize()
   {

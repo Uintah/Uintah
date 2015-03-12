@@ -108,6 +108,11 @@ namespace Uintah
     task->computes( d_currentAngleLabel, (Level*)0 );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
+  
+  void RegridderTest::scheduleRestartInitialize(const LevelP& level,
+                                                SchedulerP& sched)
+  {
+  }
 
   void RegridderTest::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
   {
