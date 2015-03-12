@@ -176,6 +176,7 @@ public:
     void*      host_contiguousArrayPtr;  //Use this address only if partOfContiguousArray is set to true.
     GridVariableBase* gridVar;  //The host variable, which also holds the host pointer to the data, and
                                 //retains a reference so the variable isn't deleted
+
     int        varDB_index;     //Where this also shows up in the varDB.  We can use this to
                                 //get the rest of the information we need.
 
@@ -243,17 +244,19 @@ public:
 
   //HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
   HOST_DEVICE void put(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
-  HOST_DEVICE void put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
 
   HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
   HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex);
-  HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex);
+  HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t sizeOfDataType);
 
   //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
   HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
   HOST_DEVICE void allocate(const char* indexID, size_t size);
 private:
-  HOST_DEVICE void put(GPUGridVariableBase &var, char const* label, int patchID, int matlID, size_t xstride, GhostType gtype = None, int numGhostCells = 0, GridVariableBase* gridVar = NULL, void* hostPtr = NULL);
+
+  HOST_DEVICE void put(GPUGridVariableBase &var, char const* label, int patchID, int matlIndex, size_t xstride, GhostType gtype = None, int numGhostCells = 0, GridVariableBase* gridVar = NULL, void* hostPtr = NULL);
+  HOST_DEVICE void put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t xstride, GPUPerPatchBase* gridVar = NULL, void* hostPtr = NULL);
+
 public:
 
   //______________________________________________________________________

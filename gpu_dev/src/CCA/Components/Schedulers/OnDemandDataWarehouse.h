@@ -311,8 +311,9 @@ public:
                                    const VarLabel* pos_var, int iteration);
 
 #ifdef HAVE_CUDA
-   static GPUGridVariableBase* createGPUGridVariable(int sizeOfDataType);
-   static GPUPerPatchBase* createGPUPerPatch(int sizeOfDataType);
+   static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
+   static GPUGridVariableBase* createGPUGridVariable(size_t sizeOfDataType);
+   static GPUPerPatchBase* createGPUPerPatch(size_t sizeOfDataType);
    void prepareGPUDependencies(DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
                    OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void copyGPUGhostCellsBetweenDevices(DetailedTask* dtask, int numDevices);

@@ -23,10 +23,10 @@
  */
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 
-deviceGridVariableInfo::deviceGridVariableInfo(GridVariableBase* gridVar,
+deviceGridVariableInfo::deviceGridVariableInfo(Variable* var,
             IntVector sizeVector,
             size_t sizeOfDataType,
-            int varSize,
+            size_t varMemSize,
             IntVector offset,
             int materialIndex,
             const Patch* patchPointer,
@@ -35,10 +35,10 @@ deviceGridVariableInfo::deviceGridVariableInfo(GridVariableBase* gridVar,
             Ghost::GhostType gtype,
             int numGhostCells,
             int whichGPU) {
-  this->gridVar = gridVar;
+  this->var = var;
   this->sizeVector = sizeVector;
   this->sizeOfDataType = sizeOfDataType;
-  this->varSize = varSize;
+  this->varMemSize = varMemSize;
   this->offset = offset;
   this->materialIndex = materialIndex;
   this->patchPointer = patchPointer;
@@ -46,6 +46,24 @@ deviceGridVariableInfo::deviceGridVariableInfo(GridVariableBase* gridVar,
   this->validOnDevice = validOnDevice;
   this->gtype = gtype;
   this->numGhostCells = numGhostCells;
+  this->whichGPU = whichGPU;
+}
+
+deviceGridVariableInfo::deviceGridVariableInfo(Variable* var,
+            size_t sizeOfDataType,
+            size_t varMemSize,
+            int materialIndex,
+            const Patch* patchPointer,
+            const Task::Dependency* dep,
+            bool validOnDevice,
+            int whichGPU) {
+  this->var = var;
+  this->sizeOfDataType = sizeOfDataType;
+  this->varMemSize = varMemSize;
+  this->materialIndex = materialIndex;
+  this->patchPointer = patchPointer;
+  this->dep = dep;
+  this->validOnDevice = validOnDevice;
   this->whichGPU = whichGPU;
 }
 
@@ -59,20 +77,35 @@ deviceGridVariables::deviceGridVariables() {
 void deviceGridVariables::add(const Patch* patchPointer,
           int materialIndex,
           IntVector sizeVector,
+          size_t varMemSize,
           size_t sizeOfDataType,
           IntVector offset,
-          GridVariableBase* gridVar,
+          Variable* var,
           const Task::Dependency* dep,
           bool validOnDevice,
           Ghost::GhostType gtype,
           int numGhostCells,
           int whichGPU) {
-  int varSize = sizeVector.x() * sizeVector.y() * sizeVector.z() * sizeOfDataType;
-  totalSize += varSize;
-  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += varSize;
-  deviceGridVariableInfo tmp(gridVar, sizeVector, sizeOfDataType, varSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
+  totalSize += varMemSize;
+  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += varMemSize;
+  deviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
   vars.push_back(tmp);
 }
+
+void deviceGridVariables::add(const Patch* patchPointer,
+          int materialIndex,
+          size_t varMemSize,
+          size_t sizeOfDataType,
+          Variable* var,
+          const Task::Dependency* dep,
+          bool validOnDevice,
+          int whichGPU) {
+  totalSize += varMemSize;
+  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += varMemSize;
+  deviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, materialIndex, patchPointer, dep, validOnDevice,  whichGPU);
+  vars.push_back(tmp);
+}
+
 
 
 size_t deviceGridVariables::getTotalSize() {
@@ -101,8 +134,8 @@ IntVector deviceGridVariables::getOffset(int index) {
     return vars.at(index).offset;
 }
 
-GridVariableBase* deviceGridVariables::getGridVar(int index) {
-  return vars.at(index).gridVar;
+Variable* deviceGridVariables::getVar(int index) {
+  return vars.at(index).var;
 }
 const Task::Dependency* deviceGridVariables::getDependency(int index) {
   return vars.at(index).dep;
@@ -112,8 +145,8 @@ size_t deviceGridVariables::getSizeOfDataType(int index) {
   return vars.at(index).sizeOfDataType;
 }
 
-int deviceGridVariables::getVarSize(int index) {
-  return vars.at(index).varSize;
+size_t deviceGridVariables::getVarMemSize(int index) {
+  return vars.at(index).varMemSize;
 }
 
 Ghost::GhostType deviceGridVariables::getGhostType(int index) {

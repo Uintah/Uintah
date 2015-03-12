@@ -372,9 +372,29 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
 }
 
 #ifdef HAVE_CUDA
+size_t
+OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type) {
+  switch(type){
+    case TypeDescription::double_type : {
+      return sizeof(double);
+      break;
+    }
+    case TypeDescription::int_type : {
+      return sizeof(int);
+      break;
+    }
+    case TypeDescription::Stencil7 : {
+      return sizeof(double);
+      break;
+    }
+    default : {
+      SCI_THROW(InternalError("Unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
+    }
+  }
+}
 
 GPUGridVariableBase*
-OnDemandDataWarehouse::createGPUGridVariable(int sizeOfDataType)
+OnDemandDataWarehouse::createGPUGridVariable(size_t sizeOfDataType)
 {
   GPUGridVariableBase* device_var = NULL;
   switch ( sizeOfDataType ) {
@@ -398,7 +418,7 @@ OnDemandDataWarehouse::createGPUGridVariable(int sizeOfDataType)
 }
 
 GPUPerPatchBase*
-OnDemandDataWarehouse::createGPUPerPatch(int sizeOfDataType)
+OnDemandDataWarehouse::createGPUPerPatch(size_t sizeOfDataType)
 {
   GPUPerPatchBase* device_var = NULL;
   switch ( sizeOfDataType ) {

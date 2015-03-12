@@ -621,7 +621,7 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* label, int patc
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, bool overWrite)
+GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t xstride, GPUPerPatchBase* originalVar, void* host_ptr)
 {
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All device memory should be allocated on the CPU with cudaMalloc\n", label);
@@ -652,9 +652,9 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int 
   d_varDB[i].validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
   d_varDB[i].queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
   d_varDB[i].validOnCPU = false; //We don't know here if the data is on the CPU.
-  d_varDB[i].gtype = GhostType::None;  //PerPatch has no ghost cells
+  d_varDB[i].gtype = None;  //PerPatch has no ghost cells
   d_varDB[i].numGhostCells = 0;
-  var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
+  var.getData(d_varDB[i].var_ptr);
 
   //Now store them in a map for easier lookups on the host
   //Without this map, we would have to loop through hundreds of array
@@ -663,7 +663,7 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int 
   //our matching data faster, and we can store far more information
   //that the host should know and the device doesn't need to know about.
   allVarPointersInfo vp;
-  vp.gridVar = gridVar;
+  vp.gridVar = NULL; //TODO: Is this even needed?
   vp.host_contiguousArrayPtr = host_ptr;
   vp.device_ptr = d_varDB[i].var_ptr;
   vp.device_offset = d_varDB[i].var_offset;
@@ -719,7 +719,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex)
+GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t sizeOfDataType)
 {
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc()\n",label);
@@ -746,28 +746,27 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
      if (d_debug){
        printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
       }
-     var.setArray3(d_varDB[index].var_offset, d_varDB[index].var_size, d_varDB[index].var_ptr);
+     var.setData(d_varDB[index].var_ptr);
+
      varLock.writeUnlock();
      return;
    }
   }
   //It's not in the database, so create it.
-  int3 size   = make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
-  int3 offset = low;
   void* addr  = NULL;
 
   //This prepares the var with the offset and size.  The actual address will come next.
-  var.setArray3(offset, size, addr);
+  //var.setData(addr);
+
   SchedulerCommon::uintahSetCudaDevice(d_device_id);
   CUDA_RT_SAFE_CALL( cudaMalloc(&addr, var.getMemSize()) );
 
   if (d_debug) {
-    printf("In allocateAndPut(), cudaMalloc for \"%s\ patch %d size %ld from (%d,%d,%d) to (%d,%d,%d) on thread %d ", label, patchID, var.getMemSize(),
-            low.x, low.y, low.z, high.x, high.y, high.z, SCIRun::Thread::self()->myid());
+    printf("In allocateAndPut(), cudaMalloc for \"%s\ patch %d size %ld on thread %d ", label, patchID, var.getMemSize(), SCIRun::Thread::self()->myid());
     printf(" at %p on device %d\n", addr, d_device_id);
   }
-  var.setArray3(offset, size, addr);
-  put(var, label, patchID, matlIndex, sizeOfDataType, gtype, numGhostCells);
+  var.setData(addr);
+  put(var, label, patchID, matlIndex, sizeOfDataType);
   varLock.writeUnlock();
 #endif
 }

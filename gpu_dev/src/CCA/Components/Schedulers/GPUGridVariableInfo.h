@@ -11,10 +11,10 @@ using namespace Uintah;
 
 class deviceGridVariableInfo {
 public:
-  deviceGridVariableInfo(GridVariableBase* gridVar,
+  deviceGridVariableInfo(Variable* var,
             IntVector sizeVector,
             size_t sizeOfDataType,
-            int varSize,
+            size_t varMemSize,
             IntVector offset,
             int materialIndex,
             const Patch* patchPointer,
@@ -23,10 +23,20 @@ public:
             Ghost::GhostType gtype,
             int numGhostCells,
             int whichGPU);
-  GridVariableBase* gridVar;
+
+  deviceGridVariableInfo(Variable* var,
+            size_t sizeOfDataType,
+            size_t varMemSize,
+            int materialIndex,
+            const Patch* patchPointer,
+            const Task::Dependency* dep,
+            bool validOnDevice,
+            int whichGPU);
+
+  Variable* var;
   IntVector sizeVector;
   size_t sizeOfDataType;
-  int varSize;
+  size_t varMemSize;
   IntVector offset;
   int materialIndex;
   const Patch* patchPointer;
@@ -45,13 +55,23 @@ public:
             int materialIndex,
             IntVector sizeVector,
             size_t sizeOfDataType,
+            size_t varMemSize,
             IntVector offset,
-            GridVariableBase* gridVar,
+            Variable* var,
             const Task::Dependency* dep,
             bool validOnDevice,
             Ghost::GhostType gtype,
             int numGhostCells,
             int whichGPU);
+
+  void add(const Patch* patchPointer,
+              int materialIndex,
+              size_t sizeOfDataType,
+              size_t varMemSize,
+              Variable* var,
+              const Task::Dependency* dep,
+              bool validOnDevice,
+              int whichGPU);
 
   size_t getTotalSize();
 
@@ -67,13 +87,13 @@ public:
 
   IntVector getOffset(int index);
 
-  GridVariableBase* getGridVar(int index);
+  Variable* getVar(int index);
 
   const Task::Dependency* getDependency(int index);
 
   size_t getSizeOfDataType(int index);
 
-  int getVarSize(int index);
+  size_t getVarMemSize(int index);
 
   Ghost::GhostType getGhostType(int index);
 
