@@ -201,7 +201,7 @@ evaluate()
       const double bcValue = a*coord_ + y0;
       //double bcValue_ = fluct_[tIndex][globalCellIJK[iComponent_]][globalCellIJK[jComponent_]];
       f(*ig) = ( bcValue - ci * f(*ii) ) / cg;
-      if (this->isStaggered_) f(*ii) = ( bcValue - ci * f(*ig) ) / cg;
+      if (this->isStaggeredNormal_) f(*ii) = ( bcValue - ci * f(*ig) ) / cg;
     }
   }
 }
