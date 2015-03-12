@@ -29,6 +29,7 @@
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
+#include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -311,11 +312,17 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
 
     int varMemSize = var.getMemSize();
 
+
     device_ptr = ca->allocatedDeviceMemory + ca->assignedOffset;
     var.setArray3(offset, size, device_ptr);
     host_contiguousArrayPtr = ca->allocatedHostMemory + ca->assignedOffset;
 
-    ca->assignedOffset += varMemSize;
+    //We ran into cuda misaligned errors previously when mixing different data types.  We suspect the ints at 4 bytes
+    //were the issue.  So the engine previously computes buffer room for each variable as a multiple of UnifiedScheduler::bufferPadding.
+    //So the contiguous array has been sized with extra padding.  (For example, if a var holds 12 ints, then it would be 48 bytes in
+    //size.  But if UnifiedScheduler::bufferPadding = 32, then it should add 16 bytes for padding, for a total of 64 bytes).
+    int memSizePlusPadding = (Uintah::UnifiedScheduler::bufferPadding - varMemSize % Uintah::UnifiedScheduler::bufferPadding) + varMemSize;
+    ca->assignedOffset += memSizePlusPadding;
 
 
     if (stageOnHost) {
@@ -326,7 +333,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
       //host array to the device.
 
       //Data listed as required.  Or compute data that was initialized as a copy of something else.
-      ca->copiedOffset += varMemSize;
+      ca->copiedOffset += memSizePlusPadding;
 
       memcpy(host_contiguousArrayPtr, gridVar->getBasePointer(), varMemSize);
       //if (strcmp(label, "sp_vol_CC") == 0) {
@@ -363,7 +370,7 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   double *d_ptr = NULL;
   double *h_ptr = NULL;
   SchedulerCommon::uintahSetCudaDevice(d_device_id);
-  CUDA_RT_SAFE_CALL(cudaMalloc(&d_ptr, size) );
+  CUDA_RT_SAFE_CALL(cudaMalloc(&d_ptr, size + 100000000) );
   //printf("In allocate(), cuda malloc for size %ld at %p on device %d\n", size, d_ptr, d_device_id);
 
 
