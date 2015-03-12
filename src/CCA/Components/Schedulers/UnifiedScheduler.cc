@@ -2356,7 +2356,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
     string taskID = dtask->getName();
 
     //For now, have all if statements go here.  The contiguous array approach needs to be reworked
-    if (deviceVars.numItems() >= 0) {
+    if (deviceVars.numItems() < 5) {
       //The scenario where we won't make contiguous host arrays
 
       //TODO: Handles that it already exists.
@@ -2502,6 +2502,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
       for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
         if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
           //create a contiguous array on the host and on the device for this datawarehouse.
+          //TODO: Make it work for multiple GPUS/multiple
           dws[dwIndex]->getGPUDW()->allocate(taskID.c_str(), deviceVars.getSizeForDataWarehouse(dwIndex));
           //put materials on the datawarehouse
           dws[dwIndex]->getGPUDW()->putMaterials(materialsNames);

@@ -97,6 +97,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
     friend class UnifiedSchedulerWorker;
 
+    static const int bufferPadding = 32;
+
   private:
 
     // Disable copy and assignment

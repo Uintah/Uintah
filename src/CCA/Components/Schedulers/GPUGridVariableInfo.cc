@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 deviceGridVariableInfo::deviceGridVariableInfo(Variable* var,
             IntVector sizeVector,
@@ -86,7 +87,7 @@ void deviceGridVariables::add(const Patch* patchPointer,
           Ghost::GhostType gtype,
           int numGhostCells,
           int whichGPU) {
-  totalSize += varMemSize;
+  totalSize += (UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += varMemSize;
   deviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
   vars.push_back(tmp);
@@ -100,7 +101,8 @@ void deviceGridVariables::add(const Patch* patchPointer,
           const Task::Dependency* dep,
           bool validOnDevice,
           int whichGPU) {
-  totalSize += varMemSize;
+
+  totalSize += (UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += varMemSize;
   deviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, materialIndex, patchPointer, dep, validOnDevice,  whichGPU);
   vars.push_back(tmp);
