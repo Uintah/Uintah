@@ -2504,6 +2504,15 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
           //create a contiguous array on the host and on the device for this datawarehouse.
           //TODO: Make it work for multiple GPUS/multiple
           dws[dwIndex]->getGPUDW()->allocate(taskID.c_str(), deviceVars.getSizeForDataWarehouse(dwIndex));
+
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << "Allocated buffer of size " << deviceVars.getSizeForDataWarehouse(dwIndex) << endl;
+            }
+            cerrLock.unlock();
+          }
+
           //put materials on the datawarehouse
           dws[dwIndex]->getGPUDW()->putMaterials(materialsNames);
         }

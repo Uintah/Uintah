@@ -87,8 +87,8 @@ void deviceGridVariables::add(const Patch* patchPointer,
           Ghost::GhostType gtype,
           int numGhostCells,
           int whichGPU) {
-  totalSize += (UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) + varMemSize;
-  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += varMemSize;
+  totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   deviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
   vars.push_back(tmp);
 }
@@ -102,8 +102,8 @@ void deviceGridVariables::add(const Patch* patchPointer,
           bool validOnDevice,
           int whichGPU) {
 
-  totalSize += (UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) + varMemSize;
-  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += varMemSize;
+  totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   deviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, materialIndex, patchPointer, dep, validOnDevice,  whichGPU);
   vars.push_back(tmp);
 }

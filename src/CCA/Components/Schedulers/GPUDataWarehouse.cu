@@ -321,7 +321,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
     //were the issue.  So the engine previously computes buffer room for each variable as a multiple of UnifiedScheduler::bufferPadding.
     //So the contiguous array has been sized with extra padding.  (For example, if a var holds 12 ints, then it would be 48 bytes in
     //size.  But if UnifiedScheduler::bufferPadding = 32, then it should add 16 bytes for padding, for a total of 64 bytes).
-    int memSizePlusPadding = (Uintah::UnifiedScheduler::bufferPadding - varMemSize % Uintah::UnifiedScheduler::bufferPadding) + varMemSize;
+    int memSizePlusPadding = ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
     ca->assignedOffset += memSizePlusPadding;
 
 
@@ -370,7 +370,10 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   double *d_ptr = NULL;
   double *h_ptr = NULL;
   SchedulerCommon::uintahSetCudaDevice(d_device_id);
-  CUDA_RT_SAFE_CALL(cudaMalloc(&d_ptr, size + 100000000) );
+
+  printf("Allocated GPU buffer of size %d \n", size);
+
+  CUDA_RT_SAFE_CALL(cudaMalloc(&d_ptr, size) );
   //printf("In allocate(), cuda malloc for size %ld at %p on device %d\n", size, d_ptr, d_device_id);
 
 
