@@ -109,11 +109,11 @@ namespace Uintah{
       //__________________________________
       //  Boundary condition related
       /** @brief Set boundary conditions */
-      
+
       void setBC_onOff( const bool onOff){
         d_onOff_SetBCs = onOff;
       }
-      
+
       void  sched_setBoundaryConditions( const LevelP& level,
                                          SchedulerP& sched,
                                          Task::WhichDW temp_dw,
@@ -121,7 +121,7 @@ namespace Uintah{
                                          const bool backoutTemp = false);
 
       void BC_bulletproofing( const ProblemSpecP& rmcrtps );
-                               
+
 
       template< class T, class V >
       void setBC(CCVariable<T>& Q_CC,
@@ -145,11 +145,11 @@ namespace Uintah{
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
-                               
+
       Radiometer* getRadiometer(){
         return d_radiometer;
       }
-                               
+
 
 
     //______________________________________________________________________
@@ -255,6 +255,7 @@ namespace Uintah{
                            Vector& ray_location,
                            const IntVector& origin,
                            const std::vector<Vector>& Dx,
+                           const BBox& domain_BB,
                            const int maxLevels,
                            const Level* fineLevel,
                            double DyDx[],
@@ -352,7 +353,7 @@ namespace Uintah{
                           const bool modifies,
                           const VarLabel* variable,
                           const int radCalc_freq);
-    
+
     template< class T >
     void coarsen_Q ( const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -363,14 +364,14 @@ namespace Uintah{
                      const bool modifies,
                      Task::WhichDW this_dw,
                      const int radCalc_freq);
-                     
+
     void coarsen_cellType( const ProcessorGroup*,
-                           const PatchSubset* patches,       
-                           const MaterialSubset*,      
-                           DataWarehouse*,            
-                           DataWarehouse* new_dw,            
+                           const PatchSubset* patches,
+                           const MaterialSubset*,
+                           DataWarehouse*,
+                           DataWarehouse* new_dw,
                            const int radCalc_freq );
-                     
+
     template< class T >
     void ROI_Extents ( const ProcessorGroup*,
                        const PatchSubset* patches,
