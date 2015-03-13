@@ -813,7 +813,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   StaticArray< constCCVariable<int> >cellType(maxLevels);
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
-  constCCVariable< int > cellType_fine;
   
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
@@ -865,7 +864,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
   double start=clock();
 
-  //__________________________________
+  // Determine the size of the domain.
+  BBox domain_BB;
+  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain  
+  
   //  patch loop
   for (int p=0; p < finePatches->size(); p++){
 
@@ -888,7 +890,6 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl ,fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       abskg_fine         = abskg[L];
       sigmaT4OverPi_fine = sigmaT4OverPi[L];
-      cellType_fine      = cellType[L];
     }
 
     CCVariable<double> divQ_fine;
@@ -934,7 +935,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
-        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, maxLevels, fineLevel, DyDx,DzDx,
+        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType, 
                        nRaySteps, sumI, mTwister);
 
@@ -1764,6 +1765,7 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
                            Vector& ray_location,
                            const IntVector& origin,
                            const vector<Vector>& Dx,
+                           const BBox& domain_BB,
                            const int maxLevels,
                            const Level* fineLevel,
                            double DyDx[],
@@ -1893,6 +1895,10 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
         //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
       }
 
+      Point pos = level->getCellPosition(cur);         // position could be outside of domain 
+      in_domain = domain_BB.inside(pos);
+      
+//      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
       //__________________________________
       //  update marching variables
       disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
@@ -1939,8 +1945,6 @@ if(origin == IntVector(20,20,20)){
 }
 #endif
 /*===========TESTING==========`*/
-
-      in_domain = (cellType[L][cur] == d_flowCell);
 
       optical_thickness += Dx[prevLev].x() * abskg[prevLev][prevCell]*disMin;
       nRaySteps++;
@@ -1989,7 +1993,6 @@ if( origin == IntVector(20,20,20) ){
     if (intensity > d_threshold && d_allowReflect ){
       ++nReflect;
       reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir] );
-
     }
   }  // threshold while loop.
 }
@@ -2125,6 +2128,7 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              Vector&,
                                              const IntVector&,
                                              const vector<Vector>&,
+                                             const BBox&,
                                              const int,
                                              const Level* ,
                                              double DyDx[],
@@ -2144,6 +2148,7 @@ template void  Ray::updateSumI_ML< float> ( Vector&,
                                              Vector&,
                                              const IntVector&,
                                              const vector<Vector>&,
+                                             const BBox&,
                                              const int,
                                              const Level* ,
                                              double DyDx[],
