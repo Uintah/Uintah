@@ -264,7 +264,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  Read in the algorithm section
   bool isMultilevel = false;
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
-  
+
   if (alg_ps){
 
     string type="NULL";
@@ -276,7 +276,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //__________________________________
     //  Data Onion
     if (type == "dataOnion" ) {
-    
+
       isMultilevel = true;
       alg_ps->getWithDefault( "halo",  d_halo,  IntVector(10,10,10));
 
@@ -307,12 +307,12 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
     }
   }
-  
+
   //__________________________________
   //  bulletproofing
   // special conditions when using floats and multi-level
   if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
-    
+
     string abskgName = d_compAbskgLabel->getName();
     if ( rmcrt_ps->isLabelSaved( abskgName ) ){
       ostringstream warn;
@@ -507,7 +507,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
   abskg_dw->getLevel(   abskg   ,       d_abskgLabel ,   d_matl , level );
   sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
   celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
-  
+
 
   double start=clock();
 
@@ -813,7 +813,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   StaticArray< constCCVariable<int> >cellType(maxLevels);
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
-  
+
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
@@ -826,7 +826,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
     LevelP level = new_dw->getGrid()->getLevel(L);
 
     if (level->hasFinerLevel() ) {                               // coarse level data
-      
+
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
@@ -866,8 +866,8 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
   // Determine the size of the domain.
   BBox domain_BB;
-  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain  
-  
+  level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
+
   //  patch loop
   for (int p=0; p < finePatches->size(); p++){
 
@@ -935,7 +935,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         rayLocation( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, ray_location);
 
         updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
-                       fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType, 
+                       fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
                        nRaySteps, sumI, mTwister);
 
 
@@ -1324,9 +1324,9 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
 //______________________________________________________________________
 //  Set Boundary conditions
 //  We're using 2 template types.  "T" is for the CCVariable type and the
-//  "V" is used to create a specialization.  The infrastructure only 
-//  allows int and double BC so we're using the template type "V" to 
-//  fake it out.  
+//  "V" is used to create a specialization.  The infrastructure only
+//  allows int and double BC so we're using the template type "V" to
+//  fake it out.
 //______________________________________________________________________
 template<class T, class V>
 void Ray::setBC(CCVariable< T >& Q_CC,
@@ -1337,13 +1337,13 @@ void Ray::setBC(CCVariable< T >& Q_CC,
   if(patch->hasBoundaryFaces() == false || d_onOff_SetBCs == false){
     return;
   }
-  
+
   if( dbg_BC.active() ){
     const Level* level = patch->getLevel();
     dbg_BC << "setBC \t"<< desc <<" "
            << " mat_id = " << mat_id <<  ", Patch: "<< patch->getID() << " L-" <<level->getID()<< endl;
   }
-  
+
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
@@ -1618,16 +1618,6 @@ void Ray::sched_CoarsenAll( const LevelP& coarseLevel,
     printSchedule(coarseLevel,dbg,"Ray::sched_CoarsenAll");
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifies_abskg,     d_abskgLabel,   radCalc_freq );
     sched_Coarsen_Q(coarseLevel, sched, Task::NewDW, modifiesd_sigmaT4,  d_sigmaT4Label, radCalc_freq );
-
-    //__________________________________
-    //  HACK: initialize cell type to 0 on coarse levels.
-    //  We don't yet know what to do
-    Task* tsk = scinew Task( "Ray::coarsen_cellType", this,
-                             &Ray::coarsen_cellType, radCalc_freq );
-
-    tsk->requires(Task::OldDW, d_cellTypeLabel, d_gn, 0);  // needed for carryForward
-    tsk->computes( d_cellTypeLabel );
-    sched->addTask( tsk, coarseLevel->eachPatch(), d_matlSet );
   }
 }
 
@@ -1726,34 +1716,34 @@ void Ray::coarsen_Q ( const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-//    Initialize cellType on the coarser Levels
-void Ray::coarsen_cellType( const ProcessorGroup*,
-                            const PatchSubset* patches,
-                            const MaterialSubset* matls,
-                            DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            const int radCalc_freq )
+//
+void Ray::sched_computeCellType ( const LevelP& level,
+                                  SchedulerP& sched,
+                                  const int value)
 {
-  // Only run if it's time
-  if ( doCarryForward( radCalc_freq ) ) {
-    bool replaceVar = true;
-    new_dw->transferFrom( old_dw, d_cellTypeLabel, patches, matls, replaceVar );
-    printTask(patches,dbg,"Doing Ray::coarsen_cellType carryForward "+ d_cellTypeLabel->getName());
-    return;
-  }
+    Task* tsk = scinew Task( "Ray::computeCellType", this,
+                             &Ray::computeCellType, value );
+    tsk->computes( d_cellTypeLabel );
+    sched->addTask( tsk, level->eachPatch(), d_matlSet );
+}
 
+//______________________________________________________________________
+//    Initialize cellType on the coarser Levels
+void Ray::computeCellType( const ProcessorGroup*,
+                           const PatchSubset* patches,
+                           const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw,
+                           const int value )
+{
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
-    printTask(patches,patch,dbg,"Doing Ray::coarsen_cellType "+ d_cellTypeLabel->getName());
+    printTask(patches,patch,dbg,"Doing Ray::computeCellType "+ d_cellTypeLabel->getName());
 
     CCVariable< int > cellType;
     new_dw->allocateAndPut( cellType, d_cellTypeLabel, d_matl, patch );
-//    cellType.initialize( d_flowCell );             // Use this for multilevel and DO calculations
-
-    cellType.initialize( 0.0 );                     // Once ARCHES is setting cellType on the 
-                                                    // coarse level delete this
-
+    cellType.initialize( value );
   }
 }
 
@@ -1807,10 +1797,10 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
   // with 1L rayTrace results.
 
   Vector tMax;
-  tMax.x( (origin[0] + sign[0]           - ray_location[0]) * inv_direction[0] ); 
-  tMax.y( (origin[1] + sign[1] * DyDx[L] - ray_location[1]) * inv_direction[1] ); 
-  tMax.z( (origin[2] + sign[2] * DzDx[L] - ray_location[2]) * inv_direction[2] ); 
-  
+  tMax.x( (origin[0] + sign[0]           - ray_location[0]) * inv_direction[0] );
+  tMax.y( (origin[1] + sign[1] * DyDx[L] - ray_location[1]) * inv_direction[1] );
+  tMax.z( (origin[2] + sign[2] * DzDx[L] - ray_location[2]) * inv_direction[2] );
+
   vector<Vector> tDelta(maxLevels);
   for(int Lev = maxLevels-1; Lev>-1; Lev--){
     //Length of t to traverse one cell
@@ -1894,9 +1884,9 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
         //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
       }
 
-      Point pos = level->getCellPosition(cur);         // position could be outside of domain 
+      Point pos = level->getCellPosition(cur);         // position could be outside of domain
       in_domain = domain_BB.inside(pos);
-      
+
 //      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
       //__________________________________
       //  update marching variables
@@ -1907,7 +1897,7 @@ void Ray::coarsen_cellType( const ProcessorGroup*,
       ray_location[0] = ray_location[0] + (disMin  * ray_direction[0]);
       ray_location[1] = ray_location[1] + (disMin  * ray_direction[1]);
       ray_location[2] = ray_location[2] + (disMin  * ray_direction[2]);
-       
+
       //__________________________________
       // Account for uniqueness of first step after reaching a new level
       Vector dx = level->dCell();

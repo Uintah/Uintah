@@ -142,6 +142,9 @@ namespace Uintah{
                              const bool modifiesd_sigmaT4,
                              const int radCalc_freq );
 
+      void sched_computeCellType ( const LevelP& coarseLevel,
+                                   SchedulerP& sched,
+                                   const int value);
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
@@ -365,12 +368,12 @@ namespace Uintah{
                      Task::WhichDW this_dw,
                      const int radCalc_freq);
 
-    void coarsen_cellType( const ProcessorGroup*,
-                           const PatchSubset* patches,
-                           const MaterialSubset*,
-                           DataWarehouse*,
-                           DataWarehouse* new_dw,
-                           const int radCalc_freq );
+    void computeCellType( const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const int value );
 
     template< class T >
     void ROI_Extents ( const ProcessorGroup*,

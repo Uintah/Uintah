@@ -635,6 +635,9 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         }
       }
     }  // intrusion
+    
+    d_RMCRT->setBC<int, int>( cellType,  d_cellTypeLabel->getName(), patch, matl );
+    
   }  // patch
 }
 
@@ -767,9 +770,16 @@ void RMCRT_Test::sched_initProperties( const LevelP& finestLevel,
 {
   // Move the labels forward.    They were computed in initialize()
   //  This mimics what the component will handoff to RMCRT.
-  d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_cellTypeLabel );
   d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_compAbskgLabel );
   d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_colorLabel );
+  
+  int maxLevels = finestLevel->getGrid()->numLevels();
+  GridP grid = finestLevel->getGrid();
+  for (int l = maxLevels - 1; l >= 0; l--) {
+    const LevelP& level = grid->getLevel(l);
+    d_RMCRT->sched_CarryForward_Var( level, sched, d_cellTypeLabel );
+  }
+  
 }
 
 //______________________________________________________________________
