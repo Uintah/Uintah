@@ -1,3 +1,4 @@
+#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -12,9 +13,11 @@ static DebugStream dbg("RMCRT", false);
 
 /*______________________________________________________________________
           TO DO:
-          
-  - fix coarsen operator
-______________________________________________________________________*/
+ 
+ - Use d_boundaryCondition->sched_cellTypeInit() on the coarser levels
+ - Use d_boundaryContition to set BC for abskg and sigmaT4
+ 
+ ______________________________________________________________________*/
 
 RMCRT_Radiation::RMCRT_Radiation( std::string src_name, 
                                   ArchesLabel* labels, 
@@ -28,7 +31,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
                   req_label_names, type ), 
   _labels( labels ),
   _MAlab(MAlab), 
-  _bc(bc), 
+  _boundaryCondition(bc), 
   _my_world(my_world)
 {  
 
@@ -156,7 +159,7 @@ RMCRT_Radiation::extraSetup( GridP& grid )
   
   _RMCRT->problemSetup( _ps, rmcrt_ps, grid, _sharedState);
   
-  _RMCRT->BC_bulletproofing( rmcrt_ps );
+//  _RMCRT->BC_bulletproofing( rmcrt_ps );
   
   //__________________________________
   //  Bulletproofing: 
@@ -216,6 +219,17 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   } else {
     modifies_divQ  = true;
   }
+  
+  
+  //__________________________________
+  //  carryForward cellType on NON arches level
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    if( level->getIndex() != _archesLevelIndex ){  
+      _RMCRT->sched_CarryForward_Var ( level,  sched, _labels->d_cellTypeLabel );
+    }
+  }
+  
   
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
@@ -349,7 +363,18 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     tsk->computes(_src_label);
     sched->addTask(tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
   }
+  
+  //__________________________________
+  //  initialize cellType on NON arches level
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    if( level->getIndex() != _archesLevelIndex ){  
+      int initialValue = 0;                                         // HACK
+      _RMCRT->sched_computeCellType( level, sched, initialValue);   /// HACK UNTIL WE'RE ABLE TO CALL sched_cellTypeInit()
+    }
+  }
 }
+
 //______________________________________________________________________
 //
 void 

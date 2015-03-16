@@ -130,7 +130,7 @@ private:
   Ray* _RMCRT;
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
-  BoundaryCondition* _bc; 
+  BoundaryCondition* _boundaryCondition; 
   const ProcessorGroup* _my_world;
   SimulationStateP      _sharedState;
   ProblemSpecP          _ps;  // needed for extraSetup()
