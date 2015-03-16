@@ -138,6 +138,7 @@
       <save label = "abskg"/>             <!-- doubles -->
       <save label = "color"          levels="-1"/>
       <save label = "divQ"           levels="-1"/>
+      <save label = "cellType" />
 <!--
       <save label = "mag_grad_abskg"   levels="-1"/>
       <save label = "mag_grad_sigmaT4" levels="-1"/>
