@@ -928,12 +928,11 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
         //dbg2 << "iRay: " << iRay << " " ;
+        Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
         Vector ray_location;
         int my_L = maxLevels - 1;
         rayLocation( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, ray_location);
-
-        Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
         updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType, 
