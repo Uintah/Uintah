@@ -212,13 +212,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
         BoundaryFaces boundaryFaces;
 
- /*
-        if(RT_flags.benchMark==4 || RT_flags.benchMark==5){
-          boundaryFaces.addFace(5);
-        }
-*/
-        
-        // which surrounding cells are boundaries
+         // which surrounding cells are boundaries
         boundFlux[origin].p = has_a_boundaryDevice(origin, celltype, boundaryFaces);
 
         //__________________________________
@@ -325,14 +319,114 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          patchParams patch,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
-                                         varLabelNames labelNames,
                                          GPUDataWarehouse* abskg_gdw,
                                          GPUDataWarehouse* sigmaT4_gdw,
                                          GPUDataWarehouse* celltype_gdw,
                                          GPUDataWarehouse* old_gdw,
                                          GPUDataWarehouse* new_gdw )
 {
-    // Stub
+  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
+  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+  
+  // calculate the thread indices
+  int tidX = threadIdx.x + blockIdx.x * blockDim.x + patch.loEC.x;
+  int tidY = threadIdx.y + blockIdx.y * blockDim.y + patch.loEC.y;
+  
+  const GPUGridVariable< T > sigmaT4OverPi;
+  const GPUGridVariable< T > abskg; 
+  const GPUGridVariable<int> celltype;
+
+  GPUGridVariable<double> divQ;
+  GPUGridVariable<GPUStencil7> boundFlux;
+  GPUGridVariable<double> radiationVolQ;
+ 
+    
+  sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );       // Should be using labelNames struct
+  celltype_gdw->get( celltype,      "cellType", patch.ID, matl );
+  
+  if(RT_flags.usingFloats){
+    abskg_gdw->get( abskg , "abskgRMCRT",   patch.ID, matl );
+  }else{
+    abskg_gdw->get( abskg , "abskg",   patch.ID, matl );
+  }
+
+  if( RT_flags.modifies_divQ ){
+    new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
+    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
+    new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
+  }else{
+    new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
+    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
+    new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
+    
+    
+    // Extra Cell Loop
+    if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
+      #pragma unroll
+      for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
+        GPUIntVector c = make_int3(tidX, tidY, z);
+        divQ[c]          = 0.0;
+        radiationVolQ[c] = 0.0;
+      }
+    }
+  }
+
+  double DyDx = patch.dx.y/patch.dx.x;
+  double DzDx = patch.dx.z/patch.dx.x;
+  
+  //______________________________________________________________________
+  //           R A D I O M E T E R
+  //______________________________________________________________________
+  // TO BE FILLED IN
+  
+  //______________________________________________________________________
+  //          B O U N D A R Y F L U X
+  //______________________________________________________________________
+  if( RT_flags.solveBoundaryFlux ){
+    // TO BE FILLED IN
+  }
+  
+  
+  //______________________________________________________________________
+  //         S O L V E   D I V Q
+  //______________________________________________________________________
+  if( RT_flags.solveDivQ ){
+    // GPU equivalent of GridIterator loop - calculate sets of rays per thread
+    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+      #pragma unroll
+      for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
+
+        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+        double sumI = 0;
+        
+        //__________________________________
+        // ray loop
+        #pragma unroll
+        for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
+        
+          GPUVector direction_vector = findRayDirectionDevice( randNumStates );
+          
+          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
+         
+          updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+        } //Ray loop
+ 
+        //__________________________________
+        //  Compute divQ
+        divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
+
+        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
+        radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
+        
+/*`==========TESTING==========*/
+#if DEBUG == 1
+          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n", 
+                    origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
+#endif
+/*===========TESTING==========`*/
+      }  // end z-slice loop
+    }  // end domain boundary check
+  }  // solve divQ
 }
 
 //______________________________________________________________________
@@ -698,7 +792,6 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
 #endif
 /*===========TESTING==========`*/
 
-        //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
       }
 #endif
 
@@ -839,7 +932,6 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              patchParams patch,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
-                                             varLabelNames labelNames,
                                              GPUDataWarehouse* abskg_gdw,
                                              GPUDataWarehouse* sigmaT4_gdw,
                                              GPUDataWarehouse* celltype_gdw,
@@ -860,7 +952,6 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      patch,
                                                                      randNumStates,
                                                                      RT_flags,
-                                                                     labelNames,
                                                                      abskg_gdw,
                                                                      sigmaT4_gdw,
                                                                      celltype_gdw,
@@ -912,7 +1003,6 @@ __host__ void launchRayTraceDataOnionKernel<double>( dim3 dimGrid,
                                                      patchParams patch,
                                                      cudaStream_t* stream,
                                                      RMCRT_flags RT_flags,
-                                                     varLabelNames labelNames,
                                                      GPUDataWarehouse* abskg_gdw,
                                                      GPUDataWarehouse* sigmaT4_gdw,
                                                      GPUDataWarehouse* celltype_gdw,
@@ -928,7 +1018,6 @@ __host__ void launchRayTraceDataOnionKernel<float>( dim3 dimGrid,
                                                     patchParams patch,
                                                     cudaStream_t* stream,
                                                     RMCRT_flags RT_flags,
-                                                    varLabelNames labelNames,
                                                     GPUDataWarehouse* abskg_gdw,
                                                     GPUDataWarehouse* sigmaT4_gdw,
                                                     GPUDataWarehouse* celltype_gdw,
