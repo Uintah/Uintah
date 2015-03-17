@@ -25,7 +25,6 @@
 //----- DORadiationModel.cc --------------------------------------------------
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
-#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
@@ -76,11 +75,9 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
                                    const MPMArchesLabel* MAlab,
-                                   BoundaryCondition* bndry_cond,
                                    const ProcessorGroup* myworld):
                                    d_lab(label),
                                    d_MAlab(MAlab), 
-                                   d_boundaryCondition(bndry_cond),
                                    d_myworld(myworld) 
 {
 

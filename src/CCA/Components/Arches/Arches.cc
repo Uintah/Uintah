@@ -765,7 +765,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
 
   // do any last setup operations on the active source terms: 
-  src_factory.extraSetup( grid ); 
+  src_factory.extraSetup( grid, d_boundaryCondition ); 
 
 
   // Add extra species to table lookup as required by models

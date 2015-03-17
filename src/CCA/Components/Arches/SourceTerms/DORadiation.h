@@ -36,7 +36,6 @@
 *  </DORadiationModel>
 *
 * TO DO'S: 
-*  @todo Remove _bc from code.  But first must remove it from DORadiationModel.cc
 *  
 */ 
 
@@ -44,13 +43,14 @@ namespace Uintah{
 
   class DORadiationModel; 
   class ArchesLabel; 
-  class BoundaryCondition; 
 
 class DORadiation: public SourceTermBase {
 public: 
 
-  DORadiation( std::string srcName, ArchesLabel* labels, MPMArchesLabel* MAlab, BoundaryCondition* bc, 
-                std::vector<std::string> reqLabelNames, const ProcessorGroup* my_world, std::string type );
+  DORadiation( std::string srcName, ArchesLabel* labels, MPMArchesLabel* MAlab, 
+               std::vector<std::string> reqLabelNames, const ProcessorGroup* my_world, 
+               std::string type );
+
   ~DORadiation();
 
   void problemSetup(const ProblemSpecP& db);
@@ -75,14 +75,17 @@ public:
     public: 
 
       Builder( std::string name, std::vector<std::string> required_label_names, ArchesLabel* labels,
-          BoundaryCondition* bc, const ProcessorGroup* my_world ) 
-        : _name(name), _labels(labels), _bc(bc), _my_world(my_world), _required_label_names(required_label_names){
+               const ProcessorGroup* my_world ) 
+               : _name(name), _labels(labels), 
+                 _my_world(my_world), _required_label_names(required_label_names)
+      {
           _type = "do_radiation"; 
-        };
-      ~Builder(){}; 
+      }
+
+      ~Builder(){}
 
       DORadiation* build()
-      { return scinew DORadiation( _name, _labels, _MAlab, _bc, _required_label_names, _my_world, _type ); };
+      { return scinew DORadiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type ); }
 
     private: 
 
@@ -90,7 +93,6 @@ public:
       std::string _type; 
       ArchesLabel* _labels; 
       MPMArchesLabel* _MAlab;
-      BoundaryCondition* _bc; 
       const ProcessorGroup* _my_world; 
       std::vector<std::string> _required_label_names;
 
@@ -112,7 +114,6 @@ private:
   DORadiationModel* _DO_model; 
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
-  BoundaryCondition* _bc; 
   RadPropertyCalculator* _prop_calculator; 
   const ProcessorGroup* _my_world;
 

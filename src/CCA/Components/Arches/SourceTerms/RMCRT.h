@@ -47,7 +47,6 @@ public:
   RMCRT_Radiation( std::string srcName, 
                    ArchesLabel* labels, 
                    MPMArchesLabel* MAlab, 
-                   BoundaryCondition* bc, 
                    std::vector<std::string> reqLabelNames,
                    const ProcessorGroup* my_world, 
                    std::string type );
@@ -56,7 +55,7 @@ public:
 
   void problemSetup(const ProblemSpecP& db );
   
-  void extraSetup( GridP& grid );
+  void extraSetup( GridP& grid, BoundaryCondition* bc );
   
   void sched_computeSource( const LevelP& level, 
                             SchedulerP& sched, 
@@ -87,28 +86,27 @@ public:
       Builder( std::string name, 
                std::vector<std::string> required_label_names,
                ArchesLabel* labels, 
-               BoundaryCondition* bc, 
                const ProcessorGroup* my_world ) 
         : _name(name), 
           _labels(labels), 
-          _bc(bc), 
           _my_world(my_world), 
           _required_label_names(required_label_names){
           _type = "rmcrt_radiation"; 
-        };
-      ~Builder(){}; 
+        }
+
+      ~Builder(){}
 
       RMCRT_Radiation* build()
       { 
-        return scinew RMCRT_Radiation( _name, _labels, _MAlab, _bc, _required_label_names, _my_world, _type ); 
-      };
+        return scinew RMCRT_Radiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type ); 
+      }
 
     private: 
+
       std::string         _name; 
       std::string         _type; 
       ArchesLabel*        _labels; 
       MPMArchesLabel*     _MAlab;
-      BoundaryCondition*  _bc; 
       const ProcessorGroup* _my_world; 
       std::vector<std::string> _required_label_names;
 
