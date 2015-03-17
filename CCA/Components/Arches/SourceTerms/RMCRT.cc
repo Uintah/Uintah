@@ -132,7 +132,7 @@ void
 RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc )
 { 
 
-  _bc = bc; 
+  _boundaryCondition = bc; 
 
   // determing the temperature label
   const VarLabel* tempLabel = VarLabel::find(_T_label_name); 
