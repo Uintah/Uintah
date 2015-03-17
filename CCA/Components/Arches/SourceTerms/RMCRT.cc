@@ -22,7 +22,6 @@ static DebugStream dbg("RMCRT", false);
 RMCRT_Radiation::RMCRT_Radiation( std::string src_name, 
                                   ArchesLabel* labels, 
                                   MPMArchesLabel* MAlab,
-                                  BoundaryCondition* bc, 
                                   vector<std::string> req_label_names, 
                                   const ProcessorGroup* my_world, 
                                   std::string type ) 
@@ -31,7 +30,6 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
                   req_label_names, type ), 
   _labels( labels ),
   _MAlab(MAlab), 
-  _boundaryCondition(bc), 
   _my_world(my_world)
 {  
 
@@ -131,8 +129,10 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void 
-RMCRT_Radiation::extraSetup( GridP& grid )
+RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc )
 { 
+
+  _bc = bc; 
 
   // determing the temperature label
   const VarLabel* tempLabel = VarLabel::find(_T_label_name); 
