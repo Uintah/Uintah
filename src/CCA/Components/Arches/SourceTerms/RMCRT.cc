@@ -368,9 +368,8 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   //  initialize cellType on NON arches level
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
-    if( level->getIndex() != _archesLevelIndex ){  
-      int initialValue = 0;                                         // HACK
-      _RMCRT->sched_computeCellType( level, sched, initialValue);   /// HACK UNTIL WE'RE ABLE TO CALL sched_cellTypeInit()
+    if( level->getIndex() != _archesLevelIndex ){      
+      _boundaryCondition->sched_cellTypeInit( sched, level, _sharedState->allArchesMaterials());
     }
   }
 }
