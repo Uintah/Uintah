@@ -63,6 +63,28 @@ struct patchParams {
 
 //______________________________________________________________________
 //
+struct levelParams {
+    bool hasFinerLevel;       // cell spacing
+    double DyDx;
+    double DzDx;
+};
+
+//______________________________________________________________________
+//
+struct BoundingBox{
+  GPUVector lo;               // these should be GPUPoints
+  GPUVector hi;
+};
+
+//______________________________________________________________________
+//
+struct gridParams {
+  int   maxLevels;
+  struct BoundingBox domain_BB;
+};
+
+//______________________________________________________________________
+//
 struct RMCRT_flags {
     bool modifies_divQ;
     bool solveDivQ;
@@ -78,6 +100,7 @@ struct RMCRT_flags {
     int nDivQRays;            // number of rays per cell used to compute divQ
     int nFluxRays;            // number of boundary flux rays
     int nRaySteps;            // number of ray steps taken
+    int whichROI_algo;        // which Region of Interest algorithm
 };
 
 //__________________________________
@@ -295,7 +318,6 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              patchParams patch,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
-                                             varLabelNames labelNames,
                                              GPUDataWarehouse* abskg_gdw,
                                              GPUDataWarehouse* sigmaT4_gdw,
                                              GPUDataWarehouse* celltype_gdw,
@@ -311,7 +333,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          patchParams patch,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
-                                         varLabelNames labelNames,
                                          GPUDataWarehouse* abskg_gdw,
                                          GPUDataWarehouse* sigmaT4_gdw,
                                          GPUDataWarehouse* celltype_gdw,

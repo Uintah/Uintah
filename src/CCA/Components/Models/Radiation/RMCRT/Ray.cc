@@ -712,11 +712,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     }
   }
 
-
   printSchedule(level,dbg,taskname);
-
-  // used when carryforward is needed
-  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
 
   Task::MaterialDomainSpec  ND  = Task::NormalDomain;
   #define allPatches 0
@@ -735,10 +731,13 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->requires( sigma_dw,      d_sigmaT4Label,   gac, SHRT_MAX);
     tsk->requires( celltype_dw ,  d_cellTypeLabel , gac, SHRT_MAX);
   }
-
-  // needed for carry Forward
-  tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-  tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+  
+  // TODO This is a temporary fix until we can generalize GPU/CPU carry forward functionality.
+  if (!(Uintah::Parallel::usingDevice())) {
+    // needed for carry Forward
+    tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
+    tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
+  }
 
 
   if( d_whichROI_algo == dynamic ){

@@ -212,7 +212,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 template<class T>
 void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                const ProcessorGroup* pg,
-                               const PatchSubset* patches,
+                               const PatchSubset* finePatches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
                                DataWarehouse* new_dw,
@@ -224,7 +224,155 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                Task::WhichDW which_celltype_dw,
                                const int radCalc_freq )
 {
-    // Stub
+  if (event == Task::GPU) {
+#ifdef HAVE_CUDA
+    const Level* fineLevel = getLevel(finePatches);
+    
+    //__________________________________
+    //  Carry Forward (old_dw -> new_dw)
+    if ( doCarryForward( radCalc_freq ) ) {
+      printTask( finePatches, dbggpu, "Doing Ray::rayTrace_dataOnionGPU carryForward ( divQ )" );
+
+      new_dw->transferFrom( old_dw, d_divQLabel,          finePatches, matls, true );
+      new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
+      return;
+    }
+    
+    //__________________________________
+    //  Grid Parameters
+    gridParams gridP;
+    int maxLevels   = fineLevel->getGrid()->numLevels();
+    gridP.maxLevels = maxLevels;
+    LevelP level_0  = new_dw->getGrid()->getLevel(0);
+    // Determine the size of the domain.
+    BBox domain_BB;
+    level_0->getInteriorSpatialRange( domain_BB );                 // edge of computational domain
+    Point lo = domain_BB.min();
+    Point hi = domain_BB.max();
+    gridP.domain_BB.lo = make_double3( lo.x(), lo.y(), lo.z() );
+    gridP.domain_BB.hi = make_double3( hi.x(), hi.y(), hi.z() );
+    //__________________________________
+    //  Level Parameters
+    
+    
+    //__________________________________
+    //   Assign dataWarehouses
+    GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
+    GPUDataWarehouse* new_gdw = new_dw->getGPUDW()->getdevice_ptr();
+
+    GPUDataWarehouse* abskg_gdw    = new_dw->getOtherDataWarehouse(which_abskg_dw)->getGPUDW()->getdevice_ptr();
+    GPUDataWarehouse* sigmaT4_gdw  = new_dw->getOtherDataWarehouse(which_sigmaT4_dw)->getGPUDW()->getdevice_ptr();
+    GPUDataWarehouse* celltype_gdw = new_dw->getOtherDataWarehouse(which_celltype_dw)->getGPUDW()->getdevice_ptr();    
+    
+    //__________________________________
+    //  RMCRT_flags
+    RMCRT_flags RT_flags;
+    RT_flags.modifies_divQ = modifies_divQ;
+
+    RT_flags.solveDivQ = d_solveDivQ;
+    RT_flags.allowReflect = d_allowReflect;
+    RT_flags.solveBoundaryFlux = d_solveBoundaryFlux;
+    RT_flags.CCRays = d_CCRays;
+    RT_flags.usingFloats = (d_FLT_DBL == TypeDescription::float_type);
+
+    RT_flags.sigma = d_sigma;
+    RT_flags.sigmaScat = d_sigmaScat;
+    RT_flags.threshold = d_threshold;
+
+    RT_flags.nDivQRays = d_nDivQRays;
+    RT_flags.nFluxRays = d_nFluxRays;
+    RT_flags.whichROI_algo = d_whichROI_algo;
+
+    
+    double start = clock();
+        
+    //______________________________________________________________________
+    //
+    // patch loop
+    int numPatches = finePatches->size();
+    for (int p = 0; p < numPatches; ++p) {
+
+      const Patch* patch = finePatches->get(p);
+      printTask(finePatches, patch, dbggpu, "Doing Ray::rayTraceGPU");
+
+      // Calculate the memory block size
+      const IntVector loEC = patch->getExtraCellLowIndex();
+      const IntVector lo = patch->getCellLowIndex();
+
+      const IntVector hiEC = patch->getExtraCellHighIndex();
+      const IntVector hi = patch->getCellHighIndex();
+      const IntVector patchSize = hiEC - loEC;
+
+      const int xdim = patchSize.x();
+      const int ydim = patchSize.y();
+      const int zdim = patchSize.z();
+
+      // get the cell spacing and convert patch extents to CUDA vector type
+      patchParams patchP;
+      const Vector dx = patch->dCell();
+      patchP.dx = make_double3(dx.x(), dx.y(), dx.z());
+      patchP.lo = make_int3(lo.x(), lo.y(), lo.z());
+      patchP.hi = make_int3(hi.x(), hi.y(), hi.z());
+
+      patchP.loEC = make_int3(loEC.x(), loEC.y(), loEC.z());
+      patchP.hiEC = make_int3(hiEC.x(), hiEC.y(), hiEC.z());
+
+      patchP.ID = patch->getID();
+      patchP.nCells = make_int3(xdim, ydim, zdim);
+
+      // define dimensions of the thread grid to be launched
+      int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
+      int yblocks = (int)ceil((float)ydim / BLOCKSIZE);
+
+      // if the # cells in a block < BLOCKSIZE^2 reduce block size
+      int blocksize = BLOCKSIZE;
+      if (xblocks == 1 && yblocks == 1) {
+        blocksize = std::max(xdim, ydim);
+      }
+
+      dim3 dimBlock(blocksize, blocksize, 1);
+      dim3 dimGrid(xblocks, yblocks, 1);
+
+#ifdef DEBUG
+      cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
+      cout << " lo   : " << lo << " hi:  " << hi << endl;
+      cout << " xdim: " << xdim << " ydim: " << ydim << endl;
+      cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
+#endif
+
+      RT_flags.nRaySteps = 0;
+
+      //__________________________________
+      // set up and launch kernel
+      launchRayTraceDataOnionKernel<T>(dimGrid,
+                                       dimBlock,
+                                       d_matl,
+                                       patchP,
+                                       (cudaStream_t*)stream,
+                                       RT_flags, 
+                                       abskg_gdw,
+                                       sigmaT4_gdw,
+                                       celltype_gdw,
+                                       old_gdw,
+                                       new_gdw);
+
+      //__________________________________
+      //
+      double end = clock();
+      double efficiency = RT_flags.nRaySteps / ((end - start) / CLOCKS_PER_SEC);
+
+      if (patch->getGridIndex() == 0) {
+        std::cout << "\n";
+        std::cout << " RMCRT REPORT: Patch 0" << "\n";
+        std::cout << " Used " << (end - start) * 1000 / CLOCKS_PER_SEC << " milliseconds of CPU time. \n" << "\n";  // Convert time to ms
+        std::cout << " Size: " << RT_flags.nRaySteps << "\n";
+        std::cout << " Efficiency: " << efficiency << " steps per sec" << "\n";
+        std::cout << std::endl;
+      }
+    }  //end patch loop    
+    
+#endif // end #ifdef HAVE_CUDA
+  }  //end GPU task code
 }
 
 //______________________________________________________________________
