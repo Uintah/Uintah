@@ -1226,7 +1226,6 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
 
   tsk->modifies( d_sigmaT4Label );
   tsk->modifies( d_abskgLabel );
-  tsk->modifies( d_cellTypeLabel );
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
 }
@@ -1265,12 +1264,10 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
       CCVariable<double> temp;
       CCVariable< T > abskg;
       CCVariable< T > sigmaT4OverPi;
-      CCVariable<int> cellType;
 
       new_dw->allocateTemporary(temp,  patch);
       new_dw->getModifiable( abskg,         d_abskgLabel,    d_matl, patch );
       new_dw->getModifiable( sigmaT4OverPi, d_sigmaT4Label,  d_matl, patch );
-      new_dw->getModifiable( cellType,      d_cellTypeLabel, d_matl, patch );
       //__________________________________
       // loop over boundary faces and backout the temperature
       // one cell from the boundary.  Note that the temperature
@@ -1302,7 +1299,6 @@ void Ray::setBoundaryConditions( const ProcessorGroup*,
       // set the boundary conditions
       setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
       setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
-      setBC< int, int >   (cellType, d_cellTypeLabel->getName(),  patch, d_matl);
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
