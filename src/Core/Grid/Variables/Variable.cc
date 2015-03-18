@@ -45,7 +45,9 @@
 #include <cstring>
 #include <cstdio>
 
-
+#include <sys/stat.h>
+#include <time.h>
+       
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
@@ -66,6 +68,44 @@ Variable::setForeign()
    d_foreign = true;
 }
 
+
+//______________________________________________________________________
+//  In some situations read() will transfer fewer bytes than was requested
+//  and it won't indicate an error.  This version will try 10 times
+//  and sleep for 10 seconds between attempts
+//  http://csapp.cs.cmu.edu/public/ch10-preview.pdf
+ssize_t 
+Variable::debug_read(int fd, char *usrbuf, size_t nRequestedBytes)
+{
+  size_t nLeft = nRequestedBytes;
+  ssize_t nRead;
+  char *bufp = usrbuf;
+  int count = 0;
+  
+  while (nLeft > 0 && count < 10) {
+    count ++;
+    
+    if ( (nRead = ::read(fd, bufp, nLeft)) < 0 ) {
+      if (errno == EINTR) {   // interrupted by sig handler return
+        nRead = 0;            // and call read() again
+      }else{
+        return -1;            // errno set by read()
+      }
+    }
+    else if (nRead == 0){
+      cerr <<  "    debug_read: at end of file\n";
+      break;                  // EOF
+    }
+    nLeft -= nRead;
+    bufp += nRead;
+    
+    cerr <<  "   debug_read: " << count << " Trying to read nBytes: " << nLeft << " nRequestedBytes " << nRequestedBytes <<  '\n'; 
+    sleep(10);
+  }
+  return (nRequestedBytes - nLeft);     /* return >= 0 */
+}
+//______________________________________________________________________
+//
 void
 Variable::emit( OutputContext& oc, const IntVector& l,
                 const IntVector& h, const string& compressionModeHint )
@@ -291,7 +331,9 @@ Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 //<ctc> fix reading files with multiple compression types
 void
 Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
-                const string& compressionMode )
+                const string& compressionMode,
+                const string& name,
+                const int matlIndex )
 {
   bool use_rle = false;
   bool use_gzip = false;
@@ -322,11 +364,55 @@ Variable::read( InputContext& ic, long end, bool swapBytes, int nByteMode,
     string* uncompressedData = &data;
 
     data.resize(datasize);
-    ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+    ssize_t s; 
 
+    s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+    int errsv = errno;
+      
+    if(s != datasize){
+      cerr << "  Error reading file: " << ic.filename << " number of bytes read: " << s << ".  Number of bytes that should have been read: " << datasize <<'\n';
+      cerr << "    Name: " << name << " matl: " << matlIndex  << '\n';
+      cerr << "    Now trying to recursively read the file.\n";
+      s = debug_read( ic.fd, const_cast<char*>(data.c_str()), datasize);
+    }   
+    //__________________________________
+    //  Output file info and throw an exception
+    // if there's a problem
     if(s != datasize) {
-      cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
-      SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
+      struct stat sb;
+    
+      if ( fstat(ic.fd, &sb) == -1 ) {
+        SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));
+      }
+      
+      printf("__________________________________\n");
+      printf("File: %s \n", ic.filename);
+      printf("File type:                ");
+
+      switch (sb.st_mode & S_IFMT) {
+      case S_IFBLK:  printf("block device\n");       break;
+      case S_IFCHR:  printf("character device\n");   break;
+      case S_IFDIR:  printf("directory\n");          break;
+      case S_IFIFO:  printf("FIFO/pipe\n");          break;
+      case S_IFLNK:  printf("symlink\n");            break;
+      case S_IFREG:  printf("regular file\n");       break;
+      case S_IFSOCK: printf("socket\n");             break;
+      default:       printf("unknown?\n");           break;
+      }
+
+      printf("  I-node number:            %ld\n", (long) sb.st_ino);
+      printf("  Mode:                     %lo (octal)\n",(unsigned long) sb.st_mode);
+      printf("  Link count:               %ld\n", (long) sb.st_nlink);
+      printf("  Ownership:                UID=%ld   GID=%ld\n",(long) sb.st_uid, (long) sb.st_gid);
+      printf("  Preferred I/O block size: %ld bytes\n",(long) sb.st_blksize);
+      printf("  File size:                %lld bytes\n",(long long) sb.st_size);
+      printf("  Blocks allocated:         %lld\n", (long long) sb.st_blocks);
+      printf("  Last status change:       %s", ctime(&sb.st_ctime));
+      printf("  Last file access:         %s", ctime(&sb.st_atime));
+      printf("  Last file modification:   %s\n", ctime(&sb.st_mtime));
+    
+      cerr << "  Note if you see: (errno=2: No such file or directory) that may be false!! \n";
+      SCI_THROW(ErrnoException("Variable::read (read call)", errsv, __FILE__, __LINE__));
     }
   
     ic.cur += datasize;

@@ -30,6 +30,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_defs/pidx_defs.h>
+#include <sys/types.h>
 
 namespace SCIRun {
   class IntVector;
@@ -101,7 +102,9 @@ public:
             const std::string& compressionModeHint, double* buffer);
 #endif
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
-            const std::string& compressionMode);
+            const std::string& compressionMode,
+            const std::string& name,
+            const int matlIndex);
 
   virtual void emitNormal(std::ostream& out, const IntVector& l,
                           const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;
@@ -145,6 +148,11 @@ private:
   bool d_foreign;
   //signals of the variable is valid, an mpi variable is not valid until mpi has been recieved
   bool d_valid;
+  
+  // recursively read a file.  This is called after
+  // the first attempt fails
+  ssize_t debug_read(int fd, char *usrbuf, size_t nRequestedBytes);
+  
 };
 
 } // End namespace Uintah

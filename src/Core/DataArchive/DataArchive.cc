@@ -653,7 +653,7 @@ DataArchive::query( Variable& var, const std::string& name, int matlIndex,
   }
   InputContext ic(fd, dataurl.c_str(), dfi->start);
   double starttime = Time::currentSeconds();
-  var.read(ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression);
+  var.read(ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression, name, matlIndex);
 
   dbg << "DataArchive::query: time to read raw data: "<<Time::currentSeconds() - starttime<<endl;
   ASSERTEQ(dfi->end, ic.cur);
