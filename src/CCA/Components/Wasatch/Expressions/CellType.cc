@@ -33,6 +33,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
 enum CellTypeEnum {
   FLOW = -1
@@ -56,12 +57,13 @@ CellType::~CellType()
 //------------------------------------------------------------------
 
 void
-CellType::schedule_compute_celltype (const Uintah::PatchSet* const patches,
+CellType::schedule_compute_celltype (Uintah::Ray* rmcrt,
+                                     const Uintah::PatchSet* const patches,
                                      const Uintah::MaterialSet* const materials,
                                      Uintah::SchedulerP& sched)
 {
   // create the Uintah task to accomplish this.
-  Uintah::Task* computeCellTypeTask = scinew Uintah::Task( "WASATCH::compute_celltype", this, &CellType::compute_celltype );
+  Uintah::Task* computeCellTypeTask = scinew Uintah::Task( "WASATCH::compute_celltype", this, &CellType::compute_celltype, rmcrt );
   computeCellTypeTask->computes(cellTypeVarLabel_);
   sched->addTask( computeCellTypeTask, patches, materials );
 }
@@ -72,7 +74,8 @@ void CellType::compute_celltype(const Uintah::ProcessorGroup* const pg,
                                 const Uintah::PatchSubset* const patches,
                                 const Uintah::MaterialSubset* const materials,
                                 Uintah::DataWarehouse* const oldDW,
-                                Uintah::DataWarehouse* const newDW)
+                                Uintah::DataWarehouse* const newDW,
+                                Uintah::Ray* rmcrt)
 {
   typedef Uintah::CCVariable<int>       UintahField;
   for( int ip=0; ip<patches->size(); ++ip ){
@@ -81,6 +84,7 @@ void CellType::compute_celltype(const Uintah::ProcessorGroup* const pg,
       UintahField cellType;
       newDW->allocateAndPut( cellType, cellTypeVarLabel_, im, patch );
       cellType.initialize(FLOW);
+      rmcrt->setBC<int, int>( cellType, cellTypeVarLabel_->getName(), patch, im );
     }
   }
 }
