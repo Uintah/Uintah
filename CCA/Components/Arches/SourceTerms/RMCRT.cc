@@ -1,4 +1,5 @@
 #include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/BoundaryCond_new.h>
 #include <CCA/Components/Arches/SourceTerms/RMCRT.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -14,8 +15,8 @@ static DebugStream dbg("RMCRT", false);
 /*______________________________________________________________________
           TO DO:
  
- - Use d_boundaryCondition->sched_cellTypeInit() on the coarser levels
  - Use d_boundaryContition to set BC for abskg and sigmaT4
+ - Allow the user to select between double or float RMCRT, see _FLT_DBL
  
  ______________________________________________________________________*/
 
@@ -35,7 +36,9 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
 
   _src_label = VarLabel::create( src_name,  CCVariable<double>::getTypeDescription() ); 
   
-   _RMCRT = scinew Ray( TypeDescription::double_type );          // HARDWIRED: double;
+  _FLT_DBL = TypeDescription::double_type;        // HARDWIRED: double;
+  
+   _RMCRT = scinew Ray( _FLT_DBL );          
   
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
@@ -68,7 +71,8 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   _ps = inputdb; 
   _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
   _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk, false );  
-  _T_label_name = "radiation_temperature"; 
+  
+  _T_label_name = "radiation_temperature";                        // HARDWIRED
   
   if ( _ps->findBlock("abskg")){ 
     _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
@@ -135,22 +139,22 @@ RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc )
   _boundaryCondition = bc; 
 
   // determing the temperature label
-  const VarLabel* tempLabel = VarLabel::find(_T_label_name); 
-  proc0cout << "RMCRT: temperature label name: " << tempLabel->getName() << endl;
+  _tempLabel = VarLabel::find(_T_label_name); 
+  proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
 
-  if ( tempLabel == 0 ){ 
+  if ( _tempLabel == 0 ){ 
     throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
   } 
 
-  const VarLabel* abskg_label = VarLabel::find(_abskg_label_name); 
-  if ( abskg_label == 0 ){
+  _abskgLabel = VarLabel::find(_abskg_label_name); 
+  if ( _abskgLabel == 0 ){
     throw InvalidValue("Error: For RMCRT Radiation source term -- Could not find the abskg label.", __FILE__, __LINE__);
   }
   
   // create RMCRT and register the labels
   _RMCRT->registerVarLabels(_matl, 
-                             abskg_label,
-                             tempLabel,
+                            _abskgLabel,
+                            _tempLabel,
                             _labels->d_cellTypeLabel, 
                             _src_label);
 
@@ -300,6 +304,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
         Task::WhichDW celltype_dw = Task::NewDW;
         
         _RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
+      //  sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
         
         _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
       }
@@ -407,3 +412,149 @@ RMCRT_Radiation::computeSource( const ProcessorGroup* ,
   // for the actual tasks
   throw InternalError("Stub Task: RMCRT_Radiation::computeSource you should never land here ", __FILE__, __LINE__);
 }
+
+
+//______________________________________________________________________
+//   Set the the boundary conditions for sigmaT4 & abskg.
+//______________________________________________________________________
+void
+RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
+                                              SchedulerP& sched,
+                                              Task::WhichDW temp_dw,
+                                              const int radCalc_freq,
+                                              const bool backoutTemp )
+{
+
+  std::string taskname = "Ray::setBoundaryConditions";
+
+  Task* tsk = NULL;
+  if( _FLT_DBL == TypeDescription::double_type ){
+
+    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >,
+                      temp_dw, radCalc_freq, backoutTemp );
+  } else {
+    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< float >,
+                      temp_dw, radCalc_freq, backoutTemp );
+  }
+
+  printSchedule(level,dbg,taskname);
+
+  if(!backoutTemp){
+    tsk->requires( temp_dw, _tempLabel, Ghost::None,0 );
+  }
+
+  tsk->modifies( _RMCRT->d_sigmaT4Label );
+  tsk->modifies( _abskgLabel );
+
+  sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+}
+//______________________________________________________________________
+
+template<class T>
+void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup*,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset*,
+                                             DataWarehouse*,
+                                             DataWarehouse* new_dw,
+                                             Task::WhichDW temp_dw,
+                                             const int radCalc_freq,
+                                             const bool backoutTemp )
+{
+
+  // Only run if it's time
+  if ( _RMCRT->doCarryForward( radCalc_freq ) ) {
+    return;
+  }
+
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    if( bf.size() > 0){
+
+      printTask(patches,patch,dbg,"Doing RMCRT_Radiation::setBoundaryConditions");
+
+      double sigma_over_pi = (_RMCRT->d_sigma)/M_PI;
+
+      CCVariable<double> temp;
+      CCVariable< T > abskg;
+      CCVariable< T > sigmaT4OverPi;
+
+      new_dw->allocateTemporary(temp,  patch);
+      new_dw->getModifiable( abskg,         _abskgLabel,             _matl, patch );
+      new_dw->getModifiable( sigmaT4OverPi, _RMCRT->d_sigmaT4Label,  _matl, patch );
+      //__________________________________
+      // loop over boundary faces and backout the temperature
+      // one cell from the boundary.  Note that the temperature
+      // is not available on all levels but sigmaT4 is.
+      if (backoutTemp){
+        for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+          Patch::FaceType face = *itr;
+
+          Patch::FaceIteratorType IFC = Patch::InteriorFaceCells;
+
+          for(CellIterator iter=patch->getFaceIterator(face, IFC); !iter.done();iter++) {
+            const IntVector& c = *iter;
+            double T4 =  sigmaT4OverPi[c]/sigma_over_pi;
+            temp[c]   =  pow( T4, 1./4.);
+          }
+        }
+      } else {
+        //__________________________________
+        // get a copy of the temperature and set the BC
+        // on the copy and do not put it back in the DW.
+        DataWarehouse* t_dw = new_dw->getOtherDataWarehouse( temp_dw );
+        constCCVariable<double> varTmp;
+        t_dw->get(varTmp, _tempLabel,   _matl, patch, Ghost::None, 0);
+        temp.copyData(varTmp);
+      }
+
+
+      //__________________________________
+      // set the boundary conditions
+//      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
+//      setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
+//      _boundaryCondition->setExtraCellScalarValueBC( -9, patch, abskg, "abskg" );
+//      _boundaryCondition->setExtraCellScalarValueBC( -9, patch, temp,  "radiation_temperature" );
+
+      //__________________________________
+      // loop over boundary faces and compute sigma T^4
+      for( vector<Patch::FaceType>::const_iterator itr = bf.begin(); itr != bf.end(); ++itr ){
+        Patch::FaceType face = *itr;
+
+        Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+
+        for(CellIterator iter=patch->getFaceIterator(face, PEC); !iter.done();iter++) {
+          const IntVector& c = *iter;
+          double T_sqrd = temp[c] * temp[c];
+          sigmaT4OverPi[c] = sigma_over_pi * T_sqrd * T_sqrd;
+        }
+      }
+    } // has a boundaryFace
+  }
+}
+//______________________________________________________________________
+// Explicit template instantiations:
+
+template 
+void RMCRT_Radiation::setBoundaryConditions< double >( const ProcessorGroup*,
+                                                       const PatchSubset* ,
+                                                       const MaterialSubset*,
+                                                       DataWarehouse*,
+                                                       DataWarehouse* ,
+                                                       Task::WhichDW ,
+                                                       const int ,
+                                                       const bool );
+
+template 
+void RMCRT_Radiation::setBoundaryConditions< float >( const ProcessorGroup*,
+                                                      const PatchSubset* ,
+                                                      const MaterialSubset*,
+                                                      DataWarehouse*,
+                                                      DataWarehouse* ,
+                                                      Task::WhichDW ,
+                                                      const int ,
+                                                      const bool );
