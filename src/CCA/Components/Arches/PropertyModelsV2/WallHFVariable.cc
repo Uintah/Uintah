@@ -25,6 +25,10 @@ WallHFVariable::problemSetup( ProblemSpecP& db ){
 
   db->getWithDefault("frequency",_f,1);
 
+  _new_variables = false; 
+  if ( db->findBlock("new_variables"))
+    _new_variables = true; 
+
 }
 
 void 
@@ -53,7 +57,39 @@ WallHFVariable::register_initialize( std::vector<VariableInformation>& variable_
 
 void 
 WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                      SpatialOps::OperatorDatabase& opr ){ 
+                            SpatialOps::OperatorDatabase& opr ){ 
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *; 
+  typedef SpatialOps::SVolField   SVolF;
+  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
+
+  SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x); 
+  SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y); 
+  SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z); 
+
+  *flux_x <<= 0.0;
+  *flux_y <<= 0.0;
+  *flux_z <<= 0.0;
+
+}
+
+void 
+WallHFVariable::register_restart_initialize( std::vector<VariableInformation>& variable_registry ){ 
+
+  if ( _new_variables ){ 
+
+    register_variable( _flux_x, CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _flux_y, CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _flux_z, CC_DOUBLE, COMPUTES, variable_registry ); 
+
+  }
+  
+}
+
+void 
+WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                                    SpatialOps::OperatorDatabase& opr ){ 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
@@ -106,9 +142,6 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   constCCVariable<double>* Ft = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxT"); 
   constCCVariable<double>* Fb = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxB"); 
   constCCVariable<double>* volFraction = tsk_info->get_uintah_const_field<constCCVariable<double> >("volFraction"); 
-  constCCVariable<double>* old_flux_x = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_x); 
-  constCCVariable<double>* old_flux_y = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_y); 
-  constCCVariable<double>* old_flux_z = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_z); 
 
   CCVariable<double>* flux_x = tsk_info->get_uintah_field<CCVariable<double> >(_flux_x); 
   CCVariable<double>* flux_y = tsk_info->get_uintah_field<CCVariable<double> >(_flux_y); 
@@ -159,10 +192,13 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     }
   } else { 
 
+    constCCVariable<double>* old_flux_x = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_x); 
+    constCCVariable<double>* old_flux_y = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_y); 
+    constCCVariable<double>* old_flux_z = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_z); 
+
     (*flux_x).copyData((*old_flux_x));
     (*flux_y).copyData((*old_flux_y));
     (*flux_z).copyData((*old_flux_z));
 
   }
-  
 }

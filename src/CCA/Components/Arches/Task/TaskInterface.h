@@ -107,6 +107,9 @@ public:
     /** @brief Register all variables needed to compute boundary conditions **/
     virtual void register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ) = 0; 
 
+    /** @brief Register initialization work to be accomplished only on restart **/ 
+    virtual void register_restart_initialize( std::vector<VariableInformation>& variable_registry ){}
+
     /** @brief Matches labels to variables in the registry **/ 
     void resolve_labels( std::vector<VariableInformation>& variable_registry ); 
 
@@ -130,7 +133,8 @@ public:
     /** @brief Add this task to the Uintah task scheduler **/ 
     void schedule_init( const LevelP& level, 
                         SchedulerP& sched, 
-                        const MaterialSet* matls );
+                        const MaterialSet* matls, 
+                        const bool is_restart );
 
     /** @brief The actual task interface function that references the 
      *         derived class implementation **/ 
@@ -140,6 +144,15 @@ public:
                   DataWarehouse* old_dw, 
                   DataWarehouse* new_dw, 
                   std::vector<VariableInformation> variable_registry );
+
+    /** @brief The actual task interface function that references the 
+     *         derived class implementation **/ 
+    void do_restart_init( const ProcessorGroup* pc, 
+                          const PatchSubset* patches, 
+                          const MaterialSubset* matls, 
+                          DataWarehouse* old_dw, 
+                          DataWarehouse* new_dw, 
+                          std::vector<VariableInformation> variable_registry );
 
     /** @brief Add this task to the Uintah task scheduler **/ 
     void schedule_timestep_init( const LevelP& level, 
@@ -344,6 +357,10 @@ protected:
     /** @brief The actual work done within the derived class **/ 
     virtual void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
                              SpatialOps::OperatorDatabase& opr ) = 0; 
+
+    /** @brief The actual work done within the derived class **/ 
+    virtual void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 
+                                     SpatialOps::OperatorDatabase& opr ) {} 
 
     /** @brief Work done at the top of a timestep **/ 
     virtual void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info_mngr, 

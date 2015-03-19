@@ -875,17 +875,18 @@ Arches::scheduleInitialize(const LevelP& level,
   BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
   BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory"); 
 
+  bool is_restart = false; 
   //utility factory
   TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls); 
+    i->second->schedule_init(level, sched, matls, is_restart); 
   }
 
   //transport factory
   all_tasks.clear();
   all_tasks = i_trans_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls); 
+    i->second->schedule_init(level, sched, matls, is_restart); 
   }
 
   //initialize factory
@@ -895,22 +896,22 @@ Arches::scheduleInitialize(const LevelP& level,
     if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
       std::cout << "Delaying particle calc..." << std::endl;
     } else { 
-      i->second->schedule_init(level, sched, matls); 
+      i->second->schedule_init(level, sched, matls, is_restart); 
     }
   }
   //have to delay and order these specific tasks...clean this up later...
   TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls); 
+  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart); 
   TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
-  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls); 
+  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart); 
   TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
+  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart); 
 
   //lagrangian particles
   all_tasks.clear();
   all_tasks = i_lag_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
   }
 
   sched_scalarInit(level, sched);
@@ -918,7 +919,7 @@ Arches::scheduleInitialize(const LevelP& level,
   all_tasks.clear();
   all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
   }
 
   //===============================================================
@@ -1038,7 +1039,7 @@ Arches::scheduleInitialize(const LevelP& level,
   all_tasks.clear(); 
   all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
   }
   //=================================================================================
 
@@ -1075,6 +1076,18 @@ void
 Arches::scheduleRestartInitialize(const LevelP& level,
                                      SchedulerP& sched)
 {
+
+  bool is_restart = true; 
+  const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
+  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory"); 
+  TaskFactoryBase::TaskMap all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
+
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
+  }
+
 }
 
 void

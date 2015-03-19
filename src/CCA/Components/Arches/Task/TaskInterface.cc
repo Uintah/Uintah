@@ -770,15 +770,25 @@ void TaskInterface::schedule_bcs( const LevelP& level,
 //====================================================================================
 void TaskInterface::schedule_init( const LevelP& level, 
                                    SchedulerP& sched, 
-                                   const MaterialSet* matls ){ 
+                                   const MaterialSet* matls, 
+                                   const bool is_restart ){ 
 
   std::vector<VariableInformation> variable_registry; 
 
-  register_initialize( variable_registry ); 
+  if ( is_restart ){ 
+    register_restart_initialize( variable_registry ); 
+  } else { 
+    register_initialize( variable_registry ); 
+  }
 
   resolve_labels( variable_registry ); 
 
-  Task* tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
+  Task* tsk;
+  if ( is_restart ){ 
+    tsk = scinew Task( _task_name+"_restart_initialize", this, &TaskInterface::do_restart_init, variable_registry ); 
+  } else { 
+    tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
+  }
 
   int counter = 0;
 
@@ -996,6 +1006,47 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
     initialize( patch, tsk_info_mngr, i_opr->second._sodb ); 
+
+    //clean up 
+    delete tsk_info_mngr; 
+    delete field_container; 
+  }
+}
+
+void TaskInterface::do_restart_init( const ProcessorGroup* pc, 
+                                     const PatchSubset* patches, 
+                                     const MaterialSubset* matls, 
+                                     DataWarehouse* old_dw, 
+                                     DataWarehouse* new_dw, 
+                                     std::vector<VariableInformation> variable_registry ){
+
+  for (int p = 0; p < patches->size(); p++) {
+    
+    const Patch* patch = patches->get(p);
+
+    const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
+
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+
+    SchedToTaskInfo info; 
+
+    //get the current dt
+    info.dt = 0; 
+    info.time_substep = 0; 
+
+    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
+
+    //doing DW gets...
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, true ); 
+
+    //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
+    tsk_info_mngr->set_field_container( field_container ); 
+
+    //get the operator DB for this patch
+    Operators& opr = Operators::self(); 
+    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
+
+    restart_initialize( patch, tsk_info_mngr, i_opr->second._sodb ); 
 
     //clean up 
     delete tsk_info_mngr; 
