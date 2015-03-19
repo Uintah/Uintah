@@ -171,7 +171,6 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 //---------------------------------------------------------------------------
 Ray::~Ray()
 {
-  VarLabel::destroy( d_sigmaT4Label );
   VarLabel::destroy( d_mag_grad_abskgLabel );
   VarLabel::destroy( d_mag_grad_sigmaT4Label );
   VarLabel::destroy( d_flaggedCellsLabel );
@@ -180,7 +179,6 @@ Ray::~Ray()
   VarLabel::destroy( d_boundFluxLabel );
   VarLabel::destroy( d_divQFiltLabel );
   VarLabel::destroy( d_boundFluxFiltLabel );
-  VarLabel::destroy( d_cellTypeLabel );
   VarLabel::destroy( d_radiationVolqLabel );
 
   if( d_radiometer) {
