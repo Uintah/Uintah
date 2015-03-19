@@ -2214,87 +2214,104 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
               dw->getValidNeighbors(curDependency->var, matlID, patches->get(i), curDependency->gtype, curDependency->numGhostCells, validNeighbors);
               for(vector<OnDemandDataWarehouse::ValidNeighbors>::iterator iter = validNeighbors.begin();
                   iter != validNeighbors.end(); ++iter) {
-                //For the moment, ignore all virtual patches. This is only to get a single patch wasatch test
-                //up and running -- Brad Mar 12
+
+                const Patch* sourcePatch = NULL;
                 if (iter->neighborPatch->getID() >= 0) {
-                  int sourceDeviceNum = getGpuIndexForPatch(iter->neighborPatch);
-                  int destDeviceNum = getGpuIndexForPatch(patches->get(i));
-
-                  //ghost cell copies between GPUs occurs in copyGPUGhostCellsBetweenDevices()
-                  //around the same time MPI data is processed.
-                  if ((sourceDeviceNum == destDeviceNum) ||
-                      (dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(curDependency->var->getName().c_str(), iter->neighborPatch->getID(), matlID))) {
-
-                    //See if we need to push into the device ghost cell data from the CPU.
-                    //This will happen one for one of two reasons.
-                    //First, if the ghost cell source data isn't valid on the GPU, then we assume it must be
-                    //on the CPU.  (This can happen from a prior MPI transfer from another node).
-                    //Second, if the ghost cell source data is valid on the GPU *and *CPU *and*
-                    //the ghost cell is coming from the same node but from one GPU to another GPU
-                    //then we are going to use the CPU data.  (This happens after an output task, when
-                    //the data in a GPU is copied to the CPU to be copied on the hard drive.)
-                    //In either case, we copy the ghost cell from the CPU to the appropriate GPU
-                    //then a kernel can merge these ghost cells into the GPU grid var.
-                    //Note: In the future when modifies support is included, then
-                    //it would be possible to be valid on the CPU and not valid on the GPU
-                    //We can run into a tricky situation where a GPU datawarehouse may try to bring in
-                    //a patch multiple times for different ghost cells (e.g. patch 1 needs 0's ghost cells
-                    //and patch 2 needs 0's ghost cells.  It will try to bring in patch 0 twice).  The fix
-                    //is to see if patch 0 in the GPUDW exists, is queued up, but not valid.
-                    bool useCpuGhostCells = false;
-                    if (!(dw->getGPUDW(sourceDeviceNum)->exist(curDependency->var->getName().c_str(), iter->neighborPatch->getID(), matlID))
-                        || !(dw->getGPUDW(sourceDeviceNum)->getValidOnGPU(curDependency->var->getName().c_str(), iter->neighborPatch->getID(), matlID))) {
-                        useCpuGhostCells = true;
-                    } else if (dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(curDependency->var->getName().c_str(), iter->neighborPatch->getID(), matlID) &&
-                               sourceDeviceNum != destDeviceNum) {
-                      useCpuGhostCells = true;
-                    } else if (!(dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(curDependency->var->getName().c_str(), iter->neighborPatch->getID(), matlID)) &&
-                               !(dw->getGPUDW(sourceDeviceNum)->getValidOnGPU(curDependency->var->getName().c_str(), iter->neighborPatch->getID(), matlID)) ) {
-                      printf("Needed ghost cell data not found on the CPU or a GPU\n");
-                      exit(-1);
-                    }
-
-                    if (useCpuGhostCells) {
-                      //Add it to the collection so it will be copied into a GPU
-                      IntVector ghost_host_low, ghost_host_high, ghost_host_offset, ghost_host_size, ghost_host_strides;
-                      iter->validNeighbor->getSizes(ghost_host_low, ghost_host_high, ghost_host_offset, ghost_host_size, ghost_host_strides);
-                      GridVariableBase* srcvar = iter->validNeighbor->cloneType();
-                      srcvar->copyPointer(*(iter->validNeighbor));
-                      //The last argument here is *very* important.  It ensures the ghost cell info goes to the correct GPU.
-                      if (gpu_stats.active()) {
-                        cerrLock.lock();
-                        {
-                          gpu_stats << "The CPU has ghost cells needed from patch " << iter->neighborPatch->getID()
-                                    << " to " << patches->get(i)->getID()
-                                    << " from device " << sourceDeviceNum
-                                    << " to device " << destDeviceNum << endl;
-                        }
-                        cerrLock.unlock();
-                      }
-                      deviceVars.add(iter->neighborPatch, matlID, ghost_host_size, srcvar->getDataSize(), ghost_host_strides.x(), ghost_host_offset, srcvar, curDependency, validOnGpu, Ghost::None, 0, destDeviceNum);
-                    } else {
-                      if (gpu_stats.active()) {
-                        cerrLock.lock();
-                        {
-                          gpu_stats << "The CPU does not need to supply ghost cells from patch " << iter->neighborPatch->getID()
-                                    << " to " << patches->get(i)->getID()
-                                    << " from device " << sourceDeviceNum
-                                    << " to device " << destDeviceNum << endl;
-                        }
-                        cerrLock.unlock();
-                      }
-                    }
-
-                    //Store the source and destination patch, and the range of the ghost cells
-                    //A GPU kernel will use this collection to do all internal GPU ghost cell copies for
-                    //that one specific GPU.
-                    //TODO: Is this needed if the copied in dimensions and the actual dimensions will be the same?
-                    ghostVars.add(iter->validNeighbor, iter->neighborPatch, sourceDeviceNum, patches->get(i), destDeviceNum,
-                        matlID, iter->low, iter->high, curDependency);
-
-
-                  }
+                  sourcePatch = iter->neighborPatch;
+                } else {
+                  //This occurs on virtual patches.  They can be "wrap around" patches, meaning if you go to one end of a domain
+                  //you will show up on the other side.  Virtual patches have negative patch IDs, but they know what real patch they
+                  //are referring to.
+                  sourcePatch = iter->neighborPatch->getRealPatch();
                 }
+                int sourceDeviceNum = getGpuIndexForPatch(sourcePatch);
+                int destDeviceNum = getGpuIndexForPatch(patches->get(i));
+                //ghost cell copies between GPUs occurs in copyGPUGhostCellsBetweenDevices()
+                //around the same time MPI data is processed.
+                if ((sourceDeviceNum == destDeviceNum) ||
+                    (dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(curDependency->var->getName().c_str(), sourcePatch->getID(), matlID))) {
+
+                  //See if we need to push into the device ghost cell data from the CPU.
+                  //This will happen one for one of two reasons.
+                  //First, if the ghost cell source data isn't valid on the GPU, then we assume it must be
+                  //on the CPU.  (This can happen from a prior MPI transfer from another node).
+                  //Second, if the ghost cell source data is valid on the GPU *and* CPU *and*
+                  //the ghost cell is from one GPU to another GPU on the same machine
+                  //then we are going to use the CPU data.  (This happens after an output task, when
+                  //the data in a GPU is copied to the CPU to be copied on the hard drive.)
+                  //In either case, we copy the ghost cell from the CPU to the appropriate GPU
+                  //then a kernel can merge these ghost cells into the GPU grid var.
+                  //Note: In the future when modifies support is included, then
+                  //it would be possible to be valid on the CPU and not valid on the GPU
+                  //We can run into a tricky situation where a GPU datawarehouse may try to bring in
+                  //a patch multiple times for different ghost cells (e.g. patch 1 needs 0's ghost cells
+                  //and patch 2 needs 0's ghost cells.  It will try to bring in patch 0 twice).  The fix
+                  //is to see if patch 0 in the GPUDW exists, is queued up, but not valid.
+                  bool useCpuGhostCells = false;
+                  if (!(dw->getGPUDW(sourceDeviceNum)->exist(curDependency->var->getName().c_str(), sourcePatch->getID(), matlID))
+                      || !(dw->getGPUDW(sourceDeviceNum)->getValidOnGPU(curDependency->var->getName().c_str(), sourcePatch->getID(), matlID))) {
+                      useCpuGhostCells = true;
+                  } else if (dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(curDependency->var->getName().c_str(), sourcePatch->getID(), matlID) &&
+                             sourceDeviceNum != destDeviceNum) {
+                    useCpuGhostCells = true;
+                  } else if (!(dw->getGPUDW(sourceDeviceNum)->getValidOnCPU(curDependency->var->getName().c_str(), sourcePatch->getID(), matlID)) &&
+                             !(dw->getGPUDW(sourceDeviceNum)->getValidOnGPU(curDependency->var->getName().c_str(), sourcePatch->getID(), matlID)) ) {
+                    printf("Needed ghost cell data not found on the CPU or a GPU\n");
+                    exit(-1);
+                  }
+
+                  if (useCpuGhostCells) {
+                    //Add it to the collection so it will be copied into a GPU
+                    IntVector ghost_host_low, ghost_host_high, ghost_host_offset, ghost_host_size, ghost_host_strides;
+                    iter->validNeighbor->getSizes(ghost_host_low, ghost_host_high, ghost_host_offset, ghost_host_size, ghost_host_strides);
+                    GridVariableBase* srcvar = iter->validNeighbor->cloneType();
+                    srcvar->copyPointer(*(iter->validNeighbor));
+                    //The last argument here is *very* important.  It ensures the ghost cell info goes to the correct GPU.
+                    if (gpu_stats.active()) {
+                      cerrLock.lock();
+                      {
+                        gpu_stats << "The CPU has ghost cells needed from patch " << sourcePatch->getID()
+                                  << " to " << patches->get(i)->getID()
+                                  << " from device " << sourceDeviceNum
+                                  << " to device " << destDeviceNum << endl;
+                      }
+                      cerrLock.unlock();
+                    }
+                    deviceVars.add(sourcePatch, matlID, ghost_host_size, srcvar->getDataSize(), ghost_host_strides.x(), ghost_host_offset, srcvar, curDependency, validOnGpu, Ghost::None, 0, destDeviceNum);
+                  } else {
+                    if (gpu_stats.active()) {
+                      cerrLock.lock();
+                      {
+                        gpu_stats << "The CPU does not need to supply ghost cells from patch " << sourcePatch->getID()
+                                  << " to " << patches->get(i)->getID()
+                                  << " from device " << sourceDeviceNum
+                                  << " to device " << destDeviceNum << endl;
+                      }
+                      cerrLock.unlock();
+                    }
+                  }
+
+                  //Store the source and destination patch, and the range of the ghost cells
+                  //A GPU kernel will use this collection to do all internal GPU ghost cell copies for
+                  //that one specific GPU.
+
+                  IntVector virtualOffset = iter->neighborPatch->getVirtualOffset();
+                  ghostVars.add(iter->validNeighbor, sourcePatch, sourceDeviceNum, patches->get(i), destDeviceNum,
+                      matlID, iter->low, iter->high, curDependency, virtualOffset);
+                  if (gpu_stats.active()) {
+                    cerrLock.lock();
+                    {
+                      gpu_stats << "Internal ghost cell copy queued for " << curDependency->var->getName().c_str()
+                                << " from (" << iter->low.x() << ", " << iter->low.y() << ", " << iter->low.z() << ")"
+                                << " to  (" << iter->high.x() << ", " << iter->high.y() << ", " << iter->high.z() << ")"
+                                << " with virtual patch offset (" << virtualOffset.x() << ", " << virtualOffset.y() << ", " << virtualOffset.z() << ")"
+                                << endl;
+                    }
+                    cerrLock.unlock();
+                  }
+
+                }
+
               }
             }
           } else if (curDependency->deptype == Task::Computes) {
@@ -2356,7 +2373,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
     string taskID = dtask->getName();
 
     //For now, have all if statements go here.  The contiguous array approach needs to be reworked
-    if (deviceVars.numItems() < 5) {
+    if (deviceVars.numItems() >= 0) {
       //The scenario where we won't make contiguous host arrays
 
       //TODO: Handles that it already exists.
@@ -2462,6 +2479,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
         //This apparently goes faster overall
         IntVector low = ghostVars.getLow(i);
         IntVector high = ghostVars.getHigh(i);
+        IntVector virtualOffset = ghostVars.getVirtualOffset(i);
         dws[dwIndex]->getGPUDW(getGpuIndexForPatch(ghostVars.getDestPatchPointer(i)))->putGhostCell(dtask,
                                                dep->var->getName().c_str(),
                                                ghostVars.getSourcePatchPointer(i)->getID(),
@@ -2469,6 +2487,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
                                                ghostVars.getMaterialIndex(i),
                                                make_int3(low.x(), low.y(), low.z()),
                                                make_int3(high.x(), high.y(), high.z()),
+                                               make_int3(virtualOffset.x(), virtualOffset.y(), virtualOffset.z()),
                                                false,
                                                NULL,
                                                make_int3(0,0,0),
@@ -2936,6 +2955,7 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                         dtask->setCUDAStream(deviceNum, stream);
                       }
 
+                      //printf("***InitiateD2H invoked***\n");
                       CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes, cudaMemcpyDeviceToHost, *stream));
                       if (retVal == cudaErrorLaunchFailure) {
                         SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));

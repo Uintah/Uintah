@@ -18,7 +18,8 @@ public:
       int materialIndex,
       IntVector low,
       IntVector high,
-      const Task::Dependency* dep);
+      const Task::Dependency* dep,
+      IntVector virtualOffset);
   GridVariableBase* gridVar;
   const Patch* sourcePatchPointer;
   int sourceDeviceNum;
@@ -27,6 +28,7 @@ public:
   int materialIndex;
   IntVector low;
   IntVector high;
+  IntVector virtualOffset;
   const Task::Dependency* dep;
 };
 
@@ -41,7 +43,8 @@ public:
       int materialIndex,
       IntVector low,
       IntVector high,
-      const Task::Dependency* dep);
+      const Task::Dependency* dep,
+      IntVector virtualOffset);
 
   unsigned int numItems();
 
@@ -63,6 +66,7 @@ public:
 
   const Task::Dependency* getDependency(int index);
 
+  IntVector getVirtualOffset(int index);
 
 private:
   vector< deviceGhostCellsInfo > vars;

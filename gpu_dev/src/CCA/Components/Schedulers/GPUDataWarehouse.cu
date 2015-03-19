@@ -1526,9 +1526,9 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars(void* taskID) {
          if (x < ghostCellSize.x && y < ghostCellSize.y && z < ghostCellSize.z) {
 
            //offset them to their true array coordinates, not relative simulation cell coordinates
-           int x_source_real = x + d_ghostCellDB[i].sharedLowCoordinates.x - d_ghostCellDB[i].var_offset.x;
-           int y_source_real = y + d_ghostCellDB[i].sharedLowCoordinates.y - d_ghostCellDB[i].var_offset.y;
-           int z_source_real = z + d_ghostCellDB[i].sharedLowCoordinates.z - d_ghostCellDB[i].var_offset.z;
+           int x_source_real = x + d_ghostCellDB[i].sharedLowCoordinates.x - d_ghostCellDB[i].virtualOffset.x - d_ghostCellDB[i].var_offset.x;
+           int y_source_real = y + d_ghostCellDB[i].sharedLowCoordinates.y - d_ghostCellDB[i].virtualOffset.y - d_ghostCellDB[i].var_offset.y;
+           int z_source_real = z + d_ghostCellDB[i].sharedLowCoordinates.z - d_ghostCellDB[i].virtualOffset.z - d_ghostCellDB[i].var_offset.z;
            //count over array slots.
            int sourceOffset = x_source_real + d_ghostCellDB[i].var_size.x * (y_source_real  + z_source_real * d_ghostCellDB[i].var_size.y);
 
@@ -1596,9 +1596,53 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream, void* 
     dim3 dimGrid(xblocks, yblocks, zblocks);
     //printf("Launching copyGpuGhostCellsToGpuVarsKernel\n");
     //cudaDeviceSynchronize();
+
+
+
+  /*
+    //View a variable before and after the ghost cell copy
+    {
+    cudaDeviceSynchronize();
+    //pull out phi0
+    Uintah::GPUGridVariable<double> myDeviceVar;
+    getModifiable( myDeviceVar, "phi0", 0, 0 );
+    double * uintahDeviceFieldVar = const_cast<double*>( myDeviceVar.getPointer() );
+    printf("Before the device pointer is %p\n", uintahDeviceFieldVar);
+    double * hostSideVar = new double[myDeviceVar.getMemSize()/8];
+    CUDA_RT_SAFE_CALL(cudaMemcpy((void*)hostSideVar, (void*)uintahDeviceFieldVar, myDeviceVar.getMemSize(), cudaMemcpyDeviceToHost));
+    printf("Contents of phi0:\n");
+    for (int i = 0; i < 34; i++) {
+      for (int j = 0; j < 34; j++) {
+        printf("%1.3lf ", hostSideVar[i*34+j]);
+      }
+      printf("\n");
+    }
+
+    delete[] hostSideVar;
+    }
+*/
     copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy, taskID);
-    //copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock>>>(this->d_device_copy, taskID);
-    //cudaDeviceSynchronize();
+/*
+    {
+    cudaDeviceSynchronize();
+    //pull out phi0
+    Uintah::GPUGridVariable<double> myDeviceVar;
+    getModifiable( myDeviceVar, "phi0", 0, 0 );
+    double * uintahDeviceFieldVar = const_cast<double*>( myDeviceVar.getPointer() );
+    printf("After the device pointer is %p\n", uintahDeviceFieldVar);
+    double * hostSideVar = new double[myDeviceVar.getMemSize()/8];
+    CUDA_RT_SAFE_CALL(cudaMemcpy((void*)hostSideVar, (void*)uintahDeviceFieldVar, myDeviceVar.getMemSize(), cudaMemcpyDeviceToHost));
+    printf("Contents of phi0:\n");
+    for (int i = 0; i < 34; i++) {
+      for (int j = 0; j < 34; j++) {
+        printf("%1.3lf ", hostSideVar[i*34+j]);
+      }
+      printf("\n");
+    }
+
+    delete[] hostSideVar;
+    }
+*/
 
 
   }
@@ -1610,7 +1654,9 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream, void* 
 
 
 HOST_DEVICE void
-GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID, int destPatchID, int matlIndex, int3 sharedLowCoordinates, int3 sharedHighCoordinates, bool sourceIsInTempGhostCells, void * data_ptr, int3 var_offset, int3 var_size, int xstride) {
+GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID, int destPatchID, int matlIndex,
+                               int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset,
+                               bool sourceIsInTempGhostCells, void * data_ptr, int3 var_offset, int3 var_size, int xstride) {
 #ifdef __CUDA_ARCH__
   printf("ERROR:\nGPUDataWarehouse::putGhostCell( %s )  Not implemented for GPU\n",label);
 #else
@@ -1623,6 +1669,7 @@ GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID
   d_ghostCellDB[i].copied = false;
   d_ghostCellDB[i].sharedLowCoordinates = sharedLowCoordinates;
   d_ghostCellDB[i].sharedHighCoordinates = sharedHighCoordinates;
+  d_ghostCellDB[i].virtualOffset = virtualOffset;
   if (d_debug){
     printf("Placed into the ghostCellDB in index %d from %d to %d has shared coordinates (%d, %d, %d), (%d, %d, %d)\n", i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z);
   }

@@ -3998,9 +3998,9 @@ if test "$with_boost" -o "$with_boost_library"; then
 
   _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
 
-  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
+  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt boost_date_time-mt"
 
-  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
+  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem boost_date_time"
 
   SCI_TRY_LINK(BOOST,[boost library (mt version) and include headers],$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
 
