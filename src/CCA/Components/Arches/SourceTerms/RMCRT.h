@@ -114,6 +114,23 @@ public:
   //______________________________________________________________________
   //
 private:
+     //______________________________________________________________________
+     //   Boundary Conditions
+    void  sched_setBoundaryConditions( const LevelP& level,
+                                       SchedulerP& sched,
+                                       Task::WhichDW temp_dw,
+                                       const int radCalc_freq,
+                                       const bool backoutTemp = false);
+
+    template< class T >
+    void setBoundaryConditions( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw,
+                                Task::WhichDW temp_dw,
+                                const int radCalc_freq,
+                                const bool backoutTemp );
 
   //__________________________________
   //
@@ -131,13 +148,16 @@ private:
   BoundaryCondition* _boundaryCondition; 
   const ProcessorGroup* _my_world;
   SimulationStateP      _sharedState;
-  ProblemSpecP          _ps;  // needed for extraSetup()
+  ProblemSpecP          _ps;              // needed for extraSetup()
  
   std::string _abskg_label_name; 
   std::string _T_label_name; 
+  const VarLabel* _abskgLabel;
+  const VarLabel* _tempLabel;
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
+  TypeDescription::Type _FLT_DBL;        // Is RMCRT algorithm using doubles or floats for communicated variables
 
 }; // end RMCRT
 } // end namespace Uintah
