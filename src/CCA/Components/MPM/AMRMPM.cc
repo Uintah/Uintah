@@ -193,7 +193,7 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   // refined if the grid has not been setup manually
   bool manualGrid;
   mpm_ps->getWithDefault("manualGrid", manualGrid, false);
-  
+
   if(!manualGrid){
     ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
     if(!refine_ps ){
@@ -1233,7 +1233,7 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-//
+////
 void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
 {
   printSchedule(patches,cout_doing,"AMRMPM::scheduleRefine");
@@ -1251,7 +1251,11 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
+  t->computes(lb->pLastLevelLabel);
+  t->computes(lb->pLocalizedMPMLabel);
+  t->computes(lb->pRefinedLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pCellNAPIDLabel, d_one_matl);
 
   // Debugging Scalar
   if (flags->d_with_color) {
@@ -2572,7 +2576,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
-    
+ 
     printTask(patches, patch,cout_doing,"Doing AMRMPM::computeZoneOfInfluence");
     NCVariable<Stencil7> zoi;
     new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
@@ -3674,7 +3678,7 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
       }
     }
 
-#if 0    
+#if 0  
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();

@@ -161,6 +161,10 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Matrix3>::const_iterator sizeiter;
     if (psizes) {
       if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
+      if (d_flags->d_AMR) {
+        cerr << "WARNING:  The particle size when using smooth or file\n"; 
+        cerr << "geom pieces needs some work when used with AMR" << endl;
+      }
     }
 
     // For getting particles colors (if they exist)
