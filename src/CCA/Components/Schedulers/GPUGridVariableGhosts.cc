@@ -31,7 +31,8 @@ deviceGhostCellsInfo::deviceGhostCellsInfo(GridVariableBase* gridVar,
           int materialIndex,
           IntVector low,
           IntVector high,
-          const Task::Dependency* dep) {
+          const Task::Dependency* dep,
+          IntVector virtualOffset) {
   this->gridVar = gridVar;
   this->sourcePatchPointer = sourcePatchPointer;
   this->sourceDeviceNum = sourceDeviceNum;
@@ -41,7 +42,7 @@ deviceGhostCellsInfo::deviceGhostCellsInfo(GridVariableBase* gridVar,
   this->low = low;
   this->high = high;
   this->dep = dep;
-
+  this->virtualOffset = virtualOffset;
 }
 
 void deviceGhostCells::add(GridVariableBase* gridVar,
@@ -52,8 +53,9 @@ void deviceGhostCells::add(GridVariableBase* gridVar,
           int materialIndex,
           IntVector low,
           IntVector high,
-          const Task::Dependency* dep) {
-  deviceGhostCellsInfo tmp(gridVar, sourcePatchPointer, sourceDeviceNum, destPatchPointer, destDeviceNum, materialIndex,  low, high, dep);
+          const Task::Dependency* dep,
+          IntVector virtualOffset) {
+  deviceGhostCellsInfo tmp(gridVar, sourcePatchPointer, sourceDeviceNum, destPatchPointer, destDeviceNum, materialIndex,  low, high, dep, virtualOffset);
   vars.push_back(tmp);
 }
 
@@ -96,4 +98,7 @@ const Task::Dependency* deviceGhostCells::getDependency(int index) {
   return vars.at(index).dep;
 }
 
+IntVector deviceGhostCells::getVirtualOffset(int index) {
+  return vars.at(index).virtualOffset;
+}
 

@@ -124,6 +124,13 @@ public:
     int3 sharedLowCoordinates;
     int3 sharedHighCoordinates;
 
+    //Wasatch has virtual patches, which come as a result of periodic boundary cells,
+    //which wrap around on each other.  (Like a label wrapping around a soup can, but
+    //for all boundary faces of the grid).  While they're technically sharing the same
+    //coordinates (just wrapped around once), from our perspective we need their actual indexes
+    //this offset helps us get that.
+    int3 virtualOffset;
+
     //So we can look up the size and offset information in the d_varDB
     int dest_varDB_index;
 
@@ -280,7 +287,8 @@ public:
   HOST_DEVICE void putMaterials(std::vector< std::string > materials);
   HOST_DEVICE materialType getMaterial(int i) const;
   HOST_DEVICE int getNumMaterials() const;
-  HOST_DEVICE void putGhostCell(void* dtask, char const* label, int sourcePatchID, int destPatchID, int matlID, int3 sharedLowCoordinates, int3 sharedHighCoordinates,
+  HOST_DEVICE void putGhostCell(void* dtask, char const* label, int sourcePatchID, int destPatchID, int matlID,
+                                int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset,
                                 bool sourceIsInTempGhostCells, void * data_ptr, int3 var_offset, int3 var_size, int xstride);
   HOST_DEVICE bool getValidOnGPU(char const* label, int patchID, int matlID);
   HOST_DEVICE void setValidOnGPU(char const* label, int patchID, int matlID);
