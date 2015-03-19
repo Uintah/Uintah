@@ -799,6 +799,13 @@ namespace Uintah {
           DataWarehouse*,
           DataWarehouse* new_dw);
 
+      /** @brief Access function to setExtraCellScalarValueBC in new BC. 
+       *         This should go away once the BC stuff is merged/cleaned **/ 
+      void setExtraCellScalarValueBC( const ProcessorGroup* pc, 
+                                      const Patch* patch, 
+                                      CCVariable<double>& variable, 
+                                      const std::string var_name );
+
 
     private:
 
