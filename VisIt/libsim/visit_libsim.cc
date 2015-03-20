@@ -155,6 +155,11 @@ void visit_EndLibSim( visit_simulation_data *sim )
     sim->runMode = VISIT_SIMMODE_STOPPED;
     sim->simMode = VISIT_SIMMODE_FINISHED;
 
+    visitdbg << "Visit libsim : "
+	     << "The simulation has finished, at the last time step."
+	     << std::endl;
+    visitdbg.flush();
+
     // Now check for the user to have finished.
     do
     {
@@ -200,7 +205,7 @@ void visit_CheckState( visit_simulation_data *sim )
     {
       sim->blocking = blocking;
 
-      message << "VisIt libsim stopped the execution at  "
+      message << "Visit libsim : Stopped the execution at  "
 	<< "Time="        << sim->time
 	<< " (timestep "  << sim->cycle 
 	<< ")";
@@ -225,7 +230,7 @@ void visit_CheckState( visit_simulation_data *sim )
     /* Do different things depending on the output from VisItDetectInput. */
     if(visitstate <= -1 || 5 <= visitstate)
     {
-      visitdbg << "Visit libsim check state cannot recover from error!"
+      visitdbg << "Visit libsim : CheckState cannot recover from error!"
 	       << std::endl;
       visitdbg.flush();
 
@@ -247,7 +252,7 @@ void visit_CheckState( visit_simulation_data *sim )
 	/* Register command callback */
 	VisItSetCommandCallback(visit_ControlCommandCallback, (void*) sim);
 
-	visitdbg << "VisIt libsim is connected" << std::endl;
+	visitdbg << "Visit libsim : Connected" << std::endl;
 	visitdbg.flush();
 
 	/* Register data access callbacks */
@@ -259,7 +264,7 @@ void visit_CheckState( visit_simulation_data *sim )
       }
       else
       {
-	visitdbg << "VisIt libsim can not connect" << std::endl;
+	visitdbg << "Visit libsim : Can not connect." << std::endl;
 	visitdbg.flush();
       }
     }
@@ -627,9 +632,13 @@ visit_handle visit_ReadMetaData(void *cbdata)
 	}
 	else
 	{
-	  visitdbg << "Uintah/VisIt libsim Error: unknown vartype: "
-		    << vartype << std::endl;
+	  visitdbg << "Visit libsim : "
+		   << "Uintah variable (" << varname << ")  "
+		   << "has an unknown variable type ("
+		   << vartype << ")" << std::endl;
 	  visitdbg.flush();
+
+	  continue;
 	}
 
 	if (meshes_added.find(mesh_for_this_var) == meshes_added.end())
