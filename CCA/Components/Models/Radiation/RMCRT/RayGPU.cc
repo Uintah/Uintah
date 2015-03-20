@@ -244,6 +244,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     int maxLevels   = fineLevel->getGrid()->numLevels();
     gridP.maxLevels = maxLevels;
     LevelP level_0  = new_dw->getGrid()->getLevel(0);
+
     // Determine the size of the domain.
     BBox domain_BB;
     level_0->getInteriorSpatialRange( domain_BB );                 // edge of computational domain
@@ -297,10 +298,10 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
 
       // Calculate the memory block size
       const IntVector loEC = patch->getExtraCellLowIndex();
-      const IntVector lo = patch->getCellLowIndex();
-
+      const IntVector lo   = patch->getCellLowIndex();
       const IntVector hiEC = patch->getExtraCellHighIndex();
-      const IntVector hi = patch->getCellHighIndex();
+      const IntVector hi   = patch->getCellHighIndex();
+
       const IntVector patchSize = hiEC - loEC;
 
       const int xdim = patchSize.x();
@@ -348,6 +349,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                        dimBlock,
                                        d_matl,
                                        patchP,
+                                       gridP,
                                        (cudaStream_t*)stream,
                                        RT_flags, 
                                        abskg_gdw,
