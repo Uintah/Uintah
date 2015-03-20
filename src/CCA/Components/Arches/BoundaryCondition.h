@@ -625,6 +625,13 @@ namespace Uintah {
 
       BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
 
+      /** @brief Access function to setExtraCellScalarValueBC in new BC. 
+       *         This should go away once the BC stuff is merged/cleaned **/ 
+      void setExtraCellScalarValueBC( const ProcessorGroup* pc, 
+                                      const Patch* patch, 
+                                      CCVariable<double>& variable, 
+                                      const std::string var_name );
+
     private:
 
       /** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
@@ -683,7 +690,6 @@ namespace Uintah {
           const int timesubstep, 
           const bool reinitialize );
 
-    private:
 
       bool d_no_corner_recirc; 
 
@@ -798,16 +804,6 @@ namespace Uintah {
           const MaterialSubset*,
           DataWarehouse*,
           DataWarehouse* new_dw);
-
-      /** @brief Access function to setExtraCellScalarValueBC in new BC. 
-       *         This should go away once the BC stuff is merged/cleaned **/ 
-      void setExtraCellScalarValueBC( const ProcessorGroup* pc, 
-                                      const Patch* patch, 
-                                      CCVariable<double>& variable, 
-                                      const std::string var_name );
-
-
-    private:
 
       // input information
       typedef std::map<IntVector, double> CellToValue; 
