@@ -76,7 +76,6 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 {
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type){
     d_sigmaT4Label = VarLabel::create( "sigmaT4", CCVariable<double>::getTypeDescription() );
-    d_abskgLabel   = VarLabel::create( "abskgRMCRT", CCVariable<double>::getTypeDescription() );
     proc0cout << "__________________________________ USING DOUBLE VERSION OF RMCRT" << endl;
   } else {
     d_sigmaT4Label = VarLabel::create( "sigmaT4",    CCVariable<float>::getTypeDescription() );
