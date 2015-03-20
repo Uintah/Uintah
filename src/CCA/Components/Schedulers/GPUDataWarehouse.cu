@@ -278,6 +278,25 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
 #ifdef __CUDA_ARCH__
   //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
 #else
+
+    varLock.writeLock();
+
+    //first check if this patch/var/matl is in the process of loading in.
+    charlabelPatchMatl lpm(label, patchID, matlIndex);
+    if (varPointers.find(lpm) != varPointers.end()) {
+      int index = varPointers[lpm].varDB_index;
+      if (d_varDB[index].queueingOnGPU == true) {
+        //It's loading up, use that and return.
+        if (d_debug){
+          printf("GPUDataWarehouse::putContiguous( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
+
+        }
+        var.setArray3(d_varDB[index].var_offset, d_varDB[index].var_size, d_varDB[index].var_ptr);
+        varLock.writeUnlock();
+        return;
+      }
+    }
+
   int3 size=make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
   int3 offset=low;
   void* device_ptr=NULL;
@@ -298,6 +317,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
           ca->assignedOffset,
           var.getMemSize(), label, patchID, matlIndex);
     }
+    varLock.writeUnlock();
     exit(-1);
   } else {
 
@@ -349,6 +369,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
 
     //printf("Allocating for %s at patch %d and matl %d size is %d host_ptr %p host_contiguousPtr %p device_ptr %p\n", label, patchID, matlIndex, varMemSize, host_ptr, host_contiguousArrayPtr, device_ptr);
   }
+  varLock.writeUnlock();
 
 #endif
 }
