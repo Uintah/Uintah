@@ -451,7 +451,7 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
 //______________________________________________________________________
 
 template<class T>
-void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup*,
+void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
                                              const PatchSubset* patches,
                                              const MaterialSubset*,
                                              DataWarehouse*,
@@ -517,8 +517,8 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup*,
       // set the boundary conditions
 //      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
 //      setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
-//      _boundaryCondition->setExtraCellScalarValueBC( -9, patch, abskg, "abskg" );
-//      _boundaryCondition->setExtraCellScalarValueBC( -9, patch, temp,  "radiation_temperature" );
+      //_boundaryCondition->setExtraCellScalarValueBC( pc, patch, abskg, "abskg" );
+      //_boundaryCondition->setExtraCellScalarValueBC( pc, patch, temp,  "radiation_temperature" );
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
