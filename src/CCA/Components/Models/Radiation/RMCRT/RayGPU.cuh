@@ -25,8 +25,8 @@
 #ifndef CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAYGPU_CUH
 #define CCA_COMPONENTS_MODELS_RADIATION_RMCRT_RAYGPU_CUH
 
-#include <Core/Geometry/GPUVector.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
+#include <Core/Geometry/GPUVector.h>
 
 #include <sci_defs/cuda_defs.h>
 #include <curand.h>
@@ -36,6 +36,7 @@ namespace Uintah {
 
 typedef SCIRun::gpuIntVector GPUIntVector;
 typedef SCIRun::gpuVector    GPUVector;
+typedef SCIRun::gpuPoint     GPUPoint;
 
 //______________________________________________________________________
 //
@@ -52,35 +53,38 @@ struct varLabelNames {
 //______________________________________________________________________
 //
 struct patchParams {
-    GPUVector    dx;          // cell spacing
     GPUIntVector lo;          // cell low index not including extra or ghost cells
     GPUIntVector hi;          // cell high index not including extra or ghost cells
     GPUIntVector loEC;        // low index including extraCells
     GPUIntVector hiEC;        // high index including extraCells
     GPUIntVector nCells;      // number of cells in each dir
+    GPUVector    dx;          // cell spacing
     int          ID;          // patch ID
 };
 
 //______________________________________________________________________
 //
 struct levelParams {
-    bool hasFinerLevel;       // cell spacing
-    double DyDx;
-    double DzDx;
+    double       DyDx;
+    double       DzDx;
+    GPUVector    Dx;
+    GPUIntVector regionLo;
+    GPUIntVector regionHi;
+    bool         hasFinerLevel;
 };
 
 //______________________________________________________________________
 //
-struct BoundingBox{
-  GPUVector lo;               // these should be GPUPoints
-  GPUVector hi;
+struct BoundingBox {
+    GPUPoint lo;
+    GPUPoint hi;
 };
 
 //______________________________________________________________________
 //
 struct gridParams {
-  int   maxLevels;
-  struct BoundingBox domain_BB;
+    int                maxLevels;
+    struct BoundingBox domain_BB;
 };
 
 //______________________________________________________________________
@@ -315,8 +319,9 @@ template< class T >
 __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              dim3 dimBlock,
                                              int matlIndex,
-                                             patchParams patch,
+                                             patchParams patchP,
                                              gridParams gridP,
+                                             levelParams* levelP,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
                                              GPUDataWarehouse* abskg_gdw,
@@ -331,8 +336,9 @@ template< class T >
 __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          dim3 dimBlock,
                                          int matlIndex,
-                                         patchParams patch,
+                                         patchParams patchP,
                                          gridParams gridP,
+                                         levelParams* levelP,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,
