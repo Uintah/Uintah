@@ -819,7 +819,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   double DyDx[maxLevels];
   double DzDx[maxLevels];
 
-  for(int L = 0; L<maxLevels; L++){
+  for(int L = 0; L<maxLevels; L++) {
     LevelP level = new_dw->getGrid()->getLevel(L);
 
     if (level->hasFinerLevel() ) {                               // coarse level data
@@ -827,7 +827,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       abskg_dw->getLevel(   abskg[L]   ,       d_abskgLabel ,   d_matl , level.get_rep() );
       sigmaT4_dw->getLevel( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , level.get_rep() );
       celltype_dw->getLevel( cellType[L] ,     d_cellTypeLabel, d_matl , level.get_rep() );
-      dbg << " getting coarse level data L-" <<L<< endl;
+      dbg << " getting coarse level data L-" << L << endl;
     }
     Vector dx = level->dCell();
     DyDx[L] = dx.y() / dx.x();
@@ -842,7 +842,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
   //__________________________________
   //  retrieve fine level data & compute the extents (dynamic and fixed )
-  if ( d_whichROI_algo == fixed || d_whichROI_algo == dynamic ){
+  if ( d_whichROI_algo == fixed || d_whichROI_algo == dynamic ) {
     int L = maxLevels - 1;
 
     const Patch* notUsed=0;
@@ -850,7 +850,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                    fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                    regionLo,  regionHi);
 
-    dbg << " getting fine level data across L-" <<L<< " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi<<endl;
+    dbg << " getting fine level data across L-" << L << " " << fineLevel_ROI_Lo << " " << fineLevel_ROI_Hi << endl;
     abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,   d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
     sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
     celltype_dw->getRegion( cellType[L] ,     d_cellTypeLabel, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
@@ -866,7 +866,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   level_0->getInteriorSpatialRange(domain_BB);                 // edge of computational domain
 
   //  patch loop
-  for (int p=0; p < finePatches->size(); p++){
+  for (int p=0; p < finePatches->size(); p++) {
 
     const Patch* finePatch = finePatches->get(p);
     printTask(finePatches, finePatch,dbg,"Doing Ray::rayTrace_dataOnion");
@@ -880,7 +880,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
                      regionLo,  regionHi);
 
       int L = maxLevels - 1;
-      dbg << " getting fine level data across L-" <<L<< endl;
+      dbg << " getting fine level data across L-" << L << endl;
 
       abskg_dw->getRegion(   abskg[L]   ,       d_abskgLabel ,  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
       sigmaT4_dw->getRegion( sigmaT4OverPi[L] , d_sigmaT4Label, d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
