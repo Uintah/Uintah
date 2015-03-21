@@ -225,9 +225,9 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                const int radCalc_freq )
 {
   if (event == Task::GPU) {
+
 #ifdef HAVE_CUDA
-    const Level* fineLevel = getLevel(finePatches);
-    
+
     //__________________________________
     //  Carry Forward (old_dw -> new_dw)
     if ( doCarryForward( radCalc_freq ) ) {
@@ -241,7 +241,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     //__________________________________
     //  Grid Parameters
     gridParams gridP;
-    int maxLevels   = fineLevel->getGrid()->numLevels();
+    const Level* fineLevel = getLevel(finePatches);
+    const int maxLevels   = fineLevel->getGrid()->numLevels();
     gridP.maxLevels = maxLevels;
     LevelP level_0  = new_dw->getGrid()->getLevel(0);
 
@@ -252,9 +253,31 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     Point hi = domain_BB.max();
     gridP.domain_BB.lo = make_double3( lo.x(), lo.y(), lo.z() );
     gridP.domain_BB.hi = make_double3( hi.x(), hi.y(), hi.z() );
+
     //__________________________________
     //  Level Parameters
-    
+    levelParams levelP[maxLevels];
+    for (int l; l < maxLevels; ++ l) {
+      LevelP level = new_dw->getGrid()->getLevel(l);
+
+      levelP[l].hasFinerLevel = level->hasFinerLevel();
+
+      SCIRun::Vector dx = level->dCell();
+      levelP[l].DyDx  = dx.y() / dx.x();
+      levelP[l].DzDx  = dx.z() / dx.x();
+      levelP[l].Dx = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
+
+      IntVector fineLevel_ROI_Lo = IntVector(-9,-9,-9);
+      IntVector fineLevel_ROI_Hi = IntVector(-9,-9,-9);
+      std::vector<IntVector> regionLo(maxLevels);
+      std::vector<IntVector> regionHi(maxLevels);
+      const Patch* notUsed = 0;
+
+      computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw, fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi);
+
+      // TODO package up the region info above into levelParams and ship to GPU kernel
+
+    }
     
     //__________________________________
     //   Assign dataWarehouses
@@ -350,6 +373,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                        d_matl,
                                        patchP,
                                        gridP,
+                                       levelP,
                                        (cudaStream_t*)stream,
                                        RT_flags, 
                                        abskg_gdw,

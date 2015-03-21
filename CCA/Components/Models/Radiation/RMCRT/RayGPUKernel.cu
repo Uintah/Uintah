@@ -67,8 +67,9 @@ __global__ void rayTraceKernel( dim3 dimGrid,
                                 GPUDataWarehouse* old_gdw,
                                 GPUDataWarehouse* new_gdw )
 {
-  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
-  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+    // Not used right now
+//  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
+//  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   
   // calculate the thread indices
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + patch.loEC.x;
@@ -318,6 +319,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          int matl,
                                          patchParams patch,
                                          gridParams gridP,
+                                         levelParams* levelP,  // array of levelParam structs
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,
@@ -326,108 +328,107 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          GPUDataWarehouse* old_gdw,
                                          GPUDataWarehouse* new_gdw )
 {
-  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z; 
-  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
+    // Not used right now
+//  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
+//  int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
   
   // calculate the thread indices
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + patch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + patch.loEC.y;
   
-  const GPUGridVariable< T > sigmaT4OverPi;
-  const GPUGridVariable< T > abskg; 
-  const GPUGridVariable<int> celltype;
+  int maxLevels = gridP.maxLevels;
 
-  GPUGridVariable<double> divQ;
-  GPUGridVariable<GPUStencil7> boundFlux;
-  GPUGridVariable<double> radiationVolQ;
- 
-    
-  sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );       // Should be using labelNames struct
-  celltype_gdw->get( celltype,      "cellType", patch.ID, matl );
-  
-  if(RT_flags.usingFloats){
-    abskg_gdw->get( abskg , "abskgRMCRT",   patch.ID, matl );
-  }else{
-    abskg_gdw->get( abskg , "abskg",   patch.ID, matl );
-  }
+  // for AMR
+  const GPUGridVariable<T>*  abskg         = new GPUGridVariable<T>[maxLevels];
+  const GPUGridVariable<T>*  sigmaT4OverPi = new GPUGridVariable<T>[maxLevels];
+  const GPUGridVariable<T>*  celltype      = new GPUGridVariable<T>[maxLevels];
+  const GPUGridVariable< T > abskg_fine;
+  const GPUGridVariable< T > sigmaT4OverPi_fine;
 
-  if( RT_flags.modifies_divQ ){
-    new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
-    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
-    new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
-  }else{
-    new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
-    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
-    new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
-    
-    
-    // Extra Cell Loop
-    if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
-      #pragma unroll
-      for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
-        GPUIntVector c = make_int3(tidX, tidY, z);
-        divQ[c]          = 0.0;
-        radiationVolQ[c] = 0.0;
-      }
+  // coarse level data
+  for (int level = 0; level < maxLevels; ++level) {
+    if (levelP[level].hasFinerLevel) {
+      abskg_gdw->get(abskg[level], "abskg", patch.ID, matl, level);
+      sigmaT4_gdw->get(sigmaT4OverPi[level], "sigmaT4", patch.ID, matl, level);
+      celltype_gdw->get(celltype[level], "cellType", patch.ID, matl, level);
     }
   }
 
-  double DyDx = patch.dx.y/patch.dx.x;
-  double DzDx = patch.dx.z/patch.dx.x;
-  
+  GPUGridVariable<double>      divQ;
+  GPUGridVariable<GPUStencil7> boundFlux;
+  GPUGridVariable<double>      radiationVolQ;
+
+  // Extra Cell Loop
+  if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) {  // patch boundary check
+    #pragma unroll
+    for (int z = patch.loEC.z; z < patch.hiEC.z; z++) {  // loop through z slices
+      GPUIntVector c = make_int3(tidX, tidY, z);
+      divQ[c] = 0.0;
+      radiationVolQ[c] = 0.0;
+    }
+  }
+
+//  double DyDx = patch.dx.y/patch.dx.x;
+//  double DzDx = patch.dx.z/patch.dx.x;
+
   //______________________________________________________________________
   //           R A D I O M E T E R
   //______________________________________________________________________
   // TO BE FILLED IN
-  
+
   //______________________________________________________________________
   //          B O U N D A R Y F L U X
   //______________________________________________________________________
   if( RT_flags.solveBoundaryFlux ){
     // TO BE FILLED IN
   }
-  
-  
-  //______________________________________________________________________
-  //         S O L V E   D I V Q
-  //______________________________________________________________________
-  if( RT_flags.solveDivQ ){
-    // GPU equivalent of GridIterator loop - calculate sets of rays per thread
-    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
-      #pragma unroll
-      for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
 
-        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
-        double sumI = 0;
-        
-        //__________________________________
-        // ray loop
-        #pragma unroll
-        for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
-        
-          GPUVector direction_vector = findRayDirectionDevice( randNumStates );
-          
-          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
-         
-          updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
-        } //Ray loop
- 
-        //__________________________________
-        //  Compute divQ
-        divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
+//
+//  //______________________________________________________________________
+//  //         S O L V E   D I V Q
+//  //______________________________________________________________________
+//  if( RT_flags.solveDivQ ){
+//    // GPU equivalent of GridIterator loop - calculate sets of rays per thread
+//    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+//      #pragma unroll
+//      for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
+//
+//        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
+//        double sumI = 0;
+//
+//        //__________________________________
+//        // ray loop
+//        #pragma unroll
+//        for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
+//
+//          GPUVector direction_vector = findRayDirectionDevice( randNumStates );
+//
+//          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
+//
+//          updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+//        } //Ray loop
+//
+//        //__________________________________
+//        //  Compute divQ
+//        divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
+//
+//        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
+//        radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
+//
+///*`==========TESTING==========*/
+//#if DEBUG == 1
+//          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
+//                    origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
+//#endif
+///*===========TESTING==========`*/
+//      }  // end z-slice loop
+//    }  // end domain boundary check
+//  }  // solve divQ
 
-        // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used 
-        radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
-        
-/*`==========TESTING==========*/
-#if DEBUG == 1
-          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n", 
-                    origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
-#endif
-/*===========TESTING==========`*/
-      }  // end z-slice loop
-    }  // end domain boundary check
-  }  // solve divQ
+  // free up dynamically allocated items
+  delete(abskg);
+  delete(sigmaT4OverPi);
+  delete(celltype);
 }
 
 //______________________________________________________________________
@@ -932,6 +933,7 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              int matlIndex,
                                              patchParams patch,
                                              gridParams gridP,
+                                             levelParams* levelP,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
                                              GPUDataWarehouse* abskg_gdw,
@@ -953,6 +955,7 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      matlIndex,
                                                                      patch,
                                                                      gridP,
+                                                                     levelP,
                                                                      randNumStates,
                                                                      RT_flags,
                                                                      abskg_gdw,
@@ -1005,6 +1008,7 @@ __host__ void launchRayTraceDataOnionKernel<double>( dim3 dimGrid,
                                                      int matlIndex,
                                                      patchParams patch,
                                                      gridParams gridP,
+                                                     levelParams* levelP,
                                                      cudaStream_t* stream,
                                                      RMCRT_flags RT_flags,
                                                      GPUDataWarehouse* abskg_gdw,
@@ -1021,6 +1025,7 @@ __host__ void launchRayTraceDataOnionKernel<float>( dim3 dimGrid,
                                                     int matlIndex,
                                                     patchParams patch,
                                                     gridParams gridP,
+                                                    levelParams* levelP,
                                                     cudaStream_t* stream,
                                                     RMCRT_flags RT_flags,
                                                     GPUDataWarehouse* abskg_gdw,
