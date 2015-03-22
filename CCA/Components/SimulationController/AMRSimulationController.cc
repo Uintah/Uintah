@@ -83,16 +83,6 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
-  // If VisIt has been included into the build, initialize the lib sim
-  // so that a user can connect to the simulation via VisIt.
-#ifdef HAVE_VISIT
-
-#ifdef HAVE_MPICH
-  d_visit_simulation_data.isProc0 = isProc0_macro;
-#endif
-
-  visit_InitLibSim( &d_visit_simulation_data );
-#endif
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -179,6 +169,19 @@ AMRSimulationController::run()
 #ifndef DISABLE_SCI_MALLOC
    AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
 #endif
+
+  // If VisIt has been included into the build, initialize the lib sim
+  // so that a user can connect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+
+#ifdef HAVE_MPICH
+  d_visit_simulation_data.isProc0 = isProc0_macro;
+#endif
+
+  if( do_visit )
+    visit_InitLibSim( &d_visit_simulation_data );
+#endif
+
    ////////////////////////////////////////////////////////////////////////////
    // The main time loop; here the specified problem is actually getting solved
    
@@ -440,20 +443,24 @@ AMRSimulationController::run()
      // to see if there is a connection and if so if anything needs to be
      // done.
 #ifdef HAVE_VISIT
-     d_visit_simulation_data.schedulerP = d_scheduler;
-     d_visit_simulation_data.gridP = currentGrid;
-     d_visit_simulation_data.time  = time;
-     d_visit_simulation_data.cycle =
-       d_sharedState->getCurrentTopLevelTimeStep();
+     if( do_visit )
+     {
+       d_visit_simulation_data.schedulerP = d_scheduler;
+       d_visit_simulation_data.gridP = currentGrid;
+       d_visit_simulation_data.time  = time;
+       d_visit_simulation_data.cycle =
+	 d_sharedState->getCurrentTopLevelTimeStep();
 
-     visit_CheckState( &d_visit_simulation_data );
+       visit_CheckState( &d_visit_simulation_data );
+     }
 #endif
    } // end while ( time is not up, etc )
 
   // If VisIt has been included into the build, stop here so the
   // user can have once last chance see their data via VisIt.
 #ifdef HAVE_VISIT
-   visit_EndLibSim( &d_visit_simulation_data );
+   if( do_visit )
+     visit_EndLibSim( &d_visit_simulation_data );
 #endif
 
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
