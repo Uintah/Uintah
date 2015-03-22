@@ -2120,8 +2120,14 @@ if test "$sci_required_visit" = "yes"; then
   
   if test "$HAVE_VISIT" = "yes"; then
     DEF_VISIT="#define HAVE_VISIT 1"
-  else
-    DEF_VISIT="#define HAVE_VISIT 1"
+
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+        VISIT_PATH="#define VISIT_PATH ((char*)\"$with_visit\")"
+    # Otherwise assume an installed version
+    else
+        VISIT_PATH="#define VISIT_PATH ((char*)\"${with_visit}/../../../..\")"
+    fi
   fi
 
 fi #end sci_required_visit
@@ -2132,6 +2138,7 @@ AC_SUBST(DEF_VISIT)
 AC_SUBST(INC_VISIT_H)
 AC_SUBST(VISIT_LIB_DIR_FLAG)
 AC_SUBST(VISIT_LIB_FLAG)
+AC_SUBST(VISIT_PATH)
 
 sci_defs_files="$sci_defs_files include/sci_defs/visit_testdefs.h"
 

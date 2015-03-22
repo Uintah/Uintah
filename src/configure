@@ -657,8 +657,6 @@ HYPRE_LIB_FLAG
 INC_HYPRE_H
 DEF_HYPRE
 HAVE_HYPRE
-BUILD_WASATCH_IN_ARCHES
-DEF_WASATCH_IN_ARCHES
 RADPROPS_LIB_DIR_FLAG
 RADPROPS_LIB_FLAG
 INC_RADPROPS_H
@@ -778,6 +776,7 @@ DEF_IEEEFP
 DEF_STAT64
 DL_LIB_DIR_FLAG
 DL_LIB_FLAG
+VISIT_PATH
 VISIT_LIB_FLAG
 VISIT_LIB_DIR_FLAG
 INC_VISIT_H
@@ -974,7 +973,6 @@ with_visit
 with_visus
 with_pidx
 enable_wasatch_3p
-enable_wasatch_in_arches
 enable_static
 enable_verbose
 enable_threads
@@ -1634,9 +1632,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
 --enable-wasatch_3p     Download and build the Wasatch Thirdparty libraries
                           - TabProps ExprLibs SpatialOps RadProps.
---enable-wasatch-in-arches
-                          Turn on the use of Wasatch objects in the Arches
-                          component.
 --enable-static         Build a statically linked version of Uintah. Set to
                           'full' to force full static link.
 --enable-verbose        Turn on verbose configure output
@@ -3786,17 +3781,6 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_3p --disable-wasatch_3p"
-
-
-
-  # Check whether --enable-wasatch_in_arches was given.
-if test "${enable_wasatch_in_arches+set}" = set; then :
-  enableval=$enable_wasatch_in_arches; wasatch_in_arches="yes"
-else
-  wasatch_in_arches="no"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_in_arches --disable-wasatch_in_arches"
 
 
 
@@ -11012,13 +10996,20 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   if test "$HAVE_VISIT" = "yes"; then
     DEF_VISIT="#define HAVE_VISIT 1"
-  else
-    DEF_VISIT="#define HAVE_VISIT 1"
+
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+        VISIT_PATH="#define VISIT_PATH ((char*)\"$with_visit\")"
+    # Otherwise assume an installed version
+    else
+        VISIT_PATH="#define VISIT_PATH ((char*)\"${with_visit}/../../../..\")"
+    fi
   fi
 
 fi #end sci_required_visit
 
 # these are all defined after the call to SCI_COMPILE_LINK_TEST
+
 
 
 
@@ -40344,7 +40335,7 @@ $as_echo_n "checking for Exprlib files (For now we are just verifying the existe
     SPOPS_INCLUDE_DIR="include/expression"
     # Check includes
     for file in ExprDeps.h ExprLib.h Context.h Expression.h ExpressionID.h FieldManagerList.h \
-                ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldRequest.h FieldManager.h FieldManagerBase.h \
+                ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldManager.h FieldManagerBase.h \
                 Functions.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
@@ -40432,24 +40423,6 @@ fi
 
 
 
-
-
-
-##  --  Handle --enable-wasatch-in-arches --------------------------------
-
-BUILD_WASATCH_IN_ARCHES=no
-
-if test "$wasatch_in_arches" = "yes"; then
-   if test "$BUILD_WASATCH" = "no"; then
-      as_fn_error $? "--enable-wasatch-in-arches specified, but Wasatch component not enabled. " "$LINENO" 5
-   fi
-   if test "$BUILD_ARCHES" = "no"; then
-      as_fn_error $? "--enable-wasatch-in-arches specified, but Arches component not enabled. " "$LINENO" 5
-   fi
-
-   DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
-   BUILD_WASATCH_IN_ARCHES=yes
-fi
 
 
 

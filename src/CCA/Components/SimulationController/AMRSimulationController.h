@@ -119,6 +119,12 @@ class Regridder;
 
 #ifdef HAVE_VISIT
      visit_simulation_data d_visit_simulation_data;
+
+     bool do_visit;
+
+   public:
+     void SetVisIt( bool val ) { do_visit = val; }
+     bool GetVisIt() { return do_visit; }
 #endif      
    };
 
