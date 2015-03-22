@@ -349,7 +349,7 @@ void cpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double one_over_4V = 1.0/(4.0*volume);
   Vector alpha[8];
   double phi[8];
-  // conw we construct the vectors necessary for the gradient calculation:
+  // construct the vectors necessary for the gradient calculation:
   alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
@@ -576,7 +576,7 @@ void cpdiInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
   double one_over_8 = .125;
   Vector alpha[8];
   double phi[8];
-  // conw we construct the vectors necessary for the gradient calculation:
+  // construct the vectors necessary for the gradient calculation:
   alpha[0][0]   =  one_over_4V* (-r2[1]*r3[2]+r2[2]*r3[1]+r1[1]*r3[2]-r1[2]*r3[1]-r1[1]*r2[2]+r1[2]*r2[1]);
   alpha[0][1]   =  one_over_4V*(r2[0]*r3[2]-r2[2]*r3[0]-r1[0]*r3[2]+r1[2]*r3[0]+r1[0]*r2[2]-r1[2]*r2[0]);
   alpha[0][2]   =  one_over_4V* (-r2[0]*r3[1]+r2[1]*r3[0]+r1[0]*r3[1]-r1[1]*r3[0]-r1[0]*r2[1]+r1[1]*r2[0]);
