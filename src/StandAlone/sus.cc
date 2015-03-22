@@ -433,7 +433,7 @@ main( int argc, char *argv[], char *env[] )
     // VisIt. The most important is the directory path to where VisIt
     // is located.
 #ifdef HAVE_VISIT
-    else if (arg == "-no-visit") {
+    else if (arg == "-no_visit") {
       do_VisIt = false;
     }
     else if (arg == "-visit_dir" ) {
@@ -520,7 +520,9 @@ main( int argc, char *argv[], char *env[] )
     // optional arguments that VisIt will interpert.
 #ifdef HAVE_VISIT
     if( do_VisIt )
+    {
       visit_LibSimArguments( argc, argv );
+    }
 #endif
 
 #ifndef HAVE_MPICH_OLD

@@ -83,6 +83,10 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
+#ifdef HAVE_VISIT
+  do_visit = true;
+#endif
+
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -179,7 +183,9 @@ AMRSimulationController::run()
 #endif
 
   if( do_visit )
+  {
     visit_InitLibSim( &d_visit_simulation_data );
+  }
 #endif
 
    ////////////////////////////////////////////////////////////////////////////
@@ -460,7 +466,9 @@ AMRSimulationController::run()
   // user can have once last chance see their data via VisIt.
 #ifdef HAVE_VISIT
    if( do_visit )
+   {
      visit_EndLibSim( &d_visit_simulation_data );
+   }
 #endif
 
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first

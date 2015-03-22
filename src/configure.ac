@@ -2079,8 +2079,8 @@ if test "$with_visit" -o "$wasatch_3p" = "yes"; then
 fi
 
 ##  --  search for visit stuff  -------------------------------------------
-# local     - sim/V2/lib/VisItControlInterface_V2.h
-#           - lib/libsimV2.a
+# local     - src/sim/V2/lib/VisItControlInterface_V2.h
+#           - build/lib/libsimV2.a
 
 # installed - linux-x86_64/libsim/V2/include/VisItControlInterface_V2.h
 #           - linux-x86_64/libsim/V2/lib/libsimV2.a
@@ -2097,8 +2097,10 @@ if test "$sci_required_visit" = "yes"; then
     _sci_lib="$with_visit"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     # Check for a local version (compiling against source)
-    if test -e $with_visit/sim/V2/lib; then
+    if test -e $with_visit/sim/V2/lib/VisItControlInterface_V2.h; then
       _sci_inc="$with_visit/sim/V2/lib"
+    elif test -e $with_visit/../src/sim/V2/lib/VisItControlInterface_V2.h; then
+      _sci_inc="$with_visit/../src/sim/V2/lib"
     # Otherwise assume an installed version
     else
       _sci_inc="$with_visit/include"
