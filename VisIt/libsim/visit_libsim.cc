@@ -215,13 +215,16 @@ void visit_CheckState( visit_simulation_data *sim )
     {
       sim->blocking = blocking;
 
-      message << "Visit libsim : Stopped the execution at  "
-	<< "Time="        << sim->time
-	<< " (timestep "  << sim->cycle 
-	<< ")";
-
-      visitdbg << message.str() << std::endl;
-      visitdbg.flush();
+      if( VisItIsConnected() )
+      {
+	message << "Visit libsim : Stopped the execution at  "
+		<< "Time="        << sim->time
+		<< " (timestep "  << sim->cycle 
+		<< ")";
+	
+	visitdbg << message.str() << std::endl;
+	visitdbg.flush();
+      }
     }
 
     /* Get input from VisIt or timeout so the simulation can run. */
