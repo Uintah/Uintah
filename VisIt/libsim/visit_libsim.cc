@@ -30,6 +30,8 @@
 
 #include "StandAlone/tools/uda2vis/uda2vis.h"
 
+#include <sci_defs/visit_defs.h>
+
 #include <iostream>
 #include <string>
 #include <stdio.h>
@@ -51,11 +53,14 @@ namespace Uintah {
 //---------------------------------------------------------------------
 void visit_LibSimArguments(int argc, char **argv)
 {
+  bool setVisItDir = false;
+
   for( int i=1; i<argc; ++i )
   {
     if( strcmp( argv[i], "-visit_dir" ) == 0 )
     {
       VisItSetDirectory(argv[++i]);
+      setVisItDir = true;
     }
     else if( strcmp( argv[i], "-visit_options" ) == 0 )
     {
@@ -65,7 +70,12 @@ void visit_LibSimArguments(int argc, char **argv)
     {
       VisItOpenTraceFile(argv[++i]);
     }
-  }  
+  }
+
+  if( !setVisItDir )
+  {
+      VisItSetDirectory( VISIT_PATH );
+  }
 }
 
 
@@ -230,7 +240,8 @@ void visit_CheckState( visit_simulation_data *sim )
     /* Do different things depending on the output from VisItDetectInput. */
     if(visitstate <= -1 || 5 <= visitstate)
     {
-      visitdbg << "Visit libsim : CheckState cannot recover from error!"
+      visitdbg << "Visit libsim : CheckState cannot recover from error ("
+	       << visitstate << ") !!"
 	       << std::endl;
       visitdbg.flush();
 
