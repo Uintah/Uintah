@@ -4479,19 +4479,7 @@ BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
 
     radiation_temperature.copyData(old_temperature); 
 
-    d_newBC->setExtraCellScalarValueBC( pc, patch, radiation_temperature, "radiation_temperature" );
+    d_newBC->setExtraCellScalarValueBC<double>( pc, patch, radiation_temperature, "radiation_temperature" );
 
   }
 }
-
-void 
-BoundaryCondition::setExtraCellScalarValueBC( const ProcessorGroup* pc, 
-                                              const Patch* patch, 
-                                              CCVariable<double>& variable, 
-                                              const std::string var_name ){ 
-
-  d_newBC->setExtraCellScalarValueBC( pc, patch, variable, var_name ); 
-
-}
-
-

@@ -625,12 +625,7 @@ namespace Uintah {
 
       BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
 
-      /** @brief Access function to setExtraCellScalarValueBC in new BC. 
-       *         This should go away once the BC stuff is merged/cleaned **/ 
-      void setExtraCellScalarValueBC( const ProcessorGroup* pc, 
-                                      const Patch* patch, 
-                                      CCVariable<double>& variable, 
-                                      const std::string var_name );
+      BoundaryCondition_new* getNewBoundaryCondition(){return d_newBC;}     // needed by Arches:RMCRT
 
     private:
 
