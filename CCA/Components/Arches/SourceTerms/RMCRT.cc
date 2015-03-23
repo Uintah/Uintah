@@ -442,7 +442,7 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
                                               const bool backoutTemp )
 {
 
-  std::string taskname = "Ray::setBoundaryConditions";
+  std::string taskname = "RMCRT_radiation::setBoundaryConditions";
 
   Task* tsk = NULL;
   if( _FLT_DBL == TypeDescription::double_type ){
@@ -454,7 +454,7 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
                       temp_dw, radCalc_freq, backoutTemp );
   }
 
-  printSchedule(level,dbg,taskname);
+  printSchedule(level, dbg, "RMCRT_radiation::sched_setBoundaryConditions");
 
   if(!backoutTemp){
     tsk->requires( temp_dw, _tempLabel, Ghost::None,0 );
@@ -535,9 +535,12 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
 //      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
 //      setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
 
+      string comp_abskg = _abskgLabel->getName();
+      string comp_Temp =  _tempLabel->getName();
+
       BoundaryCondition_new* new_BC = _boundaryCondition->getNewBoundaryCondition();
-      new_BC->setExtraCellScalarValueBC< T >( pc, patch, abskg, "abskg" );
-      new_BC->setExtraCellScalarValueBC< double >( pc, patch, temp,  "radiation_temperature" );
+      new_BC->setExtraCellScalarValueBC< T >(      pc, patch, abskg, comp_abskg );
+      new_BC->setExtraCellScalarValueBC< double >( pc, patch, temp,  comp_Temp );
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
