@@ -95,6 +95,7 @@ NIGHTLYTESTS = [
 
 # multi-threaded NIGHTLY tests
    ("rmcrt_bm1_1L_thread"         , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_ML_thread"         , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
    ("rmcrt_bm1_DO_thread"         , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
 ]
 
@@ -150,8 +151,9 @@ LOCALTESTS = [
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    
 # multi-threaded LOCAL tests
-   #("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   #("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
+   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_ML_thread"                , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
 ]
 
 NEWTESTS = [
