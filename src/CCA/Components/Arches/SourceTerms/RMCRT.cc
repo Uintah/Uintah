@@ -357,21 +357,31 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   
   
   //__________________________________
-  //  only schedule on arches level
-  if( level->getIndex() == _archesLevelIndex ){
-    string taskname = "RMCRT_Radiation::sched_initialize"; 
-    Task* tsk = scinew Task(taskname, this, &RMCRT_Radiation::initialize);
-    printSchedule(level,dbg,taskname);
     
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& myLevel = grid->getLevel(l);
+
+    int L_ID= myLevel->getIndex();
+    ostringstream taskname;
+    taskname << "RMCRT_Radiation::sched_initialize_L-" << L_ID;
+
+    Task* tsk = scinew Task( taskname.str(), this, &RMCRT_Radiation::initialize );
+    printSchedule( level, dbg, taskname.str() );
+
+    //  only schedule src on arches level
+    if( L_ID == _archesLevelIndex ){
     tsk->computes(_src_label);
-    sched->addTask(tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+    } else {
+      tsk->computes( _abskgLabel );
+    }
+    sched->addTask( tsk, myLevel->eachPatch(), _sharedState->allArchesMaterials() );
   }
   
   //__________________________________
   //  initialize cellType on NON arches level
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
-    if( level->getIndex() != _archesLevelIndex ){      
+    if( level->getIndex() != _archesLevelIndex ){
       _boundaryCondition->sched_cellTypeInit( sched, level, _sharedState->allArchesMaterials() );
     }
   }
@@ -386,13 +396,22 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
                              DataWarehouse* , 
                              DataWarehouse* new_dw )
 {
+  const Level* level = getLevel(patches);
+
   for (int p=0; p < patches->size(); p++){
 
     const Patch* patch = patches->get(p);
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::initialize");
+
+    if( level->getIndex() == _archesLevelIndex ){
     CCVariable<double> src;
     new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
     src.initialize(0.0); 
+    } else {
+      CCVariable<double> abskg;
+      new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch );
+      abskg.initialize(0.0);
+    }
   }
 }
 
