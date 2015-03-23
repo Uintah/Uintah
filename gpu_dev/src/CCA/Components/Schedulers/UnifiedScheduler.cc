@@ -1208,8 +1208,13 @@ UnifiedScheduler::runTasks( int thread_id )
           //(It would be nice if the task graph didn't have this OutputVariables task if
           //it wasn't going to output data, but that would require more task graph recompilations,
           //which can be even costlier overall.  So we do the check here.)
+          //So all tasks not named outputVariables tasks will be processed.  Otherwise we previously
+          //make sure this output timestep really will output.
           if ((m_outPort->isOutputTimestep()) || (readyTask->getName() != "DataArchiver::outputVariables")) {
-           initiateD2H(readyTask);
+            if (readyTask->getName() == "DataArchiver::outputVariables(checkpoint)") {
+              cerr << "WARNING: A bug in the unified scheduler means checkpoint DataArchiver can conflict with regular data archiving." << endl;
+            }
+            initiateD2H(readyTask);
           }
           dts->addInitiallyReadyHostTask(readyTask);
 
@@ -2084,7 +2089,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
   //it all takes
   deviceGridVariables deviceVars;
   deviceGhostCells ghostVars;
-
+/*
   //There are sets of dependencies (for now, we work with just computes and requires).
   //Loop through all dependencies in each set. This takes some overhead to prepare it.
   vector< const Task::Dependency* > dependencies;
@@ -2099,11 +2104,61 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
     currentDependencySet = 0;
     curDependency = dependencies.at(currentDependencySet);
   }
+  SchedulerCommon::uintahSetCudaDevice(getGpuIndexForPatch(curDependency->getPatchesUnderDomain(dtask->getPatches())->get(0)));
+*/
+
+  //Gather up all possible dependents and remove duplicate (we don't want to transfer some variables twice)
+
+  std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
+  for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+
+    // this is so we can allocate persistent events and streams to distribute when needed
+    //   one stream and one event per variable per H2D copy (numPatches * numMatls)
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        labelPatchMatlDependency lpmd(dependantVar->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
+        if (vars.find(lpmd) == vars.end()) {
+          vars.insert( std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type( lpmd, dependantVar ) );
+        }
+      }
+    }
+  }
+  for (const Task::Dependency* dependantVar = task->getComputes(); dependantVar != 0; dependantVar = dependantVar->next) {
+    constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+    constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+
+    // this is so we can allocate persistent events and streams to distribute when needed
+    //   one stream and one event per variable per H2D copy (numPatches * numMatls)
+    int numPatches = patches->size();
+    int numMatls = matls->size();
+    for (int i = 0; i < numPatches; i++) {
+      for (int j = 0; j < numMatls; j++) {
+        labelPatchMatlDependency lpmd(dependantVar->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Computes);
+        if (vars.find(lpmd) == vars.end()) {
+          vars.insert( std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type( lpmd, dependantVar ) );
+        }
+      }
+    }
+  }
+
   //The task runs on one device.  The first patch we see can be used to tell us
   //which device we should be on.
-  SchedulerCommon::uintahSetCudaDevice(getGpuIndexForPatch(curDependency->getPatchesUnderDomain(dtask->getPatches())->get(0)));
+  std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
+  varIter = vars.begin();
+  if (varIter != vars.end()) {
+    SchedulerCommon::uintahSetCudaDevice(getGpuIndexForPatch(varIter->second->getPatchesUnderDomain(dtask->getPatches())->get(0)));
+  }
 
-  while (curDependency != NULL) {
+
+  //Go through each unique dependent var and see if we should queue up a D2H copy
+  for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
+    const Task::Dependency* curDependency = varIter->second;
+
+  //while (curDependency != NULL) {
     constHandle<PatchSubset> patches = curDependency->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = curDependency->getMaterialsUnderDomain(dtask->getMaterials());
     int numPatches = patches->size();
@@ -2121,6 +2176,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
           || type == TypeDescription::SFCYVariable || type == TypeDescription::SFCZVariable ||
           type == TypeDescription::PerPatch) {
 
+
         int dwIndex = curDependency->mapDataWarehouse();
         OnDemandDataWarehouseP dw = dws[dwIndex];
 
@@ -2136,6 +2192,22 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
         for (int j = 0; j < numMatls; j++) {
 
           int matlID = matls->get(j);
+
+          if (gpu_stats.active()) {
+            cerrLock.lock();
+            {
+              gpu_stats << "Handling dependency for " << curDependency->var->getName()
+                        << " for patch: " << patchID
+                        << " material:  " << matlID;
+              if (curDependency->deptype == Task::Requires) {
+                gpu_stats << " - A REQUIRES dependency" << endl;
+              } else if (curDependency->deptype == Task::Computes) {
+                gpu_stats << " - A COMPUTES dependency" << endl;
+              }
+            }
+            cerrLock.unlock();
+          }
+
           if (curDependency->deptype == Task::Requires) {
             //See if this grid variable still exists on the device from some prior task and
             //never got copied back to the host.
@@ -2350,6 +2422,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
       }
     }
 
+    /*
     //Get the next dependency
     curDependency = curDependency->next;
     if (curDependency == NULL) {
@@ -2358,7 +2431,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
       if (currentDependencySet < dependencies.size()) {
         curDependency = dependencies.at(currentDependencySet);
       }
-    }
+    }*/
   }
 
   // We've now gathered up all possible things that need to go on the device.  Copy it over.
@@ -2801,10 +2874,35 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
     void* device_ptr = NULL;    // host base pointer to raw data
     size_t host_bytes = 0;    // raw byte count to copy to the device
 
+    const Task* task = dtask->getTask();
 
     //The only thing we need to process is the requires.
-    const Task* task = dtask->getTask();
+
+    //Gather up all possible dependents and remove duplicate (we don't want to transfer some variables twice)
+    std::map<labelPatchMatlDependency, const Task::Dependency*> vars;
     for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->next) {
+      constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
+      constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
+
+      // this is so we can allocate persistent events and streams to distribute when needed
+      //   one stream and one event per variable per H2D copy (numPatches * numMatls)
+      int numPatches = patches->size();
+      int numMatls = matls->size();
+      for (int i = 0; i < numPatches; i++) {
+        for (int j = 0; j < numMatls; j++) {
+          labelPatchMatlDependency lpmd(dependantVar->var->getName().c_str(), patches->get(i)->getID(), matls->get(j), Task::Requires);
+          if (vars.find(lpmd) == vars.end()) {
+            vars.insert( std::map<labelPatchMatlDependency, const Task::Dependency*>::value_type( lpmd, dependantVar ) );
+          }
+        }
+      }
+    }
+
+    //Go through each unique dependent var and see if we should queue up a D2H copy
+    std::map<labelPatchMatlDependency, const Task::Dependency*>::iterator varIter;
+    for (varIter = vars.begin(); varIter != vars.end(); ++varIter) {
+      const Task::Dependency* dependantVar = varIter->second;
+    //for (const Task::Dependency* dependantVar = task->getRequires(); dependantVar != 0; dependantVar = dependantVar->next) {
       constHandle<PatchSubset> patches = dependantVar->getPatchesUnderDomain(dtask->getPatches());
       constHandle<MaterialSubset> matls = dependantVar->getMaterialsUnderDomain(dtask->getMaterials());
 
@@ -2827,6 +2925,16 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
               case TypeDescription::SFCXVariable :
               case TypeDescription::SFCYVariable :
               case TypeDescription::SFCZVariable : {
+
+                if (gpu_stats.active()) {
+                  cerrLock.lock();
+                  {
+                    gpu_stats << "InitiateD2H, task: " << dtask->getName() << ".  Checking if we should copy of \"" << dependantVar->var->getName()
+                        << "\" Patch " << patchID << " Material " << matlID << " on thread " << Thread::self()->myid() << endl;
+                  }
+                  cerrLock.unlock();
+                }
+
                 //See if it exists on the GPU, not as part of a contiguous array
 
                 IntVector host_low, host_high, host_lowOffset, host_highOffset, host_offset, host_size, host_strides;
@@ -2837,13 +2945,13 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                 OnDemandDataWarehouseP dw = dws[dwIndex];
 
                 //TODO: Add check to make sure the data isn't valid on the CPU.
-                if (/*gpudw->exist(dependantVar->var->getName().c_str(),
-                    patchID,
-                    matlID,
-                    make_int3(host_high.x() - host_low.x(), host_high.y() - host_low.y(), host_high.z() - host_low.z()),
-                    make_int3(host_low.x(), host_low.y(), host_low.z()),
-                    true) && */
-                    gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID) ){
+                //if (gpudw->exist(dependantVar->var->getName().c_str(),
+                //    patchID,
+                //    matlID,
+                //    make_int3(host_high.x() - host_low.x(), host_high.y() - host_low.y(), host_high.z() - host_low.z()),
+                //    make_int3(host_low.x(), host_low.y(), host_low.z()),
+                //    true) &&
+                if (gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID) ){
 
                   //It's possible the computes data may contain ghost cells.  But a task needing to get the data
                   //out of the GPU may not know this.  It may just want the var data.
@@ -2876,20 +2984,6 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   // copy the computes data back to the host
                   d2hComputesLock_.writeLock();
                   {
-                    /*
-                     * Until better type information support is implemented for GPUGridVariables
-                     *   we need to determine the size of a single element in the Arary3Data object to
-                     *   know what type of GPUGridVariable to create and use.
-                     *
-                     *   "host_strides.x()" == sizeof(T)
-                     *
-                     *   This approach currently supports:
-                     *   ------------------------------------------------------------
-                     *   GPUGridVariable<int>
-                     *   GPUGridVariable<double>
-                     *   GPUGridVariable<GPUStencil7>
-                     *   ------------------------------------------------------------
-                     */
 
                     int3 device_offset;
                     int3 device_size;
@@ -2967,7 +3061,6 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   d2hComputesLock_.writeUnlock();
                   delete gridVar;
                 }
-
                 break;
               } case TypeDescription::PerPatch :{
                 if (gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID) ){

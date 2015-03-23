@@ -80,8 +80,8 @@
       <Box label = "1">                              
          <lower>     [0,0,0]        </lower>         
          <upper>     [1.0,1.0,1.0]  </upper>         
-         <resolution>[20,20,20]     </resolution>    
-         <patches>   [2,2,2]        </patches>       
+         <resolution>[200,200,200]     </resolution>    
+         <patches>   [5,5,5]        </patches>       
       </Box>                                         
     </Level>
   </Grid>
