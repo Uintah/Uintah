@@ -228,8 +228,39 @@ class UnifiedScheduler : public MPIScheduler  {
     mutable CrowdMonitor hostComputesAllocationLock_;
     mutable CrowdMonitor deviceComputesTemporaryLock_;*/
 
+    struct labelPatchMatlDependency {
+      std::string     label;
+      int        patchID;
+      int        matlIndex;
+      Task::DepType    depType;
+
+      labelPatchMatlDependency(const char * label, int patchID, int matlIndex, Task::DepType depType) {
+        this->label = label;
+        this->patchID = patchID;
+        this->matlIndex = matlIndex;
+        this->depType = depType;
+      }
+      //This so it can be used in an STL map
+      bool operator<(const labelPatchMatlDependency& right) const {
+        if (this->label < right.label) {
+          return true;
+        } else if (this->label == right.label && (this->patchID < right.patchID)) {
+          return true;
+        } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndex < right.matlIndex)) {
+          return true;
+        } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndex == right.matlIndex) && (this->depType < right.depType)) {
+          return true;
+        } else {
+          return false;
+        }
+
+      }
+
+    };
+
 #endif
 };
+
 
 
 class UnifiedSchedulerWorker : public Runnable {
@@ -259,6 +290,8 @@ private:
   int                    d_rank;
   double                 d_waittime;
   double                 d_waitstart;
+
+
 };
 
 } // End namespace Uintah

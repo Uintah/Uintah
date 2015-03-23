@@ -808,6 +808,20 @@ HOST_DEVICE GPUDataWarehouse::dataItem*
 GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
+
+
+  //This upcoming __syncthreads is needed.  I believe with CUDA function calls are inlined.
+  // If you don't have it this upcoming __syncthreads here's what can happen:
+
+  // * The correct index was found by 1 of the threads.
+  // * The last __syncthreads is called, all threads met up there.
+  // * Some threads in the block then make a second "function" call and reset index to -1
+  // * Meanwhile, those other threads were still in the first "function" call and hadn't
+  //   yet processed if (index == -1).  They now run that line.  And see index is now -1.  That's bad.
+
+  // So to prevent this scenario, we have one more __syncthreads.
+  __syncthreads();  //sync before get
+
   __shared__ int index;
 
   int numThreads = blockDim.x * blockDim.y * blockDim.z;
@@ -815,18 +829,20 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndex)
   int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;  //threadID in the block
 
   int i = threadID;
-  __syncthreads();  //sync before get
   index = -1;
+  __syncthreads();  //sync before get
 
-  if (d_debug && threadID == 0 && blockID == 0) {
-    printf("device getting item \"%s\" from GPUDW %p", label, this);
-    printf("size (%d vars)\n Available labels:", d_numItems);
-  }
+
+  //if (d_debug && threadID == 0 && blockID == 0) {
+  //  printf("device getting item \"%s\" from GPUDW %p", label, this);
+  //  printf("size (%d vars)\n Available labels:", d_numItems);
+  //}
 
   //Have every thread try to find the label/patchId/matlIndex is a match in
   //array.  This is a clever approach so that instead of doing a simple
   //sequential search with one thread, we can let every thread search for it.  Only the
   //winning thread gets to write to shared data.
+
   while(i<d_numItems){
     int strmatch=0;
     char const *s1 = label; //reset s1 and s2 back to the start
@@ -844,8 +860,11 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndex)
 
   //sync before return;
   __syncthreads();
-  if (index == -1) return NULL;
-  else return &d_varDB[index];
+  if (index == -1) {
+    printf("ERROR:\nGPUDataWarehouse::getItem() didn't find anything for %s patch %d matl %d with threadID %d and numthreads %d\n", label, patchID, matlIndex, threadID, numThreads);
+    return NULL;
+  }
+  return &d_varDB[index];
 #else
   //__________________________________
   // cpu code
@@ -1620,50 +1639,52 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream, void* 
 
 
 
-  /*
+    /*
     //View a variable before and after the ghost cell copy
     {
     cudaDeviceSynchronize();
-    //pull out phi0
+    //pull out phi01
     Uintah::GPUGridVariable<double> myDeviceVar;
-    getModifiable( myDeviceVar, "phi0", 0, 0 );
+    getModifiable( myDeviceVar, "phi1", 0, 0 );
     double * uintahDeviceFieldVar = const_cast<double*>( myDeviceVar.getPointer() );
     printf("Before the device pointer is %p\n", uintahDeviceFieldVar);
     double * hostSideVar = new double[myDeviceVar.getMemSize()/8];
     CUDA_RT_SAFE_CALL(cudaMemcpy((void*)hostSideVar, (void*)uintahDeviceFieldVar, myDeviceVar.getMemSize(), cudaMemcpyDeviceToHost));
-    printf("Contents of phi0:\n");
-    for (int i = 0; i < 34; i++) {
-      for (int j = 0; j < 34; j++) {
-        printf("%1.3lf ", hostSideVar[i*34+j]);
+    printf("Contents of phi1:\n");
+    for (int i = 0; i < 12; i++) {
+      for (int j = 0; j < 12; j++) {
+        printf("%1.3lf ", hostSideVar[i*12+j]);
       }
       printf("\n");
     }
 
     delete[] hostSideVar;
     }
-*/
+    */
+
     copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy, taskID);
-/*
+
+    /*
     {
     cudaDeviceSynchronize();
     //pull out phi0
     Uintah::GPUGridVariable<double> myDeviceVar;
-    getModifiable( myDeviceVar, "phi0", 0, 0 );
+    getModifiable( myDeviceVar, "phi1", 0, 0 );
     double * uintahDeviceFieldVar = const_cast<double*>( myDeviceVar.getPointer() );
     printf("After the device pointer is %p\n", uintahDeviceFieldVar);
     double * hostSideVar = new double[myDeviceVar.getMemSize()/8];
     CUDA_RT_SAFE_CALL(cudaMemcpy((void*)hostSideVar, (void*)uintahDeviceFieldVar, myDeviceVar.getMemSize(), cudaMemcpyDeviceToHost));
-    printf("Contents of phi0:\n");
-    for (int i = 0; i < 34; i++) {
-      for (int j = 0; j < 34; j++) {
-        printf("%1.3lf ", hostSideVar[i*34+j]);
+    printf("Contents of phi1:\n");
+    for (int i = 0; i < 12; i++) {
+      for (int j = 0; j < 12; j++) {
+        printf("%1.3lf ", hostSideVar[i*12+j]);
       }
       printf("\n");
     }
 
     delete[] hostSideVar;
     }
-*/
+    */
 
 
   }
@@ -1896,7 +1917,7 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int patchID,
 
   int i = threadID;
   while (i < d_numItems) {
-    printf("   Available labels: \"%s\"\n", d_varDB[i].label);
+    printf("   Error - Available labels: \"%s\"\n", d_varDB[i].label);
     i = i + numThreads;
   }
   if (isThread0_Blk0()) {
