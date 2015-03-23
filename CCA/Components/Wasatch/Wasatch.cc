@@ -175,7 +175,7 @@ namespace Wasatch{
       delete it->second;
     }
     delete cellType_;
-//    delete rmcrt_;
+    delete rmcrt_;
     delete particlesHelper_;
   }
 
