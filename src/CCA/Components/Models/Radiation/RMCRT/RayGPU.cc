@@ -238,6 +238,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       return;
     }
     
+
     //__________________________________
     //  Grid Parameters
     gridParams gridP;
@@ -257,9 +258,18 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     //__________________________________
     //  Level Parameters
     levelParams levelP[maxLevels];
-    for (int l; l < maxLevels; ++ l) {
-      LevelP level = new_dw->getGrid()->getLevel(l);
+    IntVector fineLevel_ROI_Lo = IntVector(-9,-9,-9);
+    IntVector fineLevel_ROI_Hi = IntVector(-9,-9,-9);
+    std::vector<IntVector> regionLo(maxLevels);
+    std::vector<IntVector> regionHi(maxLevels);
+    const Patch* finePatch = finePatches->get(0);
 
+    //__________________________________
+    // Retrieve fine level data, ROI and extents of the regions below the fineLevel
+    computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw, fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi);
+
+    for (int l = 0; l < maxLevels; ++l) {
+      LevelP level = new_dw->getGrid()->getLevel(l);
       levelP[l].hasFinerLevel = level->hasFinerLevel();
 
       SCIRun::Vector dx = level->dCell();
@@ -267,18 +277,12 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       levelP[l].DzDx  = dx.z() / dx.x();
       levelP[l].Dx = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
 
-      IntVector fineLevel_ROI_Lo = IntVector(-9,-9,-9);
-      IntVector fineLevel_ROI_Hi = IntVector(-9,-9,-9);
-      std::vector<IntVector> regionLo(maxLevels);
-      std::vector<IntVector> regionHi(maxLevels);
-      const Patch* notUsed = 0;
-
-      computeExtents(level_0, fineLevel, notUsed, maxLevels, new_dw, fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi);
-
-      // TODO package up the region info above into levelParams and ship to GPU kernel
-
+      IntVector rlo = regionLo[l];
+      IntVector rhi = regionHi[l];
+      levelP[l].regionLo = GPUIntVector(make_int3(rlo.x(), rlo.y(), rlo.z()));
+      levelP[l].regionHi = GPUIntVector(make_int3(rhi.x(), rhi.y(), rhi.z()));
     }
-    
+
     //__________________________________
     //   Assign dataWarehouses
     GPUDataWarehouse* old_gdw = old_dw->getGPUDW()->getdevice_ptr();
@@ -291,28 +295,28 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     //__________________________________
     //  RMCRT_flags
     RMCRT_flags RT_flags;
-    RT_flags.modifies_divQ = modifies_divQ;
+    RT_flags.modifies_divQ     = modifies_divQ;
 
-    RT_flags.solveDivQ = d_solveDivQ;
-    RT_flags.allowReflect = d_allowReflect;
+    RT_flags.solveDivQ         = d_solveDivQ;
+    RT_flags.allowReflect      = d_allowReflect;
     RT_flags.solveBoundaryFlux = d_solveBoundaryFlux;
     RT_flags.CCRays = d_CCRays;
     RT_flags.usingFloats = (d_FLT_DBL == TypeDescription::float_type);
 
-    RT_flags.sigma = d_sigma;
-    RT_flags.sigmaScat = d_sigmaScat;
-    RT_flags.threshold = d_threshold;
+    RT_flags.sigma             = d_sigma;
+    RT_flags.sigmaScat         = d_sigmaScat;
+    RT_flags.threshold         = d_threshold;
 
-    RT_flags.nDivQRays = d_nDivQRays;
-    RT_flags.nFluxRays = d_nFluxRays;
-    RT_flags.whichROI_algo = d_whichROI_algo;
+    RT_flags.nDivQRays         = d_nDivQRays;
+    RT_flags.nFluxRays         = d_nFluxRays;
+    RT_flags.whichROI_algo     = d_whichROI_algo;
 
     
     double start = clock();
         
     //______________________________________________________________________
     //
-    // patch loop
+    // patch loop - not really necessary for now, should be only one patch in the PatchSubset
     int numPatches = finePatches->size();
     for (int p = 0; p < numPatches; ++p) {
 
@@ -395,8 +399,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
         std::cout << " Efficiency: " << efficiency << " steps per sec" << "\n";
         std::cout << std::endl;
       }
-    }  //end patch loop    
-    
+    }  //end patch loop
+
 #endif // end #ifdef HAVE_CUDA
   }  //end GPU task code
 }

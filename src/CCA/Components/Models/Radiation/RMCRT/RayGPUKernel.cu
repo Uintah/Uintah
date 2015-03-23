@@ -368,13 +368,13 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     }
   }
 
-//  double DyDx = patch.dx.y/patch.dx.x;
-//  double DzDx = patch.dx.z/patch.dx.x;
 
   //______________________________________________________________________
   //           R A D I O M E T E R
   //______________________________________________________________________
   // TO BE FILLED IN
+
+
 
   //______________________________________________________________________
   //          B O U N D A R Y F L U X
@@ -383,11 +383,12 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     // TO BE FILLED IN
   }
 
-//
-//  //______________________________________________________________________
-//  //         S O L V E   D I V Q
-//  //______________________________________________________________________
-//  if( RT_flags.solveDivQ ){
+
+
+  //______________________________________________________________________
+  //         S O L V E   D I V Q
+  //______________________________________________________________________
+//  if( RT_flags.solveDivQ ) {
 //    // GPU equivalent of GridIterator loop - calculate sets of rays per thread
 //    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
 //      #pragma unroll
