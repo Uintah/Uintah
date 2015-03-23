@@ -15,7 +15,6 @@ static DebugStream dbg("RMCRT", false);
 /*______________________________________________________________________
           TO DO:
  
- - Use d_boundaryContition to set BC for abskg and sigmaT4
  - Allow the user to select between double or float RMCRT, see _FLT_DBL
  
  ______________________________________________________________________*/
@@ -249,7 +248,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
      // compute sigmaT4 on the finest level
     _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
  
-    _RMCRT->sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
+    sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
         
     // coarsen data to the coarser levels.  
     // do it in reverse order
@@ -262,7 +261,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const bool modifies_sigmaT4 = false;
       
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq );
-      _RMCRT->sched_setBoundaryConditions( level, sched, notUsed, _radiation_calc_freq, backoutTemp );
+      sched_setBoundaryConditions( level, sched, notUsed, _radiation_calc_freq, backoutTemp );
     }
     
     //__________________________________
@@ -303,8 +302,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
         
-        _RMCRT->sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
-      //  sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
+        sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
         
         _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
       }
@@ -374,7 +372,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     if( level->getIndex() != _archesLevelIndex ){      
-      _boundaryCondition->sched_cellTypeInit( sched, level, _sharedState->allArchesMaterials());
+      _boundaryCondition->sched_cellTypeInit( sched, level, _sharedState->allArchesMaterials() );
     }
   }
 }
@@ -517,8 +515,10 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
       // set the boundary conditions
 //      setBC< T, double >  (abskg,    d_abskgBC_tag,               patch, d_matl);
 //      setBC<double,double>(temp,     d_compTempLabel->getName(),  patch, d_matl);
-      //_boundaryCondition->setExtraCellScalarValueBC( pc, patch, abskg, "abskg" );
-      //_boundaryCondition->setExtraCellScalarValueBC( pc, patch, temp,  "radiation_temperature" );
+
+      BoundaryCondition_new* new_BC = _boundaryCondition->getNewBoundaryCondition();
+      new_BC->setExtraCellScalarValueBC< T >( pc, patch, abskg, "abskg" );
+      new_BC->setExtraCellScalarValueBC< double >( pc, patch, temp,  "radiation_temperature" );
 
       //__________________________________
       // loop over boundary faces and compute sigma T^4
