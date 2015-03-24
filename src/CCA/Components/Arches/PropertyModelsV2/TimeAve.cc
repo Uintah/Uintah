@@ -416,7 +416,7 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       sum_y.initialize(0.0);
       sum_z.initialize(0.0);
 
-      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+      for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
 
         IntVector c = *iter; 
 
