@@ -21,8 +21,11 @@
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable, 
-                                                                          time_ave'">
-                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable'">
+                                                                          variable_stats'">
+
+          <!-- For variable_stats, the variable_type is the type for the variable which you are time averaging -->
+          <variable_type                spec="REQUIRED STRING 'svol, xvol, yvol, zvol'"
+                                        need_applies_to="type variable_stats"/>
 
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
                                         need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps). 
@@ -32,11 +35,22 @@
                                                                                              to allocate the variables in the old_dw. It must be turned OFF for subsequent 
                                                                                              restarts -->
 
-          <!-- The time_ave option produces a sum(phi*dt) or sum(rho*u*phi) (all three components) from which
-               a time average can be computed -->
+          <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi) (all three components) and the sum(squared value) from which
+               a time average can be computed.
+
+               For single variables: 
+                - The summed variable to save is the label+"_running_sum". (i.e., label=my_var then my_var_running_sum) 
+                - The squared sum variable to save is the label+"_squared_sum". 
+
+               For flux variables: 
+                - The summed variables to save are label+"_running_sum_x", label+"_running_sum_y", label+"_running_sum_z". 
+                - The squared sum variables to save are label+"_squared_sum_x" and so on. 
+
+               Variance can be computed as: var^2 = (running_sum/T)^2 - squared_sum/T, where T = total time.
+          -->
           <single_variable              spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type time_ave"> <!-- time average a single variable -->
+                                        need_applies_to="type variable_stats"> <!-- time average a single variable -->
 
             <new                        spec="OPTIONAL NO_DATA"/> <!-- Turn this flag on only for variables that either you want to reinitialize to zero 
                                                                         or if this variable didn't exist in a previous uda -->
@@ -46,7 +60,7 @@
           <flux_variable                spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="phi OPTIONAL STRING"
-                                        need_applies_to="type time_ave"> <!-- time average a flux variable rho*u*phi - creates all three components 
+                                        need_applies_to="type variable_stats"> <!-- time average a flux variable rho*u*phi - creates all three components 
                                                                                If phi isn't specified, then this is the total mass flux -->
 
             <new                        spec="OPTIONAL NO_DATA"/> <!-- Turn this flag on only for variables that either you want to reinitialize to zero 
@@ -54,7 +68,7 @@
           </flux_variable>
           <density                      spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type time_ave"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
+                                        need_applies_to="type variable_stats"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
 
         </model>
       </PropertyModelsV2>

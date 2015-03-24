@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 //Specific models: 
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
-#include <CCA/Components/Arches/PropertyModelsV2/TimeAve.h>
+#include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 
 using namespace Uintah; 
 
@@ -49,14 +49,45 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         register_task( name, tsk ); 
         _pre_update_property_tasks.push_back( name ); 
 
-      } else if ( type == "time_ave" ){ 
+      } else if ( type == "variable_stats" ){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew TimeAve::Builder( name, 0, _shared_state ); 
-        register_task( name, tsk ); 
-        _finalize_property_tasks.push_back( name ); 
+        std::string var_type; 
+        db_model->require("variable_type",var_type);
+
+        if ( var_type == "svol" ){ 
+
+          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::SVolField>::Builder( name, 0, _shared_state ); 
+          register_task( name, tsk ); 
+          _finalize_property_tasks.push_back( name ); 
+
+        } else if ( var_type == "xvol" ){ 
+
+          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::XVolField>::Builder( name, 0, _shared_state ); 
+          register_task( name, tsk ); 
+          _finalize_property_tasks.push_back( name ); 
+
+        } else if ( var_type == "yvol" ){ 
+
+          //TaskInterface::TaskBuilder* tsk = scinew TimeAve<SpatialOps::YVolField>::Builder( name, 0, _shared_state ); 
+          //register_task( name, tsk ); 
+          //_finalize_property_tasks.push_back( name ); 
+
+        } else if ( var_type == "zvol" ){ 
+
+          //TaskInterface::TaskBuilder* tsk = scinew TimeAve<SpatialOps::ZVolField>::Builder( name, 0, _shared_state ); 
+          //register_task( name, tsk ); 
+          //_finalize_property_tasks.push_back( name ); 
+
+        } else { 
+
+          throw InvalidValue("Error: variable type not supported for variable_stats property model",__FILE__,__LINE__);
+
+        }
 
       } else { 
+
         throw InvalidValue("Error: Property model not recognized.",__FILE__,__LINE__); 
+
       }
 
 
