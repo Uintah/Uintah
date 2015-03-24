@@ -37,7 +37,7 @@
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
-#include <CCA/Components/Arches/CoalModels/BTDevol.h>
+#include <CCA/Components/Arches/CoalModels/FOWYDevol.h>
 #include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
@@ -265,6 +265,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
   _boost_factory_map.insert(std::make_pair("property_models_factory", PropModels)); 
 
+  //==================== NEW STUFF ===============================
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
@@ -281,7 +282,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   }
   proc0cout << endl;
-  //===================END NEW TASK STUFF
 
   //Checking for lagrangian particles:
   _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
@@ -766,7 +766,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   // do any last setup operations on the active source terms: 
   src_factory.extraSetup( grid, d_boundaryCondition ); 
-
 
   // Add extra species to table lookup as required by models
   d_props->addLookupSpecies();
@@ -2319,9 +2318,9 @@ void Arches::registerModels(ProblemSpecP& db)
           // Richards Fletcher devolatilization model
           ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "BTDevol" ) {
+        } else if ( model_type == "FOWYDevol" ) {
           // Biagini Tognotti devolatilization model
-          ModelBuilder* modelBuilder = scinew BTDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
           ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);

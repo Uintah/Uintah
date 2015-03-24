@@ -1,5 +1,5 @@
-#ifndef Uintah_Component_Arches_BTDevol_h
-#define Uintah_Component_Arches_BTDevol_h
+#ifndef Uintah_Component_Arches_FOWYDevol_h
+#define Uintah_Component_Arches_FOWYDevol_h
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
@@ -11,7 +11,7 @@
 //===========================================================================
 
 /**
-  * @class    BTDevol
+  * @class    FOWYDevol
   * @author   Jeremy Thornock, Julien Pedel, Charles Reid
   * @date     May 2009        Check-in of initial version
   *           November 2009   Verification
@@ -29,17 +29,17 @@
 namespace Uintah{
 
 class ArchesLabel;
-class BTDevolBuilder: public ModelBuilder 
+class FOWYDevolBuilder: public ModelBuilder 
 {
 public: 
-  BTDevolBuilder( const std::string               & modelName,
+  FOWYDevolBuilder( const std::string               & modelName,
                                 const std::vector<std::string>  & reqICLabelNames,
                                 const std::vector<std::string>  & reqScalarLabelNames,
                                 ArchesLabel                     * fieldLabels,
                                 SimulationStateP                & sharedState,
                                 int qn );
 
-  ~BTDevolBuilder(); 
+  ~FOWYDevolBuilder(); 
 
   ModelBase* build(); 
 
@@ -50,17 +50,17 @@ private:
 // End Builder
 //---------------------------------------------------------------------------
 
-class BTDevol: public Devolatilization {
+class FOWYDevol: public Devolatilization {
 public: 
 
-  BTDevol( std::string modelName, 
+  FOWYDevol( std::string modelName, 
                          SimulationStateP& shared_state, 
                          ArchesLabel* fieldLabels,
                          std::vector<std::string> reqICLabelNames,
                          std::vector<std::string> reqScalarLabelNames,
                          int qn );
 
-  ~BTDevol();
+  ~FOWYDevol();
 
   ////////////////////////////////////////////////
   // Initialization method

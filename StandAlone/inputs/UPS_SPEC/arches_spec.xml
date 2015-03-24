@@ -23,8 +23,10 @@
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable, 
                                                                           variable_stats'">
 
-          <!-- For variable_stats, the variable_type is the type for the variable which you are time averaging -->
-          <variable_type                spec="REQUIRED STRING 'svol, xvol, yvol, zvol'"
+          <!-- For variable_stats, the variable_type is the type for the variable which you are time averaging.
+               There is an attempt to determine the variable type automatically. This flag should only be used 
+               is that determination fails. -->
+          <variable_type                spec="OPTIONAL STRING 'svol, xvol, yvol, zvol'"
                                         need_applies_to="type variable_stats"/>
 
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
@@ -361,7 +363,7 @@
           <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
-          <BTDevol                        spec="OPTIONAL NO_DATA">
+          <FOWYDevol                        spec="OPTIONAL NO_DATA">
             <v_hiT                        spec="REQUIRED DOUBLE" />
             <Tig                          spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
@@ -371,7 +373,7 @@
             <d                            spec="REQUIRED DOUBLE" />
             <e                            spec="REQUIRED DOUBLE" />  
             <sigma                        spec="REQUIRED DOUBLE" />
-          </BTDevol>
+          </FOWYDevol>
           <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
           <!-- Shaddix char oxidation coefficients in the following order:  -->
           <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
@@ -1408,7 +1410,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'BTDevol, 
+                                        attribute2="type REQUIRED STRING 'FOWYDevol, 
                                                                           RichardsFletcherDevol, 
                                                                           KobayashiSarofimDevol, 
                                                                           YamamotoDevol, 
