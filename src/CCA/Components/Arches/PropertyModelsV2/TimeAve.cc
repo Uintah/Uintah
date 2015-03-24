@@ -67,14 +67,12 @@ TimeAve::problemSetup( ProblemSpecP& db ){
 
   }
 
-  if ( db->findBlock("density")){ 
-    db->findBlock("density")->getAttribute("label", rho_name);
-  } else { 
-    throw ProblemSetupException("Error: Must specify a density label for fluxes.",__FILE__,__LINE__);
-  }
+  bool do_fluxes = false; 
 
   for ( ProblemSpecP var_db = db->findBlock("flux_variable"); var_db != 0; 
         var_db = var_db->findNextBlock("flux_variable") ){
+
+    do_fluxes = true; 
 
     std::string phi_name; 
     std::string flux_name; 
@@ -113,6 +111,17 @@ TimeAve::problemSetup( ProblemSpecP& db ){
     flux_sum_info.push_back(fi); 
 
   }
+
+  if ( do_fluxes ){ 
+    if ( db->findBlock("density")){ 
+      db->findBlock("density")->getAttribute("label", rho_name);
+      _no_density = false; 
+    } else { 
+      _no_density = true; 
+      throw ProblemSetupException("Error: For time_ave property; must specify a density label for fluxes.",__FILE__,__LINE__);
+    }
+  }
+
 
 }
 
@@ -292,40 +301,42 @@ TimeAve::register_timestep_eval( std::vector<VariableInformation>& variable_regi
 
   }
 
-  i = ave_x_flux_sum_names.begin(); 
-  for (;i!=ave_x_flux_sum_names.end();i++){ 
+  if ( !_no_density ){ 
+    i = ave_x_flux_sum_names.begin(); 
+    for (;i!=ave_x_flux_sum_names.end();i++){ 
 
-    register_variable( *i, CC_DOUBLE, MODIFIES, variable_registry ); 
-    register_variable( *i, CC_DOUBLE, REQUIRES, 0, OLDDW, variable_registry ); 
+      register_variable( *i, CC_DOUBLE, MODIFIES, variable_registry ); 
+      register_variable( *i, CC_DOUBLE, REQUIRES, 0, OLDDW, variable_registry ); 
 
-  }
+    }
 
-  i = ave_y_flux_sum_names.begin(); 
-  for (;i!=ave_y_flux_sum_names.end();i++){ 
+    i = ave_y_flux_sum_names.begin(); 
+    for (;i!=ave_y_flux_sum_names.end();i++){ 
 
-    register_variable( *i, CC_DOUBLE, MODIFIES, variable_registry ); 
-    register_variable( *i, CC_DOUBLE, REQUIRES, 0, OLDDW, variable_registry ); 
+      register_variable( *i, CC_DOUBLE, MODIFIES, variable_registry ); 
+      register_variable( *i, CC_DOUBLE, REQUIRES, 0, OLDDW, variable_registry ); 
 
-  }
+    }
 
-  i = ave_z_flux_sum_names.begin(); 
-  for (;i!=ave_z_flux_sum_names.end();i++){ 
+    i = ave_z_flux_sum_names.begin(); 
+    for (;i!=ave_z_flux_sum_names.end();i++){ 
 
-    register_variable( *i, CC_DOUBLE, MODIFIES, variable_registry ); 
-    register_variable( *i, CC_DOUBLE, REQUIRES, 0, OLDDW, variable_registry ); 
+      register_variable( *i, CC_DOUBLE, MODIFIES, variable_registry ); 
+      register_variable( *i, CC_DOUBLE, REQUIRES, 0, OLDDW, variable_registry ); 
 
-  }
+    }
 
-  register_variable( "uVelocitySPBC"   , FACEX , REQUIRES , 1 , NEWDW , variable_registry );
-  register_variable( "vVelocitySPBC"   , FACEY , REQUIRES , 1 , NEWDW , variable_registry );
-  register_variable( "wVelocitySPBC"   , FACEZ , REQUIRES , 1 , NEWDW , variable_registry );
-  register_variable( rho_name, CC_DOUBLE , REQUIRES , 0 , NEWDW , variable_registry );
-  std::vector<FluxInfo>::iterator ii = flux_sum_info.begin(); 
-  for (;ii!=flux_sum_info.end();ii++){ 
+    register_variable( "uVelocitySPBC"   , FACEX , REQUIRES , 1 , NEWDW , variable_registry );
+    register_variable( "vVelocitySPBC"   , FACEY , REQUIRES , 1 , NEWDW , variable_registry );
+    register_variable( "wVelocitySPBC"   , FACEZ , REQUIRES , 1 , NEWDW , variable_registry );
+    register_variable( rho_name, CC_DOUBLE , REQUIRES , 1 , NEWDW , variable_registry );
+    std::vector<FluxInfo>::iterator ii = flux_sum_info.begin(); 
+    for (;ii!=flux_sum_info.end();ii++){ 
 
-    if ( (*ii).do_phi )
-      register_variable( (*ii).phi , CC_DOUBLE , REQUIRES , 0 , NEWDW , variable_registry );
+      if ( (*ii).do_phi )
+        register_variable( (*ii).phi , CC_DOUBLE , REQUIRES , 0 , NEWDW , variable_registry );
 
+    }
   }
 
 
@@ -342,6 +353,7 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   int N = ave_sum_names.size(); 
 
+  //Uintah implementation
   //Single Variables
   for ( int i = 0; i < N; i++ ){ 
 
@@ -365,65 +377,67 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   }
 
   //Fluxes
-  constCCVariable<double>* rhop = tsk_info->get_uintah_const_field<constCCVariable<double> >(rho_name); 
-  constSFCXVariable<double>* up = tsk_info->get_uintah_const_field<constSFCXVariable<double> >("uVelocitySPBC"); 
-  constSFCYVariable<double>* vp = tsk_info->get_uintah_const_field<constSFCYVariable<double> >("vVelocitySPBC"); 
-  constSFCZVariable<double>* wp = tsk_info->get_uintah_const_field<constSFCZVariable<double> >("wVelocitySPBC"); 
+  if ( !_no_density ){ 
+    constCCVariable<double>* rhop = tsk_info->get_uintah_const_field<constCCVariable<double> >(rho_name); 
+    constSFCXVariable<double>* up = tsk_info->get_uintah_const_field<constSFCXVariable<double> >("uVelocitySPBC"); 
+    constSFCYVariable<double>* vp = tsk_info->get_uintah_const_field<constSFCYVariable<double> >("vVelocitySPBC"); 
+    constSFCZVariable<double>* wp = tsk_info->get_uintah_const_field<constSFCZVariable<double> >("wVelocitySPBC"); 
 
-  constCCVariable<double>& rho = *rhop; 
-  constSFCXVariable<double>& u = *up; 
-  constSFCYVariable<double>& v = *vp; 
-  constSFCZVariable<double>& w = *wp; 
+    constCCVariable<double>& rho = *rhop; 
+    constSFCXVariable<double>& u = *up; 
+    constSFCYVariable<double>& v = *vp; 
+    constSFCZVariable<double>& w = *wp; 
 
-  N = ave_x_flux_sum_names.size(); 
+    N = ave_x_flux_sum_names.size(); 
 
-  for ( int i = 0; i < N; i++ ){ 
+    for ( int i = 0; i < N; i++ ){ 
 
-    CCVariable<double>* sump_x = tsk_info->get_uintah_field<CCVariable<double> >(ave_x_flux_sum_names[i]); 
-    constCCVariable<double>* old_sump_x = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_x_flux_sum_names[i]); 
-    CCVariable<double>* sump_y = tsk_info->get_uintah_field<CCVariable<double> >(ave_y_flux_sum_names[i]); 
-    constCCVariable<double>* old_sump_y = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_y_flux_sum_names[i]); 
-    CCVariable<double>* sump_z = tsk_info->get_uintah_field<CCVariable<double> >(ave_z_flux_sum_names[i]); 
-    constCCVariable<double>* old_sump_z = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_z_flux_sum_names[i]); 
-    constCCVariable<double>* phip;
+      CCVariable<double>* sump_x = tsk_info->get_uintah_field<CCVariable<double> >(ave_x_flux_sum_names[i]); 
+      constCCVariable<double>* old_sump_x = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_x_flux_sum_names[i]); 
+      CCVariable<double>* sump_y = tsk_info->get_uintah_field<CCVariable<double> >(ave_y_flux_sum_names[i]); 
+      constCCVariable<double>* old_sump_y = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_y_flux_sum_names[i]); 
+      CCVariable<double>* sump_z = tsk_info->get_uintah_field<CCVariable<double> >(ave_z_flux_sum_names[i]); 
+      constCCVariable<double>* old_sump_z = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_z_flux_sum_names[i]); 
+      constCCVariable<double>* phip;
 
-    if ( flux_sum_info[i].do_phi)
-      phip = tsk_info->get_uintah_const_field<constCCVariable<double> >(flux_sum_info[i].phi); 
+      if ( flux_sum_info[i].do_phi)
+        phip = tsk_info->get_uintah_const_field<constCCVariable<double> >(flux_sum_info[i].phi); 
 
-    CCVariable<double>& sum_x = *sump_x; 
-    constCCVariable<double>& old_sum_x = *old_sump_x;
-    CCVariable<double>& sum_y = *sump_y; 
-    constCCVariable<double>& old_sum_y = *old_sump_y;
-    CCVariable<double>& sum_z = *sump_z; 
-    constCCVariable<double>& old_sum_z = *old_sump_z;
+      CCVariable<double>& sum_x = *sump_x; 
+      constCCVariable<double>& old_sum_x = *old_sump_x;
+      CCVariable<double>& sum_y = *sump_y; 
+      constCCVariable<double>& old_sum_y = *old_sump_y;
+      CCVariable<double>& sum_z = *sump_z; 
+      constCCVariable<double>& old_sum_z = *old_sump_z;
 
-    sum_x.initialize(12.0);
-    sum_y.initialize(0.0);
-    sum_z.initialize(0.0);
+      sum_x.initialize(12.0);
+      sum_y.initialize(0.0);
+      sum_z.initialize(0.0);
 
-    for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+      for (CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
 
-      IntVector c = *iter; 
+        IntVector c = *iter; 
 
-      if ( flux_sum_info[i].do_phi ){ 
+        if ( flux_sum_info[i].do_phi ){ 
 
-        sum_x[c] = old_sum_x[c] + dt * rho[c] * ( u[c] + u[c+IntVector(1,0,0)] )/2.0 * (*phip)[c]; 
-        sum_y[c] = old_sum_y[c] + dt * rho[c] * ( v[c] + v[c+IntVector(0,1,0)] )/2.0 * (*phip)[c]; 
-        sum_z[c] = old_sum_z[c] + dt * rho[c] * ( w[c] + w[c+IntVector(0,0,1)] )/2.0 * (*phip)[c]; 
+          sum_x[c] = old_sum_x[c] + dt * rho[c] * ( u[c] + u[c+IntVector(1,0,0)] )/2.0 * (*phip)[c]; 
+          sum_y[c] = old_sum_y[c] + dt * rho[c] * ( v[c] + v[c+IntVector(0,1,0)] )/2.0 * (*phip)[c]; 
+          sum_z[c] = old_sum_z[c] + dt * rho[c] * ( w[c] + w[c+IntVector(0,0,1)] )/2.0 * (*phip)[c]; 
 
-      } else { 
+        } else { 
 
-        sum_x[c] = old_sum_x[c] + dt * rho[c] * ( u[c] + u[c+IntVector(1,0,0)] )/2.0 ; 
-        sum_y[c] = old_sum_y[c] + dt * rho[c] * ( v[c] + v[c+IntVector(0,1,0)] )/2.0 ; 
-        sum_z[c] = old_sum_z[c] + dt * rho[c] * ( w[c] + w[c+IntVector(0,0,1)] )/2.0 ; 
+          sum_x[c] = old_sum_x[c] + dt * rho[c] * ( u[c] + u[c+IntVector(1,0,0)] )/2.0 ; 
+          sum_y[c] = old_sum_y[c] + dt * rho[c] * ( v[c] + v[c+IntVector(0,1,0)] )/2.0 ; 
+          sum_z[c] = old_sum_z[c] + dt * rho[c] * ( w[c] + w[c+IntVector(0,0,1)] )/2.0 ; 
+
+        }
 
       }
-
     }
   }
 
 
-  //----------NEBO----------------
+  ////----------NEBO----------------
 
   ////Single variables
   //for ( int i = 0; i < N; i++ ){ 
@@ -436,76 +450,80 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   //}
 
-  ////Fluxes 
-  ////
-  //XVolFP const u = tsk_info->get_const_so_field<XVolF>( "uVelocitySPBC" );
-  //YVolFP const v = tsk_info->get_const_so_field<YVolF>( "vVelocitySPBC" );
-  //ZVolFP const w = tsk_info->get_const_so_field<ZVolF>( "wVelocitySPBC" );
-  //SVolFP const rho = tsk_info->get_const_so_field<SVolF>( rho_name );
+  //if ( !_no_density ){ 
 
-  //const IX* const ix = opr.retrieve_operator<IX>();
-  //const IY* const iy = opr.retrieve_operator<IY>();
-  //const IZ* const iz = opr.retrieve_operator<IZ>();
+    ////Fluxes 
+    //// NOTE: I WAS TRYING TO CREATE FACE FLUXES BUT WAS GETTING COMPILATION ERRORS
+    ////       WHEN TRYING TO CREATE THE INTERPOLANT (SVOL->XVOL) 
+    ////       But going to the cell centers requires one less interpolation. 
+    //XVolFP const u = tsk_info->get_const_so_field<XVolF>( "uVelocitySPBC" );
+    //YVolFP const v = tsk_info->get_const_so_field<YVolF>( "vVelocitySPBC" );
+    //ZVolFP const w = tsk_info->get_const_so_field<ZVolF>( "wVelocitySPBC" );
+    //SVolFP const rho = tsk_info->get_const_so_field<SVolF>( rho_name );
 
-  ////X FLUX
-  //N = ave_x_flux_sum_names.size(); 
-  //for ( int i = 0; i < N; i++ ){ 
+    //const IX* const ix = opr.retrieve_operator<IX>();
+    //const IY* const iy = opr.retrieve_operator<IY>();
+    //const IZ* const iz = opr.retrieve_operator<IZ>();
 
-    //SVolFP sum            = tsk_info->get_so_field<SVolF>( ave_x_flux_sum_names[i] );
-    //SVolFP const old_sum  = tsk_info->get_const_so_field<SVolF>( ave_x_flux_sum_names[i] );
+    ////X FLUX
+    //N = ave_x_flux_sum_names.size(); 
+    //for ( int i = 0; i < N; i++ ){ 
 
-    //if ( flux_sum_info[i].do_phi ){ 
+      //SVolFP sum            = tsk_info->get_so_field<SVolF>( ave_x_flux_sum_names[i] );
+      //SVolFP const old_sum  = tsk_info->get_const_so_field<SVolF>( ave_x_flux_sum_names[i] );
 
-      //SVolFP const phi = tsk_info->get_const_so_field<SVolF>( flux_sum_info[i].phi ); 
-      //*sum <<= *old_sum + dt * ( (*ix)(*u) * *rho * *phi ); 
+      //if ( flux_sum_info[i].do_phi ){ 
 
-    //} else { 
+        //SVolFP const phi = tsk_info->get_const_so_field<SVolF>( flux_sum_info[i].phi ); 
+        //*sum <<= *old_sum + dt * ( (*ix)(*u) * *rho * *phi ); 
 
-      ///[>sum <<= *old_sum + dt * ( *rho * (*ix)(*u) ); 
-      //*sum <<= (*ix)(*u) ; 
-      
+      //} else { 
+
+        ///sum <<= *old_sum + dt * ( *rho * (*ix)(*u) ); 
+        
+      //}
+
     //}
 
-  //}
+    ////Y FLUX
+    //N = ave_y_flux_sum_names.size(); 
+    //for ( int i = 0; i < N; i++ ){ 
 
-  ////Y FLUX
-  //N = ave_y_flux_sum_names.size(); 
-  //for ( int i = 0; i < N; i++ ){ 
+      //SVolFP sum            = tsk_info->get_so_field<SVolF>( ave_y_flux_sum_names[i] );
+      //SVolFP const old_sum  = tsk_info->get_const_so_field<SVolF>( ave_y_flux_sum_names[i] );
 
-    //SVolFP sum            = tsk_info->get_so_field<SVolF>( ave_y_flux_sum_names[i] );
-    //SVolFP const old_sum  = tsk_info->get_const_so_field<SVolF>( ave_y_flux_sum_names[i] );
+      //if ( flux_sum_info[i].do_phi ){ 
 
-    //if ( flux_sum_info[i].do_phi ){ 
+        //SVolFP const phi = tsk_info->get_const_so_field<SVolF>( flux_sum_info[i].phi ); 
+        //*sum <<= *old_sum + dt * ( (*iy)(*v) * *rho * *phi ); 
 
-      //SVolFP const phi = tsk_info->get_const_so_field<SVolF>( flux_sum_info[i].phi ); 
-      //*sum <<= *old_sum + dt * ( (*iy)(*v) * *rho * *phi ); 
+      //} else { 
 
-    //} else { 
+        //*sum <<= *old_sum + dt * ( *rho * (*iy)(*v) ); 
+        
+      //}
 
-      //*sum <<= *old_sum + dt * ( *rho * (*iy)(*v) ); 
-      
     //}
 
-  //}
+    ////Z FLUX
+    //N = ave_z_flux_sum_names.size(); 
+    //for ( int i = 0; i < N; i++ ){ 
 
-  ////Z FLUX
-  //N = ave_z_flux_sum_names.size(); 
-  //for ( int i = 0; i < N; i++ ){ 
+      //SVolFP sum            = tsk_info->get_so_field<SVolF>( ave_z_flux_sum_names[i] );
+      //SVolFP const old_sum  = tsk_info->get_const_so_field<SVolF>( ave_z_flux_sum_names[i] );
 
-    //SVolFP sum            = tsk_info->get_so_field<SVolF>( ave_z_flux_sum_names[i] );
-    //SVolFP const old_sum  = tsk_info->get_const_so_field<SVolF>( ave_z_flux_sum_names[i] );
+      //if ( flux_sum_info[i].do_phi ){ 
 
-    //if ( flux_sum_info[i].do_phi ){ 
+        //SVolFP const phi = tsk_info->get_const_so_field<SVolF>( flux_sum_info[i].phi ); 
+        //*sum <<= *old_sum + dt * ( (*iz)(*w) * *rho * *phi ); 
 
-      //SVolFP const phi = tsk_info->get_const_so_field<SVolF>( flux_sum_info[i].phi ); 
-      //*sum <<= *old_sum + dt * ( (*iz)(*w) * *rho * *phi ); 
+      //} else { 
 
-    //} else { 
+        //*sum <<= *old_sum + dt * ( *rho * (*iz)(*w) ); 
+        
+      //}
 
-      //*sum <<= *old_sum + dt * ( *rho * (*iz)(*w) ); 
-      
     //}
-
   //}
 
 }

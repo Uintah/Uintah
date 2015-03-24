@@ -71,10 +71,12 @@ private:
     std::string rho_name;
 
     //fluxes
+    bool _no_density; 
     struct FluxInfo{ 
       std::string phi; 
       bool do_phi;
     };
+
     std::vector<std::string> ave_x_flux_sum_names; 
     std::vector<std::string> ave_y_flux_sum_names; 
     std::vector<std::string> ave_z_flux_sum_names; 
