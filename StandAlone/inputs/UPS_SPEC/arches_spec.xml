@@ -619,7 +619,6 @@
         </TurbulentInlet>
 
       <WallHT                           spec="OPTIONAL NO_DATA">
-        <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature --> 
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'simple_ht, region_ht'">
           <!-- simple heat transfer 

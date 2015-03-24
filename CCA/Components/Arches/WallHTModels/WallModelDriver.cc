@@ -53,7 +53,8 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
   
   ProblemSpecP db = input_db; 
   
-  db->getWithDefault( "temperature_label", _T_label_name, "temperature" ); 
+  //db->getWithDefault( "temperature_label", _T_label_name, "radiation_temperature" ); 
+  _T_label_name = "radiation_temperature"; 
   
   bool found_radiation_model = false;  
   if ( db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("TransportEqns")->findBlock("Sources") ){ 
@@ -155,19 +156,18 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   if ( time_subset == 0 ) { 
     
     task->computes( _T_copy_label ); 
-    
-    task->requires( Task::OldDW, _cc_vel_label, Ghost::None, 0 ); 
+    task->requires( Task::OldDW , _cc_vel_label   , Ghost::None , 0 ); 
     task->requires( Task::OldDW , _T_label        , Ghost::None , 0 ); 
-    task->requires( Task::NewDW , _cellType_label , Ghost::None , 0 );
+    task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
     
     if ( _rad_type == DORADIATION ){
       
-      task->modifies( _HF_E_label  );
-      task->modifies( _HF_W_label  );
-      task->modifies( _HF_N_label  );
-      task->modifies( _HF_S_label  );
-      task->modifies( _HF_T_label  );
-      task->modifies( _HF_B_label  );
+      task->requires( Task::OldDW, _HF_E_label, Ghost::AroundCells, 1 );
+      task->requires( Task::OldDW, _HF_W_label, Ghost::AroundCells, 1 );
+      task->requires( Task::OldDW, _HF_N_label, Ghost::AroundCells, 1 );
+      task->requires( Task::OldDW, _HF_S_label, Ghost::AroundCells, 1 );
+      task->requires( Task::OldDW, _HF_T_label, Ghost::AroundCells, 1 );
+      task->requires( Task::OldDW, _HF_B_label, Ghost::AroundCells, 1 );
       
     } else if (_rad_type == RMCRT ) { 
       
@@ -178,7 +178,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   } else { 
     
     task->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
-    task->requires( Task::NewDW , _cellType_label , Ghost::None , 0 );
+    task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
     
   } 
   
@@ -217,39 +217,39 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       
       new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch ); 
       new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
-      new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::None, 0 );
+      new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::AroundCells, 1 );
       
       if ( _rad_type == DORADIATION ){
         
-        new_dw->getModifiable(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch  );
-        new_dw->getModifiable(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch  );
-        new_dw->getModifiable(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch  );
-        new_dw->getModifiable(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch  );
-        new_dw->getModifiable(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch  );
-        new_dw->getModifiable(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch  );
+        old_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch, Ghost::AroundCells, 1 );
         
       } else if ( _rad_type == RMCRT ){
         
         CCVariable<Stencil7> total_hf; 
         new_dw->getModifiable( total_hf, _Total_HF_label, _matl_index, patch, Ghost::None, 0 );
-        new_dw->allocateTemporary( vars.incident_hf_e, patch );
-        new_dw->allocateTemporary( vars.incident_hf_w, patch );
-        new_dw->allocateTemporary( vars.incident_hf_n, patch );
-        new_dw->allocateTemporary( vars.incident_hf_s, patch );
-        new_dw->allocateTemporary( vars.incident_hf_t, patch );
-        new_dw->allocateTemporary( vars.incident_hf_b, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_e, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_w, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_n, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_s, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_t, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_b, patch );
         
         for (CellIterator iter=patch->getCellIterator();
              !iter.done(); iter++){
           
           //copy because RMCRT has fluxes stored in Stencil7 container: 
           IntVector c = *iter; 
-          vars.incident_hf_e[c] = total_hf[c].e;
-          vars.incident_hf_w[c] = total_hf[c].w; 
-          vars.incident_hf_n[c] = total_hf[c].n;
-          vars.incident_hf_s[c] = total_hf[c].s; 
-          vars.incident_hf_t[c] = total_hf[c].t;
-          vars.incident_hf_b[c] = total_hf[c].b; 
+          //vars.incident_hf_e[c] = total_hf[c].e;
+          //vars.incident_hf_w[c] = total_hf[c].w; 
+          //vars.incident_hf_n[c] = total_hf[c].n;
+          //vars.incident_hf_s[c] = total_hf[c].s; 
+          //vars.incident_hf_t[c] = total_hf[c].t;
+          //vars.incident_hf_b[c] = total_hf[c].b; 
           
         }
       }
@@ -279,7 +279,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       constCCVariable<int> cell_type; 
       
       old_dw->get( T_old             , _T_label        , _matl_index , patch    , Ghost::None , 0 );
-      new_dw->get( cell_type         , _cellType_label , _matl_index , patch    , Ghost::None , 0 );
+      new_dw->get( cell_type         , _cellType_label , _matl_index , patch    , Ghost::AroundCells , 1 );
       new_dw->getModifiable(  T      , _T_label        , _matl_index , patch );
       new_dw->allocateAndPut( T_copy , _T_copy_label   , _matl_index , patch );
       
@@ -310,7 +310,7 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       
       new_dw->getModifiable( T , _T_label        , _matl_index , patch );
       new_dw->get( T_old       , _T_copy_label   , _matl_index , patch    , Ghost::None , 0 );
-      new_dw->get( cell_type   , _cellType_label , _matl_index , patch    , Ghost::None , 0 );
+      new_dw->get( cell_type   , _cellType_label , _matl_index , patch    , Ghost::AroundCells , 1 );
       
       std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
       
@@ -319,7 +319,6 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         (*iter)->copySolution( patch, T, T_old, cell_type ); 
         
       }
-      
     } 
   }
 }
@@ -354,7 +353,7 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
 
 //----------------------------------
 void 
-WallModelDriver::SimpleHT::computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ){ 
+WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){ 
   
   double T_wall, net_q;
   vector<Patch::FaceType> bf;
@@ -366,25 +365,25 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, const HTVariables& var
     IntVector offset = patch->faceDirection(face);
     CellIterator cell_iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
     
-    constCCVariable<double> q; 
+    constCCVariable<double>* q; 
     switch (face) {
       case Patch::xminus:
-        q = vars.incident_hf_w;
+        q = &(vars.incident_hf_w);
         break; 
       case Patch::xplus:
-        q = vars.incident_hf_e;
+        q = &(vars.incident_hf_e);
         break; 
       case Patch::yminus:
-        q = vars.incident_hf_s; 
+        q = &(vars.incident_hf_s); 
         break; 
       case Patch::yplus:
-        q = vars.incident_hf_n;
+        q = &(vars.incident_hf_n);
         break; 
       case Patch::zminus:
-        q = vars.incident_hf_b;
+        q = &(vars.incident_hf_b);
         break; 
       case Patch::zplus:
-        q = vars.incident_hf_t;
+        q = &(vars.incident_hf_t);
         break; 
       default: 
         break; 
@@ -397,7 +396,7 @@ WallModelDriver::SimpleHT::computeHT( const Patch* patch, const HTVariables& var
       
       if ( vars.celltype[c + offset] == BoundaryCondition_new::WALL ){ 
         
-        net_q = q[c] - _sigma_constant * pow( vars.T_old[adj], 4 );
+        net_q = (*q)[c] - _sigma_constant * pow( vars.T_old[adj], 4 );
         net_q = net_q > 0 ? net_q : 0;
         T_wall = _T_inner + net_q * _dy / _k;
         
@@ -485,7 +484,7 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
 
 //----------------------------------
 void 
-WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ){ 
+WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){ 
   
   int num;
   double TW1, TW0, Tmax, Tmin, net_q, error, initial_error, rad_q, total_area_face;
@@ -506,6 +505,13 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
   area_face.push_back(DxDz);
   area_face.push_back(DxDy);
   area_face.push_back(DxDy);
+
+  IntVector lowPindex = patch->getCellLowIndex();
+  IntVector highPindex = patch->getCellHighIndex(); 
+  //Pad for ghosts
+  lowPindex -= IntVector(1,1,1); 
+  highPindex += IntVector(1,1,1); 
+
   for ( std::vector<WallInfo>::iterator region_iter = _regions.begin(); region_iter != _regions.end(); region_iter++ ){ 
     
     WallInfo wi = *region_iter; 
@@ -520,27 +526,29 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
       if ( !box.degenerate() ){ 
         
         CellIterator iter = patch->getCellCenterIterator( box ); 
-        constCCVariable<double> q; 
+        constCCVariable<double>* q; 
         
         for (; !iter.done(); iter++){ 
           
           IntVector c = *iter; 
           total_flux_ind = 0;
+
           // is the point inside of region as defined by geom? 
           if ( in_or_out( c, geom, patch ) ){ 
             
-            
             container_flux_ind.clear();
             total_area_face=0;
+
             // Loop over all faces and find which faces have flow cells next to them
             for ( int i = 0; i < 6; i++ )
             { 
               // is the current cell a wall or intrusion cell? 
               if ( vars.celltype[c] == BoundaryCondition_new::WALL ||
-                  vars.celltype[c] == BoundaryCondition_new::INTRUSION ){ 
+                   vars.celltype[c] == BoundaryCondition_new::INTRUSION ){ 
                 
                 // is the neighbor in the current direction i a flow cell? 
-                if ( patch->containsCell( c + _d[i] ) )
+                //if ( patch->containsCell( c + _d[i] ) )
+                if ( patch->containsIndex(lowPindex, highPindex, c + _d[i] ) )
                 { 
                   if ( vars.celltype[c + _d[i]] == FLOW )
                   { 
@@ -553,27 +561,38 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
             // if total_flux_ind is larger than 0 then there is incoming an incoming heatflux from the flow cell
             if ( total_flux_ind>0 )
             {
-              rad_q=0;// get the total incoming heat flux from radiation
+
+              rad_q=0;
+
+              // get the total incoming heat flux from radiation:
               for ( int pp = 0; pp < total_flux_ind; pp++ )
               {  
+
                 q = get_flux( container_flux_ind[pp], vars );
-                rad_q+=q[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]]; // this is adding the total watts contribution.
-                total_area_face+=area_face[container_flux_ind[pp]];// this is the total cell surface area exposed to radiation.
+
+                // The total watts contribution:
+                rad_q += (*q)[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]]; 
+
+                // The total cell surface area exposed to radiation:
+                total_area_face += area_face[container_flux_ind[pp]];
+
               }
-              rad_q/=total_area_face; // representative radiative flux to the cell. 
-              double T_max;
-              double d_tol = 1e-15;
-              double delta = 1;
-              int NIter = 15;
-              double f0 = 0.0;
-              double f1 = 0.0;
-              double TW = vars.T_old[c];
+
+              rad_q /= total_area_face; // representative radiative flux to the cell.
+
+              double d_tol    = 1e-15;
+              double delta    = 1;
+              int NIter       = 15;
+              double f0       = 0.0;
+              double f1       = 0.0;
+              double TW       = vars.T_old[c];
+              double T_max    = pow( rad_q/_sigma_constant, 0.25); // if k = 0.0;
               double TW_guess, TW_tmp, TW_old, TW_new;
-              T_max=pow( rad_q/_sigma_constant, 0.25); // if k=0.0
+
               TW_guess = vars.T_old[c];
               TW_old = TW_guess-delta;
               net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
-              net_q = net_q>0 ? net_q : 0;
+              net_q = net_q > 0 ? net_q : 0;
               net_q *= wi.emissivity;
               f0 = - TW_old + wi.T_inner + net_q * wi.dy / wi.k;
 
@@ -584,29 +603,39 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
               f1 = - TW_new + wi.T_inner + net_q * wi.dy / wi.k;
           
               for ( int iterT=0; iterT < NIter; iterT++) {
+
                 TW_tmp = TW_old;
                 TW_old = TW_new;
-                TW_new = TW_tmp - (TW_new - TW_tmp)/(f1-f0) * f0;
+
+                TW_new = TW_tmp - ( TW_new - TW_tmp )/( f1 - f0 ) * f0;
                 TW_new = max( wi.T_inner , min( T_max, TW_new ) );            
+
                 if (std::abs(TW_new-TW_old) < d_tol){
-                  TW=TW_new;
-                  net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
-                  net_q = net_q>0 ? net_q : 0;
+
+                  TW    =  TW_new;
+                  net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
+                  net_q =  net_q > 0 ? net_q : 0;
                   net_q *= wi.emissivity;
+
                   break;
+
                 }
-                f0 = f1;
-                net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
-                net_q = net_q>0 ? net_q : 0;
+
+                f0    =  f1;
+                net_q =  rad_q - _sigma_constant * pow( TW_new, 4 );
+                net_q =  net_q>0 ? net_q : 0;
                 net_q *= wi.emissivity;
-                f1 = - TW_new + wi.T_inner + net_q * wi.dy / wi.k;
+                f1    = - TW_new + wi.T_inner + net_q * wi.dy / wi.k;
+
               }
+
               // now to make consistent with assumed emissivity of 1 in radiation model:
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
               // q_radiation - sigma Tw' ^ 4 = net_q 
+              
               TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);  
  
-              T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW;
+              T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
 
             }
           } 
