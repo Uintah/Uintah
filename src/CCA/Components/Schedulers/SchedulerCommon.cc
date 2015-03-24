@@ -109,7 +109,9 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
   reloc_new_posLabel_ = 0;
 
   maxGhostCells.clear();
-  maxLevelOffsets.clear();
+  maxLevelOffset = 0;
+  // TODO replace after MiraDDT problem is debugged (APH - 03/24/15)
+//  maxLevelOffsets.clear();
 }
 
 //______________________________________________________________________
@@ -740,16 +742,21 @@ SchedulerCommon::addTask(       Task        * task,
       mgc_iter->second = task->maxGhostCells;
     }
 
-    // initialize or update max level offset for the current level
-    std::map<int, int>::iterator mlo_iter;
-    mlo_iter = maxLevelOffsets.find(levelIndex);
-    int taskMLO = task->maxLevelOffset;
-    if (mlo_iter == maxLevelOffsets.end()) {
-      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, (taskMLO > 0 ? taskMLO : 0)));
-    }
-    else if (taskMLO > mlo_iter->second) {
-      mlo_iter->second = task->maxLevelOffset;
-    }
+//    // initialize or update max level offset for the current level
+//    std::map<int, int>::iterator mlo_iter;
+//    mlo_iter = maxLevelOffsets.find(levelIndex);
+//    int taskMLO = task->maxLevelOffset;
+//    if (mlo_iter == maxLevelOffsets.end()) {
+//      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, (taskMLO > 0 ? taskMLO : 0)));
+//    }
+//    else if (taskMLO > mlo_iter->second) {
+//      mlo_iter->second = task->maxLevelOffset;
+//    }
+  }
+
+  // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+  if (task->maxLevelOffset > maxLevelOffset){
+    maxLevelOffset = task->maxLevelOffset;
   }
   
   // add to init-requires.  These are the vars which require from the OldDW that we'll
@@ -887,7 +894,9 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
   numTasks_ = 0;
 
   maxGhostCells.clear();
-  maxLevelOffsets.clear();
+  // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+  maxLevelOffset = 0;
+//  maxLevelOffsets.clear();
 
   reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);

@@ -126,8 +126,11 @@ class Scheduler : public UintahParallelPort {
     virtual void addTask( Task* t, const PatchSet*, const MaterialSet* ) = 0;
     
     virtual const std::vector<const Task::Dependency*>&         getInitialRequires() const = 0;
+
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const = 0;
+
     virtual const std::set<const VarLabel*, VarLabel::Compare>& getComputedVars() const = 0;
+
     virtual const std::set<std::string>&                        getNotCheckPointVars() const = 0;    
 
     virtual LoadBalancer* getLoadBalancer() = 0;
@@ -213,11 +216,14 @@ class Scheduler : public UintahParallelPort {
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
     typedef std::map< std::string, std::list<int> > VarLabelMaterialMap;
+
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
 
     virtual const std::map<int, int>& getMaxGhostCells() = 0;
 
-    virtual const std::map<int, int>& getMaxLevelOffsets() = 0;
+      virtual int getMaxLevelOffset() = 0;
+      // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+//    virtual const std::map<int, int>& getMaxLevelOffsets() = 0;
 
     virtual bool isCopyDataTimestep() = 0;
 
