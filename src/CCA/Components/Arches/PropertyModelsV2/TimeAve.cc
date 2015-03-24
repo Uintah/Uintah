@@ -115,11 +115,13 @@ TimeAve::problemSetup( ProblemSpecP& db ){
   if ( do_fluxes ){ 
     if ( db->findBlock("density")){ 
       db->findBlock("density")->getAttribute("label", rho_name);
-      _no_density = false; 
+      _no_flux = false; 
     } else { 
-      _no_density = true; 
+      _no_flux = true; 
       throw ProblemSetupException("Error: For time_ave property; must specify a density label for fluxes.",__FILE__,__LINE__);
     }
+  } else { 
+    _no_flux = true; 
   }
 
 
@@ -301,7 +303,7 @@ TimeAve::register_timestep_eval( std::vector<VariableInformation>& variable_regi
 
   }
 
-  if ( !_no_density ){ 
+  if ( !_no_flux ){ 
     i = ave_x_flux_sum_names.begin(); 
     for (;i!=ave_x_flux_sum_names.end();i++){ 
 
@@ -377,7 +379,7 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   }
 
   //Fluxes
-  if ( !_no_density ){ 
+  if ( !_no_flux ){ 
     constCCVariable<double>* rhop = tsk_info->get_uintah_const_field<constCCVariable<double> >(rho_name); 
     constSFCXVariable<double>* up = tsk_info->get_uintah_const_field<constSFCXVariable<double> >("uVelocitySPBC"); 
     constSFCYVariable<double>* vp = tsk_info->get_uintah_const_field<constSFCYVariable<double> >("vVelocitySPBC"); 
@@ -450,7 +452,7 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   //}
 
-  //if ( !_no_density ){ 
+  //if ( !_no_flux ){ 
 
     ////Fluxes 
     //// NOTE: I WAS TRYING TO CREATE FACE FLUXES BUT WAS GETTING COMPILATION ERRORS

@@ -71,7 +71,7 @@ private:
     std::string rho_name;
 
     //fluxes
-    bool _no_density; 
+    bool _no_flux; 
     struct FluxInfo{ 
       std::string phi; 
       bool do_phi;
