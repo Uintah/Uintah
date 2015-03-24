@@ -39,9 +39,9 @@
                                         attribute2="phi OPTIONAL STRING"
                                         need_applies_to="type time_ave"/> <!-- time average a flux variable rho*u*phi - creates all three components 
                                                                                If phi isn't specified, then this is the total mass flux -->
-          <density                      spec="REQUIRED NO_DATA"
+          <density                      spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        need_applies_to="type time_ave"/> <!-- for flux averages, this specifies the density -->
+                                        need_applies_to="type time_ave"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
 
         </model>
       </PropertyModelsV2>
