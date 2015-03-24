@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/BTDevol.h>
+#include <CCA/Components/Arches/CoalModels/FOWYDevol.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -22,7 +22,7 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-BTDevolBuilder::BTDevolBuilder( const std::string         & modelName,
+FOWYDevolBuilder::FOWYDevolBuilder( const std::string         & modelName,
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
@@ -32,15 +32,15 @@ BTDevolBuilder::BTDevolBuilder( const std::string         & modelName,
 {
 }
 
-BTDevolBuilder::~BTDevolBuilder(){}
+FOWYDevolBuilder::~FOWYDevolBuilder(){}
 
-ModelBase* BTDevolBuilder::build() {
-  return scinew BTDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+ModelBase* FOWYDevolBuilder::build() {
+  return scinew FOWYDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-BTDevol::BTDevol( std::string modelName, 
+FOWYDevol::FOWYDevol( std::string modelName, 
                                               SimulationStateP& sharedState,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
@@ -56,7 +56,7 @@ BTDevol::BTDevol( std::string modelName,
 
 }
 
-BTDevol::~BTDevol()
+FOWYDevol::~FOWYDevol()
 {
 
   VarLabel::destroy(_v_inf_label); 
@@ -67,7 +67,7 @@ BTDevol::~BTDevol()
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-BTDevol::problemSetup(const ProblemSpecP& params, int qn)
+FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
 {
 
   ProblemSpecP db = params;
@@ -121,8 +121,8 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
  
   // Look for required scalars
-  if (db_coal_props->findBlock("BTDevol")) {
-    ProblemSpecP db_BT = db_coal_props->findBlock("BTDevol");
+  if (db_coal_props->findBlock("FOWYDevol")) {
+    ProblemSpecP db_BT = db_coal_props->findBlock("FOWYDevol");
     db_BT->require("Tig", _Tig);
     db_BT->require("Ta", _Ta);
     db_BT->require("A", _A);
@@ -137,7 +137,7 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
     db_BT->require("sigma", _sigma)  ;
 
   } else { 
-    throw ProblemSetupException("Error: BT_coefficients missing in <CoalProperties>.", __FILE__, __LINE__); 
+    throw ProblemSetupException("Error: FOWY coefficients missing in <CoalProperties>.", __FILE__, __LINE__); 
   }
   if ( db_coal_props->findBlock("density")){ 
     db_coal_props->require("density", rhop);
@@ -191,10 +191,10 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
 void 
-BTDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "BTDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &BTDevol::computeModel, timeSubStep);
+  std::string taskname = "FOWYDevol::computeModel";
+  Task* tsk = scinew Task(taskname, this, &FOWYDevol::computeModel, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
 
@@ -233,7 +233,7 @@ BTDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSub
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-BTDevol::computeModel( const ProcessorGroup * pc, 
+FOWYDevol::computeModel( const ProcessorGroup * pc, 
                                      const PatchSubset    * patches, 
                                      const MaterialSubset * matls, 
                                      DataWarehouse        * old_dw, 

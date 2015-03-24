@@ -31,6 +31,17 @@
     <RichardsFletcher_coefficients>[1.18e7, 1.46e13, 9044, 29215, 0.0309, 0.5573, -104.45, 323.46, -54.197, -0.8526, -728.01, -0.0345, 0.0, 14.590, -53.759, 126.16, -132.02, 44.477, -0.000817, 0.0]</RichardsFletcher_coefficients>
     <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
     <!-- A1[1/s], A2[1/s], E1[K], E2[K], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2 -->
+    <FOWYDevol>
+      <v_hiT>0.8895</v_hiT>
+      <Tig>590</Tig>
+      <A>229086765276.777</A>
+      <Ta>1.991e4</Ta>
+      <b>12.5454510</b>
+      <c>-8.98180972</c>
+      <d>2.27199071</d>
+      <e>-0.483777996</e>
+      <sigma>-1.183e3</sigma>
+    </FOWYDevol>
 
 
     <!-- OPTIONAL INPUTS -->

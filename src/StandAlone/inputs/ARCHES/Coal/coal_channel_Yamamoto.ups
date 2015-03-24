@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!-- @version: -->
-<!--This is a copy of coal_channel, but adds a test for a model computing-->
-<!--the radiative absorption coefficient from particles-->
-
 <Uintah_specification>
   <Meta>
     <title>DQMOM_coal</title>
@@ -12,15 +9,15 @@
 
   <Solver type="hypre"/>
   <Time>
-    <maxTime>0.020</maxTime>
+    <maxTime>50.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1e-16</delt_min>
     <delt_max>1e-3</delt_max>
     <timestep_multiplier>0.4</timestep_multiplier>
-    <max_Timesteps>0</max_Timesteps>
+    <max_Timesteps>25</max_Timesteps>
   </Time>
   <DataArchiver>
-    <filebase>coal_RadPropsPlanck.uda</filebase>
+    <filebase>coal_channel_Yamamoto.uda</filebase>
     <outputInitTimestep/>
     <outputTimestepInterval>5</outputTimestepInterval>
     <save label = "eta_source1"/>
@@ -28,18 +25,18 @@
     <save label = "eta_source3"/>
     <save label = "heat_source"/>
     <save label = "pressurePS"/>
-    <save label = "CCVelocity"/>
-    <save label = "uVelocitySPBC"/>
-    <save label = "vVelocitySPBC"/>
-    <save label = "wVelocitySPBC"/>
-    <save label = "cellType"/>
-    <save label = "coal_gas_mix_frac_RHS"/>
-    <save label = "coal_gas_mix_frac_Fdiff"/>
-    <save label = "coal_gas_mix_frac_Fconv"/>
+    <save label="CCVelocity"/>
+    <save label="uVelocitySPBC"/>
+    <save label="vVelocitySPBC"/>
+    <save label="wVelocitySPBC"/>
+    <save label="cellType"/>
+    <save label="coal_gas_mix_frac_RHS"/>
+    <save label="coal_gas_mix_frac_Fdiff"/>
+    <save label="coal_gas_mix_frac_Fconv"/>
     <save label = "radiationVolq"/>
-    <save label = "abskt"/>
     <save label = "abskg"/>
-    <save label = "abskp"/>
+    <save label = "gas_abskg"/>
+    <save label = "Julien_abskp"/>
     <save label = "divQ"/>
     <save label = "enthalpy"/>
     <save label = "length_0" />
@@ -48,18 +45,24 @@
     <save label = "w_qn0" />
     <save label = "w_qn1" />
     <save label = "w_qn2" />
-    <save label = "ux_0"/>
-    <save label = "ux_1"/>
-    <save label = "ux_2"/>
-    <save label = "RCmass_0"/>
-    <save label = "RCmass_1"/>
-    <save label = "RCmass_2"/>
-    <save label = "char_qn0_surfacerate"/>
-    <save label = "char_qn1_surfacerate"/>
-    <save label = "char_qn2_surfacerate"/>
-    <save label = "Charmass_0"/>
-    <save label = "Charmass_1"/>
-    <save label = "Charmass_2"/>
+    <save label="ux_0"/>
+    <save label="ux_1"/>
+    <save label="ux_2"/>
+    <save label="RCmass_0"/>
+    <save label="RCmass_1"/>
+    <save label="RCmass_2"/>
+    <save label="char_qn0_surfacerate"/>
+    <save label="char_qn1_surfacerate"/>
+    <save label="char_qn2_surfacerate"/>
+    <!--save label="devol_qn0"/>
+    <save label="devol_qn1"/>
+    <save label="devol_qn2"/-->
+    <!--save label="char_qn0_PO2surf"/>
+        <save label="char_qn1_PO2surf"/>
+        <save label="char_qn2_PO2surf"/-->
+    <save label="Charmass_0"/>
+    <save label="Charmass_1"/>
+    <save label="Charmass_2"/>
     <save label = "temperature_coal_0"/>
     <save label = "temperature_coal_1"/>
     <save label = "temperature_coal_2"/>
@@ -69,10 +72,13 @@
     <save label = "heat_qn1_Qrad"/>
     <save label = "heat_qn2_Qconv"/>
     <save label = "heat_qn2_Qrad"/>
-    <save label = "pE_0"/>
-    <save label = "pE_1"/>
-    <save label = "pE_2"/>
-    <save label = "radiation_temperature"/>
+    <save label="pE_0"/>
+    <save label="pE_1"/>
+    <save label="pE_2"/>
+    <save label="pE_qn0"/>
+    <save label="pE_qn1"/>
+    <save label="pE_qn2"/>
+    <save label="radiation_temperature"/>
     <!-- Table Variables -->
     <save label = "mixture_fraction_2"/>
     <save label = "heat_loss"/>
@@ -84,14 +90,13 @@
     <save label = "CO2"         table_lookup = "true"/>
     <save label = "H2O"         table_lookup = "true"/>
     <save label = "OH"          table_lookup = "true"/>
-    <save label = "NO"          table_lookup = "true"/>
     <!--save label = "CH4"         table_lookup = "true"/-->
     <save label = "O2"          table_lookup = "true"/>
     <save label = "sensibleenthalpy" table_lookup = "true"/>
     <save label = "adiabaticenthalpy"   table_lookup = "true"/>
     <save label = "N2"          table_lookup = "true"/>
     <save label = "mixture_molecular_weight" table_lookup = "true"/>
-    <checkpoint cycle="2" interval="0.00001"/>
+    <checkpoint cycle="2" interval="0.005"/>
     <outputDoubleAsFloat/>
     <compression>gzip</compression>
   </DataArchiver>
@@ -103,6 +108,9 @@
         <BCType id="all" label="secondaryflow" var="VelocityInlet">
           <value>[10.0, 0, 0]</value>
         </BCType>
+        <!--BCType id="all" label="enthalpy" var="Dirichlet">
+          <value>-4.930e6</value>
+        </BCType-->
         <BCType id="all" label="enthalpy" var="Tabulated">
           <value>adiabaticenthalpy</value>
         </BCType>
@@ -205,7 +213,7 @@
         <BCType id="all" label="radiation_temperature" var="Tabulated">
           <value>temperature</value>
         </BCType>
-        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
@@ -316,7 +324,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>298.0</value>
         </BCType>
-        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
@@ -427,7 +435,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200.0</value>
         </BCType>
-        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
       </Face>
@@ -440,7 +448,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
@@ -551,7 +559,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
@@ -662,7 +670,7 @@
         <BCType id="all" label="radiation_temperature" var="Dirichlet">
           <value>1200</value>
         </BCType>
-        <BCType id="0"  label= "abskt"              var="ForcedDirichlet">
+        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
                             <value> 1.0 </value>
         </BCType>
         <BCType id="all" label="enthalpy" var="Neumann">
@@ -823,7 +831,7 @@
         <Eqn label="enthalpy" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <use_density_guess/>
+          <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -837,7 +845,7 @@
         <Eqn label="mixture_fraction_2" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <use_density_guess/>
+          <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -854,7 +862,7 @@
        <Eqn label="coal_gas_mix_frac" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <use_density_guess/>
+          <stage value="0" /> 
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -873,7 +881,6 @@
        <Eqn label="test_scalar" type="CCscalar">
           <doDiff>true</doDiff>
           <doConv>true</doConv>
-          <use_density_guess/>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <D_mol_constant value="5e-5"/>
           <conv_scheme>roe_minmod</conv_scheme>
@@ -894,7 +901,7 @@
         <Sources>
           <src label="divQ" type="do_radiation">
             <calc_frequency>5</calc_frequency>
-            <abskg label="abskt"/>
+            <abskg label="abskg"/>
             <DORadiationModel>
                 <LinearSolver type="hypre">
                 <res_tol>1.0e-10</res_tol>
@@ -925,25 +932,18 @@
       </TransportEqns>
 
       <PropertyModels>
-        <model type="radiation_properties" label="abskt">
+        <model type="radiation_properties" label="abskg">
           <initialization type="constant">
             <constant>0.0</constant>
           </initialization>
-          <calculator type="radprops">
-          <opl>0.3</opl>
-          <abskg label = "abskg"/>
-            <particles type="coal">
-              <abskp label = "abskp"/>
-              <model_type>planck</model_type> 
-              <!--<model_type>rossland</model_type> -->
-              <complex_ir_real>2</complex_ir_real>    
-              <complex_ir_imag>-0.6</complex_ir_imag> 
+          <calculator type="hottel_sarofim">
+            <opl>.432</opl>
+            <abskg label="gas_abskg"/>
+            <particles type="basic">
+              <abskp label="Julien_abskp"/>
               <part_temp_label>temperature_coal</part_temp_label>
               <part_size_label>length</part_size_label>
             </particles>
-          <grey_gas>
-            <inputfile>inputs/ARCHES/rad_tables/GreyGasOPL1_0.txt</inputfile>
-          </grey_gas>
           </calculator>
         </model>
         <model type="heat_loss" label="heat_loss">
@@ -993,9 +993,12 @@
           <model label="zdragforce" type="Drag">
             <direction>z</direction>
           </model>
-          <model label="devol" type="FOWYDevol"/>
-          <model label="heat" type="EnthalpyShaddix"/>
-          <model label="char" type="CharOxidationShaddix"/>
+          <model label="devol" type="YamamotoDevol">
+          </model>
+          <model label="heat" type="EnthalpyShaddix">
+          </model>
+          <model label="char" type="CharOxidationShaddix">
+          </model>
         </Models>
         <Weights>
           <doDiff>false</doDiff>
@@ -1008,7 +1011,7 @@
             <env_constant qn="2" value="1e5">
             </env_constant>
           </initialization>
-          <scaling_const>[1e7,1e7,1e7]</scaling_const>
+          <scaling_const>[1e5,1e5,1e5]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <Clipping>
             <low>0.0</low>
@@ -1034,7 +1037,7 @@
             <low>3.99</low>
             <high>10.01</high>
           </Clipping>
-          <scaling_const>[1e-5,1e-5,1e-5]</scaling_const>
+          <scaling_const>[1e-6,1e-5,1e-4]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
@@ -1053,7 +1056,7 @@
           </initialization>
           <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <model label="devol" />
-          <scaling_const>[1.0e-10,1.0e-10,1.0e-10]</scaling_const>
+          <scaling_const>[1.0e-11,1e-10,1e-10]</scaling_const>
           <Clipping>
             <low>0.0</low>
             <high>10.0</high>
@@ -1075,7 +1078,7 @@
           </initialization>
           <nominal_values>[0.0,0.0,0.0]</nominal_values>
           <model label="char" />
-          <scaling_const>[1.0e-10,1.0e-10,1.0e-10]</scaling_const>
+          <scaling_const>[1.0e-10,1e-10,1e-10]</scaling_const>
           <Clipping>
             <low>-10.0</low>
             <high>10.0</high>
@@ -1102,7 +1105,7 @@
               <low>0.3</low>
               <high>3.0</high>
           </Clipping-->
-          <scaling_const>[1e-4,1e-4,1e-4]</scaling_const>
+          <scaling_const>[1e-4,1e-4,1e-3]</scaling_const>
           <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
           <conv_scheme>roe_minmod</conv_scheme>
         </Ic>
