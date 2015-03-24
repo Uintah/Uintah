@@ -89,9 +89,15 @@ public:
 private:
 
   const VarLabel* _rcmass_varlabel;
+  const VarLabel* _RHS_source_varlabel;
+  const VarLabel* _char_RHS_source_varlabel;
   const VarLabel* _char_varlabel;
   const VarLabel* _weight_varlabel;
   const VarLabel* _particle_temperature_varlabel;
+  const VarLabel* _v_inf_label; 
+  const VarLabel* _charmass_weighted_scaled_varlabel; 
+  const VarLabel* _rcmass_weighted_scaled_varlabel; 
+  const VarLabel* _rawcoal_birth_label; 
 
   std::vector<double>  particle_sizes;
   std::vector<double>  ash_mass_init;
@@ -103,14 +109,9 @@ private:
   double _Tig;
   double _Ta;
   double _A;
-  double _c;
-  double _d;
-
-  double m_vol;
-  double v_inf;
-  double f_drive;
-  double rate;
-  double rateMax;
+  double _sigma;
+  double _C1;
+  double _C2;
 
   double rhop;
   double total_rc;
@@ -124,16 +125,17 @@ private:
   double _rc_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight 
   double _weight_small;   ///< small weight 
-    struct CoalAnalysis{ 
-      double C;
-      double H; 
-      double O; 
-      double N; 
-      double S; 
-      double CHAR; 
-      double ASH; 
-      double H2O; 
-    };
+  struct CoalAnalysis{ 
+    double C;
+    double H; 
+    double O; 
+    double N; 
+    double S; 
+    double CHAR; 
+    double ASH; 
+    double H2O; 
+  };
+
 }; // end ConstSrcTerm
 } // end namespace Uintah
 #endif

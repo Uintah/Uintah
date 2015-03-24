@@ -2,6 +2,8 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -63,7 +65,6 @@ EqnBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode)
   varname = d_ic_name+"_"+node; 
   d_icLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-
 }
 
 DQMOMEqn::~DQMOMEqn()
@@ -126,17 +127,21 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   // Models (source terms):
   for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
     string model_name; 
+    string model_type; 
     m_db->getAttribute("label", model_name); 
 
     // now tag on the internal coordinate
-    string node;  
-    std::stringstream out; 
-    out << d_quadNode; 
-    node = out.str(); 
-    model_name += "_qn";
-    model_name += node; 
+    std::string model_qn_name = ParticleHelper::append_qn_env(model_name, d_quadNode); 
+
     // put it in the list
-    d_models.push_back(model_name);
+    d_models.push_back(model_qn_name);
+
+    map<string,string>::iterator icheck = d_type_to_model.find(model_type); 
+    if ( icheck == d_type_to_model.end() ){ 
+      std::string model_type = ParticleHelper::get_model_type( m_db, model_name, ParticleHelper::DQMOM ); 
+      d_type_to_model[model_type] = model_name; 
+    }
+
   }  
 
   // Clipping:
@@ -574,7 +579,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     if (d_doConv){
 
       d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme ); 
-
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) { 
         _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS ); 

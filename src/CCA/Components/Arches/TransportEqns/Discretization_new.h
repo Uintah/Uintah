@@ -2099,7 +2099,7 @@ namespace Uintah{
        if ( convScheme == "super_bee_wall_upwind"){ 
          mod_convScheme = "super_bee"; 
        } else if ( convScheme == "roe_minmod_wall_upwind"){ 
-         mod_convScheme = "roal_minmod"; 
+         mod_convScheme = "roe_minmod"; 
        } else if ( convScheme == "vanleer_wall_upwind"){
          mod_convScheme = "vanleer";
        }
@@ -2204,7 +2204,7 @@ namespace Uintah{
        if ( convScheme == "super_bee_wall_upwind"){ 
          mod_convScheme = "super_bee"; 
        } else if ( convScheme == "roe_minmod_wall_upwind"){ 
-         mod_convScheme = "roal_minmod"; 
+         mod_convScheme = "roe_minmod"; 
        } else if ( convScheme == "vanleer_wall_upwind"){
          mod_convScheme = "vanleer";
        }
@@ -2298,7 +2298,7 @@ namespace Uintah{
        if ( convScheme == "super_bee_wall_upwind"){ 
          mod_convScheme = "super_bee"; 
        } else if ( convScheme == "roe_minmod_wall_upwind"){ 
-         mod_convScheme = "roal_minmod"; 
+         mod_convScheme = "roe_minmod"; 
        } else if ( convScheme == "vanleer_wall_upwind"){
          mod_convScheme = "vanleer";
        }

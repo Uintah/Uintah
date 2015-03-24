@@ -91,6 +91,7 @@ class CoalModelFactory
 public:
   
   typedef std::map< std::string, ModelBase*> ModelMap;
+  typedef std::map< std::string, ModelBase*> BirthMap;
   typedef std::map< std::string, Devolatilization*> DevolModelMap;
   typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
   typedef std::map< std::string, HeatTransfer*> HeatTransferModelMap;
@@ -135,9 +136,6 @@ public:
                                 DataWarehouse        * old_dw, 
                                 DataWarehouse        * new_dw );
 
-        ////////////////////////////////////////////////
-        // Get/set methods
-
   /** @brief  Get all models in a ModelMap */
   ModelMap& retrieve_all_models() {
     return models_; }; 
@@ -154,9 +152,9 @@ public:
   HeatTransferModelMap& retrieve_heattransfer_models() {
     return heatmodels_; };
 
-        /** @brief      Get the initial composition vector for the coal particles */
-        std::vector<double> getInitialCoalComposition() {
-                return yelem; };
+  /** @brief      Get the initial composition vector for the coal particles */
+  std::vector<double> getInitialCoalComposition() {
+          return yelem; };
 
   /** @brief  Set the ArchesLabel class so that CoalModelFactory can use field labels from Arches */
   void setArchesLabel( ArchesLabel * fieldLabels ) {
@@ -170,11 +168,11 @@ private:
 
   BuildMap builders_;
   ModelMap models_;
+  ModelMap birth_models_;
   DevolModelMap devolmodels_;
   CharOxiModelMap charoximodels_;
   HeatTransferModelMap heatmodels_;
 
-  bool b_coupled_physics;               ///< Boolean: use coupled physics and iterative procedure?
   bool b_labelSet;          ///< Boolean: has the ArchesLabel been set using setArchesLabel()?
   bool d_unweighted;
 
