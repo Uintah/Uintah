@@ -9,7 +9,7 @@
 
   <Solver type="hypre"/>
   <Time>
-    <maxTime>1.0</maxTime>
+    <maxTime>0.25</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.00001</delt_min>
     <delt_max>0.01</delt_max>
@@ -37,7 +37,7 @@
     <save label="continuityResidual"/>
     <save label="abskg"/>
     <save label="soot"/>
-    <checkpoint cycle="2" interval="0.2"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
   </DataArchiver>
 
