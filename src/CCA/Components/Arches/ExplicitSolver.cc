@@ -324,6 +324,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //copy the temperature into a radiation temperature variable: 
   d_boundaryCondition->sched_create_radiation_temperature( sched, level, matls, true );
 
+  if ( d_wall_ht_models != 0 ){ 
+    d_wall_ht_models->sched_doWallHT( level, sched, 0 ); 
+  }
+
   //========NEW STUFF =================================
   //TIMESTEP INIT: 
   //UtilityFactory
@@ -770,10 +774,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_boundaryCondition->sched_setIntrusionTemperature( sched, level, matls );
 
     d_boundaryCondition->sched_setIntrusionDensity( sched, level, matls ); 
-
-    if ( d_wall_ht_models != 0 ){ 
-      d_wall_ht_models->sched_doWallHT( level, sched, curr_level ); 
-    }
 
     d_props->sched_computeDrhodt(sched, patches, matls,
                                  d_timeIntegratorLabels[curr_level]);
