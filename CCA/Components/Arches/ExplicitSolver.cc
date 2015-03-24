@@ -809,6 +809,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  if ( d_wall_ht_models != 0 ){ 
+    d_wall_ht_models->sched_copyWallTintoT( level, sched ); 
+  }
+
   if ( d_printTotalKE ){ 
    sched_computeKE( sched, patches, matls ); 
    sched_printTotalKE( sched, patches, matls );

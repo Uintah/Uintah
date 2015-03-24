@@ -1124,6 +1124,7 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_densityGuessLabel);
     tsk->computes(d_lab->d_totalKineticEnergyLabel); 
     tsk->computes(d_lab->d_kineticEnergyLabel); 
+    tsk->computes(VarLabel::find("true_wall_temperature")); 
 
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
       tsk->computes(d_lab->d_pressurePredLabel);
@@ -1194,6 +1195,10 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> ccUVelocity;
     CCVariable<double> ccVVelocity;
     CCVariable<double> ccWVelocity;
+    CCVariable<double> true_wall_temperature; 
+
+    new_dw->allocateAndPut( true_wall_temperature, VarLabel::find("true_wall_temperature"), indx, patch ); 
+    true_wall_temperature.initialize(0.0); 
 
     CCVariable<double> ke; 
     new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 

@@ -48,10 +48,15 @@ namespace Uintah{
       /** @brief Compute the heat tranfer to the walls/tubes **/
       void sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_substep );
 
+      /** @brief Copy the real T wall (only for wall cells) into the temperature field AFTER table lookup. **/ 
+      void sched_copyWallTintoT( const LevelP& level, SchedulerP& sched );
+
       struct HTVariables {
 
         CCVariable<double> T; 
         CCVariable<double> T_copy; 
+        CCVariable<double> T_real; 
+        constCCVariable<double> T_real_old; 
         constCCVariable<double> T_old;
         constCCVariable<int> celltype; 
         constCCVariable<double> incident_hf_e; 
@@ -88,6 +93,7 @@ namespace Uintah{
       const VarLabel* _HF_T_label; 
       const VarLabel* _HF_B_label; 
       const VarLabel* _Total_HF_label; 
+      const VarLabel* _True_T_Label; 
 
       void doWallHT( const ProcessorGroup* my_world,
                      const PatchSubset* patches, 
@@ -95,6 +101,12 @@ namespace Uintah{
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw, 
                      const int time_substep );
+
+      void copyWallTintoT( const ProcessorGroup* my_world,
+                           const PatchSubset* patches, 
+                           const MaterialSubset* matls, 
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw );
 
       //void doWallHT_alltoall( const ProcessorGroup* my_world,
       //                        const PatchSubset* patches, 
