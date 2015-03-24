@@ -567,7 +567,7 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->require("wall_thickness", info.dy);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner); 
-    r_db->getWithDefault("max_TW", info.max_TW, 3500.0);
+    //r_db->getWithDefault("max_TW", info.max_TW, 3500.0); //may need to revisit this later for cases when the wall tried to give energy back
     r_db->getWithDefault("relaxation_coef", info.relax, 1.0);
     _regions.push_back( info ); 
     
