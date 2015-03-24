@@ -392,10 +392,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       tsk->schedule_task( level, sched, matls, curr_level ); 
     }
 
-    //Property Models
-    for ( TaskFactoryBase::TaskMap::iterator i = all_property_models.begin(); 
-          i != all_property_models.end(); i++ ){ 
-      i->second->schedule_task(level, sched, matls, curr_level); 
+    //Property Models before any update has occured
+    std::vector<std::string> pre_update_prop_tasks 
+      = i_property_models->second->retrieve_task_subset("pre_update_property_models"); 
+    for ( std::vector<std::string>::iterator itsk = pre_update_prop_tasks.begin(); itsk != pre_update_prop_tasks.end(); itsk++ ){ 
+      TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk); 
+      tsk->schedule_task( level, sched, matls, curr_level ); 
     }
 
     //FE update
@@ -807,6 +809,15 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_turbModel->sched_reComputeTurbSubmodel(sched, level, matls,
                                                d_timeIntegratorLabels[curr_level]);
 
+  }
+
+  //Property Models before starting over
+  std::vector<std::string> final_prop_tasks 
+    = i_property_models->second->retrieve_task_subset("final_property_models"); 
+  for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin(); itsk != final_prop_tasks.end(); itsk++ ){ 
+    TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk); 
+    //passing in curr_level > 0 because we are at the end of the time step
+    tsk->schedule_task( level, sched, matls, 1 ); 
   }
 
   if ( d_wall_ht_models != 0 ){ 

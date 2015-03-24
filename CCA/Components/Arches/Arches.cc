@@ -104,10 +104,10 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
-
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
+
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
