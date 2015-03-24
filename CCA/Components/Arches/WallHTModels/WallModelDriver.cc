@@ -320,7 +320,16 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue. 
       T_copy.copyData( T ); 
 
-      T_real.copyData( T_real_old ); 
+      //T_real.copyData( T_real_old ); 
+      CellIterator c = patch->getExtraCellIterator(); 
+      for (; !c.done(); c++ ){ 
+        if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){ 
+          T_real[*c] = T_real_old[*c];
+        } else { 
+          T_real[*c] = 0.0;
+        }
+      }
+
       //if ( !doing_restart ){
         //std::cout << "NOT DOING RADIATION SOLVE AND REQUIRING TRUE T LABEL " << std::endl;
       //}else{ 
@@ -365,7 +374,7 @@ WallModelDriver::sched_copyWallTintoT( const LevelP& level, SchedulerP& sched )
   //WARNING: Hardcoding temperature for now:
   task->modifies( VarLabel::find("temperature") ); 
   task->requires( Task::NewDW, _True_T_Label, Ghost::None, 0 ); 
-
+  task->requires( Task::NewDW, _cellType_label, Ghost::None, 0 ); 
 
   sched->addTask( task, level->eachPatch(), _shared_state->allArchesMaterials() ); 
 
@@ -386,14 +395,16 @@ WallModelDriver::copyWallTintoT( const ProcessorGroup* my_world,
     const Patch* patch = patches->get(p);
 
     constCCVariable<double> T_real; 
+    constCCVariable<int> cell_type; 
     CCVariable<double> T; 
 
     new_dw->get( T_real, _True_T_Label, _matl_index, patch, Ghost::None, 0 ); 
+    new_dw->get( cell_type, _cellType_label, _matl_index, patch, Ghost::None, 0 ); 
     new_dw->getModifiable( T, VarLabel::find("temperature"), _matl_index, patch ); 
     CellIterator c = patch->getExtraCellIterator(); 
     for (; !c.done(); c++ ){ 
 
-      if ( T_real[*c] > 0.0 ){ 
+      if ( cell_type[*c] > 7 && cell_type[*c] < 11 ){ 
 
         T[*c] = T_real[*c]; 
 
