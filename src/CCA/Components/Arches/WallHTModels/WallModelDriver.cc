@@ -476,8 +476,6 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->require("wall_thickness", info.dy);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner); 
-    r_db->require("max_TW", info.max_TW);
-    r_db->require("min_TW", info.min_TW);
     r_db->getWithDefault("relaxation_coef", info.relax, 1.0);
     _regions.push_back( info ); 
     
@@ -489,7 +487,7 @@ void
 WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ){ 
   
   int num;
-  double TW1, TW0, Tmax, Tmin, net_q, error, initial_error, rad_q, total_area_face, total_area_face_pow;
+  double TW1, TW0, Tmax, Tmin, net_q, error, initial_error, rad_q, total_area_face;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); // cell spacing
@@ -533,7 +531,6 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
             
             container_flux_ind.clear();
             total_area_face=0;
-            total_area_face_pow=0;
             // Loop over all faces and find which faces have flow cells next to them
             for ( int i = 0; i < 6; i++ )
             { 
@@ -559,60 +556,55 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
               for ( int pp = 0; pp < total_flux_ind; pp++ )
               {  
                 q = get_flux( container_flux_ind[pp], vars );
-                rad_q+=q[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]]; // this is adding the total Watts contribution
-                total_area_face+=area_face[container_flux_ind[pp]];
-                total_area_face_pow+=pow(area_face[container_flux_ind[pp]],2);
+                rad_q+=q[c+_d[container_flux_ind[pp]]] * area_face[container_flux_ind[pp]]; // this is adding the total watts contribution.
+                total_area_face+=area_face[container_flux_ind[pp]];// this is the total cell surface area exposed to radiation.
               }
-              total_area_face_pow=pow(total_area_face_pow,0.5); 
-              rad_q/=total_area_face_pow; // total flux to the cell 
-              // get an intial guess for the wall temperature (exposed to the flow cells)
-              TW0 = vars.T_old[c];
-              net_q = rad_q - _sigma_constant * pow( TW0 , 4 );
-              net_q = net_q > 0 ? net_q : 0;
-              TW1 = wi.T_inner + net_q * wi.dy / wi.k;
-              
-              if( TW1 < TW0 ){
-                Tmax = TW0>wi.max_TW ? wi.max_TW : TW0;
-                Tmin = TW1<wi.min_TW ? wi.min_TW : TW1;
-              }
-              else{
-                Tmax = TW1>wi.max_TW ? wi.max_TW : TW1;
-                Tmin = TW0<wi.min_TW ? wi.min_TW : TW0;
-              }
-              
-              initial_error = fabs( TW0 - TW1 ) / TW1;
-              
-              T[c] = TW0;
-              
-              error = 1;
-              num = 0;
-              // iterate until steady solution is achieved
-              while ( initial_error > _init_tol && error > _tol && num < _max_it ){
-                
-                TW0 = ( Tmax + Tmin ) / 2.0; 
-                net_q = rad_q - _sigma_constant * pow( TW0, 4 );
-                net_q = net_q>0 ? net_q : 0;
+              rad_q/=total_area_face; // representative radiative flux to the cell. 
 
-                TW1 = wi.T_inner + net_q * wi.dy / wi.k;
-                
-                if( TW1 < TW0 ) {
-                  
-                  Tmax = TW0;
-                  
-                } else {
-                  
-                  Tmin = TW0;
-                  
+              double d_tol = 1e-15;
+              double delta = 1;
+              int NIter = 15;
+              double f0 = 0.0;
+              double f1 = 0.0;
+              double TW = vars.T_old[c];
+              double TW_guess, TW_tmp, TW_old, TW_new;
+              TW_guess = vars.T_old[c];
+              TW_old = TW_guess-delta;
+              net_q = rad_q - _sigma_constant * pow( TW_old, 4 );
+              net_q = net_q>0 ? net_q : 0;
+              net_q *= wi.emissivity;
+              f0 = - TW_old + wi.T_inner + net_q * wi.dy / wi.k;
+
+              TW_new = TW_guess+delta;
+              net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
+              net_q = net_q>0 ? net_q : 0;
+              net_q *= wi.emissivity;
+              f1 = - TW_new + wi.T_inner + net_q * wi.dy / wi.k;
+          
+              for ( int iterT=0; iterT < NIter; iterT++) {
+                TW_tmp = TW_old;
+                TW_old = TW_new;
+                TW_new = TW_tmp - (TW_new - TW_tmp)/(f1-f0) * f0;
+                TW_new = max( wi.T_inner , min(3500.0, TW_new)); // this is the max coal temperature in CoalTemperature.cc           
+                if (std::abs(TW_new-TW_old) < d_tol){
+                  TW=TW_new;
+                  net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
+                  net_q = net_q>0 ? net_q : 0;
+                  net_q *= wi.emissivity;
+                  break;
                 }
-                
-                error = fabs( Tmax - Tmin ) / TW0;
-                
-                num++;
-                
+                f0 = f1;
+                net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
+                net_q = net_q>0 ? net_q : 0;
+                net_q *= wi.emissivity;
+                f1 = - TW_new + wi.T_inner + net_q * wi.dy / wi.k;
               }
-              TW0 = pow( (pow(TW0,4)*total_area_face_pow)/(total_area_face) , 0.25); //NEW
-              T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW0;
-
+              // now to make consistent with assumed emissivity of 1 in radiation model:
+              // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
+              // q_radiation - 1 * sigma Tw' ^ 4 = net_q 
+              TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);  
+ 
+              T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW;
 
             }
           } 
