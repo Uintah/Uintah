@@ -161,7 +161,13 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     task->computes( _True_T_Label ); 
     task->requires( Task::OldDW , _cc_vel_label   , Ghost::None , 0 ); 
     task->requires( Task::OldDW , _T_label        , Ghost::None , 0 ); 
-    task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 ); 
+    //Use the restart information from the gas temperature label since the 
+    //True wall temperature may not exisit. 
+    //This is a band-aid for cases that were run previously without the 
+    //true wall temperature variable. 
+    task->requires( Task::OldDW, VarLabel::find("temperature"), Ghost::None, 0 ); 
+    //task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 ); 
+
     task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
     
     if ( _rad_type == DORADIATION ){
@@ -219,7 +225,8 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       
       old_dw->get( vars.T_old      , _T_label      , _matl_index , patch , Ghost::None , 0 );
       old_dw->get( vars.cc_vel     , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
-      old_dw->get( vars.T_real_old , _True_T_Label , _matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.T_real_old , VarLabel::find("temperature"), _matl_index, patch, Ghost::None, 0 ); 
+      //old_dw->get( vars.T_real_old , _True_T_Label , _matl_index , patch , Ghost::None , 0 );
       
       new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch ); 
       new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
@@ -290,7 +297,9 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       constCCVariable<int> cell_type; 
       
       old_dw->get( T_old             , _T_label        , _matl_index , patch    , Ghost::None , 0 );
-      old_dw->get( T_real_old        , _True_T_Label   , _matl_index , patch    , Ghost::None , 0 ); 
+      //if ( !doing_restart )
+        //old_dw->get( T_real_old      , _True_T_Label   , _matl_index , patch    , Ghost::None , 0 ); 
+      old_dw->get( T_real_old , VarLabel::find("temperature"), _matl_index, patch, Ghost::None, 0 ); 
       new_dw->get( cell_type         , _cellType_label , _matl_index , patch    , Ghost::AroundCells , 1 );
       new_dw->getModifiable(  T      , _T_label        , _matl_index , patch );
       new_dw->allocateAndPut( T_copy , _T_copy_label   , _matl_index , patch );
@@ -312,6 +321,13 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       T_copy.copyData( T ); 
 
       T_real.copyData( T_real_old ); 
+      //if ( !doing_restart ){
+        //std::cout << "NOT DOING RADIATION SOLVE AND REQUIRING TRUE T LABEL " << std::endl;
+      //}else{ 
+        //std::cout << "NOT DOING RADIATION SOLVE AND REQUIRING PLAIN T LABEL " << std::endl;
+        //T_real.copyData( T_old ); 
+      //}
+
       
     } else { 
       
