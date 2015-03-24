@@ -423,8 +423,8 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   for ( int i = 0; i < N; i++ ){ 
 
     CCVariable<double>* sump = tsk_info->get_uintah_field<CCVariable<double> >(ave_sum_names[i]); 
-    constCCVariable<double>* varp = tsk_info->get_uintah_const_field<constCCVariable<double> >(base_var_names[i]); 
-    constCCVariable<double>* old_sump = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_sum_names[i]); 
+    constCCVariable<double>* varp = tsk_info->get_const_uintah_field<constCCVariable<double> >(base_var_names[i]); 
+    constCCVariable<double>* old_sump = tsk_info->get_const_uintah_field<constCCVariable<double> >(ave_sum_names[i]); 
 
     CCVariable<double>& sum = *sump; 
     constCCVariable<double>& var = *varp;
@@ -443,10 +443,10 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   //Fluxes
   if ( !_no_flux ){ 
-    constCCVariable<double>* rhop = tsk_info->get_uintah_const_field<constCCVariable<double> >(rho_name); 
-    constSFCXVariable<double>* up = tsk_info->get_uintah_const_field<constSFCXVariable<double> >("uVelocitySPBC"); 
-    constSFCYVariable<double>* vp = tsk_info->get_uintah_const_field<constSFCYVariable<double> >("vVelocitySPBC"); 
-    constSFCZVariable<double>* wp = tsk_info->get_uintah_const_field<constSFCZVariable<double> >("wVelocitySPBC"); 
+    constCCVariable<double>* rhop = tsk_info->get_const_uintah_field<constCCVariable<double> >(rho_name); 
+    constSFCXVariable<double>* up = tsk_info->get_const_uintah_field<constSFCXVariable<double> >("uVelocitySPBC"); 
+    constSFCYVariable<double>* vp = tsk_info->get_const_uintah_field<constSFCYVariable<double> >("vVelocitySPBC"); 
+    constSFCZVariable<double>* wp = tsk_info->get_const_uintah_field<constSFCZVariable<double> >("wVelocitySPBC"); 
 
     constCCVariable<double>& rho = *rhop; 
     constSFCXVariable<double>& u = *up; 
@@ -458,15 +458,15 @@ TimeAve::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     for ( int i = 0; i < N; i++ ){ 
 
       CCVariable<double>* sump_x = tsk_info->get_uintah_field<CCVariable<double> >(ave_x_flux_sum_names[i]); 
-      constCCVariable<double>* old_sump_x = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_x_flux_sum_names[i]); 
+      constCCVariable<double>* old_sump_x = tsk_info->get_const_uintah_field<constCCVariable<double> >(ave_x_flux_sum_names[i]); 
       CCVariable<double>* sump_y = tsk_info->get_uintah_field<CCVariable<double> >(ave_y_flux_sum_names[i]); 
-      constCCVariable<double>* old_sump_y = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_y_flux_sum_names[i]); 
+      constCCVariable<double>* old_sump_y = tsk_info->get_const_uintah_field<constCCVariable<double> >(ave_y_flux_sum_names[i]); 
       CCVariable<double>* sump_z = tsk_info->get_uintah_field<CCVariable<double> >(ave_z_flux_sum_names[i]); 
-      constCCVariable<double>* old_sump_z = tsk_info->get_uintah_const_field<constCCVariable<double> >(ave_z_flux_sum_names[i]); 
+      constCCVariable<double>* old_sump_z = tsk_info->get_const_uintah_field<constCCVariable<double> >(ave_z_flux_sum_names[i]); 
       constCCVariable<double>* phip;
 
       if ( flux_sum_info[i].do_phi)
-        phip = tsk_info->get_uintah_const_field<constCCVariable<double> >(flux_sum_info[i].phi); 
+        phip = tsk_info->get_const_uintah_field<constCCVariable<double> >(flux_sum_info[i].phi); 
 
       CCVariable<double>& sum_x = *sump_x; 
       constCCVariable<double>& old_sum_x = *old_sump_x;

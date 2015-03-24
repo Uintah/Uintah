@@ -50,6 +50,7 @@ public:
     enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES, LOCAL_COMPUTES };
     enum WHICH_DW { OLDDW, NEWDW, LATEST };
     enum VAR_TYPE { CC_INT, CC_DOUBLE, CC_VEC, FACEX, FACEY, FACEZ, SUM, MAX, MIN, PARTICLE };
+    enum TASK_TYPE { STANDARD_TASK, BC_TASK }; 
 
     template <typename FieldT>
     struct VarTypeHelper{
@@ -118,6 +119,7 @@ public:
     void schedule_task( const LevelP& level, 
                         SchedulerP& sched, 
                         const MaterialSet* matls,
+                        TASK_TYPE task_type,
                         int time_substep );
 
     /** @brief The actual task interface function that references the 
@@ -167,12 +169,6 @@ public:
                            DataWarehouse* old_dw, 
                            DataWarehouse* new_dw, 
                            std::vector<VariableInformation> variable_registry );
-
-    /** @brief Add this task to the Uintah task scheduler **/ 
-    void schedule_bcs( const LevelP& level, 
-                        SchedulerP& sched, 
-                        const MaterialSet* matls,
-                        int time_substep );
 
     /** @brief The actual task interface function that references the 
      *         derived class implementation **/ 
@@ -301,10 +297,9 @@ protected:
         //====================================================================================
         // GRID VARIABLE ACCESS
         //====================================================================================
-
         /** @brief Return a CONST UINTAH field **/ 
         template <typename T>
-        T* get_uintah_const_field( const std::string name ){ 
+        T* get_const_uintah_field( const std::string name ){ 
           return _field_container->get_const_field<T>(name); 
         } 
 

@@ -369,19 +369,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
    
     //Build RHS
     for ( TaskFactoryBase::TaskMap::iterator i = init_all_tasks.begin(); i != init_all_tasks.end(); i++){ 
-      i->second->schedule_task(level, sched, matls, curr_level); 
+      i->second->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
     }
 
     //(scalars)
     for ( SVec::iterator i = scalar_rhs_builders.begin(); i != scalar_rhs_builders.end(); i++){ 
       TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
-      tsk->schedule_task(level, sched, matls, curr_level); 
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
     }
     
     //(momentum)
     for ( SVec::iterator i = mom_rhs_builders.begin(); i != mom_rhs_builders.end(); i++){ 
       TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
-      tsk->schedule_task(level, sched, matls, curr_level); 
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
     }
 
     //ParticleModels before any update has occured 
@@ -389,7 +389,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       = i_particle_models->second->retrieve_task_subset("pre_update_particle_models"); 
     for ( std::vector<std::string>::iterator itsk = pre_update_part_tasks.begin(); itsk != pre_update_part_tasks.end(); itsk++ ){ 
       TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk); 
-      tsk->schedule_task( level, sched, matls, curr_level ); 
+      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level ); 
     }
 
     //Property Models before any update has occured
@@ -397,7 +397,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       = i_property_models->second->retrieve_task_subset("pre_update_property_models"); 
     for ( std::vector<std::string>::iterator itsk = pre_update_prop_tasks.begin(); itsk != pre_update_prop_tasks.end(); itsk++ ){ 
       TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk); 
-      tsk->schedule_task( level, sched, matls, curr_level ); 
+      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level ); 
     }
 
     //FE update
@@ -406,11 +406,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     for ( SVec::iterator i = scalar_fe_up.begin(); i != scalar_fe_up.end(); i++){ 
       TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
-      tsk->schedule_task(level, sched, matls, curr_level); 
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
     }
     for ( SVec::iterator i = mom_fe_up.begin(); i != mom_fe_up.end(); i++){ 
       TaskInterface* tsk = i_transport->second->retrieve_task(*i); 
-      tsk->schedule_task(level, sched, matls, curr_level); 
+      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
     }
 
     //============== END NEW TASK STUFF ==============================
@@ -498,7 +498,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       std::vector<std::string> clipping_tasks = i_particle_models->second->retrieve_task_subset("post_update_coal"); 
       for ( std::vector<std::string>::iterator itsk = clipping_tasks.begin(); itsk != clipping_tasks.end(); itsk++ ){ 
         TaskInterface* tsk = i_particle_models->second->retrieve_task(*itsk); 
-        tsk->schedule_task( level, sched, matls, curr_level ); 
+        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level ); 
       }
 
     }
@@ -638,13 +638,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     for ( SVec::iterator i = scalar_ssp.begin(); i != scalar_ssp.end(); i++){ 
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       if ( curr_level > 0 )
-        tsk->schedule_task( level, sched, matls, curr_level ); 
+        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level ); 
     }
 
     for ( SVec::iterator i = mom_ssp.begin(); i != mom_ssp.end(); i++){ 
       TaskInterface* tsk = i_transport->second->retrieve_task(*i);
       if ( curr_level > 0 )
-        tsk->schedule_task( level, sched, matls, curr_level ); 
+        tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, curr_level ); 
     }
     //============= END NEW TASK STUFF===============================
 
@@ -817,7 +817,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin(); itsk != final_prop_tasks.end(); itsk++ ){ 
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk); 
     //passing in curr_level > 0 because we are at the end of the time step
-    tsk->schedule_task( level, sched, matls, 1 ); 
+    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 ); 
   }
 
   if ( d_wall_ht_models != 0 ){ 
