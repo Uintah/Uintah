@@ -16,17 +16,37 @@
                                                                           co2, h2o, soot, specific_heat'"/>
       </VarID>
 
+      <!-- These are new task properties --> 
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
+                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable, 
+                                                                          time_ave'">
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable'">
 
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
                                         need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps). 
                                                                                              Otherwise it just copies old fluxes forward. Default = 1. -->
 
+          <!-- The time_ave option produces a sum(phi*dt) or sum(rho*u*phi) (all three components) from which
+               a time average can be computed -->
+          <single_variable              spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type time_ave"/> <!-- time average a single variable -->
+
+
+          <flux_variable                spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="phi OPTIONAL STRING"
+                                        need_applies_to="type time_ave"/> <!-- time average a flux variable rho*u*phi - creates all three components 
+                                                                               If phi isn't specified, then this is the total mass flux -->
+          <density                      spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type time_ave"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
+
         </model>
       </PropertyModelsV2>
+
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
@@ -321,7 +341,11 @@
             <c                            spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
             <Ta                           spec="REQUIRED DOUBLE" />
+            <b                            spec="REQUIRED DOUBLE" />
+            <c                            spec="REQUIRED DOUBLE" />
             <d                            spec="REQUIRED DOUBLE" />
+            <e                            spec="REQUIRED DOUBLE" />  
+            <sigma                        spec="REQUIRED DOUBLE" />
           </BTDevol>
           <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
           <!-- Shaddix char oxidation coefficients in the following order:  -->
