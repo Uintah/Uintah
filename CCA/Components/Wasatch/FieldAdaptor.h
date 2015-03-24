@@ -371,8 +371,6 @@ namespace Wasatch{
     if( ainfo.isGPUTask && IS_GPU_INDEX(deviceIndex) ){ // homogeneous GPU task
       assert( uintahDeviceVar != NULL );
       fieldValues_ = uintahDeviceVar;
-      std::cout << "Wrapping field with size " << size << ", offset="
-                << offset << ", extent=" << extent << std::endl;
       field = new FieldT( so::MemoryWindow( size, offset, extent ),
                           so::BoundaryCellInfo::build<FieldT>(bcPlus),
                           newGData,
