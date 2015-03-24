@@ -27,7 +27,8 @@ _shared_state( shared_state )
   
   _matl_index = _shared_state->getArchesMaterial( 0 )->getDWIndex(); 
   
-  _T_copy_label          = VarLabel::create( "T_copy", CC_double ); 
+  _T_copy_label = VarLabel::create( "T_copy", CC_double ); 
+  _True_T_Label = VarLabel::create( "true_wall_temperature", CC_double); 
   
 }
 
@@ -43,6 +44,7 @@ WallModelDriver::~WallModelDriver()
   }
   
   VarLabel::destroy( _T_copy_label ); 
+  VarLabel::destroy( _True_T_Label ); 
   
 }
 
@@ -156,8 +158,10 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   if ( time_subset == 0 ) { 
     
     task->computes( _T_copy_label ); 
+    task->computes( _True_T_Label ); 
     task->requires( Task::OldDW , _cc_vel_label   , Ghost::None , 0 ); 
     task->requires( Task::OldDW , _T_label        , Ghost::None , 0 ); 
+    task->requires( Task::OldDW , _True_T_Label   , Ghost::None , 0 ); 
     task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
     
     if ( _rad_type == DORADIATION ){
@@ -176,7 +180,8 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     }
     
   } else { 
-    
+   
+    task->requires( Task::NewDW, _True_T_Label, Ghost::None, 0 );
     task->requires( Task::NewDW, _T_copy_label, Ghost::None, 0 );
     task->requires( Task::NewDW , _cellType_label , Ghost::AroundCells , 1 );
     
@@ -189,11 +194,11 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
 //_________________________________________
 void 
 WallModelDriver::doWallHT( const ProcessorGroup* my_world,
-                          const PatchSubset* patches, 
-                          const MaterialSubset* matls, 
-                          DataWarehouse* old_dw, 
-                          DataWarehouse* new_dw, 
-                          const int time_subset )
+                           const PatchSubset* patches, 
+                           const MaterialSubset* matls, 
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw, 
+                           const int time_subset )
 {
   
   //patch loop
@@ -212,12 +217,16 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       
       // actually compute the wall HT model 
       
-      old_dw->get( vars.T_old  , _T_label      , _matl_index , patch , Ghost::None , 0 );
-      old_dw->get( vars.cc_vel , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.T_old      , _T_label      , _matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.cc_vel     , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.T_real_old , _True_T_Label , _matl_index , patch , Ghost::None , 0 );
       
       new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch ); 
       new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
+      new_dw->allocateAndPut( vars.T_real     , _True_T_Label , _matl_index, patch ); 
       new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::AroundCells, 1 );
+
+      vars.T_real.initialize(0.0); 
       
       if ( _rad_type == DORADIATION ){
         
@@ -275,13 +284,17 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       
       CCVariable<double> T; 
       CCVariable<double> T_copy; 
+      CCVariable<double> T_real; 
+      constCCVariable<double> T_real_old; 
       constCCVariable<double> T_old; 
       constCCVariable<int> cell_type; 
       
       old_dw->get( T_old             , _T_label        , _matl_index , patch    , Ghost::None , 0 );
+      old_dw->get( T_real_old        , _True_T_Label   , _matl_index , patch    , Ghost::None , 0 ); 
       new_dw->get( cell_type         , _cellType_label , _matl_index , patch    , Ghost::AroundCells , 1 );
       new_dw->getModifiable(  T      , _T_label        , _matl_index , patch );
       new_dw->allocateAndPut( T_copy , _T_copy_label   , _matl_index , patch );
+      new_dw->allocateAndPut( T_real , _True_T_Label   , _matl_index , patch ); 
       
       std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
       
@@ -297,6 +310,8 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       //but that creates a danger of a developer forgeting to perform the operation. For now, do it 
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue. 
       T_copy.copyData( T ); 
+
+      T_real.copyData( T_real_old ); 
       
     } else { 
       
@@ -320,6 +335,56 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         
       }
     } 
+  }
+}
+
+//_________________________________________
+void 
+WallModelDriver::sched_copyWallTintoT( const LevelP& level, SchedulerP& sched )
+{
+  
+  Task* task = scinew Task( "WallModelDriver::copyWallTintoT", this, 
+                            &WallModelDriver::copyWallTintoT ); 
+
+  //WARNING: Hardcoding temperature for now:
+  task->modifies( VarLabel::find("temperature") ); 
+  task->requires( Task::NewDW, _True_T_Label, Ghost::None, 0 ); 
+
+
+  sched->addTask( task, level->eachPatch(), _shared_state->allArchesMaterials() ); 
+
+}
+
+//_________________________________________
+void 
+WallModelDriver::copyWallTintoT( const ProcessorGroup* my_world,
+                                 const PatchSubset* patches, 
+                                 const MaterialSubset* matls, 
+                                 DataWarehouse* old_dw, 
+                                 DataWarehouse* new_dw )
+{
+  
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    
+    const Patch* patch = patches->get(p);
+
+    constCCVariable<double> T_real; 
+    CCVariable<double> T; 
+
+    new_dw->get( T_real, _True_T_Label, _matl_index, patch, Ghost::None, 0 ); 
+    new_dw->getModifiable( T, VarLabel::find("temperature"), _matl_index, patch ); 
+    CellIterator c = patch->getExtraCellIterator(); 
+    for (; !c.done(); c++ ){ 
+
+      if ( T_real[*c] > 0.0 ){ 
+
+        T[*c] = T_real[*c]; 
+
+      }
+    }
+
+
   }
 }
 
@@ -632,6 +697,8 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars, CCV
               // now to make consistent with assumed emissivity of 1 in radiation model:
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
               // q_radiation - sigma Tw' ^ 4 = net_q 
+             
+              vars.T_real[c] = (1 - wi.relax) * vars.T_real_old[c] + wi.relax * TW_new; 
               
               TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);  
  
