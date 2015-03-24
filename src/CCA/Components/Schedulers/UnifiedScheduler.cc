@@ -1210,7 +1210,7 @@ UnifiedScheduler::runTasks( int thread_id )
           //which can be even costlier overall.  So we do the check here.)
           //So all tasks not named outputVariables tasks will be processed.  Otherwise we previously
           //make sure this output timestep really will output.
-          if ((m_outPort->isOutputTimestep()) || (readyTask->getName() != "DataArchiver::outputVariables")) {
+          if ((m_outPort->isOutputTimestep()) || (readyTask->getTask()->getName() != "DataArchiver::outputVariables")) {
             if (readyTask->getName() == "DataArchiver::outputVariables(checkpoint)") {
               cerr << "WARNING: A bug in the unified scheduler means checkpoint DataArchiver can conflict with regular data archiving." << endl;
             }
