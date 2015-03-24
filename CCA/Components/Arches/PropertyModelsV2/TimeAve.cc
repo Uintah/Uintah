@@ -65,6 +65,10 @@ TimeAve::problemSetup( ProblemSpecP& db ){
 
     base_var_names.push_back(var_name); 
 
+    if (var_db->findBlock("new")){ 
+      _new_variables.push_back(var_ave_name); 
+    }
+
   }
 
   bool do_fluxes = false; 
@@ -110,6 +114,12 @@ TimeAve::problemSetup( ProblemSpecP& db ){
 
     flux_sum_info.push_back(fi); 
 
+    if (var_db->findBlock("new")){ 
+      _new_variables.push_back(x_var_name); 
+      _new_variables.push_back(y_var_name); 
+      _new_variables.push_back(z_var_name); 
+    }
+
   }
 
   if ( do_fluxes ){ 
@@ -124,6 +134,29 @@ TimeAve::problemSetup( ProblemSpecP& db ){
     _no_flux = true; 
   }
 
+  for ( ProblemSpecP var_db = db->findBlock("new_single_variable"); var_db != 0; 
+        var_db = var_db->findNextBlock("new_single_variable") ){
+
+    std::string name; 
+    var_db->getAttribute("label", name); 
+    std::string final_name = name + "_running_sum"; 
+    _new_variables.push_back( final_name );
+    
+  }
+
+  for ( ProblemSpecP var_db = db->findBlock("new_flux_variable"); var_db != 0; 
+        var_db = var_db->findNextBlock("new_flux_variable") ){
+
+    std::string name; 
+    var_db->getAttribute("label", name); 
+    std::string final_name = name + "_running_sum_x"; 
+    _new_variables.push_back( final_name );
+    final_name = name + "_running_sum_y"; 
+    _new_variables.push_back( final_name );
+    final_name = name + "_running_sum_z"; 
+    _new_variables.push_back( final_name );
+    
+  }
 
 }
 
@@ -138,7 +171,7 @@ TimeAve::create_local_labels(){
 //
 
 void 
-TimeAve::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
+TimeAve::register_initialize( VIVec& variable_registry ){ 
 
   
   std::vector<std::string>::iterator i = ave_sum_names.begin(); 
@@ -204,13 +237,44 @@ TimeAve::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
 }
 
+void 
+TimeAve::register_restart_initialize( VIVec& variable_registry ){ 
+
+  typedef std::vector<std::string> StrVec; 
+
+  for ( StrVec::iterator i = _new_variables.begin(); i != _new_variables.end(); i++ ){
+    register_variable( *i, CC_DOUBLE, COMPUTES, variable_registry ); 
+  }
+  
+}
+
+void 
+TimeAve::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                             SpatialOps::OperatorDatabase& opr ){ 
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *; 
+  typedef SpatialOps::SVolField   SVolF;
+  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
+  typedef std::vector<std::string> StrVec; 
+
+  for ( StrVec::iterator i = _new_variables.begin(); i != _new_variables.end(); i++ ){
+    SVolFP variable = tsk_info->get_so_field<SVolF>(*i); 
+
+    *variable <<= 0.0; 
+
+  }
+
+
+}
+
 //
 //------------------------------------------------
 //------------- TIMESTEP INIT --------------------
 //------------------------------------------------
 //
 void 
-TimeAve::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
+TimeAve::register_timestep_init( VIVec& variable_registry ){ 
 
   std::vector<std::string>::iterator i = ave_sum_names.begin(); 
   for (;i!=ave_sum_names.end();i++){ 
@@ -286,7 +350,7 @@ TimeAve::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 //
 
 void 
-TimeAve::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+TimeAve::register_timestep_eval( VIVec& variable_registry, const int time_substep ){ 
 
   std::vector<std::string>::iterator i = ave_sum_names.begin(); 
   for (;i!=ave_sum_names.end();i++){ 
@@ -340,7 +404,6 @@ TimeAve::register_timestep_eval( std::vector<VariableInformation>& variable_regi
 
     }
   }
-
 
 }
 

@@ -11,24 +11,32 @@ namespace Uintah{
 
 public: 
 
+
+    typedef std::vector<VariableInformation> VIVec; 
+
     TimeAve( std::string task_name, int matl_index, SimulationStateP& shared_state ); 
     ~TimeAve(); 
 
     void problemSetup( ProblemSpecP& db ); 
 
-    void register_initialize( std::vector<VariableInformation>& variable_registry );
+    void register_initialize( VIVec& variable_registry );
 
-    void register_timestep_init( std::vector<VariableInformation>& variable_registry );
+    void register_timestep_init( VIVec& variable_registry );
 
-    void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
+    void register_restart_initialize( VIVec& variable_registry );
 
-    void register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){}
+    void register_timestep_eval( VIVec& variable_registry, const int time_substep ); 
+
+    void register_compute_bcs( VIVec& variable_registry, const int time_substep ){}
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                       SpatialOps::OperatorDatabase& opr ){}
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
+
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                             SpatialOps::OperatorDatabase& opr );
     
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr );
@@ -67,6 +75,7 @@ private:
     //single variables
     std::vector<std::string> ave_sum_names; 
     std::vector<std::string> base_var_names; 
+    std::vector<std::string> _new_variables; 
 
     std::string rho_name;
 
