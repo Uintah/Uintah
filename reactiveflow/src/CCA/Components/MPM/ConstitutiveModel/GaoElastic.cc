@@ -29,7 +29,7 @@
 #  define _CPP_CMATH
 #endif
 
-#include <CCA/Components/MPM/ConstitutiveModel/ReactiveFlow2.h>
+#include <CCA/Components/MPM/ConstitutiveModel/GaoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/YieldConditionFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/StabilityCheckFactory.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityModels/FlowStressModelFactory.h>
@@ -76,7 +76,7 @@ static DebugStream cout_EP1("EP1",false);
 static DebugStream CSTi("EPi",false);
 static DebugStream CSTir("EPir",false);
 
-ReactiveFlow2::ReactiveFlow2(ProblemSpecP& ps,MPMFlags* Mflag)
+GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag), ImplicitCM()
 {
   ps->require("bulk_modulus",d_initialData.Bulk);
@@ -92,7 +92,7 @@ ReactiveFlow2::ReactiveFlow2(ProblemSpecP& ps,MPMFlags* Mflag)
   d_rdlb = scinew ReactionDiffusionLabel();
 }
 
-ReactiveFlow2::ReactiveFlow2(const ReactiveFlow2* cm) :
+GaoElastic::GaoElastic(const GaoElastic* cm) :
   ConstitutiveModel(cm), ImplicitCM(cm)
 {
   d_initialData.Bulk = cm->d_initialData.Bulk;
@@ -104,7 +104,7 @@ ReactiveFlow2::ReactiveFlow2(const ReactiveFlow2* cm) :
   d_rdlb = scinew ReactionDiffusionLabel();
 }
 
-ReactiveFlow2::~ReactiveFlow2()
+GaoElastic::~GaoElastic()
 {
   // Destructor 
   VarLabel::destroy(pRotationLabel);
@@ -120,12 +120,12 @@ ReactiveFlow2::~ReactiveFlow2()
 
 //______________________________________________________________________
 //
-void ReactiveFlow2::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
+void GaoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 {
   ProblemSpecP cm_ps = ps;
   if (output_cm_tag) {
     cm_ps = ps->appendChild("constitutive_model");
-    cm_ps->setAttribute("type","reactive_flow2");
+    cm_ps->setAttribute("type","gao_elastic");
   }
   
   cm_ps->appendElement("bulk_modulus",                  d_initialData.Bulk);
@@ -134,15 +134,15 @@ void ReactiveFlow2::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 }
 
 
-ReactiveFlow2* ReactiveFlow2::clone()
+GaoElastic* GaoElastic::clone()
 {
-  return scinew ReactiveFlow2(*this);
+  return scinew GaoElastic(*this);
 }
 
 //______________________________________________________________________
 //
 void
-ReactiveFlow2::initializeLocalMPMLabels()
+GaoElastic::initializeLocalMPMLabels()
 {
   pRotationLabel = VarLabel::create("p.rotation",
     ParticleVariable<Matrix3>::getTypeDescription());
@@ -165,7 +165,7 @@ ReactiveFlow2::initializeLocalMPMLabels()
 //______________________________________________________________________
 //
 void 
-ReactiveFlow2::addParticleState(std::vector<const VarLabel*>& from,
+GaoElastic::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
   // Add the local particle state data for this constitutive model.
@@ -182,7 +182,7 @@ ReactiveFlow2::addParticleState(std::vector<const VarLabel*>& from,
 //______________________________________________________________________
 //
 void 
-ReactiveFlow2::addInitialComputesAndRequires(Task* task,
+GaoElastic::addInitialComputesAndRequires(Task* task,
                                               const MPMMaterial* matl,
                                               const PatchSet* patch) const
 {
@@ -196,7 +196,7 @@ ReactiveFlow2::addInitialComputesAndRequires(Task* task,
 //______________________________________________________________________
 //
 void 
-ReactiveFlow2::initializeCMData(const Patch* patch,
+GaoElastic::initializeCMData(const Patch* patch,
                                  const MPMMaterial* matl,
                                  DataWarehouse* new_dw)
 {
@@ -237,7 +237,7 @@ ReactiveFlow2::initializeCMData(const Patch* patch,
 //______________________________________________________________________
 //
 void 
-ReactiveFlow2::computeStableTimestep(const Patch* patch,
+GaoElastic::computeStableTimestep(const Patch* patch,
                                       const MPMMaterial* matl,
                                       DataWarehouse* new_dw)
 {
@@ -287,7 +287,7 @@ ReactiveFlow2::computeStableTimestep(const Patch* patch,
 //______________________________________________________________________
 //
 void 
-ReactiveFlow2::addComputesAndRequires(Task* task,
+GaoElastic::addComputesAndRequires(Task* task,
                                        const MPMMaterial* matl,
                                        const PatchSet* patches) const
 {
@@ -323,7 +323,7 @@ ReactiveFlow2::addComputesAndRequires(Task* task,
 //______________________________________________________________________
 //
 void 
-ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
+GaoElastic::computeStressTensor(const PatchSubset* patches,
                                       const MPMMaterial* matl,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw)
@@ -599,7 +599,7 @@ ReactiveFlow2::computeStressTensor(const PatchSubset* patches,
 //
 
 void 
-ReactiveFlow2::addComputesAndRequires(Task* task,
+GaoElastic::addComputesAndRequires(Task* task,
                                        const MPMMaterial* matl,
                                        const PatchSet* patches,
                                        const bool recurse,
@@ -623,7 +623,7 @@ ReactiveFlow2::addComputesAndRequires(Task* task,
 //
 //______________________________________________________________________
 //
-double ReactiveFlow2::computeRhoMicroCM(double pressure,
+double GaoElastic::computeRhoMicroCM(double pressure,
                                          const double p_ref,
                                          const MPMMaterial* matl, 
                                          double temperature,
@@ -642,7 +642,7 @@ double ReactiveFlow2::computeRhoMicroCM(double pressure,
 }
 //______________________________________________________________________
 //
-void ReactiveFlow2::computePressEOSCM(double rho_cur,double& pressure,
+void GaoElastic::computePressEOSCM(double rho_cur,double& pressure,
                                        double p_ref,  
                                        double& dp_drho, double& tmp,
                                        const MPMMaterial* matl, 
@@ -659,7 +659,7 @@ void ReactiveFlow2::computePressEOSCM(double rho_cur,double& pressure,
 }
 //__________________________________
 //
-double ReactiveFlow2::getCompressibility()
+double GaoElastic::getCompressibility()
 {
   return 1.0/d_initialData.Bulk;
 }

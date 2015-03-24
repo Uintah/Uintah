@@ -2,7 +2,8 @@
 <Uintah_Include>
 
   <diffusion_model               spec="OPTIONAL NO_DATA"
-                                 attribute1="type REQUIRED STRING 'linear, jg, rf1'">
+                                 attribute1="type REQUIRED STRING 'linear,
+                                 jg, rf1, gao_diffusion'">
 
     <diffusivity                 spec="OPTIONAL DOUBLE" />
     <initial_chemical_potential  spec="OPTIONAL DOUBLE" />
