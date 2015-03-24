@@ -1560,11 +1560,11 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");  
 
     //UPDATE SIZE
-    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0); 
     //UPDATE POSITION 
-    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0); 
     //UPDATE VELOCITY
-    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0); 
 
     _particlesHelper->schedule_sync_particle_position(level,sched);
     _particlesHelper->schedule_transfer_particle_ids(level,sched);

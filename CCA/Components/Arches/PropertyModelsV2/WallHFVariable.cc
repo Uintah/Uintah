@@ -135,13 +135,13 @@ void
 WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                 SpatialOps::OperatorDatabase& opr ){ 
 
-  constCCVariable<double>* Fe = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxE"); 
-  constCCVariable<double>* Fw = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxW"); 
-  constCCVariable<double>* Fn = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxN"); 
-  constCCVariable<double>* Fs = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxS"); 
-  constCCVariable<double>* Ft = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxT"); 
-  constCCVariable<double>* Fb = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxB"); 
-  constCCVariable<double>* volFraction = tsk_info->get_uintah_const_field<constCCVariable<double> >("volFraction"); 
+  constCCVariable<double>* Fe = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxE"); 
+  constCCVariable<double>* Fw = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxW"); 
+  constCCVariable<double>* Fn = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxN"); 
+  constCCVariable<double>* Fs = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxS"); 
+  constCCVariable<double>* Ft = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxT"); 
+  constCCVariable<double>* Fb = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxB"); 
+  constCCVariable<double>* volFraction = tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"); 
 
   CCVariable<double>* flux_x = tsk_info->get_uintah_field<CCVariable<double> >(_flux_x); 
   CCVariable<double>* flux_y = tsk_info->get_uintah_field<CCVariable<double> >(_flux_y); 
@@ -192,9 +192,9 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     }
   } else { 
 
-    constCCVariable<double>* old_flux_x = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_x); 
-    constCCVariable<double>* old_flux_y = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_y); 
-    constCCVariable<double>* old_flux_z = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_z); 
+    constCCVariable<double>* old_flux_x = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_x); 
+    constCCVariable<double>* old_flux_y = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_y); 
+    constCCVariable<double>* old_flux_z = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_z); 
 
     (*flux_x).copyData((*old_flux_x));
     (*flux_y).copyData((*old_flux_y));

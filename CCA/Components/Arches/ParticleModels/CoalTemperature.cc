@@ -261,7 +261,7 @@ void
 CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     SpatialOps::OperatorDatabase& opr ){ 
   const std::string gas_temperature_name   = _gas_temperature_name;
-  constCCVariable<double>* vgas_temperature = tsk_info->get_uintah_const_field<constCCVariable<double> >(gas_temperature_name); 
+  constCCVariable<double>* vgas_temperature = tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name); 
   constCCVariable<double>& gas_temperature = *vgas_temperature;
   for ( int i = 0; i < _Nenv; i++ ){ 
     const std::string temperature_name  = get_env_name( i, _task_name );
@@ -274,11 +274,11 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     
     CCVariable<double>* vtemperature = tsk_info->get_uintah_field<CCVariable<double> >(temperature_name); 
     CCVariable<double>* vdTdt = tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name); 
-    constCCVariable<double>* vrcmass = tsk_info->get_uintah_const_field<constCCVariable<double> >(rc_name); 
-    constCCVariable<double>* vchar = tsk_info->get_uintah_const_field<constCCVariable<double> >(char_name); 
-    constCCVariable<double>* venthalpy = tsk_info->get_uintah_const_field<constCCVariable<double> >(enthalpy_name); 
-    constCCVariable<double>* vweight = tsk_info->get_uintah_const_field<constCCVariable<double> >(weight_name); 
-    constCCVariable<double>* vtemperatureold = tsk_info->get_uintah_const_field<constCCVariable<double> >(temperature_name); 
+    constCCVariable<double>* vrcmass = tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name); 
+    constCCVariable<double>* vchar = tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name); 
+    constCCVariable<double>* venthalpy = tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name); 
+    constCCVariable<double>* vweight = tsk_info->get_const_uintah_field<constCCVariable<double> >(weight_name); 
+    constCCVariable<double>* vtemperatureold = tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name); 
     CCVariable<double>& temperature = *vtemperature;
     CCVariable<double>& dTdt = *vdTdt;
     constCCVariable<double>& temperatureold = *vtemperatureold;
