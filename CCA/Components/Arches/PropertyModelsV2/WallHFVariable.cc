@@ -26,7 +26,7 @@ WallHFVariable::problemSetup( ProblemSpecP& db ){
   db->getWithDefault("frequency",_f,1);
 
   _new_variables = false; 
-  if ( db->findBlock("new_variables"))
+  if ( db->findBlock("new_model"))
     _new_variables = true; 
 
 }
