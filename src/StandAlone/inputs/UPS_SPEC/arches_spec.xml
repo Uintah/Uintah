@@ -27,6 +27,10 @@
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
                                         need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps). 
                                                                                              Otherwise it just copies old fluxes forward. Default = 1. -->
+          <new_variables                spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type wall_heatflux_variable"/> <!-- When turning on these models during restart, this variable is required
+                                                                                             to allocate the variables in the old_dw. It must be turned OFF for subsequent 
+                                                                                             restarts -->
 
           <!-- The time_ave option produces a sum(phi*dt) or sum(rho*u*phi) (all three components) from which
                a time average can be computed -->
