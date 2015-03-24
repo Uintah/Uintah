@@ -2711,7 +2711,40 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
           //remove the reference to it, possibly deleting it if the reference count is zero.
         }
       }
+      //Now copy any ghostVars in.
+       for (unsigned int i = 0; i < ghostVars.numItems(); i++ ) {
+         //If the neighbor is valid on the GPU, we just send in from and to coordinates
+         //and call a kernel to copy those coordinates
+         //If it's not valid on the GPU, we copy in the grid var and send in from and to coordinates
+         //and call a kernel to copy those coordinates.
 
+         const Task::Dependency* dep = ghostVars.getDependency(i);
+         int dwIndex = dep->mapDataWarehouse();
+         int sourceDeviceNum = ghostVars.getSourceDeviceNum(i);
+         int destDeviceNum = ghostVars.getDestDeviceNum(i);
+
+         //We can copy it manually internally within the device via a kernel.
+         //This apparently goes faster overall
+         IntVector low = ghostVars.getLow(i);
+         IntVector high = ghostVars.getHigh(i);
+         IntVector virtualOffset = ghostVars.getVirtualOffset(i);
+         dws[dwIndex]->getGPUDW(getGpuIndexForPatch(ghostVars.getDestPatchPointer(i)))->putGhostCell(dtask,
+                                                dep->var->getName().c_str(),
+                                                ghostVars.getSourcePatchPointer(i)->getID(),
+                                                ghostVars.getDestPatchPointer(i)->getID(),
+                                                ghostVars.getMaterialIndex(i),
+                                                make_int3(low.x(), low.y(), low.z()),
+                                                make_int3(high.x(), high.y(), high.z()),
+                                                make_int3(virtualOffset.x(), virtualOffset.y(), virtualOffset.z()),
+                                                false,
+                                                NULL,
+                                                make_int3(0,0,0),
+                                                make_int3(0,0,0),
+                                                0);
+
+
+
+       }
       for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
         if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
             //copy it to the device.  Any data warehouse that has requires should be doing copies here.
