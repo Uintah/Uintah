@@ -476,6 +476,7 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
     r_db->require("wall_thickness", info.dy);
     r_db->getWithDefault("wall_emissivity", info.emissivity, 1.0);
     r_db->require("tube_side_T", info.T_inner); 
+    r_db->getWithDefault("max_TW", info.max_TW, 3500.0);
     r_db->getWithDefault("relaxation_coef", info.relax, 1.0);
     _regions.push_back( info ); 
     
@@ -585,7 +586,7 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
                 TW_tmp = TW_old;
                 TW_old = TW_new;
                 TW_new = TW_tmp - (TW_new - TW_tmp)/(f1-f0) * f0;
-                TW_new = max( wi.T_inner , min(3500.0, TW_new)); // this is the max coal temperature in CoalTemperature.cc           
+                TW_new = max( wi.T_inner , min(wi.max_TW, TW_new));            
                 if (std::abs(TW_new-TW_old) < d_tol){
                   TW=TW_new;
                   net_q = rad_q - _sigma_constant * pow( TW_new, 4 );
@@ -601,7 +602,7 @@ WallModelDriver::RegionHT::computeHT( const Patch* patch, const HTVariables& var
               }
               // now to make consistent with assumed emissivity of 1 in radiation model:
               // q_radiation - 1 * sigma Tw' ^ 4 = emissivity * ( q_radiation - sigma Tw ^ 4 )
-              // q_radiation - 1 * sigma Tw' ^ 4 = net_q 
+              // q_radiation - sigma Tw' ^ 4 = net_q 
               TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);  
  
               T[c] = (1-wi.relax)*vars.T_old[c]+wi.relax*TW;
