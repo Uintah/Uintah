@@ -448,7 +448,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       }
       else if ( _scatteringOn){
         new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
-       }
+      }
+      if(old_DW_isMissingIntensities){
+        old_dw->get(constvars->cenint,_IntensityLabels[0], matlIndex , patch,Ghost::None, 0  );
+      }
   
      if(_zeroInitialGuess)
     vars->cenint.initialize(0.0); // remove once RTs have been checked.
@@ -586,9 +589,8 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
       continue;
 
     for (int i=0; i < d_totalOrds ; i++) {                                    
-      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])* solidAngleQuad[direction][i];      
+      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])*solidAngleQuad[i][direction];      
       scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
-
     }
   }
 

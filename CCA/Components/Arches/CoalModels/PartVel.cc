@@ -404,11 +404,11 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         CCVariable<Vector> partVel;
         if (rkStep == 0){
           new_dw->allocateAndPut( partVel, iter->second, matlIndex, patch );
+          partVel.initialize(Vector(0.,0.,0.));
         } else { 
           new_dw->getModifiable( partVel, iter->second, matlIndex, patch );
         }
 
-        partVel.initialize(Vector(0.,0.,0.));
 
         // now loop over all cells
         for (CellIterator iter=patch->getCellIterator(0); !iter.done(); iter++){

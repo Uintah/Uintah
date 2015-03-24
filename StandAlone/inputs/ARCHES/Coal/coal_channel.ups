@@ -810,12 +810,14 @@
           <variable label="ux" role="uvel" />
           <variable label="uy" role="vvel" />
           <variable label="uz" role="wvel" />
+          <variable label="number_density" role="total_number_density"/>
         </ParticleVariables>
       </EulerianParticles>   
 
       <ParticleModels>
         <model label="rho_coal" type="coal_density" />
         <model label="temperature_coal" type="coal_temperature" />
+        <model label="number_density" type="total_number_density"/>
       </ParticleModels>
 
 <!-- TIME INTEGRATOR -->

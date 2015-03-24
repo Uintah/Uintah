@@ -321,12 +321,15 @@
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
           <BTDevol                        spec="OPTIONAL NO_DATA">
-            <v_hiT                        spec="REQUIRED DOUBLE" />
             <Tig                          spec="REQUIRED DOUBLE" />
-            <c                            spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
             <Ta                           spec="REQUIRED DOUBLE" />
+            <v_hiT                        spec="REQUIRED DOUBLE" />  <!-- this is "a" -->
+            <b                            spec="REQUIRED DOUBLE" />
+            <c                            spec="REQUIRED DOUBLE" />
             <d                            spec="REQUIRED DOUBLE" />
+            <e                            spec="REQUIRED DOUBLE" />  
+            <sigma                        spec="REQUIRED DOUBLE" />
           </BTDevol>
           <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
           <!-- Shaddix char oxidation coefficients in the following order:  -->
@@ -1447,6 +1450,8 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
+          <model                        spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
           <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
