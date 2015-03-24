@@ -178,7 +178,7 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         if ( (*volFraction)[cym] < 1.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fs)[c];
         }
-        if ( (*volFraction)[cxp] < 1.0 ){ 
+        if ( (*volFraction)[cyp] < 1.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fn)[c];
         }
         if ( (*volFraction)[czm] < 1.0 ){ 
