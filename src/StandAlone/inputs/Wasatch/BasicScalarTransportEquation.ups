@@ -108,7 +108,7 @@
 
 
   <Time>
-    <maxTime>20.0</maxTime>
+    <maxTime>5.0</maxTime>
     <initTime>0.0</initTime>
     <delt_min>0.001</delt_min>
     <delt_max>1</delt_max>
@@ -117,9 +117,9 @@
 
   <DataArchiver>
     <filebase>wasatch_test.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>2</outputTimestepInterval>
     <outputInitTimestep/>
-<!--    <checkpoint cycle="2" interval="3.0"/> -->
+    <!-- <checkpoint cycle="2" interval="3.0"/> -->
     <compression>gzip</compression>
     <save label="phi1"/>
     <save label="phi2"/>
@@ -133,8 +133,8 @@
     <Level>
       <Box label="1">
         <lower>[0,0,0]</lower>
-        <upper>[128,128,128]</upper>
-        <resolution>[128,128,128]</resolution>
+        <upper>[10,10,10]</upper>
+        <resolution>[10,10,10]</resolution>
         <patches>[1,1,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>
