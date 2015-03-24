@@ -16,36 +16,17 @@
                                                                           co2, h2o, soot, specific_heat'"/>
       </VarID>
 
-      <!-- These are new task properties --> 
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable, 
-                                                                          time_ave'">
+                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable'">
 
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
                                         need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps). 
                                                                                              Otherwise it just copies old fluxes forward. Default = 1. -->
 
-          <!-- The time_ave option produces a sum(phi*dt) or sum(rho*u*phi) (all three components) from which
-               a time average can be computed -->
-          <single_variable              spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        need_applies_to="type time_ave"/> <!-- time average a single variable -->
-
-
-          <flux_variable                spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        attribute2="phi OPTIONAL STRING"
-                                        need_applies_to="type time_ave"/> <!-- time average a flux variable rho*u*phi - creates all three components 
-                                                                               If phi isn't specified, then this is the total mass flux -->
-          <density                      spec="OPTIONAL NO_DATA"
-                                        attribute1="label REQUIRED STRING"
-                                        need_applies_to="type time_ave"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
-
         </model>
       </PropertyModelsV2>
-
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
@@ -335,15 +316,12 @@
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
           <BTDevol                        spec="OPTIONAL NO_DATA">
+            <v_hiT                        spec="REQUIRED DOUBLE" />
             <Tig                          spec="REQUIRED DOUBLE" />
+            <c                            spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
             <Ta                           spec="REQUIRED DOUBLE" />
-            <v_hiT                        spec="REQUIRED DOUBLE" />  <!-- this is "a" -->
-            <b                            spec="REQUIRED DOUBLE" />
-            <c                            spec="REQUIRED DOUBLE" />
             <d                            spec="REQUIRED DOUBLE" />
-            <e                            spec="REQUIRED DOUBLE" />  
-            <sigma                        spec="REQUIRED DOUBLE" />
           </BTDevol>
           <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
           <!-- Shaddix char oxidation coefficients in the following order:  -->
@@ -633,6 +611,7 @@
         </TurbulentInlet>
 
       <WallHT                           spec="OPTIONAL NO_DATA">
+        <temperature_label              spec="OPTIONAL STRING"/> <!-- tabluated name for temperature.  Default: temperature --> 
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="type REQUIRED STRING 'simple_ht, region_ht'">
           <!-- simple heat transfer 
@@ -662,7 +641,8 @@
             <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] --> 
             <wall_emissivity            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 --> 
             <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
-            <max_TW                     spec="OPTIONAL DOUBLE"/>  <!-- the upper limit of the wall temperature, default is 3500K for coal cases -->
+            <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
+            <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
             <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures 
 
                        because we have assumed (with this model) that the wall comes to 
@@ -1114,7 +1094,6 @@
             </injector_region>
             
             <!-- specs nneded for second moment of mixture fraction source-->
-            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, dissipation_src"/>
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
             
             <!-- specs needed for the dissipation term for 2eqn scalr var model -->
@@ -1253,7 +1232,10 @@
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 
-            <density_label              spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- density label (default = "density) --> 
+            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, 
+                                                                                     dissipation_src, 
+                                                                                     westbrook_dryer, 
+                                                                                     bowman_nox"/>
             <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light --> 
               <geom_object/>                                                                            <!-- defines the location of the pilot --> 
               <start_time               spec="REQUIRED DOUBLE 'positive'"/>                             <!-- pilot turns on at this time -->  
@@ -1462,8 +1444,6 @@
                                         attribute1="qn REQUIRED INTEGER 'positive'"
                                         attribute2="value REQUIRED DOUBLE" />     <!-- for environment (qn), step from 0 to (value) -->
           </initialization>                              
-          <model                        spec="MULTIPLE NO_DATA"
-                                        attribute1="label REQUIRED STRING"/>
           <scaling_const                spec="REQUIRED MULTIPLE_DOUBLES"/>                              
           <Clipping                     spec="OPTIONAL NO_DATA">
             <low                        spec="OPTIONAL DOUBLE"/> <!-- Low clipping value for SCALED value of DQMOM internal coordinate -->
