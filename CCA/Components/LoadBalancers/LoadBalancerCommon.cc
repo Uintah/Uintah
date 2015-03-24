@@ -504,9 +504,11 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
   // TODO consider this old warning from Steve:
   //    WARNING - this should be determined from the taskgraph? - Steve
 
-//  // get the max level offset and max ghost cells to consider for neighborhood creation
+  // get the max level offset and max ghost cells to consider for neighborhood creation
   const std::map<int, int>& maxGhostCells = d_scheduler->getMaxGhostCells();
-  const std::map<int, int>& maxLevelOffsets = d_scheduler->getMaxLevelOffsets();
+  int maxLevelOffset = d_scheduler->getMaxLevelOffset();
+    // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+//  const std::map<int, int>& maxLevelOffsets = d_scheduler->getMaxLevelOffsets();
 
   d_neighbors.clear();
   d_neighborProcessors.clear();
@@ -522,7 +524,8 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
 
     // determine max ghost cells and max level offset for the current level
     int maxGC = maxGhostCells.find(l)->second;
-    int maxOffset = maxLevelOffsets.find(l)->second;
+      // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+//    int maxOffset = maxLevelOffsets.find(l)->second;
 
     for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
@@ -586,7 +589,8 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           LevelP coarseLevel = level;
 
           IntVector ghost(maxGC, maxGC, maxGC);
-          for (int offset = 1; offset <= maxOffset && coarseLevel->hasCoarserLevel(); ++offset) {
+          // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+          for (int offset = 1; offset <= maxLevelOffset && coarseLevel->hasCoarserLevel(); ++offset) {
             ghost = ghost * coarseLevel->getRefinementRatio();
             coarseLevel = coarseLevel->getCoarserLevel();
             Patch::selectType coarse;

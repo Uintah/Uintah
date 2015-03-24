@@ -240,7 +240,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     const std::map<int, int>& getMaxGhostCells() { return maxGhostCells; }
 
-    const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
+    int getMaxLevelOffset() {return maxLevelOffset;}
+    // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+//     const std::map<int, int>& getMaxLevelOffsets() { return maxLevelOffsets; }
 
     bool isCopyDataTimestep() { return d_sharedState->isCopyDataTimestep() || d_isInitTimestep; }
 
@@ -366,7 +368,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     // max level offset of all tasks (per level) - will be used for loadbalancer to create neighborhood
     // map levelIndex to maxLevelOffset
     //   this is effectively maximum vertical range considered by the loadbalanceer for the neighborhood creation
-    std::map<int, int> maxLevelOffsets;
+    int maxLevelOffset;
+    // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+//    std::map<int, int> maxLevelOffsets;
     
   };
 } // End namespace Uintah
