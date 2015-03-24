@@ -649,8 +649,6 @@
             <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] --> 
             <wall_emissivity            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 --> 
             <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
-            <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
-            <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
             <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures 
 
                        because we have assumed (with this model) that the wall comes to 
