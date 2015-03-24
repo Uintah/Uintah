@@ -22,7 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-
 //----- Arches.cc ----------------------------------------------
 #include <CCA/Components/Arches/Radiation/RadPropertyCalculator.h>
 #include <CCA/Components/Arches/DQMOM.h>
