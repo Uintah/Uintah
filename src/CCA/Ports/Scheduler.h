@@ -219,10 +219,10 @@ class Scheduler : public UintahParallelPort {
 
     virtual VarLabelMaterialMap* makeVarLabelMaterialMap() = 0;
 
-    virtual const std::map<int, int>& getMaxGhostCells() = 0;
-
-      virtual int getMaxLevelOffset() = 0;
+    virtual int getMaxGhost()       = 0;
+    virtual int getMaxLevelOffset() = 0;
       // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+//    virtual const std::map<int, int>& getMaxGhostCells() = 0;
 //    virtual const std::map<int, int>& getMaxLevelOffsets() = 0;
 
     virtual bool isCopyDataTimestep() = 0;
