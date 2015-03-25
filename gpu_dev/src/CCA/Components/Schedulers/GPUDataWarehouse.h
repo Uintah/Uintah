@@ -39,11 +39,11 @@
 #include <vector>
 #include <Core/Thread/CrowdMonitor.h>
 
-#define MAX_ITEM 5000  //If we have 100 patches, 2 materials, and 20 grid vars,
+#define MAX_ITEM 20  //If we have 100 patches, 2 materials, and 20 grid vars,
                        //that's 100 * 2 * 20 = 4000.  Make sure we have room!
-#define MAX_GHOST_CELLS 30000  //MAX_ITEM * 6 one for each face.
-#define MAX_MATERIALS 20
-#define MAX_LVITEM 10
+#define MAX_GHOST_CELLS 100  //MAX_ITEM * 6 one for each face.
+#define MAX_MATERIALS 1
+#define MAX_LVITEM 1
 #define MAX_LABEL   20
 
 namespace Uintah {
