@@ -2447,7 +2447,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
     string taskID = dtask->getName();
 
     //For now, have all if statements go here.  The contiguous array approach needs to be reworked
-    if (deviceVars.numItems() >= 0) {
+    if (deviceVars.numItems() < 4) {
       //The scenario where we won't make contiguous host arrays
 
       //TODO: Handles that it already exists.
@@ -2638,79 +2638,116 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
            *   ------------------------------------------------------------
           */
 
-          switch (deviceVars.getSizeOfDataType(i)) {
-            case sizeof(int) : {
-              GPUGridVariable<int> device_var;
-              dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                            make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+          switch (deviceVars.getDependency(i)->var->typeDescription()->getType()) {
+               case TypeDescription::PerPatch : {
+                   std::cout<<"Have to put perpatch "<< dep->var->getName()<< std::endl;
 
-              break;
-            } case sizeof(double) : {
-              GPUGridVariable<double> device_var;
-              dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                            make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+                   GPUPerPatch<void*> device_var;
+                   dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+                                   deviceVars.getSizeOfDataType(i), dynamic_cast<PerPatchBase*>(deviceVars.getVar(i)), true);
+                   break;
+               }
+               case TypeDescription::CCVariable :
+               case TypeDescription::NCVariable :
+               case TypeDescription::SFCXVariable :
+               case TypeDescription::SFCYVariable :
+               case TypeDescription::SFCZVariable : {
+            	   switch (deviceVars.getSizeOfDataType(i)) {
+                   	   case sizeof(int) : {
+						  GPUGridVariable<int> device_var;
+						  dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+						  std::cout<<"put require "<< dep->var->getName()<< std::endl;
 
-              break;
-            } case sizeof(GPUStencil7) : {
-              GPUGridVariable<GPUStencil7> device_var;
-              dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                            make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+						  break;
+						} case sizeof(double) : {
+						  GPUGridVariable<double> device_var;
+						  dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+						  std::cout<<"put require "<< dep->var->getName()<< std::endl;
 
-              break;
-            } default : {
-              SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
-            }
-          }
-
-          //Now that this requires grid variable is copied onto the device,
-          //we no longer need to hold onto this particular reference of the host side
-          //version of it.  So go ahead and remove our reference to it. (Note: this was removed
-          //as in some situations it was the last remaining reference to it, so it would remove it
-          //for good, but the data warehouse was not aware that it was gone and tried to delete
-          //it again when scrubbing.
-          delete deviceVars.getVar(i);
-        }
-      }
-
+						  break;
+						} case sizeof(GPUStencil7) : {
+						  GPUGridVariable<GPUStencil7> device_var;
+						  dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+						  std::cout<<"put require "<< dep->var->getName()<< std::endl;
+						  break;
+						} default : {
+						  SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
+						}
+				  }
+				  //Now that this requires grid variable is copied onto the device,
+				  //we no longer need to hold onto this particular reference of the host side
+				  //version of it.  So go ahead and remove our reference to it. (Note: this was removed
+				  //as in some situations it was the last remaining reference to it, so it would remove it
+				  //for good, but the data warehouse was not aware that it was gone and tried to delete
+				  //it again when scrubbing.
+            	  delete deviceVars.getVar(i);
+            	  break;
+               }
+		  	  }
+		  	}
+		  }
       //now loop through the computes data where we just need to assign space (but not copy) on the device.
-      for (unsigned int i = 0; i < deviceVars.numItems(); i++ ) {
-        if (deviceVars.getDependency(i)->deptype != Task::Requires) {
-          int dwIndex =  deviceVars.getDependency(i)->mapDataWarehouse();
-          OnDemandDataWarehouseP dw = dws[dwIndex];
-          const Task::Dependency* dep = deviceVars.getDependency(i);
-          IntVector offset = deviceVars.getOffset(i);
-          IntVector size = deviceVars.getSizeVector(i);
-          IntVector low = offset;
-          IntVector high = offset + size;
-          switch (deviceVars.getSizeOfDataType(i)) {
-            case sizeof(int) : {
-              GPUGridVariable<int> device_var;
-              dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                            make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+       for (unsigned int i = 0; i < deviceVars.numItems(); i++ ) {
+         if (deviceVars.getDependency(i)->deptype != Task::Requires) {
+           int dwIndex =  deviceVars.getDependency(i)->mapDataWarehouse();
+           OnDemandDataWarehouseP dw = dws[dwIndex];
+           const Task::Dependency* dep = deviceVars.getDependency(i);
+           IntVector offset = deviceVars.getOffset(i);
+           IntVector size = deviceVars.getSizeVector(i);
+           IntVector low = offset;
+           IntVector high = offset + size;
 
-              break;
-            } case sizeof(double) : {
-              GPUGridVariable<double> device_var;
-              dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                            make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+           switch (deviceVars.getDependency(i)->var->typeDescription()->getType()) {
+                      case TypeDescription::PerPatch : {
+                            std::cout<<"Have to put perpatch compute"<< dep->var->getName()<< std::endl;
 
-              break;
-            } case sizeof(GPUStencil7) : {
-              GPUGridVariable<GPUStencil7> device_var;
-              dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                            make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+                            GPUPerPatch<void*> device_var;
+                            dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+                                            deviceVars.getSizeOfDataType(i), dynamic_cast<PerPatchBase*>(deviceVars.getVar(i)), false);
+                            break;
+                      }
+                      case TypeDescription::CCVariable :
+                      case TypeDescription::NCVariable :
+                      case TypeDescription::SFCXVariable :
+                      case TypeDescription::SFCYVariable :
+                      case TypeDescription::SFCZVariable : {
+                    	  switch (deviceVars.getSizeOfDataType(i)) {
+                          	  case sizeof(int) : {
+                          	  GPUGridVariable<int> device_var;
+							   dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
 
-              break;
-            } default : {
-              SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
-            }
-          }
-          //At this point, space is still allocated on the host side for this computes grid
-          //variable.  Do not delete deviceVars.getGridVar(i) yet, we want to leave a
-          //reference open and space open until we copy it back.  In processD2HCopies() we
-          //remove the reference to it, possibly deleting it if the reference count is zero.
-        }
-      }
+							   std::cout<<"put compute "<< dep->var->getName()<< std::endl;
+
+							   break;
+							 } case sizeof(double) : {
+							   GPUGridVariable<double> device_var;
+							   dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+							   std::cout<<"put compute "<< dep->var->getName()<< std::endl;
+							   break;
+							 } case sizeof(GPUStencil7) : {
+							   GPUGridVariable<GPUStencil7> device_var;
+							   dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
+															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+							   std::cout<<"put compute "<< dep->var->getName()<< std::endl;
+							   break;
+							  } default : {
+								SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
+							  }
+						}
+						//At this point, space is still allocated on the host side for this computes grid
+						//variable.  Do not delete deviceVars.getGridVar(i) yet, we want to leave a
+						//reference open and space open until we copy it back.  In processD2HCopies() we
+						//remove the reference to it, possibly deleting it if the reference count is zero.
+					  }
+				}
+           }
+       }
+
       //Now copy any ghostVars in.
        for (unsigned int i = 0; i < ghostVars.numItems(); i++ ) {
          //If the neighbor is valid on the GPU, we just send in from and to coordinates
@@ -2979,13 +3016,13 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                 OnDemandDataWarehouseP dw = dws[dwIndex];
 
                 //TODO: Add check to make sure the data isn't valid on the CPU.
-                //if (gpudw->exist(dependantVar->var->getName().c_str(),
-                //    patchID,
-                //    matlID,
-                //    make_int3(host_high.x() - host_low.x(), host_high.y() - host_low.y(), host_high.z() - host_low.z()),
-                //    make_int3(host_low.x(), host_low.y(), host_low.z()),
-                //    true) &&
-                if (gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID) ){
+                if (gpudw->exist(dependantVar->var->getName().c_str(),
+                    patchID,
+                    matlID,
+                    make_int3(host_high.x() - host_low.x(), host_high.y() - host_low.y(), host_high.z() - host_low.z()),
+                    make_int3(host_low.x(), host_low.y(), host_low.z()),
+                    true) &&
+                gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID) ){
 
                   //It's possible the computes data may contain ghost cells.  But a task needing to get the data
                   //out of the GPU may not know this.  It may just want the var data.

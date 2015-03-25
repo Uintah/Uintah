@@ -33,17 +33,18 @@
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
+#include <Core/Grid/Variables/PerPatchBase.h>
 
 #include <map> //for host code only.
 #include <string>
 #include <vector>
 #include <Core/Thread/CrowdMonitor.h>
 
-#define MAX_ITEM 20  //If we have 100 patches, 2 materials, and 20 grid vars,
+#define MAX_ITEM 200  //If we have 100 patches, 2 materials, and 20 grid vars,
                        //that's 100 * 2 * 20 = 4000.  Make sure we have room!
-#define MAX_GHOST_CELLS 100  //MAX_ITEM * 6 one for each face.
-#define MAX_MATERIALS 1
-#define MAX_LVITEM 1
+#define MAX_GHOST_CELLS 1000  //MAX_ITEM * 6 one for each face.
+#define MAX_MATERIALS 10
+#define MAX_LVITEM 10
 #define MAX_LABEL   20
 
 namespace Uintah {
@@ -258,6 +259,7 @@ public:
 
   //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
   HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
+  HOST_DEVICE void putContiguous(GPUPerPatchBase& var, const char* indexID, char const* label, int patchID, int matlID, size_t sizeOfDataType, PerPatchBase* patchVar, bool stageOnHost);
   HOST_DEVICE void allocate(const char* indexID, size_t size);
 private:
 
