@@ -237,7 +237,7 @@ namespace Wasatch{
       const Expr::Tag densT;
       const bool tempConstDens = false;
       return factory.register_expression(
-          scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, densT, tempConstDens) );
+         scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, tag_list(info.find(SOURCE_TERM)->second), densT, tempConstDens) );
     }
   }
 
