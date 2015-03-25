@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
+#include <Core/Grid/Variables/PerPatchBase.h>
 
 #include <sci_defs/cuda_defs.h>
 
@@ -372,6 +373,69 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
   varLock.writeUnlock();
 
 #endif
+}
+HOST_DEVICE void
+GPUDataWarehouse::putContiguous(GPUPerPatchBase& var, const char* indexID, char const* label, int patchID, int matlIndex, size_t sizeOfDataType, PerPatchBase* patchVar, bool stageOnHost){
+#ifdef __CUDA_ARCH__
+  //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
+#else
+    varLock.writeLock();
+    //first check if this patch/var/matl is in the process of loading in.
+    charlabelPatchMatl lpm(label, patchID, matlIndex);
+    if (varPointers.find(lpm) != varPointers.end()) {
+      int index = varPointers[lpm].varDB_index;
+      if (d_varDB[index].queueingOnGPU == true) {
+        //It's loading up, use that and return.
+        if (d_debug){
+          printf("GPUDataWarehouse::putContiguous( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
+        }
+        varLock.writeUnlock();
+        return;
+      }
+    }
+
+  void* device_ptr=NULL;
+  allocateLock.readLock();
+  contiguousArrayInfo *ca = &(contiguousArrays[indexID]);
+  allocateLock.readUnlock();
+
+  if ( (ca->allocatedDeviceMemory == NULL
+       || ca->sizeOfAllocatedMemory - ca->assignedOffset < var.getMemSize())
+      && stageOnHost) {
+    printf("ERROR: No room left on device to be assigned address space\n");
+    if (ca->allocatedDeviceMemory != NULL) {
+      printf("There was %lu bytes allocated, %lu has been assigned, and %lu more bytes were attempted to be assigned for %s patch %d matl %d\n",
+          ca->sizeOfAllocatedMemory,
+          ca->assignedOffset,
+          var.getMemSize(), label, patchID, matlIndex);
+    }
+    varLock.writeUnlock();
+    exit(-1);
+  } else {
+
+    void* host_contiguousArrayPtr = NULL;
+
+    int varMemSize = var.getMemSize();
+
+
+    device_ptr = ca->allocatedDeviceMemory + ca->assignedOffset;
+    var.setData(device_ptr);
+    host_contiguousArrayPtr = ca->allocatedHostMemory + ca->assignedOffset;
+
+    int memSizePlusPadding = ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+    ca->assignedOffset += memSizePlusPadding;
+
+    if (stageOnHost) {
+      ca->copiedOffset += memSizePlusPadding;
+      memcpy(host_contiguousArrayPtr, patchVar->getBasePointer(), varMemSize);
+    }
+    put(var, label, patchID, matlIndex, sizeOfDataType, NULL, host_contiguousArrayPtr);
+    printf("PutContiguous PerPatch%s\n",label);
+  }
+  varLock.writeUnlock();
+
+#endif
+
 }
 
 HOST_DEVICE void
