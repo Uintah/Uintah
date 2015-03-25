@@ -58,7 +58,12 @@ SimpleBirth::SimpleBirth( std::string           modelName,
 }
 
 SimpleBirth::~SimpleBirth()
-{}
+{
+
+  VarLabel::destroy(d_gasLabel); 
+  VarLabel::destroy(d_modelLabel); 
+
+}
 
 
 
