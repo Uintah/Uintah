@@ -390,8 +390,10 @@ void
 UnifiedScheduler::execute( int tgnum     /* = 0 */,
                            int iteration /* = 0 */ )
 {
-  // copy data timestep must be single threaded for now
-  if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
+  // copy data and restart timesteps must be single threaded for now
+  bool isMPICopyDataTS = Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep();
+  bool isRestartTS = d_isInitTimestep || d_isRestartInitTimestep;
+  if (isMPICopyDataTS || isRestartTS) {
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
@@ -508,15 +510,13 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   }
 
   // signal worker threads to begin executing tasks
-  if (!d_isInitTimestep && !d_isRestartInitTimestep) {
-    for (int i = 0; i < numThreads_; i++) {
-      t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
-      // sending signal to threads to wake them up
-      t_worker[i]->d_runmutex.lock();
-      t_worker[i]->d_idle = false;
-      t_worker[i]->d_runsignal.conditionSignal();
-      t_worker[i]->d_runmutex.unlock();
-    }
+  for (int i = 0; i < numThreads_; i++) {
+    t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
+    // sending signal to threads to wake them up
+    t_worker[i]->d_runmutex.lock();
+    t_worker[i]->d_idle = false;
+    t_worker[i]->d_runsignal.conditionSignal();
+    t_worker[i]->d_runmutex.unlock();
   }
 
   // main thread also executes tasks
@@ -524,16 +524,13 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   TAU_PROFILE_STOP(doittimer);
 
-  // run single-threaded if in initial or initial-restart timestep
-  if (!d_isInitTimestep && !d_isRestartInitTimestep) {
-    // wait for all tasks to finish
-    d_nextmutex.lock();
-    while (getAvailableThreadNum() < numThreads_) {
-      // if any thread is busy, conditional wait here
-      d_nextsignal.wait(d_nextmutex);
-    }
-    d_nextmutex.unlock();
+  // wait for all tasks to finish
+  d_nextmutex.lock();
+  while (getAvailableThreadNum() < numThreads_) {
+    // if any thread is busy, conditional wait here
+    d_nextsignal.wait(d_nextmutex);
   }
+  d_nextmutex.unlock();
 
   if (unified_queuelength.active()) {
     float lengthsum = 0;
