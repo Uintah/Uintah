@@ -22,21 +22,25 @@ CoalModelFactory::~CoalModelFactory()
 {
 
   // delete the builders
-  for( BuildMap::iterator i=builders_.begin(); i!=builders_.end(); ++i ){
-      delete i->second;
+  for( BuildMap::iterator i = builders_.begin(); i != builders_.end(); ++i ){
+    delete i->second;
   }
 
   // delete all constructed solvers
-  for( ModelMap::iterator i=models_.begin(); i!=models_.end(); ++i ){
-      delete i->second;
+  for( ModelMap::iterator i = models_.begin(); i != models_.end(); ++i ){
+    delete i->second;
   }
 
-  for( DevolModelMap::iterator i=devolmodels_.begin(); i!=devolmodels_.end(); ++i ){
-      delete i->second;
+  for( DevolModelMap::iterator i = devolmodels_.begin(); i != devolmodels_.end(); ++i ){
+    delete i->second;
   }
 
-  for( CharOxiModelMap::iterator i=charoximodels_.begin(); i!=charoximodels_.end(); ++i ){
-      delete i->second;
+  for( CharOxiModelMap::iterator i = charoximodels_.begin(); i != charoximodels_.end(); ++i ){
+    delete i->second;
+  }
+
+  for ( ModelMap::iterator i = birth_models_.begin(); i != birth_models_.end(); ++i ) {
+    delete i->second; 
   }
 
   VarLabel::destroy(d_Length_ICLabel); 
