@@ -253,11 +253,9 @@ void
 ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
                                int iteration /* = 0 */ )
 {
-  // copy data and restart timesteps must be single threaded for now
-  bool isMPICopyDataTS = Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep();
-  bool isRestartTS = d_isInitTimestep || d_isRestartInitTimestep;
-  if (isMPICopyDataTS || isRestartTS) {
-    MPIScheduler::execute( tgnum, iteration );
+  // copy data timestep must be single threaded for now
+  if (d_sharedState->isCopyDataTimestep()) {
+    MPIScheduler::execute(tgnum, iteration);
     return;
   }
 
