@@ -1214,6 +1214,7 @@ UnifiedScheduler::runTasks( int thread_id )
               (readyTask->getTask()->getName() != "DataArchiver::outputVariables(checkpoint)"))) {
             if (readyTask->getName() == "DataArchiver::outputVariables(checkpoint)") {
               cerr << "WARNING: A bug in the unified scheduler means checkpoint DataArchiver can conflict with regular data archiving." << endl;
+              exit(-1);
             }
             initiateD2H(readyTask);
           }
@@ -2447,7 +2448,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
     string taskID = dtask->getName();
 
     //For now, have all if statements go here.  The contiguous array approach needs to be reworked
-    if (deviceVars.numItems() < 4) {
+    if (deviceVars.numItems() < 4 ) {
       //The scenario where we won't make contiguous host arrays
 
       //TODO: Handles that it already exists.
@@ -2530,11 +2531,6 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
             }
             break;
           }
-
-
-
-
-
         }
       }
       //Now copy any ghostVars in.
@@ -2655,19 +2651,22 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
                    	   case sizeof(int) : {
 						  GPUGridVariable<int> device_var;
 						  dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)),
+														(GPUDataWarehouse::GhostType)deviceVars.getGhostType(i), deviceVars.getNumGhostCells(i) ,true);
 
 						  break;
 						} case sizeof(double) : {
 						  GPUGridVariable<double> device_var;
 						  dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)),
+														(GPUDataWarehouse::GhostType)deviceVars.getGhostType(i), deviceVars.getNumGhostCells(i) ,true);
 
 						  break;
 						} case sizeof(GPUStencil7) : {
 						  GPUGridVariable<GPUStencil7> device_var;
 						  dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+														make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)),
+														(GPUDataWarehouse::GhostType)deviceVars.getGhostType(i), deviceVars.getNumGhostCells(i) ,true);
 						  break;
 						} default : {
 						  SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
@@ -2701,7 +2700,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
 
                             GPUPerPatch<void*> device_var;
                             dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-                                            deviceVars.getSizeOfDataType(i), dynamic_cast<PerPatchBase*>(deviceVars.getVar(i)), false);
+                                            deviceVars.getSizeOfDataType(i), dynamic_cast<PerPatchBase*>(deviceVars.getVar(i)),false);
                             break;
                       }
                       case TypeDescription::CCVariable :
@@ -2713,17 +2712,20 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask)
                           	  case sizeof(int) : {
                           	  GPUGridVariable<int> device_var;
 							   dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)),
+															 (GPUDataWarehouse::GhostType)deviceVars.getGhostType(i), deviceVars.getNumGhostCells(i) ,false);
 							   break;
 							 } case sizeof(double) : {
 							   GPUGridVariable<double> device_var;
 							   dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)),
+															 (GPUDataWarehouse::GhostType)deviceVars.getGhostType(i), deviceVars.getNumGhostCells(i) ,false);
 							   break;
 							 } case sizeof(GPUStencil7) : {
 							   GPUGridVariable<GPUStencil7> device_var;
 							   dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(), deviceVars.getPatchPointer(i)->getID(), deviceVars.getMaterialIndex(i),
-															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+															 make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)),
+															 (GPUDataWarehouse::GhostType)deviceVars.getGhostType(i), deviceVars.getNumGhostCells(i) ,false);
 							   break;
 							  } default : {
 								SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
@@ -3006,13 +3008,13 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                 OnDemandDataWarehouseP dw = dws[dwIndex];
 
                 //TODO: Add check to make sure the data isn't valid on the CPU.
-                if (gpudw->exist(dependantVar->var->getName().c_str(),
-                    patchID,
-                    matlID,
-                    make_int3(host_high.x() - host_low.x(), host_high.y() - host_low.y(), host_high.z() - host_low.z()),
-                    make_int3(host_low.x(), host_low.y(), host_low.z()),
-                    true) &&
-                gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID) ){
+//                if (gpudw->exist(dependantVar->var->getName().c_str(),
+//                    patchID,
+//                    matlID,
+//                    make_int3(host_high.x() - host_low.x(), host_high.y() - host_low.y(), host_high.z() - host_low.z()),
+//                    make_int3(host_low.x(), host_low.y(), host_low.z()),
+//                    true) &&
+                if( gpudw->getValidOnGPU(dependantVar->var->getName().c_str(), patchID, matlID) ){
 
                   //It's possible the computes data may contain ghost cells.  But a task needing to get the data
                   //out of the GPU may not know this.  It may just want the var data.
@@ -3037,7 +3039,19 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(dependantVar->var->typeDescription()->createInstance());
                   //gridVar->rewindow(templow, temphigh);
                   //dw->put(*gridVar, dependantVar->var, matlID, patches->get(i), true);
-                  dw->allocateAndPut(*gridVar, dependantVar->var, matlID, patches->get(i), gtype, numGhostCells);
+                  bool allocateHostVar = false;
+					 if( !dw->exists(dependantVar->var, matlID, patches->get(i) ) ) //if var does not exist on cpu
+						 allocateHostVar = true;
+					 else
+					 {
+						 //TODO If var already exists check its size and if they are different, remove that from DW and create a new one.
+
+					 }
+				  if(allocateHostVar)
+					  dw->allocateAndPut(*gridVar, dependantVar->var, matlID, patches->get(i), gtype, numGhostCells);
+				  else
+					  dw->getModifiable(*gridVar, dependantVar->var, matlID, patches->get(i), gtype, numGhostCells);
+
                   gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
                   host_ptr = gridVar->getBasePointer();
                   host_bytes = gridVar->getDataSize();
@@ -3089,7 +3103,6 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
       //                    pinnedHostPtrs.insert(host_ptr);
       //                  }
       //                }
-
                       if (gpu_stats.active()) {
                         cerrLock.lock();
                         {
@@ -3118,8 +3131,17 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                         CUDA_RT_SAFE_CALL(retVal);
                       }
                     }
+                    else
+                    	cout<< "Sizes mismatched"<<endl; // TO-DO create a host var with gpu sizes?
                   }
                   d2hComputesLock_.writeUnlock();
+
+/*                  double* h_values = (double*)malloc(host_bytes);
+                  cudaMemcpy(h_values, device_ptr, host_bytes, cudaMemcpyDeviceToHost);
+
+                  for(int p=0;p<10;p++)
+                	  printf("%f" ,h_values[p]);*/
+
                   delete gridVar;
                 }
                 break;

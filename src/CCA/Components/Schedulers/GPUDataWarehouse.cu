@@ -267,14 +267,13 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   }
   var.setArray3(offset, size, addr);
   put(var, label, patchID, matlIndex, sizeOfDataType, gtype, numGhostCells);
-
   varLock.writeUnlock();
 #endif
 }
 
 
 HOST_DEVICE void
-GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, char const* label, int patchID, int matlIndex, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost)
+GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, char const* label, int patchID, int matlIndex, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, GhostType gtype, int numGhostCells, bool stageOnHost)
 {
 #ifdef __CUDA_ARCH__
   //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
@@ -366,7 +365,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
     //}
 
 
-    put(var, label, patchID, matlIndex, sizeOfDataType, None, 0, gridVar, host_contiguousArrayPtr);
+    put(var, label, patchID, matlIndex, sizeOfDataType, gtype, numGhostCells, gridVar, host_contiguousArrayPtr);
 
     //printf("Allocating for %s at patch %d and matl %d size is %d host_ptr %p host_contiguousPtr %p device_ptr %p\n", label, patchID, matlIndex, varMemSize, host_ptr, host_contiguousArrayPtr, device_ptr);
   }
@@ -430,7 +429,6 @@ GPUDataWarehouse::putContiguous(GPUPerPatchBase& var, const char* indexID, char 
       memcpy(host_contiguousArrayPtr, patchVar->getBasePointer(), varMemSize);
     }
     put(var, label, patchID, matlIndex, sizeOfDataType, NULL, host_contiguousArrayPtr);
-    printf("PutContiguous PerPatch%s\n",label);
   }
   varLock.writeUnlock();
 
@@ -455,8 +453,6 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   double *d_ptr = NULL;
   double *h_ptr = NULL;
   SchedulerCommon::uintahSetCudaDevice(d_device_id);
-
-  printf("Allocated GPU buffer of size %d \n", size);
 
   CUDA_RT_SAFE_CALL(cudaMalloc(&d_ptr, size) );
   //printf("In allocate(), cuda malloc for size %ld at %p on device %d\n", size, d_ptr, d_device_id);

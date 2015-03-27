@@ -258,7 +258,7 @@ public:
   HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t sizeOfDataType);
 
   //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
-  HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
+  HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, GhostType gtype = None, int numGhostCells = 0, bool stageOnHost = true);
   HOST_DEVICE void putContiguous(GPUPerPatchBase& var, const char* indexID, char const* label, int patchID, int matlID, size_t sizeOfDataType, PerPatchBase* patchVar, bool stageOnHost);
   HOST_DEVICE void allocate(const char* indexID, size_t size);
 private:
