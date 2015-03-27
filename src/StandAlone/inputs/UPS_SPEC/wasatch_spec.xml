@@ -848,7 +848,8 @@
         <Z-Velocity         spec="OPTIONAL NO_DATA"> 
             <NameTag        spec="REQUIRED"/>
         </Z-Velocity>        
-        <DoSourceTerm       spec="REQUIRED BOOLEAN"/>
+        <DoSourceTerm       spec="REQUIRED BOOLEAN"
+                            attribute1="kind REQUIRED STRING 'COUPLED, UNCOUPLED'"/>
     </ScalabilityTest>
 
     <!-- ======================================================================== -->

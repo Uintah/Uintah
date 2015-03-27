@@ -193,18 +193,28 @@ namespace Wasatch{
     Expr::Tag srcTag;
 
     if( doSrc ){
+      Uintah::ProblemSpecP srcSpec = params_->findBlock("DoSourceTerm");
+      std::string kind;
+      srcSpec->getAttribute("kind", kind);
+
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       srcTag = Expr::Tag( solnVarName_ + "_src", Expr::STATE_NONE );
-
-      int nEqs=0;
-      params_->get( "NumberOfEquations", nEqs );
-
-      std::string basePhiName;
-      params_->get( "SolutionVariable", basePhiName );
-      const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );
-
-      typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
-      factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
+      
+      if (kind == "COUPLED") {
+        int nEqs=0;
+        params_->get( "NumberOfEquations", nEqs );
+        
+        std::string basePhiName;
+        params_->get( "SolutionVariable", basePhiName );
+        const Expr::Tag basePhiTag ( basePhiName, Expr::STATE_DYNAMIC );
+        
+        typedef typename ScalabilityTestSrc<FieldT>::Builder coupledSrcTerm;
+        factory.register_expression( scinew coupledSrcTerm( srcTag, basePhiTag, nEqs) );
+      } else {
+        std::cout << "registering uncoupled source term \n";
+        typedef typename ScalabilityTestSrcUncoupled<FieldT>::Builder uncoupledSrcTerm;
+        factory.register_expression( scinew uncoupledSrcTerm( srcTag, this->solution_variable_tag()) );
+      }
     }
     info[SOURCE_TERM] = srcTag;
   }
@@ -236,8 +246,12 @@ namespace Wasatch{
     else{
       const Expr::Tag densT;
       const bool tempConstDens = false;
-      return factory.register_expression(
-         scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, tag_list(info.find(SOURCE_TERM)->second), densT, tempConstDens) );
+      Expr::Tag srcTag = info.find(SOURCE_TERM)->second;
+      if (srcTag == Expr::Tag()) {
+        return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, densT, tempConstDens) );
+      } else {
+        return factory.register_expression( scinew typename ScalarRHS<FieldT>::Builder( rhsTag_, info, tag_list(srcTag), densT, tempConstDens) );
+      }
     }
   }
 
