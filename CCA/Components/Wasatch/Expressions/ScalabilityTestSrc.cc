@@ -27,6 +27,53 @@
 #include <sci_defs/cuda_defs.h>
 
 template< typename FieldT >
+ScalabilityTestSrcUncoupled<FieldT>::
+ScalabilityTestSrcUncoupled( const Expr::Tag& varTag )
+: Expr::Expression<FieldT>()
+{
+  this->set_gpu_runnable( true );
+  f_ = this->template create_field_request<FieldT>(varTag);
+}
+
+//------------------------------------------------------------------
+
+template< typename FieldT >
+ScalabilityTestSrcUncoupled<FieldT>::~ScalabilityTestSrcUncoupled()
+{}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+void
+ScalabilityTestSrcUncoupled<FieldT>::evaluate()
+{
+  using namespace SpatialOps;
+  FieldT& val = this->value();
+  val <<= f_->field_ref();
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+Expr::ExpressionBase*
+ScalabilityTestSrcUncoupled<FieldT>::Builder::build() const
+{
+  return new ScalabilityTestSrcUncoupled( tag_ );
+}
+
+//--------------------------------------------------------------------
+
+template< typename FieldT >
+ScalabilityTestSrcUncoupled<FieldT>::Builder::
+Builder( const Expr::Tag& result,
+         const Expr::Tag& phiTag)
+: ExpressionBuilder(result),
+  tag_ ( phiTag )
+{}
+
+//==========================================================================
+
+template< typename FieldT >
 ScalabilityTestSrc<FieldT>::
 ScalabilityTestSrc( const Expr::Tag& varTag,
                     const int nvar )
@@ -122,8 +169,12 @@ Builder( const Expr::Tag& result,
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-template class ScalabilityTestSrc< SpatialOps::SVolField >;
-template class ScalabilityTestSrc< SpatialOps::XVolField >;
-template class ScalabilityTestSrc< SpatialOps::YVolField >;
-template class ScalabilityTestSrc< SpatialOps::ZVolField >;
+#define DECLARE_VARIATNS(VOL)                             \
+template class ScalabilityTestSrcUncoupled< VOL >; \
+template class ScalabilityTestSrc< VOL >;
+
+DECLARE_VARIATNS(SpatialOps::SVolField);
+DECLARE_VARIATNS(SpatialOps::XVolField);
+DECLARE_VARIATNS(SpatialOps::YVolField);
+DECLARE_VARIATNS(SpatialOps::ZVolField);
 //==========================================================================
