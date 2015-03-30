@@ -91,7 +91,6 @@ namespace Uintah {
 
   private:
 		double diffusivity;
-		double init_potential;
     double max_concentration;
     bool include_hydrostress;
 
