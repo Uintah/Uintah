@@ -78,10 +78,11 @@
            <constitutive_model type="gao_elastic"> 
              <bulk_modulus>      6.50e1      </bulk_modulus>
              <shear_modulus>     9.70e1      </shear_modulus>
+             <alpha>             1.0         </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
-	         <diffusion_model type = "rf1">
+	         <diffusion_model type = "gao_diffusion">
 	           <diffusivity>       2e-8   </diffusivity>
              <initial_chemical_potential> 1e-10 </initial_chemical_potential>
              <max_concentration> 1.0 </max_concentration>

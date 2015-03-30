@@ -40,7 +40,6 @@ GaoDiffusion::GaoDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mfl
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 	
   ps->require("diffusivity", diffusivity);
-  ps->require("initial_chemical_potential", init_potential);
   ps->require("max_concentration", max_concentration);
 
   include_hydrostress = false;
