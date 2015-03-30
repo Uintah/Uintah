@@ -91,7 +91,7 @@
 						 <boltzmann_const>    1.38e-8  </boltzmann_const> <!-- micrometer^2 gram / K s^2 -->
            </diffusion_model>
            <geom_object>
-             <cylinder label = "pillar">
+             <cylinder label = "pillar_in">
                <bottom>[0.5, 0.5, 0.0]</bottom>
                <top>[0.5, 0.5, 2.0]</top>
 							 <radius>.25</radius>
@@ -169,7 +169,7 @@
     <Level>
       <Box label="1">
         <lower>[0.0, 0.0, 0.0]   </lower>
-        <upper>[0.05,  0.05, 0.02]</upper>
+        <upper>[1.0, 1.0, 2.25]</upper>
         <resolution>[12, 12, 12]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
         <patches>[1,1,1]         </patches>
