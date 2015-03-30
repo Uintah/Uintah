@@ -83,7 +83,7 @@
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
-	         <diffusion_model type = "gao_diffusion">
+	         <diffusion_model type = "jg">
 	           <diffusivity>        1e-3     </diffusivity> <!-- micrometer^2/s -->
              <partial_atomic_vol> 14.2e-12 </partial_atomic_vol> <!-- micrometer^3 -->
              <max_concentration>  3.75     </max_concentration> <!-- #Li ions / # Si Atoms -->

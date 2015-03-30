@@ -159,24 +159,30 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
 
   new_dw->allocateTemporary(globalconc,    patch, gnone, 0);
   new_dw->allocateTemporary(globalmass,    patch, gnone, 0);
-  new_dw->allocateTemporary(globalhstress, patch, gnone, 0);
   globalconc.initialize(0);
   globalmass.initialize(0);
-  globalhstress.initialize(0);
+	if(include_hydrostress){
+    new_dw->allocateTemporary(globalhstress, patch, gnone, 0);
+    globalhstress.initialize(0);
+	}
 
   for(int m = 0; m < numMPM; m++){
     int dwi = d_sharedState->getMPMMaterial(m)->getDWIndex();
 
     new_dw->get(gmass,              d_lb->gMassLabel,            dwi, patch, gnone, 0);
     new_dw->get(gconcentration,     d_rdlb->gConcentrationLabel, dwi, patch, gnone, 0);
-    new_dw->get(ghydrostaticstress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gnone, 0);
+		if(include_hydrostress){
+      new_dw->get(ghydrostaticstress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gnone, 0);
+		}
 
     for(NodeIterator iter=patch->getExtraNodeIterator();
                      !iter.done();iter++){
       IntVector c = *iter; 
       globalconc[c] += gmass[c] * gconcentration[c];
-      globalhstress[c] += ghydrostaticstress[c] * gconcentration[c];
       globalmass[c] += gmass[c];
+			if(include_hydrostress){
+        globalhstress[c] += gmass[c] * ghydrostaticstress[c];
+			}
     }
   }
 
@@ -186,12 +192,16 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
 	  NCVariable<double> ghydrostress;
 
     new_dw->getModifiable(gconc, d_rdlb->gConcentrationLabel, dwi, patch, gnone, 0);
-    new_dw->getModifiable(ghydrostress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gnone, 0);
+		if(include_hydrostress){
+      new_dw->getModifiable(ghydrostress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gnone, 0);
+		}
     for(NodeIterator iter=patch->getExtraNodeIterator();
                      !iter.done();iter++){
       IntVector c = *iter; 
       gconc[c] = globalconc[c]/globalmass[c];
-      ghydrostress[c] = globalhstress[c]/globalmass[c];
+			if(include_hydrostress){
+        ghydrostress[c] = globalhstress[c]/globalmass[c];
+			}
     }
   }
 
