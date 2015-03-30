@@ -11,7 +11,7 @@
   <replace_lines>
     <max_Timesteps>1</max_Timesteps>
     <randomSeed> true </randomSeed>
-    <resolution> [41,41,41]  </resolution>
+    <resolution> [40,40,40]  </resolution>
   </replace_lines>
 </AllTests>
 
