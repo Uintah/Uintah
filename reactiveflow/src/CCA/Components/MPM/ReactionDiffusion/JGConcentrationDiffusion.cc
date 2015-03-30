@@ -168,7 +168,7 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
     new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
 	                         dwi,  patch);
     ghydrostaticstress.initialize(0);
-   }
+  }
   
   int n8or27 = d_Mflag->d_8or27;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
