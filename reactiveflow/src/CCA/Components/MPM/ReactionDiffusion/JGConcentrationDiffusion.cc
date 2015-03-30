@@ -143,7 +143,6 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,    pset);
   old_dw->get(psize,          d_lb->pSizeLabel,               pset);
   old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
-  old_dw->get(pStress,        d_lb->pStressLabel,             pset);
   new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
   NCVariable<double> gconcentration;
@@ -165,6 +164,7 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   gconcentrationRate.initialize(0);
 
   if(include_hydrostress){
+    old_dw->get(pStress,        d_lb->pStressLabel,             pset);
     new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
 	                         dwi,  patch);
     ghydrostaticstress.initialize(0);

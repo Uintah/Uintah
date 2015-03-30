@@ -40,7 +40,10 @@ GaoDiffusion::GaoDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mfl
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 	
   ps->require("diffusivity", diffusivity);
+  ps->require("partial_atomic_vol", partial_atomic_vol);
   ps->require("max_concentration", max_concentration);
+  ps->require("operating_temp", operating_temp);
+  ps->require("boltzmann_const", boltzmann);
 
   include_hydrostress = false;
 }
@@ -294,7 +297,8 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
 
     chem_potential = -diffusivity;
     mech_potential = diffusivity * (1 - pConcentration[idx]/max_concentration)
-                     * pConcentration[idx]*init_potential;
+		                 * partial_atomic_vol
+                     * pConcentration[idx]/(boltzmann*operating_temp);
 
     pPotentialFlux[idx] = chem_potential*pConcentrationGradient[idx]
                           + mech_potential*pHydroStressGradient[idx];

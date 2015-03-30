@@ -44,9 +44,9 @@
   <MaterialProperties>
        <MPM>
          <material name="electrolyte">
-           <density>1000.0</density>
+           <density>1.0e-12</density> <!-- grams/micrometer^3 -->
            <constitutive_model type="water"> 
-             <bulk_modulus>15000.0</bulk_modulus>
+             <bulk_modulus>2.2e6</bulk_modulus> <!-- grams/(micrometer s^2) -->
              <viscosity>.5</viscosity>
              <gamma>7.0</gamma>
            </constitutive_model>
@@ -59,12 +59,13 @@
 					   <difference>
                <box label = "boxE">
                  <min>[0.0, 0.0, 0.0]</min>
-                 <max>[0.05, 0.05, 0.02]</max>
+                 <max>[1.0, 1.0, 2.25]</max>
                </box>
-               <box label = "boxout">
-                 <min>[0.00125, 0.00125, 0.0]</min>
-                 <max>[0.04875, 0.04875, 0.01]</max>
-               </box>
+               <cylinder label = "pillar_out">
+                 <bottom>[0.5, 0.5, 0.0]</bottom>
+                 <top>[0.5, 0.5, 2.0]</top>
+							   <radius>.25</radius>
+               </cylinder>
 						 </difference>
              <res>[2,2,2]</res>
              <velocity>[0.0,0.0,0.0]</velocity>
@@ -74,24 +75,27 @@
          </material>
 
          <material name="pillar">
-           <density>1000.0</density>
+           <density>2.3e-12</density> <!-- g/micrometer^3 -->
            <constitutive_model type="gao_elastic"> 
-             <bulk_modulus>      6.50e1      </bulk_modulus>
-             <shear_modulus>     9.70e1      </shear_modulus>
+             <bulk_modulus>      47.62e12    </bulk_modulus>  <!-- grams/(micrometer s^2) -->
+             <shear_modulus>     32.79e12    </shear_modulus> <!-- grams/(micrometer s^2) -->
              <alpha>             1.0         </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
 	         <diffusion_model type = "gao_diffusion">
-	           <diffusivity>       2e-8   </diffusivity>
-             <initial_chemical_potential> 1e-10 </initial_chemical_potential>
-             <max_concentration> 1.0 </max_concentration>
+	           <diffusivity>        1e-3     </diffusivity> <!-- micrometer^2/s -->
+             <partial_atomic_vol> 14.2e-12 </partial_atomic_vol> <!-- micrometer^3 -->
+             <max_concentration>  3.75     </max_concentration> <!-- #Li ions / # Si Atoms -->
+						 <operating_temp>     300      </operating_temp> <!-- Kelvin -->
+						 <boltzmann_const>    1.38e-8  </boltzmann_const> <!-- micrometer^2 gram / K s^2 -->
            </diffusion_model>
            <geom_object>
-             <box label = "boxP">
-               <min>[0.00125, 0.00125, 0.0]</min>
-               <max>[0.04875, 0.04875, 0.01]</max>
-             </box>
+             <cylinder label = "pillar">
+               <bottom>[0.5, 0.5, 0.0]</bottom>
+               <top>[0.5, 0.5, 2.0]</top>
+							 <radius>.25</radius>
+             </cylinder>
              <res>[2,2,2]</res>
              <velocity>[0.0,0.0,0.0]</velocity>
              <temperature>0</temperature>
@@ -115,7 +119,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 1.0  </value>
+                              <value> 3.0  </value>
         </BCType>
       </Face>
       <Face side = "x+">
@@ -123,7 +127,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 1.0  </value>
+                              <value> 3.0  </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -131,7 +135,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 1.0  </value>
+                              <value> 3.0  </value>
         </BCType>
       </Face>                  
       <Face side = "y+">
@@ -139,7 +143,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 1.0  </value>
+                              <value> 3.0  </value>
         </BCType>
       </Face>
       <Face side = "z-">

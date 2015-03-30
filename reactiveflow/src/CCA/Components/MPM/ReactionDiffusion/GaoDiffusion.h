@@ -91,7 +91,10 @@ namespace Uintah {
 
   private:
 		double diffusivity;
+		double partial_atomic_vol;
     double max_concentration;
+		double operating_temp;
+		double boltzmann;
     bool include_hydrostress;
 
     GaoDiffusion(const GaoDiffusion&);
