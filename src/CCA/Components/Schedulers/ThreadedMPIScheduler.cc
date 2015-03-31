@@ -767,6 +767,7 @@ void ThreadedMPIScheduler::assignTask( DetailedTask* task,
   for (int i = 0; i < numThreads_; i++) {
     if (t_worker[i]->d_task == NULL) {
       targetThread = i;
+      t_worker[i]->d_numtasks++;
       break;
     }
   }
@@ -796,9 +797,18 @@ TaskWorker::TaskWorker( ThreadedMPIScheduler* scheduler,
     d_rank( scheduler->getProcessorGroup()->myrank() ),
     d_iteration( 0 ),
     d_waittime( 0.0 ),
-    d_waitstart( 0.0 )
+    d_waitstart( 0.0 ),
+    d_numtasks( 0 )
 {
   d_runmutex.lock();
+}
+
+TaskWorker::~TaskWorker()
+{
+  if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+    threadedmpi_threaddbg << "TaskWorker " << d_rank << "-" << d_thread_id << " executed "
+                          << d_numtasks << " tasks"  << std::endl;
+  }
 }
 
 //______________________________________________________________________
