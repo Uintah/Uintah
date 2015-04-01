@@ -45,6 +45,9 @@ GaoDiffusion::GaoDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mfl
   ps->require("operating_temp", operating_temp);
   ps->require("boltzmann_const", boltzmann);
 
+  mech_val = (diffusivity * partial_atomic_vol)/(boltzmann * operating_temp);
+
+  cout << "Mech_val: " << mech_val << endl;
   include_hydrostress = false;
 }
 
@@ -296,9 +299,7 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
 	  }
 
     chem_potential = -diffusivity;
-    mech_potential = diffusivity * (1 - pConcentration[idx]/max_concentration)
-		                 * partial_atomic_vol
-                     * pConcentration[idx]/(boltzmann*operating_temp);
+    mech_potential = mech_val * (1 - pConcentration[idx]/max_concentration) * pConcentration[idx];
 
     pPotentialFlux[idx] = chem_potential*pConcentrationGradient[idx]
                           + mech_potential*pHydroStressGradient[idx];

@@ -95,6 +95,7 @@ namespace Uintah {
     double max_concentration;
 		double operating_temp;
 		double boltzmann;
+    double mech_val;
     bool include_hydrostress;
 
     GaoDiffusion(const GaoDiffusion&);
