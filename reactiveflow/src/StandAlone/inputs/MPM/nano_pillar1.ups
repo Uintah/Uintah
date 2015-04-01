@@ -44,7 +44,7 @@
   <MaterialProperties>
        <MPM>
          <material name="electrolyte">
-           <density>1.0e-12</density> <!-- grams/micrometer^3 -->
+           <density>1000</density> <!-- kg/m^3 -->
            <constitutive_model type="water"> 
              <bulk_modulus>2.2e6</bulk_modulus> <!-- grams/(micrometer s^2) -->
              <viscosity>.5</viscosity>
@@ -75,26 +75,26 @@
          </material>
 
          <material name="pillar">
-           <density>2.3e-12</density> <!-- g/micrometer^3 -->
+           <density>2330</density> <!-- kg/m^3 -->
            <constitutive_model type="gao_elastic"> 
-             <bulk_modulus>      47.62e12    </bulk_modulus>  <!-- grams/(micrometer s^2) -->
-             <shear_modulus>     32.79e12    </shear_modulus> <!-- grams/(micrometer s^2) -->
+             <bulk_modulus>      47.62e9    </bulk_modulus>  <!-- Pa -->
+             <shear_modulus>     32.79e9    </shear_modulus> <!-- Pa -->
              <alpha>             1.0         </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
-	         <diffusion_model type = "jg">
-	           <diffusivity>        1e-3     </diffusivity> <!-- micrometer^2/s -->
-             <partial_atomic_vol> 14.2e-12 </partial_atomic_vol> <!-- micrometer^3 -->
+	   <diffusion_model type = "gao_diffusion">
+	     <diffusivity>        1e-16    </diffusivity> <!-- m^2/s -->
+	     <partial_atomic_vol> 3.03e-4  </partial_atomic_vol> <!-- m^3/kg -->
              <max_concentration>  3.75     </max_concentration> <!-- #Li ions / # Si Atoms -->
-						 <operating_temp>     300      </operating_temp> <!-- Kelvin -->
-						 <boltzmann_const>    1.38e-8  </boltzmann_const> <!-- micrometer^2 gram / K s^2 -->
+             <operating_temp>     300      </operating_temp> <!-- Kelvin -->
+             <boltzmann_const>    1.38e-23 </boltzmann_const> <!-- m^2 kg / K s^2 -->
            </diffusion_model>
            <geom_object>
              <cylinder label = "pillar_in">
                <bottom>[0.5, 0.5, 0.0]</bottom>
                <top>[0.5, 0.5, 2.0]</top>
-							 <radius>.25</radius>
+               <radius>.25</radius>
              </cylinder>
              <res>[2,2,2]</res>
              <velocity>[0.0,0.0,0.0]</velocity>
@@ -103,9 +103,9 @@
            </geom_object>
          </material>
 
-				 <diffusion_interface>
-				   <type>common</type>
-				 </diffusion_interface>
+         <diffusion_interface>
+           <type>common</type>
+         </diffusion_interface>
          <contact>
            <type>single_velocity</type>
          </contact>
@@ -170,7 +170,7 @@
       <Box label="1">
         <lower>[0.0, 0.0, 0.0]   </lower>
         <upper>[1.0, 1.0, 2.25]</upper>
-        <resolution>[12, 12, 12]   </resolution>
+        <resolution>[10, 10, 40]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
         <patches>[1,1,1]         </patches>
       </Box>
