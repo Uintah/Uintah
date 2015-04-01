@@ -10,8 +10,8 @@
   <Time>
        <maxTime>4</maxTime>
        <initTime>0.0</initTime>
-       <delt_min>1.0e-8</delt_min>
-       <delt_max>0.001</delt_max>
+       <delt_min>1.0e-16</delt_min>
+       <delt_max>1.0e-8</delt_max>
        <!--<max_Timesteps>3000000</max_Timesteps>-->
        <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
@@ -46,25 +46,25 @@
          <material name="electrolyte">
            <density>1000</density> <!-- kg/m^3 -->
            <constitutive_model type="water"> 
-             <bulk_modulus>2.2e6</bulk_modulus> <!-- grams/(micrometer s^2) -->
+             <bulk_modulus>15000</bulk_modulus> <!-- Pa -->
              <viscosity>.5</viscosity>
              <gamma>7.0</gamma>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
 	         <diffusion_model type = "jg">
-	           <diffusivity>       2e-2   </diffusivity>
+	           <diffusivity>       1e-9   </diffusivity>
            </diffusion_model>
            <geom_object>
 					   <difference>
                <box label = "boxE">
                  <min>[0.0, 0.0, 0.0]</min>
-                 <max>[1.0, 1.0, 2.25]</max>
+                 <max>[1.0e-6, 1.0e-6, 2.25e-6]</max>
                </box>
                <cylinder label = "pillar_out">
-                 <bottom>[0.5, 0.5, 0.0]</bottom>
-                 <top>[0.5, 0.5, 2.0]</top>
-							   <radius>.25</radius>
+                 <bottom>[0.5e-6, 0.5e-6, 0.0]</bottom>
+                 <top>[0.5e-6, 0.5e-6, 2.0e-6]</top>
+							   <radius>.25e-6</radius>
                </cylinder>
 						 </difference>
              <res>[2,2,2]</res>
@@ -83,18 +83,19 @@
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
-	   <diffusion_model type = "gao_diffusion">
-	     <diffusivity>        1e-16    </diffusivity> <!-- m^2/s -->
-	     <partial_atomic_vol> 3.03e-4  </partial_atomic_vol> <!-- m^3/kg -->
-             <max_concentration>  3.75     </max_concentration> <!-- #Li ions / # Si Atoms -->
+           <diffusion_model type = "gao_diffusion">
+             <diffusivity>        1e-16    </diffusivity> <!-- m^2/s -->
+             <partial_atomic_vol> 3.3  </partial_atomic_vol> <!-- m^3/% Atoms -->
+             <!--<partial_atomic_vol> 1e-6  </partial_atomic_vol> --><!-- m^3/% Atoms -->
+             <max_concentration>  1.0      </max_concentration> <!-- #-->
              <operating_temp>     300      </operating_temp> <!-- Kelvin -->
              <boltzmann_const>    1.38e-23 </boltzmann_const> <!-- m^2 kg / K s^2 -->
            </diffusion_model>
            <geom_object>
              <cylinder label = "pillar_in">
-               <bottom>[0.5, 0.5, 0.0]</bottom>
-               <top>[0.5, 0.5, 2.0]</top>
-               <radius>.25</radius>
+               <bottom>[0.5e-6, 0.5e-6, 0.0]</bottom>
+               <top>[0.5e-6, 0.5e-6, 2.0e-6]</top>
+               <radius>.25e-6</radius>
              </cylinder>
              <res>[2,2,2]</res>
              <velocity>[0.0,0.0,0.0]</velocity>
@@ -119,7 +120,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 3.0  </value>
+                              <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "x+">
@@ -127,7 +128,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 3.0  </value>
+                              <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -135,7 +136,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 3.0  </value>
+                              <value> 1.0  </value>
         </BCType>
       </Face>                  
       <Face side = "y+">
@@ -143,7 +144,7 @@
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 3.0  </value>
+                              <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "z-">
@@ -169,7 +170,7 @@
     <Level>
       <Box label="1">
         <lower>[0.0, 0.0, 0.0]   </lower>
-        <upper>[1.0, 1.0, 2.25]</upper>
+        <upper>[1.0e-6, 1.0e-6, 2.25e-6]</upper>
         <resolution>[10, 10, 40]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
         <patches>[1,1,1]         </patches>
