@@ -485,7 +485,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       // material configuration
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
-			// Add concentration component
+			// Remove stress free concentration dependent component
 			tensorD = tensorD - one * alpha * (conc_rate/3);
 
       // Calculate the deviatoric part of the non-thermal part
