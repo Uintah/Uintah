@@ -98,7 +98,7 @@
          <lower>      [0,0,0]        </lower>         
          <upper>      [1, 1, 1]      </upper>         
          <resolution> [128,128,128]  </resolution>    
-         <patches>    [10,8,6]       </patches> 
+         <patches>    [12,10,6]      </patches> 
          <extraCells> [1,1,1]        </extraCells>
       </Box>
       <periodic> [0,0,0] </periodic>                                     
@@ -124,7 +124,7 @@
     
   <RMCRT type = "double">
     <randomSeed>        true       </randomSeed>
-    <nDivQRays>         25         </nDivQRays>
+    <nDivQRays>         100        </nDivQRays>
     <Threshold>         0.05       </Threshold>
     <StefanBoltzmann>   5.67051e-8 </StefanBoltzmann>
     <solveBoundaryFlux> false      </solveBoundaryFlux>
