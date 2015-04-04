@@ -86,25 +86,68 @@ ThreadedMPI_SelectiveAffinity    SCI_DEBUG     This affinity pattern allows task
                                                for the control thread.
                                                  NOTE: This affinity pattern corresponds to the host-side implementation of the Selective
                                                        affinity described within the High Performance Parallelism Pearls chapter.
-ThreadedMPI_MICCompactAffinity   SCI_DEBUG     Modeled after OpenMP's compact affinity, this affinity pattern binds task execution threads
-                                               incrementally across logical cores 1 through nThreads-1. The logical core corresponding
-                                               to the value of nThreads is reserved for the control thread.
-                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Compact
-                                                         affinity described within the High Performance Parallelism Pearls chapter.
-                                                 NOTE 2: nThreads = 244 results in the control thread being bound to logical core 0.
+ThreadedMPI_MICCompactAffinity2t   SCI_DEBUG   Modeled after OpenMP's compact affinity with KMP_PLACE_THREADS=61c,2t, this affinity pattern
+                                               binds task execution threads incrementally across logical cores 1 through 2 and then across
+                                               physical cores 1 through 61. 
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the 
+                                                         Compact affinity described within the High Performance Parallelism Pearls chapter.
+                                                 NOTE 2: nThreads = 120 results in the control thread being bound to logical core 238.
+                                                         nThreads = 121 results in the control thread being bound to logical core 241.
+                                                         nThreads = 122 results in the control thread being bound to logical core 242.
+ThreadedMPI_MICCompactAffinity3t   SCI_DEBUG   Modeled after OpenMP's compact affinity with KMP_PLACE_THREADS=61c,3t, this affinity pattern
+                                               binds task execution threads incrementally across logical cores 1 through 3 and then across
+                                               physical cores 1 through 61. 
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the 
+                                                         Compact affinity described within the High Performance Parallelism Pearls chapter.
+                                                 NOTE 2: nThreads = 180 results in the control thread being bound to logical core 239.
+                                                         nThreads = 181 results in the control thread being bound to logical core 241.
+                                                         nThreads = 182 results in the control thread being bound to logical core 242.
+                                                         nThreads = 183 results in the control thread being bound to logical core 243.
+ThreadedMPI_MICCompactAffinity4t   SCI_DEBUG   Modeled after OpenMP's compact affinity with KMP_PLACE_THREADS=61c,4t, this affinity pattern
+                                               binds task execution threads incrementally across logical cores 1 through 4 and then across
+                                               physical cores 1 through 61. 
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the 
+                                                         Compact affinity described within the High Performance Parallelism Pearls chapter.
+                                                 NOTE 2: nThreads = 240 results in the control thread being bound to logical core 240.
+                                                         nThreads = 241 results in the control thread being bound to logical core 241.
+                                                         nThreads = 242 results in the control thread being bound to logical core 242.
+                                                         nThreads = 243 results in the control thread being bound to logical core 243.
+                                                         nThreads = 244 results in the control thread being bound to logical core 0.
 ThreadedMPI_MICScatterAffinity   SCI_DEBUG     Modeled after OpenMP's scatter affinity, this affinity pattern binds task execution threads
                                                incrementally across physical cores 1 through 60 first and then across logical cores for
-                                               logical cores 1 through nThreads-1. The logical core corresponding to the value of nThreads
-                                               is reserved for the control thread.
-                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Scatter
-                                                         affinity pattern described within the High Performance Parallelism Pearls chapter.
-                                                 NOTE 2: nThreads = 244 results in the control thread being bound to logical core 0.
+                                               logical cores 1 through nThreads-1.
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the
+                                                         Scatter affinity pattern described within the High Performance Parallelism Pearls
+                                                         chapter.
+                                                 NOTE 2: nThreads = 120 results in the control thread being bound to logical core 238.
+                                                         nThreads = 121 results in the control thread being bound to logical core 241.
+                                                         nThreads = 122 results in the control thread being bound to logical core 242.
+                                                         nThreads = 180 results in the control thread being bound to logical core 239.
+                                                         nThreads = 181 results in the control thread being bound to logical core 241.
+                                                         nThreads = 182 results in the control thread being bound to logical core 242.
+                                                         nThreads = 183 results in the control thread being bound to logical core 243.
+                                                         nThreads = 240 results in the control thread being bound to logical core 240.
+                                                         nThreads = 241 results in the control thread being bound to logical core 241.
+                                                         nThreads = 242 results in the control thread being bound to logical core 242.
+                                                         nThreads = 243 results in the control thread being bound to logical core 243.
+                                                         nThreads = 244 results in the control thread being bound to logical core 0.
 ThreadedMPI_MICSelectiveAffinity SCI_DEBUG     This affinity pattern allows task execution threads to run anywhere among logical cores 1
-                                               through nThreads-1. The logical core corresponding to the value of nThreads is reserved
-                                               for the control thread.
-                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the Selective
-                                                         affinity described within the High Performance Parallelism Pearls chapter.
-                                                 NOTE 2: nThreads = 244 results in the control thread being bound to logical core 0.
+                                               through either 240, 241, 242, 243, 244, or 0.
+                                                 NOTE 1: This affinity pattern corresponds to the coprocessor-side implementation of the 
+                                                         Selective affinity described within the High Performance Parallelism Pearls
+                                                         chapter.
+                                                 NOTE 2: nThreads = 120 results in the control thread being bound to logical core 240.
+                                                         nThreads = 121 results in the control thread being bound to logical core 241.
+                                                         nThreads = 122 results in the control thread being bound to logical core 242.
+                                                         nThreads = 180 results in the control thread being bound to logical core 240.
+                                                         nThreads = 181 results in the control thread being bound to logical core 241.
+                                                         nThreads = 182 results in the control thread being bound to logical core 242.
+                                                         nThreads = 183 results in the control thread being bound to logical core 243.
+                                                         nThreads = 240 results in the control thread being bound to logical core 240.
+                                                         nThreads = 241 results in the control thread being bound to logical core 241.
+                                                         nThreads = 242 results in the control thread being bound to logical core 242.
+                                                         nThreads = 243 results in the control thread being bound to logical core 243.
+                                                         nThreads = 244 results in the control thread being bound to logical core 0.
 
 
 UnifiedScheduler Related:
