@@ -25,7 +25,7 @@ count=`ls -1 exectimes.* | wc -l`
 echo "----------------------------------------------------------"
 echo "  Reported values are cumulative over:"
 echo "       1) 10 timesteps"
-echo "       2) All processors"
+echo "       2) $count processors"
 echo "      3a) nthreads when using the UnifiedScheduler"
 echo "      3b) nthreads-1 when using the ThreadedMPIScheduler"
 echo "----------------------------------------------------------"
