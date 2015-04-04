@@ -61,7 +61,9 @@ static DebugStream threadedmpi_threaddbg(            "ThreadedMPI_ThreadDBG",   
 static DebugStream threadedmpi_compactaffinity(      "ThreadedMPI_CompactAffinity",      true);
 static DebugStream threadedmpi_scatteraffinity(      "ThreadedMPI_ScatterAffinity",      false);
 static DebugStream threadedmpi_selectiveaffinity(    "ThreadedMPI_SelectiveAffinity",    false);
-static DebugStream threadedmpi_miccompactaffinity(   "ThreadedMPI_MICCompactAffinity",   false);
+static DebugStream threadedmpi_miccompactaffinity2t( "ThreadedMPI_MICCompactAffinity2t", false);
+static DebugStream threadedmpi_miccompactaffinity3t( "ThreadedMPI_MICCompactAffinity3t", false);
+static DebugStream threadedmpi_miccompactaffinity4t( "ThreadedMPI_MICCompactAffinity4t", false);
 static DebugStream threadedmpi_micscatteraffinity(   "ThreadedMPI_MICScatterAffinity",   false);
 static DebugStream threadedmpi_micselectiveaffinity( "ThreadedMPI_MICSelectiveAffinity", false);
 
@@ -188,16 +190,76 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   }
 
   // Reset Uintah thread ID (to reflect number of last physical core used)
-  if ( threadedmpi_miccompactaffinity.active()   ||
-       threadedmpi_micscatteraffinity.active()   ||
-       threadedmpi_micselectiveaffinity.active() ) {
+  //
+  // MIC affinity types are hard-coded for a 61-core Xeon Phi where the
+  // the lastmost physical core contains logical cores 241, 242, 243, and 0
+  //
+  // NOTE: Logical core 0 is reserved for the Xeon Phi OS and the offload
+  //       daemon also runs on this physical core
+  if ( threadedmpi_micselectiveaffinity.active() ) {
 
-    // These affinity types are hard-coded for a 61-core Xeon Phi where the
-    // the lastmost physical core contains logical cores 241, 242, 243, and 0
-    //
-    // NOTE: Logical core 0 is reserved for the Xeon Phi OS and the offload
-    //       daemon also runs on this physical core
-    Thread::self()->set_myid(Uintah::Parallel::getNumThreads() % 244);
+    // These cases are hard-coded to support thread counts for 2 and 3
+    // threads per physical core
+    switch(Uintah::Parallel::getNumThreads()){
+      case 120:
+        Thread::self()->set_myid(240);
+        break;
+      case 121:
+        Thread::self()->set_myid(241);
+        break;
+      case 122:
+        Thread::self()->set_myid(242);
+        break;
+      case 180:
+        Thread::self()->set_myid(240);
+        break;
+      case 181:
+        Thread::self()->set_myid(241);
+        break;
+      case 182:
+        Thread::self()->set_myid(242);
+        break;
+      case 183:
+        Thread::self()->set_myid(243);
+        break;
+      default:
+        Thread::self()->set_myid(Uintah::Parallel::getNumThreads() % 244);
+        break;
+    }
+  }
+  else if ( threadedmpi_miccompactaffinity2t.active() ||
+            threadedmpi_miccompactaffinity3t.active() ||
+            threadedmpi_miccompactaffinity4t.active() ||
+            threadedmpi_micscatteraffinity.active()   ) {
+
+    // These cases are hard-coded to support thread counts for 2 and 3
+    // threads per physical core
+    switch(Uintah::Parallel::getNumThreads()){
+      case 120:
+        Thread::self()->set_myid(238);
+        break;
+      case 121:
+        Thread::self()->set_myid(241);
+        break;
+      case 122:
+        Thread::self()->set_myid(242);
+        break;
+      case 180:
+        Thread::self()->set_myid(239);
+        break;
+      case 181:
+        Thread::self()->set_myid(241);
+        break;
+      case 182:
+        Thread::self()->set_myid(242);
+        break;
+      case 183:
+        Thread::self()->set_myid(243);
+        break;
+      default:
+        Thread::self()->set_myid(Uintah::Parallel::getNumThreads() % 244);
+        break;
+    }
   }
   else {
     Thread::self()->set_myid(numThreads_);
@@ -206,7 +268,9 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   // Disable CPU compact affinity to eliminate the need to explicitly disable this via SCI_DEBUG
   if ( threadedmpi_scatteraffinity.active()      ||
        threadedmpi_selectiveaffinity.active()    ||
-       threadedmpi_miccompactaffinity.active()   ||
+       threadedmpi_miccompactaffinity2t.active() ||
+       threadedmpi_miccompactaffinity3t.active() ||
+       threadedmpi_miccompactaffinity4t.active() ||
        threadedmpi_micscatteraffinity.active()   ||
        threadedmpi_micselectiveaffinity.active() ) {
 
@@ -217,30 +281,168 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   if ( threadedmpi_compactaffinity.active()   ||
        threadedmpi_scatteraffinity.active()   ||
        threadedmpi_selectiveaffinity.active() ) {
+
     if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
       threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
                             << ") to CPU core " << numThreads_ << "\n";
     }
-    Thread::self()->set_affinity(numThreads_);   // CPU - bind main thread to last physical core
+    Thread::self()->set_affinity(numThreads_); // CPU - bind main thread to last physical core
   }
 
-  // MIC-specific binding of the main thread to the last logical core used
-  if ( threadedmpi_miccompactaffinity.active()   ||
-       threadedmpi_micscatteraffinity.active()   ||
-       threadedmpi_micselectiveaffinity.active() ) {
-    if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+  // MIC-specific binding of the main thread
+  if ( threadedmpi_micselectiveaffinity.active() ) {
 
-      threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
-                            << ") to MIC core " << Uintah::Parallel::getNumThreads() % 244 << "\n";
+    // These cases are hard-coded to support thread counts for 2 and 3
+    // threads per physical core
+    switch(Uintah::Parallel::getNumThreads()){
+      case 120:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 240 << "\n";
+        }
+        Thread::self()->set_affinity(240); // MIC - bind main thread to logical core 240
+        break;
+      case 121:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 241 << "\n";
+        }
+        Thread::self()->set_affinity(241); // MIC - bind main thread to logical core 241
+        break;
+      case 122:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 242 << "\n";
+        }
+        Thread::self()->set_affinity(242); // MIC - bind main thread to logical core 242
+        break;
+      case 180:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 240 << "\n";
+        }
+        Thread::self()->set_affinity(240); // MIC - bind main thread to logical core 240
+        break;
+      case 181:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 241 << "\n";
+        }
+        Thread::self()->set_affinity(241); // MIC - bind main thread to logical core 241
+        break;
+      case 182:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 242 << "\n";
+        }
+        Thread::self()->set_affinity(242); // MIC - bind main thread to logical core 242
+        break;
+      case 183:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 243 << "\n";
+        }
+        Thread::self()->set_affinity(243); // MIC - bind main thread to logical core 243
+        break;
+      default:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << Uintah::Parallel::getNumThreads() % 244 << "\n";
+        }
+        Thread::self()->set_affinity(Uintah::Parallel::getNumThreads() % 244); // MIC - bind main thread to last logical core used
+        break;
     }
-    Thread::self()->set_affinity(Uintah::Parallel::getNumThreads() % 244);   // MIC - bind main thread to last logical core
+  }
+  else if ( threadedmpi_miccompactaffinity2t.active() ||
+            threadedmpi_miccompactaffinity3t.active() ||
+            threadedmpi_miccompactaffinity4t.active() ||
+            threadedmpi_micscatteraffinity.active()   ) {
+
+    // These cases are hard-coded to support thread counts for 2 and 3
+    // threads per physical core
+    switch(Uintah::Parallel::getNumThreads()){
+      case 120:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 238 << "\n";
+        }
+        Thread::self()->set_affinity(238); // MIC - bind main thread to logical core 238
+        break;
+      case 121:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 241 << "\n";
+        }
+        Thread::self()->set_affinity(241); // MIC - bind main thread to logical core 241
+        break;
+      case 122:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 242 << "\n";
+        }
+        Thread::self()->set_affinity(242); // MIC - bind main thread to to logical core 242
+        break;
+      case 180:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 239 << "\n";
+        }
+        Thread::self()->set_affinity(239); // MIC - bind main thread to logical core 239
+        break;
+      case 181:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 241 << "\n";
+        }
+        Thread::self()->set_affinity(241); // MIC - bind main thread to logical core 241
+        break;
+      case 182:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 242 << "\n";
+        }
+        Thread::self()->set_affinity(242); // MIC - bind main thread to logical core 242
+        break;
+      case 183:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << 243 << "\n";
+        }
+        Thread::self()->set_affinity(243); // MIC - bind main thread to logical core 243
+        break;
+      default:
+        if ( (threadedmpi_threaddbg.active()) && (d_myworld->myrank() == 0) ) {
+
+          threadedmpi_threaddbg << "   Binding main thread (ID "<<  Thread::self()->myid()
+                                << ") to MIC core " << Uintah::Parallel::getNumThreads() % 244 << "\n";
+        }
+        Thread::self()->set_affinity(Uintah::Parallel::getNumThreads() % 244); // MIC - bind main thread to last logical core used
+        break;
+    }
   }
 
   // Create the TaskWorkers here (pinned to cores in TaskWorker::run())
   char name[1024];
 
   // MIC-specific TaskWorker indexing
-  if (threadedmpi_miccompactaffinity.active()   ||
+  if (threadedmpi_miccompactaffinity2t.active() ||
+      threadedmpi_miccompactaffinity3t.active() ||
+      threadedmpi_miccompactaffinity4t.active() ||
       threadedmpi_micscatteraffinity.active()   ||
       threadedmpi_micselectiveaffinity.active() ) {
     for (int i = 0; i < numThreads_; i++) {
@@ -879,7 +1081,7 @@ void
 TaskWorker::run()
 {
 
-  // set Uintah thread ID
+  // Set Uintah thread ID
   Thread::self()->set_myid(d_thread_id);
 
   // CPU-specific compact affinity
@@ -896,9 +1098,8 @@ TaskWorker::run()
   // CPU-specific scatter affinity
   if (threadedmpi_scatteraffinity.active()) {
 
-    // NOTE: This is hard-coded for the dual socket configuration in Titan4,
-    //       which features two Sandy Bridge CPUs with 8 physical cores and
-    //       16 logical cores each
+    // This is hard-coded for a dual socket configuration featuring two
+    // Xeon E5 CPUs with 8 physical cores and 16 logical cores each
 
     int physCoresPerSocket  = 8;
     int socketIndex         = 0;
@@ -932,7 +1133,7 @@ TaskWorker::run()
         Thread::self()->set_affinity(physCoresPerSocket + d_thread_id/2);
       }
 
-    // The thread will be bounde to a logical core on the 1st socket
+    // The thread will be bound to a logical core on the 1st socket
     } else if ( socketIndex == 1 ) {
 
       // The thread will be bound to the 0th logical core on a given physical core
@@ -971,8 +1172,98 @@ TaskWorker::run()
     Thread::self()->set_affinityMainOnly(Uintah::Parallel::getNumThreads());
   }
 
-  // MIC-specific compact affinity
-  if (threadedmpi_miccompactaffinity.active()) {
+  // MIC-specific compact affinity for 2 threads per core
+  if (threadedmpi_miccompactaffinity2t.active()) {
+
+    // Handle threads to be bound to the 1st logical core in a given physical core
+    if ( (d_thread_id-1) % 2 == 0 ) {
+
+      int logCoresPerPhysCore = 4;
+      int overallIndex = 0;
+
+      overallIndex = ( ((d_thread_id-1)/2) * logCoresPerPhysCore ) + 1;
+
+      if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+        cerrLock.lock();
+        std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+        threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << overallIndex << "\n";
+        cerrLock.unlock();
+      }
+      Thread::self()->set_affinity(overallIndex);
+
+    // Handle threads to be bound to the 2nd logical core in a given physical core
+    } else {
+
+      int logCoresPerPhysCore = 4;
+      int overallIndex = 0;
+
+      overallIndex = ( ((d_thread_id-2)/2) * logCoresPerPhysCore ) + 2;
+
+      if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+        cerrLock.lock();
+        std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+        threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << overallIndex << "\n";
+        cerrLock.unlock();
+      }
+      Thread::self()->set_affinity(overallIndex);
+    }
+  }
+
+  // MIC-specific compact affinity for 3 threads per core
+  if (threadedmpi_miccompactaffinity3t.active()) {
+
+    // Handle threads to be bound to the 1st logical core in a given physical core
+    if ( (d_thread_id-1) % 3 == 0 ) {
+
+      int logCoresPerPhysCore = 4;
+      int overallIndex = 0;
+
+      overallIndex = ( ((d_thread_id-1)/3) * logCoresPerPhysCore ) + 1;
+
+      if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+        cerrLock.lock();
+        std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+        threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << overallIndex << "\n";
+        cerrLock.unlock();
+      }
+      Thread::self()->set_affinity(overallIndex);
+
+    // Handle threads to be bound to the 2nd logical core in a given physical core
+    } else if ( (d_thread_id-2) % 3 == 0 ) {
+
+      int logCoresPerPhysCore = 4;
+      int overallIndex = 0;
+
+      overallIndex = ( ((d_thread_id-2)/3) * logCoresPerPhysCore ) +2;
+
+      if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+        cerrLock.lock();
+        std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+        threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << overallIndex << "\n";
+        cerrLock.unlock();
+      }
+      Thread::self()->set_affinity(overallIndex);
+
+    // Handle threads to be bound to the 3rd logical core in a given physical core
+    } else {
+
+      int logCoresPerPhysCore = 4;
+      int overallIndex = 0;
+
+      overallIndex = ( ((d_thread_id-3)/3) * logCoresPerPhysCore ) + 3;
+
+      if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+        cerrLock.lock();
+        std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+        threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << overallIndex << "\n";
+        cerrLock.unlock();
+      }
+      Thread::self()->set_affinity(overallIndex);
+    }
+  }
+
+  // MIC-specific compact affinity for 4 threads per core
+  if (threadedmpi_miccompactaffinity4t.active()) {
     if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
       cerrLock.lock();
       std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
@@ -985,15 +1276,13 @@ TaskWorker::run()
   // MIC-specific scatter affinity
   if (threadedmpi_micscatteraffinity.active()) {
 
-    int scatterPhysCores = 60;
+    int scatterPhysCores    = 60; // Scatter across 60 cores to experiment with the 61st core
     int logCoresPerPhysCore = 4;
-    int logCoreIndex = 0;
-    int physCoreIndex = 0;
-    int overallIndex = 0;
+    int logCoreIndex        = 0;
+    int physCoreIndex       = 0;
+    int overallIndex        = 0;
 
-    // Determine how many physical cores to scatter across
-    // NOTE: This is done to experiment with scattering when both including and excluding the 61st core
-
+    // These cases are used to place threads the 61st core
     if (d_thread_id > 240) {
       if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
         cerrLock.lock();
@@ -1002,6 +1291,37 @@ TaskWorker::run()
         cerrLock.unlock();
       }
       Thread::self()->set_affinity(d_thread_id);
+    }
+    else if ( Uintah::Parallel::getNumThreads() == 122 && d_thread_id == 121) {
+      if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+        cerrLock.lock();
+        std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+        threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << 241 << "\n";
+        cerrLock.unlock();
+      }
+      Thread::self()->set_affinity(241);
+    }
+    else if ( ( Uintah::Parallel::getNumThreads() == 182 && d_thread_id == 181) ||
+              ( Uintah::Parallel::getNumThreads() == 183 && d_thread_id == 181) ||
+              ( Uintah::Parallel::getNumThreads() == 183 && d_thread_id == 182) ) {
+      if (d_thread_id == 181) {
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << 241 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinity(241);
+      }
+      else if (d_thread_id == 182) {
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Binding" << threadType << "thread ID " << d_thread_id << " to MIC core " << 242 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinity(242);
+      }
     }
     else {
 
@@ -1026,13 +1346,83 @@ TaskWorker::run()
 
   // MIC-specific selective affinity
   if (threadedmpi_micselectiveaffinity.active()) {
-    if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
-      cerrLock.lock();
-      std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
-      threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
-      cerrLock.unlock();
+
+    // These cases are hard-coded to support thread counts for 2 and 3
+    // threads per physical core
+    switch(Uintah::Parallel::getNumThreads()){
+      case 120:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << 239 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(240);
+        break;
+      case 121:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << 240 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(241);
+        break;
+      case 122:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << 241 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(242);
+        break;
+      case 180:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << 239 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(240);
+        break;
+      case 181:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << 240 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(241);
+        break;
+      case 182:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << 241 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(242);
+        break;
+      case 183:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << 242 << "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(243);
+        break;
+      default:
+        if ( (threadedmpi_threaddbg.active()) && (Uintah::Parallel::getMPIRank() == 0) ) {
+          cerrLock.lock();
+          std::string threadType = (d_scheduler->parentScheduler_) ? " subscheduler " : " ";
+          threadedmpi_threaddbg << "Allowing" << threadType << "thread ID " << d_thread_id << " to run on any MIC core between 1 and " << Uintah::Parallel::getNumThreads() - 1<< "\n";
+          cerrLock.unlock();
+        }
+        Thread::self()->set_affinityMICMainOnly(Uintah::Parallel::getNumThreads());
+        break;
     }
-    Thread::self()->set_affinityMICMainOnly(Uintah::Parallel::getNumThreads());
   }
 
   while (true) {
