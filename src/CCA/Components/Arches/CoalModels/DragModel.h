@@ -102,6 +102,7 @@ private:
   const VarLabel* _RHS_source_varlabel;
   const VarLabel* _birth_label; 
 
+  std::string _density_name; 
 
   double _vel_scaling_constant; 
   double _weight_scaling_constant; 
