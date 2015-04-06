@@ -106,8 +106,7 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
 
   // Need a density
   std::string density_root = ParticleHelper::parse_for_role_to_label(db, "density"); 
-  std::string density_name = ParticleHelper::append_env( density_root, d_quadNode ); 
-  _rhop_varlabel = VarLabel::find(density_name); 
+  _density_name = ParticleHelper::append_env( density_root, d_quadNode ); 
 
   // Need velocity scaling constant
   std::string vel_root; 
@@ -180,6 +179,12 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
   Ghost::GhostType  gn  = Ghost::None;
 
   Task::WhichDW which_dw; 
+
+  _rhop_varlabel = VarLabel::find(_density_name); 
+
+  if ( _rhop_varlabel == 0 ){ 
+    throw InvalidValue("Error: Rho label not found for particle drag model.",__FILE__,__LINE__); 
+  }
 
   if (timeSubStep == 0 ) { 
     tsk->computes(d_modelLabel);
