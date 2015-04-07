@@ -206,14 +206,16 @@ void JGConcentrationDiffusion::scheduleComputeFlux(Task* task, const MPMMaterial
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
-  task->requires(Task::OldDW, d_lb->pXLabel,                         gan, NGP);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
-  task->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
-  task->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
-  task->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
-  task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,           gan, 2*NGN);
-  task->computes(d_rdlb->pConcGradientLabel,  matlset);
+  task->requires(Task::OldDW, d_lb->pXLabel,                  matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pSizeLabel,               matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pMassLabel,               matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pVolumeLabel,             matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gan, NGP);
+  task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
+  task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,    matlset, gan, 2*NGN);
+
+  task->computes(d_rdlb->pConcGradientLabel, matlset);
+  task->computes(d_rdlb->pFluxLabel,         matlset);
 
 }
 
@@ -237,25 +239,31 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch, const MPMMaterial
   oodx[2] = 1.0/dx.z();
 
   int dwi = matl->getDWIndex();
-  constParticleVariable<Point>  px;
-  constParticleVariable<double> pvol,pMass;
+  constParticleVariable<Point>   px;
+  constParticleVariable<double>  pvol,pMass;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> deformationGradient;
+
   constNCVariable<double>       gConcentration,gMass;
 
   ParticleVariable<Vector>      pConcGradient;
+  ParticleVariable<Vector>      pFlux;
 
-  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, d_lb->pXLabel);
+  //ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, d_lb->pXLabel);
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
   old_dw->get(px,           d_lb->pXLabel,                         pset);
   old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
   old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
   old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+
   new_dw->get(gConcentration,      d_rdlb->gConcentrationLabel, dwi, patch, gac,2*NGN);
   new_dw->get(gMass,               d_lb->gMassLabel,            dwi, patch, gnone, 0);
 
-  new_dw->allocateAndPut(pConcGradient, d_rdlb->pConcGradientLabel, pset);
+  //new_dw->allocateAndPut(pConcGradient, d_rdlb->pConcGradientLabel, pset);
+  new_dw->allocateTemporary(pConcGradient, pset);
+  new_dw->allocateAndPut(pFlux,         d_rdlb->pFluxLabel,         pset);
   
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
     particleIndex idx = *iter;
@@ -264,11 +272,13 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch, const MPMMaterial
     interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
     pConcGradient[idx] = Vector(0.0,0.0,0.0);
+    pFlux[idx]         = Vector(0.0,0.0,0.0);
     for (int k = 0; k < d_Mflag->d_8or27; k++){
       for (int j = 0; j<3; j++) {
           pConcGradient[idx][j] += gConcentration[ni[k]] * d_S[k][j] * oodx[j];
       }
 	  }
+    pFlux[idx] = diffusivity*pConcGradient[idx];
   } //End of Particle Loop
 
 	delete interpolator;
@@ -290,8 +300,10 @@ void JGConcentrationDiffusion::scheduleComputeDivergence(Task* task, const MPMMa
 
   task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,     gnone);
   task->requires(Task::NewDW, d_rdlb->gConcentrationNoBCLabel, gnone);
-  task->requires(Task::NewDW, d_rdlb->pConcGradientLabel,      gan, NGP);
+  task->requires(Task::NewDW, d_rdlb->pFluxLabel,              gan, NGP);
+
   task->computes(d_rdlb->gConcentrationRateLabel, matlset);
+  task->computes(d_rdlb->gConcentrationStarLabel, matlset);
 }
 
 void JGConcentrationDiffusion::computeDivergence(const Patch* patch, const MPMMaterial* matl,
@@ -300,6 +312,7 @@ void JGConcentrationDiffusion::computeDivergence(const Patch* patch, const MPMMa
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
+  int dwi = matl->getDWIndex();
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
   vector<IntVector> ni(interpolator->size());
@@ -311,12 +324,11 @@ void JGConcentrationDiffusion::computeDivergence(const Patch* patch, const MPMMa
   oodx[1] = 1.0/dx.y();
   oodx[2] = 1.0/dx.z();
 
-  int dwi = matl->getDWIndex();
   constParticleVariable<Point>  px;
   constParticleVariable<double> pvol,pMass;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> deformationGradient;
-  constParticleVariable<Vector> pConcGradient;
+  constParticleVariable<Vector> pFlux;
   constNCVariable<double> gMass;
   constNCVariable<double> gConc_Old;
   constNCVariable<double> gConc_OldNoBC;
@@ -329,6 +341,7 @@ void JGConcentrationDiffusion::computeDivergence(const Patch* patch, const MPMMa
 
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label(), patch->getLevel() );
+
   old_dw->get(px,                  d_lb->pXLabel,                  pset);
   old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
@@ -338,13 +351,13 @@ void JGConcentrationDiffusion::computeDivergence(const Patch* patch, const MPMMa
   new_dw->get(gMass,         d_lb->gMassLabel,                dwi, patch,gnone,0);
   new_dw->get(gConc_Old,     d_rdlb->gConcentrationLabel,     dwi, patch,gnone,0);
   new_dw->get(gConc_OldNoBC, d_rdlb->gConcentrationNoBCLabel, dwi, patch,gnone,0);
-
-  new_dw->get(pConcGradient, d_rdlb->pConcGradientLabel,      pset);
-
-  new_dw->allocateTemporary(gdCdt,     patch);
-  new_dw->allocateTemporary(gConcStar, patch);
+  new_dw->get(pFlux,         d_rdlb->pFluxLabel,      pset);
 
   new_dw->allocateAndPut(gConcRate, d_rdlb->gConcentrationRateLabel, dwi,patch);
+  new_dw->allocateAndPut(gConcStar, d_rdlb->gConcentrationStarLabel, dwi,patch);
+
+  new_dw->allocateTemporary(gdCdt,     patch);
+
 
   gdCdt.initialize(0.0);
   gConcStar.initialize(0.0);
@@ -356,7 +369,7 @@ void JGConcentrationDiffusion::computeDivergence(const Patch* patch, const MPMMa
     // Get the node indices that surround the cell
     interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
 
-    Vector dC_dx = pConcGradient[idx];
+    Vector J = pFlux[idx];
     double Cdot_cond = 0.0;
     IntVector node(0,0,0);
 
@@ -364,7 +377,7 @@ void JGConcentrationDiffusion::computeDivergence(const Patch* patch, const MPMMa
       node = ni[k];
       if(patch->containsNode(node)){
         Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-        Cdot_cond = Dot(div, dC_dx)*diffusivity*pMass[idx];
+        Cdot_cond = Dot(div, J)*pMass[idx];
         gdCdt[node] -= Cdot_cond;
       }
     }
