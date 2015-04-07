@@ -58,11 +58,11 @@
                <box label = "boxE">
                  <min>[0.0, 0.0, 0.0]</min>
                  <!--<max>[1.0e-6, 1.0e-6, 0.75e-6]</max>-->
-                 <max>[1.0e-3, 1.0e-3, 0.2e-3]</max>
+                 <max>[1.0e-3, 1.0e-3, 1.0e-3]</max>
                </box>
                <cylinder label = "pillar_out">
                  <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom>
-                 <top>[0.5e-3, 0.5e-3, 0.1e-3]</top>
+                 <top>[0.5e-3, 0.5e-3, 0.8e-3]</top>
                  <radius>.25e-3</radius>
                </cylinder>
 						 </difference>
@@ -93,7 +93,7 @@
            <geom_object>
              <cylinder label = "pillar_in">
                <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom>
-               <top>[0.5e-3, 0.5e-3, 0.1e-3]</top>
+               <top>[0.5e-3, 0.5e-3, 0.8e-3]</top>
                <radius>.25e-3</radius>
              </cylinder>
              <res>[2,2,2]</res>
@@ -171,8 +171,8 @@
 	      <!-- <lower>[0.0, 0.0, 0.0]   </lower>
 	<upper>[1.0e-6, 1.0e-6, 2.25e-6]</upper> -->
         <lower>[0.0, 0.0, 0.0]   </lower>
-        <upper>[1.0e-3, 1.0e-3, 0.2e-3]</upper>
-        <resolution>[20, 20, 5]   </resolution>
+        <upper>[1.0e-3, 1.0e-3, 1.2e-3]</upper>
+        <resolution>[20, 20, 22]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
         <patches>[1,1,1]         </patches>
       </Box>
