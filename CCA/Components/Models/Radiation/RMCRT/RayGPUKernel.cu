@@ -28,6 +28,7 @@
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
 #include <Core/Grid/Variables/Stencil7.h>
+#include <Core/Util/GPU.h>
 
 #include <sci_defs/cuda_defs.h>
 #include <sci_defs/uintah_defs.h>
@@ -321,7 +322,7 @@ template< class T>
 __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          dim3 dimBlock,
                                          int matl,
-                                         patchParams patch,
+                                         patchParams finePatch,
                                          gridParams gridP,
                                          levelParams* levelP,  // array of levelParam structs
                                          //__________________________________
@@ -349,8 +350,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   
   // calculate the thread indices
-  int tidX = threadIdx.x + blockIdx.x * blockDim.x + patch.loEC.x;
-  int tidY = threadIdx.y + blockIdx.y * blockDim.y + patch.loEC.y;
+  int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
+  int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
   
   int maxLevels = gridP.maxLevels;
   int my_L = maxLevels -1;
@@ -390,8 +391,10 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   regionHi[1] = regionHi_1;
 //__________________________________
 
-
+/*`==========TESTING==========*/
+  __syncthreads();
 if( tidX == 1 && tidY == 1) {
+   printf( "  patch.loEC: %i,%i,%i,  patch.HiEC: %i,%i,%i \n",finePatch.loEC.x, finePatch.loEC.y, finePatch.loEC.z, finePatch.hiEC.x, finePatch.hiEC.y, finePatch.hiEC.z);
    printf( "L-0, HasFinerLevel: %i ",hasFinerLevel_0);
    printf( "  DyDx_0: %g, DzDx_0: %g \t", DyDx_0, DzDx_0);
    printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_0.x, Dx_0.y, Dx_0.z);
@@ -403,33 +406,57 @@ if( tidX == 1 && tidY == 1) {
    printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_1.x, Dx_1.y, Dx_1.z);
    printf( "  regionLo.x: %g, regionLo.y: %g, regionLo.z: %g \t",   regionLo_1.x, regionLo_1.y, regionLo_1.z );
    printf( "  regionHi.x: %g, regionHi.y: %g, regionHi.z: %g \n", regionHi_1.x, regionHi_1.y, regionHi_1.z );
-}
+} 
+/*===========TESTING==========`*/
 
 
+#if 1
   // coarse level data
   for (int l = 0; l < maxLevels; ++l) {
     if (hasFinerLevel[l]) {
-      abskg_gdw->get(abskg[l],           "abskg",    patch.ID, matl, l);
-      sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4",  patch.ID, matl, l);
-      celltype_gdw->get(celltype[l],     "cellType", patch.ID, matl, l);
+      abskg_gdw->get(abskg[l],           "abskg",    finePatch.ID, matl, l);
+      sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4",  finePatch.ID, matl, l);
+      celltype_gdw->get(celltype[l],     "cellType", finePatch.ID, matl, l);
     }
   }
- #if 0
-  GPUGridVariable<double>      divQ;
+#endif
+
+/*`==========TESTING==========*/
+#if DEBUG == 1
+__syncthreads();
+if( isThread0_Blk0()) {
+  printf("    Before divQ initialization \n");
+} 
+#endif
+/*===========TESTING==========`*/
+#if 0
+  GPUGridVariable<double> divQ;
   GPUGridVariable<GPUStencil7> boundFlux;
-  GPUGridVariable<double>      radiationVolQ;
-
-  // Extra Cell Loop
-  if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) {  // patch boundary check
-    #pragma unroll
-    for (int z = patch.loEC.z; z < patch.hiEC.z; z++) {  // loop through z slices
-      GPUIntVector c = make_int3(tidX, tidY, z);
-      divQ[c] = 0.0;
-      radiationVolQ[c] = 0.0;
+  GPUGridVariable<double> radiationVolQ;
+  
+  if( RT_flags.modifies_divQ ){
+    new_gdw->getModifiable( divQ,         "divQ",          finePatch.ID, matl );
+    new_gdw->getModifiable( boundFlux,    "boundFlux",     finePatch.ID, matl );
+    new_gdw->getModifiable( radiationVolQ,"radiationVolq", finePatch.ID, matl );
+  }else{
+    new_gdw->get( divQ,         "divQ",          finePatch.ID, matl );         // these should be allocateAntPut() calls
+    new_gdw->get( boundFlux,    "boundFlux",     finePatch.ID, matl );
+    new_gdw->get( radiationVolQ,"radiationVolq", finePatch.ID, matl );
+    
+    
+    // Extra Cell Loop
+    if (tidX >= finePatch.loEC.x && tidY >= finePatch.loEC.y && tidX < finePatch.hiEC.x && tidY < finePatch.hiEC.y) { // finePatch boundary check
+      #pragma unroll
+      for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
+        GPUIntVector c = make_int3(tidX, tidY, z);
+        divQ[c]          = 0.0;
+        radiationVolQ[c] = 0.0;
+      }
     }
   }
 
-  
+#endif  
+#if 0
 
   //______________________________________________________________________
   //           R A D I O M E T E R
@@ -452,9 +479,9 @@ if( tidX == 1 && tidY == 1) {
   //______________________________________________________________________
   if( RT_flags.solveDivQ ) {
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
-    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+    if (tidX >= finePatch.lo.x && tidY >= finePatch.lo.y && tidX < finePatch.hi.x && tidY < finePatch.hi.y) { // finePatch boundary check
       #pragma unroll
-      for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
+      for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
@@ -469,15 +496,15 @@ if( tidX == 1 && tidY == 1) {
           GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx[my_L],  
                                                       DzDx[my_L], RT_flags.CCRays );
 
-//          updateSumIDevice< T >( ray_direction, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+          updateSumI_MLDevice< T >( ray_direction, ray_location, origin, finePatch.dx,  sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
         } //Ray loop
 
         //__________________________________
         //  Compute divQ
-//        divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
+        divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
 
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-//        radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
+        radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
@@ -905,6 +932,215 @@ __syncthreads();
   }  // threshold while loop.
 } // end of updateSumI function
 
+//______________________________________________________________________
+//  Multi-level
+ template< class T>
+ __device__ void updateSumI_MLDevice (  GPUVector& ray_direction,
+                                        GPUVector& ray_location,
+                                        const GPUIntVector& origin,
+                                        const GPUVector& Dx,
+                                        const GPUGridVariable< T >& sigmaT4OverPi,
+                                        const GPUGridVariable< T >& abskg,
+                                        const GPUGridVariable<int>& celltype,
+                                        double& sumI,
+                                        curandState* randNumStates,
+                                        RMCRT_flags RT_flags)
+{
+  GPUIntVector cur = origin;
+  GPUIntVector prevCell = cur;
+  // Step and sign for ray marching
+  int step[3];                                          // Gives +1 or -1 based on sign    
+  bool sign[3];                                                                            
+                                                                                           
+  GPUVector inv_ray_direction = 1.0/ray_direction;
+/*`==========TESTING==========*/
+#if DEBUG == 1
+  printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
+  printf("        inv_ray_dir [%g,%g,%g]\n", inv_ray_direction.x,inv_ray_direction.y,inv_ray_direction.z);
+#endif
+/*===========TESTING==========`*/  
+
+  findStepSizeDevice(step, sign, inv_ray_direction);
+  GPUVector D_DxRatio = make_double3(1, Dx.y/Dx.x, Dx.z/Dx.x );
+
+  GPUVector tMax;         // (mixing bools, ints and doubles)
+  tMax.x = (origin.x + sign[0]               - ray_location.x) * inv_ray_direction.x ; 
+  tMax.y = (origin.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y ; 
+  tMax.z = (origin.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z ; 
+
+  //Length of t to traverse one cell
+  GPUVector tDelta;
+  tDelta   = Abs(inv_ray_direction) * D_DxRatio;                              
+
+  //Initializes the following values for each ray
+  bool in_domain     = true;
+  double tMax_prev   = 0;
+  double intensity   = 1.0;
+  double fs          = 1.0;
+  int nReflect       = 0;                 // Number of reflections                         
+  double optical_thickness      = 0;                                                       
+  double expOpticalThick_prev   = 1.0;                                                     
+
+
+#ifdef RAY_SCATTER
+  double scatCoeff = RT_flags.sigmaScat;          //[m^-1]  !! HACK !! This needs to come from data warehouse
+  if (scatCoeff == 0) scatCoeff = 1e-99;  // avoid division by zero
+
+  // Determine the length at which scattering will occur
+  // See CCA/Components/Arches/RMCRT/PaulasAttic/MCRT/ArchesRMCRT/ray.cc
+  double scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff;
+  double curLength = 0;
+#endif
+
+  //+++++++Begin ray tracing+++++++++++++++++++
+  //Threshold while loop
+  while ( intensity > RT_flags.threshold ){
+
+    DIR face = NONE;
+    
+    while (in_domain){
+
+      prevCell = cur;
+      double disMin = -9;          // Represents ray segment length.
+
+      //__________________________________
+      //  Determine which cell the ray will enter next
+      if ( tMax.x < tMax.y ){        // X < Y
+        if ( tMax.x < tMax.z ){      // X < Z
+          face = X;
+        } else {
+          face = Z;
+        }
+      } else {
+        if( tMax.y < tMax.z ){       // Y < Z
+          face = Y;
+        } else {
+          face = Z;
+        }
+      }
+      
+      //__________________________________
+      //  update marching variables
+      cur[face]  = cur[face] + step[face];
+      disMin     = (tMax[face] - tMax_prev);
+      tMax_prev  = tMax[face];
+      tMax[face] = tMax[face] + tDelta[face];
+
+      ray_location.x = ray_location.x + (disMin  * ray_direction.x);
+      ray_location.y = ray_location.y + (disMin  * ray_direction.y);
+      ray_location.z = ray_location.z + (disMin  * ray_direction.z);
+      
+/*`==========TESTING==========*/
+#if DEBUG == 1
+if(origin.x == 0 && origin.y == 0 && origin.z ==0){
+    printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
+    printf( " face %d ", face ); 
+    printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
+    printf( "rayLoc [%g,%g,%g] ",ray_location.x,ray_location.y, ray_location.z);
+    printf( "inv_dir [%g,%g,%g] ",inv_ray_direction.x,inv_ray_direction.y, inv_ray_direction.z); 
+    printf( "disMin %g \n",disMin ); 
+   
+    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevCell],  sigmaT4OverPi[prevCell]);
+    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i\n",abskg[cur], sigmaT4OverPi[cur], celltype[cur] );
+} 
+#endif
+
+/*===========TESTING==========`*/
+      in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
+    
+      optical_thickness += Dx.x * abskg[prevCell]*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
+      // were adjusted by DyDx  or DzDx, this line is now correct for noncubic domains.
+
+      RT_flags.nRaySteps ++;
+
+      //Eqn 3-15(see below reference) while
+      //Third term inside the parentheses is accounted for in Inet. Chi is accounted for in Inet calc.
+      double expOpticalThick = exp(-optical_thickness);
+
+      sumI += sigmaT4OverPi[prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
+
+      expOpticalThick_prev = expOpticalThick;
+
+
+#ifdef RAY_SCATTER
+      curLength += disMin * Dx.x;
+      if (curLength > scatLength && in_domain){
+
+        // get new scatLength for each scattering event
+        scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff; 
+
+        ray_direction     = findRayDirectionDevice( randNumStates ); 
+        
+        inv_ray_direction = 1.0/ray_direction;
+
+        // get new step and sign
+        int stepOld = step[face];
+        findStepSizeDevice( step, sign, inv_ray_direction);
+
+        // if sign[face] changes sign, put ray back into prevCell (back scattering)
+        // a sign change only occurs when the product of old and new is negative
+        if( step[face] * stepOld < 0 ){
+          cur = prevCell;
+        }
+
+        // get new tMax (mixing bools, ints and doubles)
+        tMax.x = ( ( cur.x + sign[0]               - ray_location.x) * inv_ray_direction.x );
+        tMax.y = ( ( cur.y + sign[1] * D_DxRatio.y - ray_location.y) * inv_ray_direction.y );
+        tMax.z = ( ( cur.z + sign[2] * D_DxRatio.z - ray_location.z) * inv_ray_direction.z );
+
+        // Length of t to traverse one cell
+        tDelta    = Abs(inv_ray_direction) * D_DxRatio;
+        tMax_prev = 0;
+        curLength = 0;  // allow for multiple scattering events per ray
+
+/*`==========TESTING==========*/
+#if DEBUG == 3
+        printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x, cur.y, cur.z, tMax.x, tMax.y, tMax.z, tDelta.x, tDelta.y , tDelta.z );
+#endif
+/*===========TESTING==========`*/
+
+      }
+#endif
+
+    } //end domain while loop.  ++++++++++++++
+    
+    //  wall emission 12/15/11
+    double wallEmissivity = abskg[cur];
+
+    if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one. 
+      wallEmissivity = 1.0;
+    } 
+
+    intensity = exp(-optical_thickness);
+
+    sumI += wallEmissivity * sigmaT4OverPi[cur] * intensity;
+
+    intensity = intensity * fs;
+    
+
+    // when a ray reaches the end of the domain, we force it to terminate. 
+    if( !RT_flags.allowReflect ) intensity = 0;
+
+
+/*`==========TESTING==========*/
+#if DEBUG == 1
+if(origin.x == 0 && origin.y == 0 && origin.z ==0 ){
+    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i \n", 
+            cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs,RT_flags.allowReflect );
+    
+} 
+__syncthreads();
+#endif 
+/*===========TESTING==========`*/
+    //__________________________________
+    //  Reflections
+    if ( (intensity > RT_flags.threshold) && RT_flags.allowReflect){
+      reflect( fs, cur, prevCell, abskg[cur], in_domain, step[face], sign[face], ray_direction[face]);
+      ++nReflect;
+    }
+
+  }  // threshold while loop.
+} // end of updateSumI function
 
 //---------------------------------------------------------------------------
 // Returns random number between 0 & 1.0 including 0 & 1.0
