@@ -508,26 +508,25 @@ GPUDataWarehouse::clear()
   }
 #endif
 }
-
+//______________________________________________________________________
+//
 HOST_DEVICE void
 GPUDataWarehouse::printGetError(const char* msg, char const* label, int patchID, int matlID, int levelID /* = 0 */)
 {
 #ifdef __CUDA_ARCH__
-  int numThreads = blockDim.x * blockDim.y * blockDim.z;
-  int threadID = threadIdx.x + blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;
-
-  int i = threadID;
-  while (i < d_numItems) {
-    printf("   Available labels: \"%s\"\n", d_varDB[i].label);
-    i = i + numThreads;
-  }
-  if (isThread0_Blk0()) {
-    printf("  ERROR: %s( \"%s\", patchID: %i, matl: %i )  unknown variable\n\n", msg, label, patchID, matlID);
+  __syncthreads();
+  if( isThread0() ){
+    for (int i = 0; i < d_numItems; i++) {
+      printf("   Available labels(%i): \"%s\"\n", d_numItems, d_varDB[i].label);
+    }
+    __syncthreads();
+    printf("  ERROR: %s( \"%s\", levelID: %i, patchID: %i, matl: %i )  unknown variable\n\n", msg,  label, levelID, patchID, matlID);
+    printThread();
+    printBlock();
     assert(0);
   }
-
 #else
-  printf("\t ERROR: %s( \"%s\", patchID: %i, matl: %i )  unknown variable\n", msg, label, patchID, matlID);
+  printf("\t ERROR: %s( \"%s\", levelID: %i, patchID: %i, matl: %i )  unknown variable\n", msg, label, levelID, patchID, matlID);
 #endif
 }
 
