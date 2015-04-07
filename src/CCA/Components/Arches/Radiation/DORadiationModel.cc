@@ -615,8 +615,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
   for (int qn=0; qn < _nQn_part; qn++){
     if( _radiateAtGasTemp ){
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-       // b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*pow(gTemp[*iter],4.0);
-        b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter];
+        b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*pow(gTemp[*iter],4.0);
       }
     }else{
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -626,8 +625,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
   }
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    //b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*pow(gTemp[*iter],4.0);
-    b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter];
+    b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*pow(gTemp[*iter],4.0);
   }
 
   return;
