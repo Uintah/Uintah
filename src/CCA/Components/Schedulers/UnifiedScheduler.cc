@@ -1150,8 +1150,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
         int matlID  = matls->get(j);
         int patchID = patches->get(i)->getID();
+        int levelID = dw->getGrid()->getLevel(patchID)->getIndex();
         const Level* level = getLevel(dtask->getPatches());
-        int levelID = level->getID();
 
         const std::string reqVarName = req->var->getName();
 
@@ -1169,7 +1169,6 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             //   in this case we need to use getRegion()
             bool uses_SHRT_MAX = (req->numGhostCells == SHRT_MAX);
             if (uses_SHRT_MAX) {
-              const Level* level = getLevel(dtask->getPatches());
               IntVector domainLo_EC, domainHi_EC;
               level->findCellIndexRange(domainLo_EC, domainHi_EC);  // including extraCells
               dw->getRegion(*gridVar, req->var, matls->get(j), level, domainLo_EC, domainHi_EC, true);
