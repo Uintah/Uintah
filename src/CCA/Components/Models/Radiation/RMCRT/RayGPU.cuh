@@ -71,6 +71,12 @@ struct levelParams {
     GPUIntVector regionLo;
     GPUIntVector regionHi;
     bool         hasFinerLevel;
+    
+    __host__ __device__ 
+    void print() {
+      printf( " LevelParams: hasFinerlevel: %i DyDz: %g  DzDz: %g, Dx: [%g,%g,%g] ",hasFinerLevel,DyDx,DzDx, Dx.x,Dx.y, Dx.z);
+      printf( " regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n  ",regionLo.x, regionLo.y, regionLo.z, regionHi.x, regionHi.y, regionHi.z);
+    }
 };
 
 //______________________________________________________________________
@@ -322,6 +328,16 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              patchParams patchP,
                                              gridParams gridP,
                                              levelParams* levelP,
+                                             //__________________________________
+                                             //  FIX ME
+                                             GPUVector Dx_0, GPUVector Dx_1, 
+                                             bool hasFinerLevel_0, bool hasFinerLevel_1,
+                                             double DyDx_0, double DyDx_1,
+                                             double DzDx_0, double DzDx_1,
+                                             GPUVector regionLo_0, GPUVector regionLo_1,
+                                             GPUVector regionHi_0, GPUVector regionHi_1,
+                                             GPUIntVector fineLevel_ROI_Lo, GPUIntVector fineLevel_ROI_Hi,
+                                             //__________________________________
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
                                              GPUDataWarehouse* abskg_gdw,
@@ -335,10 +351,20 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
 template< class T >
 __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          dim3 dimBlock,
-                                         int matlIndex,
-                                         patchParams patchP,
+                                         int matl,
+                                         patchParams patch,
                                          gridParams gridP,
-                                         levelParams* levelP,
+                                         levelParams* levelP,  // array of levelParam structs
+                                        //__________________________________
+                                        //  fix ME!!!
+                                         GPUVector Dx_0, GPUVector Dx_1,
+                                         bool hasFinerLevel_0, bool hasFinerLevel_1,
+                                         double DyDx_0, double DyDx_1,
+                                         double DzDx_0, double DzDx_1,
+                                         GPUVector regionLo_0, GPUVector regionLo_1,
+                                         GPUVector regionHi_0, GPUVector regionHi_1,
+                                         GPUIntVector fineLevel_ROI_Lo, GPUVector fineLevel_ROI_Hi,
+                                         //__________________________________
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,
