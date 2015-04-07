@@ -113,7 +113,6 @@ void GaoDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
 
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
-  task->computes(d_rdlb->gConcentrationRateLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
 
 }
@@ -154,7 +153,6 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
-  NCVariable<double> gconcentrationRate;
   NCVariable<double> ghydrostaticstress;
 
 
@@ -162,15 +160,12 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
 	                       dwi,  patch);
   new_dw->allocateAndPut(gconcentrationNoBC,  d_rdlb->gConcentrationNoBCLabel,
 	                       dwi,  patch);
-  new_dw->allocateAndPut(gconcentrationRate,  d_rdlb->gConcentrationRateLabel,
-	                       dwi,  patch);
   new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
 	                       dwi,  patch);
 
 
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
-  gconcentrationRate.initialize(0);
   ghydrostaticstress.initialize(0);
 
   double hydrostress = 0;
@@ -340,7 +335,7 @@ void GaoDiffusion::scheduleComputeDivergence(Task* task, const MPMMaterial* matl
   task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,     gnone);
   task->requires(Task::NewDW, d_rdlb->gConcentrationNoBCLabel, gnone);
   task->requires(Task::NewDW, d_rdlb->gdCdtLabel,              gnone);
-  task->modifies(d_rdlb->gConcentrationRateLabel, matlset);
+  task->computes(d_rdlb->gConcentrationRateLabel, matlset);
   task->computes(d_rdlb->gConcentrationStarLabel, matlset);
 }
 
@@ -366,9 +361,10 @@ void GaoDiffusion::computeDivergence(const Patch* patch, const MPMMaterial* matl
   new_dw->get(gConc_OldNoBC, d_rdlb->gConcentrationNoBCLabel, dwi, patch,gnone,0);
   new_dw->get(gdCdt,         d_rdlb->gdCdtLabel,              dwi, patch,gnone,0);
 
-  new_dw->getModifiable(gConcRate,  d_rdlb->gConcentrationRateLabel, dwi,patch);
+  new_dw->allocateAndPut(gConcRate,  d_rdlb->gConcentrationRateLabel, dwi,patch);
   new_dw->allocateAndPut(gConcStar, d_rdlb->gConcentrationStarLabel, dwi,patch);
 
+  gConcRate.initialize(0.0);
   gConcStar.initialize(0.0);
 
   MPMBoundCond bc;
