@@ -459,7 +459,11 @@ void GaoDiffusion::interpolateToParticlesAndUpdate(const Patch* patch,
     }
 
     pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+		if(pConcentrationNew[idx] > max_concentration){
+		  pConcentrationNew[idx] = max_concentration;
+		}
     pConcPreviousNew[idx] = pConcentration[idx];
+		  
 	}
 	delete interpolator;
 }
