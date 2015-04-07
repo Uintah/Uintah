@@ -105,7 +105,6 @@ void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
 
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
-  task->computes(d_rdlb->gConcentrationRateLabel,  matlset);
 
   if(include_hydrostress){
     task->requires(Task::OldDW, d_lb->pStressLabel, matlset, gan, NGP);
@@ -148,7 +147,6 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
-  NCVariable<double> gconcentrationRate;
   NCVariable<double> ghydrostaticstress;
 
 
@@ -156,13 +154,9 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
 	                       dwi,  patch);
   new_dw->allocateAndPut(gconcentrationNoBC,  d_rdlb->gConcentrationNoBCLabel,
 	                       dwi,  patch);
-  new_dw->allocateAndPut(gconcentrationRate,  d_rdlb->gConcentrationRateLabel,
-	                       dwi,  patch);
-
 
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
-  gconcentrationRate.initialize(0);
 
   if(include_hydrostress){
     old_dw->get(pStress,        d_lb->pStressLabel,             pset);
