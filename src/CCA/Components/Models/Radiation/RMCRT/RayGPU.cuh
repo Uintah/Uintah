@@ -219,6 +219,20 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
                                    double& sumI,
                                    curandState* randNumStates,
                                    RMCRT_flags RT_flags);
+                                   
+//______________________________________________________________________
+//  Multi-level
+template< class T>
+ __device__ void updateSumI_MLDevice ( GPUVector& ray_direction,
+                                       GPUVector& ray_location,
+                                       const GPUIntVector& origin,
+                                       const GPUVector& Dx,
+                                       const GPUGridVariable< T >&  sigmaT4OverPi,
+                                       const GPUGridVariable< T >& abskg,
+                                       const GPUGridVariable<int>& celltype,
+                                       double& sumI,
+                                       curandState* randNumStates,
+                                       RMCRT_flags RT_flags);
 
 //______________________________________________________________________
 //
