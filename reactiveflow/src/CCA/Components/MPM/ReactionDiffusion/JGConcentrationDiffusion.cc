@@ -40,6 +40,7 @@ JGConcentrationDiffusion::JGConcentrationDiffusion(ProblemSpecP& ps, SimulationS
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 	
   ps->require("diffusivity",diffusivity);
+  ps->require("max_concentration",max_concentration);
 
   include_hydrostress = false;
 }
@@ -469,6 +470,9 @@ void JGConcentrationDiffusion::interpolateToParticlesAndUpdate(const Patch* patc
     }
 
     pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+		//if(pConcentrationNew[idx] > max_concentration){
+		//  pConcentrationNew[idx] = max_concentration;
+		//}
     pConcPreviousNew[idx] = pConcentration[idx];
 	}
 	delete interpolator;

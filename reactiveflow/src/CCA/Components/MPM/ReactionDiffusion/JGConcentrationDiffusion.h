@@ -91,6 +91,7 @@ namespace Uintah {
 
   private:
 		double diffusivity;
+		double max_concentration;
     bool include_hydrostress;
 
     JGConcentrationDiffusion(const JGConcentrationDiffusion&);
