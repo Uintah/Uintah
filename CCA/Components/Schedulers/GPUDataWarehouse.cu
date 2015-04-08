@@ -670,7 +670,7 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelID,
     printf("  ERROR: %s( \"%s\", levelID: %i, patchID: %i, matl: %i )  unknown variable\n\n", msg,  label, levelID, patchID, matlID);
     printThread();
     printBlock();
-    assert(0);
+    assert(0);            // FIXME!!! the code doesn't exit clean when we hit this assert.  This could be costly on big runs that land here.
   }
 #else
   printf("\t ERROR: %s( \"%s\", levelID: %i, patchID: %i, matl: %i )  unknown variable\n", msg, label, levelID, patchID, matlID);
