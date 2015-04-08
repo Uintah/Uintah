@@ -144,15 +144,12 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void reclaimCudaStreams( DetailedTask* dtask );
 
-    cudaError_t unregisterPageLockedHostMem();
-
     void freeCudaStreams();
 
     int  numDevices_;
     int  currentDevice_;
 
     std::vector<std::queue<cudaStream_t*> >  idleStreams;
-    std::set<void*>                          pinnedHostPtrs;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)
     mutable CrowdMonitor idleStreamsLock_;
