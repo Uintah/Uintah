@@ -1137,6 +1137,12 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
     int dwIndex = req->mapDataWarehouse();
     OnDemandDataWarehouseP dw = dws[dwIndex];
 
+    int maxLevels = dw->getGrid()->numLevels();
+    LevelP level_n = dw->getGrid()->getLevel(maxLevels - 1);
+    LevelP level_0 = dw->getGrid()->getLevel(0);
+    const Level* fineLevel = getLevel(dtask->getPatches());
+    int fineLevelIdx = level_n->getIndex();
+
     void* host_ptr = NULL;    // host base pointer to raw data
     void* device_ptr = NULL;  // device base pointer to raw data
     size_t host_bytes = 0;    // raw byte count to copy to the device
@@ -1150,8 +1156,17 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
         int matlID  = matls->get(j);
         int patchID = patches->get(i)->getID();
-        const Level* level = getLevel(dtask->getPatches());
-        int levelID = level->getID();
+
+        // multi-level check
+        int levelID = fineLevelIdx;
+        const Level* level = fineLevel;
+        if (fineLevelIdx > 0) {
+          if (req->patches_dom == Task::CoarseLevel) {
+            levelID = fineLevelIdx - req->level_offset;
+            ASSERT(levelID >= 0);
+            level = dw->getGrid()->getLevel(levelID).get_rep();
+          }
+        }
 
         const std::string reqVarName = req->var->getName();
 
