@@ -1808,10 +1808,11 @@ void Ray::computeCellType( const ProcessorGroup*,
   double intensity      = 1.0;
   double fs             = 1.0;
   int    nReflect       = 0;             // Number of reflections
+  bool   onFineLevel    = true;
+  const  Level* level   = fineLevel;
   double optical_thickness     = 0;
   double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
-  bool   onFineLevel    = true;
-  const Level* level    = fineLevel;
+
 
 
   //dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;

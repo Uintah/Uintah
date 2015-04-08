@@ -151,6 +151,8 @@ struct BoundaryFaces {
 enum DIR {X=0, Y=1, Z=2, NONE=-9};
 //           -x      +x       -y       +y     -z     +z
 enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};
+//
+enum ROI_algo{fixed, dynamic, patch_based};
 
 //______________________________________________________________________
 //
@@ -226,7 +228,12 @@ template< class T>
  __device__ void updateSumI_MLDevice ( GPUVector& ray_direction,
                                        GPUVector& ray_location,
                                        const GPUIntVector& origin,
-                                       const GPUVector& Dx,
+                                       const GPUVector Dx[],
+                                       double DyDx[],
+                                       double DzDx[],
+                                       gridParams gridP,
+                                       const GPUIntVector& fineLevel_ROI_Lo,
+                                       const GPUIntVector& fineLevel_ROI_Hi,
                                        const GPUGridVariable< T >&  sigmaT4OverPi,
                                        const GPUGridVariable< T >& abskg,
                                        const GPUGridVariable<int>& celltype,
@@ -272,6 +279,15 @@ inline HOST_DEVICE GPUVector operator*(const GPUVector& a, const GPUVector& b)
   return make_double3(a.x*b.x, a.y*b.y, a.z*b.z);
 }
 
+
+//__________________________________
+//  returns a += b
+inline HOST_DEVICE GPUVector operator+=(GPUVector& a, const GPUVector& b)
+{
+  return make_double3(a.x+=b.x, 
+                      a.y+=b.y, 
+                      a.z+=b.z);
+}
 
 //__________________________________
 //  returns gpuVector/scalar
