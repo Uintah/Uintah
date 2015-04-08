@@ -51,7 +51,7 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int pat
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
   }
   else {
-    printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, patchID, matlID, levelID);
+    printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, levelID, patchID, matlID);
   }
 }
 
@@ -65,7 +65,7 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int lev
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
   }
   else {
-    printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, -1, -1, levelID);
+    printGetError("levelDB GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, levelID, -1, -1);
   }
 }
 
@@ -79,7 +79,7 @@ GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, in
     var.setData(item->var_ptr);
   }
   else {
-    printGetError("GPUDataWarehouse::get(GPUReductionVariableBase& var, ...)", label, patchID, matlID, levelID);
+    printGetError("GPUDataWarehouse::get(GPUReductionVariableBase& var, ...)", label, levelID, patchID, matlID);
   }
 }
 
@@ -93,7 +93,7 @@ GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, int patchID
     var.setData(item->var_ptr);
   }
   else {
-    printGetError("GPUDataWarehouse::get(GPUPerPatchBase& var, ...)", label, patchID, matlID, levelID);
+    printGetError("GPUDataWarehouse::get(GPUPerPatchBase& var, ...)", label, levelID, patchID, matlID);
   }
 }
 
@@ -107,7 +107,7 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* label, int
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
   }
   else {
-    printGetError("GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, ...)", label, patchID, matlID, levelID);
+    printGetError("GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, ...)", label, levelID, patchID, matlID);
   }
 }
 
@@ -121,7 +121,7 @@ GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* label
     var.setData(item->var_ptr);
   }
   else {
-    printGetError("GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, ...)", label, patchID, matlID, levelID);
+    printGetError("GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, ...)", label, levelID, patchID, matlID);
   }
 }
 
@@ -135,7 +135,7 @@ GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, char const* label, int pat
     var.setData(item->var_ptr);
   }
   else {
-    printGetError("GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, ...)", label, patchID, matlID, levelID);
+    printGetError("GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, ...)", label, levelID, patchID, matlID);
   }
 }
 
@@ -192,7 +192,7 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int levelID, 
   int i = d_numLevelItems;
   d_numLevelItems++;
 
-  strncpy(d_varDB[i].label, label, MAX_NAME);
+  strncpy(d_levelDB[i].label, label, MAX_NAME);
   d_levelDB[i].domainID = -1;
   d_levelDB[i].matlID   = -1;
   d_levelDB[i].levelID  = levelID;
@@ -200,7 +200,7 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int levelID, 
   var.getArray3(d_levelDB[i].var_offset, d_levelDB[i].var_size, d_levelDB[i].var_ptr);
 
   if (d_debug) {
-    printf("host put \"%s\" (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label,  levelID, d_levelDB[i].var_ptr,
+    printf("host put level-var \"%s\" (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label,  levelID, d_levelDB[i].var_ptr,
            d_device_copy, d_device_id, d_levelDB[i].var_size.x, d_levelDB[i].var_size.y, d_levelDB[i].var_size.z);
   }
   d_dirty = true;
@@ -658,7 +658,7 @@ GPUDataWarehouse::clear()
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::printGetError(const char* msg, char const* label, int patchID, int matlID, int levelID /* = 0 */)
+GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelID, int patchID, int matlID)
 {
 #ifdef __CUDA_ARCH__
   __syncthreads();
