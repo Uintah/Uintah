@@ -465,8 +465,6 @@ if( tidX == 1 && tidY == 1) {
     }
   }
 
-#if 0
-
   //______________________________________________________________________
   //           R A D I O M E T E R
   //______________________________________________________________________
@@ -505,16 +503,22 @@ if( tidX == 1 && tidY == 1) {
           GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx[fineL],
                                                       DzDx[fineL], RT_flags.CCRays );
 
-          updateSumI_MLDevice< T >( ray_direction, ray_location, origin, Dx,  DyDx, DzDx, fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                                    sigmaT4OverPi, abskg, celltype, sumI, randNumStates, RT_flags);
+ #if 0
+          updateSumI_MLDevice< T >( ray_direction, ray_location, origin, 
+                                    Dx,  DyDx, DzDx, gridP,
+                                    fineLevel_ROI_Lo, fineLevel_ROI_Hi,
+                                    regionLo, regionHi,
+                                    sigmaT4OverPi, abskg, celltype, 
+                                    sumI, randNumStates, RT_flags);
+#endif
         } //Ray loop
 
         //__________________________________
         //  Compute divQ
-        divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/RT_flags.nDivQRays) );
+        divQ[origin] = 4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
 
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
-        radiationVolQ[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/RT_flags.nDivQRays) ;
+        radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] *  (sumI/RT_flags.nDivQRays) ;
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
@@ -525,9 +529,6 @@ if( tidX == 1 && tidY == 1) {
       }  // end z-slice loop
     }  // end ROI loop
   }  // solve divQ
-
-
-#endif
 
   // free up dynamically allocated items
   delete(abskg);
@@ -692,7 +693,9 @@ __device__ bool has_a_boundaryDevice(const GPUIntVector &c,
 //
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
-                                   const GPUVector& inv_direction_vector){
+                                   const GPUVector& 
+                                   inv_direction_vector)
+{
   // get new step and sign
   for ( int d= 0; d<3; d++ ){
 
@@ -706,6 +709,16 @@ __device__ void findStepSizeDevice(int step[],
   }
 }
 
+//______________________________________________________________________
+//
+__device__ bool containsCellDevice( GPUIntVector low, 
+                                    GPUIntVector high, 
+                                    GPUIntVector cell, 
+                                    const int dir)
+{
+  return  low[dir] <= cell[dir] &&
+          high[dir] > cell[dir];
+}
 
 //______________________________________________________________________
 //
@@ -954,6 +967,8 @@ __syncthreads();
                                         gridParams gridP,
                                         const GPUIntVector& fineLevel_ROI_Lo,
                                         const GPUIntVector& fineLevel_ROI_Hi,
+                                        const GPUIntVector regionLo[],
+                                        const GPUIntVector regionHi[],
                                         const GPUGridVariable< T >& sigmaT4OverPi,
                                         const GPUGridVariable< T >& abskg,
                                         const GPUGridVariable<int>& celltype,
@@ -1043,15 +1058,15 @@ __syncthreads();
       cur[dir]  = cur[dir] + step[dir];
       GPUVector dx_prev = Dx[L];           //  Used to compute coarsenRatio
 
-#if 0
+
       //__________________________________
       // Logic for moving between levels
       // currently you can only move from fine to coarse level
 
       //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
-      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
-
+      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
+      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCellDevice(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
+#if 0
       //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
       //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl;
 
