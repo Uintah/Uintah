@@ -196,6 +196,13 @@ __device__ bool has_a_boundaryDevice(const GPUIntVector& c,
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
                                    const GPUVector& inv_direction_vector);
+ 
+//______________________________________________________________________
+//
+__device__ bool containsCellDevice( GPUIntVector fineLevel_ROI_Lo, 
+                                    GPUIntVector fineLevel_ROI_Hi, 
+                                    GPUIntVector cell, 
+                                    const int dir); 
                                  
 //______________________________________________________________________
 //
@@ -234,6 +241,8 @@ template< class T>
                                        gridParams gridP,
                                        const GPUIntVector& fineLevel_ROI_Lo,
                                        const GPUIntVector& fineLevel_ROI_Hi,
+                                       const GPUIntVector  regionLo[],
+                                       const GPUIntVector  regionHi[],
                                        const GPUGridVariable< T >&  sigmaT4OverPi,
                                        const GPUGridVariable< T >& abskg,
                                        const GPUGridVariable<int>& celltype,
