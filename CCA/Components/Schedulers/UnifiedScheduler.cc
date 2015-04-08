@@ -1150,8 +1150,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
         int matlID  = matls->get(j);
         int patchID = patches->get(i)->getID();
-        int levelID = dw->getGrid()->getLevel(patchID)->getIndex();
         const Level* level = getLevel(dtask->getPatches());
+        int levelID = level->getID();
 
         const std::string reqVarName = req->var->getName();
 
