@@ -414,9 +414,9 @@ if( tidX == 1 && tidY == 1) {
   // coarse level data
   for (int l = 0; l < maxLevels; ++l) {
     if (hasFinerLevel[l]) {
-      abskg_gdw->get(abskg[l],           "abskg",    finePatch.ID, matl, l);
-      sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4",  finePatch.ID, matl, l);
-      celltype_gdw->get(celltype[l],     "cellType", finePatch.ID, matl, l);
+      abskg_gdw->get(abskg[l],           "abskg",    l);
+      sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4",  l);
+      celltype_gdw->get(celltype[l],     "cellType", l);
     }
   }
 #endif
@@ -517,12 +517,12 @@ if( isThread0_Blk0()) {
   }  // solve divQ
 
 
+#endif
 
   // free up dynamically allocated items
   delete(abskg);
   delete(sigmaT4OverPi);
   delete(celltype);
-#endif
 
 }
 
