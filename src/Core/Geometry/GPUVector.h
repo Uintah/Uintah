@@ -30,9 +30,10 @@
 namespace SCIRun {
 
 class gpuIntVector : public int3 {
-
+  int x_,y_,z_;
   public:
     HOST_DEVICE gpuIntVector() {}
+    HOST_DEVICE gpuIntVector(int x, int y, int z): x_(x), y_(y), z_(z) {}
     HOST_DEVICE int& operator[](const int& i) { return (&x)[i]; }
     HOST_DEVICE const int& operator[](const int& i) const { return (&x)[i]; }
     HOST_DEVICE gpuIntVector(const int3& copy):int3(copy) {}
@@ -63,9 +64,10 @@ class Float3 : public float3 {
 //______________________________________________________________________
 //
 class gpuVector : public double3 {
-
+  double x_,y_,z_;
   public:
     HOST_DEVICE gpuVector() {}
+    HOST_DEVICE gpuVector(double x, double y, double z): x_(x), y_(y), z_(z) {}
     HOST_DEVICE double& operator[](const int &i) { return (&x)[i]; }
     HOST_DEVICE const double& operator[](const int& i) const { return (&x)[i]; }
     HOST_DEVICE gpuVector(const double3& copy) : double3(copy) {}
