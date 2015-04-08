@@ -1142,6 +1142,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
     LevelP level_0 = dw->getGrid()->getLevel(0);
     const Level* fineLevel = getLevel(dtask->getPatches());
     int fineLevelIdx = level_n->getIndex();
+    bool isLevelItem = false;
 
     void* host_ptr = NULL;    // host base pointer to raw data
     void* device_ptr = NULL;  // device base pointer to raw data
@@ -1165,6 +1166,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             levelID = fineLevelIdx - req->level_offset;
             ASSERT(levelID >= 0);
             level = dw->getGrid()->getLevel(levelID).get_rep();
+            isLevelItem = true;
           }
         }
 
@@ -1274,19 +1276,34 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               switch (host_strides.x()) {
                 case sizeof(int) : {
                   GPUGridVariable<int> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  if (isLevelItem) {
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), device_low, device_hi, levelID);
+                  }
+                  else {
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  }
                   device_ptr = device_var.getPointer();
                   break;
                 }
                 case sizeof(double) : {
                   GPUGridVariable<double> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  if (isLevelItem) {
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), device_low, device_hi, levelID);
+                  }
+                  else {
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  }
                   device_ptr = device_var.getPointer();
                   break;
                 }
                 case sizeof(GPUStencil7) : {
                   GPUGridVariable<GPUStencil7> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  if (isLevelItem) {
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), device_low, device_hi, levelID);
+                  }
+                  else {
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  }
                   device_ptr = device_var.getPointer();
                   break;
                 }
@@ -1294,19 +1311,6 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                   SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + reqVarName, __FILE__, __LINE__));
                 }
               }
-
-              // The following is only efficient for large single copies. With multiple smaller copies
-              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-              // once we're doing large, single, aggregated cuda memcopies. [APH]
-//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//              if (!pinned) {
-//                // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                if (retVal == cudaSuccess) {
-//                  pinnedHostPtrs.insert(host_ptr);
-//                }
-//              }
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
@@ -1359,19 +1363,6 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             h2dRequiresLock_.writeLock();
             {
               dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, levelID);
-
-              // The following is only efficient for large single copies. With multiple smaller copies
-              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-              // once we're doing large, single, aggregated cuda memcopies. [APH]
-//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//              if (!pinned) {
-//                // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                if (retVal == cudaSuccess) {
-//                  pinnedHostPtrs.insert(host_ptr);
-//                }
-//              }
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
@@ -1735,19 +1726,6 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
               if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
                   && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
 
-                // The following is only efficient for large single copies. With multiple smaller copies
-                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-                // once we're doing large, single, aggregated cuda memcopies. [APH]
-//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//                if (!pinned) {
-//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                  if (retVal == cudaSuccess) {
-//                    pinnedHostPtrs.insert(host_ptr);
-//                  }
-//                }
-
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
@@ -1788,19 +1766,6 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
 
               // if size is equal to CPU DW, directly copy back to CPU var memory;
               if (host_bytes == device_bytes) {
-
-                // The following is only efficient for large single copies. With multiple smaller copies
-                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-                // once we're doing large, single, aggregated cuda memcopies. [APH]
-//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//                if (!pinned) {
-//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                  if (retVal == cudaSuccess) {
-//                    pinnedHostPtrs.insert(host_ptr);
-//                  }
-//                }
 
                 if (gpu_stats.active()) {
                   cerrLock.lock();
@@ -1999,24 +1964,6 @@ UnifiedScheduler::getCudaStream( int device )
   idleStreamsLock_.writeUnlock();
 
   return stream;
-}
-
-//______________________________________________________________________
-//
-
-cudaError_t
-UnifiedScheduler::unregisterPageLockedHostMem()
-{
-  cudaError_t retVal;
-  std::set<void*>::iterator iter;
-
-  // unregister the page-locked host memory
-  for (iter = pinnedHostPtrs.begin(); iter != pinnedHostPtrs.end(); iter++) {
-    CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(*iter));
-  }
-  pinnedHostPtrs.clear();
-
-  return retVal;
 }
 
 //______________________________________________________________________
