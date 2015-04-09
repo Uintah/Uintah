@@ -40792,6 +40792,9 @@ int
 main ()
 {
 
+                           char *mem = hypre_CAlloc(10,20);
+                           hypre_Free(mem);
+
   ;
   return 0;
 }
