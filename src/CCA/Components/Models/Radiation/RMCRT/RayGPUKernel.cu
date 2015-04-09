@@ -371,41 +371,55 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   // coarse level data for the entire level
   for (int l = 0; l < maxLevels; ++l) {
     if (levels[l].hasFinerLevel) {
-      abskg_gdw->get(abskg[l],           "abskg",    l);
-      sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4",  l);
-      celltype_gdw->get(celltype[l],     "cellType", l);
-      
-/*`==========TESTING==========*/
-if( isThread0() ){
-  printf(" AAA ");
-  GPUIntVector c = make_int3(0, 0, 0);
-  printf( "abskg: %g, ", abskg[l][c] );
-  printf( "sigmaT4OverPi: %g, ", sigmaT4OverPi[l][c] );
-  printf( "celltype: %i\n",      celltype[l][c] );
-} 
-/*===========TESTING==========`*/
+      abskg_gdw->get(abskg[l], "abskg", l);
+      sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4", l);
+      celltype_gdw->get(celltype[l], "cellType", l);
+
+      /*`==========TESTING==========*/
+      if (isThread0()) {
+        printf("\nCOARSE-LEVEL\n");
+        for (int i = levels[l].regionLo.x; i < levels[l].regionHi.x; i++) {
+          for (int j = levels[l].regionLo.y; j < levels[l].regionHi.y; j++) {
+            for (int k = levels[l].regionLo.z; k < levels[l].regionHi.z; k++) {
+              GPUIntVector idx = make_int3(i, j, k);
+              printf("[%d,%d,%d]:", i, j, k);
+              printf("    abskg: %f",        abskg         [l][idx]);
+              printf("    sigmaT4OverPi %f", sigmaT4OverPi [l][idx]);
+              printf("    celltype %d",      celltype      [l][idx]);
+              printf("\n");
+            }
+          }
+        }
+      }
+      /*===========TESTING==========`*/
     }
   }
   
-  
   //__________________________________
   //  fine level data for the region of interest
-  if ( RT_flags.whichROI_algo == fixed || RT_flags.whichROI_algo == dynamic ) {
+  if ( RT_flags.whichROI_algo == fixed || RT_flags.whichROI_algo == dynamic) {
 
-    // duct tape to get something running
-    abskg_gdw->get(abskg[fineL],           "abskg",    fineL);
-    sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4",  fineL);
-    celltype_gdw->get(celltype[fineL],     "cellType", fineL);
+    abskg_gdw->get(abskg[fineL], "abskg", finePatch.ID, matl, fineL);
+    sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4", finePatch.ID, matl, fineL);
+    celltype_gdw->get(celltype[fineL], "cellType", finePatch.ID, matl, fineL);
 
-/*`==========TESTING==========*/
-if( isThread0() ){
-  printf(" BBB ");
-  GPUIntVector c = make_int3(0, 0, 0);
-  printf( "abskg: %g, ", abskg[fineL][c] );
-  printf( "sigmaT4OverPi: %g, ", sigmaT4OverPi[fineL][c] );
-  printf( "celltype: %i\n",      celltype[fineL][c] );
-} 
-/*===========TESTING==========`*/
+    /*`==========TESTING==========*/
+    if (isThread0()) {
+      printf("\nFINE-LEVEL\n");
+      for (int i = fineLevel_ROI_Lo.x; i < fineLevel_ROI_Hi.x; i++) {
+        for (int j = fineLevel_ROI_Lo.y; j < fineLevel_ROI_Hi.y; j++) {
+          for (int k = fineLevel_ROI_Lo.z; k < fineLevel_ROI_Hi.z; k++) {
+            GPUIntVector idx = make_int3(i, j, k);
+            printf("[%d,%d,%d]:", i, j, k);
+            printf("    abskg: %f",        abskg         [fineL][idx]);
+            printf("    sigmaT4OverPi %f", sigmaT4OverPi [fineL][idx]);
+            printf("    celltype %d",      celltype      [fineL][idx]);
+            printf("\n");
+          }
+        }
+      }
+    }
+    /*===========TESTING==========`*/
 
   #if 0       // to be filled in
     abskg_dw->getRegion(   abskg[fineL]   ,       "abskg",    d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
@@ -439,7 +453,7 @@ if( isThread0() ){
         divQ[c]          = 0.0;
         radiationVolQ[c] = 0.0;
       }
-    }   
+    }
   }
 
   //______________________________________________________________________
