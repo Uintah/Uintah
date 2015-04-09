@@ -367,16 +367,6 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              patchParams patchP,
                                              gridParams gridP,
                                              levelParams* levelP,
-                                             //__________________________________
-                                             //  FIX ME
-                                             GPUVector Dx_0, GPUVector Dx_1, 
-                                             bool hasFinerLevel_0, bool hasFinerLevel_1,
-                                             double DyDx_0, double DyDx_1,
-                                             double DzDx_0, double DzDx_1,
-                                             GPUVector regionLo_0, GPUVector regionLo_1,
-                                             GPUVector regionHi_0, GPUVector regionHi_1,
-                                             GPUIntVector fineLevel_ROI_Lo, GPUIntVector fineLevel_ROI_Hi,
-                                             //__________________________________
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
                                              GPUDataWarehouse* abskg_gdw,
@@ -391,19 +381,8 @@ template< class T >
 __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          dim3 dimBlock,
                                          int matl,
-                                         patchParams patch,
+                                         patchParams finePatch,
                                          gridParams gridP,
-                                         levelParams* levelP,  // array of levelParam structs
-                                        //__________________________________
-                                        //  fix ME!!!
-                                         GPUVector Dx_0, GPUVector Dx_1,
-                                         bool hasFinerLevel_0, bool hasFinerLevel_1,
-                                         double DyDx_0, double DyDx_1,
-                                         double DzDx_0, double DzDx_1,
-                                         GPUVector regionLo_0, GPUVector regionLo_1,
-                                         GPUVector regionHi_0, GPUVector regionHi_1,
-                                         GPUIntVector fineLevel_ROI_Lo, GPUVector fineLevel_ROI_Hi,
-                                         //__________________________________
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,

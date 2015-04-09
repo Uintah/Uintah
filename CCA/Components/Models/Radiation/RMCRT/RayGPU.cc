@@ -256,41 +256,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     gridP.domain_BB.hi = make_double3( hi.x(), hi.y(), hi.z() );
 
     //__________________________________
-    //  Level Parameters
+    //  Level Parameters - first batch of level data
     levelParams levelP[maxLevels];
-    //______________________________________________________________________
-    //      FIX ME!!    
-    // Allocate host memory
-    bool hasFinerLevel_0, hasFinerLevel_1;
-    double DyDx_0, DyDx_1;
-    double DzDx_0, DzDx_1;
-    GPUVector Dx_0, Dx_1;
-
-    //__________________________________
-    // Retrieve fine level data
-    for (int l = 0; l < maxLevels; ++l) {
-      LevelP level = new_dw->getGrid()->getLevel(l);
-      SCIRun::Vector dx = level->dCell();
-      
-      if( l == 0 ){
-        hasFinerLevel_0 = level->hasFinerLevel();
-        Dx_0   = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
-        DyDx_0 = dx.y() / dx.x();
-        DzDx_0 = dx.z() / dx.x();
-      } else {
-        hasFinerLevel_1 = level->hasFinerLevel();
-        Dx_1   = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
-        DyDx_1 = dx.y() / dx.x();
-        DzDx_1 = dx.z() / dx.x();
-      }
-    }
-   //______________________________________________________________________
-   //
-
-    // Turn this on when 2-level hard-wiring is removed... this is computing correctly
-#if 1
-    //__________________________________
-    // Retrieve first batch of level data
     for (int l = 0; l < maxLevels; ++l) {
       LevelP level = new_dw->getGrid()->getLevel(l);      
       levelP[l].hasFinerLevel = level->hasFinerLevel();
@@ -300,7 +267,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       levelP[l].DzDx  = dx.z() / dx.x();
       levelP[l].Dx = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
     }
-#endif
 
     //__________________________________
     //   Assign dataWarehouses
@@ -330,7 +296,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     RT_flags.nFluxRays         = d_nFluxRays;
     RT_flags.whichROI_algo     = d_whichROI_algo;
 
-    
     double start = clock();
         
     //______________________________________________________________________
@@ -346,39 +311,17 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       IntVector fine_ROI_Hi = IntVector(-9,-9,-9);
       std::vector<IntVector> regionLo(maxLevels);
       std::vector<IntVector> regionHi(maxLevels);
-      
   
       //__________________________________
       // compute ROI the extents for "dynamic", "fixed" and "patch_based" ROI    
       computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,fine_ROI_Lo, fine_ROI_Hi, regionLo,  regionHi);
 
-      // Turn this on when 2-level hard-wiring is removed... this is computing correctly
-#if 1
-      printf("CPU levelParams\n");
       for (int l = 0; l < maxLevels; ++l) {
         IntVector rlo = regionLo[l];
         IntVector rhi = regionHi[l];
         levelP[l].regionLo = GPUIntVector(make_int3(rlo.x(), rlo.y(), rlo.z()));
         levelP[l].regionHi = GPUIntVector(make_int3(rhi.x(), rhi.y(), rhi.z()));
-        printf("Level-%d ", l);
-        levelP[l].print();
       }
-#endif
-      
-      //__________________________________
-      //  FIX ME!!!
-      GPUVector regionLo_0, regionLo_1;
-      GPUVector regionHi_0, regionHi_1;
-      
-      regionLo_0 = GPUVector(make_double3(regionLo[0].x(), regionLo[0].y(), regionLo[0].z()));
-      regionLo_1 = GPUVector(make_double3(regionLo[1].x(), regionLo[1].y(), regionLo[1].z()));
-      
-      regionHi_0 = GPUVector(make_double3(regionHi[0].x(), regionHi[0].y(), regionHi[0].z()));
-      regionHi_1 = GPUVector(make_double3(regionHi[1].x(), regionHi[1].y(), regionHi[1].z()));
-      
-      GPUIntVector fineLevel_ROI_Lo, fineLevel_ROI_Hi;
-      fineLevel_ROI_Lo = GPUIntVector(make_int3(fine_ROI_Lo.x(), fine_ROI_Lo.y(), fine_ROI_Lo.z()));
-      fineLevel_ROI_Hi = GPUIntVector(make_int3(fine_ROI_Hi.x(), fine_ROI_Hi.y(), fine_ROI_Hi.z()));
       
       //__________________________________
       //
@@ -438,16 +381,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                        patchP,
                                        gridP,
                                        levelP,
-                                       //__________________________________
-                                       //  FIX ME!!!
-                                       Dx_0, Dx_1,
-                                       hasFinerLevel_0, hasFinerLevel_1,
-                                       DyDx_0, DyDx_1,
-                                       DzDx_0, DzDx_1,
-                                       regionLo_0, regionLo_1,
-                                       regionHi_0, regionHi_1,
-                                       fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                                       //__________________________________
                                        (cudaStream_t*)stream,
                                        RT_flags, 
                                        abskg_gdw,
