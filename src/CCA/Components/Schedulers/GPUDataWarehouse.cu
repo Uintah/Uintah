@@ -408,8 +408,8 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlID, int levelI
   index = -1;
 
   if (d_debug && threadID == 0 && blockID == 0) {
-    printf("device getting item \"%s\" from GPUDW %p", label, this);
-    printf("size (%d vars)\n Available labels:", d_numItems);
+    printf("Getting device varDB item \"%s\" from GPUDW %p, size (%d vars)", label, this, d_numItems);
+    printf("  Available varDB labels: %d\n", MAX_ITEM - d_numItems);
   }
 
   //sync before get
@@ -477,8 +477,8 @@ GPUDataWarehouse::getLevelItem(char const* label, int levelID)
   index = -1;
 
   if (d_debug && threadID == 0 && blockID == 0) {
-    printf("device getting level item \"%s\" from GPUDW %p", label, this);
-    printf("size (%d vars)\n Available levelDB labels:", d_numLevelItems);
+    printf("Getting device levelDB item \"%s\" from GPUDW %p, size (%d vars)", label, this, d_numLevelItems);
+    printf("  Available levelDB labels: %d\n", MAX_LVITEM - d_numLevelItems);
   }
 
   //sync before get

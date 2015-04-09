@@ -327,18 +327,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          int matl,
                                          patchParams finePatch,
                                          gridParams gridP,
-                                         levelParams* levelP,  // array of levelParam structs
-                                         //__________________________________
-                                         //  FIX ME
-                                         GPUVector Dx_0, GPUVector Dx_1,
-                                         bool hasFinerLevel_0, bool hasFinerLevel_1,
-                                         double DyDx_0, double DyDx_1,
-                                         double DzDx_0, double DzDx_1,
-                                         GPUVector regionLo_0, GPUVector regionLo_1,
-                                         GPUVector regionHi_0, GPUVector regionHi_1,
-                                         //__________________________________
-                                         GPUIntVector fineLevel_ROI_Lo,
-                                         GPUIntVector fineLevel_ROI_Hi,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,
@@ -356,7 +344,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
 
-#if 1
+#if 0
   if (tidX == 1 && tidY == 1) {
     printf("\nGPU levelParams\n");
 
@@ -379,57 +367,10 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   const GPUGridVariable< T > abskg_fine;
   const GPUGridVariable< T > sigmaT4OverPi_fine;
 
-
-//__________________________________
-//  FIX ME!!!
-  __shared__ GPUVector Dx[2];      // HARDWIRED FOR 2 LEVELS
-  Dx[0] = Dx_0;
-  Dx[1] = Dx_1;
-
-  __shared__ bool hasFinerLevel[2];
-  hasFinerLevel[0] = hasFinerLevel_0;
-  hasFinerLevel[1] = hasFinerLevel_1;
-
-  __shared__ double DyDx[2];
-  DyDx[0] = DyDx_0;
-  DyDx[1] = DyDx_1;
-
-  __shared__ double DzDx[2];
-  DzDx[0] = DzDx_0;
-  DzDx[1] = DzDx_1;
-
-  __shared__ GPUVector regionLo[2];
-  regionLo[0] = regionLo_0;
-  regionLo[1] = regionLo_1;
-
-  __shared__ GPUVector regionHi[2];
-  regionHi[0] = regionHi_0;
-  regionHi[1] = regionHi_1;
-//__________________________________
-
-/*`==========TESTING==========*/
-  __syncthreads();
-  if( tidX == 1 && tidY == 1) {
-     printf( "  finePatch.ID: %i\n",finePatch.ID);
-     printf( "  finePatch.loEC: %i,%i,%i,  finePatch.HiEC: %i,%i,%i \n",finePatch.loEC.x, finePatch.loEC.y, finePatch.loEC.z, finePatch.hiEC.x, finePatch.hiEC.y, finePatch.hiEC.z);
-     printf( "  L-0, HasFinerLevel: %i ",hasFinerLevel_0);
-     printf( "  DyDx_0: %g, DzDx_0: %g \t", DyDx_0, DzDx_0);
-     printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_0.x, Dx_0.y, Dx_0.z);
-     printf( "  regionLo.x: %g, regionLo.y: %g, regionLo.z: %g \t",   regionLo_0.x, regionLo_0.y, regionLo_0.z );
-     printf( "  regionHi.x: %g, regionHi.y: %g, regionHi.z: %g \n", regionHi_0.x, regionHi_0.y, regionHi_0.z );
-
-     printf( "  L-1, HasFinerLevel: %i ", hasFinerLevel_1);
-     printf( "  DyDx_1: %g, DzDx_1: %g \t", DyDx_1, DzDx_1);
-     printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_1.x, Dx_1.y, Dx_1.z);
-     printf( "  regionLo.x: %g, regionLo.y: %g, regionLo.z: %g \t",   regionLo_1.x, regionLo_1.y, regionLo_1.z );
-     printf( "  regionHi.x: %g, regionHi.y: %g, regionHi.z: %g \n", regionHi_1.x, regionHi_1.y, regionHi_1.z );
-  }
-  /*===========TESTING==========`*/
-
   //__________________________________
   // coarse level data for the entire level
   for (int l = 0; l < maxLevels; ++l) {
-    if (hasFinerLevel[l]) {
+    if (levels[l].hasFinerLevel) {
       abskg_gdw->get(abskg[l],           "abskg",    l);
       sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4",  l);
       celltype_gdw->get(celltype[l],     "cellType", l);
@@ -1300,16 +1241,6 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              patchParams patch,
                                              gridParams gridP,
                                              levelParams* levelP,
-                                             //__________________________________
-                                             //  FIX ME !!!
-                                             GPUVector Dx_0, GPUVector Dx_1,
-                                             bool hasFinerLevel_0, bool hasFinerLevel_1,
-                                             double DyDx_0, double DyDx_1,
-                                             double DzDx_0, double DzDx_1,
-                                             GPUVector regionLo_0, GPUVector regionLo_1,
-                                             GPUVector regionHi_0, GPUVector regionHi_1,
-                                             GPUIntVector fineLevel_ROI_Lo, GPUIntVector fineLevel_ROI_Hi,
-                                             //__________________________________
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
                                              GPUDataWarehouse* abskg_gdw,
@@ -1335,17 +1266,6 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      matlIndex,
                                                                      patch,
                                                                      gridP,
-                                                                     levelP,
-                                                                     //__________________________________
-                                                                     //  FIX ME
-                                                                     Dx_0, Dx_1,
-                                                                     hasFinerLevel_0, hasFinerLevel_1,
-                                                                     DyDx_0, DyDx_1,
-                                                                     DzDx_0, DzDx_1,
-                                                                     regionLo_0, regionLo_1,
-                                                                     regionHi_0, regionHi_1,
-                                                                     fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                                                                     //__________________________________
                                                                      randNumStates,
                                                                      RT_flags,
                                                                      abskg_gdw,
@@ -1399,16 +1319,6 @@ __host__ void launchRayTraceDataOnionKernel<double>( dim3 dimGrid,
                                                      patchParams patch,
                                                      gridParams gridP,
                                                      levelParams*  levelP,
-                                                     //__________________________________
-                                                     //  FIX ME
-                                                     GPUVector Dx_0, GPUVector Dx_1,
-                                                     bool hasFinerLevel_0, bool hasFinerLevel_1,
-                                                     double DyDx_0, double DyDx_1,
-                                                     double DzDx_0, double DzDx_1,
-                                                     GPUVector regionLo_0, GPUVector regionLo_1,
-                                                     GPUVector regionHi_0, GPUVector regionHi_1,
-                                                     GPUIntVector fineLevel_ROI_Lo, GPUIntVector fineLevel_ROI_Hi,
-                                                     //__________________________________
                                                      cudaStream_t* stream,
                                                      RMCRT_flags RT_flags,
                                                      GPUDataWarehouse* abskg_gdw,
@@ -1426,16 +1336,6 @@ __host__ void launchRayTraceDataOnionKernel<float>( dim3 dimGrid,
                                                     patchParams patch,
                                                     gridParams gridP,
                                                     levelParams* levelP,
-                                                    //__________________________________
-                                                    //  FIX ME
-                                                    GPUVector Dx_0, GPUVector Dx_1,
-                                                    bool hasFinerLevel_0, bool hasFinerLevel_1,
-                                                    double DyDx_0, double DyDx_1,
-                                                    double DzDx_0, double DzDx_1,
-                                                    GPUVector regionLo_0, GPUVector regionLo_1,
-                                                    GPUVector regionHi_0, GPUVector regionHi_1,
-                                                    GPUIntVector fineLevel_ROI_Lo, GPUIntVector fineLevel_ROI_Hi,
-                                                    //__________________________________
                                                     cudaStream_t* stream,
                                                     RMCRT_flags RT_flags,
                                                     GPUDataWarehouse* abskg_gdw,
