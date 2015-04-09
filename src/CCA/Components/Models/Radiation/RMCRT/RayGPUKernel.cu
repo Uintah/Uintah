@@ -327,6 +327,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          int matl,
                                          patchParams finePatch,
                                          gridParams gridP,
+                                         GPUIntVector fineLevel_ROI_Lo,
+                                         GPUIntVector fineLevel_ROI_Hi,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,
@@ -344,7 +346,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
 
-#if 0
+#if 1
   if (tidX == 1 && tidY == 1) {
     printf("\nGPU levelParams\n");
 
@@ -361,11 +363,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   //__________________________________
   //
-  const GPUGridVariable<T>*  abskg         = new GPUGridVariable<T>[maxLevels];
-  const GPUGridVariable<T>*  sigmaT4OverPi = new GPUGridVariable<T>[maxLevels];
-  const GPUGridVariable<T>*  celltype      = new GPUGridVariable<T>[maxLevels];
-  const GPUGridVariable< T > abskg_fine;
-  const GPUGridVariable< T > sigmaT4OverPi_fine;
+  const GPUGridVariable<T>*    abskg         = new GPUGridVariable<T>[maxLevels];
+  const GPUGridVariable<T>*    sigmaT4OverPi = new GPUGridVariable<T>[maxLevels];
+  const GPUGridVariable<int>*  celltype      = new GPUGridVariable<int>[maxLevels];
 
   //__________________________________
   // coarse level data for the entire level
@@ -374,8 +374,20 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       abskg_gdw->get(abskg[l],           "abskg",    l);
       sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4",  l);
       celltype_gdw->get(celltype[l],     "cellType", l);
+      
+/*`==========TESTING==========*/
+if( isThread0() ){
+  printf(" AAA ");
+  GPUIntVector c = make_int3(0, 0, 0);
+  printf( "abskg: %g, ", abskg[l][c] );
+  printf( "sigmaT4OverPi: %g, ", sigmaT4OverPi[l][c] );
+  printf( "celltype: %i\n",      celltype[l][c] );
+} 
+/*===========TESTING==========`*/
     }
   }
+  
+  
   //__________________________________
   //  fine level data for the region of interest
   if ( RT_flags.whichROI_algo == fixed || RT_flags.whichROI_algo == dynamic ) {
@@ -385,6 +397,15 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4",  fineL);
     celltype_gdw->get(celltype[fineL],     "cellType", fineL);
 
+/*`==========TESTING==========*/
+if( isThread0() ){
+  printf(" BBB ");
+  GPUIntVector c = make_int3(0, 0, 0);
+  printf( "abskg: %g, ", abskg[fineL][c] );
+  printf( "sigmaT4OverPi: %g, ", sigmaT4OverPi[fineL][c] );
+  printf( "celltype: %i\n",      celltype[fineL][c] );
+} 
+/*===========TESTING==========`*/
 
   #if 0       // to be filled in
     abskg_dw->getRegion(   abskg[fineL]   ,       "abskg",    d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
@@ -409,16 +430,16 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     new_gdw->get( radiationVolQ,"radiationVolq", finePatch.ID, matl, fineL );
 
 
-//    //__________________________________
-//    // initialize Extra Cell Loop
-//    if (tidX >= finePatch.loEC.x && tidY >= finePatch.loEC.y && tidX < finePatch.hiEC.x && tidY < finePatch.hiEC.y) { // finePatch boundary check
-//      #pragma unroll
-//      for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
-//        GPUIntVector c = make_int3(tidX, tidY, z);
-//        divQ[c]          = 0.0;
-//        radiationVolQ[c] = 0.0;
-//      }
-//    }
+    //__________________________________
+    // initialize Extra Cell Loop
+    if (tidX >= finePatch.loEC.x && tidY >= finePatch.loEC.y && tidX < finePatch.hiEC.x && tidY < finePatch.hiEC.y) { // finePatch boundary check
+      #pragma unroll
+      for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
+        GPUIntVector c = make_int3(tidX, tidY, z);
+        divQ[c]          = 0.0;
+        radiationVolQ[c] = 0.0;
+      }
+    }   
   }
 
   //______________________________________________________________________
@@ -448,30 +469,33 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
-#if 0
+
+
         //__________________________________
         // ray loop
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
 
           GPUVector ray_direction = findRayDirectionDevice( randNumStates );
-          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx[fineL], DzDx[fineL], RT_flags.CCRays );
 
+          GPUVector ray_location = rayLocationDevice( randNumStates, origin, levels[fineL].DyDx, levels[fineL].DzDx , RT_flags.CCRays );
+#if 0
           updateSumI_MLDevice< T >( ray_direction, ray_location, origin,
-                                    Dx,  DyDx, DzDx, gridP,
+                                    levels.Dx,  levels.DyDx, levels.DzDx, gridP,
                                     fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                                    regionLo, regionHi,
+                                    levels.regionLo, levels.regionHi,
                                     sigmaT4OverPi, abskg, celltype,
                                     sumI, randNumStates, RT_flags);
+#endif
         } //Ray loop
 
+#if 0
         //__________________________________
         //  Compute divQ
         divQ[origin] = 4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
-
+#endif
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
         radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] *  (sumI/RT_flags.nDivQRays) ;
-#endif
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
@@ -977,8 +1001,8 @@ __syncthreads();
   double optical_thickness      = 0;
   double expOpticalThick_prev   = 1.0;
   bool   onFineLevel    = true;
- // const Level* level    = fineLevel;
 
+#if 0
   //______________________________________________________________________
   //  Threshold  loop
   while ( intensity > RT_flags.threshold ){
@@ -1019,7 +1043,7 @@ __syncthreads();
       //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
       bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
       bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCellDevice(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
-#if 0
+
       //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
       //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl;
 
@@ -1046,7 +1070,7 @@ __syncthreads();
 
 //      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
 
-#endif
+
 
       //__________________________________
       //  update marching variables
@@ -1063,7 +1087,7 @@ __syncthreads();
       //__________________________________
       // Account for uniqueness of first step after reaching a new level
       GPUVector dx = Dx[L];
-      GPUIntVector coarsenRatio = GPUIntVector(1,1,1);
+      GPUIntVector coarsenRatio = GPUIntVector( make_int3(1,1,1) );
 
       coarsenRatio[0] = dx[0]/dx_prev[0];
       coarsenRatio[1] = dx[1]/dx_prev[1];
@@ -1143,6 +1167,7 @@ if( origin == IntVector(20,20,20) ){
       ++nReflect;
     }
   }  // threshold while loop.
+#endif
 } // end of updateSumI function
 
 //---------------------------------------------------------------------------
@@ -1241,6 +1266,8 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              patchParams patch,
                                              gridParams gridP,
                                              levelParams* levelP,
+                                             GPUIntVector fineLevel_ROI_Lo,
+                                             GPUIntVector fineLevel_ROI_Hi,
                                              cudaStream_t* stream,
                                              RMCRT_flags RT_flags,
                                              GPUDataWarehouse* abskg_gdw,
@@ -1266,6 +1293,8 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      matlIndex,
                                                                      patch,
                                                                      gridP,
+                                                                     fineLevel_ROI_Lo,
+                                                                     fineLevel_ROI_Hi,
                                                                      randNumStates,
                                                                      RT_flags,
                                                                      abskg_gdw,
@@ -1319,6 +1348,8 @@ __host__ void launchRayTraceDataOnionKernel<double>( dim3 dimGrid,
                                                      patchParams patch,
                                                      gridParams gridP,
                                                      levelParams*  levelP,
+                                                     GPUIntVector fineLevel_ROI_Lo,
+                                                     GPUIntVector fineLevel_ROI_Hi,
                                                      cudaStream_t* stream,
                                                      RMCRT_flags RT_flags,
                                                      GPUDataWarehouse* abskg_gdw,
@@ -1336,6 +1367,8 @@ __host__ void launchRayTraceDataOnionKernel<float>( dim3 dimGrid,
                                                     patchParams patch,
                                                     gridParams gridP,
                                                     levelParams* levelP,
+                                                    GPUIntVector fineLevel_ROI_Lo,
+                                                    GPUIntVector fineLevel_ROI_Hi,
                                                     cudaStream_t* stream,
                                                     RMCRT_flags RT_flags,
                                                     GPUDataWarehouse* abskg_gdw,

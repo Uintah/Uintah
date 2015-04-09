@@ -307,23 +307,26 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       const Patch* finePatch = finePatches->get(p);
       printTask(finePatches, finePatch, dbggpu, "Doing Ray::rayTraceGPU");
       
-      IntVector fine_ROI_Lo = IntVector(-9,-9,-9);
-      IntVector fine_ROI_Hi = IntVector(-9,-9,-9);
+      IntVector ROI_Lo = IntVector(-9,-9,-9);
+      IntVector ROI_Hi = IntVector(-9,-9,-9);
       std::vector<IntVector> regionLo(maxLevels);
       std::vector<IntVector> regionHi(maxLevels);
   
       //__________________________________
       // compute ROI the extents for "dynamic", "fixed" and "patch_based" ROI    
-      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,fine_ROI_Lo, fine_ROI_Hi, regionLo,  regionHi);
-
+      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw, ROI_Lo, ROI_Hi, regionLo,  regionHi);
+      
+      // move everything into GPU vars
+      GPUIntVector fineLevel_ROI_Lo = GPUIntVector( make_int3(ROI_Lo.x(), ROI_Lo.y(), ROI_Lo.z()) );
+      GPUIntVector fineLevel_ROI_Hi = GPUIntVector( make_int3(ROI_Hi.x(), ROI_Hi.y(), ROI_Hi.z()) );
+      
       for (int l = 0; l < maxLevels; ++l) {
         IntVector rlo = regionLo[l];
         IntVector rhi = regionHi[l];
         levelP[l].regionLo = GPUIntVector(make_int3(rlo.x(), rlo.y(), rlo.z()));
         levelP[l].regionHi = GPUIntVector(make_int3(rhi.x(), rhi.y(), rhi.z()));
       }
-      
-      //__________________________________
+
       //
       // Calculate the memory block size
       const IntVector loEC = finePatch->getExtraCellLowIndex();
@@ -381,6 +384,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                        patchP,
                                        gridP,
                                        levelP,
+                                       fineLevel_ROI_Lo,
+                                       fineLevel_ROI_Hi,
                                        (cudaStream_t*)stream,
                                        RT_flags, 
                                        abskg_gdw,
