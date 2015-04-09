@@ -318,6 +318,9 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 //---------------------------------------------------------------------------
 // Kernel: The GPU ray tracer data onion kernel
 //---------------------------------------------------------------------------
+// hard-wired for 2-levels now, but this should be fast and fixes
+__constant__ levelParams levels[2];
+
 template< class T>
 __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          dim3 dimBlock,
@@ -353,8 +356,20 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
 
+#if 1
+  if (tidX == 1 && tidY == 1) {
+    printf("\nGPU levelParams\n");
+
+    printf("Level-0 ");
+    levels[0].print();
+
+    printf("Level-1 ");
+    levels[1].print();
+  }
+#endif
+
   int maxLevels = gridP.maxLevels;
-  int fineL = maxLevels -1;
+  int fineL = maxLevels - 1;
 
   //__________________________________
   //
@@ -394,22 +409,22 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
 /*`==========TESTING==========*/
   __syncthreads();
-if( tidX == 1 && tidY == 1) {
-   printf( "  finePatch.ID: %i\n",finePatch.ID);
-   printf( "  finePatch.loEC: %i,%i,%i,  finePatch.HiEC: %i,%i,%i \n",finePatch.loEC.x, finePatch.loEC.y, finePatch.loEC.z, finePatch.hiEC.x, finePatch.hiEC.y, finePatch.hiEC.z);
-   printf( "  L-0, HasFinerLevel: %i ",hasFinerLevel_0);
-   printf( "  DyDx_0: %g, DzDx_0: %g \t", DyDx_0, DzDx_0);
-   printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_0.x, Dx_0.y, Dx_0.z);
-   printf( "  regionLo.x: %g, regionLo.y: %g, regionLo.z: %g \t",   regionLo_0.x, regionLo_0.y, regionLo_0.z );
-   printf( "  regionHi.x: %g, regionHi.y: %g, regionHi.z: %g \n", regionHi_0.x, regionHi_0.y, regionHi_0.z );
+  if( tidX == 1 && tidY == 1) {
+     printf( "  finePatch.ID: %i\n",finePatch.ID);
+     printf( "  finePatch.loEC: %i,%i,%i,  finePatch.HiEC: %i,%i,%i \n",finePatch.loEC.x, finePatch.loEC.y, finePatch.loEC.z, finePatch.hiEC.x, finePatch.hiEC.y, finePatch.hiEC.z);
+     printf( "  L-0, HasFinerLevel: %i ",hasFinerLevel_0);
+     printf( "  DyDx_0: %g, DzDx_0: %g \t", DyDx_0, DzDx_0);
+     printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_0.x, Dx_0.y, Dx_0.z);
+     printf( "  regionLo.x: %g, regionLo.y: %g, regionLo.z: %g \t",   regionLo_0.x, regionLo_0.y, regionLo_0.z );
+     printf( "  regionHi.x: %g, regionHi.y: %g, regionHi.z: %g \n", regionHi_0.x, regionHi_0.y, regionHi_0.z );
 
-   printf( "  L-1, HasFinerLevel: %i ", hasFinerLevel_1);
-   printf( "  DyDx_1: %g, DzDx_1: %g \t", DyDx_1, DzDx_1);
-   printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_1.x, Dx_1.y, Dx_1.z);
-   printf( "  regionLo.x: %g, regionLo.y: %g, regionLo.z: %g \t",   regionLo_1.x, regionLo_1.y, regionLo_1.z );
-   printf( "  regionHi.x: %g, regionHi.y: %g, regionHi.z: %g \n", regionHi_1.x, regionHi_1.y, regionHi_1.z );
-}
-/*===========TESTING==========`*/
+     printf( "  L-1, HasFinerLevel: %i ", hasFinerLevel_1);
+     printf( "  DyDx_1: %g, DzDx_1: %g \t", DyDx_1, DzDx_1);
+     printf( "  Dx.x: %g Dx.y: %g Dx.z: %g \t", Dx_1.x, Dx_1.y, Dx_1.z);
+     printf( "  regionLo.x: %g, regionLo.y: %g, regionLo.z: %g \t",   regionLo_1.x, regionLo_1.y, regionLo_1.z );
+     printf( "  regionHi.x: %g, regionHi.y: %g, regionHi.z: %g \n", regionHi_1.x, regionHi_1.y, regionHi_1.z );
+  }
+  /*===========TESTING==========`*/
 
   //__________________________________
   // coarse level data for the entire level
@@ -453,16 +468,16 @@ if( tidX == 1 && tidY == 1) {
     new_gdw->get( radiationVolQ,"radiationVolq", finePatch.ID, matl, fineL );
 
 
-    //__________________________________
-    // initialize Extra Cell Loop
-    if (tidX >= finePatch.loEC.x && tidY >= finePatch.loEC.y && tidX < finePatch.hiEC.x && tidY < finePatch.hiEC.y) { // finePatch boundary check
-      #pragma unroll
-      for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
-        GPUIntVector c = make_int3(tidX, tidY, z);
-        divQ[c]          = 0.0;
-        radiationVolQ[c] = 0.0;
-      }
-    }
+//    //__________________________________
+//    // initialize Extra Cell Loop
+//    if (tidX >= finePatch.loEC.x && tidY >= finePatch.loEC.y && tidX < finePatch.hiEC.x && tidY < finePatch.hiEC.y) { // finePatch boundary check
+//      #pragma unroll
+//      for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
+//        GPUIntVector c = make_int3(tidX, tidY, z);
+//        divQ[c]          = 0.0;
+//        radiationVolQ[c] = 0.0;
+//      }
+//    }
   }
 
   //______________________________________________________________________
@@ -492,25 +507,21 @@ if( tidX == 1 && tidY == 1) {
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
-
+#if 0
         //__________________________________
         // ray loop
         #pragma unroll
         for (int iRay = 0; iRay < RT_flags.nDivQRays; iRay++) {
 
           GPUVector ray_direction = findRayDirectionDevice( randNumStates );
+          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx[fineL], DzDx[fineL], RT_flags.CCRays );
 
-          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx[fineL],
-                                                      DzDx[fineL], RT_flags.CCRays );
-
- #if 0
-          updateSumI_MLDevice< T >( ray_direction, ray_location, origin, 
+          updateSumI_MLDevice< T >( ray_direction, ray_location, origin,
                                     Dx,  DyDx, DzDx, gridP,
                                     fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                                     regionLo, regionHi,
-                                    sigmaT4OverPi, abskg, celltype, 
+                                    sigmaT4OverPi, abskg, celltype,
                                     sumI, randNumStates, RT_flags);
-#endif
         } //Ray loop
 
         //__________________________________
@@ -519,6 +530,7 @@ if( tidX == 1 && tidY == 1) {
 
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
         radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] *  (sumI/RT_flags.nDivQRays) ;
+#endif
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
@@ -1309,7 +1321,11 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
   // setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
-  CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, numStates * sizeof(curandState)) );
+  CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, (numStates * sizeof(curandState))) );
+
+  // copy levelParams array to constant memory on device
+  int maxLevels = gridP.maxLevels;
+  CUDA_RT_SAFE_CALL(cudaMemcpyToSymbol(levels, levelP, (maxLevels * sizeof(levelParams))));
 
 
   setupRandNumKernel<<< dimGrid, dimBlock>>>( randNumStates );

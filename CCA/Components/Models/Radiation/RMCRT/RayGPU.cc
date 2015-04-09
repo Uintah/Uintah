@@ -286,13 +286,12 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     }
    //______________________________________________________________________
    //
-    
-#if 0    
+
+    // Turn this on when 2-level hard-wiring is removed... this is computing correctly
+#if 1
     //__________________________________
-    // Retrieve fine level data
+    // Retrieve first batch of level data
     for (int l = 0; l < maxLevels; ++l) {
-    
-      
       LevelP level = new_dw->getGrid()->getLevel(l);      
       levelP[l].hasFinerLevel = level->hasFinerLevel();
 
@@ -300,12 +299,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       levelP[l].DyDx  = dx.y() / dx.x();
       levelP[l].DzDx  = dx.z() / dx.x();
       levelP[l].Dx = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
-
-      IntVector rlo = regionLo[l];
-      IntVector rhi = regionHi[l];
-      levelP[l].regionLo = GPUIntVector(make_int3(rlo.x(), rlo.y(), rlo.z()));
-      levelP[l].regionHi = GPUIntVector(make_int3(rhi.x(), rhi.y(), rhi.z()));
-      levelP[l].print();
     }
 #endif
 
@@ -358,7 +351,19 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       //__________________________________
       // compute ROI the extents for "dynamic", "fixed" and "patch_based" ROI    
       computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,fine_ROI_Lo, fine_ROI_Hi, regionLo,  regionHi);
-      
+
+      // Turn this on when 2-level hard-wiring is removed... this is computing correctly
+#if 1
+      printf("CPU levelParams\n");
+      for (int l = 0; l < maxLevels; ++l) {
+        IntVector rlo = regionLo[l];
+        IntVector rhi = regionHi[l];
+        levelP[l].regionLo = GPUIntVector(make_int3(rlo.x(), rlo.y(), rlo.z()));
+        levelP[l].regionHi = GPUIntVector(make_int3(rhi.x(), rhi.y(), rhi.z()));
+        printf("Level-%d ", l);
+        levelP[l].print();
+      }
+#endif
       
       //__________________________________
       //  FIX ME!!!
