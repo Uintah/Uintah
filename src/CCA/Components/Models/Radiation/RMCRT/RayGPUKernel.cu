@@ -346,7 +346,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
 
-#if 1
+#if 0
   if (tidX == 1 && tidY == 1) {
     printf("\nGPU levelParams\n");
 
@@ -375,6 +375,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4", l);
       celltype_gdw->get(celltype[l], "cellType", l);
 
+#if 0
       /*`==========TESTING==========*/
       if (isThread0()) {
         printf("\nCOARSE-LEVEL\n");
@@ -392,6 +393,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         }
       }
       /*===========TESTING==========`*/
+#endif
     }
   }
   
@@ -403,6 +405,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4", finePatch.ID, matl, fineL);
     celltype_gdw->get(celltype[fineL], "cellType", finePatch.ID, matl, fineL);
 
+#if 0
     /*`==========TESTING==========*/
     if (isThread0()) {
       printf("\nFINE-LEVEL\n");
@@ -420,6 +423,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       }
     }
     /*===========TESTING==========`*/
+#endif
 
   #if 0       // to be filled in
     abskg_dw->getRegion(   abskg[fineL]   ,       "abskg",    d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
@@ -476,6 +480,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //         S O L V E   D I V Q
   //______________________________________________________________________
   if( RT_flags.solveDivQ ) {
+
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
     if (tidX >= finePatch.lo.x && tidY >= finePatch.lo.y && tidX < finePatch.hi.x && tidY < finePatch.hi.y) { // finePatch boundary check
       #pragma unroll
@@ -507,9 +512,10 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         //__________________________________
         //  Compute divQ
         divQ[origin] = 4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
-#endif
+
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
         radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] *  (sumI/RT_flags.nDivQRays) ;
+#endif
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
