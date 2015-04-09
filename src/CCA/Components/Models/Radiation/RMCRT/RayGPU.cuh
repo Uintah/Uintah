@@ -32,12 +32,136 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
+#define __CUDA_INTERNAL_COMPILATION__
+#include "math_functions.h"               // needed for max()
+#undef __CUDA_INTERNAL_COMPILATION__ 
+
 namespace Uintah {
 
 typedef SCIRun::gpuIntVector GPUIntVector;
 typedef SCIRun::gpuVector    GPUVector;
 typedef SCIRun::gpuPoint     GPUPoint;
 
+//______________________________________________________________________
+//
+//__________________________________
+//  returns gpuVector * scalar
+inline HOST_DEVICE GPUVector operator*(const GPUVector & a, double b)
+{
+  return make_double3(a.x*b, a.y*b, a.z*b);
+}
+
+//__________________________________
+//  returns gpuVector * scalar
+inline HOST_DEVICE GPUVector operator*(double b, const GPUVector & a)
+{
+  return make_double3(a.x*b, a.y*b, a.z*b);
+}
+
+//__________________________________
+//  returns gpuVector * gpuVector
+inline HOST_DEVICE GPUVector operator*(const GPUVector& a, const GPUVector& b)
+{
+  return make_double3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
+//__________________________________
+//  returns gpuVector * gpuIntVector
+inline HOST_DEVICE GPUVector operator*(const GPUVector& a, const GPUIntVector& b)
+{
+  return make_double3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+//__________________________________
+//  returns a += b
+inline HOST_DEVICE GPUVector operator+=(GPUVector& a, const GPUVector& b)
+{
+  return make_double3(a.x+=b.x, 
+                      a.y+=b.y, 
+                      a.z+=b.z);
+}
+
+//__________________________________
+//  returns gpuVector/scalar
+inline HOST_DEVICE GPUVector operator/(const GPUVector & a, double b)
+{
+  b = 1.0f / b;
+  return a*b;
+}
+
+//__________________________________
+//  returns scalar/gpuVector
+inline HOST_DEVICE GPUVector operator/(double a, const GPUVector& b)
+{
+  return make_double3( a/b.x, a/b.y, a/b.z);
+}
+
+//__________________________________
+//  returns abs
+inline HOST_DEVICE GPUVector Abs(const GPUVector& v)
+{
+  double x = v.x < 0 ? -v.x:v.x;
+  double y = v.y < 0 ? -v.y:v.y;
+  double z = v.z < 0 ? -v.z:v.z;
+  return make_double3(x,y,z);
+}
+
+//__________________________________
+//  returns const gpuIntVector + const gpuIntVector
+inline HOST_DEVICE GPUIntVector operator+(const GPUIntVector& a, const GPUIntVector& b)
+{
+  return make_int3(a.x+b.x, a.y+b.y, a.z+b.z);
+}
+
+//__________________________________
+//  returns const gpuIntVector / const gpuIntVector
+inline HOST_DEVICE GPUIntVector operator/(const GPUIntVector& a, const GPUIntVector& b)
+{
+  return make_int3(a.x/b.x, a.y/b.y, a.z/b.z);
+}
+
+//__________________________________
+//  returns const gpuIntVector / gpuIntVector
+inline HOST_DEVICE GPUIntVector operator/( const GPUIntVector& a, GPUIntVector& b)
+{
+  return make_int3(a.x/b.x, a.y/b.y, a.z/b.z);
+}
+
+//__________________________________
+//  returns const gpuIntVector * const gpuIntVector
+inline HOST_DEVICE GPUIntVector operator*(const GPUIntVector& a, const GPUIntVector& b)
+{
+  return make_int3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
+//__________________________________
+//  returns gpuIntVector * gpuIntVector
+inline HOST_DEVICE GPUIntVector operator*(GPUIntVector& a, const GPUIntVector& b)
+{
+  return make_int3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
+//__________________________________
+//  returns gpuIntVector * gpuIntVector
+inline HOST_DEVICE GPUIntVector operator*( GPUIntVector& a, GPUIntVector& b)
+{
+  return make_int3(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
+//__________________________________
+//  returns gpuIntVector + gpuIntVector
+inline HOST_DEVICE GPUIntVector operator+(GPUIntVector& a, GPUIntVector& b)
+{
+  return make_int3(a.x+b.x, a.y+b.y, a.z+b.z);
+}
+
+//__________________________________
+//  returns gpuPoint + gpuVector
+inline HOST_DEVICE GPUPoint operator+(GPUPoint& p, GPUVector& b)
+{
+  return make_double3(p.x+b.x, p.y+b.y, p.z+b.z);
+}
+//______________________________________________________________________
+//
 //______________________________________________________________________
 //
 struct varLabelNames {
@@ -62,20 +186,77 @@ struct patchParams {
     int          ID;          // patch ID
 };
 
+
+
 //______________________________________________________________________
 //
 struct levelParams {
     double       DyDx;
     double       DzDx;
-    GPUVector    Dx;
+    GPUVector    Dx;                // cell spacing
     GPUIntVector regionLo;
     GPUIntVector regionHi;
     bool         hasFinerLevel;
+    int          index;             // level index
+    GPUIntVector refinementRatio;
+    GPUPoint     anchor;            // level anchor
     
+#if 0    
+    level = level->getCoarserLevel().get_rep();      // move to a coarser level
+    Point pos = level->getCellPosition(cur);         // position could be outside of domai
+#endif
+   //__________________________________
+   //
+    __host__ __device__ 
+    int getCoarserLevelIndex() {
+      int coarserLevel = max(index-1, 0 );
+      return coarserLevel; 
+    } 
+
+    //__________________________________
+    //  GPU version of level::getCellPosition()
+    __device__
+    GPUPoint getCellPosition(const GPUIntVector& cell)
+    { 
+      double x = anchor.x + (Dx.x * cell.x) + (0.5 * Dx.x);
+      double y = anchor.y + (Dx.y * cell.y) + (0.5 * Dx.y);
+      double z = anchor.z + (Dx.z * cell.z) + (0.5 * Dx.z);
+      return make_double3(x,y,z);
+    }
+    
+    
+    //__________________________________
+    //  GPU version of level::mapCellToCoarser()
+    __device__
+    GPUIntVector mapCellToCoarser(const GPUIntVector& idx)
+    { 
+      GPUIntVector ratio = idx/refinementRatio;
+
+      // If the fine cell index is negative
+      // you must add an offset to get the right
+      // coarse cell. -Todd
+      GPUIntVector offset = make_int3(0,0,0);
+     
+      if (idx.x < 0 && refinementRatio.x  > 1){
+        offset.x = (int)fmod( (double)idx.x, (double)refinementRatio.x ) ;
+      }
+      if (idx.y < 0 && refinementRatio.y > 1){
+        offset.y = (int)fmod( (double)idx.y, (double)refinementRatio.y );
+      }  
+
+      if (idx.z < 0 && refinementRatio.z > 1){
+        offset.z = (int) fmod((double)idx.z, (double)refinementRatio.z );
+      }
+      return ratio + offset;
+    }
+   
+    //__________________________________
+    //
     __host__ __device__ 
     void print() {
       printf( " LevelParams: hasFinerlevel: %i DyDz: %g  DzDz: %g, Dx: [%g,%g,%g] ",hasFinerLevel,DyDx,DzDx, Dx.x,Dx.y, Dx.z);
       printf( " regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n  ",regionLo.x, regionLo.y, regionLo.z, regionHi.x, regionHi.y, regionHi.z);
+      printf( " RefineRatio: [%i,%i,%i] ",refinementRatio.x, refinementRatio.y, refinementRatio.z);
     }
 };
 
@@ -265,66 +446,7 @@ __device__ double randDevice(curandState* randNumStates);
 __device__ unsigned int hashDevice(unsigned int a);
 
 
-//__________________________________
-//  returns gpuVector * scalar
-inline HOST_DEVICE GPUVector operator*(const GPUVector & a, double b)
-{
-  return make_double3(a.x*b, a.y*b, a.z*b);
-}
 
-
-//__________________________________
-//  returns gpuVector * scalar
-inline HOST_DEVICE GPUVector operator*(double b, const GPUVector & a)
-{
-  return make_double3(a.x*b, a.y*b, a.z*b);
-}
-
-
-//__________________________________
-//  returns gpuVector * gpuVector
-inline HOST_DEVICE GPUVector operator*(const GPUVector& a, const GPUVector& b)
-{
-  return make_double3(a.x*b.x, a.y*b.y, a.z*b.z);
-}
-
-
-//__________________________________
-//  returns a += b
-inline HOST_DEVICE GPUVector operator+=(GPUVector& a, const GPUVector& b)
-{
-  return make_double3(a.x+=b.x, 
-                      a.y+=b.y, 
-                      a.z+=b.z);
-}
-
-//__________________________________
-//  returns gpuVector/scalar
-inline HOST_DEVICE GPUVector operator/(const GPUVector & a, double b)
-{
-  b = 1.0f / b;
-  return a*b;
-}
-
-
-//__________________________________
-//  returns scalar/gpuVector
-inline HOST_DEVICE GPUVector operator/(double a, const GPUVector& b)
-{
-  return make_double3( a/b.x, a/b.y, a/b.z);
-}
-
-
-//__________________________________
-//  returns abs
-inline HOST_DEVICE GPUVector Abs(const GPUVector& v)
-{
-
-  double x = v.x < 0 ? -v.x:v.x;
-  double y = v.y < 0 ? -v.y:v.y;
-  double z = v.z < 0 ? -v.z:v.z;
-  return make_double3(x,y,z);
-}
 
 //______________________________________________________________________
 //

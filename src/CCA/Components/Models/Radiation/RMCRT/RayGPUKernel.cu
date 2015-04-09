@@ -459,6 +459,28 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       }
     }
   }
+  
+#if 0
+  /*`==========TESTING==========*/
+  if( isThread0() ){
+    GPUIntVector c = make_int3(16, 16, 16);
+    GPUPoint p = levels[0].getCellPosition(c);
+    printf( "GPU c :[%i,%i,%i], cc: [%f,%f,%f] \n",c.x, c.y, c.z, p.x, p.y, p.z );
+
+    c = make_int3(15, -1, 3);
+    GPUIntVector cc = levels[0].mapCellToCoarser(c);
+    printf( "GPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x, c.y, c.z, cc.x, cc.y, cc.z );
+
+    c = make_int3(16, 16, 16);
+    p = levels[fineL].getCellPosition(c);
+    printf( "GPU c :[%i,%i,%i], cc: [%f,%f,%f] \n",c.x, c.y, c.z, p.x, p.y, p.z );
+
+    c = make_int3(15, -1, 3);
+    cc = levels[fineL].mapCellToCoarser(c);
+    printf( "GPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x, c.y, c.z, cc.x, cc.y, cc.z );
+  } 
+/*===========TESTING==========`*/
+#endif
 
   //______________________________________________________________________
   //           R A D I O M E T E R

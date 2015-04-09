@@ -263,9 +263,23 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       levelP[l].hasFinerLevel = level->hasFinerLevel();
 
       SCIRun::Vector dx = level->dCell();
+      levelP[l].Dx    = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
       levelP[l].DyDx  = dx.y() / dx.x();
       levelP[l].DzDx  = dx.z() / dx.x();
-      levelP[l].Dx = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
+      levelP[l].index = level->getIndex();
+      Point anchor    = level->getAnchor();
+      levelP[l].anchor = GPUPoint( make_double3(anchor.x(), anchor.y(), anchor.z()));
+      IntVector RR = level->getRefinementRatio();
+      levelP[l].refinementRatio = GPUIntVector( make_int3(RR.x(), RR.y(), RR.z() ) );
+
+  IntVector c = IntVector(16, 16, 16);
+  Point p = level->getCellPosition(c);
+  printf( "CPU c :[%i,%i,%i], P: [%f,%f,%f] \n",c.x(), c.y(), c.z(), p.x(), p.y(), p.z() );
+  
+  c = IntVector(15, -1, 3);
+  IntVector cc = level->mapCellToCoarser(c);
+  printf( "CPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x(), c.y(), c.z(), cc.x(), cc.y(), cc.z() );
+
     }
 
     //__________________________________
