@@ -261,6 +261,17 @@ struct levelParams {
 struct BoundingBox {
     GPUPoint lo;
     GPUPoint hi;
+
+    __device__
+    bool inside(GPUPoint p)
+    {
+      return ( p.x >= lo.x && 
+               p.y >= lo.y && 
+               p.z >= lo.z && 
+               p.x <= hi.x && 
+               p.y <= hi.y && 
+               p.z <= hi.z );
+    }
 };
 
 //______________________________________________________________________
