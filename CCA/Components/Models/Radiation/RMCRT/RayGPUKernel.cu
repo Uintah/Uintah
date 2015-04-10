@@ -36,7 +36,7 @@
 #include <curand_kernel.h>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG 1 // 1: divQ, 2: boundFlux, 3: scattering
 //#define FIXED_RANDOM_NUM
 
 
@@ -47,7 +47,7 @@
 //  - Implement getRegion()  Currently can only pull fineLevel patch out from gpuDW with halo[0,0,0]
 //  - Implement fixed and dynamic ROI.
 //  - dynamic block size?
-//  - Implement labelNames in unified memory. 
+//  - Implement labelNames in unified memory.
 //  - investigate the performance with different patch configurations
 //  - deterministic random numbers
 //  - Ray steps
@@ -339,7 +339,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,
                                          GPUDataWarehouse* sigmaT4_gdw,
-                                         GPUDataWarehouse* celltype_gdw,
+                                         GPUDataWarehouse* cellType_gdw,
                                          GPUDataWarehouse* old_gdw,
                                          GPUDataWarehouse* new_gdw )
 {
@@ -371,7 +371,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   //
   const GPUGridVariable<T>*    abskg         = new GPUGridVariable<T>[maxLevels];
   const GPUGridVariable<T>*    sigmaT4OverPi = new GPUGridVariable<T>[maxLevels];
-  const GPUGridVariable<int>*  celltype      = new GPUGridVariable<int>[maxLevels];
+  const GPUGridVariable<int>*  cellType      = new GPUGridVariable<int>[maxLevels];
 
   //__________________________________
   // coarse level data for the entire level
@@ -379,7 +379,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     if (d_levels[l].hasFinerLevel) {
       abskg_gdw->get(abskg[l], "abskg", l);
       sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4", l);
-      celltype_gdw->get(celltype[l], "cellType", l);
+      cellType_gdw->get(cellType[l], "cellType", l);
 
 #if 0
       /*`==========TESTING==========*/
@@ -392,7 +392,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
               printf("[%d,%d,%d]:", i, j, k);
               printf("    abskg: %f",        abskg         [l][idx]);
               printf("    sigmaT4OverPi %f", sigmaT4OverPi [l][idx]);
-              printf("    celltype %d",      celltype      [l][idx]);
+              printf("    cellType %d",      cellType      [l][idx]);
               printf("\n");
             }
           }
@@ -402,14 +402,14 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 #endif
     }
   }
-  
+
   //__________________________________
   //  fine level data for the region of interest
   if ( RT_flags.whichROI_algo == patch_based ) {
 
     abskg_gdw->get(abskg[fineL], "abskg", finePatch.ID, matl, fineL);
     sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4", finePatch.ID, matl, fineL);
-    celltype_gdw->get(celltype[fineL], "cellType", finePatch.ID, matl, fineL);
+    cellType_gdw->get(cellType[fineL], "cellType", finePatch.ID, matl, fineL);
 
 #if 0
     /*`==========TESTING==========*/
@@ -422,7 +422,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
             printf("[%d,%d,%d]:", i, j, k);
             printf("    abskg: %f",        abskg         [fineL][idx]);
             printf("    sigmaT4OverPi %f", sigmaT4OverPi [fineL][idx]);
-            printf("    celltype %d",      celltype      [fineL][idx]);
+            printf("    cellType %d",      cellType      [fineL][idx]);
             printf("\n");
           }
         }
@@ -434,7 +434,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   #if 0       // to be filled in
     abskg_dw->getRegion(   abskg[fineL]   ,       "abskg",    d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
     sigmaT4_dw->getRegion( sigmaT4OverPi[fineL] , "sigmaT4",  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-    celltype_dw->getRegion( cellType[fineL] ,     "cellType", d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
+    cellType_dw->getRegion( cellType[fineL] ,     "cellType", d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
   #endif
   }
 
@@ -465,7 +465,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       }
     }
   }
-  
+
 #if 0
   /*`==========TESTING==========*/
   if( isThread0() ){
@@ -484,7 +484,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     c = make_int3(15, -1, 3);
     cc = d_levels[fineL].mapCellToCoarser(c);
     printf( "GPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x, c.y, c.z, cc.x, cc.y, cc.z );
-  } 
+  }
 /*===========TESTING==========`*/
 #endif
 
@@ -514,6 +514,14 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       #pragma unroll
       for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
 
+
+
+/*`==========TESTING==========*/
+if( tidX != 1 || tidY != 1 ){
+  return;
+}
+/*===========TESTING==========`*/
+
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
 
@@ -531,12 +539,12 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   // FIXME
           updateSumI_MLDevice< T >( ray_direction, ray_location, origin, gridP,
                                     fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                                    sigmaT4OverPi, 
-                                    abskg, 
-                                    celltype,
+                                    sigmaT4OverPi,
+                                    abskg,
+                                    cellType,
                                     sumI, randNumStates,
                                     RT_flags);
-                                    
+
 #endif
 
 //______________________________________________________________________
@@ -545,9 +553,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         /*`==========TESTING==========*/
         #if DEBUG == 1
-          if( origin == IntVector(20,20,20) ) {
-            printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
-          }
+          //if( origin == IntVector(20,20,20) ) {
+            printf("        updateSumI_ML: [%i,%i,%i] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
+          //}
         #endif
         /*===========TESTING==========`*/
           int maxLevels = gridP.maxLevels;   // for readability
@@ -591,7 +599,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
           double expOpticalThick_prev   = 1.0;
           bool   onFineLevel    = true;
 
-
           //______________________________________________________________________
           //  Threshold  loop
 
@@ -632,29 +639,27 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
               bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
               bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCellDevice(d_levels[L].regionLo, d_levels[L].regionHi, cur, dir) == false && L > 0 );
 
+              //printf( "[%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i \n", cur.x, cur.y, cur.z,jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
+              //        containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
 
-intensity = 0;
-in_domain = false;
-#if 0
               if( jumpFinetoCoarserLevel ){
                 cur = d_levels[L].mapCellToCoarser(cur);
                 L   = d_levels[L].getCoarserLevelIndex();      // move to a coarser level
                 onFineLevel = false;
+                //printf( " ** ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x, cur.y, cur.z);
 
                } else if ( jumpCoarsetoCoarserLevel ){
 
                 GPUIntVector c_old = cur;
                 cur = d_levels[L].mapCellToCoarser(cur);
                 L   = d_levels[L].getCoarserLevelIndex();      // move to a coarser level
+                //printf( " ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x, cur.y, cur.z, c_old.x, c_old.y, c_old.z);
               }
 
-
-              Point pos = level->getCellPosition(cur);         // position could be outside of domain
-              in_domain = domain_BB.inside(pos);
+              GPUPoint pos = d_levels[L].getCellPosition(cur);         // position could be outside of domain
+              in_domain = gridP.domain_BB.inside(pos);
 
         //      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
-
-
 
               //__________________________________
               //  update marching variables
@@ -667,10 +672,9 @@ in_domain = false;
               ray_location.y = ray_location.y + (disMin  * ray_direction.y);
               ray_location.z = ray_location.z + (disMin  * ray_direction.z);
 
-
               //__________________________________
               // Account for uniqueness of first step after reaching a new level
-              GPUVector dx = Dx[L];
+              GPUVector dx = d_levels[L].Dx;
               GPUIntVector coarsenRatio = GPUIntVector( make_int3(1,1,1) );
 
               coarsenRatio[0] = dx[0]/dx_prev[0];
@@ -691,17 +695,17 @@ in_domain = false;
 
          /*`==========TESTING==========*/
         #if DEBUG == 1
-        if(origin == IntVector(20,20,20)){
-            printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+        //if(origin == IntVector(20,20,20)){
+            printf( "            cur [%i,%i,%i] prev [%i,%i,%i]", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
             printf( " face %d ", dir );
-            printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
-            printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
-            printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
-            printf( "disMin %g \n",disMin );
+            printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
+            printf( "rayLoc [%g,%g,%g] ", ray_location.x,ray_location.y, ray_location.z);
+            printf( "inv_dir [%g,%g,%g] ",inv_ray_direction.x,inv_ray_direction.y, inv_ray_direction.z);
+            printf( "disMin %g inDomain %i\n",disMin, in_domain );
 
             printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
             printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-        }
+        //}
         #endif
         /*===========TESTING==========`*/
 
@@ -712,12 +716,10 @@ in_domain = false;
               sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
               expOpticalThick_prev = expOpticalThick;
-        
-#endif
+
             } //end domain while loop.  ++++++++++++++
             //__________________________________
             //
-
             double wallEmissivity = abskg[L][cur];
 
             if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one.
@@ -737,11 +739,11 @@ in_domain = false;
 
         /*`==========TESTING==========*/
         #if DEBUG == 1
-        if( origin == IntVector(20,20,20) ){
-            printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
-                   cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
+        //if( origin == IntVector(20,20,20) ){
+            printf( "            cur [%i,%i,%i] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
+                   cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs, RT_flags.allowReflect );
 
-        }
+        //}
         #endif
         /*===========TESTING==========`*/
             //__________________________________
@@ -750,33 +752,30 @@ in_domain = false;
               reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir]);
               ++nReflect;
             }
-
           }  // threshold while loop.
 
 //______________________________________________________________________
 //
 //______________________________________________________________________
 
-
-
-
         } //Ray loop
 
-#if 0
+#if 1
         //__________________________________
         //  Compute divQ
         divQ[origin] = 4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
 
         // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
         radiationVolQ[origin] = 4.0 * M_PI * abskg[fineL][origin] *  (sumI/RT_flags.nDivQRays) ;
-#endif
+
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
-                    origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
+                    origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
 #endif
 /*===========TESTING==========`*/
+#endif
       }  // end z-slice loop
     }  // end ROI loop
   }  // solve divQ
@@ -784,7 +783,7 @@ in_domain = false;
   // free up dynamically allocated items
   delete(abskg);
   delete(sigmaT4OverPi);
-  delete(celltype);
+  delete(cellType);
 
 }
 
@@ -944,7 +943,7 @@ __device__ bool has_a_boundaryDevice(const GPUIntVector &c,
 //
 __device__ void findStepSizeDevice(int step[],
                                    bool sign[],
-                                   const GPUVector& 
+                                   const GPUVector&
                                    inv_direction_vector)
 {
   // get new step and sign
@@ -962,9 +961,9 @@ __device__ void findStepSizeDevice(int step[],
 
 //______________________________________________________________________
 //
-__device__ bool containsCellDevice( GPUIntVector low, 
-                                    GPUIntVector high, 
-                                    GPUIntVector cell, 
+__device__ bool containsCellDevice( GPUIntVector low,
+                                    GPUIntVector high,
+                                    GPUIntVector cell,
                                     const int dir)
 {
   return  low[dir] <= cell[dir] &&
@@ -1223,257 +1222,6 @@ __syncthreads();
                                         RMCRT_flags RT_flags)
 {
 
-
-#if 0
-  /*`==========TESTING==========*/
-//if (isThread0()) {
-  int l = 0;
-  printf("\NCOARSELEVEL\n");
-  for (int i = d_levels[l].regionLo.x; i < d_levels[l].regionHi.x; i++) {
-    for (int j = d_levels[l].regionLo.y; j < d_levels[l].regionHi.y; j++) {
-      for (int k = d_levels[l].regionLo.z; k < d_levels[l].regionHi.z; k++) {
-        GPUIntVector idx = make_int3(i, j, k);
-        printf("[%d,%d,%d]:", i, j, k);
-        printf("    abskg: %f",        abskg         [l][idx]);
-        printf("    sigmaT4OverPi %f", sigmaT4OverPi [l][idx]);
-        printf("    celltype %d",      celltype      [l][idx]);
-        printf("\n");
-      }
-    }
-  }
- l = 1;
-  printf("\nFINE-LEVEL\n");
-  for (int i = fineLevel_ROI_Lo.x; i < fineLevel_ROI_Hi.x; i++) {
-    for (int j = fineLevel_ROI_Lo.y; j < fineLevel_ROI_Hi.y; j++) {
-      for (int k = fineLevel_ROI_Lo.z; k < fineLevel_ROI_Hi.z; k++) {
-        GPUIntVector idx = make_int3(i, j, k);
-        printf("[%d,%d,%d]:", i, j, k);
-        printf("    abskg: %f",        abskg         [l][idx]);
-        printf("    sigmaT4OverPi %f", sigmaT4OverPi [l][idx]);
-        printf("    celltype %d",      celltype      [l][idx]);
-        printf("\n");
-      }
-    }
-  }
-//} 
-
-
-  /*===========TESTING==========`*/
-#endif
-return;
-
-/*`==========TESTING==========*/
-#if DEBUG == 1
-  if( origin == IntVector(20,20,20) ) {
-    printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
-  }
-#endif
-/*===========TESTING==========`*/
-  int maxLevels = gridP.maxLevels;   // for readability
-  int L       = maxLevels -1;       // finest level
-  int prevLev = L;
-  
-  GPUIntVector cur = origin;
-  GPUIntVector prevCell = cur;
-  // Step and sign for ray marching
-  int step[3];                                          // Gives +1 or -1 based on sign
-  bool sign[3];
-
-  GPUVector inv_ray_direction = 1.0/ray_direction;
-  findStepSizeDevice(step, sign, inv_ray_direction);
-
-  //__________________________________
-  // define tMax & tDelta on all levels
-  // go from finest to coarset level so you can compare
-  // with 1L rayTrace results.
-  GPUVector tMax;         // (mixing bools, ints and doubles)
-  tMax.x = (origin.x + sign[0]                    - ray_location.x) * inv_ray_direction.x ;
-  tMax.y = (origin.y + sign[1] * d_levels[L].DyDx - ray_location.y) * inv_ray_direction.y ;
-  tMax.z = (origin.z + sign[2] * d_levels[L].DzDx - ray_location.z) * inv_ray_direction.z ;
-
-  __shared__ GPUVector tDelta[2];                               // HARDWIRED FOR 2 LEVELS!!!
-  for(int Lev = maxLevels-1; Lev>-1; Lev--){
-    //Length of t to traverse one cell
-    tDelta[Lev].x = fabs(inv_ray_direction[0]);
-    tDelta[Lev].y = fabs(inv_ray_direction[1]) * d_levels[Lev].DyDx;
-    tDelta[Lev].z = fabs(inv_ray_direction[2]) * d_levels[Lev].DzDx;
-  }
-
-
-  //Initializes the following values for each ray
-  bool in_domain     = true;
-  double tMax_prev   = 0;
-  double intensity   = 1.0;
-  double fs          = 1.0;
-  int nReflect       = 0;                 // Number of reflections
-  double optical_thickness      = 0;
-  double expOpticalThick_prev   = 1.0;
-  bool   onFineLevel    = true;
-
-
-  //______________________________________________________________________
-  //  Threshold  loop
-  while ( intensity > RT_flags.threshold ){
-
-    DIR dir = NONE;
-
-    while (in_domain){
-
-      prevCell = cur;
-      prevLev  = L;
-      double disMin = -9;          // Represents ray segment length.
-
-      //__________________________________
-      //  Determine which cell the ray will enter next
-      if ( tMax.x < tMax.y ){        // X < Y
-        if ( tMax.x < tMax.z ){      // X < Z
-          dir = X;
-        } else {
-          dir = Z;
-        }
-      } else {
-        if( tMax.y < tMax.z ){       // Y < Z
-          dir = Y;
-        } else {
-          dir = Z;
-        }
-      }
-
-      // next cell index and position
-      cur[dir]  = cur[dir] + step[dir];
-      GPUVector dx_prev = d_levels[L].Dx;           //  Used to compute coarsenRatio
-
-      //__________________________________
-      // Logic for moving between levels
-      // currently you can only move from fine to coarse level
-
-      //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
-      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCellDevice(d_levels[L].regionLo, d_levels[L].regionHi, cur, dir) == false && L > 0 );
-
-      //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
-      //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl;
-#if 0
-      if( jumpFinetoCoarserLevel ){
-        cur   = level->mapCellToCoarser(cur);
-        level = level->getCoarserLevel().get_rep();      // move to a coarser level
-        L     = level->getIndex();
-        onFineLevel = false;
-
-        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
-        //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
-      } else if ( jumpCoarsetoCoarserLevel ){
-
-        IntVector c_old = cur;
-        cur   = level->mapCellToCoarser(cur);
-        level = level->getCoarserLevel().get_rep();
-        L     = level->getIndex();
-
-        //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
-      }
-
-      Point pos = level->getCellPosition(cur);         // position could be outside of domain
-      in_domain = domain_BB.inside(pos);
-
-//      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
-
-
-
-      //__________________________________
-      //  update marching variables
-      cur[dir]   = cur[dir] + step[dir];
-      disMin     = (tMax[dir] - tMax_prev);
-      tMax_prev  = tMax[dir];
-      tMax[dir]  = tMax[dir] + tDelta[L][dir];
-
-      ray_location.x = ray_location.x + (disMin  * ray_direction.x);
-      ray_location.y = ray_location.y + (disMin  * ray_direction.y);
-      ray_location.z = ray_location.z + (disMin  * ray_direction.z);
-
-
-      //__________________________________
-      // Account for uniqueness of first step after reaching a new level
-      GPUVector dx = Dx[L];
-      GPUIntVector coarsenRatio = GPUIntVector( make_int3(1,1,1) );
-
-      coarsenRatio[0] = dx[0]/dx_prev[0];
-      coarsenRatio[1] = dx[1]/dx_prev[1];
-      coarsenRatio[2] = dx[2]/dx_prev[2];
-
-      GPUVector lineup;
-      for (int ii=0; ii<3; ii++){
-        if (sign[ii]) {
-          lineup[ii] = -(cur[ii] % coarsenRatio[ii] - (coarsenRatio[ii] - 1 ));
-        }
-        else {
-          lineup[ii] = cur[ii] % coarsenRatio[ii];
-        }
-      }
-
-      tMax += lineup * tDelta[prevLev];
-
- /*`==========TESTING==========*/
-#if DEBUG == 1
-if(origin == IntVector(20,20,20)){
-    printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
-    printf( " face %d ", dir );
-    printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
-    printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
-    printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
-    printf( "disMin %g \n",disMin );
-
-    printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
-    printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-}
-#endif
-/*===========TESTING==========`*/
-
-      optical_thickness += d_levels[prevLev].Dx.x * abskg[prevLev][prevCell]*disMin;
-
-      double expOpticalThick = exp(-optical_thickness);
-
-      sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
-
-      expOpticalThick_prev = expOpticalThick;
-#endif
-
-    } //end domain while loop.  ++++++++++++++
-    //__________________________________
-    //
-
-    double wallEmissivity = abskg[L][cur];
-
-    if (wallEmissivity > 1.0){       // Ensure wall emissivity doesn't exceed one.
-      wallEmissivity = 1.0;
-    }
-
-    intensity = exp(-optical_thickness);
-
-    sumI += wallEmissivity * sigmaT4OverPi[L][cur] * intensity;
-
-    intensity = intensity * fs;
-
-
-    // when a ray reaches the end of the domain, we force it to terminate.
-    if( !RT_flags.allowReflect ) intensity = 0;
-
-
-/*`==========TESTING==========*/
-#if DEBUG == 1
-if( origin == IntVector(20,20,20) ){
-    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
-           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
-
-}
-#endif
-/*===========TESTING==========`*/
-    //__________________________________
-    //  Reflections
-    if ( (intensity > RT_flags.threshold) && RT_flags.allowReflect){
-      reflect( fs, cur, prevCell, abskg[L][cur], in_domain, step[dir], sign[dir], ray_direction[dir]);
-      ++nReflect;
-    }
-  }  // threshold while loop.
 } // end of updateSumI function
 
 //---------------------------------------------------------------------------
