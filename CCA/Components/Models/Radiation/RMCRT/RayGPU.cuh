@@ -200,11 +200,7 @@ struct levelParams {
     int          index;             // level index
     GPUIntVector refinementRatio;
     GPUPoint     anchor;            // level anchor
-    
-#if 0    
-    level = level->getCoarserLevel().get_rep();      // move to a coarser level
-    Point pos = level->getCellPosition(cur);         // position could be outside of domai
-#endif
+
    //__________________________________
    //
     __host__ __device__ 
@@ -412,21 +408,17 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
                                    
 //______________________________________________________________________
 //  Multi-level
+
 template< class T>
  __device__ void updateSumI_MLDevice ( GPUVector& ray_direction,
                                        GPUVector& ray_location,
                                        const GPUIntVector& origin,
-                                       const GPUVector Dx[],
-                                       double DyDx[],
-                                       double DzDx[],
                                        gridParams gridP,
                                        const GPUIntVector& fineLevel_ROI_Lo,
                                        const GPUIntVector& fineLevel_ROI_Hi,
-                                       const GPUIntVector  regionLo[],
-                                       const GPUIntVector  regionHi[],
-                                       const GPUGridVariable< T >&  sigmaT4OverPi,
-                                       const GPUGridVariable< T >& abskg,
-                                       const GPUGridVariable<int>& celltype,
+                                       const GPUGridVariable< T >*  sigmaT4OverPi,
+                                       const GPUGridVariable< T >* abskg,
+                                       const GPUGridVariable<int>* celltype,
                                        double& sumI,
                                        curandState* randNumStates,
                                        RMCRT_flags RT_flags);
