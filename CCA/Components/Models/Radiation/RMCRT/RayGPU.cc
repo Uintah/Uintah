@@ -272,13 +272,17 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       IntVector RR = level->getRefinementRatio();
       levelP[l].refinementRatio = GPUIntVector( make_int3(RR.x(), RR.y(), RR.z() ) );
 
+/*`==========TESTING==========*/
+#if 0
   IntVector c = IntVector(16, 16, 16);
   Point p = level->getCellPosition(c);
   printf( "CPU c :[%i,%i,%i], P: [%f,%f,%f] \n",c.x(), c.y(), c.z(), p.x(), p.y(), p.z() );
   
   c = IntVector(15, -1, 3);
   IntVector cc = level->mapCellToCoarser(c);
-  printf( "CPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x(), c.y(), c.z(), cc.x(), cc.y(), cc.z() );
+  printf( "CPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x(), c.y(), c.z(), cc.x(), cc.y(), cc.z() ); 
+#endif
+/*===========TESTING==========`*/
 
     }
 
