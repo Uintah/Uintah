@@ -70,7 +70,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     size_t size;
     cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
     cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
-    printf(" Increasing the size of the print buffer to %d bytes\n", (int)10 * size );
+    printf(" Increasing the size of the print buffer to %lu bytes\n", (int)10 * size );
 #endif
 
     //__________________________________
