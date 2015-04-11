@@ -32,6 +32,7 @@
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
+#include <Core/Thread/CrowdMonitor.h>
 
 #define MAX_ITEM   100
 #define MAX_LVITEM 100
@@ -43,7 +44,16 @@ class GPUDataWarehouse {
 
 public:
 
-           GPUDataWarehouse() { d_device_copy=NULL; d_numItems=0;  d_device_id=0; d_debug=true; d_dirty=true; }
+           GPUDataWarehouse() : varDBLock("var DB lock"), levelDBLock("level DB lock")
+           {
+             d_device_copy   = NULL;
+             d_numItems      = 0;
+             d_numLevelItems = 0;
+             d_device_id     = 0;
+             d_debug         = true;
+             d_dirty         = true;
+           }
+
   virtual ~GPUDataWarehouse() {}
 
   HOST_DEVICE void get( const GPUGridVariableBase&      var, char const* label, int patchID, int matlID, int levelID = 0 );
@@ -99,6 +109,9 @@ private:
   bool               d_dirty;                // whether or not this variable needs to be updated
   dataItem           d_varDB[MAX_ITEM];      // holds GPUVariables (per patch)
   dataItem           d_levelDB[MAX_LVITEM];  // hold variables referenced per level (not used yet)
+
+  mutable SCIRun::CrowdMonitor varDBLock;
+  mutable SCIRun::CrowdMonitor levelDBLock;
 
 };
 

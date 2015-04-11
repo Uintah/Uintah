@@ -152,6 +152,10 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int patchID, 
   //cpu code 
   if (d_numItems == MAX_ITEM) {
     printf("Out of GPUDataWarehouse space.  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_ITEMS.");
+
+    // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
+    varDBLock.writeUnlock();
+
     exit(-1);
   }
 
@@ -186,6 +190,10 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int levelID, 
   //cpu code
   if (d_numLevelItems == MAX_LVITEM) {
     printf("Out of GPUDataWarehouse levelDB space.  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_LVITEM.");
+
+    // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
+    levelDBLock.writeUnlock();
+
     exit(-1);
   }
 
@@ -283,6 +291,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device. All device memory should be allocated on the CPU with cudaMalloc\n", label);
 #else
+
+  varDBLock.writeLock();
   //__________________________________
   //  cpu code
   cudaError_t retVal;
@@ -303,6 +313,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
 
   var.setArray3(offset, size, addr);
   put(var, label, patchID, matlID, levelID);
+  varDBLock.writeUnlock();
 
 #endif
 }
@@ -315,6 +326,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device. All device memory should be allocated on the CPU with cudaMalloc\n", label);
 #else
+
+  levelDBLock.writeLock();
   //__________________________________
   //  cpu code
   cudaError_t retVal;
@@ -335,6 +348,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
 
   var.setArray3(offset, size, addr);
   put(var, label, levelID);
+
+  levelDBLock.writeUnlock();
 
 #endif
 }
