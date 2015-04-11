@@ -36,7 +36,7 @@
 #include <curand_kernel.h>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG 1 // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
 //#define FIXED_RANDOM_NUM
 
 
@@ -115,7 +115,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
 
     // Extra Cell Loop
-    if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
+    if ( (tidX >= patch.loEC.x) && (tidY >= patch.loEC.y) && (tidX < patch.hiEC.x) && (tidY < patch.hiEC.y) ) { // patch boundary check
       #pragma unroll
       for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
         GPUIntVector c = make_int3(tidX, tidY, z);
@@ -136,7 +136,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
     printf( "outside loops thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
   }
 
-  if (tidX >= patch.loEC.x && tidY >= patch.loEC.y && tidX < patch.hiEC.x && tidY < patch.hiEC.y) { // patch boundary check
+  if ( (tidX >= patch.loEC.x) && (tidY >= patch.loEC.y) && (tidX < patch.hiEC.x) && (tidY < patch.hiEC.y) ) { // patch boundary check
     for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
       GPUIntVector c = make_int3(tidX, tidY, z);
       divQ[c] = 0;
@@ -147,7 +147,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
     }
   }
 
-  if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+  if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y)) { // patch boundary check
     for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
       GPUIntVector c = make_int3(tidX, tidY, z);
       if (c.y == 2 && c.z == 2 ) {
@@ -214,7 +214,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
     //__________________________________
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
-    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+    if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y) ) { // patch boundary check
       #pragma unroll
       for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
 
@@ -284,7 +284,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //______________________________________________________________________
   if( RT_flags.solveDivQ ){
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
-    if (tidX >= patch.lo.x && tidY >= patch.lo.y && tidX < patch.hi.x && tidY < patch.hi.y) { // patch boundary check
+    if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y) ) { // patch boundary check
       #pragma unroll
       for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
 
@@ -352,7 +352,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   int tidX = threadIdx.x + blockIdx.x * blockDim.x + finePatch.loEC.x;
   int tidY = threadIdx.y + blockIdx.y * blockDim.y + finePatch.loEC.y;
 
-#if 1
+#if 0
   if (tidX == 1 && tidY == 1) {
     printf("\nGPU levelParams\n");
 
@@ -456,7 +456,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
     //__________________________________
     // initialize Extra Cell Loop
-    if (tidX >= finePatch.loEC.x && tidY >= finePatch.loEC.y && tidX < finePatch.hiEC.x && tidY < finePatch.hiEC.y) { // finePatch boundary check
+    if ( (tidX >= finePatch.loEC.x) && (tidY >= finePatch.loEC.y) && (tidX < finePatch.hiEC.x) && (tidY < finePatch.hiEC.y) ) { // finePatch boundary check
       #pragma unroll
       for (int z = finePatch.loEC.z; z < finePatch.hiEC.z; z++) { // loop through z slices
         GPUIntVector c = make_int3(tidX, tidY, z);
@@ -503,28 +503,27 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   }
 
 
-
+#if 0
   //______________________________________________________________________
   //         S O L V E   D I V Q
   //______________________________________________________________________
   if( RT_flags.solveDivQ ) {
 
     // GPU equivalent of GridIterator loop - calculate sets of rays per thread
-    if (tidX >= finePatch.lo.x && tidY >= finePatch.lo.y && tidX < finePatch.hi.x && tidY < finePatch.hi.y) { // finePatch boundary check
+    if ( (tidX >= finePatch.lo.x) && (tidY >= finePatch.lo.y) && (tidX < finePatch.hi.x) && (tidY < finePatch.hi.y) ) { // finePatch boundary check
       #pragma unroll
       for (int z = finePatch.lo.z; z < finePatch.hi.z; z++) { // loop through z slices
 
-
-
+        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
 /*`==========TESTING==========*/
-if( tidX != 1 || tidY != 1 ){
-  return;
-}
+        GPUIntVector dbgCell = make_int3(0,0,0);
+        if( origin != dbgCell ){
+          return;
+        }
+        printf ("HERE .... \n");
 /*===========TESTING==========`*/
 
-        GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
         double sumI = 0;
-
 
         //__________________________________
         // ray loop
@@ -552,10 +551,12 @@ if( tidX != 1 || tidY != 1 ){
 //______________________________________________________________________
 
         /*`==========TESTING==========*/
+        bool test = ( origin == dbgCell );
+        printf( " origin: [%i,%i,%i], conditional %i \n", origin.x, origin.y, origin.z, test);
         #if DEBUG == 1
-          //if( origin == IntVector(20,20,20) ) {
+          if( origin == dbgCell ) {
             printf("        updateSumI_ML: [%i,%i,%i] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
-          //}
+          }
         #endif
         /*===========TESTING==========`*/
           int maxLevels = gridP.maxLevels;   // for readability
@@ -636,24 +637,37 @@ if( tidX != 1 || tidY != 1 ){
               //__________________________________
               // Logic for moving between levels
               // currently you can only move from fine to coarse level
-              bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-              bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCellDevice(d_levels[L].regionLo, d_levels[L].regionHi, cur, dir) == false && L > 0 );
-
-              //printf( "[%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i \n", cur.x, cur.y, cur.z,jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
-              //        containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
+              bool jumpFinetoCoarserLevel   = ( onFineLevel && (containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false) );
+              bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && (containsCellDevice(d_levels[L].regionLo, d_levels[L].regionHi, cur, dir) == false) && (L > 0) );
+         
+       #if DEBUG == 1
+              if( origin == dbgCell ) {
+                printf( "[%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i \n", cur.x, cur.y, cur.z,jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
+                       containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
+              }
+        #endif
 
               if( jumpFinetoCoarserLevel ){
                 cur = d_levels[L].mapCellToCoarser(cur);
                 L   = d_levels[L].getCoarserLevelIndex();      // move to a coarser level
                 onFineLevel = false;
-                //printf( " ** ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x, cur.y, cur.z);
+                
+       #if DEBUG == 1
+                if( origin == dbgCell ) {                
+                  printf( " ** ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x, cur.y, cur.z);
+                }
+       #endif
 
-               } else if ( jumpCoarsetoCoarserLevel ){
+              } else if ( jumpCoarsetoCoarserLevel ){
 
                 GPUIntVector c_old = cur;
                 cur = d_levels[L].mapCellToCoarser(cur);
                 L   = d_levels[L].getCoarserLevelIndex();      // move to a coarser level
-                //printf( " ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x, cur.y, cur.z, c_old.x, c_old.y, c_old.z);
+       #if DEBUG == 1
+                if( origin == dbgCell ) {
+                  //printf( " ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x, cur.y, cur.z, c_old.x, c_old.y, c_old.z);
+                }
+        #endif
               }
 
               GPUPoint pos = d_levels[L].getCellPosition(cur);         // position could be outside of domain
@@ -695,7 +709,7 @@ if( tidX != 1 || tidY != 1 ){
 
          /*`==========TESTING==========*/
         #if DEBUG == 1
-        //if(origin == IntVector(20,20,20)){
+        if(origin == dbgCell){
             printf( "            cur [%i,%i,%i] prev [%i,%i,%i]", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
             printf( " face %d ", dir );
             printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
@@ -705,7 +719,7 @@ if( tidX != 1 || tidY != 1 ){
 
             printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
             printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-        //}
+        }
         #endif
         /*===========TESTING==========`*/
 
@@ -739,11 +753,10 @@ if( tidX != 1 || tidY != 1 ){
 
         /*`==========TESTING==========*/
         #if DEBUG == 1
-        //if( origin == IntVector(20,20,20) ){
+        if( origin == dbgCell ){
             printf( "            cur [%i,%i,%i] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
                    cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs, RT_flags.allowReflect );
-
-        //}
+        }
         #endif
         /*===========TESTING==========`*/
             //__________________________________
@@ -760,7 +773,6 @@ if( tidX != 1 || tidY != 1 ){
 
         } //Ray loop
 
-#if 1
         //__________________________________
         //  Compute divQ
         divQ[origin] = 4.0 * M_PI * abskg[fineL][origin] * ( sigmaT4OverPi[fineL][origin] - (sumI/RT_flags.nDivQRays) );
@@ -771,14 +783,17 @@ if( tidX != 1 || tidY != 1 ){
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
+       if( origin == dbgCell ){
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
+       }
 #endif
 /*===========TESTING==========`*/
-#endif
+
       }  // end z-slice loop
     }  // end ROI loop
   }  // solve divQ
+#endif
 
   // free up dynamically allocated items
   delete(abskg);
@@ -1127,7 +1142,7 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
 
 #ifdef RAY_SCATTER
       curLength += disMin * Dx.x;
-      if (curLength > scatLength && in_domain){
+      if ( (curLength > scatLength) && in_domain){
 
         // get new scatLength for each scattering event
         scatLength = -log( randDblExcDevice( randNumStates ) ) / scatCoeff;

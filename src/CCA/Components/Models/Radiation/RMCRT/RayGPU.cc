@@ -31,10 +31,12 @@
 
 
 #define BLOCKSIZE 16
-//#define PRINTF            // if using printf statements to debug
+#define PRINTF            // if using printf statements to debug
+//#define DEBUG
 
 using namespace Uintah;
-
+using std::cout;
+using std::endl;
 static DebugStream dbggpu("RAYGPU", false);
 
 //---------------------------------------------------------------------------

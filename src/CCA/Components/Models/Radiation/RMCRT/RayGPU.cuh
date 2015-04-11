@@ -155,6 +155,20 @@ inline HOST_DEVICE GPUIntVector operator+(GPUIntVector& a, GPUIntVector& b)
 }
 
 //__________________________________
+//  returns gpuIntVector == gpuIntVector
+inline HOST_DEVICE bool operator==(GPUIntVector& a, GPUIntVector& b)
+{
+  return ( a.x == b.x && a.y == b.y && a.z == b.z );
+}
+
+//__________________________________
+//  returns gpuIntVector == gpuIntVector
+inline HOST_DEVICE bool operator!=(GPUIntVector& a, GPUIntVector& b)
+{
+  return ( (a.x != b.x) || (a.y != b.y) || (a.z != b.z ));
+}
+
+//__________________________________
 //  returns gpuPoint + gpuVector
 inline HOST_DEVICE GPUPoint operator+(GPUPoint& p, GPUVector& b)
 {
@@ -233,14 +247,14 @@ struct levelParams {
       // coarse cell. -Todd
       GPUIntVector offset = make_int3(0,0,0);
      
-      if (idx.x < 0 && refinementRatio.x  > 1){
+      if ( (idx.x < 0) && (refinementRatio.x  > 1 )){
         offset.x = (int)fmod( (double)idx.x, (double)refinementRatio.x ) ;
       }
-      if (idx.y < 0 && refinementRatio.y > 1){
+      if ( (idx.y < 0) && (refinementRatio.y > 1 )){
         offset.y = (int)fmod( (double)idx.y, (double)refinementRatio.y );
       }  
 
-      if (idx.z < 0 && refinementRatio.z > 1){
+      if ( (idx.z < 0) && (refinementRatio.z > 1)){
         offset.z = (int) fmod((double)idx.z, (double)refinementRatio.z );
       }
       return ratio + offset;
@@ -265,12 +279,12 @@ struct BoundingBox {
     __device__
     bool inside(GPUPoint p)
     {
-      return ( p.x >= lo.x && 
-               p.y >= lo.y && 
-               p.z >= lo.z && 
-               p.x <= hi.x && 
-               p.y <= hi.y && 
-               p.z <= hi.z );
+      return ( (p.x >= lo.x) && 
+               (p.y >= lo.y) && 
+               (p.z >= lo.z) && 
+               (p.x <= hi.x) && 
+               (p.y <= hi.y) && 
+               (p.z <= hi.z) );
     }
 };
 
