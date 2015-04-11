@@ -233,7 +233,15 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     std::cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
               << "   Creating " << numThreads_ << " additional "
               << plural + " for task execution (total task execution threads = "
-              << numThreads_ + 1 << ")." << std::endl;
+              << numThreads_ + 1 << ")." << "\n";
+#ifdef HAVE_CUDA
+    if (Uintah::Parallel::usingDevice()) {
+      cudaError_t retVal;
+      int availableDevices = numDevices_;
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
+      std::cout << "   Using " << numDevices_ << "/" << availableDevices << " available GPU(s)" << std::endl;
+    }
+#endif
   }
 
   if (unified_compactaffinity.active()) {
