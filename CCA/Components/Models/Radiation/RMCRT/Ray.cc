@@ -130,6 +130,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
   d_radiometer     = NULL;
+  d_dbgCell        = IntVector(0,0,0);
 
   //_____________________________________________
   //   Ordering for Surface Method
@@ -642,10 +643,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == IntVector(20,20,20) ) {
+//  if( origin == d_dbgCell ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
-  }
+//  }
 #endif
 /*===========TESTING==========`*/
     }  // end cell iterator
@@ -911,11 +912,13 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       IntVector origin = *iter;
 
 /*`==========TESTING==========*/
-      if(origin == IntVector(20,20,20) && d_isDbgOn ){
+#if 0
+      if(origin == d_dbgCell && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
       }
+#endif
 /*===========TESTING==========`*/
 
       double sumI = 0;
@@ -924,7 +927,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       //  ray loop
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
-        //dbg2 << "iRay: " << iRay << " " ;
+        //dbg2 << "===== iRay: " << iRay << endl;
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
         Vector ray_location;
@@ -945,13 +948,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
       radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;
 
-      //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/d_nDivQRays) << endl;
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == IntVector(20,20,20) ) {
-          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
+//  if( origin == d_dbgCell ) {
+          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n\n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ_fine[origin], radiationVolq_fine[origin],abskg_fine[origin], sigmaT4OverPi_fine[origin]);
-  }
+//  }
 #endif
 /*===========TESTING==========`*/
     }  // end cell iterator
@@ -1009,8 +1011,8 @@ Ray::computeExtents(LevelP level_0,
     }
   } else if ( d_whichROI_algo == patch_based ){
 
-    IntVector patchLo = patch->getCellLowIndex();
-    IntVector patchHi = patch->getCellHighIndex();
+    IntVector patchLo = patch->getExtraCellLowIndex();
+    IntVector patchHi = patch->getExtraCellHighIndex();
 
     fineLevel_ROI_Lo = patchLo - d_halo;
     fineLevel_ROI_Hi = patchHi + d_halo;
@@ -1058,7 +1060,7 @@ Ray::computeExtents(LevelP level_0,
   // debugging
   if(dbg2.active()){
     for(int L = 0; L<maxLevels; L++){
-      dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
+      //dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
     }
   }
 }
@@ -1767,9 +1769,9 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == IntVector(20,20,20) ) {
-    printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
-  }
+//  if( origin == d_dbgCell ) {
+    printf("        A) updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
+//  }
 #endif
 /*===========TESTING==========`*/
   int L       = maxLevels -1;  // finest level
@@ -1813,10 +1815,6 @@ void Ray::computeCellType( const ProcessorGroup*,
   double optical_thickness     = 0;
   double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
 
-
-
-  //dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;
-
   //______________________________________________________________________
   //  Threshold  loop
   while (intensity > d_threshold){
@@ -1857,7 +1855,7 @@ void Ray::computeCellType( const ProcessorGroup*,
       bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
       bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
 
-      //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
+      //dbg2 << "        Ray: "<< cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
       //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl;
 
       if( jumpFinetoCoarserLevel ){
@@ -1867,7 +1865,7 @@ void Ray::computeCellType( const ProcessorGroup*,
         onFineLevel = false;
 
         // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
-        //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+        //dbg2 << "        ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
       } else if ( jumpCoarsetoCoarserLevel ){
 
         IntVector c_old = cur;
@@ -1875,7 +1873,7 @@ void Ray::computeCellType( const ProcessorGroup*,
         level = level->getCoarserLevel().get_rep();
         L     = level->getIndex();
 
-        //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
+        //dbg2 << "        ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
       }
 
       Point pos = level->getCellPosition(cur);         // position could be outside of domain
@@ -1915,17 +1913,17 @@ void Ray::computeCellType( const ProcessorGroup*,
 
  /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin == IntVector(20,20,20)){
-    printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+//if(origin == d_dbgCell){
+    printf( "        B) cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " face %d ", dir );
     printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
     printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
     printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
-    printf( "disMin %g \n",disMin );
+    printf( "disMin: %g inDomain: %i\n",disMin, in_domain );
 
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
     printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-}
+//}
 #endif
 /*===========TESTING==========`*/
 
@@ -1937,11 +1935,6 @@ if(origin == IntVector(20,20,20)){
       sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
       expOpticalThick_prev = expOpticalThick;
-
-      // NEVER UNCOMMENT EXCEPT FOR DEBUGGING IT IS EXTREMELY SLOW
-      //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
-      //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
-      //dbg2 << "    direction " << ray_direction << endl;
 
     } //end domain while loop.  ++++++++++++++
 
@@ -1963,11 +1956,10 @@ if(origin == IntVector(20,20,20)){
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-if( origin == IntVector(20,20,20) ){
-    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
-           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
+//if( origin == d_dbgCell ){
+    printf( "        C) intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n", intensity,  exp(-optical_thickness), fs, d_allowReflect );
 
-}
+//}
 #endif
 /*===========TESTING==========`*/
 
