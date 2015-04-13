@@ -516,8 +516,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
 /*`==========TESTING==========*/
-        GPUIntVector dbgCell = make_int3(0,0,0);
-        if( origin != dbgCell ){
+        GPUIntVector d_dbgCell = make_int3(0,0,0);
+        if( origin != d_dbgCell ){
           return;
         }
         printf ("HERE .... \n");
@@ -551,10 +551,10 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 //______________________________________________________________________
 
         /*`==========TESTING==========*/
-        bool test = ( origin == dbgCell );
+        bool test = ( origin == d_dbgCell );
         printf( " origin: [%i,%i,%i], conditional %i \n", origin.x, origin.y, origin.z, test);
         #if DEBUG == 1
-          if( origin == dbgCell ) {
+          if( origin == d_dbgCell ) {
             printf("        updateSumI_ML: [%i,%i,%i] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
           }
         #endif
@@ -641,7 +641,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
               bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && (containsCellDevice(d_levels[L].regionLo, d_levels[L].regionHi, cur, dir) == false) && (L > 0) );
          
        #if DEBUG == 1
-              if( origin == dbgCell ) {
+              if( origin == d_dbgCell ) {
                 printf( "[%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i \n", cur.x, cur.y, cur.z,jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
                        containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
               }
@@ -653,7 +653,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                 onFineLevel = false;
                 
        #if DEBUG == 1
-                if( origin == dbgCell ) {                
+                if( origin == d_dbgCell ) {                
                   printf( " ** ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x, cur.y, cur.z);
                 }
        #endif
@@ -664,7 +664,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                 cur = d_levels[L].mapCellToCoarser(cur);
                 L   = d_levels[L].getCoarserLevelIndex();      // move to a coarser level
        #if DEBUG == 1
-                if( origin == dbgCell ) {
+                if( origin == d_dbgCell ) {
                   //printf( " ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x, cur.y, cur.z, c_old.x, c_old.y, c_old.z);
                 }
         #endif
@@ -709,7 +709,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
          /*`==========TESTING==========*/
         #if DEBUG == 1
-        if(origin == dbgCell){
+        if(origin == d_dbgCell){
             printf( "            cur [%i,%i,%i] prev [%i,%i,%i]", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
             printf( " face %d ", dir );
             printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
@@ -753,7 +753,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         /*`==========TESTING==========*/
         #if DEBUG == 1
-        if( origin == dbgCell ){
+        if( origin == d_dbgCell ){
             printf( "            cur [%i,%i,%i] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
                    cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs, RT_flags.allowReflect );
         }
@@ -783,7 +783,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-       if( origin == dbgCell ){
+       if( origin == d_dbgCell ){
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[fineL][origin], sigmaT4OverPi[fineL][origin]);
        }
