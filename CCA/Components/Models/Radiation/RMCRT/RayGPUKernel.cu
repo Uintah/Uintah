@@ -515,11 +515,13 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
         GPUIntVector origin = make_int3(tidX, tidY, z);  // for each thread
 /*`==========TESTING==========*/
+#if 1
         GPUIntVector d_dbgCell = make_int3(0,0,0);
-        if( origin != d_dbgCell ){
-          return;
-        }
-        printf ("HERE .... \n");
+     //   if( origin != d_dbgCell ){
+     //     return;
+     //   }
+#endif
+printf(" origin[%i,%i,%i] finePatchID: %i \n", origin.x, origin.y, origin.z, finePatch.ID);
 /*===========TESTING==========`*/
 
         double sumI = 0;
@@ -1028,8 +1030,11 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
   GPUVector inv_ray_direction = 1.0/ray_direction;
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
-  printf("        inv_ray_dir [%g,%g,%g]\n", inv_ray_direction.x,inv_ray_direction.y,inv_ray_direction.z);
+  GPUIntVector d_dbgCell = make_int3(0,0,0);
+  if( origin == d_dbgCell ) {
+    printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
+    printf("        inv_ray_dir [%g,%g,%g]\n", inv_ray_direction.x,inv_ray_direction.y,inv_ray_direction.z);
+  }
 #endif
 /*===========TESTING==========`*/
 

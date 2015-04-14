@@ -162,6 +162,13 @@ inline HOST_DEVICE bool operator==(GPUIntVector& a, GPUIntVector& b)
 }
 
 //__________________________________
+//  returns const gpuIntVector == gpuIntVector
+inline HOST_DEVICE bool operator==(const GPUIntVector& a, GPUIntVector& b)
+{
+  return ( a.x == b.x && a.y == b.y && a.z == b.z );
+}
+
+//__________________________________
 //  returns gpuIntVector == gpuIntVector
 inline HOST_DEVICE bool operator!=(GPUIntVector& a, GPUIntVector& b)
 {
