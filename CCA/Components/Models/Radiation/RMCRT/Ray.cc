@@ -643,10 +643,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
-//  if( origin == d_dbgCell ) {
+    if( origin == d_dbgCell ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
-//  }
+    }
 #endif
 /*===========TESTING==========`*/
     }  // end cell iterator
@@ -918,6 +918,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       }else{
         dbg2.setActive(false);
       }
+      d_dbgCell = IntVector(0,0,0);
+      if( origin != d_dbgCell ){
+        return;
+      }
 #endif
 /*===========TESTING==========`*/
 
@@ -950,10 +954,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-//  if( origin == d_dbgCell ) {
+    if( origin == d_dbgCell ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n\n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ_fine[origin], radiationVolq_fine[origin],abskg_fine[origin], sigmaT4OverPi_fine[origin]);
-//  }
+    }
 #endif
 /*===========TESTING==========`*/
     }  // end cell iterator
@@ -1769,9 +1773,9 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-//  if( origin == d_dbgCell ) {
+  if( origin == d_dbgCell ) {
     printf("        A) updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
-//  }
+  }
 #endif
 /*===========TESTING==========`*/
   int L       = maxLevels -1;  // finest level
@@ -1913,9 +1917,11 @@ void Ray::computeCellType( const ProcessorGroup*,
 
  /*`==========TESTING==========*/
 #if DEBUG == 1
-//if(origin == d_dbgCell){
+  if(origin == d_dbgCell){
     printf( "        B) cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " face %d ", dir );
+    printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
+    printf( " tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
     printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
     printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
     printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
@@ -1923,7 +1929,8 @@ void Ray::computeCellType( const ProcessorGroup*,
 
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
     printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-//}
+    printf( "            Dx[prevLev].x  %g \n",  Dx[prevLev].x() );
+  }
 #endif
 /*===========TESTING==========`*/
 
@@ -1956,10 +1963,10 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-//if( origin == d_dbgCell ){
-    printf( "        C) intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n", intensity,  exp(-optical_thickness), fs, d_allowReflect );
+  if( origin == d_dbgCell ){
+    printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, d_allowReflect );
 
-//}
+  }
 #endif
 /*===========TESTING==========`*/
 

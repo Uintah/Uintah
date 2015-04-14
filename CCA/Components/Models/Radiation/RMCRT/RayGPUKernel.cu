@@ -35,9 +35,8 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-// TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 #define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
-//#define FIXED_RANDOM_NUM
+#define FIXED_RANDOM_NUM         // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 
 
 //__________________________________
@@ -551,11 +550,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 //______________________________________________________________________
 
         /*`==========TESTING==========*/
-        bool test = ( origin == d_dbgCell );
-        printf( " origin: [%i,%i,%i], conditional %i \n", origin.x, origin.y, origin.z, test);
         #if DEBUG == 1
           if( origin == d_dbgCell ) {
-            printf("        updateSumI_ML: [%i,%i,%i] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
+            printf("        A) updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x, origin.y, origin.z,ray_direction.x, ray_direction.y, ray_direction.z, ray_location.x, ray_location.y, ray_location.z);
           }
         #endif
         /*===========TESTING==========`*/
@@ -633,7 +630,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
               // next cell index and position
               cur[dir]  = cur[dir] + step[dir];
               GPUVector dx_prev = d_levels[L].Dx;           //  Used to compute coarsenRatio
-
               //__________________________________
               // Logic for moving between levels
               // currently you can only move from fine to coarse level
@@ -642,10 +638,10 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
          
        #if DEBUG == 1
               if( origin == d_dbgCell ) {
-                printf( "[%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i \n", cur.x, cur.y, cur.z,jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
+                printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i \n", cur.x, cur.y, cur.z, jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
                        containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
               }
-        #endif
+       #endif
 
               if( jumpFinetoCoarserLevel ){
                 cur = d_levels[L].mapCellToCoarser(cur);
@@ -654,7 +650,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                 
        #if DEBUG == 1
                 if( origin == d_dbgCell ) {                
-                  printf( " ** ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x, cur.y, cur.z);
+                  printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x, cur.y, cur.z);
                 }
        #endif
 
@@ -665,7 +661,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                 L   = d_levels[L].getCoarserLevelIndex();      // move to a coarser level
        #if DEBUG == 1
                 if( origin == d_dbgCell ) {
-                  //printf( " ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x, cur.y, cur.z, c_old.x, c_old.y, c_old.z);
+                  printf( "        ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x, cur.y, cur.z, c_old.x, c_old.y, c_old.z);
                 }
         #endif
               }
@@ -677,7 +673,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
               //__________________________________
               //  update marching variables
-              cur[dir]   = cur[dir] + step[dir];
               disMin     = (tMax[dir] - tMax_prev);
               tMax_prev  = tMax[dir];
               tMax[dir]  = tMax[dir] + tDelta[L][dir];
@@ -710,19 +705,20 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
          /*`==========TESTING==========*/
         #if DEBUG == 1
         if(origin == d_dbgCell){
-            printf( "            cur [%i,%i,%i] prev [%i,%i,%i]", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
+            printf( "        B) cur [%i,%i,%i] prev [%i,%i,%i]", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
             printf( " face %d ", dir );
-            printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
+            printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
+            printf( " tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
             printf( "rayLoc [%g,%g,%g] ", ray_location.x,ray_location.y, ray_location.z);
             printf( "inv_dir [%g,%g,%g] ",inv_ray_direction.x,inv_ray_direction.y, inv_ray_direction.z);
             printf( "disMin %g inDomain %i\n",disMin, in_domain );
 
             printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
             printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
+            printf( "            Dx[prevLev].x  %g \n",  d_levels[prevLev].Dx.x);
         }
         #endif
         /*===========TESTING==========`*/
-
               optical_thickness += d_levels[prevLev].Dx.x * abskg[prevLev][prevCell]*disMin;
 
               double expOpticalThick = exp(-optical_thickness);
@@ -754,8 +750,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
         /*`==========TESTING==========*/
         #if DEBUG == 1
         if( origin == d_dbgCell ){
-            printf( "            cur [%i,%i,%i] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
-                   cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs, RT_flags.allowReflect );
+            printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity,  optical_thickness, fs, RT_flags.allowReflect );
         }
         #endif
         /*===========TESTING==========`*/
@@ -1110,7 +1105,7 @@ __device__ void updateSumIDevice ( GPUVector& ray_direction,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin.x == 0 && origin.y == 0 && origin.z ==0){
+if( origin == d_dbgCell ){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x, cur.y, cur.z, prevCell.x, prevCell.y, prevCell.z);
     printf( " face %d ", face );
     printf( "tMax [%g,%g,%g] ",tMax.x,tMax.y, tMax.z);
@@ -1202,7 +1197,7 @@ if(origin.x == 0 && origin.y == 0 && origin.z ==0){
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin.x == 0 && origin.y == 0 && origin.z ==0 ){
+if( origin == d_dbgCell ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i \n",
             cur.x, cur.y, cur.z, intensity,  exp(-optical_thickness), fs,RT_flags.allowReflect );
 
