@@ -477,7 +477,7 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
     }
 
     if (i == d_numItems) {
-      printf("ERROR:\nGPUDataWarehouse::get( %s ) host get unknown variable from GPUDataWarehouse", label);
+      printf("ERROR:\nGPUDataWarehouse::getItem( %s ) host get unknown variable from GPUDataWarehouse", label);
       varDBLock.readUnlock();
       exit(-1);
     }
@@ -741,7 +741,7 @@ GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int lev
   __syncthreads();
   if( isThread0() ){
     for (int i = 0; i < d_numLevelItems; i++) {
-      printf("   Available labels(%i): \"%s\"\n", d_numLevelItems, d_levelDB[i].label);
+      printf("   Available labels(%i): \"%-15s\" matl: %i, L-%i \n", d_numLevelItems, d_levelDB[i].label, d_varDB[i].matlIndx, d_varDB[i].levelIndx);
     }
     __syncthreads();
     printf("  ERROR: %s( \"%s\", levelIndx: %i, matl: %i )  unknown variable\n\n", msg,  label, levelIndx, matlIndx);
@@ -765,7 +765,8 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelInd
   __syncthreads();
   if( isThread0() ){
     for (int i = 0; i < d_numItems; i++) {
-      printf("   Available labels(%i): \"%s\"\n", d_numItems, d_varDB[i].label);
+      printf("   Available labels(%i): \"%-15s\" matl: %i, patchID: %i, L-%i \n", d_numItems, d_varDB[i].label, d_varDB[i].matlIndx, 
+             d_varDB[i].domainID, d_varDB[i].levelIndx);
     }
     __syncthreads();
     printf("  ERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i )  unknown variable\n\n", msg,  label, levelIndx, patchID, matlIndx);
