@@ -312,6 +312,8 @@ MPMLabel::MPMLabel()
   gZOILabel     = VarLabel::create("g.zoi",
 			NCVariable<Stencil7>::getTypeDescription());
 
+  MPMRefineCellLabel  = VarLabel::create( "MPMRefineCell",
+                     CCVariable<double>::getTypeDescription() );
 
   cVolumeLabel  = VarLabel::create( "c.volume",
                      CCVariable<double>::getTypeDescription() );
@@ -771,6 +773,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gStressForSavingLabel);
   VarLabel::destroy(gVolumeLabel);
   VarLabel::destroy(gZOILabel);
+  VarLabel::destroy(MPMRefineCellLabel);
   VarLabel::destroy(cVolumeLabel);
   VarLabel::destroy(numLocInCellLabel);
   VarLabel::destroy(numInCellLabel);

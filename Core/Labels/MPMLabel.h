@@ -140,6 +140,7 @@ namespace Uintah {
       const VarLabel* gStressForSavingLabel;
       const VarLabel* gVolumeLabel;
       const VarLabel* gZOILabel;
+      const VarLabel* MPMRefineCellLabel;
       const VarLabel* cVolumeLabel;
       const VarLabel* numLocInCellLabel;
       const VarLabel* numInCellLabel;
