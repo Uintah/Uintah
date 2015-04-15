@@ -376,9 +376,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   // coarse level data for the entire level
   for (int l = 0; l < maxLevels; ++l) {
     if (d_levels[l].hasFinerLevel) {
-      abskg_gdw->get(abskg[l], "abskg", l);
-      sigmaT4_gdw->get(sigmaT4OverPi[l], "sigmaT4", l);
-      cellType_gdw->get(cellType[l], "cellType", l);
+      abskg_gdw->getLevel( abskg[l],           "abskg",    matl, l);
+      sigmaT4_gdw->getLevel( sigmaT4OverPi[l], "sigmaT4",  matl, l);
+      cellType_gdw->getLevel( cellType[l],     "cellType", matl, l);
 
 #if 0
       /*`==========TESTING==========*/
@@ -464,28 +464,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       }
     }
   }
-
-#if 0
-  /*`==========TESTING==========*/
-  if( isThread0() ){
-    GPUIntVector c = make_int3(16, 16, 16);
-    GPUPoint p = d_levels[0].getCellPosition(c);
-    printf( "GPU c :[%i,%i,%i], cc: [%f,%f,%f] \n",c.x, c.y, c.z, p.x, p.y, p.z );
-
-    c = make_int3(15, -1, 3);
-    GPUIntVector cc = d_levels[0].mapCellToCoarser(c);
-    printf( "GPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x, c.y, c.z, cc.x, cc.y, cc.z );
-
-    c = make_int3(16, 16, 16);
-    p = d_levels[fineL].getCellPosition(c);
-    printf( "GPU c :[%i,%i,%i], cc: [%f,%f,%f] \n",c.x, c.y, c.z, p.x, p.y, p.z );
-
-    c = make_int3(15, -1, 3);
-    cc = d_levels[fineL].mapCellToCoarser(c);
-    printf( "GPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x, c.y, c.z, cc.x, cc.y, cc.z );
-  }
-/*===========TESTING==========`*/
-#endif
 
   //______________________________________________________________________
   //           R A D I O M E T E R

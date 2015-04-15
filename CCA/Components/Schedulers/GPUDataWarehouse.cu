@@ -58,14 +58,14 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int pat
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int levelID)
+GPUDataWarehouse::getLevel(const GPUGridVariableBase& var, char const* label, int matlIndx, int levelID)
 {
-  GPUDataWarehouse::dataItem* item = getLevelItem(label, levelID);
+  GPUDataWarehouse::dataItem* item = getLevelItem(label, matlIndx, levelID);
   if (item) {
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
   }
   else {
-    printGetError("levelDB GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, levelID, -1, -1);
+    printGetError("levelDB GPUDataWarehouse::getLevel(GPUGridVariableBase& var, ...)", label, levelID, -1, matlIndx);
   }
 }
 
@@ -180,10 +180,10 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int patchID, 
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int levelID, bool overWrite /* = false */)
+GPUDataWarehouse::putLevel(GPUGridVariableBase& var, char const* label, int matlIndx, int levelID, bool overWrite /* = false */)
 {
 #ifdef __CUDA_ARCH__  // need to limit output
-  printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n", label);
+  printf("ERROR:\nGPUDataWarehouse::putLevel( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n", label);
 #else
 
   //__________________________________
@@ -202,13 +202,13 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int levelID, 
 
   strncpy(d_levelDB[i].label, label, MAX_NAME);
   d_levelDB[i].domainID = -1;
-  d_levelDB[i].matlID   = -1;
+  d_levelDB[i].matlID   = matlIndx;
   d_levelDB[i].levelID  = levelID;
 
   var.getArray3(d_levelDB[i].var_offset, d_levelDB[i].var_size, d_levelDB[i].var_ptr);
 
   if (d_debug) {
-    printf("GPUDW::put() host put level-var \"%-15s\" (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label,  levelID, d_levelDB[i].var_ptr,
+    printf("GPUDW::putLevel() host put level-var \"%-15s\" (level: %d) (matl: %i) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label,  levelID, matlIndx, d_levelDB[i].var_ptr,
            d_device_copy, d_device_id, d_levelDB[i].var_size.x, d_levelDB[i].var_size.y, d_levelDB[i].var_size.z);
   }
   d_dirty = true;
@@ -321,7 +321,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, int3 low, int3 high, int levelID /* = 0 */)
+GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, int matlIndx, int3 low, int3 high, int levelID /* = 0 */)
 {
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device. All device memory should be allocated on the CPU with cudaMalloc\n", label);
@@ -341,13 +341,13 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
   CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
   if (d_debug && retVal == cudaSuccess) {
-    printf("GPUDW::allocateAndPut() cudaMalloc for level-var \"%-15s\", L-%i, size %ld from (%d,%d,%d) to (%d,%d,%d) ", label, levelID, var.getMemSize(), low.x, low.y, low.z, high.x,
+    printf("GPUDW::allocateAndPut() cudaMalloc for level-var \"%-15s\", L-%i, matl: %i size %ld from (%d,%d,%d) to (%d,%d,%d) ", label, levelID, matlIndx, var.getMemSize(), low.x, low.y, low.z, high.x,
            high.y, high.z);
     printf(" at %p on device %d\n", addr, d_device_id);
   }
 
   var.setArray3(offset, size, addr);
-  put(var, label, levelID);
+  putLevel(var, label, matlIndx, levelID);
 
   levelDBLock.writeUnlock();
 
@@ -478,7 +478,7 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlID, int levelI
 //______________________________________________________________________
 //
 HOST_DEVICE GPUDataWarehouse::dataItem*
-GPUDataWarehouse::getLevelItem(char const* label, int levelID)
+GPUDataWarehouse::getLevelItem(char const* label, int matlIndx, int levelID)
 {
 #ifdef __CUDA_ARCH__
   __shared__ int index;
@@ -506,7 +506,7 @@ GPUDataWarehouse::getLevelItem(char const* label, int levelID)
       ++s1, ++s2;
     }
 
-    if (strmatch == 0 &&  d_levelDB[i].levelID == levelID) {
+    if (strmatch == 0 &&  d_levelDB[i].levelID == levelID && d_levelDB[i].matlID == matlIndx) {
       index = i;
     }
     i = i + numThreads;
@@ -525,7 +525,7 @@ GPUDataWarehouse::getLevelItem(char const* label, int levelID)
   // cpu code
   int i = 0;
   while (i < d_numLevelItems) {
-    if (!strncmp(d_levelDB[i].label, label, MAX_NAME) && d_levelDB[i].levelID == levelID) {
+    if (!strncmp(d_levelDB[i].label, label, MAX_NAME) && d_levelDB[i].levelID == levelID && d_levelDB[i].matlID == matlIndx) {
       break;
     }
     i++;
@@ -537,7 +537,7 @@ GPUDataWarehouse::getLevelItem(char const* label, int levelID)
   }
 
   if (d_debug) {
-    printf("GPUDW::getLevelItem() host got \"%-15s\" L-%i loc %p from GPUDW %p on device %u\n", label, levelID, d_levelDB[i].var_ptr, d_device_copy, d_device_id);
+    printf("GPUDW::getLevelItem() host got \"%-15s\" L-%i matl: %i loc %p from GPUDW %p on device %u\n", label, levelID, matlIndx, d_levelDB[i].var_ptr, d_device_copy, d_device_id);
   }
   return &d_levelDB[i];
 #endif

@@ -1285,7 +1285,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 case sizeof(int) : {
                   GPUGridVariable<int> device_var;
                   if (isLevelItem) {
-                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), device_low, device_hi, levelID);
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), matlID, device_low, device_hi, levelID);
                   }
                   else {
                     dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
@@ -1296,7 +1296,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 case sizeof(double) : {
                   GPUGridVariable<double> device_var;
                   if (isLevelItem) {
-                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), device_low, device_hi, levelID);
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), matlID, device_low, device_hi, levelID);
                   }
                   else {
                     dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
@@ -1307,7 +1307,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 case sizeof(GPUStencil7) : {
                   GPUGridVariable<GPUStencil7> device_var;
                   if (isLevelItem) {
-                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), device_low, device_hi, levelID);
+                    dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), matlID, device_low, device_hi, levelID);
                   }
                   else {
                     dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
