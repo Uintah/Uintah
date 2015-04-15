@@ -1146,10 +1146,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
     OnDemandDataWarehouseP dw = dws[dwIndex];
 
     int maxLevels = dw->getGrid()->numLevels();
-    LevelP level_n = dw->getGrid()->getLevel(maxLevels - 1);
-    LevelP level_0 = dw->getGrid()->getLevel(0);
-    const Level* fineLevel = getLevel(dtask->getPatches());
-    int fineLevelIdx = level_n->getIndex();
+    LevelP fineLevel = dw->getGrid()->getLevel(maxLevels - 1);
+    int fineLevelIdx = fineLevel->getIndex();
     bool isLevelItem = false;
 
     void* host_ptr = NULL;    // host base pointer to raw data
@@ -1158,7 +1156,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
     size_t device_bytes = 0;  // raw byte count to copy to the host
     IntVector host_low, host_high, host_offset, host_size, host_strides;
 
-    int numPatches = patches->size();
+    bool hasFinerLevel = dw->getGrid()->getLevel(fineLevelIdx - req->level_offset).get_rep()->hasFinerLevel();
+    int numPatches = (hasFinerLevel)? 1 : patches->size();
     int numMatls = matls->size();
     for (int i = 0; i < numPatches; ++i) {
       for (int j = 0; j < numMatls; ++j) {
@@ -1167,13 +1166,11 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
         int patchID = patches->get(i)->getID();
 
         // multi-level check
-        int levelID = fineLevelIdx;
-        const Level* level = fineLevel;
+        int levelID = fineLevelIdx - req->level_offset;
+        ASSERT(levelID >= 0);
+        const Level* level = dw->getGrid()->getLevel(levelID).get_rep();;
         if (fineLevelIdx > 0) {
-          if (req->patches_dom == Task::CoarseLevel) {
-            levelID = fineLevelIdx - req->level_offset;
-            ASSERT(levelID >= 0);
-            level = dw->getGrid()->getLevel(levelID).get_rep();
+          if (level->hasFinerLevel()) {
             isLevelItem = true;
           }
         }
