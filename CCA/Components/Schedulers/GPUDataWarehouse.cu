@@ -170,7 +170,7 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int patchID, 
   var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
 
   if (d_debug) {
-    printf("host put \"%s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label, patchID, levelID, d_varDB[i].var_ptr,
+    printf("GPUDW::put() host put \"%-15s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label, patchID, levelID, d_varDB[i].var_ptr,
            d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
   }
   d_dirty = true;
@@ -208,7 +208,7 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int levelID, 
   var.getArray3(d_levelDB[i].var_offset, d_levelDB[i].var_size, d_levelDB[i].var_ptr);
 
   if (d_debug) {
-    printf("host put level-var \"%s\" (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label,  levelID, d_levelDB[i].var_ptr,
+    printf("GPUDW::put() host put level-var \"%-15s\" (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label,  levelID, d_levelDB[i].var_ptr,
            d_device_copy, d_device_id, d_levelDB[i].var_size.x, d_levelDB[i].var_size.y, d_levelDB[i].var_size.z);
   }
   d_dirty = true;
@@ -242,7 +242,7 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* label, int patc
   var.getData(d_varDB[i].var_ptr);
 
   if (d_debug) {
-    printf("host put \"%s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d\n", label, patchID, levelID, d_varDB[i].var_ptr, d_device_copy,
+    printf("GPUDW::put(reduction) host put \"%s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d\n", label, patchID, levelID, d_varDB[i].var_ptr, d_device_copy,
            d_device_id);
   }
   d_dirty = true;
@@ -276,7 +276,7 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int 
   var.getData(d_varDB[i].var_ptr);
 
   if (d_debug) {
-    printf("host put \"%s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d\n", label, patchID, levelID, d_varDB[i].var_ptr, d_device_copy,
+    printf("GPUDW::put(PerPatchBase) host put \"%s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d\n", label, patchID, levelID, d_varDB[i].var_ptr, d_device_copy,
            d_device_id);
   }
   d_dirty = true;
@@ -306,7 +306,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
   CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
   if (d_debug && retVal == cudaSuccess) {
-    printf("cudaMalloc for \"%s\", size %ld from (%d,%d,%d) to (%d,%d,%d) ", label, var.getMemSize(), low.x, low.y, low.z, high.x,
+    printf("GPUDW::allocateAndPut() cudaMalloc for \"%-15s\", patch: %i, mat: %i size %ld from (%d,%d,%d) to (%d,%d,%d) ", label, patchID, matlID, var.getMemSize(), low.x, low.y, low.z, high.x,
            high.y, high.z);
     printf(" at %p on device %d\n", addr, d_device_id);
   }
@@ -341,7 +341,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
   CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
   if (d_debug && retVal == cudaSuccess) {
-    printf("cudaMalloc for level-var \"%s\", size %ld from (%d,%d,%d) to (%d,%d,%d) ", label, var.getMemSize(), low.x, low.y, low.z, high.x,
+    printf("GPUDW::allocateAndPut() cudaMalloc for level-var \"%-15s\", L-%i, size %ld from (%d,%d,%d) to (%d,%d,%d) ", label, levelID, var.getMemSize(), low.x, low.y, low.z, high.x,
            high.y, high.z);
     printf(" at %p on device %d\n", addr, d_device_id);
   }
@@ -371,7 +371,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
   CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
   if (d_debug && retVal == cudaSuccess) {
-    printf("cudaMalloc for \"%s\", size %ld", label, var.getMemSize());
+    printf("GPUDW::allocateAndPut() cudaMalloc for \"%-15s\", L-%i, patch: %i, matl: %i size %ld", label, levelID, patchID, matlID, var.getMemSize());
     printf(" at %p on device %d\n", addr, d_device_id);
   }
 
@@ -397,7 +397,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
   CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
   if (d_debug && retVal == cudaSuccess) {
-    printf("cudaMalloc for \"%s\", size %ld", label, var.getMemSize());
+    printf("GPUDW::allocateAndPut() cudaMalloc for \"%-15s\", L-%i, patch: %i, matl: %i, size %ld", label,levelID,patchID, matlID, var.getMemSize());
     printf(" at %p on device %d\n", addr, d_device_id);
   }
 
@@ -423,7 +423,7 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlID, int levelI
   index = -1;
 
   if (d_debug && threadID == 0 && blockID == 0) {
-    printf("Getting device varDB item \"%s\" from GPUDW %p, size (%d vars)", label, this, d_numItems);
+    printf("GPUDW::getItem() varDB item \"%-15s\" L-%i Patch: %i, Matl: %i from GPUDW %p, size (%d vars)", label, levelID, patchID, matlID, this, d_numItems);
     printf("  Available varDB labels: %d\n", MAX_ITEM - d_numItems);
   }
 
@@ -469,7 +469,7 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlID, int levelI
   }
 
   if (d_debug) {
-    printf("host got \"%s\" loc %p from GPUDW %p on device %u\n", label, d_varDB[i].var_ptr, d_device_copy, d_device_id);
+    printf("GPUDW::getItem() host got \"%-15s\" loc %p from GPUDW %p on device %u\n", label, d_varDB[i].var_ptr, d_device_copy, d_device_id);
   }
   return &d_varDB[i];
 #endif
@@ -492,7 +492,7 @@ GPUDataWarehouse::getLevelItem(char const* label, int levelID)
   index = -1;
 
   if (d_debug && threadID == 0 && blockID == 0) {
-    printf("Getting device levelDB item \"%s\" from GPUDW %p, size (%d vars)", label, this, d_numLevelItems);
+    printf("GPUDW::getLevelItem() \"%-13s\" L-%i from GPUDW %p, size (%d vars)", label, levelID, this, d_numLevelItems);
     printf("  Available levelDB labels: %d\n", MAX_LVITEM - d_numLevelItems);
   }
 
@@ -532,12 +532,12 @@ GPUDataWarehouse::getLevelItem(char const* label, int levelID)
   }
 
   if (i == d_numLevelItems) {
-    printf("ERROR:\nGPUDataWarehouse::get( %s ) host get unknown variable from GPUDataWarehouse", label);
+    printf("ERROR:\nGPUDataWarehouse::getLevelItem( %s ) host get unknown variable from GPUDataWarehouse", label);
     exit(-1);
   }
 
   if (d_debug) {
-    printf("host got \"%s\" loc %p from GPUDW %p on device %u\n", label, d_levelDB[i].var_ptr, d_device_copy, d_device_id);
+    printf("GPUDW::getLevelItem() host got \"%-15s\" L-%i loc %p from GPUDW %p on device %u\n", label, levelID, d_levelDB[i].var_ptr, d_device_copy, d_device_id);
   }
   return &d_levelDB[i];
 #endif
@@ -581,7 +581,7 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlID, int levelID
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
 
       if (d_debug) {
-        printf("cuda Free for \"%s\" at %p on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id);
+        printf("GPUDW::remove() cuda Free for \"%-15s\" L-%i, patch: %i, matl: %i at %p on device %d\n", d_varDB[i].label, levelID, patchID, matlID, d_varDB[i].var_ptr, d_device_id);
       }
 
       d_varDB[i].label[0] = 0;  // leave a hole in the flat array, not deleted.
@@ -633,7 +633,7 @@ GPUDataWarehouse::syncto_device()
     CUDA_RT_SAFE_CALL(retVal = cudaMemcpy(d_device_copy, this, sizeof(GPUDataWarehouse), cudaMemcpyHostToDevice));
 
     if (d_debug) {
-      printf("sync GPUDW %p to device %d\n", d_device_copy, d_device_id);
+      printf("GPUDW::::syncto_device() sync GPUDW %p to device %d\n", d_device_copy, d_device_id);
     }
   }
   d_dirty = false;
@@ -656,7 +656,7 @@ GPUDataWarehouse::clear()
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
 
       if (d_debug) {
-        printf("cudaFree for \"%s\" at %p on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id);
+        printf("GPUDW::clear() cudaFree for \"%-15s\" at %p on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id);
       }
     }
   }
@@ -665,7 +665,7 @@ GPUDataWarehouse::clear()
   if (d_device_copy) {
     CUDA_RT_SAFE_CALL(retVal = cudaFree(d_device_copy));
     if (d_debug) {
-      printf("Delete GPUDW on-device copy at %p on device %d \n", d_device_copy, d_device_id);
+      printf("GPUDW::clear() Delete GPUDW on-device copy at %p on device %d \n", d_device_copy, d_device_id);
     }
   }
 #endif
