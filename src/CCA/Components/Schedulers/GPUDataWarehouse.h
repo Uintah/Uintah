@@ -98,6 +98,8 @@ private:
   };
 
   HOST_DEVICE void printGetError( const char* msg, char const* label, int patchID, int matlID, int levelID = 0 );
+  HOST_DEVICE void printGetLevelError(const char* msg, char const* label, int levelID, int matlID);
+  
   HOST_DEVICE dataItem* getItem( char const* label, int patchID, int matlID, int levelID = 0 );
   HOST_DEVICE dataItem* getLevelItem( char const* label, int matlID, int levelID );
 
