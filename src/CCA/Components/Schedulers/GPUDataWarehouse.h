@@ -57,7 +57,7 @@ public:
   virtual ~GPUDataWarehouse() {}
 
   HOST_DEVICE void get( const GPUGridVariableBase&      var, char const* label, int patchID, int matlID, int levelID = 0 );
-  HOST_DEVICE void get( const GPUGridVariableBase&      var, char const* label, int levelID );
+  HOST_DEVICE void getLevel( const GPUGridVariableBase& var, char const* label,              int matlID, int levelID );
   HOST_DEVICE void get( const GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int levelID = 0 );
   HOST_DEVICE void get( const GPUPerPatchBase&          var, char const* label, int patchID, int matlID, int levelID = 0 );
 
@@ -66,12 +66,12 @@ public:
   HOST_DEVICE void getModifiable( GPUPerPatchBase&          var, char const* label, int patchID, int matlID, int levelID = 0 );
 
   HOST_DEVICE void put( GPUGridVariableBase&      var, char const* label, int patchID, int matlID, int levelID = 0, bool overWrite = false );
-  HOST_DEVICE void put( GPUGridVariableBase&      var, char const* label, int levelID, bool overWrite = false );
+  HOST_DEVICE void putLevel( GPUGridVariableBase& var, char const* label,              int matlID, int levelID, bool overWrite = false );
   HOST_DEVICE void put( GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int levelID = 0, bool overWrite = false );
   HOST_DEVICE void put( GPUPerPatchBase&          var, char const* label, int patchID, int matlID, int levelID = 0, bool overWrite = false );
 
   HOST_DEVICE void allocateAndPut( GPUGridVariableBase&      var, char const* label, int patchID, int matlID, int3 low, int3 high, int levelID = 0 );
-  HOST_DEVICE void allocateAndPut( GPUGridVariableBase&      var, char const* label, int3 low, int3 high, int levelID);
+  HOST_DEVICE void allocateAndPut( GPUGridVariableBase&      var, char const* label, int matlID, int3 low, int3 high, int levelID);
   HOST_DEVICE void allocateAndPut( GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int levelID = 0 );
   HOST_DEVICE void allocateAndPut( GPUPerPatchBase&          var, char const* label, int patchID, int matlID, int levelID = 0 );
 
@@ -99,7 +99,7 @@ private:
 
   HOST_DEVICE void printGetError( const char* msg, char const* label, int patchID, int matlID, int levelID = 0 );
   HOST_DEVICE dataItem* getItem( char const* label, int patchID, int matlID, int levelID = 0 );
-  HOST_DEVICE dataItem* getLevelItem( char const* label, int levelID );
+  HOST_DEVICE dataItem* getLevelItem( char const* label, int matlID, int levelID );
 
   GPUDataWarehouse*  d_device_copy;          // in-device copy location
   int                d_numItems;             // max number of items contained in varDB
