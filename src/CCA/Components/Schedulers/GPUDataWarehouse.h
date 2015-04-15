@@ -70,18 +70,18 @@ public:
   HOST_DEVICE void put( GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int levelID = 0, bool overWrite = false );
   HOST_DEVICE void put( GPUPerPatchBase&          var, char const* label, int patchID, int matlID, int levelID = 0, bool overWrite = false );
 
-  HOST_DEVICE void allocateAndPut( GPUGridVariableBase&      var, char const* label, int patchID, int matlID, int3 low, int3 high, int levelID = 0 );
-  HOST_DEVICE void allocateAndPut( GPUGridVariableBase&      var, char const* label, int matlID, int3 low, int3 high, int levelID);
-  HOST_DEVICE void allocateAndPut( GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int levelID = 0 );
-  HOST_DEVICE void allocateAndPut( GPUPerPatchBase&          var, char const* label, int patchID, int matlID, int levelID = 0 );
+  HOST_DEVICE bool allocateAndPut( GPUGridVariableBase&      var, char const* label, int patchID, int matlID, int3 low, int3 high, int levelID = 0 );
+  HOST_DEVICE bool allocateAndPut( GPUGridVariableBase&      var, char const* label, int matlID, int3 low, int3 high, int levelID);
+  HOST_DEVICE bool allocateAndPut( GPUReductionVariableBase& var, char const* label, int patchID, int matlID, int levelID = 0 );
+  HOST_DEVICE bool allocateAndPut( GPUPerPatchBase&          var, char const* label, int patchID, int matlID, int levelID = 0 );
 
   //______________________________________________________________________
   // GPU DataWarehouse support methods
   HOST_DEVICE bool exist( char const* name, int patchID, int matlID, int levelID = 0 );
   HOST_DEVICE bool remove( char const* name, int patchID, int matlID, int levelID = 0 );
-  HOST_DEVICE void init_device( int id );
-  HOST_DEVICE void syncto_device(); 
-  HOST_DEVICE void clear();
+  HOST_DEVICE bool init_device( int id );
+  HOST_DEVICE bool syncto_device();
+  HOST_DEVICE bool clear();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){ return d_device_copy; };
   HOST_DEVICE void setDebug(bool s){ d_debug=s; }
   
