@@ -65,7 +65,7 @@ GPUDataWarehouse::getLevel(const GPUGridVariableBase& var, char const* label, in
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
   }
   else {
-    printGetError("levelDB GPUDataWarehouse::getLevel(GPUGridVariableBase& var, ...)", label, levelID, -1, matlIndx);
+    printGetLevelError("levelDB GPUDataWarehouse::getLevel(GPUGridVariableBase& var, ...)", label, levelID, matlIndx);
   }
 }
 
@@ -732,6 +732,30 @@ GPUDataWarehouse::clear()
   return retVal;
 #endif
 }
+//______________________________________________________________________
+//
+HOST_DEVICE void
+GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int levelIndx, int matlIndx)
+{
+#ifdef __CUDA_ARCH__
+  __syncthreads();
+  if( isThread0() ){
+    for (int i = 0; i < d_numLevelItems; i++) {
+      printf("   Available labels(%i): \"%s\"\n", d_numLevelItems, d_levelDB[i].label);
+    }
+    __syncthreads();
+    printf("  ERROR: %s( \"%s\", levelIndx: %i, matl: %i )  unknown variable\n\n", msg,  label, levelIndx, matlIndx);
+    printThread();
+    printBlock();
+    assert(0);            // FIXME!!! the code doesn't exit clean when we hit this assert.  This could be costly on big runs that land here.
+  }
+#else
+  //__________________________________
+  //  CPU code
+  printf("\t ERROR: %s( \"%s\", levelIndx: %i, matl: %i )  unknown variable\n", msg, label, levelIndx, matlIndx);
+#endif
+}
+
 //______________________________________________________________________
 //
 HOST_DEVICE void
