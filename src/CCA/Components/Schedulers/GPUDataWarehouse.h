@@ -44,15 +44,15 @@ class GPUDataWarehouse {
 
 public:
 
-           GPUDataWarehouse() : varDBLock("var DB lock"), levelDBLock("level DB lock")
-           {
-             d_device_copy   = NULL;
-             d_numItems      = 0;
-             d_numLevelItems = 0;
-             d_device_id     = 0;
-             d_debug         = true;
-             d_dirty         = true;
-           }
+  GPUDataWarehouse() : varDBLock("var DB lock"), levelDBLock("level DB lock")
+  {
+    d_device_copy   = NULL;
+    d_numItems      = 0;
+    d_numLevelItems = 0;
+    d_device_id     = 0;
+    d_debug         = true;
+    d_dirty         = true;
+  }
 
   virtual ~GPUDataWarehouse() {}
 
