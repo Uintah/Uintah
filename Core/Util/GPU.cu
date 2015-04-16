@@ -59,7 +59,7 @@ __device__
 void 
 printThread(){ 
   int threadID = threadIdx.x +  threadIdx.y +  threadIdx.z;
-  printf( "Thread [%i,%i,%i], ID: %i\n", threadIdx.x,threadIdx.y,threadIdx.z, threadID); 
+  printf( "Thread [%i,%i,%i], ID: %i\n", threadIdx.x,threadIdx.y,threadIdx.z, threadID);
 }
 
 //______________________________________________________________________
@@ -69,7 +69,7 @@ __device__
 void 
 printBlock(){ 
   int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
-  printf( "Block [%i,%i,%i], ID: %i\n", blockIdx.x,blockIdx.y,blockIdx.z, blockID); 
+  printf( "Block  [%i,%i,%i], ID: %i\n", blockIdx.x,blockIdx.y,blockIdx.z, blockID);
 }
 
 }  // end namespace Uintah
