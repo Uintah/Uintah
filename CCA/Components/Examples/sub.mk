@@ -35,6 +35,7 @@ SRCS += \
         $(SRCDIR)/AMRWave.cc           \
         $(SRCDIR)/Benchmark.cc         \
         $(SRCDIR)/Burger.cc            \
+        $(SRCDIR)/DOSweep.cc            \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/HeatEquation.cc      \
         $(SRCDIR)/Interpolator.cc      \
