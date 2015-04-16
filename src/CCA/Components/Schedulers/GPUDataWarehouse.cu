@@ -746,19 +746,25 @@ GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int lev
 #ifdef __CUDA_ARCH__
   __syncthreads();
   if( isThread0() ){
+    printf("  \nERROR: %s( \"%s\", levelIndx: %i, matl: %i )  unknown variable\n", msg,  label, levelIndx, matlIndx);
+
     for (int i = 0; i < d_numLevelItems; i++) {
-      printf("   Available labels(%i): \"%-15s\" matl: %i, L-%i \n", d_numLevelItems, d_levelDB[i].label, d_varDB[i].matlIndx, d_varDB[i].levelIndx);
+      printf("   Available levelDB labels(%i): \"%-15s\" matl: %i, L-%i \n", d_numLevelItems, d_levelDB[i].label, d_levelDB[i].matlIndx, d_levelDB[i].levelIndx);
     }
     __syncthreads();
-    printf("  ERROR: %s( \"%s\", levelIndx: %i, matl: %i )  unknown variable\n\n", msg,  label, levelIndx, matlIndx);
+
     printThread();
     printBlock();
+
     assert(0);            // FIXME!!! the code doesn't exit clean when we hit this assert.  This could be costly on big runs that land here.
   }
 #else
   //__________________________________
   //  CPU code
-  printf("\t ERROR: %s( \"%s\", levelIndx: %i, matl: %i )  unknown variable\n", msg, label, levelIndx, matlIndx);
+  printf("  \nERROR: %s( \"%s\", levelIndx: %i, matl: %i )  unknown variable\n", msg, label, levelIndx, matlIndx);
+  for (int i = 0; i < d_numLevelItems; i++) {
+    printf("   Available levelDB labels(%i): \"%-15s\" matl: %i, L-%i \n", d_numLevelItems, d_levelDB[i].label, d_levelDB[i].matlIndx, d_levelDB[i].levelIndx);
+  }
 #endif
 }
 
@@ -769,21 +775,29 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelInd
 {
 #ifdef __CUDA_ARCH__
   __syncthreads();
-  if( isThread0() ){
+  if( isThread0() ) {
+    printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i )  unknown variable\n", msg,  label, levelIndx, patchID, matlIndx);
+
     for (int i = 0; i < d_numVarItems; i++) {
-      printf("   Available labels(%i): \"%-15s\" matl: %i, patchID: %i, L-%i \n", d_numVarItems, d_varDB[i].label, d_varDB[i].matlIndx,
+      printf("   Available varDB labels(%i): \"%-15s\" matl: %i, patchID: %i, L-%i \n", d_numVarItems, d_varDB[i].label, d_varDB[i].matlIndx,
              d_varDB[i].domainID, d_varDB[i].levelIndx);
     }
     __syncthreads();
-    printf("  ERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i )  unknown variable\n\n", msg,  label, levelIndx, patchID, matlIndx);
+
     printThread();
     printBlock();
+    printf("\n");
+
     assert(0);            // FIXME!!! the code doesn't exit clean when we hit this assert.  This could be costly on big runs that land here.
   }
 #else
   //__________________________________
   //  CPU code
-  printf("\t ERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i )  unknown variable\n", msg, label, levelIndx, patchID, matlIndx);
+  printf("  \nERROR: %s( \"%s\", levelIndx: %i, patchID: %i, matl: %i )  unknown variable\n", msg, label, levelIndx, patchID, matlIndx);
+  for (int i = 0; i < d_numVarItems; i++) {
+    printf("   Available varDB labels(%i): \"%-15s\" matl: %i, patchID: %i, L-%i \n", d_numVarItems, d_varDB[i].label, d_varDB[i].matlIndx,
+           d_varDB[i].domainID, d_varDB[i].levelIndx);
+  }
 #endif
 }
 
