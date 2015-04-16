@@ -756,7 +756,9 @@ GPUDataWarehouse::printGetLevelError(const char* msg, char const* label, int lev
     printThread();
     printBlock();
 
-    assert(0);            // FIXME!!! the code doesn't exit clean when we hit this assert.  This could be costly on big runs that land here.
+    // we know this is fatal and why, so just stop kernel execution
+    __threadfence();
+    asm("trap;");
   }
 #else
   //__________________________________
@@ -788,7 +790,9 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelInd
     printBlock();
     printf("\n");
 
-    assert(0);            // FIXME!!! the code doesn't exit clean when we hit this assert.  This could be costly on big runs that land here.
+    // we know this is fatal and why, so just stop kernel execution
+    __threadfence();
+    asm("trap;");
   }
 #else
   //__________________________________
