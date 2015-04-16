@@ -149,16 +149,17 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int patchID, 
 #else
   //__________________________________
   // CPU code
-  if (d_numItems == MAX_ITEM) {
-    printf("Out of GPUDataWarehouse space.  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_ITEMS.");
+  if (d_numVarItems == MAX_VARDB_ITEMS) {
+    printf("Out of GPUDataWarehouse space (MAX_VARDB_ITEMS=%d)\n", MAX_VARDB_ITEMS);
+    printf("  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_VARDB_ITEMS\n");
     varDBLock.writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
     exit(-1);
   }
 
-  int i = d_numItems;
-  d_numItems++;
+  int i = d_numVarItems;
+  d_numVarItems++;
 
-  strncpy(d_varDB[i].label, label, MAX_NAME);
+  strncpy(d_varDB[i].label, label, MAX_NAME_LENGTH);
   d_varDB[i].domainID = patchID;
   d_varDB[i].matlIndx   = matlIndx;
   d_varDB[i].levelIndx  = levelIndx;
@@ -183,8 +184,9 @@ GPUDataWarehouse::putLevel(GPUGridVariableBase& var, char const* label, int matl
 #else
   //__________________________________
   // CPU code
-  if (d_numLevelItems == MAX_LVITEM) {
-    printf("Out of GPUDataWarehouse levelDB space.  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_LVITEM.");
+  if (d_numLevelItems == MAX_LEVELDB_ITEMS) {
+    printf("Out of GPUDataWarehouse levelDB space (MAX_LEVELDB_ITEMS=%d)\n", MAX_LEVELDB_ITEMS);
+    printf("  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_LEVELDB_ITEMS\n");
     levelDBLock.writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
     exit(-1);
   }
@@ -192,7 +194,7 @@ GPUDataWarehouse::putLevel(GPUGridVariableBase& var, char const* label, int matl
   int i = d_numLevelItems;
   d_numLevelItems++;
 
-  strncpy(d_levelDB[i].label, label, MAX_NAME);
+  strncpy(d_levelDB[i].label, label, MAX_NAME_LENGTH);
   d_levelDB[i].domainID = -1;
   d_levelDB[i].matlIndx   = matlIndx;
   d_levelDB[i].levelIndx  = levelIndx;
@@ -217,15 +219,17 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* label, int patc
 #else
   //__________________________________
   // CPU code
-  if (d_numItems == MAX_ITEM) {
-    printf("Out of GPUDataWarehouse space.  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_ITEMS");
+  if (d_numVarItems == MAX_LEVELDB_ITEMS) {
+    printf("Out of GPUDataWarehouse space (MAX_LEVELDB_ITEMS=%d)\n", MAX_LEVELDB_ITEMS);
+    printf("  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_LEVELDB_ITEMS\n");
+    levelDBLock.writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
     exit(-1);
   }
 
-  int i = d_numItems;
-  d_numItems++;
+  int i = d_numVarItems;
+  d_numVarItems++;
 
-  strncpy(d_varDB[i].label, label, MAX_NAME);
+  strncpy(d_varDB[i].label, label, MAX_NAME_LENGTH);
   d_varDB[i].domainID = patchID;
   d_varDB[i].matlIndx   = -1;  // matlIndx;
   d_varDB[i].levelIndx  = levelIndx;
@@ -250,15 +254,17 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int 
 #else
   //__________________________________
   // CPU code
-  if (d_numItems == MAX_ITEM) {
-    printf("Out of GPUDataWarehouse space.  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_ITEMS");
+  if (d_numVarItems == MAX_LEVELDB_ITEMS) {
+    printf("Out of GPUDataWarehouse space (MAX_LEVELDB_ITEMS=%d)\n", MAX_LEVELDB_ITEMS);
+    printf("  You can try increasing src/CCA/Components/Schedulers/GPUDataWarehouse.h: #define MAX_LEVELDB_ITEMS\n");
+    levelDBLock.writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
     exit(-1);
   }
 
-  int i = d_numItems;
-  d_numItems++;
+  int i = d_numVarItems;
+  d_numVarItems++;
 
-  strncpy(d_varDB[i].label, label, MAX_NAME);
+  strncpy(d_varDB[i].label, label, MAX_NAME_LENGTH);
   d_varDB[i].domainID = patchID;
   d_varDB[i].matlIndx   = matlIndx;
   d_varDB[i].levelIndx  = levelIndx;
@@ -434,14 +440,14 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   index = -1;
 
   if (d_debug && threadID == 0 && blockID == 0) {
-    printf("GPUDW::getItem() varDB item \"%-15s\" L-%i Patch: %i, Matl: %i from GPUDW %p, size (%d vars)", label, levelIndx, patchID, matlIndx, this, d_numItems);
-    printf("  Available varDB labels: %d\n", MAX_ITEM - d_numItems);
+    printf("GPUDW::getItem() varDB item \"%-15s\" L-%i Patch: %i, Matl: %i from GPUDW %p, size (%d vars)", label, levelIndx, patchID, matlIndx, this, d_numVarItems);
+    printf("  Available varDB labels: %d\n", MAX_VARDB_ITEMS - d_numVarItems);
   }
 
   //sync before get
   __syncthreads();
 
-  while (i < d_numItems) {
+  while (i < d_numVarItems) {
     int strmatch = 0;
     char* s2 = &(d_varDB[i].label[0]);
     while (!(strmatch = *(unsigned char *)s1 - *(unsigned char *)s2) && *s2) {  //strcmp
@@ -468,15 +474,15 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   int i = 0;
   varDBLock.readLock();
   {
-    while (i < d_numItems) {
-      if (!strncmp(d_varDB[i].label, label, MAX_NAME) && d_varDB[i].domainID == patchID && d_varDB[i].matlIndx == matlIndx
+    while (i < d_numVarItems) {
+      if (!strncmp(d_varDB[i].label, label, MAX_NAME_LENGTH) && d_varDB[i].domainID == patchID && d_varDB[i].matlIndx == matlIndx
           && d_varDB[i].levelIndx == levelIndx) {
         break;
       }
       i++;
     }
 
-    if (i == d_numItems) {
+    if (i == d_numVarItems) {
       printf("ERROR:\nGPUDataWarehouse::getItem( %s ) host get unknown variable from GPUDataWarehouse", label);
       varDBLock.readUnlock();
       exit(-1);
@@ -511,7 +517,7 @@ GPUDataWarehouse::getLevelItem(char const* label, int matlIndx, int levelIndx)
 
   if (d_debug && threadID == 0 && blockID == 0) {
     printf("GPUDW::getLevelItem() \"%-13s\" L-%i from GPUDW %p, size (%d vars)", label, levelIndx, this, d_numLevelItems);
-    printf("  Available levelDB labels: %d\n", MAX_LVITEM - d_numLevelItems);
+    printf("  Available levelDB labels: %d\n", MAX_LEVELDB_ITEMS - d_numLevelItems);
   }
 
   //sync before get
@@ -545,7 +551,7 @@ GPUDataWarehouse::getLevelItem(char const* label, int matlIndx, int levelIndx)
   levelDBLock.readLock();
   {
     while (i < d_numLevelItems) {
-      if (!strncmp(d_levelDB[i].label, label, MAX_NAME) && d_levelDB[i].levelIndx == levelIndx && d_levelDB[i].matlIndx == matlIndx) {
+      if (!strncmp(d_levelDB[i].label, label, MAX_NAME_LENGTH) && d_levelDB[i].levelIndx == levelIndx && d_levelDB[i].matlIndx == matlIndx) {
         break;
       }
       i++;
@@ -582,8 +588,8 @@ GPUDataWarehouse::exist(char const* label, int patchID, int matlIndx, int levelI
   varDBLock.readLock();
   {
     int i = 0;
-    while (i < d_numItems) {
-      if (!strncmp(d_varDB[i].label, label, MAX_NAME) && d_varDB[i].domainID == patchID && d_varDB[i].matlIndx == matlIndx
+    while (i < d_numVarItems) {
+      if (!strncmp(d_varDB[i].label, label, MAX_NAME_LENGTH) && d_varDB[i].domainID == patchID && d_varDB[i].matlIndx == matlIndx
           && d_varDB[i].levelIndx == levelIndx) {
         varDBLock.readUnlock();
         return true;
@@ -613,8 +619,8 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlIndx, int level
   varDBLock.writeLock();
   {
     int i = 0;
-    while (i < d_numItems) {
-      if (!strncmp(d_varDB[i].label, label, MAX_NAME) && d_varDB[i].domainID == patchID && d_varDB[i].matlIndx == matlIndx
+    while (i < d_numVarItems) {
+      if (!strncmp(d_varDB[i].label, label, MAX_NAME_LENGTH) && d_varDB[i].domainID == patchID && d_varDB[i].matlIndx == matlIndx
           && d_varDB[i].levelIndx == levelIndx) {
         CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
 
@@ -709,7 +715,7 @@ GPUDataWarehouse::clear()
   varDBLock.writeLock();
   {
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(d_device_id));
-    for (int i = 0; i < d_numItems; i++) {
+    for (int i = 0; i < d_numVarItems; i++) {
       if (d_varDB[i].label[0] != 0) {
         CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
 
@@ -719,7 +725,7 @@ GPUDataWarehouse::clear()
       }
     }
 
-    d_numItems = 0;
+    d_numVarItems = 0;
     if (d_device_copy) {
       CUDA_RT_SAFE_CALL(retVal = cudaFree(d_device_copy));
       if (d_debug && retVal == cudaSuccess) {
@@ -764,8 +770,8 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int levelInd
 #ifdef __CUDA_ARCH__
   __syncthreads();
   if( isThread0() ){
-    for (int i = 0; i < d_numItems; i++) {
-      printf("   Available labels(%i): \"%-15s\" matl: %i, patchID: %i, L-%i \n", d_numItems, d_varDB[i].label, d_varDB[i].matlIndx, 
+    for (int i = 0; i < d_numVarItems; i++) {
+      printf("   Available labels(%i): \"%-15s\" matl: %i, patchID: %i, L-%i \n", d_numVarItems, d_varDB[i].label, d_varDB[i].matlIndx,
              d_varDB[i].domainID, d_varDB[i].levelIndx);
     }
     __syncthreads();

@@ -34,9 +34,9 @@
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Thread/CrowdMonitor.h>
 
-#define MAX_ITEM   100
-#define MAX_LVITEM 100
-#define MAX_NAME   64
+#define MAX_VARDB_ITEMS     100
+#define MAX_LEVELDB_ITEMS   100
+#define MAX_NAME_LENGTH      64
 
 namespace Uintah {
 
@@ -47,7 +47,7 @@ public:
   GPUDataWarehouse() : varDBLock("var DB lock"), levelDBLock("level DB lock")
   {
     d_device_copy   = NULL;
-    d_numItems      = 0;
+    d_numVarItems   = 0;
     d_numLevelItems = 0;
     d_device_id     = 0;
     d_debug         = true;
@@ -88,13 +88,13 @@ public:
 private:
 
   struct dataItem {   // flat array
-    char       label[MAX_NAME];  // VarLabel name
-    int        domainID;         // a Patch ID (d_VarDB) or Level index (d_levelDB)
-    int        matlIndx;           // the material index
-    int        levelIndx;          // level the variable resides on (AMR)
-    int3       var_offset;       // offset
-    int3       var_size;         // dimensions of GPUGridVariable
-    void*      var_ptr;          // raw pointer to the memory
+    char       label[MAX_NAME_LENGTH];  // VarLabel name
+    int        domainID;                // a Patch ID (d_VarDB) or Level index (d_levelDB)
+    int        matlIndx;                // the material index
+    int        levelIndx;               // level the variable resides on (AMR)
+    int3       var_offset;              // offset
+    int3       var_size;                // dimensions of GPUGridVariable
+    void*      var_ptr;                 // raw pointer to the memory
   };
 
   HOST_DEVICE void printGetError( const char* msg, char const* label, int patchID, int matlIndx, int levelIndx = 0 );
@@ -104,13 +104,14 @@ private:
   HOST_DEVICE dataItem* getLevelItem( char const* label, int matlIndx, int levelIndx );
 
   GPUDataWarehouse*  d_device_copy;          // in-device copy location
-  int                d_numItems;             // max number of items contained in varDB
+  int                d_numVarItems;           // max number of items contained in varDB
   int                d_numLevelItems;        // max number of items contained in levelDB
   int                d_device_id;            // the device number where this DW resides
   bool               d_debug;                // debug flag - set in OnDemandDataWarehouse CTOR
   bool               d_dirty;                // whether or not this variable needs to be updated
-  dataItem           d_varDB[MAX_ITEM];      // holds GPUVariables (per patch)
-  dataItem           d_levelDB[MAX_LVITEM];  // hold variables referenced per level (not used yet)
+
+  dataItem           d_varDB[MAX_VARDB_ITEMS];      // holds GPUVariables (per patch)
+  dataItem           d_levelDB[MAX_LEVELDB_ITEMS];  // hold variables referenced per level
 
   mutable SCIRun::CrowdMonitor varDBLock;
   mutable SCIRun::CrowdMonitor levelDBLock;
