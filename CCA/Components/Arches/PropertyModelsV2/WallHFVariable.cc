@@ -37,6 +37,7 @@ WallHFVariable::create_local_labels(){
   register_new_variable( _flux_x, CC_DOUBLE ); 
   register_new_variable( _flux_y, CC_DOUBLE ); 
   register_new_variable( _flux_z, CC_DOUBLE ); 
+  register_new_variable( _task_name, CC_DOUBLE ); 
 
 }
 
@@ -49,9 +50,10 @@ WallHFVariable::create_local_labels(){
 void 
 WallHFVariable::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
-  register_variable( _flux_x, CC_DOUBLE, COMPUTES, variable_registry ); 
-  register_variable( _flux_y, CC_DOUBLE, COMPUTES, variable_registry ); 
-  register_variable( _flux_z, CC_DOUBLE, COMPUTES, variable_registry ); 
+  register_variable( _flux_x   , CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _flux_y   , CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _flux_z   , CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _task_name, CC_DOUBLE, COMPUTES, variable_registry );
 
 }
 
@@ -67,10 +69,12 @@ WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x); 
   SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y); 
   SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z); 
+  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name); 
 
   *flux_x <<= 0.0;
   *flux_y <<= 0.0;
   *flux_z <<= 0.0;
+  *total <<= 0.0; 
 
 }
 
@@ -79,9 +83,10 @@ WallHFVariable::register_restart_initialize( std::vector<VariableInformation>& v
 
   if ( _new_variables ){ 
 
-    register_variable( _flux_x, CC_DOUBLE, COMPUTES, variable_registry ); 
-    register_variable( _flux_y, CC_DOUBLE, COMPUTES, variable_registry ); 
-    register_variable( _flux_z, CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _flux_x,    CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _flux_y,    CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _flux_z,    CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _task_name, CC_DOUBLE, COMPUTES, variable_registry ); 
 
   }
   
@@ -99,10 +104,12 @@ WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* t
   SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x); 
   SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y); 
   SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z); 
+  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name); 
 
   *flux_x <<= 0.0;
   *flux_y <<= 0.0;
   *flux_z <<= 0.0;
+  *total <<= 0.0;
 
 }
 
@@ -118,6 +125,7 @@ WallHFVariable::register_timestep_eval( std::vector<VariableInformation>& variab
   register_variable( _flux_x            , CC_DOUBLE , COMPUTES , variable_registry );
   register_variable( _flux_y            , CC_DOUBLE , COMPUTES , variable_registry );
   register_variable( _flux_z            , CC_DOUBLE , COMPUTES , variable_registry );
+  register_variable( _task_name         , CC_DOUBLE , COMPUTES , variable_registry );
   register_variable( "radiationFluxE"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
   register_variable( "radiationFluxW"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
   register_variable( "radiationFluxN"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
@@ -128,6 +136,7 @@ WallHFVariable::register_timestep_eval( std::vector<VariableInformation>& variab
   register_variable( _flux_x            , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
   register_variable( _flux_y            , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
   register_variable( _flux_z            , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( _task_name         , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
 
 }
 
@@ -146,10 +155,12 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   CCVariable<double>* flux_x = tsk_info->get_uintah_field<CCVariable<double> >(_flux_x); 
   CCVariable<double>* flux_y = tsk_info->get_uintah_field<CCVariable<double> >(_flux_y); 
   CCVariable<double>* flux_z = tsk_info->get_uintah_field<CCVariable<double> >(_flux_z); 
+  CCVariable<double>* total  = tsk_info->get_uintah_field<CCVariable<double> >(_task_name); 
 
   (*flux_x).initialize(0.0); 
   (*flux_y).initialize(0.0); 
   (*flux_z).initialize(0.0); 
+  (*total).initialize(0.0);
 
   int timestep = _shared_state->getCurrentTopLevelTimeStep(); 
 
@@ -171,21 +182,27 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
         ////check neighbors to see if we populate a flux here: 
         if ( (*volFraction)[cxm] < 1.0 ){ 
           (*flux_x)[c] = (*flux_x)[c] + (*Fw)[c];
+          (*total)[cxm] += (*Fw)[c]; 
         }
         if ( (*volFraction)[cxp] < 1.0 ){ 
           (*flux_x)[c] = (*flux_x)[c] + (*Fe)[c];
+          (*total)[cxp] += (*Fe)[c]; 
         }
         if ( (*volFraction)[cym] < 1.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fs)[c];
+          (*total)[cym] += (*Fs)[c]; 
         }
         if ( (*volFraction)[cyp] < 1.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fn)[c];
+          (*total)[cyp] += (*Fn)[c]; 
         }
         if ( (*volFraction)[czm] < 1.0 ){ 
           (*flux_z)[c] = (*flux_z)[c] + (*Fb)[c];
+          (*total)[czm] += (*Fb)[c]; 
         }
         if ( (*volFraction)[czp] < 1.0 ){ 
           (*flux_z)[c] = (*flux_z)[c] + (*Ft)[c];
+          (*total)[czp] += (*Ft)[c]; 
         }
 
       }
@@ -195,10 +212,12 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>* old_flux_x = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_x); 
     constCCVariable<double>* old_flux_y = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_y); 
     constCCVariable<double>* old_flux_z = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_z); 
+    constCCVariable<double>* old_total = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name); 
 
     (*flux_x).copyData((*old_flux_x));
     (*flux_y).copyData((*old_flux_y));
     (*flux_z).copyData((*old_flux_z));
+    (*total).copyData((*old_total)); 
 
   }
 }
