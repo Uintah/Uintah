@@ -177,32 +177,32 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       IntVector czp = c + IntVector(0,0,1); 
       IntVector czm = c - IntVector(0,0,1); 
 
-      if ( (*volFraction)[c] > 0.0 ){ 
+      if ( (*volFraction)[c] < 1.0 ){ 
 
         ////check neighbors to see if we populate a flux here: 
-        if ( (*volFraction)[cxm] < 1.0 ){ 
-          (*flux_x)[c] = (*flux_x)[c] + (*Fw)[c];
-          (*total)[cxm] += (*Fw)[c]; 
+        if ( (*volFraction)[cxm] > 0.0 ){ 
+          (*flux_x)[c] = (*flux_x)[c] + (*Fe)[cxm];
+          (*total)[c] += (*Fe)[cxm]; 
         }
-        if ( (*volFraction)[cxp] < 1.0 ){ 
-          (*flux_x)[c] = (*flux_x)[c] + (*Fe)[c];
-          (*total)[cxp] += (*Fe)[c]; 
+        if ( (*volFraction)[cxp] > 0.0 ){ 
+          (*flux_x)[c] = (*flux_x)[c] + (*Fw)[cxp];
+          (*total)[c] += (*Fw)[cxp]; 
         }
-        if ( (*volFraction)[cym] < 1.0 ){ 
-          (*flux_y)[c] = (*flux_y)[c] + (*Fs)[c];
-          (*total)[cym] += (*Fs)[c]; 
+        if ( (*volFraction)[cym] > 0.0 ){ 
+          (*flux_y)[c] = (*flux_y)[c] + (*Fn)[cym];
+          (*total)[c] += (*Fn)[cym]; 
         }
-        if ( (*volFraction)[cyp] < 1.0 ){ 
-          (*flux_y)[c] = (*flux_y)[c] + (*Fn)[c];
-          (*total)[cyp] += (*Fn)[c]; 
+        if ( (*volFraction)[cyp] > 0.0 ){ 
+          (*flux_y)[c] = (*flux_y)[c] + (*Fs)[cyp];
+          (*total)[c] += (*Fs)[cyp]; 
         }
-        if ( (*volFraction)[czm] < 1.0 ){ 
-          (*flux_z)[c] = (*flux_z)[c] + (*Fb)[c];
-          (*total)[czm] += (*Fb)[c]; 
+        if ( (*volFraction)[czm] > 0.0 ){ 
+          (*flux_z)[c] = (*flux_z)[c] + (*Ft)[czm];
+          (*total)[c] += (*Ft)[czm]; 
         }
-        if ( (*volFraction)[czp] < 1.0 ){ 
-          (*flux_z)[c] = (*flux_z)[c] + (*Ft)[c];
-          (*total)[czp] += (*Ft)[c]; 
+        if ( (*volFraction)[czp] > 0.0 ){ 
+          (*flux_z)[c] = (*flux_z)[c] + (*Fb)[czp];
+          (*total)[c] += (*Fb)[czp]; 
         }
 
       }
