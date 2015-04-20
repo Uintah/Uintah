@@ -963,6 +963,7 @@ namespace Uintah {
       double d_SMALL_NUM;
       double d_CFL;
       double d_delT_knob;
+      double d_delT_diffusionKnob;     // used to modify the diffusion constribution to delT calc.
       int    d_max_iceMatl_indx;
       Vector d_gravity;
 

@@ -113,6 +113,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
   
   d_max_iter_equilibration  = 100;
   d_delT_knob               = 1.0;
+  d_delT_diffusionKnob      = 1.0;
   d_delT_scheme             = "aggressive";
   d_surroundingMatl_indx    = -9;
   d_dbgVar1                 = 0;     //inputs for debugging                 
@@ -368,6 +369,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   if (tsc_ps ) {
     tsc_ps ->require("Scheme_for_delT_calc", d_delT_scheme);
     tsc_ps ->require("knob_for_speedSound",  d_delT_knob);
+    tsc_ps ->require("knob_for_diffusion",   d_delT_diffusionKnob);
     
     if (d_delT_scheme != "conservative" && d_delT_scheme != "aggressive") {
      string warn="ERROR:\n Scheme_for_delT_calc:  must specify either aggressive or conservative";
@@ -1950,13 +1952,10 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       if (d_delT_scheme == "aggressive") {     //      A G G R E S S I V E
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector c = *iter;
-          double speed_Sound = d_delT_knob * speedSound[c];
-          double A = d_CFL*delX/(speed_Sound + 
-                                       fabs(vel_CC[c].x())+d_SMALL_NUM);
-          double B = d_CFL*delY/(speed_Sound + 
-                                       fabs(vel_CC[c].y())+d_SMALL_NUM);
-          double C = d_CFL*delZ/(speed_Sound + 
-                                       fabs(vel_CC[c].z())+d_SMALL_NUM);
+          double Mod_speed_Sound = d_delT_knob * speedSound[c];
+          double A = d_CFL*delX/(Mod_speed_Sound + fabs(vel_CC[c].x())+d_SMALL_NUM);
+          double B = d_CFL*delY/(Mod_speed_Sound + fabs(vel_CC[c].y())+d_SMALL_NUM);
+          double C = d_CFL*delZ/(Mod_speed_Sound + fabs(vel_CC[c].z())+d_SMALL_NUM);
           delt_CFL = std::min(A, delt_CFL);
           delt_CFL = std::min(B, delt_CFL);
           delt_CFL = std::min(C, delt_CFL);
@@ -1978,10 +1977,15 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
           for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
             IntVector c = *iter;
             double cp = cv[c] * gamma[c];
-            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * thermalCond[c]);
-            double kinematicViscosity = viscosity[c] * sp_vol_CC[c];
-            double inv_diffusionCoeff = min(inv_thermalDiffusivity, 1.0/kinematicViscosity);
+            
+            double Mod_thermalCond  = d_delT_diffusionKnob * thermalCond[c];
+            double Mod_viscosity    = d_delT_diffusionKnob * viscosity[c];
+            
+            double inv_thermalDiffusivity = cp/(sp_vol_CC[c] * Mod_thermalCond + d_SMALL_NUM );
+            double kinematicViscosity = Mod_viscosity * sp_vol_CC[c];
+            double inv_diffusionCoeff = min(inv_thermalDiffusivity, 1.0/( kinematicViscosity +d_SMALL_NUM) );
             double A = d_CFL * 0.5 * inv_sum_invDelx_sqr * inv_diffusionCoeff;
+            
             delt_diff = std::min(A, delt_diff);
             if (delt_diff < 1e-20 && badCell == IntVector(0,0,0)) {
               badCell = c;
