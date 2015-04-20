@@ -954,6 +954,13 @@ Arches::scheduleInitialize(const LevelP& level,
   d_props->doTableMatching();
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+      iprop != all_prop_models.end(); iprop++){
+    PropertyModelBase* prop_model = iprop->second;
+        if ( prop_model->initType()=="physical" )
+          prop_model->sched_computeProp( level, sched, 1 );
+  }
+
   //Setup BC areas
   d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
 

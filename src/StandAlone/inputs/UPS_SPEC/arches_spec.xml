@@ -91,7 +91,7 @@
                                                                           radiation_properties'">
 
           <initialization               spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, gaussian'">
+                                        attribute1="type REQUIRED STRING 'constant, gaussian, physical'">
 
             <!-- Constant initialization -->
             <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
