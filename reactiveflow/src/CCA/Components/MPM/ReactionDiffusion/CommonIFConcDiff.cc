@@ -137,7 +137,6 @@ void CommonIFConcDiff::scheduleInterpolateParticlesToGrid(Task* task,
     sdm->scheduleInterpolateParticlesToGrid(task, mpm_matl, patches);
 		if(include_hydrostress){
       task->requires(Task::OldDW, d_lb->pStressLabel, mpm_matl->thisMaterial(), gan, NGP);
-      task->computes(d_rdlb->pHydroStressLabel, mpm_matl->thisMaterial());
 		}
   }
 }
@@ -164,7 +163,6 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
   NCVariable<double> globalhstress;
 
   constParticleVariable<Matrix3> pStress;
-  ParticleVariable<double> pHydroStress;
 
   new_dw->allocateTemporary(globalconc,    patch, gnone, 0);
   new_dw->allocateTemporary(globalmass,    patch, gnone, 0);
@@ -197,12 +195,6 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
 		if(include_hydrostress){
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
       old_dw->get(pStress, d_lb->pStressLabel, pset);
-      new_dw->allocateAndPut(pHydroStress, d_rdlb->pHydroStressLabel, pset);
-
-      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
-         particleIndex idx = *iter;
-			   pHydroStress[idx] = (pStress[idx].Trace())/3;
-			}
 		}
   }
 
