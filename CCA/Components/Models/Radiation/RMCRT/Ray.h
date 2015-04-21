@@ -391,7 +391,9 @@ namespace Uintah{
     bool greater_Eq( const IntVector& a, const IntVector& b ){
       return ( a.x() >= b.x() && a.y() >= b.y() && a.z() >= b.z() );
     }
-
+    bool greater( const IntVector& a, const IntVector& b ){
+      return ( a.x() > b.x() && a.y() > b.y() && a.z() > b.z() );
+    }
   }; // class Ray
 
 } // namespace Uintah

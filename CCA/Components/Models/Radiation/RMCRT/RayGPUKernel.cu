@@ -36,13 +36,11 @@
 #include <curand_kernel.h>
 
 #define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
-#define FIXED_RANDOM_NUM         // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
+//#define FIXED_RANDOM_NUM         // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 
 
 //__________________________________
 //  To Do
-//  - Throw exception if halo > 0,0,0
-//  - Throw exception if not using patch_based ROI
 //  - Implement getRegion()  Currently can only pull fineLevel patch out from gpuDW with halo[0,0,0]
 //  - Implement fixed and dynamic ROI.
 //  - dynamic block size?
@@ -123,41 +121,6 @@ __global__ void rayTraceKernel( dim3 dimGrid,
       }
     }
   }
-
-
-
-/*`==========TESTING==========*/
-#if 0
- //__________________________________
- // Sanity check code used to test the "iterators"
-  // Extra Cell Loop
-  if (threadIdx.y == 2 ) {
-    printf( "outside loops thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
-  }
-
-  if ( (tidX >= patch.loEC.x) && (tidY >= patch.loEC.y) && (tidX < patch.hiEC.x) && (tidY < patch.hiEC.y) ) { // patch boundary check
-    for (int z = patch.loEC.z; z < patch.hiEC.z; z++) { // loop through z slices
-      GPUIntVector c = make_int3(tidX, tidY, z);
-      divQ[c] = 0;
-
-      if (c.y == 2 && c.z == 2 ) {
-        printf( " EC thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
-      }
-    }
-  }
-
-  if ( (tidX >= patch.lo.x) && (tidY >= patch.lo.y) && (tidX < patch.hi.x) && (tidY < patch.hi.y)) { // patch boundary check
-    for (int z = patch.lo.z; z < patch.hi.z; z++) { // loop through z slices
-      GPUIntVector c = make_int3(tidX, tidY, z);
-      if (c.y == 2 && c.z == 2 ) {
-        printf( " int thread[%d, %d] tID[%d, %d]\n",threadIdx.x, threadIdx.y, tidX, tidY);
-      }
-      divQ[c] = c.x + c.y + c.z;
-    }
-  }
-  return;
-#endif
-/*===========TESTING==========`*/
 
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
@@ -495,11 +458,11 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
 /*`==========TESTING==========*/
 #if 0
-        GPUIntVector d_dbgCell = make_int3(0,0,0);
+        GPUIntVector d_dbgCell = make_int3(3,0,4);
      //   if( origin != d_dbgCell ){
      //     return;
      //   }
-printf(" origin[%i,%i,%i] finePatchID: %i \n", origin.x, origin.y, origin.z, finePatch.ID);
+     //printf(" origin[%i,%i,%i] finePatchID: %i \n", origin.x, origin.y, origin.z, finePatch.ID);
 #endif
 /*===========TESTING==========`*/
 

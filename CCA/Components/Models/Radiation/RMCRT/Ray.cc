@@ -130,7 +130,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
   d_radiometer     = NULL;
-  d_dbgCell        = IntVector(0,0,0);
+  d_dbgCell        = IntVector(3,0,4);
 
   //_____________________________________________
   //   Ordering for Surface Method
@@ -309,6 +309,20 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  bulletproofing
+  if(  greater( d_halo,IntVector(0,0,0) ) && (Parallel::usingDevice()) ){
+    ostringstream warn;
+    warn << "GPU:RMCRT:ERROR: halo > 0 ";
+    warn << "At this time halo spacing must be 0 to run on GPUs";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
+    if( isMultilevel && (d_whichROI_algo != patch_based) && Parallel::usingDevice() ){
+    ostringstream warn;
+    warn << "GPU:RMCRT:ERROR: ";
+    warn << "At this time only ROI_extents type=\"patch_based\" work on the GPU";
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+  
   // special conditions when using floats and multi-level
   if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
 
@@ -1922,7 +1936,6 @@ void Ray::computeCellType( const ProcessorGroup*,
     printf( " face %d ", dir );
     printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
     printf( " tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
-    printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
     printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
     printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
     printf( "disMin: %g inDomain: %i\n",disMin, in_domain );
