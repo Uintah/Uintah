@@ -47,7 +47,7 @@ GaoDiffusion::GaoDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mfl
 
   mech_val = (diffusivity * partial_atomic_vol)/(boltzmann * operating_temp);
 
-  cout << "Mech_val: " << mech_val << endl;
+  //cout << "Mech_val: " << mech_val << endl;
   include_hydrostress = false;
 }
 
@@ -111,6 +111,7 @@ void GaoDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,    matlset, gan, NGP);
 	task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
 
+  task->computes(d_rdlb->pHydroStressLabel,        matlset);
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
@@ -151,6 +152,7 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
   new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
+  ParticleVariable<double> phydrostress;
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> ghydrostaticstress;
@@ -162,26 +164,27 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
 	                       dwi,  patch);
   new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
 	                       dwi,  patch);
+  new_dw->allocateAndPut(phydrostress,        d_rdlb->pHydroStressLabel,
+                         pset);
 
 
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
   ghydrostaticstress.initialize(0);
 
-  double hydrostress = 0;
   
   int n8or27 = d_Mflag->d_8or27;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
     particleIndex idx = *iter;
 
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    phydrostress[idx] = (pStress[idx].Trace())/3;
 
     IntVector node;
     for(int k = 0; k < n8or27; k++) {
       node = ni[k];
       if(patch->containsNode(node)) {
-        hydrostress = (pStress[idx].Trace())/3;
-        ghydrostaticstress[node] += hydrostress * pmass[idx] * S[k];
+        ghydrostaticstress[node] += phydrostress[idx] * pmass[idx] * S[k];
         gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
       }
     }
@@ -273,9 +276,9 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
 
   //new_dw->allocateAndPut(pConcGradient, d_rdlb->pConcGradientLabel, pset);
   new_dw->allocateTemporary(pConcGradient, pset);
+  new_dw->allocateTemporary(pHydroStressGradient,   pset);
   new_dw->allocateAndPut(pFlux,         d_rdlb->pFluxLabel,         pset);
 
-  new_dw->allocateTemporary(pHydroStressGradient,   pset);
   
   double chem_potential;
   double mech_potential; 
