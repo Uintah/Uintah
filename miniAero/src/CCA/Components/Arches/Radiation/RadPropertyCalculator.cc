@@ -626,13 +626,13 @@ void RadPropertyCalculator::coalOptics::compute_abskp( const Patch* patch,  cons
 
         if ( _p_planck_abskp ){ 
 
-          abskp[i][c] = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c],complexReal[i][c] )* unscaled_weight;
+          abskp[i][c] = _part_radprops->planck_abs_coeff( unscaled_size/2.0, (pT[i])[c],complexReal[i][c] )* unscaled_weight;
           //double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
           abskpt[c] += abskp[i][c] ; 
           
         } else if ( _p_ros_abskp ){ 
 
-          abskp[i][c] = _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c],complexReal[i][c] )* unscaled_weight;
+          abskp[i][c] = _part_radprops->ross_abs_coeff( unscaled_size/2.0, (pT[i])[c],complexReal[i][c] )* unscaled_weight;
           //double abskp_i = _part_rossprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
           abskpt[c] += abskp[i][c] ; 
 
@@ -678,13 +678,13 @@ void RadPropertyCalculator::coalOptics::compute_scatkt( const Patch* patch,  con
         unscaled_weight = (weights[i])[c];
         unscaled_size = (size[i])[c];
         if ( _p_planck_abskp ){ 
-          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c], complexReal[i][c]);
+          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size/2.0, (pT[i])[c], complexReal[i][c]);
           //double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c]);
           scatktQuad[i][c]=scatkt_i* unscaled_weight;
           scatkt[c] += scatkt_i * unscaled_weight; 
           
         } else if ( _p_ros_abskp ){ 
-          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] , complexReal[i][c]);
+          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size/2.0, (pT[i])[c] , complexReal[i][c]);
           //double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] );
           scatktQuad[i][c]=scatkt_i* unscaled_weight;
           scatkt[c] += scatkt_i * unscaled_weight; 
@@ -845,13 +845,13 @@ void RadPropertyCalculator::constantCIF::compute_abskp( const Patch* patch,  con
 
         if ( _p_planck_abskp ){ 
 
-          abskp[i][c] = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c])* unscaled_weight;
+          abskp[i][c] = _part_radprops->planck_abs_coeff( unscaled_size/2.0, (pT[i])[c])* unscaled_weight;
           //double abskp_i = _part_radprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
           abskpt[c] += abskp[i][c] ; 
           
         } else if ( _p_ros_abskp ){ 
 
-          abskp[i][c] = _part_radprops->ross_abs_coeff( unscaled_size, (pT[i])[c])* unscaled_weight;
+          abskp[i][c] = _part_radprops->ross_abs_coeff( unscaled_size/2.0, (pT[i])[c])* unscaled_weight;
           //double abskp_i = _part_rossprops->planck_abs_coeff( unscaled_size, (pT[i])[c] );
           abskpt[c] += abskp[i][c] ; 
 
@@ -896,12 +896,12 @@ void RadPropertyCalculator::constantCIF::compute_scatkt( const Patch* patch,  co
         unscaled_weight = (weights[i])[c];
         unscaled_size = (size[i])[c];
         if ( _p_planck_abskp ){ 
-          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size, (pT[i])[c]);
+          double scatkt_i = _part_radprops->planck_sca_coeff( unscaled_size/2.0, (pT[i])[c]);
           scatktQuad[i][c]=scatkt_i* unscaled_weight;
           scatkt[c] += scatkt_i * unscaled_weight; 
 
         } else if ( _p_ros_abskp ){ 
-          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size, (pT[i])[c] );
+          double scatkt_i =  _part_radprops->ross_sca_coeff( unscaled_size/2.0, (pT[i])[c] );
           scatktQuad[i][c]=scatkt_i* unscaled_weight;
           scatkt[c] += scatkt_i * unscaled_weight; 
         } 

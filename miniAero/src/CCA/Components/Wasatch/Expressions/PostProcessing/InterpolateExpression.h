@@ -50,7 +50,7 @@ template< typename SrcT, typename DestT >
 class InterpolateExpression
 : public Expr::Expression<DestT>
 {
-  DECLARE_FIELD(SrcT, src_);
+  DECLARE_FIELD(SrcT, src_)
   
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SrcT, DestT >::type InterpSrcT2DestT;
   const InterpSrcT2DestT* interpSrcT2DestTOp_;
@@ -95,7 +95,7 @@ template< typename DestT >
 class InterpolateParticleExpression
 : public Expr::Expression<DestT>
 {
-  DECLARE_FIELDS(ParticleField, src_, psize_, px_, py_, pz_);
+  DECLARE_FIELDS(ParticleField, src_, psize_, px_, py_, pz_)
   
   typedef typename SpatialOps::Particle::ParticleToCell<DestT> P2CellOpT;
   P2CellOpT* p2CellOp_; // particle to cell operator

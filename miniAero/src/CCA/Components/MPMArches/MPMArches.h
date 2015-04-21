@@ -106,6 +106,9 @@ public:
   // Set up initial conditions for MPMArches problem	 
   virtual void scheduleInitialize(const LevelP& level,
 				  SchedulerP&);
+                              
+  virtual void scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched);
 
   virtual void scheduleInitializeKStability(SchedulerP& sched,
 					    const PatchSet* patches,

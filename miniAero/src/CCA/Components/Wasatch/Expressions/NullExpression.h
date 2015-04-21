@@ -81,6 +81,7 @@ NullExpression<SrcT, TargetT>::
 NullExpression( const Expr::TagList& VarNameTags )
   : Expr::Expression<TargetT>()
 {
+  this->set_gpu_runnable(true);
   this->template create_field_vector_request<SrcT>(VarNameTags, f_);
 }
 

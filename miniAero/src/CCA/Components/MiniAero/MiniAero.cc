@@ -254,6 +254,14 @@ void MiniAero::scheduleInitialize(const LevelP& level,
 }
 
 //______________________________________________________________________
+//
+void MiniAero::scheduleRestartInitialize(const LevelP& level,
+                                        SchedulerP& sched)
+{
+  // do nothing for now
+}
+
+//______________________________________________________________________
 // 
 void MiniAero::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)

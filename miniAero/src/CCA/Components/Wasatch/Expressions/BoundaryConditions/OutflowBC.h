@@ -58,8 +58,8 @@ public:
   void evaluate();
   
 private:
-  DECLARE_FIELD(FieldT, u_);
-  DECLARE_FIELD(SpatialOps::SingleValueField, dt_);
+  DECLARE_FIELD(FieldT, u_)
+  DECLARE_FIELD(SpatialOps::SingleValueField, dt_)
 };
 
 #endif // OutflowBC_Expr_h

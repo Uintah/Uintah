@@ -292,7 +292,13 @@ main( int argc, char *argv[], char *env[] )
   string solver              = ""; // Empty string defaults to CGSolver
   bool   validateUps         = true;
   bool   onlyValidateUps     = false;
-    
+
+#ifdef HAVE_VISIT
+  bool   do_VisIt            = true;  // Assume if VisIt is compiled
+				      // in that the user may want to
+				      // connect with VisIt.
+#endif
+
   IntVector layout(1,1,1);
 
   // Checks to see if user is running an MPI version of sus.
@@ -427,19 +433,22 @@ main( int argc, char *argv[], char *env[] )
     // VisIt. The most important is the directory path to where VisIt
     // is located.
 #ifdef HAVE_VISIT
-    else if (arg == "-dir" ) {
+    else if (arg == "-no_visit") {
+      do_VisIt = false;
+    }
+    else if (arg == "-visit_dir" ) {
       if (++i == argc) {
-        usage("You must provide a file name for -dir", arg, argv[0]);
+        usage("You must provide a file name for -visit_dir", arg, argv[0]);
       }
     }
-    else if (arg == "-option" ) {
+    else if (arg == "-visit_option" ) {
       if (++i == argc) {
-        usage("You must provide a string for -option", arg, argv[0]);
+        usage("You must provide a string for -visit_option", arg, argv[0]);
       }
     }
-    else if (arg == "-trace" ) {
+    else if (arg == "-visit_trace" ) {
       if (++i == argc) {
-        usage("You must provide a file name for -trace", arg, argv[0]);
+        usage("You must provide a file name for -visit_trace", arg, argv[0]);
       }
     }
 #endif
@@ -510,7 +519,10 @@ main( int argc, char *argv[], char *env[] )
     // libsim for in-situ analysis and visualization. This call pass
     // optional arguments that VisIt will interpert.
 #ifdef HAVE_VISIT
-    visit_LibSimArguments( argc, argv );
+    if( do_VisIt )
+    {
+      visit_LibSimArguments( argc, argv );
+    }
 #endif
 
 #ifndef HAVE_MPICH_OLD
@@ -633,6 +645,10 @@ main( int argc, char *argv[], char *env[] )
 
     SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
 
+#ifdef HAVE_VISIT
+    ((AMRSimulationController*) ctl)->SetVisIt( do_VisIt );
+#endif
+
     RegridderCommon* reg = 0;
     if(do_AMR) {
       reg = RegridderFactory::create(ups, world);
@@ -711,9 +727,9 @@ main( int argc, char *argv[], char *env[] )
     }
 
     MALLOC_TRACE_TAG(oldTag);
-    /*
-     * Start the simulation controller
-     */
+
+    //__________________________________
+    // Start the simulation controller
     if (restart) {
       ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }

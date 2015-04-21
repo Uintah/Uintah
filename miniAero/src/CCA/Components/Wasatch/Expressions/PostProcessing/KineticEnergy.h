@@ -114,9 +114,9 @@ class TotalKineticEnergy
 {
   
 private:
-  DECLARE_FIELD(Vel1T, u_);
-  DECLARE_FIELD(Vel2T, v_);
-  DECLARE_FIELD(Vel3T, w_);
+  DECLARE_FIELD(Vel1T, u_)
+  DECLARE_FIELD(Vel2T, v_)
+  DECLARE_FIELD(Vel3T, w_)
   
   const bool doX_, doY_, doZ_, is3d_;
   

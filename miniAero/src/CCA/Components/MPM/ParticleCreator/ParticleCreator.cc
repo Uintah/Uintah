@@ -161,6 +161,10 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<Matrix3>::const_iterator sizeiter;
     if (psizes) {
       if (!psizes->empty()) sizeiter = vars.d_object_size[*obj].begin();
+      if (d_flags->d_AMR) {
+        cerr << "WARNING:  The particle size when using smooth or file\n"; 
+        cerr << "geom pieces needs some work when used with AMR" << endl;
+      }
     }
 
     // For getting particles colors (if they exist)
@@ -218,28 +222,10 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         }
       }
 
-      // CPDI or CPTI
-      if (psizes && ((d_flags->d_interpolator_type=="cpdi") || d_useCPTI)) {
-        // Read psize from file
+      if (psizes) {
+        // Read psize from file or get from a smooth geometry piece
         if (!psizes->empty()) {
-          Vector dxcc = patch->dCell(); 
           pvars.psize[pidx] = *sizeiter;
-          if (volumes->empty()) {
-            // Calculate CPDI hexahedron volume from psize 
-            double volFactor=1.0;
-            if (d_useCPTI) {
-              // Calculate CPTI tetrahedron volume from psize 
-              volFactor=6.0;
-            }
-            // (if volume not passed from FileGeometryPiece)
-            pvars.pvolume[pidx]=abs(pvars.psize[pidx].Determinant()/volFactor);
-            pvars.pmass[pidx] = matl->getInitialDensity()*pvars.pvolume[pidx];
-          }
-          // Modify psize (CPDI R-vectors) to be normalized by cell spacing
-          Matrix3 size(1./((double) dxcc.x()),0.,0.,
-                       0.,1./((double) dxcc.y()),0.,
-                       0.,0.,1./((double) dxcc.z()));
-          pvars.psize[pidx]= pvars.psize[pidx]*size;
           ++sizeiter;
         }
       }
@@ -388,6 +374,9 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_artificial_viscosity){
      new_dw->allocateAndPut(pvars.p_q,        d_lb->p_qLabel,           subset);
   }
+  if(d_flags->d_AMR){
+     new_dw->allocateAndPut(pvars.pLastLevel, d_lb->pLastLevelLabel,    subset);
+  }
   return subset;
 }
 
@@ -416,7 +405,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
       const Point CC = patch->cellPosition(c);
       bool includeExtraCells=true;
       const Patch* patchExists = fineLevel->getPatchFromPoint(CC,
-                                                              includeExtraCells);
+                                                             includeExtraCells);
       if(patchExists != 0){
        continue;
       }
@@ -512,8 +501,8 @@ ParticleCreator::initializeParticle(const Patch* patch,
           affineTrans_A0[0],affineTrans_A0[1],affineTrans_A0[2],
           affineTrans_A1[0],affineTrans_A1[1],affineTrans_A1[2],
           affineTrans_A2[0],affineTrans_A2[1],affineTrans_A2[2]);
-  // The size matrix is used for storing particle domain sizes (Rvectors for CPDI
-  // and CPTI) normalized by the grid spacing
+  // The size matrix is used for storing particle domain sizes (Rvectors for
+  // CPDI and CPTI) normalized by the grid spacing
   Matrix3 size(1./((double) ppc.x()),0.,0.,
                0.,1./((double) ppc.y()),0.,
                0.,0.,1./((double) ppc.z()));
@@ -539,7 +528,19 @@ ParticleCreator::initializeParticle(const Patch* patch,
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
   pvars.plocalized[i]   = 0;
-  pvars.prefined[i]     = 0;
+
+  // AMR stuff
+  // I don't like putting this here, a conditional around each particle.
+  // A better solution would be to pass in the value for prefined.  Make
+  // prefined = 1 on the finest level (unless there is only 1 level),
+  // so that particles don't get refined
+  // to smaller than they start in that region initially.
+  const Level* curLevel = patch->getLevel();
+  if(curLevel->hasFinerLevel() || curLevel->getID()==0){
+    pvars.prefined[i]     = 0;
+  } else{
+    pvars.prefined[i]     = 1;
+  }
 
   //MMS
   string mms_type = d_flags->d_mms_type;
@@ -588,6 +589,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
   if(d_artificial_viscosity){
     pvars.p_q[i] = 0.;
   }
+  if(d_flags->d_AMR){
+    pvars.pLastLevel[i] = curLevel->getID();
+  }
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
 
@@ -630,17 +634,15 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   if (sgp) {
     int numPts = 0;
     FileGeometryPiece *fgp = dynamic_cast<FileGeometryPiece*>(piece.get_rep());
+    sgp->setCellSize(patch->dCell());
     if(fgp){
-      if (d_useCPTI) {
-        proc0cout << "*** Reading CPTI file ***" << endl;
-      }
+      fgp->setCpti(d_useCPTI);
       fgp->readPoints(patch->getID());
       numPts = fgp->returnPointCount();
     } else {
       Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");    
       double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
       sgp->setParticleSpacing(dx);
-      sgp->setCellSize(patch->dCell());
       numPts = sgp->createPoints();
     }
     vector<Point>* points      = sgp->getPoints();
@@ -782,20 +784,25 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
     particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
   }
 
+  if (d_flags->d_refineParticles) {
+    particle_state.push_back(d_lb->pRefinedLabel);
+    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
+  }
+
   particle_state.push_back(d_lb->pStressLabel);
   particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
 
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);
 
-  if (d_flags->d_refineParticles) {
-    particle_state.push_back(d_lb->pRefinedLabel);
-    particle_state_preReloc.push_back(d_lb->pRefinedLabel_preReloc);
-  }
-
   if (d_artificial_viscosity) {
     particle_state.push_back(d_lb->p_qLabel);
     particle_state_preReloc.push_back(d_lb->p_qLabel_preReloc);
+  }
+
+  if (d_flags->d_AMR) {
+    particle_state.push_back(d_lb->pLastLevelLabel);
+    particle_state_preReloc.push_back(d_lb->pLastLevelLabel_preReloc);
   }
 
   if (d_computeScaleFactor) {

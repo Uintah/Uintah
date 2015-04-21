@@ -130,6 +130,11 @@ namespace Uintah {
 
     unsigned int createPoints();
 
+    //////////////////////////////////////////////////////////////////////
+    /*! Check for CPTI interpolator                                     */
+    //////////////////////////////////////////////////////////////////////
+    void setCpti(bool useCPTI);
+
   private:
  
     Box                    d_box;
@@ -137,6 +142,7 @@ namespace Uintah {
     std::string            d_file_format;
     std::list<std::string> d_vars;
     bool                   d_usePFS;
+    bool                   d_useCPTI;
     
     void checkFileType(std::ifstream & source, std::string& fileType, std::string& filename);
     

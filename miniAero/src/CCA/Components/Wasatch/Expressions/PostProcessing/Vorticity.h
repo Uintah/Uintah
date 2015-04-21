@@ -89,8 +89,8 @@ class Vorticity
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel1FaceT, FieldT >::type InterpVel1FaceT2FieldT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, Vel2FaceT, FieldT >::type InterpVel2FaceT2FieldT;
 
-  DECLARE_FIELD(Vel1T, u1_);
-  DECLARE_FIELD(Vel2T, u2_);
+  DECLARE_FIELD(Vel1T, u1_)
+  DECLARE_FIELD(Vel2T, u2_)
 
   const Vel1GradT* vel1GradTOp_;
   const Vel2GradT* vel2GradTOp_;

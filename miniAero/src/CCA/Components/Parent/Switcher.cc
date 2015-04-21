@@ -361,7 +361,14 @@ void Switcher::scheduleInitialize(const LevelP& level,
   printSchedule(level,dbg,"Switcher::scheduleInitialize");
   d_sim->scheduleInitialize(level,sched);
 }
-
+//______________________________________________________________________
+// 
+void Switcher::scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched)
+{
+  printSchedule(level,dbg,"Switcher::scheduleRestartInitialize");
+  d_sim->scheduleRestartInitialize(level,sched);
+}
 //______________________________________________________________________
 //
 void Switcher::scheduleComputeStableTimestep(const LevelP& level,

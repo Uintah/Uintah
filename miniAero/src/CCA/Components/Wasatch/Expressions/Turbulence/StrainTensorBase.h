@@ -76,9 +76,9 @@ protected:
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::YSurfZField, SVolField >::type YZInterpT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SpatialOps::ZSurfYField, SVolField >::type ZYInterpT;
   
-  DECLARE_FIELD(XVolField, u_);
-  DECLARE_FIELD(YVolField, v_);
-  DECLARE_FIELD(ZVolField, w_);
+  DECLARE_FIELD(XVolField, u_)
+  DECLARE_FIELD(YVolField, v_)
+  DECLARE_FIELD(ZVolField, w_)
   
   const bool doX_, doY_, doZ_;
   

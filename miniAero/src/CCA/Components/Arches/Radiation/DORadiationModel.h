@@ -59,7 +59,6 @@ GENERAL INFORMATION
 namespace Uintah {
 
   class ArchesLabel;
-  class BoundaryCondition;
 
 class DORadiationModel{
 
@@ -69,7 +68,6 @@ public:
 
       DORadiationModel(const ArchesLabel* label,
                        const MPMArchesLabel* MAlab,
-                       BoundaryCondition* bndry_cond, 
                        const ProcessorGroup* myworld);
 
 
@@ -119,7 +117,6 @@ private:
       double d_opl; // optical length
       const ArchesLabel*    d_lab;
       const MPMArchesLabel* d_MAlab;
-      BoundaryCondition* d_boundaryCondition;
       const ProcessorGroup* d_myworld;
       const PatchSet* d_perproc_patches;
       
@@ -166,7 +163,7 @@ private:
       void computeScatteringIntensities(int direction,
                       constCCVariable<double> &scatkt,
   //StaticArray< constCCVariable<double> > &Intensities,
-  StaticArray< TYPE > &Intensities,
+  SCIRun::StaticArray< TYPE > &Intensities,
               CCVariable<double> &scatIntensitySource,
               constCCVariable<double> &asymmetryFactor,
                                     const Patch* patch,
@@ -175,8 +172,8 @@ private:
 
 
       void computeIntensitySource( const Patch* patch,
-              StaticArray <constCCVariable<double> >&abskp,
-             StaticArray <constCCVariable<double> > &pTemp,
+              SCIRun::StaticArray <constCCVariable<double> >&abskp,
+             SCIRun::StaticArray <constCCVariable<double> > &pTemp,
                            constCCVariable<double>  &abskg,
                            constCCVariable<double>  &gTemp,
                          CCVariable<double> &b_sourceArray);

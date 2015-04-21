@@ -73,25 +73,30 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& params,
                               const ProblemSpecP& restart_prob_spec,
                               GridP& grid, SimulationStateP&);
+                              
     virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP& sched);
+                                    SchedulerP& sched);
+                                    
+    virtual void scheduleRestartInitialize(const LevelP& level,
+                                           SchedulerP& sched);
+                                           
     virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&);
+                                               SchedulerP&);
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&);
+                                      SchedulerP&);
   private:
     void initialize(const ProcessorGroup*,
-		    const PatchSubset* patches, const MaterialSubset* matls,
-		    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                    const PatchSubset* patches, const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
     void computeStableTimestep(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw, DataWarehouse* new_dw);
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw, DataWarehouse* new_dw);
     void timeAdvance(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw,
-		     LevelP, Scheduler*);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw, DataWarehouse* new_dw,
+                     LevelP, Scheduler*);
 
 
     ExamplesLabel* lb_;
@@ -104,7 +109,7 @@ WARNING
     
     SolverTest1(const SolverTest1&);
     SolverTest1& operator=(const SolverTest1&);
-	 
+         
   };
 }
 

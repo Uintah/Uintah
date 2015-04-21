@@ -138,6 +138,12 @@ private:
 
   /** @brief  Calculate gas properties of N2 at atmospheric pressure (see Holman, p. 505) */
   double props(double Tg, double Tp);
+  
+  /** @brief  Compute cp using Merricks method (1982) */
+  double cp_c(double Tp);
+  double cp_ash(double Tp);
+  double cp_h(double Tp);
+  double g2(double z);
 
   // labels used for getting required variables later on in the calculation
   const VarLabel* _particle_temperature_varlabel;
@@ -146,6 +152,8 @@ private:
   const VarLabel* _volq_varlabel;
   const VarLabel* _length_varlabel;
   const VarLabel* _weight_varlabel;
+  const VarLabel* _rcmass_varlabel;
+  const VarLabel* _char_varlabel;
   const VarLabel* _abskg_varlabel;
   const VarLabel* _abskp_varlabel;
   const VarLabel* _charoxiTemp_varlabel; 
@@ -170,6 +178,7 @@ private:
     };
 
 
+  double max_Q_convection;
   double _Pr;
   double _sigma;
   double _pi;
@@ -181,11 +190,19 @@ private:
   double _ksi;
   double _Hc0;
   double _Hh0;
+  double _rhop_o;
   double _enthalpy_scaling_constant;
   double _weight_scaling_constant;
   double _weight_small;   ///< small weight 
   std::string _weight_name;
+  std::vector<double> _init_ash;
+  std::vector<double> _sizes;
 
+  double heat_rate_;
+  double gas_heat_rate_;
+  double Q_convection;
+  double Q_radiation;
+  double Q_reaction;  
   // variables used in cell loops 
   double blow;
   double kappa;

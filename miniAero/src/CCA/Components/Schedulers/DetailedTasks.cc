@@ -1338,7 +1338,7 @@ operator<<(       std::ostream& out,
       if (task.getTask()->getType() == Task::OncePerProc) {
         out << ", on multiple levels";
       }
-      else if (patches->size() > 1) {
+      else {
         out << ", Level " << getLevel(patches)->getIndex();
       }
     }

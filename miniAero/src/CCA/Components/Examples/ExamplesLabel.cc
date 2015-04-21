@@ -42,96 +42,96 @@ ExamplesLabel::ExamplesLabel()
 {
   // For SimpleCFD
   bctype = VarLabel::create("bctype",
-			    NCVariable<int>::getTypeDescription(),
-			    IntVector(1,1,1));
+                            NCVariable<int>::getTypeDescription(),
+                            IntVector(1,1,1));
   xvelocity = VarLabel::create("xvelocity",
-			       SFCXVariable<double>::getTypeDescription(),
-			       IntVector(1,1,1));
+                               SFCXVariable<double>::getTypeDescription(),
+                               IntVector(1,1,1));
   yvelocity = VarLabel::create("yvelocity",
-			       SFCYVariable<double>::getTypeDescription(),
-			       IntVector(1,1,1));
+                               SFCYVariable<double>::getTypeDescription(),
+                               IntVector(1,1,1));
   zvelocity = VarLabel::create("zvelocity",
-			       SFCZVariable<double>::getTypeDescription(),
-			       IntVector(1,1,1));
+                               SFCZVariable<double>::getTypeDescription(),
+                               IntVector(1,1,1));
   density = VarLabel::create("density",
-			     CCVariable<double>::getTypeDescription(),
-			     IntVector(1,1,1));
+                             CCVariable<double>::getTypeDescription(),
+                             IntVector(1,1,1));
   temperature = VarLabel::create("temperature",
-				 CCVariable<double>::getTypeDescription(),
-				 IntVector(1,1,1));
+                                 CCVariable<double>::getTypeDescription(),
+                                 IntVector(1,1,1));
   xvelocity_matrix = VarLabel::create("xvelocity_matrix",
-				      SFCXVariable<Stencil7>::getTypeDescription());
+                                      SFCXVariable<Stencil7>::getTypeDescription());
   xvelocity_rhs = VarLabel::create("xvelocity_rhs",
-				   SFCXVariable<double>::getTypeDescription());
+                                   SFCXVariable<double>::getTypeDescription());
   yvelocity_matrix = VarLabel::create("yvelocity_matrix",
-				      SFCYVariable<Stencil7>::getTypeDescription());
+                                      SFCYVariable<Stencil7>::getTypeDescription());
   yvelocity_rhs = VarLabel::create("yvelocity_rhs",
-				   SFCYVariable<double>::getTypeDescription());
+                                   SFCYVariable<double>::getTypeDescription());
   zvelocity_matrix = VarLabel::create("zvelocity_matrix",
-				      SFCZVariable<Stencil7>::getTypeDescription());
+                                      SFCZVariable<Stencil7>::getTypeDescription());
   zvelocity_rhs = VarLabel::create("zvelocity_rhs",
-				   SFCZVariable<double>::getTypeDescription());
+                                   SFCZVariable<double>::getTypeDescription());
   density_matrix = VarLabel::create("density_matrix",
-				    CCVariable<Stencil7>::getTypeDescription());
+                                    CCVariable<Stencil7>::getTypeDescription());
   density_rhs = VarLabel::create("density_rhs",
-				 CCVariable<double>::getTypeDescription());
+                                 CCVariable<double>::getTypeDescription());
   temperature_matrix = VarLabel::create("temperature_matrix",
-					CCVariable<Stencil7>::getTypeDescription());
+                                        CCVariable<Stencil7>::getTypeDescription());
   temperature_rhs = VarLabel::create("temperature_rhs",
-				     CCVariable<double>::getTypeDescription());
+                                     CCVariable<double>::getTypeDescription());
 
   pressure_matrix = VarLabel::create("pressure_matrix",
-				     CCVariable<Stencil7>::getTypeDescription());
+                                     CCVariable<Stencil7>::getTypeDescription());
   pressure_rhs = VarLabel::create("pressure_rhs",
-				  CCVariable<double>::getTypeDescription());
+                                  CCVariable<double>::getTypeDescription());
   pressure = VarLabel::create("pressure",
-			      CCVariable<double>::getTypeDescription());
+                              CCVariable<double>::getTypeDescription());
 
   ccvelocity = VarLabel::create("ccvelocity",
-				CCVariable<Vector>::getTypeDescription());
+                                CCVariable<Vector>::getTypeDescription());
   ccvorticity = VarLabel::create("ccvorticity",
-				 CCVariable<Vector>::getTypeDescription());
+                                 CCVariable<Vector>::getTypeDescription());
   ccvorticitymag = VarLabel::create("ccvorticitymag",
-				    CCVariable<double>::getTypeDescription());
+                                    CCVariable<double>::getTypeDescription());
   vcforce = VarLabel::create("vcforce",
-			     CCVariable<Vector>::getTypeDescription());
+                             CCVariable<Vector>::getTypeDescription());
   NN = VarLabel::create("N",
-			CCVariable<Vector>::getTypeDescription());
+                        CCVariable<Vector>::getTypeDescription());
 
   // For AMRSimpleCFD
   pressure2_matrix = VarLabel::create("pressure2_matrix",
-				      CCVariable<Stencil7>::getTypeDescription());
+                                      CCVariable<Stencil7>::getTypeDescription());
   pressure2_rhs = VarLabel::create("pressure2_rhs",
-				  CCVariable<double>::getTypeDescription());
+                                  CCVariable<double>::getTypeDescription());
   pressure2 = VarLabel::create("pressure2",
-			       CCVariable<double>::getTypeDescription());
+                               CCVariable<double>::getTypeDescription());
 
   density_gradient_mag = VarLabel::create("density_gradient_magnitude",
-					  CCVariable<double>::getTypeDescription());
+                                          CCVariable<double>::getTypeDescription());
   temperature_gradient_mag = VarLabel::create("temperature_gradient_magnitude",
-					      CCVariable<double>::getTypeDescription());
+                                              CCVariable<double>::getTypeDescription());
   pressure_gradient_mag = VarLabel::create("pressure_gradient_magnitude",
-					   CCVariable<double>::getTypeDescription());
+                                           CCVariable<double>::getTypeDescription());
 
   pXLabel = VarLabel::create("p.x",
                              ParticleVariable<Point>::getTypeDescription() );
 
   pXLabel_preReloc = VarLabel::create( "p.x+",
-			ParticleVariable<Point>::getTypeDescription(),
-			IntVector(0,0,0),
-			VarLabel::PositionVariable);
+                        ParticleVariable<Point>::getTypeDescription(),
+                        IntVector(0,0,0),
+                        VarLabel::PositionVariable);
 
   pParticleIDLabel = VarLabel::create("p.particleID",
-			ParticleVariable<long64>::getTypeDescription() );
+                        ParticleVariable<long64>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+",
-			ParticleVariable<long64>::getTypeDescription() );
+                        ParticleVariable<long64>::getTypeDescription() );
 
   pMassLabel_preReloc = VarLabel::create( "p.mass+",
-			ParticleVariable<double>::getTypeDescription() );
+                        ParticleVariable<double>::getTypeDescription() );
 
   pMassLabel = VarLabel::create( "p.mass",
-			ParticleVariable<double>::getTypeDescription() );
+                        ParticleVariable<double>::getTypeDescription() );
 
 
 

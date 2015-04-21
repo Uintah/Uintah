@@ -776,6 +776,7 @@ DEF_IEEEFP
 DEF_STAT64
 DL_LIB_DIR_FLAG
 DL_LIB_FLAG
+VISIT_PATH
 VISIT_LIB_FLAG
 VISIT_LIB_DIR_FLAG
 INC_VISIT_H
@@ -10519,8 +10520,8 @@ $as_echo "$as_me: WARNING: Have not tried using cmake v3.x... It might work..." 
 fi
 
 ##  --  search for visit stuff  -------------------------------------------
-# local     - sim/V2/lib/VisItControlInterface_V2.h
-#           - lib/libsimV2.a
+# local     - src/sim/V2/lib/VisItControlInterface_V2.h
+#           - build/lib/libsimV2.a
 
 # installed - linux-x86_64/libsim/V2/include/VisItControlInterface_V2.h
 #           - linux-x86_64/libsim/V2/lib/libsimV2.a
@@ -10578,8 +10579,10 @@ if test "$sci_required_visit" = "yes"; then
   fi
 
     # Check for a local version (compiling against source)
-    if test -e $with_visit/sim/V2/lib; then
+    if test -e $with_visit/sim/V2/lib/VisItControlInterface_V2.h; then
       _sci_inc="$with_visit/sim/V2/lib"
+    elif test -e $with_visit/../src/sim/V2/lib/VisItControlInterface_V2.h; then
+      _sci_inc="$with_visit/../src/sim/V2/lib"
     # Otherwise assume an installed version
     else
       _sci_inc="$with_visit/include"
@@ -11048,13 +11051,20 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   if test "$HAVE_VISIT" = "yes"; then
     DEF_VISIT="#define HAVE_VISIT 1"
-  else
-    DEF_VISIT="#define HAVE_VISIT 1"
+
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+        VISIT_PATH="#define VISIT_PATH ((char*)\"$with_visit\")"
+    # Otherwise assume an installed version
+    else
+        VISIT_PATH="#define VISIT_PATH ((char*)\"${with_visit}/../../../..\")"
+    fi
   fi
 
 fi #end sci_required_visit
 
 # these are all defined after the call to SCI_COMPILE_LINK_TEST
+
 
 
 
@@ -38748,9 +38758,9 @@ if test "$with_boost" -o "$with_boost_library"; then
 
   _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
 
-  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
+  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt boost_date_time-mt"
 
-  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
+  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem boost_date_time"
 
 
 ##
@@ -41428,6 +41438,7 @@ _sci_includes=''
 ##
 ## END of SCI_TRY_LINK (HYPRE):  HYPRE libraries and headers
 ##
+
 
 
      fi

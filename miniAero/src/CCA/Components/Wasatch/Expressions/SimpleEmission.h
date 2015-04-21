@@ -16,7 +16,7 @@ class SimpleEmission
   const double envTempValue_;
   const bool hasAbsCoef_, hasConstEnvTemp_;
   
-  DECLARE_FIELDS(FieldT, temperature_, envTemp_, absCoef_);
+  DECLARE_FIELDS( FieldT, temperature_, envTemp_, absCoef_ )
 
   SimpleEmission( const Expr::Tag& temperatureTag,
                   const Expr::Tag& envTempTag,
@@ -57,7 +57,6 @@ public:
     const double envTemp_;
   };
 
-  ~SimpleEmission();
   void evaluate();
 };
 

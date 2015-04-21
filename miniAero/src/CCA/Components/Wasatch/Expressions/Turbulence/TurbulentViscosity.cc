@@ -43,6 +43,7 @@ TurbulentViscosity( const Expr::Tag rhoTag,
   isConstSmag_( turbParams.turbModelName != Wasatch::TurbulenceParameters::DYNAMIC ),
   turbParams_      ( turbParams         )
 {
+  this->set_gpu_runnable(true);
    rho_ = create_field_request<SVolField>(rhoTag);
   switch( turbParams_.turbModelName ){
     case Wasatch::TurbulenceParameters::SMAGORINSKY :
@@ -65,8 +66,7 @@ TurbulentViscosity( const Expr::Tag rhoTag,
   }
 }
 
-//--------------------------------------------------------------------
-
+//------------------------------------------------------------------
 TurbulentViscosity::
 ~TurbulentViscosity()
 {}

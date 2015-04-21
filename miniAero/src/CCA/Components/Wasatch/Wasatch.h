@@ -110,7 +110,6 @@
 #include <CCA/Ports/SimulationInterface.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Ports/SolverInterface.h>
-#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
 //-- Wasatch includes --//
 #include "PatchInfo.h"
@@ -210,6 +209,11 @@ namespace Wasatch{
      */
     void scheduleInitialize( const Uintah::LevelP& level,
                              Uintah::SchedulerP& sched );
+    /**
+     *  \brief Set up initial condition task(s) on a restart
+     */
+    void scheduleRestartInitialize( const Uintah::LevelP& level,
+                                    Uintah::SchedulerP& sched );
 
     /**
      *  \brief Set up things that need to be done on a restart
@@ -300,6 +304,8 @@ namespace Wasatch{
 
     Uintah::SolverInterface* linSolver_;
 
+    Uintah::Ray* rmcrt_; // RMCRT solver. needed to pass along to other tasks and expressions...
+    
     EquationAdaptors adaptors_;  ///< set of transport equations to be solved
 
     std::list< const TaskInterface*  > taskInterfaceList_;

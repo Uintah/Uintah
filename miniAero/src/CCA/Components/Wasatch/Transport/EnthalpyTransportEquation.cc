@@ -38,7 +38,7 @@ namespace Wasatch {
   class EnthDiffCoeff
    : public Expr::Expression<SVolField>
   {
-    DECLARE_FIELDS(SVolField, thermCond_, cp_, turbVisc_);
+    DECLARE_FIELDS(SVolField, thermCond_, cp_, turbVisc_)
     const double turbPr_;
     const bool isTurbulent_;
 

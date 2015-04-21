@@ -47,6 +47,7 @@ namespace Uintah {
     virtual void outputProblemSpec(ProblemSpecP& ps);
     virtual void outputPS(Dir& dir);
     virtual void scheduleInitialize(            const LevelP& level, SchedulerP& sched);
+    virtual void scheduleRestartInitialize(     const LevelP& level, SchedulerP& sched);
     virtual void scheduleComputeStableTimestep( const LevelP& level, SchedulerP& sched);
     virtual void scheduleTimeAdvance(           const LevelP& level, SchedulerP& sched);
 

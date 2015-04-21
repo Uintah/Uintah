@@ -116,8 +116,7 @@ protected:
   //    'first' is whether this is the first time adjustDelT is called.
   void adjustDelT( double& delt, double prev_delt, bool first, double t );
   void initSimulationStatsVars ( void );
-  void printSimulationStats    ( int timestep, double delt, double time,
-				 std::string prefix_msg = std::string("") );
+  void printSimulationStats    ( int timestep, double delt, double time );
 
   ProblemSpecP         d_ups;
   ProblemSpecP         d_grid_ps;         // Problem Spec for the Grid

@@ -51,7 +51,7 @@ class CylindricalDiffusionCoefficient
 //  const FieldT* superSat_; //field from table of supersaturation
 //  const FieldT* eqConc_;   //field from table of equilibrium concentration
 //  const FieldT* sBar_;     //S bar calculatino for ostwald ripening
-  DECLARE_FIELDS(FieldT, superSat_, eqConc_, sBar_);
+  DECLARE_FIELDS(FieldT, superSat_, eqConc_, sBar_)
   
   CylindricalDiffusionCoefficient( const Expr::Tag& superSatTag,
                                    const Expr::Tag& eqConcTag,

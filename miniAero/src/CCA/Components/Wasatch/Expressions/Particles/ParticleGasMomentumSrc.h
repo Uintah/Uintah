@@ -49,7 +49,7 @@ private:
                          const Expr::Tag& particleSizeTag,
                          const Expr::TagList& particlePositionTags);
   
-  DECLARE_FIELDS(ParticleField, px_, py_, pz_, pDrag_, pSize_, pMass_);
+  DECLARE_FIELDS(ParticleField, px_, py_, pz_, pDrag_, pSize_, pMass_)
   double vol_; // cell volume
   
   typedef typename SpatialOps::Particle::ParticleToCell<GasVelT> P2GVelT;

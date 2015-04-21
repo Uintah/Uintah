@@ -87,7 +87,7 @@ public:
   void evaluate();
 private:
   const double rho0_, rho1_;
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELD(TimeField, t_)
 };
 
 /***********************************************************************************************/
@@ -134,7 +134,7 @@ public:
   ~VarDen1DMMSMixtureFraction(){}
   void evaluate();
 private:
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELD(TimeField, t_)
 };
 
 /***********************************************************************************************/
@@ -200,7 +200,7 @@ private:
   }
   const double rho0_, rho1_;
   const SpatialOps::BCSide side_;
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELD(TimeField, t_)
 };
 
 /***********************************************************************************************/
@@ -258,7 +258,7 @@ public:
   void evaluate();
 private:
   const double rho0_, rho1_;
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELD(TimeField, t_)
 };
 
 /***********************************************************************************************/
@@ -313,7 +313,7 @@ private:
     this->set_gpu_runnable(false);
      t_ = this->template create_field_request<TimeField>(indepVarTag);
   }
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELD(TimeField, t_)
   const SpatialOps::BCSide side_;
 };
 
