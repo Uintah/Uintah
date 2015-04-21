@@ -77,12 +77,12 @@ public:
     enum PointType 
     {
         Inner,
-	East,
-	West,
-	North,
-	South,
-	Up,
-	Down
+        East,
+        West,
+        North,
+        South,
+        Up,
+        Down
     };
 
     Interpolator(int factor);
@@ -93,8 +93,8 @@ public:
     int getMaxSupportRefine() { return max_refine_support_; }
     double refine(constNCVariable<double>& variable, IntVector index, Interpolator::PointType type);
     double refine(constNCVariable<double>& variable1, double weight1,
-		  constNCVariable<double>& variable2, double weight2,
-		  IntVector index, Interpolator::PointType type);
+                  constNCVariable<double>& variable2, double weight2,
+                  IntVector index, Interpolator::PointType type);
 
     IntVector getSupportCoarsen() { return coarsen_support_; }
     int getXSupportCoarsen() { return coarsen_support_[0]; }

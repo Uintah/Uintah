@@ -51,7 +51,7 @@ class AggregationEfficiency
   const std::string growthModel_;         //string with type of growth rate model to use 
   
   DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
-  DECLARE_FIELDS(FieldT, g0_, eps_, rho_);
+  DECLARE_FIELDS(FieldT, g0_, eps_, rho_)
   
   AggregationEfficiency(const Expr::TagList& abscissaeTagList,
                         const Expr::Tag& growthCoefTag,

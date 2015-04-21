@@ -49,8 +49,8 @@ class MomRHS
   typedef SpatialOps::SVolField PFieldT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, PFieldT, FieldT >::type Grad;
 
-  DECLARE_FIELDS(FieldT, rhsPart_, volfrac_);
-  DECLARE_FIELD(PFieldT, pressure_);
+  DECLARE_FIELDS(FieldT, rhsPart_, volfrac_)
+  DECLARE_FIELD(PFieldT, pressure_)
   const bool hasP_, hasIntrusion_;
   const Grad* gradOp_;
 

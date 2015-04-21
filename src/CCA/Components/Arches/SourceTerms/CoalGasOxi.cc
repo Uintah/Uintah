@@ -68,7 +68,7 @@ CoalGasOxi::sched_computeSource( const LevelP& level, SchedulerP& sched, int tim
     ModelBase& model = modelFactory.retrieve_model( model_name ); 
     
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
   }
 
@@ -101,16 +101,12 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
     CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
     CCVariable<double> oxiSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( oxiSrc, _src_label, matlIndex, patch ); 
-      oxiSrc.initialize(0.0);
-    } else {
+    if ( timeSubStep == 0 ){ 
       new_dw->allocateAndPut( oxiSrc, _src_label, matlIndex, patch );
       oxiSrc.initialize(0.0);
-    } 
-
-
-
+    } else { 
+      new_dw->getModifiable( oxiSrc, _src_label, matlIndex, patch ); 
+    }
 
 
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
@@ -127,7 +123,7 @@ CoalGasOxi::computeSource( const ProcessorGroup* pc,
       constCCVariable<double> qn_gas_oxi;
       const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
-      old_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
+      new_dw->get( qn_gas_oxi, gasModelLabel, matlIndex, patch, gn, 0 );
 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
               IntVector c = *iter;

@@ -74,8 +74,8 @@ private:
                        const double rho0,
                        const double rho1 );
   const double d_, rho0_, rho1_;
-  DECLARE_FIELD(FieldT, x_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELD(FieldT, x_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 /**
@@ -151,12 +151,12 @@ private:
   const Wasatch::VarDenParameters::VariableDensityModels model_;
   const bool useOnePredictor_;
   
-  DECLARE_FIELD(FieldT, x_);
-  DECLARE_FIELD(XVolField, u_);
-  DECLARE_FIELD(YVolField, v_);
-  DECLARE_FIELD(ZVolField, w_);
-  DECLARE_FIELDS(SVolField, dens_, densStar_, dens2Star_);
-  DECLARE_FIELDS(TimeField, t_, dt_);
+  DECLARE_FIELD(FieldT, x_)
+  DECLARE_FIELD(XVolField, u_)
+  DECLARE_FIELD(YVolField, v_)
+  DECLARE_FIELD(ZVolField, w_)
+  DECLARE_FIELDS(SVolField, dens_, densStar_, dens2Star_)
+  DECLARE_FIELDS(TimeField, t_, dt_)
   
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;
@@ -207,8 +207,8 @@ private:
                             const Expr::Tag& timestepTag);
 
   typedef typename SpatialOps::SingleValueField TimeField;
-  DECLARE_FIELD(FieldT, continutySrc_);
-  DECLARE_FIELD(TimeField, dt_);
+  DECLARE_FIELD(FieldT, continutySrc_)
+  DECLARE_FIELD(TimeField, dt_)
 };
 
 #endif /* defined(__uintah_xcode_local__VardenMMS__) */

@@ -46,7 +46,7 @@ class MultiEnvAveMoment
 //  weightAndDerivativeTags_; //this tag list has wieghts and derivatives [w0 dw0/dt w1 dw1/dt w2 dw2/dt]
 //  phiTag_;                      //tag for this moment in 2nd env
   DECLARE_VECTOR_OF_FIELDS(FieldT, weightsAndDerivs_);
-  DECLARE_FIELD(FieldT, phi_);
+  DECLARE_FIELD(FieldT, phi_)
   const double initialMoment_;
 
   MultiEnvAveMoment( const Expr::TagList weightAndDerivativeTags,

@@ -70,19 +70,24 @@ void HeatEquation::problemSetup(const ProblemSpecP& params,
 }
  
 void HeatEquation::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                               SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &HeatEquation::initialize);
+                           this, &HeatEquation::initialize);
   task->computes(temperature_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
  
+void HeatEquation::scheduleRestartInitialize(const LevelP& level,
+                                             SchedulerP& sched)
+{
+}
+
 void HeatEquation::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &HeatEquation::computeStableTimestep);
+                           this, &HeatEquation::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -91,7 +96,7 @@ void
 HeatEquation::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
-			   this, &HeatEquation::timeAdvance);
+                           this, &HeatEquation::timeAdvance);
 
   task->requires(Task::OldDW, temperature_label, Ghost::AroundNodes, 1);
   task->computes(temperature_label);
@@ -101,17 +106,17 @@ HeatEquation::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 
 void HeatEquation::computeStableTimestep(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset*,
-				  DataWarehouse*, DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*, DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
 }
 
 void HeatEquation::initialize(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse*, DataWarehouse* new_dw)
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -123,11 +128,11 @@ void HeatEquation::initialize(const ProcessorGroup*,
       temperature.initialize(0);
 
       if(patch->getBCType(Patch::xminus) != Patch::Neighbor){
-	IntVector l,h;
-	patch->getFaceNodes(Patch::xminus, 0, l, h);
+        IntVector l,h;
+        patch->getFaceNodes(Patch::xminus, 0, l, h);
 
-	for(NodeIterator iter(l,h); !iter.done(); iter++)
-	  temperature[*iter]=1;
+        for(NodeIterator iter(l,h); !iter.done(); iter++)
+          temperature[*iter]=1;
       }
     }
   }
@@ -159,11 +164,11 @@ void HeatEquation::timeAdvance(const ProcessorGroup* pg,
       IntVector h = patch->getNodeHighIndex(); 
 
       l += IntVector(patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
+                     patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::zminus) == Patch::Neighbor?0:1);
       h -= IntVector(patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
-		     patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1);
+                     patch->getBCType(Patch::yplus) == Patch::Neighbor?0:1,
+                     patch->getBCType(Patch::zplus) == Patch::Neighbor?0:1);
 
       delt_vartype dt;
       old_dw->get(dt, sharedState_->get_delt_label());
@@ -178,12 +183,12 @@ void HeatEquation::timeAdvance(const ProcessorGroup* pg,
       cout << "diffusion_number = " << diffusion_number << endl;
 
       for(NodeIterator iter(l, h);!iter.done(); iter++){
-	newtemperature[*iter]=(1./6)*(
-	  temperature[*iter+IntVector(1,0,0)]+temperature[*iter+IntVector(-1,0,0)]+
-	  temperature[*iter+IntVector(0,1,0)]+temperature[*iter+IntVector(0,-1,0)]+
-	  temperature[*iter+IntVector(0,0,1)]+temperature[*iter+IntVector(0,0,-1)]);
-	double diff = newtemperature[*iter]-temperature[*iter];
-	residual += diff*diff;
+        newtemperature[*iter]=(1./6)*(
+          temperature[*iter+IntVector(1,0,0)]+temperature[*iter+IntVector(-1,0,0)]+
+          temperature[*iter+IntVector(0,1,0)]+temperature[*iter+IntVector(0,-1,0)]+
+          temperature[*iter+IntVector(0,0,1)]+temperature[*iter+IntVector(0,0,-1)]);
+        double diff = newtemperature[*iter]-temperature[*iter];
+        residual += diff*diff;
       }
 
       new_dw->put(sum_vartype(residual), residual_label);

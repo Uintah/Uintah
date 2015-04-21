@@ -28,14 +28,14 @@
     <save label = "eta_source3"/>
     <save label = "heat_source"/>
     <save label = "pressurePS"/>
-    <save label="CCVelocity"/>
-    <save label="uVelocitySPBC"/>
-    <save label="vVelocitySPBC"/>
-    <save label="wVelocitySPBC"/>
-    <save label="cellType"/>
-    <save label="coal_gas_mix_frac_RHS"/>
-    <save label="coal_gas_mix_frac_Fdiff"/>
-    <save label="coal_gas_mix_frac_Fconv"/>
+    <save label = "CCVelocity"/>
+    <save label = "uVelocitySPBC"/>
+    <save label = "vVelocitySPBC"/>
+    <save label = "wVelocitySPBC"/>
+    <save label = "cellType"/>
+    <save label = "coal_gas_mix_frac_RHS"/>
+    <save label = "coal_gas_mix_frac_Fdiff"/>
+    <save label = "coal_gas_mix_frac_Fconv"/>
     <save label = "radiationVolq"/>
     <save label = "abskt"/>
     <save label = "abskg"/>
@@ -48,18 +48,18 @@
     <save label = "w_qn0" />
     <save label = "w_qn1" />
     <save label = "w_qn2" />
-    <save label="ux_0"/>
-    <save label="ux_1"/>
-    <save label="ux_2"/>
-    <save label="RCmass_0"/>
-    <save label="RCmass_1"/>
-    <save label="RCmass_2"/>
-    <save label="char_qn0_surfacerate"/>
-    <save label="char_qn1_surfacerate"/>
-    <save label="char_qn2_surfacerate"/>
-    <save label="Charmass_0"/>
-    <save label="Charmass_1"/>
-    <save label="Charmass_2"/>
+    <save label = "ux_0"/>
+    <save label = "ux_1"/>
+    <save label = "ux_2"/>
+    <save label = "RCmass_0"/>
+    <save label = "RCmass_1"/>
+    <save label = "RCmass_2"/>
+    <save label = "char_qn0_surfacerate"/>
+    <save label = "char_qn1_surfacerate"/>
+    <save label = "char_qn2_surfacerate"/>
+    <save label = "Charmass_0"/>
+    <save label = "Charmass_1"/>
+    <save label = "Charmass_2"/>
     <save label = "temperature_coal_0"/>
     <save label = "temperature_coal_1"/>
     <save label = "temperature_coal_2"/>
@@ -69,10 +69,10 @@
     <save label = "heat_qn1_Qrad"/>
     <save label = "heat_qn2_Qconv"/>
     <save label = "heat_qn2_Qrad"/>
-    <save label="pE_0"/>
-    <save label="pE_1"/>
-    <save label="pE_2"/>
-    <save label="radiation_temperature"/>
+    <save label = "pE_0"/>
+    <save label = "pE_1"/>
+    <save label = "pE_2"/>
+    <save label = "radiation_temperature"/>
     <!-- Table Variables -->
     <save label = "mixture_fraction_2"/>
     <save label = "heat_loss"/>
@@ -789,7 +789,7 @@
     <ARCHES>
  
       <!-- include the coal data base that you are using -->
-      <include href="inputs/ARCHES/CoalDataBase/example_coal.xml" section="Coal" />
+      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="Coal" />
       <EulerianParticles>
         <ParticleVariables>
           <variable label="RCmass" role="raw_coal" />
@@ -802,12 +802,14 @@
           <variable label="ux" role="uvel" />
           <variable label="uy" role="vvel" />
           <variable label="uz" role="wvel" />
+          <variable label="number_density" role="total_number_density"/>
         </ParticleVariables>
       </EulerianParticles>   
 
       <ParticleModels>
         <model label="rho_coal" type="coal_density" />
         <model label="temperature_coal" type="coal_temperature" />
+        <model label="number_density" type="total_number_density"/>
       </ParticleModels>
 
 <!-- TIME INTEGRATOR -->
@@ -991,12 +993,9 @@
           <model label="zdragforce" type="Drag">
             <direction>z</direction>
           </model>
-          <model label="devol" type="YamamotoDevol">
-          </model>
-          <model label="heat" type="EnthalpyShaddix">
-          </model>
-          <model label="char" type="CharOxidationShaddix">
-          </model>
+          <model label="devol" type="FOWYDevol"/>
+          <model label="heat" type="EnthalpyShaddix"/>
+          <model label="char" type="CharOxidationShaddix"/>
         </Models>
         <Weights>
           <doDiff>false</doDiff>

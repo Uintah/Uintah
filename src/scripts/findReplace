@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 #______________________________________________________________________
 #  Usage: findReplace <find pattern> <replacement Pattern> < filename>
 #

@@ -37,7 +37,7 @@
 #include <CCA/Components/Arches/CoalModels/CharOxidation.h>
 #include <CCA/Components/Arches/CoalModels/KobayashiSarofimDevol.h>
 #include <CCA/Components/Arches/CoalModels/RichardsFletcherDevol.h>
-#include <CCA/Components/Arches/CoalModels/BTDevol.h>
+#include <CCA/Components/Arches/CoalModels/FOWYDevol.h>
 #include <CCA/Components/Arches/CoalModels/SimpleBirth.h>
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
@@ -104,10 +104,10 @@
 #include <CCA/Components/Arches/Operators/Operators.h>
 
 #include <CCA/Components/Arches/TurbulenceModelPlaceholder.h>
-
 #include <CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/CompDynamicProcedure.h>
+
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SolverInterface.h>
@@ -265,6 +265,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   _boost_factory_map.insert(std::make_pair("lagrangian_factory",LagF)); 
   _boost_factory_map.insert(std::make_pair("property_models_factory", PropModels)); 
 
+  //==================== NEW STUFF ===============================
   typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
   proc0cout << "\n Registering Tasks For: " << std::endl;
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ){ 
@@ -281,7 +282,6 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   }
   proc0cout << endl;
-  //===================END NEW TASK STUFF
 
   //Checking for lagrangian particles:
   _doLagrangianParticles = _arches_spec->findBlock("LagrangianParticles"); 
@@ -765,8 +765,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
 
   // do any last setup operations on the active source terms: 
-  src_factory.extraSetup( grid ); 
-
+  src_factory.extraSetup( grid, d_boundaryCondition ); 
 
   // Add extra species to table lookup as required by models
   d_props->addLookupSpecies();
@@ -875,17 +874,18 @@ Arches::scheduleInitialize(const LevelP& level,
   BFM::iterator i_lag_fac = _boost_factory_map.find("lagrangian_factory"); 
   BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory"); 
 
+  bool is_restart = false; 
   //utility factory
   TaskFactoryBase::TaskMap all_tasks = i_util_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls); 
+    i->second->schedule_init(level, sched, matls, is_restart); 
   }
 
   //transport factory
   all_tasks.clear();
   all_tasks = i_trans_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls); 
+    i->second->schedule_init(level, sched, matls, is_restart); 
   }
 
   //initialize factory
@@ -895,22 +895,22 @@ Arches::scheduleInitialize(const LevelP& level,
     if ( i->first == "Lx" || i->first == "Lvel" || i->first == "Ld"){ 
       std::cout << "Delaying particle calc..." << std::endl;
     } else { 
-      i->second->schedule_init(level, sched, matls); 
+      i->second->schedule_init(level, sched, matls, is_restart); 
     }
   }
   //have to delay and order these specific tasks...clean this up later...
   TaskFactoryBase::TaskMap::iterator iLX = all_tasks.find("Lx");
-  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls); 
+  if ( iLX != all_tasks.end() ) iLX->second->schedule_init(level, sched, matls, is_restart); 
   TaskFactoryBase::TaskMap::iterator iLD = all_tasks.find("Ld"); 
-  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls); 
+  if ( iLD != all_tasks.end() ) iLD->second->schedule_init(level, sched, matls, is_restart); 
   TaskFactoryBase::TaskMap::iterator iLV = all_tasks.find("Lvel");
-  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls); 
+  if ( iLV != all_tasks.end() ) iLV->second->schedule_init(level, sched, matls, is_restart); 
 
   //lagrangian particles
   all_tasks.clear();
   all_tasks = i_lag_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
   }
 
   sched_scalarInit(level, sched);
@@ -918,7 +918,7 @@ Arches::scheduleInitialize(const LevelP& level,
   all_tasks.clear();
   all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
   }
 
   //===============================================================
@@ -953,6 +953,13 @@ Arches::scheduleInitialize(const LevelP& level,
                         //
   d_props->doTableMatching();
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
+
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+      iprop != all_prop_models.end(); iprop++){
+    PropertyModelBase* prop_model = iprop->second;
+        if ( prop_model->initType()=="physical" )
+          prop_model->sched_computeProp( level, sched, 1 );
+  }
 
   //Setup BC areas
   d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
@@ -1038,7 +1045,7 @@ Arches::scheduleInitialize(const LevelP& level,
   all_tasks.clear(); 
   all_tasks = i_partmod_fac->second->retrieve_all_tasks(); 
   for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
-    i->second->schedule_init(level, sched, matls ); 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
   }
   //=================================================================================
 
@@ -1065,6 +1072,28 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true );
+}
+
+
+// ****************************************************************************
+// 
+// ****************************************************************************
+void 
+Arches::scheduleRestartInitialize(const LevelP& level,
+                                     SchedulerP& sched)
+{
+
+  bool is_restart = true; 
+  const MaterialSet* matls = d_sharedState->allArchesMaterials();
+
+  typedef std::map<std::string, boost::shared_ptr<TaskFactoryBase> > BFM;
+  BFM::iterator i_property_models_fac = _boost_factory_map.find("property_models_factory"); 
+  TaskFactoryBase::TaskMap all_tasks = i_property_models_fac->second->retrieve_all_tasks(); 
+
+  for ( TaskFactoryBase::TaskMap::iterator i = all_tasks.begin(); i != all_tasks.end(); i++){ 
+    i->second->schedule_init(level, sched, matls, is_restart ); 
+  }
+
 }
 
 void
@@ -1101,6 +1130,8 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_densityGuessLabel);
     tsk->computes(d_lab->d_totalKineticEnergyLabel); 
     tsk->computes(d_lab->d_kineticEnergyLabel); 
+    if ( VarLabel::find("true_wall_temperature"))
+      tsk->computes(VarLabel::find("true_wall_temperature")); 
 
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))){
       tsk->computes(d_lab->d_pressurePredLabel);
@@ -1171,6 +1202,14 @@ Arches::paramInit(const ProcessorGroup* pg,
     CCVariable<double> ccUVelocity;
     CCVariable<double> ccVVelocity;
     CCVariable<double> ccWVelocity;
+
+    if ( VarLabel::find("true_wall_temperature")){
+
+      CCVariable<double> true_wall_temperature; 
+      new_dw->allocateAndPut( true_wall_temperature, VarLabel::find("true_wall_temperature"), indx, patch ); 
+      true_wall_temperature.initialize(0.0);
+
+    }
 
     CCVariable<double> ke; 
     new_dw->allocateAndPut( ke, d_lab->d_kineticEnergyLabel, indx, patch ); 
@@ -1527,11 +1566,11 @@ Arches::scheduleTimeAdvance( const LevelP& level,
     TaskFactoryBase::TaskMap::iterator i_part_vel_update = all_tasks.find("update_particle_velocity");  
 
     //UPDATE SIZE
-    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    i_part_size_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0); 
     //UPDATE POSITION 
-    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    i_part_pos_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0); 
     //UPDATE VELOCITY
-    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), 0); 
+    i_part_vel_update->second->schedule_task( level, sched, d_sharedState->allArchesMaterials(), TaskInterface::STANDARD_TASK, 0); 
 
     _particlesHelper->schedule_sync_particle_position(level,sched);
     _particlesHelper->schedule_transfer_particle_ids(level,sched);
@@ -2286,9 +2325,9 @@ void Arches::registerModels(ProblemSpecP& db)
           // Richards Fletcher devolatilization model
           ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
-        } else if ( model_type == "BTDevol" ) {
+        } else if ( model_type == "FOWYDevol" ) {
           // Biagini Tognotti devolatilization model
-          ModelBuilder* modelBuilder = scinew BTDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
           ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);

@@ -14,7 +14,7 @@ template< typename SrcFieldT,     // source field type: SVol, XVol...
 class Reduction
  : public ReductionBase
 {
-  DECLARE_FIELD(SrcFieldT, src_);
+  DECLARE_FIELD(SrcFieldT, src_)
 
   Reduction( const Expr::Tag& resultTag,
              const Expr::Tag& srcTag,

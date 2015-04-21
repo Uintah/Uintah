@@ -48,7 +48,7 @@
 class WallDistance
 : public Expr::Expression<SVolField>
 {
-  DECLARE_FIELD(SVolField, phi_);
+  DECLARE_FIELD(SVolField, phi_)
    
   // gradient operators are only here to extract spacing information out of them
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, SVolField, XVolField >::type GradXT;

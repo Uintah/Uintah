@@ -529,26 +529,14 @@ namespace Wasatch{
       builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
     }
     
-    else if( params->findBlock("GradPX") ){
+    else if( params->findBlock("GradP") ){
       double amplitude, viscosity;
-      Uintah::ProblemSpecP valParams = params->findBlock("GradPX");
+      Uintah::ProblemSpecP valParams = params->findBlock("GradP");
       valParams->getAttribute("amplitude",amplitude);
       valParams->getAttribute("viscosity",viscosity);
-      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
-      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      typedef typename GradPX<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
-    }
-    
-    else if( params->findBlock("GradPY") ){
-      double amplitude, viscosity;
-      Uintah::ProblemSpecP valParams = params->findBlock("GradPY");
-      valParams->getAttribute("amplitude",amplitude);
-      valParams->getAttribute("viscosity",viscosity);
-      const Expr::Tag indepVarTag1 = parse_nametag( valParams->findBlock("XCoordinate")->findBlock("NameTag") );
-      const Expr::Tag indepVarTag2 = parse_nametag( valParams->findBlock("YCoordinate")->findBlock("NameTag") );
-      typedef typename GradPY<FieldT>::Builder Builder;
-      builder = scinew Builder( tag, indepVarTag1, indepVarTag2, tagNames.time, amplitude, viscosity );
+      const Expr::Tag indepVarTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
+      typedef typename GradP<FieldT>::Builder Builder;
+      builder = scinew Builder( tag, indepVarTag, tagNames.time, amplitude, viscosity );
     }
     
     else if( params->findBlock("TGVel3D") ){

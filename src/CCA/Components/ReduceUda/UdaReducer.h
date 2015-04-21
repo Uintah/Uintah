@@ -83,6 +83,9 @@ WARNING
 
     virtual void scheduleInitialize( const LevelP     & level,
                                            SchedulerP & );
+                                           
+    virtual void scheduleRestartInitialize( const LevelP     & level,
+                                                  SchedulerP & );
 
     virtual void restartInitialize() {}
 

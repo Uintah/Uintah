@@ -93,6 +93,16 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
   std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
   std::string length_name = ParticleHelper::append_env( length_root, d_quadNode ); 
   _length_varlabel = VarLabel::find(length_name); 
+  
+  // create raw coal mass var label 
+  std::string rcmass_root = ParticleHelper::parse_for_role_to_label(db, "raw_coal"); 
+  std::string rcmass_name = ParticleHelper::append_env( rcmass_root, d_quadNode ); 
+  _rcmass_varlabel = VarLabel::find(rcmass_name);
+ 
+  // check for char mass and get scaling constant
+  std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
+  std::string char_name = ParticleHelper::append_env( char_root, d_quadNode ); 
+  _char_varlabel = VarLabel::find(char_name);
 
   // get weight and scaling constant
   std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
@@ -132,7 +142,6 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   std::string modelName;
   std::string baseNameAbskp;
-  std::string baseNameAbskg;
 
   if (d_radiation ) {
     ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("PropertyModels");
@@ -160,7 +169,6 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
           break;
         }
         db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);
-        db_model->findBlock("calculator")->findBlock("abskg")->getAttribute("label",baseNameAbskg);
         break;
       }
       if  (db_model== 0){
@@ -181,7 +189,6 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     }
     std::string abskp_string = ParticleHelper::append_env(baseNameAbskp, d_quadNode);
     _abskp_varlabel = VarLabel::find(abskp_string);
-    _abskg_varlabel = VarLabel::find(baseNameAbskg);
   }
 
 
@@ -210,6 +217,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     ProblemSpecP db_coal = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
     db_coal->require("raw_coal_enthalpy", _Hc0);
     db_coal->require("char_enthalpy", _Hh0);
+    db_coal->require("density",_rhop_o);
     db_coal->getWithDefault( "ksi",_ksi,1); // Fraction of the heat released by char oxidation that goes to the particle
     ProblemSpecP db_ua = db_coal->findBlock("ultimate_analysis"); 
     CoalAnalysis coal; 
@@ -227,6 +235,17 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     yelem[2]=coal.N/total_rc; // N daf
     yelem[3]=coal.O/total_rc; // O daf
     yelem[4]=coal.S/total_rc; // S daf
+    db_coal->require("diameter_distribution", _sizes);
+    double coal_daf = coal.C + coal.H + coal.O + coal.N + coal.S; //dry ash free coal
+    double coal_dry = coal.C + coal.H + coal.O + coal.N + coal.S + coal.ASH + coal.CHAR; //moisture free coal
+    double raw_coal_mf = coal_daf / coal_dry;
+    double char_mf = coal.CHAR / coal_dry;
+    double ash_mf = coal.ASH / coal_dry;
+    _init_ash.clear();
+    for ( unsigned int i = 0; i < _sizes.size(); i++ ){
+      double mass_dry = (_pi/6.0) * pow(_sizes[i],3) * _rhop_o;     // kg/particle
+      _init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)
+    } 
   } else {
     throw InvalidValue("ERROR: EnthalpyShaddix: problemSetup(): Missing <CoalProperties> section in input file!",__FILE__,__LINE__);
   }
@@ -294,22 +313,24 @@ EnthalpyShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int
   // require gas phase variables 
   tsk->requires( which_dw, _gas_temperature_varlabel, Ghost::None, 0);
   tsk->requires( which_dw, _gas_cp_varlabel, Ghost::None, 0);
-  tsk->requires( which_dw, _devolgas_varlabel, Ghost::None, 0 );
-  tsk->requires( which_dw, _chargas_varlabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, _devolgas_varlabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, _chargas_varlabel, Ghost::None, 0 );
   tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, Ghost::None, 0);
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, Ghost::None, 0);
   if ( d_radiation ){ 
-    tsk->requires( which_dw, _abskg_varlabel,  Ghost::None, 0);   
     tsk->requires( which_dw, _volq_varlabel, Ghost::None, 0);
     tsk->requires( which_dw, _abskp_varlabel, Ghost::None, 0);
   }
+  tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
 
   // require particle phase variables
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _char_varlabel, gn, 0 );
+  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _length_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _surfacerate_varlabel, Ghost::None, 0 );
-  tsk->requires( which_dw, _charoxiTemp_varlabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, _surfacerate_varlabel, Ghost::None, 0 );
+  tsk->requires( Task::NewDW, _charoxiTemp_varlabel, Ghost::None, 0 );
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
   tsk->requires( Task::NewDW, i->second, gn, 0 );
@@ -335,6 +356,10 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+   
+    delt_vartype DT;
+    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
+    double dt = DT;
 
     CCVariable<double> heat_rate;
     CCVariable<double> gas_heat_rate; 
@@ -365,18 +390,16 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> specific_heat;
     which_dw->get( specific_heat, _gas_cp_varlabel, matlIndex, patch, gn, 0 );  // in J/kg/K
     constCCVariable<double> radiationVolqIN;
-    constCCVariable<double> abskgIN;
     constCCVariable<double> abskp; 
 
     constCCVariable<double> rad_particle_temperature;
     if ( d_radiation ){ 
       which_dw->get( radiationVolqIN, _volq_varlabel, matlIndex, patch, gn, 0);
-      which_dw->get( abskgIN, _abskg_varlabel, matlIndex, patch, gn, 0);
       which_dw->get( abskp, _abskp_varlabel, matlIndex, patch, gn, 0);
       if (_radiateAtGasTemp){
         which_dw->get( rad_particle_temperature, _gas_temperature_varlabel, matlIndex, patch, gn, 0 );
       }else{
-        which_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+        new_dw->get( rad_particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
       }
     }
     constCCVariable<Vector> gasVel; 
@@ -384,22 +407,26 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> den;
     which_dw->get( den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> devol_gas_source;
-    which_dw->get( devol_gas_source, _devolgas_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( devol_gas_source, _devolgas_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> chargas_source;
-    which_dw->get( chargas_source, _chargas_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( chargas_source, _chargas_varlabel, matlIndex, patch, gn, 0 );
 
     // get particle phase variables 
     constCCVariable<double> length;
     which_dw->get( length, _length_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> weight;
     which_dw->get( weight, _weight_varlabel, matlIndex, patch, gn, 0 );
+    constCCVariable<double> rawcoal_mass;
+    which_dw->get( rawcoal_mass, _rcmass_varlabel, matlIndex, patch, gn, 0 );
+    constCCVariable<double> char_mass;
+    which_dw->get( char_mass, _char_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> particle_temperature;
-    which_dw->get( particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( particle_temperature, _particle_temperature_varlabel, matlIndex, patch, gn, 0 );
 
     constCCVariable<double> charoxi_temp_source;
-    which_dw->get( charoxi_temp_source, _charoxiTemp_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( charoxi_temp_source, _charoxiTemp_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> surface_rate;
-    which_dw->get( surface_rate, _surfacerate_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( surface_rate, _surfacerate_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<Vector> partVel;  
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
@@ -408,63 +435,55 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
       IntVector c = *iter; 
 
 
-      double temperatureph=temperature[c];
-      double specific_heatph=specific_heat[c];
-      //double radiationVolqINph=radiationVolqIN[c];
-      //double abskgINph=abskgIN[c];
-      double denph=den[c];
-      double devol_gas_sourceph=devol_gas_source[c];
-      double chargas_sourceph=chargas_source[c];
-      double lengthph=length[c];
-      double weightph=weight[c];
-      double particle_temperatureph=particle_temperature[c];
-      double charoxi_temp_sourceph=charoxi_temp_source[c];
-      double surface_rateph=surface_rate[c];
-
-      // velocities
-      Vector gas_velocity = gasVel[c];
-      Vector particle_velocity = partVel[c];
-
-      //Verification
-      //temperatureph=1206.4;
-      //specific_heatph=18356.4;
-      //radiationVolqINph=0;
-      //abskgINph=0.666444;
-      //denph=0.394622;
-      //devol_gas_sourceph=7.14291e-08;
-      //chargas_sourceph=9.14846e-05;
-      //lengthph=2e-05;
-      //weightph=1.40781e+09;
-      //particle_temperatureph=536.954;
-      //charoxi_temp_sourceph=842.663;
-      //surface_rateph=5.72444e-05;
-      //gas_velocity[0]=7.56321;
-      //gas_velocity[1]=0.663992;
-      //gas_velocity[2]=0.654003;
-      //particle_velocity[0]=6.54863;
-      //particle_velocity[1]=0.339306;
-      //particle_velocity[2]=0.334942;
-
-      double FSum = 0.0;
-
-      double heat_rate_ = 0;
-      double gas_heat_rate_ = 0;
-
-      // intermediate calculation values
-      double Re;
-      double Nu; 
-      double rkg;
-      double Q_convection;
-      double Q_radiation;
-      double Q_reaction;
-
-      if (weightph/_weight_scaling_constant < _weight_small) {
+      if (weight[c]/_weight_scaling_constant < _weight_small) {
         heat_rate_ = 0.0;
         gas_heat_rate_ = 0.0;
         Q_convection = 0.0;
         Q_radiation = 0.0;
       } else {
 
+        double rawcoal_massph=rawcoal_mass[c];
+        double char_massph=char_mass[c];
+        double temperatureph=temperature[c];
+        double specific_heatph=specific_heat[c];
+        double denph=den[c];
+        double devol_gas_sourceph=devol_gas_source[c];
+        double chargas_sourceph=chargas_source[c];
+        double lengthph=length[c];
+        double weightph=weight[c];
+        double particle_temperatureph=particle_temperature[c];
+        double charoxi_temp_sourceph=charoxi_temp_source[c];
+        double surface_rateph=surface_rate[c];
+        
+        // velocities
+        Vector gas_velocity = gasVel[c];
+        Vector particle_velocity = partVel[c];
+
+        //Verification
+        //temperatureph=1206.4;
+        //specific_heatph=18356.4;
+        //radiationVolqINph=0;
+        //denph=0.394622;
+        //devol_gas_sourceph=7.14291e-08;
+        //chargas_sourceph=9.14846e-05;
+        //lengthph=2e-05;
+        //weightph=1.40781e+09;
+        //particle_temperatureph=536.954;
+        //charoxi_temp_sourceph=842.663;
+        //surface_rateph=5.72444e-05;
+        //gas_velocity[0]=7.56321;
+        //gas_velocity[1]=0.663992;
+        //gas_velocity[2]=0.654003;
+        //particle_velocity[0]=6.54863;
+        //particle_velocity[1]=0.339306;
+        //particle_velocity[2]=0.334942;
+
+        double FSum = 0.0;
+
+        // intermediate calculation values
+        double Re;
+        double Nu; 
+        double rkg;
         // Convection part: -----------------------
         // Reynolds number
         double delta_V =sqrt(pow(gas_velocity.x() - particle_velocity.x(),2.0) + pow(gas_velocity.y() - particle_velocity.y(),2.0)+pow(gas_velocity.z() - particle_velocity.z(),2.0));
@@ -483,33 +502,40 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
         } else {
           blow = kappa/(exp(kappa)-1.0);
         }
-        // Q_convection (see Section 5.4 of LES_Coal document)
-        Q_convection = Nu*_pi*blow*rkg*lengthph*(temperatureph - particle_temperatureph);
 
+        Q_convection = Nu*_pi*blow*rkg*lengthph*(temperatureph - particle_temperatureph); // J/(#.s)
+        //clip convection term if timesteps are too large
+        double deltaT=temperatureph-particle_temperatureph;
+        double alpha_rc=(rawcoal_massph+char_massph);
+        double alpha_cp=cp_c(particle_temperatureph)*alpha_rc+cp_ash(particle_temperatureph)*_init_ash[d_quadNode];
+        max_Q_convection=alpha_cp*(deltaT/dt);
+        if (abs(Q_convection) > abs(max_Q_convection)){
+          Q_convection = max_Q_convection;
+        }
         // Radiation part: -------------------------
         Q_radiation = 0.0;
-        if ( d_radiation) { 
+        if ( d_radiation) {
           double Eb;
           Eb = 4.0*_sigma*pow(rad_particle_temperature[c],4.0); 
           FSum = radiationVolqIN[c];    
           Q_radiation = abskp[c]*(FSum - Eb);
+          double Q_radMax=(pow( radiationVolqIN[c] / (4.0 * _sigma )  , 0.25)-rad_particle_temperature[c])/(dt)*alpha_cp;
+          if (abs(Q_radMax) < abs(Q_radiation)){
+            Q_radiation=Q_radMax;
+          } 
         } 
-
         double hint = -156.076 + 380/(-1 + exp(380 / particle_temperatureph)) + 3600/(-1 + exp(1800 / particle_temperatureph));
         double hc = _Hc0 + hint * _RdMW;
-        double hh = _Hh0 + hint * _RdC;
         Q_reaction = charoxi_temp_sourceph;
-                                             // This needs to be made consistant with lagrangian particles!!! - derek 12/14
-        heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - devol_gas_sourceph*hc - chargas_sourceph*hh)/
+                                     // This needs to be made consistant with lagrangian particles!!! - derek 12/14
+        heat_rate_ = (Q_convection*weightph + Q_radiation + _ksi*Q_reaction - (devol_gas_sourceph + chargas_sourceph)*hc)/
                      (_enthalpy_scaling_constant*_weight_scaling_constant);
-        gas_heat_rate_ = -weightph*Q_convection + Q_radiation - _ksi*Q_reaction + devol_gas_sourceph*hc + chargas_sourceph*hh;
+        gas_heat_rate_ = -weightph*Q_convection - Q_radiation - _ksi*Q_reaction + (devol_gas_sourceph+chargas_sourceph)*hc;
       }
-  
       heat_rate[c] = heat_rate_;
       gas_heat_rate[c] = gas_heat_rate_;
       qconv[c] = Q_convection;
       qrad[c] = Q_radiation;
-
     }//end cell loop
 
   }//end patch loop
@@ -519,6 +545,33 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
 
 // ********************************************************
 // Private methods:
+
+double
+EnthalpyShaddix::g2( double z ){
+  double sol = exp(z)/pow((exp(z)-1)/z,2);
+  return sol;
+}
+
+double
+EnthalpyShaddix::cp_c( double Tp){ 
+  double z1 = 380.0/Tp;
+  double z2 = 1800.0/Tp;
+  double cp = (_RdMW)*(g2(z1)+2*g2(z2));
+  return cp;
+}
+double
+EnthalpyShaddix::cp_ash( double Tp){ 
+  double cp = 754.0 + 0.586*Tp;
+  return cp;
+}
+double
+EnthalpyShaddix::cp_h( double Tp){ 
+  double z1 = 380.0/Tp;
+  double z2 = 1800.0/Tp;
+  double cp = (_RdC)*(g2(z1)+2*g2(z2));
+  return cp;
+}
+
 
 double
 EnthalpyShaddix::props(double Tg, double Tp){

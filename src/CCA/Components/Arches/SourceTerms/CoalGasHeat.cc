@@ -70,15 +70,15 @@ CoalGasHeat::sched_computeSource( const LevelP& level, SchedulerP& sched, int ti
     EqnBase& eqn = dqmomFactory.retrieve_scalar_eqn( weight_name );
 
     const VarLabel* tempLabel_w = eqn.getTransportEqnLabel();
-    tsk->requires( Task::OldDW, tempLabel_w, Ghost::None, 0 ); 
+    tsk->requires( Task::NewDW, tempLabel_w, Ghost::None, 0 ); 
 
     ModelBase& model = modelFactory.retrieve_model( model_name ); 
     
     const VarLabel* tempLabel_m = model.getModelLabel(); 
-    tsk->requires( Task::OldDW, tempLabel_m, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempLabel_m, Ghost::None, 0 );
 
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
   }
 
@@ -111,13 +111,12 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
     CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
     CCVariable<double> heatSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( heatSrc, _src_label, matlIndex, patch ); 
-      heatSrc.initialize(0.0);
-    } else {
+    if ( timeSubStep == 0 ){ 
       new_dw->allocateAndPut( heatSrc, _src_label, matlIndex, patch );
       heatSrc.initialize(0.0);
-    } 
+    } else { 
+      new_dw->getModifiable( heatSrc, _src_label, matlIndex, patch ); 
+    }
 
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
       std::string model_name = _heat_model_name; 
@@ -133,12 +132,11 @@ CoalGasHeat::computeSource( const ProcessorGroup* pc,
       constCCVariable<double> qn_gas_heat;
       const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
-      old_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
+      new_dw->get( qn_gas_heat, gasModelLabel, matlIndex, patch, gn, 0 );
 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         heatSrc[c] += qn_gas_heat[c];
-        //cout << "Heat source " << qn_gas_heat[c] << " " << node << " " << heatSrc[c] << endl;
       }
     }
   }

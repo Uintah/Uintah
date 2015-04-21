@@ -28,11 +28,11 @@ template< typename GVel1T, typename GVel2T, typename GVel3T, typename ScalarT >
 class ParticleRe
  : public Expr::Expression<ParticleField>
 {
-  DECLARE_FIELDS(ParticleField, psize_, px_, py_, pz_, pu_, pv_, pw_);
-  DECLARE_FIELDS(ScalarT, gVisc_, gDensity_);
-  DECLARE_FIELD(GVel1T, gu_);
-  DECLARE_FIELD(GVel2T, gv_);
-  DECLARE_FIELD(GVel3T, gw_);
+  DECLARE_FIELDS(ParticleField, psize_, px_, py_, pz_, pu_, pv_, pw_)
+  DECLARE_FIELDS(ScalarT, gVisc_, gDensity_)
+  DECLARE_FIELD(GVel1T, gu_)
+  DECLARE_FIELD(GVel2T, gv_)
+  DECLARE_FIELD(GVel3T, gw_)
 
   typedef typename SpatialOps::Particle::CellToParticle<GVel1T> GVel1OpT;
   typedef typename SpatialOps::Particle::CellToParticle<GVel2T> GVel2OpT;

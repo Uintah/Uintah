@@ -49,7 +49,7 @@ class KineticGrowthCoefficient
   const bool doSBar_;
 //  const FieldT* superSat_; //field from table of supersaturation
 //  const FieldT* sBar_;     //S bar calculatino for ostwald ripening
-  DECLARE_FIELDS(FieldT, sBar_, superSat_);
+  DECLARE_FIELDS(FieldT, sBar_, superSat_)
   
   KineticGrowthCoefficient( const Expr::Tag& superSatTag,
                             const Expr::Tag& sBarTag,

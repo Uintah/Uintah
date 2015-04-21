@@ -76,50 +76,60 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
+                              
     virtual void scheduleInitialize(const LevelP& level,
-				    SchedulerP& sched);
+                                    SchedulerP& sched);
+                                    
+    virtual void scheduleRestartInitialize(const LevelP& level,
+                                           SchedulerP& sched);
+                                    
+                                          
     virtual void scheduleComputeStableTimestep(const LevelP& level,
-					       SchedulerP&);
+                                               SchedulerP&);
+                                               
     virtual void scheduleTimeAdvance( const LevelP& level, 
-				      SchedulerP&);
+                                      SchedulerP&);
 
     // New functions
     virtual void scheduleRefine(const LevelP& fineLevel, SchedulerP& sched);
     void refine(const ProcessorGroup* pg,
                 const PatchSubset* finePatches, 
-		const MaterialSubset* matls,
+                const MaterialSubset* matls,
                 DataWarehouse*, 
                 DataWarehouse* newDW);
 
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
-					 SchedulerP& scheduler,
-					 bool needCoarseOld, bool needCoarseNew);
+                                         SchedulerP& scheduler,
+                                         bool needCoarseOld, 
+                                         bool needCoarseNew);
+
     void refineInterface(const ProcessorGroup*,
-			 const PatchSubset* finePatches, 
-			 const MaterialSubset* matls,
-			 DataWarehouse* fineDW, 
-			 DataWarehouse* coarseDW);
+                         const PatchSubset* finePatches, 
+                         const MaterialSubset* matls,
+                         DataWarehouse* fineDW, 
+                         DataWarehouse* coarseDW);
 
     virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
     void coarsen(const ProcessorGroup* pg,
-	         const PatchSubset* finePatches, 
-		 const MaterialSubset* matls,
+                 const PatchSubset* finePatches, 
+                 const MaterialSubset* matls,
                  DataWarehouse* coarseDW, 
                  DataWarehouse* fineDW);
 
   private:
     void initialize(const ProcessorGroup*,
-		    const PatchSubset* patches, const MaterialSubset* matls,
-		    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                    const PatchSubset* patches, const MaterialSubset* matls,
+                    DataWarehouse* old_dw, DataWarehouse* new_dw);
+                    
     void computeStableTimestep(const ProcessorGroup*,
-			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
-			       DataWarehouse* old_dw, DataWarehouse* new_dw);
+                               const PatchSubset* patches,
+                               const MaterialSubset* matls,
+                               DataWarehouse* old_dw, DataWarehouse* new_dw);
     void timeAdvance(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset* matls,
-		     DataWarehouse* old_dw, DataWarehouse* new_dw,
-		     bool modify);
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw, DataWarehouse* new_dw,
+                     bool modify);
 
     const VarLabel* phi_label;
     const VarLabel* residual_label;
@@ -131,7 +141,7 @@ WARNING
 
     Poisson3(const Poisson3&);
     Poisson3& operator=(const Poisson3&);
-	 
+         
   };
 }
 

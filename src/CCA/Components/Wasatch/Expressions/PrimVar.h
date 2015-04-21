@@ -52,8 +52,8 @@ class PrimVar
   typedef typename OperatorTypeBuilder< Interpolant, DensT, FieldT >::type  InterpT;
 
   const bool hasIntrusion_;
-  DECLARE_FIELDS(FieldT, rhophi_, volfrac_);
-  DECLARE_FIELD(DensT, rho_);
+  DECLARE_FIELDS(FieldT, rhophi_, volfrac_)
+  DECLARE_FIELD(DensT, rho_)
 
   const InterpT* interpOp_;
 
@@ -89,7 +89,7 @@ template< typename FieldT >
 class PrimVar<FieldT,FieldT>
  : public Expr::Expression<FieldT>
 {
-  DECLARE_FIELDS(FieldT, rhophi_, rho_);
+  DECLARE_FIELDS(FieldT, rhophi_, rho_)
 
   PrimVar( const Expr::Tag& rhoPhiTag,
            const Expr::Tag& rhoTag );

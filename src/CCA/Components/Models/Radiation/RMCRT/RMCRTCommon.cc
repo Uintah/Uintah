@@ -37,7 +37,7 @@
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
-
+#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
 //______________________________________________________________________
 //
 using namespace Uintah;
@@ -85,6 +85,7 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 
   d_gac     = Ghost::AroundCells;
   d_gn      = Ghost::None;
+  d_flowCell = -1; //<----HARD CODED FLOW CELL
 }
 
 //______________________________________________________________________
@@ -404,7 +405,9 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
 {
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
+  if( origin == IntVector(20,20,20) ) {
+    printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
+  }
 #endif
 /*===========TESTING==========`*/
 
@@ -488,7 +491,7 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
 
  /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
+if(origin == IntVector(20,20,20)){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " face %d ", face );
     printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
@@ -504,7 +507,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
 //cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location <<
 //        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
 
-       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
+       in_domain = (celltype[cur] == d_flowCell);
 
 
        optical_thickness += Dx.x() * abskg_prev*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
@@ -578,7 +581,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
+if( origin == IntVector(20,20,20) ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
            cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
 

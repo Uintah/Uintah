@@ -59,8 +59,8 @@ class Strain
   const Vel1GradT*   vel1GradOp_;   ///< Calculate the velocity gradient dui/dxj at the Strain face
   const Vel2GradT*   vel2GradOp_;   ///< Calculate the velocity gradient duj/dxi at the Strain face
   
-  DECLARE_FIELD(Vel1T, u1_);
-  DECLARE_FIELD(Vel2T, u2_);
+  DECLARE_FIELD(Vel1T, u1_)
+  DECLARE_FIELD(Vel2T, u2_)
   
   Strain( const Expr::Tag& vel1Tag,
           const Expr::Tag& vel2Tag );
@@ -114,8 +114,8 @@ class Strain< StrainT, VelT, VelT >
   const SVol2StrainInterpT* svolInterpOp_; ///< Interpolate viscosity to the face where we are building the Strain
   const VelGradT*    velGradOp_;    ///< Calculate the velocity gradient dui/dxj at the Strain face
   
-  DECLARE_FIELD(VelT, u_);
-  DECLARE_FIELD(SVolField, dil_);
+  DECLARE_FIELD(VelT, u_)
+  DECLARE_FIELD(SVolField, dil_)
   
   Strain( const Expr::Tag& velTag,
           const Expr::Tag& dilTag );

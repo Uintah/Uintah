@@ -17,13 +17,11 @@ using namespace std;
 using namespace Uintah; 
 
 DORadiation::DORadiation( std::string src_name, ArchesLabel* labels, MPMArchesLabel* MAlab,
-                          BoundaryCondition* bc, 
                           vector<std::string> req_label_names, const ProcessorGroup* my_world, 
                           std::string type ) 
 : SourceTermBase( src_name, labels->d_sharedState, req_label_names, type ), 
   _labels( labels ),
   _MAlab(MAlab), 
-  _bc(bc), 
   _my_world(my_world)
 {
 
@@ -110,7 +108,7 @@ DORadiation::problemSetup(const ProblemSpecP& inputdb)
   proc0cout << "   -> abskt label:               " << _abskt_label_name << endl;
   proc0cout << " --- end DO Radiation Summary ------ " << endl;
 
-  _DO_model = scinew DORadiationModel( _labels, _MAlab, _bc, _my_world ); 
+  _DO_model = scinew DORadiationModel( _labels, _MAlab, _my_world ); 
   _DO_model->problemSetup( db ); 
 
   for( int ix=0;  ix< _DO_model->getIntOrdinates();ix++){

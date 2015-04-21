@@ -26,7 +26,15 @@
 </test> 
 -->
 
-<!-- Grid convergence test using Burns & Christon benchmark -->
+<!-- Patch layout test using Burns & Christon benchmark and Data Onion
+<test>
+  <name>RMCRT_DO_finePatches</name>
+  <ups>RMCRT_bm1_DO.ups</ups>
+  <tst>DO_patchLayout.tst</tst>
+</test> 
+-->
+
+<!-- Grid convergence test using Burns & Christon benchmark-->
 <test>
   <name>DoubleRMCRT_OA_dx_cpu</name>
   <ups>RMCRT_test_1L.ups</ups>

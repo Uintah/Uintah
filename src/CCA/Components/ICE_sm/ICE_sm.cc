@@ -221,6 +221,14 @@ void ICE_sm::scheduleInitialize(const LevelP& level,
   sched->addTask(t, level->eachPatch(), ice_matls);
 }
 
+//______________________________________________________________________
+//
+void ICE_sm::scheduleRestartInitialize(const LevelP& level,
+                                        SchedulerP& sched)
+{
+  // do nothing for now
+}
+
 /* _____________________________________________________________________
   Purpose~   Set variables that are normally set during the initialization
              phase, but get wiped clean when you restart

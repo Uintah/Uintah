@@ -77,9 +77,10 @@ NIGHTLYTESTS = [
    ("coal_table_pipe"                   , "coal_table_pipe.ups"                                     , 1.1 , "Linux" , ["exactComparison"])   , 
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("coal_channel"                      , "Coal/coal_channel.ups"                                   , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
+   ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"])   , 
-   #   ("methane_RCCE"                  , "methane_RCCE.ups"                                        , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "Linux" , ["exactComparison"])   , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "Linux" , ["exactComparison"])   , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
@@ -95,6 +96,7 @@ NIGHTLYTESTS = [
 
 # multi-threaded NIGHTLY tests
    ("rmcrt_bm1_1L_thread"         , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_ML_thread"         , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
    ("rmcrt_bm1_DO_thread"         , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"  , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),
 ]
 
@@ -132,12 +134,14 @@ LOCALTESTS = [
    ("source_channel_conden"             , "verify_masssource/source_channel_conden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("source_channel_varden"             , "verify_masssource/source_channel_varden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("heptane_pipe"                      , "heptane_pipe.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
    ("coal_table_pipe"                   , "coal_table_pipe.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
+   ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("coal_channel"                      , "Coal/coal_channel.ups"                                   , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"]), 
-      #("methane_RCCE"                  , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
+   ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -150,8 +154,9 @@ LOCALTESTS = [
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    
 # multi-threaded LOCAL tests
-   #("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
-   #("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "ALL"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
+   ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_ML_thread"                , "RMCRT/rmcrt_bm1_ML.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
+   ("rmcrt_bm1_DO_thread"                , "RMCRT/rmcrt_bm1_DO.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 8"]),   
 ]
 
 NEWTESTS = [
@@ -204,10 +209,59 @@ CQMOMTESTS = [
   ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
+# NO RMCRT due to the segfault on the MAC
+NORMCRT = [
+   ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"  , ["exactComparison"]) , 
+   ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"  , ["exactComparison"]) , 
+   ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch__NEW"          , "methane_fire_8patch__NEW.ups"                            , 8   , "All"  , ["exactComparison"]) , 
+   ("methane_fire_8patch_petscrad__NEW" , "methane_fire_8patch_petscrad__NEW.ups"                   , 8   , "All"  , ["exactComparison"]) , 
+   ("dqmom_test_1"                      , "DQMOM_regression/dqmom_test_1.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+   ("dqmom_test_2"                      , "DQMOM_regression/dqmom_test_2.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+   ("dqmom_test_3"                      , "DQMOM_regression/dqmom_test_3.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+   ("dqmom_test_4"                      , "DQMOM_regression/dqmom_test_4.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+   ("dqmom_test_5"                      , "DQMOM_regression/dqmom_test_5.ups"                       , 1.1 , "All"  , ["exactComparison"]) , 
+   ("birth_test"                        , "DQMOM_regression/birth_test.ups"                         , 1.1 , "All"  , ["exactComparison"])   , 
+   ("upwind_birth_test"                 , "DQMOM_regression/upwind_birth_test.ups"                  , 1.1 , "All"  , ["exactComparison"])   , 
+   ("methane_jet"                       , "ClassicMixingTables/ups/methane_jet.ups"                 , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("acidbase_jet"                      , "ClassicMixingTables/ups/acidbase_jet.ups"                , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("acidbase_jet_2D"                   , "ClassicMixingTables/ups/acidbase_jet_2D.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("1DTableTest"                       , "ClassicMixingTables/ups/1DTableTest.ups"                 , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("xplus_scalar_test"                 , "ScalarTests/xplus_scalar_test.ups"                       , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("yplus_scalar_test"                 , "ScalarTests/yplus_scalar_test.ups"                       , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("zplus_scalar_test"                 , "ScalarTests/zplus_scalar_test.ups"                       , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("xminus_scalar_test"                , "ScalarTests/xminus_scalar_test.ups"                      , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("yminus_scalar_test"                , "ScalarTests/yminus_scalar_test.ups"                      , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("zminus_scalar_test"                , "ScalarTests/zminus_scalar_test.ups"                      , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("turbulent_inlet_test"              , "DigitalFilter/TurbulentInletChannel.ups"                 , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("source_channel_conden"             , "verify_masssource/source_channel_conden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("source_channel_varden"             , "verify_masssource/source_channel_varden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("heptane_pipe"                      , "heptane_pipe.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
+   ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
+   ("coal_table_pipe"                   , "coal_table_pipe.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
+   ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All"  , ["exactComparison"]), 
+   ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
+   ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "All"  , ["exactComparison"]) , 
+   ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("CQMOM_scalar_transport"            , "CQMOM_regression/CQMOM_Transport.ups"                    , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("CQMOM_scalar_transport2x2x2"       , "CQMOM_regression/CQMOM_Transport_2x2x2.ups"              , 6   , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("SimpleBoxPTC"                      , "CQMOM_regression/SimpleBoxPTC.ups"                       , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("PTC_2D"                            , "CQMOM_regression/PTC_2D.ups"                             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("PTC_3D"                            , "CQMOM_regression/PTC_3D.ups"                             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+]
+
 #__________________________________
 # The following list is parsed by the local RT script
 # and allows the user to select the tests to run
-#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS
+#LIST: LOCALTESTS RMCRTTESTS NEWTESTS SCALARTESTS DQMOMTESTS NIGHTLYTESTS CQMOMTESTS NORMCRT
 #__________________________________
 
   
@@ -227,6 +281,8 @@ def getTestList(me) :
     TESTS = NIGHTLYTESTS
   elif me == "CQMOMTESTS":
     TESTS = CQMOMTESTS
+  elif me == "NORMCRT":
+    TESTS = NORMCRT
   else:
     print "\nERROR:ARCHES.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

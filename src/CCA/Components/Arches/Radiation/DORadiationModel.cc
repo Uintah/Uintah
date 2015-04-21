@@ -25,7 +25,6 @@
 //----- DORadiationModel.cc --------------------------------------------------
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
-#include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <CCA/Components/Arches/Radiation/RadPetscSolver.h>
 #include <CCA/Components/Arches/Radiation/RadiationSolver.h>
@@ -76,11 +75,9 @@ static DebugStream dbg("ARCHES_RADIATION",false);
 //****************************************************************************
 DORadiationModel::DORadiationModel(const ArchesLabel* label,
                                    const MPMArchesLabel* MAlab,
-                                   BoundaryCondition* bndry_cond,
                                    const ProcessorGroup* myworld):
                                    d_lab(label),
                                    d_MAlab(MAlab), 
-                                   d_boundaryCondition(bndry_cond),
                                    d_myworld(myworld) 
 {
 
@@ -451,7 +448,10 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       }
       else if ( _scatteringOn){
         new_dw->getModifiable(vars->cenint,_IntensityLabels[direcn-1] , matlIndex, patch );
-       }
+      }
+      if(old_DW_isMissingIntensities){
+        old_dw->get(constvars->cenint,_IntensityLabels[0], matlIndex , patch,Ghost::None, 0  );
+      }
   
      if(_zeroInitialGuess)
     vars->cenint.initialize(0.0); // remove once RTs have been checked.
@@ -589,9 +589,8 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
       continue;
 
     for (int i=0; i < d_totalOrds ; i++) {                                    
-      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])* solidAngleQuad[direction][i];      
+      double phaseFunction = (1.0 + asymmetryFactor[*iter]*cosineTheta[direction][i])*solidAngleQuad[i][direction];      
       scatIntensitySource[*iter]  +=phaseFunction*Intensities[i][*iter] ; // wt could be comuted up with the phase function in the j loop
-
     }
   }
 
@@ -616,8 +615,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
   for (int qn=0; qn < _nQn_part; qn++){
     if( _radiateAtGasTemp ){
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-       // b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*pow(gTemp[*iter],4.0);
-        b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter];
+        b_sourceArray[*iter]+=(_sigma/M_PI)*abskp[qn][*iter]*pow(gTemp[*iter],4.0);
       }
     }else{
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -627,8 +625,7 @@ DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <const
   }
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-    //b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*pow(gTemp[*iter],4.0);
-    b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter]*gTemp[*iter];
+    b_sourceArray[*iter]+=(_sigma/M_PI)*abskg[*iter]*pow(gTemp[*iter],4.0);
   }
 
   return;

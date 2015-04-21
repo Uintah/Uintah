@@ -241,9 +241,17 @@ namespace Wasatch {
     std::vector<SpatialOps::IntVec> extraPlusBndCells;      // iterator for extra cells on plus faces (staggered fields). These are zero-based on the extra cell.
     std::vector<SpatialOps::IntVec> interiorBndCells;       // iterator for interior cells. These are zero-based on the extra cell
     
-    std::vector<SpatialOps::IntVec> neboExtraBndCells;      // iterator for extra cells. These are zero-based on the first interior cell.
-    std::vector<SpatialOps::IntVec> neboExtraPlusBndCells;  // iterator for extra cells on plus faces (staggered fields). These are zero-based on the first interior cell.
-    std::vector<SpatialOps::IntVec> neboInteriorBndCells;   // iterator for interior cells. These are zero-based on the first interior cell.
+    SpatialOps::SpatialMask<SVolField>* svolExtraCellSpatialMask; // iterator for svol/ccvar extra cells.
+    SpatialOps::SpatialMask<XVolField>* xvolExtraCellSpatialMask; // iterator for xvol/sfcxvar extra cells.
+    SpatialOps::SpatialMask<YVolField>* yvolExtraCellSpatialMask; // iterator for yvol/sfcyvar extra cells.
+    SpatialOps::SpatialMask<ZVolField>* zvolExtraCellSpatialMask; // iterator for zvol/sfczvar extra cells.
+
+    /**
+     \brief Helper function to return the appropriate spatial mask given a field type
+     */
+    template<typename FieldT>
+    SpatialOps::SpatialMask<FieldT>*
+    get_spatial_mask() const;
 
     std::vector<SpatialOps::IntVec> interiorEdgeCells;      // iterator for interior edge (domain edges) cells
     Uintah::Iterator extraBndCellsUintah;                   // We still need the Unitah iterator
@@ -267,6 +275,10 @@ namespace Wasatch {
     typedef OpTypes<FieldT> Ops;
     
   public:
+    typedef typename Ops::InterpC2FX   InterpX;
+    typedef typename Ops::InterpC2FY   InterpY;
+    typedef typename Ops::InterpC2FZ   InterpZ;
+    
     typedef typename Ops::InterpC2FX   DirichletX;
     typedef typename Ops::InterpC2FY   DirichletY;
     typedef typename Ops::InterpC2FZ   DirichletZ;
@@ -290,6 +302,7 @@ namespace Wasatch {
   template<>
   struct BCOpTypeSelector<XVolField> : public BCOpTypeSelectorBase<XVolField>
   {
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, XVolField, XVolField >::type InterpX;
     typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientX, XVolField, XVolField >::type NeumannX;
   };
   
@@ -297,6 +310,7 @@ namespace Wasatch {
   template<>
   struct BCOpTypeSelector<YVolField> : public BCOpTypeSelectorBase<YVolField>
   {
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, YVolField, YVolField >::type InterpY;
     typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientY, YVolField, YVolField >::type NeumannY;
   };
   
@@ -304,6 +318,7 @@ namespace Wasatch {
   template<>
   struct BCOpTypeSelector<ZVolField> : public BCOpTypeSelectorBase<ZVolField>
   {
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, ZVolField, ZVolField >::type InterpZ;
     typedef SpatialOps::OperatorTypeBuilder<SpatialOps::GradientZ, ZVolField, ZVolField >::type NeumannZ;
   };
   
@@ -313,6 +328,7 @@ namespace Wasatch {
   {
   public:
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type DirichletX;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::XSurfXField, SpatialOps::XVolField >::type InterpX;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::XSurfXField, SpatialOps::XVolField >::type NeumannX;
   };
   //
@@ -320,6 +336,7 @@ namespace Wasatch {
   struct BCOpTypeSelector<FaceTypes<YVolField>::YFace>
   {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type DirichletY;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::YSurfYField, SpatialOps::YVolField >::type InterpY;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::YSurfYField, SpatialOps::YVolField >::type NeumannY;
   };
   //
@@ -327,6 +344,7 @@ namespace Wasatch {
   struct BCOpTypeSelector<FaceTypes<ZVolField>::ZFace>
   {
     typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type DirichletZ;
+    typedef SpatialOps::OperatorTypeBuilder<Interpolant, SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type InterpZ;
     typedef SpatialOps::OperatorTypeBuilder<Divergence,  SpatialOps::ZSurfZField, SpatialOps::ZVolField >::type NeumannZ;
   };
 
@@ -404,19 +422,10 @@ namespace Wasatch {
     const std::vector<IntVecT>* get_interior_bnd_mask( const BndSpec& myBndSpec,
                                                       const int& patchID ) const;
 
-    // returns the nebo-friendly extra cell iterator. These are zero-based on the first
-    // interior cell. If FieldT is staggered and normal to the boundary, this will
-    // return the extra faces (those outside the domain).
+    // returns the cell centered extra cell SpatialMask associated with this boundary
     template<typename FieldT>
-    const std::vector<IntVecT>* get_nebo_extra_bnd_mask( const BndSpec& myBndSpec,
-                                                   const int& patchID ) const;
-
-    // returns the nebo-friendly interior cell iterator. These are zero-based on the first
-    // interior cell. If FieldT is staggered and normal to the boundary, this will return
-    // the boundary faces.
-    template<typename FieldT>
-    const std::vector<IntVecT>* get_nebo_interior_bnd_mask( const BndSpec& myBndSpec,
-                                                      const int& patchID ) const;
+    const SpatialOps::SpatialMask<FieldT>* get_spatial_mask( const BndSpec& myBndSpec,
+                                                             const int& patchID ) const;
 
     Uintah::Iterator& get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                                  const int& patchID );
