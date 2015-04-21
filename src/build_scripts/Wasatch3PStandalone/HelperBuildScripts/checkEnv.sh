@@ -119,6 +119,23 @@ if test "$MACHINE" = "Mapache"; then
   INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
   BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
 else
+if test "$MACHINE" = "Mustang"; then
+  if [[ $host != mu-fe* ]]; then
+     echo "Error: hostname did not return mu-fe*... Goodbye."
+     exit
+  fi
+  COMP=gcc4.7.2
+  echo
+  echo "Have you run the appropriate 'module load' commands? Eg:"
+  echo "   * module load gcc"
+  echo "   * module load cmake/3.0.0"
+  echo
+  sleep 1
+
+  NAME2="Mustang"
+  INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
+else
 if test "$MACHINE" = "Wolf"; then
   if [[ $host != wf-fe* ]]; then
      echo "Error: hostname did not return wf-fe*... Goodbye."
@@ -189,6 +206,7 @@ else
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi
