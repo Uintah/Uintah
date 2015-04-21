@@ -1094,7 +1094,6 @@ __syncthreads();
       }
       else if (jumpCoarsetoCoarserLevel) {
 
-        GPUIntVector c_old = cur;
         cur = d_levels[L].mapCellToCoarser(cur);
         L = d_levels[L].getCoarserLevelIndex();      // move to a coarser level
 #if DEBUG == 1
