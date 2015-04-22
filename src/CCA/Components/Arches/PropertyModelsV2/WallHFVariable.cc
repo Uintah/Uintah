@@ -194,40 +194,44 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
       if ( (*volFraction)[c] < 1.0 ){ 
 
-        double darea = 0.0; 
+        double darea = 0.0;
+        double total_in = 0.0;
 
         ////check neighbors to see if we populate a flux here: 
+        double a = DX.y()*DX.z(); 
         if ( (*volFraction)[cxm] > 0.0 ){ 
           (*flux_x)[c] = (*flux_x)[c] + (*Fe)[cxm];
-          (*total)[c] += (*Fe)[cxm]; 
-          darea += DX.y()*DX.z(); 
+          total_in += (*Fe)[cxm]*a; 
+          darea += a; 
         }
         if ( (*volFraction)[cxp] > 0.0 ){ 
           (*flux_x)[c] = (*flux_x)[c] + (*Fw)[cxp];
-          (*total)[c] += (*Fw)[cxp]; 
-          darea += DX.y()*DX.z(); 
+          total_in += (*Fw)[cxp]*a; 
+          darea += a; 
         }
+        a = DX.x()*DX.z();
         if ( (*volFraction)[cym] > 0.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fn)[cym];
-          (*total)[c] += (*Fn)[cym]; 
-          darea += DX.x()*DX.z(); 
+          total_in += (*Fn)[cym]*a; 
+          darea += a; 
         }
         if ( (*volFraction)[cyp] > 0.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fs)[cyp];
-          (*total)[c] += (*Fs)[cyp]; 
-          darea += DX.x()*DX.z(); 
+          total_in += (*Fs)[cyp]*a; 
+          darea += a; 
         }
+        a = DX.x()*DX.y(); 
         if ( (*volFraction)[czm] > 0.0 ){ 
           (*flux_z)[c] = (*flux_z)[c] + (*Ft)[czm];
-          (*total)[c] += (*Ft)[czm]; 
-          darea += DX.x()*DX.y(); 
+          total_in += (*Ft)[czm]*a; 
+          darea += a; 
         }
         if ( (*volFraction)[czp] > 0.0 ){ 
           (*flux_z)[c] = (*flux_z)[c] + (*Fb)[czp];
-          (*total)[c] += (*Fb)[czp]; 
-          darea += DX.x()*DX.y(); 
+          total_in += (*Fb)[czp]*a; 
+          darea += a; 
         }
-
+        (*total)[c] = total_in/darea; 
         (*area)[c] = darea;
 
       }
