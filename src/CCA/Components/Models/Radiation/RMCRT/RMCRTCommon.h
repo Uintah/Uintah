@@ -167,6 +167,8 @@ namespace Uintah{
 
 
       void doRecompileTaskgraph( const int radCalc_freq );
+      
+      bool isDbgCell( IntVector me);
                             
       //______________________________________________________________________
       //    Public variables that are used by Radiometer & RMCRT classes
@@ -179,7 +181,9 @@ namespace Uintah{
       Ghost::GhostType d_gac;
 
       SimulationStateP d_sharedState;
-      TypeDescription::Type d_FLT_DBL;       // Is algorithm based on doubles or floats
+      TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
+      
+      static std::vector<IntVector> d_dbgCells;     // cells that we're interogating when DEBUG is on
       
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;

@@ -163,7 +163,6 @@ namespace Uintah{
       int    d_nFluxRays;                    // number of rays per cell used to compute radiative flux
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
       IntVector d_halo;                      // number of cells surrounding a coarse patch on coarser levels
-      IntVector d_dbgCell;                   // cell that we're interogating when DEBUG is on
 
       bool d_solveBoundaryFlux;
       bool d_solveDivQ;
