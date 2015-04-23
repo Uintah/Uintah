@@ -130,7 +130,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
   d_radiometer     = NULL;
-  d_dbgCell        = IntVector(3,0,4);
+  d_dbgCells.push_back( IntVector(8,24,0) );
 
   //_____________________________________________
   //   Ordering for Surface Method
@@ -436,7 +436,7 @@ Ray::sched_rayTrace( const LevelP& level,
     Ghost::GhostType  gac  = Ghost::AroundCells;
     dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl;
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-    tsk->requires( sigma_dw ,    d_sigmaT4Label,  gac, SHRT_MAX);
+    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
 
@@ -657,7 +657,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
-    if( origin == d_dbgCell ) {
+    if( isDbgCell(origin) ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
     }
@@ -927,15 +927,17 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
 /*`==========TESTING==========*/
 #if 0
-      if(origin == d_dbgCell && d_isDbgOn ){
+      d_dbgCells.push_back(IntVector( 24,33,1 ) );
+      
+      if( isDbgCell(origin) && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
       }
-      d_dbgCell = IntVector(0,0,0);
-      if( origin != d_dbgCell ){
-        return;
-      }
+      
+//      if( origin != d_dbgCell ){
+//        return;
+//     }
 #endif
 /*===========TESTING==========`*/
 
@@ -968,7 +970,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-    if( origin == d_dbgCell ) {
+    if( isDbgCell(origin) ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n\n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ_fine[origin], radiationVolq_fine[origin],abskg_fine[origin], sigmaT4OverPi_fine[origin]);
     }
@@ -1034,7 +1036,7 @@ Ray::computeExtents(LevelP level_0,
 
     fineLevel_ROI_Lo = patchLo - d_halo;
     fineLevel_ROI_Hi = patchHi + d_halo;
-    dbg << "  patch: " << patchLo << " " << patchHi << endl;
+    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
 
   }
 
@@ -1787,7 +1789,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == d_dbgCell ) {
+  if( isDbgCell(origin) ) {
     printf("        A) updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
   }
 #endif
@@ -1863,7 +1865,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       // next cell index and position
       cur[dir]  = cur[dir] + step[dir];
-      Vector dx_prev = Dx[L];           //  Used to compute coarsenRatio
+      Vector dx_prev = Dx[L];           //  Used to compute coarsenRatio  FIX ME
 
       //__________________________________
       // Logic for moving between levels
@@ -1931,7 +1933,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 
  /*`==========TESTING==========*/
 #if DEBUG == 1
-  if(origin == d_dbgCell){
+  if( isDbgCell( origin) ){
     printf( "        B) cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " face %d ", dir );
     printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
@@ -1976,7 +1978,7 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == d_dbgCell ){
+  if( isDbgCell(origin) ){
     printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, d_allowReflect );
 
   }
