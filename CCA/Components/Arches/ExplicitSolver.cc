@@ -811,6 +811,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   }
 
+  if ( d_wall_ht_models != 0 ){ 
+    d_wall_ht_models->sched_copyWallTintoT( level, sched ); 
+  }
+
   //Property Models before starting over
   std::vector<std::string> final_prop_tasks 
     = i_property_models->second->retrieve_task_subset("final_property_models"); 
@@ -818,10 +822,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk); 
     //passing in curr_level > 0 because we are at the end of the time step
     tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 ); 
-  }
-
-  if ( d_wall_ht_models != 0 ){ 
-    d_wall_ht_models->sched_copyWallTintoT( level, sched ); 
   }
 
   if ( d_printTotalKE ){ 
