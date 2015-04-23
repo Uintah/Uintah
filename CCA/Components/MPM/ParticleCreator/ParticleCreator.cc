@@ -403,7 +403,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
     
     if(hasFiner){ // Don't create particles if a finer level exists here
       const Point CC = patch->cellPosition(c);
-      bool includeExtraCells=true;
+      bool includeExtraCells=false;
       const Patch* patchExists = fineLevel->getPatchFromPoint(CC,
                                                              includeExtraCells);
       if(patchExists != 0){
