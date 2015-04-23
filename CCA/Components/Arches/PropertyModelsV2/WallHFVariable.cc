@@ -231,8 +231,11 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           total_in += (*Fb)[czp]*a; 
           darea += a; 
         }
-        (*total)[c] = total_in/darea; 
-        (*area)[c] = darea;
+
+        if ( darea > 1.e-10 ){
+          (*total)[c] = total_in/darea; 
+          (*area)[c] = darea;
+        }
 
       }
     }
