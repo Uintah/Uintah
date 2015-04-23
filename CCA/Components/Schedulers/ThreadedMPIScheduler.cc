@@ -502,7 +502,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 
   // wait for all tasks to finish
   d_nextmutex.lock();
-  while (getAviableThreadNum() < numThreads_) {
+  while (getAvailableThreadNum() < numThreads_) {
     // if any thread is busy, conditional wait here
     d_nextsignal.wait(d_nextmutex);
   }
@@ -741,7 +741,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 //______________________________________________________________________
 //
 
-int ThreadedMPIScheduler::getAviableThreadNum()
+int ThreadedMPIScheduler::getAvailableThreadNum()
 {
   int num = 0;
   for (int i = 0; i < numThreads_; i++) {
@@ -759,7 +759,7 @@ void ThreadedMPIScheduler::assignTask( DetailedTask* task,
                                        int           iteration )
 {
   d_nextmutex.lock();
-  if (getAviableThreadNum() == 0) {
+  if (getAvailableThreadNum() == 0) {
     d_nextsignal.wait(d_nextmutex);
   }
   // find an idle thread and assign task

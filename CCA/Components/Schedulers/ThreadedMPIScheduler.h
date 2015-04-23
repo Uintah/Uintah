@@ -97,7 +97,7 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     void assignTask( DetailedTask* task, int iteration );
 
-    int getAviableThreadNum();
+    int getAvailableThreadNum();
 
     ConditionVariable d_nextsignal;
     Mutex             d_nextmutex;             // conditional wait mutex
