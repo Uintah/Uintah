@@ -82,7 +82,7 @@ extern DebugStream mixedDebug;
   extern DebugStream use_single_device;
 #endif
 
-static DebugStream dbg( "OnDemandDataWarehouse", false );
+static DebugStream dbg( "OnDemandDataWarehouse", true );
 static DebugStream gpudbg( "GPUDataWarehouse", false );
 static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);

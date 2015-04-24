@@ -12,7 +12,7 @@
        <initTime>0.0</initTime>
        <delt_min>1.0e-16</delt_min>
        <delt_max>1.0e-3</delt_max>
-       <!--<max_Timesteps>3000000</max_Timesteps>-->
+       <max_Timesteps>1</max_Timesteps>
        <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
   <DataArchiver>
@@ -27,6 +27,8 @@
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
+    <save label="maxHydroStress" />
+    <save label="minHydroStress" />
   </DataArchiver>
 
   <MPM>
