@@ -1,0 +1,13 @@
+Task:MiniAero::computeStableTimestep    |  0.22184   |  0.237114 
+Task:MiniAero::Limiters                 |  37.9344   |  74.1502 
+Task:send                               |  0.000609168|  0.00185 
+Task:MiniAero::update_RK_State          |  1.04719   |  1.32549 
+Task:MiniAero::Gradients                |  15.6788   |  17.0401 
+Task:MiniAero::faceCenteredFlux         |  14.7931   |  16.3619 
+Task:MiniAero::cellCenteredFlux         |  13.9551   |  36.7296 
+Task:MiniAero::updateResidual           |  41.9919   |  59.4182 
+Task:MiniAero::Primitives               |  9.29468   |  16.8992 
+Task:reduceSysVar                       |  10.5287   |  15.1515 
+Task:MiniAero::dissipativeFaceFlux      |  58.5346   |  162.524 
+Task:MiniAero::viscousFaceFlux          |  46.4053   |  88.4771 
+Task:MiniAero::updateSolution           |  0.229315  |  0.319519 

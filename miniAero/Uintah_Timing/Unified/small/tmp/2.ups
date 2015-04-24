@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+    <!--____________________________________________________________________-->
+    <!-- This input files replicates test problem on page 605 of            -->
+    <!-- M. Kucharik, R. Liska, S. Steinberg, B. Wendroff, "Optimally-stable-->
+    <!-- second-order accurate difference schemes for non-linear conservation -->
+    <!-- law in 3D", Applied Numerical Mathematics 56 (2006) 589-607        -->
+    <!--____________________________________________________________________-->
+   <Meta>
+       <title>3D Riemann Problem</title>
+   </Meta>    
+
+   <SimulationComponent type="miniaero" />
+   <Scheduler type="Unified" />
+
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            0.25      </maxTime>
+       <initTime>           0.0         </initTime>
+       <delt_min>           0.0         </delt_min>
+       <delt_max>           1.0         </delt_max>
+       <delt_init>          1.0e-6      </delt_init>
+       <timestep_multiplier>1.0         </timestep_multiplier>
+       <max_Timesteps> 25        </max_Timesteps>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+      </Face>
+      
+      <Face side = "x+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+      </Face>
+
+      <Face side = "y-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+      </Face>    
+                    
+      <Face side = "y+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+      </Face>
+      
+      <Face side = "z-">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+      </Face>
+      
+      <Face side = "z+">
+        <BCType id = "0"   label = "Pressure"     var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0"   label = "Temperature"  var = "Neumann">
+                              <value> 0. </value>
+        </BCType>
+        <BCType id = "0"   label = "Density"      var = "Neumann">
+                              <value> 0  </value>
+        </BCType>
+      </Face> 
+    </BoundaryConditions>
+
+       <Level>
+           <Box label="1">
+              <lower>        [0.0,  0.0, 0.0]  </lower>
+              <upper>        [1.0,  1.0, 1.0]  </upper>
+              <extraCells>   [1,1,1]           </extraCells>
+              <resolution> [256,256,256]  </resolution>    
+              <patches>    [4,4,2]     </patches> 
+           </Box>
+           <periodic>        [0, 0, 0]          </periodic>
+      </Level>
+    </Grid>    
+    <!--____________________________________________________________________-->
+    <!--      O  U  T  P  U  T     V  A  R  I  A  B  L  E  S                   -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>riemann3D_periodic.uda</filebase>
+      <outputTimestepInterval> 0 </outputTimestepInterval>
+   </DataArchiver>
+
+
+    <!--____________________________________________________________________-->
+    <!--    M I N I A E R O     P  A  R  A  M  E  T  E  R  S                -->
+    <!--____________________________________________________________________-->
+
+    <!--____________________________________________________________________-->
+    <!--     Material Properties and Initial Conditions                     -->
+    <!--____________________________________________________________________-->
+       <MiniAero>
+           <gamma>                  1.4                 </gamma>
+           <R>                287.0                     </R>
+           <CFL>                0.25                    </CFL>
+           <Is_visc_flow>      true                    </Is_visc_flow>
+           <RKSteps>            4                       </RKSteps>
+           
+           <geom_object>
+                <box label="000">
+                    <min>           [ 0.0,  0.0, 0.0 ]   </min>
+                    <max>           [ 0.5,  0.5, 0.5 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.8939,0.8939,0.8939]   </velocity>
+               <temperature>    2.5                      </temperature>
+               <density>        1.1                      </density>
+               <pressure>       1.1                       </pressure> 
+           </geom_object>
+
+           <geom_object>
+                <box label="100">
+                    <min>           [ 0.5,  0.0, 0.0 ]   </min>
+                    <max>           [ 1.0,  0.5, 0.5 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.0, 0.8939, 0.8939]    </velocity>
+               <temperature>    1.72754                  </temperature>
+               <density>         0.5065                  </density>
+               <pressure>       .35                      </pressure> 
+           </geom_object>
+
+           <geom_object>
+                <box label="010">
+                    <min>           [ 0.0,  0.5, 0.0 ]   </min>
+                    <max>           [ 0.5,  1.0, 0.5 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.8939, 0.0, 0.8939]    </velocity>
+               <temperature>    1.72754                  </temperature>
+               <density>         0.5065                  </density>
+               <pressure>       .35                      </pressure> 
+           </geom_object>
+
+           <geom_object>
+                <box label="110">
+                    <min>           [ 0.5,  0.5, 0.0 ]   </min>
+                    <max>           [ 1.0,  1.0, 0.5 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.0, 0.0, 0.8939]       </velocity>
+               <temperature>     2.5                     </temperature>
+               <density>         1.1                     </density>
+               <pressure>       1.1                      </pressure> 
+           </geom_object>
+
+           <geom_object>
+                <box label="001">
+                    <min>           [ 0.0,  0.0, 0.5 ]   </min>
+                    <max>           [ 0.5,  0.5, 1.0 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.8939, 0.8939, 0.0]    </velocity>
+               <temperature>     1.72754                 </temperature>
+               <density>         0.5065                  </density>
+               <pressure>       .35                      </pressure> 
+           </geom_object>
+
+           <geom_object>
+                <box label="101">
+                    <min>           [ 0.5,  0.0, 0.5 ]   </min>
+                    <max>           [ 1.0,  0.5, 1.0 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.0, 0.8939, 0.0]    </velocity>
+               <temperature>     2.5                  </temperature>
+               <density>         1.1                  </density>
+               <pressure>        1.1                  </pressure> 
+           </geom_object>
+
+           <geom_object>
+                <box label="011">
+                    <min>           [ 0.0,  0.5, 0.5 ]   </min>
+                    <max>           [ 0.5,  1.0, 1.0 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.8939, 0.0 , 0.0]     </velocity>
+               <temperature>     2.5                    </temperature>
+               <density>        1.1                     </density>
+               <pressure>       1.1                     </pressure> 
+           </geom_object>
+
+           <geom_object>
+                <box label="111">
+                    <min>           [ 0.5,  0.5, 0.5 ]   </min>
+                    <max>           [ 1.0,  1.0, 1.0 ]   </max>
+                </box> 
+               <res>                  [2,2,2]            </res>
+
+               <velocity>       [0.0, 0.0 , 0.0]         </velocity>
+               <temperature>     1.72754                 </temperature>
+               <density>         0.5065                  </density>
+               <pressure>       .35                      </pressure>  
+           </geom_object>
+                      
+      </MiniAero>       
+                     
+</Uintah_specification>
+

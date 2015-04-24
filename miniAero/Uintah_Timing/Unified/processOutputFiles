@@ -1,0 +1,13 @@
+#!/bin/csh -f
+
+set here = `pwd`
+set EXTRACT = $here/extractScalingData
+
+echo "__________________________________SMALL"
+cd $here/small/output; $EXTRACT out*
+
+echo "__________________________________medium"
+cd $here/medium/output;  $EXTRACT out*
+
+echo "__________________________________LARGE"
+cd $here/large/output;  $EXTRACT out*

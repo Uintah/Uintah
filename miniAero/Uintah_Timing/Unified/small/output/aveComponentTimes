@@ -1,0 +1,8 @@
+#file               procs  aveTaskExec  aveTaskLocalComm  aveTaskWaitComm
+out.small.2.32      32     376.458      0.839115          7.09491
+out.small.4.64      64     194.078      1.45596           4.2776
+out.small.8.128     128    96.7604      1.40675           2.42074
+out.small.16.256    256    47.743       0.948898          1.20751
+out.small.32.512    512    23.7656      1.03205           0.898661
+out.small.64.1024   1024   11.9923      1.32256           0.546521
+out.small.128.2048  2048   6.00922      1.59198           0.307069
