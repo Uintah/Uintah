@@ -85,6 +85,12 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
 
   gHydrostaticStressLabel = VarLabel::create("g.hydrostaticStressRD",
 	    NCVariable<double>::getTypeDescription());
+
+  // Reduction Variables
+  maxHydroStressLabel = VarLabel::create("maxHydroStress", 
+      max_vartype::getTypeDescription());
+  minHydroStressLabel = VarLabel::create("minHydroStress", 
+      min_vartype::getTypeDescription());
 }
 
 ReactionDiffusionLabel::~ReactionDiffusionLabel() {
@@ -109,4 +115,8 @@ ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(gdCdtLabel);
   VarLabel::destroy(gConcentrationStarLabel);
   VarLabel::destroy(gHydrostaticStressLabel);
+
+  // Reduction Variables
+  VarLabel::destroy(maxHydroStressLabel);
+  VarLabel::destroy(minHydroStressLabel);
 }

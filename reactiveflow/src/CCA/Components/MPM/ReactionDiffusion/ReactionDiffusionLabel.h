@@ -55,6 +55,10 @@ namespace Uintah {
     const VarLabel* gdCdtLabel;
     const VarLabel* gConcentrationStarLabel;
     const VarLabel* gHydrostaticStressLabel;
+
+    // Reduction variables
+    const VarLabel* maxHydroStressLabel;
+    const VarLabel* minHydroStressLabel;
   };
   
 } // end namespace Uintah

@@ -56,8 +56,10 @@ void JGConcentrationDiffusion::addInitialComputesAndRequires(Task* task,
                                                       const MPMMaterial* matl,
                                                       const PatchSet* patch) const{
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->computes(d_rdlb->pConcentrationLabel,  matlset);
-  task->computes(d_rdlb->pConcPreviousLabel,   matlset);
+  task->computes(d_rdlb->pConcentrationLabel, matlset);
+  task->computes(d_rdlb->pConcPreviousLabel,  matlset);
+  task->computes(d_rdlb->maxHydroStressLabel);
+  task->computes(d_rdlb->minHydroStressLabel);
 }
 
 void JGConcentrationDiffusion::initializeSDMData(const Patch* patch,
@@ -65,6 +67,7 @@ void JGConcentrationDiffusion::initializeSDMData(const Patch* patch,
                                           DataWarehouse* new_dw)
 {
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  int dwi = matl->getDWIndex();
 
   ParticleVariable<double>  pConcentration;
   ParticleVariable<double>  pConcPrevious;
@@ -76,6 +79,8 @@ void JGConcentrationDiffusion::initializeSDMData(const Patch* patch,
     pConcentration[*iter] = 0.0;
     pConcPrevious[*iter] = 0.0;
   }
+  new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel);
+  new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel);
 }
 
 void JGConcentrationDiffusion::addParticleState(std::vector<const VarLabel*>& from,
@@ -110,6 +115,8 @@ void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
     task->requires(Task::OldDW, d_lb->pStressLabel, matlset, gan, NGP);
     task->computes(d_rdlb->gHydrostaticStressLabel, matlset);
     task->computes(d_rdlb->pHydroStressLabel,       matlset);
+    task->computes(d_rdlb->maxHydroStressLabel);
+    task->computes(d_rdlb->minHydroStressLabel);
   }
 
 }
@@ -168,6 +175,9 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
     ghydrostaticstress.initialize(0);
   }
   
+  double maxhydrostress = 0;
+  double minhydrostress = 0;
+
   int n8or27 = d_Mflag->d_8or27;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
     particleIndex idx = *iter;
@@ -176,6 +186,13 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
     if(include_hydrostress){
       phydrostress[idx] = (pStress[idx].Trace())/3;
+
+      if(phydrostress[idx] > maxhydrostress){
+        maxhydrostress = phydrostress[idx];
+      }
+      if(phydrostress[idx] < minhydrostress){
+        minhydrostress = phydrostress[idx];
+      }
     }
 
     IntVector node;
@@ -189,6 +206,10 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
       }
     }
   }
+
+  new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel);
+  new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel);
+
   for(NodeIterator iter=patch->getExtraNodeIterator();
                    !iter.done();iter++){
     IntVector c = *iter; 
