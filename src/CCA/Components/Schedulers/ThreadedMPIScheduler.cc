@@ -394,7 +394,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
         phaseSyncTask[task->getTask()->d_phase] = task;
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << "Rank-" << me << " Task Reduction/OPP ready " << *task << " deps needed: " << task->getExternalDepCount()
+          taskdbg << "Rank-" << me << " Task Reduction/OncePerProc ready " << *task << " deps needed: " << task->getExternalDepCount()
                   << std::endl;
           cerrLock.unlock();
         }
@@ -432,7 +432,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
         if (!abort) {
           if (taskdbg.active()) {
             cerrLock.lock();
-            taskdbg << "Rank-" << me << " Running Reduce task " << reducetask->getTask()->getName() << " with communicator "
+            taskdbg << "Rank-" << me << " Dispatching Reduce task " << *reducetask << " with communicator "
                     << reducetask->getTask()->d_comm << std::endl;
             cerrLock.unlock();
           }
@@ -445,21 +445,16 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
         reducetask->markInitiated();
 
         ASSERT(reducetask->getExternalDepCount() == 0)
-        assignTask(reducetask, iteration);
 
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << "Rank-" << me << " Running OPP task: ";
+          taskdbg << "Rank-" << me << " Dispatching OncePerProc task: " << *reducetask << " with communicator "
+                  << reducetask->getTask()->d_comm << std::endl;
           cerrLock.unlock();
         }
 
-        cerrLock.lock();
-        printTask(taskdbg, reducetask);
-        cerrLock.unlock();
+        assignTask(reducetask, iteration);
 
-        if (taskdbg.active()) {
-          taskdbg << '\n';
-        }
       }
       ASSERT(reducetask->getTask()->d_phase == currphase);
       numTasksDone++;
@@ -482,7 +477,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
       DetailedTask* task = dts->getNextExternalReadyTask();
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Rank-" << me << " Dispatching task " << *task << "(" << dts->numExternalReadyTasks() << "/"
+        taskdbg << "Rank-" << me << " Dispatching task " << *task << "  (" << dts->numExternalReadyTasks() << "/"
                 << pending_tasks.size() << " tasks in queue)" << std::endl;
         cerrLock.unlock();
         pending_tasks.erase(pending_tasks.find(task));

@@ -807,7 +807,7 @@ UnifiedScheduler::runTasks( int thread_id )
         if (taskorder.active()) {
           if (me == d_myworld->size() / 2) {
             cerrLock.lock();
-            taskorder << "Rank-" << me  << " Running task static order: " << readyTask->getSaticOrder()
+            taskorder << "Rank-" << me  << " Running task static order: " << readyTask->getStaticOrder()
                       << " , scheduled order: " << numTasksDone << std::endl;
             cerrLock.unlock();
           }
@@ -861,7 +861,7 @@ UnifiedScheduler::runTasks( int thread_id )
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getStaticOrder()
                         << ", scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
@@ -956,7 +956,7 @@ UnifiedScheduler::runTasks( int thread_id )
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getStaticOrder()
                         << " , scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
