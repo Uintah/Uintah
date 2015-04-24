@@ -1,0 +1,12 @@
+#!/bin/csh -f
+
+#  This script renames the job files from 
+#  large.1.1024.16384.o2235444 -> large.1.1024.16384
+
+set base = $argv
+
+foreach X ( $base.*.*.* )
+  set me = `echo $X | cut -f1-4 -d"."`
+  echo "mv $X $me"
+  mv $X $me
+end

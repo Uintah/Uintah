@@ -1,0 +1,19 @@
+#PBS -S /bin/csh -f
+#PBS -N "execTimes"                  
+#PBS -l walltime=1:00:00
+#PBS -l nodes=256
+#PBS -j oe
+#PBS -V 
+#PBS -r n
+#PBS -M t.harman@utah.edu
+#PBS -m abe
+#PBS -A cmb109
+
+# name of output file
+set OUT = "out.4096"
+
+cd $PBS_O_WORKDIR
+setenv SCI_DEBUG ExecTimes:+,ComponentTimings:+
+setenv  MPICH_MAX_THREAD_SAFETY multiple
+
+aprun -n 256 -N 1 -d 16 ../sus -do_not_validate -mpi  -nthreads 16 256.ups>& $OUT

@@ -1,0 +1,17 @@
+Warning: no access to tty (Bad file descriptor).
+Thus no job control in this shell.
+ModuleCmd_Switch.c(172):ERROR:152: Module 'PrgEnv-pgi' is currently not loaded
+hypre(5):ERROR:105: Unable to locate a modulefile for 'hypre'
+---------------------------------
+Wed Feb  4 20:03:04 EST 2015
+SCRIPT_DIR=/lustre/atlas/proj-shared/cmb109/harman/miniAero/RK4/Unified/large
+ups=2048.ups
+procs=2048
+size=32768
+threads=16
+way=1
+nodes=2048
+pwd=/lustre/atlas/proj-shared/cmb109/harman/miniAero/RK4/Unified/large/output
+---------------------------------
+/lustre/atlas/proj-shared/cmb109/harman/miniAero/RK4/Unified/large/output
+aprun -n 2048 -N 1 -d 16 ../../sus -mpi -do_not_validate -nthreads 16 ../tmp/2048.ups &> out.large.2048.32768

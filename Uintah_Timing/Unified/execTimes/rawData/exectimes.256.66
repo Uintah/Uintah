@@ -1,0 +1,13 @@
+66: TaskExecTime(s): 15.816924 Task:MiniAero::Gradients
+66: TaskExecTime(s): 32.028287 Task:MiniAero::Limiters
+66: TaskExecTime(s): 9.095921 Task:MiniAero::Primitives
+66: TaskExecTime(s): 12.479371 Task:MiniAero::cellCenteredFlux
+66: TaskExecTime(s): 0.220825 Task:MiniAero::computeStableTimestep
+66: TaskExecTime(s): 55.003219 Task:MiniAero::dissipativeFaceFlux
+66: TaskExecTime(s): 14.705225 Task:MiniAero::faceCenteredFlux
+66: TaskExecTime(s): 43.365675 Task:MiniAero::updateResidual
+66: TaskExecTime(s): 0.214129 Task:MiniAero::updateSolution
+66: TaskExecTime(s): 0.971239 Task:MiniAero::update_RK_State
+66: TaskExecTime(s): 44.414397 Task:MiniAero::viscousFaceFlux
+66: TaskExecTime(s): 13.774616 Task:reduceSysVar
+66: TaskExecTime(s): 0.000269 Task:send old data

@@ -1,0 +1,296 @@
+PE 0: MPICH processor detected:
+PE 0:   AuthenticAMD (21:1:2) (family:model:stepping)
+MPI VERSION : CRAY MPICH version 6.3.0 (ANL base 3.0.3)
+BUILD INFO  : Built Mon Mar 10 21:36:48 2014 (svn rev 10018) RT-G CPR-R
+PE 0: MPICH environment settings:
+PE 0:   MPICH_ENV_DISPLAY          = 1
+PE 0:   MPICH_VERSION_DISPLAY      = 1
+PE 0:   MPICH_ABORT_ON_ERROR       = 1
+PE 0:   MPICH_CPUMASK_DISPLAY      = 0
+PE 0:   MPICH_RANK_REORDER_METHOD  = 1
+PE 0:   MPICH_RANK_REORDER_DISPLAY = 0
+PE 0:   MPICH_MEMCPY_MEM_CHECK     = 0
+PE 0:   MPICH_USE_SYSTEM_MEMCPY    = 1
+PE 0:   MPICH_NO_BUFFER_ALIAS_CHECK= 0
+PE 0:   MPICH_COLL_SYNC            = 0
+PE 0:   MPICH_MSG_QUEUE_DBG        = 0
+PE 0: MPICH/GPU environment settings:
+PE 0:   MPICH_RDMA_ENABLED_CUDA    = 0
+PE 0:   MPICH_G2G_PIPELINE         = 0
+PE 0:   MPICH_NO_GPU_DIRECT        = 0
+PE 0: MPICH/MPMD environment settings:
+PE 0:   MPICH_DMAPP_APP_IS_WORLD   = 0
+PE 0: MPICH/SMP environment settings:
+PE 0:   MPICH_SMP_SINGLE_COPY_OFF  = 0
+PE 0:   MPICH_SMP_SINGLE_COPY_SIZE = 8192
+PE 0: MPICH/GNI environment settings:
+PE 0:           MPICH_GNI_RECV_CQ_SIZE = 40960
+PE 0:          MPICH_GNI_LOCAL_CQ_SIZE = 8192
+PE 0:            MPICH_GNI_DEBUG_LEVEL = 0
+PE 0:    MPICH_GNI_MAX_VSHORT_MSG_SIZE = 8144
+PE 0:     MPICH_GNI_MAX_EAGER_MSG_SIZE = 8192
+PE 0:               MPICH_GNI_NUM_BUFS = 64
+PE 0:             MPICH_GNI_NUM_MBOXES = -1
+PE 0:       MPICH_GNI_MBOXES_PER_BLOCK = 4096
+PE 0:         MPICH_GNI_RDMA_THRESHOLD = 1024
+PE 0:          MPICH_GNI_RCVCQ_PROCNUM = 1
+PE 0:    MPICH_GNI_NDREG_ENTRIES(req.) = 999
+PE 0:          MPICH_GNI_NDREG_MAXSIZE = 524288
+PE 0:        MPICH_GNI_MALLOC_FALLBACK = 0
+PE 0:          MPICH_GNI_NDREG_LAZYMEM = LAZY_ALL
+PE 0:          MPICH_GNI_DMAPP_INTEROP = 1
+PE 0:           MPICH_GNI_DYNAMIC_CONN = 1
+PE 0:        MPICH_GNI_MAX_NUM_RETRIES = 16
+PE 0:              MPICH_GNI_FORK_MODE = PARTCOPY
+PE 0:         MPICH_GNI_MBOX_PLACEMENT = DEFAULT
+PE 0:        MPICH_GNI_VC_MSG_PROTOCOL = MBOX
+PE 0:      MPICH_GNI_BTE_MULTI_CHANNEL = 1
+PE 0:           MPICH_GNI_LMT_GET_PATH = 1
+PE 0:               MPICH_GNI_LMT_PATH = 1
+PE 0:     MPICH_NEMESIS_ASYNC_PROGRESS = 0
+PE 0: MPICH_GNI_ASYNC_PROGRESS_TIMEOUT = -1
+PE 0:       MPICH_GNI_DATAGRAM_TIMEOUT = -1
+PE 0:            MPICH_GNI_FMA_SHARING = 0
+PE 0:          MPICH_GNI_USE_PCI_IOMMU = 0
+PE 0:            MPICH_GNI_CQE_BACKOFF = 0
+PE 0:    MPICH_GNI_USE_UNASSIGNED_CPUS = 1
+PE 0:        MPICH_GNI_MEM_DEBUG_FNAME = 
+PE 0: MPICH/COLLECTIVE environment settings:
+PE 0:   MPICH_COLL_OPT_OFF         = 0
+PE 0:   MPICH_COLL_BAL_INJECTION   = auto
+PE 0:   MPICH_USE_DMAPP_COLL       = 0
+PE 0:   MPICH_DMAPP_COLL_RADIX     = 64
+PE 0:   MPICH_DMAPP_A2A_SHORT_MSG  = 4096
+PE 0:   MPICH_DMAPP_A2A_USE_PUTS   = 0
+PE 0:   MPICH_DMAPP_A2A_SYMBUF_SIZE= 131072
+PE 0:   MPICH_BCAST_ONLY_TREE      = 1
+PE 0:   MPICH_ALLTOALL_SHORT_MSG   = 32-2048
+PE 0:   MPICH_ALLTOALLV_THROTTLE   = 1
+PE 0:   MPICH_ALLGATHER_VSHORT_MSG = 1024-8192
+PE 0:   MPICH_ALLGATHERV_VSHORT_MSG= 1024-8192
+PE 0:   MPICH_GATHERV_SHORT_MSG    = 16384
+PE 0:   MPICH_SCATTERV_SHORT_MSG   = 2048-8192
+PE 0:   MPICH_SCATTERV_SYNCHRONOUS = 0
+PE 0:   MPICH_ALLREDUCE_NO_SMP     = 0
+PE 0:   MPICH_REDUCE_NO_SMP        = 0
+PE 0: MPICH/MPIIO environment settings:
+PE 0:   MPICH_MPIIO_HINTS_DISPLAY  = 0
+PE 0:   MPICH_MPIIO_HINTS          = NULL
+PE 0:   MPICH_MPIIO_ABORT_ON_RW_ERROR = disable
+PE 0:   MPICH_MPIIO_CB_ALIGN       = 2
+PE 0: MPICH Thread Safety settings:
+PE 0:   MPICH_MAX_THREAD_SAFETY    = multiple
+PE 0:   rank 0 required = multiple, was provided = multiple
+Parallel: 512 processors (using MPI)
+Parallel: 16 threads per MPI process
+Parallel: MPI Level Required: 3, provided: 3
+
+WARNING: You have turned OFF .ups file validation... this may cause many unforeseen problems
+         with your simulation run.  It is strongly suggested that you leave validation on!
+
+Date:    Wed Feb  4 14:26:43 2015
+Machine: nid15827
+SVN: Revision: 53060
+SVN: Last Changed Date: 2015-02-02 13:12:02 -0500 (Mon, 02 Feb 2015)
+Assertion level: 0
+CFLAGS: -fPIC  -fopenmp -Wall -g -O2 -mfpmath=sse -DNDEBUG 
+Implicit Solver: 	CGSolver
+Simulation Component: 	'miniaero'
+Load Balancer: 		SimpleLoadBalancer
+Scheduler: 		Unified
+   Using "MostMessages" task queue priority algorithm
+   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.
+   Creating 15 additional  threads for task execution (total task execution threads = 16).
+<VarTracker> not specified in .ups file... no variable tracking will take place.
+Patch layout: 		(32,16,16)
+Grid statistics:
+Number of levels:		1
+Level 0:
+  Number of patches:		8192
+  Total number of cells:	1080045576 (131842 avg. per patch)
+Total patches in grid:		8192
+Total cells in grid:		1080045576 (131842 avg. per patch)
+
+WARNING (b): lowering delt from 7.49179e-06 to maximum: 1e-06 (for initial timesteps)
+Time=0 (timestep 0), delT=1e-06, elap T = 6.91, Memory Use = 250.53 MBs (avg), 255.68 MBs (max on rank:496)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  Recompile           : 0.222703     : 0.243679     : 39         : 8.60821   
+  TaskExec            : 6.83713      : 6.83988      : 437        : 0.0401452 
+  TaskLocalComm       : 1.45293e-05  : 2.3e-05      : 314        : 36.8291   
+Time=1e-06 (timestep 1), delT=7.44393e-06, elap T = 15.10, Memory Use = 1212.09 MBs (avg), 1425.57 MBs (max on rank:494)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 88.9096      : 91.9412      : 183        : 3.29729   
+  TaskLocalComm       : 3.27528      : 4.55921      : 183        : 28.1612   
+  TaskWaitCommTime    : 2.2636       : 3.54897      : 209        : 36.218    
+  TaskWaitThreadTime  : 0.000351916  : 0.000455     : 366        : 22.6558   
+Time=8.44393e-06 (timestep 2), delT=7.12368e-06, elap T = 23.26, Memory Use = 1622.43 MBs (avg), 1914.90 MBs (max on rank:60)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 89.3966      : 91.9868      : 156        : 2.81585   
+  TaskLocalComm       : 2.50046      : 3.44754      : 310        : 27.4712   
+  TaskWaitCommTime    : 2.35133      : 3.67833      : 169        : 36.0761   
+  TaskWaitThreadTime  : 0.000358701  : 0.031616     : 461        : 98.8654   
+Time=1.55676e-05 (timestep 3), delT=6.89865e-06, elap T = 31.73, Memory Use = 1950.38 MBs (avg), 2281.84 MBs (max on rank:424)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 89.7415      : 92.2345      : 469        : 2.70288   
+  TaskLocalComm       : 2.51639      : 3.55669      : 142        : 29.2491   
+  TaskWaitCommTime    : 2.42699      : 3.83838      : 177        : 36.7703   
+  TaskWaitThreadTime  : 0.000299715  : 0.00035      : 214        : 14.3672   
+  Percent Time in overhead:0
+Time=2.24663e-05 (timestep 4), delT=6.65457e-06, elap T = 40.11, mean: 8.41, Memory Use = 2253.10 MBs (avg), 2682.73 MBs (max on rank:164)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 89.9393      : 93.2189      : 71         : 3.5182    
+  TaskLocalComm       : 2.52882      : 3.3519       : 461        : 24.5556   
+  TaskWaitCommTime    : 2.38083      : 3.52325      : 468        : 32.4254   
+  TaskWaitThreadTime  : 0.00029835   : 0.000393     : 327        : 24.0841   
+  Percent Time in overhead:0
+Time=2.91208e-05 (timestep 5), delT=6.41331e-06, elap T = 48.48, mean: 8.39, Memory Use = 2534.86 MBs (avg), 2964.29 MBs (max on rank:345)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 89.9669      : 93.1334      : 471        : 3.39994   
+  TaskLocalComm       : 2.53868      : 3.21595      : 443        : 21.0599   
+  TaskWaitCommTime    : 2.38268      : 3.9009       : 75         : 38.9197   
+  TaskWaitThreadTime  : 0.000299783  : 0.000348     : 246        : 13.8554   
+  Percent Time in overhead:0
+Time=3.55341e-05 (timestep 6), delT=6.25357e-06, elap T = 56.50, mean: 8.24, Memory Use = 2809.84 MBs (avg), 3321.07 MBs (max on rank:145)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 89.6099      : 93.554       : 455        : 4.21583   
+  TaskLocalComm       : 2.56361      : 3.5206       : 77         : 27.1827   
+  TaskWaitCommTime    : 2.37777      : 3.46713      : 36         : 31.4197   
+  TaskWaitThreadTime  : 0.000298865  : 0.000347     : 18         : 13.8717   
+  Percent Time in overhead:0
+Time=4.17877e-05 (timestep 7), delT=6.1427e-06, elap T = 64.80, mean: 8.26, Memory Use = 3080.51 MBs (avg), 3623.28 MBs (max on rank:145)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 89.9867      : 92.2394      : 286        : 2.44223   
+  TaskLocalComm       : 2.57174      : 3.39122      : 60         : 24.1648   
+  TaskWaitCommTime    : 2.39586      : 4.06514      : 27         : 41.0634   
+  TaskWaitThreadTime  : 0.000298047  : 0.000392     : 65         : 23.9676   
+  Percent Time in overhead:0
+Time=4.79304e-05 (timestep 8), delT=6.06333e-06, elap T = 95.72, mean: 14.74, Memory Use = 3338.00 MBs (avg), 3850.88 MBs (max on rank:470)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 126.459      : 235.221      : 508        : 46.2384   
+  TaskLocalComm       : 43.5339      : 254.011      : 491        : 82.8614   
+  TaskWaitCommTime    : 19.0273      : 41.3915      : 382        : 54.031    
+  TaskWaitThreadTime  : 0.000298252  : 0.000348     : 62         : 14.2954   
+  Percent Time in overhead:0
+Time=5.39937e-05 (timestep 9), delT=6.00531e-06, elap T = 104.33, mean: 13.20, Memory Use = 3587.72 MBs (avg), 4130.28 MBs (max on rank:345)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 90.848       : 99.3561      : 287        : 8.56326   
+  TaskLocalComm       : 2.57839      : 3.65772      : 33         : 29.5085   
+  TaskWaitCommTime    : 2.4457       : 4.16417      : 314        : 41.2679   
+  TaskWaitThreadTime  : 0.000298986  : 0.00035      : 114        : 14.5753   
+  Percent Time in overhead:0
+Time=5.9999e-05 (timestep 10), delT=5.96223e-06, elap T = 112.92, mean: 12.18, Memory Use = 3835.42 MBs (avg), 4380.26 MBs (max on rank:410)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 91.1121      : 104.006      : 287        : 12.3969   
+  TaskLocalComm       : 2.61874      : 3.61482      : 282        : 27.5555   
+  TaskWaitCommTime    : 2.47297      : 4.02402      : 340        : 38.5447   
+  TaskWaitThreadTime  : 0.000298188  : 0.000394     : 353        : 24.3179   
+  Percent Time in overhead:0
+Time=6.59613e-05 (timestep 11), delT=5.92988e-06, elap T = 121.94, mean: 11.55, Memory Use = 4084.98 MBs (avg), 4701.20 MBs (max on rank:446)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 91.5498      : 106.03       : 287        : 13.6565   
+  TaskLocalComm       : 2.62         : 3.56412      : 97         : 26.4895   
+  TaskWaitCommTime    : 2.52584      : 3.8206       : 250        : 33.889    
+  TaskWaitThreadTime  : 0.000298941  : 0.000399     : 494        : 25.0773   
+  Percent Time in overhead:0
+Time=7.18912e-05 (timestep 12), delT=5.90537e-06, elap T = 130.65, mean: 11.03, Memory Use = 4339.42 MBs (avg), 4929.46 MBs (max on rank:446)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 91.5239      : 106.789      : 287        : 14.295    
+  TaskLocalComm       : 2.6222       : 3.68841      : 221        : 28.9069   
+  TaskWaitCommTime    : 2.45789      : 3.70386      : 230        : 33.6396   
+  TaskWaitThreadTime  : 0.000298666  : 0.000389     : 77         : 23.2221   
+  Percent Time in overhead:0
+Time=7.77965e-05 (timestep 13), delT=5.88668e-06, elap T = 162.02, mean: 14.73, Memory Use = 4588.88 MBs (avg), 5179.07 MBs (max on rank:293)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 124.294      : 280.648      : 458        : 55.7119   
+  TaskLocalComm       : 23.3693      : 185.88       : 417        : 87.4277   
+  TaskWaitCommTime    : 19.0048      : 36.0169      : 246        : 47.2336   
+  TaskWaitThreadTime  : 0.000300174  : 0.000508     : 0          : 40.9107   
+  Percent Time in overhead:0
+Time=8.36832e-05 (timestep 14), delT=5.87234e-06, elap T = 171.01, mean: 13.69, Memory Use = 4842.90 MBs (avg), 5453.10 MBs (max on rank:424)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 92.2302      : 108.861      : 297        : 15.2768   
+  TaskLocalComm       : 2.65361      : 3.60553      : 407        : 26.4017   
+  TaskWaitCommTime    : 2.58284      : 3.97045      : 240        : 34.9484   
+  TaskWaitThreadTime  : 0.000318438  : 0.008696     : 409        : 96.3381   
+  Percent Time in overhead:0
+Time=8.95555e-05 (timestep 15), delT=5.86127e-06, elap T = 181.35, mean: 13.08, Memory Use = 5090.08 MBs (avg), 5711.81 MBs (max on rank:300)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 94.3882      : 135.168      : 297        : 30.1697   
+  TaskLocalComm       : 2.62732      : 4.06257      : 348        : 35.3285   
+  TaskWaitCommTime    : 2.91058      : 5.47688      : 296        : 46.857    
+  TaskWaitThreadTime  : 0.000299586  : 0.000347     : 142        : 13.664    
+  Percent Time in overhead:0
+Time=9.54168e-05 (timestep 16), delT=5.85271e-06, elap T = 192.43, mean: 12.71, Memory Use = 5350.66 MBs (avg), 5952.24 MBs (max on rank:300)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 95.1279      : 144.985      : 297        : 34.3879   
+  TaskLocalComm       : 2.6271       : 4.29459      : 99         : 38.8277   
+  TaskWaitCommTime    : 3.1506       : 6.31337      : 268        : 50.0963   
+  TaskWaitThreadTime  : 0.000302182  : 0.000352     : 421        : 14.1529   
+  Percent Time in overhead:0
+Time=0.00010127 (timestep 17), delT=5.84605e-06, elap T = 224.19, mean: 16.18, Memory Use = 5600.14 MBs (avg), 6200.40 MBs (max on rank:388)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 137.384      : 296.459      : 297        : 53.6583   
+  TaskLocalComm       : 43.6202      : 247.751      : 417        : 82.3935   
+  TaskWaitCommTime    : 19.6087      : 34.8475      : 423        : 43.7298   
+  TaskWaitThreadTime  : 0.000301414  : 0.000351     : 448        : 14.127    
+  Percent Time in overhead:0
+Time=0.000107116 (timestep 18), delT=5.84086e-06, elap T = 236.66, mean: 15.50, Memory Use = 5855.91 MBs (avg), 6430.43 MBs (max on rank:135)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 96.0661      : 162.204      : 297        : 40.7744   
+  TaskLocalComm       : 2.60628      : 3.52299      : 492        : 26.0206   
+  TaskWaitCommTime    : 3.58008      : 7.38848      : 287        : 51.5452   
+  TaskWaitThreadTime  : 0.000300332  : 0.000348     : 260        : 13.6977   
+  Percent Time in overhead:0
+Time=0.000112956 (timestep 19), delT=5.8368e-06, elap T = 247.93, mean: 14.73, Memory Use = 6112.36 MBs (avg), 6720.12 MBs (max on rank:411)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 94.6757      : 153.791      : 297        : 38.4389   
+  TaskLocalComm       : 2.61894      : 3.78778      : 85         : 30.8583   
+  TaskWaitCommTime    : 3.73211      : 6.86115      : 281        : 45.6051   
+  TaskWaitThreadTime  : 0.00029825   : 0.000355     : 235        : 15.9859   
+  Percent Time in overhead:0
+Time=0.000118793 (timestep 20), delT=5.83362e-06, elap T = 258.09, mean: 13.90, Memory Use = 6363.79 MBs (avg), 7003.68 MBs (max on rank:309)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 94.5146      : 144.268      : 297        : 34.4869   
+  TaskLocalComm       : 2.643        : 3.73933      : 37         : 29.319    
+  TaskWaitCommTime    : 3.18929      : 5.93792      : 296        : 46.2895   
+  TaskWaitThreadTime  : 0.000299355  : 0.00035      : 38         : 14.4699   
+  Percent Time in overhead:0
+Time=0.000124627 (timestep 21), delT=5.83113e-06, elap T = 289.80, mean: 17.14, Memory Use = 6616.39 MBs (avg), 7289.95 MBs (max on rank:28)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 145.107      : 311.458      : 505        : 53.4102   
+  TaskLocalComm       : 38.0546      : 269.296      : 316        : 85.8689   
+  TaskWaitCommTime    : 19.1482      : 38.8246      : 7          : 50.6804   
+  TaskWaitThreadTime  : 0.000302268  : 0.000391     : 391        : 22.6937   
+  Percent Time in overhead:0
+Time=0.000130458 (timestep 22), delT=5.82919e-06, elap T = 300.63, mean: 15.99, Memory Use = 6872.47 MBs (avg), 7654.73 MBs (max on rank:28)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 94.9021      : 144.477      : 313        : 34.3132   
+  TaskLocalComm       : 2.62141      : 3.56214      : 247        : 26.409    
+  TaskWaitCommTime    : 3.53859      : 6.43247      : 281        : 44.9885   
+  TaskWaitThreadTime  : 0.000300836  : 0.000352     : 116        : 14.5352   
+  Percent Time in overhead:0
+Time=0.000136287 (timestep 23), delT=5.82767e-06, elap T = 311.44, mean: 15.05, Memory Use = 7132.55 MBs (avg), 7874.25 MBs (max on rank:171)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 95.1328      : 148.909      : 313        : 36.1133   
+  TaskLocalComm       : 2.65175      : 3.70786      : 454        : 28.4828   
+  TaskWaitCommTime    : 3.3804       : 7.2021       : 312        : 53.0637   
+  TaskWaitThreadTime  : 0.00030184   : 0.000368     : 14         : 17.9783   
+  Percent Time in overhead:0
+Time=0.000142115 (timestep 24), delT=5.8265e-06, elap T = 322.30, mean: 14.29, Memory Use = 7383.87 MBs (avg), 8196.56 MBs (max on rank:171)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 95.1547      : 154.613      : 313        : 38.4562   
+  TaskLocalComm       : 2.6532       : 3.67358      : 92         : 27.7762   
+  TaskWaitCommTime    : 3.54215      : 6.78618      : 281        : 47.8034   
+  TaskWaitThreadTime  : 0.000359064  : 0.028496     : 303        : 98.7399   
+  Percent Time in overhead:0
+Time=0.000147941 (timestep 25), delT=5.82561e-06, elap T = 354.24, mean: 17.50, Memory Use = 7641.05 MBs (avg), 8334.44 MBs (max on rank:171)
+  Description         Ave time:      max Time:      mpi proc:    100*(1-ave/max) '% load imbalance'
+  TaskExec            : 143.369      : 337.987      : 505        : 57.5815   
+  TaskLocalComm       : 37.7967      : 238.433      : 77         : 84.1479   
+  TaskWaitCommTime    : 19.124       : 40.4105      : 421        : 52.6756   
+  TaskWaitThreadTime  : 0.000300285  : 0.00036      : 86         : 16.5875   
+  Percent Time in overhead:0
+Sus: going down successfully
+Application 9037611 network throttled: 512 nodes throttled, 14:42:06 node-seconds
+Application 9037611 balanced injection 100, after throttle 100
+Application 9037611 resources: utime ~1233750s, stime ~161708s, Rss ~9365388, inblocks ~105586933, outblocks ~92058220
