@@ -261,7 +261,9 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Read in the algorithm section
-  bool isMultilevel = false;
+  bool isMultilevel   = false;
+  Algorithm algorithm = singleLevel;
+  
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
 
   if (alg_ps){
@@ -277,6 +279,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     if (type == "dataOnion" ) {
 
       isMultilevel = true;
+      algorithm    = dataOnion;
       alg_ps->getWithDefault( "halo",  d_halo,  IntVector(10,10,10));
 
       //  Method for deteriming the extents of the ROI
@@ -303,6 +306,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //  rmcrt only on the coarse level
     } else if ( type == "RMCRT_coarseLevel" ) {
       isMultilevel = true;
+      algorithm    = coarseLevel;
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
     }
   }
@@ -316,7 +320,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
   
-    if( isMultilevel && (d_whichROI_algo != patch_based) && Parallel::usingDevice() ){
+  if( (algorithm == dataOnion && d_whichROI_algo != patch_based ) && Parallel::usingDevice() ){
     ostringstream warn;
     warn << "GPU:RMCRT:ERROR: ";
     warn << "At this time only ROI_extents type=\"patch_based\" work on the GPU";

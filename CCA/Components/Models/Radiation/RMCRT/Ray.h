@@ -167,11 +167,19 @@ namespace Uintah{
       bool d_solveBoundaryFlux;
       bool d_solveDivQ;
       bool d_CCRays;
-      bool d_onOff_SetBCs;                // switch for setting boundary conditions
+      bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
-      bool d_applyFilter;                 // Allow for filtering of boundFlux and divQ results
+      bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
 
-      enum ROI_algo{fixed, dynamic, patch_based};
+      enum Algorithm{ dataOnion,            
+                      coarseLevel, 
+                      singleLevel
+                    };
+      enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box 
+                      dynamic,              // user specifies thresholds that are used to dynamically determine ROI
+                      patch_based,          // The patch extents + halo are the ROI
+                    };
+                    
       ROI_algo  d_whichROI_algo;
       Point d_ROI_minPt;
       Point d_ROI_maxPt;
