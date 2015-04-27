@@ -130,7 +130,7 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
   d_radiometer     = NULL;
-  d_dbgCells.push_back( IntVector(8,24,0) );
+  d_dbgCells.push_back( IntVector(36,0,0) );
 
   //_____________________________________________
   //   Ordering for Surface Method
@@ -926,9 +926,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       IntVector origin = *iter;
 
 /*`==========TESTING==========*/
-#if 0
-      d_dbgCells.push_back(IntVector( 24,33,1 ) );
-      
+#if 0 
       if( isDbgCell(origin) && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
@@ -1869,14 +1867,26 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       //__________________________________
       // Logic for moving between levels
-      // currently you can only move from fine to coarse level
+      // - Currently you can only move from fine to coarse level
+      // - Don't jump levels if ray is at edge of domain
+      
+      Point pos = level->getCellPosition(cur);           // position could be outside of domain
+      in_domain = domain_BB.inside(pos);
+      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
 
-      //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
-      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
+      bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
+      bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
+    
+      bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
+      bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
 
-      //dbg2 << "        Ray: "<< cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
-      //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl;
+#if (DEBUG == 1 || DEBUG == 4)
+      if( isDbgCell(origin) ) {
+        printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ", cur.x(), cur.y(), cur.z(), jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
+            containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
+        printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n", onFineLevel, ray_outside_ROI, ray_outside_Region, in_domain );
+      }
+#endif
 
       if( jumpFinetoCoarserLevel ){
         cur   = level->mapCellToCoarser(cur);
@@ -1884,22 +1894,26 @@ void Ray::computeCellType( const ProcessorGroup*,
         L     = level->getIndex();
         onFineLevel = false;
 
-        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
-        //dbg2 << "        ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+#if (DEBUG == 1 || DEBUG == 4)
+        if( isDbgCell(origin) ) {
+          printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x(), cur.y(), cur.z());
+        }
+#endif
       } else if ( jumpCoarsetoCoarserLevel ){
 
-        IntVector c_old = cur;
+        IntVector c_old = cur;                          // needed for debugging
         cur   = level->mapCellToCoarser(cur);
         level = level->getCoarserLevel().get_rep();
         L     = level->getIndex();
-
-        //dbg2 << "        ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
+#if (DEBUG == 1 || DEBUG == 4)
+        if( isDbgCell(origin) ) {
+          printf( "        ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x(), cur.y(), cur.z(), c_old.x(), c_old.y(), c_old.z());
+        }
+#endif
       }
 
-      Point pos = level->getCellPosition(cur);         // position could be outside of domain
-      in_domain = domain_BB.inside(pos);
 
-//      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
+
       //__________________________________
       //  update marching variables
       disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
@@ -1934,13 +1948,13 @@ void Ray::computeCellType( const ProcessorGroup*,
  /*`==========TESTING==========*/
 #if DEBUG == 1
   if( isDbgCell( origin) ){
-    printf( "        B) cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
-    printf( " face %d ", dir );
+    printf( "        B) cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+    printf( " dir %d ", dir );
     printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
     printf( " tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
     printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
     printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
-    printf( "disMin: %g inDomain: %i\n",disMin, in_domain );
+    printf( "disMin %g inDomain %i\n",disMin, in_domain );
 
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
     printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);

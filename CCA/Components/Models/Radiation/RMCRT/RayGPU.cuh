@@ -44,6 +44,8 @@ typedef SCIRun::gpuPoint     GPUPoint;
 
 //______________________________________________________________________
 //
+const int d_MAXLEVELS = 3;               // FIX ME!
+
 //__________________________________
 //  returns gpuVector * scalar
 inline HOST_DEVICE GPUVector operator*(const GPUVector & a, double b)
@@ -464,11 +466,9 @@ __device__ double randDblExcDevice(curandState* randNumStates);
 //
 __device__ double randDevice(curandState* randNumStates);
 
-
 //______________________________________________________________________
 //
-__device__ unsigned int hashDevice(unsigned int a);
-
+__device__ bool isDbgCellDevice( GPUIntVector me);
 
 
 

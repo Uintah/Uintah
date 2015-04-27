@@ -24,19 +24,19 @@
 
 #include <sci_defs/cuda_defs.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
 #ifdef HAVE_CUDA
   #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #endif
-
+#include <iostream>
 
 #define BLOCKSIZE 16
 #define PRINTF            // if using printf statements to debug
-//#define DEBUG
 
 using namespace Uintah;
-using std::cout;
-using std::endl;
+using namespace std;
+
 static DebugStream dbggpu("RAYGPU", false);
 
 //---------------------------------------------------------------------------
@@ -239,13 +239,23 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
       return;
     }
-    
+
+    //__________________________________
+    //  bulletproofing   FIX ME 
+    const Level* fineLevel = getLevel(finePatches);
+    const int maxLevels   = fineLevel->getGrid()->numLevels();
+    if ( maxLevels > d_MAXLEVELS) {
+      ostringstream warn;
+      warn << "\nERROR:  RMCRT:GPU The maximum number of levels allowed ("<<d_MAXLEVELS<< ") has been exceeded." << endl;
+      warn << " To increase that value see /src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
 
     //__________________________________
     //  Grid Parameters
     gridParams gridP;
-    const Level* fineLevel = getLevel(finePatches);
-    const int maxLevels   = fineLevel->getGrid()->numLevels();
+//    const Level* fineLevel = getLevel(finePatches);
+//    const int maxLevels   = fineLevel->getGrid()->numLevels();
     gridP.maxLevels = maxLevels;
     LevelP level_0  = new_dw->getGrid()->getLevel(0);
 
@@ -273,19 +283,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       levelP[l].anchor = GPUPoint( make_double3(anchor.x(), anchor.y(), anchor.z()));
       IntVector RR = level->getRefinementRatio();
       levelP[l].refinementRatio = GPUIntVector( make_int3(RR.x(), RR.y(), RR.z() ) );
-
-/*`==========TESTING==========*/
-#if 0
-  IntVector c = IntVector(16, 16, 16);
-  Point p = level->getCellPosition(c);
-  printf( "CPU c :[%i,%i,%i], P: [%f,%f,%f] \n",c.x(), c.y(), c.z(), p.x(), p.y(), p.z() );
-  
-  c = IntVector(15, -1, 3);
-  IntVector cc = level->mapCellToCoarser(c);
-  printf( "CPU c :[%i,%i,%i], cc: [%i,%i,%i] \n",c.x(), c.y(), c.z(), cc.x(), cc.y(), cc.z() ); 
-#endif
-/*===========TESTING==========`*/
-
     }
 
     //__________________________________
