@@ -591,7 +591,6 @@ void AMRMPM::scheduleComputeZoneOfInfluence(SchedulerP& sched,
 
   if(L_indx > 0 ){
 
-
     printSchedule(patches,cout_doing,"AMRMPM::scheduleComputeZoneOfInfluence");
     Task* t = scinew Task("AMRMPM::computeZoneOfInfluence",
                     this, &AMRMPM::computeZoneOfInfluence);
@@ -1556,16 +1555,6 @@ void AMRMPM::partitionOfUnity(const ProcessorGroup*,
         }
 
         plastlevelnew[idx]= curLevelIndex;
-
-/*
-        int RRindex = curLevelIndex - plastlevel[idx] + 1;
-
-        if(curLevelIndex != plastlevel[idx]){
-          cout << "curLevel = " << curLevelIndex << endl;
-          cout << "plastlevel = " << plastlevel[idx] << endl;
-          cout << "RR = " << RR[RRindex] << endl;
-        }
-*/
 
         partitionUnity[idx] = 0;
 
@@ -2650,9 +2639,7 @@ void AMRMPM::computeZoneOfInfluence(const ProcessorGroup*,
  
     printTask(patches, patch,cout_doing,"Doing AMRMPM::computeZoneOfInfluence");
     NCVariable<Stencil7> zoi;
-    cout << "patch  = " << patch << endl;
     new_dw->allocateAndPut(zoi, lb->gZOILabel, 0, patch);
-    cout << "allocate " << endl;
 
     for(NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
       IntVector c = *iter;
@@ -3454,6 +3441,10 @@ void AMRMPM::addParticles(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     const Level* level = getLevel(patches);
+    bool hasCoarser=false;
+    if(level->hasCoarserLevel()){
+      hasCoarser=true;
+    }
 
     //Carry forward CellNAPID
     constCCVariable<short int> NAPID;
@@ -3510,9 +3501,39 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           if(patch->containsCell(c)){
             refineCell[c] = 1.0;
           }
+        }else{
+           if(hasCoarser){  /* see comment below */
+             IntVector c = level->getCellIndex(px[pp]);
+             if(patch->containsCell(c)){
+               refineCell[c] = -100.;
+             }
+           }
         }
       }
       numNewPartNeeded*=8;
+
+      /*  This tomfoolery is in place to keep refined regions that contain
+          particles refined.  If a patch with particles coarsens, the particles
+          on that patch disappear when the fine patch is deleted.  This
+          prevents the deletion of those patches.  Ideally, we'd allow
+          coarsening and relocate the orphan particles, but I don't know how to
+          do that.  JG */
+      bool keep_patch_refined=false;
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        if(refineCell[c]<0.0){
+           keep_patch_refined=true;
+           refineCell[c]=0.0;
+        }
+      }
+
+      if(keep_patch_refined==true){
+          IntVector low = patch->getCellLowIndex();
+          IntVector high= patch->getCellHighIndex();
+          IntVector middle = (low+high)/IntVector(2,2,2);
+          refineCell[middle]=1.0;
+      }
+      /*  End tomfoolery */
 
       const unsigned int oldNumPar = pset->addParticles(numNewPartNeeded);
 
@@ -3680,48 +3701,6 @@ void AMRMPM::addParticles(const ProcessorGroup*,
   }    // for patches
 }
 
-#if 0
-void AMRMPM::markCellsForRefinement(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* ,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw)
-{
-  const Level* level = getLevel(patches);
-
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches, patch,cout_doing,"Doing AMRMPM::markCellsForRefinement");
-
-    CCVariable<int> refineCell;
-    new_dw->allocateAndPut(refineCell, lb->MPMRefineCellLabel, 0, patch);
-    refineCell.initialize(0);
-
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      
-      // Loop over particles
-      ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
-      
-      constParticleVariable<Point> px;
-      constParticleVariable<int> prefined;
-      new_dw->get(px,       lb->pXLabel_preReloc,       pset);
-      new_dw->get(prefined, lb->pRefinedLabel_preReloc, pset);
-      for(ParticleSubset::iterator iter = pset->begin();
-                                   iter!= pset->end();  iter++){
-        if(prefined[*iter]==1){
-          IntVector c = level->getCellIndex(px[*iter]);
-          refineCell[c] = 1;
-          cout << "refineFlag Cell = " << c << endl;
-        }
-      }
-
-    }
-  }
-}
-#endif
-
 void AMRMPM::computeParticleScaleFactor(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset* ,
@@ -3755,13 +3734,6 @@ void AMRMPM::computeParticleScaleFactor(const ProcessorGroup*,
           pScaleFactor[idx] = (pF[idx]*psize[idx]*Matrix3(dx[0],0,0,
                                                           0,dx[1],0,
                                                           0,0,dx[2]));
-/*
-          if(pScaleFactor[idx](0,0)<0.0001){
-             cout << "F = " << pF[idx] << endl;
-             cout << "size = " << psize[idx] << endl;
-             cout << "dx = " << dx << endl;
-          }
-*/
         } // for particles
       } // isOutputTimestep
     } // matls
@@ -3792,14 +3764,14 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
                                                                   0, patch);
     new_dw->get(refineCell,  lb->MPMRefineCellLabel,  0, patch, gnone, 0);
     PatchFlag* refinePatch = refinePatchFlag.get().get_rep();
-    
+
     for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         
-        if(refineCell[c]>0.0){
+        if(refineCell[c]>0.0 || refineFlag[c]==true){
           refineFlag[c] = true;
           refinePatch->set();
-        } else{
+        }else{
           refineFlag[c] = false;
         }
     }
@@ -3888,10 +3860,6 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
 
-//    CCVariable<Stencil7> gZOI;
-//    new_dw->allocateAndPut(gZOI, lb->gZOILabel, 0, patch);
-//    gZOI.initialize(Stencil7(0.0));
-
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -3904,7 +3872,6 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
 
       // this is a new patch, so create empty particle variables.
       if (!new_dw->haveParticleSubset(dwi, patch)) {
-        cout << "patch = " << patch->getID() << endl;
         ParticleSubset* pset = new_dw->createParticleSubset(0, dwi, patch);
 
         // Create arrays for the particle data
@@ -3940,7 +3907,6 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);
       } else {
-        cout << "else_patch = " << patch->getID() << endl;
       }
     }
   }
