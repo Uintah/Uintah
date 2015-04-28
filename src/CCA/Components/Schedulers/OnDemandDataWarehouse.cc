@@ -3469,10 +3469,11 @@ OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
 {
   if( dbg.active() ) {
     cerrLock.lock();
+    int L_indx = patch->getLevel()->getIndex();
     dbg << d_myworld->myrank() << " Putting (line: "<<line<< ") ";
     dbg << std::left;
     dbg.width( 20 );
-    dbg << *label << " MI: " << matlIndex << " patch: " << *patch << " \tinto DW: " << d_generation
+    dbg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" "<< *patch << " \tinto DW: " << d_generation
         << "\n";
     cerrLock.unlock();
   }

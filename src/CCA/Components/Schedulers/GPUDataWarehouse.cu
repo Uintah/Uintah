@@ -167,7 +167,8 @@ GPUDataWarehouse::put(GPUGridVariableBase& var, char const* label, int patchID, 
   var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
 
   if (d_debug) {
-    printf("GPUDW::put() host put \"%-15s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", label, patchID, levelIndx, d_varDB[i].var_ptr,
+    printf("GPUDW::put(line: %i) host put \"%-15s\" (patch: %d) (level: %d) (loc %p) into GPUDW %p on device %d, size [%d,%d,%d]\n", 
+           __LINE__,label, patchID, levelIndx, d_varDB[i].var_ptr,
            d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
   }
   d_dirty = true;
@@ -303,8 +304,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
     CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
     if (d_debug && retVal == cudaSuccess) {
-      printf("GPUDW::allocateAndPut() cudaMalloc for \"%-15s\", patch: %i, mat: %i size %ld from (%d,%d,%d) to (%d,%d,%d) ", label,
-             patchID, matlIndx, var.getMemSize(), low.x, low.y, low.z, high.x, high.y, high.z);
+      printf("GPUDW::allocateAndPut(line: %i) cudaMalloc for \"%-15s\",  L-%i patch: %i, mat: %i size %ld from (%d,%d,%d) to (%d,%d,%d) ",
+             __LINE__, label, levelIndx, patchID, matlIndx, var.getMemSize(), low.x, low.y, low.z, high.x, high.y, high.z);
       printf(" at %p on device %d\n", addr, d_device_id);
     }
 
@@ -341,8 +342,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
     CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
     if (d_debug && retVal == cudaSuccess) {
-      printf("GPUDW::allocateAndPut() cudaMalloc for level-var \"%-15s\", L-%i, matl: %i size %ld from (%d,%d,%d) to (%d,%d,%d) ",
-             label, levelIndx, matlIndx, var.getMemSize(), low.x, low.y, low.z, high.x, high.y, high.z);
+      printf("GPUDW::allocateAndPut(line: %i) cudaMalloc for level-var \"%-15s\", L-%i, matl: %i size %ld from (%d,%d,%d) to (%d,%d,%d) ",
+             __LINE__, label, levelIndx, matlIndx, var.getMemSize(), low.x, low.y, low.z, high.x, high.y, high.z);
       printf(" at %p on device %d\n", addr, d_device_id);
     }
 
@@ -375,8 +376,8 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
     CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
     if (d_debug && retVal == cudaSuccess) {
-      printf("GPUDW::allocateAndPut() cudaMalloc for \"%-15s\", L-%i, patch: %i, matl: %i size %ld", label, levelIndx, patchID,
-             matlIndx, var.getMemSize());
+      printf("GPUDW::allocateAndPut(line: %i) cudaMalloc for \"%-15s\", L-%i, patch: %i, matl: %i size %ld", 
+            __LINE__, label, levelIndx, patchID, matlIndx, var.getMemSize());
       printf(" at %p on device %d\n", addr, d_device_id);
     }
 
@@ -409,8 +410,8 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
     CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
 
     if (d_debug && retVal == cudaSuccess) {
-      printf("GPUDW::allocateAndPut() cudaMalloc for \"%-15s\", L-%i, patch: %i, matl: %i, size %ld", label, levelIndx, patchID,
-             matlIndx, var.getMemSize());
+      printf("GPUDW::allocateAndPut(line: %i) cudaMalloc for \"%-15s\", L-%i, patch: %i, matl: %i, size %ld", 
+             __LINE__, label, levelIndx, patchID, matlIndx, var.getMemSize());
       printf(" at %p on device %d\n", addr, d_device_id);
     }
 
