@@ -187,14 +187,113 @@ inline HOST_DEVICE GPUPoint operator+(GPUPoint& p, GPUVector& b)
 //
 //______________________________________________________________________
 //
-struct varLabelNames {
-    const char* divQ;
-    const char* abskg;
-    const char* sigmaT4;
-    const char* celltype;
-    const char* VRFlux;
-    const char* boundFlux;
-    const char* radVolQ;
+class unifiedMemory {                     // this should be moved upstream
+public:                                   // This only works for cuda > 6.X
+
+  void *operator new(size_t len) 
+  {
+    void *ptr;
+    cudaMallocManaged(&ptr, len);
+    return ptr;
+  }
+
+  void operator delete(void *ptr) 
+  {
+    cudaFree(ptr);
+  }
+  
+  void *operator new[] (size_t len) 
+  {
+    void *ptr; 
+    cudaMallocManaged(&ptr, len);
+    return ptr;
+  }
+  
+  void operator delete[] (void* ptr) 
+  {
+    cudaFree(ptr);
+  }
+  
+};
+
+//______________________________________________________________________
+//
+//  http://devblogs.nvidia.com/parallelforall/unified-memory-in-cuda-6/
+// String Class for unified managed Memory
+class GPUString : public unifiedMemory
+{
+  int length;
+  char *data;
+  
+  public:
+    GPUString() : length(0), data(0) {}
+    // Constructor for C-GPUString initializer
+    GPUString(const char *s) : length(0), data(0) 
+    {
+      _realloc(strlen(s));
+      strcpy(data, s);
+    }
+
+    // Copy constructor
+    GPUString(const GPUString& s) : length(0), data(0) 
+    {
+      _realloc(s.length);
+      strcpy(data, s.data);
+    }
+    
+    // destructor
+    ~GPUString() { 
+      cudaFree(data); 
+    }
+
+    // Assignment operator
+    GPUString& operator=(const char* s) 
+    {
+      _realloc(strlen(s));
+      strcpy(data, s);
+      return *this;
+    }
+
+    // Element access (from host or device)
+    __host__ __device__
+    char& operator[](int pos) 
+    {   
+      return data[pos]; 
+    }
+
+    // C-String access host or device
+    __host__ __device__
+    const char* c_str() const 
+    { 
+      return data; 
+    }
+   
+  private:
+    void _realloc(int len) 
+    {
+      cudaFree(data);
+      length = len;
+      cudaMallocManaged(&data, length+1);
+    }
+};
+
+//______________________________________________________________________
+//
+struct varLabelNames : public unifiedMemory {
+  public:
+    GPUString divQ;
+    GPUString abskg;
+    GPUString sigmaT4;
+    GPUString celltype;
+    GPUString VRFlux;
+    GPUString boundFlux;
+    GPUString radVolQ;
+    
+    __host__ __device__ 
+    void print() {
+      printf( " varLabelNames:  divQ: (%s), abskg: (%s), sigmaT4: (%s) ",divQ.c_str(), abskg.c_str(), sigmaT4.c_str() );
+      printf( " celltype: (%s), VRFlux: (%s), boundFlux: (%s) \n",celltype.c_str(), VRFlux.c_str(), boundFlux.c_str() );
+    }
 };
 
 //______________________________________________________________________
@@ -481,7 +580,7 @@ __host__ void launchRayTraceKernel( dim3 dimGrid,
                                     patchParams patch,
                                     cudaStream_t* stream,
                                     RMCRT_flags RT_flags,
-                                    varLabelNames labelNames,
+                                    varLabelNames* labelNames,
                                     GPUDataWarehouse* abskg_gdw,
                                     GPUDataWarehouse* sigmaT4_gdw,
                                     GPUDataWarehouse* celltype_gdw,
@@ -497,7 +596,7 @@ __global__ void rayTraceKernel( dim3 dimGrid,
                                 patchParams patch,
                                 curandState* randNumStates,
                                 RMCRT_flags RT_flags,
-                                varLabelNames labelNames,
+                                varLabelNames* labelNames,
                                 GPUDataWarehouse* abskg_gdw,
                                 GPUDataWarehouse* sigmaT4_gdw,
                                 GPUDataWarehouse* celltype_gdw,
