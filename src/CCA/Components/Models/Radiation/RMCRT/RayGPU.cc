@@ -32,7 +32,7 @@
 #include <iostream>
 
 #define BLOCKSIZE 16
-#define PRINTF            // if using printf statements to debug
+//#define PRINTF            // if using printf statements to debug
 
 using namespace Uintah;
 using namespace std;
@@ -70,7 +70,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     size_t size;
     cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
     cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
-    printf(" Increasing the size of the print buffer to %lu bytes\n", (int)10 * size );
+    printf(" Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
 #endif
 
     //__________________________________
@@ -84,22 +84,16 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     //__________________________________
     //  varLabel name struct
-    varLabelNames labelNames;
-#if 0
-    labelNames.abskg = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
-    labelNames.sigmaT4 = d_sigmaT4Label->getName().c_str();
-    labelNames.divQ = d_divQLabel->getName().c_str();
-    labelNames.celltype = d_cellTypeLabel->getName().c_str();
-    labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
-    labelNames.radVolQ = d_radiationVolqLabel->getName().c_str();
+    varLabelNames*  labelNames = new varLabelNames;
 
-    cout << " abskg:   " << d_abskgLabel->getName() << endl;
-    cout << " sigmaT4: " << d_sigmaT4Label->getName() << endl;
-    cout << " divQ:    " << d_divQLabel->getName() << endl;
-    cout << " cellType:" << d_cellTypeLabel->getName() << endl;
-    cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
-    cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
-#endif
+    labelNames->abskg   = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
+    labelNames->sigmaT4 = d_sigmaT4Label->getName().c_str();
+    labelNames->divQ    = d_divQLabel->getName().c_str();
+    labelNames->celltype  = d_cellTypeLabel->getName().c_str();
+    labelNames->boundFlux = d_boundFluxLabel->getName().c_str();
+    labelNames->radVolQ   = d_radiationVolqLabel->getName().c_str();
+    
+    labelNames->print();
 
     //__________________________________
     //  RMCRT_flags
@@ -239,6 +233,15 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
       return;
     }
+
+    //__________________________________
+    //  increase the size of the printbuffer on the device
+#ifdef PRINTF
+    size_t size;
+    cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
+    cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
+    printf(" Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
+#endif
 
     //__________________________________
     //  bulletproofing   FIX ME 
