@@ -76,8 +76,8 @@ static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
 static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
-  static DebugStream gpu_stats(        "Unified_GPUStats",     false);
-         DebugStream use_single_device("Unified_SingleDevice", false);
+  static DebugStream gpu_stats(        "GPUStats",     false);
+         DebugStream use_single_device("SingleDevice", false);
 #endif
 
 //______________________________________________________________________
