@@ -84,6 +84,7 @@ public:
   HOST_DEVICE bool clear();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){ return d_device_copy; };
   HOST_DEVICE void setDebug(bool s){ d_debug=s; }
+  __device__ void print();
   
 private:
 
