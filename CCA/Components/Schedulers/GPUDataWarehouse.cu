@@ -739,6 +739,41 @@ GPUDataWarehouse::clear()
   return retVal;
 #endif
 }
+
+
+//______________________________________________________________________
+//
+__device__ void
+GPUDataWarehouse::print()
+{
+#ifdef __CUDA_ARCH__
+  __syncthreads();
+  if( isThread0_Blk0() ){
+    printf("\nVariables in GPUDataWarehouse\n");
+    printf("__________________________________\n");
+    printf("  levelDB\n");
+    for (int i = 0; i < d_numLevelItems; i++) {
+      dataItem me = d_levelDB[i];
+      printf("    %-15s matl: %i, L-%i size:[%i,%i,%i] pointer: %p\n", me.label, me.matlIndx, me.levelIndx, 
+                 me.var_size.x, me.var_size.y, me.var_size.z, me.var_ptr);
+    }
+    
+    printf("  variableDB\n");
+    for (int i = 0; i < d_numVarItems; i++) {
+      dataItem me = d_varDB[i];
+      printf("    %-15s matl: %i, patchID: %i, L-%i size:[%i,%i,%i] pointer: %p\n", me.label, me.matlIndx,
+             me.domainID, me.levelIndx,me.var_size.x, me.var_size.y, me.var_size.z, me.var_ptr);
+    }
+    __syncthreads();
+
+    printThread();
+    printBlock();
+    printf("\n");
+
+  }
+#endif
+}
+
 //______________________________________________________________________
 //
 HOST_DEVICE void
