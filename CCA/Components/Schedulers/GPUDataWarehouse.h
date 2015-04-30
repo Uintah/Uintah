@@ -77,8 +77,12 @@ public:
 
   //______________________________________________________________________
   // GPU DataWarehouse support methods
-  HOST_DEVICE bool exist( char const* name, int patchID, int matlIndx, int levelIndx = 0 );
-  HOST_DEVICE bool remove( char const* name, int patchID, int matlIndx, int levelIndx = 0 );
+  HOST_DEVICE bool exists( char const*      name, int patchID, int matlIndx, int levelIndx = 0 );
+  HOST_DEVICE bool remove( char const*      name, int patchID, int matlIndx, int levelIndx = 0 );
+  
+  HOST_DEVICE bool existsLevelDB( char const* name,            int matlIndx, int levelIndx );       // levelDB
+  HOST_DEVICE bool removeLevelDB( char const* name,            int matlIndx, int levelIndx );
+  
   HOST_DEVICE bool init_device( int id );
   HOST_DEVICE bool syncto_device();
   HOST_DEVICE bool clear();
