@@ -1220,7 +1220,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             }
 
             // check if the variable already exists on the GPU
-            if (dw->getGPUDW()->exist(reqVarName.c_str(), patchID, matlID)) {
+            if (dw->getGPUDW()->exists(reqVarName.c_str(), patchID, matlID)) {
 
               int3 device_offset;
               int3 device_size;
@@ -1361,7 +1361,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             GPUReductionVariable<void*> device_var;
 
             // check if the variable already exists on the GPU
-            if (dw->getGPUDW()->exist(reqVarName.c_str(), patchID, matlID, levelID)) {
+            if (dw->getGPUDW()->exists(reqVarName.c_str(), patchID, matlID, levelID)) {
             
               dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID, levelID);
               device_ptr   = device_var.getPointer();
@@ -1416,7 +1416,7 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             GPUPerPatch<void*> device_var;
 
             // check if the variable already exists on the GPU
-            if (dw->getGPUDW()->exist(reqVarName.c_str(), patchID, matlID, levelID)) {
+            if (dw->getGPUDW()->exists(reqVarName.c_str(), patchID, matlID, levelID)) {
               dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID, levelID);
               device_ptr   = device_var.getPointer();
               device_bytes = device_var.getMemSize(); // TODO fix this
