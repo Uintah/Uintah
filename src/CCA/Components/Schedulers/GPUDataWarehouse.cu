@@ -578,10 +578,10 @@ GPUDataWarehouse::getLevelItem(char const* label, int matlIndx, int levelIndx)
 //______________________________________________________________________
 //
 HOST_DEVICE bool
-GPUDataWarehouse::exist(char const* label, int patchID, int matlIndx, int levelIndx /* = 0 */)
+GPUDataWarehouse::exists(char const* label, int patchID, int matlIndx, int levelIndx /* = 0 */)
 {
 #ifdef __CUDA_ARCH__
-  printf("exist() is only for framework code\n");
+  printf("exists() is only for framework code\n");
   return false;
 #else
   //__________________________________
@@ -599,6 +599,34 @@ GPUDataWarehouse::exist(char const* label, int patchID, int matlIndx, int levelI
     }
   }
   varDBLock.readUnlock();
+  return false;
+#endif
+}
+
+//______________________________________________________________________
+//
+HOST_DEVICE bool
+GPUDataWarehouse::existsLevelDB(char const* label, int matlIndx, int levelIndx)
+{
+#ifdef __CUDA_ARCH__
+  printf("existsLevelDB() is only for framework code\n");
+  return false;
+#else
+  //__________________________________
+  //  CPU code
+  levelDBLock.readLock();
+  {
+    int i = 0;
+    while (i < d_numLevelItems) {
+      dataItem me = d_levelDB[i];  
+      if (!strncmp(me.label, label, MAX_NAME_LENGTH) && me.matlIndx == matlIndx && me.levelIndx == levelIndx) {
+        levelDBLock.readUnlock();
+        return true;
+      }
+      i++;
+    }
+  }
+  levelDBLock.readUnlock();
   return false;
 #endif
 }
@@ -640,6 +668,45 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlIndx, int level
   return retVal;
 #endif
 }
+//______________________________________________________________________
+//
+HOST_DEVICE bool
+GPUDataWarehouse::removeLevelDB(char const* label, int matlIndx, int levelIndx)
+{
+  // I think this method may be dicey in general. Really only the infrastructure should call it.
+
+#ifdef __CUDA_ARCH__
+  printf("GPUDataWarehouse::removeLevelDB() should only be called by the framework\n");
+  return false;
+#else
+  //__________________________________
+  //  CPU code
+  cudaError_t retVal;
+  levelDBLock.writeLock();
+  {
+    int i = 0;
+    while (i < d_numLevelItems) {
+      if (!strncmp(d_levelDB[i].label, label, MAX_NAME_LENGTH)
+          && d_levelDB[i].matlIndx == matlIndx
+          && d_levelDB[i].levelIndx == levelIndx) {
+        CUDA_RT_SAFE_CALL(retVal = cudaFree(d_levelDB[i].var_ptr));
+
+        if (d_debug && retVal == cudaSuccess) {
+          printf("GPUDW::removeLevelDB() cuda free for \"%-15s\" L-%i, matl: %i at %p on device %d\n", d_levelDB[i].label,
+                 levelIndx, matlIndx, d_levelDB[i].var_ptr, d_device_id);
+        }
+
+        d_levelDB[i].label[0] = 0;  // leave a hole in the flat array, not deleted.
+        d_dirty = true;
+      }
+      i++;
+    }
+  }
+  levelDBLock.writeUnlock();
+  return retVal;
+#endif
+}
+
 
 //______________________________________________________________________
 //
@@ -713,6 +780,8 @@ GPUDataWarehouse::clear()
   //__________________________________
   //  CPU code
   cudaError_t retVal;
+  
+  levelDBLock.writeLock();
   varDBLock.writeLock();
   {
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(d_device_id));
@@ -721,7 +790,17 @@ GPUDataWarehouse::clear()
         CUDA_RT_SAFE_CALL(retVal = cudaFree(d_varDB[i].var_ptr));
 
         if (d_debug && retVal == cudaSuccess) {
-          printf("GPUDW::clear() cudaFree for \"%-15s\" at %p on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id);
+          printf("GPUDW::clear() cudaFree for varDB item \"%-15s\" at %p on device %d\n", d_varDB[i].label, d_varDB[i].var_ptr, d_device_id);
+        }
+      }
+    }
+
+    for (int i = 0; i < d_numLevelItems; i++) {
+      if (d_levelDB[i].label[0] != 0) {
+        CUDA_RT_SAFE_CALL(retVal = cudaFree(d_levelDB[i].var_ptr));
+
+        if (d_debug && retVal == cudaSuccess) {
+          printf("GPUDW::clear() cudaFree for levelDB item \"%-15s\" at %p on device %d\n", d_levelDB[i].label, d_levelDB[i].var_ptr, d_device_id);
         }
       }
     }
@@ -735,6 +814,7 @@ GPUDataWarehouse::clear()
     }
   }
   varDBLock.writeUnlock();
+  levelDBLock.writeUnlock();
 
   return retVal;
 #endif
