@@ -1336,7 +1336,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
+                  gpu_stats << myRankThread() 
+                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
                             << ", size (bytes) = "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
@@ -1374,7 +1375,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "ReductionVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
+                    gpu_stats << myRankThread() 
+                              << "ReductionVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -1392,7 +1394,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
+                  gpu_stats << myRankThread()
+                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
                             << ", size (bytes) = "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
@@ -1428,7 +1431,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "PerPatch (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
+                    gpu_stats << myRankThread() 
+                              << " PerPatch (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -1446,7 +1450,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
+                  gpu_stats << myRankThread()
+                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
                             << ", size (bytes) = "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
@@ -1581,7 +1586,8 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                  gpu_stats << myRankThread()
+                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
                             << ", size = " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum() 
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
@@ -1607,7 +1613,8 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                  gpu_stats << myRankThread()
+                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
                             << ", size = " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
@@ -1632,7 +1639,8 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                  gpu_stats << myRankThread()
+                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
                             << ", size = " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
@@ -1772,7 +1780,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                    gpu_stats << myRankThread()
+                              << " Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
                               << ", size = " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
@@ -1815,7 +1824,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                    gpu_stats << myRankThread()
+                              << " Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
                               << ", size = " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream()<< std::endl;
@@ -1857,7 +1867,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of COMPUTES ("<< std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                    gpu_stats << myRankThread()
+                              << "Post D2H copy of COMPUTES ("<< std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
                               << ", size = " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
@@ -1916,7 +1927,7 @@ UnifiedScheduler::createCudaStreams( int device,
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Created CUDA stream " << std::hex << stream << " on device "
+          gpu_stats << myRankThread() << " Created CUDA stream " << std::hex << stream << " on device "
                     << std::dec << device << std::endl;
         }
         cerrLock.unlock();
@@ -1945,7 +1956,7 @@ UnifiedScheduler::freeCudaStreams()
       }
       cerrLock.lock();
       {
-        gpu_stats << "Deallocating " << totalStreams << " total CUDA stream(s) for " << numQueues << " device(s)"<< std::endl;
+        gpu_stats << myRankThread() <<  " Deallocating " << totalStreams << " total CUDA stream(s) for " << numQueues << " device(s)"<< std::endl;
       }
       cerrLock.unlock();
     }
@@ -1956,7 +1967,7 @@ UnifiedScheduler::freeCudaStreams()
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Deallocating " << idleStreams[i].size() << " CUDA stream(s) on device " << retVal << std::endl;
+          gpu_stats << myRankThread() << " Deallocating " << idleStreams[i].size() << " CUDA stream(s) on device " << retVal << std::endl;
         }
         cerrLock.unlock();
       }
@@ -1988,7 +1999,8 @@ UnifiedScheduler::getCudaStream( int device )
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Issued CUDA stream " << std::hex << stream
+          gpu_stats << myRankThread()
+                    << " Issued CUDA stream " << std::hex << stream
                     << " on device " << std::dec << device << std::endl;
           cerrLock.unlock();
         }
@@ -2003,7 +2015,8 @@ UnifiedScheduler::getCudaStream( int device )
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Needed to create 1 additional CUDA stream " << std::hex << stream
+          gpu_stats << myRankThread()
+                    << "Needed to create 1 additional CUDA stream " << std::hex << stream
                     << " for device " << std::dec << device << std::endl;
         }
         cerrLock.unlock();
@@ -2036,7 +2049,8 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
   if (gpu_stats.active()) {
     cerrLock.lock();
     {
-      gpu_stats << "Reclaimed CUDA stream " << std::hex << stream << " on device " << std::dec << deviceNum << std::endl;
+      gpu_stats << myRankThread() 
+                << " Reclaimed CUDA stream " << std::hex << stream << " on device " << std::dec << deviceNum << std::endl;
     }
     cerrLock.unlock();
   }
@@ -2044,6 +2058,16 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
 
 #endif // end HAVE_CUDA
 
+//______________________________________________________________________
+//  generate string   <MPI rank>.<Thread ID>
+//  useful to see who running what    
+std::string
+UnifiedScheduler::myRankThread()
+{
+  std::ostringstream out;
+  out<< Uintah::Parallel::getMPIRank()<< "." << Thread::self()->myid();
+  return out.str();
+}
 
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
