@@ -1,0 +1,247 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_specification> 
+<!--Please use a consistent set of units, (mks, cgs,...)-->
+
+   <Meta>
+       <title>none</title>
+   </Meta>
+
+   <SimulationComponent type="ice" />
+    <!--____________________________________________________________________-->
+    <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <Time>
+       <maxTime>            5      </maxTime>
+       <initTime>           0.0       </initTime>
+       <delt_min>           0.0       </delt_min>
+       <delt_max>           0.1       </delt_max>
+       <delt_init>          1.0e-7    </delt_init>
+       <max_delt_increase>  0.5       </max_delt_increase>
+       <max_Timesteps>     1         </max_Timesteps>
+       <timestep_multiplier> 1        </timestep_multiplier>
+   </Time>
+    <!--____________________________________________________________________-->
+    <!--      G  R  I  D     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "0" label = "Pressure"      var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity"    var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature" var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density"     var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "scalar-f"    var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>  
+      <Face side = "x+">
+        <BCType id = "0" label = "Pressure"       var = "Neumann">
+                              <value> 0.0   </value>
+        </BCType>
+        <BCType id = "0" label = "Velocity"     var = "Neumann">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "0" label = "Temperature"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "Density"      var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "SpecificVol"  var = "computeFromDensity">
+                              <value> 0.0  </value>
+        </BCType>
+        <BCType id = "0" label = "scalar-f"     var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+        <BCType id = "0" label = "cumulativeEnergyReleased" var = "Neumann">
+                              <value> 0.0</value>
+        </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>   
+      <Face side = "y+">
+        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>        
+      <Face side = "z+">
+        <BCType id = "0" label = "Symmetric" var = "symmetry">
+        </BCType>
+      </Face>
+    </BoundaryConditions>
+
+       <Level>
+           <Box label = "2">
+              <lower>        [-0.0005,-0.1,-0.1]     </lower>
+              <upper>        [ 1.0005, 0.1, 0.1]    </upper>         
+              <extraCells>   [1,1,1]         </extraCells>
+              <patches>      [1,1,1]         </patches>    
+           </Box>
+           <spacing>   [0.001,0.2,0.2]     </spacing>
+       </Level>
+    </Grid>
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+   <DataArchiver>
+      <filebase>tableTest.uda</filebase>
+     <!--<outputInterval>0.01</outputInterval> -->
+     <outputTimestepInterval> 1 </outputTimestepInterval>
+      <save label = "delP_Dilatate"/>
+      <save label = "press_CC"/>
+      <save label = "press_equil_CC"/> 
+      <save label = "vel_CC"/>
+      <save label = "rho_CC"/>
+      <save label = "temp_CC"/>
+      <save label = "intE_source_CC"/>
+      <save label = "scalar-f"/>
+      <save label = "modelEng_src"/>
+      <save label = "cumulativeEnergyReleased"/>
+      <save label = "specific_heat"/>
+      <save label = "speedSound_CC"/>
+      <save label = "gamma"/>
+      <compression>gzip</compression>
+      <!--<checkpoint cycle = "4" interval = "0.05"/> -->
+      <outputInitTimestep/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
+    <!--____________________________________________________________________-->
+    <CFD>
+      <cfl>0.20</cfl>
+      <ICE>
+        <advection type = "SecondOrder"/>
+              
+        <TimeStepControl>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.0          </knob_for_speedSound>
+        </TimeStepControl>
+        
+         
+        <ImplicitSolver>
+           <max_outer_iterations>      20    </max_outer_iterations>
+           <outer_iteration_tolerance> 1e-6   </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
+           <Parameters variable="implicitPressure">
+            <!-- CGSolver options -->
+              <norm>     LInfinity  </norm>
+              <criteria> Absolute   </criteria>
+
+            <!-- Hypre options -->
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+             <tolerance>      1.e-8  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
+           </Parameters>
+        </ImplicitSolver>
+      </ICE>       
+    </CFD>
+
+    <!--____________________________________________________________________-->
+    <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
+    <!--____________________________________________________________________-->   
+    <PhysicalConstants>
+       <gravity>            [0,0,0]   </gravity>
+       <reference_pressure>  101325   </reference_pressure>
+    </PhysicalConstants>
+    <!--____________________________________________________________________-->
+    <!--    MATERIAL PROPERTIES INITIAL CONDITIONS                          -->
+    <!--  Note:  The initial density, pressure and temperature for the      -->
+    <!--         for the entire flow field is set to the reference state    -->
+    <!--         of the table.  What you specify below will be wiped out    --> 
+    <!--         by the model.                                              -->
+    <!--____________________________________________________________________-->
+    <MaterialProperties>
+       <ICE>
+         <material name = "BackgroundGas">
+           <EOS type = "ideal_gas">                     </EOS>
+           <isSurroundingMatl>          true            </isSurroundingMatl>
+           <dynamic_viscosity>          0.00002         </dynamic_viscosity>
+           <thermal_conductivity>       0.0             </thermal_conductivity>
+           <specific_heat>              716.5           </specific_heat>
+           <gamma>                      1.4             </gamma>
+           
+           <geom_object>
+              <box label = "world">
+                  <min>            [-5.0, -5.0, -5.0] </min>
+                  <max>            [ 5.0,  8.0,  5.0] </max>                 
+              </box>
+              <res>                [2,2,2]             </res>
+              <velocity>           [.0,.0,.0]         </velocity>
+              <density>            1.1798322           </density>
+              <pressure>           101325.0            </pressure>     
+              <temperature>        300.0               </temperature>
+           </geom_object>
+         </material>
+      </ICE>       
+      
+    
+    </MaterialProperties>
+    <!--__________________________________-->
+    <Models>
+       <Model type="AdiabaticTable">
+        <!--<tableValue>CO2</tableValue>
+        <tableValue>H2O</tableValue> -->
+        <table name="adiabatic" type="Arches">
+
+          <!--____________CH4______________________ -->
+          <!--<include href="inputs/Models/CH4.xml"/>  -->
+          
+          <!--<filename>inputs/Models/ch4.rxn</filename> Steve's table -->
+          
+          <!--____________He______________________ -->
+             <defaultValue name="heat_loss">0.0</defaultValue>
+          <derivedValue name="reference_heat_capac_Cv">[heat_capac_Cv]</derivedValue>
+          <derivedValue name="reference_gamma">[gamma]</derivedValue>
+          <constantValue name="reference_Temp">298</constantValue>
+          <filename>inputs/Models/he.rxn</filename>  
+          
+          <!--____________JP8______________________-->
+          <!--<include href="inputs/Models/JP8.xml"/> -->
+        </table>
+       
+        <material>BackgroundGas</material>
+        <scalar name="f">
+          <doTableTest>   true </doTableTest>
+          <constants>
+            <diffusivity>0</diffusivity>
+          </constants> 
+          <geom_object>
+            <box label = "world">  </box>
+            <scalar>    0.00       </scalar>
+          </geom_object>
+        </scalar>
+        
+        <varianceScale>0</varianceScale>
+        <varianceMax>1</varianceMax>
+       </Model>
+    </Models>
+
+       
+</Uintah_specification>
+

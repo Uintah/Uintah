@@ -1,0 +1,38 @@
+#!/bin/csh -f
+
+#__________________________________
+# This computes the Linf, L1 & L2 errors
+# of the boundary Fluxes (stencil7) between a gold standard 
+# and an uda 
+#__________________________________
+
+# defaults
+set GS_uda = ~/cpu_1000.uda.000      # Gold standard 
+set data   = Lnorm/L-0/boundFlux_0   # file containing stencil 7 data
+
+# parse the input arguments and extract $out and $uda
+
+while (1)
+  switch($1:q)  # $1 is first argument
+  case -o:
+    shift
+    set out = $1    # currently not used
+    breaksw;
+  case -uda:
+    shift
+    set uda = $1
+    break
+  endsw
+  shift
+end
+
+# compute the L norms between the two uda
+compute_Lnorm_udas  $uda  $GS_uda >& tmp
+
+# write the data out so it's easier to plot with gnuplot
+sed -i /"#Time"/d  $data    # remove the first line of the data file                                   
+cat $data | awk '{print $5,  $7,  $9,  $11, $13, $15}' >>L1
+cat $data | awk '{print $19, $21, $23, $25, $27, $29}' >>L2
+cat $data | awk '{print $33, $35, $37, $39, $41, $43}' >>Linf
+
+exit

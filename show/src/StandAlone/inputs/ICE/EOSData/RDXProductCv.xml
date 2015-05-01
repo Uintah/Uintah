@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <SpecificHeatModel type="Polynomial">
+    <!-- RDX Product Specific Heat Model -->
+    <Tmin>      250  </Tmin>  <!-- K -->
+    <MaxOrder>    7  </MaxOrder>
+    <coefficient> [-8.61808e14, 1.93325e14, -1.56024e13, 5.91158e11, -1.12393e10, 1.04421e8, -421721, 1452] </coefficient>
+  </SpecificHeatModel>
+</Uintah_Include>
+
