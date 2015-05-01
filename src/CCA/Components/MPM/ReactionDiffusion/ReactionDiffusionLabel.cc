@@ -87,10 +87,18 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
 	    NCVariable<double>::getTypeDescription());
 
   // Reduction Variables
-  maxHydroStressLabel = VarLabel::create("maxHydroStress", 
+  maxHydroStressLabel0 = VarLabel::create("maxHydroStress0",
       max_vartype::getTypeDescription());
-  minHydroStressLabel = VarLabel::create("minHydroStress", 
+  maxHydroStressLabel0 = VarLabel::create("maxHydroStress1",
+        max_vartype::getTypeDescription());
+  maxHydroStressLabel0 = VarLabel::create("maxHydroStress2",
+        max_vartype::getTypeDescription());
+  minHydroStressLabel0 = VarLabel::create("minHydroStress0",
       min_vartype::getTypeDescription());
+  minHydroStressLabel0 = VarLabel::create("minHydroStress1",
+        min_vartype::getTypeDescription());
+  minHydroStressLabel0 = VarLabel::create("minHydroStress2",
+        min_vartype::getTypeDescription());
 }
 
 ReactionDiffusionLabel::~ReactionDiffusionLabel() {
@@ -117,6 +125,10 @@ ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(gHydrostaticStressLabel);
 
   // Reduction Variables
-  VarLabel::destroy(maxHydroStressLabel);
-  VarLabel::destroy(minHydroStressLabel);
+  VarLabel::destroy(maxHydroStressLabel0);
+  VarLabel::destroy(maxHydroStressLabel1);
+  VarLabel::destroy(maxHydroStressLabel2);
+  VarLabel::destroy(minHydroStressLabel0);
+  VarLabel::destroy(minHydroStressLabel1);
+  VarLabel::destroy(minHydroStressLabel2);
 }

@@ -57,8 +57,14 @@ namespace Uintah {
     const VarLabel* gHydrostaticStressLabel;
 
     // Reduction variables
-    const VarLabel* maxHydroStressLabel;
-    const VarLabel* minHydroStressLabel;
+    const VarLabel* maxHydroStressLabel0;
+    const VarLabel* maxHydroStressLabel1;
+    const VarLabel* maxHydroStressLabel2;
+    const VarLabel* maxHydroStressLabel3;
+    const VarLabel* minHydroStressLabel0;
+    const VarLabel* minHydroStressLabel1;
+    const VarLabel* minHydroStressLabel2;
+    const VarLabel* minHydroStressLabel3;
   };
   
 } // end namespace Uintah
