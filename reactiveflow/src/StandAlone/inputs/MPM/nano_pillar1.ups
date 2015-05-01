@@ -27,8 +27,8 @@
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
-    <save label="maxHydroStress" />
-    <save label="minHydroStress" />
+    <!--<save label="maxHydroStress" />
+    <save label="minHydroStress" />-->
   </DataArchiver>
 
   <MPM>

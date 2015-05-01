@@ -65,8 +65,8 @@ void GaoDiffusion::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_rdlb->pConcentrationLabel, matlset);
   task->computes(d_rdlb->pConcPreviousLabel,  matlset);
-  task->computes(d_rdlb->maxHydroStressLabel, matlset);
-  task->computes(d_rdlb->minHydroStressLabel, matlset);
+  task->computes(d_rdlb->maxHydroStressLabel1);
+  task->computes(d_rdlb->minHydroStressLabel1);
 }
 
 void GaoDiffusion::initializeSDMData(const Patch* patch,
@@ -86,8 +86,8 @@ void GaoDiffusion::initializeSDMData(const Patch* patch,
     pConcentration[*iter] = 0.0;
     pConcPrevious[*iter] = 0.0;
   }
-  new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel);
-  new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel);
+  new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel1);
+  new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel1);
 }
 
 void GaoDiffusion::addParticleState(std::vector<const VarLabel*>& from,
@@ -120,8 +120,8 @@ void GaoDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
-  task->computes(d_rdlb->maxHydroStressLabel);
-  task->computes(d_rdlb->minHydroStressLabel);
+  task->computes(d_rdlb->maxHydroStressLabel1);
+  task->computes(d_rdlb->minHydroStressLabel1);
 }
 
 void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
@@ -206,8 +206,13 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
     }
   }
 
-  new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel);
-  new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel);
+  if(dwi == 1){
+    new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel0);
+    new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel0);
+  }else{
+	new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel0);
+	new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel0);
+  }
 
   for(NodeIterator iter=patch->getExtraNodeIterator();
                    !iter.done();iter++){
