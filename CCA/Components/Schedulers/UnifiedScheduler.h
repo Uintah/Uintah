@@ -104,6 +104,9 @@ class UnifiedScheduler : public MPIScheduler  {
     int getAvailableThreadNum();
 
     int  pendingMPIRecvs();
+    
+    std::string myRankThread();
+    
 
     ConditionVariable          d_nextsignal;           // conditional wait mutex
     Mutex                      d_nextmutex;            // next mutex
