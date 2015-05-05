@@ -815,7 +815,7 @@ UnifiedScheduler::runTasks( int thread_id )
         if (taskorder.active()) {
           if (me == d_myworld->size() / 2) {
             cerrLock.lock();
-            taskorder << "Rank-" << me  << " Running task static order: " << readyTask->getStaticOrder()
+            taskorder << "Rank-" << me  << " Running static task order: " << readyTask->getStaticOrder()
                       << " , scheduled order: " << numTasksDone << std::endl;
             cerrLock.unlock();
           }
@@ -2114,7 +2114,7 @@ UnifiedSchedulerWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_thread_id << " quitting" << "\n";
+        unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << " quitting" << "\n";
         cerrLock.unlock();
       }
       return;
@@ -2122,7 +2122,7 @@ UnifiedSchedulerWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": executing tasks \n";
+      unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << ": executing tasks \n";
       cerrLock.unlock();
     }
 
@@ -2140,7 +2140,7 @@ UnifiedSchedulerWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing tasks   \n";
+      unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing tasks   \n";
       cerrLock.unlock();
     }
 

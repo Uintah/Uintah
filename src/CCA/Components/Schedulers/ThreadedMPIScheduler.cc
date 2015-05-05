@@ -392,10 +392,11 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
       // save the reduction task and once per proc task for later execution
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {
         phaseSyncTask[task->getTask()->d_phase] = task;
+        ASSERT(task->getRequires().size() == 0)
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << "Rank-" << me << " Task Reduction/OncePerProc ready " << *task << " deps needed: " << task->getExternalDepCount()
-                  << std::endl;
+          taskdbg << "Rank-" << me << " Task Reduction/OncePerProc ready: "<< *task
+                  << ", deps needed: " << task->getExternalDepCount() << std::endl;
           cerrLock.unlock();
         }
       }
@@ -405,8 +406,8 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
         task->checkExternalDepCount();
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << "Rank-" << me << " Task internal ready " << *task << " deps needed: " << task->getExternalDepCount()
-                  << std::endl;
+          taskdbg << "Rank-" << me << " Task internal ready: " << *task << " deps needed: "
+                  << task->getExternalDepCount() << std::endl;
           cerrLock.unlock();
           pending_tasks.insert(task);
         }
@@ -424,7 +425,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Rank-" << me << " Ready Reduce/OPP task " << reducetask->getTask()->getName() << std::endl;
+        taskdbg << "Rank-" << me << " Ready Reduce/OncePerProc task " << *reducetask << std::endl;
         cerrLock.unlock();
       }
 
@@ -432,7 +433,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
         if (!abort) {
           if (taskdbg.active()) {
             cerrLock.lock();
-            taskdbg << "Rank-" << me << " Dispatching Reduce task " << *reducetask << " with communicator "
+            taskdbg << "Rank-" << me << " Initiating Reduction task: " << *reducetask << " with communicator "
                     << reducetask->getTask()->d_comm << std::endl;
             cerrLock.unlock();
           }
@@ -448,7 +449,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 
         if (taskdbg.active()) {
           cerrLock.lock();
-          taskdbg << "Rank-" << me << " Dispatching OncePerProc task: " << *reducetask << " with communicator "
+          taskdbg << "Rank-" << me << " Initiating OncePerProc task: " << *reducetask << " with communicator "
                   << reducetask->getTask()->d_comm << std::endl;
           cerrLock.unlock();
         }
@@ -477,7 +478,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
       DetailedTask* task = dts->getNextExternalReadyTask();
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Rank-" << me << " Dispatching task " << *task << "  (" << dts->numExternalReadyTasks() << "/"
+        taskdbg << "Rank-" << me << " Task external ready: " << *task << "  (" << dts->numExternalReadyTasks() << "/"
                 << pending_tasks.size() << " tasks in queue)" << std::endl;
         cerrLock.unlock();
         pending_tasks.erase(pending_tasks.find(task));
@@ -835,7 +836,7 @@ TaskWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "TaskWorker " << d_rank << "-" << d_thread_id << " quitting\n";
+        threadedmpi_threaddbg << "TaskWorker " << d_rank << "-" << d_thread_id << " quitting\n";
         cerrLock.unlock();
       }
       return;
@@ -843,7 +844,7 @@ TaskWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "TaskWorker " << d_rank << "-" << d_thread_id << ": began executing task: " << *d_task << "\n";
+      threadedmpi_threaddbg << "TaskWorker " << d_rank << "-" << d_thread_id << ": began executing task: " << *d_task << "\n";
       cerrLock.unlock();
     }
 
@@ -867,7 +868,7 @@ TaskWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing task: " << *d_task << std::endl;
+      threadedmpi_threaddbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing task: " << *d_task << std::endl;
       cerrLock.unlock();
     }
 
