@@ -287,6 +287,7 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
+  setCUDAStream(NULL);
 #endif
 }
 
@@ -1363,6 +1364,12 @@ operator<<(       std::ostream& out,
     else {
       out << task.getAssignedResourceIndex();
     }
+#ifdef HAVE_CUDA
+    if( task.getCUDAStream() ){
+      out << std::hex << " using CUDA stream " << task.getCUDAStream();
+    }
+#endif
+    
   }
   coutLock.unlock();
 
