@@ -536,11 +536,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   // so that particles don't get refined
   // to smaller than they start in that region initially.
   const Level* curLevel = patch->getLevel();
-  if(curLevel->hasFinerLevel() || curLevel->getID()==0){
-    pvars.prefined[i]     = 0;
-  } else{
-    pvars.prefined[i]     = 1;
-  }
+  pvars.prefined[i]     = curLevel->getIndex();
 
   //MMS
   string mms_type = d_flags->d_mms_type;
