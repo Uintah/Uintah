@@ -464,8 +464,10 @@ namespace Wasatch {
 
       const bool hasXNeighbors = patch->containsCell(refCellip1) &&
                                 (patch->containsCell(refCellim1) || refCell.x() == 0);
+
       const bool hasYNeighbors = patch->containsCell(refCelljp1) &&
                                 (patch->containsCell(refCelljm1) || refCell.y() == 0);
+
       const bool hasZNeighbors = patch->containsCell(refCellkp1) &&
                                 (patch->containsCell(refCellkm1) || refCell.z() == 0);
 
@@ -500,7 +502,7 @@ namespace Wasatch {
       }
 
       if (nz != 1) {
-        if (hasYNeighbors) {
+        if (hasZNeighbors) {
           poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
           poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK - SpatialOps::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
         } else {
