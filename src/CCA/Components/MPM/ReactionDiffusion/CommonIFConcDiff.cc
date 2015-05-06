@@ -111,6 +111,21 @@ void CommonIFConcDiff::addInitialComputesAndRequires(Task* task,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->addInitialComputesAndRequires(task, mpm_matl, patches);
+    if(include_hydrostress){
+      if(mpm_matl->getDWIndex() == 0){
+        task->computes(d_rdlb->maxHydroStressLabel0);
+        task->computes(d_rdlb->minHydroStressLabel0);
+      }else if(mpm_matl->getDWIndex() == 1){
+        task->computes(d_rdlb->maxHydroStressLabel1);
+        task->computes(d_rdlb->minHydroStressLabel1);
+      }else if(mpm_matl->getDWIndex() == 2){
+        task->computes(d_rdlb->maxHydroStressLabel2);
+        task->computes(d_rdlb->minHydroStressLabel2);
+      }else if(mpm_matl->getDWIndex() == 3){
+        task->computes(d_rdlb->maxHydroStressLabel3);
+        task->computes(d_rdlb->minHydroStressLabel3);
+      }
+    }
   }
 }
 
@@ -121,8 +136,22 @@ void CommonIFConcDiff::initializeSDMData(const Patch* patch, DataWarehouse* new_
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->initializeSDMData(patch, mpm_matl, new_dw);
+    if(include_hydrostress){
+      if(mpm_matl->getDWIndex() == 0){
+        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel0);
+        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel0);
+      }else if(mpm_matl->getDWIndex() == 1){
+        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel1);
+        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel1);
+      }else if(mpm_matl->getDWIndex() == 2){
+        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel2);
+        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel2);
+      }else if(mpm_matl->getDWIndex() == 3){
+        new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel3);
+        new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel3);
+      }
+    }
   }
-
 }
 
 void CommonIFConcDiff::scheduleInterpolateParticlesToGrid(Task* task,
@@ -135,9 +164,22 @@ void CommonIFConcDiff::scheduleInterpolateParticlesToGrid(Task* task,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->scheduleInterpolateParticlesToGrid(task, mpm_matl, patches);
-		if(include_hydrostress){
-      task->requires(Task::OldDW, d_lb->pStressLabel, mpm_matl->thisMaterial(), gan, NGP);
-		}
+    if(include_hydrostress){
+      task->requires(Task::NewDW, d_rdlb->pHydroStressLabel, mpm_matl->thisMaterial(), gan, NGP);
+      if(mpm_matl->getDWIndex() == 0){
+        task->computes(d_rdlb->maxHydroStressLabel0);
+        task->computes(d_rdlb->minHydroStressLabel0);
+      }else if(mpm_matl->getDWIndex() == 1){
+        task->computes(d_rdlb->maxHydroStressLabel1);
+        task->computes(d_rdlb->minHydroStressLabel1);
+      }else if(mpm_matl->getDWIndex() == 2){
+        task->computes(d_rdlb->maxHydroStressLabel2);
+        task->computes(d_rdlb->minHydroStressLabel2);
+      }else if(mpm_matl->getDWIndex() == 3){
+        task->computes(d_rdlb->maxHydroStressLabel3);
+        task->computes(d_rdlb->minHydroStressLabel3);
+      }
+    }
   }
 }
 
@@ -154,49 +196,78 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
 
-	constNCVariable<double> gmass;
-	constNCVariable<double> gconcentration;
-	constNCVariable<double> ghydrostaticstress;
+  constNCVariable<double> gmass;
+  constNCVariable<double> gconcentration;
+  constNCVariable<double> ghydrostaticstress;
 
   NCVariable<double> globalconc;
   NCVariable<double> globalmass;
   NCVariable<double> globalhstress;
 
   constParticleVariable<Matrix3> pStress;
+  constParticleVariable<double> pHydroStress;
+
+  double maxhydrostress, minhydrostress;
 
   new_dw->allocateTemporary(globalconc,    patch, gnone, 0);
   new_dw->allocateTemporary(globalmass,    patch, gnone, 0);
   globalconc.initialize(0);
   globalmass.initialize(0);
-	if(include_hydrostress){
+  if(include_hydrostress){
     new_dw->allocateTemporary(globalhstress, patch, gnone, 0);
     globalhstress.initialize(0);
-	}
+  }
 
   for(int m = 0; m < numMPM; m++){
     int dwi = d_sharedState->getMPMMaterial(m)->getDWIndex();
 
     new_dw->get(gmass,              d_lb->gMassLabel,            dwi, patch, gnone, 0);
     new_dw->get(gconcentration,     d_rdlb->gConcentrationLabel, dwi, patch, gnone, 0);
-		if(include_hydrostress){
+    if(include_hydrostress){
       new_dw->get(ghydrostaticstress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gnone, 0);
-		}
+    }
 
     for(NodeIterator iter=patch->getExtraNodeIterator();
                      !iter.done();iter++){
       IntVector c = *iter; 
       globalconc[c] += gmass[c] * gconcentration[c];
       globalmass[c] += gmass[c];
-			if(include_hydrostress){
+      if(include_hydrostress){
         globalhstress[c] += gmass[c] * ghydrostaticstress[c];
-			}
+      }
     }
 
-		if(include_hydrostress){
+    if(include_hydrostress){
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      old_dw->get(pStress, d_lb->pStressLabel, pset);
-		}
-  }
+      //old_dw->get(pStress, d_lb->pStressLabel, pset);
+      new_dw->get(pHydroStress, d_rdlb->pHydroStressLabel, pset);
+      maxhydrostress = 0;
+      minhydrostress = 0;
+      for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        if(pHydroStress[idx] > maxhydrostress){
+          maxhydrostress = pHydroStress[idx];
+        }
+        if(pHydroStress[idx] < minhydrostress){
+          minhydrostress = pHydroStress[idx];
+        }
+      }
+      if(dwi == 0){
+        new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel0);
+        new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel0);
+      }else if(dwi == 1){
+        new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel1);
+        new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel1);
+      }else if(dwi == 2){
+        new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel2);
+        new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel2);
+      }else if(dwi == 3){
+        new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel3);
+        new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel3);
+      }
+    }
+  } //end material loop
 
   for(int m = 0; m < numMPM; m++){
     int dwi = d_sharedState->getMPMMaterial(m)->getDWIndex();
@@ -204,16 +275,16 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
 	  NCVariable<double> ghydrostress;
 
     new_dw->getModifiable(gconc, d_rdlb->gConcentrationLabel, dwi, patch, gnone, 0);
-		if(include_hydrostress){
+    if(include_hydrostress){
       new_dw->getModifiable(ghydrostress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gnone, 0);
-		}
+    }
     for(NodeIterator iter=patch->getExtraNodeIterator();
                      !iter.done();iter++){
       IntVector c = *iter; 
       gconc[c] = globalconc[c]/globalmass[c];
-			if(include_hydrostress){
+      if(include_hydrostress){
         ghydrostress[c] = globalhstress[c]/globalmass[c];
-			}
+      }
     }
   }
 

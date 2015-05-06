@@ -65,8 +65,6 @@ void GaoDiffusion::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_rdlb->pConcentrationLabel, matlset);
   task->computes(d_rdlb->pConcPreviousLabel,  matlset);
-  task->computes(d_rdlb->maxHydroStressLabel1);
-  task->computes(d_rdlb->minHydroStressLabel1);
 }
 
 void GaoDiffusion::initializeSDMData(const Patch* patch,
@@ -86,8 +84,6 @@ void GaoDiffusion::initializeSDMData(const Patch* patch,
     pConcentration[*iter] = 0.0;
     pConcPrevious[*iter] = 0.0;
   }
-  new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel1);
-  new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel1);
 }
 
 void GaoDiffusion::addParticleState(std::vector<const VarLabel*>& from,
@@ -114,20 +110,18 @@ void GaoDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pStressLabel,             matlset, gan, NGP);
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,    matlset, gan, NGP);
-	task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
+  task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
 
   task->computes(d_rdlb->pHydroStressLabel,        matlset);
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
-  task->computes(d_rdlb->maxHydroStressLabel1);
-  task->computes(d_rdlb->minHydroStressLabel1);
 }
 
 void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
-                                                   const MPMMaterial* matl,
-                                                   DataWarehouse* old_dw,
-																									 DataWarehouse* new_dw){
+                                              const MPMMaterial* matl,
+                                              DataWarehouse* old_dw,
+                                              DataWarehouse* new_dw){
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
@@ -143,7 +137,7 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pFOld;
   constParticleVariable<Matrix3> pStress;
-	constNCVariable<double>       gmass;
+  constNCVariable<double>       gmass;
 
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
@@ -187,14 +181,6 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
     phydrostress[idx] = (pStress[idx].Trace())/3;
-    
-    if(phydrostress[idx] > maxhydrostress){
-      maxhydrostress = phydrostress[idx];
-    }
-
-    if(phydrostress[idx] < minhydrostress){
-      minhydrostress = phydrostress[idx];
-    }
 
     IntVector node;
     for(int k = 0; k < n8or27; k++) {
@@ -204,14 +190,6 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
         gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
       }
     }
-  }
-
-  if(dwi == 1){
-    new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel0);
-    new_dw->put(min_vartype(minhydrostress), d_rdlb->minHydroStressLabel0);
-  }else{
-	new_dw->put(max_vartype(0), d_rdlb->maxHydroStressLabel0);
-	new_dw->put(min_vartype(0), d_rdlb->minHydroStressLabel0);
   }
 
   for(NodeIterator iter=patch->getExtraNodeIterator();

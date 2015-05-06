@@ -12,7 +12,7 @@
        <initTime>0.0</initTime>
        <delt_min>1.0e-16</delt_min>
        <delt_max>1.0e-3</delt_max>
-       <max_Timesteps>1</max_Timesteps>
+       <max_Timesteps>500</max_Timesteps>
        <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
   <DataArchiver>
@@ -27,8 +27,8 @@
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
-    <!--<save label="maxHydroStress" />
-    <save label="minHydroStress" />-->
+    <save label="maxHydroStress1" />
+    <save label="minHydroStress1" />
   </DataArchiver>
 
   <MPM>
@@ -170,10 +170,10 @@
     <Level>
       <Box label="1">
 	      <!-- <lower>[0.0, 0.0, 0.0]   </lower>
-	<upper>[1.0e-6, 1.0e-6, 2.25e-6]</upper> -->
+	      <upper>[1.0e-6, 1.0e-6, 2.25e-6]</upper> -->
         <lower>[0.0, 0.0, 0.0]   </lower>
         <upper>[0.1, 0.1, .02]</upper>
-        <resolution>[10, 10, 2]   </resolution>
+        <resolution>[20, 20, 2]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
         <patches>[1,1,1]         </patches>
       </Box>
