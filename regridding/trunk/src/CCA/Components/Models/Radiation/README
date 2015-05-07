@@ -1,0 +1,89 @@
+07/8/2014
+
+On svn revision 52123 the DO radiation Model was removed from ICE. 
+
+Repository Root: https://gforge.sci.utah.edu/svn/uintah
+Repository UUID: aee3fe44-4ef4-0310-ac56-cc817e9d0e43
+Revision: 52122
+Node Kind: directory
+Schedule: normal
+Last Changed Author: tsaad
+Last Changed Rev: 52122
+Last Changed Date: 2014-07-09 15:56:54 -0600 (Wed, 09 Jul 2014)
+
+M       CCA/Components/Models/ModelFactory.cc
+D       CCA/Components/Models/Radiation/Models_CellInformation.cc
+D       CCA/Components/Models/Radiation/Models_CellInformation.h
+D       CCA/Components/Models/Radiation/Models_CellInformationP.h
+D       CCA/Components/Models/Radiation/Models_DORadiationModel.cc
+D       CCA/Components/Models/Radiation/Models_DORadiationModel.h
+D       CCA/Components/Models/Radiation/Models_FakePetscSolver.cc
+D       CCA/Components/Models/Radiation/Models_HypreSolver.cc
+D       CCA/Components/Models/Radiation/Models_HypreSolver.h
+D       CCA/Components/Models/Radiation/Models_PetscSolver.cc
+D       CCA/Components/Models/Radiation/Models_PetscSolver.h
+D       CCA/Components/Models/Radiation/Models_RadiationModel.cc
+D       CCA/Components/Models/Radiation/Models_RadiationModel.h
+D       CCA/Components/Models/Radiation/Models_RadiationSolver.cc
+D       CCA/Components/Models/Radiation/Models_RadiationSolver.h
+A       CCA/Components/Models/Radiation/README
+D       CCA/Components/Models/Radiation/RadiationConstVariables.cc
+D       CCA/Components/Models/Radiation/RadiationConstVariables.h
+D       CCA/Components/Models/Radiation/RadiationDriver.cc
+D       CCA/Components/Models/Radiation/RadiationDriver.h
+D       CCA/Components/Models/Radiation/RadiationVariables.cc
+D       CCA/Components/Models/Radiation/RadiationVariables.h
+D       CCA/Components/Models/Radiation/fortran
+D       CCA/Components/Models/Radiation/fortran/m_cellg.F
+D       CCA/Components/Models/Radiation/fortran/m_cellg.fspec
+D       CCA/Components/Models/Radiation/fortran/m_eco.F
+D       CCA/Components/Models/Radiation/fortran/m_eco2.F
+D       CCA/Components/Models/Radiation/fortran/m_efuel.F
+D       CCA/Components/Models/Radiation/fortran/m_eh2o.F
+D       CCA/Components/Models/Radiation/fortran/m_eico2.F
+D       CCA/Components/Models/Radiation/fortran/m_eih2o.F
+D       CCA/Components/Models/Radiation/fortran/m_find.F
+D       CCA/Components/Models/Radiation/fortran/m_fixradval.F
+D       CCA/Components/Models/Radiation/fortran/m_param4.h
+D       CCA/Components/Models/Radiation/fortran/m_radarray.F
+D       CCA/Components/Models/Radiation/fortran/m_radarray.fspec
+D       CCA/Components/Models/Radiation/fortran/m_radcal.F
+D       CCA/Components/Models/Radiation/fortran/m_radcal.fspec
+D       CCA/Components/Models/Radiation/fortran/m_radcoef.F
+D       CCA/Components/Models/Radiation/fortran/m_radcoef.fspec
+D       CCA/Components/Models/Radiation/fortran/m_radwsgg.F
+D       CCA/Components/Models/Radiation/fortran/m_radwsgg.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rdombc.F
+D       CCA/Components/Models/Radiation/fortran/m_rdombc.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rdombmcalc.F
+D       CCA/Components/Models/Radiation/fortran/m_rdombmcalc.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rdomflux.F
+D       CCA/Components/Models/Radiation/fortran/m_rdomflux.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rdomsolve.F
+D       CCA/Components/Models/Radiation/fortran/m_rdomsolve.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rdomsrc.F
+D       CCA/Components/Models/Radiation/fortran/m_rdomsrc.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rdomvolq.F
+D       CCA/Components/Models/Radiation/fortran/m_rdomvolq.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rordr.F
+D       CCA/Components/Models/Radiation/fortran/m_rordr.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rordrss.F
+D       CCA/Components/Models/Radiation/fortran/m_rordrss.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rordrtn.F
+D       CCA/Components/Models/Radiation/fortran/m_rordrtn.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rshresults.F
+D       CCA/Components/Models/Radiation/fortran/m_rshresults.fspec
+D       CCA/Components/Models/Radiation/fortran/m_rshsolve.F
+D       CCA/Components/Models/Radiation/fortran/m_rshsolve.fspec
+D       CCA/Components/Models/Radiation/fortran/m_soot.F
+D       CCA/Components/Models/Radiation/fortran/sub.mk
+M       CCA/Components/Models/Radiation/sub.mk
+?       CCA/Components/OnTheFlyAnalysis/patch_minMax.cc
+M       R_Tester/Models.py
+D       StandAlone/inputs/Models/JP8_Radiation.ups
+D       StandAlone/inputs/Models/Radiation
+D       StandAlone/inputs/Models/Radiation/hotJetContainer.ups
+D       StandAlone/inputs/Models/Radiation/hotJetTest.ups
+D       StandAlone/inputs/Models/Radiation/impHotBlob.ups
+D       StandAlone/inputs/Models/Radiation/impHotBlob_Container.ups
+D       StandAlone/inputs/Models/Radiation/probone.ups

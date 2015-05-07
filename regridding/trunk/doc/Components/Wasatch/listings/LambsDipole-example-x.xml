@@ -1,0 +1,12 @@
+<BasicExpression type="XVOL">        
+  <TaskList>initialization</TaskList>        
+  <NameTag name="x-mom" state="STATE_N" />        
+  <LambsDipole x0="0.0" y0="0.0" G="0.9" R="0.25" U="0.1" velocityComponent="X1">  		  
+    <Coordinate1> 
+      <NameTag name="XXVOL" state="STATE_NONE"/> 		   
+    </Coordinate1> 		   
+    <Coordinate2> 				
+      <NameTag name="YXVOL" state="STATE_NONE"/> 		  
+    </Coordinate2>		          
+  </LambsDipole>     
+</BasicExpression>

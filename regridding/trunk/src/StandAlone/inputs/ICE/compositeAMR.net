@@ -1,0 +1,136 @@
+# SCIRun Network v1.25.0
+
+
+set name {Main}
+set bbox {10 10 387 439}
+set creationDate {Mon Aug 08 2005}
+set creationTime {11:27:58}
+set runDate {}
+set runTime {}
+set notes {}
+set geometry {800x800+0+0}
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m1 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 10 10]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m2 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 10 87]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m3 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 10 164]
+
+# Create a SCIRun->Visualization->TextureBuilder Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 10 241]
+
+# Create a SCIRun->Visualization->VolumeSlicer Module
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "VolumeSlicer" 10 318]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 192 241]
+
+# Create a SCIRun->Render->Viewer Module
+set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 10 395]
+
+# Create the Connections between Modules
+set c1 [addConnection $m4 0 $m5 0]
+set c2 [addConnection $m5 0 $m7 0]
+set c3 [addConnection $m1 0 $m2 0]
+set c4 [addConnection $m3 0 $m4 0]
+set c5 [addConnection $m2 0 $m3 0]
+set c6 [addConnection $m6 0 $m5 1]
+
+# Set GUI variables for the Uintah->DataIO->ArchiveReader Module
+set $m1-filebase {/home/csafe/harman/People/Kurt/MURI.uda.001}
+set $m1-tcl_status {Executing}
+
+# Set GUI variables for the Uintah->Selectors->TimestepSelector Module
+set $m2-tcl_status {Done}
+set $m2-time {1}
+set $m2-max_time {32}
+set $m2-timeval {3.92911895442e-05}
+
+# Set GUI variables for the Uintah->Selectors->ScalarFieldExtractor Module
+set $m3-level {3}
+set $m3-tcl_status {Calling FieldExtractor!}
+set $m3-sVar {press_CC}
+
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m4-vmin {101325.0}
+set $m4-vmax {6383179.66308}
+set $m4-card_mem {128}
+
+# Set GUI variables for the SCIRun->Visualization->VolumeSlicer Module
+set $m5-control_pos_saved {1}
+set $m5-control_x {-2.1}
+set $m5-control_y {-1.11022302463e-16}
+set $m5-control_z {0.0}
+set $m5-drawZ {1}
+set $m5-interp_mode {0}
+set $m5-cyl_active {0}
+set $m5-multi_level {3}
+set $m5-outline_levels {1}
+set $m5-use_stencil {1}
+
+# Open the SCIRun->Visualization->VolumeSlicer UI
+$m5 initialize_ui
+
+$m7 addViewer
+set $m7-ViewWindow_0-geometry 654x613+852+201
+
+# Set GUI variables for the SCIRun->Render->Viewer Module
+set $m7-ViewWindow_0-view-eyep-x {-0.192766214847}
+set $m7-ViewWindow_0-view-eyep-y {-0.0030146162195}
+set $m7-ViewWindow_0-view-eyep-z {24.3086540779}
+set $m7-ViewWindow_0-view-lookat-x {-2.22044604925e-16}
+set $m7-ViewWindow_0-view-lookat-y {-2.22044604925e-16}
+set $m7-ViewWindow_0-view-lookat-z {0.0}
+set $m7-ViewWindow_0-view-up-x {0.000653258551498}
+set $m7-ViewWindow_0-view-up-y {0.999999778281}
+set $m7-ViewWindow_0-view-up-z {0.000129194389756}
+set $m7-ViewWindow_0-view-fov {20.0}
+set $m7-ViewWindow_0-sr {1}
+set $m7-ViewWindow_0-do_stereo {0}
+set $m7-ViewWindow_0-ortho-view {0}
+set $m7-ViewWindow_0-trackViewWindow0 {1}
+set $m7-ViewWindow_0-raxes {1}
+set $m7-ViewWindow_0-ambient-scale {1.0}
+set $m7-ViewWindow_0-diffuse-scale {1.0}
+set $m7-ViewWindow_0-specular-scale {0.4}
+set $m7-ViewWindow_0-emission-scale {1.0}
+set $m7-ViewWindow_0-shininess-scale {1.0}
+set $m7-ViewWindow_0-polygon-offset-factor {1.0}
+set $m7-ViewWindow_0-polygon-offset-units {0.0}
+set $m7-ViewWindow_0-point-size {1.0}
+set $m7-ViewWindow_0-line-width {1.0}
+set $m7-ViewWindow_0-sbase {0.4}
+set $m7-ViewWindow_0-bgcolor-r {0.0}
+set $m7-ViewWindow_0-bgcolor-g {0.0}
+set $m7-ViewWindow_0-bgcolor-b {0.0}
+set $m7-ViewWindow_0-fogusebg {1}
+set $m7-ViewWindow_0-fogcolor-r {0.0}
+set $m7-ViewWindow_0-fogcolor-g {0.0}
+set $m7-ViewWindow_0-fogcolor-b {1.0}
+set $m7-ViewWindow_0-fog-start {0.0}
+set $m7-ViewWindow_0-fog-end {0.714265}
+set $m7-ViewWindow_0-fog-visibleonly {1}
+set $m7-ViewWindow_0-currentvisual {0}
+set $m7-ViewWindow_0-caxes {0}
+set $m7-ViewWindow_0-pos {z1_y1}
+set $m7-ViewWindow_0-global-light0 {1}
+set $m7-ViewWindow_0-global-light1 {0}
+set $m7-ViewWindow_0-global-light2 {0}
+set $m7-ViewWindow_0-global-light3 {0}
+set $m7-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m7-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m7-ViewWindow_0-global-light {1}
+set $m7-ViewWindow_0-global-fog {0}
+set $m7-ViewWindow_0-global-debug {0}
+set $m7-ViewWindow_0-global-clip {1}
+set $m7-ViewWindow_0-global-cull {0}
+set $m7-ViewWindow_0-global-dl {0}
+set $m7-ViewWindow_0-global-type {Gouraud}
+set "$m7-ViewWindow_0-Volume Slicer (1)" {1}
+set "$m7-ViewWindow_0-Control Widget (1)" {1}
+
+
+::netedit scheduleok

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <EOS type="Murnaghan">
+    <!-- ANFO parameters -->
+    <!-- This bulk modulus is from Souer's paper on JWL++ -->
+    <!-- It corresponds to a K=2.56 GPa  -->
+    <K>        39e-11 </K>
+    <n>         7.4   </n>
+    <P0>   101325.0   </P0>
+    <rho0>   1160.0   </rho0>
+  </EOS>
+</Uintah_Include>

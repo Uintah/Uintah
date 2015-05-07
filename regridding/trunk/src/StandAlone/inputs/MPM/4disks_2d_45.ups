@@ -1,0 +1,184 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
+<!-- @version: Updated 1/31/01-->
+<Uintah_specification>
+
+   <Meta>
+       <title>Compaction of cylinders</title>
+   </Meta>
+
+   <SimulationComponent type="mpm" />
+
+   <Time>
+       <maxTime>10.</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.005</delt_min>
+       <delt_max>0.5</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
+   </Time>
+   <DataArchiver>
+        <filebase>4disks_2d_45.uda</filebase>
+       <outputInterval>.1</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "StrainEnergy"/>
+       <save label = "p.x"/>
+       <save label = "p.velocity"/>
+       <save label = "p.volume"/>
+       <save label = "p.mass"/>
+       <save label = "p.temperature"/>
+       <save label = "p.stress"/>
+        <save label = "g.mass" material = "3"/>
+        <save label = "g.temperature" material = "3"/>
+        <save label = "g.stressFS" material = "3"/>
+       <save label = "g.velocity"/>
+   </DataArchiver>
+
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+            <material name = "Piston">
+                <density>1.9e10</density>
+              <constitutive_model type = "hypo_elastic"> 
+                 <G>7.2e4</G>
+                 <K>10.2e4</K>
+               </constitutive_model>
+                <thermal_conductivity>1.0e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+              <geom_object>
+                  <box label = "box">
+                       <min>[0.0,0.0,3.82843]</min>
+                       <max>[1.70711,0.0125,3.86280]</max>
+                  </box>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,-0.0006]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+            <material name = "HMX">
+                <density>1.9e6</density>
+              <constitutive_model type = "hypo_elastic"> 
+                 <G>7.2e5</G>
+                 <K>10.2e5</K>
+               </constitutive_model>
+                <thermal_conductivity>1.0e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+              <geom_object>
+                  <cylinder label = "cyl1">
+                     <bottom>[0.5,0.0,0.5]</bottom>
+                     <top>[0.5,0.0125,0.5]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+              <geom_object>
+                  <cylinder label = "cyl3">
+                     <bottom>[0.5,0.0,1.91421]</bottom>
+                     <top>[0.5,0.0125,1.91421]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+              <geom_object>
+                  <cylinder label = "cyl5">
+                     <bottom>[0.5,0.0,3.32843]</bottom>
+                     <top>[0.5,0.0125,3.32843]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+           </material>
+
+            <material name = "HMX">
+                <density>1.9e6</density>
+              <constitutive_model type = "hypo_elastic"> 
+                 <G>7.2e5</G>
+                 <K>10.2e5</K>
+               </constitutive_model>
+                <thermal_conductivity>1.0e-7</thermal_conductivity>
+                <specific_heat>1.004e-5</specific_heat>
+
+              <geom_object>
+                  <cylinder label = "cyl2">
+                     <bottom>[1.20711,0.0,1.20711]</bottom>
+                     <top>[1.20711,0.0125,1.20711]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+              <geom_object>
+                  <cylinder label = "cyl4">
+                     <bottom>[1.20711,0.0,2.62132]</bottom>
+                     <top>[1.20711,0.0125,2.62132]</top>
+                     <radius> .5 </radius>
+                  </cylinder>
+                  <res>[1,1,1]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+
+           </material>
+
+           <contact>
+              <type>friction</type>
+              <materials>[0,1,2]</materials>
+              <mu> 0.5 </mu>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
+    <Grid>
+       <BoundaryConditions>
+        <Face side = "x-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "x+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "y-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>                  
+       <Face side = "y+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z-">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+        <Face side = "z+">
+           <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+        </Face>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[0.0,0.0,0.0]</lower>
+              <upper>[1.70711,0.0125,3.87526]</upper>
+               <resolution>[137,1,311]</resolution>
+              <patches>[1,1,4]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+    
+</Uintah_specification>
+

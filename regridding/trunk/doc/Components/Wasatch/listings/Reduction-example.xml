@@ -1,0 +1,6 @@
+<Reduction tasklist="advance_solution" op="max" output="true">
+	<NameTag name="u_max" state="STATE_NONE" />
+	<Source type="XVOL">
+		<NameTag name="u" state="STATE_NONE" />
+	</Source>
+</Reduction>
