@@ -734,8 +734,9 @@
     <!-- CAUTION! FOR DEVELOPER USE ONLY -->
     <!-- =========================================================================== -->
     <VariableDensity spec="OPTIONAL NO_DATA" 
-                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, DYNAMIC'"
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, SMOOTHIMPULSE, DYNAMIC'"
                      attribute2="coefficient REQUIRED DOUBLE">
+      <ImpulseWidth spec="OPTIONAL DOUBLE" need_applies_to="model SMOOTHIMPULSE"/>
       <UseOnePredictor spec="OPTIONAL NO_DATA"/>
     </VariableDensity>
     
