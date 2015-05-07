@@ -1,0 +1,161 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{txfonts}
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman times
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family rmdefault
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize 12
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 2
+\use_package amssymb 2
+\use_package cancel 1
+\use_package esint 2
+\use_package mathdots 2
+\use_package mathtools 1
+\use_package mhchem 2
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Computing Temporal Order without an Analytical Solution
+\end_layout
+
+\begin_layout Author
+Tony Saad
+\end_layout
+
+\begin_layout Standard
+It is possible to compute the temporal order of accuracy without an analytical
+ solution.
+ The order of accuracy is defined as the exponent of the leading order term
+ of the truncation error.
+ Using a general Taylor series expansion for a quantity 
+\begin_inset Formula $f$
+\end_inset
+
+, we have for a 
+\begin_inset Formula $p$
+\end_inset
+
+-th order scheme
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f_{1}=\tilde{f}+a_{p}\Delta t^{p}+\mathcal{O}(\Delta t^{p+1})
+\end{equation}
+
+\end_inset
+
+The same formula may be applied for two more refinement levels
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f_{2}=\tilde{f}+a_{p}(r\Delta t)^{p}+\mathcal{O}(r^{p+1}\Delta t^{p+1})
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+f_{3}=\tilde{f}+a_{p}(r^{2}\Delta t)^{p}+\mathcal{O}(r^{2p+2}\Delta t^{p+1})
+\end{equation}
+
+\end_inset
+
+where 
+\begin_inset Formula $r=\frac{\Delta t_{\text{fine}}}{\Delta t_{\text{coarse}}}<1$
+\end_inset
+
+.
+ If the step size is small enough and the higher order terms are negligible,
+ it is possible to estimate the observed order of accuracy as
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+\frac{f_{3}-f_{2}}{f_{2}-f_{1}}=\frac{a_{p}r^{p}\Delta t^{p}(r^{p}-1)}{a_{p}\Delta t^{p}(r^{p}-1)}=r^{p}
+\end{equation}
+
+\end_inset
+
+or
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{equation}
+p=\frac{\ln\left(\frac{f_{3}-f_{2}}{f_{2}-f_{1}}\right)}{\ln r}
+\end{equation}
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

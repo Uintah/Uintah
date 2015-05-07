@@ -1,0 +1,207 @@
+<Uintah_specification>
+
+  <Meta>
+    <title>2D Varden Periodic MMS using a single predictor, tabulated props, and a ref pressure</title>
+  </Meta>
+
+  <SimulationComponent type="wasatch"/>
+   <Solver type="hypre"/>
+  <Wasatch>
+    <TimeIntegrator> FE </TimeIntegrator>    
+
+		<VariableDensity model="CONSTANT" coefficient="0.1">
+		  <UseOnePredictor/>
+		</VariableDensity>
+    <Density>
+      <NameTag name="density" state="CARRY_FORWARD"/>
+    </Density>
+
+
+    <!-- Setup the parameters for variable density MMS -->
+    <VarDenOscillatingMMS rho0="1.29985" rho1="0.081889" w="2.0" k="2.0" d="0.001" uf="0.5" vf="0.5">
+       <DiffusionCoefficient>
+          <NameTag name="diffcoef" state="STATE_NONE"/>
+       </DiffusionCoefficient>
+       <Scalar>f</Scalar>    
+       <ConservedScalar>rhof</ConservedScalar>           
+    </VarDenOscillatingMMS>
+
+    <!-- Set up a tabular property evaluation to extract density for initialization-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
+      <TaskList>initialization</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="f" state="STATE_NONE"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractVariable>
+        <NameInTable>Density</NameInTable>
+        <NameTag name="density" state="STATE_NONE"/>
+      </ExtractVariable>
+
+    </TabProps>
+    
+    <!-- Set up a tabular property evaluation to extract density within the advance_solution-->
+    <TabProps>
+      <FileNamePrefix>inputs/Wasatch/NonReacting_PP_MMS</FileNamePrefix>
+      <TaskList>advance_solution</TaskList>
+      
+      <IndependentVariable>
+        <NameTag name="f" state="STATE_NONE"/>
+        <NameInTable>MixtureFraction</NameInTable>
+      </IndependentVariable>
+      
+      <ExtractDensity>
+        <NameTag name="density" state="CARRY_FORWARD"/>
+        <ModelBasedOnMixtureFraction>
+          <DensityWeightedMixtureFraction>
+          <NameTag name="rhof" state="STATE_N"/>
+          </DensityWeightedMixtureFraction>       
+        </ModelBasedOnMixtureFraction>
+      </ExtractDensity>
+      
+    </TabProps>  
+            
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="XVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="u" state="STATE_NONE"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+    
+    <!-- Set the initial condition expression for x-velocity -->
+    <BasicExpression type="YVOL">
+       <TaskList>initialization</TaskList>
+       <NameTag name="v" state="STATE_NONE"/>
+       <Constant>0.0</Constant>
+    </BasicExpression>
+
+    <!-- Build a scalar transport equation for mixture fraction -->
+    <TransportEquation equation="generic">
+
+      <SolutionVariable>rhof</SolutionVariable>
+      <PrimitiveVariable>f</PrimitiveVariable>
+
+      <DiffusiveFlux direction="XY">
+        <DiffusionCoefficient>
+          <NameTag name="diffcoef" state="STATE_NONE"/>
+        </DiffusionCoefficient>
+      </DiffusiveFlux>
+
+      <ConvectiveFlux direction="X" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="u" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
+      <ConvectiveFlux direction="Y" method="UPWIND">
+        <AdvectiveVelocity>
+            <NameTag name="v" state="STATE_NONE"/>
+        </AdvectiveVelocity>
+      </ConvectiveFlux>
+      
+    </TransportEquation>   
+    
+    <FieldClipping tasklist="advance_solution">
+      <FieldExpression type="SVOL" min="0.0" max="1.0">
+        <NameTag name="f" state="STATE_NONE"/>        
+      </FieldExpression>                    
+    </FieldClipping>
+        
+      
+    <BasicExpression type="SVOL">
+      <TaskList>advance_solution</TaskList>
+        <NameTag name="viscosity" state="STATE_NONE"/>
+      <Constant>0.001</Constant>
+    </BasicExpression>
+        
+    <!-- Momentum transport equations -->
+    <MomentumEquations>
+      <X-Velocity>u</X-Velocity>
+      <X-Momentum>x-mom</X-Momentum>
+      <Y-Velocity>v</Y-Velocity>
+      <Y-Momentum>y-mom</Y-Momentum>
+         
+      <Viscosity>
+        <NameTag name="viscosity" state="STATE_NONE"/>
+      </Viscosity>
+      <ComputeMassResidual/>
+      <Pressure>
+        <ReferencePressure value="10.0">
+        	<ReferenceCell>[1,1,0]</ReferenceCell>
+        </ReferencePressure>
+        <Use3DLaplacian>false</Use3DLaplacian>
+        <Parameters>
+            <solver>         cg      </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1e-10  </tolerance>
+            <maxiterations>  100   </maxiterations>
+            <relax_type>     2       </relax_type>
+           </Parameters>
+
+      </Pressure>
+    </MomentumEquations>
+
+  </Wasatch>
+
+
+  <Time>
+    <maxTime>1.0</maxTime>
+    <initTime>0.0</initTime>
+    <delt_min>1e-3</delt_min>
+    <delt_max>1e-3</delt_max>
+    <max_Timesteps> 50 </max_Timesteps>
+    <timestep_multiplier>1.0</timestep_multiplier>
+  </Time>
+
+
+  <DataArchiver>
+    <filebase>varden-2dmms-tabulated.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputInitTimestep/>
+    <checkpoint cycle="2" interval="1e-2"/>
+    <save label="density"/>
+    <save label="density*"/>
+    <!-- save label="u*"/>
+    <save label="v*"/>
+    <save label="density*"/>
+    <save label="density**"/>
+    <save label="varden_alpha"/>    
+    <save label="divmom*"/ -->
+    <save label="x-mom"/>
+    <save label="y-mom"/>
+    <!-- save label="x-mom_rhs_partial"/ -->
+    <save label="u"/>
+    <save label="v"/>
+    <save label="diffcoef"/>    
+    <save label="tau_xy"/>
+    <save label="tau_yx"/>
+    <!-- save label="mms_mixture_fraction_src"/>
+    <save label="mms_continuity_src"/>
+    <save label="mms_pressure_continuity_src"/ -->
+    <save label="f"/>
+    <save label="rhof"/>
+    <save label="pressure"/>
+<!--     <save label="pressure_src"/> -->
+    <!-- save label="pressure_rhs"/>
+    <save label="f_diffFlux_X"/>
+    <save label="f_diffFlux_Y"/>
+    <save label="f*_diffFlux_X"/>
+    <save label="f*_diffFlux_Y"/ -->
+  </DataArchiver> 
+
+  <Grid>
+      <Level>
+      <Box label="1">
+        <lower>[-1,-1,0]</lower>
+        <upper>[1,1,1]</upper>
+        <resolution>[64,64,1]</resolution>
+        <patches>[2,2,1]</patches>
+      </Box>
+      <periodic>[1,1,1]</periodic>
+    </Level>
+  </Grid>
+
+</Uintah_specification>
