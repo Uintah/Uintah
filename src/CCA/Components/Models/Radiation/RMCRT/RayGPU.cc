@@ -84,6 +84,8 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     //__________________________________
     //  varLabel name struct
+    varLabelNames*  labelNames;
+#if 0
     varLabelNames*  labelNames = new varLabelNames;
 
     labelNames->abskg   = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
@@ -94,7 +96,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     labelNames->radVolQ   = d_radiationVolqLabel->getName().c_str();
     
     labelNames->print();
-
+#endif
     //__________________________________
     //  RMCRT_flags
     RMCRT_flags RT_flags;
