@@ -48,10 +48,12 @@ namespace Wasatch{
     enum VariableDensityModels {
       CONSTANT,
       IMPULSE,
+      SMOOTHIMPULSE,
       DYNAMIC
     };
 
     double alpha0;
+    double gaussWidth;
     VariableDensityModels model;
     bool onePredictor;
   };
