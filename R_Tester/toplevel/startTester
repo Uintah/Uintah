@@ -59,7 +59,7 @@ if test "$MACHINE" = "albion" ; then
   TEMP_DIR=/home/rt/"$OS"
   SCRIPT_DIR=/home/rt/scripts
   CHECKPOINTS=/home/rt/CheckPoints
-  export TEST_COMPONENTS=GPU             # only run gpu tests
+  export TEST_COMPONENTS="GPU Examples" 
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/home/rt/public_html/Uintah.html
