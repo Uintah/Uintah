@@ -56,12 +56,11 @@ if [ "$OS" = "Linux" ]; then
   
   if [ "$MACHINE" == "albion" ]; then
     COMMON="      --with-mpi=/usr/local/openmpi \\
-       --with-hypre=/usr/local/hypre \\
-       --with-cuda=/usr/local/cuda \\
-       --enable-gencode=30 \\
-       --enable-ray-scatter\\"
+      --with-cuda=/usr/local/cuda \\
+      --enable-gencode=30 \\
+      --enable-ray-scatter\\"
 
-    ENV="      CC=gcc-4.8 \\
+    ENV="       CC=gcc-4.8 \\
        CXX=g++-4.8 \\
        F77=gfortran-4.8"   
   fi
@@ -69,8 +68,8 @@ fi
 
 
 #__________________________________
-echo "#!/bin/csh" > configure_command
-echo "../../src/configure --enable-package=Uintah \\" >> configure_command
+echo "#!/bin/csh -f" > configure_command
+echo "../../src/configure \\" >> configure_command
  
 if [ "$mode" = "dbg" ]; then
   echo "$DBG_CONFIGURE" >> configure_command
