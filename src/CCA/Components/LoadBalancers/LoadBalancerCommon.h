@@ -31,7 +31,7 @@
 #include <Core/Grid/Level.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Parallel/UintahParallelComponent.h>
-
+#include <Core/Containers/BitMap.h>
 #include <set>
 #include <string>
 
@@ -81,6 +81,7 @@ public:
   }
 };
 
+// TODO Use index instead of ID for Compariance
 class PatchCompare {
 public:
   inline bool operator()(const PatchInfo& p1, const PatchInfo& p2) const {
@@ -103,6 +104,8 @@ public:
   //! The Simple and SingleProcessor override this function with default implementations.
   virtual int getOldProcessorAssignment(       const Patch * patch );
 
+  // If current CoreID is not contained in d_neighborProcessors, insert it and return true
+  bool needInsertNeighbor(int rank);
   /// Goes through the Detailed tasks and assigns each to its own processor.
   virtual void assignResources( DetailedTasks & tg );
 
@@ -111,7 +114,7 @@ public:
   /// receive data from.
   virtual void createNeighborhood( const GridP& grid, const GridP& oldGrid );
 
-  const std::set<int>& getNeighborhoodProcessors() { return d_neighborProcessors; }
+  const std::vector<int>& getNeighborhoodProcessors() { return d_neighborProcessors; }
 
   /// Asks the load balancer if a patch in the patch subset is in the neighborhood.
   virtual bool inNeighborhood(const PatchSubset*);
@@ -201,8 +204,10 @@ protected:
 
   SimulationStateP d_sharedState; ///< to keep track of timesteps
   Scheduler* d_scheduler; ///< store the scheduler to not have to keep passing it in
-  std::set<const Patch*> d_neighbors; ///< the neighborhood.  See createNeighborhood
-  std::set<int> d_neighborProcessors; //a list of processors that are in this processors neighborhood
+  static BitMap<Patch*> d_neighbors; ///< the neighborhood.  See createNeighborhood
+  unsigned char d_neighborProcessors_ptr;
+  unsigned char* d_neighborProcessors_bm;
+  std::vector<int> d_neighborProcessors; //a list of processors that are in this processors neighborhood
   //! output on every nth processor.  This variable needs to be shared 
   //! with the DataArchiver as well, but we keep it here because the lb
   //! needs it to assign the processor resource.

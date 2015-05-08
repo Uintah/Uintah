@@ -234,6 +234,11 @@ abortCleanupFunc()
   Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
 }
 
+#if 0 
+extern const char* timer_fout;
+extern void __timer_init();
+#endif
+
 int
 main( int argc, char *argv[], char *env[] )
 {
@@ -738,6 +743,13 @@ main( int argc, char *argv[], char *env[] )
     // no one else is holding on to it...
     ups = 0;
 
+	// Initialize UintahProfiler
+#if 0
+	static char cBuffer[10];
+	sprintf(cBuffer, "tm_%d", Uintah::Parallel::getMPIRank() );
+	timer_fout = cBuffer;
+	__timer_init();
+#endif
     ctl->run();
     delete ctl;
 

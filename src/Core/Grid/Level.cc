@@ -26,7 +26,6 @@
 //by padding the digits
 //#define AG_HACK  
 
-
 #include <TauProfilerForSCIRun.h>
 
 #include <Core/Grid/Level.h>
@@ -63,7 +62,6 @@
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
-
 
 static AtomicCounter ids("Level ID counter",0);
 static Mutex ids_init("ID init");
@@ -448,7 +446,6 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
                           selectType& neighbors, bool withExtraCells, bool cache) const
 {
  TAU_PROFILE("Level::selectPatches", " ", TAU_USER);
-    
  if(cache){
    // look it up in the cache first
    d_cachelock.readLock();
@@ -468,9 +465,10 @@ void Level::selectPatches(const IntVector& low, const IntVector& high,
 
    //cout << Parallel::getMPIRank() << " Level Quesy: " << low << " " << high << endl;
    d_bvh->query(low, high, neighbors, withExtraCells);
-   sort(neighbors.begin(), neighbors.end(), Patch::Compare());
+   //sort(neighbors.begin(), neighbors.end(), Patch::Compare());
 
-#ifdef CHECK_SELECT
+//#ifdef CHECK_SELECT
+#if 0
    // Double-check the more advanced selection algorithms against the
    // slow (exhaustive) one.
    vector<const Patch*> tneighbors;

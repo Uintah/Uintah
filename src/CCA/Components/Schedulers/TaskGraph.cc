@@ -730,7 +730,7 @@ TaskGraph::createDetailedTasks(       bool           useInternalDeps,
   TAU_PROFILE_STOP(neighbortimer);
 
   TAU_PROFILE_START(dttimer);
-  const set<int> neighborhood_procs=lb->getNeighborhoodProcessors();
+  const vector<int> neighborhood_procs=lb->getNeighborhoodProcessors();
   dts_ = scinew DetailedTasks(sc, d_myworld, first, this, neighborhood_procs, useInternalDeps );
   
   for (int i = 0; i < (int)sorted_tasks.size(); i++) {
@@ -742,7 +742,7 @@ TaskGraph::createDetailedTasks(       bool           useInternalDeps,
       //only create OncePerProc tasks and output tasks once on each processor.
       if (task->getType() == Task::OncePerProc) {
         //only schedule this task on processors in the neighborhood
-        for (set<int>::iterator p = neighborhood_procs.begin(); p != neighborhood_procs.end(); p++) {
+        for (vector<int>::const_iterator p = neighborhood_procs.begin(); p != neighborhood_procs.end(); p++) {
           const PatchSubset* pss = ps->getSubset(*p);
           for (int m = 0; m < ms->size(); m++) {
             const MaterialSubset* mss = ms->getSubset(m);
@@ -1366,6 +1366,7 @@ TaskGraph::createDetailedDependencies( DetailedTask*     task,
             neighbors.push_back(patch);
           }
         }
+		//sort(neighbors.begin(), neighbors.end(), Patch::Compare());
         ASSERT(is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
         if (detaileddbg.active()) {
           detaileddbg << d_myworld->myrank() << "    Creating dependency on " << neighbors.size() << " neighbors\n";
