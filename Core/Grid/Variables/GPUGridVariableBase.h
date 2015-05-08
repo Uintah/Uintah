@@ -39,6 +39,8 @@ class GPUGridVariableBase : public GPUVariable {
   public:
     HOST_DEVICE virtual ~GPUGridVariableBase() {}
     HOST_DEVICE virtual size_t getMemSize() = 0;
+    HOST_DEVICE virtual int3 getLowIndex()  = 0;
+    HOST_DEVICE virtual int3 getHighIndex() = 0;
 
   protected:
     HOST_DEVICE GPUGridVariableBase() {}
