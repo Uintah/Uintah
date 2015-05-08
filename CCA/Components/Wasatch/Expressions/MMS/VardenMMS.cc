@@ -188,14 +188,13 @@ evaluate()
   *t <<= time + dt;
   
 
-  
-  const SVolField& dens = dens_->field_ref();
   SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
   switch (model_) {
     case Wasatch::VarDenParameters::IMPULSE:
     case Wasatch::VarDenParameters::SMOOTHIMPULSE:
     case Wasatch::VarDenParameters::DYNAMIC:
     {
+      const SVolField& dens = dens_->field_ref();
       if (useOnePredictor_)  *drhodtstar <<= (densStar_->field_ref()  - dens) / dt;
       else                   *drhodtstar <<= (dens2Star_->field_ref() - dens) / (2. * dt);
     }
@@ -203,7 +202,7 @@ evaluate()
     default:
       break;
   }
-  
+
   SpatialOps::SpatFldPtr<SVolField> alpha = SpatialOps::SpatialFieldStore::get<SVolField>( result );
 
   switch (model_) {
@@ -223,6 +222,7 @@ evaluate()
       break;      
     case Wasatch::VarDenParameters::DYNAMIC:
     {
+      const SVolField& dens = dens_->field_ref();
       SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
       
       if( is3d_ ){ // for 3D cases, inline the whole thing
