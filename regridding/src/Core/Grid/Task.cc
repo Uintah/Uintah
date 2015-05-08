@@ -897,12 +897,13 @@ getOtherLevelPatchSubset(Task::PatchDomainSpec dom,
                             __FILE__, __LINE__));
   }
 
-  std::set<const Patch*, Patch::Compare> patches;
+  std::vector<const Patch*> patches;
   for (int p = 0; p < myLevelSubset->size(); p++) {
     const Patch* patch = myLevelSubset->get(p);
     Patch::selectType somePatches;
     patch->getOtherLevelPatches(levelOffset, somePatches, ngc); 
-    patches.insert(somePatches.begin(), somePatches.end());
+	for (Uintah::fixedvector<const Uintah::Patch*, 32>::iterator it = somePatches.begin(); it != somePatches.end(); it++)
+	    patches.push_back(*it);
   }
 
   return constHandle<PatchSubset>(scinew PatchSubset(patches.begin(), patches.end()));

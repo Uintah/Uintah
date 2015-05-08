@@ -149,9 +149,24 @@ namespace Uintah {
     
     class Compare {
     public:
-      inline bool operator()(const Patch* p1, const Patch* p2) const {
+      inline bool operator()(const Patch* p1, const Patch* p2) const 
+	  {
+#if 1
+		  if (p1 != 0 && p2 != 0)
+		  {
+			  if (p1->getCellLowIndex().x() != p2->getCellLowIndex().x())
+				  return p1->getCellLowIndex().x() < p2->getCellLowIndex().x();
+			  else if (p1->getCellLowIndex().y() != p2->getCellLowIndex().y())
+				  return p1->getCellLowIndex().y() < p2->getCellLowIndex().y();
+			  else
+				  return p1->getCellLowIndex().z() < p2->getCellLowIndex().z();
+		  }
+		  else
+			  return (p2 != 0);
+#else
         return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) :
         ((p2 != 0) ? true : false);
+#endif
       }
     private:
     };

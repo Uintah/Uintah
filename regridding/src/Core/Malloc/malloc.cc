@@ -41,6 +41,12 @@
 #include <Core/Malloc/AllocPriv.h>
 #include <Core/Malloc/mem_init.h>
 
+#ifdef PROF
+static char UintahProfiler_allocator[0x4000000];
+int UintahProfiler_allocator_ptr = 0;
+bool disable_normal_allocator = false;
+#endif
+
 #if defined(__sun)
 #  include <cstring>
 #  define bzero(p,sz)  memset(p,0, sz);
@@ -107,6 +113,16 @@ namespace SCIRun {
 void*
 malloc(size_t size) THROWCLAUSE
 {
+#ifdef PROF
+	if (disable_normal_allocator)
+	{
+		if (sizeof(UintahProfiler_allocator) < UintahProfiler_allocator_ptr + size)
+			UintahProfiler_allocator_ptr = 0;
+		void* ret = UintahProfiler_allocator + UintahProfiler_allocator_ptr;
+		UintahProfiler_allocator_ptr += size;
+		return ret;
+	}
+#endif
   if(!default_allocator)
     MakeDefaultAllocator();
   void* mem=default_allocator->alloc(size, default_malloc_tag, default_tag_line_number);
@@ -121,6 +137,9 @@ malloc(size_t size) THROWCLAUSE
 void
 free(void* ptr) THROWCLAUSE
 {
+#ifdef PROF
+  if (disable_normal_allocator) return;
+#endif
   default_allocator->free(ptr);
 }
 

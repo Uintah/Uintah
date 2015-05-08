@@ -74,7 +74,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
                               const ProcessorGroup*  pg,
                                     DetailedTasks*   first,
                               const TaskGraph*       taskgraph,
-                              const set<int>&        neighborhood_processors,
+                              const vector<int>&        neighborhood_processors,
                                     bool             mustConsiderInternalDependencies /* = false */ ) :
   sc_(sc),
   d_myworld(pg),
@@ -104,7 +104,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   stask_->setMapping( dwmap );
 
   // Create a send old detailed task for every processor in my neighborhood.
-  for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
+  for (std::vector<int>::const_iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
     DetailedTask* newtask = scinew DetailedTask( stask_, 0, 0, this );
     newtask->assignResource(*iter);
     //use a map because the processors in this map are likely to be sparse

@@ -378,7 +378,7 @@ namespace Uintah {
                    const ProcessorGroup*  pg,
                          DetailedTasks*   first,
                    const TaskGraph*       taskgraph,
-                   const std::set<int>&   neighborhood_processors,
+                   const std::vector<int>&   neighborhood_processors,
                          bool             mustConsiderInternalDependencies = false );
 
     ~DetailedTasks();

@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright (c) 1997-2015 The University of Utah
+ * Copyright (c) 1997-2014 The University of Utah
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -21,56 +21,45 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+#ifndef Hash_Table_H
+#define Hash_Table_H
 
-#ifndef PATCH_BVH_NODE_H
-#define PATCH_BVH_NODE_H
+#include <Core/Geometry/IntVector.h>
+#include <Core/Malloc/Allocator.h>
 
+#include <Core/Grid/Patch.h>
+#include <Core/Grid/Level.h>
 
-#include <Core/Grid/PatchBVH/PatchBVHBase.h>
+#include <string.h>
 #include <vector>
-namespace Uintah {
+#include <map>
 
-  /**************************************
+namespace Uintah{
+    struct HEntry
+    {
+		int eID;
+        const Patch* pPtr;
+		HEntry() : pPtr(NULL) { eID = -1;}
+        HEntry(const Patch* value) : pPtr(value) { eID = -1;}
+        HEntry(Patch* value) : pPtr(value) { eID = -1;}
+    };
 
-    CLASS
-    PatchBVHNode
+    class HashTable
+    {
+        public:
+            HashTable(int& nRow, int& nCol, int& nHie);
+            HashTable(IntVector& n);
+            ~HashTable();
 
-    A Bounding Volume Hiearchy for querying patches that are 
-    within a given range.  This class is a general node of the tree.
-
-    GENERAL INFORMATION
-
-    PatchBVHNode.h
-
-    Justin Luitjens
-    Department of Computer Science
-    University of Utah
-
-    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
-
-    KEYWORDS
-    PatchBVH
-
-    DESCRIPTION
-    The PatchBVH is used for querying patches within a given range.
-    WARNING
-
-   ****************************************/
-
-  class PatchBVHNode : public PatchBVHBase
-  {
-    public:
-      PatchBVHNode(std::vector<PatchKeyVal>::iterator begin, std::vector<PatchKeyVal>::iterator end);
-
-      ~PatchBVHNode();
-
-      void query(const IntVector& low, const IntVector& high, Level::selectType& patches, bool includeExtraCells);
-    private:
-
-      PatchBVHBase *left_, *right_;
-  };
-
-} // end namespace Uintah
+            void clear();
+			void setup_empty();
+			void batch_put(IntVector& low, IntVector& high, const Patch* value);
+			void batch_get(IntVector& low, IntVector& high, int* bm, int& cur_true, Level::selectType& patches);
+        private:
+            HEntry *_root;
+            int _x, _y, _z, _yz;
+			int _patchesCnt;
+    };
+}
 
 #endif

@@ -21,7 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 #include <sci_defs/malloc_defs.h>
 #include <sci_defs/gperftools_defs.h>
 
@@ -907,6 +906,11 @@ AMRSimulationController::doRegridding( GridP & currentGrid, bool initialTimestep
 void
 AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
 {
+#ifdef PROF
+	timer_enabled = 1;
+	signal(SIGALRM, handler);
+	setalarm(0, 1000);
+#endif
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::Recompile()");
 
   proc0cout << "Compiling taskgraph...\n";
@@ -989,7 +993,11 @@ AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, in
   d_scheduler->compile();
  
   double dt=Time::currentSeconds() - start;
+#ifdef PROF
+  timer_enabled = 0;
 
+  timer_print_summary();
+#endif
   proc0cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
   d_sharedState->compilationTime += dt;
 }

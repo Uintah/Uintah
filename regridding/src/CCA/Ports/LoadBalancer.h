@@ -117,7 +117,7 @@ WARNING
     virtual bool isDynamic() { return false; }
 
     //! returns all processors in this processors neighborhood
-    virtual const std::set<int>& getNeighborhoodProcessors() = 0;
+    virtual const std::vector<int>& getNeighborhoodProcessors() = 0;
 
     //! Asks if a patch in the patch subset is in the neighborhood.
     virtual bool inNeighborhood(const PatchSubset*) = 0;

@@ -22,38 +22,53 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef SCI_Containers_BitMap_h
+#define SCI_Containers_BitMap 1
 
-#include <Core/Grid/PatchBVH/PatchBVH.h>
-namespace Uintah {
- 
+#include <stdint.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Grid/Patch.h>
 
-  /**************************************
-
-    CLASS
-    PatchBVH
-
-    A Bounding Volume Hiearchy for querying patches that are 
-    within a given range.
-
-    GENERAL INFORMATION
-
-    PatchBVH.h
-
-    Justin Luitjens
-    Department of Computer Science
-    University of Utah
-
-    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-
-
-    KEYWORDS
-    PatchBVH
-
-    DESCRIPTION
-    The PatchBVH is used for querying patches within a given range.
-    WARNING
-
-   ****************************************/
-  unsigned int PatchBVHBase::leafSize_=4;
-
-} // end namespace Uintah
+namespace Uintah
+{
+	template <class T>
+	class BitMap
+	{
+		public:
+			BitMap(size_t size):_size(size)
+			{
+				_storage = new unsigned char [size + 1];
+				_true = 0;
+			}
+			~BitMap()
+			{
+				delete[] _storage;
+			}
+			void set(unsigned key)
+			{
+				_storage[key] = _true;
+			}
+			void erase(unsigned key)
+			{
+				_storage[key] = 0;
+			}
+			void clear()
+			{
+				_true++;
+				if (_true == 0)
+				{
+					_true = 1;
+					memset(_storage, 0, sizeof(unsigned char) * (_size + 1));
+				}
+			}
+			bool operator[](unsigned key)
+			{
+				return (_true == _storage[key]);
+			}
+		private:
+			unsigned char* _storage;
+			int _size;
+			unsigned char _true;
+	};
+}
+#endif
