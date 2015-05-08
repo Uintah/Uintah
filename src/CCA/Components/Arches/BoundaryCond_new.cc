@@ -990,3 +990,146 @@ BoundaryCondition_new::create_masks( const ProcessorGroup* pg,
 
   }
 }
+
+
+  /** @brief This method sets the boundary value of a scalar to 
+             a value such that the interpolated value on the face results
+             in the actual boundary condition. Note that the boundary condition 
+             from the input file can be overridden by the last two arguments. */ 
+  template< class T >   
+  void 
+  BoundaryCondition_new::setExtraCellScalarValueBC(const ProcessorGroup*,
+                                 const Patch* patch,
+                                 CCVariable< T >& scalar, 
+                                 const std::string varname, 
+                                 bool  change_bc, 
+                                 const std::string override_bc)
+  {
+
+    using std::vector; 
+    using std::string; 
+
+    vector<Patch::FaceType>::const_iterator iter;
+    vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+    Vector Dx = patch->dCell(); 
+  
+    for (iter = bf.begin(); iter !=bf.end(); iter++){
+      Patch::FaceType face = *iter;
+  
+      //get the face direction
+      IntVector insideCellDir = patch->faceDirection(face);
+      //get the number of children
+      int numChildren = patch->getBCDataArray(face)->getNumberChildren(d_matl_id); //assumed one material
+  
+      for (int child = 0; child < numChildren; child++){
+  
+        double bc_value = -9; 
+        Vector bc_v_value(0,0,0); 
+        std::string bc_s_value = "NA";
+  
+        Iterator bound_ptr;
+        string bc_kind = "NotSet"; 
+        string face_name; 
+        getBCKind( patch, face, child, varname, d_matl_id, bc_kind, face_name ); 
+  
+        if ( change_bc == true ){ 
+          bc_kind = override_bc; 
+        }
+  
+        bool foundIterator = "false"; 
+        if ( bc_kind == "Tabulated" || bc_kind == "FromFile" ){ 
+          foundIterator = 
+            getIteratorBCValue<std::string>( patch, face, child, varname, d_matl_id, bc_s_value, bound_ptr ); 
+        } else {
+          foundIterator = 
+            getIteratorBCValue<double>( patch, face, child, varname, d_matl_id, bc_value, bound_ptr ); 
+        } 
+  
+        if (foundIterator) {
+          // --- notation --- 
+          // bp1: boundary cell + 1 or the interior cell one in from the boundary
+          if (bc_kind == "Dirichlet" || bc_kind == "ForcedDirichlet") {
+  
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir);
+              scalar[*bound_ptr] = bc_value;
+            }
+  
+          } else if (bc_kind == "Neumann") {
+  
+            IntVector axes = patch->getFaceAxes(face);
+            int P_dir = axes[0];  // principal direction
+            double plus_minus_one = (double) patch->faceDirection(face)[P_dir];
+            double dx = Dx[P_dir];
+            
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+              IntVector bp1(*bound_ptr - insideCellDir); 
+              scalar[*bound_ptr] = scalar[bp1] + plus_minus_one * dx * bc_value;
+            }
+          } else if (bc_kind == "FromFile") { 
+  
+            ScalarToBCValueMap::iterator i_scalar_bc_storage = scalar_bc_from_file.find( face_name ); 
+  
+            for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+  
+              IntVector rel_bc = *bound_ptr - i_scalar_bc_storage->second.relative_ijk; 
+              CellToValueMap::iterator iter = i_scalar_bc_storage->second.values.find( rel_bc ); //<----WARNING ... May be slow here
+              if ( iter != i_scalar_bc_storage->second.values.end() ){ 
+  
+                double file_bc_value = iter->second; 
+                IntVector bp1(*bound_ptr - insideCellDir);
+                scalar[*bound_ptr] = file_bc_value; 
+  
+              } else if ( i_scalar_bc_storage->second.default_type == "Neumann" ){  
+
+                IntVector bp1(*bound_ptr - insideCellDir); 
+                scalar[*bound_ptr] = i_scalar_bc_storage->second.default_value;
+  
+              } else if ( i_scalar_bc_storage->second.default_type == "Dirichlet" ){ 
+  
+                IntVector bp1(*bound_ptr - insideCellDir); 
+                scalar[*bound_ptr] = i_scalar_bc_storage->second.default_value;
+  
+              } 
+            }
+          } else if ( bc_kind == "Tabulated") {
+  
+            MapDoubleMap::iterator i_face = _tabVarsMap.find( face_name );
+  
+            if ( i_face != _tabVarsMap.end() ){ 
+  
+              DoubleMap::iterator i_var = i_face->second.find( varname ); 
+              double tab_bc_value = i_var->second;
+  
+              for (bound_ptr.reset(); !bound_ptr.done(); bound_ptr++) {
+                IntVector bp1(*bound_ptr - insideCellDir);
+                scalar[*bound_ptr] = tab_bc_value;
+              }
+  
+            }
+          } else { 
+            throw InvalidValue( "Error: Cannot determine boundary condition type for variable: "+varname, __FILE__, __LINE__);
+          }
+        }
+      }
+    }
+  }
+
+//______________________________________________________________________
+// Explicit template instantiations:
+template
+void BoundaryCondition_new::setExtraCellScalarValueBC <double> ( const ProcessorGroup* pc, 
+                                                                 const Patch* patch,
+                                                                 CCVariable< double >& scalar, 
+                                                                 const std::string varname, 
+                                                                 bool  change_bc, 
+                                                                 const std::string override_bc);
+
+template
+void BoundaryCondition_new::setExtraCellScalarValueBC <float> ( const ProcessorGroup* pc, 
+                                                                const Patch* patch,
+                                                                CCVariable< float >& scalar, 
+                                                                const std::string varname, 
+                                                                bool  change_bc, 
+                                                                const std::string override_bc);

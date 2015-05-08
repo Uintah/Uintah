@@ -83,6 +83,12 @@ void UnifiedSchedulerTest::scheduleInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
+void UnifiedSchedulerTest::scheduleRestartInitialize(const LevelP& level,
+                                                     SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
 void UnifiedSchedulerTest::scheduleComputeStableTimestep(const LevelP& level,
                                                          SchedulerP& sched)
 {

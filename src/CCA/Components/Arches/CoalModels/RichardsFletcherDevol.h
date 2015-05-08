@@ -89,6 +89,7 @@ public:
 private:
 
   const VarLabel* _rcmass_varlabel;
+  const VarLabel* _RHS_source_varlabel;
   const VarLabel* _char_varlabel;
   const VarLabel* _weight_varlabel;
   const VarLabel* _particle_temperature_varlabel;
@@ -135,6 +136,7 @@ private:
   double pi;
   
   double rateMax;
+  double rate;
   double _rc_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight 
   double _weight_small;   ///< small weight 

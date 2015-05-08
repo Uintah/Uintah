@@ -94,8 +94,7 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
 
-  void setMPMLabel(MPMLabel* Mlb)
-  {
+  void setMPMLabel(MPMLabel* Mlb) {
     delete lb;
     lb = Mlb;
   };
@@ -261,12 +260,24 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
+  //////////
+  // Add new particles to the simulation based on criteria TBD:
+  virtual void addParticles(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
-  void refine(const ProcessorGroup*,
-              const PatchSubset* patches,
-              const MaterialSubset* matls,
-              DataWarehouse*,
-              DataWarehouse* new_dw);
+  void refineGrid(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*,
+                  DataWarehouse* new_dw);
+
+  void coarsen(const ProcessorGroup*,
+               const PatchSubset* patches,
+               const MaterialSubset* matls,
+               DataWarehouse*, DataWarehouse* new_dw);
 
   void errorEstimate(const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -356,10 +367,12 @@ protected:
   virtual void scheduleFinalParticleUpdate(SchedulerP&,
                                            const PatchSet*,
                                            const MaterialSet*);
-  
-  //
+
+  virtual void scheduleAddParticles(SchedulerP&,
+                                    const PatchSet*,
+                                    const MaterialSet*);
+
   //  count the total number of particles in the domain
-  //
   void scheduleCountParticles(const PatchSet* patches,
                                SchedulerP& sched);
                                                                                          
@@ -402,6 +415,8 @@ protected:
 
   const VarLabel* pDbgLabel;        // debugging labels
   const VarLabel* gSumSLabel;                   
+  const VarLabel* gZOINETLabel;                   
+  const VarLabel* gZOISWBLabel;                   
                                    
   std::vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;

@@ -37,7 +37,7 @@
 
 #include <include/sci_defs/uintah_testdefs.h.in>
 
-
+#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
 //______________________________________________________________________
 //
 using namespace Uintah;
@@ -58,6 +58,8 @@ bool   RMCRTCommon::d_isSeedRandom;
 bool   RMCRTCommon::d_allowReflect;
 int    RMCRTCommon::d_matl;
 string RMCRTCommon::d_abskgBC_tag;
+vector<IntVector> RMCRTCommon::d_dbgCells;
+
 
 MaterialSet* RMCRTCommon::d_matlSet = 0;
 const VarLabel* RMCRTCommon::d_sigmaT4Label;
@@ -85,6 +87,7 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 
   d_gac     = Ghost::AroundCells;
   d_gn      = Ghost::None;
+  d_flowCell = -1; //<----HARD CODED FLOW CELL
 }
 
 //______________________________________________________________________
@@ -349,8 +352,8 @@ RMCRTCommon::rayLocation( MTRand& mTwister,
                          Vector& location)
 {
   if( useCCRays == false ){
-    location[0] =   origin[0] +  mTwister.rand() ;
-    location[1] =   origin[1] +  mTwister.rand() * DyDx ;
+    location[0] =   origin[0] +  mTwister.rand() ;             // FIX ME!!! This is not the physical location of the ray.
+    location[1] =   origin[1] +  mTwister.rand() * DyDx ;      // this is index space.
     location[2] =   origin[2] +  mTwister.rand() * DzDx ;
   }else{
     location[0] =   origin[0] +  0.5 ;
@@ -386,7 +389,7 @@ RMCRTCommon::reflect(double& fs,
 }
 
 //______________________________________________________________________
-//    Core function:  Integrate the intensity
+//    Integrate the intensity
 //______________________________________________________________________
 template <class T >
 void
@@ -404,7 +407,9 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
 {
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
+  if( isDbgCell(origin) ) {
+    printf("        updateSumI: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
+  }
 #endif
 /*===========TESTING==========`*/
 
@@ -488,7 +493,7 @@ RMCRTCommon::updateSumI ( Vector& ray_direction,
 
  /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
+if( isDbgCell( origin )){
     printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
     printf( " face %d ", face );
     printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
@@ -504,7 +509,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
 //cout << "cur " << cur << " face " << face << " tmax " << tMax << " rayLoc " << ray_location <<
 //        " inv_dir: " << inv_ray_direction << " disMin: " << disMin << endl;
 
-       in_domain = (celltype[cur]==-1);  //cellType of -1 is flow
+       in_domain = (celltype[cur] == d_flowCell);
 
 
        optical_thickness += Dx.x() * abskg_prev*disMin; // as long as tDeltaY,Z tMax.y(),Z and ray_location[1],[2]..
@@ -555,7 +560,6 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
   printf( "%i, %i, %i, tmax: %g, %g, %g  tDelta: %g, %g, %g \n", cur.x(), cur.y(), cur.z(), tMax.x(), tMax.y(), tMax.z(), tDelta.x(), tDelta.y() , tDelta.z());
 #endif
 /*===========TESTING==========`*/
-         //if(_benchmark == 4 || _benchmark ==5) scatLength = 1e16; // only for Siegel Benchmark4 benchmark5. Only allows 1 scatter event.
        }
 #endif
 
@@ -578,7 +582,7 @@ if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0){
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin.x() == 0 && origin.y() == 0 && origin.z() ==0 ){
+if( isDbgCell( origin)  ){
     printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
            cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
 
@@ -663,6 +667,22 @@ RMCRTCommon::doCarryForward( const int radCalc_freq ){
   bool test = (timestep%radCalc_freq != 0 && timestep != 1);
 
   return test;
+}
+
+//______________________________________________________________________
+//
+//______________________________________________________________________
+bool
+RMCRTCommon::isDbgCell( const IntVector me)
+{
+  
+  for( uint i = 0; i<d_dbgCells.size(); i++) {
+    if( me == d_dbgCells[i]) {
+      return true;
+      
+    }
+  }
+  return false;
 }
 
 

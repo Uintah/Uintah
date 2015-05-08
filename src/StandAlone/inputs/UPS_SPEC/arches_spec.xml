@@ -16,17 +16,65 @@
                                                                           co2, h2o, soot, specific_heat'"/>
       </VarID>
 
+      <!-- These are new task properties --> 
       <PropertyModelsV2                 spec="OPTIONAL NO_DATA">
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable'">
+                                        attribute2="type REQUIRED STRING 'wall_heatflux_variable, 
+                                                                          variable_stats'">
+
+          <!-- For variable_stats, the variable_type is the type for the variable which you are time averaging.
+               There is an attempt to determine the variable type automatically. This flag should only be used 
+               is that determination fails. -->
+          <variable_type                spec="OPTIONAL STRING 'svol, xvol, yvol, zvol'"
+                                        need_applies_to="type variable_stats"/>
 
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
                                         need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps). 
                                                                                              Otherwise it just copies old fluxes forward. Default = 1. -->
+          <new_model                    spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type wall_heatflux_variable"/> <!-- When turning on these models during restart, this variable is required
+                                                                                             to allocate the variables in the old_dw. It must be turned OFF for subsequent 
+                                                                                             restarts -->
+
+          <!-- The variable_stats model produces a sum(phi*dt) or sum(rho*u*phi) (all three components) and the sum(squared value) from which
+               a time average can be computed.
+
+               For single variables: 
+                - The summed variable to save is the label+"_running_sum". (i.e., label=my_var then my_var_running_sum) 
+                - The squared sum variable to save is the label+"_squared_sum". 
+
+               For flux variables: 
+                - The summed variables to save are label+"_running_sum_x", label+"_running_sum_y", label+"_running_sum_z". 
+                - The squared sum variables to save are label+"_squared_sum_x" and so on. 
+
+               Variance can be computed as: var^2 = (running_sum/T)^2 - squared_sum/T, where T = total time.
+          -->
+          <single_variable              spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type variable_stats"> <!-- time average a single variable -->
+
+            <new                        spec="OPTIONAL NO_DATA"/> <!-- Turn this flag on only for variables that either you want to reinitialize to zero 
+                                                                        or if this variable didn't exist in a previous uda -->
+          </single_variable>
+
+
+          <flux_variable                spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        attribute2="phi OPTIONAL STRING"
+                                        need_applies_to="type variable_stats"> <!-- time average a flux variable rho*u*phi - creates all three components 
+                                                                               If phi isn't specified, then this is the total mass flux -->
+
+            <new                        spec="OPTIONAL NO_DATA"/> <!-- Turn this flag on only for variables that either you want to reinitialize to zero 
+                                                                        or if this variable didn't exist in a previous uda -->
+          </flux_variable>
+          <density                      spec="OPTIONAL NO_DATA"
+                                        attribute1="label REQUIRED STRING"
+                                        need_applies_to="type variable_stats"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
 
         </model>
       </PropertyModelsV2>
+
       <PropertyModels                   spec="OPTIONAL NO_DATA" >
         <model                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
@@ -43,7 +91,7 @@
                                                                           radiation_properties'">
 
           <initialization               spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, gaussian'">
+                                        attribute1="type REQUIRED STRING 'constant, gaussian, physical'">
 
             <!-- Constant initialization -->
             <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
@@ -315,14 +363,17 @@
           <RichardsFletcher_coefficients          spec="OPTIONAL MULTIPLE_DOUBLES" />
           <!-- RichardsFletcher 2 step rate coefficients in the following order:  -->
           <!-- A1[1/s], A2[1/s], E1[kcal/kmol], E2[kcal/kmol], Y1[volatile fraction from prox analysis], Y2[fraction devolatilzed at higher temperatures], c0_1-c5_1, c0_2-c5_2  --> 
-          <BTDevol                        spec="OPTIONAL NO_DATA">
+          <FOWYDevol                        spec="OPTIONAL NO_DATA">
             <v_hiT                        spec="REQUIRED DOUBLE" />
             <Tig                          spec="REQUIRED DOUBLE" />
-            <c                            spec="REQUIRED DOUBLE" />
             <A                            spec="REQUIRED DOUBLE" />
             <Ta                           spec="REQUIRED DOUBLE" />
+            <b                            spec="REQUIRED DOUBLE" />
+            <c                            spec="REQUIRED DOUBLE" />
             <d                            spec="REQUIRED DOUBLE" />
-          </BTDevol>
+            <e                            spec="REQUIRED DOUBLE" />  
+            <sigma                        spec="REQUIRED DOUBLE" />
+          </FOWYDevol>
           <Shaddix_char_coefficients      spec="OPTIONAL MULTIPLE_DOUBLES" /> 
           <!-- Shaddix char oxidation coefficients in the following order:  -->
           <!-- D1[O2/CO2 m2/s], D2[O2/H2O m2/s], D3[O2/CO2 m2/s], T0[K], As[mol/s.m^2.atm^n], Es[J/mol] n[], HF_CO2[J/mol], HF_CO[J/mol]  -->
@@ -641,12 +692,11 @@
             <wall_thickness             spec="REQUIRED DOUBLE"/>  <!-- thickness of the wall in meters, [meters] --> 
             <wall_emissivity            spec="OPTIONAL DOUBLE 'positive'"/>  <!-- emissivity of the wall with default of 1.0 --> 
             <tube_side_T                spec="REQUIRED DOUBLE"/>  <!-- temperature of the fluid on the tube side (constant), [K] -->
-            <max_TW                     spec="REQUIRED DOUBLE"/>  <!-- the upper limit of the wall temperature -->
-            <min_TW                     spec="REQUIRED DOUBLE"/>  <!-- the lower limit of the wall temperature -->
             <relaxation_coef              spec="OPTIONAL DOUBLE 'positive'"/> <!-- relaxation to help with wildy varying wall temperatures 
-
-                       because we have assumed (with this model) that the wall comes to 
-                                                                                                                  instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation. for wall with large thermal resistance, recommend relaxation_coef=0.1, for small thermal resisitance, recommend relaxation_coef=1.0 --> 
+                                                                                   because we have assumed (with this model) that the wall comes to 
+                                                                                   instant equilibrium with the gas heat flux. Range 0 < relax < 1. Default = 1 no relaxation. 
+                                                                                   for wall with large thermal resistance, recommend relaxation_coef=0.1, 
+                                                                                   for small thermal resisitance, recommend relaxation_coef=1.0 --> 
 
             <geom_object/>
           </region> 
@@ -1094,7 +1144,6 @@
             </injector_region>
             
             <!-- specs nneded for second moment of mixture fraction source-->
-            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, dissipation_src"/>
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
             
             <!-- specs needed for the dissipation term for 2eqn scalr var model -->
@@ -1233,7 +1282,10 @@
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 
-            <density_label              spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- density label (default = "density) --> 
+            <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, 
+                                                                                     dissipation_src, 
+                                                                                     westbrook_dryer, 
+                                                                                     bowman_nox"/>
             <hot_spot                   spec="OPTIONAL NO_DATA" need_applies_to="type westbrook_dryer"> <!-- pilot light --> 
               <geom_object/>                                                                            <!-- defines the location of the pilot --> 
               <start_time               spec="REQUIRED DOUBLE 'positive'"/>                             <!-- pilot turns on at this time -->  
@@ -1358,7 +1410,7 @@
         
           <model                        spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
-                                        attribute2="type REQUIRED STRING 'BTDevol, 
+                                        attribute2="type REQUIRED STRING 'FOWYDevol, 
                                                                           RichardsFletcherDevol, 
                                                                           KobayashiSarofimDevol, 
                                                                           YamamotoDevol, 

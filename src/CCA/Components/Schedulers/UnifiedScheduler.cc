@@ -48,7 +48,7 @@
 #include <sci_defs/cuda_defs.h>
 
 #include <cstring>
-
+#include <iomanip>
 #define USE_PACKING
 
 using namespace Uintah;
@@ -76,8 +76,8 @@ static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
 static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
-  static DebugStream gpu_stats(        "Unified_GPUStats",     false);
-         DebugStream use_single_device("Unified_SingleDevice", false);
+  static DebugStream gpu_stats(        "GPUStats",     false);
+         DebugStream use_single_device("SingleDevice", false);
 #endif
 
 //______________________________________________________________________
@@ -233,7 +233,23 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
     std::cout << "   WARNING: Multi-threaded Unified scheduler is EXPERIMENTAL, not all tasks are thread safe yet.\n"
               << "   Creating " << numThreads_ << " additional "
               << plural + " for task execution (total task execution threads = "
-              << numThreads_ + 1 << ")." << std::endl;
+              << numThreads_ + 1 << ")." << "\n";
+#ifdef HAVE_CUDA
+    if (Uintah::Parallel::usingDevice()) {
+      cudaError_t retVal;
+      int availableDevices = numDevices_;
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
+      std::cout << "   Using " << numDevices_ << "/" << availableDevices << " available GPU(s)" << std::endl;
+      
+      if (numDevices_ == 1){  // we may want to output for all devices -Todd
+        cudaDeviceProp deviceProp;
+        int devID = 0;
+        CUDA_RT_SAFE_CALL(retVal = cudaGetDevice(&devID));
+        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, devID));
+        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+      }
+    }
+#endif
   }
 
   if (unified_compactaffinity.active()) {
@@ -390,8 +406,10 @@ void
 UnifiedScheduler::execute( int tgnum     /* = 0 */,
                            int iteration /* = 0 */ )
 {
-  // copy data timestep must be single threaded for now
-  if (Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep()) {
+  // copy data and restart timesteps must be single threaded for now
+  bool isMPICopyDataTS = Uintah::Parallel::usingMPI() && d_sharedState->isCopyDataTimestep();
+  bool isRestartTS = d_isInitTimestep || d_isRestartInitTimestep;
+  if (isMPICopyDataTS || isRestartTS) {
     MPIScheduler::execute( tgnum, iteration );
     return;
   }
@@ -502,21 +520,19 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   if (taskdbg.active()) {
     cerrLock.lock();
-    taskdbg << "Rank-" << me << " starting task phase " << currphase << ", total phase " << currphase << " tasks = "
+    taskdbg << myRankThread() << " starting task phase " << currphase << ", total phase " << currphase << " tasks = "
             << phaseTasks[currphase] << std::endl;
     cerrLock.unlock();
   }
 
   // signal worker threads to begin executing tasks
-  if (!d_isInitTimestep && !d_isRestartInitTimestep) {
-    for (int i = 0; i < numThreads_; i++) {
-      t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
-      // sending signal to threads to wake them up
-      t_worker[i]->d_runmutex.lock();
-      t_worker[i]->d_idle = false;
-      t_worker[i]->d_runsignal.conditionSignal();
-      t_worker[i]->d_runmutex.unlock();
-    }
+  for (int i = 0; i < numThreads_; i++) {
+    t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
+    // sending signal to threads to wake them up
+    t_worker[i]->d_runmutex.lock();
+    t_worker[i]->d_idle = false;
+    t_worker[i]->d_runsignal.conditionSignal();
+    t_worker[i]->d_runmutex.unlock();
   }
 
   // main thread also executes tasks
@@ -524,16 +540,13 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   TAU_PROFILE_STOP(doittimer);
 
-  // run single-threaded if in initial or initial-restart timestep
-  if (!d_isInitTimestep && !d_isRestartInitTimestep) {
-    // wait for all tasks to finish
-    d_nextmutex.lock();
-    while (getAvailableThreadNum() < numThreads_) {
-      // if any thread is busy, conditional wait here
-      d_nextsignal.wait(d_nextmutex);
-    }
-    d_nextmutex.unlock();
+  // wait for all tasks to finish
+  d_nextmutex.lock();
+  while (getAvailableThreadNum() < numThreads_) {
+    // if any thread is busy, conditional wait here
+    d_nextsignal.wait(d_nextmutex);
   }
+  d_nextmutex.unlock();
 
   if (unified_queuelength.active()) {
     float lengthsum = 0;
@@ -802,7 +815,7 @@ UnifiedScheduler::runTasks( int thread_id )
         if (taskorder.active()) {
           if (me == d_myworld->size() / 2) {
             cerrLock.lock();
-            taskorder << "Rank-" << me  << " Running task static order: " << readyTask->getSaticOrder()
+            taskorder << myRankThread()  << " Running task static order: " << readyTask->getStaticOrder()
                       << " , scheduled order: " << numTasksDone << std::endl;
             cerrLock.unlock();
           }
@@ -812,7 +825,7 @@ UnifiedScheduler::runTasks( int thread_id )
           currphase++;
           if (taskdbg.active()) {
             cerrLock.lock();
-            taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+            taskdbg << myRankThread() << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
                     << phaseTasks[currphase] << std::endl;
             cerrLock.unlock();
           }
@@ -856,7 +869,7 @@ UnifiedScheduler::runTasks( int thread_id )
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+              taskorder << myRankThread() << " Running task static order: " << readyTask->getStaticOrder()
                         << ", scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
@@ -866,7 +879,7 @@ UnifiedScheduler::runTasks( int thread_id )
             currphase++;
             if (taskdbg.active()) {
               cerrLock.lock();
-              taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+              taskdbg << myRankThread() << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
                       << phaseTasks[currphase] << std::endl;
               cerrLock.unlock();
             }
@@ -892,7 +905,7 @@ UnifiedScheduler::runTasks( int thread_id )
           if (initTask->getTask()->getType() == Task::Reduction || initTask->getTask()->usesMPI()) {
             if (taskdbg.active()) {
               cerrLock.lock();
-              taskdbg << "Rank-" << me << " Task internal ready 1 " << *initTask << std::endl;
+              taskdbg << myRankThread() <<  " Task internal ready 1 " << *initTask << std::endl;
               cerrLock.unlock();
             }
             phaseSyncTask[initTask->getTask()->d_phase] = initTask;
@@ -951,7 +964,7 @@ UnifiedScheduler::runTasks( int thread_id )
           if (taskorder.active()) {
             if (d_myworld->myrank() == d_myworld->size() / 2) {
               cerrLock.lock();
-              taskorder << "Rank-" << me << " Running task static order: " << readyTask->getSaticOrder()
+              taskorder << myRankThread() << " Running task static order: " << readyTask->getStaticOrder()
                         << " , scheduled order: " << numTasksDone << std::endl;
               cerrLock.unlock();
             }
@@ -961,7 +974,7 @@ UnifiedScheduler::runTasks( int thread_id )
             currphase++;
             if (taskdbg.active()) {
               cerrLock.lock();
-              taskdbg << "Rank-" << me << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
+              taskdbg << myRankThread() << " switched to task phase " << currphase << ", total phase " << currphase << " tasks = "
                       << phaseTasks[currphase] << std::endl;
               cerrLock.unlock();
             }
@@ -999,7 +1012,7 @@ UnifiedScheduler::runTasks( int thread_id )
       initiateTask(initTask, abort, abort_point, currentIteration);
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Rank-" << me << " Task internal ready 2 " << *initTask << " deps needed: "
+        taskdbg << myRankThread() << " Task internal ready 2 " << *initTask << " deps needed: "
                 << initTask->getExternalDepCount() << std::endl;
         cerrLock.unlock();
       }
@@ -1009,7 +1022,7 @@ UnifiedScheduler::runTasks( int thread_id )
     else if (readyTask != NULL) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Rank-" << me << " Task external ready " << *readyTask << std::endl;
+        taskdbg << myRankThread() << " Task external ready " << *readyTask << std::endl;
         cerrLock.unlock();
       }
       if (readyTask->getTask()->getType() == Task::Reduction) {
@@ -1134,25 +1147,47 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 
   // determine variables the specified task requires
   for (const Task::Dependency* req = task->getRequires(); req != 0; req = req->next) {
+  
     constHandle<PatchSubset> patches = req->getPatchesUnderDomain(dtask->getPatches());
     constHandle<MaterialSubset> matls = req->getMaterialsUnderDomain(dtask->getMaterials());
 
     int dwIndex = req->mapDataWarehouse();
     OnDemandDataWarehouseP dw = dws[dwIndex];
+    GPUDataWarehouse* gpuDW = dw->getGPUDW();
 
-    void* host_ptr = NULL;    // host base pointer to raw data
-    void* device_ptr = NULL;  // device base pointer to raw data
-    size_t host_bytes = 0;    // raw byte count to copy to the device
-    size_t device_bytes = 0;  // raw byte count to copy to the host
+    int maxLevels    = dw->getGrid()->numLevels();
+    LevelP fineLevel = dw->getGrid()->getLevel(maxLevels - 1);
+    int fineLevelIdx = fineLevel->getIndex();
+    bool isLevelItem = false;
+
+    void* host_ptr    = NULL;   // host base pointer to raw data
+    void* device_ptr  = NULL;   // device base pointer to raw data
+    size_t host_bytes = 0;      // raw byte count to copy to the device
+    size_t device_bytes = 0;    // raw byte count to copy to the host
     IntVector host_low, host_high, host_offset, host_size, host_strides;
 
-    int numPatches = patches->size();
+    bool hasFinerLevel = dw->getGrid()->getLevel(fineLevelIdx - req->level_offset).get_rep()->hasFinerLevel();
+    int numPatches = (hasFinerLevel)? 1 : patches->size();
     int numMatls = matls->size();
+    
+    //__________________________________
+    //
     for (int i = 0; i < numPatches; ++i) {
       for (int j = 0; j < numMatls; ++j) {
 
-        int matlID = matls->get(j);
+        int matlID  = matls->get(j);
         int patchID = patches->get(i)->getID();
+
+        // multi-level check
+        int levelID = fineLevelIdx - req->level_offset;
+        ASSERT(levelID >= 0);
+        const Level* level = dw->getGrid()->getLevel(levelID).get_rep();;
+        if (fineLevelIdx > 0) {
+          if (level->hasFinerLevel()) {
+            isLevelItem = true;
+          }
+        }
+
         const std::string reqVarName = req->var->getName();
 
         TypeDescription::Type type = req->var->typeDescription()->getType();
@@ -1169,22 +1204,24 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             //   in this case we need to use getRegion()
             bool uses_SHRT_MAX = (req->numGhostCells == SHRT_MAX);
             if (uses_SHRT_MAX) {
-              const Level* level = getLevel(dtask->getPatches());
               IntVector domainLo_EC, domainHi_EC;
               level->findCellIndexRange(domainLo_EC, domainHi_EC);  // including extraCells
+              
               dw->getRegion(*gridVar, req->var, matls->get(j), level, domainLo_EC, domainHi_EC, true);
               gridVar->getSizes(domainLo_EC, domainHi_EC, host_offset, host_size, host_strides);
-              host_ptr = gridVar->getBasePointer();
+              
+              host_ptr   = gridVar->getBasePointer();
               host_bytes = gridVar->getDataSize();
             } else {
               dw->getGridVar(*gridVar, req->var, matlID, patches->get(i), req->gtype, req->numGhostCells);
               gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
-              host_ptr = gridVar->getBasePointer();
+              
+              host_ptr   = gridVar->getBasePointer();
               host_bytes = gridVar->getDataSize();
             }
 
             // check if the variable already exists on the GPU
-            if (dw->getGPUDW()->exist(reqVarName.c_str(), patchID, matlID)) {
+            if (gpuDW->exists(reqVarName.c_str(), patchID, matlID)) {
 
               int3 device_offset;
               int3 device_size;
@@ -1207,19 +1244,19 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               switch (host_strides.x()) {
                 case sizeof(int) : {
                   GPUGridVariable<int> device_var;
-                  dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID);
+                  gpuDW->get(device_var, reqVarName.c_str(), patchID, matlID, levelID);
                   device_var.getArray3(device_offset, device_size, device_ptr);
                   break;
                 }
                 case sizeof(double) : {
                   GPUGridVariable<double> device_var;
-                  dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID);
+                  gpuDW->get(device_var, reqVarName.c_str(), patchID, matlID, levelID);
                   device_var.getArray3(device_offset, device_size, device_ptr);
                   break;
                 }
                 case sizeof(GPUStencil7) : {
                   GPUGridVariable<GPUStencil7> device_var;
-                  dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID);
+                  gpuDW->get(device_var, reqVarName.c_str(), patchID, matlID, levelID);
                   device_var.getArray3(device_offset, device_size, device_ptr);
                   break;
                 }
@@ -1245,34 +1282,49 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
 //                }
 //                continue;
 //              } else {
-                dw->getGPUDW()->remove(reqVarName.c_str(), patchID, matlID);
+                gpuDW->remove(reqVarName.c_str(), patchID, matlID, levelID);
 //              }
             }
 
             // Otherwise, variable doesn't exist on the GPU, so prepare and async copy to the device
             h2dRequiresLock_.writeLock();
             {
-              IntVector low = host_offset;
+              IntVector low  = host_offset;
               IntVector high = host_offset + host_size;
               int3 device_low = make_int3(low.x(), low.y(), low.z());
-              int3 device_hi = make_int3(high.x(), high.y(), high.z());
+              int3 device_hi  = make_int3(high.x(), high.y(), high.z());
 
               switch (host_strides.x()) {
                 case sizeof(int) : {
                   GPUGridVariable<int> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi);
+                  if (isLevelItem) {
+                    gpuDW->allocateAndPut(device_var, reqVarName.c_str(), matlID, device_low, device_hi, levelID);
+                  }
+                  else {
+                    gpuDW->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  }
                   device_ptr = device_var.getPointer();
                   break;
                 }
                 case sizeof(double) : {
                   GPUGridVariable<double> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi);
+                  if (isLevelItem) {
+                    gpuDW->allocateAndPut(device_var, reqVarName.c_str(), matlID, device_low, device_hi, levelID);
+                  }
+                  else {
+                    gpuDW->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  }
                   device_ptr = device_var.getPointer();
                   break;
                 }
                 case sizeof(GPUStencil7) : {
                   GPUGridVariable<GPUStencil7> device_var;
-                  dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi);
+                  if (isLevelItem) {
+                    gpuDW->allocateAndPut(device_var, reqVarName.c_str(), matlID, device_low, device_hi, levelID);
+                  }
+                  else {
+                    gpuDW->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, device_low, device_hi, levelID);
+                  }
                   device_ptr = device_var.getPointer();
                   break;
                 }
@@ -1281,25 +1333,14 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 }
               }
 
-              // The following is only efficient for large single copies. With multiple smaller copies
-              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-              // once we're doing large, single, aggregated cuda memcopies. [APH]
-//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//              if (!pinned) {
-//                // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                if (retVal == cudaSuccess) {
-//                  pinnedHostPtrs.insert(host_ptr);
-//                }
-//              }
-
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of REQUIRES (" << reqVarName <<  "), size (bytes) = "  << std::dec << host_bytes
+                  gpu_stats << myRankThread() 
+                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
+                            << ", size (bytes) = "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
-                            << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                            << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1311,59 +1352,53 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             break;
 
           }  // end GridVariable switch case
-
+          //__________________________________
+          //
           case TypeDescription::ReductionVariable : {
 
+            levelID = -1;
             ReductionVariableBase* reductionVar = dynamic_cast<ReductionVariableBase*>(req->var->typeDescription()->createInstance());
-            host_ptr = reductionVar->getBasePointer();
+            host_ptr   = reductionVar->getBasePointer();
             host_bytes = reductionVar->getDataSize();
             GPUReductionVariable<void*> device_var;
 
             // check if the variable already exists on the GPU
-            if (dw->getGPUDW()->exist(reqVarName.c_str(), patchID, matlID)) {
-              dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID);
-              device_ptr = device_var.getPointer();
+            if (gpuDW->exists(reqVarName.c_str(), patchID, matlID, levelID)) {
+            
+              gpuDW->get(device_var, reqVarName.c_str(), patchID, matlID, levelID);
+              device_ptr   = device_var.getPointer();
               device_bytes = device_var.getMemSize(); // TODO fix this
+            
               // if the size is the same, assume the variable already exists on the GPU... no H2D copy
               if (host_bytes == device_bytes) {
                 // report the above fact
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "ReductionVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
+                    gpu_stats << myRankThread() 
+                              << "ReductionVariable (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
                   cerrLock.unlock();
                 }
                 continue;
               } else {
-                dw->getGPUDW()->remove(reqVarName.c_str(), patchID, matlID);
+                gpuDW->remove(reqVarName.c_str(), patchID, matlID, levelID);
               }
             }
 
             // critical section - prepare and async copy the requires variable data to the device
             h2dRequiresLock_.writeLock();
             {
-              dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID);
-
-              // The following is only efficient for large single copies. With multiple smaller copies
-              // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-              // once we're doing large, single, aggregated cuda memcopies. [APH]
-//              const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//              if (!pinned) {
-//                // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                if (retVal == cudaSuccess) {
-//                  pinnedHostPtrs.insert(host_ptr);
-//                }
-//              }
+              gpuDW->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, levelID);
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of REQUIRES (" << reqVarName <<  "), size (bytes) = "  << std::dec << host_bytes
+                  gpu_stats << myRankThread()
+                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
+                            << ", size (bytes) = "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
-                            << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                            << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1375,46 +1410,51 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
             break;
 
           }  // end ReductionVariable switch case
-
+          //__________________________________
+          //
           case TypeDescription::PerPatch : {
 
             PerPatchBase* perPatchVar = dynamic_cast<PerPatchBase*>(req->var->typeDescription()->createInstance());
-            host_ptr = perPatchVar->getBasePointer();
+            host_ptr   = perPatchVar->getBasePointer();
             host_bytes = perPatchVar->getDataSize();
             GPUPerPatch<void*> device_var;
 
             // check if the variable already exists on the GPU
-            if (dw->getGPUDW()->exist(reqVarName.c_str(), patchID, matlID)) {
-              dw->getGPUDW()->get(device_var, reqVarName.c_str(), patchID, matlID);
-              device_ptr = device_var.getPointer();
+            if (gpuDW->exists(reqVarName.c_str(), patchID, matlID, levelID)) {
+              gpuDW->get(device_var, reqVarName.c_str(), patchID, matlID, levelID);
+              device_ptr   = device_var.getPointer();
               device_bytes = device_var.getMemSize(); // TODO fix this
+              
               // if the size is the same, assume the variable already exists on the GPU... no H2D copy
               if (host_bytes == device_bytes) {
                 // report the above fact
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "PerPatch (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
+                    gpu_stats << myRankThread() 
+                              << " PerPatch (" << reqVarName << ") already exists, skipping H2D copy..." << std::endl;
                   }
                   cerrLock.unlock();
                 }
                 continue;
               } else {
-                dw->getGPUDW()->remove(reqVarName.c_str(), patchID, matlID);
+                gpuDW->remove(reqVarName.c_str(), patchID, matlID, levelID);
               }
             }
 
             // critical section - prepare and async copy the requires variable data to the device
             h2dRequiresLock_.writeLock();
             {
-              dw->getGPUDW()->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID);
+              gpuDW->allocateAndPut(device_var, reqVarName.c_str(), patchID, matlID, levelID);
 
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Post H2D copy of REQUIRES (" << reqVarName <<  "), size (bytes) = "  << std::dec << host_bytes
+                  gpu_stats << myRankThread()
+                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
+                            << ", size (bytes) = "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
-                            << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                            << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1469,11 +1509,17 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
 
     int numPatches = patches->size();
     int numMatls = matls->size();
+    
+    //__________________________________
+    //
     for (int i = 0; i < numPatches; ++i) {
       for (int j = 0; j < numMatls; ++j) {
-
-        int matlID = matls->get(j);
+    
+        int matlID  = matls->get(j);
         int patchID = patches->get(i)->getID();
+        const Level* level = getLevel(dtask->getPatches());
+        int levelID = level->getID();
+
         const std::string compVarName = comp->var->getName();
 
         TypeDescription::Type type = comp->var->typeDescription()->getType();
@@ -1514,21 +1560,23 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
                 GPUGridVariable<int> device_var;
                 dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
                                                make_int3(low.x(), low.y(), low.z()),
-                                               make_int3(high.x(), high.y(), high.z()));
+                                               make_int3(high.x(), high.y(), high.z()), levelID);
                 device_ptr = device_var.getPointer();
                 num_bytes = device_var.getMemSize();
+                
               } else if (name.compare("double") == 0) {
                 GPUGridVariable<double> device_var;
                 dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
                                                make_int3(low.x(), low.y(), low.z()),
-                                               make_int3(high.x(), high.y(), high.z()));
+                                               make_int3(high.x(), high.y(), high.z()), levelID);
                 device_ptr = device_var.getPointer();
                 num_bytes = device_var.getMemSize();
+                
               } else if (name.compare("Stencil7") == 0) {
                 GPUGridVariable<GPUStencil7> device_var;
                 dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID,
                                                make_int3(low.x(), low.y(), low.z()),
-                                               make_int3(high.x(), high.y(), high.z()));
+                                               make_int3(high.x(), high.y(), high.z()), levelID);
                 device_ptr = device_var.getPointer();
                 num_bytes = device_var.getMemSize();
               } else {
@@ -1538,9 +1586,11 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Allocated device memory for COMPUTES (" << compVarName << "), size = " << std::dec << num_bytes
-                            << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
-                            << std::dec << std::endl;
+                  gpu_stats << myRankThread()
+                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                            << ", size = " << std::dec << num_bytes
+                            << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum() 
+                            << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1549,21 +1599,25 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
             break;
 
           }  // end GridVariable switch case
-
+          //__________________________________
+          //
           case TypeDescription::ReductionVariable : {
 
             d2hComputesLock_.writeLock();
             {
+              levelID = -1;
               GPUReductionVariable<void*> device_var;
-              dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID);
+              dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID, levelID);
               device_ptr = device_var.getPointer();
               num_bytes = device_var.getMemSize();
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
-                  gpu_stats << "Allocated device memory for COMPUTES (" << compVarName << "), size = " << std::dec << num_bytes
+                  gpu_stats << myRankThread()
+                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                            << ", size = " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
-                            << std::dec << std::endl;
+                            << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
                 cerrLock.unlock();
               }
@@ -1572,29 +1626,32 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
             break;
 
           }  // end ReductionVariable switch case
-
+          //__________________________________
+          //
           case TypeDescription::PerPatch : {
 
-                      d2hComputesLock_.writeLock();
-                      {
-                        GPUPerPatch<void*> device_var;
-                        dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID);
-                        device_ptr = device_var.getPointer();
-                        num_bytes = device_var.getMemSize();
-                        if (gpu_stats.active()) {
-                          cerrLock.lock();
-                          {
-                            gpu_stats << "Allocated device memory for COMPUTES (" << compVarName << "), size = " << std::dec << num_bytes
-                                      << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
-                                      << std::dec << std::endl;
-                          }
-                          cerrLock.unlock();
-                        }
-                      }
-                      d2hComputesLock_.writeUnlock();
-                      break;
+            d2hComputesLock_.writeLock();
+            {
+              GPUPerPatch<void*> device_var;
+              dw->getGPUDW()->allocateAndPut(device_var, compVarName.c_str(), patchID, matlID, levelID);
+              device_ptr = device_var.getPointer();
+              num_bytes = device_var.getMemSize();
+              if (gpu_stats.active()) {
+                cerrLock.lock();
+                {
+                  gpu_stats << myRankThread()
+                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                            << ", size = " << std::dec << num_bytes
+                            << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
+                            << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
+                }
+                cerrLock.unlock();
+              }
+            }
+            d2hComputesLock_.writeUnlock();
+            break;
 
-                    }  // end PerPatch switch case
+          }  // end PerPatch switch case
 
           case TypeDescription::ParticleVariable : {
             SCI_THROW(
@@ -1636,19 +1693,24 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
     int dwIndex = comp->mapDataWarehouse();
     OnDemandDataWarehouseP dw = dws[dwIndex];
 
-    void* host_ptr = NULL;    // host base pointer to raw data
-    void* device_ptr = NULL;  // device base pointer to raw data
-    size_t host_bytes = 0;    // raw byte count to copy to the device
-    size_t device_bytes = 0;  // raw byte count to copy to the host
+    void* host_ptr   = NULL;    // host base pointer to raw data
+    void* device_ptr = NULL;    // device base pointer to raw data
+    size_t host_bytes = 0;      // raw byte count to copy to the device
+    size_t device_bytes = 0;    // raw byte count to copy to the host
     IntVector host_low, host_high, host_offset, host_size, host_strides;
 
     int numPatches = patches->size();
     int numMatls = matls->size();
+    //__________________________________
+    //
     for (int i = 0; i < numPatches; ++i) {
       for (int j = 0; j < numMatls; ++j) {
 
-        int matlID = matls->get(j);
+        int matlID  = matls->get(j);
         int patchID = patches->get(i)->getID();
+        const Level* level = getLevel(dtask->getPatches());
+        int levelID = level->getID();
+
         const std::string compVarName = comp->var->getName();
 
         TypeDescription::Type type = comp->var->typeDescription()->getType();
@@ -1661,6 +1723,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
 
             GridVariableBase* gridVar = dynamic_cast<GridVariableBase*>(comp->var->typeDescription()->createInstance());
             dw->allocateAndPut(*gridVar, comp->var, matlID, patches->get(i), comp->gtype, comp->numGhostCells);
+            
             gridVar->getSizes(host_low, host_high, host_offset, host_size, host_strides);
             host_ptr = gridVar->getBasePointer();
             host_bytes = gridVar->getDataSize();
@@ -1689,19 +1752,19 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
               switch (host_strides.x()) {
                 case sizeof(int) : {
                   GPUGridVariable<int> device_var;
-                  dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID);
+                  dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID, levelID);
                   device_var.getArray3(device_offset, device_size, device_ptr);
                   break;
                 }
                 case sizeof(double) : {
                   GPUGridVariable<double> device_var;
-                  dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID);
+                  dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID, levelID);
                   device_var.getArray3(device_offset, device_size, device_ptr);
                   break;
                 }
                 case sizeof(GPUStencil7) : {
                   GPUGridVariable<GPUStencil7> device_var;
-                  dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID);
+                  dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID, levelID);
                   device_var.getArray3(device_offset, device_size, device_ptr);
                   break;
                 }
@@ -1714,25 +1777,14 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
               if (device_offset.x == host_offset.x() && device_offset.y == host_offset.y() && device_offset.z == host_offset.z()
                   && device_size.x == host_size.x() && device_size.y == host_size.y() && device_size.z == host_size.z()) {
 
-                // The following is only efficient for large single copies. With multiple smaller copies
-                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-                // once we're doing large, single, aggregated cuda memcopies. [APH]
-//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//                if (!pinned) {
-//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                  if (retVal == cudaSuccess) {
-//                    pinnedHostPtrs.insert(host_ptr);
-//                  }
-//                }
-
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of COMPUTES (" << compVarName << "), size = " << std::dec << host_bytes
+                    gpu_stats << myRankThread()
+                              << " Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                              << ", size = " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
-                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -1749,9 +1801,11 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
             break;
 
           }  // end GridVariable switch case
-
+          //__________________________________
+          //
           case TypeDescription::ReductionVariable : {
 
+            levelID = -1;
             ReductionVariableBase* reductionVar = dynamic_cast<ReductionVariableBase*>(comp->var->typeDescription()->createInstance());
             dw->put(*reductionVar, comp->var, patches->get(i)->getLevel(), matlID);
             host_ptr = reductionVar->getBasePointer();
@@ -1760,32 +1814,21 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
             d2hComputesLock_.writeLock();
             {
               GPUReductionVariable<void*> device_var;
-              dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID);
+              dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID, levelID);
               device_ptr = device_var.getPointer();
               device_bytes = device_var.getMemSize();
 
               // if size is equal to CPU DW, directly copy back to CPU var memory;
               if (host_bytes == device_bytes) {
 
-                // The following is only efficient for large single copies. With multiple smaller copies
-                // the faster PCIe transfers never outweigh the CUDA API latencies. We can revive this idea
-                // once we're doing large, single, aggregated cuda memcopies. [APH]
-//                const bool pinned = (*(pinnedHostPtrs.find(host_ptr)) == host_ptr);
-//                if (!pinned) {
-//                  // pin/page-lock host memory for H2D cudaMemcpyAsync
-//                  // memory returned using cudaHostRegisterPortable flag will be considered pinned by all CUDA contexts
-//                  CUDA_RT_SAFE_CALL(retVal = cudaHostRegister(host_ptr, host_bytes, cudaHostRegisterPortable));
-//                  if (retVal == cudaSuccess) {
-//                    pinnedHostPtrs.insert(host_ptr);
-//                  }
-//                }
-
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of COMPUTES (" << compVarName << "), size = " << std::dec << host_bytes
+                    gpu_stats << myRankThread()
+                              << " Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                              << ", size = " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
-                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                              << ", using stream " << std::hex << dtask->getCUDAStream()<< std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -1802,7 +1845,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
             break;
 
           }  // end ReductionVariable switch case
-
+          //__________________________________
+          //
           case TypeDescription::PerPatch : {
 
             PerPatchBase* perPatchVar = dynamic_cast<PerPatchBase*>(comp->var->typeDescription()->createInstance());
@@ -1814,7 +1858,7 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
             d2hComputesLock_.writeLock();
             {
               GPUPerPatch<void*> device_var;
-              dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID);
+              dw->getGPUDW()->get(device_var, compVarName.c_str(), patchID, matlID, levelID);
               device_ptr = device_var.getPointer();
               device_bytes = device_var.getMemSize();
 
@@ -1823,9 +1867,11 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
-                    gpu_stats << "Post D2H copy of COMPUTES (" << compVarName << "), size = " << std::dec << host_bytes
+                    gpu_stats << myRankThread()
+                              << "Post D2H copy of COMPUTES ("<< std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                              << ", size = " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
-                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::dec << std::endl;
+                              << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                   }
                   cerrLock.unlock();
                 }
@@ -1842,7 +1888,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
             break;
 
           }  // end PerPatch switch case
-
+          //__________________________________
+          //
           case TypeDescription::ParticleVariable : {
             SCI_THROW(
                 InternalError("Copying ParticleVariables to GPU not yet supported:" + compVarName, __FILE__, __LINE__));
@@ -1880,7 +1927,7 @@ UnifiedScheduler::createCudaStreams( int device,
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Created CUDA stream " << std::hex << stream << " on device "
+          gpu_stats << myRankThread() << " Created CUDA stream " << std::hex << stream << " on device "
                     << std::dec << device << std::endl;
         }
         cerrLock.unlock();
@@ -1909,7 +1956,7 @@ UnifiedScheduler::freeCudaStreams()
       }
       cerrLock.lock();
       {
-        gpu_stats << "Deallocating " << totalStreams << " total CUDA stream(s) for " << numQueues << " device(s)"<< std::endl;
+        gpu_stats << myRankThread() <<  " Deallocating " << totalStreams << " total CUDA stream(s) for " << numQueues << " device(s)"<< std::endl;
       }
       cerrLock.unlock();
     }
@@ -1920,7 +1967,7 @@ UnifiedScheduler::freeCudaStreams()
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Deallocating " << idleStreams[i].size() << " CUDA stream(s) on device " << retVal << std::endl;
+          gpu_stats << myRankThread() << " Deallocating " << idleStreams[i].size() << " CUDA stream(s) on device " << retVal << std::endl;
         }
         cerrLock.unlock();
       }
@@ -1952,7 +1999,8 @@ UnifiedScheduler::getCudaStream( int device )
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Issued CUDA stream " << std::hex << stream
+          gpu_stats << myRankThread()
+                    << " Issued CUDA stream " << std::hex << stream
                     << " on device " << std::dec << device << std::endl;
           cerrLock.unlock();
         }
@@ -1967,7 +2015,8 @@ UnifiedScheduler::getCudaStream( int device )
       if (gpu_stats.active()) {
         cerrLock.lock();
         {
-          gpu_stats << "Needed to create 1 additional CUDA stream " << std::hex << stream
+          gpu_stats << myRankThread()
+                    << "Needed to create 1 additional CUDA stream " << std::hex << stream
                     << " for device " << std::dec << device << std::endl;
         }
         cerrLock.unlock();
@@ -1977,24 +2026,6 @@ UnifiedScheduler::getCudaStream( int device )
   idleStreamsLock_.writeUnlock();
 
   return stream;
-}
-
-//______________________________________________________________________
-//
-
-cudaError_t
-UnifiedScheduler::unregisterPageLockedHostMem()
-{
-  cudaError_t retVal;
-  std::set<void*>::iterator iter;
-
-  // unregister the page-locked host memory
-  for (iter = pinnedHostPtrs.begin(); iter != pinnedHostPtrs.end(); iter++) {
-    CUDA_RT_SAFE_CALL(retVal = cudaHostUnregister(*iter));
-  }
-  pinnedHostPtrs.clear();
-
-  return retVal;
 }
 
 //______________________________________________________________________
@@ -2018,7 +2049,8 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
   if (gpu_stats.active()) {
     cerrLock.lock();
     {
-      gpu_stats << "Reclaimed CUDA stream " << std::hex << stream << " on device " << std::dec << deviceNum << std::endl;
+      gpu_stats << myRankThread() 
+                << " Reclaimed CUDA stream " << std::hex << stream << " on device " << std::dec << deviceNum << std::endl;
     }
     cerrLock.unlock();
   }
@@ -2026,6 +2058,16 @@ UnifiedScheduler::reclaimCudaStreams( DetailedTask* dtask )
 
 #endif // end HAVE_CUDA
 
+//______________________________________________________________________
+//  generate string   <MPI rank>.<Thread ID>
+//  useful to see who running what    
+std::string
+UnifiedScheduler::myRankThread()
+{
+  std::ostringstream out;
+  out<< Uintah::Parallel::getMPIRank()<< "." << Thread::self()->myid();
+  return out.str();
+}
 
 //------------------------------------------
 // UnifiedSchedulerWorker Thread Methods
@@ -2072,7 +2114,7 @@ UnifiedSchedulerWorker::run()
     if (d_quit) {
       if (taskdbg.active()) {
         cerrLock.lock();
-        taskdbg << "Worker " << d_rank << "-" << d_thread_id << " quitting" << "\n";
+        unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << " quitting" << "\n";
         cerrLock.unlock();
       }
       return;
@@ -2080,7 +2122,7 @@ UnifiedSchedulerWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": executing tasks \n";
+      unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << ": executing tasks \n";
       cerrLock.unlock();
     }
 
@@ -2098,7 +2140,7 @@ UnifiedSchedulerWorker::run()
 
     if (taskdbg.active()) {
       cerrLock.lock();
-      taskdbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing tasks   \n";
+      unified_threaddbg << "Worker " << d_rank << "-" << d_thread_id << ": finished executing tasks   \n";
       cerrLock.unlock();
     }
 

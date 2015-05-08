@@ -93,7 +93,7 @@ namespace Uintah{
       //__________________________________
       //
       template< class T>
-      void sigmaT4( const ProcessorGroup* pc,
+      void sigmaT4( const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
@@ -167,6 +167,8 @@ namespace Uintah{
 
 
       void doRecompileTaskgraph( const int radCalc_freq );
+      
+      bool isDbgCell( IntVector me);
                             
       //______________________________________________________________________
       //    Public variables that are used by Radiometer & RMCRT classes
@@ -174,11 +176,14 @@ namespace Uintah{
       //           -x      +x       -y       +y     -z     +z
       enum FACE {EAST=0, WEST=1, NORTH=2, SOUTH=3, TOP=4, BOT=5, nFACES=6};     
       double d_sigma_over_pi;                // Stefan Boltzmann divided by pi (W* m-2* K-4)
+      int d_flowCell;                       // HARDWIRED 
       Ghost::GhostType d_gn;
       Ghost::GhostType d_gac;
 
       SimulationStateP d_sharedState;
-      TypeDescription::Type d_FLT_DBL;       // Is algorithm based on doubles or floats
+      TypeDescription::Type d_FLT_DBL;              // Is algorithm based on doubles or floats
+      
+      static std::vector<IntVector> d_dbgCells;     // cells that we're interogating when DEBUG is on
       
       // This will create only 1 instance for both Ray() and radiometer() classes to use
       static double d_threshold;

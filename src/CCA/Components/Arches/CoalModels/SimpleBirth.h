@@ -74,7 +74,7 @@ public:
                      const int timeSubStep );
 
   inline std::string getType() {
-    return "Constant"; }
+    return "birth"; }
 
 
 private:

@@ -72,6 +72,15 @@ namespace Uintah {
       {
         return d_size.x * d_size.y * d_size.z * sizeof(T);
       }
+      
+      HOST_DEVICE int3 getLowIndex() const
+      {
+        return make_int3(d_offset.x, d_offset.y, d_offset.z);
+      }
+      HOST_DEVICE int3 getHighIndex() const
+      {
+        return make_int3(d_offset.x+d_size.x, d_offset.y+d_size.y, d_offset.z+d_size.z);
+      }
 
     protected:
 
@@ -118,6 +127,17 @@ namespace Uintah {
       {
         return GPUArray3<T>::getMemSize();
       }
+      
+      HOST_DEVICE virtual int3 getLowIndex()
+      {
+        return GPUArray3<T>::getLowIndex();
+      }
+      
+      HOST_DEVICE virtual int3 getHighIndex()
+      {
+        return GPUArray3<T>::getHighIndex();
+      }
+    
 
     private:
 

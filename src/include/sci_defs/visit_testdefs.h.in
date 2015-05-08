@@ -26,6 +26,7 @@
 #define SCI_VISIT_DEFS_H
 
 @DEF_VISIT@
+@VISIT_PATH@
 
 #endif
 

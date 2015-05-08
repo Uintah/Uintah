@@ -87,7 +87,11 @@ WARNING
      //////////
      // Insert Documentation Here:
      virtual void scheduleInitialize(const LevelP& level,
-				     SchedulerP&) = 0;
+                                         SchedulerP&) = 0;
+                                 
+     // on a restart schedule an initialization task
+     virtual void scheduleRestartInitialize(const LevelP& level,
+                                            SchedulerP&)  = 0;
 
      //////////
      // restartInitialize() is called once and only once if and when a simulation is restarted.
@@ -101,7 +105,7 @@ WARNING
      //////////
      // Insert Documentation Here:
      virtual void scheduleComputeStableTimestep(const LevelP& level,
-						SchedulerP&) = 0;
+                                                SchedulerP&) = 0;
       
      //////////
      // Insert Documentation Here:
@@ -110,16 +114,16 @@ WARNING
      // this is for wrapping up a timestep when it can't be done in scheduleTimeAdvance.
      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&) {}
      virtual void scheduleRefine(const PatchSet* patches, 
-				 SchedulerP& scheduler);
+                                 SchedulerP& scheduler);
      virtual void scheduleRefineInterface(const LevelP& fineLevel, 
-				          SchedulerP& scheduler,
-					  bool needCoarseOld, bool needCoarseNew);
+                                          SchedulerP& scheduler,
+                                          bool needCoarseOld, bool needCoarseNew);
      virtual void scheduleCoarsen(const LevelP& coarseLevel, 
-				  SchedulerP& scheduler);
+                                  SchedulerP& scheduler);
 
      /// Schedule to mark flags for AMR regridding
      virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-					SchedulerP& sched);
+                                        SchedulerP& sched);
 
      /// Schedule to mark initial flags for AMR regridding
      virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
@@ -137,7 +141,7 @@ WARNING
      //////////
      // ask the component if it needs to be recompiled
      virtual bool needRecompile(double /*time*/, double /*dt*/,
-				const GridP& /*grid*/) {return false;}
+                                const GridP& /*grid*/) {return false;}
 
      virtual void scheduleSwitchTest(const LevelP& /*level*/, SchedulerP& /*sched*/)
        {};

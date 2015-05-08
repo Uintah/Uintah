@@ -90,6 +90,7 @@ class RadiationSource
                    const Expr::Tag& temperatureTag,
                    const Expr::Tag& absorptionTag,
                    const Expr::Tag& celltypeTag,
+                   Uintah::Ray* rmcrt,
                    const Uintah::ProblemSpecP& radiationSpec,
                    Uintah::SimulationStateP sharedState,
                    Uintah::GridP grid);
@@ -98,6 +99,7 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag temperatureTag_, absorptionTag_, celltypeTag_;
+    Uintah::Ray* rmcrt_;
     Uintah::ProblemSpecP     radiationSpec_;
     Uintah::SimulationStateP sharedState_;
     Uintah::GridP            grid_;
@@ -107,6 +109,7 @@ public:
              const Expr::Tag& temperatureTag,
              const Expr::Tag& absorptionTag,
              const Expr::Tag& celltypeTag,
+             Uintah::Ray* rmcrt,
              Uintah::ProblemSpecP& radiationSpec,
              Uintah::SimulationStateP& sharedState,
              Uintah::GridP& grid);

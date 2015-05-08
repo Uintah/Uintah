@@ -20,3 +20,27 @@ RadProps
 
 And uses: 'git pull' to update code.
 
+To git the original files:
+
+git clone git://software.crsim.utah.edu/SpatialOpt.git
+git clone git://software.crsim.utah.edu/ExprLib.git
+etc.
+
+------------------
+
+On Vulcan @ LLNL:
+----------------
+
+   use cmake
+
+
+On Cab @ LLNL:
+-------------
+
+icc:
+use mvapich2-intel-1.9
+use ic-14.0.174
+
+gcc:
+use mvapich2-gnu-1.9
+use gcc-4.6.1

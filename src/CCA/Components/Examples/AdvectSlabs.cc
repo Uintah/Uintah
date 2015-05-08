@@ -88,20 +88,25 @@ void AdvectSlabs::problemSetup(const ProblemSpecP& params,
 }
  
 void AdvectSlabs::scheduleInitialize(const LevelP& level,
-			       SchedulerP& sched)
+                               SchedulerP& sched)
 {
   Task* task = scinew Task("initialize",
-			   this, &AdvectSlabs::initialize);
+                           this, &AdvectSlabs::initialize);
   task->computes(mass_label);
   task->computes(massAdvected_label);
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
+
+void AdvectSlabs::scheduleRestartInitialize(const LevelP& level,
+                                            SchedulerP& sched)
+{
+}
  
 void AdvectSlabs::scheduleComputeStableTimestep(const LevelP& level,
-					  SchedulerP& sched)
+                                          SchedulerP& sched)
 {
   Task* task = scinew Task("computeStableTimestep",
-			   this, &AdvectSlabs::computeStableTimestep);
+                           this, &AdvectSlabs::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
@@ -110,7 +115,7 @@ void
 AdvectSlabs::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
   Task* task = scinew Task("timeAdvance",
-			   this, &AdvectSlabs::timeAdvance);
+                           this, &AdvectSlabs::timeAdvance);
 
   task->requires(Task::OldDW, mass_label, Ghost::AroundCells, 2);
   task->computes(mass_label);
@@ -120,17 +125,17 @@ AdvectSlabs::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 }
 
 void AdvectSlabs::computeStableTimestep(const ProcessorGroup*,
-				  const PatchSubset* patches,
-				  const MaterialSubset*,
-				  DataWarehouse*, DataWarehouse* new_dw)
+                                  const PatchSubset* patches,
+                                  const MaterialSubset*,
+                                  DataWarehouse*, DataWarehouse* new_dw)
 {
   new_dw->put(delt_vartype(delt_), sharedState_->get_delt_label(),getLevel(patches));
 }
 
 void AdvectSlabs::initialize(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse*old_dw, DataWarehouse* new_dw)
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*old_dw, DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);

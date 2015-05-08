@@ -25,7 +25,8 @@ PressureSource::PressureSource( const Expr::TagList& momTags,
   is3d_     ( doX_ && doY_ && doZ_    ),
   useOnePredictor_(varDenParams.onePredictor),
   a0_   (varDenParams.alpha0),
-  model_(varDenParams.model )
+  model_(varDenParams.model ),
+  varDenParams_(varDenParams)
 {
   set_gpu_runnable( true );
   
@@ -182,6 +183,12 @@ void PressureSource::evaluate()
         break;
       case Wasatch::VarDenParameters::IMPULSE:
         alpha <<= cond(drhodtstar == 0.0, 1.0)(a0_);
+        break;
+      case Wasatch::VarDenParameters::SMOOTHIMPULSE:
+      {
+        const double c = varDenParams_.gaussWidth;
+        alpha <<= a0_ + (1.0 - a0_)*exp(-drhodtstar*drhodtstar/(2.0*c*c));
+      }
         break;
       case Wasatch::VarDenParameters::DYNAMIC:
       {

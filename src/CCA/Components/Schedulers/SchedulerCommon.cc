@@ -108,8 +108,11 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
   m_locallyComputedPatchVarMap = scinew LocallyComputedPatchVarMap;
   reloc_new_posLabel_ = 0;
 
-  maxGhostCells.clear();
-  maxLevelOffsets.clear();
+  // TODO replace after MiraDDT problem is debugged (APH - 03/24/15)
+  maxGhost = 0;
+  maxLevelOffset = 0;
+//  maxGhostCells.clear();
+//  maxLevelOffsets.clear();
 }
 
 //______________________________________________________________________
@@ -397,6 +400,15 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec,
       }
     }
   }
+
+  // If small_messages not specified in UP Scheduler block, still report what's used
+  if( d_useSmallMessages ) {
+    proc0cout << "   Using small, individual MPI messages (no message combining)\n";
+  }
+  else {
+    proc0cout << "   Using large, combined MPI messages\n";
+  }
+
   noScrubVars_.insert("refineFlag");
   noScrubVars_.insert("refinePatchFlag");
 }
@@ -715,33 +727,38 @@ SchedulerCommon::addTask(       Task        * task,
   graphs[graphs.size()-1]->addTask(task, patches, matls);
   numTasks_++;
 
+  // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+  if (task->maxGhostCells > maxGhost) {
+    maxGhost = task->maxGhostCells;
+  }
+  if (task->maxLevelOffset > maxLevelOffset){
+    maxLevelOffset = task->maxLevelOffset;
+  }
   // get the current level for the specified PatchSet to determine maxGhostCells and maxLevelOffset
   //   don't check these for output and restart tasks - patch and material sets are null then
-  if (patches && matls) {
-    int levelIndex = patches->getSubset(0)->get(0)->getLevel()->getIndex();
-
-    // initialize or update max ghost cells for the current level
-    std::map<int, int>::iterator mgc_iter;
-    mgc_iter = maxGhostCells.find(levelIndex);
-    int taskMGC = task->maxGhostCells;
-    if (mgc_iter == maxGhostCells.end()) {
-      maxGhostCells.insert(std::pair<int, int>(levelIndex, (taskMGC > 0 ? taskMGC : 0)));
-    }
-    else if (taskMGC > mgc_iter->second) {
-      mgc_iter->second = task->maxGhostCells;
-    }
-
-    // initialize or update max level offset for the current level
-    std::map<int, int>::iterator mlo_iter;
-    mlo_iter = maxLevelOffsets.find(levelIndex);
-    int taskMLO = task->maxLevelOffset;
-    if (mlo_iter == maxLevelOffsets.end()) {
-      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, (taskMLO > 0 ? taskMLO : 0)));
-    }
-    else if (taskMLO > mlo_iter->second) {
-      mlo_iter->second = task->maxLevelOffset;
-    }
-  }
+//  if (patches && matls) {
+//    int levelIndex = patches->getSubset(0)->get(0)->getLevel()->getIndex();
+//
+//    // initialize or update max ghost cells for the current level
+//    std::map<int, int>::iterator mgc_iter;
+//    mgc_iter = maxGhostCells.find(levelIndex);
+//    if (mgc_iter == maxGhostCells.end()) {
+//      maxGhostCells.insert(std::pair<int, int>(levelIndex, 0));
+//    }
+//    else if (task->maxGhostCells > mgc_iter->second) {
+//      mgc_iter->second = task->maxGhostCells;
+//    }
+//
+//    // initialize or update max level offset for the current level
+//    std::map<int, int>::iterator mlo_iter;
+//    mlo_iter = maxLevelOffsets.find(levelIndex);
+//    if (mlo_iter == maxLevelOffsets.end()) {
+//      maxLevelOffsets.insert(std::pair<int, int>(levelIndex, 0));
+//    }
+//    else if (task->maxLevelOffset > mlo_iter->second) {
+//      mlo_iter->second = task->maxLevelOffset;
+//    }
+//  }
   
   // add to init-requires.  These are the vars which require from the OldDW that we'll
   // need for checkpointing, switching, and the like.
@@ -877,8 +894,11 @@ SchedulerCommon::initialize( int numOldDW /* = 1 */,
   d_computedVars.clear();
   numTasks_ = 0;
 
-  maxGhostCells.clear();
-  maxLevelOffsets.clear();
+  // TODO replace after Mira DDT problem is debugged (APH - 03/24/15)
+  maxGhost = 0;
+  maxLevelOffset = 0;
+//  maxGhostCells.clear();
+//  maxLevelOffsets.clear();
 
   reductionTasks.clear();
   addTaskGraph(NormalTaskGraph);
@@ -1174,6 +1194,12 @@ SchedulerCommon::compile()
     }
     verifyChecksum();
     schedulercommon_dbg << d_myworld->myrank() << " SchedulerCommon finished compile\n";
+  }
+  else {
+    // NOTE: this was added with scheduleRestartInititalize() support (for empty TGs)
+    //  Even when numTasks_ <= 0, the code below executed and did nothing worthwhile... seemingly
+    //  Shouldn't need to do this work without tasks though -APH 03/12/15
+    return; // no tasks and nothing to do
   }
 
   m_locallyComputedPatchVarMap->reset();
