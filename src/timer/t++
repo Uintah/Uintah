@@ -1,0 +1,25 @@
+#!/bin/bash
+if [ "$COMPILE_REALLY" = "yes" ]
+then
+	COMPILE=no
+	ARGS=$@
+	NARGS=$#
+	for((i=0;i<${NARGS};i++))
+	do
+		if [ "$1" = "-c" ]
+		then
+			COMPILE=yes
+			break
+		fi
+		shift
+	done
+
+	if [ "${COMPILE}" = "yes" ]
+	then
+		g++ ${ARGS}
+	else
+		g++ -rdynamic /home/neil/uintah_beta/src/timer/timer.o ${ARGS}
+	fi
+else
+	g++ $@
+fi
