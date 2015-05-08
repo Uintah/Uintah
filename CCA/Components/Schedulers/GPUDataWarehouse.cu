@@ -298,7 +298,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
     int3 offset = low;
     void* addr = NULL;
 
-    var.setArray3(offset, size, addr);
+    var.setArray3(offset, size, addr);              // Set the offset and size, addr = NULL
 
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(d_device_id));
     CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
@@ -309,7 +309,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
       printf(" at %p on device %d\n", addr, d_device_id);
     }
 
-    var.setArray3(offset, size, addr);
+    var.setArray3(offset, size, addr);              // set the addr
     put(var, label, patchID, matlIndx, levelIndx);
   }
   varDBLock.writeUnlock();
@@ -336,7 +336,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
     int3 offset = low;
     void* addr = NULL;
 
-    var.setArray3(offset, size, addr);
+    var.setArray3(offset, size, addr);              // Set the offset and size, addr = NULL
 
     CUDA_RT_SAFE_CALL(retVal = cudaSetDevice(d_device_id));
     CUDA_RT_SAFE_CALL(retVal = cudaMalloc(&addr, var.getMemSize()));
@@ -347,7 +347,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase& var, char const* label, in
       printf(" at %p on device %d\n", addr, d_device_id);
     }
 
-    var.setArray3(offset, size, addr);
+    var.setArray3(offset, size, addr);              // Set the addr
     putLevel(var, label, matlIndx, levelIndx);
   }
   levelDBLock.writeUnlock();
