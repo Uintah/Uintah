@@ -78,6 +78,13 @@ void Burger::scheduleInitialize(const LevelP& level,
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 }
 //______________________________________________________________________
+//
+void Burger::scheduleRestartInitialize(const LevelP& level,
+                                       SchedulerP& sched)
+{
+}
+
+//______________________________________________________________________
 // 
 void Burger::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)

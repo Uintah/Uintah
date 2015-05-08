@@ -73,6 +73,7 @@ class PressureSource : public Expr::Expression<SVolField>
 
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
+  const Wasatch::VarDenParameters varDenParams_;
   
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;

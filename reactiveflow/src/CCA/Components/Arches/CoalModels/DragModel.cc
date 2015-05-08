@@ -59,6 +59,9 @@ DragModel::DragModel( std::string modelName,
   //constants
   _pi = acos(-1.0);
 
+  //initialize
+  _birth_label = NULL; 
+
 }
 
 DragModel::~DragModel()
@@ -103,8 +106,7 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
 
   // Need a density
   std::string density_root = ParticleHelper::parse_for_role_to_label(db, "density"); 
-  std::string density_name = ParticleHelper::append_env( density_root, d_quadNode ); 
-  _rhop_varlabel = VarLabel::find(density_name); 
+  _density_name = ParticleHelper::append_env( density_root, d_quadNode ); 
 
   // Need velocity scaling constant
   std::string vel_root; 
@@ -120,14 +122,21 @@ DragModel::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& temp_current_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(vel_root);
   DQMOMEqn& current_eqn = dynamic_cast<DQMOMEqn&>(temp_current_eqn);
   _vel_scaling_constant = current_eqn.getScalingConstant(d_quadNode);
-  std::string ic_convection = vel_root+"_Fconv";
-  std::string ic_diffusion = vel_root+"_Fdiff";
-  _conv_source_varlabel = VarLabel::find(ic_convection);
-  _diff_source_varlabel = VarLabel::find(ic_diffusion);
+  std::string ic_RHS = vel_root+"_RHS";
+  _RHS_source_varlabel = VarLabel::find(ic_RHS);
+
+  //get the birth term if any: 
+  const std::string birth_name = current_eqn.get_model_by_type( "SimpleBirth" ); 
+  std::string birth_qn_name = ParticleHelper::append_qn_env(birth_name, d_quadNode); 
+  if ( birth_name != "NULLSTRING" ){ 
+    _birth_label = VarLabel::find( birth_qn_name ); 
+  }
 
   // Need weight name and scaling constant
   std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
   _weight_varlabel = VarLabel::find(weight_name); 
+  std::string scaled_weight_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  _scaled_weight_varlabel = VarLabel::find(scaled_weight_name); 
   std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
   EqnBase& temp_current_eqn2 = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& current_eqn2 = dynamic_cast<DQMOMEqn&>(temp_current_eqn2);
@@ -171,6 +180,12 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
 
   Task::WhichDW which_dw; 
 
+  _rhop_varlabel = VarLabel::find(_density_name); 
+
+  if ( _rhop_varlabel == 0 ){ 
+    throw InvalidValue("Error: Rho label not found for particle drag model.",__FILE__,__LINE__); 
+  }
+
   if (timeSubStep == 0 ) { 
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
@@ -181,13 +196,15 @@ DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeS
     which_dw = Task::NewDW; 
   }
 
-  tsk->requires( which_dw    , _rhop_varlabel                   , gn , 0 );
-  tsk->requires( which_dw    , _length_varlabel                 , gn , 0 );
-  tsk->requires( which_dw    , _weight_varlabel                 , gn , 0 );
-  tsk->requires( Task::NewDW , _conv_source_varlabel            , gn , 0 );
-  tsk->requires( Task::NewDW , _diff_source_varlabel            , gn , 0 );
-  tsk->requires( which_dw    , d_fieldLabels->d_CCVelocityLabel , gn , 0 );
-  tsk->requires( which_dw    , d_fieldLabels->d_densityCPLabel  , gn , 0 );
+  tsk->requires( Task::NewDW, _rhop_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _length_varlabel, gn, 0 );
+  tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _scaled_weight_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, d_fieldLabels->d_CCVelocityLabel, gn, 0 );
+  tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0 );
+  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
+  if ( _birth_label != NULL )
+    tsk->requires( Task::NewDW, _birth_label, gn, 0 ); 
 
   // require particle velocity
   ArchesLabel::PartVelMap::const_iterator i = d_fieldLabels->partVel.find(d_quadNode);
@@ -219,6 +236,9 @@ DragModel::computeModel( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    Vector Dx = patch->dCell(); 
+    double vol = Dx.x()* Dx.y()* Dx.z(); 
+    
     CCVariable<double> model; 
     CCVariable<double> gas_source;
     DataWarehouse* which_dw; 
@@ -240,18 +260,24 @@ DragModel::computeModel( const ProcessorGroup* pc,
     constCCVariable<double> den;
     which_dw->get(den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> rho_p; 
-    which_dw->get( rho_p  , _rhop_varlabel   , matlIndex , patch , gn , 0 );
+    new_dw->get( rho_p  , _rhop_varlabel   , matlIndex , patch , gn , 0 );
     constCCVariable<double> l_p; 
     which_dw->get( l_p    , _length_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> weight; 
     which_dw->get( weight , _weight_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> scaled_weight; 
+    which_dw->get( scaled_weight, _scaled_weight_varlabel, matlIndex, patch, gn, 0 ); 
     constCCVariable<Vector> partVel;
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
-    constCCVariable<double> conv_source; 
-    new_dw->get( conv_source , _conv_source_varlabel , matlIndex , patch , gn , 0 );
-    constCCVariable<double> diff_source; 
-    new_dw->get( diff_source , _diff_source_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> RHS_source; 
+    new_dw->get( RHS_source , _RHS_source_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> birth;
+    bool add_birth = false; 
+    if ( _birth_label != NULL ){
+      new_dw->get( birth, _birth_label, matlIndex, patch, gn, 0 ); 
+      add_birth = true; 
+    } 
 
     delt_vartype DT;    
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
@@ -261,7 +287,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
 
       IntVector c = *iter;
 
-      if (weight[c]/_weight_scaling_constant > _weight_small) {
+      if (scaled_weight[c] > _weight_small) {
  
         Vector gas_vel = gasVel[c];
         Vector part_vel = partVel[c];
@@ -269,8 +295,7 @@ DragModel::computeModel( const ProcessorGroup* pc,
         double rho_pph=rho_p[c]; 
         double l_pph=l_p[c]; 
         double weightph=weight[c];
-        double conv_sourceph=conv_source[c];
-        double diff_sourceph=diff_source[c];
+        double RHS_sourceph=RHS_source[c];
 
         // Verification
         //denph=0.394622;
@@ -311,10 +336,15 @@ DragModel::computeModel( const ProcessorGroup* pc,
         double tau=t_p/f;
         // add rate clipping if drag time scale is smaller than dt..
         if (tau > dt ){
-          model[c] = weightph * ( f / t_p * (gas_vel[_dir]-part_vel[_dir])+_gravity[_dir]) / (_vel_scaling_constant*_weight_scaling_constant);
+          model[c] = scaled_weight[c] * ( f / t_p * (gas_vel[_dir]-part_vel[_dir])+_gravity[_dir]) / (_vel_scaling_constant);
           gas_source[c] = -weightph * rho_pph / 6.0 * _pi * f / t_p * ( gas_vel[_dir]-part_vel[_dir] ) * pow(l_pph,3.0);
         } else {
-          model[c] = (weightph/(_vel_scaling_constant*_weight_scaling_constant)) * (gas_vel[_dir]-part_vel[_dir]) / dt + conv_sourceph - diff_sourceph; 
+          //model[c] = (weightph/(_vel_scaling_constant*_weight_scaling_constant)) * (gas_vel[_dir]-part_vel[_dir]) / dt -  RHS_sourceph/vol; 
+          if ( add_birth ){ 
+            model[c] = scaled_weight[c] / _vel_scaling_constant * ( gas_vel[_dir] - part_vel[_dir] ) / dt - ( RHS_sourceph / vol + birth[c] );
+          } else { 
+            model[c] = scaled_weight[c] / _vel_scaling_constant * ( gas_vel[_dir] - part_vel[_dir] ) / dt - ( RHS_sourceph / vol );
+          }
           gas_source[c] = 0.0;
         }
 

@@ -10,6 +10,7 @@
       <artificial_viscosity_coeff2        spec="OPTIONAL DOUBLE" />
       <refine_particles                   spec="OPTIONAL BOOLEAN" />
       <axisymmetric                       spec="OPTIONAL BOOLEAN" />
+      <AMR                                spec="OPTIONAL BOOLEAN" />
       <CanAddMPMMaterial                  spec="OPTIONAL BOOLEAN" />
       <create_new_particles               spec="OPTIONAL BOOLEAN" />  <!-- default is false -->
       <do_contact_friction_heating        spec="OPTIONAL BOOLEAN" />

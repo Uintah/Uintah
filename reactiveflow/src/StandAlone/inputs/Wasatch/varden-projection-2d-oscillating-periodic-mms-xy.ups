@@ -97,7 +97,7 @@
         <ReferencePressure value="0.0">
         	<ReferenceCell>[0,0,0]</ReferenceCell>
         </ReferencePressure>
-        <Use3DLaplacian>   true</Use3DLaplacian>
+        <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
@@ -105,7 +105,6 @@
             <maxiterations>  100   </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>
-
       </Pressure>
     </MomentumEquations>
 
@@ -127,7 +126,6 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.0005"/>
-    <compression>gzip</compression>
     <save label="density"/>
     <!-- save label="u*"/>
     <save label="v*"/>
@@ -162,7 +160,7 @@
       <Box label="1">
         <lower>[-1,-1,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[128,128,2]</resolution>
+        <resolution>[128,128,1]</resolution>
         <patches>[2,2,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

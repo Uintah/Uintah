@@ -12,6 +12,19 @@ if the_dir == "" :
 else :
   the_dir = the_dir + "/Wasatch"
 
+bc_gpu_x_ups = modUPS( the_dir, \
+                  "bc-test-svol-xdir.ups", \
+                   ["<patches>[1,1,1]</patches>"])
+bc_gpu_y_ups = modUPS( the_dir, \
+                  "bc-test-svol-ydir.ups", \
+                   ["<patches>[1,1,1]</patches>"])
+bc_gpu_z_ups = modUPS( the_dir, \
+                  "bc-test-svol-zdir.ups", \
+                   ["<patches>[1,1,1]</patches>"])
+bc_gpu_xyz_ups = modUPS( the_dir, \
+                  "bc-test-mixed.ups", \
+                   ["<patches>[1,1,1]</patches>"])
+                 
 scalarequationperf_ups = modUPS( the_dir, \
                                        "ScalarTransportEquation.ups", \
                                        ["<max_Timesteps> 40 </max_Timesteps>","<resolution>[400,400,400]</resolution>","<patches>[1,1,1]</patches>"])
@@ -129,6 +142,8 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+  ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-2dmms-tabulated", "varden-2dmms-tabulated.ups", 4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
 	("particle-test-interpolate-to-mesh.ups", "particle-test-interpolate-to-mesh.ups",  4,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("interior-bc-test", "interior-bc-test.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -209,11 +224,12 @@ NIGHTLYTESTS = [
   ("TabPropsInterface",             "TabPropsInterface.ups",             1,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-test-mixed",                 "bc-test-mixed.ups",                 4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("ScalarTransportEquation",       "ScalarTransportEquation.ups",       1,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
-  ("taylor-green-vortex-2d-xy",          "taylor-green-vortex-2d-xy.ups",          4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
-  ("taylor-green-vortex-2d-xz",          "taylor-green-vortex-2d-xz.ups",          4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
-  ("taylor-green-vortex-2d-yz",          "taylor-green-vortex-2d-yz.ups",          4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("taylor-green-vortex-2d-xy",     "taylor-green-vortex-2d-xy.ups",          4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("taylor-green-vortex-2d-xz",     "taylor-green-vortex-2d-xz.ups",          4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("taylor-green-vortex-2d-yz",     "taylor-green-vortex-2d-yz.ups",          4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("scalability-test",              "scalability-test.ups",              1,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
-  ("taylor-green-vortex-3d",          "taylor-green-vortex-3d.ups",          8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
+  ("scalability-test-uncoupled",    "scalability-test-uncoupled.ups",    1,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),  
+  ("taylor-green-vortex-3d",        "taylor-green-vortex-3d.ups",          8,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("bc-test-svol-xdir",             "bc-test-svol-xdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-test-svol-ydir",             "bc-test-svol-ydir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("bc-test-svol-zdir",             "bc-test-svol-zdir.ups",             4,  "Linux",  ["exactComparison","no_restart","no_memoryTest"] ),
@@ -296,6 +312,8 @@ RKTESTS=[
 ]
 
 VARDENTESTS=[
+  ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-2dmms-tabulated", "varden-2dmms-tabulated.ups", 4,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-3D-lowres-jet-IMPULSE",                    "varden-3D-lowres-jet-IMPULSE.ups",   8,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),
@@ -312,6 +330,7 @@ MISCTESTS=[
   ("force-on-graph-postprocessing-test",     "force-on-graph-postprocessing-test.ups",   4,  "All",  ["exactComparison","no_restart","no_memoryTest"] ),
   ("kinetic-energy-example",     "kinetic-energy-example.ups",   8,  "All",  ["exactComparison","no_restart"] ) ,
   ("scalability-test",              "scalability-test.ups",              1,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
+  ("scalability-test-uncoupled",    "scalability-test-uncoupled.ups",    1,  "All",  ["exactComparison","no_restart","do_not_validate"] ),    
   ("read-from-file-test",                      "read-from-file-test.ups",   8,  "All",   ["exactComparison","no_restart"] ),
   ("reduction-test",       "reduction-test.ups",  4,  "All",  ["exactComparison","no_restart"] ),
   ("lid-drive-cavity-xy-Re1000-adaptive",       liddrivencavityXYRe1000adaptive_ups,  4,  "All",  ["exactComparison","no_restart"] ),
@@ -356,7 +375,11 @@ SCALARTRANSPORTTESTS=[
 
 GPUTESTS=[
   ("BasicScalarTransportEquation", "BasicScalarTransportEquation.ups", 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
-  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
+  ("ScalarTransportEquation",      "ScalarTransportEquation.ups",      1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),
+  ("bc-test-svol-gpu-x"  , bc_gpu_x_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-y"  , bc_gpu_y_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),  
+  ("bc-test-svol-gpu-z"  , bc_gpu_z_ups,   1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "]),      
+  ("bc-test-svol-gpu-xyz", bc_gpu_xyz_ups, 1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("scalability-test",             "scalability-test.ups",             1, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-gpu -nthreads 2 "])
 #  ("taylor-green-vortex-2d-xy",    "taylor-green-vortex-2d-xy.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),
 #  ("taylor-green-vortex-2d-xz",    "taylor-green-vortex-2d-xz.ups",    4, "Linux", ["gpu", "no_restart", "no_memoryTest", "sus_options=-mpi -gpu -nthreads 2 "]),

@@ -51,7 +51,7 @@
             <NameTag name="z-vel" state="STATE_NONE"/>
         </Z-Velocity>        
         <DoDiffusion>true</DoDiffusion>
-        <DoSourceTerm>true</DoSourceTerm>
+        <DoSourceTerm kind="COUPLED">true</DoSourceTerm>
     </ScalabilityTest>
   </Wasatch>
 

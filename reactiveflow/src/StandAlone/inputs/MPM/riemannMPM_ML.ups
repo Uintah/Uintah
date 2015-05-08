@@ -99,6 +99,7 @@
         <interpolator>          linear    </interpolator>
         <artificial_viscosity>  true      </artificial_viscosity>
         <do_grid_reset>         true      </do_grid_reset>
+        <AMR>                   true      </AMR>
         <minimum_mass_for_acc>  1.0e-15   </minimum_mass_for_acc>
     </MPM>
    <!--__________________________________-->

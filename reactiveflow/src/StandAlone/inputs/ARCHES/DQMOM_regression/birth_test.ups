@@ -150,6 +150,18 @@
             <abscissa label="length"/>
             <small_weight>0.1</small_weight>
           </model>
+          <model label="ux_birth" type="SimpleBirth">
+            <abscissa label="ux"/>
+            <small_weight>0.1</small_weight>
+          </model>
+          <model label="uy_birth" type="SimpleBirth">
+            <abscissa label="uy"/>
+            <small_weight>0.1</small_weight>
+          </model>
+          <model label="uz_birth" type="SimpleBirth">
+            <abscissa label="uz"/>
+            <small_weight>0.1</small_weight>
+          </model>
           <model label="xdragforce" type="Drag">
             <direction>x</direction>
           </model>
@@ -222,6 +234,7 @@
           <nominal_values>[0.0, 0.0]</nominal_values>
           <scaling_const>[1,1]</scaling_const>
           <model label="xdragforce"/>
+          <model label="ux_birth"/>
         </Ic>
         <Ic label="uy">
           <doDiff>false</doDiff>
@@ -236,6 +249,7 @@
           <nominal_values>[0.0, 0.0]</nominal_values>
           <scaling_const>[1,1]</scaling_const>
           <model label="ydragforce"/>
+          <model label="uy_birth"/>
         </Ic>
         <Ic label="uz">
           <doDiff>false</doDiff>
@@ -250,6 +264,7 @@
           <nominal_values>[0.0, 0.0]</nominal_values>
           <scaling_const>[1,1]</scaling_const>
           <model label="zdragforce"/>
+          <model label="uz_birth"/>
         </Ic>
       </DQMOM>
 

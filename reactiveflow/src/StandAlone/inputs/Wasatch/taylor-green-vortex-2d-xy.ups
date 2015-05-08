@@ -113,7 +113,7 @@
       <Box label="1">
         <lower>[0,0,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[64,64,2]</resolution>
+        <resolution>[64,64,1]</resolution>
         <patches>[2,2,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

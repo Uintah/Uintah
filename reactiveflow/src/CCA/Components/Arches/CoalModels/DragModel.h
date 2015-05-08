@@ -98,8 +98,11 @@ private:
   const VarLabel* _length_varlabel;
   const VarLabel* _rhop_varlabel;
   const VarLabel* _weight_varlabel;
-  const VarLabel* _conv_source_varlabel;
-  const VarLabel* _diff_source_varlabel;
+  const VarLabel* _scaled_weight_varlabel; 
+  const VarLabel* _RHS_source_varlabel;
+  const VarLabel* _birth_label; 
+
+  std::string _density_name; 
 
   double _vel_scaling_constant; 
   double _weight_scaling_constant; 

@@ -47,7 +47,6 @@ public:
   RMCRT_Radiation( std::string srcName, 
                    ArchesLabel* labels, 
                    MPMArchesLabel* MAlab, 
-                   BoundaryCondition* bc, 
                    std::vector<std::string> reqLabelNames,
                    const ProcessorGroup* my_world, 
                    std::string type );
@@ -56,7 +55,7 @@ public:
 
   void problemSetup(const ProblemSpecP& db );
   
-  void extraSetup( GridP& grid );
+  void extraSetup( GridP& grid, BoundaryCondition* bc );
   
   void sched_computeSource( const LevelP& level, 
                             SchedulerP& sched, 
@@ -87,28 +86,27 @@ public:
       Builder( std::string name, 
                std::vector<std::string> required_label_names,
                ArchesLabel* labels, 
-               BoundaryCondition* bc, 
                const ProcessorGroup* my_world ) 
         : _name(name), 
           _labels(labels), 
-          _bc(bc), 
           _my_world(my_world), 
           _required_label_names(required_label_names){
           _type = "rmcrt_radiation"; 
-        };
-      ~Builder(){}; 
+        }
+
+      ~Builder(){}
 
       RMCRT_Radiation* build()
       { 
-        return scinew RMCRT_Radiation( _name, _labels, _MAlab, _bc, _required_label_names, _my_world, _type ); 
-      };
+        return scinew RMCRT_Radiation( _name, _labels, _MAlab, _required_label_names, _my_world, _type ); 
+      }
 
     private: 
+
       std::string         _name; 
       std::string         _type; 
       ArchesLabel*        _labels; 
       MPMArchesLabel*     _MAlab;
-      BoundaryCondition*  _bc; 
       const ProcessorGroup* _my_world; 
       std::vector<std::string> _required_label_names;
 
@@ -116,6 +114,23 @@ public:
   //______________________________________________________________________
   //
 private:
+     //______________________________________________________________________
+     //   Boundary Conditions
+    void  sched_setBoundaryConditions( const LevelP& level,
+                                       SchedulerP& sched,
+                                       Task::WhichDW temp_dw,
+                                       const int radCalc_freq,
+                                       const bool backoutTemp = false);
+
+    template< class T >
+    void setBoundaryConditions( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse*,
+                                DataWarehouse* new_dw,
+                                Task::WhichDW temp_dw,
+                                const int radCalc_freq,
+                                const bool backoutTemp );
 
   //__________________________________
   //
@@ -130,16 +145,19 @@ private:
   Ray* _RMCRT;
   ArchesLabel*    _labels; 
   MPMArchesLabel* _MAlab;
-  BoundaryCondition* _bc; 
+  BoundaryCondition* _boundaryCondition; 
   const ProcessorGroup* _my_world;
   SimulationStateP      _sharedState;
-  ProblemSpecP          _ps;  // needed for extraSetup()
+  ProblemSpecP          _ps;              // needed for extraSetup()
  
   std::string _abskg_label_name; 
   std::string _T_label_name; 
+  const VarLabel* _abskgLabel;
+  const VarLabel* _tempLabel;
   
   Ghost::GhostType _gn;
   Ghost::GhostType _gac;
+  TypeDescription::Type _FLT_DBL;        // Is RMCRT algorithm using doubles or floats for communicated variables
 
 }; // end RMCRT
 } // end namespace Uintah

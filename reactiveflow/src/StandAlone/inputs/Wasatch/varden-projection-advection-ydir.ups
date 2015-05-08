@@ -138,7 +138,6 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
-    <compression>gzip</compression>
     <save label="density"/>
     <save label="y-mom"/>
     <save label="y-mom_rhs_partial"/>
@@ -181,7 +180,7 @@
       <Box label="1">
         <lower>[0,-15,0]</lower>
         <upper>[1,15,1]</upper>
-        <resolution>[2,256,2]</resolution>
+        <resolution>[1,256,1]</resolution>
         <patches>[1,9,1]</patches>
       </Box>
       <periodic>[1,0,1]</periodic>

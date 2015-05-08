@@ -37,6 +37,7 @@ namespace Uintah{
   class ProcessorGroup;
   class VarLabel;
   class DataWarehouse;
+  class Ray;
 }
 
 /**
@@ -54,7 +55,8 @@ public:
   CellType();
   ~CellType();
   
-  void schedule_compute_celltype(const Uintah::PatchSet* const patches,
+  void schedule_compute_celltype(Uintah::Ray* rmcrt,
+                                 const Uintah::PatchSet* const patches,
                                  const Uintah::MaterialSet* const materials,
                                  Uintah::SchedulerP& sched);
   
@@ -69,7 +71,8 @@ private:
                         const Uintah::PatchSubset* const patches,
                         const Uintah::MaterialSubset* const materials,
                         Uintah::DataWarehouse* const oldDW,
-                        Uintah::DataWarehouse* const newDW);
+                        Uintah::DataWarehouse* const newDW,
+                        Uintah::Ray* rmcrt_);
 
   void carry_forward(const Uintah::ProcessorGroup* const pg,
                         const Uintah::PatchSubset* const patches,

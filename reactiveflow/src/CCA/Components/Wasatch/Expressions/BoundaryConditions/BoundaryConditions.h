@@ -28,6 +28,7 @@
 #include "BoundaryConditionBase.h"
 #include <expression/Expression.h>
 
+//-------------------------------------------------------------------------------------------------
 /**
  *  \class 	ConstantBC
  *  \ingroup 	Expressions
@@ -46,7 +47,9 @@ class ConstantBC : public BoundaryConditionBase<FieldT>
 public:
   ConstantBC( const double bcValue) :
   bcValue_(bcValue)
-  {}
+  {
+    this->set_gpu_runnable(true);
+  }
   
   class Builder : public Expr::ExpressionBuilder
   {
@@ -59,7 +62,7 @@ public:
     : ExpressionBuilder(resultTag),
       bcValue_(bcValue)
     {}
-    Expr::ExpressionBase* build() const{ return new ConstantBC(bcValue_); }
+    inline Expr::ExpressionBase* build() const{ return new ConstantBC(bcValue_); }
   private:
     const double bcValue_;
   };
@@ -71,6 +74,7 @@ private:
   const double bcValue_;
 };
 
+//-------------------------------------------------------------------------------------------------
 /**
  *  \class 	OneSidedDirichletBC
  *  \ingroup 	Expressions
@@ -102,7 +106,7 @@ public:
     : ExpressionBuilder(resultTag),
       bcValue_(bcValue)
     {}
-    Expr::ExpressionBase* build() const{ return new OneSidedDirichletBC(bcValue_); }
+    inline Expr::ExpressionBase* build() const{ return new OneSidedDirichletBC(bcValue_); }
   private:
     const double bcValue_;
   };
@@ -114,6 +118,7 @@ private:
   const double bcValue_;
 };
 
+//-------------------------------------------------------------------------------------------------
 /**
  *  \class 	LinearBC
  *  \ingroup 	Expressions
@@ -132,7 +137,8 @@ class LinearBC : public BoundaryConditionBase<FieldT>
             const double b )
   : a_(a), b_(b)
   {
-     x_ = this->template create_field_request<FieldT>(indepVarTag);
+    this->set_gpu_runnable(true);
+    x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -146,7 +152,7 @@ public:
       indepVarTag_ (indepVarTag),
       a_(a), b_(b)
     {}
-    Expr::ExpressionBase* build() const{ return new LinearBC(indepVarTag_, a_, b_); }
+    inline Expr::ExpressionBase* build() const{ return new LinearBC(indepVarTag_, a_, b_); }
   private:
     const Expr::Tag indepVarTag_;
     const double a_, b_;
@@ -160,7 +166,7 @@ private:
   const double a_, b_;
 };
 
-
+//-------------------------------------------------------------------------------------------------
 /**
  *  \class 	ParabolicBC
  *  \ingroup 	Expressions
@@ -179,7 +185,8 @@ class ParabolicBC : public BoundaryConditionBase<FieldT>
                const double c, const double x0 )
   : a_(a), b_(b), c_(c), x0_(x0)
   {
-     x_ = this->template create_field_request<FieldT>(indepVarTag);
+    this->set_gpu_runnable(true);
+    x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -201,7 +208,7 @@ public:
       indepVarTag_ (indepVarTag),
       a_(a), b_(b), c_(c), x0_(x0)
     {}
-    Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_, x0_); }
+    inline Expr::ExpressionBase* build() const{ return new ParabolicBC(indepVarTag_, a_, b_, c_, x0_); }
   private:
     const Expr::Tag indepVarTag_;
     const double a_, b_, c_, x0_;
@@ -215,6 +222,7 @@ private:
   const double a_, b_, c_, x0_;
 };
 
+//-------------------------------------------------------------------------------------------------
 /**
  *  \class 	PowerLawBC
  *  \ingroup 	Expressions
@@ -233,7 +241,8 @@ class PowerLawBC : public BoundaryConditionBase<FieldT>
              const double halfHeight, const double n )
   : x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
   {
-     x_ = this->template create_field_request<FieldT>(indepVarTag);
+    this->set_gpu_runnable(true);
+    x_ = this->template create_field_request<FieldT>(indepVarTag);
   }
 public:
   class Builder : public Expr::ExpressionBuilder
@@ -247,7 +256,7 @@ public:
       indepVarTag_ (indepVarTag),
       x0_(x0), phic_(phiCenter), R_(halfHeight), n_(n)
     {}
-    Expr::ExpressionBase* build() const{ return new PowerLawBC(indepVarTag_, x0_, phic_, R_, n_); }
+    inline Expr::ExpressionBase* build() const{ return new PowerLawBC(indepVarTag_, x0_, phic_, R_, n_); }
   private:
     const Expr::Tag indepVarTag_;
     const double x0_, phic_, R_, n_;
@@ -261,6 +270,7 @@ private:
   const double    x0_, phic_, R_, n_;
 };
 
+//-------------------------------------------------------------------------------------------------
 /**
  *  \class 	BCCopier
  *  \ingroup 	Expressions
@@ -287,7 +297,7 @@ public:
     : ExpressionBuilder(resultTag),
       srcTag_ (srcTag)
     {}
-    Expr::ExpressionBase* build() const{ return new BCCopier(srcTag_); }
+    inline Expr::ExpressionBase* build() const{ return new BCCopier(srcTag_); }
   private:
     const Expr::Tag srcTag_;
   };
@@ -298,7 +308,7 @@ private:
   DECLARE_FIELD(FieldT, src_)
 };
 
-
+//-------------------------------------------------------------------------------------------------
 /**
  *  \class 	BCPrimVar
  *  \ingroup 	Expressions
@@ -317,7 +327,8 @@ class BCPrimVar
            const Expr::Tag& densityTag) :
   hasDensity_(densityTag != Expr::Tag() )
   {
-     src_ = this->template create_field_request<FieldT>(srcTag);
+    this->set_gpu_runnable(true);
+    src_ = this->template create_field_request<FieldT>(srcTag);
     if (hasDensity_)  rho_ = this->template create_field_request<SVolField>(densityTag);
   }
 public:
@@ -331,17 +342,33 @@ public:
     srcTag_ (srcTag),
     densityTag_(densityTag)
     {}
-    Expr::ExpressionBase* build() const{ return new BCPrimVar(srcTag_, densityTag_); }
+    inline Expr::ExpressionBase* build() const{ return new BCPrimVar(srcTag_, densityTag_); }
   private:
     const Expr::Tag srcTag_, densityTag_;
   };
   
   ~BCPrimVar(){}
   void evaluate();
+  void bind_operators( const SpatialOps::OperatorDatabase& opdb );
 private:
   const bool hasDensity_;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type DenInterpT;
+  const DenInterpT* rhoInterpOp_;
+
+  typedef typename SpatialOps::BasicOpTypes<FieldT>::GradX      GradX;
+  typedef typename SpatialOps::BasicOpTypes<FieldT>::GradY      GradY;
+  typedef typename SpatialOps::BasicOpTypes<FieldT>::GradZ      GradZ;
+  
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<GradX> Neum2XOpT;
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<GradY> Neum2YOpT;
+  typedef typename SpatialOps::NeboBoundaryConditionBuilder<GradZ> Neum2ZOpT;
+  const Neum2XOpT* neux_;
+  const Neum2YOpT* neuy_;
+  const Neum2ZOpT* neuz_;
+  
   DECLARE_FIELD(FieldT, src_)
   DECLARE_FIELD(SVolField, rho_)
 };
 
+//-------------------------------------------------------------------------------------------------
 #endif // BoundaryConditions_h

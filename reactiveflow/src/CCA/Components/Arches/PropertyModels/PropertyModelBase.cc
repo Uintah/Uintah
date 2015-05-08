@@ -55,7 +55,8 @@ PropertyModelBase::commonProblemSetup( const ProblemSpecP& inputdb )
     db_init->getWithDefault( "shift", _shift_gauss, 0.0 ); 
 
     _init_type = "gaussian";
-
+  } else if ( type == "physical" ){ 
+    _init_type = "physical"; 
   } else { 
 
     throw ProblemSetupException( "Error: Property model initialization not recognized.", __FILE__, __LINE__);

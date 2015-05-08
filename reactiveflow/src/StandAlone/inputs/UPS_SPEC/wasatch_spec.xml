@@ -661,7 +661,7 @@
                         
     <TaylorVortexMMS      spec="MULTIPLE NO_DATA"
                           attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                          children1="ONE_OF(CHILD VelocityX,VelocityY,GradPX,GradPY,TGVel3D)" >
+                          children1="ONE_OF(CHILD VelocityX,VelocityY,GradP,TGVel3D)" >
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       
@@ -707,28 +707,13 @@
       </VelocityY>
       
       <!-- Taylor Vortex Pressure field gradient function in x direction with amplitude and kinematic viscosity -->
-      <GradPX             spec="OPTIONAL NO_DATA"
+      <GradP             spec="OPTIONAL NO_DATA"
                           attribute1="amplitude REQUIRED DOUBLE"
                           attribute2="viscosity REQUIRED DOUBLE">
-        <XCoordinate      spec="REQUIRED NO_DATA">
+        <Coordinate      spec="REQUIRED NO_DATA">
           <NameTag        spec="REQUIRED"/>
-        </XCoordinate>
-        <YCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </YCoordinate>
-      </GradPX>
-
-      <!-- Taylor Vortex Pressure field gradient function in y direction with amplitude and kinematic viscosity -->
-      <GradPY             spec="OPTIONAL NO_DATA"
-                          attribute1="amplitude REQUIRED DOUBLE"
-                          attribute2="viscosity REQUIRED DOUBLE">
-        <XCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </XCoordinate>
-        <YCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </YCoordinate>
-      </GradPY>
+        </Coordinate>
+      </GradP>
 
     </TaylorVortexMMS>
     
@@ -749,8 +734,9 @@
     <!-- CAUTION! FOR DEVELOPER USE ONLY -->
     <!-- =========================================================================== -->
     <VariableDensity spec="OPTIONAL NO_DATA" 
-                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, DYNAMIC'"
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, SMOOTHIMPULSE, DYNAMIC'"
                      attribute2="coefficient REQUIRED DOUBLE">
+      <ImpulseWidth spec="OPTIONAL DOUBLE" need_applies_to="model SMOOTHIMPULSE"/>
       <UseOnePredictor spec="OPTIONAL NO_DATA"/>
     </VariableDensity>
     
@@ -863,7 +849,8 @@
         <Z-Velocity         spec="OPTIONAL NO_DATA"> 
             <NameTag        spec="REQUIRED"/>
         </Z-Velocity>        
-        <DoSourceTerm       spec="REQUIRED BOOLEAN"/>
+        <DoSourceTerm       spec="REQUIRED BOOLEAN"
+                            attribute1="kind REQUIRED STRING 'COUPLED, UNCOUPLED'"/>
     </ScalabilityTest>
 
     <!-- ======================================================================== -->

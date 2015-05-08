@@ -136,7 +136,7 @@
 			<Box label="1">
 				<lower>[0,0,0]</lower>
 				<upper>[0.01,1,1]</upper>
-				<resolution>[2,64,64]</resolution>
+				<resolution>[1,64,64]</resolution>
 				<!--extraCells>[1,1,0]</extraCells-->
 				<patches>[1,2,2]</patches>
 			</Box>

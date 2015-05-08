@@ -48,18 +48,23 @@ namespace Uintah{
       /** @brief Compute the heat tranfer to the walls/tubes **/
       void sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_substep );
 
+      /** @brief Copy the real T wall (only for wall cells) into the temperature field AFTER table lookup. **/ 
+      void sched_copyWallTintoT( const LevelP& level, SchedulerP& sched );
+
       struct HTVariables {
 
         CCVariable<double> T; 
         CCVariable<double> T_copy; 
+        CCVariable<double> T_real; 
+        constCCVariable<double> T_real_old; 
         constCCVariable<double> T_old;
         constCCVariable<int> celltype; 
-        CCVariable<double > incident_hf_e; 
-        CCVariable<double > incident_hf_w; 
-        CCVariable<double > incident_hf_n; 
-        CCVariable<double > incident_hf_s; 
-        CCVariable<double > incident_hf_t; 
-        CCVariable<double > incident_hf_b; 
+        constCCVariable<double> incident_hf_e; 
+        constCCVariable<double> incident_hf_w; 
+        constCCVariable<double> incident_hf_n; 
+        constCCVariable<double> incident_hf_s; 
+        constCCVariable<double> incident_hf_t; 
+        constCCVariable<double> incident_hf_b; 
         CCVariable<Stencil7> total_hf; 
         constCCVariable<Vector > cc_vel; 
         WallModelDriver::RAD_MODEL_TYPE model_type; 
@@ -88,6 +93,7 @@ namespace Uintah{
       const VarLabel* _HF_T_label; 
       const VarLabel* _HF_B_label; 
       const VarLabel* _Total_HF_label; 
+      const VarLabel* _True_T_Label; 
 
       void doWallHT( const ProcessorGroup* my_world,
                      const PatchSubset* patches, 
@@ -95,6 +101,12 @@ namespace Uintah{
                      DataWarehouse* old_dw, 
                      DataWarehouse* new_dw, 
                      const int time_substep );
+
+      void copyWallTintoT( const ProcessorGroup* my_world,
+                           const PatchSubset* patches, 
+                           const MaterialSubset* matls, 
+                           DataWarehouse* old_dw, 
+                           DataWarehouse* new_dw );
 
       //void doWallHT_alltoall( const ProcessorGroup* my_world,
       //                        const PatchSubset* patches, 
@@ -177,7 +189,7 @@ namespace Uintah{
           virtual ~HTModelBase(){}; 
 
           virtual void problemSetup( const ProblemSpecP& input_db ) = 0;
-          virtual void computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ) = 0; 
+          virtual void computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ) = 0; 
           virtual void copySolution( const Patch* patch, CCVariable<double>& T, constCCVariable<double>& T_old, constCCVariable<int>& cell_type ) = 0; 
 
         private: 
@@ -214,7 +226,7 @@ namespace Uintah{
           ~SimpleHT(); 
 
           void problemSetup( const ProblemSpecP& input_db ); 
-          void computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ); 
+          void computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ); 
           void copySolution( const Patch* patch, CCVariable<double>& T, constCCVariable<double>& T_copy, constCCVariable<int>& cell_type ); 
 
         private: 
@@ -242,7 +254,7 @@ namespace Uintah{
           ~RegionHT(); 
 
           void problemSetup( const ProblemSpecP& input_db ); 
-          void computeHT( const Patch* patch, const HTVariables& vars, CCVariable<double>& T ); 
+          void computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ); 
           void copySolution( const Patch* patch, CCVariable<double>& T, constCCVariable<double>& T_copy, constCCVariable<int>& cell_type ); 
 
         private: 
@@ -256,39 +268,39 @@ namespace Uintah{
           struct WallInfo { 
               double k; 
               double dy;
-        double emissivity; 
+              double emissivity; 
               double T_inner; 
               double relax;     ///< A relaxation coefficient to help stability (eg, wall temperature changes too fast)...but not necessarily with accuracy
               double max_TW;     ///< maximum wall temperature
               double min_TW;     ///< minimum wall temperature
-            std::vector<GeometryPieceP> geometry; 
+              std::vector<GeometryPieceP> geometry; 
           };
 
           std::vector<WallInfo> _regions; 
 
           std::vector<IntVector> _d; 
 
-          inline constCCVariable<double> get_flux( int i, const HTVariables& vars ){ 
+          inline constCCVariable<double>* get_flux( int i, HTVariables& vars ){ 
 
-            constCCVariable<double> q; 
+            constCCVariable<double>* q; 
             switch (i) {
               case 0:
-                q = vars.incident_hf_w;
+                q = &(vars.incident_hf_w);
                 break; 
               case 1:
-                q = vars.incident_hf_e;
+                q = &(vars.incident_hf_e);
                 break; 
               case 2:
-                q = vars.incident_hf_s;
+                q = &(vars.incident_hf_s);
                 break; 
               case 3:
-                q = vars.incident_hf_n;
+                q = &(vars.incident_hf_n);
                 break; 
               case 4:
-                q = vars.incident_hf_b;
+                q = &(vars.incident_hf_b);
                 break; 
               case 5:
-                q = vars.incident_hf_t;
+                q = &(vars.incident_hf_t);
                 break; 
               default: 
                 break; 

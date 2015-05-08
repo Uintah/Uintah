@@ -107,7 +107,6 @@
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.02"/>
-    <compression>gzip</compression>
     <save label="density"/>
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
@@ -150,7 +149,7 @@
       <Box label="1">
         <lower>[-15,0,0]</lower>
         <upper>[15,1,1]</upper>
-        <resolution>[256,2,2]</resolution>
+        <resolution>[256,1,1]</resolution>
         <patches>[3,1,1]</patches>
       </Box>
       <periodic>[0,1,1]</periodic>

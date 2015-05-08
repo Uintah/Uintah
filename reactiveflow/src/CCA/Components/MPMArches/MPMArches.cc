@@ -283,6 +283,13 @@ void MPMArches::scheduleInitialize(const LevelP& level,
 
 //______________________________________________________________________
 //
+void MPMArches::scheduleRestartInitialize(const LevelP& level,
+                                          SchedulerP& sched)
+{
+}
+
+//______________________________________________________________________
+//
 
 void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
     const PatchSet* patches,

@@ -463,13 +463,6 @@ Radiometer::radiometer( const ProcessorGroup* pg,
   //
   MTRand mTwister;
 
-  // Determine the size of the domain.
-  IntVector domainLo, domainHi;
-  IntVector domainLo_EC, domainHi_EC;
-
-  level->findInteriorCellIndexRange(domainLo, domainHi);     // excluding extraCells
-  level->findCellIndexRange(domainLo_EC, domainHi_EC);       // including extraCells
-
   DataWarehouse* abskg_dw    = new_dw->getOtherDataWarehouse(which_abskg_dw);
   DataWarehouse* sigmaT4_dw  = new_dw->getOtherDataWarehouse(whichd_sigmaT4_dw);
   DataWarehouse* celltype_dw = new_dw->getOtherDataWarehouse(which_celltype_dw);
@@ -478,9 +471,9 @@ Radiometer::radiometer( const ProcessorGroup* pg,
   constCCVariable< T > abskg;
   constCCVariable<int>    celltype;
 
-  abskg_dw->getRegion(   abskg   ,       d_abskgLabel ,   d_matl , level, domainLo_EC, domainHi_EC );
-  sigmaT4_dw->getRegion( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level, domainLo_EC, domainHi_EC );
-  celltype_dw->getRegion( celltype ,     d_cellTypeLabel, d_matl , level, domainLo_EC, domainHi_EC );
+  abskg_dw->getLevel(   abskg   ,       d_abskgLabel ,   d_matl , level );
+  sigmaT4_dw->getLevel( sigmaT4OverPi , d_sigmaT4Label,  d_matl , level );
+  celltype_dw->getLevel( celltype ,     d_cellTypeLabel, d_matl , level );
 
   //__________________________________
   // patch loop
