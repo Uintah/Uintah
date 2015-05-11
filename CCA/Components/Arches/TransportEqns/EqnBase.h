@@ -279,8 +279,6 @@ protected:
 
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
-  double curr_ssp_time;             ///< Current value of time considering ssp averaging  
-  double curr_time;                 ///< "old" time (t)
   int _stage;                       ///< At which algorithmic stage should this be computed. 
   std::vector<double> d_scalingConstant;         ///< Value by which to scale values 
 
