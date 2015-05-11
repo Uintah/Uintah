@@ -1335,9 +1335,11 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
+                  int3 nCells    = make_int3(device_hi.x-device_low.x, device_hi.y-device_low.y, device_hi.z-device_low.z);
                   gpu_stats << myRankThread() 
-                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
-                            << ", size (bytes) = "  << std::dec << host_bytes
+                            << " Post H2D copy of REQUIRES (" << std::setw(26) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID<< ", "
+                            << std::setw(10) << "Bytes: "  << std::dec << host_bytes <<", "
+                            << std::setw(10) << "nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"]"
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
@@ -1394,8 +1396,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 cerrLock.lock();
                 {
                   gpu_stats << myRankThread()
-                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
-                            << ", size (bytes) = "  << std::dec << host_bytes
+                            << " Post H2D copy of REQUIRES (" << std::setw(26) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID<< ", "
+                            << "Bytes = "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                 }
@@ -1450,8 +1452,8 @@ UnifiedScheduler::postH2DCopies( DetailedTask* dtask ) {
                 cerrLock.lock();
                 {
                   gpu_stats << myRankThread()
-                            << " Post H2D copy of REQUIRES (" << std::setw(15) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID
-                            << ", size (bytes) = "  << std::dec << host_bytes
+                            << " Post H2D copy of REQUIRES (" << std::setw(26) << reqVarName <<  "), L-" << levelID << ", patch: " << patchID<< ", "
+                            << "Bytes: "  << std::dec << host_bytes
                             << " from " << std::hex << host_ptr << " to " << std::hex <<  device_ptr
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
@@ -1596,9 +1598,9 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
                 cerrLock.lock();
                 {
                   gpu_stats << myRankThread()
-                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
-                            << ", Bytes = " << std::dec << num_bytes
-                            << " nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"], "
+                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID << ", "
+                            <<  std::setw(10) << "Bytes: " << std::dec << num_bytes << ", "
+                            <<  std::setw(10) << " nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"], "
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum() 
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
@@ -1624,8 +1626,8 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
                 cerrLock.lock();
                 {
                   gpu_stats << myRankThread()
-                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
-                            << ", Bytes = " << std::dec << num_bytes
+                            << " Allocated device memory for COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                            << ", Bytes: " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
@@ -1650,8 +1652,8 @@ UnifiedScheduler::preallocateDeviceMemory( DetailedTask* dtask )
                 cerrLock.lock();
                 {
                   gpu_stats << myRankThread()
-                            << " Allocated device memory for COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
-                            << ", Bytes = " << std::dec << num_bytes
+                            << " Allocated device memory for COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID
+                            << ", Bytes: " << std::dec << num_bytes
                             << " at " << std::hex << device_ptr << " on device " << std::dec << dtask->getDeviceNum()
                             << ", using stream " << std::hex << dtask->getCUDAStream()  << std::endl;
                 }
@@ -1801,9 +1803,9 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                   cerrLock.lock();
                   {
                     gpu_stats << myRankThread()
-                              << " Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
-                              << ", Bytes = " << std::dec << host_bytes
-                              << ", nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"]"
+                              << " Post D2H copy of COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID << ", "
+                              << std::setw(10) << "Bytes: " << std::dec << host_bytes << ", "
+                              << std::setw(10) << "nCells [" << nCells.x <<","<<nCells.y <<"," << nCells.z <<"]"
                               << ", from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                   }
@@ -1846,8 +1848,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                   cerrLock.lock();
                   {
                     gpu_stats << myRankThread()
-                              << " Post D2H copy of COMPUTES (" << std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
-                              << ", Bytes = " << std::dec << host_bytes
+                              << " Post D2H copy of COMPUTES (" << std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID<< ", "
+                              << std::setw(10) << "Bytes: " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream()<< std::endl;
                   }
@@ -1889,8 +1891,8 @@ UnifiedScheduler::postD2HCopies( DetailedTask* dtask )
                   cerrLock.lock();
                   {
                     gpu_stats << myRankThread()
-                              << "Post D2H copy of COMPUTES ("<< std::setw(15) << compVarName << "), L-" << levelID << ", patch: " << patchID
-                              << ", Bytes = " << std::dec << host_bytes
+                              << "Post D2H copy of COMPUTES ("<< std::setw(26) << compVarName << "), L-" << levelID << ", patch: " << patchID<< ", "
+                              << std::setw(10) << "Bytes: " << std::dec << host_bytes
                               << " from " << std::hex << device_ptr << " to " << std::hex << host_ptr
                               << ", using stream " << std::hex << dtask->getCUDAStream() << std::endl;
                   }
