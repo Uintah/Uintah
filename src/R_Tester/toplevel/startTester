@@ -22,6 +22,7 @@ USE_TREE="new"
 VERBOSE="no"
 COMMON_GROUP=""
 CHECKPOINTS=""
+MPIRUN=""
 
 ID=`date +%m%d%y`
 
@@ -59,7 +60,8 @@ if test "$MACHINE" = "albion" ; then
   TEMP_DIR=/home/rt/"$OS"
   SCRIPT_DIR=/home/rt/scripts
   CHECKPOINTS=/home/rt/CheckPoints
-  export TEST_COMPONENTS="GPU Examples" 
+  MPIRUN=/usr/local/openmpi/bin/mpirun
+  export TEST_COMPONENTS="GPU Examples"             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/home/rt/public_html/Uintah.html
