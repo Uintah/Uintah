@@ -218,6 +218,8 @@ private:
   bool d_norm_press;
   bool d_do_only_last_projection;
   bool d_use_ref_point; 
+  bool d_twod_ref;         ///< Creates a reference pencil for 2D problems (in third dimension)
+  int d_ref_dim;           ///< Used to move along with pencil dimension 
   double d_ref_value; 
   
   SolverInterface* d_hypreSolver;

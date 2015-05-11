@@ -4,6 +4,8 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
+#define SMALLNUM 1e-100
+
 using namespace Uintah;
 
 WallHFVariable::WallHFVariable( std::string task_name, int matl_index, SimulationStateP& shared_state ) : 
@@ -232,10 +234,8 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           darea += a; 
         }
 
-        if ( darea > 1.e-10 ){
-          (*total)[c] = total_in/darea; 
-          (*area)[c] = darea;
-        }
+        (*total)[c] = total_in/(darea+SMALLNUM); 
+        (*area)[c] = darea;
 
       }
     }
