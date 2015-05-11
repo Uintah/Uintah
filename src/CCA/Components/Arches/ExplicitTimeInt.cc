@@ -160,13 +160,10 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
       old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
       double dt = DT; 
 
-      double curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-      double curr_ssp_time = curr_time + time_factor[rkstep] * dt;
-
       singlePatchFEUpdate( patch, 
                           phi, 
                           rhs, 
-                          dt, curr_ssp_time, 
+                          dt, 
                           eqn_name);
     } 
   }
@@ -233,10 +230,7 @@ void ExplicitTimeInt::time_ave( const ProcessorGroup*,
       old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
       double dt = DT; 
 
-      double curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-      double curr_ssp_time = curr_time + time_factor[rkstep] * dt;
-
-      timeAvePhi( patch, phi, old_phi, rkstep, curr_ssp_time ); 
+      timeAvePhi( patch, phi, old_phi, rkstep ); 
 
     } 
   }

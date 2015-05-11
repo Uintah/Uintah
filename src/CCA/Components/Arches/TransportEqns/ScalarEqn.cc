@@ -437,9 +437,6 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
 
     }
 
-    curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-    curr_ssp_time = curr_time; 
-
   }
 }
 //---------------------------------------------------------------------------
@@ -700,7 +697,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     // ----FE UPDATE
     //     to get phi^{(j+1)}
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, d_eqnName);
 
     if ( clip.activated ) 
       clipPhi( patch, phi ); 
@@ -759,10 +756,6 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
 
-    // Compute the current RK time. 
-    double factor = d_timeIntegrator->time_factor[timeSubStep]; 
-    curr_ssp_time = curr_time + factor * dt;
-
     CCVariable<double> new_phi; 
     constCCVariable<double> old_phi;
     constCCVariable<double> new_den; 
@@ -774,7 +767,7 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     old_dw->get( old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
 
     //----Time averaging done here. 
-    d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
+    d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
 
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep
