@@ -748,7 +748,7 @@ namespace Wasatch{
           msg << "WARNING: Wasatch does NOT allow specification of setupFrequency for the pressure solver. "
           << "The setupFrequency will be determined by Wasatch."
           << std::endl;
-          std::cout << msg;
+          std::cout << msg.str();
           //throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
         }
         
