@@ -15,37 +15,37 @@
 
      <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="temperature" state="STATE_NONE"/>
+       <NameTag name="temperature"/>
        <Constant>543.21</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="MyTestVariable" state="STATE_NONE"/>
+       <NameTag name="MyTestVariable"/>
        <Constant>123.456</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="beta" state="STATE_NONE"/>
+       <NameTag name="beta"/>
        <Constant>5.4321</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="alpha" state="STATE_NONE"/>
+       <NameTag name="alpha"/>
        <Constant>5.4321</Constant>
      </BasicExpression>
      
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="phi1" state="STATE_NONE"/>
+       <NameTag name="phi1"/>
        <Constant>2.3</Constant>
      </BasicExpression>
 
      <BasicExpression type="SVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="phi2" state="STATE_NONE"/>
+       <NameTag name="phi2"/>
        <Constant>4.5</Constant>
      </BasicExpression>
 
@@ -54,12 +54,12 @@
        This mimics what would be done for an MMS where a source term is attached.
       -->
      <AttachDependency tasklist="advance_solution">
-       <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
-       <Target> <NameTag name="phi1" state="STATE_NONE"/> </Target>   
+       <Source> <NameTag name="alpha"/> </Source>   
+       <Target> <NameTag name="phi1"/> </Target>   
      </AttachDependency>
      <AttachDependency tasklist="advance_solution">
-       <Source> <NameTag name="alpha" state="STATE_NONE"/> </Source>   
-       <Target> <NameTag name="phi2" state="STATE_NONE"/> </Target>   
+       <Source> <NameTag name="alpha"/> </Source>   
+       <Target> <NameTag name="phi2"/> </Target>   
      </AttachDependency>
 
      <!--
@@ -68,8 +68,8 @@
        This forces it on. 
       -->
      <ForceOnGraph tasklist="advance_solution">
-       <NameTag name="phi1" state="STATE_NONE"/>
-       <NameTag name="phi2" state="STATE_NONE"/>
+       <NameTag name="phi1"/>
+       <NameTag name="phi2"/>
      </ForceOnGraph>
      
      <!--
@@ -77,10 +77,10 @@
        This will create two separate Uintah tasks.
      -->
      <Cleave from="CHILDREN">
-       <NameTag name="phi1" state="STATE_NONE"/>
+       <NameTag name="phi1"/>
      </Cleave>
      <!--Cleave from="PARENTS">
-       <NameTag name="beta" state="STATE_NONE"/>
+       <NameTag name="beta" />
      </Cleave-->
 
   </Wasatch>

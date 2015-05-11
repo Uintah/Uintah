@@ -12,13 +12,13 @@ For example:
         <Method>KOREN</Method> 
         <Direction>X</Direction>
         <AdvectiveVelocity>
-            <NameTag name="u" state="STATE_NONE"/>
+            <NameTag name="u" />
         </AdvectiveVelocity>
       </ConvectiveFlux>
 will be converted to
       <ConvectiveFlux direction="X" method="KOREN">
         <AdvectiveVelocity>
-            <NameTag name="u" state="STATE_NONE"/>
+            <NameTag name="u" />
         </AdvectiveVelocity>
       </ConvectiveFlux>
 

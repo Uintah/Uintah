@@ -16,25 +16,25 @@
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE"/>
+      <NameTag name="f"/>
       <GaussianFunction amplitude="0.1" deviation="2.0" mean="0.0" baseline="0.1">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </GaussianFunction> 
     </BasicExpression>
 
     <!-- Set the initial condition expression for heat loss -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="gamma" state="STATE_NONE"/>
+      <NameTag name="gamma"/>
       <SineFunction amplitude="0.5" frequency="0.2" offset="0.0">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </SineFunction> 
     </BasicExpression>
     
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>1.0</Constant>
     </BasicExpression>
     
@@ -44,21 +44,21 @@
       <TaskList>initialization</TaskList>
       
       <IndependentVariable>
-        <NameTag name="gamma" state="STATE_NONE"/>
+        <NameTag name="gamma"/>
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractVariable>
         <NameInTable>Density</NameInTable>
-        <NameTag name="density" state="STATE_NONE"/>
+        <NameTag name="density"/>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>Enthalpy</NameInTable>
-        <NameTag name="h" state="STATE_NONE"/>
+        <NameTag name="h"/>
       </ExtractVariable>
     </TabProps>
     
@@ -68,7 +68,7 @@
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <IndependentVariable>
@@ -87,19 +87,19 @@
 
       <ExtractVariable>
         <NameInTable>Conductivity</NameInTable>
-        <NameTag name="lambda" state="STATE_NONE"/>
+        <NameTag name="lambda"/>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>Temperature</NameInTable>
-        <NameTag name="T" state="STATE_NONE"/>
+        <NameTag name="T"/>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>Viscosity</NameInTable>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>SpecificHeat</NameInTable>
-        <NameTag name="cp" state="STATE_NONE"/>
+        <NameTag name="cp"/>
       </ExtractVariable>
             
     </TabProps>  
@@ -115,24 +115,24 @@
 
       <SolutionVariable>rhoh</SolutionVariable>
       <PrimitiveVariable>h</PrimitiveVariable>
-      <ThermalConductivity><NameTag name="lambda" state="STATE_NONE"/></ThermalConductivity>
-      <HeatCapacity><NameTag name="cp" state="STATE_NONE"/></HeatCapacity>
+      <ThermalConductivity><NameTag name="lambda"/></ThermalConductivity>
+      <HeatCapacity><NameTag name="cp"/></HeatCapacity>
       
     </TransportEquation>   
     
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_NONE"/>        
+        <NameTag name="f"/>        
       </FieldExpression>                    
     </FieldClipping>
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="-1.0" max="1.0">
-        <NameTag name="gamma" state="STATE_NONE"/>        
+        <NameTag name="gamma"/>        
       </FieldExpression>                    
     </FieldClipping>
       
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="T" state="STATE_NONE"/>
+      <NameTag name="T"/>
     </ForceOnGraph>
         
     <!-- Momentum transport equations -->
@@ -141,7 +141,7 @@
       <X-Momentum>x-mom</X-Momentum>
          
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity" />
       </Viscosity>
       
       <Pressure>

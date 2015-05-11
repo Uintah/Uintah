@@ -11,34 +11,34 @@
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vorticity_z" state="STATE_NONE"/>
+      <NameTag name="vorticity_z"/>
       <Vorticity>
       <Component>Z</Component>
       <Vel1>
-        <NameTag name="v" state="STATE_NONE"/>
+        <NameTag name="v"/>
       </Vel1>
       <Vel2>
-        <NameTag name="u" state="STATE_NONE"/>
+        <NameTag name="u"/>
       </Vel2>
       </Vorticity>
     </PostProcessingExpression>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_NONE"/>
+      <NameTag name="vel_magnitude"/>
       <VelocityMagnitude>
       <XVelocity>
-        <NameTag name="u" state="STATE_NONE"/>
+        <NameTag name="u"/>
       </XVelocity>
       <YVelocity>
-        <NameTag name="v" state="STATE_NONE"/>
+        <NameTag name="v"/>
       </YVelocity>
       </VelocityMagnitude>
     </PostProcessingExpression>
     
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vorticity_z" state="STATE_NONE"/>
-      <NameTag name="vel_magnitude" state="STATE_NONE"/>
+      <NameTag name="vorticity_z"/>
+      <NameTag name="vel_magnitude"/>
     </ForceOnGraph>
 
     <Density>
@@ -48,19 +48,19 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
@@ -72,7 +72,7 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>

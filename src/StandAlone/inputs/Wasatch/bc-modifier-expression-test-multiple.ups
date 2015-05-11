@@ -15,17 +15,17 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-dirichlet-a" state="STATE_NONE"/>
+      <NameTag name="phi-dirichlet-dirichlet-a"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     
 
     <BCExpression type="SVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="parabolic-inlet" state="STATE_NONE"/>
+      <NameTag name="parabolic-inlet"/>
       <ParabolicFunction type="GENERAL">
          <General a="-2560" b="640" c="-30"/>
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </ParabolicFunction>
     </BCExpression>
  

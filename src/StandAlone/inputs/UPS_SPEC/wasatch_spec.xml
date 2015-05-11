@@ -7,7 +7,7 @@
     -->
     <NameTag  spec="OPTIONAL NO_DATA"
               attribute1="name REQUIRED STRING"
-              attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'" />
+              attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'" />
 
 		<!-- ================================================================================== -->            
 		<!-- Specification of the diffusive flux -->

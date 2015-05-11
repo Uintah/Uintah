@@ -17,49 +17,49 @@
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_NONE"/>
+      <NameTag name="vel_magnitude"/>
       <VelocityMagnitude>
       <XVelocity>
-        <NameTag name="u" state="STATE_NONE"/>
+        <NameTag name="u"/>
       </XVelocity>
       <YVelocity>
-        <NameTag name="v" state="STATE_NONE"/>
+        <NameTag name="v"/>
       </YVelocity>
       <ZVelocity>
-        <NameTag name="w" state="STATE_NONE"/>
+        <NameTag name="w"/>
       </ZVelocity>
       </VelocityMagnitude>
     </PostProcessingExpression>
     
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="xvelcc" state="STATE_NONE"/>
+      <NameTag name="xvelcc"/>
       <InterpolateExpression type="XVOL">
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u"/>
       </InterpolateExpression>
     </PostProcessingExpression>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="yvelcc" state="STATE_NONE"/>
+      <NameTag name="yvelcc"/>
       <InterpolateExpression type="YVOL">
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v"/>
       </InterpolateExpression>
     </PostProcessingExpression>
   
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="zvelcc" state="STATE_NONE"/>
+      <NameTag name="zvelcc"/>
       <InterpolateExpression type="ZVOL">
-          <NameTag name="w" state="STATE_NONE"/>
+          <NameTag name="w"/>
       </InterpolateExpression>
     </PostProcessingExpression>
 
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vel_magnitude" state="STATE_NONE"/>
-      <NameTag name="xvelcc" state="STATE_NONE"/>
-      <NameTag name="yvelcc" state="STATE_NONE"/>
-      <NameTag name="zvelcc" state="STATE_NONE"/>
+      <NameTag name="vel_magnitude"/>
+      <NameTag name="xvelcc"/>
+      <NameTag name="yvelcc"/>
+      <NameTag name="zvelcc"/>
     </ForceOnGraph>
 
     <Density>
@@ -69,7 +69,7 @@
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-			<NameTag name="f" state="STATE_NONE"/>      
+			<NameTag name="f"/>      
       <GeometryBased value="0.0">
       	<Intrusion value="1.0">
       		<geom_object>
@@ -91,25 +91,25 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="w" state="STATE_NONE"/>
+       <NameTag name="w"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                        
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.0001</Constant>
     </BasicExpression>
 
@@ -118,17 +118,17 @@
       <SolutionVariable>f</SolutionVariable>
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Z" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="w" state="STATE_NONE"/>
+          <NameTag name="w"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <DiffusiveFlux direction="X" coefficient="0.0001"/>
@@ -151,7 +151,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>

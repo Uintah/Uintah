@@ -38,7 +38,7 @@
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="Turb_agg" state="STATE_NONE"/>
+      <NameTag name="Turb_agg"/>
       <TurbulentAggregationCoefficient>
         <KinematicViscosity>
           <NameTag name="kinviscos" state="STATE_N"/>
@@ -74,7 +74,7 @@
 
         <AggregationExpression>
           <AggregationCoefficientExpression>
-            <NameTag name="Turb_agg" state="STATE_NONE"/>
+            <NameTag name="Turb_agg"/>
           </AggregationCoefficientExpression>
           <AggregationModel> HYDRODYNAMIC </AggregationModel>
 
@@ -97,7 +97,7 @@
 
         <AggregationExpression>
           <AggregationCoefficientExpression>
-            <NameTag name="Turb_agg" state="STATE_NONE"/>
+            <NameTag name="Turb_agg"/>
           </AggregationCoefficientExpression>
           <AggregationModel> BROWNIAN </AggregationModel>
 <!--SizeDependentEfficiency>

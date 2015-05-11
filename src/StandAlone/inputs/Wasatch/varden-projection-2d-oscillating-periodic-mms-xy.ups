@@ -17,7 +17,7 @@
     <!-- Setup the parameters for variable density MMS -->
     <VarDenOscillatingMMS rho0="5.0" rho1="1.0" w="2.0" k="2.0" d="0.001" uf="0.5" vf="0.5">
        <DiffusionCoefficient>
-          <NameTag name="diffcoef" state="STATE_NONE"/>
+          <NameTag name="diffcoef"/>
        </DiffusionCoefficient>
        <Scalar>f</Scalar>    
        <ConservedScalar>rhof</ConservedScalar>           
@@ -25,21 +25,21 @@
 
     <TwoStreamMixing rho0="5.0" rho1="1.0">
       <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
-      <MixtureFraction> <NameTag name="f" state="STATE_NONE"/> </MixtureFraction>
+      <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
             
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
@@ -51,19 +51,19 @@
 
       <DiffusiveFlux direction="XY">
         <DiffusionCoefficient>
-          <NameTag name="diffcoef" state="STATE_NONE"/>
+          <NameTag name="diffcoef"/>
         </DiffusionCoefficient>
       </DiffusiveFlux>
 
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="u" state="STATE_NONE"/>
+            <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       
@@ -71,14 +71,14 @@
     
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_NONE"/>        
+        <NameTag name="f"/>        
       </FieldExpression>                    
     </FieldClipping>
         
       
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       <Constant>0.001</Constant>
     </BasicExpression>
         
@@ -90,7 +90,7 @@
       <Y-Momentum>y-mom</Y-Momentum>
          
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       <ComputeMassResidual/>
       <Pressure>

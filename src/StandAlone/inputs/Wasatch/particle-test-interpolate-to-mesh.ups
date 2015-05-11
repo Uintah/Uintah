@@ -10,7 +10,7 @@
     
     <PostProcessingExpression type="SVOL">
       <TaskList>post_processing</TaskList>
-      <NameTag name="pwcc" state="STATE_NONE"/>
+      <NameTag name="pwcc"/>
       <InterpolateExpression type="PARTICLE">
           <NameTag name="p.w" state="STATE_NP1"/>
           <ParticleInfo size="p.size" px="p.xw" py="p.yw" pz="p.zw"/>
@@ -19,7 +19,7 @@
 
     <PostProcessingExpression type="SVOL">
       <TaskList>post_processing</TaskList>
-      <NameTag name="psizecc" state="STATE_NONE"/>
+      <NameTag name="psizecc"/>
       <InterpolateExpression type="PARTICLE">
           <NameTag name="p.size" state="STATE_NP1"/>
           <ParticleInfo size="p.size" px="p.xw" py="p.yw" pz="p.zw"/>
@@ -27,19 +27,19 @@
     </PostProcessingExpression>
 
     <ForceOnGraph tasklist="post_processing">
-      <NameTag name="pwcc" state="STATE_NONE"/>
-      <NameTag name="psizecc" state="STATE_NONE"/>      
+      <NameTag name="pwcc"/>
+      <NameTag name="psizecc"/>      
     </ForceOnGraph>
 
     
     <ParticleTransportEquations>
       <ParticlesPerCell>10</ParticlesPerCell>
-      <ParticleDensity name="p.rho" state="STATE_NONE"/>
+      <ParticleDensity name="p.rho"/>
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
-        <SourceTerm name="nothing" state="STATE_NONE"/>
+        <SourceTerm name="nothing"/>
       </ParticleMass>
       <ParticleSize name="p.size" state="STATE_DYNAMIC">
-        <SourceTerm name="nothing" state="STATE_NONE"/>
+        <SourceTerm name="nothing"/>
       </ParticleSize>
       <ParticlePosition x="p.xw" y="p.yw" z="p.zw">
         <Velocity>
@@ -51,12 +51,12 @@
       <ParticleMomentum x="p.u" y="p.v" z="p.w">
         <Gravity direction="Z"/>
         <GasProperties>
-          <GasViscosity name="viscosity" state="STATE_NONE"/>
-          <GasDensity name="density" state="STATE_NONE"/>
+          <GasViscosity name="viscosity"/>
+          <GasDensity name="density"/>
           <GasVelocity>
-            <XVel name="u" state="STATE_NONE"/>
-            <YVel name="v" state="STATE_NONE"/>
-            <ZVel name="w" state="STATE_NONE"/>
+            <XVel name="u"/>
+            <YVel name="v"/>
+            <ZVel name="w"/>
           </GasVelocity>
         </GasProperties>
       </ParticleMomentum>
@@ -66,79 +66,79 @@
     </Density>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.size" state="STATE_NONE"/>
+      <NameTag name="p.size"/>
       <RandomField low="0.001" high="0.01" seed="11"/>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.rho" state="STATE_NONE"/>
+      <NameTag name="p.rho"/>
       <Constant>1000</Constant>
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.yw" state="STATE_NONE"/>
+      <NameTag name="p.yw"/>
       <ParticlePositionIC coordinate="Y" bounds="PATCHBASED">
         <Random seed="1"/>
       </ParticlePositionIC>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.xw" state="STATE_NONE"/>
+      <NameTag name="p.xw"/>
       <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
         <Random seed="3"/>
       </ParticlePositionIC>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.zw" state="STATE_NONE"/>
+      <NameTag name="p.zw"/>
       <Constant>0.02</Constant>
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.u" state="STATE_NONE"/>
+      <NameTag name="p.u"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.v" state="STATE_NONE"/>
+      <NameTag name="p.v"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="PARTICLE">
       <TaskList>initialization</TaskList>
-      <NameTag name="p.w" state="STATE_NONE"/>
+      <NameTag name="p.w"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <!-- Set the initial condition expression for momentum -->
     <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="u" state="STATE_NONE"/>
+      <NameTag name="u"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="u" state="STATE_NONE"/>
+      <NameTag name="u"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="v" state="STATE_NONE"/>
+      <NameTag name="v"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="YVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="v" state="STATE_NONE"/>
+      <NameTag name="v"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="w" state="STATE_NONE"/>
+      <NameTag name="w"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="w" state="STATE_NONE"/>
+      <NameTag name="w"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
@@ -148,7 +148,7 @@
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.01</Constant>
     </BasicExpression>
   </Wasatch>

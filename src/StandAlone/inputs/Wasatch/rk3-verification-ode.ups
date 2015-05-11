@@ -17,15 +17,15 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_NONE" />
+      <NameTag name="phi-scalar"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="phi-source" state="STATE_NONE" />
+      <NameTag name="phi-source"/>
       <LinearFunction slope="1" intercept="0.0">
-        <NameTag name="phi-scalar" state="STATE_DYNAMIC" />
+        <NameTag name="phi-scalar" state="STATE_DYNAMIC"/>
       </LinearFunction>
     </BasicExpression>
 
@@ -36,14 +36,14 @@
       <SolutionVariable>phi-scalar</SolutionVariable>
 
       <SourceTermExpression>
-        <NameTag name="phi-source" state="STATE_NONE" />
+        <NameTag name="phi-source"/>
       </SourceTermExpression>
 
     </TransportEquation>
   </Wasatch>
   <DataArchiver>
     <filebase>rk3-verification-ode.uda</filebase>
-    <checkpoint cycle = "2" interval = "0.1"/>    
+    <checkpoint cycle="2" interval="0.1"/>    
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="phi-scalar"/>

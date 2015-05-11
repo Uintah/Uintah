@@ -20,32 +20,32 @@
     
     <TwoStreamMixing rho0="1.0" rho1="5.0">
       <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
-      <MixtureFraction> <NameTag name="f" state="STATE_NONE"/> </MixtureFraction>
+      <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
       <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>
 
     <!-- Set the initial condition expression for velocity components -->    
    <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="u" state="STATE_NONE"/>
+      <NameTag name="u"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>1e-3</Constant>
     </BasicExpression>
 
    <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE"/>
+      <NameTag name="f"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     
@@ -59,13 +59,13 @@
   
       <ConvectiveFlux direction="X" method="SUPERBEE">
         <AdvectiveVelocity>
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
   
       <ConvectiveFlux direction="Y" method="SUPERBEE">
         <AdvectiveVelocity>
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -73,19 +73,19 @@
 
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
       </FieldExpression>
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f*" state="STATE_NONE"/>
+        <NameTag name="f*"/>
       </FieldExpression>
       <FieldExpression type="SVOL" min="0.0" max="5.0">
-        <NameTag name="rhof" state="STATE_NONE"/>
+        <NameTag name="rhof"/>
       </FieldExpression>
       <FieldExpression type="SVOL" min="0.0" max="5.0">
-        <NameTag name="rhof*" state="STATE_NONE"/>
+        <NameTag name="rhof*"/>
       </FieldExpression>
       <FieldExpression type="SVOL" min="0.0" max="5.0">
-        <NameTag name="rhof**" state="STATE_NONE"/>
+        <NameTag name="rhof**"/>
       </FieldExpression>
     </FieldClipping>
 
@@ -97,7 +97,7 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       <ComputeMassResidual/>
       <Pressure>
