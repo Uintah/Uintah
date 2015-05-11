@@ -35,8 +35,8 @@
 #include <curand.h>
 #include <curand_kernel.h>
 
-#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
-//#define FIXED_RANDOM_NUM         // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
+#define DEBUG -9                 // 1: divQ, 2: boundFlux, 3: scattering
+#define FIXED_RANDOM_NUM         // also edit in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
 
 //__________________________________
 //  To Do
@@ -65,7 +65,8 @@ namespace Uintah {
 template< class T>
 __global__ void rayTraceKernel( dim3 dimGrid,
                                 dim3 dimBlock,
-                                int matl,
+                                const int matl,
+                                const int levelIndx,
                                 patchParams patch,
                                 curandState* randNumStates,
                                 RMCRT_flags RT_flags,
@@ -92,13 +93,15 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   GPUGridVariable<GPUStencil7> boundFlux;
   GPUGridVariable<double> radiationVolQ;
 
-  sigmaT4_gdw->get( sigmaT4OverPi , "sigmaT4",  patch.ID, matl );       // Should be using labelNames struct
-  cellType_gdw->get( cellType,      "cellType", patch.ID, matl );
+//  sigmaT4_gdw->print();
+  
+  sigmaT4_gdw->getLevel( sigmaT4OverPi, "sigmaT4",  matl, levelIndx);
+  cellType_gdw->getLevel( cellType,     "cellType", matl, levelIndx);
 
   if(RT_flags.usingFloats){
-    abskg_gdw->get( abskg , "abskgRMCRT",   patch.ID, matl );
+    abskg_gdw->getLevel( abskg, "abskgRMCRT",  matl, levelIndx);
   }else{
-    abskg_gdw->get( abskg , "abskg",   patch.ID, matl );
+    abskg_gdw->getLevel( abskg, "abskg",       matl, levelIndx);
   }
 
   if( RT_flags.modifies_divQ ){
@@ -121,7 +124,20 @@ __global__ void rayTraceKernel( dim3 dimGrid,
       }
     }
   }
+  
+  //__________________________________  
+  //  Sanity checks                     
+#if 0
+  if (isThread0()) {
+   printf(" level: %i, patch: %i \n",levelIndx, patch.ID); 
+  }
+  GPUVariableSanityCK<double>(divQ,          patch.loEC, patch.hiEC);
+  GPUVariableSanityCK<double>(const_cast< GPUGridVariable<double>*> (sigmaT4OverPi), patch.loEC, patch.hiEC);
 
+  GPUIntVector lo = sigmaT4OverPi.getLowIndex();
+  GPUIntVector hi = sigmaT4OverPi.getHighIndex();
+  printf("  lo:[%i,%i,%i], hi[%i,%i,%i] nCells: [%i,%i,%i]\n", lo.x, lo.y, lo.z, hi.x, hi.y, hi.z);
+#endif
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
 
@@ -335,6 +351,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   const GPUGridVariable<T>*    abskg         = new GPUGridVariable<T>[maxLevels];
   const GPUGridVariable<T>*    sigmaT4OverPi = new GPUGridVariable<T>[maxLevels];
   const GPUGridVariable<int>*  cellType      = new GPUGridVariable<int>[maxLevels];
+
+  //new_gdw->print();
 
   //__________________________________
   // coarse level data for the entire level
@@ -1233,13 +1251,53 @@ __device__ bool isDbgCellDevice( GPUIntVector me )
   }
   return false;
 }
+//______________________________________________________________________
+//    See if every 
+
+template< class T>
+__device__ void GPUVariableSanityCK(GPUGridVariable<T>& Q,
+                                    const GPUIntVector Lo,
+                                    const GPUIntVector Hi)
+{
+  if (isThread0()) {
+    GPUIntVector lo = Q.getLowIndex();
+    GPUIntVector hi = Q.getHighIndex();
+    GPUIntVector diff = (hi - lo);
+    
+   if( lo != Lo || hi != Hi){
+    printf ( "ERROR: the \n");
+   }
+    
+    
+    printf("  lo:[%i,%i,%i], hi[%i,%i,%i] nCells: [%i,%i,%i]\n", lo.x, lo.y, lo.z, hi.x, hi.y, hi.z,
+              diff.x, diff.y, diff.z);
+    
+    for (int i = Lo.x; i < Hi.x; i++) {
+      for (int j = Lo.y; j < Hi.y; j++) {
+        for (int k = Lo.z; k < Hi.z; k++) {
+          GPUIntVector idx = make_int3(i, j, k);
+          T me = Q[idx];
+          if ( isnan(me) || isinf(me)){
+            printf ( "isNan or isInf was detected at [%i,%i,%i]\n", i,j,k);
+            printf(" Now existing...");
+            __threadfence();
+            asm("trap;");
+          }
+          
+        }
+      }
+    }
+  }  
+}
+
 
 //______________________________________________________________________
 //
 template< class T>
 __host__ void launchRayTraceKernel(dim3 dimGrid,
                                    dim3 dimBlock,
-                                   int matlIndex,
+                                   const int matlIndx,
+                                   const int levelIndx,
                                    patchParams patch,
                                    cudaStream_t* stream,
                                    RMCRT_flags RT_flags,
@@ -1260,7 +1318,8 @@ __host__ void launchRayTraceKernel(dim3 dimGrid,
 
   rayTraceKernel< T ><<< dimGrid, dimBlock, 0, *stream >>>( dimGrid,
                                                             dimBlock,
-                                                            matlIndex,
+                                                            matlIndx,
+                                                            levelIndx,
                                                             patch,
                                                             randNumStates,
                                                             RT_flags,
@@ -1330,7 +1389,8 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
 template
 __host__ void launchRayTraceKernel<double>( dim3 dimGrid,
                                             dim3 dimBlock,
-                                            int matlIndex,
+                                            const int matlIndx,
+                                            const int levelIndx,
                                             patchParams patch,
                                             cudaStream_t* stream,
                                             RMCRT_flags RT_flags,
@@ -1346,7 +1406,8 @@ __host__ void launchRayTraceKernel<double>( dim3 dimGrid,
 template
 __host__ void launchRayTraceKernel<float>( dim3 dimGrid,
                                            dim3 dimBlock,
-                                           int matlIndex,
+                                           const int matlIndx,
+                                           const int levelIndx,
                                            patchParams patch,
                                            cudaStream_t* stream,
                                            RMCRT_flags RT_flags,

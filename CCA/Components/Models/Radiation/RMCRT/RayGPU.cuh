@@ -115,6 +115,13 @@ inline HOST_DEVICE GPUIntVector operator+(const GPUIntVector& a, const GPUIntVec
 }
 
 //__________________________________
+//  returns const gpuIntVector - const gpuIntVector
+inline HOST_DEVICE GPUIntVector operator-(const GPUIntVector& a, const GPUIntVector& b)
+{
+  return make_int3(a.x-b.x, a.y-b.y, a.z-b.z);
+}
+
+//__________________________________
 //  returns const gpuIntVector / const gpuIntVector
 inline HOST_DEVICE GPUIntVector operator/(const GPUIntVector& a, const GPUIntVector& b)
 {
@@ -177,6 +184,19 @@ inline HOST_DEVICE bool operator!=(GPUIntVector& a, GPUIntVector& b)
   return ( (a.x != b.x) || (a.y != b.y) || (a.z != b.z ));
 }
 
+inline HOST_DEVICE bool operator!=(const GPUIntVector& a, GPUIntVector& b)
+{
+  return ( (a.x != b.x) || (a.y != b.y) || (a.z != b.z ));
+}
+
+inline HOST_DEVICE bool operator!=(GPUIntVector& a, const GPUIntVector& b)
+{
+  return ( (a.x != b.x) || (a.y != b.y) || (a.z != b.z ));
+}
+inline HOST_DEVICE bool operator!=(const GPUIntVector& a, const GPUIntVector& b)
+{
+  return ( (a.x != b.x) || (a.y != b.y) || (a.z != b.z ));
+}
 //__________________________________
 //  returns gpuPoint + gpuVector
 inline HOST_DEVICE GPUPoint operator+(GPUPoint& p, GPUVector& b)
@@ -569,14 +589,20 @@ __device__ double randDevice(curandState* randNumStates);
 //
 __device__ bool isDbgCellDevice( GPUIntVector me);
 
-
+//______________________________________________________________________
+//
+template< class T>
+__device__ void GPUVariableSanityCK(GPUGridVariable<T>& Q,
+                                    const GPUIntVector Lo,
+                                    const GPUIntVector Hi);
 
 //______________________________________________________________________
 //
 template< class T >
 __host__ void launchRayTraceKernel( dim3 dimGrid,
                                     dim3 dimBlock,
-                                    int matlIndex,
+                                    const int matlIndex,
+                                    const int levelIndx,
                                     patchParams patch,
                                     cudaStream_t* stream,
                                     RMCRT_flags RT_flags,
@@ -592,7 +618,8 @@ __host__ void launchRayTraceKernel( dim3 dimGrid,
 template< class T >
 __global__ void rayTraceKernel( dim3 dimGrid,
                                 dim3 dimBlock,
-                                int matlIndex,
+                                const int matlIndex,
+                                const int levelIndx,
                                 patchParams patch,
                                 curandState* randNumStates,
                                 RMCRT_flags RT_flags,

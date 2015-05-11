@@ -64,6 +64,9 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       return;
     }
 
+    const Level* level = getLevel(patches);
+    const int levelIndx = level->getIndex();
+
     //__________________________________
     //  increase the size of the printbuffer on the device
 #ifdef PRINTF
@@ -118,7 +121,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     double start = clock();
 
     //______________________________________________________________________
-    //
     // patch loop
     int numPatches = patches->size();
     for (int p = 0; p < numPatches; ++p) {
@@ -178,6 +180,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       launchRayTraceKernel<T>(dimGrid,
                               dimBlock,
                               d_matl,
+                              levelIndx,
                               patchP,
                               (cudaStream_t*)stream,
                               RT_flags, labelNames, abskg_gdw,
@@ -327,7 +330,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     for (int p = 0; p < numPatches; ++p) {
 
       const Patch* finePatch = finePatches->get(p);
-      printTask(finePatches, finePatch, dbggpu, "Doing Ray::rayTraceGPU");
+      printTask(finePatches, finePatch, dbggpu, "Doing Ray::rayTraceDataOnionGPU");
       
       IntVector ROI_Lo = IntVector(-9,-9,-9);
       IntVector ROI_Hi = IntVector(-9,-9,-9);
