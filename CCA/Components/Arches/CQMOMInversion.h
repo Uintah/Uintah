@@ -305,7 +305,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     bool nonrealCheck = false;
     //check a vector for a nan - occurs in point distribution
     for ( int i = 0; i<nEnvOut; i++ ) {
-      if ( isnan(a[i]) || isinf(a[i]) ) {
+      if ( std::isnan(a[i]) || std::isinf(a[i]) ) {
 #ifdef cqmom_dbg
         cout << "WARNING: Arches: CQMOMInversion: not-a-number in a vector encountered. " << endl;
 #endif
@@ -321,7 +321,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     double d_small = 1.0e-14;
     //check the b vector for realizable space
     for ( int i = 0; i<nEnvOut; i++ ) {
-      if ( (b[i] != 0.0 && b[i]<d_small) || isnan(b[i]) ) { //clip if b is very close to zero
+      if ( (b[i] != 0.0 && b[i]<d_small) || std::isnan(b[i]) ) { //clip if b is very close to zero
 #ifdef cqmom_dbg
         cout << "WARNING: Arches: CQMOMInversion: Negative b vector encountered." << endl;
 #endif

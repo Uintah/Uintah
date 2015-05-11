@@ -178,7 +178,6 @@ private:
     };
 
 
-  double max_Q_convection;
   double _Pr;
   double _sigma;
   double _pi;
@@ -198,14 +197,6 @@ private:
   std::vector<double> _init_ash;
   std::vector<double> _sizes;
 
-  double heat_rate_;
-  double gas_heat_rate_;
-  double Q_convection;
-  double Q_radiation;
-  double Q_reaction;  
-  // variables used in cell loops 
-  double blow;
-  double kappa;
 
   //bool _radiation;                ///< Radiation flag
 

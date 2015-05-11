@@ -431,6 +431,15 @@ EnthalpyShaddix::computeModel( const ProcessorGroup * pc,
     ArchesLabel::PartVelMap::const_iterator iter = d_fieldLabels->partVel.find(d_quadNode);
     new_dw->get(partVel, iter->second, matlIndex, patch, gn, 0);
     
+    // variables used in cell loops 
+    double max_Q_convection;
+    double heat_rate_;
+    double gas_heat_rate_;
+    double Q_convection;
+    double Q_radiation;
+    double Q_reaction;  
+    double blow;
+    double kappa;
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
 

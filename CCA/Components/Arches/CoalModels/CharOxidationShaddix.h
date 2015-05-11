@@ -116,22 +116,6 @@ private:
   double _R;
   double _HF_CO2;
   double _HF_CO;
-  double max_char_reaction_rate_;
-  double max_char_reaction_rate_O2_;
-  double char_reaction_rate_;
-  double char_production_rate_;
-  double rc_destruction_rate_;
-  double particle_temp_rate_;
-  double PO2_inf;
-  double PO2_surf;
-  double PO2_surf_guess;
-  double PO2_surf_tmp;
-  double PO2_surf_new;
-  double PO2_surf_old;
-  double CO2CO;
-  double OF;
-  double ks;
-  double q;
   double _small;
   double _WO2;
   double _WCO2;
@@ -142,18 +126,6 @@ private:
   double _D2;
   double _D3;
   double _T0;
-  double d_tol;
-  double delta;
-  double Conc;
-  double DO2;
-  double gamma;
-  int d_totIter;
-  int NIter;
-  double f0;
-  double f1;
-  double lower_bound;
-  double upper_bound;
-  int icount;
   double _pi;
   double _RC_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
