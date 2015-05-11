@@ -15,18 +15,18 @@
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE"/>
+      <NameTag name="f"/>
       <SineFunction amplitude="0.5" frequency="2" offset="0.5">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </SineFunction>
     </BasicExpression>
     
     <!-- Set the initial condition expression for heat loss -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="lambda" state="STATE_NONE"/>
+      <NameTag name="lambda"/>
       <SineFunction amplitude="1.0" frequency="2" offset="0.0">
-        <NameTag name="YSVOL" state="STATE_NONE"/>
+        <NameTag name="YSVOL"/>
       </SineFunction>
     </BasicExpression>    
             
@@ -35,27 +35,27 @@
       <FileNamePrefix>inputs/Wasatch/FastChem_d</FileNamePrefix>
       <TaskList>initialization</TaskList>
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <IndependentVariable>
-        <NameTag name="lambda" state="STATE_NONE"/>
+        <NameTag name="lambda"/>
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
       
       <ExtractDensity>
         <NameInTable>Density</NameInTable>
-        <NameTag name="rho" state="STATE_NONE"/>
+        <NameTag name="rho"/>
       </ExtractDensity>
     </TabProps>
 	
 	<!-- CREATE AN EXPRESSION FOR HEAT LOSS -->
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="lambda" state="STATE_NONE"/>
+      <NameTag name="lambda"/>
       <SineFunction amplitude="1.0" frequency="2" offset="0.0">
-        <NameTag name="YSVOL" state="STATE_NONE"/>
+        <NameTag name="YSVOL"/>
       </SineFunction>
     </BasicExpression>
 
@@ -64,12 +64,12 @@
       <FileNamePrefix>inputs/Wasatch/FastChem_d</FileNamePrefix>
       <TaskList>advance_solution</TaskList>
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <IndependentVariable>
-        <NameTag name="lambda" state="STATE_NONE"/>
+        <NameTag name="lambda"/>
         <NameInTable>HeatLoss</NameInTable>
       </IndependentVariable>
       
@@ -79,7 +79,7 @@
         <DensityWeightedIVar>
           <NameTag name="rhof" state="STATE_N"/>
           <RelatedIVar>
-            <NameTag name="f" state="STATE_NONE"/>
+            <NameTag name="f"/>
           </RelatedIVar>
         </DensityWeightedIVar>
       </ExtractDensity>
@@ -89,42 +89,42 @@
     <!-- SET THE INITIAL CONDITIONEXPRESSION FOR VelX -->
     <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="VelX" state="STATE_NONE"/>
+      <NameTag name="VelX"/>
       <Constant> 10.0 </Constant>
     </BasicExpression>
     
     <!-- SET THE INITIAL CONDITIONEXPRESSION FOR VelY -->
     <BasicExpression type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="VelY" state="STATE_NONE"/>
+      <NameTag name="VelY"/>
       <Constant> 0.0 </Constant>
     </BasicExpression>
 
     <!-- SET THE INITIAL CONDITIONEXPRESSION FOR VelZ -->
     <BasicExpression type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="VelZ" state="STATE_NONE"/>
+      <NameTag name="VelZ"/>
       <Constant> 0.0 </Constant>
     </BasicExpression>
          
     <!-- CREATE AN EXPRESSION FOR VelX -->
     <BasicExpression type="XVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="VelX" state="STATE_NONE"/>
+      <NameTag name="VelX"/>
       <Constant> 10.0 </Constant>
     </BasicExpression>
                
     <!-- CREATE AN EXPRESSION FOR VelY -->
     <BasicExpression type="YVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="VelY" state="STATE_NONE"/>
+      <NameTag name="VelY"/>
       <Constant> 0.0 </Constant>
     </BasicExpression>
     
     <!-- CREATE AN EXPRESSION FOR VelZ -->
     <BasicExpression type="ZVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="VelZ" state="STATE_NONE"/>
+      <NameTag name="VelZ"/>
       <Constant> 0.0 </Constant>
     </BasicExpression>
     
@@ -134,17 +134,17 @@
       <PrimitiveVariable>f</PrimitiveVariable>
       <ConvectiveFlux direction="X" method="CENTRAL">
         <AdvectiveVelocity>
-          <NameTag name="VelX" state="STATE_NONE"/>
+          <NameTag name="VelX"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Y" method="CENTRAL">
         <AdvectiveVelocity>
-          <NameTag name="VelY" state="STATE_NONE"/>
+          <NameTag name="VelY"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Z" method="CENTRAL">
         <AdvectiveVelocity>
-          <NameTag name="VelZ" state="STATE_NONE"/>
+          <NameTag name="VelZ"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <DiffusiveFlux direction="X" coefficient="0.1"/>

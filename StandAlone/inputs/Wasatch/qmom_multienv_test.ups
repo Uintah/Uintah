@@ -158,7 +158,7 @@
       <TaskList> advance_solution </TaskList>
       <NameTag name="mixfrac" state="STATE_N"/>
       <LinearFunction slope="1" intercept="0.0">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </LinearFunction>
     </BasicExpression> 
 
@@ -172,7 +172,7 @@
       <TaskList> advance_solution </TaskList>
       <NameTag name="scalarvar" state="STATE_N"/>
       <LinearFunction slope="-.01" intercept="0.01">
-        <NameTag name="YSVOL" state="STATE_NONE"/>
+        <NameTag name="YSVOL"/>
       </LinearFunction>
     </BasicExpression>
 
@@ -331,7 +331,7 @@
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="MultiEnv" state="STATE_NONE"/>
+      <NameTag name="MultiEnv"/>
       <MultiEnvMixingModel>
         <MixtureFraction>
           <NameTag name="mixfrac" state="STATE_N"/>
@@ -403,7 +403,7 @@
       </BirthExpression>
 
       <MultiEnvMixingModel>
-        <NameTag name="MultiEnv" state="STATE_NONE"/>
+        <NameTag name="MultiEnv"/>
       </MultiEnvMixingModel>
 
     </MomentTransportEquation>
@@ -416,7 +416,7 @@
     </ForceOnGraph> 
 -->
      <ForceOnGraph tasklist="advance_solution">
-         <NameTag name="m_CalcMult_0_ave" state="STATE_NONE"/>
+         <NameTag name="m_CalcMult_0_ave"/>
     </ForceOnGraph>
   </Wasatch>
 

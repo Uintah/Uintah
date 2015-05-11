@@ -16,7 +16,7 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_NONE"/>
+      <NameTag name="phi-scalar"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     
@@ -25,12 +25,12 @@
       <SolutionVariable>phi-scalar</SolutionVariable>
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <DiffusiveFlux direction="X" coefficient="0.0001"/>
@@ -65,19 +65,19 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.1</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.01</Constant>
     </BasicExpression>
 
@@ -89,7 +89,7 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>

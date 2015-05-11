@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
 
     <Density>
@@ -15,42 +15,42 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_NONE" />
+      <NameTag name="x-mom"/>
       <TGVel3D angle="1.570796326794897">
         <VelComponent>X</VelComponent>
-        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
-        <ZCoordinate> <NameTag name="ZXVOL" state="STATE_NONE"/> </ZCoordinate>        
+        <XCoordinate> <NameTag name="XXVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YXVOL"/> </YCoordinate>
+        <ZCoordinate> <NameTag name="ZXVOL"/> </ZCoordinate>        
       </TGVel3D>
     </TaylorVortexMMS>
 
     <!-- Set the initial condition for y-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_NONE" />
+      <NameTag name="y-mom"/>
       <TGVel3D angle="1.570796326794897">
         <VelComponent>Y</VelComponent>      
-        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
-        <ZCoordinate> <NameTag name="ZYVOL" state="STATE_NONE"/> </ZCoordinate>        
+        <XCoordinate> <NameTag name="XYVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YYVOL"/> </YCoordinate>
+        <ZCoordinate> <NameTag name="ZYVOL"/> </ZCoordinate>        
       </TGVel3D>
     </TaylorVortexMMS>
 
     <!-- Set the initial condition for z-momentum -->
     <TaylorVortexMMS type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_NONE" />
+      <NameTag name="z-mom"/>
       <TGVel3D angle="1.570796326794897">
         <VelComponent>Z</VelComponent>      
-        <XCoordinate> <NameTag name="XZVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YZVOL" state="STATE_NONE"/> </YCoordinate>
-        <ZCoordinate> <NameTag name="ZZVOL" state="STATE_NONE"/> </ZCoordinate>        
+        <XCoordinate> <NameTag name="XZVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YZVOL"/> </YCoordinate>
+        <ZCoordinate> <NameTag name="ZZVOL"/> </ZCoordinate>        
       </TGVel3D>
     </TaylorVortexMMS>
                 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
@@ -65,7 +65,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>      
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>
@@ -104,7 +104,7 @@
     <filebase>kinetic-energy-example.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="u"/>
     <save label="v"/>

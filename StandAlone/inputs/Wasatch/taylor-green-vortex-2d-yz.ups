@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
 
     <Density>
@@ -15,26 +15,26 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_NONE" />
+      <NameTag name="y-mom"/>
       <VelocityX amplitude="1.0" viscosity="0.0">
-        <XCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="ZYVOL" state="STATE_NONE"/> </YCoordinate>
+        <XCoordinate> <NameTag name="YYVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="ZYVOL"/> </YCoordinate>
       </VelocityX>
     </TaylorVortexMMS>
 
     <!-- Set the initial condition for y-momentum -->
     <TaylorVortexMMS type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_NONE" />
-      <VelocityY amplitude="1.0" viscosity="0.0" >
-        <XCoordinate> <NameTag name="YZVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="ZZVOL" state="STATE_NONE"/> </YCoordinate>
+      <NameTag name="z-mom"/>
+      <VelocityY amplitude="1.0" viscosity="0.0">
+        <XCoordinate> <NameTag name="YZVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="ZZVOL"/> </YCoordinate>
       </VelocityY>
     </TaylorVortexMMS>
                 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
@@ -46,7 +46,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>
@@ -84,7 +84,7 @@
     <filebase>taylor-green-vortex-2d-yz.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="y-mom"/>
     <save label="z-mom"/>

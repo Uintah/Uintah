@@ -14,7 +14,7 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="mixture fraction" state="STATE_NONE"/>
+      <NameTag name="mixture fraction"/>
       <Constant>0.5</Constant>
     </BasicExpression>
 
@@ -28,12 +28,12 @@
       </IndependentVariable>
       <ExtractVariable>
         <NameInTable>Temperature</NameInTable>
-        <NameTag name="temperature" state="STATE_NONE"/>
+        <NameTag name="temperature"/>
         <Type>SVOL</Type>
       </ExtractVariable>
       <ExtractVariable>
         <NameInTable>Conductivity</NameInTable>
-        <NameTag name="thermal conductivity" state="STATE_NONE"/>
+        <NameTag name="thermal conductivity"/>
         <Type>SVOL</Type>
       </ExtractVariable>
     </TabProps>
@@ -43,7 +43,7 @@
       <SolutionVariable>mixture fraction</SolutionVariable>
       <DiffusiveFlux direction="X">
         <DiffusionCoefficient>
-          <NameTag name="thermal conductivity" state="STATE_NONE"/>
+          <NameTag name="thermal conductivity"/>
         </DiffusionCoefficient>
       </DiffusiveFlux>
       <DiffusiveFlux direction="Y" coefficient="2.0"/>

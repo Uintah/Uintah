@@ -5,12 +5,12 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
     <TimeIntegrator>RK3SSP</TimeIntegrator>
 
     <Density>
-      <Constant value="1" name="density" />
+      <Constant value="1" name="density"/>
     </Density>
     
 
@@ -25,7 +25,7 @@
     <!-- Set the initial condition for x-mom -->
     <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_NONE" />
+      <NameTag name="x-mom"/>
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_u.gz</FileName>
       </ReadFromFile>
@@ -34,7 +34,7 @@
     <!-- Set the initial condition for y-mom -->
     <BasicExpression type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_NONE" />
+      <NameTag name="y-mom"/>
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_v.gz</FileName>
       </ReadFromFile>
@@ -43,7 +43,7 @@
     <!-- Set the initial condition for z-mom -->
     <BasicExpression type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_NONE" />
+      <NameTag name="z-mom"/>
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_w.gz</FileName>
       </ReadFromFile>
@@ -52,7 +52,7 @@
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
@@ -67,7 +67,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>      
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity"/>
       </Viscosity>
       <Pressure>
         <!-- ReferencePressure value="0.0">
@@ -105,7 +105,7 @@
     <filebase>decay-isotropic-turbulence-inviscid-64.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "10"/>
+    <checkpoint cycle="2" interval="10"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>
