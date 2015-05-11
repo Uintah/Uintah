@@ -767,7 +767,12 @@
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
           <use_ref_point                spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"/> 
+                                        attribute1="value REQUIRED DOUBLE"> <!-- pin pressure down to a value -->
+            <twod                       spec="OPTIONAL NO_DATA"
+                                        attribute1="third-dim REQUIRED STRING 'x,X,y,X,z,Z'"/> <!-- used for purely two-dimensional problem when pinning down the pressure 
+                                                                                                    third-dim refers to the dimension not in use -->
+          </use_ref_point>
+          
         <Parameters                     spec="OPTIONAL NO_DATA"
                                           attribute1="variable OPTIONAL STRING 'implicitPressure'" >
           <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
