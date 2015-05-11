@@ -118,7 +118,9 @@ if __name__ == "__main__":
      statenone = 0
      staten = 0
      stateforward  = 0
+     nfiles = 0
      for fname in glob.glob(inputdir + "/*.ups"):
+          nfiles +=1
           statedynamic_, statenone_,staten_, stateforward_ = count_state(fname)
           statedynamic += statedynamic_
           statenone += statenone_
@@ -128,7 +130,8 @@ if __name__ == "__main__":
      allstates = statedynamic + statenone + staten + stateforward
      print '************************'
      print 'OVERALL STATS '
-     print '************************'     
+     print '************************'
+     print 'NUMBER of FILES:', nfiles     
      print 'STATE_DYNAMIC: ', statedynamic/allstates*100, '%'
      print 'STATE_NONE: ', statenone/allstates*100, '%'
      print 'STATE_N: ', staten/allstates*100, '%'
