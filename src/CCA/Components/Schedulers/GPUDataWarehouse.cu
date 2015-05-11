@@ -273,7 +273,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
 
 
 HOST_DEVICE void
-GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, char const* label, int patchID, int matlIndex, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, GhostType gtype, int numGhostCells, bool stageOnHost)
+GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, char const* label, int patchID, int matlIndex, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, void *cuda_stream, GhostType gtype, int numGhostCells, bool stageOnHost )
 {
 #ifdef __CUDA_ARCH__
   //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
@@ -355,7 +355,8 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
       //Data listed as required.  Or compute data that was initialized as a copy of something else.
       ca->copiedOffset += memSizePlusPadding;
 
-      memcpy(host_contiguousArrayPtr, gridVar->getBasePointer(), varMemSize);
+      //memcpy(host_contiguousArrayPtr, gridVar->getBasePointer(), varMemSize);
+      cudaMemcpyAsync(device_ptr, gridVar->getBasePointer(), varMemSize, cudaMemcpyHostToDevice, *((cudaStream_t*)cuda_stream));
       //if (strcmp(label, "sp_vol_CC") == 0) {
       //  printf("To   - copying %s %d %d from host location %p to host contiguous array at %p (starting at %p) to device array at %p (starting at %p) and used %d bytes with data %1.15e\n", label, patchID, matlIndex, host_ptr, host_contiguousArrayPtr, ca->allocatedHostMemory, device_ptr, ca->allocatedDeviceMemory, ca->copiedOffset, *((double *)host_contiguousArrayPtr));
       //}
@@ -374,7 +375,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
 #endif
 }
 HOST_DEVICE void
-GPUDataWarehouse::putContiguous(GPUPerPatchBase& var, const char* indexID, char const* label, int patchID, int matlIndex, size_t sizeOfDataType, PerPatchBase* patchVar, bool stageOnHost){
+GPUDataWarehouse::putContiguous(GPUPerPatchBase& var, const char* indexID, char const* label, int patchID, int matlIndex, size_t sizeOfDataType, PerPatchBase* patchVar, void *cuda_stream, bool stageOnHost ){
 #ifdef __CUDA_ARCH__
   //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
 #else
@@ -426,7 +427,8 @@ GPUDataWarehouse::putContiguous(GPUPerPatchBase& var, const char* indexID, char 
 
     if (stageOnHost) {
       ca->copiedOffset += memSizePlusPadding;
-      memcpy(host_contiguousArrayPtr, patchVar->getBasePointer(), varMemSize);
+      //memcpy(host_contiguousArrayPtr, patchVar->getBasePointer(), varMemSize);
+      cudaMemcpyAsync(device_ptr, patchVar->getBasePointer(), varMemSize, cudaMemcpyHostToDevice, *((cudaStream_t*)cuda_stream));
     }
     put(var, label, patchID, matlIndex, sizeOfDataType, NULL, host_contiguousArrayPtr);
   }
@@ -466,7 +468,7 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   //h_ptr = new double[size];
 
 
-  h_ptr = (double*)malloc(size);
+  h_ptr = (double*)malloc(1); //unnecessary but left here as a quick fix for some other unknown issue.
 
   //Registering memory seems good in theory, but bad in practice for our purposes.
   //On the k20 device on beast.sci.utah.edu, this single register call was taking 0.1 seconds!

@@ -97,7 +97,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
     friend class UnifiedSchedulerWorker;
 
-    static const int bufferPadding = 32;
+    static const int bufferPadding = 8;
 
   private:
 
