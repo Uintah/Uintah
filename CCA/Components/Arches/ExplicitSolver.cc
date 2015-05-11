@@ -648,7 +648,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     }
     //============= END NEW TASK STUFF===============================
 
-
     // STAGE 1
 
     // Property models needed after table lookup:
@@ -694,9 +693,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     // averaging for RKSSP
     if ((curr_level>0)&&(!((d_timeIntegratorType == "RK2")||(d_timeIntegratorType == "BEEmulation")))) {
 
+      //currently averaging density guess as 
+      // rho_guess = alpha*old_den + beta*new_den
+      // not sure that this is used anywhere now
       d_props->sched_averageRKProps(sched, patches, matls,
                                     d_timeIntegratorLabels[curr_level]);
 
+      //copies current density into temp density
       d_props->sched_saveTempDensity(sched, patches, matls,
                                      d_timeIntegratorLabels[curr_level]);
 

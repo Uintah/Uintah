@@ -66,8 +66,8 @@ void
 SampleTask::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable( "a_sample_variable", CC_DOUBLE, COMPUTES, 0, NEWDW,  variable_registry );
-  register_variable( "a_result_variable", CC_DOUBLE, COMPUTES, 0, NEWDW,  variable_registry );
+  register_variable( "a_sample_variable", CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( "a_result_variable", CC_DOUBLE, COMPUTES, variable_registry );
 
 }
 
