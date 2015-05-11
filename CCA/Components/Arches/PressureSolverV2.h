@@ -31,12 +31,12 @@
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
-
 
 namespace Uintah {
 
@@ -201,6 +201,105 @@ private:
    * known pressure **/ 
   void adjustForRefPoint( const Patch* patch, ArchesVariables* vars, ArchesConstVariables* constvars );
 
+  inline void fix_ref_coeffs(const Patch* patch, ArchesVariables* vars, ArchesConstVariables* constvars, IntVector c ){ 
+
+    using std::cout; 
+    using std::endl;
+
+    if ( patch->containsCell( c ) ){ 
+
+      IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
+      IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
+      IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
+
+      if ( constvars->cellType[c] != -1 ) {
+        throw InvalidValue("Error: Your reference pressure point is not a flow cell.", __FILE__, __LINE__);
+      }
+
+      vars->pressCoeff[c].p = 1.0; 
+      vars->pressCoeff[c].e = .0; 
+      vars->pressCoeff[c].w = .0; 
+      vars->pressCoeff[c].n = .0; 
+      vars->pressCoeff[c].s = .0; 
+      vars->pressCoeff[c].t = .0; 
+      vars->pressCoeff[c].b = .0; 
+      vars->pressNonlinearSrc[c] = d_ref_value; 
+
+      if ( constvars->cellType[E] == -1 ){ 
+        if ( patch->containsCell(E) ){ 
+          vars->pressCoeff[E].p -= vars->pressCoeff[E].w;
+          vars->pressCoeff[E].w = 0.0; 
+          vars->pressNonlinearSrc[E] += d_ref_value;
+        } else { 
+          if ( d_periodic_vector[0] == 0 ){ 
+            cout << " Reference neighbor = " << E << std::endl;
+            throw InvalidValue("Error: (EAST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+          }
+        } 
+      } 
+      if ( constvars->cellType[W] == -1 ){ 
+        if ( patch->containsCell(W) ){  
+          vars->pressCoeff[W].p -= vars->pressCoeff[W].e;
+          vars->pressCoeff[W].e = 0.0; 
+          vars->pressNonlinearSrc[W] += d_ref_value;
+        } else { 
+          if ( d_periodic_vector[0] == 0 ){ 
+            cout << " Reference neighbor = " << W << endl;
+            throw InvalidValue("Error: (WEST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+          }
+        } 
+      } 
+      if ( constvars->cellType[N] == -1 ){ 
+        if ( patch->containsCell(N) ){ 
+          vars->pressCoeff[N].p -= vars->pressCoeff[N].s;
+          vars->pressCoeff[N].s= 0.0; 
+          vars->pressNonlinearSrc[N] += d_ref_value;
+        } else { 
+          if ( d_periodic_vector[1] == 0 ){ 
+            cout << " Reference neighbor = " << N << endl;
+            throw InvalidValue("Error: (NORTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+          }
+        } 
+      } 
+      if ( constvars->cellType[S] == -1 ){ 
+        if ( patch->containsCell(S) ){ 
+          vars->pressCoeff[S].p -= vars->pressCoeff[S].n;
+          vars->pressCoeff[S].n = 0.0; 
+          vars->pressNonlinearSrc[S] += d_ref_value;
+        } else { 
+          if ( d_periodic_vector[1] == 0 ){ 
+            cout << " Reference neighbor = " << S << endl;
+            throw InvalidValue("Error: (SOUTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+          }
+        } 
+      } 
+      if ( constvars->cellType[T] == -1 ){ 
+        if ( patch->containsCell(T) ){
+          vars->pressCoeff[T].p -= vars->pressCoeff[T].b;
+          vars->pressCoeff[T].b= 0.0; 
+          vars->pressNonlinearSrc[T] += d_ref_value;
+        } else { 
+          if ( d_periodic_vector[2] == 0 ){ 
+            cout << " Reference neighbor = " << T << endl;
+            throw InvalidValue("Error: (TOP DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+          }
+        } 
+      } 
+      if ( constvars->cellType[B] == -1 ){ 
+        if ( patch->containsCell(B) ){ 
+          vars->pressCoeff[B].p -= vars->pressCoeff[B].t;
+          vars->pressCoeff[B].t = 0.0; 
+          vars->pressNonlinearSrc[B] += d_ref_value;
+        } else { 
+          if ( d_periodic_vector[2] == 0 ){ 
+            cout << " Reference neighbor = " << B << endl;
+            throw InvalidValue("Error: (BOTTOM DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
+          }
+        } 
+      } 
+    }
+  }
+
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
   IntVector d_periodic_vector; 
@@ -218,9 +317,9 @@ private:
   bool d_norm_press;
   bool d_do_only_last_projection;
   bool d_use_ref_point; 
-  bool d_twod_ref;         ///< Creates a reference pencil for 2D problems (in third dimension)
-  int d_ref_dim;           ///< Used to move along with pencil dimension 
   double d_ref_value; 
+  std::vector<int> d_reduce_ref_dims; 
+  int d_N_reduce_ref_dims; 
   
   SolverInterface* d_hypreSolver;
   SolverParameters* d_hypreSolver_parameters;

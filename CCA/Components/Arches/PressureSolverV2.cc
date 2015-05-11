@@ -76,7 +76,6 @@ PressureSolver::PressureSolver(ArchesLabel* label,
   d_indx = -9;
   d_hypreSolver_parameters = NULL;
   d_periodic_vector = IntVector(0,0,0); 
-  d_twod_ref = false; 
 }
 
 //______________________________________________________________________
@@ -102,21 +101,34 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   //fix pressure at a point.
   d_use_ref_point = false; 
   if ( db->findBlock("use_ref_point") ){ 
-    db->findBlock("use_ref_point")->getAttribute("value", d_ref_value); 
+
+    d_ref_value = 0.0;
+
     ProblemSpecP db_ref = db->findBlock("use_ref_point");
     d_use_ref_point = true; 
 
-    if ( db_ref->findBlock("twod")){ 
-      d_twod_ref = true; 
-      std::string dim; 
-      db_ref->findBlock("twod")->getAttribute("third-dim",dim); 
-      if ( dim == "x" || dim == "X" ){ 
-        d_ref_dim = 0; 
-      } else if ( dim =="y" || dim == "Y" ){ 
-        d_ref_dim = 1; 
+    d_reduce_ref_dims.clear(); 
+    if ( db_ref->findBlock("reduce_dims")){ 
+
+      std::vector<std::string> dims; 
+      db_ref->require("reduce_dims", dims); 
+
+      if ( dims.size() > 2 ){ 
+        throw InvalidValue("Error: Only up to two dimensions may be removed for the reference pressure.",__FILE__,__LINE__); 
       } else { 
-        d_ref_dim = 2; 
+        d_N_reduce_ref_dims = dims.size(); 
       }
+
+      for (std::vector<std::string>::iterator i = dims.begin(); i != dims.end(); i++ ){
+        if ( *i == "x" || *i == "X" ){ 
+          d_reduce_ref_dims.push_back(0);
+        } else if ( *i == "y" || *i == "Y" ){ 
+          d_reduce_ref_dims.push_back(1);
+        } else if ( *i == "z" || *i == "Z" ){ 
+          d_reduce_ref_dims.push_back(2);
+        }
+      }
+      
     }
   } 
 
@@ -923,121 +935,48 @@ PressureSolver::adjustForRefPoint( const Patch* patch,
   //DEVELOPER NOTE: (TODO) This only works when not next to a patch boundary. 
   // We might want to figure out how to use this in any valid flow cell 
   // and specify the physical location rather than the I,J,K index. 
-
   Vector Dx = patch->dCell(); 
   IntVector c = d_pressRef; 
-
-  int starti; 
-  int endi; 
 
   IntVector low = patch->getExtraCellLowIndex(); 
   IntVector hi  = patch->getExtraCellHighIndex(); 
 
-  if ( d_twod_ref ){ 
-    starti = low[d_ref_dim]; 
-    endi   = hi[d_ref_dim]; 
-  } else { 
-    //(we initialize d_ref_dim = 0)
-    starti = c[d_ref_dim]; 
-    endi = c[d_ref_dim]; 
-  }
+  if ( d_N_reduce_ref_dims == 1 ){ 
 
-  for (int myi = starti; myi < endi; myi++ ){ 
+    int starti = low[d_reduce_ref_dims[0]]; 
+    int endi   = hi[d_reduce_ref_dims[0]];
 
-    c[d_ref_dim] = myi; 
+    for (int i = starti; i < endi; i++ ){
 
-    if ( patch->containsCell( c ) ){ 
+      c[d_reduce_ref_dims[0]] = i; 
 
-      IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
-      IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
-      IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
+      fix_ref_coeffs( patch, vars, constvars, c ); 
 
-      if ( constvars->cellType[c] != -1 ) {
-        throw InvalidValue("Error: Your reference pressure point is not a flow cell.", __FILE__, __LINE__);
-      }
-
-      vars->pressCoeff[c].p = 1.0; 
-      vars->pressCoeff[c].e = .0; 
-      vars->pressCoeff[c].w = .0; 
-      vars->pressCoeff[c].n = .0; 
-      vars->pressCoeff[c].s = .0; 
-      vars->pressCoeff[c].t = .0; 
-      vars->pressCoeff[c].b = .0; 
-      vars->pressNonlinearSrc[c] = d_ref_value; 
-
-
-      if ( constvars->cellType[E] == -1 ){ 
-        if ( patch->containsCell(E) ){ 
-          vars->pressCoeff[E].p -= vars->pressCoeff[E].w;
-          vars->pressCoeff[E].w = 0.0; 
-          vars->pressNonlinearSrc[E] += d_ref_value;
-        } else { 
-          if ( d_periodic_vector[0] == 0 ){ 
-            cout << " Reference neighbor = " << E << endl;
-            throw InvalidValue("Error: (EAST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-          }
-        } 
-      } 
-      if ( constvars->cellType[W] == -1 ){ 
-        if ( patch->containsCell(W) ){  
-          vars->pressCoeff[W].p -= vars->pressCoeff[W].e;
-          vars->pressCoeff[W].e = 0.0; 
-          vars->pressNonlinearSrc[W] += d_ref_value;
-        } else { 
-          if ( d_periodic_vector[0] == 0 ){ 
-            cout << " Reference neighbor = " << W << endl;
-            throw InvalidValue("Error: (WEST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-          }
-        } 
-      } 
-      if ( constvars->cellType[N] == -1 ){ 
-        if ( patch->containsCell(N) ){ 
-          vars->pressCoeff[N].p -= vars->pressCoeff[N].s;
-          vars->pressCoeff[N].s= 0.0; 
-          vars->pressNonlinearSrc[N] += d_ref_value;
-        } else { 
-          if ( d_periodic_vector[1] == 0 ){ 
-            cout << " Reference neighbor = " << N << endl;
-            throw InvalidValue("Error: (NORTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-          }
-        } 
-      } 
-      if ( constvars->cellType[S] == -1 ){ 
-        if ( patch->containsCell(S) ){ 
-          vars->pressCoeff[S].p -= vars->pressCoeff[S].n;
-          vars->pressCoeff[S].n = 0.0; 
-          vars->pressNonlinearSrc[S] += d_ref_value;
-        } else { 
-          if ( d_periodic_vector[1] == 0 ){ 
-            cout << " Reference neighbor = " << S << endl;
-            throw InvalidValue("Error: (SOUTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-          }
-        } 
-      } 
-      if ( constvars->cellType[T] == -1 ){ 
-        if ( patch->containsCell(T) ){
-          vars->pressCoeff[T].p -= vars->pressCoeff[T].b;
-          vars->pressCoeff[T].b= 0.0; 
-          vars->pressNonlinearSrc[T] += d_ref_value;
-        } else { 
-          if ( d_periodic_vector[2] == 0 ){ 
-            cout << " Reference neighbor = " << T << endl;
-            throw InvalidValue("Error: (TOP DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-          }
-        } 
-      } 
-      if ( constvars->cellType[B] == -1 ){ 
-        if ( patch->containsCell(B) ){ 
-          vars->pressCoeff[B].p -= vars->pressCoeff[B].t;
-          vars->pressCoeff[B].t = 0.0; 
-          vars->pressNonlinearSrc[B] += d_ref_value;
-        } else { 
-          if ( d_periodic_vector[2] == 0 ){ 
-            cout << " Reference neighbor = " << B << endl;
-            throw InvalidValue("Error: (BOTTOM DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-          }
-        } 
-      } 
     }
+
+
+  } else if ( d_N_reduce_ref_dims == 2 ) { 
+
+    int starti = low[d_reduce_ref_dims[0]]; 
+    int endi   = hi[d_reduce_ref_dims[0]];
+
+    int startj = low[d_reduce_ref_dims[1]]; 
+    int endj   = hi[d_reduce_ref_dims[1]];
+
+    for ( int j = startj; j < endj; j++ ){ 
+      for (int i = starti; i < endi; i++ ){ 
+
+        c[d_reduce_ref_dims[0]] = i; 
+        c[d_reduce_ref_dims[1]] = j; 
+
+        fix_ref_coeffs( patch, vars, constvars, c ); 
+
+      }
+    }
+
+  } else { 
+
+    fix_ref_coeffs( patch, vars, constvars, d_pressRef ); 
+
   }
 } 
