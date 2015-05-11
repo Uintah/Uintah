@@ -766,11 +766,12 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" /> 
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
-          <use_ref_point                spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"> <!-- pin pressure down to a value -->
-            <twod                       spec="OPTIONAL NO_DATA"
-                                        attribute1="third-dim REQUIRED STRING 'x,X,y,X,z,Z'"/> <!-- used for purely two-dimensional problem when pinning down the pressure 
-                                                                                                    third-dim refers to the dimension not in use -->
+          <use_ref_point                spec="OPTIONAL NO_DATA"> <!-- pin pressure down to zero at a specified location -->
+
+            <reduce_dims                spec="OPTIONAL STRING"/> <!-- These are the dimensions that you DONT want participating in the -->
+                                                                 <!-- reference pressure. For two-D problems, you specify one value. For -->
+                                                                 <!-- one-D problems you specify two. Use x, y, or z in a vector to remove. -->
+
           </use_ref_point>
           
         <Parameters                     spec="OPTIONAL NO_DATA"
