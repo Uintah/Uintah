@@ -197,6 +197,49 @@ inline HOST_DEVICE bool operator!=(const GPUIntVector& a, const GPUIntVector& b)
 {
   return ( (a.x != b.x) || (a.y != b.y) || (a.z != b.z ));
 }
+
+//__________________________________
+//  returns gpuIntVector > gpuIntVector
+inline HOST_DEVICE bool operator>(GPUIntVector& a, GPUIntVector& b)
+{
+  return ( (a.x > b.x) || (a.y > b.y) || (a.z > b.z ));
+}
+
+inline HOST_DEVICE bool operator>(const GPUIntVector& a, GPUIntVector& b)
+{
+  return ( (a.x > b.x) || (a.y > b.y) || (a.z > b.z ));
+}
+
+inline HOST_DEVICE bool operator>(GPUIntVector& a, const GPUIntVector& b)
+{
+  return ( (a.x > b.x) || (a.y > b.y) || (a.z > b.z ));
+}
+inline HOST_DEVICE bool operator>(const GPUIntVector& a, const GPUIntVector& b)
+{
+  return ( (a.x > b.x) || (a.y > b.y) || (a.z > b.z ));
+}
+
+//__________________________________
+//  returns gpuIntVector < gpuIntVector
+inline HOST_DEVICE bool operator<(GPUIntVector& a, GPUIntVector& b)
+{
+  return ( (a.x < b.x) || (a.y < b.y) || (a.z < b.z ));
+}
+
+inline HOST_DEVICE bool operator<(const GPUIntVector& a, GPUIntVector& b)
+{
+  return ( (a.x < b.x) || (a.y < b.y) || (a.z < b.z ));
+}
+
+inline HOST_DEVICE bool operator<(GPUIntVector& a, const GPUIntVector& b)
+{
+  return ( (a.x < b.x) || (a.y < b.y) || (a.z < b.z ));
+}
+inline HOST_DEVICE bool operator<(const GPUIntVector& a, const GPUIntVector& b)
+{
+  return ( (a.x < b.x) || (a.y < b.y) || (a.z < b.z ));
+}
+
 //__________________________________
 //  returns gpuPoint + gpuVector
 inline HOST_DEVICE GPUPoint operator+(GPUPoint& p, GPUVector& b)
@@ -592,7 +635,7 @@ __device__ bool isDbgCellDevice( GPUIntVector me);
 //______________________________________________________________________
 //
 template< class T>
-__device__ void GPUVariableSanityCK(GPUGridVariable<T>& Q,
+__device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
                                     const GPUIntVector Lo,
                                     const GPUIntVector Hi);
 
