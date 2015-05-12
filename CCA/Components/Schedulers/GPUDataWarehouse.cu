@@ -518,7 +518,6 @@ GPUDataWarehouse::getLevelItem(char const* label, int matlIndx, int levelIndx)
 
   if (d_debug && threadID == 0 && blockID == 0) {
     printf("GPUDW::getLevelItem() \"%-13s\" L-%i from GPUDW %p, size (%d vars)", label, levelIndx, this, d_numLevelItems);
-    printf("  Available levelDB labels: %d\n", MAX_LEVELDB_ITEMS - d_numLevelItems);
   }
 
   //sync before get
