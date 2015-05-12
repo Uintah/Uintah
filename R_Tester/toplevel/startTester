@@ -60,7 +60,7 @@ if test "$MACHINE" = "albion" ; then
   TEMP_DIR=/home/rt/"$OS"
   SCRIPT_DIR=/home/rt/scripts
   CHECKPOINTS=/home/rt/CheckPoints
-  MPIRUN=/usr/local/openmpi/bin/mpirun
+  MPIRUN=/usr/local/openmpi/bin/
   export TEST_COMPONENTS="GPU Examples"             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
@@ -185,7 +185,7 @@ EOF
 fi
 
 
-PATH="$PATH":"$SCRIPT_DIR":.
+PATH="$PATH":"$SCRIPT_DIR":.:"$MPIRUN"
 export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
 
 # set number of processors to use when building
