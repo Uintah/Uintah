@@ -40,14 +40,15 @@
 
 //__________________________________
 //  To Do
-//  - remove hard wiring MAXLEVELS.  See line 291
 //  - Implement getRegion()  Currently can only pull fineLevel patch out from gpuDW with halo[0,0,0]
+//  - Fix the delete(GPUVariable)  cuda-memcheck crashes on these
 //  - Implement fixed and dynamic ROI.
 //  - dynamic block size?
 //  - Implement labelNames in unified memory.
 //  - investigate the performance with different patch configurations
 //  - deterministic random numbers
 //  - Ray steps
+
 
 //__________________________________
 //
@@ -129,15 +130,13 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   //  Sanity checks                     
 #if 0
   if (isThread0()) {
-   printf(" level: %i, patch: %i \n",levelIndx, patch.ID); 
+   printf("  GPUVariable Sanity check level: %i, patch: %i \n",levelIndx, patch.ID); 
   }
-  GPUVariableSanityCK<double>(divQ,          patch.loEC, patch.hiEC);
-  GPUVariableSanityCK<double>(const_cast< GPUGridVariable<double>*> (sigmaT4OverPi), patch.loEC, patch.hiEC);
-
-  GPUIntVector lo = sigmaT4OverPi.getLowIndex();
-  GPUIntVector hi = sigmaT4OverPi.getHighIndex();
-  printf("  lo:[%i,%i,%i], hi[%i,%i,%i] nCells: [%i,%i,%i]\n", lo.x, lo.y, lo.z, hi.x, hi.y, hi.z);
 #endif
+  GPUVariableSanityCK(abskg,         patch.loEC, patch.hiEC);
+  GPUVariableSanityCK(sigmaT4OverPi, patch.loEC, patch.hiEC);
+
+
   double DyDx = patch.dx.y/patch.dx.x;
   double DzDx = patch.dx.z/patch.dx.x;
 
@@ -352,7 +351,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   const GPUGridVariable<T>*    sigmaT4OverPi = new GPUGridVariable<T>[maxLevels];
   const GPUGridVariable<int>*  cellType      = new GPUGridVariable<int>[maxLevels];
 
-  //new_gdw->print();
+  new_gdw->print();
 
   //__________________________________
   // coarse level data for the entire level
@@ -363,60 +362,32 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       cellType_gdw->getLevel( cellType[l],     "cellType", matl, l);
 
 #if 0
-      /*`==========TESTING==========*/
       if (isThread0()) {
-        printf("\nCOARSE-LEVEL\n");
-        for (int i = d_levels[l].regionLo.x; i < d_levels[l].regionHi.x; i++) {
-          for (int j = d_levels[l].regionLo.y; j < d_levels[l].regionHi.y; j++) {
-            for (int k = d_levels[l].regionLo.z; k < d_levels[l].regionHi.z; k++) {
-              GPUIntVector idx = make_int3(i, j, k);
-              printf("[%d,%d,%d]:", i, j, k);
-              printf("    abskg: %f",        abskg         [l][idx]);
-              printf("    sigmaT4OverPi %f", sigmaT4OverPi [l][idx]);
-              printf("    cellType %d",      cellType      [l][idx]);
-              printf("\n");
-            }
-          }
-        }
+        printf("  GPUVariable Sanity check level: %i\n",l);
       }
-      /*===========TESTING==========`*/
 #endif
+      GPUVariableSanityCK(abskg[l],        d_levels[l].regionLo,d_levels[l].regionHi);
+      GPUVariableSanityCK(sigmaT4OverPi[l],d_levels[l].regionLo,d_levels[l].regionHi);
     }
   }
 
   //__________________________________
-  //  fine level data for the region of interest
+  //  fine level data for the region of interest.
+  //  ToDo:  replace get with getRegion() calls so 
+  //  so the halo can be > 0
   if ( RT_flags.whichROI_algo == patch_based ) {
 
-    abskg_gdw->get(abskg[fineL], "abskg", finePatch.ID, matl, fineL);
-    sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4", finePatch.ID, matl, fineL);
-    cellType_gdw->get(cellType[fineL], "cellType", finePatch.ID, matl, fineL);
+    abskg_gdw->get(abskg[fineL],           "abskg",    finePatch.ID, matl, fineL);
+    sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4",  finePatch.ID, matl, fineL);
+    cellType_gdw->get(cellType[fineL],     "cellType", finePatch.ID, matl, fineL);
 
 #if 0
-    /*`==========TESTING==========*/
     if (isThread0()) {
-      printf("\nFINE-LEVEL\n");
-      for (int i = fineLevel_ROI_Lo.x; i < fineLevel_ROI_Hi.x; i++) {
-        for (int j = fineLevel_ROI_Lo.y; j < fineLevel_ROI_Hi.y; j++) {
-          for (int k = fineLevel_ROI_Lo.z; k < fineLevel_ROI_Hi.z; k++) {
-            GPUIntVector idx = make_int3(i, j, k);
-            printf("[%d,%d,%d]:", i, j, k);
-            printf("    abskg: %f",        abskg         [fineL][idx]);
-            printf("    sigmaT4OverPi %f", sigmaT4OverPi [fineL][idx]);
-            printf("    cellType %d",      cellType      [fineL][idx]);
-            printf("\n");
-          }
-        }
-      }
+      printf("  GPUVariable Sanity check level: %i\n",fineL);
     }
-    /*===========TESTING==========`*/
 #endif
-
-  #if 0       // to be filled in
-    abskg_dw->getRegion(   abskg[fineL]   ,       "abskg",    d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-    sigmaT4_dw->getRegion( sigmaT4OverPi[fineL] , "sigmaT4",  d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-    cellType_dw->getRegion( cellType[fineL] ,     "cellType", d_matl , fineLevel, fineLevel_ROI_Lo, fineLevel_ROI_Hi);
-  #endif
+    GPUVariableSanityCK(abskg[fineL],        fineLevel_ROI_Lo,fineLevel_ROI_Hi);
+    GPUVariableSanityCK(sigmaT4OverPi[fineL],fineLevel_ROI_Lo,fineLevel_ROI_Hi);
   }
 
   GPUGridVariable<double> divQ;
@@ -462,7 +433,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   }
 
 
-#if 1
+#if 0
   //______________________________________________________________________
   //         S O L V E   D I V Q
   //______________________________________________________________________
@@ -521,11 +492,14 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   }  // solve divQ
 #endif
 
+ 
+#if 0       
+  // If you run cuda-memcheck it crashes here with "Malloc/Free error encountered : Invalid pointer to free"
   // free up dynamically allocated items
   delete(abskg);
   delete(sigmaT4OverPi);
   delete(cellType);
-
+#endif
 
 }
 
@@ -1252,26 +1226,26 @@ __device__ bool isDbgCellDevice( GPUIntVector me )
   return false;
 }
 //______________________________________________________________________
-//    See if every 
-
+//   Perform some sanity checks on the Variable.  This is for debugging
 template< class T>
-__device__ void GPUVariableSanityCK(GPUGridVariable<T>& Q,
+__device__ void GPUVariableSanityCK(const GPUGridVariable<T>& Q,
                                     const GPUIntVector Lo,
                                     const GPUIntVector Hi)
 {
+#if SCI_ASSERTION_LEVEL > 0
   if (isThread0()) {
-    GPUIntVector lo = Q.getLowIndex();
-    GPUIntVector hi = Q.getHighIndex();
-    GPUIntVector diff = (hi - lo);
+    GPUIntVector varLo = Q.getLowIndex();
+    GPUIntVector varHi = Q.getHighIndex();
     
-   if( lo != Lo || hi != Hi){
-    printf ( "ERROR: the \n");
-   }
-    
-    
-    printf("  lo:[%i,%i,%i], hi[%i,%i,%i] nCells: [%i,%i,%i]\n", lo.x, lo.y, lo.z, hi.x, hi.y, hi.z,
-              diff.x, diff.y, diff.z);
-    
+    if( Lo < varLo || varHi < Hi){
+      printf ( "ERROR: GPUVariableSanityCK \n");
+      printf("  Variable:          varLo:[%i,%i,%i], varHi[%i,%i,%i]\n", varLo.x, varLo.y, varLo.z, varHi.x, varHi.y, varHi.z);
+      printf("  Requested extents: varLo:[%i,%i,%i], varHi[%i,%i,%i]\n", Lo.x, Lo.y, Lo.z, Hi.x, Hi.y, Hi.z);
+      printf(" Now existing...");
+      __threadfence();
+      asm("trap;");
+    }
+
     for (int i = Lo.x; i < Hi.x; i++) {
       for (int j = Lo.y; j < Hi.y; j++) {
         for (int k = Lo.z; k < Hi.z; k++) {
@@ -1284,13 +1258,20 @@ __device__ void GPUVariableSanityCK(GPUGridVariable<T>& Q,
             asm("trap;");
           }
           
-        }
-      }
-    }
-  }  
+        }  // k loop
+      }  // j loop
+    }  // i loop
+  }  // thread0
+#endif
 }
-
-
+template
+__device__ void GPUVariableSanityCK(const GPUGridVariable<float>& Q,
+                                    const GPUIntVector Lo,
+                                    const GPUIntVector Hi);
+template
+__device__ void GPUVariableSanityCK(const GPUGridVariable<double>& Q,
+                                    const GPUIntVector Lo,
+                                    const GPUIntVector Hi);
 //______________________________________________________________________
 //
 template< class T>
