@@ -41,7 +41,8 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
+#define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
   TO DO
@@ -342,6 +343,22 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     }
   }
   d_sigma_over_pi = d_sigma/M_PI;
+  
+
+//__________________________________
+// Increase the printf buffer size only once!  
+#ifdef HAVE_CUDA
+  #ifdef CUDA_PRINTF
+  if( Parallel::usingDevice() ){
+    size_t size;
+    CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize) );
+    CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
+    printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
+  }
+  #endif
+#endif
+  
+  
 }
 
 //______________________________________________________________________
