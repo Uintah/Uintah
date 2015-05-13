@@ -407,6 +407,10 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     CCVariable<double> src;
     new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
     src.initialize(0.0); 
+
+    CCVariable<double> radVolq;
+    new_dw->allocateAndPut( radVolq,VarLabel::find("radiationVolq"), _matl, patch ); 
+    radVolq.initialize(0.0);  // needed for coal
     } else {
       CCVariable<double> abskg;
       new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch );
