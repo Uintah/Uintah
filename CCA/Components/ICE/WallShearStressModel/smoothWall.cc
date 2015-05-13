@@ -228,7 +228,7 @@ void smoothwall::wallShearStresses(DataWarehouse* old_dw,
         // end of solve for uTau
 
         // bulletproofing
-        if (count == d_max_iter || isnan(uTau) ) {
+        if (count == d_max_iter || std::isnan(uTau) ) {
           ostringstream warn;
           warn << "ERROR: ICE:smoothwall::wallShearStresses cell (" << c << ") exeeded the max iterations, or a NAN was detected"
                << " when computing uTau.\n"

@@ -2272,8 +2272,8 @@ void AMRMPM::computeInternalForce(const ProcessorGroup*,
             // cout << " CIF: ni: " << ni[k] << " div " << div << "\t internalForce " << internalforce[ni[k]] << endl;
             // cout << " div " << div[k] << " stressPress: " << stresspress  << endl;
             
-            if( isinf( internalforce[ni[k]].length() ) || 
-                isnan( internalforce[ni[k]].length() ) ){
+            if( std::isinf( internalforce[ni[k]].length() ) || 
+                std::isnan( internalforce[ni[k]].length() ) ){
                 cout << "INF: " << ni[k] << " " << internalforce[ni[k]] 
                      << " div: " << div << " stressPress: " << stresspress 
                      << " pvol " << pvol[idx] << endl;
@@ -2439,7 +2439,7 @@ void AMRMPM::computeInternalForce_CFI(const ProcessorGroup*,
 
 
   /*`==========TESTING==========*/
-                if(isinf( internalforce[fineNode].length() ) ||  isnan( internalforce[fineNode].length() )){
+                if(std::isinf( internalforce[fineNode].length() ) ||  std::isnan( internalforce[fineNode].length() )){
                   cout << "INF: " << fineNode << " " << internalforce[fineNode] 
                        << " div[k]:"<< div[k] << " stressPress: " << stresspress
                        << " pvol " << pvol_coarse[idx] << endl;
