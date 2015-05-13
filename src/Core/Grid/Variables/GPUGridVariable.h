@@ -40,26 +40,34 @@ namespace Uintah {
 
       HOST_DEVICE const T& operator[](const int3& idx) const
       {  //get data from global index
-        CHECK_INSIDE(idx, d_offset, d_size)
+#if SCI_CUDA_ASSERTION_LEVEL >= 3
+        checkBounds( idx);
+#endif
         return d_data[idx.x - d_offset.x + d_size.x * (idx.y - d_offset.y + (idx.z - d_offset.z) * d_size.y)];
       }
 
       HOST_DEVICE T& operator[](const int3& idx)
       {  //get data from global index
-        CHECK_INSIDE(idx, d_offset, d_size)
+#if SCI_CUDA_ASSERTION_LEVEL >= 3
+        checkBounds( idx);
+#endif
         return d_data[idx.x - d_offset.x + d_size.x * (idx.y - d_offset.y + (idx.z - d_offset.z) * d_size.y)];
       }
 
       HOST_DEVICE const T&
       operator()(const int& x, const int& y, const int& z) const
       {  //get data from global index
-        CHECK_INSIDE3(x, y, z, d_offset, d_size)
+#if SCI_CUDA_ASSERTION_LEVEL >= 3
+        checkBounds3(x,y,z);
+#endif
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];
       }
 
       HOST_DEVICE T& operator()(const int& x, const int& y, const int& z)
       {  //get data from global index
-        CHECK_INSIDE3(x, y, z, d_offset, d_size)
+#if SCI_CUDA_ASSERTION_LEVEL >= 3
+        checkBounds3(x,y,z);
+#endif
         return d_data[x - d_offset.x + d_size.x * (y - d_offset.y + (z - d_offset.z) * d_size.y)];
       }
 
@@ -121,6 +129,44 @@ namespace Uintah {
 
       HOST_DEVICE GPUArray3& operator=(const GPUArray3&);
       HOST_DEVICE GPUArray3(const GPUArray3&);
+      
+      //__________________________________
+      //
+      HOST_DEVICE void checkBounds( const int3& idx){
+         int3 Lo = getLowIndex();  
+         int3 Hi = getHighIndex();                                             
+         if (idx.x < Lo.x || idx.y < Lo.y || idx.z < Lo.z ||                                    
+             idx.x > Hi.x || idx.y > Hi.y || idx.z > Hi.z){        
+                printf ("GPU OUT_OF_BOUND ERROR: pointer: %p (%d, %d, %d) not inside (%d, %d, %d)-(%d, %d, %d) \n",    
+                        (void*)d_data, idx.x, idx.y, idx.z, Lo.x, Lo.y, Lo.z, Hi.x, Hi.y, Hi.z);                          
+        }
+      }
+
+      //__________________________________
+      //    const version
+      HOST_DEVICE void checkBounds( const int3& idx) const{
+         int3 Lo = getLowIndex();  
+         int3 Hi = getHighIndex();                                             
+         if (idx.x < Lo.x || idx.y < Lo.y || idx.z < Lo.z ||                                    
+             idx.x > Hi.x || idx.y > Hi.y || idx.z > Hi.z){        
+                printf ("GPU OUT_OF_BOUND ERROR (const) (: pointer: %p (%d, %d, %d) not inside (%d, %d, %d)-(%d, %d, %d) \n",    
+                        (void*)d_data, idx.x, idx.y, idx.z, Lo.x, Lo.y, Lo.z, Hi.x, Hi.y, Hi.z);                          
+        }
+      }
+      //__________________________________
+      //
+      HOST_DEVICE void checkBounds3(const int& x, const int& y, const int& z ){
+        int3 idx = make_int3(x,y,z);
+        checkBounds(idx);
+      }
+      //__________________________________
+      //    const version
+      HOST_DEVICE void checkBounds3(const int& x, const int& y, const int& z )const {
+        int3 idx = make_int3(x,y,z);
+        checkBounds(idx);
+      }
+      
+      
   };
 
   template<class T> class GPUGridVariable: public GPUGridVariableBase, public GPUArray3<T> {
