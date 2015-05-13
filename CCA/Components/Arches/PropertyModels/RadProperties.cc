@@ -103,7 +103,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
         break;
       }
       else if ( radiation_model == "rmcrt_radiation"){
-        db->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+        //db->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+        _scatteringOn=false ; 
         break;
       }
     }
