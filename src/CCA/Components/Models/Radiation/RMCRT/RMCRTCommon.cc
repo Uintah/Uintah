@@ -97,7 +97,9 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 RMCRTCommon::~RMCRTCommon()
 {
   VarLabel::destroy( d_sigmaT4Label );
-  VarLabel::destroy( d_abskgLabel );
+  if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type){
+    VarLabel::destroy( d_abskgLabel );
+  }
 
   // when the radiometer class is invoked d_matlSet it deleted twice.  This prevents that.
   if( d_matlSet ) {
