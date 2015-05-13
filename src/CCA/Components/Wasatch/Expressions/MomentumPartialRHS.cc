@@ -110,8 +110,6 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
 
-  result <<= 0.0;
-
   if( is3dconvdiff_ ){ // inline all convective and diffusive contributions
     const XFluxT& cfx = cFluxX_->field_ref();
     const YFluxT& cfy = cFluxY_->field_ref();
@@ -122,7 +120,7 @@ evaluate()
     const ZFluxT& tz = tauZ_->field_ref();
 
     const SVolField& mu = visc_->field_ref();
-    // note: this does not diff, but is slow:
+    // note: this does not diff, but is slower:
     result <<= (*divXOp_)(-cfx)
               +(*divYOp_)(-cfy)
               +(*divZOp_)(-cfz)
@@ -135,6 +133,9 @@ evaluate()
 //               (*divZOp_)( -cfz + 2.0 * (*sVol2ZFluxInterpOp_)(mu) * tz );
   }
   else{ // 1D and 2D cases, or cases with only convection or diffusion - not optimized for these...
+
+    result <<= 0.0;
+
     if( doXConv_ ) result <<= result - (*divXOp_)(cFluxX_->field_ref());
     if( doYConv_ ) result <<= result - (*divYOp_)(cFluxY_->field_ref());
     if( doZConv_ ) result <<= result - (*divZOp_)(cFluxZ_->field_ref());
@@ -145,9 +146,9 @@ evaluate()
   }
   
   // sum in other terms as required
-  if( hasBodyF_ ) result <<= result + (*densityInterpOp_)(density_->field_ref()) * bodyForce_->field_ref();
-  if( hasSrcTerm_ ) result <<= result + srcTerm_->field_ref();
-  if ( hasIntrusion_ ) result <<= result * volfrac_->field_ref();
+  if( hasBodyF_     ) result <<= result + (*densityInterpOp_)(density_->field_ref()) * bodyForce_->field_ref();
+  if( hasSrcTerm_   ) result <<= result + srcTerm_->field_ref();
+  if( hasIntrusion_ ) result <<= result * volfrac_->field_ref();
 }
 
 //--------------------------------------------------------------------
