@@ -793,6 +793,7 @@ THREAD_IMPL
 RT_LIB_FLAG
 M_LIB_DIR_FLAG
 M_LIB_FLAG
+DEF_CXX11
 TEMPLATE_BOX
 TEMPLATE_TAG
 REPOSITORY_FLAGS
@@ -8593,6 +8594,38 @@ done
 ac_config_headers="$ac_config_headers include/sci_defs/config_testdefs.h"
 
 sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
+
+# Check if we are using a c++-11 compiler
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if using a c++-11 compiler" >&5
+$as_echo_n "checking if using a c++-11 compiler... " >&6; }
+have_cxx11="no"
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <iostream>
+int
+main ()
+{
+int a; decltype(a) b; auto d = a; auto l = [](){};
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  have_cxx11=yes
+else
+  have_cxx11=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+if test $have_cxx11 = yes; then
+   DEF_CXX11="#define HAVE_CXX11 1"
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_cxx11" >&5
+$as_echo "$have_cxx11" >&6; }
+
+
 
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for required libraries and headers  ------

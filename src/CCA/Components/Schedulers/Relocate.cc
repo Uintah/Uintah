@@ -972,8 +972,8 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
         
         ParticleSubset::iterator delete_iter = delete_pset->begin();
         
-        ASSERT(is_sorted(pset->begin(), pset->end()));
-        ASSERT(is_sorted(delete_pset->begin(), delete_pset->end()));
+        ASSERT(std::is_sorted(pset->begin(), pset->end()));
+        ASSERT(std::is_sorted(delete_pset->begin(), delete_pset->end()));
         ASSERT(pset->begin() == pset->end() || *pset->begin() == 0);
         
         // The previous Particle's relocation patch
@@ -1415,8 +1415,8 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
 
         ParticleSubset::iterator delete_iter = delete_pset->begin();
 
-        ASSERT(is_sorted(pset->begin(), pset->end()));
-        ASSERT(is_sorted(delete_pset->begin(), delete_pset->end()));
+        ASSERT(std::is_sorted(pset->begin(), pset->end()));
+        ASSERT(std::is_sorted(delete_pset->begin(), delete_pset->end()));
         ASSERT(pset->begin() == pset->end() || *pset->begin() == 0);
 
         // The previous Particle's relocation patch
