@@ -260,6 +260,13 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
     new_dw->get( RHS_source , _RHS_source_varlabel , matlIndex , patch , gn , 0 );
     
     double rcmass_init = rc_mass_init[d_quadNode];
+    double Xv;
+    double Fv1;
+    double Fv2;
+    double k1;        ///< Rate constant for devolatilization reaction 1
+    double k2;        ///< Rate constant for devolatilization reaction 2
+    double rateMax;
+    double rate;
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
