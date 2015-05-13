@@ -32,7 +32,6 @@
 #include <iostream>
 
 #define BLOCKSIZE 16
-//#define PRINTF            // if using printf statements to debug
 
 using namespace Uintah;
 using namespace std;
@@ -69,12 +68,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     //__________________________________
     //  increase the size of the printbuffer on the device
-#ifdef PRINTF
-    size_t size;
-    cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
-    cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
-    printf(" Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
-#endif
+
 
     //__________________________________
     //
@@ -238,15 +232,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
       return;
     }
-
-    //__________________________________
-    //  increase the size of the printbuffer on the device
-#ifdef PRINTF
-    size_t size;
-    cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
-    cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
-    printf(" Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
-#endif
 
     //__________________________________
     //  bulletproofing   FIX ME 
