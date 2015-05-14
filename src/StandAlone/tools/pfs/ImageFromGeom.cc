@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
   // Open file containing sphere center locations and radii
   string spherefile_name = "spheres.txt";
   ifstream fp(spherefile_name.c_str());
-  if(fp==0){
+  if(!fp.is_open()){
      cout << "FATAL ERROR : Failed opening spheres.txt file" << endl;
      exit(0);
   }
