@@ -64,6 +64,16 @@ if [ "$OS" = "Linux" ]; then
        CXX=g++-4.8 \\
        F77=gfortran-4.8"   
   fi
+  
+  if [ "$MACHINE" == "cyrus.mech.utah.edu" ]; then
+    COMMON="      --with-cuda=/usr/local/cuda-6.5 \\
+      --enable-gencode=35 \\
+      --enable-ray-scatter\\"
+
+    ENV="       CC=gcc-4.8 \\
+       CXX=g++-4.8 \\
+       F77=gfortran-4.8"   
+  fi
 fi
 
 
@@ -157,7 +167,7 @@ fi
 
 if [ $retval != "0" ]; then
   # try it again -- it may not go all the way the first time
-  echo "Failed second compile, try again (storing make errors)"
+  echo "Failed second compile, try again \(storing make errors\)"
   $MAKE -k -j$MAKE_PARALLELISM > ../make3.log 2>&1
   retval=$?
 fi

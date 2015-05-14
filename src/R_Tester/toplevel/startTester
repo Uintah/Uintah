@@ -50,7 +50,6 @@ if [ "$MACHINE" == "rt" ]; then
   WEBLOG=http://155.98.58.231:8050/~csafe-tester/Uintah.html
 fi
 
-
 if test "$MACHINE" = "albion" ; then
   DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
   REPLY_TO="t.harman@utah.edu"
@@ -65,6 +64,22 @@ if test "$MACHINE" = "albion" ; then
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/home/rt/public_html/Uintah.html
+  WEBLOG=NONE
+fi
+
+if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
+  REPLY_TO="t.harman@utah.edu"
+  COMMON_GROUP="users"
+  BUILD_DIR=/raid/home/rt/"$OS"
+  TEST_DATA=/raid/home/rt/"$OS"/TestData
+  TEMP_DIR=/raid/home/rt/"$OS"
+  SCRIPT_DIR=/raid/home/rt/scripts
+  CHECKPOINTS=/raid/home/rt/CheckPoints
+  export TEST_COMPONENTS="GPU Examples"             # only run gpu tests
+  
+  # Where the webpage will be, and init webpage.  (SEE above notes)
+  HTMLLOG=/raid/home/rt/public_html/Uintah.html
   WEBLOG=NONE
 fi
 
