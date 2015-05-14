@@ -29,23 +29,22 @@
 
 namespace SCIRun {
 
-using namespace std;
 
 static DebugStream dbg("ProgressiveWarning", true);
 
-ProgressiveWarning::ProgressiveWarning( const string & message,
-                                        int multiplier /* = -1 */, 
-                                        ostream & stream /* = cerr */)
+  ProgressiveWarning::ProgressiveWarning(const std::string & message,
+                                         int multiplier /* = -1 */, 
+                                         std::ostream & stream /* = cerr */)
 {
   d_message = message;
   d_multiplier = multiplier;
 
   if( d_multiplier == 1 ) {
-    cout << "Warning: ProgressiveWarning multiplier may not be set to 1... changing to 2.\n";
+    std::cout << "Warning: ProgressiveWarning multiplier may not be set to 1... changing to 2.\n";
     d_multiplier = 2;
   }
 
-  if (stream == cerr)
+  if (stream.rdbuf() == std::cerr.rdbuf())
     d_out = &dbg;
   else
     d_out = &stream;
@@ -79,7 +78,7 @@ ProgressiveWarning::invoke( int numTimes /* = -1 */ )
 }
 
 void
-ProgressiveWarning::changeMessage( const string & message )
+ProgressiveWarning::changeMessage( const std::string & message )
 {
   d_message = message;
 }
