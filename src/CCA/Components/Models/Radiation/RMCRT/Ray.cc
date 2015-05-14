@@ -49,43 +49,6 @@
   create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
   and use it for scheduling.  Add logic to what is actually in that vector.
 
- ISSUES:
-   For GPU code to run you must comment out sched_rayTrace()
-      tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-      tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
-      tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-
-  RMCRT_bm1_ML.ups:
-     - It crashes when you uncomment the 3rd level.  The pathology
-       is 1) a ray is next to a domain boundary and is moving parallel to it.  It hits the edge of the fine patch
-      and drops down a level.  The coarsening the cell index, now moves the ray closer to the edge of the domain.
-      The ray now travels into the extra cell on the coarsest level, reflects and crashes.
-      Here is some diagnostic info
-
-
-      [int 1, 8, 35] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 0 containsCell: 1
-          origin [int 2, 4, 16]dir 2 cur [int 1, 8, 35] prevCell [int 1, 8, 34] sumI 0.0527691 in_domain 1
-          tmaxX 22.1192 tmaxY 22.042 tmaxZ 20.1616
-          direction [-0.0700541 0.196376 0.978023]
-
-      [int 1, 8, 36] **jumpFinetoCoarserLevel 1 jumpCoarsetoCoarserLevel 0 containsCell: 0
-       ** Jumping off fine patch switching Levels:  prev L: 2 cur L 1 cur [int 0, 4, 18]
-          origin [int 2, 4, 16]dir 2 cur [int 0, 4, 18] prevCell [int 1, 8, 35] sumI 0.0533102 in_domain 1
-          tmaxX 22.1192 tmaxY 27.1343 tmaxZ 22.2066
-          direction [-0.0700541 0.196376 0.978023]
-
-      [int -1, 4, 18] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 1 containsCell: 1
-       ** Switching Levels:  prev L: 1 cur L 0 cur [int -1, 2, 9] c_old [int -1, 4, 18]
-          origin [int 2, 4, 16]dir 0 cur [int -1, 2, 9] prevCell [int 0, 4, 18] sumI 0.0553113 in_domain 0
-          tmaxX 22.1192 tmaxY 32.2266 tmaxZ 22.2066
-          direction [-0.0700541 0.196376 0.978023]
-
-       REFLECTING
-      [int 1, 4, 18] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 0 containsCell: 1
-
-      <crash>
-
-
 ______________________________________________________________________*/
 
 
@@ -428,6 +391,13 @@ Ray::sched_rayTrace( const LevelP& level,
   Task *tsk = NULL;
 
   if (Parallel::usingDevice()) {          // G P U
+  
+    if(radCalc_freq != 1){                // FIXME    
+       ostringstream warn;
+       warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
@@ -731,6 +701,14 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
+    
+    if(radCalc_freq != 1){                // FIXME    
+       ostringstream warn;
+       warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
       tsk = scinew Task( taskname, this, &Ray::rayTraceDataOnionGPU< double >,
                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
