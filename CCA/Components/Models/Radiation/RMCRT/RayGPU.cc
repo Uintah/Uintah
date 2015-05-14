@@ -59,10 +59,15 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   if (event == Task::GPU) {
 #ifdef HAVE_CUDA
 
-    if (doCarryForward(radCalc_freq)) {
+    if ( doCarryForward( radCalc_freq ) ) {
+      printTask(patches,patches->get(0), dbggpu,"Doing Ray::rayTraceGPU (carryForward)");
+      bool replaceVar = true;
+      new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
+      new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
+      new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
       return;
     }
-
+    
     const Level* level = getLevel(patches);
     const int levelIndx = level->getIndex();
 

@@ -40,6 +40,7 @@
 
 //__________________________________
 //  To Do
+//  - Need to implement transferFrom so use can use calc_frequency > 1
 //  - Implement getRegion()  Currently can only pull fineLevel patch out from gpuDW with halo[0,0,0]
 //  - Fix the delete(GPUVariable)  cuda-memcheck crashes on these
 //  - Implement fixed and dynamic ROI.
@@ -1217,8 +1218,9 @@ __device__ bool isDbgCellDevice( GPUIntVector me )
 {
   int size = 1;  
   GPUIntVector dbgCell[1];
-  dbgCell[0] = make_int3(0,0,0);
-
+  dbgCell[0] = make_int3(10,10,10);
+  
+ 
   
   for (int i = 0; i < size; i++) {
     if( me == dbgCell[i]){
