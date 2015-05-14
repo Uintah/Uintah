@@ -104,15 +104,12 @@ private:
   double _Av;        ///< Pre-exponential factors for devolatilization rate constants
   double _Ev;        ///< Activation energy for devolatilization rate constant
   double _Yv;       ///< Volatile fraction from proximate analysis
-  double kv;        ///< Rate constant for devolatilization reaction 1
   double _c0;
   double _c1;
   double _c2;
   double _c3;
   double _c4;
   double _c5;
-  double Xv;
-  double Fv;
   double rhop;
   double total_rc;
   double total_dry;
@@ -123,8 +120,6 @@ private:
   double _pi;
   double _R;
   
-  double rateMax;
-  double rate;
   double _rc_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight 
   double _weight_small;   ///< small weight 
