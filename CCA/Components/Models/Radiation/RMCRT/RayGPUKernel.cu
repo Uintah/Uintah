@@ -289,8 +289,10 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
+        if( isDbgCellDevice( origin ) ){
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x, origin.y, origin.z, sumI,divQ[origin], radiationVolQ[origin],abskg[origin], sigmaT4OverPi[origin]);
+        }
 #endif
 /*===========TESTING==========`*/
       }  // end z-slice loop
@@ -1215,7 +1217,7 @@ __device__ bool isDbgCellDevice( GPUIntVector me )
 {
   int size = 1;  
   GPUIntVector dbgCell[1];
-  dbgCell[0] = make_int3(36,0,0);
+  dbgCell[0] = make_int3(0,0,0);
 
   
   for (int i = 0; i < size; i++) {
