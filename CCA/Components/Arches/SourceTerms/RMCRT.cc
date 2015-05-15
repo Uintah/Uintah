@@ -370,7 +370,8 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
 
     //  only schedule src on arches level
     if( L_ID == _archesLevelIndex ){
-    tsk->computes(_src_label);
+      tsk->computes(_src_label);
+      tsk->computes(VarLabel::find("radiationVolq"));
     } else {
       tsk->computes( _abskgLabel );
     }
@@ -404,13 +405,13 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::initialize");
 
     if( level->getIndex() == _archesLevelIndex ){
-    CCVariable<double> src;
-    new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
-    src.initialize(0.0); 
+      CCVariable<double> src;
+      new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
+      src.initialize(0.0); 
 
-    CCVariable<double> radVolq;
-    new_dw->allocateAndPut( radVolq,VarLabel::find("radiationVolq"), _matl, patch ); 
-    radVolq.initialize(0.0);  // needed for coal
+      CCVariable<double> radVolq;
+      new_dw->allocateAndPut( radVolq,VarLabel::find("radiationVolq"), _matl, patch ); 
+      radVolq.initialize(0.0);  // needed for coal
     } else {
       CCVariable<double> abskg;
       new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch );
