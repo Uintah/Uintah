@@ -68,11 +68,13 @@ MomRHSPart( const Expr::Tag& convFluxX,
   if( doZTau_ )   tauZ_ = this->template create_field_request<ZFluxT>(tauZ);
 
   if(doXTau_ || doYTau_ || doZTau_)  visc_ = this->template create_field_request<SVolField>(viscTag);
-   density_ = this->template create_field_request<SVolField>(densityTag);
   
-  if( hasBodyF_ )   bodyForce_ = this->template create_field_request<FieldT>(bodyForceTag);
+  if( hasBodyF_ )     {
+    density_ = this->template create_field_request<SVolField>(densityTag);
+    bodyForce_ = this->template create_field_request<FieldT>(bodyForceTag);
+  }
   if( hasSrcTerm_ )   srcTerm_ = this->template create_field_request<FieldT>(srcTermTag);
-  if( hasIntrusion_ )   volfrac_ = this->template create_field_request<FieldT>(volFracTag);
+  if( hasIntrusion_ ) volfrac_ = this->template create_field_request<FieldT>(volFracTag);
 }
 
 //--------------------------------------------------------------------
