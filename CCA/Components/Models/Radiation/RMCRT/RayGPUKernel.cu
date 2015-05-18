@@ -350,11 +350,11 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
   //__________________________________
   //
-  const GPUGridVariable<T>*    abskg         = new GPUGridVariable<T>[maxLevels];
-  const GPUGridVariable<T>*    sigmaT4OverPi = new GPUGridVariable<T>[maxLevels];
-  const GPUGridVariable<int>*  cellType      = new GPUGridVariable<int>[maxLevels];
+  const GPUGridVariable<T>    abskg[d_MAXLEVELS];
+  const GPUGridVariable<T>    sigmaT4OverPi[d_MAXLEVELS];
+  const GPUGridVariable<int>  cellType[d_MAXLEVELS];
 
-  new_gdw->print();
+//  new_gdw->print();
 
   //__________________________________
   // coarse level data for the entire level
@@ -493,15 +493,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       }  // end z-slice loop
     }  // end ROI loop
   }  // solve divQ
-#endif
-
- 
-#if 0       
-  // If you run cuda-memcheck it crashes here with "Malloc/Free error encountered : Invalid pointer to free"
-  // free up dynamically allocated items
-  delete(abskg);
-  delete(sigmaT4OverPi);
-  delete(cellType);
 #endif
 
 }
