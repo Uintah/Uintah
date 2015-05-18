@@ -58,9 +58,10 @@ SUBDIRS := \
 	$(SRCDIR)/ThermalContact    \
 	$(SRCDIR)/PhysicalBC        \
 	$(SRCDIR)/ParticleCreator   \
-	$(SRCDIR)/CohesiveZone   \
+	$(SRCDIR)/CohesiveZone      \
 	$(SRCDIR)/HeatConduction    \
-	$(SRCDIR)/MMS
+	$(SRCDIR)/MMS               \
+	$(SRCDIR)/ReactionDiffusion
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
