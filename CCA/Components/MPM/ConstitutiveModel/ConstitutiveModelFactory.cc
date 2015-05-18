@@ -41,6 +41,7 @@
 #  include <CCA/Components/MPM/ConstitutiveModel/HypoElasticFortran.h>
 #endif
 
+#include <CCA/Components/MPM/ConstitutiveModel/GaoElastic.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Kayenta.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
@@ -234,6 +235,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "camclay")
     return(scinew CamClay(child,flags));
+
+  else if (mat_type ==  "gao_elastic")
+    return(scinew GaoElastic(child,flags));
 
   else
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
