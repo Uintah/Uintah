@@ -81,6 +81,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   has_gpu         = 0 
   if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
     has_gpu = 1
+    environ['SCI_DEBUG'] = 'SingleDevice:+'
 
   
   #__________________________________
@@ -607,7 +608,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if do_memory_test == 1:
   
     environ['MALLOC_STRICT'] = "set"
-    environ['SCI_DEBUG']     ="VarLabel:+"
+    env = "%s,%s" % (environ['SCI_DEBUG'], "VarLabel:+") # append to the existing SCI_DEBUG
+    environ['SCI_DEBUG']      = env
     
     if startFrom == "restart":
       malloc_stats_file = "restart_malloc_stats"        
