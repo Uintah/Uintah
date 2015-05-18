@@ -26,7 +26,7 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="mixture fraction" state="STATE_N"/>
+      <NameTag name="mixture fraction" state="STATE_DYNAMIC"/>
       <GaussianFunction amplitude="1.0" deviation="0.25" mean="0.0" baseline="0.0">
         <NameTag name="XSVOL"/>
       </GaussianFunction> 
@@ -37,7 +37,7 @@
       <FileNamePrefix>inputs/Wasatch/AdEquilCH4</FileNamePrefix>
       <TaskList>advance_solution</TaskList>
       <IndependentVariable>
-        <NameTag name="mixture fraction" state="STATE_N"/>
+        <NameTag name="mixture fraction" state="STATE_DYNAMIC"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <ExtractVariable>

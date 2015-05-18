@@ -79,8 +79,8 @@
       <ExtractDensity>
         <NameTag name="density" state="CARRY_FORWARD"/>
         <ModelBasedOnMixtureFractionAndHeatLoss>
-          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_N"/></DensityWeightedMixtureFraction>    
-          <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_N"/></DensityWeightedEnthalpy>
+          <DensityWeightedMixtureFraction><NameTag name="rhof" state="STATE_DYNAMIC"/></DensityWeightedMixtureFraction>    
+          <DensityWeightedEnthalpy>       <NameTag name="rhoh" state="STATE_DYNAMIC"/></DensityWeightedEnthalpy>
           <HeatLoss>                      <NameTag name="gamma" state="CARRY_FORWARD"/></HeatLoss>
         </ModelBasedOnMixtureFractionAndHeatLoss>
       </ExtractDensity>
