@@ -96,7 +96,6 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_max_vel = 3.e105;
   d_with_ice = false;
   d_with_arches = false;
-  d_cell_based_smoothing = false;
   d_use_momentum_form = false;
   d_myworld = myworld;
   
@@ -109,6 +108,10 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_reductionVars->KE               = false;
   d_reductionVars->volDeformed      = false;
   d_reductionVars->centerOfMass     = false;
+
+  //******* Reactive Flow Component
+  d_doScalarDiffusion = false; //for diffusion component found in ReactiveFlow
+  d_scalarDiffusion_type = Explicit;
 
 // MMS
 if(d_mms_type=="AxisAligned"){
@@ -249,6 +252,11 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
    }
 
   mpm_flag_ps->get("delete_rogue_particles",  d_deleteRogueParticles);
+
+  // Setting Scalar Diffusion
+  if(mpm_flag_ps->get("scalar_diffusion", d_scalarDiffusion_type)){
+    d_doScalarDiffusion = true;
+  }
   
   // d_doComputeHeatFlux:
   // set to true if the label g.HeatFlux is saved or 
@@ -352,11 +360,7 @@ else{
   d_8or27=d_interpolator->size();
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
-
   mpm_flag_ps->get("boundary_traction_faces", d_bndy_face_txt_list);
-
-  mpm_flag_ps->get("CellBasedSmoothing", d_cell_based_smoothing);
-    
   mpm_flag_ps->get("UseMomentumForm", d_use_momentum_form);
 
   if (dbg.active()) {
@@ -437,12 +441,13 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   erosion_ps->setAttribute("algorithm", d_erosionAlgorithm);
  
   ps->appendElement("extra_solver_flushes", d_extraSolverFlushes);
-
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
-
-  ps->appendElement("CellBasedSmoothing", d_cell_based_smoothing);
-  
   ps->appendElement("UseMomentumForm", d_use_momentum_form);
+  ps->appendElement("UseMomentumForm", d_use_momentum_form);
+  ps->appendElement("scalar_diffusion",d_doScalarDiffusion);
+  if(d_doScalarDiffusion){
+    ps->appendElement("scalar_diffusion", d_scalarDiffusion_type);
+  }
 }
 
 
