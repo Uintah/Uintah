@@ -137,7 +137,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
       const int xdim = patchSize.x();
       const int ydim = patchSize.y();
-      const int zdim = patchSize.z();
 
       // get the cell spacing and convert patch extents to CUDA vector type
       patchParams patchP;
@@ -150,7 +149,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       patchP.hiEC = make_int3(hiEC.x(), hiEC.y(), hiEC.z());
 
       patchP.ID = patch->getID();
-      patchP.nCells = make_int3(xdim, ydim, zdim);
 
       // define dimensions of the thread grid to be launched
       int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
@@ -166,8 +164,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       dim3 dimGrid(xblocks, yblocks, 1);
 
 #ifdef DEBUG
-      cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
-      cout << " lo   : " << lo << " hi:  " << hi << endl;
+      patchP.print();
       cout << " xdim: " << xdim << " ydim: " << ydim << endl;
       cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
 #endif
@@ -353,7 +350,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
 
       const int xdim = patchSize.x();
       const int ydim = patchSize.y();
-      const int zdim = patchSize.z();
 
       // get the cell spacing and convert patch extents to CUDA vector type
       patchParams patchP;
@@ -366,7 +362,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       patchP.hiEC = make_int3(hiEC.x(), hiEC.y(), hiEC.z());
 
       patchP.ID = finePatch->getID();
-      patchP.nCells = make_int3(xdim, ydim, zdim);
 
       // define dimensions of the thread grid to be launched
       int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
@@ -382,8 +377,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       dim3 dimGrid(xblocks, yblocks, 1);
 
 #ifdef DEBUG
-      cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
-      cout << " lo   : " << lo << " hi:  " << hi << endl;
+      patchP.print();
       cout << " xdim: " << xdim << " ydim: " << ydim << endl;
       cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
 #endif
