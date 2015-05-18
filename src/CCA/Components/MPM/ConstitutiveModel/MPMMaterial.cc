@@ -181,11 +181,13 @@ MPMMaterial::~MPMMaterial()
 {
   delete d_lb;
   delete d_cm;
-  delete d_sdm;
   delete d_particle_creator;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
+  }
+  if(d_sdm){
+    delete d_sdm;
   }
 }
 
