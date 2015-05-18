@@ -241,6 +241,16 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
       std::cout << "   Using " << numDevices_ << "/" << availableDevices << " available GPU(s)" << std::endl;
       
+      if (numDevices_ > 1){
+        std::ostringstream warn;
+        warn << "ERROR: The results computed using multiple GPUs != 1 GPU.\n";
+        warn << "        A GPU enable task will behave as if it's running when it isn't.\n";
+        warn << "        The computed quantities will be incorrect.\n\n";
+        warn << "        To use one GPU set: \n";
+        warn << "           SCI_DEBUG SingleDevice:+\n";
+        throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
+      }
+      
       if (numDevices_ == 1){  // we may want to output for all devices -Todd
         cudaDeviceProp deviceProp;
         int devID = 0;
