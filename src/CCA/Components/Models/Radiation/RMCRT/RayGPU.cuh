@@ -366,9 +366,15 @@ struct patchParams {
     GPUIntVector hi;          // cell high index not including extra or ghost cells
     GPUIntVector loEC;        // low index including extraCells
     GPUIntVector hiEC;        // high index including extraCells
-    GPUIntVector nCells;      // number of cells in each dir
     GPUVector    dx;          // cell spacing
     int          ID;          // patch ID
+    //__________________________________
+    //
+    __host__ __device__ 
+    void print() {
+      printf( " patchParams: patchID: %i, lo[%i,%i,%i], hi: [%i,%i,%i])", ID, lo.x, lo.y, lo.z, hi.x,hi.y,hi.z);
+      printf( " loEC: [%i,%i,%i], hiEC: [%i,%i,%i]\n  ",loEC.x, loEC.y, loEC.z, hiEC.x,hiEC.y,hiEC.z);
+    }
 };
 
 
