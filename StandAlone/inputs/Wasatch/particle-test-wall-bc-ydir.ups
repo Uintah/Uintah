@@ -138,11 +138,6 @@
       <Constant>0.0</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
-      <TaskList>initialization</TaskList>
-      <NameTag name="viscosity" state="STATE_N"/>
-      <Constant>1e-2</Constant>
-    </BasicExpression>
-    <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
       <NameTag name="viscosity"/>
       <Constant>1e-2</Constant>

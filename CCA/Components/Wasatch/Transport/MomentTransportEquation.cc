@@ -147,9 +147,9 @@ namespace Wasatch {
   {
     Expr::Tag ostwaldTag, m0Tag; // this tag will be populated
     Expr::ExpressionBuilder* builder = NULL;
-    ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_N );
+    ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_NONE );
     //need to m0 to normalize wieghts to add to 1, otherwise there are counted twice when the actually growht term is computed
-    m0Tag = Expr::Tag( "m_" + PopulationName + "_0", Expr::STATE_N);  
+    m0Tag = Expr::Tag( "m_" + PopulationName + "_0", Expr::STATE_DYNAMIC);
     
     double Molec_Vol;
     double Surf_Eng;
@@ -248,7 +248,7 @@ namespace Wasatch {
   {
     Expr::Tag ostwaldTag, deathTag, superSatTag;
     Expr::ExpressionBuilder* builder = NULL;
-    ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_N );
+    ostwaldTag = Expr::Tag( "SBar_" + PopulationName , Expr::STATE_NONE );
     deathTag = Expr::Tag(thisPhiName + "_death", Expr::STATE_NONE ); 
     
     double rCutoff, deathCoefficient;

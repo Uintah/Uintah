@@ -53,7 +53,7 @@
         <NameTag name="density" state="CARRY_FORWARD"/>
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
-          <NameTag name="rhof" state="STATE_N"/>
+          <NameTag name="rhof" state="STATE_DYNAMIC"/>
           </DensityWeightedMixtureFraction>       
         </ModelBasedOnMixtureFraction>
       </ExtractDensity>

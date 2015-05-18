@@ -14,7 +14,7 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="mixture fraction" state="STATE_N"/>
+      <NameTag name="mixture fraction"/>
       <SineFunction amplitude="0.5" frequency="0.5" offset="0.5">
         <NameTag name="XSVOL"/>    
       </SineFunction>
@@ -25,7 +25,7 @@
       <FileNamePrefix>inputs/Wasatch/AdEquilCH4</FileNamePrefix>
       <TaskList>advance_solution</TaskList>
       <IndependentVariable>
-        <NameTag name="mixture fraction" state="STATE_N"/>
+        <NameTag name="mixture fraction" state="STATE_DYNAMIC"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       <ExtractVariable>

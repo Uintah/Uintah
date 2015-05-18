@@ -14,25 +14,25 @@
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="dissipation" state="STATE_N"/>
+      <NameTag name="dissipation" />
       <Constant> 0.05 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="kinviscos" state="STATE_N"/>
+      <NameTag name="kinviscos" />
       <Constant> 0.1 </Constant>
     </BasicExpression> 
 
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="density" state="STATE_N"/>
+      <NameTag name="density" />
       <Constant> 1.0 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL"> 
       <TaskList> advance_solution </TaskList>
-      <NameTag name="growthCoef" state="STATE_N"/>
+      <NameTag name="growthCoef" />
       <Constant> 1500.0 </Constant>
     </BasicExpression> 
 
@@ -41,10 +41,10 @@
       <NameTag name="Turb_agg"/>
       <TurbulentAggregationCoefficient>
         <KinematicViscosity>
-          <NameTag name="kinviscos" state="STATE_N"/>
+          <NameTag name="kinviscos" />
         </KinematicViscosity>
         <EnergyDissipation>
-          <NameTag name="dissipation" state="STATE_N"/>
+          <NameTag name="dissipation" />
         </EnergyDissipation>
       </TurbulentAggregationCoefficient>
     </PrecipitationBasicExpression>    
@@ -82,13 +82,13 @@
             <GrowthModel> BULK_DIFFUSION </GrowthModel>
             <LengthParam> 1.5 </LengthParam>
             <Density>
-              <NameTag name="density" state="STATE_N"/>
+              <NameTag name="density" />
             </Density>
             <EnergyDissipation>
-              <NameTag name="dissipation" state="STATE_N"/>
+              <NameTag name="dissipation" />
             </EnergyDissipation>
             <GrowthCoefficientExpression>
-              <NameTag name="growthCoef" state="STATE_N"/>
+              <NameTag name="growthCoef" />
             </GrowthCoefficientExpression>      
           </SizeDependentEfficiency>
 
@@ -104,13 +104,13 @@
             <GrowthModel> BULK_DIFFUSION </GrowthModel>
             <LengthParam> 1.5 </LengthParam>
             <Density>
-              <NameTag name="density" state="STATE_N" />
+              <NameTag name="density"  />
             </Density>
             <EnergyDissipation>
-              <NameTag name="dissipation" state="STATE_N" />
+              <NameTag name="dissipation"  />
             </EnergyDissipation>
             <GrowthCoefficientExpression>
-              <NameTag name="growthCoef" state="STATE_N"/>
+              <NameTag name="growthCoef" />
             </GrowthCoefficientExpression>
           </SizeDependentEfficiency-->
 

@@ -26,7 +26,7 @@
     <TwoStreamMixing rho0="5.0" rho1="1.0">
       <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
-      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
             
     <!-- Set the initial condition expression for x-velocity -->

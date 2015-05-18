@@ -33,7 +33,7 @@
     <TwoStreamMixing rho0="1.29985" rho1="0.081889">
       <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
       <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
-      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
 
             
