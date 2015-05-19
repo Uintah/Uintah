@@ -81,7 +81,6 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   has_gpu         = 0 
   if socket.gethostname() == "albion" or socket.gethostname() == "aurora" or socket.gethostname() == "prism.crsim.utah.edu" or socket.gethostname() == "cyrus.mech.utah.edu": 
     has_gpu = 1
-    environ['SCI_DEBUG'] = 'SingleDevice:+'
 
   
   #__________________________________
@@ -215,6 +214,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     sus_options     = ""
     startFrom = "inputFile"
     
+    unsetenv('SCI_DEBUG')   # reset it for each test
+    
     #__________________________________
     # override defaults if the flags has been specified
     if len(test) == 5:
@@ -264,6 +265,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         if flags[i] == "exactComparison":
           abs_tolerance = 0.0
           rel_tolerance = 0.0
+
     
     #Warnings
     if dbg_opt == "dbg" and do_performance == 1:
@@ -288,6 +290,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     if environ['SCI_MALLOC_ENABLED'] != "yes" :
       do_memory = 0
+      
+    if do_gpu == 1 and has_gpu == 1:
+      environ['SCI_DEBUG'] = "SingleDevice:+"
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
@@ -529,7 +534,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   if not do_memory_test :
       unsetenv('MALLOC_STATS')
-      unsetenv('SCI_DEBUG')
       
   MPIHEAD="%s -np" % MPIRUN       #default 
   
@@ -546,12 +550,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   rc = system("mpirun -genvlist TERM echo 'hello' > /dev/null 2>&1")
   if rc == 0:
     MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE -np" % MPIRUN
-    
-  #__________________________________
-  #  H A C K    The checks above sometimes fail on hmx & fin
-  if socket.gethostname() == "fin" or  socket.gethostname() == "hmx":
-    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN    
-  #__________________________________
   
   
   # set where to view the log files

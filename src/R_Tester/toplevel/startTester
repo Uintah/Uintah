@@ -60,7 +60,7 @@ if test "$MACHINE" = "albion" ; then
   SCRIPT_DIR=/home/rt/scripts
   CHECKPOINTS=/home/rt/CheckPoints
   MPIRUN=/usr/local/openmpi/bin/
-  export TEST_COMPONENTS="GPU Examples"             # only run gpu tests
+  export TEST_COMPONENTS="Examples"             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/home/rt/public_html/Uintah.html
@@ -76,7 +76,7 @@ if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
   TEMP_DIR=/raid/home/rt/"$OS"
   SCRIPT_DIR=/raid/home/rt/scripts
   CHECKPOINTS=/raid/home/rt/CheckPoints
-  export TEST_COMPONENTS="GPU Examples"             # only run gpu tests
+  export TEST_COMPONENTS="Examples"             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/raid/home/rt/public_html/Uintah.html
