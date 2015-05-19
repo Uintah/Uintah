@@ -280,14 +280,6 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  bulletproofing
   
   if( Parallel::usingDevice() ){              // GPU
-  
-    if(  algorithm == dataOnion && greater( d_halo,IntVector(0,0,0) )  ){
-      ostringstream warn;
-      warn << "GPU:RMCRT:ERROR: halo > 0 ";
-      warn << "At this time halo spacing must be 0 to run on GPUs";
-      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
-    }
-
     if( (algorithm == dataOnion && d_whichROI_algo != patch_based ) ){
       ostringstream warn;
       warn << "GPU:RMCRT:ERROR: ";
