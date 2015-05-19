@@ -28,7 +28,6 @@ using namespace std;
 #include <CCA/Ports/SFC.h>
 #include <Core/Parallel/Parallel.h>
 #include<Core/Thread/Time.h>
-using namespace Uintah;
 
 #define depth 1000.0f
 #define height 1000.0f

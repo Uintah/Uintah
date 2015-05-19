@@ -174,7 +174,7 @@ inline Stencil7 Abs(const Stencil7& a)
   Stencil7 me;
 
   for(int i = 0; i<7; i++){
-    me[i] = Abs( a[i] );
+    me[i] = std::abs( a[i] );
   }
   return me;
 }
