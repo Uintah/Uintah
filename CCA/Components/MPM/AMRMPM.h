@@ -268,6 +268,15 @@ protected:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
 
+  ////////
+  // Find the extents of MPMRefineCell for use in generating rectangular
+  // patches
+  virtual void reduceFlagsExtents(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
   void refineGrid(const ProcessorGroup*,
                   const PatchSubset* patches,
                   const MaterialSubset* matls,
@@ -372,6 +381,10 @@ protected:
                                     const PatchSet*,
                                     const MaterialSet*);
 
+  virtual void scheduleReduceFlagsExtents(SchedulerP&,
+                                          const PatchSet*,
+                                          const MaterialSet*);
+
   //  count the total number of particles in the domain
   void scheduleCountParticles(const PatchSet* patches,
                                SchedulerP& sched);
@@ -407,9 +420,9 @@ protected:
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
                                    
-  Vector   d_acc_ans;               // debugging code used to check the answers (acceleration)
+  Vector   d_acc_ans; // debugging code used to check the answers (acceleration)
   double   d_acc_tol;
-  Vector   d_vel_ans;               // debugging code used to check the answers (velocity)
+  Vector   d_vel_ans; // debugging code used to check the answers (velocity)
   double   d_vel_tol;
 
 
@@ -417,7 +430,13 @@ protected:
   const VarLabel* gSumSLabel;                   
   const VarLabel* gZOINETLabel;                   
   const VarLabel* gZOISWBLabel;                   
-                                   
+  const VarLabel* RefineFlagXMaxLabel;
+  const VarLabel* RefineFlagXMinLabel;
+  const VarLabel* RefineFlagYMaxLabel;
+  const VarLabel* RefineFlagYMinLabel;
+  const VarLabel* RefineFlagZMaxLabel;
+  const VarLabel* RefineFlagZMinLabel;
+
   std::vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
 
