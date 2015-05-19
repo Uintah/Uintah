@@ -115,8 +115,22 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
   d_vel_ans = Vector(-100,0,0);
   d_vel_tol = 1e-7;
   
-  pDbgLabel = VarLabel::create("p.dbg",ParticleVariable<double>::getTypeDescription());
-  gSumSLabel= VarLabel::create("g.sum_S",NCVariable<double>::getTypeDescription());
+  pDbgLabel = VarLabel::create("p.dbg",
+                               ParticleVariable<double>::getTypeDescription());
+  gSumSLabel= VarLabel::create("g.sum_S",
+                               NCVariable<double>::getTypeDescription());
+  RefineFlagXMaxLabel = VarLabel::create("RefFlagXMax",
+                                         max_vartype::getTypeDescription() );
+  RefineFlagXMinLabel = VarLabel::create("RefFlagXMin",
+                                         min_vartype::getTypeDescription() );
+  RefineFlagYMaxLabel = VarLabel::create("RefFlagYMax",
+                                         max_vartype::getTypeDescription() );
+  RefineFlagYMinLabel = VarLabel::create("RefFlagYMin",
+                                         min_vartype::getTypeDescription() );
+  RefineFlagZMaxLabel = VarLabel::create("RefFlagZMax",
+                                         max_vartype::getTypeDescription() );
+  RefineFlagZMinLabel = VarLabel::create("RefFlagZMin",
+                                         min_vartype::getTypeDescription() );
   
   d_one_matl = scinew MaterialSubset();
   d_one_matl->add(0);
@@ -534,6 +548,12 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     if(flags->d_refineParticles){
       scheduleAddParticles(                 sched, patches, matls);
     }
+  }
+
+  for (int l = 0; l < maxLevels; l++) {
+    const LevelP& level = grid->getLevel(l);
+    const PatchSet* patches = level->eachPatch();
+    scheduleReduceFlagsExtents(             sched, patches, matls);
   }
 }
 
@@ -1174,11 +1194,9 @@ void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-
 void AMRMPM::scheduleFinalParticleUpdate(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls)
-
 {
   if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
                            getLevel(patches)->getGrid()->numLevels()))
@@ -1241,6 +1259,33 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->computes(             lb->pCellNAPIDLabel, zeroth_matl);
 
     sched->addTask(t, patches, matls);
+}
+
+
+void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls)
+{
+  const Level* level = getLevel(patches);
+
+//  if( !level->hasFinerLevel() ){
+  if(level->getIndex() > 0 ){
+    printSchedule(patches,cout_doing,"AMRMPM::scheduleReduceFlagsExtents");
+
+    Task* t=scinew Task("AMRMPM::reduceFlagsExtents",
+                        this, &AMRMPM::reduceFlagsExtents);
+
+    t->requires(Task::NewDW, lb->MPMRefineCellLabel, Ghost::None);
+
+    t->computes(RefineFlagXMaxLabel);
+    t->computes(RefineFlagXMinLabel);
+    t->computes(RefineFlagYMaxLabel);
+    t->computes(RefineFlagYMinLabel);
+    t->computes(RefineFlagZMaxLabel);
+    t->computes(RefineFlagZMinLabel);
+
+    sched->addTask(t, patches, matls);
+  }
 }
 
 //______________________________________________________________________
@@ -1327,6 +1372,13 @@ void AMRMPM::scheduleCoarsen(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->MPMRefineCellLabel,
                0, Task::FineLevel,  d_one_matl,oims, gn, 0, fat);
 
+  task->requires(Task::NewDW, RefineFlagXMaxLabel);
+  task->requires(Task::NewDW, RefineFlagXMinLabel);
+  task->requires(Task::NewDW, RefineFlagYMaxLabel);
+  task->requires(Task::NewDW, RefineFlagYMinLabel);
+  task->requires(Task::NewDW, RefineFlagZMaxLabel);
+  task->requires(Task::NewDW, RefineFlagZMinLabel);
+
   task->modifies(lb->MPMRefineCellLabel, d_one_matl, oims, fat);
 
   sched->addTask(task, patch_set, all_matls);
@@ -1338,13 +1390,15 @@ void AMRMPM::coarsen(const ProcessorGroup*,
                      DataWarehouse*,
                      DataWarehouse* new_dw)
 {
-
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  GridP grid = coarseLevel->getGrid();
+  int numLevels = grid->numLevels();
+  IntVector RR = fineLevel->getRefinementRatio();
 
   for(int p=0;p<patches->size();p++){
     const Patch* coarsePatch = patches->get(p);
-    cout_doing <<"  patch " << coarsePatch->getID()<< endl;
+    cout_doing << "  patch " << coarsePatch->getID()<< endl;
 
     CCVariable<double> refineCell;
     new_dw->getModifiable(refineCell, lb->MPMRefineCellLabel, 0, coarsePatch);
@@ -1353,7 +1407,77 @@ void AMRMPM::coarsen(const ProcessorGroup*,
     fineToCoarseOperator<double>(refineCell, computesAve,
                        lb->MPMRefineCellLabel, 0,   new_dw,
                        coarsePatch, coarseLevel, fineLevel);
-  }
+
+    if( coarseLevel->getIndex() == numLevels - 2 ){
+//    cout << "coarseLevelIndex = " << coarseLevel->getIndex() << endl;
+      max_vartype xmax,ymax,zmax;
+      min_vartype xmin,ymin,zmin;
+      new_dw->get(xmax, RefineFlagXMaxLabel);
+      new_dw->get(ymax, RefineFlagYMaxLabel);
+      new_dw->get(zmax, RefineFlagZMaxLabel);
+      new_dw->get(xmin, RefineFlagXMinLabel);
+      new_dw->get(ymin, RefineFlagYMinLabel);
+      new_dw->get(zmin, RefineFlagZMinLabel);
+
+//    cout << "xmax = " << xmax << endl;
+//    cout << "ymax = " << ymax << endl;
+//    cout << "zmax = " << zmax << endl;
+//    cout << "xmin = " << xmin << endl;
+//    cout << "ymin = " << ymin << endl;
+//    cout << "zmin = " << zmin << endl;
+
+      IntVector fineXYZMaxMin(xmax,ymax,zmax);
+      IntVector fineXYZMinMax(xmin,ymin,zmin);
+      IntVector fineXZMaxYMin(xmax,ymin,zmax);
+      IntVector fineXZMinYMax(xmin,ymax,zmin);
+      IntVector fineXYMaxZMin(xmax,ymax,zmin);
+      IntVector fineXYMinZMax(xmin,ymin,zmax);
+      IntVector fineXMinYZMax(xmin,ymax,zmax);
+      IntVector fineXMaxYZMin(xmax,ymin,zmin);
+
+      IntVector coarseMinMax[8];
+
+      coarseMinMax[0] = fineXYZMaxMin/RR;
+      coarseMinMax[1] = fineXYZMinMax/RR;
+#if 0
+      coarseMinMax[2] = fineXZMaxYMin/RR;
+      coarseMinMax[3] = fineXZMinYMax/RR;
+      coarseMinMax[4] = fineXYMaxZMin/RR;
+      coarseMinMax[5] = fineXYMinZMax/RR;
+      coarseMinMax[6] = fineXMinYZMax/RR;
+      coarseMinMax[7] = fineXMaxYZMin/RR;
+
+      // This only sets the refine flags at the 8 corners of the
+      // extents of the refined region, may leave holes.  See below...
+      for(int i=0; i<8; i++){
+//       cout << "coarseMinMax = " << coarseMinMax[i] << endl;
+        if(coarsePatch->containsCell(coarseMinMax[i])){
+//         cout << "A patch contains " << coarseMinMax[i] << endl;
+          refineCell[coarseMinMax[i]]=1;
+        }
+     }
+#endif
+
+    // Set the refine flags to 1 in all cells in the interior of the minimum
+    // and maximum to ensure a rectangular region is refined.
+    int imax,jmax,kmax,imin,jmin,kmin;
+    imax = coarseMinMax[0].x();
+    jmax = coarseMinMax[0].y();
+    kmax = coarseMinMax[0].z();
+    imin = coarseMinMax[1].x();
+    jmin = coarseMinMax[1].y();
+    kmin = coarseMinMax[1].z();
+    for(CellIterator iter=coarsePatch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      if(c.x() >= imin && c.x() <= imax &&
+         c.y() >= jmin && c.y() <= jmax &&
+         c.z() >= kmin && c.z() <= kmax){
+         refineCell[c]=1;
+      }
+    }
+
+  }  // end if level
+  } // end patch
 }
 
 //______________________________________________________________________
@@ -3631,19 +3755,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         new_part_pos.push_back(px[idx]-r[2]);
         new_part_pos.push_back(px[idx]-r[3]);
 
-//        new_part_pos.push_back(px[idx]+Vector(dxp,dxp,dxp));
-//        new_part_pos.push_back(px[idx]+Vector(-dxp,-dxp,-dxp));
-//        new_part_pos.push_back(px[idx]+Vector(dxp,dxp,-dxp));
-//        new_part_pos.push_back(px[idx]+Vector(dxp,-dxp,dxp));
-//        new_part_pos.push_back(px[idx]+Vector(-dxp,dxp,dxp));
-//        new_part_pos.push_back(px[idx]+Vector(dxp,-dxp,-dxp));
-//        new_part_pos.push_back(px[idx]+Vector(-dxp,-dxp,dxp));
-//        new_part_pos.push_back(px[idx]+Vector(-dxp,dxp,-dxp));
-
-        //cout << "NPP = " << new_part_pos[0] << endl;
         cout << "OPP = " << px[idx] << endl;
         for(int i = 0;i<8;i++){
-        cout << "NPP = " << new_part_pos[i] << endl;
+//        cout << "NPP = " << new_part_pos[i] << endl;
           if(!level->containsPoint(new_part_pos[i])){
             Point anchor = level->getAnchor();
             Point orig = new_part_pos[i];
@@ -3709,6 +3823,76 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->put(pvgradtmp,lb->pVelGradLabel_preReloc,              true);
       // put back temporary data
     }  // for matls
+  }    // for patches
+}
+
+void AMRMPM::reduceFlagsExtents(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* ,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw)
+{
+
+  // Currently doing for levels > 0
+  const Level* level = getLevel(patches);
+  int levelIndex = level->getIndex();
+  IntVector RR_thisLevel = level->getRefinementRatio();
+  int numLevels = level->getGrid()->numLevels();
+
+  IntVector RR_RelToFinest = IntVector(1,1,1);
+  if(level->hasFinerLevel()){
+    RR_RelToFinest = RR_thisLevel*(numLevels-levelIndex-1);
+  }
+
+//  cout << "rFE levelIndex = " << levelIndex << endl;
+//  cout << "RR_RelToFinest = " << RR_RelToFinest << endl;
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches, patch,cout_doing, "Doing reduceFlagsExtents");
+
+    // Mark cells where particles are refined for grid refinement
+    Ghost::GhostType  gnone = Ghost::None;
+    constCCVariable<double> refineCell;
+    new_dw->get(refineCell, lb->MPMRefineCellLabel, 0, patch, gnone, 0);
+
+    int xmax,xmin,ymax,ymin,zmax,zmin;
+    xmax = -999;   ymax = -999;   zmax = -999;
+    xmin = 999999; ymin = 999999; zmin = 999999;
+//    int print = 0;
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++){
+      IntVector c = *iter;
+      if(refineCell[c]>0){
+        xmax=max(xmax,c.x()); ymax=max(ymax,c.y()); zmax=max(zmax,c.z());
+        xmin=min(xmin,c.x()); ymin=min(ymin,c.y()); zmin=min(zmin,c.z());
+//        print = 1;
+      }
+    }
+
+    xmax = xmax*RR_RelToFinest.x();
+    ymax = ymax*RR_RelToFinest.y();
+    zmax = zmax*RR_RelToFinest.z();
+    xmin = xmin*RR_RelToFinest.x();
+    ymin = ymin*RR_RelToFinest.y();
+    zmin = zmin*RR_RelToFinest.z();
+
+/*
+    if (print==1){
+      cout << "Xmax = " << xmax << endl;
+      cout << "Ymax = " << ymax << endl;
+      cout << "Zmax = " << zmax << endl;
+      cout << "Xmin = " << xmin << endl;
+      cout << "Ymin = " << ymin << endl;
+      cout << "Zmin = " << zmin << endl;
+    }
+*/
+
+    new_dw->put(max_vartype(xmax), RefineFlagXMaxLabel);
+    new_dw->put(max_vartype(ymax), RefineFlagYMaxLabel);
+    new_dw->put(max_vartype(zmax), RefineFlagZMaxLabel);
+    new_dw->put(min_vartype(xmin), RefineFlagXMinLabel);
+    new_dw->put(min_vartype(ymin), RefineFlagYMinLabel);
+    new_dw->put(min_vartype(zmin), RefineFlagZMinLabel);
   }    // for patches
 }
 
@@ -3786,14 +3970,9 @@ AMRMPM::errorEstimate(const ProcessorGroup*,
       if(refineCell[c]>0.0 || refineFlag[c]==true){
         refineFlag[c] = 1;
         refinePatch->set();
-//        cout << "cell = " << c << endl;
-//        cout << "refineCell[c] = " << refineCell[c] << endl;
       }else if(refineCell[c]<0.0 && ((int) refineCell[c])%100!=0){
         refineFlag[c] = 1;
         refinePatch->set();
-//        cout << "CELL = " << c << endl;
-//        cout << "RefineCell[c] = " << refineCell[c] << endl;
-//        cout << "modulus = " << ((int) refineCell[c])%100 << endl;
       }else{
         refineFlag[c] = 0;
       }
