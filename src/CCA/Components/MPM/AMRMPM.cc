@@ -1275,7 +1275,7 @@ void AMRMPM::scheduleReduceFlagsExtents(SchedulerP& sched,
     Task* t=scinew Task("AMRMPM::reduceFlagsExtents",
                         this, &AMRMPM::reduceFlagsExtents);
 
-    t->requires(Task::NewDW, lb->MPMRefineCellLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->MPMRefineCellLabel, d_one_matl, Ghost::None);
 
     t->computes(RefineFlagXMaxLabel);
     t->computes(RefineFlagXMinLabel);
