@@ -1417,8 +1417,7 @@ namespace Uintah {
     static void findNodesFromCell( const IntVector& cellIndex,
                                   IntVector nodeIndex[8]);
     
-    /**
-     * Returns true if the node idx is owned by this patch
+    /* Returns true if the node idx is owned by this patch
      * including extra cells
      */
     inline bool containsNode(const IntVector& idx) const {
@@ -1426,7 +1425,7 @@ namespace Uintah {
       IntVector h(getExtraNodeHighIndex());
       return containsIndex(l,h,idx);
     }
-    
+
     /**
      * Returns true if the cell idx is owned by this patch
      * including extra cells
