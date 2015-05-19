@@ -182,7 +182,12 @@ namespace Wasatch{
       rhofTag.name() += scalarTagNameAppend;
 
       typedef DensFromMixfrac<SVolField>::Builder DensCalc;
-      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, densityTag, rhofTag ) );
+      
+      Expr::Tag unconvPts = TagNames::self().unconvergedpts;
+      unconvPts.name() += tagNameAppend;
+      
+      const Expr::TagList theTagList( tag_list( densityTag, unconvPts));
+      densCalcID = factory.register_expression( scinew DensCalc( *densInterp, theTagList, rhofTag ) );
 
     }
     else if( params->findBlock("ModelBasedOnMixtureFractionAndHeatLoss") ){
