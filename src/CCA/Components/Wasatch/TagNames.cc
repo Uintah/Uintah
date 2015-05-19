@@ -112,6 +112,7 @@ namespace Wasatch{
   drhodtstar ( "drhodt*",     Expr::STATE_NONE ),
   drhodt     ( "drhodt",       Expr::STATE_NONE ),
   drhodtnp1  ( "drhodt",       Expr::STATE_NP1  ),
+  unconvergedpts("UnconvergedPts", Expr::STATE_NONE),
   
   // mms varden
   mms_mixfracsrc( "mms_mixture_fraction_src", Expr::STATE_NONE ),

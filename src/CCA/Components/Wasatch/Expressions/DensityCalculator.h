@@ -116,7 +116,7 @@ public:
      *  @param rhoFTag the density weighted mixture fraction
      */
     Builder( const InterpT& rhoEval,
-             const Expr::Tag& resultTag,
+             const Expr::TagList& resultsTag,
              const Expr::Tag& rhoFTag );
     ~Builder(){ delete rhoEval_; }
     Expr::ExpressionBase* build() const;
