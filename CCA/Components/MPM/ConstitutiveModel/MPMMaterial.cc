@@ -102,6 +102,8 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMF
   // create the scalar diffusion model.
   if(flags->d_doScalarDiffusion){
     d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
+  }else{
+    d_sdm = NULL;
   }
 
   // Step 3 -- get the general material properties
