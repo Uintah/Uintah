@@ -666,7 +666,6 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
             for (StringToCCVar::iterator inert_iter = inert_mixture_fractions.begin(); 
                 inert_iter != inert_mixture_fractions.end(); inert_iter++ ){
 
-              double inert_f = inert_iter->second.var[c];
               doubleMap inert_species_map_list = d_inertMap.find( inert_iter->first )->second; 
 
               double temp_table_value = depVarValues[depVarCount];
@@ -674,7 +673,7 @@ ClassicTableInterface::getState( const ProcessorGroup* pc,
                 temp_table_value = 1.0/depVarValues[depVarCount];
               } 
 
-              post_mixing( temp_table_value, inert_f, i->first, inert_species_map_list ); 
+              post_mixing( temp_table_value, total_inert_f, i->first, inert_species_map_list ); 
 
               if ( i->first == "density" ){ 
                 depVarValues[depVarCount] = 1.0 / temp_table_value;
