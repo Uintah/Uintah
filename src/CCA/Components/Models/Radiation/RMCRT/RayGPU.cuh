@@ -44,7 +44,7 @@ typedef SCIRun::gpuPoint     GPUPoint;
 
 //______________________________________________________________________
 //
-const int d_MAXLEVELS = 3;               // FIX ME!
+const int d_MAXLEVELS = 5;               // FIX ME!
 
 //__________________________________
 //  returns gpuVector * scalar
@@ -385,8 +385,8 @@ struct levelParams {
     double       DyDx;
     double       DzDx;
     GPUVector    Dx;                // cell spacing
-    GPUIntVector regionLo;
-    GPUIntVector regionHi;
+    GPUIntVector regionLo;          // never use these regionLo/Hi in the kernel
+    GPUIntVector regionHi;          // they vary on every patch and must be passed into the kernel
     bool         hasFinerLevel;
     int          index;             // level index
     GPUIntVector refinementRatio;
@@ -618,6 +618,8 @@ template< class T>
                                        gridParams gridP,
                                        const GPUIntVector& fineLevel_ROI_Lo,
                                        const GPUIntVector& fineLevel_ROI_Hi,
+                                       const int3* regionLo,
+                                       const int3* regionHi,
                                        const GPUGridVariable< T >*  sigmaT4OverPi,
                                        const GPUGridVariable< T >* abskg,
                                        const GPUGridVariable<int>* celltype,
@@ -708,6 +710,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          gridParams gridP,
                                          GPUIntVector fineLevel_ROI_Lo,
                                          GPUIntVector fineLevel_ROI_Hi,
+                                         int3* regionLo,
+                                         int3* regionHi,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,

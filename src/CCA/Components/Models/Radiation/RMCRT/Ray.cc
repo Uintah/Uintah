@@ -1881,6 +1881,7 @@ void Ray::computeCellType( const ProcessorGroup*,
         printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ", cur.x(), cur.y(), cur.z(), jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
             containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
         printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n", onFineLevel, ray_outside_ROI, ray_outside_Region, in_domain );
+        printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",L,regionLo[L].x(),regionLo[L].y(),regionLo[L].z(),regionHi[L].x(),regionHi[L].y(),regionHi[L].z());
       }
 #endif
 
