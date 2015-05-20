@@ -41,8 +41,9 @@
 //__________________________________
 //  To Do
 //  - Need to implement transferFrom so use can use calc_frequency > 1
-//  - Implement getRegion()  Currently can only pull fineLevel patch out from gpuDW with halo[0,0,0]
-//  - Fix the delete(GPUVariable)  cuda-memcheck crashes on these
+//  - Temporal scheduling
+//  - restarts are not working.
+//  - Investigate using multiple GPUs per node.
 //  - Implement fixed and dynamic ROI.
 //  - dynamic block size?
 //  - Implement labelNames in unified memory.
@@ -315,6 +316,8 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
                                          gridParams gridP,
                                          GPUIntVector fineLevel_ROI_Lo,
                                          GPUIntVector fineLevel_ROI_Hi,
+                                         int3* regionLo,
+                                         int3* regionHi,
                                          curandState* randNumStates,
                                          RMCRT_flags RT_flags,
                                          GPUDataWarehouse* abskg_gdw,
@@ -436,7 +439,7 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
   }
 
 
-#if 0
+#if 1
   //______________________________________________________________________
   //         S O L V E   D I V Q
   //______________________________________________________________________
@@ -469,7 +472,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
           GPUVector ray_location = rayLocationDevice( randNumStates, origin, d_levels[fineL].DyDx, d_levels[fineL].DzDx , RT_flags.CCRays );
 
-          updateSumI_MLDevice<T>(ray_direction, ray_location, origin, gridP, fineLevel_ROI_Lo, fineLevel_ROI_Hi,
+          updateSumI_MLDevice<T>(ray_direction, ray_location, origin, gridP, 
+                                 fineLevel_ROI_Lo, fineLevel_ROI_Hi,
+                                 regionLo, regionHi,
                                  sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
         } //Ray loop
 
@@ -926,6 +931,8 @@ __syncthreads();
                                         gridParams gridP,
                                         const GPUIntVector& fineLevel_ROI_Lo,
                                         const GPUIntVector& fineLevel_ROI_Hi,
+                                        const int3* regionLo,
+                                        const int3* regionHi,
                                         const GPUGridVariable< T >* sigmaT4OverPi,
                                         const GPUGridVariable< T >* abskg,
                                         const GPUGridVariable<int>* cellType,
@@ -1023,12 +1030,10 @@ __syncthreads();
       GPUPoint pos = d_levels[L].getCellPosition(cur);         // position could be outside of domain
       in_domain = gridP.domain_BB.inside(pos);
 
-      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
+      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts      
       
-      GPUIntVector regionLo  = d_levels[L].regionLo;
-      GPUIntVector regionHi  = d_levels[L].regionHi;
       bool ray_outside_ROI    = ( containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-      bool ray_outside_Region = ( containsCellDevice(regionLo, regionHi, cur, dir) == false );
+      bool ray_outside_Region = ( containsCellDevice(regionLo[L], regionHi[L], cur, dir) == false );
       
       bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
       bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
@@ -1038,6 +1043,7 @@ __syncthreads();
         printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ", cur.x, cur.y, cur.z, jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
             containsCellDevice(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
         printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n", onFineLevel, ray_outside_ROI, ray_outside_Region,in_domain );
+        printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",L,regionLo[L].x,regionLo[L].y,regionLo[L].z, regionHi[L].x,regionHi[L].y,regionHi[L].z); 
       }
 #endif
 
@@ -1327,17 +1333,36 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                              GPUDataWarehouse* cellType_gdw,
                                              GPUDataWarehouse* old_gdw,
                                              GPUDataWarehouse* new_gdw )
-{
+{  
+  // copy regionLo & regionHi to device memory
+  int maxLevels = gridP.maxLevels;
+  
+  int3* dev_regionLo;
+  int3* dev_regionHi;
+  size_t size = d_MAXLEVELS *  sizeof(int3);
+  CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionLo, size) );
+  CUDA_RT_SAFE_CALL( cudaMalloc( (void**)& dev_regionHi, size) );
+  
+  int3 myLo[d_MAXLEVELS];
+  int3 myHi[d_MAXLEVELS];
+  for (int l = 0; l < maxLevels; ++l) {
+    myLo[l] = levelP[l].regionLo;        // never use levelP regionLo or hi in the kernel.
+    myHi[l] = levelP[l].regionHi;        // They are different on each patch
+  }
+  
+  CUDA_RT_SAFE_CALL( cudaMemcpy( dev_regionLo, myLo, size, cudaMemcpyHostToDevice) );
+  CUDA_RT_SAFE_CALL( cudaMemcpy( dev_regionHi, myHi, size, cudaMemcpyHostToDevice) );  
+  
+
+  //__________________________________
+  // copy levelParams array to constant memory on device
+  CUDA_RT_SAFE_CALL(cudaMemcpyToSymbol(d_levels, levelP, (maxLevels * sizeof(levelParams))));
+
+  //__________________________________
   // setup random number generator states on the device, 1 for each thread
   curandState* randNumStates;
   int numStates = dimGrid.x * dimGrid.y * dimBlock.x * dimBlock.y * dimBlock.z;
   CUDA_RT_SAFE_CALL( cudaMalloc((void**)&randNumStates, (numStates * sizeof(curandState))) );
-
-  // copy levelParams array to constant memory on device
-  int maxLevels = gridP.maxLevels;
-  
-  CUDA_RT_SAFE_CALL(cudaMemcpyToSymbol(d_levels, levelP, (maxLevels * sizeof(levelParams))));
-
 
   setupRandNumKernel<<< dimGrid, dimBlock>>>( randNumStates );
 
@@ -1348,6 +1373,8 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      gridP,
                                                                      fineLevel_ROI_Lo,
                                                                      fineLevel_ROI_Hi,
+                                                                     dev_regionLo,
+                                                                     dev_regionHi,
                                                                      randNumStates,
                                                                      RT_flags,
                                                                      abskg_gdw,
@@ -1355,8 +1382,11 @@ __host__ void launchRayTraceDataOnionKernel( dim3 dimGrid,
                                                                      cellType_gdw,
                                                                      old_gdw,
                                                                      new_gdw);
-    // free device-side RNG states
-    CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+  // free device-side RNG states
+  CUDA_RT_SAFE_CALL( cudaFree(randNumStates) );
+  CUDA_RT_SAFE_CALL( cudaFree(dev_regionLo) );
+  CUDA_RT_SAFE_CALL( cudaFree(dev_regionHi) );
+
 }
 
 //______________________________________________________________________
