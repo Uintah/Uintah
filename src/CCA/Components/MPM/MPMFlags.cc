@@ -444,7 +444,6 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("boundary_traction_faces", d_bndy_face_txt_list);
   ps->appendElement("UseMomentumForm", d_use_momentum_form);
   ps->appendElement("UseMomentumForm", d_use_momentum_form);
-  ps->appendElement("scalar_diffusion",d_doScalarDiffusion);
   if(d_doScalarDiffusion){
     ps->appendElement("scalar_diffusion", d_scalarDiffusion_type);
   }
