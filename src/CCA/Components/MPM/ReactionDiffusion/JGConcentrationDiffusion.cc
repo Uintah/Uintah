@@ -110,7 +110,7 @@ void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
   if(include_hydrostress){
     task->requires(Task::OldDW, d_lb->pStressLabel, matlset, gan, NGP);
     task->computes(d_rdlb->gHydrostaticStressLabel, matlset);
-    task->computes(d_rdlb->pHydroStressLabel,       matlset);
+//    task->computes(d_rdlb->pHydroStressLabel,       matlset);
   }
 
 }
@@ -118,7 +118,7 @@ void JGConcentrationDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
 void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
                                                    const MPMMaterial* matl,
                                                    DataWarehouse* old_dw,
-																									 DataWarehouse* new_dw){
+                                                   DataWarehouse* new_dw){
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
@@ -147,7 +147,8 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
   old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
   new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
-  ParticleVariable<double> phydrostress;
+//  ParticleVariable<double> phydrostress;
+  double phydrostress;
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> ghydrostaticstress;
@@ -163,20 +164,23 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
   if(include_hydrostress){
     old_dw->get(pStress,        d_lb->pStressLabel,             pset);
-    new_dw->allocateAndPut(phydrostress, d_rdlb->pHydroStressLabel, pset);
+//    new_dw->allocateAndPut(phydrostress, d_rdlb->pHydroStressLabel, pset);
     new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
 	                         dwi,  patch);
     ghydrostaticstress.initialize(0);
   }
   
   int n8or27 = d_Mflag->d_8or27;
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+  double one_third = 1.0/3.0;
+  for (ParticleSubset::iterator iter  = pset->begin();
+                                iter != pset->end(); iter++){
     particleIndex idx = *iter;
 
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
 
     if(include_hydrostress){
-      phydrostress[idx] = (pStress[idx].Trace())/3;
+//      phydrostress[idx] = (pStress[idx].Trace())/3;
+      phydrostress = one_third*(pStress[idx].Trace());
     }
 
     IntVector node;
@@ -185,7 +189,7 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
       if(patch->containsNode(node)) {
         gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
         if(include_hydrostress){
-          ghydrostaticstress[node] += phydrostress[idx] * pmass[idx] * S[k];
+          ghydrostaticstress[node] += phydrostress * pmass[idx] * S[k];
         }
       }
     }
@@ -206,7 +210,6 @@ void JGConcentrationDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
   delete interpolator;
 }
-
 
 void JGConcentrationDiffusion::scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                                    const PatchSet* patch) const
