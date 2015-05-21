@@ -293,6 +293,13 @@ SCI_ARG_WITH(mx,
    sci_required_mx=no],
   [with_mx=""])
   
+SCI_ARG_WITH(pokitt,
+  AC_HELP_STRING(--with-pokitt=DIR,
+                 Use the PoKiTT installation in DIR),
+  [with_pokitt="$withval"
+   sci_required_pokitt=yes],
+  [with_pokitt=""])
+  
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
@@ -4223,6 +4230,50 @@ AC_SUBST(DEF_SPATIALOPS)
 AC_SUBST(INC_SPATIALOPS_H)
 AC_SUBST(SPATIALOPS_LIB_FLAG)
 AC_SUBST(SPATIALOPS_LIB_DIR_FLAG)
+
+##  --  search for PoKiTT Library ------------------------
+
+if test "$with_pokitt"; then
+
+  if test "$with_pokitt" = "yes"; then
+    AC_MSG_ERROR( --with-pokitt=DIR requires a DIRectory be provided. )
+  else
+
+    AC_MSG_CHECKING(for Pokitt files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_pokitt; then
+      echo ""
+      AC_MSG_ERROR( PoKiTT directory '$with_pokitt' does not exist. )
+    fi
+    POKITT_INCLUDE_DIR="include/pokitt"
+    # Check includes
+    for file in CanteraObjects.h  MixtureFractionExpr.h PoKiTTVersion.h   SpeciesN.h thermo \
+                MixtureFraction.h MixtureMolWeight.h    SpecFromMixfrac.h kinetics   transport; do
+      if test ! -e $with_pokitt/$POKITT_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$with_pokitt/$POKITT_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check lib
+    the_lib=$with_pokitt/lib/pokitt/libpokitt.a
+    if test ! -f $the_lib; then
+      echo ""
+      AC_MSG_ERROR( '$the_lib' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_POKITT="#define HAVE_POKITT 1"
+  INC_POKITT_H="-I$with_pokitt/include"
+  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+
+  POKITT_LIB_FLAG="-lpokitt"
+
+  HAVE_POKITT="yes"
+fi
+AC_SUBST(HAVE_POKITT)
+AC_SUBST(DEF_POKITT)
+AC_SUBST(INC_POKITT_H)
+AC_SUBST(POKITT_LIB_FLAG)
+AC_SUBST(POKITT_LIB_DIR_FLAG)
 
 ##  --  search for Exprlib Library ------------------------
 

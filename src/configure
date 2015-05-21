@@ -672,6 +672,11 @@ EXPRLIB_LIB_FLAG
 INC_EXPRLIB_H
 DEF_EXPRLIB
 HAVE_EXPRLIB
+POKITT_LIB_DIR_FLAG
+POKITT_LIB_FLAG
+INC_POKITT_H
+DEF_POKITT
+HAVE_POKITT
 SPATIALOPS_LIB_DIR_FLAG
 SPATIALOPS_LIB_FLAG
 INC_SPATIALOPS_H
@@ -945,6 +950,7 @@ with_lapack
 with_fortran
 with_ofed
 with_mx
+with_pokitt
 with_mpi
 with_mpi_lib
 with_mpi_include
@@ -1689,6 +1695,7 @@ Optional Packages:
                           mpi installation
 --with-mx=DIR           Specify that mx - Myrinet - is needed for the mpi
                           installation
+--with-pokitt=DIR       Use the PoKiTT installation in DIR
 --with-mpi=DIR          Use the mpi installation in DIR
 --with-mpi-lib=DIR      Use the mpi libraries installed in DIR
 --with-mpi-include=DIR  Use the mpi include files installed in DIR
@@ -3296,6 +3303,23 @@ fi
   sci_arg_with_list="$sci_arg_with_list --with-mx --without-mx"
   if test -n "$mx" -a ! -e "$mx"; then
     as_fn_error $? "The file or directory parameter ($mx) specified for --with-mx does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
+# Check whether --with-pokitt was given.
+if test "${with_pokitt+set}" = set; then :
+  withval=$with_pokitt; with_pokitt="$withval"
+   sci_required_pokitt=yes
+else
+  with_pokitt=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-pokitt --without-pokitt"
+  if test -n "$pokitt" -a ! -e "$pokitt"; then
+    as_fn_error $? "The file or directory parameter ($pokitt) specified for --with-pokitt does not exist!  Please verify that the path and file are correct." "$LINENO" 5
   fi
 
 
@@ -40343,6 +40367,52 @@ $as_echo "yes" >&6; }
   SPATIALOPS_LIB_FLAG="-lspatialops -lspatialops-stencil -lspatialops-structured"
 
   HAVE_SPATIALOPS="yes"
+fi
+
+
+
+
+
+
+##  --  search for PoKiTT Library ------------------------
+
+if test "$with_pokitt"; then
+
+  if test "$with_pokitt" = "yes"; then
+    as_fn_error $? "--with-pokitt=DIR requires a DIRectory be provided. " "$LINENO" 5
+  else
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Pokitt files (For now we are just verifying the existence of lib and .h files)" >&5
+$as_echo_n "checking for Pokitt files (For now we are just verifying the existence of lib and .h files)... " >&6; }
+    if test ! -d $with_pokitt; then
+      echo ""
+      as_fn_error $? "PoKiTT directory '$with_pokitt' does not exist. " "$LINENO" 5
+    fi
+    POKITT_INCLUDE_DIR="include/pokitt"
+    # Check includes
+    for file in CanteraObjects.h  MixtureFractionExpr.h PoKiTTVersion.h   SpeciesN.h thermo \
+                MixtureFraction.h MixtureMolWeight.h    SpecFromMixfrac.h kinetics   transport; do
+      if test ! -e $with_pokitt/$POKITT_INCLUDE_DIR/$file; then
+        echo ""
+        as_fn_error $? "'$with_pokitt/$POKITT_INCLUDE_DIR/$file' does not exist. " "$LINENO" 5
+      fi
+    done
+    # Check lib
+    the_lib=$with_pokitt/lib/pokitt/libpokitt.a
+    if test ! -f $the_lib; then
+      echo ""
+      as_fn_error $? "'$the_lib' does not exist. " "$LINENO" 5
+    fi
+  fi
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+  DEF_POKITT="#define HAVE_POKITT 1"
+  INC_POKITT_H="-I$with_pokitt/include"
+  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+
+  POKITT_LIB_FLAG="-lpokitt"
+
+  HAVE_POKITT="yes"
 fi
 
 
