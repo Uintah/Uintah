@@ -371,7 +371,9 @@ TwoStreamMixingDensity( const Expr::Tag& rhofTag,
                         const double rho0,
                         const double rho1 )
   : Expr::Expression<FieldT>(),
-    rho0_(rho0), rho1_(rho1)
+    rho0_(rho0), rho1_(rho1),
+    rhoMin_( rho0_ < rho1_ ? rho0_ : rho1),
+    rhoMax_( rho0_ > rho1_ ? rho0_ : rho1)
 {
   this->set_gpu_runnable(true);
   
@@ -392,9 +394,12 @@ evaluate()
 
   // first calculate the mixture fraction:
   result <<= (rf/rho0_) / (1.0+rf*tmp);
-
+  
   // now use that to get the density:
   result <<= 1.0 / ( result/rho1_ + (1.0-result)/rho0_ );
+  
+  // repair bounds
+  result <<= max ( min(result, rhoMax_), rhoMin_);
 }
 
 //--------------------------------------------------------------------
@@ -419,7 +424,9 @@ TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
                         const double rho0,
                         const double rho1 )
   : Expr::Expression<FieldT>(),
-    rho0_(rho0), rho1_(rho1)
+    rho0_(rho0), rho1_(rho1),
+    rhoMin_( rho0_ < rho1_ ? rho0_ : rho1),
+    rhoMax_( rho0_ > rho1_ ? rho0_ : rho1)
 {
   this->set_gpu_runnable(true);
   
@@ -436,7 +443,11 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   const FieldT& f = mixfr_->field_ref();
+  
   result <<= 1.0 / ( f/rho1_ + (1.0-f)/rho0_ );
+  
+  // repair bounds
+  result <<= max ( min(result, rhoMax_), rhoMin_);
 }
 
 //--------------------------------------------------------------------
