@@ -45,7 +45,7 @@
 #  include <Core/Grid/Variables/GPUStencil7.h>
 #endif
 
-#include <omp.h>
+//#include <omp.h>
 
 #include <sci_defs/cuda_defs.h>
 
