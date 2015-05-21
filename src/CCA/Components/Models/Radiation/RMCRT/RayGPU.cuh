@@ -252,7 +252,7 @@ inline HOST_DEVICE GPUPoint operator+(GPUPoint& p, GPUVector& b)
 //
 class unifiedMemory {                     // this should be moved upstream
 public:                                   // This only works for cuda > 6.X
-
+#if 0       // turn off until titan has cuda > 6.0 installed
   void *operator new(size_t len) 
   {
     void *ptr;
@@ -276,9 +276,9 @@ public:                                   // This only works for cuda > 6.X
   {
     cudaFree(ptr);
   }
-  
+#endif  
 };
-
+#if 0      // turn off until titan has cuda > 6.0 installed
 //______________________________________________________________________
 //
 //  http://devblogs.nvidia.com/parallelforall/unified-memory-in-cuda-6/
@@ -339,11 +339,13 @@ class GPUString : public unifiedMemory
       cudaMallocManaged(&data, length+1);
     }
 };
-
+#endif
 //______________________________________________________________________
 //
 struct varLabelNames : public unifiedMemory {
   public:
+
+#if 0         // turn off until titan has cuda > 6.0 installed
     GPUString divQ;
     GPUString abskg;
     GPUString sigmaT4;
@@ -357,6 +359,7 @@ struct varLabelNames : public unifiedMemory {
       printf( " varLabelNames:  divQ: (%s), abskg: (%s), sigmaT4: (%s) ",divQ.c_str(), abskg.c_str(), sigmaT4.c_str() );
       printf( " celltype: (%s), VRFlux: (%s), boundFlux: (%s) \n",celltype.c_str(), VRFlux.c_str(), boundFlux.c_str() );
     }
+#endif
 };
 
 //______________________________________________________________________
