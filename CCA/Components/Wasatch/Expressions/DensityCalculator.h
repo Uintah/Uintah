@@ -247,7 +247,7 @@ public:
 template< typename FieldT >
 class TwoStreamMixingDensity : public Expr::Expression<FieldT>
 {
-  const double rho0_, rho1_;
+  const double rho0_, rho1_, rhoMin_, rhoMax_;
   DECLARE_FIELD(FieldT, rhof_)
   
   TwoStreamMixingDensity( const Expr::Tag& rhofTag,
@@ -287,7 +287,7 @@ public:
 template< typename FieldT >
 class TwoStreamDensFromMixfr : public Expr::Expression<FieldT>
 {
-  const double rho0_, rho1_;
+  const double rho0_, rho1_, rhoMin_, rhoMax_;
   DECLARE_FIELD(FieldT, mixfr_)
   
   TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
