@@ -79,7 +79,6 @@ void SDInterfaceModel::initializeSDMData(const Patch* patch, DataWarehouse* new_
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->initializeSDMData(patch, mpm_matl, new_dw);
   }
-
 }
 
 void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* task,
@@ -91,7 +90,6 @@ void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* task,
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->scheduleInterpolateParticlesToGrid(task, mpm_matl, patches);
   }
-
 }
 
 void SDInterfaceModel::interpolateParticlesToGrid(const Patch* patch, DataWarehouse* old_dw,

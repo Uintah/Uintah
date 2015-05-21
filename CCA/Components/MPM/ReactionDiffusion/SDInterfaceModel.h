@@ -45,7 +45,7 @@ namespace Uintah {
   public:
     
     SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag);
-    ~SDInterfaceModel();
+    virtual ~SDInterfaceModel();
     virtual void addInitialComputesAndRequires(Task* task,
                                                const PatchSet* patch) const;
 
