@@ -9,6 +9,10 @@
 
    <SimulationComponent type="solvertest" />
 
+   <!--   <Scheduler type="Unified"/> -->
+
+   <!-- export OMP_WAIT_POLICY=PASSIVE; export OMP_NUM_THREADS=8 -->
+   
    <Time>
      <maxTime>0.1</maxTime>                          
      <initTime>0.0</initTime>                        
