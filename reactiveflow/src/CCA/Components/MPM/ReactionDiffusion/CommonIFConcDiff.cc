@@ -158,14 +158,17 @@ void CommonIFConcDiff::scheduleInterpolateParticlesToGrid(Task* task,
                                                          const PatchSet* patches) const
 {
   Ghost::GhostType  gnone = Ghost::None;
-  Ghost::GhostType  gan = Ghost::AroundNodes;
+  if(include_hydrostress){
+    task->requires(Task::OldDW,d_lb->pStressLabel,               gnone);
+  }
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->scheduleInterpolateParticlesToGrid(task, mpm_matl, patches);
     if(include_hydrostress){
-      task->requires(Task::NewDW, d_rdlb->pHydroStressLabel, mpm_matl->thisMaterial(), gan, NGP);
+//      task->requires(Task::NewDW, d_rdlb->pHydroStressLabel, mpm_matl->thisMaterial(), gan, NGP);
+
       if(mpm_matl->getDWIndex() == 0){
         task->computes(d_rdlb->maxHydroStressLabel0);
         task->computes(d_rdlb->minHydroStressLabel0);
@@ -205,7 +208,7 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
   NCVariable<double> globalhstress;
 
   constParticleVariable<Matrix3> pStress;
-  constParticleVariable<double> pHydroStress;
+//  constParticleVariable<double> pHydroStress;
 
   double maxhydrostress, minhydrostress;
 
@@ -238,20 +241,19 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
     }
 
     if(include_hydrostress){
+      double one_third = 1./3.;
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-      //old_dw->get(pStress, d_lb->pStressLabel, pset);
-      new_dw->get(pHydroStress, d_rdlb->pHydroStressLabel, pset);
+      old_dw->get(pStress, d_lb->pStressLabel, pset);
+//      new_dw->get(pHydroStress, d_rdlb->pHydroStressLabel, pset);
       maxhydrostress = 0;
       minhydrostress = 0;
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
         particleIndex idx = *iter;
 
-        if(pHydroStress[idx] > maxhydrostress){
-          maxhydrostress = pHydroStress[idx];
-        }
-        if(pHydroStress[idx] < minhydrostress){
-          minhydrostress = pHydroStress[idx];
-        }
+        double pHydroStress = one_third*pStress[idx].Trace();
+
+        maxhydrostress = max(maxhydrostress, pHydroStress);
+        minhydrostress = min(minhydrostress, pHydroStress);
       }
       if(dwi == 0){
         new_dw->put(max_vartype(maxhydrostress), d_rdlb->maxHydroStressLabel0);
@@ -287,9 +289,7 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
       }
     }
   }
-
 }
-
 
 void CommonIFConcDiff::scheduleComputeFlux(Task* task, const PatchSet* patches) const
 {

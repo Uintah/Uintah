@@ -112,7 +112,7 @@ void GaoDiffusion::scheduleInterpolateParticlesToGrid(Task* task,
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,    matlset, gan, NGP);
   task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
 
-  task->computes(d_rdlb->pHydroStressLabel,        matlset);
+//  task->computes(d_rdlb->pHydroStressLabel,        matlset);
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
@@ -152,7 +152,8 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
 
   new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
-  ParticleVariable<double> phydrostress;
+//  ParticleVariable<double> phydrostress;
+  double phydrostress;
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> ghydrostaticstress;
@@ -164,8 +165,8 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
 	                       dwi,  patch);
   new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
 	                       dwi,  patch);
-  new_dw->allocateAndPut(phydrostress,        d_rdlb->pHydroStressLabel,
-                         pset);
+//  new_dw->allocateAndPut(phydrostress,        d_rdlb->pHydroStressLabel,
+//                         pset);
 
 
   gconcentration.initialize(0);
@@ -176,17 +177,18 @@ void GaoDiffusion::interpolateParticlesToGrid(const Patch* patch,
   double minhydrostress = 0;
   
   int n8or27 = d_Mflag->d_8or27;
+  double one_third = 1./3.;
   for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
     particleIndex idx = *iter;
 
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
-    phydrostress[idx] = (pStress[idx].Trace())/3;
+    phydrostress = one_third*(pStress[idx].Trace());
 
     IntVector node;
     for(int k = 0; k < n8or27; k++) {
       node = ni[k];
       if(patch->containsNode(node)) {
-        ghydrostaticstress[node] += phydrostress[idx] * pmass[idx] * S[k];
+        ghydrostaticstress[node] += phydrostress * pmass[idx] * S[k];
         gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
       }
     }
