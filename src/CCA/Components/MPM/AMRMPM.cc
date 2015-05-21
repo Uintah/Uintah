@@ -145,6 +145,12 @@ AMRMPM::~AMRMPM()
   
   VarLabel::destroy(pDbgLabel);
   VarLabel::destroy(gSumSLabel);
+  VarLabel::destroy(RefineFlagXMaxLabel);
+  VarLabel::destroy(RefineFlagYMaxLabel);
+  VarLabel::destroy(RefineFlagZMaxLabel);
+  VarLabel::destroy(RefineFlagXMinLabel);
+  VarLabel::destroy(RefineFlagYMinLabel);
+  VarLabel::destroy(RefineFlagZMinLabel);
   
   if (d_one_matl->removeReference())
     delete d_one_matl;
