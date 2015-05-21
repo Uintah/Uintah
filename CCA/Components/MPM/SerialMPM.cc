@@ -751,7 +751,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   if(flags->d_with_ice){
     t->computes(lb->gVelocityBCLabel);
   }
-  
+
   sched->addTask(t, patches, matls);
 }
 

@@ -47,12 +47,14 @@ namespace Uintah {
 
 using namespace SCIRun;
 class GeometryObject;
+class SDInterfaceModel;
 
 class AMRMPM : public SerialMPM {
 
 public:
   AMRMPM(const ProcessorGroup* myworld);
   virtual ~AMRMPM();
+  SDInterfaceModel* sdInterfaceModel;
 
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
@@ -238,12 +240,14 @@ protected:
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
+#if 0
   // At Coarse Fine interface
   void interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw);
+#endif
 
   // Used to compute the particles initial physical size
   // for use in deformed particle visualization
@@ -365,9 +369,11 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
                                                        
+#if 0
   void scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP&, 
                                                    const PatchSet*,
                                                    const MaterialSet*);
+#endif
 
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
@@ -508,6 +514,44 @@ private:
       }
     }
   };
+
+        //--------------- Reaction Diffusion -----------------------
+  virtual void scheduleSDInterpolateParticlesToGrid(SchedulerP& sched,
+                                                    const PatchSet* patches,
+                                                    const MaterialSet* matls);
+
+  virtual void sdInterpolateParticlesToGrid(const ProcessorGroup*,
+                                            const PatchSubset* patches,
+                                            const MaterialSubset* matls,
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw);
+
+  virtual void scheduleComputeFlux(SchedulerP&, const PatchSet*, const MaterialSet*);
+
+  virtual void computeFlux(const ProcessorGroup*, const PatchSubset* patches,
+                           const MaterialSubset* matls, DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
+
+  virtual void scheduleComputeDivergence(SchedulerP&, const PatchSet*, const MaterialSet*);
+
+  virtual void computeDivergence(const ProcessorGroup*, const PatchSubset* patches,
+                                 const MaterialSubset* matls, DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+  virtual void scheduleSDInterpolateToParticlesAndUpdate(SchedulerP& sched,
+                                                          const PatchSet* patches,
+                                                          const MaterialSet* matls);
+
+  virtual void sdInterpolateToParticlesAndUpdate(const ProcessorGroup*, const PatchSubset* patches,
+                                                 const MaterialSubset* matls, DataWarehouse* old_dw,
+                                                 DataWarehouse* new_dw);
+
+  virtual void scheduleSDFinalParticleUpdate(SchedulerP& sched, const PatchSet* patches,
+                                             const MaterialSet* matls);
+
+  virtual void sdFinalParticleUpdate(const ProcessorGroup*, const PatchSubset* patches,
+                                     const MaterialSubset* matls, DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 
 };
       

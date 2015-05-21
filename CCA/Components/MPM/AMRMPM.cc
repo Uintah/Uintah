@@ -25,6 +25,9 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/Contact/ContactFactory.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/SDInterfaceModelFactory.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <CCA/Components/MPM/MPMBoundCond.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
@@ -106,6 +109,7 @@ AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 
   d_SMALL_NUM_MPM=1e-200;
   contactModel   = 0;
+  sdInterfaceModel = 0;
   NGP     = -9;
   NGN     = -9;
   d_nPaddingCells_Coarse = -9;
@@ -142,6 +146,9 @@ AMRMPM::~AMRMPM()
   delete lb;
   delete flags;
 //  delete contactModel;  // deleted in SerialMPM.cc
+  if(flags->d_doScalarDiffusion){
+    delete sdInterfaceModel;
+  }
   
   VarLabel::destroy(pDbgLabel);
   VarLabel::destroy(gSumSLabel);
@@ -214,48 +221,33 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     warn ="\n INPUT FILE ERROR:\n <MPM>  block not found inside of <AMR> block \n";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
-  //__________________________________
-  // read in the regions that user would like 
-  // refined if the grid has not been setup manually
-//  bool manualGrid;
-//  mpm_ps->getWithDefault("manualGrid", manualGrid, false);
 
-#if 1
+#if 0
   ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
-//  if(!manualGrid){
-//    ProblemSpecP refine_ps = mpm_ps->findBlock("Refine_Regions");
-  if(refine_ps){
-//    if(!refine_ps ){
-//      string warn;
-//      warn ="\n INPUT FILE ERROR:\n <Refine_Regions> "
-//           " block not found inside of <MPM> block \n";
-//      throw ProblemSetupException(warn, __FILE__, __LINE__);
-//    }
+  // Read in the refined regions geometry objects
+  int piece_num = 0;
+  list<GeometryObject::DataItem> geom_obj_data;
+  geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
 
-    // Read in the refined regions geometry objects
-    int piece_num = 0;
-    list<GeometryObject::DataItem> geom_obj_data;
-    geom_obj_data.push_back(GeometryObject::DataItem("level", GeometryObject::Integer));
+  for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
+        geom_obj_ps != 0;
+        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-    for (ProblemSpecP geom_obj_ps = refine_ps->findBlock("geom_object");
-          geom_obj_ps != 0;
-          geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
+      vector<GeometryPieceP> pieces;
+      GeometryPieceFactory::create(geom_obj_ps, pieces);
 
-        vector<GeometryPieceP> pieces;
-        GeometryPieceFactory::create(geom_obj_ps, pieces);
-
-        GeometryPieceP mainpiece;
-        if(pieces.size() == 0){
-           throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
-        } else if(pieces.size() > 1){
-           mainpiece = scinew UnionGeometryPiece(pieces);
-        } else {
-           mainpiece = pieces[0];
-        }
-        piece_num++;
-        d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
-     }
-   }  // if(refine_ps)
+      GeometryPieceP mainpiece;
+      if(pieces.size() == 0){
+        throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
+      } else if(pieces.size() > 1){
+         mainpiece = scinew UnionGeometryPiece(pieces);
+      } else {
+         mainpiece = pieces[0];
+      }
+      piece_num++;
+      d_refine_geom_objs.push_back(scinew GeometryObject(mainpiece,geom_obj_ps,geom_obj_data));
+   }
+ }  // if(refine_ps)
 #endif
 
   //__________________________________
@@ -276,7 +268,8 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
     NGN=2;
   }
   
-  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld, mat_ps,sharedState,lb,flags);
+  contactModel = ContactFactory::create(UintahParallelComponent::d_myworld,
+                                                           mat_ps,sharedState,lb,flags);
 
   // Determine extents for coarser level particle data
   // Linear Interpolation:  1 layer of coarse level cells
@@ -290,6 +283,10 @@ void AMRMPM::problemSetup(const ProblemSpecP& prob_spec,
   d_sharedState->setParticleGhostLayer(Ghost::AroundNodes, NGP);
 
   materialProblemSetup(mat_ps, d_sharedState,flags);
+
+  if(flags->d_doScalarDiffusion){
+    sdInterfaceModel=SDInterfaceModelFactory::create(mat_ps, sharedState, flags);
+  }
 }
 
 //______________________________________________________________________
@@ -313,6 +310,9 @@ void AMRMPM::outputProblemSpec(ProblemSpecP& root_ps)
     ProblemSpecP cm_ps = mat->outputProblemSpec(mpm_ps);
   }
   contactModel->outputProblemSpec(mpm_ps);
+//  if (flags->d_doScalarDiffusion){
+//    sdInterfaceModel->outputProblemSpec(mpm_ps);
+//  }
 }
 
 //______________________________________________________________________
@@ -389,6 +389,11 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
   }
 
+  // Adding initial computes and requires for scalar diffusion models.
+  if (flags->d_doScalarDiffusion){
+    sdInterfaceModel->addInitialComputesAndRequires(t, patches);
+  }
+
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
   if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched); 
@@ -443,6 +448,9 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid(     sched, patches, matls);
+    if(flags->d_doScalarDiffusion){
+      scheduleSDInterpolateParticlesToGrid( sched, patches, matls);
+    }
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -499,6 +507,15 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleSetGridBoundaryConditions(      sched, patches, matls);
   }
 
+  if(flags->d_doScalarDiffusion){
+    for (int l = 0; l < maxLevels; l++) {
+      const LevelP& level = grid->getLevel(l);
+      const PatchSet* patches = level->eachPatch();
+      scheduleComputeFlux(              sched, patches, matls);
+      scheduleComputeDivergence(        sched, patches, matls);
+    }
+  }
+
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
@@ -518,6 +535,9 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
+    if(flags->d_doScalarDiffusion){
+      scheduleSDInterpolateToParticlesAndUpdate(sched, patches, matls);
+    }
   }
 
 #if 0
@@ -533,7 +553,7 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const PatchSet* patches = level->eachPatch();
     scheduleComputeStressTensor(            sched, patches, matls);
   }
- 
+
   if(flags->d_computeScaleFactor){
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
@@ -546,6 +566,9 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleFinalParticleUpdate(            sched, patches, matls);
+//    if(flags->d_doScalarDiffusion){
+//      scheduleSDFinalParticleUpdate(sched, patches, matls);
+//    }
   }
 
   for (int l = 0; l < maxLevels; l++) {
@@ -1142,42 +1165,6 @@ void AMRMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   sched->addTask(t, patches, matls);
 }
 
-//______________________________________________________________________
-//
-void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
-                                                         const PatchSet* patches,
-                                                         const MaterialSet* matls)
-
-{
-  const Level* level = getLevel(patches);
-  
-  if(level->hasFinerLevel()){
-
-    printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI");
-
-    Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate_CFI",
-                  this, &AMRMPM::interpolateToParticlesAndUpdate_CFI);
-
-    Ghost::GhostType  gn  = Ghost::None;
-    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
-    #define allPatches 0
-    #define allMatls 0
-    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
-    
-    t->requires(Task::OldDW, lb->pXLabel, gn);
-    t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, gn,0);
-    t->requires(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls,   ND, gn,0);
-    t->requires(Task::NewDW, lb->gZOILabel,          allPatches, Task::FineLevel,d_one_matl, ND, gn,0);
-    
-    t->modifies(lb->pXLabel_preReloc);
-    t->modifies(lb->pDispLabel_preReloc);
-    t->modifies(lb->pVelocityLabel_preReloc);
-
-    sched->addTask(t, patches, matls);
-  }
-}
-
-
 void AMRMPM::scheduleComputeParticleScaleFactor(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* matls)
@@ -1584,6 +1571,12 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
         }
       }
     }  // matl loop
+
+    // This comment from Chris makes no sense to me - JG
+    // to work on move initialization for from createParticles to here
+    if(flags->d_doScalarDiffusion){
+      sdInterfaceModel->initializeSDMData(patch, new_dw);
+    }
   }
 
   if (flags->d_reductionVars->accStrainEnergy) {
@@ -3299,14 +3292,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
        }
 #endif
 #ifdef DEBUG_ACC
-  #if 1
-       if( abs(acc.length() - d_acc_ans.length() ) > d_acc_tol ) {
-         cout << "    L-"  << getLevel(patches)->getIndex() << " particle: "<< idx
-              <<  " cell: " << getLevel(patches)->getCellIndex(px[idx])
-              <<  " acc: " << acc
-              <<  " diff: " << acc.length() - d_acc_ans.length() << endl;
-       }
-  #endif                                                                         
 #endif
 /*===========TESTING==========`*/
 
@@ -3377,138 +3362,6 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
     delete interpolator;
   }
-}
-    
-//______________________________________________________________________
-//
-void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
-                                                 const PatchSubset* coarsePatches,
-                                                 const MaterialSubset* ,
-                                                 DataWarehouse* old_dw,
-                                                 DataWarehouse* new_dw)
-{
-  const Level* coarseLevel = getLevel(coarsePatches);
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  
-  delt_vartype delT;
-  old_dw->get(delT, d_sharedState->get_delt_label(), coarseLevel );
-  
-  double move_particles=1.;
-  if(!flags->d_doGridReset){
-    move_particles=0.;
-  }
-  
-  //__________________________________
-  //Loop over the coarse level patches
-  for(int p=0;p<coarsePatches->size();p++){
-    const Patch* coarsePatch = coarsePatches->get(p);
-    printTask(coarsePatches,coarsePatch,cout_doing,"AMRMPM::interpolateToParticlesAndUpdate_CFI");
-
-    int numMatls = d_sharedState->getNumMPMMatls();
-        
-    Level::selectType finePatches;
-    coarsePatch->getFineLevelPatches(finePatches);
-    
-    
-    //__________________________________
-    //  Fine patch loop
-    for(int i=0;i<finePatches.size();i++){
-      const Patch* finePatch = finePatches[i]; 
-      
-      if(finePatch->hasCoarseFaces()){
-
-        ParticleInterpolator* interpolator = flags->d_interpolator->clone(finePatch);
-        
-        constNCVariable<Stencil7> zoi_fine;
-        new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
-
-        for(int m = 0; m < numMatls; m++){
-          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-          int dwi = mpm_matl->getDWIndex();
-
-          // get fine level grid data
-          constNCVariable<double> gmass_fine;
-          constNCVariable<Vector> gvelocity_star_fine;
-          constNCVariable<Vector> gacceleration_fine;
-
-          // use getRegion() instead of get().  They should be equivalent but 
-          // get() throws assert on parallel runs.
-          IntVector fl = finePatch->getNodeLowIndex();
-          IntVector fh = finePatch->getNodeHighIndex();
-          new_dw->getRegion(gvelocity_star_fine,  lb->gVelocityStarLabel, dwi, fineLevel,fl, fh);   
-          new_dw->getRegion(gacceleration_fine,   lb->gAccelerationLabel, dwi, fineLevel,fl, fh); 
-            
-          
-          // get coarse level particle data
-          ParticleVariable<Point>  pxnew_coarse;
-          ParticleVariable<Vector> pdispnew_coarse;
-          ParticleVariable<Vector> pvelocitynew_coarse;
-          constParticleVariable<Point>  pxold_coarse;
-          
-          ParticleSubset* pset=0;
-          
-/*`==========TESTING==========*/
-          // get the particles for the entire coarse patch
-          // Ideally you only need the particle subset in the cells
-          // that surround the fine patch.  Currently, getModifiable doesn't
-          // allow you to get a pset with a high/low index that does not match
-          // the patch low high index  
-          pset = old_dw->getParticleSubset(dwi, coarsePatch);
-          //cout << *pset << endl; 
-/*===========TESTING==========`*/
-          old_dw->get(pxold_coarse,                  lb->pXLabel,                 pset);
-          new_dw->getModifiable(pxnew_coarse,        lb->pXLabel_preReloc,        pset);
-          new_dw->getModifiable(pdispnew_coarse,     lb->pDispLabel_preReloc,     pset);
-          new_dw->getModifiable(pvelocitynew_coarse, lb->pVelocityLabel_preReloc, pset);
-
-
-          for (ParticleSubset::iterator iter = pset->begin();
-                                        iter != pset->end(); iter++){
-            particleIndex idx = *iter;
-
-            // Get the node indices that surround the fine patch cell
-            vector<IntVector> ni;
-            vector<double> S;
-            
-            interpolator->findCellAndWeights_CFI(pxold_coarse[idx],ni,S,zoi_fine);
-
-            Vector acc(0.0, 0.0, 0.0); 
-            Vector vel(0.0, 0.0, 0.0);
-
-            // Add each nodes contribution to the particle's velocity & acceleration 
-            IntVector fineNode;
-            for(int k = 0; k < (int)ni.size(); k++) {
-              
-              fineNode = ni[k];
-            
-              vel  += gvelocity_star_fine[fineNode] * S[k];
-              acc  += gacceleration_fine[fineNode]  * S[k];
-/*`==========TESTING==========*/
-#ifdef DEBUG_ACC 
-              Vector diff = acc - d_acc_ans;
-              if( abs(acc.length() - d_acc_ans.length() > d_acc_tol ) ) {
-                const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-                cout << "    L-"<< fineLevel->getIndex() << " node: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
-                     << "  diff " << diff << endl;
-              }
-#endif 
-/*===========TESTING==========`*/
-            }
-            
-//            cout << " pvelocitynew_coarse  "<< idx << " "  << pvelocitynew_coarse[idx] << " p.x " << pxnew_coarse[idx] ;
-            
-            // Update the particle's position and velocity
-            pxnew_coarse[idx]         += vel*delT*move_particles;  
-            pdispnew_coarse[idx]      += vel*delT;                 
-            pvelocitynew_coarse[idx]  += acc*delT; 
-            
-          } // End of particle loop
-        } // End loop over materials 
-      
-      delete interpolator;
-      }  // if has coarse face
-    }  // End loop over fine patches 
-  }  // End loop over patches
 }
 
 void AMRMPM::finalParticleUpdate(const ProcessorGroup*,
@@ -4332,5 +4185,334 @@ void AMRMPM::coarseLevelCFI_Patches(const PatchSubset* coarsePatches,
         CFI_patches.push_back( coarsePatch );
       }
     }
+  }
+}
+
+#if 0
+//______________________________________________________________________
+//
+void AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP& sched,
+                                                         const PatchSet* patches,
+                                                         const MaterialSet* matls)
+
+{
+  const Level* level = getLevel(patches);
+  
+  if(level->hasFinerLevel()){
+
+    printSchedule(patches,cout_doing,"AMRMPM::scheduleInterpolateToParticlesAndUpdate_CFI");
+
+    Task* t=scinew Task("AMRMPM::interpolateToParticlesAndUpdate_CFI",
+                  this, &AMRMPM::interpolateToParticlesAndUpdate_CFI);
+
+    Ghost::GhostType  gn  = Ghost::None;
+    Task::MaterialDomainSpec  ND  = Task::NormalDomain;
+    #define allPatches 0
+    #define allMatls 0
+    t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+    
+    t->requires(Task::OldDW, lb->pXLabel, gn);
+    t->requires(Task::NewDW, lb->gVelocityStarLabel, allPatches, Task::FineLevel,allMatls,   ND, gn,0);
+    t->requires(Task::NewDW, lb->gAccelerationLabel, allPatches, Task::FineLevel,allMatls,   ND, gn,0);
+    t->requires(Task::NewDW, lb->gZOILabel,          allPatches, Task::FineLevel,d_one_matl, ND, gn,0);
+    
+    t->modifies(lb->pXLabel_preReloc);
+    t->modifies(lb->pDispLabel_preReloc);
+    t->modifies(lb->pVelocityLabel_preReloc);
+
+    sched->addTask(t, patches, matls);
+  }
+}
+#endif
+
+#if 0
+//______________________________________________________________________
+//
+void AMRMPM::interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
+                                                 const PatchSubset* coarsePatches,
+                                                 const MaterialSubset* ,
+                                                 DataWarehouse* old_dw,
+                                                 DataWarehouse* new_dw)
+{
+  const Level* coarseLevel = getLevel(coarsePatches);
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+  
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label(), coarseLevel );
+  
+  double move_particles=1.;
+  if(!flags->d_doGridReset){
+    move_particles=0.;
+  }
+  
+  //__________________________________
+  //Loop over the coarse level patches
+  for(int p=0;p<coarsePatches->size();p++){
+    const Patch* coarsePatch = coarsePatches->get(p);
+    printTask(coarsePatches,coarsePatch,cout_doing,"AMRMPM::interpolateToParticlesAndUpdate_CFI");
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+        
+    Level::selectType finePatches;
+    coarsePatch->getFineLevelPatches(finePatches);
+    
+    
+    //__________________________________
+    //  Fine patch loop
+    for(int i=0;i<finePatches.size();i++){
+      const Patch* finePatch = finePatches[i]; 
+      
+      if(finePatch->hasCoarseFaces()){
+
+        ParticleInterpolator* interpolator = flags->d_interpolator->clone(finePatch);
+        
+        constNCVariable<Stencil7> zoi_fine;
+        new_dw->get(zoi_fine, lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+
+        for(int m = 0; m < numMatls; m++){
+          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+          int dwi = mpm_matl->getDWIndex();
+
+          // get fine level grid data
+          constNCVariable<double> gmass_fine;
+          constNCVariable<Vector> gvelocity_star_fine;
+          constNCVariable<Vector> gacceleration_fine;
+
+          // use getRegion() instead of get().  They should be equivalent but 
+          // get() throws assert on parallel runs.
+          IntVector fl = finePatch->getNodeLowIndex();
+          IntVector fh = finePatch->getNodeHighIndex();
+          new_dw->getRegion(gvelocity_star_fine,  lb->gVelocityStarLabel, dwi, fineLevel,fl, fh);   
+          new_dw->getRegion(gacceleration_fine,   lb->gAccelerationLabel, dwi, fineLevel,fl, fh); 
+            
+          
+          // get coarse level particle data
+          ParticleVariable<Point>  pxnew_coarse;
+          ParticleVariable<Vector> pdispnew_coarse;
+          ParticleVariable<Vector> pvelocitynew_coarse;
+          constParticleVariable<Point>  pxold_coarse;
+          
+          ParticleSubset* pset=0;
+          
+/*`==========TESTING==========*/
+          // get the particles for the entire coarse patch
+          // Ideally you only need the particle subset in the cells
+          // that surround the fine patch.  Currently, getModifiable doesn't
+          // allow you to get a pset with a high/low index that does not match
+          // the patch low high index  
+          pset = old_dw->getParticleSubset(dwi, coarsePatch);
+          //cout << *pset << endl; 
+/*===========TESTING==========`*/
+          old_dw->get(pxold_coarse,                  lb->pXLabel,                 pset);
+          new_dw->getModifiable(pxnew_coarse,        lb->pXLabel_preReloc,        pset);
+          new_dw->getModifiable(pdispnew_coarse,     lb->pDispLabel_preReloc,     pset);
+          new_dw->getModifiable(pvelocitynew_coarse, lb->pVelocityLabel_preReloc, pset);
+
+
+          for (ParticleSubset::iterator iter = pset->begin();
+                                        iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+
+            // Get the node indices that surround the fine patch cell
+            vector<IntVector> ni;
+            vector<double> S;
+            
+            interpolator->findCellAndWeights_CFI(pxold_coarse[idx],ni,S,zoi_fine);
+
+            Vector acc(0.0, 0.0, 0.0); 
+            Vector vel(0.0, 0.0, 0.0);
+
+            // Add each nodes contribution to the particle's velocity & acceleration 
+            IntVector fineNode;
+            for(int k = 0; k < (int)ni.size(); k++) {
+              
+              fineNode = ni[k];
+            
+              vel  += gvelocity_star_fine[fineNode] * S[k];
+              acc  += gacceleration_fine[fineNode]  * S[k];
+/*`==========TESTING==========*/
+#ifdef DEBUG_ACC 
+              Vector diff = acc - d_acc_ans;
+              if( abs(acc.length() - d_acc_ans.length() > d_acc_tol ) ) {
+                const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
+                cout << "    L-"<< fineLevel->getIndex() << " node: "<< fineNode << " gacceleration: " << gacceleration_fine[fineNode] 
+                     << "  diff " << diff << endl;
+              }
+#endif 
+/*===========TESTING==========`*/
+            }
+            
+//            cout << " pvelocitynew_coarse  "<< idx << " "  << pvelocitynew_coarse[idx] << " p.x " << pxnew_coarse[idx] ;
+            
+            // Update the particle's position and velocity
+            pxnew_coarse[idx]         += vel*delT*move_particles;  
+            pdispnew_coarse[idx]      += vel*delT;                 
+            pvelocitynew_coarse[idx]  += acc*delT; 
+            
+          } // End of particle loop
+        } // End loop over materials 
+      
+      delete interpolator;
+      }  // if has coarse face
+    }  // End loop over fine patches 
+  }  // End loop over patches
+}
+#endif
+
+void AMRMPM::scheduleSDInterpolateParticlesToGrid(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+    
+  printSchedule(patches,cout_doing,"MPM::scheduleSDInterpolateParticlesToGrid");
+  
+
+  Task* t = scinew Task("MPM::sdInterpolateParticlesToGrid",
+                        this,&AMRMPM::sdInterpolateParticlesToGrid);
+	
+	sdInterfaceModel->scheduleInterpolateParticlesToGrid(t, patches);
+  
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::sdInterpolateParticlesToGrid(const ProcessorGroup*,
+                                             const PatchSubset* patches,
+                                             const MaterialSubset* matls,
+                                             DataWarehouse* old_dw,
+                                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing SDInterface::interpolateParticlesToGrid");
+
+    sdInterfaceModel->interpolateParticlesToGrid(patch, old_dw, new_dw);
+  }
+
+}
+
+void AMRMPM::scheduleComputeFlux(SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"SDInterface::scheduleComputeFlux");
+
+  Task* t = scinew Task("MPM::computeFlux",
+                        this,&AMRMPM::computeFlux);
+
+  sdInterfaceModel->scheduleComputeFlux(t,patches);
+
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::computeFlux(const ProcessorGroup*, const PatchSubset* patches,
+                             const MaterialSubset* matls,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing SDInterface::computeFlux");
+
+    sdInterfaceModel->computeFlux(patch, old_dw, new_dw);
+  }
+
+}
+
+void AMRMPM::scheduleComputeDivergence(SchedulerP& sched,
+                                       const PatchSet* patches,
+                                       const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+    
+  printSchedule(patches,cout_doing,"SDInterface::scheduleComputeDivergence");
+  
+
+  Task* t = scinew Task("MPM::computeDivergence", this,&AMRMPM::computeDivergence);
+
+  sdInterfaceModel->scheduleComputeDivergence(t, patches);
+
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::computeDivergence(const ProcessorGroup*, const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing SDInterface::scheduleComputeDivergence");
+
+    sdInterfaceModel->computeDivergence(patch, old_dw, new_dw);
+  }
+}
+
+void AMRMPM::scheduleSDInterpolateToParticlesAndUpdate(SchedulerP& sched,
+                                                          const PatchSet* patches,
+                                                          const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+    
+  printSchedule(patches,cout_doing,
+                        "SDInterface::scheduleSDInterpolateToParticlesAndUpdate");
+  
+
+  Task* t = scinew Task("MPM::sdInterpolateToParticlesAndUpdate",
+                        this,&AMRMPM::sdInterpolateToParticlesAndUpdate);
+
+  sdInterfaceModel->scheduleInterpolateToParticlesAndUpdate(t,patches);
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::sdInterpolateToParticlesAndUpdate(const ProcessorGroup*,
+                                                  const PatchSubset* patches,
+                                                  const MaterialSubset* matls,
+                                                  DataWarehouse* old_dw,
+                                                  DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,
+                            "Doing SDInterface::InterpolateToParticlesAndUpdate");
+
+    sdInterfaceModel->interpolateToParticlesAndUpdate(patch,old_dw,new_dw);
+  }
+}
+
+void AMRMPM::scheduleSDFinalParticleUpdate(SchedulerP& sched, const PatchSet* patches,
+                                              const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+    
+  printSchedule(patches,cout_doing,"SDInterface::scheduleSDFinalParticleUpdate");
+  
+
+  Task* t = scinew Task("MPM::sdFinalParticleUpdate",
+                        this,&AMRMPM::sdFinalParticleUpdate);
+
+	sdInterfaceModel->scheduleFinalParticleUpdate(t,patches);
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::sdFinalParticleUpdate(const ProcessorGroup*, const PatchSubset* patches,
+                                      const MaterialSubset* matls, DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing SDInterface::finalParticleUpdate");
+
+    sdInterfaceModel->finalParticleUpdate(patch,old_dw,new_dw);
   }
 }
