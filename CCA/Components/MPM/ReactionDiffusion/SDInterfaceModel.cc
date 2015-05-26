@@ -82,7 +82,7 @@ void SDInterfaceModel::initializeSDMData(const Patch* patch, DataWarehouse* new_
 }
 
 void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* task,
-                                                         const PatchSet* patches) const
+                                                          const PatchSet* patches) const
 {
   int numMPM = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMPM; m++){
@@ -92,17 +92,16 @@ void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* task,
   }
 }
 
-void SDInterfaceModel::interpolateParticlesToGrid(const Patch* patch, DataWarehouse* old_dw,
+void SDInterfaceModel::interpolateParticlesToGrid(const Patch* patch,
+                                                  DataWarehouse* old_dw,
                                                   DataWarehouse* new_dw)
 {
   int numMPM = d_sharedState->getNumMPMMatls();
-
   for(int m = 0; m < numMPM; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->interpolateParticlesToGrid(patch, mpm_matl, old_dw, new_dw);
-	}
-
+  }
 }
 
 
@@ -178,6 +177,7 @@ void SDInterfaceModel::interpolateToParticlesAndUpdate(const Patch* patch,
 
 }
 
+#if 0
 void SDInterfaceModel::scheduleFinalParticleUpdate(Task* task, const PatchSet* patches) const
 {
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -199,4 +199,4 @@ void SDInterfaceModel::finalParticleUpdate(const Patch* patch, DataWarehouse* ol
     sdm->finalParticleUpdate(patch, mpm_matl, old_dw, new_dw);
   }
 }
-
+#endif

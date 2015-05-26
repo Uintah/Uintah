@@ -53,6 +53,8 @@ namespace Uintah {
 
     virtual string getDiffusionType();
 
+    virtual void setIncludeHydroStress(bool value);
+
     virtual void addInitialComputesAndRequires(Task* task, const MPMMaterial* matl,
                                                const PatchSet* patches) const;
 
@@ -63,7 +65,7 @@ namespace Uintah {
                                   std::vector<const VarLabel*>& to);
 
     virtual void scheduleInterpolateParticlesToGrid(Task* task,
-		                                                const MPMMaterial* matl,
+		                                    const MPMMaterial* matl,
                                                     const PatchSet* patch) const;
 
     virtual void interpolateParticlesToGrid(const Patch* patch, const MPMMaterial* matl,
@@ -87,11 +89,14 @@ namespace Uintah {
     virtual void interpolateToParticlesAndUpdate(const Patch* patch, const MPMMaterial* matl,
                                                  DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+#if 0
     virtual void scheduleFinalParticleUpdate(Task* task, const MPMMaterial* matl, 
 		                                         const PatchSet* patch) const;
 
     virtual void finalParticleUpdate(const Patch* patch, const MPMMaterial* matl,
                                      DataWarehouse* old_dw, DataWarehouse* new_dw);
+#endif
+
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;
@@ -101,10 +106,13 @@ namespace Uintah {
     int NGP, NGN;
     bool do_explicit;
     string diffusion_type;
+    bool include_hydrostress;
 
     ScalarDiffusionModel(const ScalarDiffusionModel&);
     ScalarDiffusionModel& operator=(const ScalarDiffusionModel&);
     
+    double diffusivity;
+    double max_concentration;
   };
   
 } // end namespace Uintah
