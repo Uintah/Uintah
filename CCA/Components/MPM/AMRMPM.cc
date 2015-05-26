@@ -332,10 +332,6 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   Task* t = scinew Task("AMRMPM::actuallyInitialize",
                   this, &AMRMPM::actuallyInitialize);
 
-  MaterialSubset* zeroth_matl = scinew MaterialSubset();
-  zeroth_matl->add(0);
-  zeroth_matl->addReference();
-
   t->computes(lb->partCountLabel);
   t->computes(lb->pXLabel);
   t->computes(lb->pDispLabel);
@@ -356,7 +352,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pLastLevelLabel);
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(d_sharedState->get_delt_label(),level.get_rep());
-  t->computes(lb->pCellNAPIDLabel,zeroth_matl);
+  t->computes(lb->pCellNAPIDLabel,d_one_matl);
 
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -397,10 +393,6 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
   if (level->getIndex() == 0 ) schedulePrintParticleCount(level, sched); 
-
-  // The task will have a reference to zeroth_matl
-  if (zeroth_matl->removeReference())
-    delete zeroth_matl; // shouln't happen, but...
 
 }
 //______________________________________________________________________
@@ -1224,10 +1216,6 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     Task* t=scinew Task("AMRMPM::addParticles",this,
                         &AMRMPM::addParticles);
 
-    MaterialSubset* zeroth_matl = scinew MaterialSubset();
-    zeroth_matl->add(0);
-    zeroth_matl->addReference();
-
     t->modifies(lb->pParticleIDLabel_preReloc);
     t->modifies(lb->pXLabel_preReloc);
     t->modifies(lb->pVolumeLabel_preReloc);
@@ -1248,8 +1236,8 @@ void AMRMPM::scheduleAddParticles(SchedulerP& sched,
     t->modifies(lb->pVelGradLabel_preReloc);
     t->modifies(lb->MPMRefineCellLabel, d_one_matl);
 
-    t->requires(Task::OldDW, lb->pCellNAPIDLabel, zeroth_matl, Ghost::None);
-    t->computes(             lb->pCellNAPIDLabel, zeroth_matl);
+    t->requires(Task::OldDW, lb->pCellNAPIDLabel, d_one_matl, Ghost::None);
+    t->computes(             lb->pCellNAPIDLabel, d_one_matl);
 
     sched->addTask(t, patches, matls);
 }
