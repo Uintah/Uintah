@@ -956,12 +956,12 @@ namespace Uintah {
           // Get the solution back from hypre
           for(int z=l.z();z<h.z();z++){
             for(int y=l.y();y<h.y();y++){
-              const double* values = &Xnew[IntVector(l.x(), y, z)];
+              double* values = &Xnew[IntVector(l.x(), y, z)];
               IntVector ll(l.x(), y, z);
               IntVector hh(h.x()-1, y, z);
               HYPRE_StructVectorGetBoxValues(*HX,
                   ll.get_pointer(), hh.get_pointer(),
-                  const_cast<double*>(values));
+                  values);
             }
           }
         }
