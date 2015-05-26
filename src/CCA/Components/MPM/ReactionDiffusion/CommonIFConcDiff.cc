@@ -400,6 +400,7 @@ void CommonIFConcDiff::interpolateToParticlesAndUpdate(const Patch* patch,
 
 }
 
+#if 0
 void CommonIFConcDiff::scheduleFinalParticleUpdate(Task* task, const PatchSet* patches) const
 {
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -421,4 +422,4 @@ void CommonIFConcDiff::finalParticleUpdate(const Patch* patch, DataWarehouse* ol
     sdm->finalParticleUpdate(patch, mpm_matl, old_dw, new_dw);
   }
 }
-
+#endif
