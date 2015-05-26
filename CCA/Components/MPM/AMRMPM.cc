@@ -449,8 +449,11 @@ void AMRMPM::scheduleTimeAdvance(const LevelP & level,
     const LevelP& level = grid->getLevel(l);
     const PatchSet* patches = level->eachPatch();
     scheduleInterpolateParticlesToGrid_CFI( sched, patches, matls);
+//    if(flags->d_doScalarDiffusion){
+//      scheduleSDInterpolateParticlesToGrid_CFI( sched, patches, matls);
+//    }
   }
-  
+
 #ifdef USE_DEBUG_TASK
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
@@ -4360,13 +4363,48 @@ void AMRMPM::scheduleSDInterpolateParticlesToGrid(SchedulerP& sched,
 
   Task* t = scinew Task("MPM::sdInterpolateParticlesToGrid",
                         this,&AMRMPM::sdInterpolateParticlesToGrid);
-	
-	sdInterfaceModel->scheduleInterpolateParticlesToGrid(t, patches);
-  
+
+  sdInterfaceModel->scheduleInterpolateParticlesToGrid(t, patches);
+ 
   sched->addTask(t, patches, matls);
 }
 
 void AMRMPM::sdInterpolateParticlesToGrid(const ProcessorGroup*,
+                                          const PatchSubset* patches,
+                                          const MaterialSubset* matls,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,cout_doing,"Doing SDInterface::interpolateParticlesToGrid");
+
+    sdInterfaceModel->interpolateParticlesToGrid(patch, old_dw, new_dw);
+  }
+
+}
+
+#if 0
+void AMRMPM::scheduleSDInterpolateParticlesToGrid_CFI(SchedulerP& sched,
+                                                   const PatchSet* patches,
+                                                   const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(),
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,cout_doing,"MPM::scheduleSDInterpolateParticlesToGrid_CFI");
+
+
+  Task* t = scinew Task("MPM::sdInterpolateParticlesToGrid_CFI",
+                        this,&AMRMPM::sdInterpolateParticlesToGrid_CFI);
+
+  sdInterfaceModel->scheduleInterpolateParticlesToGrid_CFI(t, patches);
+
+  sched->addTask(t, patches, matls);
+}
+
+void AMRMPM::sdInterpolateParticlesToGrid_CFI(const ProcessorGroup*,
                                              const PatchSubset* patches,
                                              const MaterialSubset* matls,
                                              DataWarehouse* old_dw,
@@ -4378,8 +4416,8 @@ void AMRMPM::sdInterpolateParticlesToGrid(const ProcessorGroup*,
 
     sdInterfaceModel->interpolateParticlesToGrid(patch, old_dw, new_dw);
   }
-
 }
+#endif
 
 void AMRMPM::scheduleComputeFlux(SchedulerP& sched, const PatchSet* patches, const MaterialSet* matls)
 {
@@ -4473,34 +4511,5 @@ void AMRMPM::sdInterpolateToParticlesAndUpdate(const ProcessorGroup*,
                             "Doing SDInterface::InterpolateToParticlesAndUpdate");
 
     sdInterfaceModel->interpolateToParticlesAndUpdate(patch,old_dw,new_dw);
-  }
-}
-
-void AMRMPM::scheduleSDFinalParticleUpdate(SchedulerP& sched, const PatchSet* patches,
-                                              const MaterialSet* matls)
-{
-  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
-                           getLevel(patches)->getGrid()->numLevels()))
-    return;
-    
-  printSchedule(patches,cout_doing,"SDInterface::scheduleSDFinalParticleUpdate");
-  
-
-  Task* t = scinew Task("MPM::sdFinalParticleUpdate",
-                        this,&AMRMPM::sdFinalParticleUpdate);
-
-	sdInterfaceModel->scheduleFinalParticleUpdate(t,patches);
-  sched->addTask(t, patches, matls);
-}
-
-void AMRMPM::sdFinalParticleUpdate(const ProcessorGroup*, const PatchSubset* patches,
-                                      const MaterialSubset* matls, DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw)
-{
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    printTask(patches,patch,cout_doing,"Doing SDInterface::finalParticleUpdate");
-
-    sdInterfaceModel->finalParticleUpdate(patch,old_dw,new_dw);
   }
 }
