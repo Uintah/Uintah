@@ -27,13 +27,18 @@
 #define Packages_Uintah_CCA_Ports_SolverInterace_h
 
 #include <Core/Parallel/UintahParallelPort.h>
+#include <Core/Grid/Task.h>
 #include <Core/Grid/LevelP.h>
+#include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
-#include <Core/Grid/Task.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/Reductions.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+
 #include <string>
 
 
@@ -104,8 +109,14 @@ namespace Uintah {
   
   class SolverInterface : public UintahParallelPort {
   public:
-    SolverInterface() {}
-    virtual ~SolverInterface() {}
+    SolverInterface()
+    {
+      rhsIntegralLabel_ = VarLabel::create("poisson_rhs_integral", sum_vartype::getTypeDescription());
+    }
+    virtual ~SolverInterface()
+    {
+      VarLabel::destroy(rhsIntegralLabel_);
+    }
 
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
 					      const std::string      & name,
@@ -130,10 +141,109 @@ namespace Uintah {
                                       bool               modifies_hypre = false ) = 0;
 
     virtual std::string getName() = 0;
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief Enforces solvability condition on periodic problems or in domains where boundary
+     conditions on the Poisson system are zero Neumann (dp/dn = 0).
+     \param bLabel Varlabel of the Poisson system right hand side (RHS). The RHS MUST live in the 
+     newDW (i.e. be modifiable).
+     The remaining parameters take the standard form of other Uintah tasks.
+     */
+    template <typename FieldT>
+    void scheduleEnforceSolvability( const LevelP & level,
+                                     SchedulerP   & sched,
+                                     const MaterialSet  * matls,
+                                    const VarLabel     * bLabel )
+    {
+      // Check for periodic boundaries
+      IntVector periodic_vector = level->getPeriodicBoundaries();
+      const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
+      if (!isPeriodic) return; // execute this task ONLY if boundaries are periodic
+      
+      Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral",
+                                      this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel);;
+      tskIntegral->computes( rhsIntegralLabel_ );
+      tskIntegral->requires( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
+      sched->addTask(tskIntegral, level->eachPatch(), matls);
+      
+      Task* tskSolvability = scinew Task("SolverInterface::enforceSolvability",
+                                         this, &SolverInterface::enforceSolvability<FieldT>, bLabel);
+      tskSolvability->requires( Uintah::Task::NewDW, rhsIntegralLabel_ );
+      tskSolvability->modifies( bLabel );
+      sched->addTask(tskSolvability, level->eachPatch(), matls);
+    }
+    
 
-  private: 
+  private:
     SolverInterface(const SolverInterface&);
     SolverInterface& operator=(const SolverInterface&);
+    const Uintah::VarLabel* rhsIntegralLabel_;
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief Computes the volume integral of the RHS of the Poisson equation: 1/V * int(rhs*dV)
+     Since Uintah deals with uniform structured grids, the above equation can be simplified, discretely,
+     to: 1/n * sum(rhs) where n is the total number of cell sin the domain.
+     */
+    template<typename FieldT>
+    void computeRHSIntegral( const Uintah::ProcessorGroup*,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                            Uintah::DataWarehouse* old_dw,
+                            Uintah::DataWarehouse* new_dw,
+                            const VarLabel         * bLabel)
+    {
+      for( int ip=0; ip<patches->size(); ++ip ) {
+        const Uintah::Patch* const patch = patches->get(ip);
+        for( int im=0; im<materials->size(); ++im ){
+          int matl = materials->get(im);
+          // compute integral of b
+          FieldT b;
+          new_dw->getModifiable(b, bLabel, im, patch);
+          double rhsIntegral = 0.0;
+          for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            IntVector iCell = *iter;
+            rhsIntegral += b[iCell];
+          }
+          // divide by total volume.
+          rhsIntegral /= patch->getLevel()->totalCells();
+          new_dw->put( sum_vartype(rhsIntegral), rhsIntegralLabel_ );
+        }
+      }
+    }
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief Modifies the RHS of the Poisson equation to satisfy the solvability condition
+     on periodic problems.
+     */
+    template<typename FieldT>
+    void enforceSolvability( const Uintah::ProcessorGroup*,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                            Uintah::DataWarehouse* old_dw,
+                            Uintah::DataWarehouse* new_dw,
+                            const VarLabel         * bLabel)
+    {
+      // once we've computed the total integral, subtract it from the poisson rhs
+      for( int ip=0; ip<patches->size(); ++ip ){
+        const Patch* const patch = patches->get(ip);
+        for( int im=0; im<materials->size(); ++im ){
+          int matl = materials->get(im);
+          sum_vartype rhsIntegral_;
+          new_dw->get( rhsIntegral_, rhsIntegralLabel_ );
+          double rhsIntegral = rhsIntegral_;
+          FieldT b;
+          new_dw->getModifiable(b, bLabel, im, patch);
+          for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            IntVector iCell = *iter;
+            b[iCell] -= rhsIntegral;
+          }
+        }
+      }
+    }
+    //----------------------------------------------------------------------------------------------
   };
 }
 
