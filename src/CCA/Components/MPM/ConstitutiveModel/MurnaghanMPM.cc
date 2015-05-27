@@ -133,9 +133,9 @@ void MurnaghanMPM::computeStableTimestep(const Patch* patch,
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt((K)*pvolume[idx]/pmass[idx]);
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+     WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                      std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -217,9 +217,9 @@ void MurnaghanMPM::computeStressTensor(const PatchSubset* patches,
 
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = sqrt((gamma*jtotheminusgamma*K)/rho_cur);
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
                                                                                 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {

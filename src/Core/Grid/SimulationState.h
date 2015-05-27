@@ -42,7 +42,6 @@
 #define OVERHEAD_WINDOW 40
 namespace Uintah {
 
-using namespace SCIRun;
 
 class VarLabel;
 class Material; 

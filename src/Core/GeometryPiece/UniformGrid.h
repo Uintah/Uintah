@@ -36,7 +36,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
 
 /**************************************
 	
@@ -78,10 +77,10 @@ WARNING
    Point vertex(int i);
    std::list<Tri> makeTriList(std::vector<IntVector>& tris, std::vector<Point>& pts);
    bool inside(Point& p);
-   Plane plane();
+   SCIRun::Plane plane();
  private:
    Point d_points[3];
-   Plane d_plane;
+   SCIRun::Plane d_plane;
  };
  
  class UniformGrid {

@@ -60,7 +60,7 @@
 namespace Uintah{ 
 
   // setenv SCI_DEBUG INTRUSION_DEBUG:+ 
-  static DebugStream cout_intrusiondebug("INTRUSION_DEBUG",false);
+  static SCIRun::DebugStream cout_intrusiondebug("INTRUSION_DEBUG",false);
 
   class VarLabel; 
   class ArchesLabel;
@@ -1005,10 +1005,10 @@ namespace Uintah{
       bool _do_energy_exchange; 
       bool _mpm_energy_exchange; 
 
-      Mutex _bc_face_iterator_lock;
-      Mutex _interior_cell_iterator_lock;
-      Mutex _bc_cell_iterator_lock;
-      Mutex _iterator_initializer_lock;
+      SCIRun::Mutex _bc_face_iterator_lock;
+      SCIRun::Mutex _interior_cell_iterator_lock;
+      SCIRun::Mutex _bc_cell_iterator_lock;
+      SCIRun::Mutex _iterator_initializer_lock;
 
       const VarLabel* _T_label; 
 

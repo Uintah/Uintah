@@ -49,7 +49,7 @@ using namespace std;
 //__________________________________   
 //  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
 //  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
 const double Unsteady_Burn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 const double Unsteady_Burn::INIT_TS   = 300.0;  /* initial surface temperature          */
@@ -418,8 +418,8 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
                 
     /* All Material Data */
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
-    StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
+    SCIRun::StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
+    SCIRun::StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
     for(int m = 0; m < numAllMatls; m++){
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();

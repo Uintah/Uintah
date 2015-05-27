@@ -36,7 +36,7 @@ Tri::Tri(Point& p1, Point& p2, Point& p3)
   d_points[0] = p1;
   d_points[1] = p2;
   d_points[2] = p3;
-  d_plane = Plane(p1,p2,p3);
+  d_plane = SCIRun::Plane(p1,p2,p3);
 }
 
 Tri::Tri()
@@ -132,7 +132,7 @@ bool Tri::inside(Point& pt)
   return bool(inside);
 }
 
-Plane Tri::plane()
+SCIRun::Plane Tri::plane()
 {
   return d_plane;
 }

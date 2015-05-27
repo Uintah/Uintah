@@ -49,7 +49,6 @@ namespace Uintah {
   class MPMICELabel;
   class Output;
 
-using namespace SCIRun;
 
 /**************************************
 
@@ -274,19 +273,19 @@ public:
                      int     component,
                      const NCVariable<Vector>& q_NC);
                      
-  void binaryPressureSearch(StaticArray<constCCVariable<double> >& Temp, 
-                            StaticArray<CCVariable<double> >& rho_micro, 
-                            StaticArray<CCVariable<double> >& vol_frac, 
-                            StaticArray<CCVariable<double> >& rho_CC_new,
-                            StaticArray<CCVariable<double> >& speedSound_new,
-                            StaticArray<double> & dp_drho, 
-                            StaticArray<double> & dp_de, 
-                            StaticArray<double> & press_eos,
+  void binaryPressureSearch(SCIRun::StaticArray<constCCVariable<double> >& Temp, 
+                            SCIRun::StaticArray<CCVariable<double> >& rho_micro, 
+                            SCIRun::StaticArray<CCVariable<double> >& vol_frac, 
+                            SCIRun::StaticArray<CCVariable<double> >& rho_CC_new,
+                            SCIRun::StaticArray<CCVariable<double> >& speedSound_new,
+                            SCIRun::StaticArray<double> & dp_drho, 
+                            SCIRun::StaticArray<double> & dp_de, 
+                            SCIRun::StaticArray<double> & press_eos,
                             constCCVariable<double> & press,
                             CCVariable<double> & press_new, 
                             double press_ref,
-                            StaticArray<constCCVariable<double> > & cv,
-                            StaticArray<constCCVariable<double> > & gamma,
+                            SCIRun::StaticArray<constCCVariable<double> > & cv,
+                            SCIRun::StaticArray<constCCVariable<double> > & gamma,
                             double convergence_crit,
                             int numALLMatls,
                             int & count,

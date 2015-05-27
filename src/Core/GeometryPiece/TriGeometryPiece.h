@@ -37,7 +37,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
 
 /**************************************
         
@@ -123,7 +122,7 @@ WARNING
          Box d_box;
          std::vector<Point>     d_points;
          std::vector<IntVector> d_tri;
-         std::vector<Plane>     d_planes;
+         std::vector<SCIRun::Plane>     d_planes;
          std::vector<Box>       d_boxes;
 
          UniformGrid* d_grid;

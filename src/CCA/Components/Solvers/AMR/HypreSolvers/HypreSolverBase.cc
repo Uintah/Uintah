@@ -44,8 +44,8 @@ using namespace Uintah;
 //  To turn on normal output
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
-static DebugStream cout_dbg("HYPRE_DBG", false);
+static SCIRun::DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static SCIRun::DebugStream cout_dbg("HYPRE_DBG", false);
 
 HypreSolverBase::HypreSolverBase(HypreDriver* driver,
                                  HyprePrecondBase* precond,

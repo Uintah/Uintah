@@ -37,7 +37,7 @@
 
 using namespace Uintah;
 using namespace std;
-static DebugStream dbg("ICE_DOING_COUT", false);
+static SCIRun::DebugStream dbg("ICE_DOING_COUT", false);
 #define SMALL_NUM 1e-100
 
 //______________________________________________________________________

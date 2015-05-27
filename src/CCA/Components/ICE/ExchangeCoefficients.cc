@@ -31,7 +31,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
+static SCIRun::DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 
 ExchangeCoefficients::ExchangeCoefficients()
 {

@@ -41,7 +41,7 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "MMS_DOING_COUT:+"
-static DebugStream cout_doing("MMS_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("MMS_DOING_COUT", false);
 
 /* ______________________________________________________________________
  Function~  read_MMS_BC_inputs--   

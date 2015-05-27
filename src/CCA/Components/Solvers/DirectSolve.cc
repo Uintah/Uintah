@@ -51,7 +51,7 @@ using namespace Uintah;
 //  To turn on normal output
 //  setenv SCI_DEBUG "CGSOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
 
 namespace Uintah {
 
@@ -103,7 +103,7 @@ public:
     DataWarehouse* A_dw = new_dw->getOtherDataWarehouse(which_A_dw);
     DataWarehouse* b_dw = new_dw->getOtherDataWarehouse(which_b_dw);
     
-    double tstart = Time::currentSeconds();
+    double tstart = SCIRun::Time::currentSeconds();
     long64 flops = 0, memrefs = 0;
     for(int m = 0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -140,10 +140,10 @@ public:
       IntVector size = h-l;
       int totsize = size.x()*size.y()*size.z();
 
-      Array2<double> a(totsize, totsize);
+      SCIRun::Array2<double> a(totsize, totsize);
       a.initialize(0);
-      Array1<double> x(totsize);
-      Array1<double> b(totsize);
+      SCIRun::Array1<double> x(totsize);
+      SCIRun::Array1<double> b(totsize);
 
       for(CellIterator i(iter); !i.done(); i++){
         IntVector idx = *i;
@@ -236,7 +236,7 @@ public:
         X[idx] = x[row];
       }
     }
-    double dt=Time::currentSeconds()-tstart;
+    double dt=SCIRun::Time::currentSeconds()-tstart;
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){

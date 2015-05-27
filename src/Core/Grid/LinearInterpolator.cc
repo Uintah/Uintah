@@ -57,9 +57,9 @@ void LinearInterpolator::findCellAndWeights(const Point& pos,
                                            const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos );
-  int ix = Floor(cellpos.x());
-  int iy = Floor(cellpos.y());
-  int iz = Floor(cellpos.z());
+  int ix = SCIRun::Floor(cellpos.x());
+  int iy = SCIRun::Floor(cellpos.y());
+  int iz = SCIRun::Floor(cellpos.z());
   ni[0] = IntVector(ix, iy, iz);
   ni[1] = IntVector(ix, iy, iz+1);
   ni[2] = IntVector(ix, iy+1, iz);
@@ -423,9 +423,9 @@ void LinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-  int ix = Floor(cellpos.x());
-  int iy = Floor(cellpos.y());
-  int iz = Floor(cellpos.z());
+  int ix = SCIRun::Floor(cellpos.x());
+  int iy = SCIRun::Floor(cellpos.y());
+  int iz = SCIRun::Floor(cellpos.z());
   ni[0] = IntVector(ix, iy, iz);
   ni[1] = IntVector(ix, iy, iz+1);
   ni[2] = IntVector(ix, iy+1, iz);
@@ -459,9 +459,9 @@ LinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                    const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-  int ix = Floor(cellpos.x());
-  int iy = Floor(cellpos.y());
-  int iz = Floor(cellpos.z());
+  int ix = SCIRun::Floor(cellpos.x());
+  int iy = SCIRun::Floor(cellpos.y());
+  int iz = SCIRun::Floor(cellpos.z());
   ni[0] = IntVector(ix, iy, iz);
   ni[1] = IntVector(ix, iy, iz+1);
   ni[2] = IntVector(ix, iy+1, iz);

@@ -465,9 +465,9 @@ void Arenisca3::computeStableTimestep(const Patch* patch,
     // store the maximum
     c_dil = sqrt((bulk + four_third*shear)*(pvolume[idx]/pmass[idx]));
 
-    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+    WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                     std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
 
   // Compute the stable timestep based on maximum value of
@@ -738,7 +738,7 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
         // magnitude of the strain rate.  MH!: I don't have a reference for this equation.
         //
         // tau = T1*(epsdot)^(-T2) = T1*(1/epsdot)^T2, modified to avoid division by zero.
-        double tau = d_cm.T1_rate_dependence*Pow(1.0/max(D.Norm(), 1.0e-15),d_cm.T2_rate_dependence);
+        double tau = d_cm.T1_rate_dependence*std::pow(1.0/max(D.Norm(), 1.0e-15),d_cm.T2_rate_dependence);
 
         // RH and rh are defined by eq. 6.93 in the book chapter, but there seems to be a sign error
         // in the text, and I've rewritten it to avoid computing the exponential twice.
@@ -811,9 +811,9 @@ void Arenisca3::computeStressTensor(const PatchSubset* patches,
       double rho_cur = pmass[idx]/pvolume[idx];
              c_dil = sqrt((bulk+four_third*shear)/rho_cur);
 
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
@@ -1384,7 +1384,7 @@ updateISV:
 //      too much plastic strain in the return.
 
     //if(fabs(I1_trial - I1_new)>(d_cm.B0*TOL) && Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
-    if(Sign(I1_trial - I1_new)!=Sign(I1_trial - I1_0)){
+        if(SCIRun::Sign(I1_trial - I1_new)!=SCIRun::Sign(I1_trial - I1_0)){
       eta_out = eta_mid;
       if( i >= imax ){
         // solution failed to converge within the allowable iterations, which means
@@ -1517,7 +1517,7 @@ double Arenisca3::computeX(const double& evp,const double& P3)
     }
     else{
       // This is an expensive calculation, but fastpow() may cause errors.
-      X = p0*Pow(1.0 + evp, 1.0/(p0*p1*P3));
+      X = p0*std::pow(1.0 + evp, 1.0/(p0*p1*P3));
     }
 
     if(Kf!=0.0 && evp<=ev0) { // ------------------------------------------- Fluid Effects
@@ -1681,7 +1681,7 @@ int Arenisca3::nonHardeningReturn(const double & I1_trial,    // Trial Stress
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
       //
-      // theta = pi_fourth*Pow(-two_third,n);
+      // theta = pi_fourth*std::pow(-two_third,n);
       // z_test = z_trial + cos(theta)*(z_0-z_trial) - sin(theta)*(r_0-r_trial);
       // r_test = r_trial + sin(theta)*(z_0-z_trial) + cos(theta)*(r_0-r_trial);
       sinTheta = sinV[n];
@@ -1853,7 +1853,7 @@ int Arenisca3::computeYieldFunction(const double& I1,
     // wishes to run without porosity, and no cap function is used, i.e. fc=1
 
     // **Elliptical Cap Function: (fc)**
-    // fc = sqrt(1.0 - Pow((Kappa-I1mZ)/(Kappa-X)),2.0);
+    // fc = sqrt(1.0 - std::pow((Kappa-I1mZ)/(Kappa-X)),2.0);
     // faster version: fc2 = fc^2
     double fc2 = 1.0 - ((Kappa-I1mZ)/(Kappa-X))*((Kappa-I1mZ)/(Kappa-X));
     if(rJ2*rJ2 > Ff*Ff*fc2 ) YIELD = 1;

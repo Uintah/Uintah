@@ -12,7 +12,7 @@
 
 using namespace std;
 using namespace Uintah;
-static DebugStream dbg("ARCHES", false);
+static SCIRun::DebugStream dbg("ARCHES", false);
 
 //---------------------------------------------------------------------------
 // Builder:

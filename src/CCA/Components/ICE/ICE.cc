@@ -88,9 +88,9 @@ using namespace Uintah;
 //  ICE_NORMAL_COUT:  dumps out during problemSetup 
 //  ICE_DOING_COUT:   dumps when tasks are scheduled and performed
 //  default is OFF
-static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
-static DebugStream cout_doing("ICE_DOING_COUT", false);
-static DebugStream ds_EqPress("DBG_EqPress",false);
+static SCIRun::DebugStream cout_norm("ICE_NORMAL_COUT", false);  
+static SCIRun::DebugStream cout_doing("ICE_DOING_COUT", false);
+static SCIRun::DebugStream ds_EqPress("DBG_EqPress",false);
 
 
 ICE::ICE(const ProcessorGroup* myworld, const bool doAMR) :
@@ -2014,7 +2014,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         double vol = dx.x() * dx.y() * dx.z();  
         Vector grav = getGravity();
-        double grav_vel =  Sqrt( dx.x() * fabs(grav.x()) + 
+        double grav_vel =  std::sqrt( dx.x() * fabs(grav.x()) + 
                                  dx.y() * fabs(grav.y()) + 
                                  dx.z() * fabs(grav.z()) ); 
                                    
@@ -2127,16 +2127,16 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
     Vector grav     = getGravity();
-    StaticArray<constCCVariable<double> > placeHolder(0);
-    StaticArray<CCVariable<double>   > rho_micro(max_indx);
-    StaticArray<CCVariable<double>   > sp_vol_CC(max_indx);
-    StaticArray<CCVariable<double>   > rho_CC(max_indx); 
-    StaticArray<CCVariable<double>   > Temp_CC(max_indx);
-    StaticArray<CCVariable<double>   > speedSound(max_indx);
-    StaticArray<CCVariable<double>   > vol_frac_CC(max_indx);
-    StaticArray<CCVariable<Vector>   > vel_CC(max_indx);
-    StaticArray<CCVariable<double>   > cv(max_indx);
-    StaticArray<CCVariable<double>   > gamma(max_indx);
+    SCIRun::StaticArray<constCCVariable<double> > placeHolder(0);
+    SCIRun::StaticArray<CCVariable<double>   > rho_micro(max_indx);
+    SCIRun::StaticArray<CCVariable<double>   > sp_vol_CC(max_indx);
+    SCIRun::StaticArray<CCVariable<double>   > rho_CC(max_indx); 
+    SCIRun::StaticArray<CCVariable<double>   > Temp_CC(max_indx);
+    SCIRun::StaticArray<CCVariable<double>   > speedSound(max_indx);
+    SCIRun::StaticArray<CCVariable<double>   > vol_frac_CC(max_indx);
+    SCIRun::StaticArray<CCVariable<Vector>   > vel_CC(max_indx);
+    SCIRun::StaticArray<CCVariable<double>   > cv(max_indx);
+    SCIRun::StaticArray<CCVariable<double>   > gamma(max_indx);
     CCVariable<double>    press_CC, imp_initialGuess, vol_frac_sum;
     
     new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
@@ -2430,22 +2430,22 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     static int n_passes;                  
     n_passes ++; 
 
-    StaticArray<double> press_eos(numMatls);
-    StaticArray<double> dp_drho(numMatls),dp_de(numMatls);
-    StaticArray<CCVariable<double> > vol_frac(numMatls);
-    StaticArray<CCVariable<double> > rho_micro(numMatls);
-    StaticArray<CCVariable<double> > rho_CC_new(numMatls);
-    StaticArray<CCVariable<double> > sp_vol_new(numMatls); 
-    StaticArray<CCVariable<double> > speedSound(numMatls);
-    StaticArray<CCVariable<double> > speedSound_new(numMatls);
-    StaticArray<CCVariable<double> > f_theta(numMatls); 
-    StaticArray<CCVariable<double> > kappa(numMatls);
-    StaticArray<constCCVariable<double> > Temp(numMatls);
-    StaticArray<constCCVariable<double> > rho_CC(numMatls);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-    StaticArray<constCCVariable<double> > cv(numMatls);
-    StaticArray<constCCVariable<double> > gamma(numMatls); 
-    StaticArray<constCCVariable<double> > placeHolder(0);   
+    SCIRun::StaticArray<double> press_eos(numMatls);
+    SCIRun::StaticArray<double> dp_drho(numMatls),dp_de(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > vol_frac(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > rho_micro(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > rho_CC_new(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > sp_vol_new(numMatls); 
+    SCIRun::StaticArray<CCVariable<double> > speedSound(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > speedSound_new(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > f_theta(numMatls); 
+    SCIRun::StaticArray<CCVariable<double> > kappa(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > Temp(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > rho_CC(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > cv(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > gamma(numMatls); 
+    SCIRun::StaticArray<constCCVariable<double> > placeHolder(0);   
 
     CCVariable<int> n_iters_equil_press;
     constCCVariable<double> press;
@@ -2738,7 +2738,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     CCVariable<double> speedSound, f_theta, kappa;
     CCVariable<double> press_eq, sumKappa, sum_imp_delP, rho_CC_new;
     constCCVariable<double> Temp,rho_CC, sp_vol_CC, cv, gamma;   
-    StaticArray<CCVariable<double> > rho_micro(1);
+    SCIRun::StaticArray<CCVariable<double> > rho_micro(1);
     
     Ghost::GhostType  gn = Ghost::None;
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);   
@@ -2789,7 +2789,7 @@ void ICE::computeEquilPressure_1_matl(const ProcessorGroup*,
     }
     //__________________________________
     // - apply Boundary conditions
-    StaticArray<constCCVariable<double> > placeHolder(0);
+    SCIRun::StaticArray<constCCVariable<double> > placeHolder(0);
     customBC_localVars* BC_localVars   = scinew customBC_localVars();
     
     preprocess_CustomBCs( "EqPress",old_dw, new_dw, lb,  patch, 
@@ -3213,11 +3213,11 @@ template<class constSFC, class SFC>
                                    int numMatls,
                                    FastMatrix& K,
                                    double delT,
-                                   StaticArray<constCCVariable<double> >& vol_frac_CC,
-                                   StaticArray<constCCVariable<double> >& sp_vol_CC,
-                                   StaticArray< constSFC> & vel_FC,
-                                   StaticArray< SFC >& sp_vol_FC,
-                                   StaticArray< SFC >& vel_FCME)        
+                                   SCIRun::StaticArray<constCCVariable<double> >& vol_frac_CC,
+                                   SCIRun::StaticArray<constCCVariable<double> >& sp_vol_CC,
+                                   SCIRun::StaticArray< constSFC> & vel_FC,
+                                   SCIRun::StaticArray< SFC >& sp_vol_FC,
+                                   SCIRun::StaticArray< SFC >& vel_FCME)        
                                        
 {
   //__________________________________
@@ -3350,15 +3350,15 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     delt_vartype delT;
     pOldDW->get(delT, d_sharedState->get_delt_label(),level);
 
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
-    StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
-    StaticArray<constSFCXVariable<double> > uvel_FC(numMatls);
-    StaticArray<constSFCYVariable<double> > vvel_FC(numMatls);
-    StaticArray<constSFCZVariable<double> > wvel_FC(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > vol_frac_CC(numMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > uvel_FC(numMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > vvel_FC(numMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > wvel_FC(numMatls);
 
-    StaticArray<SFCXVariable<double> >uvel_FCME(numMatls),sp_vol_XFC(numMatls);
-    StaticArray<SFCYVariable<double> >vvel_FCME(numMatls),sp_vol_YFC(numMatls);
-    StaticArray<SFCZVariable<double> >wvel_FCME(numMatls),sp_vol_ZFC(numMatls);
+    SCIRun::StaticArray<SFCXVariable<double> >uvel_FCME(numMatls),sp_vol_XFC(numMatls);
+    SCIRun::StaticArray<SFCYVariable<double> >vvel_FCME(numMatls),sp_vol_YFC(numMatls);
+    SCIRun::StaticArray<SFCZVariable<double> >wvel_FCME(numMatls),sp_vol_ZFC(numMatls);
     
     // lowIndex is the same for all vel_FC
     IntVector lowIndex(patch->getExtraSFCXLowIndex()); 
@@ -3485,8 +3485,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2;
     constCCVariable<double>sumKappa, press_equil;
-    StaticArray<CCVariable<double> > placeHolder(0);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > placeHolder(0);
+    SCIRun::StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
    
     const IntVector gc(1,1,1);
     Ghost::GhostType  gn  = Ghost::None;
@@ -3759,12 +3759,12 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
     Ghost::GhostType  gn = Ghost::None;
     int numALLMatls = d_sharedState->getNumMatls();
     CCVariable<double> sumKappa;
-    StaticArray<CCVariable<double> > vol_frac(numALLMatls);
-    StaticArray<CCVariable<double> > f_theta(numALLMatls);
-    StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > sp_vol(numALLMatls);
-    StaticArray<constCCVariable<double> > modVolSrc(numALLMatls);
-    StaticArray<constCCVariable<double> > kappa(numALLMatls);
+    SCIRun::StaticArray<CCVariable<double> > vol_frac(numALLMatls);
+    SCIRun::StaticArray<CCVariable<double> > f_theta(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > sp_vol(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > modVolSrc(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > kappa(numALLMatls);
     new_dw->getModifiable(sumKappa, lb->sumKappaLabel, 0,patch);
     
     Vector dx  = patch->dCell();
@@ -4453,10 +4453,10 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     Ghost::GhostType  gn  = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;
 
-    StaticArray<constCCVariable<double> > Tdot(numALLMatls);
-    StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
-    StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
-    StaticArray<CCVariable<double> > alpha(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > Tdot(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
+    SCIRun::StaticArray<CCVariable<double> > alpha(numALLMatls);
     constCCVariable<double> rho_CC, f_theta, sp_vol_CC, cv;
     constCCVariable<double> delP, P;
     constCCVariable<double> TMV_CC;
@@ -4639,7 +4639,7 @@ void ICE::computeLagrangian_Transported_Vars(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumICEMatls();
     
     // get mass_L for all ice matls
-    StaticArray<constCCVariable<double> > mass_L(numMatls);
+    SCIRun::StaticArray<constCCVariable<double> > mass_L(numMatls);
     for (int m = 0; m < numMatls; m++ ) {
       Material* matl = d_sharedState->getICEMaterial( m );
       int indx = matl->getDWIndex();
@@ -4843,21 +4843,21 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     //Vector zero(0.,0.,0.);
 
     // Create arrays for the grid data
-    StaticArray<CCVariable<double> > cv(numALLMatls);
-    StaticArray<CCVariable<double> > Temp_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > gamma(numALLMatls);  
-    StaticArray<constCCVariable<double> > vol_frac_CC(numALLMatls);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
-    StaticArray<constCCVariable<Vector> > mom_L(numALLMatls);
-    StaticArray<constCCVariable<double> > int_eng_L(numALLMatls);
+    SCIRun::StaticArray<CCVariable<double> > cv(numALLMatls);
+    SCIRun::StaticArray<CCVariable<double> > Temp_CC(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > gamma(numALLMatls);  
+    SCIRun::StaticArray<constCCVariable<double> > vol_frac_CC(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<Vector> > mom_L(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > int_eng_L(numALLMatls);
 
     // Create variables for the results
-    StaticArray<CCVariable<Vector> > mom_L_ME(numALLMatls);
-    StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
-    StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
-    StaticArray<CCVariable<double> > Tdot(numALLMatls);
-    StaticArray<constCCVariable<double> > mass_L(numALLMatls);
-    StaticArray<constCCVariable<double> > old_temp(numALLMatls);
+    SCIRun::StaticArray<CCVariable<Vector> > mom_L_ME(numALLMatls);
+    SCIRun::StaticArray<CCVariable<Vector> > vel_CC(numALLMatls);
+    SCIRun::StaticArray<CCVariable<double> > int_eng_L_ME(numALLMatls);
+    SCIRun::StaticArray<CCVariable<double> > Tdot(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > mass_L(numALLMatls);
+    SCIRun::StaticArray<constCCVariable<double> > old_temp(numALLMatls);
 
     double b[MAX_MATLS];
     Vector bb[MAX_MATLS];
@@ -5113,8 +5113,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
     /*`==========TESTING==========*/ 
     if(d_BC_globalVars->usingLodi || 
        d_BC_globalVars->usingMicroSlipBCs){ 
-      StaticArray<CCVariable<double> > temp_CC_Xchange(numALLMatls);
-      StaticArray<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);      
+      SCIRun::StaticArray<CCVariable<double> > temp_CC_Xchange(numALLMatls);
+      SCIRun::StaticArray<CCVariable<Vector> > vel_CC_Xchange(numALLMatls);      
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial(m);
         int indx = matl->getDWIndex();
@@ -5178,8 +5178,8 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
       
     Ghost::GhostType  gn = Ghost::None;
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<constCCVariable<Vector> > vel_CC(numAllMatls);
-    StaticArray<constCCVariable<double> > speedSound(numAllMatls);
+    SCIRun::StaticArray<constCCVariable<Vector> > vel_CC(numAllMatls);
+    SCIRun::StaticArray<constCCVariable<double> > speedSound(numAllMatls);
           
     for(int m=0;m < numAllMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );
@@ -5217,7 +5217,7 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
             for(CellIterator iter=patch->getFaceIterator(face, MEC);
                                                           !iter.done();iter++) {
               IntVector c = *iter;
-              maxMach = Max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);
+              maxMach = std::max(maxMach,vel_CC[m][c].length()/speedSound[m][c]);
             }
             
             VarLabel* V_Label = getMaxMach_face_VarLabel(face);
@@ -5590,9 +5590,9 @@ void ICE::TestConservation(const ProcessorGroup*,
     //__________________________________
     // get face centered velocities to 
     // to compute what's being fluxed through the domain
-    StaticArray<constSFCXVariable<double> >uvel_FC(numICEmatls);
-    StaticArray<constSFCYVariable<double> >vvel_FC(numICEmatls);
-    StaticArray<constSFCZVariable<double> >wvel_FC(numICEmatls);
+    SCIRun::StaticArray<constSFCXVariable<double> >uvel_FC(numICEmatls);
+    SCIRun::StaticArray<constSFCYVariable<double> >vvel_FC(numICEmatls);
+    SCIRun::StaticArray<constSFCZVariable<double> >wvel_FC(numICEmatls);
     for (int m = 0; m < numICEmatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
@@ -5604,7 +5604,7 @@ void ICE::TestConservation(const ProcessorGroup*,
     //__________________________________
     // conservation of mass
     constCCVariable<double> rho_CC;
-    StaticArray<CCVariable<double> > mass(numICEmatls);   
+    SCIRun::StaticArray<CCVariable<double> > mass(numICEmatls);   
     for (int m = 0; m < numICEmatls; m++ ) {
 
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -5868,7 +5868,7 @@ void ICE::getConstantExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 void ICE::getVariableExchangeCoefficients( FastMatrix& ,
                                            FastMatrix& H,
                                            IntVector & c,
-                                           StaticArray<constCCVariable<double> >& mass_L  )
+                                           SCIRun::StaticArray<constCCVariable<double> >& mass_L  )
 {
   int numMatls  = d_sharedState->getNumMatls();
 

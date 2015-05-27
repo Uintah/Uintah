@@ -42,7 +42,7 @@ using namespace std;
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("MODELS_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 IandG::IandG(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)

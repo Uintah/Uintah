@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 
 
 // define INSERT_P to generate a cylinder distribution that is compatible with

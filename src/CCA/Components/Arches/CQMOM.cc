@@ -277,7 +277,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
                                  DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  double start_SolveTime = SCIRun::Time::currentSeconds();
   
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
@@ -390,7 +390,7 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
+  double total_SolveTime = (SCIRun::Time::currentSeconds() - start_SolveTime);
   proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
 }
 
@@ -613,7 +613,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
                                 DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  double start_SolveTime = SCIRun::Time::currentSeconds();
   
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
@@ -727,7 +727,7 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
+  double total_SolveTime = (SCIRun::Time::currentSeconds() - start_SolveTime);
   proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
 }
 
@@ -773,7 +773,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
                                    DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  double start_SolveTime = SCIRun::Time::currentSeconds();
   
   //change Ni and maxInd to match new varaible order
   vector<int> maxInd_tmp (3);
@@ -902,7 +902,7 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
+  double total_SolveTime = (SCIRun::Time::currentSeconds() - start_SolveTime);
   proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
 }
 
@@ -947,7 +947,7 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
                                    DataWarehouse* new_dw)
 {
   //time how long the CQMOM solve takes in total
-  double start_SolveTime = Time::currentSeconds();
+  double start_SolveTime = SCIRun::Time::currentSeconds();
   
   for (int p = 0; p< patches->size(); ++p) {
     const Patch* patch = patches->get(p);
@@ -1076,6 +1076,6 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       delete cqmomWeights[i];
     }
   } //end patch loop
-  double total_SolveTime = (Time::currentSeconds() - start_SolveTime);
+  double total_SolveTime = (SCIRun::Time::currentSeconds() - start_SolveTime);
   proc0cout << "CQMOM Solve time: " << total_SolveTime << endl;
 }

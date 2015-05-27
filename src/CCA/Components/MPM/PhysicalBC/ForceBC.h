@@ -32,7 +32,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
    
 /**************************************
 
@@ -67,17 +66,17 @@ WARNING
       virtual std::string getType() const;
       virtual void outputProblemSpec(ProblemSpecP& ps);
 
-      const Vector&  getForceDensity() const;
-      const Point&   getLowerRange() const;
-      const Point&   getUpperRange() const;
+      const SCIRun::Vector&  getForceDensity() const;
+      const SCIRun::Point&   getLowerRange() const;
+      const SCIRun::Point&   getUpperRange() const;
          
    private:
       ForceBC(const ForceBC&);
       ForceBC& operator=(const ForceBC&);
       
-      Vector d_forceDensity;
-      Point  d_lowerRange;
-      Point  d_upperRange;
+      SCIRun::Vector d_forceDensity;
+      SCIRun::Point  d_lowerRange;
+      SCIRun::Point  d_upperRange;
    };
 } // End namespace Uintah
 

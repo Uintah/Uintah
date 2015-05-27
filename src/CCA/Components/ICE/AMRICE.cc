@@ -49,7 +49,7 @@
 
 using namespace Uintah;
 using namespace std;
-static DebugStream cout_doing("AMRICE_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("AMRICE_DOING_COUT", false);
 
 //setenv SCI_DEBUG AMR:+ you can see the new grid it creates
 
@@ -538,8 +538,8 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
-      StaticArray<CCVariable<double> > sp_vol_CC(numICEMatls);
-      StaticArray<constCCVariable<double> > sp_vol_const(numICEMatls);
+      SCIRun::StaticArray<CCVariable<double> > sp_vol_CC(numICEMatls);
+      SCIRun::StaticArray<constCCVariable<double> > sp_vol_const(numICEMatls);
       
       
       for (int m = 0; m < numICEMatls; m++) {
@@ -651,7 +651,7 @@ void AMRICE::setBC_FineLevel(const ProcessorGroup*,
       customBC_localVars* notUsed = scinew customBC_localVars();
       
       CCVariable<double> press_CC;
-      StaticArray<CCVariable<double> > placeHolder(0);
+      SCIRun::StaticArray<CCVariable<double> > placeHolder(0);
       
       fine_new_dw->getModifiable(press_CC, lb->press_CCLabel, 0, patch);
       
@@ -1340,10 +1340,10 @@ void AMRICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
 #endif
 /*===========TESTING==========`*/  
   
-  l[y] = Max(l[y], coarse_Lo[y]);  // intersection 
-  l[z] = Max(l[z], coarse_Lo[z]);  // only the transerse directions 
-  h[y] = Min(h[y], coarse_Hi[y]);
-  h[z] = Min(h[z], coarse_Hi[z]);       
+  l[y] = std::max(l[y], coarse_Lo[y]);  // intersection 
+  l[z] = std::max(l[z], coarse_Lo[z]);  // only the transerse directions 
+  h[y] = std::min(h[y], coarse_Hi[y]);
+  h[z] = std::min(h[z], coarse_Hi[z]);       
       
   iter=CellIterator(l,h);
   
@@ -1873,10 +1873,10 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     //__________________________________
     //  initialize mag_grad for all matls
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
-    StaticArray<CCVariable<double> > mag_div_vel_CC(numAllMatls);
+    SCIRun::StaticArray<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
+    SCIRun::StaticArray<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
+    SCIRun::StaticArray<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
+    SCIRun::StaticArray<CCVariable<double> > mag_div_vel_CC(numAllMatls);
           
     for(int m=0;m < numAllMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );

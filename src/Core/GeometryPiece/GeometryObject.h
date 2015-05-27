@@ -42,7 +42,6 @@ namespace Uintah {
 
 class GeometryPiece;
 
-using namespace SCIRun;
 
 /**************************************
 	
@@ -107,7 +106,7 @@ public:
     {
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
-      throw InternalError(msg.str(),__FILE__,__LINE__);
+      throw SCIRun::InternalError(msg.str(),__FILE__,__LINE__);
     }
     return d_double_data[data_string];
   }
@@ -117,7 +116,7 @@ public:
     {
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
-      throw InternalError(msg.str(),__FILE__,__LINE__);
+      throw SCIRun::InternalError(msg.str(),__FILE__,__LINE__);
     }
     return d_int_data[data_string];
   }
@@ -127,7 +126,7 @@ public:
     {
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
-      throw InternalError(msg.str(),__FILE__,__LINE__);
+      throw SCIRun::InternalError(msg.str(),__FILE__,__LINE__);
     }
     return d_point_data[data_string];
   }
@@ -137,7 +136,7 @@ public:
     {
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
-      throw InternalError(msg.str(),__FILE__,__LINE__);
+      throw SCIRun::InternalError(msg.str(),__FILE__,__LINE__);
     }
     return d_vector_data[data_string];
   }
@@ -147,7 +146,7 @@ public:
     {
       std::stringstream msg;
       msg << "Geometry Object string '" << data_string << "' was not read during problemSetup";
-      throw InternalError(msg.str(),__FILE__,__LINE__);
+      throw SCIRun::InternalError(msg.str(),__FILE__,__LINE__);
     }
     return d_intvector_data[data_string];
   }

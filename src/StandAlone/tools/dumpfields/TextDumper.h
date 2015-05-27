@@ -35,7 +35,7 @@ namespace Uintah {
 
   class TextOpts {
   public:
-    TextOpts(Args & args);
+    TextOpts(SCIRun::Args & args);
     
     bool onedim;
     bool tseries;
@@ -50,7 +50,7 @@ namespace Uintah {
   class TextDumper : public FieldDumper 
   {
   public:
-    TextDumper(DataArchive * da, std::string basedir, const TextOpts & opts, const FieldSelection & flds);
+    TextDumper(DataArchive * da, std::string basedir, const TextOpts & opts, const SCIRun::FieldSelection & flds);
     
     std::string directoryExt() const { return "text"; }
     void addField(std::string fieldname, const Uintah::TypeDescription * /*type*/);
@@ -58,7 +58,7 @@ namespace Uintah {
     class Step : public FieldDumper::Step {
     public:
       Step(DataArchive * da, std::string basedir, int timestep, double time, int index,
-           const TextOpts & opts, const FieldSelection & flds);
+           const TextOpts & opts, const SCIRun::FieldSelection & flds);
       
       std::string infostr() const { return tsdir_; }
       void   storeGrid () {}
@@ -68,7 +68,7 @@ namespace Uintah {
       DataArchive *        da_;
       std::string          outdir_;
       TextOpts             opts_;
-    const FieldSelection & flds_;
+      const SCIRun::FieldSelection & flds_;
     };
   
     //
@@ -78,7 +78,7 @@ namespace Uintah {
   private:
     std::ofstream          idxos_;
     TextOpts               opts_;
-    const FieldSelection & flds_;
+    const SCIRun::FieldSelection & flds_;
     FILE*                  filelist_;
   };
 }

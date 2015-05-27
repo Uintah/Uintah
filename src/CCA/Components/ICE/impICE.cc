@@ -54,9 +54,9 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
-static DebugStream cout_doing("ICE_DOING_COUT", false);
-static DebugStream cout_dbg("IMPICE_DBG",false);
+static SCIRun::DebugStream cout_norm("ICE_NORMAL_COUT", false);  
+static SCIRun::DebugStream cout_doing("ICE_DOING_COUT", false);
+static SCIRun::DebugStream cout_dbg("IMPICE_DBG",false);
 
  
 /*___________________________________________________________________
@@ -748,7 +748,7 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
 
     for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
       IntVector c = *iter;
-      rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
+      rhs_max = std::max(rhs_max, std::abs(rhs[c]/vol));
     }
     new_dw->put(max_vartype(rhs_max), lb->max_RHSLabel);
 
@@ -759,10 +759,10 @@ void ICE::compute_maxRHS(const ProcessorGroup*,
       IntVector maxCell(0,0,0);
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
-        if(Abs(rhs[c]/vol) > rhs_max){
+        if(std::abs(rhs[c]/vol) > rhs_max){
           maxCell = c;
         }
-        rhs_max = Max(rhs_max, Abs(rhs[c]/vol));
+        rhs_max = std::max(rhs_max, std::abs(rhs[c]/vol));
       }  
       cout << " maxRHS: " << maxCell << " " << rhs_max << " \t L-" << level->getIndex() << endl;
     }
@@ -800,8 +800,8 @@ void ICE::updatePressure(const ProcessorGroup*,
     CCVariable<double> sum_imp_delP;
     constCCVariable<double> press_equil;
     constCCVariable<double> sum_imp_delP_old;
-    StaticArray<CCVariable<double> > placeHolder(0);
-    StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
+    SCIRun::StaticArray<CCVariable<double> > placeHolder(0);
+    SCIRun::StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
          
     old_dw->get(sum_imp_delP_old,        lb->sum_imp_delPLabel,   0,patch,gn,0);
     parent_new_dw->get(press_equil,      lb->press_equil_CCLabel, 0,patch,gn,0);      

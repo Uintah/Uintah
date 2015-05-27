@@ -258,7 +258,7 @@ main(int argc, char *argv[])
       }
     }
     
-  } catch (Exception& e) {
+  } catch (SCIRun::Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
       cerr << "Stack trace: " << e.stackTrace() << '\n';

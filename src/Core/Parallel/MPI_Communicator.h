@@ -37,7 +37,6 @@ int WAIT_TIME_DEFAULT   = 10000; //how many microseconds to sleep before trigger
 int NUM_IPROBES_DEFAULT = 15;    //how many Iprobes to do inside of the progress loop
 
 
-using namespace SCIRun;
 
 class MpiCall {
 public:

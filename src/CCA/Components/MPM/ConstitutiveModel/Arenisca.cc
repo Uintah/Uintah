@@ -571,9 +571,9 @@ void Arenisca::computeStableTimestep(const Patch* patch,
     // store the maximum
     c_dil = sqrt((bulk+4.0*shear/3.0)*(pvolume[idx]/pmass[idx]));
 
-    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+    WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                     std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
 
   // Compute the stable timestep based on maximum value of
@@ -949,10 +949,10 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                 f_void  = f_trial_step;
         Matrix3 S_void  = S_trial_step;
         
-        while (Abs(pow(2,n_void)*stress_diff_step.Norm()) > 1.0e-20){
+        while (std::abs(std::pow(2,n_void)*stress_diff_step.Norm()) > 1.0e-20){
           n_void--;
           //EG: modifying the stress
-          stress_new_step = stress_new_step - Sign(f_void)*pow(2,n_void)*stress_diff_step;
+          stress_new_step = stress_new_step - SCIRun::Sign(f_void)*pow(2,n_void)*stress_diff_step;
           // EG: Compute the invariants of modified stress
           I1_void = stress_new_step.Trace();  
           S_void  = stress_new_step - Identity*(one_third*I1_void);  
@@ -1102,7 +1102,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
             //  2nd time through, num_subcycles is multiplied by 10
             //  3rd time trhrugh, num_subcycles is multiplied by 100
             //  4th and list time, num_subcycles is multiplied by 1000
-            num_substeps = num_steps * Pow(10,massive_subcycling_counter-1);
+            num_substeps = num_steps * std::pow(10,massive_subcycling_counter-1);
 
             if(num_substeps > 100){  //T2D: this might change, but keep high for node success
               cout << "WARNING: $num_subcycles=" << num_substeps
@@ -1261,12 +1261,12 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
                            D(0,2)*D(0,2) +
                            D(1,2)*D(1,2));
 
-          double Dnorm1 = Sqrt(Dnormsq);
+          double Dnorm1 = std::sqrt(Dnormsq);
           double Dnorm = max(Dnorm1 , 1e-15); // print result to observe the range
 
           double inv_eqstrain = 1.0/Dnorm;
 
-          tau1 = d_cm.T1_rate_dependence*Pow(inv_eqstrain,d_cm.T2_rate_dependence);
+          tau1 = d_cm.T1_rate_dependence*std::pow(inv_eqstrain,d_cm.T2_rate_dependence);
           tau  = max(tau1 , 1e-15); // asking non-zero tau
         }
 
@@ -1311,9 +1311,9 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
         idvel.z(idx);vbulk.z(bulk);vshear.z(shear);
       }
 #endif
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute artificial viscosity term
       if(flag->d_artificial_viscosity){
@@ -1590,7 +1590,7 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
 
       if(TransformedYieldFunction( r_trial,z_trial,X_new,Beta,PEAKI1) <= 0.0 ||
           //Sign(dgdz(r_trial,z_trial,X_old,Beta)) != Sign(dgdz(r_trial,z_trial,X_new,Beta))
-          Sign(z_trial-z_new0) != Sign(z_trial-z_new)){
+         SCIRun::Sign(z_trial-z_new0) != SCIRun::Sign(z_trial-z_new)){
         /*
         cout << "BAD step, n = " << n
         << ", eta_in = " << eta_in
@@ -1770,7 +1770,7 @@ double Arenisca::YieldFunction(const double& I1,   // Unshifted
   //     <<",transf="<< f
   //     <<",signtransf="<<Sign( f ) << endl;
 
-  f = Sign( f ); // + plastic, - elastic
+  f = SCIRun::Sign( f ); // + plastic, - elastic
 
   return f;
 }
@@ -1811,18 +1811,18 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
   double CapR2 = CapR*CapR,
          R2 = R*R,
          Zdiff2=(Z - ZVertex)*(Z - ZVertex),
-         one_sqrt_sum1=1.0/Sqrt(Beta2 + CapR2);
+    one_sqrt_sum1=1.0/std::sqrt(Beta2 + CapR2);
 
   // Shifted Z component of the branch point:
   ZKappa = ZCapX - (Beta*ZCapX)*one_sqrt_sum1 + (Beta*ZVertex)*one_sqrt_sum1;
     // Transformed R Component of the branch point
-  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex))*one_sqrt_sum1;
+  RKappa = (Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex))*one_sqrt_sum1;
     // Shifted Z component of the apex:
-  ZApex = (CapR2*ZCapX + Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
+  ZApex = (CapR2*ZCapX + Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
 
   // Region I - closest point return to vertex
   if(R <= (Z - ZVertex)/Beta){
-    g = Sqrt(R2 + Zdiff2);
+    g = std::sqrt(R2 + Zdiff2);
     dgdr = R/g;
     dgdz = (Z - ZVertex)/g;
 
@@ -1831,9 +1831,9 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
   }
   // Region II - closest point return to the linear Drucker-Prager surface
   else if( (Z>ZKappa) && (R - RKappa <= ( Z - ZKappa ) / Beta) ){
-    g = (R + Beta*Z - Beta*ZVertex)/Sqrt(1 + Beta2);
-    dgdr = 1/Sqrt(1 + Beta2);
-    dgdz = Beta/Sqrt(1 + Beta2);
+    g = (R + Beta*Z - Beta*ZVertex)/std::sqrt(1 + Beta2);
+    dgdr = 1/std::sqrt(1 + Beta2);
+    dgdz = Beta/std::sqrt(1 + Beta2);
 
     r_new = R - g*dgdr;
     z_new = Z - g*dgdz;
@@ -1843,18 +1843,18 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
    //An iterative bisection method is used to compute the return to the elliptical cap.
    // Solution is found in the first quadrant then remapped to the correct region.
 
-   double X = Abs(Z-ZApex), // Relative x-position
-          Y = Abs(R), //Relative y-position
-          a = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2,
-          b = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR,
+    double X = std::abs(Z-ZApex), // Relative x-position
+      Y = std::abs(R), //Relative y-position
+          a = (Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2,
+          b = (Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR,
           Theta = 0.0,
           Theta_in = 0.0,
           Theta_out = 1.570796326794897,
           TOL = 1.0e-6;
 
-   while(Abs(Theta_out-Theta_in)>TOL){
+   while(std::abs(Theta_out-Theta_in)>TOL){
      Theta = (Theta_out+Theta_in)/2;
-     g=Sqrt((X-a*cos(Theta))*(X-a*cos(Theta))+(Y-b*sin(Theta))*(Y-b*sin(Theta)));
+     g=std::sqrt((X-a*cos(Theta))*(X-a*cos(Theta))+(Y-b*sin(Theta))*(Y-b*sin(Theta)));
      if ((2*a*(X-a*cos(Theta))*sin(Theta)
           -2*b*cos(Theta)*(Y-b*sin(Theta)))/(2*g) > 0)
        Theta_out = Theta;
@@ -1863,7 +1863,7 @@ double Arenisca::ComputeNonHardeningReturn(const double& R,   // Transformed Tri
    }
 
    r_new = b*sin(Theta);
-   z_new = Sign(Z-ZApex)*a*cos(Theta) + ZApex;
+   z_new = SCIRun::Sign(Z-ZApex)*a*cos(Theta) + ZApex;
   }
 
   // Return the value of the flow function, which equals the distance from the trial
@@ -1903,14 +1903,14 @@ double Arenisca::TransformedYieldFunction(const double& R,   // Transformed Tria
          ZApex,
          f       = 0.0, // sign of the yield function
          CapR2   = CapR*CapR,
-         one_sqrt_sum1=1.0/Sqrt(Beta2 + CapR2);
+         one_sqrt_sum1=1.0/std::sqrt(Beta2 + CapR2);
 
   // Shifted Z component of the branch point:
   ZKappa = ZCapX - (Beta*ZCapX)*one_sqrt_sum1 + (Beta*ZVertex)*one_sqrt_sum1;
   // Transformed R Component of the branch point
-  RKappa = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex))*one_sqrt_sum1;
+  RKappa = (Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex))*one_sqrt_sum1;
   // Shifted Z component of the apex:
-  ZApex = (CapR2*ZCapX + Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
+  ZApex = (CapR2*ZCapX + Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2;
 
   // Region I - closest point return to vertex
   if(R <= (Z - ZVertex)/Beta){
@@ -1929,10 +1929,10 @@ double Arenisca::TransformedYieldFunction(const double& R,   // Transformed Tria
    //An iterative bisection method is used to compute the return to the elliptical cap.
    // Solution is found in the first quadrant then remapped to the correct region.
 
-    double X = Abs(Z-ZApex), // Relative x-position
-           Y = Abs(R), //Relative y-position
-           a = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2,
-           b = (Beta*(-Beta + Sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR;
+    double X = std::abs(Z-ZApex), // Relative x-position
+           Y = std::abs(R), //Relative y-position
+           a = (Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR2,
+           b = (Beta*(-Beta + std::sqrt(Beta2 + CapR2))*(-ZCapX + ZVertex)) / CapR;
 
     if( (Z-ZApex)*(Z-ZApex)/(a*a)+R*R/(b*b) - 1 < 0 )
         f = -1.0;
@@ -2468,7 +2468,7 @@ double Arenisca::computeX(double evp)
       if(evp <= 0)
         X = (p0*p1 + log((evp+p3)/p3))/p1;
       else
-        X = p0*Pow(1+evp , 1/(p0*p1*p3));
+        X = p0*std::pow(1+evp , 1/(p0*p1*p3));
     }
     else{ // Fluid Effects ------------------------------------------------
       // First we evaluate the elastic volumetric strain to yield from the
@@ -2487,7 +2487,7 @@ double Arenisca::computeX(double evp)
       }
       else{ // pore expansion
         Kfit = B0;                                 // drained bulk modulus function
-        Xfit = Pow(1 + evp , 1 / (p0*p1*p3))*p0; // drained crush curve function
+        Xfit = std::pow(1 + evp , 1 / (p0*p1*p3))*p0; // drained crush curve function
       }
 
       // Now we use our linear engineering model for the bulk modulus of the

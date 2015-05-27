@@ -44,8 +44,7 @@ namespace Uintah {
    
    */
   
-  using namespace SCIRun;
-  
+    
   class DifferenceBCData : public BCGeomBase  {
   public:
     

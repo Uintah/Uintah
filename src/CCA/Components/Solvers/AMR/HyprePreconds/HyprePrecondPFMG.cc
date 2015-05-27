@@ -40,7 +40,7 @@ using namespace Uintah;
 //  To turn on normal output
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
-static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 Priorities
 HyprePrecondPFMG::initPriority(void)

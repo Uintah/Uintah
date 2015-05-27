@@ -37,7 +37,7 @@
 
 using namespace std;
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+static SCIRun::DebugStream dbg("SWITCHER", false);
 
 SteadyState::SteadyState(ProblemSpecP& ps)
 {

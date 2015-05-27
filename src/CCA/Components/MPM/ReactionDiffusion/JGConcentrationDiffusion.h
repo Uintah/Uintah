@@ -45,7 +45,7 @@ namespace Uintah {
   public:
     
     JGConcentrationDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
-                             string diff_type);
+                             std::string diff_type);
     ~JGConcentrationDiffusion();
 
     virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 

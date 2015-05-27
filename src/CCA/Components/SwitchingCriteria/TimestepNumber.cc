@@ -35,7 +35,7 @@
 using namespace std;
 
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+static SCIRun::DebugStream dbg("SWITCHER", false);
 
 TimestepNumber::TimestepNumber(ProblemSpecP& ps)
 {

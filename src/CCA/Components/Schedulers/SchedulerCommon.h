@@ -281,7 +281,7 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     *  only first patch of that level
     */
     void printTaskLevels( const ProcessorGroup* d_myworld,
-                                DebugStream& out,
+                                SCIRun::DebugStream& out,
                                 DetailedTask* task );
     
     

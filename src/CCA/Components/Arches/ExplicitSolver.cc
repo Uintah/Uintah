@@ -83,7 +83,7 @@
 using namespace std;
 using namespace Uintah;
 
-static DebugStream dbg("ARCHES", false);
+static SCIRun::DebugStream dbg("ARCHES", false);
 
 // ****************************************************************************
 // Default constructor for ExplicitSolver
@@ -1953,7 +1953,7 @@ ExplicitSolver::computeDensityLag(const ProcessorGroup*,
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
         for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
           IntVector currCell(colX, colY, colZ);
-          densityLag += Abs(density[currCell] - densityGuess[currCell]);
+          densityLag += std::abs(density[currCell] - densityGuess[currCell]);
         }
       }
     }

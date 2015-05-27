@@ -31,8 +31,7 @@
 
 
 namespace Uintah {
-  using namespace SCIRun;
-
+  
 /**************************************
 
 CLASS
@@ -111,7 +110,7 @@ private:
     IntVector d_centerTimes2;
   };
 
-  RangeTree<PatchPoint, int>* d_rangeTree;
+  SCIRun::RangeTree<PatchPoint, int>* d_rangeTree;
   IntVector d_maxPatchDimensions;
 
   // PatchPoint's vector is kept here mostly for memory management

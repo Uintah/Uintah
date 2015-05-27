@@ -119,9 +119,7 @@
 #include <sys/stat.h>
 #include <time.h>
 
-using namespace SCIRun;
-using namespace Uintah;
-using namespace std;
+
 
 #if defined( USE_LENNY_HACK )
   // See Core/Malloc/Allocator.cc for more info.
@@ -138,20 +136,20 @@ using namespace std;
 
 
 // Used to sync cerr so it is readable when output by multiple threads
-extern Mutex cerrLock;
+extern SCIRun::Mutex cerrLock;
 
-static DebugStream stackDebug("ExceptionStack", true);
-static DebugStream dbgwait("WaitForDebugger", false);
+static SCIRun::DebugStream stackDebug("ExceptionStack", true);
+static SCIRun::DebugStream dbgwait("WaitForDebugger", false);
 
 static
 void
 quit(const std::string & msg = "")
 {
   if (msg != "") {
-    cerr << msg << "\n";
+    std::cerr << msg << "\n";
   }
   Uintah::Parallel::finalizeManager();
-  Thread::exitAll(2);
+  SCIRun::Thread::exitAll(2);
 }
 
 static
@@ -169,36 +167,36 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
 #endif
 
   if (Uintah::Parallel::getMPIRank() == 0) {
-    cerr << "\n";
+    std::cerr << "\n";
     if (badarg != "") {
-      cerr << "Error parsing argument: " << badarg << '\n';
+      std::cerr << "Error parsing argument: " << badarg << '\n';
     }
-    cerr << "\n";
-    cerr << message << "\n";
-    cerr << "\n";
-    cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
-    cerr << "Valid options are:\n";
-    cerr << "-h[elp]              : This usage information.\n";
-    cerr << "-AMR                 : use AMR simulation controller\n";
+    std::cerr << "\n";
+    std::cerr << message << "\n";
+    std::cerr << "\n";
+    std::cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
+    std::cerr << "Valid options are:\n";
+    std::cerr << "-h[elp]              : This usage information.\n";
+    std::cerr << "-AMR                 : use AMR simulation controller\n";
 #ifdef HAVE_CUDA
-    cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
+    std::cerr << "-gpu                 : use available GPU devices, requires multi-threaded Unified scheduler \n";
 #endif
-    cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
-    cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
-    cerr << "                           of boxes you are using.\n";
-    cerr << "-emit_taskgraphs     : Output taskgraph information\n";
-    cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-    cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
-    cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
-    cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
-    cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
-    cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
-    cerr << "-copy                : Copy from old uda when restarting\n";
-    cerr << "-move                : Move from old uda when restarting\n";
-    cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
-    cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
-    cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
-    cerr << "\n\n";
+    std::cerr << "-nthreads <#>        : number of threads per MPI process, requires multi-threaded Unified scheduler\n";
+    std::cerr << "-layout NxMxO        : Eg: 2x1x1.  MxNxO must equal number\n";
+    std::cerr << "                           of boxes you are using.\n";
+    std::cerr << "-emit_taskgraphs     : Output taskgraph information\n";
+    std::cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
+    std::cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
+    std::cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";
+    std::cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
+    std::cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
+    std::cerr << "-svnStat             : runs svn stat -u & svn info <src/...../Packages/Uintah \n";
+    std::cerr << "-copy                : Copy from old uda when restarting\n";
+    std::cerr << "-move                : Move from old uda when restarting\n";
+    std::cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
+    std::cerr << "-validate            : Verifies the .ups file is valid and quits!\n";
+    std::cerr << "-do_not_validate     : Skips .ups file validation! Please avoid this flag if at all possible.\n";
+    std::cerr << "\n\n";
   }
   quit();
 }
@@ -211,19 +209,19 @@ sanityChecks()
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    SCIRun::Thread::exitAll(1);
   }
   if (getenv("MALLOC_TRACE")) {
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    SCIRun::Thread::exitAll(1);
   }
   if (getenv("MALLOC_STRICT")) {
     printf("\nERROR:\n");
     printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
     printf("ERROR:\n\n");
-    Thread::exitAll(1);
+    SCIRun::Thread::exitAll(1);
   }
 #endif
 }
@@ -243,13 +241,13 @@ main( int argc, char *argv[], char *env[] )
 
   sanityChecks();
 
-  string oldTag;
+  std::string oldTag;
   MALLOC_TRACE_TAG_SCOPE("main()");
 
   // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
   // Can override this behavior with the environment variable SCI_SIGNALMODE
-  Thread::setDefaultAbortMode("exit");
-  Thread::self()->setCleanupFunction( &abortCleanupFunc );
+  SCIRun::Thread::setDefaultAbortMode("exit");
+  SCIRun::Thread::self()->setCleanupFunction( &abortCleanupFunc );
 
 #ifdef USE_TAU_PROFILING
 
@@ -284,12 +282,12 @@ main( int argc, char *argv[], char *env[] )
   bool   do_svnStat          = false;
   int    restartTimestep     = -1;
   int    udaSuffix           = -1;
-  string udaDir; // for restart
+  std::string udaDir; // for restart
   bool   restartFromScratch  = true;
   bool   restartRemoveOldDir = false;
   int    numThreads          = 0;
-  string filename;
-  string solver              = ""; // Empty string defaults to CGSolver
+  std::string filename;
+  std::string solver              = ""; // Empty std::string defaults to CGSolver
   bool   validateUps         = true;
   bool   onlyValidateUps     = false;
 
@@ -322,7 +320,7 @@ main( int argc, char *argv[], char *env[] )
     * Parse arguments
     */
   for (int i = 1; i < argc; i++) {
-    string arg = argv[i];
+    std::string arg = argv[i];
     if ((arg == "-help") || (arg == "-h")) {
       usage("", "", argv[0]);
     }
@@ -427,7 +425,7 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-arches" || arg == "-ice" || arg == "-impm" || arg == "-mpm" || arg == "-mpmarches" || arg == "-mpmice"
         || arg == "-poisson1" || arg == "-poisson2" || arg == "-switcher" || arg == "-poisson4" || arg == "-benchmark"
         || arg == "-mpmf" || arg == "-rmpm" || arg == "-smpm" || arg == "-amrmpm" || arg == "-smpmice" || arg == "-rmpmice") {
-      usage(string("'") + arg + "' is deprecated.  Simulation component must be specified " + "in the .ups file!", arg, argv[0]);
+      usage(std::string("'") + arg + "' is deprecated.  Simulation component must be specified " + "in the .ups file!", arg, argv[0]);
     }
     // If VisIt is included then the user may send optional args to
     // VisIt. The most important is the directory path to where VisIt
@@ -443,7 +441,7 @@ main( int argc, char *argv[], char *env[] )
     }
     else if (arg == "-visit_option" ) {
       if (++i == argc) {
-        usage("You must provide a string for -visit_option", arg, argv[0]);
+        usage("You must provide a std::string for -visit_option", arg, argv[0]);
       }
     }
     else if (arg == "-visit_trace" ) {
@@ -469,14 +467,14 @@ main( int argc, char *argv[], char *env[] )
   }
  
   // Pass the env into the sci env so it can be used there...
-  create_sci_environment( env, 0, true );
+  SCIRun::create_sci_environment( env, 0, true );
 
   if( filename == "" ) {
     usage("No input file specified", "", argv[0]);
   }
 
   if(dbgwait.active()) {
-    TURN_ON_WAIT_FOR_DEBUGGER();
+    SCIRun::TURN_ON_WAIT_FOR_DEBUGGER();
   }
 
   //__________________________________
@@ -488,12 +486,12 @@ main( int argc, char *argv[], char *env[] )
     // If restarting (etc), make sure that the uda specified is not a symbolic link to an Uda.
     // This is because the sym link can (will) be updated to point to a new uda, thus creating
     // an inconsistency.  Therefore it is just better not to use the sym link in the first place.
-    if( isSymLink( udaDir.c_str() ) ) {
-      cout << "\n";
-      cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
-      cout << "\n";
+    if( SCIRun::isSymLink( udaDir.c_str() ) ) {
+      std::cout << "\n";
+      std::cout << "ERROR: " + udaDir + " is a symbolic link.  Please use the full name of the UDA.\n";
+      std::cout << "\n";
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 1 );
+      SCIRun::Thread::exitAll( 1 );
     }
   }
 
@@ -549,7 +547,7 @@ main( int argc, char *argv[], char *env[] )
     }
 
 #if defined(MALLOC_TRACE)
-    ostringstream traceFilename;
+    ostd::stringstream traceFilename;
     traceFilename << "mallocTrace-" << Uintah::Parallel::getMPIRank();
     MALLOC_TRACE_LOG_FILE( traceFilename.str().c_str() );
     //mallocTraceInfo.setTracingState( false );
@@ -558,32 +556,32 @@ main( int argc, char *argv[], char *env[] )
     if (Uintah::Parallel::getMPIRank() == 0) {
       // helpful for cleaning out old stale udas
       time_t t = time(NULL);
-      string time_string(ctime(&t));
+      std::string time_string(ctime(&t));
       char name[256];
       gethostname(name, 256);
 
-      cout << "Date:    " << time_string;  // has its own newline
-      cout << "Machine: " << name << "\n";
-      cout << "SVN: " << SVN_REVISION << "\n";
-      cout << "SVN: " << SVN_DATE << "\n";
-      cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
-      cout << "CFLAGS: " << CFLAGS << "\n";
+      std::cout << "Date:    " << time_string;  // has its own newline
+      std::cout << "Machine: " << name << "\n";
+      std::cout << "SVN: " << SVN_REVISION << "\n";
+      std::cout << "SVN: " << SVN_DATE << "\n";
+      std::cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
+      std::cout << "CFLAGS: " << CFLAGS << "\n";
 
       // Run svn commands on Packages/Uintah 
       if (do_svnDiff || do_svnStat) {
-        cout << "____SVN_____________________________________________________________\n";
-        string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
+        std::cout << "____SVN_____________________________________________________________\n";
+        std::string sdir = std::string(SCIRun::sci_getenv("SCIRUN_SRCDIR"));
         if (do_svnDiff) {
-          string cmd = "svn diff --username anonymous --password \"\" " + sdir;
+          std::string cmd = "svn diff --username anonymous --password \"\" " + sdir;
           system(cmd.c_str());
         }
         if (do_svnStat) {
-          string cmd = "svn info  --username anonymous --password \"\" " + sdir;
+          std::string cmd = "svn info  --username anonymous --password \"\" " + sdir;
           system(cmd.c_str());
           cmd = "svn stat -u  --username anonymous --password \"\" " + sdir;
           system(cmd.c_str());
         }
-        cout << "____SVN_______________________________________________________________\n";
+        std::cout << "____SVN_______________________________________________________________\n";
       }
     }
 
@@ -593,37 +591,37 @@ main( int argc, char *argv[], char *env[] )
       gethostname(name, 256);
       int sleepTime = atoi( st );
       if (Uintah::Parallel::getMPIRank() == 0) {
-        cout << "SLEEPING FOR " << sleepTime
+        std::cout << "SLEEPING FOR " << sleepTime
              << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
       }
-      cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
-      cout.flush();
-      Time::waitFor( (double)sleepTime );
+      std::cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " (" << name << ") is " << getpid() << "\n";
+      std::cout.flush();
+      SCIRun::Time::waitFor( (double)sleepTime );
     }
     //__________________________________
     // Read input file
-    ProblemSpecP ups;
+    Uintah::ProblemSpecP ups;
     try {
-      ups = ProblemSpecReader().readInputFile( filename, validateUps );
+      ups = Uintah::ProblemSpecReader().readInputFile( filename, validateUps );
     }
     catch( ... ) {
       // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
       // instead of a UPS file.
       proc0cout   << "\n";
       proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
-      if( validDir( filename ) ) {
+      if( SCIRun::validDir( filename ) ) {
         proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
       }
       proc0cout   << "\n";
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
+      SCIRun::Thread::exitAll( 0 );
     }
 
     if( onlyValidateUps ) {
-      cout << "\nValidation of .ups File finished... good bye.\n\n";
+      std::cout << "\nValidation of .ups File finished... good bye.\n\n";
       ups = 0; // This cleans up memory held by the 'ups'.
       Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
+      SCIRun::Thread::exitAll( 0 );
     }
 
     //if the AMR block is defined default to turning amr on
@@ -641,17 +639,17 @@ main( int argc, char *argv[], char *env[] )
     }
     
 
-    const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
+    const Uintah::ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
+    Uintah::SimulationController* ctl = scinew Uintah::AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
-    ((AMRSimulationController*) ctl)->SetVisIt( do_VisIt );
+    ((Uintah::AMRSimulationController*) ctl)->SetVisIt( do_VisIt );
 #endif
 
-    RegridderCommon* reg = 0;
+    Uintah::RegridderCommon* reg = 0;
     if(do_AMR) {
-      reg = RegridderFactory::create(ups, world);
+      reg = Uintah::RegridderFactory::create(ups, world);
       if (reg) {
         ctl->attachPort("regridder", reg);
       }
@@ -659,7 +657,7 @@ main( int argc, char *argv[], char *env[] )
 
     //__________________________________
     // Solver
-    SolverInterface * solve = SolverFactory::create( ups, world, solver );
+    Uintah::SolverInterface * solve = Uintah::SolverFactory::create( ups, world, solver );
 
     proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
 
@@ -670,8 +668,8 @@ main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Component
     // try to make it from the command line first, then look in ups file
-    UintahParallelComponent* comp = ComponentFactory::create(ups, world, do_AMR, udaDir);
-    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
+    Uintah::UintahParallelComponent* comp = Uintah::ComponentFactory::create(ups, world, do_AMR, udaDir);
+    Uintah::SimulationInterface* sim = dynamic_cast<Uintah::SimulationInterface*>(comp);
 
     // set sim. controller flags for reduce uda
     if ( reduce_uda ) {
@@ -685,13 +683,13 @@ main( int argc, char *argv[], char *env[] )
 #ifndef NO_ICE
     //__________________________________
     //  Model
-    ModelMaker* modelmaker = scinew ModelFactory(world);
+    Uintah::ModelMaker* modelmaker = scinew Uintah::ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
 #endif
 
     //__________________________________
     // Load balancer
-    LoadBalancerCommon* lbc = LoadBalancerFactory::create(ups, world);
+    Uintah::LoadBalancerCommon* lbc = Uintah::LoadBalancerFactory::create(ups, world);
     lbc->attachPort("sim", sim);
     if(reg) {
       reg->attachPort("load balancer", lbc);
@@ -700,8 +698,8 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Output
-    DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
-    Output* output = dataarchiver;
+    Uintah::DataArchiver* dataarchiver = scinew Uintah::DataArchiver(world, udaSuffix);
+    Uintah::Output* output = dataarchiver;
     ctl->attachPort("output", dataarchiver);
     dataarchiver->attachPort("load balancer", lbc);
     comp->attachPort("output", dataarchiver);
@@ -709,7 +707,7 @@ main( int argc, char *argv[], char *env[] )
     
     //__________________________________
     // Scheduler
-    SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
+    Uintah::SchedulerCommon* sched = Uintah::SchedulerFactory::create(ups, world, output);
     sched->attachPort("load balancer", lbc);
     ctl->attachPort("scheduler", sched);
     lbc->attachPort("scheduler", sched);
@@ -760,16 +758,16 @@ main( int argc, char *argv[], char *env[] )
     delete modelmaker;
 #endif
   }
-  catch (ProblemSetupException& e) {
+  catch (Uintah::ProblemSetupException& e) {
     // Don't show a stack trace in the case of ProblemSetupException.
     cerrLock.lock();
-    cout << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
+    std::cout << "\n\n(Proc: " << Uintah::Parallel::getMPIRank() << ") Caught: " << e.message() << "\n\n";
     cerrLock.unlock();
     thrownException = true;
   }
-  catch (Exception& e) {
+  catch (SCIRun::Exception& e) {
     cerrLock.lock();
-    cout << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
+    std::cout << "\n\n(Proc " << Uintah::Parallel::getMPIRank() << ") Caught exception: " << e.message() << "\n\n";
     if(e.stackTrace()) {
       stackDebug << "Stack trace: " << e.stackTrace() << '\n';
     }
@@ -778,37 +776,37 @@ main( int argc, char *argv[], char *env[] )
   }
   catch (std::bad_alloc& e) {
     cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
+    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'bad_alloc': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
   }
   catch (std::bad_exception& e) {
     cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
+    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: 'bad_exception'" << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
   }
   catch (std::ios_base::failure& e) {
     cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
+    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'ios_base::failure': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
   }
   catch (std::runtime_error& e) {
     cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
+    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception 'runtime_error': " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
   }
   catch (std::exception& e) {
     cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
+    std::cerr << Uintah::Parallel::getMPIRank() << " Caught std exception: " << e.what() << '\n';
     cerrLock.unlock();
     thrownException = true;
   }
   catch(...) {
     cerrLock.lock();
-    cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
+    std::cerr << Uintah::Parallel::getMPIRank() << " Caught unknown exception\n";
     cerrLock.unlock();
     thrownException = true;
   }
@@ -823,17 +821,17 @@ main( int argc, char *argv[], char *env[] )
 
   if (thrownException) {
     if( Uintah::Parallel::getMPIRank() == 0 ) {
-      cout << "\n\nAN EXCEPTION WAS THROWN... Goodbye.\n\n";
+      std::cout << "\n\nAN EXCEPTION WAS THROWN... Goodbye.\n\n";
     }
-    Thread::exitAll(1);
+    SCIRun::Thread::exitAll(1);
   }
 
   if( Uintah::Parallel::getMPIRank() == 0 ) {
-    cout << "Sus: going down successfully\n";
+    std::cout << "Sus: going down successfully\n";
   }
 
   // use exitAll(0) since return does not work
-  Thread::exitAll(0);
+  SCIRun::Thread::exitAll(0);
   return 0;
 
 } // end main()

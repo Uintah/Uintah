@@ -35,8 +35,7 @@
 
 namespace Uintah {
 
-  using namespace SCIRun;
-
+  
   class LinearInterpolator : public ParticleInterpolator {
     
   public:
@@ -56,9 +55,9 @@ namespace Uintah {
                                    std::vector<double>& S)
       {
         Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-        int ix = Floor(cellpos.x());
-        int iy = Floor(cellpos.y());
-        int iz = Floor(cellpos.z());
+        int ix = SCIRun::Floor(cellpos.x());
+        int iy = SCIRun::Floor(cellpos.y());
+        int iz = SCIRun::Floor(cellpos.z());
         ni[0] = IntVector(ix, iy, iz);
         ni[1] = IntVector(ix, iy, iz+1);
         ni[2] = IntVector(ix, iy+1, iz);
@@ -112,9 +111,9 @@ namespace Uintah {
                                             std::vector<Vector>& d_S)
       {
         Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-        int ix = Floor(cellpos.x());
-        int iy = Floor(cellpos.y());
-        int iz = Floor(cellpos.z());
+        int ix = SCIRun::Floor(cellpos.x());
+        int iy = SCIRun::Floor(cellpos.y());
+        int iz = SCIRun::Floor(cellpos.z());
         ni[0] = IntVector(ix, iy, iz);
         ni[1] = IntVector(ix, iy, iz+1);
         ni[2] = IntVector(ix, iy+1, iz);
@@ -151,9 +150,9 @@ namespace Uintah {
                                                       std::vector<Vector>& d_S)
       {
         Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-        int ix = Floor(cellpos.x());
-        int iy = Floor(cellpos.y());
-        int iz = Floor(cellpos.z());
+        int ix = SCIRun::Floor(cellpos.x());
+        int iy = SCIRun::Floor(cellpos.y());
+        int iz = SCIRun::Floor(cellpos.z());
         ni[0] = IntVector(ix, iy, iz);
         ni[1] = IntVector(ix, iy, iz+1);
         ni[2] = IntVector(ix, iy+1, iz);
@@ -191,9 +190,9 @@ namespace Uintah {
                           const Level* level)
       {
         Point cellpos = level->positionToIndex(pos);
-        int ix = Floor(cellpos.x());
-        int iy = Floor(cellpos.y());
-        int iz = Floor(cellpos.z());
+        int ix = SCIRun::Floor(cellpos.x());
+        int iy = SCIRun::Floor(cellpos.y());
+        int iz = SCIRun::Floor(cellpos.z());
                                                                                 
         cur[0] = IntVector(ix, iy, iz);
         cur[1] = IntVector(ix, iy, iz+1);

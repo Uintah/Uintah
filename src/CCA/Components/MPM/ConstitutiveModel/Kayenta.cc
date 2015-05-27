@@ -305,7 +305,7 @@ void Kayenta::initializeCMData(const Patch* patch,
   // This method is defined in the ConstitutiveModel base class.
   initSharedDataForExplicit(patch, matl, new_dw);
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-  StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
+  SCIRun::StaticArray<ParticleVariable<double> > ISVs(d_NINSV+1);
 //  proc0cout << "In initializeCMData" << endl;
   for(int i=0;i<d_NINSV;i++){
     new_dw->allocateAndPut(ISVs[i],ISVLabels[i], pset);
@@ -402,9 +402,9 @@ void Kayenta::computeStableTimestep(const Patch* patch,
      particleIndex idx = *iter;
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt((bulk + 4.*G/3.)*pvolume[idx]/pmass[idx]);
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+     WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                      std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   UI[d_R0] = matl->getInitialDensity();      // RHO0
   UI[d_T0]=matl->getRoomTemperature();     // TMPR0
@@ -476,7 +476,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(peakI1IDist,         peakI1IDistLabel,             pset);
     old_dw->get(pParticleID,         lb->pParticleIDLabel,         pset);
-    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+    SCIRun::StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],           ISVLabels[i],                 pset);
     }
@@ -490,7 +490,7 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
     new_dw->get(pvolume_new,     lb->pVolumeLabel_preReloc,              pset);
     new_dw->get(velGrad,         lb->pVelGradLabel_preReloc,             pset);
     peakI1IDist_new.copyData(peakI1IDist);
-    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+    SCIRun::StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     for(int i=0;i<d_NINSV;i++){
       new_dw->allocateAndPut(ISVs_new[i],ISVLabels_preReloc[i], pset);
     }
@@ -596,9 +596,9 @@ void Kayenta::computeStressTensor(const PatchSubset* patches,
       se += e;
       // Compute wave speed at each particle, store the maximum
       Vector pvelocity_idx = pvelocity[idx];
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
         double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
@@ -639,8 +639,8 @@ void Kayenta::carryForward(const PatchSubset* patches,
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
     // Carry forward the data local to this constitutive model
-    StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
-    StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
+    SCIRun::StaticArray<constParticleVariable<double> > ISVs(d_NINSV+1);
+    SCIRun::StaticArray<ParticleVariable<double> > ISVs_new(d_NINSV+1);
     ParticleVariable<int>          pLocalized_new;
     for(int i=0;i<d_NINSV;i++){
       old_dw->get(ISVs[i],ISVLabels[i], pset);

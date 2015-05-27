@@ -47,8 +47,8 @@ using namespace Uintah;
 #include <cstdio>
 using namespace std;
 
-static DebugStream grid_dbg("GridDBG",false);
-static DebugStream rgtimes("RGTimes",false);
+static SCIRun::DebugStream grid_dbg("GridDBG",false);
+static SCIRun::DebugStream rgtimes("RGTimes",false);
 
 int Product(const IntVector &i)
 {
@@ -169,7 +169,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     for(int i=0;i<20;i++)
       rtimes[i]=0;
   }
-  double start=Time::currentSeconds();
+  double start=SCIRun::Time::currentSeconds();
   MALLOC_TRACE_TAG_SCOPE("TiledRegridder::regrid");
   TAU_PROFILE("TiledRegridder::regrid", " ", TAU_USER);
 
@@ -178,20 +178,20 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //for each level fine to coarse 
   for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--) {
     //MPI_Barrier(d_myworld->getComm());
-    rtimes[15+l]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    rtimes[15+l]+=SCIRun::Time::currentSeconds()-start;
+    start=SCIRun::Time::currentSeconds();
     const LevelP level=oldGrid->getLevel(l);
 
     vector<IntVector> mytiles;
     vector<IntVector> myoldtiles;
 
-    rtimes[0]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    rtimes[0]+=SCIRun::Time::currentSeconds()-start;
+    start=SCIRun::Time::currentSeconds();
     
     //compute volume using minimum tile size
     ComputeTiles(mytiles, level, d_minTileSize[l+1], d_cellRefinementRatio[l]);
-    rtimes[1]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    rtimes[1]+=SCIRun::Time::currentSeconds()-start;
+    start=SCIRun::Time::currentSeconds();
 
     GatherTiles(mytiles,tiles[l+1]);
 
@@ -199,8 +199,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
       //add flags to the coarser level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
       CoarsenFlags(oldGrid,l,tiles[l+1]);
     }
-    rtimes[6]+=Time::currentSeconds()-start;
-    start=Time::currentSeconds();
+    rtimes[6]+=SCIRun::Time::currentSeconds()-start;
+    start=SCIRun::Time::currentSeconds();
   }
 
   //level 0 does not change so just copy the patches over.
@@ -211,15 +211,15 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //Create the grid
   Grid *newGrid = CreateGrid(oldGrid,tiles);
 
-  rtimes[7]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[7]+=SCIRun::Time::currentSeconds()-start;
+  start=SCIRun::Time::currentSeconds();
 
   if(*newGrid==*oldGrid) {
     delete newGrid;
     return oldGrid;
   }
-  rtimes[8]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[8]+=SCIRun::Time::currentSeconds()-start;
+  start=SCIRun::Time::currentSeconds();
 
   //finalize the grid
   TAU_PROFILE_TIMER(finalizetimer, "TiledRegridder::finalize grid", "", TAU_USER);
@@ -233,8 +233,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     //level->assignBCS(grid_ps_,0);
   }
 
-  rtimes[9]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[9]+=SCIRun::Time::currentSeconds()-start;
+  start=SCIRun::Time::currentSeconds();
   TAU_PROFILE_STOP(finalizetimer);
 
   d_newGrid = true;
@@ -245,16 +245,16 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   //initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
 
-  rtimes[10]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[10]+=SCIRun::Time::currentSeconds()-start;
+  start=SCIRun::Time::currentSeconds();
 #if SCI_ASSERTION_LEVEL > 0
   if(!verifyGrid(newGrid))
   {
     throw InternalError("Grid is not consistent across processes",__FILE__,__LINE__);
   }
 #endif 
-  rtimes[11]+=Time::currentSeconds()-start;
-  start=Time::currentSeconds();
+  rtimes[11]+=SCIRun::Time::currentSeconds()-start;
+  start=SCIRun::Time::currentSeconds();
 
 
   // ignore...

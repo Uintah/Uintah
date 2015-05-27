@@ -74,10 +74,10 @@ using namespace Uintah;
 //  bash     : export SCI_DEBUG="CamClay:+,CamClayDefGrad:+,CamClayConv:+" )
 //  default is OFF
 
-static DebugStream cout_CC("CamClay",false);
-static DebugStream cout_CC_Conv("CamClayConv",false);
-static DebugStream cout_CC_F("CamClayDefGrad",false);
-static DebugStream cout_CC_Eps("CamClayStrain",false);
+static SCIRun::DebugStream cout_CC("CamClay",false);
+static SCIRun::DebugStream cout_CC_Conv("CamClayConv",false);
+static SCIRun::DebugStream cout_CC_F("CamClayDefGrad",false);
+static SCIRun::DebugStream cout_CC_Eps("CamClayStrain",false);
 
 CamClay::CamClay(ProblemSpecP& ps, MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
@@ -288,9 +288,9 @@ CamClay::computeStableTimestep(const Patch* patch,
       c_dil = 0.0;
       pvelocity_idx = Vector(0.0,0.0,0.0);
     }
-    waveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),waveSpeed.x()),
-                     Max(c_dil+fabs(pvelocity_idx.y()),waveSpeed.y()),
-                     Max(c_dil+fabs(pvelocity_idx.z()),waveSpeed.z()));
+    waveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),waveSpeed.x()),
+                     std::max(c_dil+fabs(pvelocity_idx.y()),waveSpeed.y()),
+                     std::max(c_dil+fabs(pvelocity_idx.z()),waveSpeed.z()));
   }
 
   waveSpeed = dx/waveSpeed;
@@ -853,9 +853,9 @@ CamClay::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      waveSpeed=Vector(Max(c_dil+fabs(pVel.x()),waveSpeed.x()),
-                       Max(c_dil+fabs(pVel.y()),waveSpeed.y()),
-                       Max(c_dil+fabs(pVel.z()),waveSpeed.z()));
+      waveSpeed=Vector(std::max(c_dil+fabs(pVel.x()),waveSpeed.x()),
+                       std::max(c_dil+fabs(pVel.y()),waveSpeed.y()),
+                       std::max(c_dil+fabs(pVel.z()),waveSpeed.z()));
 
       delete state;
 

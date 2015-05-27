@@ -155,9 +155,9 @@ void CNH_MMS::computeStableTimestep(const Patch* patch,
 
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+     WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                      std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -233,9 +233,9 @@ void CNH_MMS::computeStressTensor(const PatchSubset* patches,
       pstress[idx] = (Identity*p + Shear)/J;
 
       Vector pvelocity_idx = pvelocity[idx];
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;

@@ -57,8 +57,8 @@ void AxiLinearInterpolator::findCellAndWeights(const Point& pos,
                                            const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos );
-  int ix = Floor(cellpos.x());
-  int iy = Floor(cellpos.y());
+  int ix = SCIRun::Floor(cellpos.x());
+  int iy = SCIRun::Floor(cellpos.y());
   ni[0] = IntVector(ix, iy, 0);
   ni[1] = IntVector(ix, iy, 1);
   ni[2] = IntVector(ix, iy+1, 0);
@@ -90,8 +90,8 @@ void AxiLinearInterpolator::findCellAndShapeDerivatives(const Point& pos,
                                                         const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-  int ix = Floor(cellpos.x());
-  int iy = Floor(cellpos.y());
+  int ix = SCIRun::Floor(cellpos.x());
+  int iy = SCIRun::Floor(cellpos.y());
   ni[0] = IntVector(ix, iy, 0);
   ni[1] = IntVector(ix, iy, 1);
   ni[2] = IntVector(ix, iy+1, 0);
@@ -123,8 +123,8 @@ AxiLinearInterpolator::findCellAndWeightsAndShapeDerivatives(const Point& pos,
                                                          const Matrix3& defgrad)
 {
   Point cellpos = d_patch->getLevel()->positionToIndex(pos);
-  int ix = Floor(cellpos.x());
-  int iy = Floor(cellpos.y());
+  int ix = SCIRun::Floor(cellpos.x());
+  int iy = SCIRun::Floor(cellpos.y());
   ni[0] = IntVector(ix, iy, 0);
   ni[1] = IntVector(ix, iy, 1);
   ni[2] = IntVector(ix, iy+1, 0);

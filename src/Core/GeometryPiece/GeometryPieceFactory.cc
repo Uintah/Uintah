@@ -57,7 +57,7 @@ using namespace std;
 using namespace Uintah;
 
 
-static DebugStream dbg( "GeometryPieceFactory", false );
+static SCIRun::DebugStream dbg( "GeometryPieceFactory", false );
 
 // Static class variable definition:
 map<string,GeometryPieceP>                     GeometryPieceFactory::namedPieces_    ;
@@ -222,7 +222,7 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
 
       // See if there is any data for this node (that is not in a sub-block)
       string data = child->getNodeValue();
-      remove_lt_white_space(data);
+      SCIRun::remove_lt_white_space(data);
 
       // Lookup in table to see if this piece has already be named...
       GeometryPieceP referencedPiece = namedPieces_[go_label];

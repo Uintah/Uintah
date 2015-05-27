@@ -294,7 +294,7 @@ namespace Uintah {
     std::map<const Patch*,faceMarks> faceMarks_map[2];
   };
 
-static DebugStream cout_dbg("AMRICE_DBG", false);
+static SCIRun::DebugStream cout_dbg("AMRICE_DBG", false);
 /*_____________________________________________________________________
  Function~  AMRICE::refluxOperator_applyCorrectionFluxes
  Purpose~   

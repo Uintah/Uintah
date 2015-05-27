@@ -63,8 +63,7 @@
 #define MAX_MATLS 16
 
 namespace Uintah {
-  using namespace SCIRun;
-  class ModelInfo;
+    class ModelInfo;
   class ModelInterface;
   class Turbulence;
   class AnalysisModule;
@@ -438,11 +437,11 @@ namespace Uintah {
                                        int numMatls,
                                        FastMatrix & K,
                                        double delT,
-                                       StaticArray<constCCVariable<double> >& vol_frac_CC,
-                                       StaticArray<constCCVariable<double> >& sp_vol_CC,
-                                       StaticArray< constSFC >& vel_FC,
-                                       StaticArray< SFC > & sp_vol_FC,
-                                       StaticArray< SFC > & vel_FCME);
+                                       SCIRun::StaticArray<constCCVariable<double> >& vol_frac_CC,
+                                       SCIRun::StaticArray<constCCVariable<double> >& sp_vol_CC,
+                                       SCIRun::StaticArray< constSFC >& vel_FC,
+                                       SCIRun::StaticArray< SFC > & sp_vol_FC,
+                                       SCIRun::StaticArray< SFC > & vel_FCME);
 
 
       void addExchangeContributionToFCVel(const ProcessorGroup*,
@@ -804,7 +803,7 @@ namespace Uintah {
       void getVariableExchangeCoefficients( FastMatrix& ,
                                            FastMatrix& H,
                                            IntVector & c,
-                                           StaticArray<constCCVariable<double> >& mass  );
+                                           SCIRun::StaticArray<constCCVariable<double> >& mass  );
 
       IntVector upwindCell_X(const IntVector& c,
                              const double& var,

@@ -332,7 +332,7 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    SCIRun::StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
 
     for (int m = 0; m < numMPMMatls; m++) {
 
@@ -1600,11 +1600,11 @@ void MPMArches::computeVoidFracMPM(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int zeroGhostCells = 0;
 
-    StaticArray<constCCVariable<double> > mat_vol(numMPMMatls);
-    StaticArray<constCCVariable<double> > oldSolidFrac(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > mat_vol(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > oldSolidFrac(numMPMMatls);
     constCCVariable<double> oldVoidFrac;
 
-    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);    
+    SCIRun::StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);    
     CCVariable<double> void_frac;
     CCVariable<double> solid_sum;
 
@@ -1972,8 +1972,8 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     int archIndex = 0;
     int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<constCCVariable<double> > solid_fraction_cc_old(numMPMMatls);
-    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > solid_fraction_cc_old(numMPMMatls);
+    SCIRun::StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
 
     // int zeroGhostCells = 0;
 
@@ -2055,12 +2055,12 @@ void MPMArches::computeIntegratedSolidProps(const ProcessorGroup*,
     int archIndex = 0;
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
-    StaticArray<constCCVariable<double> > tempSolid_CC(numMPMMatls);
-    StaticArray<constCCVariable<double> > hTSolid_CC(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > hTSolid_FCX(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > hTSolid_FCY(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > hTSolid_FCZ(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > tempSolid_CC(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > hTSolid_CC(numMPMMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > hTSolid_FCX(numMPMMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > hTSolid_FCY(numMPMMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > hTSolid_FCZ(numMPMMatls);
 
     int zeroGhostCells = 0;
 
@@ -2613,40 +2613,40 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
 
     // MPM stuff
 
-    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
 
-    StaticArray<constCCVariable<double> > xvelCC_solid(numMPMMatls);
-    StaticArray<constCCVariable<double> > yvelCC_solid(numMPMMatls);
-    StaticArray<constCCVariable<double> > zvelCC_solid(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > xvelCC_solid(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > yvelCC_solid(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > zvelCC_solid(numMPMMatls);
 
-    StaticArray<constSFCXVariable<double> > xvelFCX_solid(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > yvelFCX_solid(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > zvelFCX_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > xvelFCX_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > yvelFCX_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > zvelFCX_solid(numMPMMatls);
 
-    StaticArray<constSFCYVariable<double> > xvelFCY_solid(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > yvelFCY_solid(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > zvelFCY_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > xvelFCY_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > yvelFCY_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > zvelFCY_solid(numMPMMatls);
 
-    StaticArray<constSFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > xvelFCZ_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > yvelFCZ_solid(numMPMMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > zvelFCZ_solid(numMPMMatls);
 
-    StaticArray<CCVariable<double> >   dragForceX_cc(numMPMMatls);
-    StaticArray<CCVariable<double> >   dragForceY_cc(numMPMMatls);
-    StaticArray<CCVariable<double> >   dragForceZ_cc(numMPMMatls);
+    SCIRun::StaticArray<CCVariable<double> >   dragForceX_cc(numMPMMatls);
+    SCIRun::StaticArray<CCVariable<double> >   dragForceY_cc(numMPMMatls);
+    SCIRun::StaticArray<CCVariable<double> >   dragForceZ_cc(numMPMMatls);
 
-    StaticArray<SFCYVariable<double> > dragForceX_fcy(numMPMMatls);
-    StaticArray<SFCZVariable<double> > dragForceX_fcz(numMPMMatls);
+    SCIRun::StaticArray<SFCYVariable<double> > dragForceX_fcy(numMPMMatls);
+    SCIRun::StaticArray<SFCZVariable<double> > dragForceX_fcz(numMPMMatls);
 
-    StaticArray<SFCZVariable<double> > dragForceY_fcz(numMPMMatls);
-    StaticArray<SFCXVariable<double> > dragForceY_fcx(numMPMMatls);
+    SCIRun::StaticArray<SFCZVariable<double> > dragForceY_fcz(numMPMMatls);
+    SCIRun::StaticArray<SFCXVariable<double> > dragForceY_fcx(numMPMMatls);
 
-    StaticArray<SFCXVariable<double> > dragForceZ_fcx(numMPMMatls);
-    StaticArray<SFCYVariable<double> > dragForceZ_fcy(numMPMMatls);
+    SCIRun::StaticArray<SFCXVariable<double> > dragForceZ_fcx(numMPMMatls);
+    SCIRun::StaticArray<SFCYVariable<double> > dragForceZ_fcy(numMPMMatls);
 
-    StaticArray<SFCXVariable<double> > pressForceX(numMPMMatls);
-    StaticArray<SFCYVariable<double> > pressForceY(numMPMMatls);
-    StaticArray<SFCZVariable<double> > pressForceZ(numMPMMatls);
+    SCIRun::StaticArray<SFCXVariable<double> > pressForceX(numMPMMatls);
+    SCIRun::StaticArray<SFCYVariable<double> > pressForceY(numMPMMatls);
+    SCIRun::StaticArray<SFCZVariable<double> > pressForceZ(numMPMMatls);
 
     // Arches stuff
 
@@ -3742,29 +3742,29 @@ void MPMArches::doEnergyExchange(const ProcessorGroup*,
 
     // MPM stuff
 
-    StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
-    StaticArray<constCCVariable<double> > tempSolid_cc(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > tempSolid_fcx(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > tempSolid_fcy(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > tempSolid_fcz(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > solid_fraction_cc(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > tempSolid_cc(numMPMMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > tempSolid_fcx(numMPMMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > tempSolid_fcy(numMPMMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > tempSolid_fcz(numMPMMatls);
 
-    StaticArray<constCCVariable<double> > upCC(numMPMMatls);
-    StaticArray<constCCVariable<double> > vpCC(numMPMMatls);
-    StaticArray<constCCVariable<double> > wpCC(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > vpFCX(numMPMMatls);
-    StaticArray<constSFCXVariable<double> > wpFCX(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > upFCY(numMPMMatls);
-    StaticArray<constSFCYVariable<double> > wpFCY(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > upFCZ(numMPMMatls);
-    StaticArray<constSFCZVariable<double> > vpFCZ(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > upCC(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > vpCC(numMPMMatls);
+    SCIRun::StaticArray<constCCVariable<double> > wpCC(numMPMMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > vpFCX(numMPMMatls);
+    SCIRun::StaticArray<constSFCXVariable<double> > wpFCX(numMPMMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > upFCY(numMPMMatls);
+    SCIRun::StaticArray<constSFCYVariable<double> > wpFCY(numMPMMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > upFCZ(numMPMMatls);
+    SCIRun::StaticArray<constSFCZVariable<double> > vpFCZ(numMPMMatls);
 
-    StaticArray<CCVariable<double> >   heaTranSolid_cc(numMPMMatls);
-    StaticArray<SFCXVariable<double> > heaTranSolid_fcx(numMPMMatls);
-    StaticArray<SFCYVariable<double> > heaTranSolid_fcy(numMPMMatls);
-    StaticArray<SFCZVariable<double> > heaTranSolid_fcz(numMPMMatls);
-    StaticArray<SFCXVariable<double> > heaTranSolid_fcx_rad(numMPMMatls);
-    StaticArray<SFCYVariable<double> > heaTranSolid_fcy_rad(numMPMMatls);
-    StaticArray<SFCZVariable<double> > heaTranSolid_fcz_rad(numMPMMatls);
+    SCIRun::StaticArray<CCVariable<double> >   heaTranSolid_cc(numMPMMatls);
+    SCIRun::StaticArray<SFCXVariable<double> > heaTranSolid_fcx(numMPMMatls);
+    SCIRun::StaticArray<SFCYVariable<double> > heaTranSolid_fcy(numMPMMatls);
+    SCIRun::StaticArray<SFCZVariable<double> > heaTranSolid_fcz(numMPMMatls);
+    SCIRun::StaticArray<SFCXVariable<double> > heaTranSolid_fcx_rad(numMPMMatls);
+    SCIRun::StaticArray<SFCYVariable<double> > heaTranSolid_fcy_rad(numMPMMatls);
+    SCIRun::StaticArray<SFCZVariable<double> > heaTranSolid_fcz_rad(numMPMMatls);
 
     // Arches stuff
 

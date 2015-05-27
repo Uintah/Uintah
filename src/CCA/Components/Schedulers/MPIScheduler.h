@@ -42,7 +42,7 @@
 
 namespace Uintah {
 
-static DebugStream mpi_stats("MPIStats", false);
+static SCIRun::DebugStream mpi_stats("MPIStats", false);
 
 class Task;
 

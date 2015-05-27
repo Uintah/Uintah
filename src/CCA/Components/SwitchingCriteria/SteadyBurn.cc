@@ -44,7 +44,7 @@
 using namespace std;
 
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+static SCIRun::DebugStream dbg("SWITCHER", false);
 
 SteadyBurnCriteria::SteadyBurnCriteria(ProblemSpecP& ps)
 {
@@ -137,9 +137,9 @@ void SteadyBurnCriteria::switchTest(const ProcessorGroup* group,
       // mpm matls
       constNCVariable<double> NC_CCweight;
       constNCVariable<double> gTempAllMatls;
-      StaticArray<constNCVariable<double> > gmass(numMPMMatls);
-      StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
-      StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
+      SCIRun::StaticArray<constNCVariable<double> > gmass(numMPMMatls);
+      SCIRun::StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
+      SCIRun::StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       Ghost::GhostType  gan = Ghost::AroundNodes;

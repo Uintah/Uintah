@@ -33,7 +33,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream grid_dbg("GridDBG",false);
+static SCIRun::DebugStream grid_dbg("GridDBG",false);
 
 
 SingleLevelRegridder::SingleLevelRegridder(const ProcessorGroup* pg) : TiledRegridder(pg)

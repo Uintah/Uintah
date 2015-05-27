@@ -41,7 +41,7 @@
 using namespace Uintah;
 using namespace std;
 
-DebugStream amrwave("AMRWave", false);
+SCIRun::DebugStream amrwave("AMRWave", false);
 
 AMRWave::AMRWave(const ProcessorGroup* myworld)
   : Wave(myworld)

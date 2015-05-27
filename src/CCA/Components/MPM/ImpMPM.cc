@@ -91,7 +91,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream cout_doing("IMPM", false);
+static SCIRun::DebugStream cout_doing("IMPM", false);
 
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
@@ -2153,12 +2153,12 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // Create arrays for the grid data
     constNCVariable<double> gTemperatureOld;
     NCVariable<double> gTemperature;
-    StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
+    SCIRun::StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
       gExternalHeatRate(numMatls),gExternalHeatFlux(numMatls),
       gmassall(numMatls);
-    StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
-    StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
-    StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
+    SCIRun::StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
+    SCIRun::StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
+    SCIRun::StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
 
     NCVariable<double> GMASS,GVOLUME;
     NCVariable<Vector> GVEL_OLD, GACC, GEXTFORCE;
@@ -2802,7 +2802,7 @@ void ImpMPM::computeContact(const ProcessorGroup*,
     delt_vartype dt;
 
     int numMatls = d_sharedState->getNumMPMMatls();
-    StaticArray<NCVariable<int> >  contact(numMatls);
+    SCIRun::StaticArray<NCVariable<int> >  contact(numMatls);
     for(int n = 0; n < numMatls; n++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
       int dwi = mpm_matl->getDWIndex();
@@ -3021,7 +3021,7 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int n8or27 = flags->d_8or27;
 
-    StaticArray<NCVariable<Vector> > int_force(numMPMMatls);
+    SCIRun::StaticArray<NCVariable<Vector> > int_force(numMPMMatls);
     NCVariable<Vector> INT_FORCE;
     new_dw->allocateTemporary(INT_FORCE,     patch,Ghost::None,0);
     INT_FORCE.initialize(Vector(0,0,0));
@@ -3739,9 +3739,9 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     INT_FORCE.initialize(Vector(0,0,0));
 
     GSTRESS.initialize(Matrix3(0.));
-    StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
-    StaticArray<constNCVariable<double> >     gvolume(numMatls);
-    StaticArray<NCVariable<Vector> >          int_force(numMatls);
+    SCIRun::StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
+    SCIRun::StaticArray<constNCVariable<double> >     gvolume(numMatls);
+    SCIRun::StaticArray<NCVariable<Vector> >          int_force(numMatls);
 
     Vector dx = patch->dCell();
     double oodx[3];
@@ -3971,9 +3971,9 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
           particleIndex idx = *iter;
-          ParticleSpeed=Vector(Max(fabs(pvelocity[idx].x()),ParticleSpeed.x()),
-                               Max(fabs(pvelocity[idx].y()),ParticleSpeed.y()),
-                               Max(fabs(pvelocity[idx].z()),ParticleSpeed.z()));
+          ParticleSpeed=Vector(std::max(fabs(pvelocity[idx].x()),ParticleSpeed.x()),
+                               std::max(fabs(pvelocity[idx].y()),ParticleSpeed.y()),
+                               std::max(fabs(pvelocity[idx].z()),ParticleSpeed.z()));
         }
         ParticleSpeed = dx/ParticleSpeed;
         double delT_new = .8*ParticleSpeed.minComponent();

@@ -10,7 +10,7 @@
 
 using namespace std;
 using namespace Uintah; 
-static DebugStream dbg("RMCRT", false);
+static SCIRun::DebugStream dbg("RMCRT", false);
 
 /*______________________________________________________________________
           TO DO:

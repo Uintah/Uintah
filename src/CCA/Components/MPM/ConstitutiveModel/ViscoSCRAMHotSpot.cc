@@ -51,7 +51,7 @@ using namespace std;
 using namespace Uintah;
 
 
-static DebugStream dbg("VS_HS", false);
+static SCIRun::DebugStream dbg("VS_HS", false);
 
 ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMFlags* Mflag)
   :ViscoScram(ps,Mflag)
@@ -529,9 +529,9 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
       // Compute wave speed at each particle, store the maximum
       Vector pVel_idx = pVel[idx];
       double c_dil = sqrt((K + 4.*G/3.)*pVol_new[idx]/pMass[idx]);
-      WaveSpeed=Vector(Max(c_dil+fabs(pVel_idx.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pVel_idx.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pVel_idx.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pVel_idx.x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pVel_idx.y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pVel_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;

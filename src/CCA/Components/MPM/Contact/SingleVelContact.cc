@@ -91,8 +91,8 @@ void SingleVelContact::exMomInterpolated(const ProcessorGroup*,
     Vector centerOfMassVelocity(0.0,0.0,0.0);
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> > gvelocity(numMatls);
+    SCIRun::StaticArray<constNCVariable<double> > gmass(numMatls);
+    SCIRun::StaticArray<NCVariable<Vector> > gvelocity(numMatls);
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
       new_dw->get(gmass[m], lb->gMassLabel,    dwindex, patch,Ghost::None,0);
@@ -147,8 +147,8 @@ void SingleVelContact::exMomIntegrated(const ProcessorGroup*,
     double centerOfMassMass;
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
+    SCIRun::StaticArray<constNCVariable<double> > gmass(numMatls);
+    SCIRun::StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
 
     for(int m=0;m<matls->size();m++){
      int dwi = matls->get(m);

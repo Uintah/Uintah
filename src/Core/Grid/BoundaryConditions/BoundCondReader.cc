@@ -56,7 +56,7 @@ using namespace std;
 using namespace Uintah;
 
 // export SCI_DEBUG="BCR_DBG:+,OLD_BC_DBG:+"
-static DebugStream BCR_dbg ("BCR_DBG", false);
+static SCIRun::DebugStream BCR_dbg ("BCR_DBG", false);
 
 //-------------------------------------------------------------------------------------------------
 

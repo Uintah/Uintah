@@ -57,7 +57,7 @@ using namespace std;
 //__________________________________
 //  To turn on the output
 //  setenv SCI_DEBUG "MinMax_DBG_COUT:+" 
-static DebugStream cout_doing("MinMax_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("MinMax_DOING_COUT", false);
 
 //______________________________________________________________________    
 /*  TO DO:
@@ -755,8 +755,8 @@ void MinMax::findMinMax( DataWarehouse*  new_dw,
     
     // use Max & Min instead of std::max & min
     // These functions can handle Vectors
-    maxQ = Max(maxQ,Q);  
-    minQ = Min(minQ,Q);
+    maxQ = SCIRun::Max(maxQ,Q);  
+    minQ = SCIRun::Min(minQ,Q);
     
     if ( Q == maxQ ){
       maxIndx = c;
