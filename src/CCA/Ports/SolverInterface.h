@@ -298,7 +298,6 @@ namespace Uintah {
           }
           // divide by total volume.
           rhsIntegral /= patch->getLevel()->totalCells();
-          std::cout << "rhs integral [" << patch->getID() << "] = " << rhsIntegral << std::endl;
           new_dw->put( sum_vartype(rhsIntegral), rhsIntegralLabel );
         }
       }
@@ -357,7 +356,6 @@ namespace Uintah {
           sum_vartype rhsIntegral_;
           new_dw->get( rhsIntegral_, rhsIntegralLabel );
           double rhsIntegral = rhsIntegral_;
-          std::cout << "rhs integral after reduction [" << patch->getID() << "] = " << rhsIntegral << std::endl;
           FieldT b;
           new_dw->getModifiable(b, bLabel, im, patch);
           for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
