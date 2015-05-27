@@ -117,6 +117,7 @@ namespace Uintah {
     virtual ~SolverInterface()
     {
       VarLabel::destroy(rhsIntegralLabel_);
+      VarLabel::destroy(refValueLabel_);
     }
 
     virtual SolverParameters* readParameters( ProblemSpecP     & params,
@@ -155,13 +156,8 @@ namespace Uintah {
     void scheduleEnforceSolvability( const LevelP & level,
                                      SchedulerP   & sched,
                                      const MaterialSet  * matls,
-                                    const VarLabel     * bLabel )
+                                     const VarLabel     * bLabel)
     {
-      // Check for periodic boundaries
-      IntVector periodic_vector = level->getPeriodicBoundaries();
-      const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
-      if (!isPeriodic) return; // execute this task ONLY if boundaries are periodic
-      
       Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral",
                                       this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel);;
       tskIntegral->computes( rhsIntegralLabel_ );
@@ -192,14 +188,14 @@ namespace Uintah {
                                     const IntVector refCell = IntVector(0,0,0),
                                     const double refValue = 0.0)
     {
-      Task* tskFindDiff = scinew Task("SolverInterface::computeRHSIntegral",
+      Task* tskFindDiff = scinew Task("SolverInterface::findRefValueDiff",
                                       this, &SolverInterface::findRefValueDiff<FieldT>, xLabel,
                                       refCell, refValue);
       tskFindDiff->computes( refValueLabel_ );
       tskFindDiff->requires( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
       sched->addTask(tskFindDiff, level->eachPatch(), matls);
       
-      Task* tskSetRefValue = scinew Task("SolverInterface::enforceSolvability",
+      Task* tskSetRefValue = scinew Task("SolverInterface::setRefValue",
                                          this, &SolverInterface::setRefValue<FieldT>, xLabel);
       tskSetRefValue->requires( Uintah::Task::NewDW, refValueLabel_ );
       tskSetRefValue->modifies( xLabel );
