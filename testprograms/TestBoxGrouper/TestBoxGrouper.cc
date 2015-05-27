@@ -27,7 +27,6 @@
 #include <testprograms/TestBoxGrouper/BoxRangeQuerier.h>
 #include <Core/Containers/SuperBox.h>
 
-using namespace std;
 using namespace SCIRun;
 
 namespace Uintah {
@@ -44,7 +43,7 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose);
 // are disjoint and complete (with respect to boxes).
 void performStandardSuperBoxSetTests(Suite* suite,
 				     const SuperBoxSet* superBoxSet,
-				     const set<const Box*>& boxes);
+				     const std::set<const Box*>& boxes);
 
 template <class BoxPIterator>
 void clean(BoxPIterator boxesBegin, BoxPIterator boxesEnd);
@@ -64,7 +63,7 @@ SuiteTree* BoxGrouperTestTree(bool verbose)
 void doSimpleExampleTests(Suite* suite, bool verbose)
 {
   // just some example I drew on my whiteboard
-  set<const Box*> boxes;
+  std::set<const Box*> boxes;
   boxes.insert(scinew Box(IntVector(6, 1, 0), IntVector(15, 5, 0), 1));
   boxes.insert(scinew Box(IntVector(6, 6, 0), IntVector(10, 10, 0), 2));
   boxes.insert(scinew Box(IntVector(11, 6, 0), IntVector(15, 15, 0), 3));
@@ -79,9 +78,9 @@ void doSimpleExampleTests(Suite* suite, bool verbose)
     SuperBoxSet::makeOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 					rangeQuerier);
   if (verbose) {
-    cerr << "\nSuperBoxSet:\n";
-    cerr << *superBoxSet << endl;
-    cerr << superBoxSet->getValue() << endl;
+    std::cerr << "\nSuperBoxSet:\n";
+    std::cerr << *superBoxSet << std::endl;
+    std::cerr << superBoxSet->getValue() << std::endl;
   }
   
   performStandardSuperBoxSetTests(suite, superBoxSet, boxes);
@@ -92,16 +91,16 @@ void doSimpleExampleTests(Suite* suite, bool verbose)
 
 void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
 {
-  list<int> takeAwayRands;
+  std::list<int> takeAwayRands;
   int i;
   for (i = 0; i < numTakeAway; i++) {
     takeAwayRands.push_back(rand() % (n*n*n - i));
   }
   takeAwayRands.sort();
   
-  list<int>::iterator takeAwayRandIter = takeAwayRands.begin();
+  std::list<int>::iterator takeAwayRandIter = takeAwayRands.begin();
   
-  set<const Box*> boxes;
+  std::set<const Box*> boxes;
   i = 0;
   for (int x = 1; x <= n; x++) {
     for (int y = 1; y <= n; y++) {
@@ -137,13 +136,13 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
 					    rangeQuerier);
   if (verbose) {
 #ifdef SUPERBOX_PERFORMANCE_TESTING  
-    cerr << "\nBiggerBoxCount: " << SuperBoxSet::biggerBoxCount << endl;
-    cerr << "\nMinimum BiggerBoxCount: " << SuperBoxSet::minBiggerBoxCount
-	 << endl;
+    std::cerr << "\nBiggerBoxCount: " << SuperBoxSet::biggerBoxCount << std::endl;
+    std::cerr << "\nMinimum BiggerBoxCount: " << SuperBoxSet::minBiggerBoxCount
+	 << std::endl;
 #endif  
-    cerr << "\nOptimal SuperBoxSet:\n";
-    cerr << *superBoxSet << endl;
-    cerr << superBoxSet->getValue() << endl;
+    std::cerr << "\nOptimal SuperBoxSet:\n";
+    std::cerr << *superBoxSet << std::endl;
+    std::cerr << superBoxSet->getValue() << std::endl;
   }
   
   performStandardSuperBoxSetTests(suite, superBoxSet, boxes);
@@ -155,9 +154,9 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
       SuperBoxSet::makeNearOptimalSuperBoxSet(boxes.begin(), boxes.end(),
 					      rangeQuerier);
     if (verbose) {
-      cerr << "\nNear Optimal (heuristic) SuperBoxSet:\n";
-      cerr << *nearOptimalSuperBoxSet << endl;
-      cerr << nearOptimalSuperBoxSet->getValue() << endl;
+      std::cerr << "\nNear Optimal (heuristic) SuperBoxSet:\n";
+      std::cerr << *nearOptimalSuperBoxSet << std::endl;
+      std::cerr << nearOptimalSuperBoxSet->getValue() << std::endl;
     }
     
     suite->addTest("Near Optimal Comparison", superBoxSet->getValue() >=
@@ -169,18 +168,18 @@ void doGridTests(Suite* suite, int n, int numTakeAway, bool verbose)
 
 void performStandardSuperBoxSetTests(Suite* suite,
 				     const SuperBoxSet* superBoxSet,
-				     const set<const Box*>& boxes)
+				     const std::set<const Box*>& boxes)
 {
   suite->addTest("not null", superBoxSet != 0);
   if (superBoxSet == 0)
     return;
 
-  set<const Box*> superSetBoxes;
+  std::set<const Box*> superSetBoxes;
   int count = 0;
-  vector<SuperBox*>::const_iterator iter;
+  std::vector<SuperBox*>::const_iterator iter;
   for (iter = superBoxSet->getSuperBoxes().begin();
        iter != superBoxSet->getSuperBoxes().end(); iter++) {
-    const vector<const Box*>& superBoxBoxes = (*iter)->getBoxes();
+    const std::vector<const Box*>& superBoxBoxes = (*iter)->getBoxes();
     superSetBoxes.insert(superBoxBoxes.begin(), superBoxBoxes.end());
     count += superBoxBoxes.size();    
   }
