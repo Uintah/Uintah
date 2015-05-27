@@ -23,7 +23,6 @@
  */
 
 #include <iostream>
-using namespace std;
 
 #include <CCA/Ports/SFC.h>
 #include <Core/Parallel/Parallel.h>

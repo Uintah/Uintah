@@ -37,20 +37,17 @@
 #include <cstring>
 #include <unistd.h>
 
-using namespace std;
-using namespace SCIRun;
-
 class Globals {
 public:
   Globals(): group(0), work(0), mutex(0), np(0), exit_everybody(false) {}
-  Globals(ThreadGroup *group, WorkQueue *work, Mutex *mutex, Barrier *barrier,
+  Globals(SCIRun::ThreadGroup *group, SCIRun::WorkQueue *work, SCIRun::Mutex *mutex, SCIRun::Barrier *barrier,
 	  const int np):
     group(group), work(work), mutex(mutex), barrier(barrier), np(np),
     exit_everybody(false) {}
-  ThreadGroup *group;
-  WorkQueue *work;
-  Mutex *mutex;
-  Barrier *barrier;
+  SCIRun::ThreadGroup *group;
+  SCIRun::WorkQueue *work;
+  SCIRun::Mutex *mutex;
+  SCIRun::Barrier *barrier;
   int np;
 
   // exit stuff
@@ -66,7 +63,7 @@ public:
 
 class Display;
 
-class Worker: public Runnable {
+class Worker: public SCIRun::Runnable {
 public:
   Worker(const int procID, Display *dpy, Globals *globals):
     procID(procID), dpy(dpy), globals(globals)
@@ -78,7 +75,7 @@ public:
   void run();
 };
 
-class Display: public Runnable {
+class Display: public SCIRun::Runnable {
 public:
   Display(const int buff_size, Globals *globals, const int stopper) :
     buff_size(buff_size), 
@@ -106,16 +103,16 @@ public:
 
   void print_test() {
     if (buff_size <= 0) {
-      cout << "ParallelWorker is empty\n";
+      std::cout << "ParallelWorker is empty\n";
       return;
     }
     int prev = buffer_display[0];
-    cout << "ParallelWorker: buff_size("<<buff_size<<"), np("<<globals->np<<")\n";
-    cout << "buffer_display[0] = "<<prev<<endl;
+    std::cout << "ParallelWorker: buff_size("<<buff_size<<"), np("<<globals->np<<")\n";
+    std::cout << "buffer_display[0] = "<<prev<<std::endl;
     for (int i = 0; i < buff_size; i++) {
       if (prev != buffer_display[i]) {
 	prev = buffer_display[i];
-	cout << "buffer_display["<<i<<"] = "<<prev<<endl;
+	std::cout << "buffer_display["<<i<<"] = "<<prev<<std::endl;
       }
     }
   }
@@ -127,7 +124,7 @@ public:
       globals->barrier->wait(globals->np + 1);
       if (globals->stop_execution()){
         //        for(;;) {}
-        //        Thread::exit();
+        //        SCIRun::Thread::exit();
         return;
       }
 
@@ -143,7 +140,7 @@ public:
       print_test();
 
       if (i == stopper) {
-	//	Thread::exitAll(0);
+	//	SCIRun::Thread::exitAll(0);
 	globals->exit_clean(0);
       }
     }
@@ -156,7 +153,7 @@ void Worker::run() {
     globals->barrier->wait(globals->np + 1);
     if (globals->stop_execution()){
       //      for(;;) {}
-      //      Thread::exit();
+      //      SCIRun::Thread::exit();
       return;
     }
     // let the display refill the work queue
@@ -188,9 +185,9 @@ int main(int argc, char *argv[]) {
       i++;
       stopper = atoi(argv[i]);
     } else {
-      cout << "parallel -np [int] -size [int]\n";
-      cout << "-np\tnumber of processors/helpers to use.\n";
-      cout << "-size\tsize of array to use\n";
+      std::cout << "parallel -np [int] -size [int]\n";
+      std::cout << "-np\tnumber of processors/helpers to use.\n";
+      std::cout << "-size\tsize of array to use\n";
       return 1;
     }
   }
@@ -198,25 +195,25 @@ int main(int argc, char *argv[]) {
   // validate parameters
   if (np < 1) np = 1;
   if (buff_size < 1) buff_size = 100;
-  cout <<"np = "<<np<<", buff_size = "<<buff_size<<endl;
+  std::cout <<"np = "<<np<<", buff_size = "<<buff_size<<std::endl;
 
-  ThreadGroup *group = new ThreadGroup("threadexit group");
-  WorkQueue *work = new WorkQueue("threadexit workqueue");
-  Mutex *mutex = new Mutex("threadexit mutex");
-  Barrier *barrier = new Barrier("threadexit barrier");
+  SCIRun::ThreadGroup *group = new SCIRun::ThreadGroup("threadexit group");
+  SCIRun::WorkQueue *work = new SCIRun::WorkQueue("threadexit workqueue");
+  SCIRun::Mutex *mutex = new SCIRun::Mutex("threadexit mutex");
+  SCIRun::Barrier *barrier = new SCIRun::Barrier("threadexit barrier");
   Globals *globals = new Globals(group, work, mutex, barrier, np);
   Display *dpy = new Display(buff_size, globals, stopper);
-  new Thread(dpy, "Display thread", group);
+  new SCIRun::Thread(dpy, "Display thread", group);
   for(int i = 0; i < np; i++) {
     char buf[100];
     sprintf(buf, "worker %d", i);
-    new Thread(new Worker(i, dpy, globals), buf, group);
+    new SCIRun::Thread(new Worker(i, dpy, globals), buf, group);
   }
 #if 0
   group->detach();
 #else
    group->join();
-   cout << "Threads exited" << endl;
+   std::cout << "Threads exited" << std::endl;
 #endif
    
   return 0;

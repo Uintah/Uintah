@@ -28,18 +28,17 @@
 #include <Core/Geometry/IntVector.h>
 
 namespace Uintah {
-  using namespace SCIRun;
-
+  
 class Box
 {
 public:
-  Box(IntVector low, IntVector high, int id)
+ Box(SCIRun::IntVector low, SCIRun::IntVector high, int id)
     : low_(low), high_(high), id_(id) {}
   
-  const IntVector& getLow() const
+  const SCIRun::IntVector& getLow() const
   { return low_; }
 
-  const IntVector& getHigh() const
+  const SCIRun::IntVector& getHigh() const
   { return high_; }
 
   int getID() const
@@ -57,22 +56,22 @@ public:
     return area;
   }
 
-  bool isInside(IntVector low, IntVector high) const;
-  bool isNeighboring(IntVector low, IntVector high) const;
+  bool isInside(SCIRun::IntVector low, SCIRun::IntVector high) const;
+  bool isNeighboring(SCIRun::IntVector low, SCIRun::IntVector high) const;
 
-  static int getVolume(IntVector low, IntVector high)
+  static int getVolume(SCIRun::IntVector low, SCIRun::IntVector high)
   { return (high.x() - low.x() + 1) * (high.y() - low.y() + 1) *
       (high.z() - low.z() + 1); }
 
-  static IntVector Min(IntVector low, IntVector high)
+  static SCIRun::IntVector Min(SCIRun::IntVector low, SCIRun::IntVector high)
   { return SCIRun::Min(low, high); }
 
-  static IntVector Max(IntVector low, IntVector high)
+  static SCIRun::IntVector Max(SCIRun::IntVector low, SCIRun::IntVector high)
   { return SCIRun::Max(low, high); }
   
 private:
-  IntVector low_;
-  IntVector high_;
+  SCIRun::IntVector low_;
+  SCIRun::IntVector high_;
   int id_;
 };
 

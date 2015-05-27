@@ -32,32 +32,29 @@
 #include <iostream>
 #include <cstring>
 
-using namespace std;
-using namespace SCIRun;
-
-list<Point*> getRandomPoints(int n);
-list<Point*> doLinearQuery(list<Point*> points,
+std::list<Point*> getRandomPoints(int n);
+std::list<Point*> doLinearQuery(std::list<Point*> points,
 			   const Point& low, const Point& high);
-list<Point*> doLinearSphereQuery(list<Point*> points,
+std::list<Point*> doLinearSphereQuery(std::list<Point*> points,
 				 const Point& p, int radius);
-void doRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
-		       list<Point*>& points,
+void doRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+		       std::list<Point*>& points,
 		       const Point& low, const Point& high, bool verbose);
-void doSphereRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
-			     list<Point*>& points,
+void doSphereRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+			     std::list<Point*>& points,
 			     const Point& p, int radius, bool verbose);
-Point* doLinearNearestL1Query(list<Point*> points, const Point& p);
-Point* doLinearNearestQuery(list<Point*> points, const Point& p);
+Point* doLinearNearestL1Query(std::list<Point*> points, const Point& p);
+Point* doLinearNearestQuery(std::list<Point*> points, const Point& p);
 
-void doNearestQueryTests(Suite* suite, RangeTree<Point, int, true>* rangeTree,
-			 list<Point*>& points, const Point& p, bool verbose);
+void doNearestQueryTests(Suite* suite, SCIRun::RangeTree<Point, int, true>* rangeTree,
+			 std::list<Point*>& points, const Point& p, bool verbose);
 void doNearestQueryAtPointsTest(Suite* suite,
-				RangeTree<Point, int, true>* rangeTree,
-				list<Point*>& points, bool verbose);
+				SCIRun::RangeTree<Point, int, true>* rangeTree,
+				std::list<Point*>& points, bool verbose);
 
-void printList(list<Point*>& points);
+void printList(std::list<Point*>& points);
 
-void display_time_diff(ostream& out, timeval start, timeval end,
+void display_time_diff(std::ostream& out, timeval start, timeval end,
 		       unsigned long divisor = 1)
 {
   if ((start.tv_sec - end.tv_sec) / divisor == 0) {
@@ -82,9 +79,9 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   srand(randomSeed);
 
   if (verbose)
-    cout << "Using random number seed " << randomSeed << endl;
+    std::cout << "Using random number seed " << randomSeed << std::endl;
   
-  list<Point*> points;
+  std::list<Point*> points;
   points = getRandomPoints(n);
   points.push_back(new Point(-1, 100, 100, 100));
   points.push_back(new Point(-2, 100, 100, 101));
@@ -127,24 +124,24 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   
   timeval start, end;
   gettimeofday(&start, 0);
-  RangeTree<Point, int>* rangeTree = scinew RangeTree<Point, int>(points, 3);
+  SCIRun::RangeTree<Point, int>* rangeTree = scinew SCIRun::RangeTree<Point, int>(points, 3);
   gettimeofday(&end, 0);
   if (verbose) {
-    cout << "Built tree in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n\n";
+    std::cout << "Built tree in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n\n";
     //rangeTree->topLevelDump();
     //rangeTree->bottomLevelDump();
-    //cout << endl;
+    //std::cout << endl;
   }
 
   
   doRangeQueryTests(topSuite->addSuite("Range Query"), rangeTree, points,
 		    low, high, verbose);
-  if (verbose) cout << endl;
+  if (verbose) std::cout << std::endl;
   doSphereRangeQueryTests(topSuite->addSuite("Sphere Range Query"), rangeTree,
 			  points, p, radius, verbose); 
-  if (verbose) cout << endl;
+  if (verbose) std::cout << std::endl;
 
 
   delete rangeTree;
@@ -152,16 +149,16 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
   
   // build a range tree for nearest neighbor searches
   gettimeofday(&start, 0);
-  RangeTree<Point, int, true>* nearestCapabableRangeTree =
-    scinew RangeTree<Point, int, true>(points, 3);
+  SCIRun::RangeTree<Point, int, true>* nearestCapabableRangeTree =
+    scinew SCIRun::RangeTree<Point, int, true>(points, 3);
   gettimeofday(&end, 0);
   if (verbose) {
-    cout << "Built nearest query enabled tree in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n\n";
+    std::cout << "Built nearest query enabled tree in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n\n";
     //rangeTree->topLevelDump();
     //rangeTree->bottomLevelDump();
-    //cout << endl;
+    //std::cout << std::endl;
   }
 
   Point p_out[8];
@@ -183,30 +180,30 @@ SuiteTree* RangeTreeTestTree(bool verbose /*= false*/, int n /* = 100000 */,
     outerSuiteName[12] = '0' + i;
     doNearestQueryTests(nearestSuite->addSuite(outerSuiteName),
 			nearestCapabableRangeTree, points, p_out[i], verbose);
-    if (verbose) cout << endl;
+    if (verbose) std::cout << std::endl;
   }
   Suite* innerPointNearestSuite = nearestSuite->addSuite("Inner point");
   doNearestQueryTests(innerPointNearestSuite, nearestCapabableRangeTree,
 		      points, p_in, verbose);
-  if (verbose) cout << endl;
+  if (verbose) std::cout << std::endl;
   doNearestQueryAtPointsTest(innerPointNearestSuite, nearestCapabableRangeTree,
 			     points, verbose); 
-  if (verbose) cout << endl;
+  if (verbose) std::cout << std::endl;
   delete rangeTree;
   
   // clean up 
-  for (list<Point*>::iterator it = points.begin(); it != points.end(); it++)
+  for (std::list<Point*>::iterator it = points.begin(); it != points.end(); it++)
     delete *it;
 
   return topSuite;
 } 
 
-void doRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
-		       list<Point*>& points,
+void doRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+		       std::list<Point*>& points,
 		       const Point& low, const Point& high, bool verbose)
 {
   timeval start, end;
-  list<Point*> treeQuery;
+  std::list<Point*> treeQuery;
   // do the query  twice and time the second one in attempts to get a more
   // accurate timing apart from memory delays that may play more of a role
   // the first time
@@ -219,18 +216,18 @@ void doRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
   }
   
   if (verbose) {
-    cout << "Tree query found " << treeQuery.size() << " out of " << points.size() << " points in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Tree query found " << treeQuery.size() << " out of " << points.size() << " points in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
   
   gettimeofday(&start, 0);
-  list<Point*> linearQuery = doLinearQuery(points, low, high);
+  std::list<Point*> linearQuery = doLinearQuery(points, low, high);
   gettimeofday(&end, 0);
   if (verbose) {
-    cout << "Linear query found " << linearQuery.size() << " out of " << points.size() << " points in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Linear query found " << linearQuery.size() << " out of " << points.size() << " points in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
   
   treeQuery.sort();
@@ -241,14 +238,14 @@ void doRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
 
   if (correctCount)
   {
-    list<Point*>::iterator treeResultIt = treeQuery.begin();
-    list<Point*>::iterator linResultIt = linearQuery.begin();
+    std::list<Point*>::iterator treeResultIt = treeQuery.begin();
+    std::list<Point*>::iterator linResultIt = linearQuery.begin();
     int i = 0;
     bool same = true;
     while (treeResultIt != treeQuery.end()) {
       if (*treeResultIt != *linResultIt) {
 	if (verbose)
-	  cout << "Element " << i << " is not the same.\n";
+	  std::cout << "Element " << i << " is not the same.\n";
 	same = false;
       }
       
@@ -260,19 +257,19 @@ void doRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
     suite->addTest("Range query", same);    
   }
   else if (verbose && points.size() < 50) {
-    cout << "Range Tree query results: " << endl;
+    std::cout << "Range Tree query results: " << std::endl;
     printList(treeQuery);
-    cout << "Linear query results: " << endl;
+    std::cout << "Linear query results: " << std::endl;
     printList(linearQuery);    
   }
 }
 
-void doSphereRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
-			     list<Point*>& points,
+void doSphereRangeQueryTests(Suite* suite, SCIRun::RangeTree<Point, int>* rangeTree,
+			     std::list<Point*>& points,
 			     const Point& p, int radius, bool verbose)
 {   
   timeval start, end;
-  list<Point*> treeQuery;
+  std::list<Point*> treeQuery;
   // do the query  twice and time the second one in attempts to get a more
   // accurate timing apart from memory delays that may play more of a role
   // the first time
@@ -286,18 +283,18 @@ void doSphereRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
   }
   
   if (verbose) {
-    cout << "Tree sphere query found " << treeQuery.size() << " out of " << points.size() << " points in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Tree sphere query found " << treeQuery.size() << " out of " << points.size() << " points in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
   
   gettimeofday(&start, 0);
-  list<Point*> linearQuery = doLinearSphereQuery(points, p, radius);
+  std::list<Point*> linearQuery = doLinearSphereQuery(points, p, radius);
   gettimeofday(&end, 0);
   if (verbose) {
-    cout << "Linear sphere query found " << linearQuery.size() << " out of " << points.size() << " points in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Linear sphere query found " << linearQuery.size() << " out of " << points.size() << " points in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
   
   treeQuery.sort();
@@ -308,14 +305,14 @@ void doSphereRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
 
   if (correctCount)
   {
-    list<Point*>::iterator treeResultIt = treeQuery.begin();
-    list<Point*>::iterator linResultIt = linearQuery.begin();
+    std::list<Point*>::iterator treeResultIt = treeQuery.begin();
+    std::list<Point*>::iterator linResultIt = linearQuery.begin();
     int i = 0;
     bool same = true;
     while (treeResultIt != treeQuery.end()) {
       if (*treeResultIt != *linResultIt) {
 	if (verbose)
-	  cout << "Element " << i << " is not the same.\n";
+	  std::cout << "Element " << i << " is not the same.\n";
 	same = false;
       }
       
@@ -327,15 +324,15 @@ void doSphereRangeQueryTests(Suite* suite, RangeTree<Point, int>* rangeTree,
     suite->addTest("Range query", same);    
   }
   else if (verbose && points.size() < 50) {
-    cout << "Range Tree sphere query results: " << endl;
+    std::cout << "Range Tree sphere query results: " << std::endl;
     printList(treeQuery);
-    cout << "Linear sphere query results: " << endl;
+    std::cout << "Linear sphere query results: " << std::endl;
     printList(linearQuery);    
   }
 }
 
-void doNearestQueryTests(Suite* suite, RangeTree<Point, int, true>* rangeTree,
-			 list<Point*>& points, const Point& p, bool verbose)
+void doNearestQueryTests(Suite* suite, SCIRun::RangeTree<Point, int, true>* rangeTree,
+			 std::list<Point*>& points, const Point& p, bool verbose)
 {
   timeval start, end;
   // do it twice and time the second one in attempts to get a more accurate
@@ -349,9 +346,9 @@ void doNearestQueryTests(Suite* suite, RangeTree<Point, int, true>* rangeTree,
   }
 
   if (verbose) {
-    cout << "Tree nearest L1 query done in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Tree nearest L1 query done in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
 
   // do it twice and time the second one in attempts to get a more accurate
@@ -365,33 +362,33 @@ void doNearestQueryTests(Suite* suite, RangeTree<Point, int, true>* rangeTree,
   }
   
   if (verbose) {
-    cout << "Tree nearest query done in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Tree nearest query done in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
   
   gettimeofday(&start, 0);
   Point* linearNearestL1 = doLinearNearestL1Query(points, p);
   gettimeofday(&end, 0);
   if (verbose) {
-    cout << "Linear nearest L1 query done in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Linear nearest L1 query done in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
 
   gettimeofday(&start, 0);
   Point* linearNearest = doLinearNearestQuery(points, p);
   gettimeofday(&end, 0);
   if (verbose) {
-    cout << "Linear nearest query done in ";
-    display_time_diff(cout, start, end);
-    cout << ".\n";
+    std::cout << "Linear nearest query done in ";
+    display_time_diff(std::cout, start, end);
+    std::cout << ".\n";
   }
 
   int rangeDistL1 = p.distanceL1(*nearestL1);
   int linearDistL1 = p.distanceL1(*linearNearestL1);
   if (verbose && (rangeDistL1 != linearDistL1)) 
-    cout << "Failed Nearest L1: " << rangeDistL1 << " != " << linearDistL1 << endl;
+    std::cout << "Failed Nearest L1: " << rangeDistL1 << " != " << linearDistL1 << std::endl;
   suite->addTest("Nearest L1 query", rangeDistL1 == linearDistL1);
   int rangeDistSqrd = p.distanceSquared(*nearest);
   int linearDistSqrd = p.distanceSquared(*linearNearest);
@@ -399,49 +396,49 @@ void doNearestQueryTests(Suite* suite, RangeTree<Point, int, true>* rangeTree,
 }
 
 void doNearestQueryAtPointsTest(Suite* suite,
-				RangeTree<Point, int, true>* rangeTree,
-				list<Point*>& points, bool verbose)
+				SCIRun::RangeTree<Point, int, true>* rangeTree,
+				std::list<Point*>& points, bool verbose)
 { 
   timeval start, end;
   // now do nearest queries where the query point is one of the points in
   // the tree
-  list<Point*>::iterator pIter = points.begin();
+  std::list<Point*>::iterator pIter = points.begin();
   bool passed = true;
   gettimeofday(&start, 0);  
   for ( ; pIter != points.end(); pIter++) {
     Point* nearest = rangeTree->queryNearest(*(*pIter), INT_MAX/2);
     if (nearest->distanceL1(*(*pIter)) != 0) {
       passed = false;
-      cout << nearest->getId() << " not @ " << (*pIter)->getId() << endl;
+      std::cout << nearest->getId() << " not @ " << (*pIter)->getId() << std::endl;
     }
   }
   gettimeofday(&end, 0);
   suite->findOrAddTest("@ Nearest", passed);
 
   if (verbose) {
-    cout << "Tree nearest query @ point done in ";
-    display_time_diff(cout, start, end, points.size());
-    cout << " average time.\n";
+    std::cout << "Tree nearest query @ point done in ";
+    display_time_diff(std::cout, start, end, points.size());
+    std::cout << " average time.\n";
   }  
 }
 
   
   
-list<Point*> getRandomPoints(int n)
+std::list<Point*> getRandomPoints(int n)
 {
-  list<Point*> points;
+  std::list<Point*> points;
   for (int i = 0; i < n; i++)
     points.push_back(new Point(i, rand() % 500 - 250, rand() % 500 - 250,
 			       rand() % 500 - 250));
   return points;
 }
 
-list<Point*> doLinearQuery(list<Point*> points,
+std::list<Point*> doLinearQuery(std::list<Point*> points,
 			   const Point& low, const Point& high)
 {
-  list<Point*> found;
+  std::list<Point*> found;
   int i;
-  for (list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
+  for (std::list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
     Point* p = *it;
     for (i = 0; i < 3; i++) {
       if ((*p)[i] < low[i] || (*p)[i] > high[i]) {
@@ -454,13 +451,13 @@ list<Point*> doLinearQuery(list<Point*> points,
   return found;
 }
 
-list<Point*> doLinearSphereQuery(list<Point*> points,
+std::list<Point*> doLinearSphereQuery(std::list<Point*> points,
 				 const Point& p, int radius)
 {
-  list<Point*> found;
+  std::list<Point*> found;
   int i;
   int radiusSquared = radius * radius;
-  for (list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
+  for (std::list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
     Point* p2 = *it;
     int distSquared = 0;
     for (i = 0; i < 3; i++) {
@@ -472,12 +469,12 @@ list<Point*> doLinearSphereQuery(list<Point*> points,
   return found;
 }
 
-Point* doLinearNearestL1Query(list<Point*> points, const Point& p)
+Point* doLinearNearestL1Query(std::list<Point*> points, const Point& p)
 {
   Point* found = 0;
   int minDistance = INT_MAX;
   
-  for (list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
+  for (std::list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
     Point* p2 = *it;
     int distance = p.distanceL1(*p2);
     if (distance < minDistance) {
@@ -488,12 +485,12 @@ Point* doLinearNearestL1Query(list<Point*> points, const Point& p)
   return found;
 }
 
-Point* doLinearNearestQuery(list<Point*> points, const Point& p)
+Point* doLinearNearestQuery(std::list<Point*> points, const Point& p)
 {
   Point* found = 0;
   int minDistanceSquared = INT_MAX;
   
-  for (list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
+  for (std::list<Point*>::iterator it = points.begin(); it != points.end(); it++) {
     Point* p2 = *it;
     int distanceSquared = p.distanceSquared(*p2);
     if (distanceSquared < minDistanceSquared) {
@@ -504,9 +501,9 @@ Point* doLinearNearestQuery(list<Point*> points, const Point& p)
   return found;
 }
 
-void printList(list<Point*>& points)
+void printList(std::list<Point*>& points)
 {
-  for (list<Point*>::iterator it = points.begin(); it != points.end(); it++)
-    cout << (**it)[0] << ", " << (**it)[1] << ", " << (**it)[2] << endl;
+  for (std::list<Point*>::iterator it = points.begin(); it != points.end(); it++)
+    std::cout << (**it)[0] << ", " << (**it)[1] << ", " << (**it)[2] << std::endl;
 
 }
