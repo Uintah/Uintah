@@ -29,7 +29,7 @@
 #include <list>
 
 namespace Uintah {
-using namespace SCIRun;
+
 
 /**************************************
 

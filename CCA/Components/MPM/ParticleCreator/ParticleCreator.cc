@@ -640,7 +640,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       numPts = fgp->returnPointCount();
     } else {
       Vector dxpp = patch->dCell()/obj->getInitialData_IntVector("res");    
-      double dx   = Min(Min(dxpp.x(),dxpp.y()), dxpp.z());
+      double dx   = std::min(std::min(dxpp.x(),dxpp.y()), dxpp.z());
       sgp->setParticleSpacing(dx);
       numPts = sgp->createPoints();
     }

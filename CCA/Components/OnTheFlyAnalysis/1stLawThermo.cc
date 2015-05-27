@@ -53,8 +53,8 @@ using namespace std;
 //______________________________________________________________________ 
 //  To turn on the output
 //  setenv SCI_DEBUG "FirstLawThermo_DBG_COUT:+" 
-static DebugStream cout_doing("FirstLawThermo",   false);
-static DebugStream cout_dbg("FirstLawThermo_dbg", false);
+static SCIRun::DebugStream cout_doing("FirstLawThermo",   false);
+static SCIRun::DebugStream cout_dbg("FirstLawThermo_dbg", false);
 //______________________________________________________________________              
 FirstLawThermo::FirstLawThermo(ProblemSpecP& module_spec,
                                SimulationStateP& sharedState,

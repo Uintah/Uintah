@@ -69,10 +69,10 @@
 using namespace std;
 using namespace Uintah;
 
-static DebugStream cout_EP("EP",false);
-static DebugStream cout_EP1("EP1",false);
-static DebugStream CSTi("EPi",false);
-static DebugStream CSTir("EPir",false);
+static SCIRun::DebugStream cout_EP("EP",false);
+static SCIRun::DebugStream cout_EP1("EP1",false);
+static SCIRun::DebugStream CSTi("EPi",false);
+static SCIRun::DebugStream CSTir("EPir",false);
 
 ElasticPlasticHP::ElasticPlasticHP(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag), ImplicitCM()
@@ -642,9 +642,9 @@ ElasticPlasticHP::computeStableTimestep(const Patch* patch,
       c_dil = 0.0;
       pvelocity_idx = Vector(0.0,0.0,0.0);
     }
-    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                     Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                     Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+    WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                     std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                     std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -1237,7 +1237,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
           Matrix3 eigVec;
           stress.eigen(eigVal, eigVec);
           
-          double max_stress = Max(Max(eigVal[0],eigVal[1]), eigVal[2]);
+          double max_stress = std::max(std::max(eigVal[0],eigVal[1]), eigVal[2]);
           if (max_stress > d_initialData.sigma_crit) {
             isLocalized = true;
           }
@@ -1325,9 +1325,9 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
       
       delete defState;
       delete state;

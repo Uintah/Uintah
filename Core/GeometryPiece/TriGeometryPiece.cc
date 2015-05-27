@@ -291,7 +291,7 @@ TriGeometryPiece::makePlanes()
     pt[0] = d_points[tri.x()];
     pt[1] = d_points[tri.y()];
     pt[2] = d_points[tri.z()];
-    Plane plane(pt[0],pt[1],pt[2]);
+    SCIRun::Plane plane(pt[0],pt[1],pt[2]);
     d_planes.push_back(plane);
   }
 }
@@ -355,7 +355,7 @@ TriGeometryPiece::insideTriangle( Point& q,int num,int& NCS,
 
   if (dominant_coord == -1){
     std::cout << " dominant coordinate not found " << endl;
-    throw InternalError("Dominant coordinate not found", __FILE__, __LINE__);
+    throw SCIRun::InternalError("Dominant coordinate not found", __FILE__, __LINE__);
   }
   Point p[3];
   p[0] = d_points[d_tri[num].x()];

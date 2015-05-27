@@ -36,7 +36,7 @@ namespace Uintah {
   
   class EnsightOpts {
   public:
-    EnsightOpts(Args & args);
+    EnsightOpts(SCIRun::Args & args);
     
     bool withpart;
     bool onemesh;
@@ -122,7 +122,7 @@ namespace Uintah {
 
     struct Data {
       Data(DataArchive * da, FldDumper * dumper, 
-           const EnsightOpts & opts, const FieldSelection & fselect)
+           const EnsightOpts & opts, const SCIRun::FieldSelection & fselect)
         : 
         da_(da), dumper_(dumper), onemesh_(opts.onemesh), withpart_(opts.withpart), fselect_(fselect)
       {}
@@ -131,12 +131,12 @@ namespace Uintah {
       std::string   dir_;
       FldDumper   * dumper_;
       bool          onemesh_, withpart_;
-      const FieldSelection & fselect_;
+      const SCIRun::FieldSelection & fselect_;
     };
   
   public:
     EnsightDumper(DataArchive* da, std::string basedir,
-                  const EnsightOpts & opts, const FieldSelection & fselect);
+                  const EnsightOpts & opts, const SCIRun::FieldSelection & fselect);
     ~EnsightDumper();
     
     std::string directoryExt() const { return "ensight"; }

@@ -142,7 +142,7 @@ using std::cout;
 
 using namespace Uintah;
 
-static DebugStream dbg("ARCHES", false);
+static SCIRun::DebugStream dbg("ARCHES", false);
 
 // Used to sync std::cout when output by multiple threads
 extern SCIRun::Mutex coutLock;
@@ -1430,9 +1430,9 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 
               tmp_time=1.0;
               if (flag != 0){
-                tmp_time=Abs(uvel)/(cellinfo->sew[colX])+
-                  Abs(vvel)/(cellinfo->sns[colY])+
-                  Abs(wvel)/(cellinfo->stb[colZ])+
+                tmp_time=std::abs(uvel)/(cellinfo->sew[colX])+
+                  std::abs(vvel)/(cellinfo->sns[colY])+
+                  std::abs(wvel)/(cellinfo->stb[colZ])+
                   (visc[currCell]/den[currCell])*
                   (1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
                    1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
@@ -1450,7 +1450,7 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
  //                1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
  //               small_num;
 
-            delta_t2=Min(1.0/tmp_time, delta_t2);
+              delta_t2=std::min(1.0/tmp_time, delta_t2);
           }
         }
       }
@@ -1472,18 +1472,18 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
               double tmp_time;
 
               tmp_time = 0.5* (
-              ((den[currCell]+den[xplusCell])*Max(uVelocity[xplusCell],0.0) -
-               (den[currCell]+den[xminusCell])*Min(uVelocity[currCell],0.0)) /
+              ((den[currCell]+den[xplusCell])*std::max(uVelocity[xplusCell],0.0) -
+               (den[currCell]+den[xminusCell])*std::min(uVelocity[currCell],0.0)) /
               cellinfo->sew[colX] +
-              ((den[currCell]+den[yplusCell])*Max(vVelocity[yplusCell],0.0) -
-               (den[currCell]+den[yminusCell])*Min(vVelocity[currCell],0.0)) /
+              ((den[currCell]+den[yplusCell])*std::max(vVelocity[yplusCell],0.0) -
+               (den[currCell]+den[yminusCell])*std::min(vVelocity[currCell],0.0)) /
               cellinfo->sns[colY] +
-              ((den[currCell]+den[zplusCell])*Max(wVelocity[zplusCell],0.0) -
-               (den[currCell]+den[zminusCell])*Min(wVelocity[currCell],0.0)) /
+              ((den[currCell]+den[zplusCell])*std::max(wVelocity[zplusCell],0.0) -
+               (den[currCell]+den[zminusCell])*std::min(wVelocity[currCell],0.0)) /
               cellinfo->stb[colZ])+small_num;
 
               if (den[currCell] > 0.0){
-                delta_t2=Min(den[currCell]/tmp_time, delta_t2);
+                delta_t2=std::min(den[currCell]/tmp_time, delta_t2);
               }
             }
           }

@@ -275,9 +275,9 @@ namespace Uintah{
                            const IntVector& fineLevel_ROI_Hi,
                            std::vector<IntVector>& regionLo,
                            std::vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable< T > >& sigmaT4Pi,
-                           StaticArray< constCCVariable< T > >& abskg,
-                           StaticArray< constCCVariable< int > >& cellType,
+                           SCIRun::StaticArray< constCCVariable< T > >& sigmaT4Pi,
+                           SCIRun::StaticArray< constCCVariable< T > >& abskg,
+                           SCIRun::StaticArray< constCCVariable< int > >& cellType,
                            unsigned long int& size,
                            double& sumI,
                            MTRand& mTwister);

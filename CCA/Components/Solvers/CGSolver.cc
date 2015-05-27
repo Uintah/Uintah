@@ -54,7 +54,7 @@ using namespace Uintah;
 //  To turn on normal output
 //  setenv SCI_DEBUG "CGSOLVER_DOING_COUT:+"
 
-static DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("CGSOLVER_DOING_COUT", false);
 
 void Mult(Array3<double>& B, const Array3<Stencil7>& A,
           const Array3<double>& X, CellIterator iter,
@@ -167,7 +167,7 @@ static double L1(const Array3<double>& a, CellIterator iter, long64& flops,
     cout_doing << "CGSolver::L1" << endl;
   double sum=0;
   for(; !iter.done(); ++iter)
-    sum += Abs(a[*iter]);
+    sum += SCIRun::Abs(a[*iter]);
   IntVector diff = iter.end()-iter.begin();
   flops += 2*diff.x()*diff.y()*diff.z();
   memrefs += diff.x()*diff.y()*diff.z()*8L;
@@ -181,7 +181,7 @@ double LInf(const Array3<double>& a, CellIterator iter, long64& flops,
     cout_doing << "CGSolver::Linf" << endl;
   double max=0;
   for(; !iter.done(); ++iter)
-    max = Max(max, Abs(a[*iter]));
+    max = SCIRun::Max(max, SCIRun::Abs(a[*iter]));
   IntVector diff = iter.end()-iter.begin();
   flops += 2*diff.x()*diff.y()*diff.z();
   memrefs += diff.x()*diff.y()*diff.z()*8L;
@@ -670,7 +670,7 @@ public:
   {
     if(cout_doing.active())
       cout_doing << "CGSolver::solve" << endl;
-    double tstart = Time::currentSeconds();
+    double tstart = SCIRun::Time::currentSeconds();
     SchedulerP subsched = sched->createSubScheduler();
     DataWarehouse::ScrubMode old_dw_scrubmode = old_dw->setScrubbing(DataWarehouse::ScrubNone);
     DataWarehouse::ScrubMode new_dw_scrubmode = new_dw->setScrubbing(DataWarehouse::ScrubNone);
@@ -889,7 +889,7 @@ public:
     old_dw->setScrubbing(old_dw_scrubmode);
     new_dw->setScrubbing(new_dw_scrubmode);
 
-    double dt=Time::currentSeconds()-tstart;
+    double dt=SCIRun::Time::currentSeconds()-tstart;
     double mflops = (double(flops)*1.e-6)/dt;
     double memrate = (double(memrefs)*1.e-9)/dt;
     if(pg->myrank() == 0){

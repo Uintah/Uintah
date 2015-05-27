@@ -30,6 +30,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 
 using namespace std;
+using namespace SCIRun;
 
 namespace Uintah {
 

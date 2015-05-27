@@ -55,7 +55,7 @@
 
 using namespace std;
 using namespace Uintah;
-static DebugStream dbg("SWITCHER", false);
+static SCIRun::DebugStream dbg("SWITCHER", false);
 #define ALL_LEVELS  99
 
 
@@ -220,8 +220,8 @@ Switcher::Switcher( const ProcessorGroup* myworld,
     MaterialSubset* carry_over_matls = 0;
     if (matls != "") {
       carry_over_matls = scinew MaterialSubset;
-      ConsecutiveRangeSet crs = matls;
-      ConsecutiveRangeSet::iterator iter = crs.begin();
+      SCIRun::ConsecutiveRangeSet crs = matls;
+      SCIRun::ConsecutiveRangeSet::iterator iter = crs.begin();
       
       for (; iter != crs.end(); iter++){
         carry_over_matls->add(*iter);

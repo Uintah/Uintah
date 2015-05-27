@@ -39,7 +39,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
 
 class ThermalContact;
 

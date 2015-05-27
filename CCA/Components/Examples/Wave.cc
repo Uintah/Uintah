@@ -45,7 +45,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream wave("Wave", false);
+static SCIRun::DebugStream wave("Wave", false);
 
 Wave::Wave(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)

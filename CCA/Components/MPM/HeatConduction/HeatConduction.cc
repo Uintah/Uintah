@@ -42,8 +42,8 @@ using namespace Uintah;
 #define EROSION
 #undef EROSION
 
-static DebugStream cout_doing("HeatConduction", false);
-static DebugStream cout_heat("MPMHeat", false);
+static SCIRun::DebugStream cout_doing("HeatConduction", false);
+static SCIRun::DebugStream cout_heat("MPMHeat", false);
 
 HeatConduction::HeatConduction(SimulationStateP& sS,MPMLabel* labels, 
                                MPMFlags* flags)

@@ -26,7 +26,7 @@ namespace Uintah{
 
   // setenv SCI_DEBUG WALL_MODEL_DRIVER_DEBUG:+   (tcsh)
   // export SCI_DEBUG="WALL_MODEL_DRIVER_DEBUG:+" (bash)
-  static DebugStream cout_wmd_dbg("WALL_MODEL_DRIVER",false);
+  static SCIRun::DebugStream cout_wmd_dbg("WALL_MODEL_DRIVER",false);
 
   class VarLabel; 
 

@@ -46,8 +46,7 @@ namespace Uintah {
 
   */
   
-  using namespace SCIRun;
-
+  
   class CircleBCData : public BCGeomBase  {
 
    public:

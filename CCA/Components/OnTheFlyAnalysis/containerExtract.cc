@@ -75,8 +75,8 @@ using namespace std;
 //__________________________________
 //  To turn on the output
 //  setenv SCI_DEBUG "CONTAINEREXTRACT_DBG_COUT:+" 
-static DebugStream cout_doing("CONTAINEREXTRACT_DOING_COUT", false);
-static DebugStream cout_dbg("CONTAINEREXTRACT_DBG_COUT", false);
+static SCIRun::DebugStream cout_doing("CONTAINEREXTRACT_DOING_COUT", false);
+static SCIRun::DebugStream cout_dbg("CONTAINEREXTRACT_DBG_COUT", false);
 
 
 

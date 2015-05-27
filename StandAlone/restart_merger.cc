@@ -58,39 +58,36 @@
 #include <sstream>
 #include <iomanip>
 
-using namespace SCIRun;
-using namespace std;
-using namespace Uintah;
 
 void
-usage( const string & badarg, const string & progname )
+usage( const std::string & badarg, const std::string & progname )
 {
-  cerr << "\n";
+  std::cerr << "\n";
   if(badarg != "") {
-    cerr << "Error parsing argument: " << badarg << '\n';
+    std::cerr << "Error parsing argument: " << badarg << '\n';
   }
-  cerr << "Usage: " << progname << " [options] <uda dir 1> <uda dir 2> [<uda dir 3> ...]\n";
-  cerr << "    There can be any number of udas on the command line.\n";
-  cerr << "\n";
-  cerr << "    The " << progname << " program is used to merge N UDAs together into a single UDA.\n";
-  cerr << "    The N merged UDAs must all be restarts of a common UDA.  This tool is most commonly\n";
-  cerr << "    used in order to create a single UDA for visualization purposes.\n";
-  cerr << "\n";
-  cerr << "Options:\n";
-  cerr << "\t-copy\t(Default) Copies timestep directories into the new uda directory\n"
+  std::cerr << "Usage: " << progname << " [options] <uda dir 1> <uda dir 2> [<uda dir 3> ...]\n";
+  std::cerr << "    There can be any number of udas on the command line.\n";
+  std::cerr << "\n";
+  std::cerr << "    The " << progname << " program is used to merge N UDAs together into a single UDA.\n";
+  std::cerr << "    The N merged UDAs must all be restarts of a common UDA.  This tool is most commonly\n";
+  std::cerr << "    used in order to create a single UDA for visualization purposes.\n";
+  std::cerr << "\n";
+  std::cerr << "Options:\n";
+  std::cerr << "\t-copy\t(Default) Copies timestep directories into the new uda directory\n"
        << "\t\twithout affecting the source uda directories.\n";
-  cerr << "\t-move\tMoves timestep directories from the source udas directories into\n"
+  std::cerr << "\t-move\tMoves timestep directories from the source udas directories into\n"
        << "\t\tthe new uda directory and removes the source udas.\n"
        << "\t\tThis option can be faster if the source and destination are\n"
        << "\t\ton the same file system, but there may be data loss where the\n"
        << "\t\tudas overlap.\n";
-  cerr << "\n";
-  cerr << "\t\t\t-move or -copy must be the first argument if specified.\n";
-  cerr << "\n";
-  cerr << "Assuming <uda dir n> was created by restarting from <uda dir n-1>\n";
-  cerr << "with the -nocopy option (which is the default), this will create a\n";
-  cerr << "new uda directory that is a continuous version of these uda directories.\n"; 
-  cerr << "\n";
+  std::cerr << "\n";
+  std::cerr << "\t\t\t-move or -copy must be the first argument if specified.\n";
+  std::cerr << "\n";
+  std::cerr << "Assuming <uda dir n> was created by restarting from <uda dir n-1>\n";
+  std::cerr << "with the -nocopy option (which is the default), this will create a\n";
+  std::cerr << "new uda directory that is a continuous version of these uda directories.\n"; 
+  std::cerr << "\n";
   exit(1);
 }
 
@@ -98,12 +95,12 @@ int
 main( int argc, char *argv[], char *env[] )
 {
   // Pass the env into the sci env so it can be used there...
-  create_sci_environment( env, 0, true );
+  SCIRun::create_sci_environment( env, 0, true );
 
   bool move = false;
   int i = 1;
   for (i = 1; i < argc; i++) {
-    string s = argv[i];
+    std::string s = argv[i];
     if (s == "-copy") {
       move = false; // default anyway
     }
@@ -120,22 +117,22 @@ main( int argc, char *argv[], char *env[] )
   }
   
   char** udafile = &argv[i];
-  string ups_filename = string(udafile[0]) + "/input.xml";
+  std::string ups_filename = std::string(udafile[0]) + "/input.xml";
 
   bool thrownException = false;
   
   Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
 
-  string new_uda_dir;
+  std::string new_uda_dir;
   try {
-    ProblemSpecP ups = ProblemSpecReader().readInputFile( ups_filename );
+    Uintah::ProblemSpecP ups = Uintah::ProblemSpecReader().readInputFile( ups_filename );
     Uintah::Parallel::initializeManager(argc, argv);
-    const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
+    const Uintah::ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    UintahParallelComponent * comp = ComponentFactory::create( ups, world, false, udafile[0] );
-    SimulationInterface     * sim  = dynamic_cast<SimulationInterface*>( comp );
+    Uintah::UintahParallelComponent * comp = Uintah::ComponentFactory::create( ups, world, false, udafile[0] );
+    Uintah::SimulationInterface     * sim  = dynamic_cast<Uintah::SimulationInterface*>( comp );
 
-    DataArchiver out_uda(world);
+    Uintah::DataArchiver out_uda(world);
     out_uda.attachPort("sim", sim);
     out_uda.problemSetup(ups, NULL);
     out_uda.initializeOutput(ups);
@@ -145,50 +142,50 @@ main( int argc, char *argv[], char *env[] )
     int prevTimestep = 0;
     int i;
     for (i = 0; i < n_udafiles-1; i++) { // each file except last
-      DataArchive in_uda(udafile[i+1]);
+      Uintah::DataArchive in_uda(udafile[i+1]);
       int old_timestep = timestep;
       if (!in_uda.queryRestartTimestep(timestep)) {
-	cerr << endl << udafile[i+1] << " is not a restarted uda -- no \"restart\" tag found.\n";
+	std::cerr << std::endl << udafile[i+1] << " is not a restarted uda -- no \"restart\" tag found.\n";
 	exit(1);
       }
 
       if (old_timestep > timestep) {
-	cerr << endl << udafile[i] << " does not preceed " << udafile[i+1] << " with respect to restart timestep order.\n\n";
+	std::cerr << std::endl << udafile[i] << " does not preceed " << udafile[i+1] << " with respect to restart timestep order.\n\n";
 	usage("", argv[0]);
       }
       
-      Dir restartFromDir(udafile[i]);
+      Uintah::Dir restartFromDir(udafile[i]);
       // the time argument doesn't matter.  Pass in 0 also to signify to not copy checkpoints
       out_uda.restartSetup(restartFromDir, prevTimestep, timestep, 0 /* this time doesn't matter for our purpose here */, false, move);
       prevTimestep = timestep;
     }
    
     // copy all of the last uda timesteps 
-    Dir restartFromDir(udafile[i]);
+    SCIRun::Dir restartFromDir(udafile[i]);
     out_uda.copySection(restartFromDir, "globals");
     out_uda.copySection(restartFromDir, "variables");
     // pass in an arbitrary '1' for time, so it can copy the checkpoints.
     out_uda.restartSetup(restartFromDir, prevTimestep, -1, 1, false, move);
 
     //ups->releaseDocument();
-  } catch (Exception& e) {
-    cerr << "Caught exception: " << e.message() << '\n';
+  } catch (SCIRun::Exception& e) {
+    std::cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
-      cerr << "Stack trace: " << e.stackTrace() << '\n';
+      std::cerr << "Stack trace: " << e.stackTrace() << '\n';
     // Dd: I believe that these cause error messages
     // to be lost when the program dies...
     //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
     //abort();
     thrownException = true;
   } catch (std::exception e){
-    cerr << "Caught std exception: " << e.what() << '\n';
+    std::cerr << "Caught std exception: " << e.what() << '\n';
     //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
     //abort();
     thrownException = true;
   }
   /*
   catch(...){
-    cerr << "Caught unknown exception\n";
+    std::cerr << "Caught unknown exception\n";
     //Uintah::Parallel::finalizeManager(Uintah::Parallel::Abort);
     //abort();
     thrownException = true;
@@ -199,6 +196,6 @@ main( int argc, char *argv[], char *env[] )
     usage( "", argv[0] );
   }
 
-  cout << "Successfully created " << new_uda_dir << "\n";
+  std::cout << "Successfully created " << new_uda_dir << "\n";
   return 0;
 }

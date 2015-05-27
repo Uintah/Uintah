@@ -35,8 +35,7 @@
 
 namespace Uintah {
 
-  using namespace SCIRun;
-
+  
   class AxiLinearInterpolator : public ParticleInterpolator {
     
   public:

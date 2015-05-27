@@ -52,15 +52,15 @@ using namespace std;
 extern SCIRun::Mutex cerrLock;
 extern SCIRun::Mutex coutLock;
 
-extern DebugStream mixedDebug;
-extern DebugStream mpidbg;
+extern SCIRun::DebugStream mixedDebug;
+extern SCIRun::DebugStream mpidbg;
 
-static DebugStream dbg(         "DetailedTasks", false);
-static DebugStream scrubout(    "Scrubbing",     false);
-static DebugStream messagedbg(  "MessageTags",   false);
-static DebugStream internaldbg( "InternalDeps",  false);
-static DebugStream dwdbg(       "DetailedDWDBG", false);
-static DebugStream waitout(     "WaitTimes",     false);
+static SCIRun::DebugStream dbg(         "DetailedTasks", false);
+static SCIRun::DebugStream scrubout(    "Scrubbing",     false);
+static SCIRun::DebugStream messagedbg(  "MessageTags",   false);
+static SCIRun::DebugStream internaldbg( "InternalDeps",  false);
+static SCIRun::DebugStream dwdbg(       "DetailedDWDBG", false);
+static SCIRun::DebugStream waitout(     "WaitTimes",     false);
 
 // for debugging - set the var name to watch one in the scrubout
 static std::string dbgScrubVar   = "";
@@ -690,7 +690,7 @@ DetailedTasks::createScrubCounts()
   if (scrubout.active()) {
     scrubout << Parallel::getMPIRank() << " scrub counts:\n";
     scrubout << Parallel::getMPIRank() << " DW/Patch/Matl/Label\tCount\n";
-    for (FastHashTableIter<ScrubItem> iter(&(first ? first->scrubCountTable_ : scrubCountTable_)); iter.ok(); ++iter) {
+    for (SCIRun::FastHashTableIter<ScrubItem> iter(&(first ? first->scrubCountTable_ : scrubCountTable_)); iter.ok(); ++iter) {
       const ScrubItem* rec = iter.get_key();
       scrubout << rec->dw << '/' << (rec->patch ? rec->patch->getID() : 0) << '/' << rec->matl << '/' << rec->label->getName()
                << "\t\t" << rec->count << '\n';
@@ -1825,13 +1825,13 @@ DetailedTask::getName() const
   name_ = std::string(task->getName());
 
   if (patches != 0) {
-    ConsecutiveRangeSet patchIDs;
+    SCIRun::ConsecutiveRangeSet patchIDs;
     patchIDs.addInOrder(PatchIDIterator(patches->getVector().begin()), PatchIDIterator(patches->getVector().end()));
     name_ += std::string(" (Patches: ") + patchIDs.toString() + ")";
   }
 
   if (matls != 0) {
-    ConsecutiveRangeSet matlSet;
+    SCIRun::ConsecutiveRangeSet matlSet;
     matlSet.addInOrder(matls->getVector().begin(), matls->getVector().end());
     name_ += std::string(" (Matls: ") + matlSet.toString() + ")";
   }

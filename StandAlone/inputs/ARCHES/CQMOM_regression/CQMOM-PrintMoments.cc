@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <iostream>
 
-using namespace std;
 
 //This is a "dummy" version of the CQMOM solver that will step through the algorithm
 //and output to commadn line  whenver a given moment of the system is required.  In this way  

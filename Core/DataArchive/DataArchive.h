@@ -54,8 +54,7 @@
 
 namespace Uintah {
 
-  using namespace SCIRun;
-
+  
   class VarLabel;
   class DataWarehouse;
   class LoadBalancer;
@@ -117,8 +116,8 @@ namespace Uintah {
         std::string datafilename;
       };
 
-      typedef HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
-      typedef HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
+      typedef SCIRun::HashTable<VarnameMatlPatch, DataFileInfo> VarHashMap;
+      typedef SCIRun::HashTableIter<VarnameMatlPatch, DataFileInfo> VarHashMapIterator;
 
       //! Top of DataArchive structure for storing hash maps of variable data
       //! - containing data for each time step.
@@ -164,7 +163,7 @@ namespace Uintah {
 
           std::string         d_globaldata;
 
-          ConsecutiveRangeSet d_matls;  // materials available this timestep
+          SCIRun::ConsecutiveRangeSet d_matls;  // materials available this timestep
 
           GridP         d_grid;
           bool          d_initialized;
@@ -253,9 +252,9 @@ namespace Uintah {
       // How long does a patch live?  Not variable specific.
       void queryLifetime( double & min, double & max, const Patch * patch );
 
-      ConsecutiveRangeSet queryMaterials( const std::string & varname,
-                                          const Patch       * patch,
-                                                int           index );
+      SCIRun::ConsecutiveRangeSet queryMaterials( const std::string & varname,
+                                                  const Patch       * patch,
+                                                  int           index );
 
       int queryNumMaterials( const Patch* patch, int index );
 
@@ -357,7 +356,7 @@ namespace Uintah {
       // These are here for the LockingHandle interface.  The names should
       // match those found in Core/Datatypes/Datatype.h.
       int ref_cnt;
-      Mutex lock;
+      SCIRun::Mutex lock;
 
       // This is added to allow simple geometric scaling of the entire domain
       void setCellScale( Vector& s ){ d_cell_scale = s; }
@@ -415,7 +414,7 @@ namespace Uintah {
       int d_processor;
       int d_numProcessors;
 
-      Mutex d_lock;
+      SCIRun::Mutex d_lock;
     
       std::string d_particlePositionName;
 
@@ -429,7 +428,7 @@ namespace Uintah {
                               const int              levelIndex,
                               const int              index );
 
-      static DebugStream dbg;
+      static SCIRun::DebugStream dbg;
   };
 
 

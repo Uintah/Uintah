@@ -19,7 +19,6 @@
 // Specification (ups) file.
 
 
-using namespace std;
 
 bool isCylInsideRVE(double partDia, double RVEsize,
                        double xCent, double yCent);

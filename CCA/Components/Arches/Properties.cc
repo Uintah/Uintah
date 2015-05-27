@@ -469,7 +469,7 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
           IntVector currcell(ii,jj,kk);
 
           double vol =cellinfo->sns[jj]*cellinfo->stb[kk]*cellinfo->sew[ii];
-          if (Abs(filterdrhodt[currcell]/vol) < 1.0e-9){
+          if (std::abs(filterdrhodt[currcell]/vol) < 1.0e-9){
               filterdrhodt[currcell] = 0.0;
           }
         }

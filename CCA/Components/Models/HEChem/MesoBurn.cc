@@ -51,7 +51,7 @@ using namespace Uintah;
 using namespace std;
 //__________________________________   
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("MODELS_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 const double MesoBurn::EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 const double ONE_YEAR_MICROSECONDS = 3.1536e13;
@@ -564,8 +564,8 @@ void MesoBurn::computeModelSources(const ProcessorGroup*,
 
     /* All Material Data */
     int numAllMatls = d_sharedState->getNumMatls();
-    StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
-    StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
+    SCIRun::StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
+    SCIRun::StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();

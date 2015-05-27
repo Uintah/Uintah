@@ -41,8 +41,8 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "SLIP_DOING_COUT:+, SLIP_DBG_COUT:+"
-static DebugStream cout_doing("SLIP_DOING_COUT", false);
-static DebugStream cout_dbg("SLIP_DBG_COUT", false);
+static SCIRun::DebugStream cout_doing("SLIP_DOING_COUT", false);
+static SCIRun::DebugStream cout_dbg("SLIP_DBG_COUT", false);
 
 /* ______________________________________________________________________
  Function~  read_MicroSlip_BC_inputs--   

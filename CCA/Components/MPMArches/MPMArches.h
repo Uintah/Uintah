@@ -84,7 +84,6 @@ namespace SCIRun {
 
 namespace Uintah {
 
-using namespace SCIRun;
 
 
  const TypeDescription* fun_getTypeDescription(cutcell*);

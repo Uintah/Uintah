@@ -58,8 +58,8 @@ using namespace std;
 //  To turn on the output
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+,PASSIVE_SCALAR_DBG_COUT:+"
 //  PASSIVE_SCALAR_DBG:  dumps out during problemSetup 
-static DebugStream cout_doing("MODELS_DOING_COUT", false);
-static DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
+static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
+static SCIRun::DebugStream cout_dbg("PASSIVE_SCALAR_DBG_COUT", false);
 //______________________________________________________________________              
 PassiveScalar::PassiveScalar(const ProcessorGroup* myworld, 
                              ProblemSpecP& params,

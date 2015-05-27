@@ -57,8 +57,8 @@ using namespace std;
 //__________________________________
 //  To turn on the output
 //  setenv SCI_DEBUG "LINEEXTRACT_DBG_COUT:+" 
-static DebugStream cout_doing("LINEEXTRACT_DOING_COUT", false);
-static DebugStream cout_dbg("LINEEXTRACT_DBG_COUT", false);
+static SCIRun::DebugStream cout_doing("LINEEXTRACT_DOING_COUT", false);
+static SCIRun::DebugStream cout_dbg("LINEEXTRACT_DBG_COUT", false);
 //______________________________________________________________________              
 lineExtract::lineExtract(ProblemSpecP& module_spec,
                          SimulationStateP& sharedState,
@@ -601,8 +601,8 @@ void lineExtract::doAnalysis(const ProcessorGroup* pg,
         double dxDir = dx[d_lines[l]->loopDir];
         double tmp = stepSize/dxDir;
         
-        int step = RoundUp(tmp);
-        step = Max(step, 1);
+        int step = SCIRun::RoundUp(tmp);
+        step = SCIRun::Max(step, 1);
         
         Box patchDomain = patch->getExtraBox();
         if(level->getIndex() > 0){ // ignore extra cells on fine patches

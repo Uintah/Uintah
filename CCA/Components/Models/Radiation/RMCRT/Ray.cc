@@ -731,7 +731,7 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
   // finest level:
   if ( d_whichROI_algo == patch_based ) {          // patch_based we know the number of ghostCells
 
-    int maxElem = Max( d_halo.x(), d_halo.y(), d_halo.z() );
+    int maxElem = SCIRun::Max( d_halo.x(), d_halo.y(), d_halo.z() );
     tsk->requires( abskg_dw,     d_abskgLabel,     gac, maxElem);
     tsk->requires( sigma_dw,     d_sigmaT4Label,   gac, maxElem);
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, maxElem);
@@ -816,9 +816,10 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
   //__________________________________
   // retrieve the coarse level data
   // compute the level dependent variables that are constant
-  StaticArray< constCCVariable< T > > abskg(maxLevels);
-  StaticArray< constCCVariable< T > >sigmaT4OverPi(maxLevels);
-  StaticArray< constCCVariable<int> >cellType(maxLevels);
+
+  SCIRun::StaticArray< constCCVariable< T > > abskg(maxLevels);
+  SCIRun::StaticArray< constCCVariable< T > >sigmaT4OverPi(maxLevels);
+  SCIRun::StaticArray< constCCVariable<int> >cellType(maxLevels);
   constCCVariable< T > abskg_fine;
   constCCVariable< T > sigmaT4OverPi_fine;
 
@@ -1772,9 +1773,9 @@ void Ray::computeCellType( const ProcessorGroup*,
                            const IntVector& fineLevel_ROI_Hi,
                            vector<IntVector>& regionLo,
                            vector<IntVector>& regionHi,
-                           StaticArray< constCCVariable< T > >& sigmaT4OverPi,
-                           StaticArray< constCCVariable< T > >& abskg,
-                           StaticArray< constCCVariable< int > >& cellType,
+                           SCIRun::StaticArray< constCCVariable< T > >& sigmaT4OverPi,
+                           SCIRun::StaticArray< constCCVariable< T > >& abskg,
+                           SCIRun::StaticArray< constCCVariable< int > >& cellType,
                            unsigned long int& nRaySteps,
                            double& sumI,
                            MTRand& mTwister)
@@ -2145,9 +2146,9 @@ template void  Ray::updateSumI_ML< double> ( Vector&,
                                              const IntVector&,
                                              vector<IntVector>&,
                                              vector<IntVector>&,
-                                             StaticArray< constCCVariable< double > >& sigmaT4OverPi,
-                                             StaticArray< constCCVariable<double> >& abskg,
-                                             StaticArray< constCCVariable< int > >& cellType,
+                                             SCIRun::StaticArray< constCCVariable< double > >& sigmaT4OverPi,
+                                             SCIRun::StaticArray< constCCVariable<double> >& abskg,
+                                             SCIRun::StaticArray< constCCVariable< int > >& cellType,
                                              unsigned long int& ,
                                              double& ,
                                              MTRand&);
@@ -2165,9 +2166,9 @@ template void  Ray::updateSumI_ML< float> ( Vector&,
                                              const IntVector&,
                                              vector<IntVector>&,
                                              vector<IntVector>&,
-                                             StaticArray< constCCVariable< float > >& sigmaT4OverPi,
-                                             StaticArray< constCCVariable< float > >& abskg,
-                                             StaticArray< constCCVariable< int > >& cellType,
+                                             SCIRun::StaticArray< constCCVariable< float > >& sigmaT4OverPi,
+                                             SCIRun::StaticArray< constCCVariable< float > >& abskg,
+                                             SCIRun::StaticArray< constCCVariable< int > >& cellType,
                                              unsigned long int& ,
                                              double& ,
                                              MTRand&);

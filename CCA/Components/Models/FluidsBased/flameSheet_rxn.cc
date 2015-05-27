@@ -50,7 +50,7 @@
 
 using namespace Uintah;
 using namespace std;
-static DebugStream cout_doing("MODELS_DOING_COUT", false);
+static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 //______________________________________________________________________
 // flame sheet approach for laminar diffusion flames.
@@ -156,8 +156,8 @@ void flameSheet_rxn::problemSetup(GridP&, SimulationStateP& in_state,
   react_ps->getWithDefault("smear_initialDistribution_knob",       
                             d_smear_initialDistribution_knob,       0);
                             
-  if( Floor(d_f_stoic) == -9        ||  Floor(d_del_h_comb) == -9 ||    // bulletproofing
-      Floor(d_T_oxidizer_inf) == -9 ||  Floor(d_T_fuel_init) == -9 ) {
+  if( SCIRun::Floor(d_f_stoic) == -9        ||  SCIRun::Floor(d_del_h_comb) == -9 ||    // bulletproofing
+      SCIRun::Floor(d_T_oxidizer_inf) == -9 ||  SCIRun::Floor(d_T_fuel_init) == -9 ) {
     ostringstream warn;
     warn << " ERROR FlameSheet_rxn: Input variable(s) not specified \n" 
          << "\n f_stoichometric        "<< d_f_stoic

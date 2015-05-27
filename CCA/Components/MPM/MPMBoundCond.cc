@@ -35,7 +35,7 @@
 using namespace Uintah;
 using namespace std;
 
-static DebugStream dbg_BC("MPM_BC", false);
+static SCIRun::DebugStream dbg_BC("MPM_BC", false);
 
 MPMBoundCond::MPMBoundCond()
 {

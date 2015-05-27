@@ -249,12 +249,12 @@ TimeStepInfo* getTimeStepInfo(DataArchive *archive,
     for (int l=0; l<numLevels; l++) {
       LevelP level = (*grid)->getLevel(l);
       const Patch* patch = *(level->patchesBegin());
-      ConsecutiveRangeSet matls =
+      SCIRun::ConsecutiveRangeSet matls =
 	archive->queryMaterials(vars[i], patch, timestep);
       if (matls.size() > 0) {
 
         // copy the list of materials
-        for (ConsecutiveRangeSet::iterator matlIter = matls.begin();
+        for (SCIRun::ConsecutiveRangeSet::iterator matlIter = matls.begin();
              matlIter != matls.end(); matlIter++)
           varInfo.materials.push_back(*matlIter);
 
@@ -491,10 +491,10 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
   pd->num = 0;
 
   // figure out which material we're interested in
-  ConsecutiveRangeSet allMatls =
+  SCIRun::ConsecutiveRangeSet allMatls =
     archive->queryMaterials(variable_name, patch, timestep);
 
-  ConsecutiveRangeSet matlsForVar;
+  SCIRun::ConsecutiveRangeSet matlsForVar;
   if (material<0) {
     matlsForVar = allMatls;
   }
@@ -508,7 +508,7 @@ ParticleDataRaw* readParticleData(DataArchive *archive,
   // first get all the particle subsets so that we know how many total
   // particles we'll have
   std::vector<ParticleVariable<T>*> particle_vars;
-  for( ConsecutiveRangeSet::iterator matlIter =
+  for( SCIRun::ConsecutiveRangeSet::iterator matlIter =
 	 matlsForVar.begin(); matlIter != matlsForVar.end(); matlIter++ )
   {
     int matl = *matlIter;

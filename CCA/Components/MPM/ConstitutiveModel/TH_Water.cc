@@ -181,9 +181,9 @@ void TH_Water::computeStableTimestep(const Patch* patch,
       double c_2 = dp_drho + dp_de * press/(rhoM * rhoM);
 
       c_dil=sqrt(c_2);
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -303,9 +303,9 @@ void TH_Water::computeStressTensor(const PatchSubset* patches,
       c_dil=sqrt(c_2);
 
       Vector pvelocity_idx = pvelocity[idx];
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                       std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
                                                                                 
       // Compute artificial viscosity term
 //      if (flag->d_artificial_viscosity) {

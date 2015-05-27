@@ -56,7 +56,7 @@ WARNING
 #include <vector>
 
 namespace Uintah {
-  using namespace SCIRun;
+  
     class InletStream {
     public:
       InletStream();
