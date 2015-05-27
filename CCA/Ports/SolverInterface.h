@@ -110,14 +110,12 @@ namespace Uintah {
   class SolverInterface : public UintahParallelPort {
   public:
     SolverInterface()
-    {
-      rhsIntegralLabel_ = VarLabel::create("poisson_rhs_integral", sum_vartype::getTypeDescription());
-      refValueLabel_    = VarLabel::create("poisson_ref_value_offset", sum_vartype::getTypeDescription());
-    }
+    {}
     virtual ~SolverInterface()
     {
-      VarLabel::destroy(rhsIntegralLabel_);
-      VarLabel::destroy(refValueLabel_);
+      for (int i=0;  i < varLabels_.size(); ++i) {
+        VarLabel::destroy(varLabels_[i]);
+      }
     }
 
     virtual SolverParameters* readParameters( ProblemSpecP     & params,
@@ -151,22 +149,37 @@ namespace Uintah {
      \param bLabel Varlabel of the Poisson system right hand side (RHS). The RHS MUST live in the 
      newDW (i.e. be modifiable).
      The remaining parameters take the standard form of other Uintah tasks.
+     \param rkStage: In a multistep integration scheme, Uintah is incapable of dealing
+     with multiple reductions on the same variable. Hence the need for a stage number
+     (e.g. rkStage) to create unique varlabels
      */
     template <typename FieldT>
     void scheduleEnforceSolvability( const LevelP & level,
                                      SchedulerP   & sched,
                                      const MaterialSet  * matls,
-                                     const VarLabel     * bLabel)
+                                     const VarLabel     * bLabel,
+                                     const int rkStage = 1)
     {
-      Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral",
-                                      this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel);;
-      tskIntegral->computes( rhsIntegralLabel_ );
+      std::stringstream strRKStage;
+      strRKStage << rkStage;
+      const std::string varName = "poisson_rhs_integral" + strRKStage.str();
+      VarLabel* rhsIntegralLabel = VarLabel::find(varName);
+      if (rhsIntegralLabel == NULL) {
+        rhsIntegralLabel = VarLabel::create(varName, sum_vartype::getTypeDescription());
+        varLabels_.push_back(rhsIntegralLabel);
+      }
+
+      Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral" + strRKStage.str(),
+                                      this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel,
+                                      rhsIntegralLabel);
+      tskIntegral->computes( rhsIntegralLabel );
       tskIntegral->requires( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
       sched->addTask(tskIntegral, level->eachPatch(), matls);
       
-      Task* tskSolvability = scinew Task("SolverInterface::enforceSolvability",
-                                         this, &SolverInterface::enforceSolvability<FieldT>, bLabel);
-      tskSolvability->requires( Uintah::Task::NewDW, rhsIntegralLabel_ );
+      Task* tskSolvability = scinew Task("SolverInterface::enforceSolvability"+ strRKStage.str(),
+                                         this, &SolverInterface::enforceSolvability<FieldT>, bLabel,
+                                         rhsIntegralLabel);
+      tskSolvability->requires( Uintah::Task::NewDW, rhsIntegralLabel );
       tskSolvability->modifies( bLabel );
       sched->addTask(tskSolvability, level->eachPatch(), matls);
     }
@@ -185,19 +198,30 @@ namespace Uintah {
                                     SchedulerP   & sched,
                                     const MaterialSet  * matls,
                                     const VarLabel     * xLabel,
+                                    const int rkStage = 1,
                                     const IntVector refCell = IntVector(0,0,0),
                                     const double refValue = 0.0)
     {
+      std::stringstream strRKStage;
+      strRKStage << rkStage;
+      const std::string varName = "poisson_ref_value_offset" + strRKStage.str();
+      VarLabel* refValueLabel = VarLabel::find(varName);
+      if (refValueLabel == NULL) {
+        refValueLabel = VarLabel::create(varName, sum_vartype::getTypeDescription());
+        varLabels_.push_back(refValueLabel);
+      }
+
       Task* tskFindDiff = scinew Task("SolverInterface::findRefValueDiff",
                                       this, &SolverInterface::findRefValueDiff<FieldT>, xLabel,
-                                      refCell, refValue);
-      tskFindDiff->computes( refValueLabel_ );
+                                      refValueLabel, refCell, refValue);
+      tskFindDiff->computes( refValueLabel );
       tskFindDiff->requires( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
       sched->addTask(tskFindDiff, level->eachPatch(), matls);
       
       Task* tskSetRefValue = scinew Task("SolverInterface::setRefValue",
-                                         this, &SolverInterface::setRefValue<FieldT>, xLabel);
-      tskSetRefValue->requires( Uintah::Task::NewDW, refValueLabel_ );
+                                         this, &SolverInterface::setRefValue<FieldT>, xLabel,
+                                         refValueLabel);
+      tskSetRefValue->requires( Uintah::Task::NewDW, refValueLabel );
       tskSetRefValue->modifies( xLabel );
       sched->addTask(tskSetRefValue, level->eachPatch(), matls);
     }
@@ -206,7 +230,7 @@ namespace Uintah {
   private:
     SolverInterface(const SolverInterface&);
     SolverInterface& operator=(const SolverInterface&);
-    const Uintah::VarLabel *rhsIntegralLabel_, *refValueLabel_;
+    std::vector<VarLabel*> varLabels_;
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -225,6 +249,7 @@ namespace Uintah {
                             Uintah::DataWarehouse* old_dw,
                             Uintah::DataWarehouse* new_dw,
                             const VarLabel         * xLabel,
+                          VarLabel         * refValueLabel,
                           const IntVector refCell,
                           const double refValue)
     {
@@ -239,7 +264,7 @@ namespace Uintah {
             const double cellValue = x[refCell];
             refValueDiff = refValue - cellValue;
           }
-          new_dw->put( sum_vartype(refValueDiff), refValueLabel_ );
+          new_dw->put( sum_vartype(refValueDiff), refValueLabel );
         }
       }
     }
@@ -256,7 +281,8 @@ namespace Uintah {
                             const Uintah::MaterialSubset* materials,
                             Uintah::DataWarehouse* old_dw,
                             Uintah::DataWarehouse* new_dw,
-                            const VarLabel         * bLabel)
+                            const VarLabel         * bLabel,
+                            VarLabel* rhsIntegralLabel)
     {
       for( int ip=0; ip<patches->size(); ++ip ) {
         const Uintah::Patch* const patch = patches->get(ip);
@@ -272,7 +298,8 @@ namespace Uintah {
           }
           // divide by total volume.
           rhsIntegral /= patch->getLevel()->totalCells();
-          new_dw->put( sum_vartype(rhsIntegral), rhsIntegralLabel_ );
+          std::cout << "rhs integral [" << patch->getID() << "] = " << rhsIntegral << std::endl;
+          new_dw->put( sum_vartype(rhsIntegral), rhsIntegralLabel );
         }
       }
     }
@@ -287,7 +314,8 @@ namespace Uintah {
                             const Uintah::MaterialSubset* materials,
                             Uintah::DataWarehouse* old_dw,
                             Uintah::DataWarehouse* new_dw,
-                            const VarLabel         * xLabel)
+                            const VarLabel         * xLabel,
+                            VarLabel* refValueLabel)
     {
       // once we've computed the total integral, subtract it from the poisson rhs
       for( int ip=0; ip<patches->size(); ++ip ){
@@ -295,7 +323,7 @@ namespace Uintah {
         for( int im=0; im<materials->size(); ++im ){
           int matl = materials->get(im);
           sum_vartype refValueDiff_;
-          new_dw->get( refValueDiff_, refValueLabel_ );
+          new_dw->get( refValueDiff_, refValueLabel );
           const double refValueDiff = refValueDiff_;
           FieldT x;
           new_dw->getModifiable(x, xLabel, im, patch);
@@ -318,7 +346,8 @@ namespace Uintah {
                             const Uintah::MaterialSubset* materials,
                             Uintah::DataWarehouse* old_dw,
                             Uintah::DataWarehouse* new_dw,
-                            const VarLabel         * bLabel)
+                            const VarLabel         * bLabel,
+                            VarLabel * rhsIntegralLabel)
     {
       // once we've computed the total integral, subtract it from the poisson rhs
       for( int ip=0; ip<patches->size(); ++ip ){
@@ -326,8 +355,9 @@ namespace Uintah {
         for( int im=0; im<materials->size(); ++im ){
           int matl = materials->get(im);
           sum_vartype rhsIntegral_;
-          new_dw->get( rhsIntegral_, rhsIntegralLabel_ );
+          new_dw->get( rhsIntegral_, rhsIntegralLabel );
           double rhsIntegral = rhsIntegral_;
+          std::cout << "rhs integral after reduction [" << patch->getID() << "] = " << rhsIntegral << std::endl;
           FieldT b;
           new_dw->getModifiable(b, bLabel, im, patch);
           for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
