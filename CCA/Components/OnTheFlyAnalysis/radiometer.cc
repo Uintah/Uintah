@@ -44,7 +44,7 @@ using namespace std;
           TO DO
       - Clean up the hardwiring in the problem setup
 ______________________________________________________________________*/
-static SCIRun::DebugStream cout_doing("radiometer", false);
+static DebugStream cout_doing("radiometer", false);
 
 OnTheFly_radiometer::OnTheFly_radiometer(ProblemSpecP& module_spec,
                                          SimulationStateP& sharedState,

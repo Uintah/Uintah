@@ -58,13 +58,16 @@
 #include <cmath>
 #include <algorithm>
 
+using namespace SCIRun;
+using namespace std;
+using namespace Uintah;
 
 // declarations
 void usage(const std::string& badarg, const std::string& progname);
-void printParticleID(Uintah::DataArchive* da, int mat, 
+void printParticleID(DataArchive* da, int mat, 
 const bool tslow_set, const bool tsup_set, 
 unsigned long & time_step_lower, unsigned long & time_step_upper,
-const Uintah::Box& box);
+const Box& box);
 
 //borrowed from puda.h
 void findTimestep_loopLimits( const bool tslow_set, 
@@ -81,7 +84,7 @@ int main(int argc, char** argv)
    */
   double xmin = 0.0, ymin = 0.0, zmin = 0.0;
   double xmax = 1.0, ymax = 1.0, zmax = 1.0;
-  std::string filebase;
+  string filebase;
 
   int mat = -1;
   unsigned long time_step_lower = 0;
@@ -89,14 +92,14 @@ int main(int argc, char** argv)
   bool tslow_set = false;
   bool tsup_set = false;;
 
-  // set defaults for std::cout
-  std::cout.setf(std::ios::scientific,std::ios::floatfield);
-  std::cout.precision(8);
+  // set defaults for cout
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(8);
   /*
    * Parse arguments
    */
   for(int i=1;i<argc;i++){
-    std::string s=argv[i];
+    string s=argv[i];
     if(s == "-box"){
       xmin = atof(argv[++i]);
       ymin = atof(argv[++i]);
@@ -125,41 +128,41 @@ int main(int argc, char** argv)
   filebase = argv[argc-1];
 
   if(filebase == "" || filebase == argv[0]){
-    std::cerr << "No archive file specified\n";
+    cerr << "No archive file specified\n";
     usage("", argv[0]);
   }
 
   try {
-    Uintah::DataArchive* da = scinew Uintah::DataArchive(filebase);
+    DataArchive* da = scinew DataArchive(filebase);
 
     // Setup box
-    Uintah::Point lower(xmin,ymin,zmin);
-    Uintah::Point upper(xmax,ymax,zmax);
-    Uintah::Box box(lower, upper);
+    Point lower(xmin,ymin,zmin);
+    Point upper(xmax,ymax,zmax);
+    Box box(lower, upper);
     
     // Get the particle IDs
     printParticleID(da, mat, tslow_set, tsup_set, time_step_lower, 
          time_step_upper, box);
 
-  } catch (SCIRun::Exception& e) {
-    std::cerr << "Caught exception: " << e.message() << std::endl;
+  } catch (Exception& e) {
+    cerr << "Caught exception: " << e.message() << endl;
     abort();
   } catch(...){
-    std::cerr << "Caught unknown exception\n";
+    cerr << "Caught unknown exception\n";
     abort();
   }
 }
 
 void usage(const std::string& badarg, const std::string& progname)
 {
-  if(badarg != "") std::cerr << "Error parsing argument: " << badarg << std::endl;
+  if(badarg != "") cerr << "Error parsing argument: " << badarg << endl;
 
-  std::cerr << "Usage: " << progname << "[options] <archive file>\n\n";
-  std::cerr << "Valid options are:\n";
-  std::cerr << "  -box <xmin> <ymin> <zmin> <xmax> <ymax> <zmax> (required)\n";
-  std::cerr << "  -mat <material id>\n";
-  std::cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
-  std::cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
+  cerr << "Usage: " << progname << "[options] <archive file>\n\n";
+  cerr << "Valid options are:\n";
+  cerr << "  -box <xmin> <ymin> <zmin> <xmax> <ymax> <zmax> (required)\n";
+  cerr << "  -mat <material id>\n";
+  cerr << "  -timesteplow <int>  (only outputs timestep from int)\n";
+  cerr << "  -timestephigh <int> (only outputs timesteps upto int)\n";
   exit(1);
 }
 
@@ -168,19 +171,19 @@ void usage(const std::string& badarg, const std::string& progname)
 // Print particle IDs
 //
 ////////////////////////////////////////////////////////////////////////////
-void printParticleID(Uintah::DataArchive* da, int mat, 
+void printParticleID(DataArchive* da, int mat, 
                     const bool tslow_set, 
                     const bool tsup_set,
                     unsigned long & time_step_lower,
                     unsigned long & time_step_upper,
-                    const Uintah::Box& box)
+                    const Box& box)
 {
-  // Uintah::Box
-  std::cerr << "Selction box = " << box << std::endl;
+  // Box
+  cerr << "Selction box = " << box << endl;
 
   // Check if the particle variable p.particleId and p.x are available
-  std::vector<std::string> vars;
-  std::vector<const Uintah::TypeDescription*> types;
+  vector<string> vars;
+  vector<const Uintah::TypeDescription*> types;
   da->queryVariables(vars, types);
   ASSERTEQ(vars.size(), types.size());
   bool variableFound = false;
@@ -189,14 +192,14 @@ void printParticleID(Uintah::DataArchive* da, int mat,
     if (var == "p.particleID" || var == "p.x") variableFound = true;
   }
   if (!variableFound) {
-    std::cerr << "p.particleID or p.x not found\n"; 
+    cerr << "p.particleID or p.x not found\n"; 
     exit(1);
   }
 
   // Now that the variable has been found, get the data for the
   // desired timesteps from the archive
-  std::vector<int> index;
-  std::vector<double> times;
+  vector<int> index;
+  vector<double> times;
   da->queryTimesteps(index, times);
   ASSERTEQ(index.size(), times.size());
   findTimestep_loopLimits(tslow_set, tsup_set,times, time_step_lower, 
@@ -206,43 +209,43 @@ void printParticleID(Uintah::DataArchive* da, int mat,
   for(unsigned long t=time_step_lower;t<=time_step_upper;t++){
 
   double time = times[t];
-  Uintah::GridP grid = da->queryGrid(t);
+  GridP grid = da->queryGrid(t);
 
   // Loop thru all the levels
   for(int l=0;l<grid->numLevels();l++){
-    Uintah::LevelP level = grid->getLevel(l);
+    LevelP level = grid->getLevel(l);
 
     // Loop thru all the patches
-    Uintah::Level::const_patchIterator iter = level->patchesBegin(); 
+    Level::const_patchIterator iter = level->patchesBegin(); 
     int patchIndex = 0;
     for(; iter != level->patchesEnd(); iter++){
-      const Uintah::Patch* patch = *iter;
+      const Patch* patch = *iter;
       ++patchIndex; 
 
       // Search for p.x
       std::string var = "p.x";
 
       // loop thru all the materials
-      SCIRun::ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
-      SCIRun::ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
+      ConsecutiveRangeSet matls = da->queryMaterials(var, patch, t);
+      ConsecutiveRangeSet::iterator matlIter = matls.begin(); 
       for(; matlIter != matls.end(); matlIter++){
         int matl = *matlIter;
         if (mat != -1 && matl != mat) continue;
 
-        Uintah::ParticleVariable<Uintah::Point> point;
+        ParticleVariable<Point> point;
         da->query(point, var, matl, patch, t);
-        Uintah::ParticleSubset* pset = point.getParticleSubset();
-        Uintah::ParticleVariable<Uintah::long64> pid;
+        ParticleSubset* pset = point.getParticleSubset();
+        ParticleVariable<long64> pid;
         da->query(pid, "p.particleID", matl, patch, t);
         if(pset->numParticles() > 0){
-          Uintah::ParticleSubset::iterator iter = pset->begin();
+          ParticleSubset::iterator iter = pset->begin();
           for(;iter != pset->end(); iter++){
 	     if (box.contains(point[*iter])) {
-               std::cout << time << " " << patchIndex << " " << matl ;
-               std::cout << " " << pid[*iter];
-               std::cout << " " << point[*iter](0) 
+               cout << time << " " << patchIndex << " " << matl ;
+               cout << " " << pid[*iter];
+               cout << " " << point[*iter](0) 
                     << " " << point[*iter](1)
-                    << " " << point[*iter](2) << std::endl;
+                    << " " << point[*iter](2) << endl;
 	     }
           }
         }
@@ -255,7 +258,7 @@ void printParticleID(Uintah::DataArchive* da, int mat,
 void
 findTimestep_loopLimits( const bool tslow_set, 
                                  const bool tsup_set,
-                                 const std::vector<double> times,
+                                 const vector<double> times,
                                  unsigned long & time_step_lower,
                                  unsigned long & time_step_upper )
 {
@@ -263,14 +266,14 @@ findTimestep_loopLimits( const bool tslow_set,
     time_step_lower = 0;
   }
   else if( time_step_lower >= times.size() ) {
-    std::cerr << "timesteplow must be between 0 and " << times.size()-1 << "\n";
+    cerr << "timesteplow must be between 0 and " << times.size()-1 << "\n";
     abort();
   }
   if( !tsup_set ) {
     time_step_upper = times.size() - 1;
   }
   else if( time_step_upper >= times.size() ) {
-    std::cerr << "timestephigh must be between 0 and " << times.size()-1 << "\n";
+    cerr << "timestephigh must be between 0 and " << times.size()-1 << "\n";
     abort();
   }
 }

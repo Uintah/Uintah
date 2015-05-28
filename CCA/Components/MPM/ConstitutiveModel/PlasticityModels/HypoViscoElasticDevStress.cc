@@ -28,7 +28,7 @@
 
 using namespace std;
 using namespace Uintah;
-static SCIRun::DebugStream dbg("HypoViscoElasticDevStress", false);
+static DebugStream dbg("HypoViscoElasticDevStress", false);
 
 HypoViscoElasticDevStress::HypoViscoElasticDevStress(ProblemSpecP& ps)
 {  

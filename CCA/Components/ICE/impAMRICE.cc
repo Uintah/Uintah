@@ -45,8 +45,8 @@
 using namespace std;
 using namespace Uintah;
 
-static SCIRun::DebugStream cout_doing("ICE_DOING_COUT", false);
-static SCIRun::DebugStream cout_dbg("impAMRICE_DBG", false);
+static DebugStream cout_doing("ICE_DOING_COUT", false);
+static DebugStream cout_dbg("impAMRICE_DBG", false);
 
 impAMRICE::impAMRICE(const ProcessorGroup* myworld)
   : AMRICE(myworld)

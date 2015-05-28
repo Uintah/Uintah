@@ -73,8 +73,8 @@
 using namespace Uintah;
 using namespace std;
 
-static SCIRun::DebugStream cout_doing("AMRMPM", false);
-static SCIRun::DebugStream amr_doing("AMRMPM", false);
+static DebugStream cout_doing("AMRMPM", false);
+static DebugStream amr_doing("AMRMPM", false);
 
 //#define USE_DEBUG_TASK
 //#define DEBUG_VEL
@@ -98,7 +98,7 @@ static SCIRun::DebugStream amr_doing("AMRMPM", false);
 //  Need to Add gimp interpolation
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern SCIRun::Mutex cerrLock;
+extern Mutex cerrLock;
 
 AMRMPM::AMRMPM(const ProcessorGroup* myworld) :SerialMPM(myworld)
 {

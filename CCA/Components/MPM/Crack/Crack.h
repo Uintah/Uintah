@@ -48,7 +48,7 @@
 #include <CCA/Components/MPM/Crack/CrackGeometry.h>
 
 namespace Uintah {
-   
+   using namespace SCIRun;
    using std::vector;
    using std::string;
 

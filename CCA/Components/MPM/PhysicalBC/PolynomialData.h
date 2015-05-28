@@ -33,6 +33,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
 /*****
 
@@ -53,12 +54,12 @@ GENERAL INFORMATION
 
  public:
 
-   PolynomialData(ProblemSpecP& ps,const SCIRun::Point& bottom, const SCIRun::Point& top);
+   PolynomialData(ProblemSpecP& ps,const Point& bottom, const Point& top);
    ~PolynomialData();
    void outputProblemSpec(ProblemSpecP& ps);
    void loadData();
    double interpolateRadial(const int polyNum, const double theta);
-   double interpolateValue(const SCIRun::Point& test_pt);
+   double interpolateValue(const Point& test_pt);
 
    std::string d_endCapName;
    double d_endCapLow, d_endCapHigh;   
@@ -75,7 +76,7 @@ GENERAL INFORMATION
    std::vector<double> d_polyRange;
 
    double d_length;
-   SCIRun::Point d_top, d_bottom;
+   Point d_top, d_bottom;
    double d_thetaBegin, d_thetaEnd;
  };
 

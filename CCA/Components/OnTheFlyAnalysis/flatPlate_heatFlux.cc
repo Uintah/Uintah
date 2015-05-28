@@ -47,8 +47,8 @@ using namespace std;
 //______________________________________________________________________ 
 //  To turn on the output
 //  setenv SCI_DEBUG "FLATPLATE_HEATFLUX_DBG_COUT:+" 
-static SCIRun::DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
-static SCIRun::DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
+static DebugStream cout_doing("FLATPLATE_HEATFLUX_DOING_COUT", false);
+static DebugStream cout_dbg("FLATPLATE_HEATFLUX_DBG_COUT", false);
 //______________________________________________________________________              
 flatPlate_heatFlux::flatPlate_heatFlux(ProblemSpecP& module_spec,
                                        SimulationStateP& sharedState,

@@ -54,7 +54,7 @@ using namespace std;
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
-static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 const double DDT1::d_EPSILON   = 1e-6;   /* stop epsilon for Bisection-Newton method */
 
@@ -780,8 +780,8 @@ void DDT1::computeBurnLogic(const ProcessorGroup*,
     constCCVariable<double> prodRho, prodRho2;
     // Domain Wide Variables
     constCCVariable<double> press_CC; 
-    SCIRun::StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
-    SCIRun::StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
 
 
     Vector dx = patch->dCell();
@@ -1222,8 +1222,8 @@ void DDT1::computeModelSources(const ProcessorGroup*,
     
     // Domain Wide Variables
     constCCVariable<double> press_CC; 
-    SCIRun::StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
-    SCIRun::StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
 
     Vector dx = patch->dCell();
 

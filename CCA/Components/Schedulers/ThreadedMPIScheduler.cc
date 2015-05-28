@@ -45,19 +45,19 @@ using namespace Uintah;
 extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
-extern SCIRun::DebugStream taskdbg;
-extern SCIRun::DebugStream mpidbg;
-extern SCIRun::DebugStream waitout;
-extern SCIRun::DebugStream execout;
+extern DebugStream taskdbg;
+extern DebugStream mpidbg;
+extern DebugStream waitout;
+extern DebugStream execout;
 
 extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
-static SCIRun::DebugStream threadedmpi_dbg(             "ThreadedMPI_DBG",             false);
-static SCIRun::DebugStream threadedmpi_timeout(         "ThreadedMPI_TimingsOut",      false);
-static SCIRun::DebugStream threadedmpi_queuelength(     "ThreadedMPI_QueueLength",     false);
-static SCIRun::DebugStream threadedmpi_threaddbg(       "ThreadedMPI_ThreadDBG",       false);
-static SCIRun::DebugStream threadedmpi_compactaffinity( "ThreadedMPI_CompactAffinity", true);
+static DebugStream threadedmpi_dbg(             "ThreadedMPI_DBG",             false);
+static DebugStream threadedmpi_timeout(         "ThreadedMPI_TimingsOut",      false);
+static DebugStream threadedmpi_queuelength(     "ThreadedMPI_QueueLength",     false);
+static DebugStream threadedmpi_threaddbg(       "ThreadedMPI_ThreadDBG",       false);
+static DebugStream threadedmpi_compactaffinity( "ThreadedMPI_CompactAffinity", true);
 
 ThreadedMPIScheduler::ThreadedMPIScheduler( const ProcessorGroup*       myworld,
                                             const Output*               oport,
@@ -232,7 +232,7 @@ ThreadedMPIScheduler::createSubScheduler()
 
     // Create TaskWorker threads for the subscheduler
     char name[1024];
-    SCIRun::ThreadGroup* subGroup = new SCIRun::ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
+    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
       TaskWorker* worker = scinew TaskWorker(subsched, i);
       subsched->t_worker[i] = worker;
@@ -371,7 +371,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
   }
 
   for (int i = 0; i < numThreads_; i++) {
-    t_worker[i]->resetWaittime(SCIRun::Time::currentSeconds());
+    t_worker[i]->resetWaittime(Time::currentSeconds());
   }
 
   // The main task loop
@@ -530,7 +530,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
     emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
 
-    double time = SCIRun::Time::currentSeconds();
+    double time = Time::currentSeconds();
     double totalexec = time - d_lasttime;
 
     d_lasttime = time;
@@ -673,7 +673,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     }
 
     // TODO - need to clean this up (APH - 01/22/15)
-    double time  = SCIRun::Time::currentSeconds();
+    double time  = Time::currentSeconds();
 //    double rtime = time - d_lasttime;
     d_lasttime = time;
 //    threadedmpi_timeout << "ThreadedMPIScheduler: TOTAL                                    " << total << '\n';
@@ -831,7 +831,7 @@ TaskWorker::run()
   while (true) {
     d_runsignal.wait(d_runmutex); // wait for main thread signal
     d_runmutex.unlock();
-    d_waittime += SCIRun::Time::currentSeconds() - d_waitstart;
+    d_waittime += Time::currentSeconds() - d_waitstart;
 
     if (d_quit) {
       if (taskdbg.active()) {
@@ -877,7 +877,7 @@ TaskWorker::run()
     d_runmutex.lock();
     d_task = NULL;
     d_iteration = 0;
-    d_waitstart = SCIRun::Time::currentSeconds();
+    d_waitstart = Time::currentSeconds();
     d_scheduler->d_nextsignal.conditionSignal();
     d_scheduler->d_nextmutex.unlock();
   }

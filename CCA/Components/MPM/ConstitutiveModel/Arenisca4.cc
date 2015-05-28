@@ -479,9 +479,9 @@ void Arenisca4::computeStableTimestep(const Patch* patch,
     // store the maximum
     c_dil = sqrt((bulk + four_third*shear)*(pvolume[idx]/pmass[idx]));
 
-    WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                     std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                     std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
 
   // Compute the stable timestep based on maximum value of
@@ -752,7 +752,7 @@ void Arenisca4::computeStressTensor(const PatchSubset* patches,
         // magnitude of the strain rate.  MH!: I don't have a reference for this equation.
         //
         // tau = T1*(epsdot)^(-T2) = T1*(1/epsdot)^T2, modified to avoid division by zero.
-        double tau = d_cm.T1_rate_dependence*std::pow(1.0/max(D.Norm(), 1.0e-15),d_cm.T2_rate_dependence);
+        double tau = d_cm.T1_rate_dependence*Pow(1.0/max(D.Norm(), 1.0e-15),d_cm.T2_rate_dependence);
 
         // RH and rh are defined by eq. 6.93 in the book chapter, but there seems to be a sign error
         // in the text, and I've rewritten it to avoid computing the exponential twice.
@@ -819,9 +819,9 @@ void Arenisca4::computeStressTensor(const PatchSubset* patches,
       double rho_cur = pmass[idx]/pvolume[idx];
              c_dil = sqrt((bulk+four_third*shear)/rho_cur);
 
-      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {
@@ -1368,7 +1368,7 @@ updateISV:
 // (10) Check whether the isotropic component of the return has changed sign, as this
 //      would indicate that the cap apex has moved past the trial stress, indicating
 //      too much plastic strain in the return.
-        if(SCIRun::Sign(I1_trial - sigma_new.Trace())!=SCIRun::Sign(I1_trial - I1_0)){
+    if(Sign(I1_trial - sigma_new.Trace())!=Sign(I1_trial - I1_0)){
       eta_out = eta_mid;
       if( i >= imax ){
         // solution failed to converge within the allowable iterations, which means
@@ -1477,7 +1477,7 @@ double Arenisca4::computeX(const double& evp,const double& P3)
     }
     else{
       // This is an expensive calculation, but fastpow() may cause errors.
-      X = p0*std::pow(1.0 + evp, 1.0/(p0*p1*P3));
+      X = p0*Pow(1.0 + evp, 1.0/(p0*p1*P3));
     }
 
     if(Kf!=0.0 && evp<=ev0) { // ------------------------------------------- Fluid Effects
@@ -1752,7 +1752,7 @@ double cosTheta[] = {1.,0.7572888982693721,0.1469729508840787,-0.534686930168567
 		k++;
       // To avoid the cost of computing pow() to get theta, and then sin(), cos(),
       // we use a lookup table defined above by sinV and cosV.
-	  // phi = pi_half*std::pow(2.0,-0.25*n);
+	  // phi = pi_half*Pow(2.0,-0.25*n);
 	  // theta = pi_fourth*n;
 	  // Cartesian vector for the spherical {r,theta,phi}  
 	  double x = r_test_norm*cosTheta[n]*sinPhi[n],
@@ -1917,7 +1917,7 @@ int Arenisca4::computeYieldFunction(const Matrix3& sigma,
 #ifdef MHfastfcns		  
 		  double sin3theta = -0.5*J3*fasterpow(3.0/J2,1.5);
 #else
-		  //double sin3theta = -0.5*J3*std::pow(3.0/J2,1.5);
+		  //double sin3theta = -0.5*J3*Pow(3.0/J2,1.5);
 		  double sin3theta = -0.5*J3*sqrt(27.0/(J2*J2*J2));
 #endif		  
 		  Gamma = 0.5*(1 + sin3theta + (1./psi)*(1. - sin3theta));
@@ -1930,10 +1930,10 @@ int Arenisca4::computeYieldFunction(const Matrix3& sigma,
 #ifdef MHfastfcns		  
 		  double theta = one_third*asin(-0.5*J3*fasterpow(3.0/J2,1.5));
 #else
-		  //double theta = one_third*asin(-0.5*J3*std::pow(3.0/J2,1.5));
+		  //double theta = one_third*asin(-0.5*J3*Pow(3.0/J2,1.5));
 		  double theta = one_third*asin(-0.5*J3*sqrt(27.0/(J2*J2*J2)));
 #endif		  
-		  //double theta = one_third*asin(-0.5*J3*std::pow(3.0/J2,1.5));
+		  //double theta = one_third*asin(-0.5*J3*Pow(3.0/J2,1.5));
 		  Gamma = 2*sqrt_three/(3.0-sinphi)*(cos(theta)-sinphi*sin(theta)/sqrt_three);
 	  }
   }
@@ -1960,7 +1960,7 @@ int Arenisca4::computeYieldFunction(const Matrix3& sigma,
     // wishes to run without porosity, and no cap function is used, i.e. fc=1
 
     // **Elliptical Cap Function: (fc)**
-    // fc = sqrt(1.0 - std::pow((Kappa-I1mZ)/(Kappa-X)),2.0);
+    // fc = sqrt(1.0 - Pow((Kappa-I1mZ)/(Kappa-X)),2.0);
     // faster version: fc2 = fc^2
     double fc2 = 1.0 - ((Kappa-I1mZ)/(Kappa-X))*((Kappa-I1mZ)/(Kappa-X));
     if(J2 > Gamma*Gamma*Ff*Ff*fc2 ) YIELD = 1;

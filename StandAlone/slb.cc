@@ -65,11 +65,13 @@
 // 10. Compensate for jobs with no particles (divide domain evenly)
 // Zoltan
 
+using namespace Uintah;
+using namespace std;
 
-void bisect(const std::string& div, int num, int factor, 
-            Uintah::Primes::FactorType factors, const Uintah::IntVector& low, 
-            const Uintah::IntVector& high, const Uintah::Array3<float>& weights,
-            const Uintah::LevelP& level, Uintah::ProblemSpecP& level_ups, Uintah::IntVector& extraCells)
+void bisect(const string& div, int num, int factor, 
+            Uintah::Primes::FactorType factors, const IntVector& low, 
+            const IntVector& high, const Array3<float>& weights,
+            const LevelP& level, ProblemSpecP& level_ups, IntVector& extraCells)
 {
   static int levels_of_recursion = -1;
 
@@ -94,25 +96,25 @@ void bisect(const std::string& div, int num, int factor,
   else if(div[num] == 'z')
     index=2;
   else {
-    throw Uintah::InternalError(std::string("bad bisection axis: ")+div[num], __FILE__, __LINE__);
+    throw InternalError(string("bad bisection axis: ")+div[num], __FILE__, __LINE__);
   }
 
   if(factor == -1){
     static int idx = 0;
-    Uintah::Point low_point = level->getNodePosition(low);
-    Uintah::Point high_point = level->getNodePosition(high);
-    Uintah::IntVector res = high - low;
+    Point low_point = level->getNodePosition(low);
+    Point high_point = level->getNodePosition(high);
+    IntVector res = high - low;
 
-    Uintah::ProblemSpecP box = level_ups->appendChild("Box");
+    ProblemSpecP box = level_ups->appendChild("Box");
     box->appendElement("label", idx);
     box->appendElement("lower", low_point);
     box->appendElement("upper", high_point);
     
-    if (extraCells != Uintah::IntVector(0,0,0))
+    if (extraCells != IntVector(0,0,0))
       box->appendElement("extraCells", extraCells);
     box->appendElement("resolution", res);
 
-    std::cerr << idx++ << ": patch: " << low << "-" << high << ',' 
+    cerr << idx++ << ": patch: " << low << "-" << high << ',' 
          << low_point << "-" << high_point << '\n';
 
 
@@ -121,10 +123,10 @@ void bisect(const std::string& div, int num, int factor,
 
     levels_of_recursion++;
     for (int qq = 0; qq < levels_of_recursion*2; qq++) {
-      std::cout << ' ';
+      cout << ' ';
     }
-    std::cout << "Bisect: dir " << div[num] << " factor: " << factors[factor] << ' ' 
-         << low << '-' << high << std::endl;
+    cout << "Bisect: dir " << div[num] << " factor: " << factors[factor] << ' ' 
+         << low << '-' << high << endl;
 
     int number = static_cast<int>(factors[factor]);  // quiet the sgi compiler
 
@@ -133,20 +135,20 @@ void bisect(const std::string& div, int num, int factor,
 
     float total = 0;
 
-    std::vector<float> sums(h-l);
+    vector<float> sums(h-l);
     for(int i = l; i<h; i++){
-      Uintah::IntVector slab_low = low;
+      IntVector slab_low = low;
       slab_low[index] = i;
-      Uintah::IntVector slab_high = high;
+      IntVector slab_high = high;
       slab_high[index] = i;
       double sum = 0;
-      for(Uintah::CellIterator iter(slab_low, slab_high); !iter.done(); iter++) {
+      for(CellIterator iter(slab_low, slab_high); !iter.done(); iter++) {
         sum += weights[*iter];
-        //std::cout << weights[*iter] << ' ';
+        //cout << weights[*iter] << ' ';
       }
       total += sum;
-      //std::cout << sum << ' ' << total << '\n';
-      //std::cerr << "sum[" << i-l << ": " << slab_low << "-" << slab_high << ": " << sum << '\n';
+      //cout << sum << ' ' << total << '\n';
+      //cerr << "sum[" << i-l << ": " << slab_low << "-" << slab_high << ": " << sum << '\n';
       sums[i-l] = total;
     }
     //total = 0;
@@ -160,7 +162,7 @@ void bisect(const std::string& div, int num, int factor,
     for(int i = 0 ; i < number; i ++){
       double w1 = weight_per * i;
       double w2 = weight_per * (i+1);
-      //std::cout << weight_per << ' ' << w1 << ' ' << w2 << '\n';
+      //cout << weight_per << ' ' << w1 << ' ' << w2 << '\n';
       int s = 0;
       int e = 0;
 
@@ -175,13 +177,13 @@ void bisect(const std::string& div, int num, int factor,
       // find the upper end, compensating for 0's.
       float high_sum = sums[e];
       while((sums[e] <= w2 || high_sum >= sums[e]) && e < h-l) {
-        //std::cout << e << ' ' << high_sum << ' ' << sums[e] << '\n';
+        //cout << e << ' ' << high_sum << ' ' << sums[e] << '\n';
         high_sum = sums[e];
         e++;
       }
-      Uintah::IntVector new_low = low;
+      IntVector new_low = low;
       new_low[index] = s+l;
-      Uintah::IntVector new_high = high;
+      IntVector new_high = high;
       new_high[index] = e+l;
       next_s = e;
 
@@ -195,8 +197,8 @@ void usage( char *prog_name );
 
 void
 parseArgs( int argc, char *argv[], 
-           int & nump, float & weight, std::string & infile, std::string & outfile,
-           std::string & divisions, int & submultiples)
+           int & nump, float & weight, string & infile, string & outfile,
+           string & divisions, int & submultiples)
 {
   if( argc < 4 || argc > 9 ) {
     usage( argv[0] );
@@ -204,12 +206,12 @@ parseArgs( int argc, char *argv[],
 
   weight = atof( argv[1] );
   if( weight < -1.0 || weight > 1.0 ) {
-    std::cerr << "Weight must be between 0.0 and 1.0\n";
+    cerr << "Weight must be between 0.0 and 1.0\n";
     exit( 1 );
   }
   nump = atoi( argv[2] );
   if( nump < 1 ) {
-    std::cerr << "Number of patches must be greater than 0.\n";
+    cerr << "Number of patches must be greater than 0.\n";
     exit( 1 );
   }
 
@@ -221,12 +223,12 @@ parseArgs( int argc, char *argv[],
     if (strcmp(argv[i], "-div") == 0) {
       i++;
       if (i >= argc) {
-        std::cerr << "-div option needs an argument (i.e., -div xyz)\n";
+        cerr << "-div option needs an argument (i.e., -div xyz)\n";
         exit( 1 );
       }
       for (unsigned int j = 0; j < strlen(argv[i]); j++) {
         if (argv[i][j] != 'x' && argv[i][j] != 'y' && argv[i][j] != 'z') {
-          std::cerr << "Divisions std::string must be a combination of x, y, or z\n";
+          cerr << "Divisions string must be a combination of x, y, or z\n";
           exit( 1 );
         }
       }
@@ -235,17 +237,17 @@ parseArgs( int argc, char *argv[],
     else if (strcmp(argv[i], "-sub") == 0) {
       i++;
       if (i >= argc) {
-        std::cerr << "-sub option needs an argument (i.e., -sub 2)\n";
+        cerr << "-sub option needs an argument (i.e., -sub 2)\n";
         exit( 1 );
       }
       submultiples = atoi(argv[i]);
       if (submultiples < 1) {
-        std::cerr << "Number of Submultiples must be greater than 0\n";
+        cerr << "Number of Submultiples must be greater than 0\n";
         exit( 1 );
       }
     }
     else {
-      std::cerr << "Unknown option " << argv[i] << '\n';
+      cerr << "Unknown option " << argv[i] << '\n';
       exit( 1 );
     }
   }
@@ -254,15 +256,15 @@ parseArgs( int argc, char *argv[],
 void
 usage( char *prog_name )
 {
-  std::cout << "Usage: " << prog_name << " weight num_patches infile outfile "
+  cout << "Usage: " << prog_name << " weight num_patches infile outfile "
        << "[-div <pattern>] [-sub <submult>] \n";
-  std::cout << "    weight: 0.0 - 1.0.  0.0 => all cells, 1.0 => all particles\n";
-  std::cout << "    num_patches: number of patches to divvy up domain into.\n";
-  std::cout << "    infile:      .ups file to read in.\n";
-  std::cout << "    outfile:     modified .ups file.\n";
-  std::cout << "    -div <pattern>:     OPTIONAL.  pattern is some combination\n"
+  cout << "    weight: 0.0 - 1.0.  0.0 => all cells, 1.0 => all particles\n";
+  cout << "    num_patches: number of patches to divvy up domain into.\n";
+  cout << "    infile:      .ups file to read in.\n";
+  cout << "    outfile:     modified .ups file.\n";
+  cout << "    -div <pattern>:     OPTIONAL.  pattern is some combination\n"
        << "        of x,y, and z, where the default is xyz\n";
-  std::cout << "    -sub <submult>:     divide original resolution by submult"
+  cout << "    -sub <submult>:     divide original resolution by submult"
        << "        for quicker estimation\n";
   exit( 1 );
 }
@@ -276,40 +278,40 @@ main(int argc, char *argv[])
 
     int    nump;
     float  weight;
-    std::string infile;
-    std::string outfile;
+    string infile;
+    string outfile;
     int submultiples = 1;
-    std::string divisions = "l";
+    string divisions = "l";
     
     parseArgs( argc, argv, nump, weight, infile, outfile,
                divisions, submultiples );
     
     // Get the problem specification
 
-    Uintah::ProblemSpecP ups = Uintah::ProblemSpecReader().readInputFile( infile );
+    ProblemSpecP ups = ProblemSpecReader().readInputFile( infile );
 
     if( !ups ) {
-      throw Uintah::ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
+      throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
     }
     
     if( ups->getNodeName() != "Uintah_specification" ) {
-      throw Uintah::ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
+      throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
     }
     
-    const Uintah::ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
+    const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     
     // Setup the initial grid
-    Uintah::GridP grid=scinew Uintah::Grid();
-    Uintah::IntVector extraCells(0,0,0);
+    GridP grid=scinew Grid();
+    IntVector extraCells(0,0,0);
 
     // save and remove the extra cells before the problem setup
-    Uintah::ProblemSpecP g = ups->findBlock("Grid");
-    for( Uintah::ProblemSpecP levelspec = g->findBlock("Level"); levelspec != 0;
+    ProblemSpecP g = ups->findBlock("Grid");
+    for( ProblemSpecP levelspec = g->findBlock("Level"); levelspec != 0;
          levelspec = levelspec->findNextBlock("Level")) {
-      for (Uintah::ProblemSpecP box = levelspec->findBlock("Box"); box != 0 ; 
+      for (ProblemSpecP box = levelspec->findBlock("Box"); box != 0 ; 
            box = box->findNextBlock("Box")) {
         
-        Uintah::ProblemSpecP cells = box->findBlock("extraCells");
+        ProblemSpecP cells = box->findBlock("extraCells");
         if (cells != 0) {
           box->get("extraCells", extraCells);
           box->removeChild(cells);
@@ -320,76 +322,76 @@ main(int argc, char *argv[])
     grid->problemSetup(ups, world, false);  
     
     for (int l = 0; l < grid->numLevels(); l++) {
-      const Uintah::LevelP &level = grid->getLevel(l);
+      const LevelP &level = grid->getLevel(l);
       
-      Uintah::IntVector low, high;
+      IntVector low, high;
       level->findCellIndexRange(low, high);
-      Uintah::IntVector diff = high-low;
+      IntVector diff = high-low;
       long cells = diff.x()*diff.y()*diff.z();
       if(cells != level->totalCells())
-        throw Uintah::ProblemSetupException("Currently slb can only handle square grids", __FILE__, __LINE__);
+        throw ProblemSetupException("Currently slb can only handle square grids", __FILE__, __LINE__);
 
       Uintah::Primes::FactorType factors;
       int n = Uintah::Primes::factorize(nump, factors);
-      std::cerr << nump << ": ";
+      cerr << nump << ": ";
       for(int i=0;i<n;i++){
-        std::cerr << factors[i] << " ";
+        cerr << factors[i] << " ";
       }
-      std::cerr << '\n';
+      cerr << '\n';
       
-      std::string div = divisions;
+      string div = divisions;
       while(static_cast<int>(div.length()) <= n)
         div += divisions;
       
-      Uintah::Array3<float> weights(low, high);
+      Array3<float> weights(low, high);
       weights.initialize(weight);
       
       // Parse the geometry from the UPS
-      Uintah::ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
-      Uintah::ProblemSpecP mpm = mp->findBlock("MPM");
-      for (Uintah::ProblemSpecP child = mpm->findBlock("material"); child != 0;
+      ProblemSpecP mp = ups->findBlockWithOutAttribute("MaterialProperties");
+      ProblemSpecP mpm = mp->findBlock("MPM");
+      for (ProblemSpecP child = mpm->findBlock("material"); child != 0;
            child = child->findNextBlock("material")) {
-        for (Uintah::ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
+        for (ProblemSpecP geom_obj_ps = child->findBlock("geom_object");
              geom_obj_ps != 0;
              geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-          std::vector<Uintah::GeometryPieceP> pieces;
-          Uintah::GeometryPieceFactory::create(geom_obj_ps, pieces);
+          vector<GeometryPieceP> pieces;
+          GeometryPieceFactory::create(geom_obj_ps, pieces);
           
-          Uintah::GeometryPieceP mainpiece;
+          GeometryPieceP mainpiece;
           if(pieces.size() == 0){
-            throw Uintah::ProblemSetupException("No piece specified in geom_object", __FILE__, __LINE__);
+            throw ProblemSetupException("No piece specified in geom_object", __FILE__, __LINE__);
           } else if(pieces.size() > 1){
-            mainpiece = scinew Uintah::UnionGeometryPiece(pieces);
+            mainpiece = scinew UnionGeometryPiece(pieces);
           } else {
             mainpiece = pieces[0];
           }
           
-          for(Uintah::CellIterator iter(low, high); !iter.done(); iter++){
-            Uintah::Point p = level->getCellPosition(*iter);
+          for(CellIterator iter(low, high); !iter.done(); iter++){
+            Point p = level->getCellPosition(*iter);
             if(mainpiece->inside(p))
               weights[*iter] = 1;
           }
         }
       }
 
-      //      std::cout << "FIRST OUTPUT OF CELLS" << low << '-' << high << '\n';
+      //      cout << "FIRST OUTPUT OF CELLS" << low << '-' << high << '\n';
       //      int blah = 0;
-//       for(Uintah::CellIterator iter(low, high); !iter.done(); iter++){
+//       for(CellIterator iter(low, high); !iter.done(); iter++){
 //         blah++;
-//         std::cout << weights[*iter] << ' ';
+//         cout << weights[*iter] << ' ';
 //         if (blah % 12 == 0)
-//           std::cout << '\n';
+//           cout << '\n';
 //         if (blah % 144 == 0)
-//           std::cout << '\n';
+//           cout << '\n';
 //       }
-//       std::cout << "\n\n";
+//       cout << "\n\n";
       
       int factor = n-1;
       
       // remove the 'Box' entry from the ups - note this should try to
       // remove *all* boxes from the level node
-      Uintah::ProblemSpecP lev = g->findBlock("Level");
-      Uintah::ProblemSpecP box = lev->findBlock("Box");
+      ProblemSpecP lev = g->findBlock("Level");
+      ProblemSpecP box = lev->findBlock("Box");
       
       lev->removeChild(box);
       
@@ -397,13 +399,13 @@ main(int argc, char *argv[])
              extraCells); 
     }
     
-    std::ofstream out(outfile.c_str());
+    ofstream out(outfile.c_str());
     out << ups;
-  } catch (SCIRun::Exception& e) {
-    std::cerr << "Caught exception: " << e.message() << '\n';
+  } catch (Exception& e) {
+    cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
-      std::cerr << "Stack trace: " << e.stackTrace() << '\n';
+      cerr << "Stack trace: " << e.stackTrace() << '\n';
   } catch(...){
-    std::cerr << "Caught unknown exception\n";
+    cerr << "Caught unknown exception\n";
   }
 }

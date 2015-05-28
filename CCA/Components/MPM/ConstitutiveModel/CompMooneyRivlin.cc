@@ -35,6 +35,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/Grid/Level.h>
 #include <Core/Exceptions/ParameterNotFound.h>
+#include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -134,9 +135,9 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
      double mu = 2.*(C1 + C2);
      //double C4 = .5*(C1*(5.*PR-2) + C2*(11.*PR-5)) / (1. - 2.*PR);
      c_dil = sqrt(2.*mu*(1.- PR)*pvolume[idx]/((1.-2.*PR)*pmass[idx]));
-     WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -221,11 +222,11 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
       double rho_cur = pmass[idx]/pvolume[idx];
       c_dil = sqrt((4.*(C1+C2*invar2)/J
                     +8.*(2.*C3/(invar3*invar3*invar3)+C4*(2.*invar3-1.))
-                    -SCIRun::Min((pstress[idx])(0,0),(pstress[idx])(1,1)
+                    -Min((pstress[idx])(0,0),(pstress[idx])(1,1)
                          ,(pstress[idx])(2,2))/J)/rho_cur);
-      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {

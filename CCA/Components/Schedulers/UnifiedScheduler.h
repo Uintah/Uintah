@@ -108,7 +108,7 @@ class UnifiedScheduler : public MPIScheduler  {
     std::string myRankThread();
     
 
-    SCIRun::ConditionVariable          d_nextsignal;           // conditional wait mutex
+    ConditionVariable          d_nextsignal;           // conditional wait mutex
     Mutex                      d_nextmutex;            // next mutex
     Mutex                      schedulerLock;          // scheduler lock (acquire and release quickly)
     UnifiedSchedulerWorker*    t_worker[MAX_THREADS];  // the workers
@@ -163,7 +163,7 @@ class UnifiedScheduler : public MPIScheduler  {
 };
 
 
-class UnifiedSchedulerWorker : public SCIRun::Runnable {
+class UnifiedSchedulerWorker : public Runnable {
 
 public:
   
@@ -182,7 +182,7 @@ public:
 private:
 
   UnifiedScheduler*      d_scheduler;
-  SCIRun::ConditionVariable      d_runsignal;
+  ConditionVariable      d_runsignal;
   Mutex                  d_runmutex;
   bool                   d_quit;
   bool                   d_idle;

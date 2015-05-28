@@ -46,9 +46,9 @@
 #include <time.h>
 
 
-static SCIRun::DebugStream BC_dbg(  "ICE_BC_DBG", false);
-static SCIRun::DebugStream cout_BC_CC("ICE_BC_CC", false);
-static SCIRun::DebugStream cout_BC_FC("ICE_BC_FC", false);
+static DebugStream BC_dbg(  "ICE_BC_DBG", false);
+static DebugStream cout_BC_CC("ICE_BC_CC", false);
+static DebugStream cout_BC_FC("ICE_BC_FC", false);
 namespace Uintah {
   class DataWarehouse;
  
@@ -76,8 +76,8 @@ namespace Uintah {
   //__________________________________
   //  P R E S S U R E        
    void setBC(CCVariable<double>& press_CC,          
-                      SCIRun::StaticArray<CCVariable<double> >& rho_micro,
-                      SCIRun::StaticArray<constCCVariable<double> >& sp_vol,
+                      StaticArray<CCVariable<double> >& rho_micro,
+                      StaticArray<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
                       const std::string& whichVar, 
                       const std::string& kind, 
@@ -89,8 +89,8 @@ namespace Uintah {
                       customBC_localVars* localVars);
              
    void setBC(CCVariable<double>& press_CC,          
-                      SCIRun::StaticArray<CCVariable<double> >& rho_micro,
-                      SCIRun::StaticArray<constCCVariable<double> >& sp_vol,
+                      StaticArray<CCVariable<double> >& rho_micro,
+                      StaticArray<constCCVariable<double> >& sp_vol,
                       const int surroundingMatl_indx,
                       const std::string& whichVar, 
                       const std::string& kind,       // stub function 

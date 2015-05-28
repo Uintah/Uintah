@@ -44,7 +44,8 @@ extern "C"{
 
 //uncomment to debug matricies
 //#define cqmom_dbg
-
+using namespace std;
+using namespace Uintah;
 //-------------------------------------------------------
 
 /**
@@ -161,13 +162,13 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   //check the b vector for realizable space
   for ( int i = 0; i<nEnv; i++ ) {
     if (b[i] < 0) {
-      std::stringstream err_msg;
-      err_msg << "ERROR: Arches: CQMOMInversion: Negative b vector encountered. Moment set: " << std::endl;
+      stringstream err_msg;
+      err_msg << "ERROR: Arches: CQMOMInversion: Negative b vector encountered. Moment set: " << endl;
       for (int i = 0; i<nMom; i++) {
-        err_msg << "m[" << i << "]=" << moments[i] << std::endl;
+        err_msg << "m[" << i << "]=" << moments[i] << endl;
       }
-      throw Uintah::InvalidValue(err_msg.str(),__FILE__,__LINE__);
-      std::cout << std::endl;
+      throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
+      cout << endl;
     }
   }
   
@@ -217,12 +218,12 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   bool status = ( info>0 || info<0 )? false : true;
   
   if (!status) {
-    std::stringstream err_msg;
-    err_msg << "ERROR: Arches: CQMOMInversion: Solving Eigenvalue problem failed. Moment set: " << std::endl;
+    stringstream err_msg;
+    err_msg << "ERROR: Arches: CQMOMInversion: Solving Eigenvalue problem failed. Moment set: " << endl;
     for (int i = 0; i<nMom; i++) {
-      err_msg << "m[" << i << "]=" << moments[i] << std::endl;
+      err_msg << "m[" << i << "]=" << moments[i] << endl;
     }
-    throw Uintah::InvalidValue(err_msg.str(),__FILE__,__LINE__);
+    throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
   }
   
   //_____________
@@ -545,9 +546,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       int dim = N_i[0];
       int nRHS = 1;
       int info;
-      std::vector<int> ipiv(dim);
-      std::vector<double> b (dim);
-      std::vector<double> a (dim*dim);
+      vector<int> ipiv(dim);
+      vector<double> b (dim);
+      vector<double> a (dim*dim);
     
       for (int i = 0; i<dim; i++) {
         b[i] = vanderMom[i];
@@ -667,9 +668,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         int dim = N_i[0];
         int nRHS = 1;
         int info;
-        std::vector<int> ipiv(dim);
-        std::vector<double> b (dim);
-        std::vector<double> a (dim*dim);
+        vector<int> ipiv(dim);
+        vector<double> b (dim);
+        vector<double> a (dim*dim);
       
         for (int i = 0; i<dim; i++) {
           b[i] = vanderMom[i];
@@ -754,9 +755,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         int dim = N_i[0];
         int nRHS = 1;
         int info;
-        std::vector<int> ipiv(dim);
-        std::vector<double> b (dim);
-        std::vector<double> a (dim*dim);
+        vector<int> ipiv(dim);
+        vector<double> b (dim);
+        vector<double> a (dim*dim);
       
         for (int i = 0; i<dim; i++) {
           b[i] = vanderMom[i];
@@ -881,9 +882,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           int dim = N_i[0];
           int nRHS = 1;
           int info;
-          std::vector<int> ipiv(dim);
-          std::vector<double> b (dim);
-          std::vector<double> a (dim*dim);
+          vector<int> ipiv(dim);
+          vector<double> b (dim);
+          vector<double> a (dim*dim);
           
           for (int i = 0; i<dim; i++) {
             b[i] = vanderMom[i];
@@ -970,9 +971,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           int dim = N_i[1];
           int nRHS = 1;
           int info;
-          std::vector<int> ipiv(dim);
-          std::vector<double> b (dim);
-          std::vector<double> a (dim*dim);
+          vector<int> ipiv(dim);
+          vector<double> b (dim);
+          vector<double> a (dim*dim);
           
           for (int i = 0; i<dim; i++) {
             b[i] = vanderMom[i];
@@ -1045,9 +1046,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           int dim = N_i[2];
           int nRHS = 1;
           int info;
-          std::vector<int> ipiv(dim);
-          std::vector<double> b (dim);
-          std::vector<double> a (dim*dim);
+          vector<int> ipiv(dim);
+          vector<double> b (dim);
+          vector<double> a (dim*dim);
           
           for (int i = 0; i<dim; i++) {
             b[i] = vanderMom[i];

@@ -863,7 +863,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     filterWVel.initialize(0.0);
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
-    double start_turbTime = SCIRun::Time::currentSeconds();
+    double start_turbTime = Time::currentSeconds();
 
     d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterUVel, 0);
     d_filter->applyFilter_noPetsc(pc, patch, ccVel, filterVolume, cellType, filterVVel, 1);
@@ -881,7 +881,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: ";
-    proc0cerr << msg << SCIRun::Time::currentSeconds() - start_turbTime << " seconds\n";
+    proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
 
     TAU_PROFILE_START( compute2 );
 
@@ -1332,7 +1332,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             IntVector currCell(colX, colY, colZ);
             double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
             double filter = pow(delta, 1.0/3.0);
-            Cs[currCell] = std::min(Cs[currCell],10.0);
+            Cs[currCell] = Min(Cs[currCell],10.0);
             Cs[currCell] = factor * sqrt(Cs[currCell]);
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos*voidFraction[currCell];
@@ -1349,7 +1349,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             IntVector currCell(colX, colY, colZ);
             double delta = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
             double filter = pow(delta, 1.0/3.0);
-            Cs[currCell] = std::min(Cs[currCell],10.0);
+            Cs[currCell] = Min(Cs[currCell],10.0);
             Cs[currCell] = factor * sqrt(Cs[currCell]);
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos;

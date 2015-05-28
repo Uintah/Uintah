@@ -50,9 +50,9 @@
 
 using namespace Uintah;
 
-SCIRun::DebugStream rdbg("Regridder", false);
-SCIRun::DebugStream dilate_dbg("Regridder_dilate", false);
-SCIRun::DebugStream rreason("RegridReason", false);
+DebugStream rdbg("Regridder", false);
+DebugStream dilate_dbg("Regridder_dilate", false);
+DebugStream rreason("RegridReason", false);
 
 //______________________________________________________________________
 //
@@ -680,11 +680,11 @@ RegridderCommon::scheduleDilation(const LevelP& level)
   Task* dilate_regrid_task = scinew Task("RegridderCommon::Dilate Regrid", this, &RegridderCommon::Dilate,
                                          d_dilatedCellsRegridLabel, filters[regrid_depth], regrid_depth);
 
-  int ngc_stability = SCIRun::Max(stability_depth.x(), stability_depth.y());
-  ngc_stability = SCIRun::Max(ngc_stability, stability_depth.z());
+  int ngc_stability = Max(stability_depth.x(), stability_depth.y());
+  ngc_stability = Max(ngc_stability, stability_depth.z());
 
-  int ngc_regrid = SCIRun::Max(regrid_depth.x(), regrid_depth.y());
-  ngc_regrid = SCIRun::Max(ngc_regrid, regrid_depth.z());
+  int ngc_regrid = Max(regrid_depth.x(), regrid_depth.y());
+  ngc_regrid = Max(ngc_regrid, regrid_depth.z());
 
   dilate_stability_task->requires(Task::NewDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc_stability);
   dilate_regrid_task->requires(Task::NewDW, refineFlagLabel, refineFlag_matls, Ghost::AroundCells, ngc_regrid);
@@ -715,8 +715,8 @@ RegridderCommon::Dilate(const ProcessorGroup*,
   const VarLabel* to_get = d_sharedState->get_refineFlag_label();
 
   int ngc;
-  ngc = SCIRun::Max(depth.x(), depth.y());
-  ngc = SCIRun::Max(ngc, depth.z());
+  ngc = Max(depth.x(), depth.y());
+  ngc = Max(ngc, depth.z());
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

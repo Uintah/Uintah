@@ -47,7 +47,7 @@ using namespace std;
 using namespace Uintah;
 
 
-static SCIRun::DebugStream debug("ShellMat", false);
+static DebugStream debug("ShellMat", false);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -341,9 +341,9 @@ ShellMaterial::computeStableTimestep(const Patch* patch,
 
     // Compute wave speed at each particle, store the maximum
     c_dil = sqrt((bulk + 4.0*mu/3.0)*pvolume[idx]/pmass[idx]);
-    WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                     std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                     std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   Vector dx = patch->dCell();
   WaveSpeed = dx/WaveSpeed;
@@ -782,9 +782,9 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
       Vector pVel = pVelocity[idx];
       double c_dil = sqrt((bulk + 4.*shear/3.)*pVolume_new[idx]/pMass[idx]);
-      WaveSpeed=Vector(std::max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {

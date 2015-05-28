@@ -50,14 +50,17 @@
 #include <cmath>
 #include <algorithm>
 
+using namespace SCIRun;
+using namespace std;
+using namespace Uintah;
 
 void usage(const std::string& badarg, const std::string& progname)
 {
   if(badarg != "")
-    std::cerr << "Error parsing argument: " << badarg << std::endl;
-  std::cerr << "Usage: " << progname << " [options] <archive file>\n\n";
-  std::cerr << "Valid options are:\n";
-  std::cerr << " -mat <material id>\n";
+    cerr << "Error parsing argument: " << badarg << endl;
+  cerr << "Usage: " << progname << " [options] <archive file>\n\n";
+  cerr << "Valid options are:\n";
+  cerr << " -mat <material id>\n";
   exit(1);
 }
 
@@ -70,45 +73,45 @@ int main(int argc, char** argv)
   if (argc <= 1) usage("", argv[0]);
 
   // Parse arguments
-  std::string filebase;
+  string filebase;
   for (int i = 1; i < argc; i++) {
-    std::string s = argv[i];
+    string s = argv[i];
     if (s == "-mat") {
       mat = atoi(argv[++i]);
     }
   }
   filebase = argv[argc-1];
   if(filebase == ""){
-    std::cerr << "No archive file specified\n";
+    cerr << "No archive file specified\n";
     usage("", argv[0]);
   }
 
-  // set defaults for std::cout
-  std::cout.setf(std::ios::scientific,std::ios::floatfield);
-  std::cout.precision(8);
+  // set defaults for cout
+  cout.setf(ios::scientific,ios::floatfield);
+  cout.precision(8);
 
   try {
-    Uintah::DataArchive* da = scinew Uintah::DataArchive(filebase);
+    DataArchive* da = scinew DataArchive(filebase);
     
     //______________________________________________________________________
     //              V A R S U M M A R Y   O P T I O N
-    std::vector<std::string> vars;
-    std::vector<const Uintah::TypeDescription*> types;
+    vector<string> vars;
+    vector<const Uintah::TypeDescription*> types;
     da->queryVariables(vars, types);
     ASSERTEQ(vars.size(), types.size());
-    //std::cout << "There are " << vars.size() << " variables:\n";
+    //cout << "There are " << vars.size() << " variables:\n";
     //for(int i=0;i<(int)vars.size();i++) {
-    //  std::cout << vars[i] << ": " << types[i]->getName() << std::endl;
+    //  cout << vars[i] << ": " << types[i]->getName() << endl;
     //}
 
       
-    std::vector<int> index;
-    std::vector<double> times;
+    vector<int> index;
+    vector<double> times;
     da->queryTimesteps(index, times);
     ASSERTEQ(index.size(), times.size());
-    //std::cout << "There are " << index.size() << " timesteps:\n";
+    //cout << "There are " << index.size() << " timesteps:\n";
     //for(int i=0;i<(int)index.size();i++)
-    //  std::cout << index[i] << ": " << times[i] << std::endl;
+    //  cout << index[i] << ": " << times[i] << endl;
       
     // Var loop
     for(int v=0;v<(int)vars.size();v++){
@@ -133,41 +136,41 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              Uintah::GridP grid = da->queryGrid(t);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
-                Uintah::LevelP level = grid->getLevel(l);
+                LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Uintah::Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patchIterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
-                  const Uintah::Patch* patch = *pIter;
-                  SCIRun::ConsecutiveRangeSet matls = 
+                  const Patch* patch = *pIter;
+                  ConsecutiveRangeSet matls = 
                     da->queryMaterials(var, patch, t);
 
                   // Material loop
-                  SCIRun::ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  ConsecutiveRangeSet::iterator matlIter = matls.begin();
                   for(; matlIter != matls.end(); matlIter++){
                     int matl = *matlIter;
 
                     if (matl != mat) continue;
 
-                    Uintah::ParticleVariable<double> value;
+                    ParticleVariable<double> value;
                     da->query(value, var, matl, patch, t);
-                    Uintah::ParticleSubset* pset = value.getParticleSubset();
+                    ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
-                      Uintah::ParticleSubset::iterator iter = pset->begin();
+                      ParticleSubset::iterator iter = pset->begin();
                       for(;iter != pset->end(); iter++){
-                        min=std::min(min, value[*iter]);
-                        max=std::max(max, value[*iter]);
+                        min=Min(min, value[*iter]);
+                        max=Max(max, value[*iter]);
                       }
                     }
                   } // end material loop
                 } // end patch loop
               } // end level loop
             } // end time loop
-            std::cout << var << " min = " << min << " max = " << max << std::endl;
+            cout << var << " min = " << min << " max = " << max << endl;
           } // end double case
         break;
 
@@ -182,41 +185,41 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              Uintah::GridP grid = da->queryGrid(t);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
-                Uintah::LevelP level = grid->getLevel(l);
+                LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Uintah::Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patchIterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
-                  const Uintah::Patch* patch = *pIter;
-                  SCIRun::ConsecutiveRangeSet matls = 
+                  const Patch* patch = *pIter;
+                  ConsecutiveRangeSet matls = 
                     da->queryMaterials(var, patch, t);
 
                   // Material loop
-                  SCIRun::ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  ConsecutiveRangeSet::iterator matlIter = matls.begin();
                   for(; matlIter != matls.end(); matlIter++){
                     int matl = *matlIter;
 
                     if (matl != mat) continue;
 
-                    Uintah::ParticleVariable<float> value;
+                    ParticleVariable<float> value;
                     da->query(value, var, matl, patch, t);
-                    Uintah::ParticleSubset* pset = value.getParticleSubset();
+                    ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
-                      Uintah::ParticleSubset::iterator iter = pset->begin();
+                      ParticleSubset::iterator iter = pset->begin();
                       for(;iter != pset->end(); iter++){
-                        min=std::min(min, value[*iter]);
-                        max=std::max(max, value[*iter]);
+                        min=Min(min, value[*iter]);
+                        max=Max(max, value[*iter]);
                       }
                     }
                   } // end material loop
                 } // end patch loop
               } // end level loop
             } // end time loop
-            std::cout << var << " min = " << min << " max = " << max << std::endl;
+            cout << var << " min = " << min << " max = " << max << endl;
           } // end float case
         break;
 
@@ -231,41 +234,41 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              Uintah::GridP grid = da->queryGrid(t);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
-                Uintah::LevelP level = grid->getLevel(l);
+                LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Uintah::Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patchIterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
-                  const Uintah::Patch* patch = *pIter;
-                  SCIRun::ConsecutiveRangeSet matls = 
+                  const Patch* patch = *pIter;
+                  ConsecutiveRangeSet matls = 
                     da->queryMaterials(var, patch, t);
 
                   // Material loop
-                  SCIRun::ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  ConsecutiveRangeSet::iterator matlIter = matls.begin();
                   for(; matlIter != matls.end(); matlIter++){
                     int matl = *matlIter;
 
                     if (matl != mat) continue;
 
-                    Uintah::ParticleVariable<int> value;
+                    ParticleVariable<int> value;
                     da->query(value, var, matl, patch, t);
-                    Uintah::ParticleSubset* pset = value.getParticleSubset();
+                    ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
-                      Uintah::ParticleSubset::iterator iter = pset->begin();
+                      ParticleSubset::iterator iter = pset->begin();
                       for(;iter != pset->end(); iter++){
-                        min=std::min(min, value[*iter]);
-                        max=std::max(max, value[*iter]);
+                        min=Min(min, value[*iter]);
+                        max=Max(max, value[*iter]);
                       }
                     }
                   } // end material loop
                 } // end patch loop
               } // end level loop
             } // end time loop
-            std::cout << var << " min = " << min << " max = " << max << std::endl;
+            cout << var << " min = " << min << " max = " << max << endl;
           } // end int case
         break;
 
@@ -280,42 +283,42 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              Uintah::GridP grid = da->queryGrid(t);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
-                Uintah::LevelP level = grid->getLevel(l);
+                LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Uintah::Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patchIterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
-                  const Uintah::Patch* patch = *pIter;
-                  SCIRun::ConsecutiveRangeSet matls = 
+                  const Patch* patch = *pIter;
+                  ConsecutiveRangeSet matls = 
                     da->queryMaterials(var, patch, t);
 
                   // Material loop
-                  SCIRun::ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  ConsecutiveRangeSet::iterator matlIter = matls.begin();
                   for(; matlIter != matls.end(); matlIter++){
                     int matl = *matlIter;
 
                     if (matl != mat) continue;
 
-                    Uintah::ParticleVariable<Uintah::Vector> value;
+                    ParticleVariable<Vector> value;
                     da->query(value, var, matl, patch, t);
-                    Uintah::ParticleSubset* pset = value.getParticleSubset();
+                    ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
-                      Uintah::ParticleSubset::iterator iter = pset->begin();
+                      ParticleSubset::iterator iter = pset->begin();
                       for(;iter != pset->end(); iter++){
-                        min=std::min(min, value[*iter].length2());
-                        max=std::max(max, value[*iter].length2());
+                        min=Min(min, value[*iter].length2());
+                        max=Max(max, value[*iter].length2());
                       }
                     }
                   } // end material loop
                 } // end patch loop
               } // end level loop
             } // end time loop
-            std::cout << var << " min = " << sqrt(min) 
-                 << " max = " << sqrt(max) << std::endl;
+            cout << var << " min = " << sqrt(min) 
+                 << " max = " << sqrt(max) << endl;
           } // end Vector case
         break;
 
@@ -330,42 +333,42 @@ int main(int argc, char** argv)
             unsigned long time_step_upper = times.size()-1;
             unsigned long t=time_step_lower;
             for(; t<=time_step_upper; t++){
-              Uintah::GridP grid = da->queryGrid(t);
+              GridP grid = da->queryGrid(t);
 
               // Level loop
               for(int l=0;l<grid->numLevels();l++){
-                Uintah::LevelP level = grid->getLevel(l);
+                LevelP level = grid->getLevel(l);
 
                 // Patch loop
-                Uintah::Level::const_patchIterator pIter = level->patchesBegin();
+                Level::const_patchIterator pIter = level->patchesBegin();
                 for(; pIter != level->patchesEnd(); pIter++){
-                  const Uintah::Patch* patch = *pIter;
-                  SCIRun::ConsecutiveRangeSet matls = 
+                  const Patch* patch = *pIter;
+                  ConsecutiveRangeSet matls = 
                     da->queryMaterials(var, patch, t);
 
                   // Material loop
-                  SCIRun::ConsecutiveRangeSet::iterator matlIter = matls.begin();
+                  ConsecutiveRangeSet::iterator matlIter = matls.begin();
                   for(; matlIter != matls.end(); matlIter++){
                     int matl = *matlIter;
 
                     if (matl != mat) continue;
 
-                    Uintah::ParticleVariable<Uintah::Matrix3> value;
+                    ParticleVariable<Matrix3> value;
                     da->query(value, var, matl, patch, t);
-                    Uintah::ParticleSubset* pset = value.getParticleSubset();
+                    ParticleSubset* pset = value.getParticleSubset();
                     if(pset->numParticles() > 0){
-                      Uintah::ParticleSubset::iterator iter = pset->begin();
+                      ParticleSubset::iterator iter = pset->begin();
                       for(;iter != pset->end(); iter++){
-                        min=std::min(min, value[*iter].NormSquared());
-                        max=std::max(max, value[*iter].NormSquared());
+                        min=Min(min, value[*iter].NormSquared());
+                        max=Max(max, value[*iter].NormSquared());
                       }
                     }
                   } // end material loop
                 } // end patch loop
               } // end level loop
             } // end time loop
-            std::cout << var << " min = " << sqrt(min) 
-                 << " max = " << sqrt(max) << std::endl;
+            cout << var << " min = " << sqrt(min) 
+                 << " max = " << sqrt(max) << endl;
           } // end Matrix3 case
         break;
 
@@ -377,8 +380,8 @@ int main(int argc, char** argv)
 
         default:
           {
-            std::cerr << "Particle Variable of unknown type: " 
-                 << subtype->getName() << std::endl;
+            cerr << "Particle Variable of unknown type: " 
+                 << subtype->getName() << endl;
           }
         break;
 
@@ -405,11 +408,11 @@ int main(int argc, char** argv)
       } // end switch type
     
     } // end var loop
-  } catch (SCIRun::Exception& e) {
-    std::cerr << "Caught exception: " << e.message() << std::endl;
+  } catch (Exception& e) {
+    cerr << "Caught exception: " << e.message() << endl;
     abort();
   } catch(...){
-    std::cerr << "Caught unknown exception\n";
+    cerr << "Caught unknown exception\n";
     abort();
   }
 }

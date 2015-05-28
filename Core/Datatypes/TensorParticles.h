@@ -43,6 +43,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
 /**************************************
 
@@ -72,9 +73,9 @@ WARNING
   
 ****************************************/
 class TensorParticles;
- typedef SCIRun::LockingHandle<TensorParticles> TensorParticlesHandle;
+typedef LockingHandle<TensorParticles> TensorParticlesHandle;
 
-class TensorParticles : public SCIRun::Datatype {
+class TensorParticles : public Datatype {
 
 public:
   // GROUP: Constructors:

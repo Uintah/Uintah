@@ -37,6 +37,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
 class Box;
 class GeometryPiece;

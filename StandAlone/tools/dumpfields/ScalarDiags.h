@@ -72,7 +72,7 @@ namespace Uintah {
   void describeScalarDiags(std::ostream & os);
   
   std::list<ScalarDiag const *> createScalarDiags(const Uintah::TypeDescription * fldtype, 
-                                                  const SCIRun::FieldSelection & fldselection,
+                                             const FieldSelection & fldselection,
                                              const class TensorDiag * tensorpreop = 0);
 }
 

@@ -52,7 +52,7 @@ using namespace std;
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
-static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 DDT0::DDT0(const ProcessorGroup* myworld,
                          ProblemSpecP& params,
@@ -396,8 +396,8 @@ void DDT0::computeModelSources(const ProcessorGroup*,
     // Stores level of cracking in particles
     constParticleVariable<double> crackRad;   
  
-    SCIRun::StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
-    SCIRun::StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > vol_frac_CC(numAllMatls);
+    StaticArray<constCCVariable<double> > temp_CC(numAllMatls);
 	    
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();

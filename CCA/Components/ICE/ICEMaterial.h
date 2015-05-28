@@ -34,6 +34,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
+  using namespace SCIRun;
   class EquationOfState;
   class GeometryObject;
  

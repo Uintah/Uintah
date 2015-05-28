@@ -59,8 +59,8 @@ using namespace Uintah;
 //  To turn on normal output
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
-static SCIRun::DebugStream cout_doing("HYPRE_DOING_COUT", false);
-static SCIRun::DebugStream cout_dbg("HYPRE_DBG", false);
+static DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_dbg("HYPRE_DBG", false);
 
 //#####################################################################
 // class HypreDriver implementation common to all variable types

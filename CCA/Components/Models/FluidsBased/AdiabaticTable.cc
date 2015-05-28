@@ -64,8 +64,8 @@ using namespace std;
 //  To turn on the output
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+,ADIABATIC_TABLE_DBG_COUT:+"
 //  ADIABATIC_TABLE_DBG:  dumps out during problemSetup
-static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
-static SCIRun::DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_dbg("ADIABATIC_TABLE_DBG_COUT", false);
 
 //______________________________________________________________________              
 AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld, 

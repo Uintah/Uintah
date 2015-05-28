@@ -230,9 +230,9 @@ void NonLocalDruckerPrager::computeStableTimestep(const Patch* patch,
      // store the maximum
 
      c_dil = sqrt((bulk+4.0*shear/3.0)*pvolume[idx]/pmass[idx]);
-     WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -682,9 +682,9 @@ void NonLocalDruckerPrager::computeStressTensor(const PatchSubset* patches,
       // store the maximum
 	
       c_dil = sqrt((bulk+(4.0/3.0)*shear)/(rho_cur[idx]));
-      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {

@@ -63,10 +63,10 @@ using namespace std;
 
 #undef INTEGRAL_TRACTION
 
-static SCIRun::DebugStream cout_doing("RIGID_MPM", false);
+static DebugStream cout_doing("RIGID_MPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern SCIRun::Mutex cerrLock;
+extern Mutex cerrLock;
 
 RigidMPM::RigidMPM(const ProcessorGroup* myworld) :
   SerialMPM(myworld)

@@ -54,8 +54,8 @@ using namespace std;
 //__________________________________
 //  To turn on the output
 //  setenv SCI_DEBUG "particleExtract_DBG_COUT:+" 
-static SCIRun::DebugStream cout_doing("particleExtract_DOING_COUT", false);
-static SCIRun::DebugStream cout_dbg("particleExtract_DBG_COUT", false);
+static DebugStream cout_doing("particleExtract_DOING_COUT", false);
+static DebugStream cout_dbg("particleExtract_DBG_COUT", false);
 //______________________________________________________________________              
 particleExtract::particleExtract(ProblemSpecP& module_spec,
                          SimulationStateP& sharedState,

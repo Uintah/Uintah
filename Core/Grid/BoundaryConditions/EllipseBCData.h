@@ -62,7 +62,8 @@ namespace Uintah {
   University of Utah \n
   */
   
-  
+  using namespace SCIRun;
+
   class EllipseBCData : public BCGeomBase  {
 
    public:

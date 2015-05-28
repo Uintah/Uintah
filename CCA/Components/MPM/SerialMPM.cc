@@ -79,14 +79,14 @@ using namespace Uintah;
 
 using namespace std;
 
-static SCIRun::DebugStream cout_doing("MPM", false);
-static SCIRun::DebugStream cout_dbg("SerialMPM", false);
-static SCIRun::DebugStream cout_convert("MPMConv", false);
-static SCIRun::DebugStream cout_heat("MPMHeat", false);
-static SCIRun::DebugStream amr_doing("AMRMPM", false);
+static DebugStream cout_doing("MPM", false);
+static DebugStream cout_dbg("SerialMPM", false);
+static DebugStream cout_convert("MPMConv", false);
+static DebugStream cout_heat("MPMHeat", false);
+static DebugStream amr_doing("AMRMPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern SCIRun::Mutex cerrLock;
+extern Mutex cerrLock;
 
 
 static Vector face_norm(Patch::FaceType f)
@@ -2279,7 +2279,7 @@ void SerialMPM::addCohesiveZoneForces(const ProcessorGroup*,
     vector<double> S(interpolator->size());
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    SCIRun::StaticArray<NCVariable<Vector> > gext_force(numMPMMatls);
+    StaticArray<NCVariable<Vector> > gext_force(numMPMMatls);
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* cz_matl = d_sharedState->getMPMMaterial( m );
       int dwi = cz_matl->getDWIndex();
@@ -3445,7 +3445,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                     << " T_new = " << pTempNew[idx] << endl;
         }
 
-        pmassNew[idx]     = std::max(pmass[idx]*(1.    - burnFraction),0.);
+        pmassNew[idx]     = Max(pmass[idx]*(1.    - burnFraction),0.);
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
@@ -3977,7 +3977,7 @@ void SerialMPM::interpolateToParticlesAndUpdateMom2(const ProcessorGroup*,
         else{
           rho = rho_init;
         }
-        pmassNew[idx]     = std::max(pmass[idx]*(1.    - burnFraction),0.);
+        pmassNew[idx]     = Max(pmass[idx]*(1.    - burnFraction),0.);
         pvolume[idx]      = pmassNew[idx]/rho;
 
         thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
@@ -4057,8 +4057,8 @@ void SerialMPM::updateCohesiveZones(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    SCIRun::StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
-    SCIRun::StaticArray<constNCVariable<double> > gmass(numMPMMatls);
+    StaticArray<constNCVariable<Vector> > gvelocity(numMPMMatls);
+    StaticArray<constNCVariable<double> > gmass(numMPMMatls);
     //double rho_init[numMPMMatls];
     Vector dx = patch-> dCell();
     for(int m = 0; m < numMPMMatls; m++){

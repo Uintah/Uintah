@@ -32,6 +32,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
 /**************************************
 
@@ -69,7 +70,7 @@ namespace Uintah {
       {
       }
 
-      inline Box(const SCIRun::Point& lower, const SCIRun::Point& upper)
+      inline Box(const Point& lower, const Point& upper)
          : d_lower(lower), d_upper(upper)
       {
       }
@@ -92,16 +93,16 @@ namespace Uintah {
       
       // Do not use this for determining if a point is within a patch
       // The logic is incorrect if there are multiple patches
-       bool contains(const SCIRun::Point& p) const {
+       bool contains(const Point& p) const {
          return p.x() >= d_lower.x() && p.y() >= d_lower.y()
             && p.z() >= d_lower.z() && p.x() < d_upper.x()
             && p.y() < d_upper.y() && p.z() < d_upper.z();
       }
 
-      inline SCIRun::Point lower() const {
+      inline Point lower() const {
          return d_lower;
       }
-      inline SCIRun::Point upper() const {
+      inline Point upper() const {
          return d_upper;
       }
       inline Box intersect(const Box& b) const {
@@ -118,8 +119,8 @@ namespace Uintah {
        friend std::ostream& operator<<(std::ostream& out, const Uintah::Box& b);
 
    private:
-       SCIRun::Point d_lower;
-       SCIRun::Point d_upper;
+      Point d_lower;
+      Point d_upper;
    };
 
 } // End namespace Uintah

@@ -51,7 +51,7 @@ using namespace std;
 //__________________________________
 //  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
-static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 Simple_Burn::Simple_Burn(const ProcessorGroup* myworld, 
                          const ProblemSpecP& params,
@@ -324,8 +324,8 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
 
     // Get all Temperatures for burning check
     int numAllMatls = d_sharedState->getNumMatls();
-    SCIRun::StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
-    SCIRun::StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
+    StaticArray<constCCVariable<double> >  vol_frac_CC(numAllMatls);
+    StaticArray<constCCVariable<double> >  temp_CC(numAllMatls);
     for (int m = 0; m < numAllMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();

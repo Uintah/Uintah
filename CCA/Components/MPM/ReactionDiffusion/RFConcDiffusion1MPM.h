@@ -45,7 +45,7 @@ namespace Uintah {
   public:
     
     RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
-                        std::string diff_type);
+                        string diff_type);
     ~RFConcDiffusion1MPM();
 
     virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 

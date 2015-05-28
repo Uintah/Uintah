@@ -99,7 +99,7 @@ class ThreadedMPIScheduler : public MPIScheduler {
 
     int getAvailableThreadNum();
 
-    SCIRun::ConditionVariable d_nextsignal;
+    ConditionVariable d_nextsignal;
     Mutex             d_nextmutex;             // conditional wait mutex
     TaskWorker*       t_worker[MAX_THREADS];   // workers
     Thread*           t_thread[MAX_THREADS];   // actual threads
@@ -108,7 +108,7 @@ class ThreadedMPIScheduler : public MPIScheduler {
 };
 
 
-class TaskWorker : public SCIRun::Runnable {
+class TaskWorker : public Runnable {
 
   public:
 
@@ -130,7 +130,7 @@ class TaskWorker : public SCIRun::Runnable {
 
     ThreadedMPIScheduler* d_scheduler;
     DetailedTask*         d_task;
-    SCIRun::ConditionVariable     d_runsignal;
+    ConditionVariable     d_runsignal;
     Mutex                 d_runmutex;
     bool                  d_quit;
     int                   d_thread_id;

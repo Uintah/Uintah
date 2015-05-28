@@ -28,6 +28,7 @@
 #include <Core/Grid/Material.h>
 namespace Uintah {
 
+using namespace SCIRun;
 
 /**************************************
      

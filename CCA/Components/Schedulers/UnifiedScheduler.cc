@@ -57,27 +57,27 @@ using namespace Uintah;
 extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
-extern SCIRun::DebugStream taskdbg;
-extern SCIRun::DebugStream mpidbg;
-extern SCIRun::DebugStream waitout;
-extern SCIRun::DebugStream execout;
-extern SCIRun::DebugStream taskorder;
-extern SCIRun::DebugStream taskLevel_dbg;
+extern DebugStream taskdbg;
+extern DebugStream mpidbg;
+extern DebugStream waitout;
+extern DebugStream execout;
+extern DebugStream taskorder;
+extern DebugStream taskLevel_dbg;
 
 extern std::map<std::string, double> waittimes;
 extern std::map<std::string, double> exectimes;
 
 static double Unified_CurrentWaitTime = 0;
 
-static SCIRun::DebugStream unified_dbg(             "Unified_DBG",             false);
-static SCIRun::DebugStream unified_timeout(         "Unified_TimingsOut",      false);
-static SCIRun::DebugStream unified_queuelength(     "Unified_QueueLength",     false);
-static SCIRun::DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
-static SCIRun::DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
+static DebugStream unified_dbg(             "Unified_DBG",             false);
+static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
+static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
+static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
+static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
-  static SCIRun::DebugStream gpu_stats(        "GPUStats",     false);
-         SCIRun::DebugStream use_single_device("SingleDevice", false);
+  static DebugStream gpu_stats(        "GPUStats",     false);
+         DebugStream use_single_device("SingleDevice", false);
 #endif
 
 //______________________________________________________________________
@@ -312,7 +312,7 @@ UnifiedScheduler::createSubScheduler()
 
     // Create UnifiedWorker threads for the subscheduler
     char name[1024];
-    SCIRun::ThreadGroup* subGroup = new SCIRun::ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
+    ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
       UnifiedSchedulerWorker* worker = scinew UnifiedSchedulerWorker(subsched, i);
       subsched->t_worker[i] = worker;
@@ -346,7 +346,7 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     waittimesLock.unlock();
   }
 
-  double taskstart = SCIRun::Time::currentSeconds();
+  double taskstart = Time::currentSeconds();
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -363,7 +363,7 @@ UnifiedScheduler::runTask( DetailedTask*         task,
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  double dtask = SCIRun::Time::currentSeconds() - taskstart;
+  double dtask = Time::currentSeconds() - taskstart;
 
   dlbLock.lock();
   {
@@ -388,14 +388,14 @@ UnifiedScheduler::runTask( DetailedTask*         task,
       postMPISends(task, iteration, thread_id);
     }
     task->done(dws);  // should this be timed with taskstart? - BJW
-    double teststart = SCIRun::Time::currentSeconds();
+    double teststart = Time::currentSeconds();
 
     if (Uintah::Parallel::usingMPI()) {
       // This is per thread, no lock needed.
       sends_[thread_id].testsome(d_myworld);
     }
 
-    mpi_info_.totaltestmpi += SCIRun::Time::currentSeconds() - teststart;
+    mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
 
     // add my timings to the parent scheduler
     if( parentScheduler_ ) {
@@ -537,7 +537,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 
   // signal worker threads to begin executing tasks
   for (int i = 0; i < numThreads_; i++) {
-    t_worker[i]->resetWaittime(SCIRun::Time::currentSeconds());  // reset wait time counter
+    t_worker[i]->resetWaittime(Time::currentSeconds());  // reset wait time counter
     // sending signal to threads to wake them up
     t_worker[i]->d_runmutex.lock();
     t_worker[i]->d_idle = false;
@@ -583,7 +583,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
   emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
   emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
 
-  double time = SCIRun::Time::currentSeconds();
+  double time = Time::currentSeconds();
   double totalexec = time - d_lasttime;
   d_lasttime = time;
 
@@ -724,7 +724,7 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
     }
 
     // TODO - need to clean this up (APH - 01/22/15)
-    double time = SCIRun::Time::currentSeconds();
+    double time = Time::currentSeconds();
 //    double rtime = time - d_lasttime;
     d_lasttime = time;
 //    unified_timeout << "UnifiedScheduler: TOTAL                                    " << total << '\n';
@@ -2198,7 +2198,7 @@ UnifiedSchedulerWorker::run()
   while( true ) {
     d_runsignal.wait(d_runmutex); // wait for main thread signal.
     d_runmutex.unlock();
-    d_waittime += SCIRun::Time::currentSeconds() - d_waitstart;
+    d_waittime += Time::currentSeconds() - d_waitstart;
 
     if (d_quit) {
       if (taskdbg.active()) {
@@ -2236,7 +2236,7 @@ UnifiedSchedulerWorker::run()
     // Signal main thread for next group of tasks.
     d_scheduler->d_nextmutex.lock();
     d_runmutex.lock();
-    d_waitstart = SCIRun::Time::currentSeconds();
+    d_waitstart = Time::currentSeconds();
     d_idle = true;
     d_scheduler->d_nextsignal.conditionSignal();
     d_scheduler->d_nextmutex.unlock();

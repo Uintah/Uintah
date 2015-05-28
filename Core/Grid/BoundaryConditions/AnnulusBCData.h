@@ -46,7 +46,8 @@ namespace Uintah {
 
   */
   
-  
+  using namespace SCIRun;
+
   class AnnulusBCData : public BCGeomBase  {
 
    public:

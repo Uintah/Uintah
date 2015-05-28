@@ -68,7 +68,7 @@
 using namespace std;
 using namespace Uintah;
 
-static SCIRun::DebugStream dbg("ARCHES_RADIATION",false);
+static DebugStream dbg("ARCHES_RADIATION",false);
 
 //****************************************************************************
 // Default constructor for DORadiationModel
@@ -321,7 +321,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   proc0cout << " Radiation Solve: " << endl;
 
-  double solve_start = SCIRun::Time::currentSeconds();
+  double solve_start = Time::currentSeconds();
   rgamma.resize(1,29);    
   sd15.resize(1,481);     
   sd.resize(1,2257);      
@@ -351,7 +351,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   CCVariable<double> ab;
   CCVariable<double> ap;
 
-  SCIRun::StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
+  StaticArray< CCVariable<double> > radiationFlux_old(_radiationFluxLabels.size()); // must always 6, even when reflections are off.
 
   if(reflectionsTurnedOn){
     for (unsigned int i=0; i<  _radiationFluxLabels.size(); i++){
@@ -375,9 +375,9 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
   }
 
 
-  SCIRun::StaticArray< constCCVariable<double> > Intensities((_scatteringOn && !old_DW_isMissingIntensities) ? d_totalOrds : 0);
+  StaticArray< constCCVariable<double> > Intensities((_scatteringOn && !old_DW_isMissingIntensities) ? d_totalOrds : 0);
 
-  SCIRun::StaticArray< CCVariable<double> > IntensitiesRestart((_scatteringOn && old_DW_isMissingIntensities) ? d_totalOrds : 0);
+  StaticArray< CCVariable<double> > IntensitiesRestart((_scatteringOn && old_DW_isMissingIntensities) ? d_totalOrds : 0);
 
   CCVariable<double> scatIntensitySource;  
   constCCVariable<double> scatkt;   //total scattering coefficient
@@ -402,8 +402,8 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
     old_dw->get(scatkt,_scatktLabel, matlIndex , patch,Ghost::None, 0);
   }
 
-  SCIRun::StaticArray< constCCVariable<double> > abskp(_nQn_part);
-  SCIRun::StaticArray< constCCVariable<double> > partTemp(_nQn_part);
+  StaticArray< constCCVariable<double> > abskp(_nQn_part);
+  StaticArray< constCCVariable<double> > partTemp(_nQn_part);
   for (int ix=0;  ix< _nQn_part; ix++){
       old_dw->get(abskp[ix],_abskp_label_vector[ix], matlIndex , patch,Ghost::None, 0  ); 
       old_dw->get(partTemp[ix],_temperature_label_vector[ix], matlIndex , patch,Ghost::None, 0  );
@@ -519,7 +519,7 @@ DORadiationModel::intensitysolve(const ProcessorGroup* pg,
 
   }  // bands loop
 
-  proc0cout << "Total Radiation Solve Time: " << SCIRun::Time::currentSeconds()-solve_start << " seconds\n";
+  proc0cout << "Total Radiation Solve Time: " << Time::currentSeconds()-solve_start << " seconds\n";
 
 }
 // returns the total number of directions, sn*(sn+2)
@@ -575,7 +575,7 @@ DORadiationModel::setLabels(){
 template<class TYPE> 
 void
 //DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < constCCVariable<double> > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
-DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, SCIRun::StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
+DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<double> &scatkt, StaticArray < TYPE > &Intensities, CCVariable<double> &scatIntensitySource,constCCVariable<double> &asymmetryFactor , const Patch* patch, CCVariable<double> &b_sourceArray ){
 
   for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
     b_sourceArray[*iter]-=scatIntensitySource[*iter];
@@ -606,8 +606,8 @@ DORadiationModel::computeScatteringIntensities(int direction, constCCVariable<do
 }
 
 void
-DORadiationModel::computeIntensitySource( const Patch* patch, SCIRun::StaticArray <constCCVariable<double> >&abskp,
-    SCIRun::StaticArray <constCCVariable<double> > &pTemp,
+DORadiationModel::computeIntensitySource( const Patch* patch, StaticArray <constCCVariable<double> >&abskp,
+    StaticArray <constCCVariable<double> > &pTemp,
                   constCCVariable<double>  &abskg,
                   constCCVariable<double>  &gTemp,
                   CCVariable<double> &b_sourceArray){

@@ -67,11 +67,11 @@
 using namespace std;
 using namespace Uintah;
 
-static SCIRun::DebugStream cout_CST("HEP",false);
-static SCIRun::DebugStream cout_CST1("HEP1",false);
-static SCIRun::DebugStream CSTi("HEPi",false);
-static SCIRun::DebugStream CSTir("HEPir",false);
-static SCIRun::DebugStream cout_visco("ViscoPlastic", false);
+static DebugStream cout_CST("HEP",false);
+static DebugStream cout_CST1("HEP1",false);
+static DebugStream CSTi("HEPi",false);
+static DebugStream CSTir("HEPir",false);
+static DebugStream cout_visco("ViscoPlastic", false);
 
 ViscoPlastic::ViscoPlastic(ProblemSpecP& ps, MPMFlags* Mflag) :
   ConstitutiveModel(Mflag), ImplicitCM()
@@ -468,9 +468,9 @@ ViscoPlastic::computeStableTimestep(const Patch* patch,
       c_dil = 0.0;
       pvelocity_idx = Vector(0.0,0.0,0.0);
     }
-    WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                     std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                     std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -970,9 +970,9 @@ ViscoPlastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      WaveSpeed=Vector(std::max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
 
       delete state;
     } //end iterator

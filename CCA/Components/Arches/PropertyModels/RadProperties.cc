@@ -307,7 +307,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     CCVariable<double> abskg; 
     CCVariable<double> abskpt; 
     CCVariable<double> scatkt; 
-    SCIRun::StaticArray< CCVariable<double> > abskp(_nQn_part); 
+    StaticArray< CCVariable<double> > abskp(_nQn_part); 
 
     if ( time_substep == 0 ) { 
       which_dw = old_dw; 
@@ -424,7 +424,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       /////--Other required scalars needed to compute optical props
       std::vector< const VarLabel*> requiredLabels;
       requiredLabels =  _ocalc->getRequiresLabels();  
-      SCIRun::StaticArray< constCCVariable<double> > RequiredScalars(requiredLabels.size());
+      StaticArray< constCCVariable<double> > RequiredScalars(requiredLabels.size());
 
       for (unsigned int i=0; i<requiredLabels.size(); i++){ // unsigned avoids compiler warning
 
@@ -433,7 +433,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
       }
 
       ////--compute the complex index of refraction
-      SCIRun::StaticArray<CCVariable<double> >complexIndexReal(_nQn_part);
+      StaticArray<CCVariable<double> >complexIndexReal(_nQn_part);
 
       if(_ocalc->get_complexIndexBool()){
 
@@ -465,7 +465,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
 
       if (_scatteringOn){  //----scattering props---//
 
-        SCIRun::StaticArray<CCVariable<double> >scatktQuad(_nQn_part);
+        StaticArray<CCVariable<double> >scatktQuad(_nQn_part);
         CCVariable<double> asymmetryParam;
 
         if(time_substep==0) {
@@ -553,7 +553,7 @@ void RadProperties::initialize( const ProcessorGroup* pc,
       CCVariable<double> abskpt;
       new_dw->allocateAndPut( abskpt, _ocalc->get_abskp_label(), matlIndex, patch ); 
       abskpt.initialize(0.0); 
-      SCIRun::StaticArray< CCVariable<double> >abskp(_nQn_part);
+      StaticArray< CCVariable<double> >abskp(_nQn_part);
       for( int i=0; i< _nQn_part; i++){
         new_dw->allocateAndPut( abskp[i], _ocalc->get_abskp_label_vector()[i], matlIndex, patch ); 
         abskp[i].initialize(0.0); 

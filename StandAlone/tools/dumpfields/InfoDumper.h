@@ -49,7 +49,7 @@ namespace Uintah {
   {
   public:
     InfoDumper(DataArchive* da, std::string basedir,
-               const InfoOpts & opts, const SCIRun::FieldSelection & fselect);
+               const InfoOpts & opts, const FieldSelection & fselect);
   
     std::string directoryExt() const { return "info"; }
     void addField(std::string /*fieldname*/, const Uintah::TypeDescription * /*theType*/) {}
@@ -57,7 +57,7 @@ namespace Uintah {
     class Step : public FieldDumper::Step {
     public:
       Step(DataArchive * da, std::string tsdir, int timestep, double time, int index,
-           const InfoOpts & opts, const SCIRun::FieldSelection & fselect);
+           const InfoOpts & opts, const FieldSelection & fselect);
       
       void storeGrid () {}
       void storeField(std::string fieldname, const Uintah::TypeDescription * type);
@@ -68,7 +68,7 @@ namespace Uintah {
       std::string             info_;
       DataArchive*           da_;
       InfoOpts               opts_;
-      const SCIRun::FieldSelection & fselect_;
+      const FieldSelection & fselect_;
     };
     
     //
@@ -82,7 +82,7 @@ namespace Uintah {
     FILE*         filelist_;
     
     InfoOpts               opts_;
-    const SCIRun::FieldSelection & fselect_;
+    const FieldSelection & fselect_;
   };
 
 }

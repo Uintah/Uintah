@@ -50,6 +50,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
  class DataWarehouse;
  class MPMLabel;
  class ProcessorGroup;

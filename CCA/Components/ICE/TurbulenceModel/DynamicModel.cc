@@ -36,7 +36,7 @@
 using namespace Uintah;
 using namespace std;
 
-static SCIRun::DebugStream cout_doing("ICE_DOING_COUT", false);
+static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 DynamicModel::DynamicModel(ProblemSpecP& ps, SimulationStateP& sharedState)
   : Turbulence(ps, sharedState), d_smag() 
@@ -187,8 +187,8 @@ void DynamicModel::computeSmagCoeff(DataWarehouse* new_dw,
                                     CCVariable<double>& meanSIJ)
 {
   double Cs, meanSIJ_hat;
-  SCIRun::StaticArray<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
-  SCIRun::StaticArray<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
+  StaticArray<CCVariable<double> > SIJ(6), SIJ_hat(6), LIJ(6), MIJ(6); 
+  StaticArray<CCVariable<double> > alpha(6), beta(6), beta_hat(6);
   CCVariable<Vector> vel_CC_hat;
   CCVariable<double> vel_prod, vel_prod_hat, LM, MM; 
 

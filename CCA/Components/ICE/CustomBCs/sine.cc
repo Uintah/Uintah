@@ -40,7 +40,7 @@ namespace Uintah {
 //__________________________________
 //  To turn on couts
 //  setenv SCI_DEBUG "SINE_DOING_COUT:+"
-static SCIRun::DebugStream cout_doing("ICE_BC_CC", false);
+static DebugStream cout_doing("ICE_BC_CC", false);
 
 /* ______________________________________________________________________
  Function~  read_Sine_BC_inputs--   

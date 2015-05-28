@@ -48,7 +48,7 @@ using namespace std;
 using namespace Uintah;
 
 
-static SCIRun::DebugStream cout_doing("ImplicitHeatConduction", false);
+static DebugStream cout_doing("ImplicitHeatConduction", false);
 
 ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
                                                MPMLabel* labels,MPMFlags* flags)

@@ -49,8 +49,9 @@
 
 namespace Uintah {
 
-  
-  class VariableCache: public SCIRun::Datatype {
+  using namespace SCIRun;
+
+class VariableCache: public Datatype {
 protected:
   std::map< std::string, std::string > data_cache;
 public:
@@ -110,7 +111,7 @@ public:
 
   //////////////////////////////////////////////////////////
   // inherited functions
-  virtual void io(SCIRun::Piostream&);
+  virtual void io(Piostream&);
 };
 
 } // end namespace Uintah
