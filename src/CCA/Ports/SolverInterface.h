@@ -271,6 +271,38 @@ namespace Uintah {
 
     //----------------------------------------------------------------------------------------------
     /**
+     \brief This task adds dp (see above) to the pressure at all points in the domain to reflect
+     the reference value specified by the user/developer.
+     */
+    template<typename FieldT>
+    void setRefValue( const Uintah::ProcessorGroup*,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                            Uintah::DataWarehouse* old_dw,
+                            Uintah::DataWarehouse* new_dw,
+                            const VarLabel         * xLabel,
+                            VarLabel* refValueLabel)
+    {
+      // once we've computed the difference needed to set the ref pressure, subtract it from all points
+      for( int ip=0; ip<patches->size(); ++ip ){
+        const Patch* const patch = patches->get(ip);
+        for( int im=0; im<materials->size(); ++im ){
+          int matl = materials->get(im);
+          sum_vartype refValueDiff_;
+          new_dw->get( refValueDiff_, refValueLabel );
+          const double refValueDiff = refValueDiff_;
+          FieldT x;
+          new_dw->getModifiable(x, xLabel, im, patch);
+          for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            IntVector iCell = *iter;
+            x[iCell] += refValueDiff;
+          }
+        }
+      }
+    }
+    
+    //----------------------------------------------------------------------------------------------
+    /**
      \brief Computes the volume integral of the RHS of the Poisson equation: 1/V * int(rhs*dV)
      Since Uintah deals with uniform structured grids, the above equation can be simplified, discretely,
      to: 1/n * sum(rhs) where n is the total number of cell sin the domain.
@@ -299,37 +331,6 @@ namespace Uintah {
           // divide by total volume.
           rhsIntegral /= patch->getLevel()->totalCells();
           new_dw->put( sum_vartype(rhsIntegral), rhsIntegralLabel );
-        }
-      }
-    }
-    //----------------------------------------------------------------------------------------------
-    /**
-     \brief This task adds dp (see above) to the pressure at all points in the domain to reflect
-     the reference value specified by the user/developer.
-     */
-    template<typename FieldT>
-    void setRefValue( const Uintah::ProcessorGroup*,
-                            const Uintah::PatchSubset* patches,
-                            const Uintah::MaterialSubset* materials,
-                            Uintah::DataWarehouse* old_dw,
-                            Uintah::DataWarehouse* new_dw,
-                            const VarLabel         * xLabel,
-                            VarLabel* refValueLabel)
-    {
-      // once we've computed the total integral, subtract it from the poisson rhs
-      for( int ip=0; ip<patches->size(); ++ip ){
-        const Patch* const patch = patches->get(ip);
-        for( int im=0; im<materials->size(); ++im ){
-          int matl = materials->get(im);
-          sum_vartype refValueDiff_;
-          new_dw->get( refValueDiff_, refValueLabel );
-          const double refValueDiff = refValueDiff_;
-          FieldT x;
-          new_dw->getModifiable(x, xLabel, im, patch);
-          for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
-            IntVector iCell = *iter;
-            x[iCell] += refValueDiff;
-          }
         }
       }
     }

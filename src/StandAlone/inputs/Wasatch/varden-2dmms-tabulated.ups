@@ -129,9 +129,10 @@
       </Viscosity>
       <ComputeMassResidual/>
       <Pressure>
-        <ReferencePressure value="10.0">
-        	<ReferenceCell>[1,1,0]</ReferenceCell>
+        <ReferencePressure value="0.0">
+        	<ReferenceCell>[0,0,0]</ReferenceCell>
         </ReferencePressure>
+        <EnforceSolvability/>
         <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
