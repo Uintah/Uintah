@@ -62,14 +62,13 @@
       
       <Pressure>
         <ReferencePressure value="0.0">
-              <ReferenceCell>[1,1,1]</ReferenceCell>
+              <ReferenceCell>[0,0,11]</ReferenceCell>
         </ReferencePressure>
-        <Use3DLaplacian>    true</Use3DLaplacian>
+        <EnforceSolvability/>
         <Parameters>
- 	 	 	 	 	 	 <skip>1</skip>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1e-15  </tolerance>
+            <tolerance>      1e-12  </tolerance>
             <maxiterations>  1000    </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>

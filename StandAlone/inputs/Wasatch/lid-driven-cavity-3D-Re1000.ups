@@ -72,16 +72,13 @@
       </Viscosity>
       
       <Pressure>
-       <ReferencePressure value="0.0">
-              <ReferenceCell>[0,0,0]</ReferenceCell>
+        <ReferencePressure value="0.0">
+          <ReferenceCell>[0,0,0]</ReferenceCell>
         </ReferencePressure>
-        <Use3DLaplacian>    true</Use3DLaplacian>
-
         <Parameters>
- 	 	 	 	 	 	 <skip>1</skip>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
-            <tolerance>      1e-15  </tolerance>
+            <tolerance>      1e-14  </tolerance>
             <maxiterations>  100   </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>

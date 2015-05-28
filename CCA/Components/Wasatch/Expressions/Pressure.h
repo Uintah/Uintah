@@ -90,6 +90,7 @@ class Pressure
   const double refPressureValue_;
   const SCIRun::IntVector refPressureLocation_;
   const bool use3DLaplacian_;
+  const bool enforceSolvability_;
   
   Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
@@ -137,6 +138,7 @@ class Pressure
             const double     refPressureValue,
             const SCIRun::IntVector refPressureLocation,
             const bool       use3dlaplacian,
+            const bool       enforceSolvability,
             Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
@@ -150,6 +152,8 @@ public:
     const double refpressurevalue_;
     const SCIRun::IntVector refpressurelocation_;
     const bool use3dlaplacian_;
+    const bool enforceSolvability_;
+    
     Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
@@ -164,7 +168,8 @@ public:
              const bool       useRefPressure,
              const double     refPressureValue,
              const SCIRun::IntVector refPressureLocation,
-             const bool       use3DLaplacian,            
+             const bool       use3DLaplacian,
+             const bool       enforceSolvability,
              Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}
