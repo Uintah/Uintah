@@ -32,7 +32,8 @@
 
 namespace Uintah {
 
-    
+ using namespace SCIRun;
+   
 /**************************************
 
 CLASS

@@ -32,7 +32,6 @@
 #include <iomanip>
 #include <sstream>
 using namespace std;
-using namespace SCIRun;
 
 static string _rngtxt(double v1, double v2)
 {

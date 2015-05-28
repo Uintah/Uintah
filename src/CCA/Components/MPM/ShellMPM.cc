@@ -53,10 +53,10 @@ using namespace Uintah;
 using namespace std;
 
 
-static SCIRun::DebugStream cout_doing("ShellMPM", false);
+static DebugStream cout_doing("ShellMPM", false);
 
 // From ThreadPool.cc:  Used for syncing cerr'ing so it is easier to read.
-extern SCIRun::Mutex cerrLock;
+extern Mutex cerrLock;
 
 ///////////////////////////////////////////////////////////////////////////
 //

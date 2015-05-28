@@ -72,7 +72,7 @@ using namespace Uintah;
 //  To turn on normal output
 //  setenv SCI_DEBUG "HYPRE_DOING_COUT:+"
 
-static SCIRun::DebugStream cout_doing("HYPRE_DOING_COUT", false);
+static DebugStream cout_doing("HYPRE_DOING_COUT", false);
 
 namespace Uintah {
 
@@ -190,7 +190,7 @@ namespace Uintah {
       DataWarehouse* guess_dw = new_dw->getOtherDataWarehouse(which_guess_dw);
     
       ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
-      double tstart = SCIRun::Time::currentSeconds();
+      double tstart = Time::currentSeconds();
       for(int m = 0;m<matls->size();m++){
         int matl = matls->get(m);
 
@@ -496,7 +496,7 @@ namespace Uintah {
         //  Dynamic tolerances  Arches uses this
         double precond_tolerance = 0.0;
 
-        double solve_start = SCIRun::Time::currentSeconds();
+        double solve_start = Time::currentSeconds();
         int num_iterations;
         double final_res_norm;
         
@@ -929,7 +929,7 @@ namespace Uintah {
         }
         //__________________________________
         // Push the solution into Uintah data structure
-        double solve_dt = SCIRun::Time::currentSeconds()-solve_start;
+        double solve_dt = Time::currentSeconds()-solve_start;
 
         for(int p=0;p<patches->size();p++){
           const Patch* patch = patches->get(p);
@@ -975,7 +975,7 @@ namespace Uintah {
         HYPRE_StructStencilDestroy(stencil);
         HYPRE_StructGridDestroy(grid);
 
-        double dt=SCIRun::Time::currentSeconds()-tstart;
+        double dt=Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
 
           cout << "Solve of " << X_label->getName() 
@@ -992,7 +992,7 @@ namespace Uintah {
                cout << num_iterations << " iterations, residual = " << final_res_norm << ")."
                << std::endl;
         }
-        tstart = SCIRun::Time::currentSeconds();
+        tstart = Time::currentSeconds();
       }
     }
     

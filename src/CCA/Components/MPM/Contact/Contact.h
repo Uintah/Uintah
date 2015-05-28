@@ -33,7 +33,7 @@
 #include <cmath>
 
 namespace Uintah {
-
+using namespace SCIRun;
   class DataWarehouse;
   class MPMLabel;
   class MPMFlags;

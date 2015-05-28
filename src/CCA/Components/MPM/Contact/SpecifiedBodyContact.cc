@@ -255,11 +255,11 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
   int numMatls = d_sharedState->getNumMPMMatls();
 
   // Retrieve necessary data from DataWarehouse
-  SCIRun::StaticArray<constNCVariable<double> > gmass(numMatls);
-  SCIRun::StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
-  SCIRun::StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
-  SCIRun::StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
-  SCIRun::StaticArray<constNCVariable<double> > gvolume(numMatls);
+  StaticArray<constNCVariable<double> > gmass(numMatls);
+  StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
+  StaticArray<constNCVariable<Vector> > gvelocity(numMatls);
+  StaticArray<constNCVariable<Vector> > ginternalForce(numMatls);
+  StaticArray<constNCVariable<double> > gvolume(numMatls);
   NCVariable<Vector>                    gsurfnorm;
 
   for(int p=0;p<patches->size();p++){

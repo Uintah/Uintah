@@ -153,29 +153,29 @@ private:
                               std::vector<double>  &models,
                               int              verbosity=0);
 
-  void constructLinearSystem( SCIRun::DenseMatrix*    &AA,
-                              SCIRun::ColumnMatrix*   &BB,
+  void constructLinearSystem( DenseMatrix*    &AA,
+                              ColumnMatrix*   &BB,
                               std::vector<double>  &weights,
                               std::vector<double>  &weightedAbscissas,
                               std::vector<double>  &models,
                               int              verbosity=0);
 
-  void constructAopt( SCIRun::DenseMatrix*   &AA,
+  void constructAopt( DenseMatrix*   &AA,
                       std::vector<double> &Abscissas);
 
-  void constructAopt_unw( SCIRun::DenseMatrix*   &AA,
+  void constructAopt_unw( DenseMatrix*   &AA,
                           std::vector<double> &Abscissas);
 
-  void constructBopt( SCIRun::ColumnMatrix*  &BB,
+  void constructBopt( ColumnMatrix*  &BB,
                       std::vector<double> &weights,
                       std::vector<double> &Abscissas,
                       std::vector<double> &models);
 
-  void constructBopt_unw( SCIRun::ColumnMatrix*  &BB,
+  void constructBopt_unw( ColumnMatrix*  &BB,
                           std::vector<double> &Abscissas,
                           std::vector<double> &models);
     
-  void construct_Simplest_XX( SCIRun::ColumnMatrix*  &XX,
+  void construct_Simplest_XX( ColumnMatrix*  &XX,
                            std::vector<double> &models);
 
 
@@ -202,7 +202,7 @@ private:
   double d_weight_scaling_constant;
   std::vector<double> d_weighted_abscissa_scaling_constants;
   std::vector<double> d_opt_abscissas;
-  SCIRun::DenseMatrix* AAopt;
+  DenseMatrix* AAopt;
 
   const VarLabel* d_normBLabel; 
   const VarLabel* d_normXLabel; 

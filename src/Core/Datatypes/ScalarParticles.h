@@ -70,9 +70,9 @@ WARNING
   
 ****************************************/
 class ScalarParticles;
- typedef SCIRun::LockingHandle<ScalarParticles> ScalarParticlesHandle;
+typedef LockingHandle<ScalarParticles> ScalarParticlesHandle;
 
- class ScalarParticles : public SCIRun::Datatype {
+class ScalarParticles : public Datatype {
 
 public:
   // GROUP: Constructors:
@@ -112,8 +112,8 @@ public:
 	       
 
   // Persistant representation
-  virtual void io(SCIRun::Piostream&);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 
   void get_minmax(double& v0, double& v1);
   void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}

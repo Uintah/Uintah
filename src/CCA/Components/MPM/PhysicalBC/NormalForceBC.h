@@ -33,6 +33,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
    
 /**************************************
 

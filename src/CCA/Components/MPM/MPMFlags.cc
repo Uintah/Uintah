@@ -42,7 +42,7 @@
 using namespace Uintah;
 using namespace std;
 
-static SCIRun::DebugStream dbg("MPMFlags", false);
+static DebugStream dbg("MPMFlags", false);
 
 MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 {

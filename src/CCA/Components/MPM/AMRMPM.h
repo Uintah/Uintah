@@ -45,6 +45,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 class GeometryObject;
 class SDInterfaceModel;
 

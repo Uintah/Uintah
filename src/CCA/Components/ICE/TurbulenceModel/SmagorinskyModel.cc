@@ -36,7 +36,7 @@
 using namespace Uintah;
 using namespace std;
 
-static SCIRun::DebugStream cout_doing("ICE_DOING_COUT", false);
+static DebugStream cout_doing("ICE_DOING_COUT", false);
 
 Smagorinsky_Model::Smagorinsky_Model(ProblemSpecP& ps,
                                      SimulationStateP& sharedState)

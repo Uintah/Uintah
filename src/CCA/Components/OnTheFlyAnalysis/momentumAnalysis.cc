@@ -59,8 +59,8 @@ using namespace std;
 
 
 
-static SCIRun::DebugStream cout_doing("momentumAnalysis",   false);
-static SCIRun::DebugStream cout_dbg("momentumAnalysis_dbg", false);
+static DebugStream cout_doing("momentumAnalysis",   false);
+static DebugStream cout_dbg("momentumAnalysis_dbg", false);
 //______________________________________________________________________
 //______________________________________________________________________
 //

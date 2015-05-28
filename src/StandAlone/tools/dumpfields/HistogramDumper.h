@@ -35,7 +35,7 @@ namespace Uintah {
   
   class HistogramOpts {
   public:
-    HistogramOpts(SCIRun::Args & args);
+    HistogramOpts(Args & args);
     
     int    nbins;
     double minval;
@@ -57,7 +57,7 @@ namespace Uintah {
   {
   public:
     HistogramDumper(DataArchive* da, std::string basedir, HistogramOpts opts,
-                    const SCIRun::FieldSelection & fselect);
+                    const FieldSelection & fselect);
     
     std::string directoryExt() const { return "hist"; }
     void addField(std::string /*fieldname*/, const Uintah::TypeDescription * /*theType*/) {}
@@ -65,7 +65,7 @@ namespace Uintah {
     class Step : public FieldDumper::Step {
     public:
       Step(DataArchive * da, std::string outdir, int timestep, double time, int index,
-           const HistogramOpts & opts, const SCIRun::FieldSelection & fselect);
+           const HistogramOpts & opts, const FieldSelection & fselect);
     
       void storeGrid () {}
       void storeField(std::string fieldname, const Uintah::TypeDescription * type);
@@ -79,7 +79,7 @@ namespace Uintah {
       std::string       basedir_;
       
       const HistogramOpts &  opts_;
-      const SCIRun::FieldSelection & fselect_;
+      const FieldSelection & fselect_;
     };
   
     //
@@ -91,7 +91,7 @@ namespace Uintah {
     FILE*         filelist_;
     
     HistogramOpts opts_;
-    const SCIRun::FieldSelection & fselect_;
+    const FieldSelection & fselect_;
   };
 
 }

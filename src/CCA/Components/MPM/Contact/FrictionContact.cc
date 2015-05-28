@@ -101,13 +101,13 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
   ASSERTEQ(numMatls, matls->size());
 
   // Need access to all velocity fields at once
-  SCIRun::StaticArray<constNCVariable<double> >  gmass(numMatls);
-  SCIRun::StaticArray<constNCVariable<double> >  gvolume(numMatls);
-  SCIRun::StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
-  SCIRun::StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
-  SCIRun::StaticArray<NCVariable<double> >       frictionWork(numMatls);
-  SCIRun::StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
-  SCIRun::StaticArray<NCVariable<double> >       gnormtraction(numMatls);
+  StaticArray<constNCVariable<double> >  gmass(numMatls);
+  StaticArray<constNCVariable<double> >  gvolume(numMatls);
+  StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
+  StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
+  StaticArray<NCVariable<double> >       frictionWork(numMatls);
+  StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
+  StaticArray<NCVariable<double> >       gnormtraction(numMatls);
 
   constNCVariable<double> gm;
 
@@ -366,7 +366,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                   Vector surfaceTangent = dV_normalDV/dV_normalDV.length();
                   double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                   double frictionCoefficient=
-                    std::min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
+                    Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
 
                   // Calculate velocity change needed to enforce contact
                   Dv = -normal_normaldV
@@ -394,13 +394,13 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
                 // Define contact algorithm imposed strain, find maximum
                 Vector epsilon=(Dv/dx)*delT;
                 double epsilon_max=
-                  std::max(std::max(std::abs(epsilon.x()),std::abs(epsilon.y())),std::abs(epsilon.z()));
+                  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
                 if(!compare(epsilon_max,0.0)){
-                  epsilon_max *= std::max(1.0, mass/(centerOfMassMass-mass));
+                  epsilon_max *= Max(1.0, mass/(centerOfMassMass-mass));
 
                   // Scale velocity change if contact algorithm
                   // imposed strain is too large.
-                  double ff=std::min(epsilon_max,.5)/epsilon_max;
+                  double ff=Min(epsilon_max,.5)/epsilon_max;
                   Dv=Dv*ff;
                 }
                 Dv=scale_factor*Dv;
@@ -431,12 +431,12 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
   // Need access to all velocity fields at once, so store in
   // vectors of NCVariables
-  SCIRun::StaticArray<constNCVariable<double> > gmass(numMatls);
-  SCIRun::StaticArray<constNCVariable<double> > gvolume(numMatls);
-  SCIRun::StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
-  SCIRun::StaticArray<constNCVariable<double> > normtraction(numMatls);
-  SCIRun::StaticArray<NCVariable<double> >      frictionWork(numMatls);
-  SCIRun::StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
+  StaticArray<constNCVariable<double> > gmass(numMatls);
+  StaticArray<constNCVariable<double> > gvolume(numMatls);
+  StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
+  StaticArray<constNCVariable<double> > normtraction(numMatls);
+  StaticArray<NCVariable<double> >      frictionWork(numMatls);
+  StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -556,7 +556,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                   Vector surfaceTangent= dV_normaldV/dV_normaldV.length();
                   double tangentDeltaVelocity=Dot(deltaVelocity,surfaceTangent);
                   double frictionCoefficient=
-                    std::min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
+                    Min(d_mu,tangentDeltaVelocity/fabs(normalDeltaVel));
 
                   // Calculate velocity change needed to enforce contact
                   Dv= -normal_normaldV
@@ -578,14 +578,14 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
                 // Define contact algorithm imposed strain, find maximum
                 Vector epsilon=(Dv/dx)*delT;
                 double epsilon_max=
-                  std::max(std::max(std::abs(epsilon.x()),std::abs(epsilon.y())),std::abs(epsilon.z()));
-                epsilon_max_max=std::max(epsilon_max,epsilon_max_max);
+                  Max(fabs(epsilon.x()),fabs(epsilon.y()),fabs(epsilon.z()));
+                epsilon_max_max=max(epsilon_max,epsilon_max_max);
                 if(!compare(epsilon_max,0.0)){
-                  epsilon_max *=std::max(1.0, mass/(centerOfMassMass-mass));
+                  epsilon_max *=Max(1.0, mass/(centerOfMassMass-mass));
 
                   // Scale velocity change if contact algorithm imposed strain
                   // is too large.
-                  double ff=std::min(epsilon_max,.5)/epsilon_max;
+                  double ff=Min(epsilon_max,.5)/epsilon_max;
                   Dv=Dv*ff;
                 }
                 Dv=scale_factor*Dv;

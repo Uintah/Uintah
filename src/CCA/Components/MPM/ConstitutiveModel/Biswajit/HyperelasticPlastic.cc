@@ -1068,9 +1068,9 @@ void HyperelasticPlastic::computeStableTimestep(const Patch* patch,
       c_dil = 0.0;
       pVelocity_idx = Vector(0.0,0.0,0.0);
     }
-    WaveSpeed=Vector(std::max(c_dil+fabs(pVelocity[idx].x()),WaveSpeed.x()),
-                     std::max(c_dil+fabs(pVelocity[idx].y()),WaveSpeed.y()),
-                     std::max(c_dil+fabs(pVelocity[idx].z()),WaveSpeed.z()));
+    WaveSpeed=Vector(Max(c_dil+fabs(pVelocity[idx].x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pVelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pVelocity[idx].z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -1408,9 +1408,9 @@ void HyperelasticPlastic::computeStressTensor(const PatchSubset* patches,
       
       // Compute wave speed at each particle, store the maximum
       Vector pvel = pVelocity[idx];
-      WaveSpeed=Vector(std::max(c_dil+fabs(pvel.x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pvel.y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pvel.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pvel.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pvel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvel.z()),WaveSpeed.z()));
       
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {

@@ -29,7 +29,7 @@
 using namespace Uintah;
 
 
-static SCIRun::DebugStream dbg( "GeometryPiece", false );
+static DebugStream dbg( "GeometryPiece", false );
 
 GeometryPiece::GeometryPiece() :
   nameSet_( false ),

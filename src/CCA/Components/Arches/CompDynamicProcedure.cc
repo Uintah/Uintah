@@ -828,7 +828,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
 
-    double start_turbTime = SCIRun::Time::currentSeconds();
+    double start_turbTime = Time::currentSeconds();
 
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoU,   filterVolume, vol_fraction, filterRhoU);
     d_filter->applyFilter<Array3<double> >(pc, patch, rhoV,   filterVolume, vol_fraction, filterRhoV);
@@ -845,7 +845,7 @@ CompDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     }
 
     string msg = "Time for the Filter operation in Turbulence Model: (patch: ";
-    proc0cerr << msg << p << ") " << SCIRun::Time::currentSeconds() - start_turbTime << " seconds\n";
+    proc0cerr << msg << p << ") " << Time::currentSeconds() - start_turbTime << " seconds\n";
 
     TAU_PROFILE_START(compute2);
 
@@ -1034,7 +1034,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
         IntVector c = *iter; 
 
-        Cs[c] = SCIRun::Min(tempCs[c],10.0);
+        Cs[c] = Min(tempCs[c],10.0);
         viscosity[c] =  ( Cs[c] * filter2 * IsI[c] * den[c] + viscos ) * vol_fraction[c];
         turbViscosity[c] = viscosity[c] - viscos; 
 
@@ -1053,7 +1053,7 @@ CompDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           value = MLHatI[c] / MMHatI[c]; 
         }
 
-        Cs[c] = SCIRun::Min(value,10.0);
+        Cs[c] = Min(value,10.0);
         viscosity[c] =  ( Cs[c] * filter2 * IsI[c] * den[c] + viscos ) * vol_fraction[c];
         turbViscosity[c] = viscosity[c] - viscos; 
 

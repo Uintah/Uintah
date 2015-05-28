@@ -33,6 +33,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
 /**************************************
 
@@ -62,13 +63,13 @@ WARNING
   
 ****************************************/
 class Archive;
- typedef SCIRun::LockingHandle<Archive> ArchiveHandle;
+typedef LockingHandle<Archive> ArchiveHandle;
 
   // This is defined here, so that we don't have to include
   // LockingHandle and Persistent stuff in DataArchive.
-  typedef SCIRun::LockingHandle<DataArchive> DataArchiveHandle;
+  typedef LockingHandle<DataArchive> DataArchiveHandle;
   
-class Archive : public SCIRun::Datatype {
+class Archive : public Datatype {
 
 public:
   // GROUP: Constructors:
@@ -98,8 +99,8 @@ public:
   void SetTimestep( int t ){ _timestep = t; }
 
   // Persistant representation
-  virtual void io(SCIRun::Piostream&);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
   
 
 private:

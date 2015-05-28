@@ -62,7 +62,6 @@
 
 using namespace std;
 using namespace Uintah;
-using namespace SCIRun;
 
 void usage(const std::string& badarg, const std::string& progname)
 {
@@ -86,20 +85,20 @@ void usage(const std::string& badarg, const std::string& progname)
        << " [options] <uda1> <uda2>\n\n";
   cout << "Valid options are:\n";
   cout << "  -h[elp]\n";
-  SCIRun::Thread::exitAll(1);
+  Thread::exitAll(1);
 }
 //__________________________________
 void abort_uncomparable()
 {
   cerr << "\nThe uda directories may not be compared.\n";
-  SCIRun::Thread::exitAll(5);
+  Thread::exitAll(5);
 }
 
 //__________________________________
 //    Returns: sqrt( Vector )
-Vector Sqrt(const SCIRun::Vector a)
+Vector Sqrt(const Vector a)
 {
-  return SCIRun::Vector(Sqrt(a.x()), Sqrt(a.y()), Sqrt(a.z()));
+  return Vector(Sqrt(a.x()), Sqrt(a.y()), Sqrt(a.z()));
 }
 
 //__________________________________

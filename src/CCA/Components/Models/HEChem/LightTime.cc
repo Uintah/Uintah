@@ -47,7 +47,7 @@ using namespace std;
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_NORMAL_COUT:+,MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
-static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 LightTime::LightTime(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
@@ -300,7 +300,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       IntVector c = *iter;
 
       Point pos = level->getCellPosition(c);
-      double dist_plane = std::abs(A*pos.x() + B*pos.y() + C*pos.z() + D)/denom;
+      double dist_plane = Abs(A*pos.x() + B*pos.y() + C*pos.z() + D)/denom;
       double dist_straight = (pos - d_start_place).length();
       double dist = dist_plane*plane + dist_straight*(1.-plane);
       

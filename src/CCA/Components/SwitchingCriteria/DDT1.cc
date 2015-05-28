@@ -45,7 +45,7 @@
 using namespace std;
 
 using namespace Uintah;
-static SCIRun::DebugStream dbg("SWITCHER", false);
+static DebugStream dbg("SWITCHER", false);
 
 DDT1Criteria::DDT1Criteria(ProblemSpecP& ps)
 {
@@ -138,9 +138,9 @@ void DDT1Criteria::switchTest(const ProcessorGroup* group,
       // mpm matls
       constNCVariable<double> NC_CCweight;
       constNCVariable<double> gTempAllMatls;
-      SCIRun::StaticArray<constNCVariable<double> > gmass(numMPMMatls);
-      SCIRun::StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
-      SCIRun::StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
+      StaticArray<constNCVariable<double> > gmass(numMPMMatls);
+      StaticArray<CCVariable<double> >      temp_CC_mpm(numAllMatls);
+      StaticArray<constCCVariable<double> > vol_frac_mpm(numAllMatls);
 
       Ghost::GhostType  gac = Ghost::AroundCells;
       Ghost::GhostType  gan = Ghost::AroundNodes;

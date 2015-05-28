@@ -209,9 +209,9 @@ void P_Alpha::computeStableTimestep(const Patch* patch,
 
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt(tmp);
-     WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-                      std::max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-                      std::max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -394,9 +394,9 @@ void P_Alpha::computeStressTensor(const PatchSubset* patches,
 
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = c;
-      WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;

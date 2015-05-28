@@ -31,6 +31,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
   class MPMBoundCond {
 

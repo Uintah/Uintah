@@ -61,17 +61,17 @@ using namespace Uintah;
 extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
-static SCIRun::DebugStream dbg(          "MPIScheduler_DBG",     false );
-static SCIRun::DebugStream dbgst(        "SendTiming",           false );
-static SCIRun::DebugStream timeout(      "MPIScheduler.timings", false );
-static SCIRun::DebugStream reductionout( "ReductionTasks",       false );
+static DebugStream dbg(          "MPIScheduler_DBG",     false );
+static DebugStream dbgst(        "SendTiming",           false );
+static DebugStream timeout(      "MPIScheduler.timings", false );
+static DebugStream reductionout( "ReductionTasks",       false );
 
-SCIRun::DebugStream taskorder(     "TaskOrder", false );
-SCIRun::DebugStream waitout(       "WaitTimes", false );
-SCIRun::DebugStream execout(       "ExecTimes", false );
-SCIRun::DebugStream taskdbg(       "TaskDBG",   false );
-SCIRun::DebugStream taskLevel_dbg( "TaskLevel", false );
-SCIRun::DebugStream mpidbg(        "MPIDBG",    false );
+DebugStream taskorder(     "TaskOrder", false );
+DebugStream waitout(       "WaitTimes", false );
+DebugStream execout(       "ExecTimes", false );
+DebugStream taskdbg(       "TaskDBG",   false );
+DebugStream taskLevel_dbg( "TaskLevel", false );
+DebugStream mpidbg(        "MPIDBG",    false );
 
 static double CurrentWaitTime = 0;
 
@@ -94,7 +94,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup* myworld,
     dlbLock("loadbalancer lock"),
     waittimesLock("waittimes lock")
 {
-  d_lasttime = SCIRun::Time::currentSeconds();
+  d_lasttime = Time::currentSeconds();
   reloc_new_posLabel_ = 0;
 
   if (timeout.active()) {
@@ -241,11 +241,11 @@ MPIScheduler::initiateReduction( DetailedTask* task )
     coutLock.unlock();
   }
 
-  double reducestart = SCIRun::Time::currentSeconds();
+  double reducestart = Time::currentSeconds();
 
   runReductionTask(task);
 
-  double reduceend = SCIRun::Time::currentSeconds();
+  double reduceend = Time::currentSeconds();
 
   emitNode(task, reducestart, reduceend - reducestart, 0);
   mpi_info_.totalreduce    += reduceend - reducestart;
@@ -269,7 +269,7 @@ MPIScheduler::runTask( DetailedTask* task,
     waittimesLock.unlock();
   }
 
-  double taskstart = SCIRun::Time::currentSeconds();
+  double taskstart = Time::currentSeconds();
 
   if (trackingVarsPrintLocation_ & SchedulerCommon::PRINT_BEFORE_EXEC) {
     printTrackedVars(task, SchedulerCommon::PRINT_BEFORE_EXEC);
@@ -288,7 +288,7 @@ MPIScheduler::runTask( DetailedTask* task,
     printTrackedVars(task, SchedulerCommon::PRINT_AFTER_EXEC);
   }
 
-  double dtask = SCIRun::Time::currentSeconds() - taskstart;
+  double dtask = Time::currentSeconds() - taskstart;
 
   dlbLock.lock();
   {
@@ -311,11 +311,11 @@ MPIScheduler::runTask( DetailedTask* task,
   postMPISends(task, iteration, thread_id);
 
   task->done(dws);  // should this be timed with taskstart? - BJW
-  double teststart = SCIRun::Time::currentSeconds();
+  double teststart = Time::currentSeconds();
 
   sends_[thread_id].testsome(d_myworld);
 
-  mpi_info_.totaltestmpi += SCIRun::Time::currentSeconds() - teststart;
+  mpi_info_.totaltestmpi += Time::currentSeconds() - teststart;
 
   // Add subscheduler timings to the parent scheduler and reset subscheduler timings
   if (parentScheduler_) {
@@ -360,7 +360,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
                             int           thread_id  /*=0*/ )
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPISends");
-  double sendstart = SCIRun::Time::currentSeconds();
+  double sendstart = Time::currentSeconds();
   bool dbg_active = dbg.active();
 
   int me = d_myworld->myrank();
@@ -461,7 +461,7 @@ MPIScheduler::postMPISends( DetailedTask* task,
     // Post the send
     if (mpibuff.count() > 0) {
       ASSERT(batch->messageTag > 0);
-      double start = SCIRun::Time::currentSeconds();
+      double start = Time::currentSeconds();
       void* buf;
       int count;
       MPI_Datatype datatype;
@@ -512,19 +512,19 @@ MPIScheduler::postMPISends( DetailedTask* task,
       sends_[thread_id].add(requestid, bytes, mpibuff.takeSendlist(), ostr.str(), batch->messageTag);
       sendLock.writeUnlock();
 
-      mpi_info_.totalsendmpi += SCIRun::Time::currentSeconds() - start;
+      mpi_info_.totalsendmpi += Time::currentSeconds() - start;
 
       //}
     }
   }  // end for (DependencyBatch* batch = task->getComputes())
 
-  double dsend = SCIRun::Time::currentSeconds() - sendstart;
+  double dsend = Time::currentSeconds() - sendstart;
   mpi_info_.totalsend += dsend;
   if (dbgst.active() && numSend > 0) {
     if (d_myworld->myrank() == d_myworld->size() / 2) {
       if (dbgst.active()) {
         cerrLock.lock();
-        dbgst << d_myworld->myrank() << " Time: " << SCIRun::Time::currentSeconds() << " , NumSend= " << numSend << " , VolSend: "
+        dbgst << d_myworld->myrank() << " Time: " << Time::currentSeconds() << " , NumSend= " << numSend << " , VolSend: "
               << volSend << std::endl;
         cerrLock.unlock();
       }
@@ -551,7 +551,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 {
   MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
 
-  double recvstart = SCIRun::Time::currentSeconds();
+  double recvstart = Time::currentSeconds();
   TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER);
 
   bool dbg_active = dbg.active();
@@ -697,7 +697,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
       if (mpibuff.count() > 0) {
 
         ASSERT(batch->messageTag > 0);
-        double start = SCIRun::Time::currentSeconds();
+        double start = Time::currentSeconds();
         void* buf;
         int count;
         MPI_Datatype datatype;
@@ -727,7 +727,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
         int bytes = count;
         recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
-        mpi_info_.totalrecvmpi += SCIRun::Time::currentSeconds() - start;
+        mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
 
         /*}
          else
@@ -751,7 +751,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
   }
   recvLock.writeUnlock();
 
-  double drecv = SCIRun::Time::currentSeconds() - recvstart;
+  double drecv = Time::currentSeconds() - recvstart;
   mpi_info_.totalrecv += drecv;
 
 }  // end postMPIRecvs()
@@ -769,7 +769,7 @@ void MPIScheduler::processMPIRecvs(int how_much)
     return;
   }
 
-  double start = SCIRun::Time::currentSeconds();
+  double start = Time::currentSeconds();
 
   recvLock.writeLock();
   {
@@ -810,8 +810,8 @@ void MPIScheduler::processMPIRecvs(int how_much)
   }
   recvLock.writeUnlock();
 
-  mpi_info_.totalwaitmpi += SCIRun::Time::currentSeconds() - start;
-  CurrentWaitTime += SCIRun::Time::currentSeconds() - start;
+  mpi_info_.totalwaitmpi += Time::currentSeconds() - start;
+  CurrentWaitTime += Time::currentSeconds() - start;
 
 }  // end processMPIRecvs()
 
@@ -1022,7 +1022,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     emitTime("Total reduction time", mpi_info_.totalreduce - mpi_info_.totalreducempi);
     emitTime("Total comm time", mpi_info_.totalrecv + mpi_info_.totalsend + mpi_info_.totalreduce);
 
-    double time = SCIRun::Time::currentSeconds();
+    double time = Time::currentSeconds();
     double totalexec = time - d_lasttime;
 
     d_lasttime = time;
@@ -1157,7 +1157,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
       timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1 - avgCell / maxCell) * 100 << " load imbalance (theoretical)%\n";
     }
 
-    double time = SCIRun::Time::currentSeconds();
+    double time = Time::currentSeconds();
     //double rtime=time-d_lasttime;
     d_lasttime = time;
     //timeout << "MPIScheduler: TOTAL                                    "
@@ -1227,7 +1227,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 void
 MPIScheduler::emitTime( const char* label )
 {
-   double time = SCIRun::Time::currentSeconds();
+   double time = Time::currentSeconds();
    emitTime(label, time-d_lasttime);
    d_lasttime=time;
 }

@@ -61,6 +61,8 @@ computeExternalForceForMMS : Computes the analytically determined body force for
 
 namespace Uintah {
 
+using namespace SCIRun;
+using namespace std;
 
   class MMS {
 

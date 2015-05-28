@@ -334,7 +334,7 @@ void Mixing::computeModelSources(const ProcessorGroup*,
           IntVector idx = *iter;
           double mass = density[idx]*volume;
           double moles_from = from_mf[idx]*mass/from->props.molecularWeight;
-          double moles_rxn = std::min(moles_from, max);
+          double moles_rxn = Min(moles_from, max);
           double release = moles_rxn * rxn->energyRelease;
           cerr << "idx=" << idx << ", moles_rxn=" << moles_rxn << ", release=" << release << '\n';
           // Convert energy to temperature...

@@ -44,7 +44,7 @@
 //
 using namespace Uintah;
 using namespace std;
-static SCIRun::DebugStream dbg("RAY", false);
+static DebugStream dbg("RAY", false);
 
 //______________________________________________________________________
 // Class: Constructor.

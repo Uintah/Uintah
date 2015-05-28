@@ -46,6 +46,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
 class Crack;
 class ThermalContact;

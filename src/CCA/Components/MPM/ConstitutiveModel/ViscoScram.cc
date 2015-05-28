@@ -51,8 +51,8 @@
 using namespace std;
 using namespace Uintah;
 
-static SCIRun::DebugStream dbg("VS", false);
-static SCIRun::DebugStream dbgSig("VSSig", false);
+static DebugStream dbg("VS", false);
+static DebugStream dbgSig("VSSig", false);
 
 ViscoScram::ViscoScram(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag)
@@ -446,9 +446,9 @@ ViscoScram::computeStableTimestep(const Patch* patch,
 
     // Compute wave speed at each particle, store the maximum
     c_dil = sqrt((bulk + 4.*G/3.)*pVol[idx]/pMass[idx]);
-    WaveSpeed=Vector(std::max(c_dil+fabs(pVelocity[idx].x()),WaveSpeed.x()),
-                     std::max(c_dil+fabs(pVelocity[idx].y()),WaveSpeed.y()),
-                     std::max(c_dil+fabs(pVelocity[idx].z()),WaveSpeed.z()));
+    WaveSpeed=Vector(Max(c_dil+fabs(pVelocity[idx].x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pVelocity[idx].y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pVelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
 
@@ -1015,9 +1015,9 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
       double c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
-      WaveSpeed=Vector(std::max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
 
       // Compute artificial viscosity term
       if (flag->d_artificial_viscosity) {

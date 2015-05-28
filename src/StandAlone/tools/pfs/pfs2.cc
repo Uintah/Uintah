@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
         Point top(xt,yt,zt);                                                                             
         cylinder = scinew CylinderGeometryPiece(top, bottom, radius);                                    
         fprintf(stderr, "Cylinder height, volume: %g, %g\n", cylinder->height(), cylinder->volume());    
-      } catch (SCIRun::Exception& e) {                                                                             
+      } catch (Exception& e) {                                                                             
         cerr << "Caught exception: " << e.message() << endl;                                             
         abort();                                                                                         
       } catch(...){                                                                                        
@@ -427,7 +427,7 @@ int main(int argc, char *argv[])
       } // loop over materials
     } // loop over grid levels
     
-  } catch (SCIRun::Exception& e) {
+  } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     if(e.stackTrace())
       cerr << "Stack trace: " << e.stackTrace() << '\n';
@@ -504,7 +504,7 @@ bool ReadImage(const char* szfile, unsigned int nPixels, pixel* pb, const string
   // if the user specifies bigEndian then return
   if( endianness == "big" ){
     for(unsigned int i = 0; i< nread;  i++ ){
-      SCIRun::swapbytes(pb[i]);
+      swapbytes(pb[i]);
       maxI = max(pb[i], maxI);
       minI = min(pb[i], minI);
     }

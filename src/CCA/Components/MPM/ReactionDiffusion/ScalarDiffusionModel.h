@@ -32,6 +32,7 @@
 
 #include <string>
 
+using namespace std;
 namespace Uintah {
 
   class Task;
@@ -47,10 +48,10 @@ namespace Uintah {
   public:
     
     ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
-                         std::string diff_type);
+                         string diff_type);
     virtual ~ScalarDiffusionModel();
 
-    virtual std::string getDiffusionType();
+    virtual string getDiffusionType();
 
     virtual void setIncludeHydroStress(bool value);
 
@@ -104,7 +105,7 @@ namespace Uintah {
 
     int NGP, NGN;
     bool do_explicit;
-    std::string diffusion_type;
+    string diffusion_type;
     bool include_hydrostress;
 
     ScalarDiffusionModel(const ScalarDiffusionModel&);

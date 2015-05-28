@@ -37,7 +37,6 @@
 #include <cfloat>
 
 using namespace std;
-using namespace SCIRun;
 
 namespace Uintah {
   

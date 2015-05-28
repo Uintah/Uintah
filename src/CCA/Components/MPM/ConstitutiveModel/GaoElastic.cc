@@ -71,10 +71,10 @@
 using namespace std;
 using namespace Uintah;
 
-static SCIRun::DebugStream cout_EP("EP",false);
-static SCIRun::DebugStream cout_EP1("EP1",false);
-static SCIRun::DebugStream CSTi("EPi",false);
-static SCIRun::DebugStream CSTir("EPir",false);
+static DebugStream cout_EP("EP",false);
+static DebugStream cout_EP1("EP1",false);
+static DebugStream CSTi("EPi",false);
+static DebugStream CSTir("EPir",false);
 
 GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag), ImplicitCM()
@@ -276,9 +276,9 @@ GaoElastic::computeStableTimestep(const Patch* patch,
       c_dil = 0.0;
       pvelocity_idx = Vector(0.0,0.0,0.0);
     }
-    WaveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-                     std::max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-                     std::max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+    WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+                     Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -581,9 +581,9 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      WaveSpeed=Vector(std::max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
-                       std::max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
-                       std::max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pVel.x()),WaveSpeed.x()),
+                       Max(c_dil+fabs(pVel.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),WaveSpeed.z()));
 
       delete defState;
 

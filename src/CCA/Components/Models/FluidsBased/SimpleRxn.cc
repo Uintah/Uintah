@@ -55,8 +55,8 @@ using namespace std;
 //  To turn on the output
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+,SIMPLE_RXN_DBG_COUT:+"
 //  SIMPLE_RXN_DBG:  dumps out during problemSetup 
-static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
-static SCIRun::DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_dbg("SIMPLE_RXN_DBG_COUT", false);
 //______________________________________________________________________              
 SimpleRxn::SimpleRxn(const ProcessorGroup* myworld, 
                      ProblemSpecP& params)

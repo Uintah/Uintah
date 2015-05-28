@@ -71,10 +71,10 @@
 using namespace std;
 using namespace Uintah;
 
-static SCIRun::DebugStream cout_EP("SSEP",false);
-static SCIRun::DebugStream cout_EP1("SSEP1",false);
-static SCIRun::DebugStream CSTi("SSEPi",false);
-static SCIRun::DebugStream CSTir("SSEPir",false);
+static DebugStream cout_EP("SSEP",false);
+static DebugStream cout_EP1("SSEP1",false);
+static DebugStream CSTi("SSEPi",false);
+static DebugStream CSTir("SSEPir",false);
 
 SmallStrainPlastic::SmallStrainPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   : ConstitutiveModel(Mflag), ImplicitCM()
@@ -561,9 +561,9 @@ SmallStrainPlastic::computeStableTimestep(const Patch* patch,
       c_dil = 0.0;
       pvelocity_idx = Vector(0.0,0.0,0.0);
     }
-    waveSpeed=Vector(std::max(c_dil+fabs(pvelocity_idx.x()),waveSpeed.x()),
-                     std::max(c_dil+fabs(pvelocity_idx.y()),waveSpeed.y()),
-                     std::max(c_dil+fabs(pvelocity_idx.z()),waveSpeed.z()));
+    waveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),waveSpeed.x()),
+                     Max(c_dil+fabs(pvelocity_idx.y()),waveSpeed.y()),
+                     Max(c_dil+fabs(pvelocity_idx.z()),waveSpeed.z()));
   }
 
   waveSpeed = dx/waveSpeed;
@@ -1192,7 +1192,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
           Vector eigVal(0.0, 0.0, 0.0);
           Matrix3 eigVec;
           stress.eigen(eigVal, eigVec);
-          double max_stress = std::max(std::max(eigVal[0],eigVal[1]), eigVal[2]);
+          double max_stress = Max(Max(eigVal[0],eigVal[1]), eigVal[2]);
           if (max_stress > d_initialData.sigma_crit) {
             isLocalized = true;
           }
@@ -1256,9 +1256,9 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
-      waveSpeed=Vector(std::max(c_dil+fabs(pVel.x()),waveSpeed.x()),
-                       std::max(c_dil+fabs(pVel.y()),waveSpeed.y()),
-                       std::max(c_dil+fabs(pVel.z()),waveSpeed.z()));
+      waveSpeed=Vector(Max(c_dil+fabs(pVel.x()),waveSpeed.x()),
+                       Max(c_dil+fabs(pVel.y()),waveSpeed.y()),
+                       Max(c_dil+fabs(pVel.z()),waveSpeed.z()));
 
       // Compute artificial viscosity term
       double de_s=0.;

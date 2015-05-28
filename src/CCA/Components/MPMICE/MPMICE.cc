@@ -75,9 +75,9 @@ using namespace std;
 //  default is OFF
 
 
-static SCIRun::DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
-static SCIRun::DebugStream cout_doing("MPMICE_DOING_COUT", false);
-static SCIRun::DebugStream ds_EqPress("DBG_EqPress",false);
+static DebugStream cout_norm("MPMICE_NORMAL_COUT", false);  
+static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+static DebugStream ds_EqPress("DBG_EqPress",false);
 
 MPMICE::MPMICE(const ProcessorGroup* myworld, 
                MPMType mpmtype, const bool doAMR)
@@ -1732,26 +1732,26 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     Vector dx       = patch->dCell(); 
     double cell_vol = dx.x()*dx.y()*dx.z();
 
-    SCIRun::StaticArray<double> press_eos(numALLMatls);
-    SCIRun::StaticArray<double> dp_drho(numALLMatls),dp_de(numALLMatls);
-    SCIRun::StaticArray<double> mat_volume(numALLMatls);
+    StaticArray<double> press_eos(numALLMatls);
+    StaticArray<double> dp_drho(numALLMatls),dp_de(numALLMatls);
+    StaticArray<double> mat_volume(numALLMatls);
 
-    SCIRun::StaticArray<CCVariable<double> > vol_frac(numALLMatls);
-    SCIRun::StaticArray<CCVariable<double> > rho_micro(numALLMatls);
-    SCIRun::StaticArray<CCVariable<double> > rho_CC_new(numALLMatls);
-    SCIRun::StaticArray<CCVariable<double> > speedSound(numALLMatls);
-    SCIRun::StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
-    SCIRun::StaticArray<CCVariable<double> > f_theta(numALLMatls);
-    SCIRun::StaticArray<CCVariable<double> > kappa(numALLMatls);
+    StaticArray<CCVariable<double> > vol_frac(numALLMatls);
+    StaticArray<CCVariable<double> > rho_micro(numALLMatls);
+    StaticArray<CCVariable<double> > rho_CC_new(numALLMatls);
+    StaticArray<CCVariable<double> > speedSound(numALLMatls);
+    StaticArray<CCVariable<double> > sp_vol_new(numALLMatls);
+    StaticArray<CCVariable<double> > f_theta(numALLMatls);
+    StaticArray<CCVariable<double> > kappa(numALLMatls);
     
-    SCIRun::StaticArray<constCCVariable<double> > placeHolder(0);
-    SCIRun::StaticArray<constCCVariable<double> > cv(numALLMatls);
-    SCIRun::StaticArray<constCCVariable<double> > gamma(numALLMatls);
-    SCIRun::StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls); 
-    SCIRun::StaticArray<constCCVariable<double> > Temp(numALLMatls);
-    SCIRun::StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
-    SCIRun::StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
-    SCIRun::StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
+    StaticArray<constCCVariable<double> > placeHolder(0);
+    StaticArray<constCCVariable<double> > cv(numALLMatls);
+    StaticArray<constCCVariable<double> > gamma(numALLMatls);
+    StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls); 
+    StaticArray<constCCVariable<double> > Temp(numALLMatls);
+    StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
+    StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
+    StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
@@ -1771,8 +1771,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     sum_imp_delP.initialize(0.0);
     nIterations.initialize(0);
 
-    SCIRun::StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
-    SCIRun::StaticArray<ICEMaterial*> ice_matl(numALLMatls);
+    StaticArray<MPMMaterial*> mpm_matl(numALLMatls);
+    StaticArray<ICEMaterial*> ice_matl(numALLMatls);
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ice_matl[m] = dynamic_cast<ICEMaterial*>(matl);
@@ -2165,19 +2165,19 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
             craps out then try this method.
  Reference:  Se Numerical Methods by Robert W. Hornbeck.
 _____________________________________________________________________*/ 
-void MPMICE::binaryPressureSearch(  SCIRun::StaticArray<constCCVariable<double> >& Temp,
-                            SCIRun::StaticArray<CCVariable<double> >& rho_micro, 
-                            SCIRun::StaticArray<CCVariable<double> >& vol_frac, 
-                            SCIRun::StaticArray<CCVariable<double> >& rho_CC_new,
-                            SCIRun::StaticArray<CCVariable<double> >& speedSound,
-                            SCIRun::StaticArray<double> & dp_drho, 
-                            SCIRun::StaticArray<double> & dp_de, 
-                            SCIRun::StaticArray<double> & press_eos,
+void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
+                            StaticArray<CCVariable<double> >& rho_micro, 
+                            StaticArray<CCVariable<double> >& vol_frac, 
+                            StaticArray<CCVariable<double> >& rho_CC_new,
+                            StaticArray<CCVariable<double> >& speedSound,
+                            StaticArray<double> & dp_drho, 
+                            StaticArray<double> & dp_de, 
+                            StaticArray<double> & press_eos,
                             constCCVariable<double> & press,
                             CCVariable<double> & press_new, 
                             double press_ref,
-                            SCIRun::StaticArray<constCCVariable<double> > & cv,
-                            SCIRun::StaticArray<constCCVariable<double> > & gamma,
+                            StaticArray<constCCVariable<double> > & cv,
+                            StaticArray<constCCVariable<double> > & gamma,
                             double convergence_crit,
                             int numALLMatls,
                             int & count,
@@ -2191,8 +2191,8 @@ void MPMICE::binaryPressureSearch(  SCIRun::StaticArray<constCCVariable<double> 
   double c_2;
   double Pleft=0., Pright=0., Ptemp=0., Pm=0.;
   double rhoMicroR=0., rhoMicroL=0.;
-  SCIRun::StaticArray<double> vfR(numALLMatls);
-  SCIRun::StaticArray<double> vfL(numALLMatls);
+  StaticArray<double> vfR(numALLMatls);
+  StaticArray<double> vfL(numALLMatls);
   Pm = press[c];
   double residual = 1.0;
 

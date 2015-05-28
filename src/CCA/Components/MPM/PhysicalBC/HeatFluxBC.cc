@@ -76,7 +76,7 @@ HeatFluxBC::HeatFluxBC(ProblemSpecP& ps,const GridP& grid)
   //   Bulletproofing
   // user shouldn't specify a geometry object that is bigger than the domain
   Box boundingBox = d_surface->getBoundingBox();
-  SCIRun::BBox compDomain;
+  BBox compDomain;
   grid->getSpatialRange(compDomain);
   
   Point BB_min = boundingBox.lower();

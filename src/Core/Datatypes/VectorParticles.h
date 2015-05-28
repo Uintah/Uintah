@@ -43,7 +43,8 @@
 
 namespace Uintah {
 
-  
+  using namespace SCIRun;
+
 /**************************************
 
 CLASS
@@ -72,9 +73,9 @@ WARNING
   
 ****************************************/
 class VectorParticles;
- typedef SCIRun::LockingHandle<VectorParticles> VectorParticlesHandle;
+typedef LockingHandle<VectorParticles> VectorParticlesHandle;
 
-class VectorParticles : public SCIRun::Datatype {
+class VectorParticles : public Datatype {
 
 public:
   // GROUP: Constructors:
@@ -113,8 +114,8 @@ public:
 	       
 
   // Persistant representation
-  virtual void io(SCIRun::Piostream&);
-  static SCIRun::PersistentTypeID type_id;
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 
   void get_minmax(double& v0, double& v1);
   void get_bounds(Point& p0, Point& p1){ psetH->get_bounds(p0,p1);}

@@ -54,7 +54,7 @@
 using namespace Uintah;
 using namespace std;
 
-static SCIRun::DebugStream dbg("ARCHES_PRESS_SOLVE",false);
+static DebugStream dbg("ARCHES_PRESS_SOLVE",false);
 
 //______________________________________________________________________
 // Default constructor for PressureSolver

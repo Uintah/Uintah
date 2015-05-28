@@ -57,7 +57,7 @@ using namespace std;
 //__________________________________
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
-static SCIRun::DebugStream cout_doing("MODELS_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 SolidReactionModel::SolidReactionModel(const ProcessorGroup* myworld, ProblemSpecP& params,
                                        const ProblemSpecP& prob_spec)

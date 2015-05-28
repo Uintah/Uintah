@@ -40,7 +40,7 @@
 
 using namespace std;
 using namespace Uintah;
-static SCIRun::DebugStream dbg("SWITCHER", false);
+static DebugStream dbg("SWITCHER", false);
 
 SimpleBurnCriteria::SimpleBurnCriteria(ProblemSpecP& ps)
 {

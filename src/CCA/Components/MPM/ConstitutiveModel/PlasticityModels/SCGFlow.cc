@@ -259,7 +259,7 @@ SCGFlow::computeFlowStress(const PlasticityState* state,
   // Calculate sigma_A <= Ymax
   double Ya = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(Ya >= 0.0);
-  double sigma_A = std::min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
+  double sigma_A = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
 
   // Calculate the thermal part of the yield stress using 
   // the Hoge and Mukherjee model
@@ -419,7 +419,7 @@ SCGFlow::computeEpdot(const PlasticityState* state,
   // Compute the sigma_A and sigma_T
   double f_ep = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(f_ep >= 0.0);
-  double sigma_A = std::min(d_CM.sigma_0*pow(f_ep, d_CM.n), d_CM.Y_max);
+  double sigma_A = Min(d_CM.sigma_0*pow(f_ep, d_CM.n), d_CM.Y_max);
   double sigma_T = tau*(mu_0/mu) - sigma_A;
   
   double t1 = 1.0 - sigma_T/sigma_P;
@@ -515,7 +515,7 @@ SCGFlow::evalDerivativeWRTTemperature(const PlasticityState* state,
   // Calculate Y <= Ymax
   double Ya = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(Ya >= 0.0);
-  double Y = std::min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
+  double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
 
   return -Y*d_CM.B;
 }
@@ -530,7 +530,7 @@ SCGFlow::evalDerivativeWRTPressure(const PlasticityState* state,
   // Calculate Y <= Ymax
   double Ya = 1.0 + d_CM.beta*(ep + d_CM.epsilon_p0);
   ASSERT(Ya >= 0.0);
-  double Y = std::min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
+  double Y = Min(d_CM.sigma_0*pow(Ya, d_CM.n), d_CM.Y_max);
 
   double eta = state->density/state->initialDensity;
   return Y*d_CM.A/pow(eta,1.0/3.0);

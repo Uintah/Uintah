@@ -52,8 +52,8 @@ using namespace std;
 // multiple threads at the same time)  From sus.cc:
 extern SCIRun::Mutex cerrLock;
 
-SCIRun::DebugStream lbDebug( "LoadBalancer", false );
-SCIRun::DebugStream neiDebug("Neighborhood", false );
+DebugStream lbDebug( "LoadBalancer", false );
+DebugStream neiDebug("Neighborhood", false );
 
 // If defined, the space-filling curve will be computed in parallel,
 // this may not be a good idea because the time to compute the

@@ -37,6 +37,7 @@
 
 namespace Uintah {
 
+using namespace SCIRun;
 
 class GeometryPiece;
 class ParticleCreator;

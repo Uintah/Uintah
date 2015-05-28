@@ -65,14 +65,14 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
 
-    SCIRun::StaticArray<constNCVariable<double> > gmass(numMatls);
-    SCIRun::StaticArray<constNCVariable<double> > gTemp(numMatls);
-    SCIRun::StaticArray<NCVariable<double> > thermalContactTemperatureRate(numMatls);
+    StaticArray<constNCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<double> > gTemp(numMatls);
+    StaticArray<NCVariable<double> > thermalContactTemperatureRate(numMatls);
     vector<double> Cp(numMatls);
     // for Fracture (additional field)-----------------------------------------
-    SCIRun::StaticArray<constNCVariable<double> > Gmass(numMatls);
-    SCIRun::StaticArray<constNCVariable<double> > GTemp(numMatls);
-    SCIRun::StaticArray<NCVariable<double> > GthermalContactTemperatureRate(numMatls);
+    StaticArray<constNCVariable<double> > Gmass(numMatls);
+    StaticArray<constNCVariable<double> > GTemp(numMatls);
+    StaticArray<NCVariable<double> > GthermalContactTemperatureRate(numMatls);
 
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
