@@ -34,9 +34,9 @@ SRCS     += \
 	$(SRCDIR)/ReactionDiffusionLabel.cc \
 	$(SRCDIR)/ScalarDiffusionModel.cc \
 	$(SRCDIR)/JGConcentrationDiffusion.cc \
-	$(SRCDIR)/RFConcDiffusion1MPM.cc \
-	$(SRCDIR)/GaoDiffusion.cc \
-	$(SRCDIR)/CommonIFConcDiff.cc \
 	$(SRCDIR)/SDInterfaceModel.cc \
 	$(SRCDIR)/ScalarDiffusionModelFactory.cc \
-	$(SRCDIR)/SDInterfaceModelFactory.cc
+	$(SRCDIR)/CommonIFConcDiff.cc \
+	$(SRCDIR)/SDInterfaceModelFactory.cc \
+	$(SRCDIR)/RFConcDiffusion1MPM.cc \
+	$(SRCDIR)/GaoDiffusion.cc 

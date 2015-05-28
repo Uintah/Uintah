@@ -76,11 +76,12 @@ namespace Uintah {
                                                  DataWarehouse* old_dw,
                                                  DataWarehouse* new_dw);
 
+#if 0
     virtual void scheduleFinalParticleUpdate(Task* task, const PatchSet* patch) const;
 
     virtual void finalParticleUpdate(const Patch* patch, DataWarehouse* old_dw,
 		                                 DataWarehouse* new_dw);
- 
+#endif 
 
   protected:
     MPMLabel* d_lb;
