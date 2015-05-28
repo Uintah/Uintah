@@ -66,11 +66,11 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
 
   if (diffusion_type == "linear")
     return(scinew ScalarDiffusionModel(child, ss, flags, diffusion_type));
-	else if (diffusion_type == "jg")
+  if (diffusion_type == "jg")
     return(scinew JGConcentrationDiffusion(child, ss, flags, diffusion_type));
-	else if (diffusion_type == "rf1")
+  else if (diffusion_type == "rf1")
     return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
-	else if (diffusion_type == "gao_diffusion")
+  else if (diffusion_type == "gao_diffusion")
     return(scinew GaoDiffusion(child, ss, flags, diffusion_type));
 
   else

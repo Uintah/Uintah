@@ -627,9 +627,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
       scheduleSDInterpolateToParticlesAndUpdate(sched, patches, matls);
     }
     scheduleComputeStressTensor(            sched, patches, matls);
-    if(flags->d_doScalarDiffusion){
-      scheduleSDFinalParticleUpdate(sched, patches, matls);
-    }
+    //if(flags->d_doScalarDiffusion){
+    //  scheduleSDFinalParticleUpdate(sched, patches, matls);
+    //}
     scheduleFinalParticleUpdate(            sched, patches, matls);
   }
   if(flags->d_use_momentum_form){
@@ -5111,6 +5111,7 @@ void SerialMPM::sdInterpolateToParticlesAndUpdate(const ProcessorGroup*,
   }
 }
 
+/**
 void SerialMPM::scheduleSDFinalParticleUpdate(SchedulerP& sched, const PatchSet* patches,
                                               const MaterialSet* matls)
 {
@@ -5139,3 +5140,4 @@ void SerialMPM::sdFinalParticleUpdate(const ProcessorGroup*, const PatchSubset* 
     sdInterfaceModel->finalParticleUpdate(patch,old_dw,new_dw);
   }
 }
+**/

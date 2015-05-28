@@ -613,12 +613,14 @@ protected:
                                                  const MaterialSubset* matls, DataWarehouse* old_dw,
                                                  DataWarehouse* new_dw);
 
+  /**
   virtual void scheduleSDFinalParticleUpdate(SchedulerP& sched, const PatchSet* patches,
                                              const MaterialSet* matls);
 
   virtual void sdFinalParticleUpdate(const ProcessorGroup*, const PatchSubset* patches,
                                      const MaterialSubset* matls, DataWarehouse* old_dw,
                                      DataWarehouse* new_dw);
+	**/
 
   SimulationStateP d_sharedState;
   MPMLabel* lb;
