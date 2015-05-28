@@ -50,11 +50,11 @@ NIGHTLYTESTS = [
                   ("test_hypoviscoelastic_radial_return", "test_hypoviscoelastic_rad_ret.ups", 1,  "Linux", ["exactComparison"] ),  
                   ("advect_3L_3D",                        "advect_3L_3D.ups",                        4,  "Linux", ["exactComparison", "no_restart"] ),  
                   ("advect_2L_3D_slabs",                  "advect_2L_3D_slabs.ups",                  3,  "Linux", [ "no_restart","no_dbg"] ),
-                  ("Collide_AMR_3L",                  "Collide_AMR_3L.ups",                  1,  "Linux", [ "exactComparison"] ),  
                   ("advect_2L_3D_edges",                  "advect_2L_3D_edges.ups",                  1,  "Linux", ["exactComparison", "no_restart"] ),  
                   ("riemannMPM_ML",                       "riemannMPM_ML.ups",                       1,  "Linux", ["exactComparison"] ),  
                   ("Charpy",                              "Charpy.ups",                              8,  "Linux", ["exactComparison"] ),  
                   
+                  #("Collide_AMR_3L",                  "Collide_AMR_3L.ups",                  1,  "Linux", [ "exactComparison"] ),  
                   #("AreniscaTest_01_UniaxialStrainRotate",                  "./Arenisca/AreniscaTest_01_UniaxialStrainRotate.ups",                  1,  "Linux", ["exactComparison"] ), 
                   #("AreniscaTest_02_VertexTreatment",                       "./Arenisca/AreniscaTest_02_VertexTreatment.ups",                       1,  "Linux", ["exactComparison"] ), 
                   #("AreniscaTest_03a_UniaxialStrain_NoHardening",           "./Arenisca/AreniscaTest_03a_UniaxialStrain_NoHardening.ups",           1,  "Linux", ["exactComparison"] ),
