@@ -32,8 +32,6 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
-
-using namespace SCIRun;
    
 /**************************************
 

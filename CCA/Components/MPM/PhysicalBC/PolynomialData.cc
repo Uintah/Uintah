@@ -32,6 +32,7 @@
 
 using namespace Uintah;
 using namespace std;
+using SCIRun::Point;
 
 
 PolynomialData::PolynomialData(ProblemSpecP& ps, const Point& bottom, 

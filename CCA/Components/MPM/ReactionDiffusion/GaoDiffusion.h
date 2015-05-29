@@ -44,7 +44,7 @@ namespace Uintah {
   public:
     
     GaoDiffusion(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag,
-                        string diff_type);
+                        std::string diff_type);
     ~GaoDiffusion();
 
     virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
