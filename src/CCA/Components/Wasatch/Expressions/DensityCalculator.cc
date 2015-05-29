@@ -390,14 +390,10 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   const FieldT& rf = rhof_->field_ref();
-  const double tmp = (1/rho0_ - 1/rho1_);
+  
+  // compute the density in one shot from rhof
+  result <<= rho0_ + (1 - rho0_/rho1_)*rf;
 
-  // first calculate the mixture fraction:
-  result <<= (rf/rho0_) / (1.0+rf*tmp);
-  
-  // now use that to get the density:
-  result <<= 1.0 / ( result/rho1_ + (1.0-result)/rho0_ );
-  
   // repair bounds
   result <<= max ( min(result, rhoMax_), rhoMin_);
 }
