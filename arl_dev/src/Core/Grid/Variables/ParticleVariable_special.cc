@@ -69,7 +69,6 @@ using namespace std;
                                        const vector<const Patch*>& srcPatches,
                                        particleIndex extra)
   {
-    
     if(d_pdata && d_pdata->removeReference())
       delete d_pdata;
     if(d_pset && d_pset->removeReference())
@@ -82,9 +81,9 @@ using namespace std;
         pset->getNeighbors().front()->getLevel() != patch->getLevel()){
       patch = srcPatches[0];
     }
-    
+
     IntVector lowIndex(pset->getLow()), highIndex(pset->getHigh());
-    
+
     d_pset = pset;
     pset->addReference();
     
@@ -107,10 +106,11 @@ using namespace std;
       
       // no or real srcPatch
       if (srcPatch == 0 || !srcPatch->isVirtual()) {
-        for(ParticleSubset::iterator src_iter = subset->begin(); src_iter != subset->end(); src_iter++){
-        
+        for(ParticleSubset::iterator src_iter = subset->begin();
+                                    src_iter != subset->end(); src_iter++){
+
           (*this)[*dst_iter] = src[*src_iter];         
-      
+
           IntVector ptIndex =  patch->getLevel()->getCellIndex(src[*src_iter]);
 
           ASSERT( Patch::containsIndex(lowIndex,highIndex,ptIndex));
@@ -119,7 +119,7 @@ using namespace std;
       }
       else if (subset->numParticles() != 0) {
         Vector offset = srcPatch->getVirtualOffsetVector();
-      
+
         for(ParticleSubset::iterator src_iter = subset->begin();
             src_iter != subset->end(); src_iter++){
             

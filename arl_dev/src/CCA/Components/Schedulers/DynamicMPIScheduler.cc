@@ -379,7 +379,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       if (taskorder.active()) {
         if (d_myworld->myrank() == d_myworld->size() / 2) {
           cerrLock.lock();
-          taskorder << d_myworld->myrank() << " Running task static order: " << task->getSaticOrder() << " , scheduled order: "
+          taskorder << d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: "
                     << numTasksDone << std::endl;
           cerrLock.unlock();
         }
@@ -427,7 +427,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       numTasksDone++;
       if (taskorder.active()) {
         if (d_myworld->myrank() == d_myworld->size() / 2) {
-          taskorder << d_myworld->myrank() << " Running task static order: " << reducetask->getSaticOrder()
+          taskorder << d_myworld->myrank() << " Running task static order: " << reducetask->getStaticOrder()
                     << " , scheduled order: " << numTasksDone << std::endl;
         }
       }

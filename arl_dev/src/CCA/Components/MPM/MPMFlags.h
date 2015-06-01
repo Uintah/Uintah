@@ -110,9 +110,13 @@ namespace Uintah {
 
     bool        d_with_ice;
     bool        d_with_arches;
-    bool        d_cell_based_smoothing;
     bool        d_use_momentum_form;
     std::string d_mms_type;  // MMS Flag
+
+    //********** Start Reactive Flow Section *********************
+    bool           d_doScalarDiffusion;     //for diffusion component found in ReactiveFlow
+    std::string    d_scalarDiffusion_type;  // for diffusion component found in ReactiveFlow
+    //********** End Reactive Flow Section *********************
     
     bool		d_computeNodalConcentrationFlux;	// compute the auxiliary nodal concentration flux
     bool        d_doImplicitConcentrationDiffusion;

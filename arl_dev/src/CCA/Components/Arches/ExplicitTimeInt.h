@@ -29,7 +29,7 @@ public:
     void singlePatchFEUpdate( const Patch* patch, 
                               phiT& phi, 
                               constphiT& RHS, 
-                              double dt, double time, 
+                              double dt, 
                               const std::string eqnName);
    /** @brief A template forward Euler update for a single 
                variable for a single patch */ 
@@ -38,7 +38,7 @@ public:
                               phiT& phi, constCCVariable<double>& old_den, 
                               constCCVariable<double>& new_den, 
                               constphiT& RHS, 
-                              double dt, double time,
+                              double dt, 
                               const std::string eqnName );
   
     /** @brief A template for time averaging using a Runge-kutta form without explicit density and no clipping */  
@@ -46,14 +46,14 @@ public:
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
                      constphiT& old_phi, 
-                     const int step, const double time );
+                     const int step );
 
     /** @brief A template for time averaging using a Runge-kutta form without explicit density*/  
     template <class phiT, class constphiT>
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
                      constphiT& old_phi, 
-                     const int step, const double time, 
+                     const int step,  
                      const double clip_tol, 
                      const bool do_low_clip,  const double low_clip, 
                      const bool do_high_clip, const double high_clip, 
@@ -65,7 +65,7 @@ public:
     void timeAvePhi( const Patch* patch, 
                      phiT& phi, 
                      constphiT& old_phi, 
-                     const int step, const double time, 
+                     const int step,  
                      const double clip_tol, 
                      const bool do_low_clip,  const double low_clip, 
                      const bool do_high_clip, const double high_clip, constCCVariable<double>& weight, 
@@ -79,7 +79,7 @@ public:
                      constphiT& old_phi, 
                      constphiT& old_den, 
                      constphiT& new_den, 
-                     const int step, const double time,
+                     const int step,
                      const double clip_tol, 
                      const bool do_low_clip,  const double low_clip, 
                      const bool do_high_clip, const double high_clip );
@@ -135,22 +135,10 @@ private:
   void ExplicitTimeInt::singlePatchFEUpdate( const Patch* patch, 
                                              phiT& phi, 
                                              constphiT& RHS, 
-                                             double dt, double time, 
+                                             double dt, 
                                              const std::string eqnName)
   {
     
-#ifdef VERIFY_TIMEINT
-    std::cout << "**********************************************************************" << std::endl;
-    std::cout << std::endl;
-    std::cout << "NOTICE! Using time integrator verification procedure." << std::endl;
-    std::cout << "current equation: " << eqnName << std::endl;
-    std::cout << std::endl;
-
-    // This is a verfication test on the time integrator only (no spatial error)
-    double pi = acos(-1.0); 
-    double RHS_test = cos(2.0*pi*time); 
-#endif 
-
     Vector dx = patch->dCell();
     double vol = dx.x()*dx.y()*dx.z();
 
@@ -158,11 +146,8 @@ private:
 
       IntVector c = *iter;
 
-#ifdef VERIFY_TIMEINT
-      phi[c] += dt/vol*(RHS_test);
-#else
       phi[c] += dt/vol*(RHS[c]);
-#endif
+
     } 
   }
 
@@ -172,25 +157,10 @@ private:
                                              phiT& phi, constCCVariable<double>& old_den, 
                                              constCCVariable<double>& new_den, 
                                              constphiT& RHS, 
-                                             double dt, double time, 
+                                             double dt, 
                                              const std::string eqnName )
  
   {
-
-
-#ifdef VERIFY_TIMEINT
-    std::cout << "**********************************************************************" << std::endl;
-    std::cout << std::endl;
-    std::cout << "NOTICE! Using time integrator verification procedure." << std::endl;
-    std::cout << "current equation: " << eqnName << std::endl;
-    std::cout << "current time: " << time << std::endl;
-    std::cout << std::endl;
-
-    // This is a verfication test on the time integrator only (no spatial error)
-    double pi = acos(-1.0); 
-    double RHS_test = cos(2.0*pi*time); 
-#endif 
-
 
     Vector dx = patch->dCell();
     double dtvol = dt/ (dx.x()*dx.y()*dx.z());
@@ -200,11 +170,7 @@ private:
       IntVector c = *iter; 
 
       // (rho*phi)^{t+\Delta t} = (rho*phi)^{t} + RHS
-#ifdef VERIFY_TIMEINT
-      phi[c] = old_den[c]*phi[c] + dtvol*(RHS_test);
-#else
       phi[c] = old_den[c]*phi[c] + dtvol*(RHS[c]); 
-#endif
 
       // phi^{t+\Delta t} = ((rho*phi)^{t} + RHS) / rho^{t + \Delta t} 
       //double rho_ox = .5;
@@ -231,7 +197,7 @@ private:
   void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
                                     phiT& phi, 
                                     constphiT& old_phi, 
-                                    const int step, const double time )
+                                    const int step )
   {
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -252,7 +218,7 @@ private:
   void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
                                     phiT& phi, 
                                     constphiT& old_phi, 
-                                    const int step, const double time,
+                                    const int step,
                                     const double clip_tol, 
                                     const bool do_low_clip,  const double low_clip, 
                                     const bool do_high_clip, const double high_clip, 
@@ -278,33 +244,6 @@ private:
       }
 
     }
-
-#ifdef VERIFY_TIMEINT
-    // This computes the L_inf norm of the error for the integrator test. 
-    if (step == 0 && d_time_order == "first" || 
-        step == 1 && d_time_order == "second" || 
-        step == 2 && d_time_order == "third") {
-      d_LinfError = 0.0;
-      d_LinfSol   = 0.0; 
-    }  
-
-    double error = 0.0;
-    double pi = acos(-1.0); 
-    Vector dx = patch->dCell();
-    double exact = 1./(2.*pi)*sin(2.*pi*time);
-    d_LinfSol = max(d_LinfSol, exact); 
-    exact *= dx.x()*dx.y()*dx.z(); 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-      d_LinfError = max(d_LinfError, abs(phi[c] - exact));
-    }
-    error = d_LinfError / d_LinfSol; //normalize
-
-    std::cout << "Error from time integration = " << error << std::endl;
-    std::cout << std::endl;
-    std::cout << "**********************************************************************" << std::endl;
-#endif  
-
   }
 
 
@@ -319,7 +258,7 @@ private:
   void ExplicitTimeInt::timeAvePhi( const Patch* patch, 
                                     phiT& phi, 
                                     constphiT& old_phi, 
-                                    const int step, const double time,
+                                    const int step, 
                                     const double clip_tol, 
                                     const bool do_low_clip,  const double low_clip, 
                                     const bool do_high_clip, const double high_clip, 
@@ -349,33 +288,6 @@ private:
       }
 
     }
-
-#ifdef VERIFY_TIMEINT
-    // This computes the L_inf norm of the error for the integrator test. 
-    if (step == 0 && d_time_order == "first" || 
-        step == 1 && d_time_order == "second" || 
-        step == 2 && d_time_order == "third") {
-      d_LinfError = 0.0;
-      d_LinfSol   = 0.0; 
-    }  
-
-    double error = 0.0;
-    double pi = acos(-1.0); 
-    Vector dx = patch->dCell();
-    double exact = 1./(2.*pi)*sin(2.*pi*time);
-    d_LinfSol = max(d_LinfSol, exact); 
-    exact *= dx.x()*dx.y()*dx.z(); 
-    for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-      d_LinfError = max(d_LinfError, abs(phi[c] - exact));
-    }
-    error = d_LinfError / d_LinfSol; //normalize
-
-    std::cout << "Error from time integration = " << error << std::endl;
-    std::cout << std::endl;
-    std::cout << "**********************************************************************" << std::endl;
-#endif  
-
   }
 
 
@@ -392,7 +304,7 @@ private:
                                     constphiT& old_phi, 
                                     constphiT& new_den, 
                                     constphiT& old_den, 
-                                    int step, double time, 
+                                    int step, 
                                     const double clip_tol, 
                                     const bool do_low_clip,  const double low_clip, 
                                     const bool do_high_clip, const double high_clip )

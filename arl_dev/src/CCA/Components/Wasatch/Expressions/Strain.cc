@@ -169,13 +169,13 @@ Strain<StrainT,VelT,VelT>::Builder::build() const
 #include <spatialops/structured/FVStaggered.h>
 #define DECLARE_Strain( VOL )	\
   template class Strain< SpatialOps::FaceTypes<VOL>::XFace,	\
-                         VOL,						\
-                         SpatialOps::XVolField >;           \
+                         VOL,					\
+                         SpatialOps::XVolField >;               \
   template class Strain< SpatialOps::FaceTypes<VOL>::YFace,	\
-                         VOL,						\
-                         SpatialOps::YVolField >;           \
+                         VOL,					\
+                         SpatialOps::YVolField >;               \
   template class Strain< SpatialOps::FaceTypes<VOL>::ZFace,	\
-                         VOL,						\
+                         VOL,					\
                          SpatialOps::ZVolField>;
 
 DECLARE_Strain( SpatialOps::XVolField );

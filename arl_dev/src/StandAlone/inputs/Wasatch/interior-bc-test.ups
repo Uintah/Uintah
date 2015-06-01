@@ -10,7 +10,7 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE"/>
+      <NameTag name="f"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     <!-- Build a cell-centered scalar transport equation -->

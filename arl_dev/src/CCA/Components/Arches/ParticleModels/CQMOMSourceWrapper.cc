@@ -194,8 +194,6 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter;
       
-      model[c] = 0.0;
-      
       std::vector<double> temp_weights ( _N, 0.0 );
       std::vector<double> temp_abscissas ( _N * M, 0.0 );
       std::vector<double> temp_sources ( _N, 0.0 );
@@ -221,6 +219,7 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
       }
 
       double d_small = 1e-10;
+      double sum = 0.0;
       for ( int i = 0; i < _N; i++ ) { //loop each quad node
         double product = 1.0;
         for ( int m = 0; m < M; m++ ) { //loop each internal coordinate
@@ -238,9 +237,9 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
           }
         }
         product *= temp_weights[i] * temp_sources[i];
-        model[c] += product;
+        sum += product;
       }
-      model[c] *= d_momentIndex[_nIC];
+      model[c] = d_momentIndex[_nIC] * sum;
     } //cell loop
   } //patch loop
 }

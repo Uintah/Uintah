@@ -1550,20 +1550,12 @@ OnDemandDataWarehouse::put(       ParticleVariableBase& var,
   }
   
   int matlIndex = pset->getMatlIndex();
-  
-  if( dbg.active() ) {
-    cerrLock.lock();
-    dbg << d_myworld->myrank() << " Putting: ";
-    dbg << std::left;
-    dbg.width( 20 );
-    dbg << *label << " MI: " << matlIndex << " patch: " << *patch << " \tinto DW: " << d_generation
-        << "\n";
-    cerrLock.unlock();
-  }
-
+ 
   checkPutAccess( label, matlIndex, patch, replace );
 
   // Put it in the database
+  printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
+   
   d_varDB.put( label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), replace );
 }
 
@@ -1701,7 +1693,10 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
     }
     // allocate the memory
     var.allocate(lowIndex, highIndex);
+
     // put the variable in the database
+    printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
+     
     d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true);
   }
   else {
@@ -1821,9 +1816,12 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
     Patch::selectType::iterator iter = encompassedPatches.begin();
     for (; iter != encompassedPatches.end(); ++iter) {
       const Patch* patchGroupMember = *iter;
+      
       GridVariableBase* clone = var.clone();
+      
       IntVector groupMemberLowIndex = patchGroupMember->getExtraLowIndex(basis, label->getBoundaryLayer());
       IntVector groupMemberHighIndex = patchGroupMember->getExtraHighIndex(basis, label->getBoundaryLayer());
+      
       IntVector enclosedLowIndex = Max(groupMemberLowIndex, superLowIndex);
       IntVector enclosedHighIndex = Min(groupMemberHighIndex, superHighIndex);
 
@@ -1835,6 +1833,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
       else {
         exists = d_varDB.exists(label, matlIndex, patchGroupMember);
       }
+      
       if (patchGroupMember->isVirtual()) {
         // Virtual patches can only be ghost patches.
         ASSERT(nonGhostPatches.find(patchGroupMember) == nonGhostPatches.end());
@@ -1868,6 +1867,8 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
         else if (minLow == enclosedLowIndex && maxHigh == enclosedHighIndex) {
           // this new ghost variable section encloses the old one,
           // so replace the old one
+          printDebuggingPutInfo( label, matlIndex,patchGroupMember, __LINE__ );
+          
           d_varDB.put(label, matlIndex, patchGroupMember, clone, d_scheduler->isCopyDataTimestep(), true);
         }
         else {
@@ -1880,6 +1881,8 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
       }
       else {
         // it didn't exist before -- add it
+        printDebuggingPutInfo( label, matlIndex,patchGroupMember, __LINE__ );
+        
         d_varDB.put(label, matlIndex, patchGroupMember, clone, d_scheduler->isCopyDataTimestep(), false);
       }
     }
@@ -3461,4 +3464,23 @@ OnDemandDataWarehouse::print()
 
   d_varDB.print(std::cout, d_myworld->myrank());
   d_levelDB.print(std::cout, d_myworld->myrank());
+}
+//______________________________________________________________________
+//  print debugging information 
+void
+OnDemandDataWarehouse::printDebuggingPutInfo( const VarLabel* label,
+                                              int             matlIndex,
+                                              const Patch*    patch,
+                                              int             line)
+{
+  if( dbg.active() ) {
+    cerrLock.lock();
+    int L_indx = patch->getLevel()->getIndex();
+    dbg << d_myworld->myrank() << " Putting (line: "<<line<< ") ";
+    dbg << std::left;
+    dbg.width( 20 );
+    dbg << *label << " MI: " << matlIndex << " L-"<< L_indx <<" "<< *patch << " \tinto DW: " << d_generation
+        << "\n";
+    cerrLock.unlock();
+  }
 }

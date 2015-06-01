@@ -31,7 +31,6 @@
 #include <vector>
 
 namespace Uintah {
-using namespace SCIRun;
 
 // Just does a simple linear query for testing only.
 // Maybe change it to a range tree when testing performance.
@@ -44,9 +43,9 @@ public:
   BoxRangeQuerier(BoxPIterator begin, BoxPIterator end);
   ~BoxRangeQuerier();
 
-  void query(const IntVector& low, const IntVector& high,
+  void query(const SCIRun::IntVector& low, const SCIRun::IntVector& high,
 	     std::list<const Box*>&);
-  void queryNeighbors(const IntVector& low, const IntVector& high,
+  void queryNeighbors(const SCIRun::IntVector& low, const SCIRun::IntVector& high,
 		      std::list<const Box*>&);
 private:
   class BoxPoint
@@ -55,7 +54,7 @@ private:
     BoxPoint()
       : d_box(NULL) { }
 
-    BoxPoint(IntVector centerTimes2)
+    BoxPoint(SCIRun::IntVector centerTimes2)
       : d_box(NULL), d_centerTimes2(centerTimes2) { }
 
     BoxPoint(const BoxPoint& copy)
@@ -76,11 +75,11 @@ private:
     const Box* d_box;
     
     // center of the patch multiplied by 2
-    IntVector d_centerTimes2;
+    SCIRun::IntVector d_centerTimes2;
   };
 
-  RangeTree<BoxPoint, int>* d_rangeTree;  
-  IntVector d_maxBoxDimensions;
+  SCIRun::RangeTree<BoxPoint, int>* d_rangeTree;  
+  SCIRun::IntVector d_maxBoxDimensions;
 
   // BoxPoint's vector is kept here mostly for memory management
   std::vector<BoxPoint> d_boxPoints;
@@ -91,7 +90,7 @@ BoxRangeQuerier::BoxRangeQuerier(BoxPIterator begin, BoxPIterator end)
   :  d_maxBoxDimensions(0, 0, 0)
 {
   std::list<BoxPoint*> pointList;
-  IntVector dimensions;
+  SCIRun::IntVector dimensions;
   BoxPIterator iter;
   
   int n = 0;
@@ -113,7 +112,7 @@ BoxRangeQuerier::BoxRangeQuerier(BoxPIterator begin, BoxPIterator end)
     }
   }
 
-  d_rangeTree = scinew RangeTree<BoxPoint, int>(pointList, 3 /*dimensions*/);
+  d_rangeTree = scinew SCIRun::RangeTree<BoxPoint, int>(pointList, 3 /*dimensions*/);
 }
   
 } // end namespace Uintah

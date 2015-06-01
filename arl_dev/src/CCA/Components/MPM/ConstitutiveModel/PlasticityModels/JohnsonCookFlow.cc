@@ -191,7 +191,7 @@ JohnsonCookFlow::computeFlowStress(const PlasticityState* state,
   double Tstar = (T > Tm) ? 1.0 : ((T-Tr)/(Tm-Tr)); 
   double tempPart = (Tstar < 0.0) ? (1.0 - Tstar) : (1.0-pow(Tstar,m));
   double sigy = strainPart*strainRatePart*tempPart;
-  if (isnan(sigy)) {
+  if (std::isnan(sigy)) {
     cout << "**ERROR** JohnsonCook: sig_y == nan " 
          << " Particle = " << idx << " epdot = " << epdot
          << " ep = " << ep << " T = " << T 
@@ -229,7 +229,7 @@ JohnsonCookFlow::computeEpdot(const PlasticityState* state,
   double fac1 = tau/(strainPart*tempPart);
   double fac2 = (1.0/d_CM.C)*(fac1-1.0);
   double epdot = exp(fac2)*d_CM.epdot_0;
-  if (isnan(epdot)) {
+  if (std::isnan(epdot)) {
     cout << "**ERROR** JohnsonCook: epdot == nan " << endl; 
   }
   return epdot;
@@ -284,7 +284,7 @@ JohnsonCookFlow::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
   double D = strainRatePart*tempPart;
 
   double deriv =  (ep > 0.0) ?  (d_CM.B*d_CM.n*D*pow(ep,d_CM.n-1)) : 0.0;
-  if (isnan(deriv)) {
+  if (std::isnan(deriv)) {
     cout << "**ERROR** JohnsonCook: dsig/dep == nan " << endl; 
   }
   return deriv;
@@ -335,7 +335,7 @@ JohnsonCookFlow::evalDerivativeWRTTemperature(const PlasticityState* state,
 
   double F = strainPart*strainRatePart;
   double deriv = (T < Tr) ? -F/(Tm-Tr) : -m*F*pow(Tstar,m-1)/(Tm-Tr);
-  if (isnan(deriv)) {
+  if (std::isnan(deriv)) {
     cout << "**ERROR** JohnsonCook: dsig/dT == nan " << endl; 
   }
   return deriv;
@@ -369,7 +369,7 @@ JohnsonCookFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
     deriv = E*d_CM.C*pow((1.0 + epdot),(d_CM.C-1.0));
   else
     deriv = E*d_CM.C/epdot;
-  if (isnan(deriv)) {
+  if (std::isnan(deriv)) {
     cout << "**ERROR** JohnsonCook: dsig/depdot == nan " << endl; 
   }
   return deriv;

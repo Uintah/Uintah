@@ -54,7 +54,7 @@ areAllValuesPositive( T & src, IntVector & neg_cell )
   
   for(CellIterator iter=iterLim; !iter.done();iter++) {
     IntVector c = *iter;
-    sumNan += isnan(src[c]);       // check for nans
+    sumNan += std::isnan(src[c]);       // check for nans
     sum_src += src[c]/(fabs(src[c]) + d_SMALLNUM);
     numCells++;
   }
@@ -63,7 +63,7 @@ areAllValuesPositive( T & src, IntVector & neg_cell )
   if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
     for(CellIterator iter=iterLim; !iter.done();iter++) {
       IntVector c = *iter;
-      if (src[c] < 0.0 || isnan(src[c]) !=0) {
+      if (src[c] < 0.0 || std::isnan(src[c]) !=0) {
         neg_cell = c;
         return false;
       }
@@ -91,8 +91,8 @@ areAllValuesNumbers( T & src, IntVector & neg_cell )
   
   for(CellIterator iter=iterLim; !iter.done();iter++) {
     IntVector c = *iter;
-    sumInf += isinf(src[c]);       // check for infs
-    sumNan += isnan(src[c]);       // check for nans
+    sumInf += std::isinf(src[c]);       // check for infs
+    sumNan += std::isnan(src[c]);       // check for nans
     sum_src += src[c]/(fabs(src[c]) + d_SMALLNUM);
     numCells++;
   }
@@ -101,7 +101,7 @@ areAllValuesNumbers( T & src, IntVector & neg_cell )
   if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
     for(CellIterator iter=iterLim; !iter.done();iter++) {
       IntVector c = *iter;
-      if (isinf(src[c]) != 0 || isnan(src[c]) !=0) {
+      if (std::isinf(src[c]) != 0 || std::isnan(src[c]) !=0) {
         neg_cell = c;
         return false;
       }
@@ -125,8 +125,8 @@ areAllNodeValuesNumbers(NCVariable<Vector> & src, IntVector & neg_node )
 
   for(NodeIterator iter=iterLim; !iter.done();iter++) {
     IntVector c = *iter;
-    sumInf += isinf(src[c].length());       // check for infs
-    sumNan += isnan(src[c].length());       // check for nans
+    sumInf += std::isinf(src[c].length());       // check for infs
+    sumNan += std::isnan(src[c].length());       // check for nans
     sum_src += src[c].length()/(fabs(src[c].length()) + d_SMALLNUM);
     numCells++;
   }
@@ -135,7 +135,7 @@ areAllNodeValuesNumbers(NCVariable<Vector> & src, IntVector & neg_node )
   if ( (fabs(sum_src - numCells) > 1.0e-2) || sumNan !=0) {
     for(NodeIterator iter=iterLim; !iter.done();iter++) {
       IntVector c = *iter;
-      if (isinf(src[c].length()) != 0 || isnan(src[c].length()) !=0) {
+      if (std::isinf(src[c].length()) != 0 || std::isnan(src[c].length()) !=0) {
         neg_node = c;
         return false;
       }

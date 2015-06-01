@@ -2023,7 +2023,7 @@ HypoElasticPlastic::computeDeltaGamma(const double& delT,
     // Update local plastic strain 
     state->plasticStrain = ep + stt_deltaGamma;
 
-    if (isnan(g) || isnan(deltaGamma)) {
+    if (std::isnan(g) || std::isnan(deltaGamma)) {
       cout << "idx = " << idx << " iter = " << count 
          << " g = " << g << " Dg = " << Dg << " deltaGamma = " << deltaGamma 
          << " sigy = " << sigma_y 

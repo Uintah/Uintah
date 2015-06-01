@@ -214,6 +214,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     sus_options     = ""
     startFrom = "inputFile"
     
+    unsetenv('SCI_DEBUG')   # reset it for each test
+    
     #__________________________________
     # override defaults if the flags has been specified
     if len(test) == 5:
@@ -263,6 +265,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         if flags[i] == "exactComparison":
           abs_tolerance = 0.0
           rel_tolerance = 0.0
+
     
     #Warnings
     if dbg_opt == "dbg" and do_performance == 1:
@@ -287,6 +290,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     if environ['SCI_MALLOC_ENABLED'] != "yes" :
       do_memory = 0
+      
+    if do_gpu == 1 and has_gpu == 1:
+      environ['SCI_DEBUG'] = "SingleDevice:+"
       
     tests_to_do = [do_uda_comparisons, do_memory, do_performance]
     tolerances  = [abs_tolerance, rel_tolerance]
@@ -363,8 +369,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if outputpath != startpath:
       if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != 1:
         mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
-      system("cp `ls -1 | grep -v uda` %s/%s-results/%s/" % (outputpath, ALGO, testname))
-    
+      system("rsync --exclude '*uda*' %s/%s-results/%s/" % (outputpath, ALGO, testname))
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
       # Prepare for restart test
@@ -393,7 +398,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         if outputpath != startpath:
           if path.exists("%s/%s-results/%s/restart" % (outputpath, ALGO, testname)) != 1:
             mkdir("%s/%s-results/%s/restart" % (outputpath, ALGO, testname))
-          system("cp `ls -1 | grep -v uda` %s/%s-results/%s/restart/" % (outputpath, ALGO, testname))
+          system("rsync --exclude '*uda*' %s/%s-results/%s/" % (outputpath, ALGO, testname))
 
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
@@ -528,7 +533,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
 
   if not do_memory_test :
       unsetenv('MALLOC_STATS')
-      unsetenv('SCI_DEBUG')
       
   MPIHEAD="%s -np" % MPIRUN       #default 
   
@@ -545,12 +549,6 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   rc = system("mpirun -genvlist TERM echo 'hello' > /dev/null 2>&1")
   if rc == 0:
     MPIHEAD="%s -genvlist MALLOC_STATS,SCI_SIGNALMODE -np" % MPIRUN
-    
-  #__________________________________
-  #  H A C K    The checks above sometimes fail on hmx & fin
-  if socket.gethostname() == "fin" or  socket.gethostname() == "hmx":
-    MPIHEAD="%s -x MALLOC_STATS -x SCI_SIGNALMODE -np" % MPIRUN    
-  #__________________________________
   
   
   # set where to view the log files
@@ -607,7 +605,8 @@ def runSusTest(test, susdir, inputxml, compare_root, ALGO, dbg_opt, max_parallel
   if do_memory_test == 1:
   
     environ['MALLOC_STRICT'] = "set"
-    environ['SCI_DEBUG']     ="VarLabel:+"
+    env = "%s,%s" % (environ['SCI_DEBUG'], "VarLabel:+") # append to the existing SCI_DEBUG
+    environ['SCI_DEBUG']      = env
     
     if startFrom == "restart":
       malloc_stats_file = "restart_malloc_stats"        

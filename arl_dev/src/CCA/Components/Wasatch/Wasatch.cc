@@ -524,9 +524,13 @@ namespace Wasatch{
     
     //
     // create expressions explicitly defined in the input file.  These
-    // are typically associated with, e.g. initial conditions.
+    // are typically associated with, e.g. initial conditions, source terms, or post-processing.
     //
     create_expressions_from_input( wasatchSpec_, graphCategories_ );
+    
+    //
+    // setup property evaluations
+    //
     setup_property_evaluation( wasatchSpec_, graphCategories_, lockedFields_ );
 
     //

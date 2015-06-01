@@ -51,8 +51,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
-
 class ThermalContact;
 class ConcentrationContact;
 class HeatConduction;

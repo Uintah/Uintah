@@ -65,6 +65,10 @@ public:
   inline const std::string getPropType(){
     return _prop_type; }; 
 
+  /** @brief Returns the initialization type as set in the derived class **/
+  inline const std::string initType(){
+    return _init_type; };
+
   /** @brief Returns a vector of extra labels stored for this specific property **/ 
   inline const std::vector<const VarLabel*> getExtraLocalLabels(){
     return _extra_local_labels; }; 
@@ -156,11 +160,14 @@ void PropertyModelBase::base_initialize( const Patch* patch, phiT& phi ){
       } 
     }
 
+  } else if (_init_type == "physical" ){ 
+    _init_type = "physical"; 
   } else {
     proc0cout << " For property model: " << _prop_name << std::endl;
     throw InvalidValue("Initialization type for property model not recognized or supported!", __FILE__, __LINE__); 
   }
 }
+
 
 }  // end namespace Uintah
 

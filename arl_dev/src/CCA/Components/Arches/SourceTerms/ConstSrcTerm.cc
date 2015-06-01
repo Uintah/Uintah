@@ -94,11 +94,12 @@ ConstSrcTerm::computeSource( const ProcessorGroup* pc,
 
     CCVariable<double> constSrc; 
     constCCVariable<double> density; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
+
+    if ( timeSubStep ==0 ){  // double check this for me jeremy
+      new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
       constSrc.initialize(0.0);
     } else {
-      new_dw->allocateAndPut( constSrc, _src_label, matlIndex, patch );
+      new_dw->getModifiable( constSrc, _src_label, matlIndex, patch ); 
       constSrc.initialize(0.0);
     } 
 

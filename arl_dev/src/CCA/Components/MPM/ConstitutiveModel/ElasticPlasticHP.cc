@@ -1556,7 +1556,7 @@ ElasticPlasticHP::computeDeltaGamma(const double& delT,
     deltaGammaOld = deltaGamma;
     deltaGamma -= g/Dg;
 
-    if (isnan(g) || isnan(deltaGamma)) {
+    if (std::isnan(g) || std::isnan(deltaGamma)) {
       cout << "idx = " << idx << " iter = " << count 
            << " g = " << g << " Dg = " << Dg << " deltaGamma = " << deltaGamma 
            << " sigy = " << sigma_y 
@@ -1581,7 +1581,7 @@ ElasticPlasticHP::computeDeltaGamma(const double& delT,
   state->yieldStress = d_flow->computeFlowStress(state, delT, tolerance, 
                                                     matl, idx);
 
-  if (isnan(state->yieldStress)) {
+  if (std::isnan(state->yieldStress)) {
     cout << "idx = " << idx << " iter = " << count 
          << " sig_y = " << state->yieldStress
          << " epdot = " << state->plasticStrainRate

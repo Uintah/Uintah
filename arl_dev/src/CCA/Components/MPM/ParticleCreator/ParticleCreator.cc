@@ -42,6 +42,7 @@
 #include <CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <CCA/Components/MPM/MMS/MMS.h>
 #include <fstream>
@@ -110,10 +111,12 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<double>* temperatures  = 0;
     vector<double>* concentrations = 0;
     vector<double>* colors        = 0;
+//  vector<double>* concentrations= 0;
     vector<Vector>* pforces       = 0;
     vector<Vector>* pfiberdirs    = 0;
     vector<Vector>* pvelocities   = 0;    // gcd adds and new change name
     vector<Matrix3>* psizes       = 0;
+
     if (sgp){
       volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
@@ -421,7 +424,7 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
     
     if(hasFiner){ // Don't create particles if a finer level exists here
       const Point CC = patch->cellPosition(c);
-      bool includeExtraCells=true;
+      bool includeExtraCells=false;
       const Patch* patchExists = fineLevel->getPatchFromPoint(CC,
                                                              includeExtraCells);
       if(patchExists != 0){
@@ -555,11 +558,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   // so that particles don't get refined
   // to smaller than they start in that region initially.
   const Level* curLevel = patch->getLevel();
-  if(curLevel->hasFinerLevel() || curLevel->getID()==0){
-    pvars.prefined[i]     = 0;
-  } else{
-    pvars.prefined[i]     = 1;
-  }
+  pvars.prefined[i]     = curLevel->getIndex();
 
   //MMS
   string mms_type = d_flags->d_mms_type;
@@ -847,6 +846,10 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   matl->getConstitutiveModel()->addParticleState(particle_state,
                                                  particle_state_preReloc);
+  if(d_flags->d_doScalarDiffusion){
+    matl->getScalarDiffusionModel()->addParticleState(particle_state,
+                                                      particle_state_preReloc);
+  }
 }
 
 int

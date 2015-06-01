@@ -1000,7 +1000,7 @@ double UCNH::computeRhoMicroCM(double pressure,
       cout << e.message() << endl;
       error = true;
     }
-    if (error || rho_cur < 0.0 || isnan(rho_cur)) {
+    if (error || rho_cur < 0.0 || std::isnan(rho_cur)) {
       ostringstream desc;
       desc << "rho_cur = " << rho_cur << " pressure = " << -p_gauge 
            << " p_ref = " << p_ref << " 1/sp_vol_CC = " << rho_guess << endl;

@@ -41,49 +41,13 @@
 #include <include/sci_defs/uintah_testdefs.h.in>
 
 // TURN ON debug flag in src/Core/Math/MersenneTwister.h to compare with Ray:CPU
-#define DEBUG -9 // 1: divQ, 2: boundFlux, 3: scattering
+#define DEBUG -9      // 1: divQ, 2: boundFlux, 3: scattering
+#define CUDA_PRINTF   // increase the printf buffer
 
 /*______________________________________________________________________
   TO DO
   create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
   and use it for scheduling.  Add logic to what is actually in that vector.
-
- ISSUES:
-   For GPU code to run you must comment out sched_rayTrace()
-      tsk->requires( Task::OldDW, d_divQLabel,           d_gn, 0 );
-      tsk->requires( Task::OldDW, d_boundFluxLabel,      d_gn, 0 );
-      tsk->requires( Task::OldDW, d_radiationVolqLabel,  d_gn, 0 );
-
-  RMCRT_bm1_ML.ups:
-     - It crashes when you uncomment the 3rd level.  The pathology
-       is 1) a ray is next to a domain boundary and is moving parallel to it.  It hits the edge of the fine patch
-      and drops down a level.  The coarsening the cell index, now moves the ray closer to the edge of the domain.
-      The ray now travels into the extra cell on the coarsest level, reflects and crashes.
-      Here is some diagnostic info
-
-
-      [int 1, 8, 35] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 0 containsCell: 1
-          origin [int 2, 4, 16]dir 2 cur [int 1, 8, 35] prevCell [int 1, 8, 34] sumI 0.0527691 in_domain 1
-          tmaxX 22.1192 tmaxY 22.042 tmaxZ 20.1616
-          direction [-0.0700541 0.196376 0.978023]
-
-      [int 1, 8, 36] **jumpFinetoCoarserLevel 1 jumpCoarsetoCoarserLevel 0 containsCell: 0
-       ** Jumping off fine patch switching Levels:  prev L: 2 cur L 1 cur [int 0, 4, 18]
-          origin [int 2, 4, 16]dir 2 cur [int 0, 4, 18] prevCell [int 1, 8, 35] sumI 0.0533102 in_domain 1
-          tmaxX 22.1192 tmaxY 27.1343 tmaxZ 22.2066
-          direction [-0.0700541 0.196376 0.978023]
-
-      [int -1, 4, 18] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 1 containsCell: 1
-       ** Switching Levels:  prev L: 1 cur L 0 cur [int -1, 2, 9] c_old [int -1, 4, 18]
-          origin [int 2, 4, 16]dir 0 cur [int -1, 2, 9] prevCell [int 0, 4, 18] sumI 0.0553113 in_domain 0
-          tmaxX 22.1192 tmaxY 32.2266 tmaxZ 22.2066
-          direction [-0.0700541 0.196376 0.978023]
-
-       REFLECTING
-      [int 1, 4, 18] **jumpFinetoCoarserLevel 0 jumpCoarsetoCoarserLevel 0 containsCell: 1
-
-      <crash>
-
 
 ______________________________________________________________________*/
 
@@ -130,6 +94,8 @@ Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
   d_orderOfInterpolation = -9;
   d_onOff_SetBCs   = true;
   d_radiometer     = NULL;
+  d_dbgCells.push_back( IntVector(36,0,0) );
+  d_halo          = IntVector(-9,-9,-9);
 
   //_____________________________________________
   //   Ordering for Surface Method
@@ -260,7 +226,9 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 
   //__________________________________
   //  Read in the algorithm section
-  bool isMultilevel = false;
+  bool isMultilevel   = false;
+  Algorithm algorithm = singleLevel;
+  
   ProblemSpecP alg_ps = rmcrt_ps->findBlock("algorithm");
 
   if (alg_ps){
@@ -276,6 +244,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     if (type == "dataOnion" ) {
 
       isMultilevel = true;
+      algorithm    = dataOnion;
       alg_ps->getWithDefault( "halo",  d_halo,  IntVector(10,10,10));
 
       //  Method for deteriming the extents of the ROI
@@ -302,12 +271,23 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     //  rmcrt only on the coarse level
     } else if ( type == "RMCRT_coarseLevel" ) {
       isMultilevel = true;
+      algorithm    = coarseLevel;
       alg_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
     }
   }
 
   //__________________________________
   //  bulletproofing
+  
+  if( Parallel::usingDevice() ){              // GPU
+    if( (algorithm == dataOnion && d_whichROI_algo != patch_based ) ){
+      ostringstream warn;
+      warn << "GPU:RMCRT:ERROR: ";
+      warn << "At this time only ROI_extents type=\"patch_based\" work on the GPU";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  }
+  
   // special conditions when using floats and multi-level
   if ( d_FLT_DBL == TypeDescription::float_type && isMultilevel) {
 
@@ -323,6 +303,22 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
     }
   }
   d_sigma_over_pi = d_sigma/M_PI;
+  
+
+//__________________________________
+// Increase the printf buffer size only once!  
+#ifdef HAVE_CUDA
+  #ifdef CUDA_PRINTF
+  if( Parallel::usingDevice() ){
+    size_t size;
+    CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize) );
+    CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
+    printf("RMCRT: CUDA: Increasing the size of the print buffer from %lu to %lu bytes\n",(long uint) size, ((long uint)10 * size) );
+  }
+  #endif
+#endif
+  
+  
 }
 
 //______________________________________________________________________
@@ -387,6 +383,13 @@ Ray::sched_rayTrace( const LevelP& level,
   Task *tsk = NULL;
 
   if (Parallel::usingDevice()) {          // G P U
+  
+    if(radCalc_freq != 1){                // FIXME    
+       ostringstream warn;
+       warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+  
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
       tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
@@ -421,7 +424,7 @@ Ray::sched_rayTrace( const LevelP& level,
     Ghost::GhostType  gac  = Ghost::AroundCells;
     dbg << "    sched_rayTrace: adding requires for all-to-all variables " << endl;
     tsk->requires( abskg_dw ,    d_abskgLabel  ,   gac, SHRT_MAX);
-    tsk->requires( sigma_dw ,    d_sigmaT4Label,  gac, SHRT_MAX);
+    tsk->requires( sigma_dw ,    d_sigmaT4Label,   gac, SHRT_MAX);
     tsk->requires( celltype_dw , d_cellTypeLabel , gac, SHRT_MAX);
   }
 
@@ -642,10 +645,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == IntVector(20,20,20) ) {
+    if( isDbgCell(origin) ) {
           printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ[origin], radiationVolq[origin],abskg[origin], sigmaT4OverPi[origin]);
-  }
+    }
 #endif
 /*===========TESTING==========`*/
     }  // end cell iterator
@@ -690,6 +693,14 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
 
   if (Parallel::usingDevice()) {          // G P U
     taskname = "Ray::rayTraceDataOnionGPU";
+    
+    if(radCalc_freq != 1){                // FIXME    
+       ostringstream warn;
+       warn << "RMCRT:GPU  A radiation calculation frequency > 1 is not supported\n";
+      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+    }
+    
+    
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
       tsk = scinew Task( taskname, this, &Ray::rayTraceDataOnionGPU< double >,
                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
@@ -911,11 +922,17 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       IntVector origin = *iter;
 
 /*`==========TESTING==========*/
-      if(origin == IntVector(20,20,20) && d_isDbgOn ){
+#if 0 
+      if( isDbgCell(origin) && d_isDbgOn ){
         dbg2.setActive(true);
       }else{
         dbg2.setActive(false);
       }
+      
+//      if( origin != d_dbgCell ){
+//        return;
+//     }
+#endif
 /*===========TESTING==========`*/
 
       double sumI = 0;
@@ -924,7 +941,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       //  ray loop
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
-        //dbg2 << "iRay: " << iRay << " " ;
+        //dbg2 << "===== iRay: " << iRay << endl;
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
         Vector ray_location;
@@ -945,13 +962,12 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
       radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;
 
-      //dbg2 << origin << "    divQ: " << divQ_fine[origin] << " term2 " << abskg_fine[origin] << " sumI term " << (sumI/d_nDivQRays) << endl;
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == IntVector(20,20,20) ) {
-          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n",
+    if( isDbgCell(origin) ) {
+          printf( "\n      [%d, %d, %d]  sumI: %g  divQ: %g radiationVolq: %g  abskg: %g,    sigmaT4: %g \n\n",
                     origin.x(), origin.y(), origin.z(), sumI,divQ_fine[origin], radiationVolq_fine[origin],abskg_fine[origin], sigmaT4OverPi_fine[origin]);
-  }
+    }
 #endif
 /*===========TESTING==========`*/
     }  // end cell iterator
@@ -1009,12 +1025,12 @@ Ray::computeExtents(LevelP level_0,
     }
   } else if ( d_whichROI_algo == patch_based ){
 
-    IntVector patchLo = patch->getCellLowIndex();
-    IntVector patchHi = patch->getCellHighIndex();
+    IntVector patchLo = patch->getExtraCellLowIndex();
+    IntVector patchHi = patch->getExtraCellHighIndex();
 
     fineLevel_ROI_Lo = patchLo - d_halo;
     fineLevel_ROI_Hi = patchHi + d_halo;
-    dbg << "  patch: " << patchLo << " " << patchHi << endl;
+    dbg << "  L-"<< fineLevel->getIndex() <<"  patch: ("<<patch->getID() <<") " << patchLo << " " << patchHi << endl;
 
   }
 
@@ -1058,7 +1074,7 @@ Ray::computeExtents(LevelP level_0,
   // debugging
   if(dbg2.active()){
     for(int L = 0; L<maxLevels; L++){
-      dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
+      //dbg2 << "L-"<< L << " regionLo " << regionLo[L] << " regionHi " << regionHi[L] << endl;
     }
   }
 }
@@ -1767,8 +1783,8 @@ void Ray::computeCellType( const ProcessorGroup*,
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-  if( origin == IntVector(20,20,20) ) {
-    printf("        updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
+  if( isDbgCell(origin) ) {
+    printf("        A) updateSumI_ML: [%d,%d,%d] ray_dir [%g,%g,%g] ray_loc [%g,%g,%g]\n", origin.x(), origin.y(), origin.z(),ray_direction.x(), ray_direction.y(), ray_direction.z(), ray_location.x(), ray_location.y(), ray_location.z());
   }
 #endif
 /*===========TESTING==========`*/
@@ -1813,10 +1829,6 @@ void Ray::computeCellType( const ProcessorGroup*,
   double optical_thickness     = 0;
   double expOpticalThick_prev  = 1.0;    // exp(-opticalThick_prev)
 
-
-
-  //dbg2 << "  fineLevel_ROI_Lo: " <<  fineLevel_ROI_Lo << " fineLevel_ROI_HI: " << fineLevel_ROI_Hi << endl;
-
   //______________________________________________________________________
   //  Threshold  loop
   while (intensity > d_threshold){
@@ -1847,18 +1859,31 @@ void Ray::computeCellType( const ProcessorGroup*,
 
       // next cell index and position
       cur[dir]  = cur[dir] + step[dir];
-      Vector dx_prev = Dx[L];           //  Used to compute coarsenRatio
+      Vector dx_prev = Dx[L];           //  Used to compute coarsenRatio  FIX ME
 
       //__________________________________
       // Logic for moving between levels
-      // currently you can only move from fine to coarse level
+      // - Currently you can only move from fine to coarse level
+      // - Don't jump levels if ray is at edge of domain
+      
+      Point pos = level->getCellPosition(cur);           // position could be outside of domain
+      in_domain = domain_BB.inside(pos);
+      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
 
-      //bool jumpFinetoCoarserLevel   = ( onFineLevel && finePatch->containsCell(cur) == false );
-      bool jumpFinetoCoarserLevel   = ( onFineLevel && containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) == false );
-      bool jumpCoarsetoCoarserLevel = ( onFineLevel == false && containsCell(regionLo[L], regionHi[L], cur, dir) == false && L > 0 );
+      bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
+      bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );
+    
+      bool jumpFinetoCoarserLevel   = ( onFineLevel &&  ray_outside_ROI && in_domain );
+      bool jumpCoarsetoCoarserLevel = ( (onFineLevel == false) && ray_outside_Region && (L > 0) && in_domain );
 
-      //dbg2 << cur << " **jumpFinetoCoarserLevel " << jumpFinetoCoarserLevel << " jumpCoarsetoCoarserLevel " << jumpCoarsetoCoarserLevel
-      //    << " containsCell: " << containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir) << endl;
+#if (DEBUG == 1 || DEBUG == 4)
+      if( isDbgCell(origin) ) {
+        printf( "        Ray: [%i,%i,%i] **jumpFinetoCoarserLevel %i jumpCoarsetoCoarserLevel %i containsCell: %i ", cur.x(), cur.y(), cur.z(), jumpFinetoCoarserLevel, jumpCoarsetoCoarserLevel,
+            containsCell(fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir));
+        printf( " onFineLevel: %i ray_outside_ROI: %i ray_outside_Region: %i in_domain: %i\n", onFineLevel, ray_outside_ROI, ray_outside_Region, in_domain );
+        printf( " L: %i regionLo: [%i,%i,%i], regionHi: [%i,%i,%i]\n",L,regionLo[L].x(),regionLo[L].y(),regionLo[L].z(),regionHi[L].x(),regionHi[L].y(),regionHi[L].z());
+      }
+#endif
 
       if( jumpFinetoCoarserLevel ){
         cur   = level->mapCellToCoarser(cur);
@@ -1866,22 +1891,26 @@ void Ray::computeCellType( const ProcessorGroup*,
         L     = level->getIndex();
         onFineLevel = false;
 
-        // NEVER UNCOMMENT EXCEPT FOR DEBUGGING, it is EXTREMELY SLOW
-        //dbg2 << " ** Jumping off fine patch switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << endl;
+#if (DEBUG == 1 || DEBUG == 4)
+        if( isDbgCell(origin) ) {
+          printf( "        ** Jumping off fine patch switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i] \n",prevLev, L, cur.x(), cur.y(), cur.z());
+        }
+#endif
       } else if ( jumpCoarsetoCoarserLevel ){
 
-        IntVector c_old = cur;
+        IntVector c_old = cur;                          // needed for debugging
         cur   = level->mapCellToCoarser(cur);
         level = level->getCoarserLevel().get_rep();
         L     = level->getIndex();
-
-        //dbg2 << " ** Switching Levels:  prev L: " << prevLev << " cur L " << L << " cur " << cur << " c_old " << c_old << endl;
+#if (DEBUG == 1 || DEBUG == 4)
+        if( isDbgCell(origin) ) {
+          printf( "        ** Switching Levels:  prev L: %i, L: %i, cur: [%i,%i,%i], c_old: [%i,%i,%i]\n",prevLev, L, cur.x(), cur.y(), cur.z(), c_old.x(), c_old.y(), c_old.z());
+        }
+#endif
       }
 
-      Point pos = level->getCellPosition(cur);         // position could be outside of domain
-      in_domain = domain_BB.inside(pos);
 
-//      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
+
       //__________________________________
       //  update marching variables
       disMin        = (tMax[dir] - tMax_prev);        // Todd:   replace tMax[dir]
@@ -1915,17 +1944,19 @@ void Ray::computeCellType( const ProcessorGroup*,
 
  /*`==========TESTING==========*/
 #if DEBUG == 1
-if(origin == IntVector(20,20,20)){
-    printf( "            cur [%d,%d,%d] prev [%d,%d,%d] ", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
-    printf( " face %d ", dir );
-    printf( "tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
+  if( isDbgCell( origin) ){
+    printf( "        B) cur [%d,%d,%d] prev [%d,%d,%d]", cur.x(), cur.y(), cur.z(), prevCell.x(), prevCell.y(), prevCell.z());
+    printf( " dir %d ", dir );
+    printf( " stepSize [%i,%i,%i] ",step[0],step[1],step[2]);
+    printf( " tMax [%g,%g,%g] ",tMax.x(),tMax.y(), tMax.z());
     printf( "rayLoc [%g,%g,%g] ", ray_location.x(),ray_location.y(), ray_location.z());
     printf( "inv_dir [%g,%g,%g] ",inv_direction.x(),inv_direction.y(), inv_direction.z());
-    printf( "disMin %g \n",disMin );
+    printf( "disMin %g inDomain %i\n",disMin, in_domain );
 
     printf( "            abskg[prev] %g  \t sigmaT4OverPi[prev]: %g \n",abskg[prevLev][prevCell],  sigmaT4OverPi[prevLev][prevCell]);
     printf( "            abskg[cur]  %g  \t sigmaT4OverPi[cur]:  %g  \t  cellType: %i \n",abskg[L][cur], sigmaT4OverPi[L][cur], cellType[L][cur]);
-}
+    printf( "            Dx[prevLev].x  %g \n",  Dx[prevLev].x() );
+  }
 #endif
 /*===========TESTING==========`*/
 
@@ -1937,11 +1968,6 @@ if(origin == IntVector(20,20,20)){
       sumI += sigmaT4OverPi[prevLev][prevCell] * ( expOpticalThick_prev - expOpticalThick ) * fs;
 
       expOpticalThick_prev = expOpticalThick;
-
-      // NEVER UNCOMMENT EXCEPT FOR DEBUGGING IT IS EXTREMELY SLOW
-      //dbg2 << "    origin " << origin << "dir " << dir << " cur " << cur <<" prevCell " << prevCell << " sumI " << sumI << " in_domain " << in_domain << endl;
-      //dbg2 << "    tmaxX " << tMax.x() << " tmaxY " << tMax.y() << " tmaxZ " << tMax.z() << endl;
-      //dbg2 << "    direction " << ray_direction << endl;
 
     } //end domain while loop.  ++++++++++++++
 
@@ -1963,11 +1989,10 @@ if(origin == IntVector(20,20,20)){
 
 /*`==========TESTING==========*/
 #if DEBUG == 1
-if( origin == IntVector(20,20,20) ){
-    printf( "            cur [%d,%d,%d] intensity: %g expOptThick: %g, fs: %g allowReflect: %i\n",
-           cur.x(), cur.y(), cur.z(), intensity,  exp(-optical_thickness), fs, d_allowReflect );
+  if( isDbgCell(origin) ){
+    printf( "        C) intensity: %g OptThick: %g, fs: %g allowReflect: %i\n", intensity, optical_thickness, fs, d_allowReflect );
 
-}
+  }
 #endif
 /*===========TESTING==========`*/
 

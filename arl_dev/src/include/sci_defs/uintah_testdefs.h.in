@@ -44,6 +44,8 @@
 
 @DEF_RAY_SCATTER@
 
+@DEF_CXX11@
+
 #if !defined( FIX_NAME )
 #  if defined( FORTRAN_UNDERSCORE_END )
      // This ## magic (apparently) concatenates the _ to the 'fun' varaible.

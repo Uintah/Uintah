@@ -318,7 +318,7 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,
 
         //__________________________________
         // Used in MPMICE.
-        if(type=="Pressure" || type=="Temperature" || type=="Concentration"){
+        if(type=="Pressure" || type=="Temperature" || type=="SD-Type"){
           const BoundCondBase *bcb = 
             patch->getArrayBCValues(face,dwi,type,nu,nbound_ptr, child);
             

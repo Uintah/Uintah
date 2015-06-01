@@ -26,19 +26,19 @@
 
 using namespace Uintah;
 
-bool Box::isInside(IntVector low, IntVector high) const
+bool Box::isInside(SCIRun::IntVector low, SCIRun::IntVector high) const
 {
-  IntVector lowOverlap = Max(low, low_);
-  IntVector highOverlap = Min(high, high_);
+  SCIRun::IntVector lowOverlap = Max(low, low_);
+  SCIRun::IntVector highOverlap = Min(high, high_);
   return (highOverlap.x() >= lowOverlap.x() &&
 	  highOverlap.y() >= lowOverlap.y() &&
 	  highOverlap.z() >= lowOverlap.z());
 }
 
-bool Box::isNeighboring(IntVector low, IntVector high) const
+bool Box::isNeighboring(SCIRun::IntVector low, SCIRun::IntVector high) const
 {
-  IntVector lowOverlap = Max(low, low_);
-  IntVector highOverlap = Min(high, high_);
+  SCIRun::IntVector lowOverlap = Max(low, low_);
+  SCIRun::IntVector highOverlap = Min(high, high_);
 
   int neighboringSides = 0;
   int overlappingSides = 0;

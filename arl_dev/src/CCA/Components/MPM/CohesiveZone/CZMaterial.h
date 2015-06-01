@@ -43,8 +43,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
-
  class Patch;
  class DataWarehouse;
  class VarLabel;

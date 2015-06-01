@@ -84,14 +84,14 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
 //
 RMCRT_Test::~RMCRT_Test ( void )
 {
-  if ( d_RMCRT ) {
-    delete d_RMCRT;
-  }
-
   VarLabel::destroy(d_colorLabel);
   VarLabel::destroy(d_divQLabel);
   VarLabel::destroy(d_compAbskgLabel);
   VarLabel::destroy(d_cellTypeLabel);
+
+  if ( d_RMCRT ) {
+    delete d_RMCRT;
+  }
 
   if( d_old_uda){
     delete d_old_uda;

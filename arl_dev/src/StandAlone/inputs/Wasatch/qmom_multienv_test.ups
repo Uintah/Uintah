@@ -124,69 +124,69 @@
 <!-- SuperSaturation Value, w/o table make it linear in rxn_ext space -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="S" state="STATE_N"/>
+      <NameTag name="S" />
       <Constant> 2000 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="S" state="STATE_N"/>
+      <NameTag name="S" />
       <LinearFunction slope="-1999" intercept="2000">    
-        <NameTag name="rxn_extent" state="STATE_N"/>
+        <NameTag name="rxn_extent" />
       </LinearFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="Eq-CaCO3" state="STATE_N"/>
+      <NameTag name="Eq-CaCO3" />
       <Constant> 0.001 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="rxn_extent" state="STATE_N"/>
+      <NameTag name="rxn_extent" />
       <Constant> 0 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList> initialization </TaskList>
-      <NameTag name="mixfrac" state="STATE_N"/>
+      <NameTag name="mixfrac" />
       <Constant> 0 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="mixfrac" state="STATE_N"/>
+      <NameTag name="mixfrac" />
       <LinearFunction slope="1" intercept="0.0">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </LinearFunction>
     </BasicExpression> 
 
     <BasicExpression type="SVOL">
       <TaskList> initialization </TaskList>
-      <NameTag name="scalarvar" state="STATE_N"/>
+      <NameTag name="scalarvar" />
       <Constant> 0 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="scalarvar" state="STATE_N"/>
+      <NameTag name="scalarvar" />
       <LinearFunction slope="-.01" intercept="0.01">
-        <NameTag name="YSVOL" state="STATE_NONE"/>
+        <NameTag name="YSVOL"/>
       </LinearFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList> initialization </TaskList>
-      <NameTag name="scalardiss" state="STATE_N"/>
+      <NameTag name="scalardiss" />
       <Constant> 0.0 </Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="scalardiss" state="STATE_N"/>
+      <NameTag name="scalardiss" />
       <LinearFunction slope="0.1" intercept="0.0">
-        <NameTag name="scalarvar" state="STATE_N"/>
+        <NameTag name="scalarvar" />
       </LinearFunction>
     </BasicExpression>
 
@@ -194,7 +194,7 @@
     <TransportEquation equation="generic">
       <SolutionVariable> rxn_extent </SolutionVariable>
       <SourceTermExpression>
-        <NameTag name="rxn_src_expr" state="STATE_N"/>
+        <NameTag name="rxn_src_expr" />
       </SourceTermExpression>
     </TransportEquation>
 
@@ -223,59 +223,59 @@
 <!-- RXN Extent Source Calculations-->
     <BasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="max_mols" state="STATE_N"/>
+      <NameTag name="max_mols" />
       <Constant> 0.1 </Constant>
     </BasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="rxn_src_expr" state="STATE_N"/>
+      <NameTag name="rxn_src_expr" />
       <PrecipitationSource>
         <EtaScale>
-          <NameTag name="max_mols" state="STATE_N"/>
+          <NameTag name="max_mols" />
         </EtaScale>
         <Density>
-          <NameTag name="density" state="STATE_N"/>
+          <NameTag name="density" />
         </Density>
       </PrecipitationSource>
     </PrecipitationBasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="rxn_src_expr" state="STATE_N"/>
+      <NameTag name="rxn_src_expr" />
       <Constant>0</Constant>
     </BasicExpression>
 
 <!-- Calcite Physics Parameters -->
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="GrowthCoefficient_Calcite" state="STATE_N"/>
+      <NameTag name="GrowthCoefficient_Calcite" />
       <PrecipitationBulkDiffusionCoefficient Molec_Vol="3.693e-5" Diff_Coef="1e-9">
         <Supersaturation>
-          <NameTag name="S" state="STATE_N"/>  
+          <NameTag name="S" />  
         </Supersaturation>
         <EquilibriumConcentration>
-          <NameTag name="Eq-CaCO3" state="STATE_N"/>
+          <NameTag name="Eq-CaCO3" />
         </EquilibriumConcentration>
       </PrecipitationBulkDiffusionCoefficient>
     </PrecipitationBasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="BirthCoefficient_Calcite" state="STATE_N"/>
+      <NameTag name="BirthCoefficient_Calcite" />
       <PrecipitationClassicNucleationCoefficient Molec_Vol="3.693e-5" Surf_Eng="0.16" Temperature="298">
         <Supersaturation>
-          <NameTag name="S" state="STATE_N"/>  
+          <NameTag name="S" />  
         </Supersaturation> 
       </PrecipitationClassicNucleationCoefficient>
     </PrecipitationBasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="RStarExpr_Calcite" state="STATE_N"/>
+      <NameTag name="RStarExpr_Calcite" />
       <PrecipitationClassicRStarValue Surf_Eng="0.16" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
         <Supersaturation>
-          <NameTag name="S" state="STATE_N"/>
+          <NameTag name="S" />
         </Supersaturation>
       </PrecipitationClassicRStarValue>
     </PrecipitationBasicExpression>
@@ -284,63 +284,63 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="S_CalcMult" state="STATE_N"/>
+      <NameTag name="S_CalcMult" />
       <Constant>0</Constant> 
     </BasicExpression> 
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="S_CalcMult" state="STATE_N"/>
+      <NameTag name="S_CalcMult" />
         <LinearFunction slope="1.0" intercept="0.0">    <!-- this slope is = K_calc/k_acc-->
-          <NameTag name="S" state="STATE_N"/>
+          <NameTag name="S" />
         </LinearFunction>
     </BasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="GrowthCoefficient_CalcMult" state="STATE_N"/>
+      <NameTag name="GrowthCoefficient_CalcMult" />
       <PrecipitationBulkDiffusionCoefficient Molec_Vol="3.693e-5" Diff_Coef="1e-9">
         <Supersaturation>
-          <NameTag name="S_CalcMult" state="STATE_N"/>  
+          <NameTag name="S_CalcMult" />  
         </Supersaturation>
         <EquilibriumConcentration>
-          <NameTag name="Eq-CaCO3" state="STATE_N"/>
+          <NameTag name="Eq-CaCO3" />
         </EquilibriumConcentration>
       </PrecipitationBulkDiffusionCoefficient>
     </PrecipitationBasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="BirthCoefficient_CalcMult" state="STATE_N"/>
+      <NameTag name="BirthCoefficient_CalcMult" />
       <PrecipitationClassicNucleationCoefficient Molec_Vol="3.693e-5" Surf_Eng="0.16" Temperature="298">
         <Supersaturation>
-          <NameTag name="S_CalcMult" state="STATE_N"/>  
+          <NameTag name="S_CalcMult" />  
         </Supersaturation> 
       </PrecipitationClassicNucleationCoefficient>
     </PrecipitationBasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="RStarExpr_CalcMult" state="STATE_N"/>
+      <NameTag name="RStarExpr_CalcMult" />
       <PrecipitationClassicRStarValue Surf_Eng="0.16" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
         <Supersaturation>
-          <NameTag name="S_CalcMult" state="STATE_N"/>
+          <NameTag name="S_CalcMult" />
         </Supersaturation>
       </PrecipitationClassicRStarValue>
     </PrecipitationBasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="MultiEnv" state="STATE_NONE"/>
+      <NameTag name="MultiEnv"/>
       <MultiEnvMixingModel>
         <MixtureFraction>
-          <NameTag name="mixfrac" state="STATE_N"/>
+          <NameTag name="mixfrac" />
         </MixtureFraction>
         <ScalarVariance>
-          <NameTag name="scalarvar" state="STATE_N"/>
+          <NameTag name="scalarvar" />
         </ScalarVariance>
         <ScalarDissipation>
-          <NameTag name="scalardiss" state="STATE_N"/>
+          <NameTag name="scalardiss" />
         </ScalarDissipation>
       </MultiEnvMixingModel>
     </PrecipitationBasicExpression>
@@ -358,7 +358,7 @@
         <PreGrowthCoefficient>1.0e13</PreGrowthCoefficient>
        
         <GrowthCoefficientExpression>
-           <NameTag name="GrowthCoefficient_Calcite" state="STATE_N"/> 
+           <NameTag name="GrowthCoefficient_Calcite" /> 
         </GrowthCoefficientExpression> 
       </GrowthExpression> 
         
@@ -366,10 +366,10 @@
         <BirthModel> POINT </BirthModel>
         <PreBirthCoefficient> 1.0e30 </PreBirthCoefficient>
         <BirthCoefficientExpression>
-          <NameTag name="BirthCoefficient_Calcite" state="STATE_N"/>
+          <NameTag name="BirthCoefficient_Calcite" />
         </BirthCoefficientExpression> 
         <RStarExpression>
-          <NameTag name="RStarExpr_Calcite" state="STATE_N"/>
+          <NameTag name="RStarExpr_Calcite" />
         </RStarExpression> 
       </BirthExpression>
 
@@ -387,7 +387,7 @@
         <PreGrowthCoefficient>1.0e13</PreGrowthCoefficient>
        
         <GrowthCoefficientExpression>
-           <NameTag name="GrowthCoefficient_CalcMult" state="STATE_N"/> 
+           <NameTag name="GrowthCoefficient_CalcMult" /> 
         </GrowthCoefficientExpression> 
       </GrowthExpression> 
         
@@ -395,15 +395,15 @@
         <BirthModel> POINT </BirthModel>
         <PreBirthCoefficient> 1.0e30 </PreBirthCoefficient>
         <BirthCoefficientExpression>
-          <NameTag name="BirthCoefficient_CalcMult" state="STATE_N"/>
+          <NameTag name="BirthCoefficient_CalcMult" />
         </BirthCoefficientExpression> 
         <RStarExpression>
-          <NameTag name="RStarExpr_CalcMult" state="STATE_N"/>
+          <NameTag name="RStarExpr_CalcMult" />
         </RStarExpression> 
       </BirthExpression>
 
       <MultiEnvMixingModel>
-        <NameTag name="MultiEnv" state="STATE_NONE"/>
+        <NameTag name="MultiEnv"/>
       </MultiEnvMixingModel>
 
     </MomentTransportEquation>
@@ -412,11 +412,11 @@
 
 
 <!--    <ForceOnGraph tasklist="initialization">
-      <NameTag name="rxn_src_expr" state="STATE_N" />
+      <NameTag name="rxn_src_expr"  />
     </ForceOnGraph> 
 -->
      <ForceOnGraph tasklist="advance_solution">
-         <NameTag name="m_CalcMult_0_ave" state="STATE_NONE"/>
+         <NameTag name="m_CalcMult_0_ave"/>
     </ForceOnGraph>
   </Wasatch>
 

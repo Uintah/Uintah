@@ -24,22 +24,21 @@
 
 #include "SuiteTree.h"
 #include <iostream>
-using namespace std;
 
 SuiteTreeNode::~SuiteTreeNode()
 {
-  for (list<SuiteTree*>::iterator it = mySubTrees.begin();
+  for (std::list<SuiteTree*>::iterator it = mySubTrees.begin();
        it != mySubTrees.end() ; it++)
     delete *it;
 }
 
-string SuiteTreeNode::composeSubSummary(const string indent, bool expandAll,
+std::string SuiteTreeNode::composeSubSummary(const std::string indent, bool expandAll,
 					bool& allPassed)
 {
-  string summary = "";
+  std::string summary = "";
   allPassed = true;
   bool passed;
-  for (list<SuiteTree*>::iterator it = mySubTrees.begin();
+  for (std::list<SuiteTree*>::iterator it = mySubTrees.begin();
        it != mySubTrees.end() ; it++) {
     summary += (*it)->composeSummary(indent, expandAll, passed);
     if (!passed)
@@ -48,10 +47,10 @@ string SuiteTreeNode::composeSubSummary(const string indent, bool expandAll,
   return summary;
 }
 
-string SuiteTreeNode::composeSummary(const string indent, bool expandAll,
+std::string SuiteTreeNode::composeSummary(const std::string indent, bool expandAll,
 				     bool& allPassed)
 {
-  string summary = composeSubSummary(indent + "  ", expandAll, allPassed);
+  std::string summary = composeSubSummary(indent + "  ", expandAll, allPassed);
  
   if (allPassed) {
     if (expandAll)
@@ -65,21 +64,21 @@ string SuiteTreeNode::composeSummary(const string indent, bool expandAll,
   return summary;
 }
 
-void SuiteTreeNode::appendFailedSuites(list<Suite*>& failedSuiteList)
+void SuiteTreeNode::appendFailedSuites(std::list<Suite*>& failedSuiteList)
 {
-  for (list<SuiteTree*>::iterator it = mySubTrees.begin();
+  for (std::list<SuiteTree*>::iterator it = mySubTrees.begin();
        it != mySubTrees.end() ; it++)
     (*it)->appendFailedSuites(failedSuiteList);
 }
 
 void SuiteTreeNode::reportAllSuites()
 {
-  for (list<SuiteTree*>::iterator it = mySubTrees.begin();
+  for (std::list<SuiteTree*>::iterator it = mySubTrees.begin();
        it != mySubTrees.end() ; it++)
     (*it)->reportAllSuites();  
 }
 
-string SuiteTreeLeaf::composeSummary(const string indent, bool,
+std::string SuiteTreeLeaf::composeSummary(const std::string indent, bool,
 				     bool& allPassed)
 {
   if (mySuite->hasAllPassed()) {
@@ -92,7 +91,7 @@ string SuiteTreeLeaf::composeSummary(const string indent, bool,
   }
 }
 
-void SuiteTreeLeaf::appendFailedSuites(list<Suite*>& failedSuiteList)
+void SuiteTreeLeaf::appendFailedSuites(std::list<Suite*>& failedSuiteList)
 {
   if (!mySuite->hasAllPassed())
     failedSuiteList.push_back(mySuite);
@@ -101,6 +100,6 @@ void SuiteTreeLeaf::appendFailedSuites(list<Suite*>& failedSuiteList)
 void SuiteTreeLeaf::reportAllSuites()
 {
   mySuite->report();
-  cout << endl;
+  std::cout << std::endl;
 }
 

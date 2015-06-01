@@ -91,7 +91,7 @@
                                                                           radiation_properties'">
 
           <initialization               spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, gaussian'">
+                                        attribute1="type REQUIRED STRING 'constant, gaussian, physical'">
 
             <!-- Constant initialization -->
             <constant                   spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
@@ -425,24 +425,27 @@
         <first_order_drhodt             spec="OPTIONAL BOOLEAN" />
         <inverse_density_average        spec="OPTIONAL BOOLEAN" />
 
+        <!-- cold flow mixing as 1/rho_mix = f/rho_0 + (1-f)/rho_1 -->
         <ColdFlow                       spec="OPTIONAL NO_DATA" >
           <ignore_iv_density_check      spec="OPTIONAL NO_DATA"/>  <!-- don't force an algorithmic change on the transported iv's to use density guess --> 
-          <mixture_fraction_label       spec="REQUIRED STRING"/>
+          <mixture_fraction             spec="REQUIRED NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
           <temperature_label_name       spec="OPTIONAL STRING"/>   <!-- The string label identifier from the table for temperature --> 
-          <Stream_1                     spec="MULTIPLE NO_DATA">
-            <density                    spec="REQUIRED DOUBLE 'positive'"/>
-            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+          
+          <stream_0                     spec="REQUIRED NO_DATA"
+                                        attribute1="density REQUIRED DOUBLE 'positive'"
+                                        attribute2="temperature REQUIRED DOUBLE 'positive'"> <!-- f=1 stream, rho[=]kg/m^3, T[=]K -->
             <species                    spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
                                         attribute2="value REQUIRED DOUBLE 'positive'"/>
-          </Stream_1>
-          <Stream_2                     spec="MULTIPLE NO_DATA">
-            <density                    spec="REQUIRED DOUBLE 'positive'"/>
-            <temperature                spec="REQUIRED DOUBLE 'positive'"/>
+          </stream_0>
+          <stream_1                     spec="REQUIRED NO_DATA"
+                                        attribute1="density REQUIRED DOUBLE 'positive'"
+                                        attribute2="temperature REQUIRED DOUBLE 'positive'"> <!-- f=0 stream, rho[=]kg/m^3, T[=]K -->
             <species                    spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"
                                         attribute2="value REQUIRED DOUBLE 'positive'"/>
-          </Stream_2>
+          </stream_1>
           <post_mix                     spec="OPTIONAL NO_DATA">
             <!-- Notes on post stream mixing: 
               1) Dependent variables that are not specified are assumed to be ZERO (even density)
@@ -726,7 +729,7 @@
         <MomentumSolver                 spec="REQUIRED NO_DATA" >
           <filter_divergence_constraint spec="OPTIONAL BOOLEAN" />
           <convection_scheme            spec="REQUIRED STRING 'central, upwind, wall_upwind, old_central, old_upwind'" /> 
-          <!-- wallupwind = upwinding on walls, central otherwise (cheap wall model)--> 
+          <!-- wallupwind = upwinding on walls, central otherwise (cheap, ad hoc wall model)--> 
           <Re_limit                     spec="OPTIONAL DOUBLE 'positive'"/> <!-- for Upwind and Wallupwind: Upwind > this Re, Central < this Re --> 
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
@@ -734,8 +737,9 @@
           <initialization               spec="OPTIONAL NO_DATA"           
                                         attribute1="type REQUIRED STRING 'constant, 
                                         taylor-green, almgren, exponentialvortex, StABL,
-                                        input'">
+                                        input, shunn_moin'">
 
+           <!-- Constant values -->
            <const_u                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
            <const_v                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
            <const_w                     spec="REQUIRED DOUBLE" need_applies_to="type constant"/>
@@ -744,7 +748,7 @@
 
            <A                           spec="OPTIONAL DOUBLE" need_applies_to="type almgren"/> <!-- amplitude --> 
            <B                           spec="OPTIONAL DOUBLE" need_applies_to="type almgren"/> <!-- amplitude --> 
-           <plane                       spec="OPTIONAL STRING 'x-y, y-z, z-x'" need_applies_to="type almgren, exponentialvortex"/>
+           <plane                       spec="OPTIONAL STRING 'x-y, y-z, z-x'" need_applies_to="type almgren, exponentialvortex, shunn_moin"/>
            
            <x0                          spec="REQUIRED DOUBLE" need_applies_to="type exponentialvortex"/>
            <y0                          spec="REQUIRED DOUBLE" need_applies_to="type exponentialvortex"/>
@@ -757,6 +761,12 @@
            <which_bc                    spec="REQUIRED STRING" need_applies_to="type StABL"/>
 
            <input_file                  spec="REQUIRED STRING" need_applies_to="type input"/> <!-- reads a simple input file for u,v,w --> 
+
+           <!-- Shunn/Moin MMS -->
+           <k                           spec="REQUIRED DOUBLE" need_applies_to="type shunn_moin"/>
+           <w                           spec="REQUIRED DOUBLE" need_applies_to="type shunn_moin"/>
+           <uf                          spec="OPTIONAL DOUBLE" need_applies_to="type shunn_moin"/>
+           <vf                          spec="OPTIONAL DOUBLE" need_applies_to="type shunn_moin"/>
            
           </initialization>
         </MomentumSolver>
@@ -766,8 +776,8 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" /> 
           <src                          spec="MULTIPLE NO_DATA" 
                                         attribute1="label REQUIRED STRING"/>
-          <use_ref_point                spec="OPTIONAL NO_DATA"
-                                        attribute1="value REQUIRED DOUBLE"/> 
+          <enforce_solvability          spec="OPTIONAL NO_DATA"/> <!-- For some problems, this parameter is required to solve the system (e.g., periodic, variable density ) -->
+          
         <Parameters                     spec="OPTIONAL NO_DATA"
                                           attribute1="variable OPTIONAL STRING 'implicitPressure'" >
           <initial_tolerance            spec="OPTIONAL DOUBLE 'positive'"/>
@@ -1048,7 +1058,7 @@
                                         attribute1="value REQUIRED DOUBLE"/> <!-- [m^2/s] --> <!-- for constant diffusivity --> 
           <initialization               spec="OPTIONAL NO_DATA"
                                         attribute1="type REQUIRED STRING 'constant, step, geometry_fill, 
-                                                                          sine-x, sine-y, sine-z, gaussian, 
+                                                                          sine-x, sine-y, sine-z, gaussian, shunn_moin,
                                                                           tabulated, linear-x'">
             <!-- constant value initialization -->
             <constant                   spec="OPTIONAL DOUBLE"/>
@@ -1072,6 +1082,9 @@
             <center                     spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- center of the gaussian --> 
             <std                        spec="REQUIRED DOUBLE" need_applies_to="type gaussian"/>               <!-- width of the gaussian --> 
             <shift                      spec="OPTIONAL DOUBLE" need_applies_to="type gaussian"/>               <!-- shift the gaussian by a constant --> 
+
+            <!-- Shunn and Moin MMS with variable density on a 2D periodic plane -->
+            <!-- NOTE: The parameters for this initialization are grabbed from the momentum IC. Thus, momentum MUST be using the shunn_moin IC. -->
 
             <!-- Initialize a variable using table lookup --> 
             <depend_varname             spec="REQUIRED STRING" need_applies_to="type tabulated"/> <!-- the name of the variable from the table --> 
@@ -1118,7 +1131,9 @@
                                                                            moment2_mixture_fraction_src,
                                                                            dissipation_src,
                                                                            manifold_rxn,
-                                                                           momentum_drag_src'">
+                                                                           momentum_drag_src, 
+                                                                           shunn_moin_mf_mms, 
+                                                                           shunn_moin_cont_mms'">
 
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />

@@ -71,6 +71,7 @@
       <calculate_fracture_parameters      spec="OPTIONAL BOOLEAN" />  <!-- FIXME: default is? -->
       <do_crack_propagation               spec="OPTIONAL BOOLEAN" />
       <RunMMSProblem                           spec="OPTIONAL STRING 'AxisAligned, GeneralizedVortex , ExpandingRing, AxisAligned3L'" /> <!-- MMS runtime option -->
+      <scalar_diffusion                   spec="OPTIONAL STRING 'explicit, implicit'" />
     </MPM>
     <PhysicalBC                   spec="OPTIONAL NO_DATA" >
       <MPM                        spec="REQUIRED NO_DATA" >
@@ -174,6 +175,7 @@
             </quad>
           </crack_segments>
         </crack>
+        <include href="diffusion_models.xml" />
       </material>
       <cohesive_zone                     spec="MULTIPLE NO_DATA"
                                            attribute1="name OPTIONAL STRING" >
@@ -185,6 +187,7 @@
         <do_rotation                       spec="OPTIONAL BOOLEAN" />
       </cohesive_zone>
       <thermal_contact                   spec="OPTIONAL NO_DATA" />
+      <include href="diffusion_interface.xml" />
     </MPM>
   </MaterialProperties>
 

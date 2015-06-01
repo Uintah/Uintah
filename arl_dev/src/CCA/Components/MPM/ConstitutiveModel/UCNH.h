@@ -47,7 +47,6 @@ struct UCNHStateData {
 #include <Core/Util/Endian.h>
 
 namespace SCIRun {
-  using namespace Uintah;
   inline void swapbytes( Uintah::UCNHStateData& d)
   { swapbytes(d.Alpha); }
 } // namespace SCIRun

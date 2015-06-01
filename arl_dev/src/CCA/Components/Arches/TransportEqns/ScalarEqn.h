@@ -155,9 +155,6 @@ private:
   const VarLabel* d_prNo_label;           ///< Label for the prandlt number 
 
   //For advanced clipping
-  std::vector<double> clip_ind_vec;
-  std::vector<double> clip_dep_vec;  
-  std::vector<double> clip_dep_low_vec;
   bool _reinitialize_from_other_var; 
   std::string _reinit_var_name; 
   const VarLabel* _reinit_var_label; 

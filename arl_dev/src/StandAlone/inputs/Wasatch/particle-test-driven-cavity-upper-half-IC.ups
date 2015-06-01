@@ -11,65 +11,65 @@
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="xvelcc" state="STATE_NONE"/>
+      <NameTag name="xvelcc"/>
       <InterpolateExpression type="XVOL">
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u"/>
       </InterpolateExpression>
     </PostProcessingExpression>
     
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="yvelcc" state="STATE_NONE"/>
+      <NameTag name="yvelcc"/>
       <InterpolateExpression type="YVOL">
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v"/>
       </InterpolateExpression>
     </PostProcessingExpression>
         
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="xvelcc" state="STATE_NONE"/>
-      <NameTag name="yvelcc" state="STATE_NONE"/>
+      <NameTag name="xvelcc"/>
+      <NameTag name="yvelcc"/>
     </ForceOnGraph>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vorticity_z" state="STATE_NONE"/>
+      <NameTag name="vorticity_z"/>
       <Vorticity>
       <Component>Z</Component>
       <Vel1>
-        <NameTag name="v" state="STATE_NONE"/>
+        <NameTag name="v"/>
       </Vel1>
       <Vel2>
-        <NameTag name="u" state="STATE_NONE"/>
+        <NameTag name="u"/>
       </Vel2>
       </Vorticity>
     </PostProcessingExpression>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_NONE"/>
+      <NameTag name="vel_magnitude"/>
       <VelocityMagnitude>
       <XVelocity>
-        <NameTag name="u" state="STATE_NONE"/>
+        <NameTag name="u"/>
       </XVelocity>
       <YVelocity>
-        <NameTag name="v" state="STATE_NONE"/>
+        <NameTag name="v"/>
       </YVelocity>
       </VelocityMagnitude>
     </PostProcessingExpression>
 
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vel_magnitude" state="STATE_NONE"/>
-      <NameTag name="vorticity_z" state="STATE_NONE"/>                      
+      <NameTag name="vel_magnitude"/>
+      <NameTag name="vorticity_z"/>                      
     </ForceOnGraph>
     
     <ParticleTransportEquations>
       <ParticlesPerCell>1</ParticlesPerCell>
-      <ParticleDensity name="p.rho" state="STATE_NONE"/>            
+      <ParticleDensity name="p.rho"/>            
       <ParticleMass name="p.m" state="STATE_DYNAMIC">
-      	<SourceTerm name="nothing" state="STATE_NONE"/>	
+      	<SourceTerm name="nothing"/>	
       </ParticleMass>      
       <ParticleSize name="p.size" state="STATE_DYNAMIC">      
-      	<SourceTerm name="nothing" state="STATE_NONE"/>
+      	<SourceTerm name="nothing"/>
       </ParticleSize>
 			<ParticlePosition x="p.xw" y="p.yw" z="p.zw">
 				<Velocity>
@@ -82,12 +82,12 @@
 <!-- 				<DisableDragForce/> -->
 <!-- 				<Gravity direction="Z"/> -->
 				<GasProperties>
-					<GasViscosity name="viscosity" state="STATE_NONE"/>
-					<GasDensity name="density" state="STATE_NONE"/>					
+					<GasViscosity name="viscosity"/>
+					<GasDensity name="density"/>					
 					<GasVelocity>
-						<XVel name="u" state="STATE_NONE"/>
-						<YVel name="v" state="STATE_NONE"/>
-						<ZVel name="w" state="STATE_NONE"/>		
+						<XVel name="u"/>
+						<YVel name="v"/>
+						<ZVel name="w"/>		
 					</GasVelocity>				
 				</GasProperties>
 			</ParticleMomentum>
@@ -99,13 +99,13 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.size" state="STATE_NONE"/>
+       <NameTag name="p.size"/>
        <Constant>0.0001</Constant>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.rho" state="STATE_NONE"/>
+       <NameTag name="p.rho"/>
        <Constant>1000</Constant>
     </BasicExpression>
 
@@ -117,7 +117,7 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.xw" state="STATE_NONE"/>
+       <NameTag name="p.xw"/>
        <ParticlePositionIC coordinate="X" bounds="PATCHBASED">
        		<Random seed="1"/>
        </ParticlePositionIC>
@@ -125,7 +125,7 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.yw" state="STATE_NONE"/>
+       <NameTag name="p.yw"/>
        <ParticlePositionIC coordinate="Y" bounds="SPECIFIED">
        		<Bounds low="0.55" high="0.95"/>
        		<Random seed="2"/>
@@ -134,25 +134,25 @@
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.zw" state="STATE_NONE"/>
+       <NameTag name="p.zw"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.u" state="STATE_NONE"/>
+       <NameTag name="p.u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.v" state="STATE_NONE"/>
+       <NameTag name="p.v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <BasicExpression type="PARTICLE">
        <TaskList>initialization</TaskList>
-       <NameTag name="p.w" state="STATE_NONE"/>
+       <NameTag name="p.w"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
@@ -160,31 +160,31 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="w" state="STATE_NONE"/>
+       <NameTag name="w"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>advance_solution</TaskList>
-       <NameTag name="w" state="STATE_NONE"/>
+       <NameTag name="w"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
@@ -196,7 +196,7 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>

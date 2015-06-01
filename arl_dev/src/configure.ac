@@ -293,6 +293,13 @@ SCI_ARG_WITH(mx,
    sci_required_mx=no],
   [with_mx=""])
   
+SCI_ARG_WITH(pokitt,
+  AC_HELP_STRING(--with-pokitt=DIR,
+                 Use the PoKiTT installation in DIR),
+  [with_pokitt="$withval"
+   sci_required_pokitt=yes],
+  [with_pokitt=""])
+  
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
@@ -1947,6 +1954,23 @@ AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.
 
 AC_CONFIG_HEADER(include/sci_defs/config_testdefs.h)
 sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
+
+# Check if we are using a c++-11 compiler
+
+AC_MSG_CHECKING(if using a c++-11 compiler)
+have_cxx11="no"
+
+AC_TRY_COMPILE([#include <iostream>],
+                [int a; decltype(a) b; auto d = a; auto l = [](){};],
+                [have_cxx11=yes],
+                [have_cxx11=no])
+
+if test $have_cxx11 = yes; then
+   DEF_CXX11="#define HAVE_CXX11 1"
+fi   
+AC_MSG_RESULT($have_cxx11)
+AC_SUBST(DEF_CXX11)
+
 
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for required libraries and headers  ------
@@ -4302,6 +4326,50 @@ AC_SUBST(INC_SPATIALOPS_H)
 AC_SUBST(SPATIALOPS_LIB_FLAG)
 AC_SUBST(SPATIALOPS_LIB_DIR_FLAG)
 
+##  --  search for PoKiTT Library ------------------------
+
+if test "$with_pokitt"; then
+
+  if test "$with_pokitt" = "yes"; then
+    AC_MSG_ERROR( --with-pokitt=DIR requires a DIRectory be provided. )
+  else
+
+    AC_MSG_CHECKING(for Pokitt files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_pokitt; then
+      echo ""
+      AC_MSG_ERROR( PoKiTT directory '$with_pokitt' does not exist. )
+    fi
+    POKITT_INCLUDE_DIR="include/pokitt"
+    # Check includes
+    for file in CanteraObjects.h  MixtureFractionExpr.h PoKiTTVersion.h   SpeciesN.h thermo \
+                MixtureFraction.h MixtureMolWeight.h    SpecFromMixfrac.h kinetics   transport; do
+      if test ! -e $with_pokitt/$POKITT_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$with_pokitt/$POKITT_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check lib
+    the_lib=$with_pokitt/lib/pokitt/libpokitt.a
+    if test ! -f $the_lib; then
+      echo ""
+      AC_MSG_ERROR( '$the_lib' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_POKITT="#define HAVE_POKITT 1"
+  INC_POKITT_H="-I$with_pokitt/include"
+  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+
+  POKITT_LIB_FLAG="-lpokitt"
+
+  HAVE_POKITT="yes"
+fi
+AC_SUBST(HAVE_POKITT)
+AC_SUBST(DEF_POKITT)
+AC_SUBST(INC_POKITT_H)
+AC_SUBST(POKITT_LIB_FLAG)
+AC_SUBST(POKITT_LIB_DIR_FLAG)
+
 ##  --  search for Exprlib Library ------------------------
 
 if test "$with_exprlib"; then
@@ -4468,7 +4536,7 @@ else
      # We should just be able to link vs. libHYPRE.so...
      #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
      AC_LANG([C++])
-     SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+            SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                         HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
                         $_sci_lib,
                         $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
@@ -4476,12 +4544,13 @@ else
                         optional)
 
      if test "$HAVE_HYPRE" != "yes"; then
-        SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+           SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                            HYPRE,
                            $_sci_lib,
                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                            ,
                            optional)
+
      fi
      AC_LANG([C])
 

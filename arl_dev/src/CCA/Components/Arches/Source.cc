@@ -215,7 +215,7 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
                    constvars->vVelRhoHat, constvars->wVelRhoHat, delta_t,
                    dx, dy, dz);
 #endif
-  
+ 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
     IntVector c = *iter;
     vars->pressNonlinearSrc[c] -= constvars->filterdrhodt[c]/delta_t;

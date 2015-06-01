@@ -89,7 +89,7 @@
 #include <time.h>
 #include <math.h>
 
-//#define DEBUG
+//#define FIXED_RANDOM_NUM
 
 class MTRand {
 // Data
@@ -170,7 +170,7 @@ inline MTRand::MTRand()
 
 inline double MTRand::rand()
 	{ 
-        #ifdef DEBUG
+        #ifdef FIXED_RANDOM_NUM
           return 0.3;   // fix the random number for debugging purposes
         #else
           return double(randInt()) * (1.0/4294967295.0); 
@@ -188,7 +188,7 @@ inline double MTRand::randExc( const double& n )
 
 inline double MTRand::randDblExc()
 	{ 
-       #ifdef DEBUG
+       #ifdef FIXED_RANDOM_NUM
          return 0.3;    // fix the random number for debugging purposes
        #else
          return ( double(randInt()) + 0.5 ) * (1.0/4294967296.0); 

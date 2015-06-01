@@ -69,6 +69,7 @@ private:
     std::string _flux_x; 
     std::string _flux_y; 
     std::string _flux_z; 
+    std::string _area; 
 
     int _f;
 

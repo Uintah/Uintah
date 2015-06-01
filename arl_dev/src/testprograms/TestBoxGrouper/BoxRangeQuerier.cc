@@ -26,27 +26,23 @@
 #include <testprograms/TestBoxGrouper/BoxRangeQuerier.h>
 #include <list>
 
-using namespace Uintah;
-using namespace SCIRun;
-using namespace std;
-
-BoxRangeQuerier::~BoxRangeQuerier()
+Uintah::BoxRangeQuerier::~BoxRangeQuerier()
 {
   delete d_rangeTree;
 }
 
-void BoxRangeQuerier::query(const IntVector& low, const IntVector& high,
-			    list<const Box*>& foundBoxes)
+void Uintah::BoxRangeQuerier::query(const SCIRun::IntVector& low, const SCIRun::IntVector& high,
+			    std::list<const Box*>& foundBoxes)
 {
-  list<BoxPoint*> foundPoints;
+  std::list<BoxPoint*> foundPoints;
 
   // Note: factor of 2 is to make calculations simple and not
   // require rounding, but think of this as doing a query on
   // the box centers and think of these query values as halved.
-  IntVector centerLowTimes2 =
-    low * IntVector(2, 2, 2) - d_maxBoxDimensions;
-  IntVector centerHighTimes2 =
-    high * IntVector(2, 2, 2) + d_maxBoxDimensions;
+  SCIRun::IntVector centerLowTimes2 =
+    low * SCIRun::IntVector(2, 2, 2) - d_maxBoxDimensions;
+  SCIRun::IntVector centerHighTimes2 =
+    high * SCIRun::IntVector(2, 2, 2) + d_maxBoxDimensions;
 
   BoxPoint lowBoxPoint(centerLowTimes2);
   BoxPoint highBoxPoint(centerHighTimes2);
@@ -62,7 +58,7 @@ void BoxRangeQuerier::query(const IntVector& low, const IntVector& high,
   // the average box dimensions).
 
   //foundBoxes.reserve(foundBoxes.size() + foundPoints.size());
-  for (list<BoxPoint*>::iterator it = foundPoints.begin();
+  for (std::list<BoxPoint*>::iterator it = foundPoints.begin();
        it != foundPoints.end(); it++) {    
     const Box* box = (*it)->getBox();
     if (box->isInside(low, high))
@@ -71,27 +67,27 @@ void BoxRangeQuerier::query(const IntVector& low, const IntVector& high,
 }
 
 void
-BoxRangeQuerier::queryNeighbors(const IntVector& low, const IntVector& high,
-				list<const Box*>& foundBoxes)
+Uintah::BoxRangeQuerier::queryNeighbors(const SCIRun::IntVector& low, const SCIRun::IntVector& high,
+				std::list<const Box*>& foundBoxes)
 {
-  list<BoxPoint*> foundPoints;
+  std::list<BoxPoint*> foundPoints;
   for (int i = 0; i < 3; i++) {
-    IntVector sideLow = low; --sideLow[i];
-    IntVector sideHigh = high; sideHigh[i] = sideLow[i];
+    SCIRun::IntVector sideLow = low; --sideLow[i];
+    SCIRun::IntVector sideHigh = high; sideHigh[i] = sideLow[i];
     query(sideLow, sideHigh, foundBoxes);
     sideHigh = high; ++sideHigh[i];
     sideLow = low; sideLow[i] = sideHigh[i];
     query(sideLow, sideHigh, foundBoxes);
   }
-  for (list<const Box*>::iterator iter = foundBoxes.begin(); iter != foundBoxes.end(); iter++) {
+  for (std::list<const Box*>::iterator iter = foundBoxes.begin(); iter != foundBoxes.end(); iter++) {
     ASSERT((*iter)->isNeighboring(low, high));  
   }
 }
 
 /*
-list<const Box*> BoxRangeQuerier::query(const IntVector& low, const IntVector& high)
+std::list<const Box*> Uintah::BoxRangeQuerier::query(const SCIRun::IntVector& low, const SCIRun::IntVector& high)
 {
-  list<const Box*> results;
+  std::list<const Box*> results;
   for (unsigned long i = 0; i < d_boxPoints.size(); i++) {
     const Box* box = d_boxPoints[i].getBox();
     if (box->isInside(low, high))
@@ -100,9 +96,9 @@ list<const Box*> BoxRangeQuerier::query(const IntVector& low, const IntVector& h
   return results;
 }
 
-list<const Box*> BoxRangeQuerier::queryNeighbors(const IntVector& low, const IntVector& high)
+std::list<const Box*> Uintah::BoxRangeQuerier::queryNeighbors(const SCIRun::IntVector& low, const SCIRun::IntVector& high)
 {
-  list<const Box*> results;
+  std::list<const Box*> results;
   for (unsigned long i = 0; i < d_boxPoints.size(); i++) {
     const Box* box = d_boxPoints[i].getBox();
     if (box->isNeighboring(low, high))

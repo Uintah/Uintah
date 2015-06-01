@@ -142,6 +142,8 @@ DEBUGTESTS = [
 NIGHTLYTESTS = [
 #   ("scalar-transport-equation_perf",    scalarequationperf_ups,   1.1,  "Linux",  ["no_uda_comparison","no_restart","do_performance_test"] ),
 #	("particle-test-driven-cavity-upper-half-IC", "particle-test-driven-cavity-upper-half-IC.ups",   4,  "Linux",   ["exactComparison","no_memoryTest"] ),
+  ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-2dmms-tabulated", "varden-2dmms-tabulated.ups", 4,  "Linux",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
 	("particle-test-interpolate-to-mesh.ups", "particle-test-interpolate-to-mesh.ups",  4,  "All",   ["exactComparison","no_restart","no_memoryTest","no_dbg"] ),
 	("interior-bc-test", "interior-bc-test.ups",  8,  "All",   ["exactComparison","no_restart","no_memoryTest"] ),
@@ -310,6 +312,8 @@ RKTESTS=[
 ]
 
 VARDENTESTS=[
+  ("varden-jet-2d",                    "varden-jet-2d.ups",   4,  "All",  ["exactComparison","no_restart"] ),
+  ("varden-2dmms-tabulated", "varden-2dmms-tabulated.ups", 4,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-projection-mms-analytic",                         "varden-projection-mms-analytic.ups",              3,  "All",  ["exactComparison","no_restart","do_not_validate"] ),
   ("varden-3D-lowres-jet-IMPULSE",                    "varden-3D-lowres-jet-IMPULSE.ups",   8,  "All",  ["exactComparison","no_restart"] ),
   ("varden-projection-mms",                    "varden-projection-mms.ups",   3,  "All",  ["exactComparison","no_restart"] ),
