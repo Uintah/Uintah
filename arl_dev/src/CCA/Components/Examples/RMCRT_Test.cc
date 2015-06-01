@@ -315,6 +315,13 @@ void RMCRT_Test::scheduleInitialize ( const LevelP& level,
 //______________________________________________________________________
 //
 //______________________________________________________________________
+void RMCRT_Test::scheduleRestartInitialize(const LevelP& level,
+                                     SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
+//______________________________________________________________________
 void RMCRT_Test::scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler )
 {
   printSchedule(level,dbg,"RMCRT_Test::scheduleComputeStableTimestep");
@@ -379,9 +386,10 @@ void RMCRT_Test::scheduleTimeAdvance ( const LevelP& level,
     //  on the finest level
     d_RMCRT->sched_ROI_Extents( fineLevel, sched );
 
-    Task::WhichDW sigmaT4_dw = Task::NewDW;
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
+    Task::WhichDW celltype_dw = Task::NewDW;
     const bool modifies_divQ = false;
-    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, modifies_divQ, d_radCalc_freq);
+    d_RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, d_radCalc_freq);
 
   }
 
@@ -627,6 +635,9 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         }
       }
     }  // intrusion
+    
+    d_RMCRT->setBC<int, int>( cellType,  d_cellTypeLabel->getName(), patch, matl );
+    
   }  // patch
 }
 
@@ -759,9 +770,16 @@ void RMCRT_Test::sched_initProperties( const LevelP& finestLevel,
 {
   // Move the labels forward.    They were computed in initialize()
   //  This mimics what the component will handoff to RMCRT.
-  d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_cellTypeLabel );
   d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_compAbskgLabel );
   d_RMCRT->sched_CarryForward_Var( finestLevel, sched, d_colorLabel );
+  
+  int maxLevels = finestLevel->getGrid()->numLevels();
+  GridP grid = finestLevel->getGrid();
+  for (int l = maxLevels - 1; l >= 0; l--) {
+    const LevelP& level = grid->getLevel(l);
+    d_RMCRT->sched_CarryForward_Var( level, sched, d_cellTypeLabel );
+  }
+  
 }
 
 //______________________________________________________________________

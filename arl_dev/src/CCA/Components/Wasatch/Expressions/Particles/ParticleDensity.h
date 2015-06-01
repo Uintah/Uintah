@@ -15,7 +15,7 @@
 class ParticleDensity
 : public Expr::Expression<ParticleField>
 {
-  DECLARE_FIELDS(ParticleField, pmass_, psize_);
+  DECLARE_FIELDS(ParticleField, pmass_, psize_)
   
   ParticleDensity( const Expr::Tag& pmassTag,
                    const Expr::Tag& psizeTag );

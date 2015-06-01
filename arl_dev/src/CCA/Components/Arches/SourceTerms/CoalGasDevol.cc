@@ -68,7 +68,7 @@ CoalGasDevol::sched_computeSource( const LevelP& level, SchedulerP& sched, int t
     ModelBase& model = modelFactory.retrieve_model( model_name ); 
     
     const VarLabel* tempgasLabel_m = model.getGasSourceLabel();
-    tsk->requires( Task::OldDW, tempgasLabel_m, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempgasLabel_m, Ghost::None, 0 );
 
   }
 
@@ -101,14 +101,12 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
     CoalModelFactory& modelFactory = CoalModelFactory::self(); 
 
     CCVariable<double> devolSrc; 
-    if ( new_dw->exists(_src_label, matlIndex, patch ) ){
-      new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch ); 
-      devolSrc.initialize(0.0);
-    } else {
+    if ( timeSubStep == 0 ){ 
       new_dw->allocateAndPut( devolSrc, _src_label, matlIndex, patch );
       devolSrc.initialize(0.0);
-    } 
-
+    } else { 
+      new_dw->getModifiable( devolSrc, _src_label, matlIndex, patch ); 
+    }
 
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
       std::string model_name = _devol_model_name; 
@@ -124,7 +122,7 @@ CoalGasDevol::computeSource( const ProcessorGroup* pc,
       constCCVariable<double> qn_gas_devol;
       const VarLabel* gasModelLabel = model.getGasSourceLabel(); 
  
-      old_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
+      new_dw->get( qn_gas_devol, gasModelLabel, matlIndex, patch, gn, 0 );
 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
               IntVector c = *iter;

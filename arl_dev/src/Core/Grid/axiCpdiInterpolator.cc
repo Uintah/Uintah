@@ -164,7 +164,7 @@ void axiCpdiInterpolator::findCellAndShapeDerivatives(const Point& pos,
   double one_over_4V = 1.0/(4.0*volume);
   vector<Vector> alpha(4,Vector(0.0,0.0,0.0));
   vector<double> phi(4);
-  // conw we construct the vectors necessary for the gradient calculation:
+  // construct the vectors necessary for the gradient calculation:
   alpha[0][0]   =  one_over_4V*(-r2[1]+r1[1]);
   alpha[0][1]   =  one_over_4V*(r2[0]-r1[0]);
   alpha[0][2]   =  one_over_4V*(-r1[0]*r2[1]+r1[1]*r2[0]);

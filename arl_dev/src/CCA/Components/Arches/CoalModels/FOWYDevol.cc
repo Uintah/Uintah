@@ -1,4 +1,4 @@
-#include <CCA/Components/Arches/CoalModels/BTDevol.h>
+#include <CCA/Components/Arches/CoalModels/FOWYDevol.h>
 #include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -14,6 +14,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
 
+#include <boost/math/special_functions/erf.hpp>
 //===========================================================================
 
 using namespace std;
@@ -21,7 +22,7 @@ using namespace Uintah;
 
 //---------------------------------------------------------------------------
 // Builder:
-BTDevolBuilder::BTDevolBuilder( const std::string         & modelName,
+FOWYDevolBuilder::FOWYDevolBuilder( const std::string         & modelName,
                                                             const vector<std::string> & reqICLabelNames,
                                                             const vector<std::string> & reqScalarLabelNames,
                                                             ArchesLabel         * fieldLabels,
@@ -31,15 +32,15 @@ BTDevolBuilder::BTDevolBuilder( const std::string         & modelName,
 {
 }
 
-BTDevolBuilder::~BTDevolBuilder(){}
+FOWYDevolBuilder::~FOWYDevolBuilder(){}
 
-ModelBase* BTDevolBuilder::build() {
-  return scinew BTDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+ModelBase* FOWYDevolBuilder::build() {
+  return scinew FOWYDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
 
-BTDevol::BTDevol( std::string modelName, 
+FOWYDevol::FOWYDevol( std::string modelName, 
                                               SimulationStateP& sharedState,
                                               ArchesLabel* fieldLabels,
                                               vector<std::string> icLabelNames, 
@@ -48,17 +49,25 @@ BTDevol::BTDevol( std::string modelName,
 : Devolatilization(modelName, sharedState, fieldLabels, icLabelNames, scalarLabelNames, qn)
 {
   pi = acos(-1.0);
+
+  std::string v_inf_name = ParticleHelper::append_env( "v_inf", qn ); 
+  _v_inf_label = VarLabel::create( v_inf_name, CCVariable<double>::getTypeDescription() );
+  _rawcoal_birth_label = NULL; 
+
 }
 
-BTDevol::~BTDevol()
+FOWYDevol::~FOWYDevol()
 {
+
+  VarLabel::destroy(_v_inf_label); 
+
 }
 
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
   void 
-BTDevol::problemSetup(const ProblemSpecP& params, int qn)
+FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
 {
 
   ProblemSpecP db = params;
@@ -73,14 +82,38 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   std::string rcmass_name = ParticleHelper::append_env( rcmass_root, d_quadNode ); 
   std::string rcmassqn_name = ParticleHelper::append_qn_env( rcmass_root, d_quadNode ); 
   _rcmass_varlabel = VarLabel::find(rcmass_name);
+  _rcmass_weighted_scaled_varlabel = VarLabel::find(rcmassqn_name); 
+
+
   EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
   DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
    _rc_scaling_constant = rcmass_eqn.getScalingConstant(d_quadNode);
+  std::string ic_RHS = rcmassqn_name+"_RHS";
+  _RHS_source_varlabel = VarLabel::find(ic_RHS);
+
+
+
+  //RAW COAL get the birth term if any: 
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" ); 
+  std::string rawcoal_birth_qn_name = ParticleHelper::append_qn_env(rawcoal_birth_name, d_quadNode); 
+  if ( rawcoal_birth_name != "NULLSTRING" ){ 
+    _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name ); 
+  }
 
   // create char mass var label
   std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
   std::string char_name = ParticleHelper::append_env( char_root, d_quadNode ); 
   _char_varlabel = VarLabel::find(char_name); 
+  std::string char_weighted_scaled_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
+  _charmass_weighted_scaled_varlabel = VarLabel::find(char_weighted_scaled_name); 
+
+  // check for char mass and get scaling constant
+  std::string charqn_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
+
+  EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
+  DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
+  std::string char_ic_RHS = charqn_name+"_RHS";
+  _char_RHS_source_varlabel = VarLabel::find(char_ic_RHS);
   
   // create particle temperature label
   std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
@@ -88,16 +121,23 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
  
   // Look for required scalars
-  if (db_coal_props->findBlock("BTDevol")) {
-    ProblemSpecP db_BT = db_coal_props->findBlock("BTDevol");
+  if (db_coal_props->findBlock("FOWYDevol")) {
+    ProblemSpecP db_BT = db_coal_props->findBlock("FOWYDevol");
     db_BT->require("Tig", _Tig);
-    db_BT->require("v_hiT", _v_hiT);
     db_BT->require("Ta", _Ta);
     db_BT->require("A", _A);
-    db_BT->require("c", _c);
-    db_BT->require("d", _d);
+    db_BT->require("v_hiT", _v_hiT); // this is a
+    double b, c, d, e;
+    db_BT->require("b", b);
+    db_BT->require("c", c);
+    db_BT->require("d", d);
+    db_BT->require("e", e);
+    _C1= b + c*_v_hiT;
+    _C2= d + e*_v_hiT;
+    db_BT->require("sigma", _sigma)  ;
+
   } else { 
-    throw ProblemSetupException("Error: BT_coefficients missing in <CoalProperties>.", __FILE__, __LINE__); 
+    throw ProblemSetupException("Error: FOWY coefficients missing in <CoalProperties>.", __FILE__, __LINE__); 
   }
   if ( db_coal_props->findBlock("density")){ 
     db_coal_props->require("density", rhop);
@@ -146,16 +186,15 @@ BTDevol::problemSetup(const ProblemSpecP& params, int qn)
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
-
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
 void 
-BTDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+FOWYDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
-  std::string taskname = "BTDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &BTDevol::computeModel, timeSubStep);
+  std::string taskname = "FOWYDevol::computeModel";
+  Task* tsk = scinew Task(taskname, this, &FOWYDevol::computeModel, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
 
@@ -165,19 +204,26 @@ BTDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSub
     tsk->computes(d_modelLabel);
     tsk->computes(d_gasLabel);
     tsk->computes(d_charLabel);
+    tsk->computes(_v_inf_label); 
     which_dw = Task::OldDW; 
   } else {
     tsk->modifies(d_modelLabel); 
     tsk->modifies(d_gasLabel);
     tsk->modifies(d_charLabel); 
+    tsk->modifies(_v_inf_label); 
     which_dw = Task::NewDW; 
   }
-
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 ); 
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
+  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, _char_RHS_source_varlabel, gn, 0 ); 
+  if ( _rawcoal_birth_label != NULL )
+    tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -187,7 +233,7 @@ BTDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSub
 // Method: Actually compute the source term 
 //---------------------------------------------------------------------------
 void
-BTDevol::computeModel( const ProcessorGroup * pc, 
+FOWYDevol::computeModel( const ProcessorGroup * pc, 
                                      const PatchSubset    * patches, 
                                      const MaterialSubset * matls, 
                                      DataWarehouse        * old_dw, 
@@ -201,6 +247,9 @@ BTDevol::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    Vector Dx = patch->dCell(); 
+    double vol = Dx.x()* Dx.y()* Dx.z(); 
+     
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT;
@@ -208,6 +257,7 @@ BTDevol::computeModel( const ProcessorGroup * pc,
     CCVariable<double> devol_rate;
     CCVariable<double> gas_devol_rate; 
     CCVariable<double> char_rate;
+    CCVariable<double> v_inf; 
     DataWarehouse* which_dw; 
 
     if ( timeSubStep == 0 ){ 
@@ -218,34 +268,54 @@ BTDevol::computeModel( const ProcessorGroup * pc,
       gas_devol_rate.initialize(0.0);
       new_dw->allocateAndPut( char_rate, d_charLabel, matlIndex, patch );
       char_rate.initialize(0.0);
+      new_dw->allocateAndPut( v_inf, _v_inf_label, matlIndex, patch );
+      v_inf.initialize(0.0);
     } else { 
       which_dw = new_dw; 
       new_dw->getModifiable( devol_rate, d_modelLabel, matlIndex, patch ); 
       new_dw->getModifiable( gas_devol_rate, d_gasLabel, matlIndex, patch ); 
       new_dw->getModifiable( char_rate, d_charLabel, matlIndex, patch );
+      new_dw->getModifiable( v_inf, _v_inf_label, matlIndex, patch );
     }
 
     constCCVariable<double> temperature; 
-    which_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    new_dw->get( temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> rcmass; 
     which_dw->get( rcmass    , _rcmass_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> charmass; 
     which_dw->get( charmass , _char_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> weight; 
     which_dw->get( weight , _weight_varlabel , matlIndex , patch , gn , 0 );
-    
-    double rcmass_init = rc_mass_init[d_quadNode];
+    constCCVariable<double> RHS_source; 
+    new_dw->get( RHS_source , _RHS_source_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> char_RHS_source; 
+    new_dw->get( char_RHS_source , _char_RHS_source_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> rc_weighted_scaled; 
+    which_dw->get( rc_weighted_scaled, _rcmass_weighted_scaled_varlabel, matlIndex , patch , gn , 0 );
+    constCCVariable<double> char_weighted_scaled; 
+    which_dw->get( char_weighted_scaled, _charmass_weighted_scaled_varlabel, matlIndex , patch , gn , 0 );
 
+    constCCVariable<double> rawcoal_birth; 
+    bool add_birth = false; 
+    if ( _rawcoal_birth_label != NULL ){ 
+      add_birth = true; 
+      new_dw->get( rawcoal_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
+    }
+
+
+    double rcmass_init = rc_mass_init[d_quadNode];
+    double Z=0;
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
       if (weight[c]/_weight_scaling_constant > _weight_small) {
 
         double rcmassph=rcmass[c];
+        double RHS_sourceph=RHS_source[c];
         double temperatureph=temperature[c];
         double charmassph=charmass[c];
         double weightph=weight[c];
-
+      
         //VERIFICATION
         //rcmassph=1;
         //temperatureph=300;
@@ -256,28 +326,41 @@ BTDevol::computeModel( const ProcessorGroup * pc,
 
         // m_init = m_residual_solid + m_h_off_gas + m_vol
         // m_vol = m_init - m_residual_solid - m_h_off_gas
-        // but m_h_off_gas is negative by construction so 
-        // m_vol = m_init - m_residual_solid + m_h_off_gas
-        v_inf = 0.5*_v_hiT*(1.0 - tanh(_c*(_Tig-temperatureph)/temperatureph + _d));
-        m_vol = rcmass_init - rcmassph + charmassph;
-        f_drive = max(rcmass_init*v_inf - m_vol, 0.0);
-        rateMax = max((rcmassph + min(0.0,charmassph))*weightph/dt,0.0);
-        rate = _A * exp(-_Ta/temperatureph) * f_drive;
+        // but m_h_off_gas = - m_char
+        // m_vol = m_init - m_residual_solid + m_char
+
+        double m_vol = rcmass_init - (rcmassph+charmassph);
+
+        double v_inf_local = 0.5*_v_hiT*(1.0 - tanh(_C1*(_Tig-temperatureph)/temperatureph + _C2));
+        v_inf[c] = v_inf_local; 
+        double f_drive = max((rcmass_init*v_inf_local - m_vol) , 0.0);
+        double zFact =min(max(f_drive/rcmass_init/_v_hiT,2.5e-5 ),1.0-2.5e-5  );
+
+        double rateMax = 0.0; 
+        if ( add_birth ){ 
+          rateMax = max(f_drive/dt 
+              + (  (RHS_sourceph+char_RHS_source[c]) /vol + rawcoal_birth[c] ) / weightph
+              * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
+        } else { 
+          rateMax = max(f_drive/dt 
+              + (  (RHS_sourceph+char_RHS_source[c]) /vol ) / weightph
+              * _rc_scaling_constant*_weight_scaling_constant , 0.0 );
+        }
+
+        Z = sqrt(2.0) * boost::math::erf_inv(1.0-2.0*zFact );
+
+        double rate = min(_A*exp(-(_Ta + Z *_sigma)/temperatureph)*f_drive , rateMax);
         devol_rate[c] = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
         gas_devol_rate[c] = rate*weightph; // rate of creation of coal off gas
         char_rate[c] = 0; // rate of creation of char
-        if( devol_rate[c] < (-rateMax/(_rc_scaling_constant*_weight_scaling_constant))) {
-          devol_rate[c] = -rateMax/(_rc_scaling_constant*_weight_scaling_constant);
-          gas_devol_rate[c] = rateMax;
-          char_rate[c] = 0;
-        }
+
         //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
-        if( (devol_rate[c] > -1e-16) && ((rcmassph+min(0.0,charmassph)) < 1e-16)) {
+        if( devol_rate[c]>0.0 || ( rc_weighted_scaled[c] + char_weighted_scaled[c] )<1e-16) {
           devol_rate[c] = 0;
           gas_devol_rate[c] = 0;
           char_rate[c] = 0;
         }
-   
+
       } else {
         devol_rate[c] = 0;
         gas_devol_rate[c] = 0;

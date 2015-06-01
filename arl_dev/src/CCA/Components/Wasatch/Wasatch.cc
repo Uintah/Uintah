@@ -41,6 +41,7 @@
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
+#include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 
 //-- SpatialOps includes --//
 #include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
@@ -122,6 +123,7 @@ namespace Wasatch{
     linSolver_   = NULL;
 
     cellType_ = scinew CellType();
+    rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
     
     isRestarting_ = false;
 
@@ -173,6 +175,7 @@ namespace Wasatch{
       delete it->second;
     }
     delete cellType_;
+    delete rmcrt_;
     delete particlesHelper_;
   }
 
@@ -732,6 +735,7 @@ namespace Wasatch{
                                                              temperatureTag,
                                                              absorptionCoefTag,
                                                              TagNames::self().celltype,
+                                                             rmcrt_,
                                                              radSpec,
                                                              sharedState_,
                                                              grid ) );
@@ -875,11 +879,18 @@ namespace Wasatch{
     }
     
     // Compute the cell type only when radiation is present. This may change in the future.
-    if( doRadiation_ ) cellType_->schedule_compute_celltype( allPatches, materials_, sched );
+    if( doRadiation_ ) cellType_->schedule_compute_celltype( rmcrt_, allPatches, materials_, sched );
 
     if(doParticles_ ) particlesHelper_->schedule_sync_particle_position( level, sched, true );
     
     proc0cout << "Wasatch: done creating initialization task(s)" << std::endl;
+  }
+
+  //--------------------------------------------------------------------
+
+  void Wasatch::scheduleRestartInitialize( const Uintah::LevelP& level,
+                                           Uintah::SchedulerP& sched )
+  {
   }
 
   //--------------------------------------------------------------------

@@ -235,7 +235,7 @@ SimpleBirth::computeModel( const ProcessorGroup* pc,
 
         double balance = ( _small_weight - w[c] ) / dt - w_rhs[c] / vol;
 
-        balance = std::max(balance, 0.0); 
+        balance = std::max(balance, 0.0) * vol_fraction[c]; 
 
         if ( _is_weight ){ 
 

@@ -74,7 +74,7 @@ private:
   DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
   DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
   DECLARE_VECTOR_OF_FIELDS(FieldT, efficiency_);
-  DECLARE_FIELD(FieldT, aggCoef_);
+  DECLARE_FIELD(FieldT, aggCoef_)
   
   Aggregation( const Expr::TagList& weightsTagList,
                const Expr::TagList& abscissaeTagList,

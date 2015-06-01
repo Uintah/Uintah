@@ -78,7 +78,7 @@ private:
   const double insidevalue_, outsidevalue_, radius_;
   const double frequency_, amplitude_;
 
-  DECLARE_FIELDS(SVolField, field1_, field2_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(SVolField, field1_, field2_)
+  DECLARE_FIELD(TimeField, t_)
 };
 #endif

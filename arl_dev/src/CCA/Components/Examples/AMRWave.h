@@ -69,16 +69,19 @@ WARNING
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP& sharedState);
     virtual void scheduleRefineInterface(const LevelP& fineLevel,
-					 SchedulerP& scheduler,
-					 bool needCoarseOld, bool needCoarseNew);
+                                         SchedulerP& scheduler,
+                                         bool needCoarseOld, 
+                                         bool needCoarseNew);
+                                         
     virtual void scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched);
     virtual void scheduleRefine (const PatchSet* patches, SchedulerP& sched);
 
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-				       SchedulerP& sched);
+                                       SchedulerP& sched);
     virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                               SchedulerP& sched);
     virtual void scheduleTimeAdvance( const LevelP& level, SchedulerP&);
+    
   protected:
     virtual void addRefineDependencies( Task* /*task*/, const VarLabel* /*label*/, bool needCoarseOld, bool needCoarseNew);
     virtual void refineFaces(const Patch* finePatch, const Level* fineLevel, const Level* coarseLevel, 
@@ -86,9 +89,9 @@ WARNING
                       int matl, DataWarehouse* coarse_old_dw, DataWarehouse* coarse_new_dw);
   private:
     void errorEstimate(const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse*, DataWarehouse* new_dw);
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse*, DataWarehouse* new_dw);
     void refine(const ProcessorGroup*,
                 const PatchSubset* patches,
                 const MaterialSubset* matls,
@@ -105,7 +108,7 @@ WARNING
 
     AMRWave(const AMRWave&);
     AMRWave& operator=(const AMRWave&);
-	 
+         
     double refine_threshold;
     bool do_refineFaces;
     bool do_refine;

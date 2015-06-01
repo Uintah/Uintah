@@ -161,7 +161,12 @@ void UdaReducer::scheduleInitialize(const LevelP& level,
   
   sched->addTask( t, perProcPatches, d_sharedState->allMaterials() );
 }
-
+//______________________________________________________________________
+//
+void UdaReducer::scheduleRestartInitialize(const LevelP& level,
+                                           SchedulerP& sched)
+{
+}
 //______________________________________________________________________
 //  
 void UdaReducer::initialize(const ProcessorGroup*,

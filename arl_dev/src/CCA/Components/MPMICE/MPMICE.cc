@@ -315,6 +315,17 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 
 //______________________________________________________________________
 //
+void MPMICE::scheduleRestartInitialize(const LevelP& level,
+                                       SchedulerP& sched)
+{
+  printSchedule(level,cout_doing,"MPMICE::scheduleInitialize");
+
+  d_mpm->scheduleRestartInitialize(level, sched);
+  d_ice->scheduleRestartInitialize(level, sched);
+}
+
+//______________________________________________________________________
+//
 void MPMICE::restartInitialize()
 {
   if (cout_doing.active())

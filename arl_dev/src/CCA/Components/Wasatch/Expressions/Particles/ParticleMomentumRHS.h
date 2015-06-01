@@ -38,7 +38,7 @@ class ParticleMomentumRHS
 : public Expr::Expression<SpatialOps::Particle::ParticleField>
 {
   const bool doBodyForce_, doDragForce_;
-  DECLARE_FIELDS(ParticleField, pg_, pdrag_);
+  DECLARE_FIELDS(ParticleField, pg_, pdrag_)
   
   ParticleMomentumRHS( const Expr::Tag& particleBodyForceTag,
                        const Expr::Tag& ParticleDragForceTag );

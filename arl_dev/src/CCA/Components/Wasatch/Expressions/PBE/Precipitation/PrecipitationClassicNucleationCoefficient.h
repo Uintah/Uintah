@@ -44,7 +44,7 @@ class PrecipitationClassicNucleationCoefficient
 : public Expr::Expression<FieldT>
 {
   const double expConst_;
-  DECLARE_FIELD(FieldT, superSat_);
+  DECLARE_FIELD(FieldT, superSat_)
 
   PrecipitationClassicNucleationCoefficient( const Expr::Tag& superSatTag,
                                              const double expConst);

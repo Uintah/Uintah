@@ -147,6 +147,32 @@ namespace Uintah{
         }
       }
 
+      /** @brief Returns model type given the name **/ 
+      static std::string get_model_type( ProblemSpecP& db, std::string model_name, PARTICLE_METHOD method ){ 
+
+        const ProblemSpecP arches_root = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES");
+       
+        if ( method == DQMOM ){ 
+
+          const ProblemSpecP db_models = arches_root->findBlock("DQMOM")->findBlock("Models"); 
+
+          for ( ProblemSpecP m_db = db_models->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model") ) {
+
+            std::string curr_model_name;
+            std::string curr_model_type; 
+            m_db->getAttribute("label",curr_model_name);
+            m_db->getAttribute("type", curr_model_type); 
+
+            if ( model_name == curr_model_name ){ 
+              return curr_model_type; 
+            }
+          }
+        } else { 
+          throw InvalidValue("Error: Not yet implemented for this particle method.",__FILE__,__LINE__); 
+        }
+        return "NULL"; 
+      }
+
     private: 
 
   

@@ -1180,7 +1180,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
               for (int j = 0; j<i-1; j++ ) { //create the multiple for this
                 product *= maxInd[j];
               }
-              flatIndex += product;
+              if ( i == m) {
+                flatIndex += product;
+              }
             }
             vanderMom[k1] = moments[flatIndex];
             
@@ -1326,23 +1328,6 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         }
       }
     }
-    
-    //after the otehr dimensions are dealt with getting the 1 node solved is easy
-    for (int i = 6; i <= m; i++) { //loop from 5 up to current internal coordinate diemnsion
-      int ii = 0;
-      for (int k1 = 0; k1< N_i[0]; k1++) {
-        for (int k2 = 0; k2 < N_i[1]; k2++) {
-          for (int k3 = 0; k3 < N_i[2]; k3++) { //loop each x3
-            for (int k4 = 0; k4 < N_i[3]; k4++) {
-              //to fill absciassa no wheeler alogrithm required and x = m1/m0, and m0 for condtional = 1
-              conditionals[k1][k2][k3][k4] = conditionals[k1][k2][k3][k4]/abscissas[i-2][ii];
-              ii++;
-            }
-          }
-        }
-      }
-    }
-    
     
     for (int k1 = 0; k1< N_i[0]; k1++) {
       for (int k2 = 0; k2 < N_i[1]; k2++) {

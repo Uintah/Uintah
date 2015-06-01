@@ -72,7 +72,7 @@ private:
   GeometryBased( GeomValueMapT geomObjects,const double outsideValue);
   GeomValueMapT geomObjects_;
   const double outsideValue_;
-  DECLARE_FIELDS(SVolField, x_, y_, z_);
+  DECLARE_FIELDS(SVolField, x_, y_, z_)
 
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, FieldT >::type InpterpSrcT2DestT;
   const InpterpSrcT2DestT* interpSrcT2DestTOp_;

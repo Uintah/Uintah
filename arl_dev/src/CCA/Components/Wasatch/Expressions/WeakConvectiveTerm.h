@@ -50,10 +50,10 @@ class WeakConvectiveTerm
   const GradYT* gradYOp_;
   const GradZT* gradZOp_;
     
-  DECLARE_FIELD(XVolField, u_);
-  DECLARE_FIELD(YVolField, v_);
-  DECLARE_FIELD(ZVolField, w_);
-  DECLARE_FIELD(FieldT, vel_);
+  DECLARE_FIELD(XVolField, u_)
+  DECLARE_FIELD(YVolField, v_)
+  DECLARE_FIELD(ZVolField, w_)
+  DECLARE_FIELD(FieldT, vel_)
   
   const bool doX_, doY_, doZ_, is3d_;
   

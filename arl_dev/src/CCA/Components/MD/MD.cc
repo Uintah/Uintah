@@ -378,6 +378,12 @@ void MD::scheduleInitialize(const LevelP&       level,
   }
 }
 
+void MD::scheduleRestartInitialize(const LevelP& level,
+                                   SchedulerP& sched)
+{
+  // Do nothing for now
+}
+
 void MD::scheduleComputeStableTimestep(const LevelP& level,
                                        SchedulerP& sched)
 {

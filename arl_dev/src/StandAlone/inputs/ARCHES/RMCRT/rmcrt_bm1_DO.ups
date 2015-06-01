@@ -52,7 +52,7 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -70,7 +70,7 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -88,7 +88,7 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -106,7 +106,7 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -124,7 +124,7 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>
@@ -142,7 +142,7 @@
         <BCType id="all"  label = "radiation_temperature" var="Dirichlet">
           <value> 0. </value>
         </BCType>
-        <BCType id="all"  label = "abskg"       var="Dirichlet">
+        <BCType id="all"  label = "abskg"       var="ForcedDirichlet">
           <value> 1. </value>
         </BCType>
       </Face>

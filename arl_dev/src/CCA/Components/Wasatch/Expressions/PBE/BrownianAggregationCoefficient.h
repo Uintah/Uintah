@@ -45,7 +45,7 @@ class BrownianAggregationCoefficient
 : public Expr::Expression<FieldT>
 {
   const double coefVal_;
-  DECLARE_FIELD(FieldT, density_);
+  DECLARE_FIELD(FieldT, density_)
   
   BrownianAggregationCoefficient( const Expr::Tag& densityTag,
                                   const double coefVal );

@@ -2127,8 +2127,8 @@ if test "$with_visit" -o "$wasatch_3p" = "yes"; then
 fi
 
 ##  --  search for visit stuff  -------------------------------------------
-# local     - sim/V2/lib/VisItControlInterface_V2.h
-#           - lib/libsimV2.a
+# local     - src/sim/V2/lib/VisItControlInterface_V2.h
+#           - build/lib/libsimV2.a
 
 # installed - linux-x86_64/libsim/V2/include/VisItControlInterface_V2.h
 #           - linux-x86_64/libsim/V2/lib/libsimV2.a
@@ -2145,8 +2145,10 @@ if test "$sci_required_visit" = "yes"; then
     _sci_lib="$with_visit"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     # Check for a local version (compiling against source)
-    if test -e $with_visit/sim/V2/lib; then
+    if test -e $with_visit/sim/V2/lib/VisItControlInterface_V2.h; then
       _sci_inc="$with_visit/sim/V2/lib"
+    elif test -e $with_visit/../src/sim/V2/lib/VisItControlInterface_V2.h; then
+      _sci_inc="$with_visit/../src/sim/V2/lib"
     # Otherwise assume an installed version
     else
       _sci_inc="$with_visit/include"
@@ -2168,8 +2170,14 @@ if test "$sci_required_visit" = "yes"; then
   
   if test "$HAVE_VISIT" = "yes"; then
     DEF_VISIT="#define HAVE_VISIT 1"
-  else
-    DEF_VISIT="#define HAVE_VISIT 1"
+
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+        VISIT_PATH="#define VISIT_PATH ((char*)\"$with_visit\")"
+    # Otherwise assume an installed version
+    else
+        VISIT_PATH="#define VISIT_PATH ((char*)\"${with_visit}/../../../..\")"
+    fi
   fi
 
 fi #end sci_required_visit
@@ -2180,6 +2188,7 @@ AC_SUBST(DEF_VISIT)
 AC_SUBST(INC_VISIT_H)
 AC_SUBST(VISIT_LIB_DIR_FLAG)
 AC_SUBST(VISIT_LIB_FLAG)
+AC_SUBST(VISIT_PATH)
 
 sci_defs_files="$sci_defs_files include/sci_defs/visit_testdefs.h"
 
@@ -4093,9 +4102,9 @@ if test "$with_boost" -o "$with_boost_library"; then
 
   _boost_incl="boost/signal.hpp boost/shared_ptr.hpp boost/bind.hpp boost/signal.hpp boost/ref.hpp boost/graph/adjacency_list.hpp boost/graph/graph_traits.hpp boost/graph/topological_sort.hpp boost/graph/graphviz.hpp boost/graph/breadth_first_search.hpp boost/graph/visitors.hpp boost/graph/transpose_graph.hpp boost/any.hpp boost/filesystem.hpp"
 
-  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt"
+  _boost_libs_mt="boost_thread-mt boost_signals-mt boost_serialization-mt boost_system-mt boost_program_options-mt boost_filesystem-mt boost_date_time-mt"
 
-  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem"
+  _boost_libs="boost_thread boost_signals boost_serialization boost_system boost_program_options boost_filesystem boost_date_time"
 
   SCI_TRY_LINK(BOOST,[boost library (mt version) and include headers],$_boost_incl,$BOOST_INCLUDE_DIR,$_boost_libs_mt,$BOOST_LIBRARY_DIR,,,optional)
 
