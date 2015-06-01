@@ -115,13 +115,46 @@ for fname in fnames:
     #dtmax = float(node.firstChild.data)
     #dtmax = dtmax/refinement
     node.firstChild.replaceWholeText(dtmin)
-    
+
+  foundMaxTimesteps = False
   for node in xmldoc.getElementsByTagName('max_Timesteps'):
+    foundMaxTimesteps = True
     node.firstChild.replaceWholeText(maxSteps*refinement)
+  
+  if (not foundMaxTimesteps):
+    for node in xmldoc.getElementsByTagName('Time'):
+      foundMaxTimesteps = True
+      maxT = xmldoc.createElement('max_Timesteps')
+      text = xmldoc.createTextNode(str(maxSteps*refinement))
+      maxT.appendChild(text)
+      node.appendChild(maxT)
+   
+  needsTimestepInterval = True
+  for node in xmldoc.getElementsByTagName('outputInterval'):
+    needsTimestepInterval = True
+    parent = node.parentNode
+    parent.removeChild(node)
 
   for node in xmldoc.getElementsByTagName('outputTimestepInterval'):
-    node.firstChild.replaceWholeText('1')
+    needsTimestepInterval = False
+    node.firstChild.replaceWholeText('1')    
+    
+  if (needsTimestepInterval):
+    for node in xmldoc.getElementsByTagName('DataArchiver'):
+      outInter = xmldoc.createElement('outputTimestepInterval')
+      text = xmldoc.createTextNode('1')
+      outInter.appendChild(text)
+      node.appendChild(outInter)
 
+  hasInitTimestep = False
+  for node in xmldoc.getElementsByTagName('outputInitTimestep'):
+    hasInitTimestep = True
+  
+  if (not hasInitTimestep):
+    for node in xmldoc.getElementsByTagName('DataArchiver'):
+      outInter = xmldoc.createElement('outputInitTimestep')
+      node.appendChild(outInter)  
+  
   for node in xmldoc.getElementsByTagName('maxTime'):
     node.firstChild.replaceWholeText('100')
     
@@ -157,19 +190,21 @@ for var in myvars:
     phiAll.append(phi[:,3])
     os.system('rm ' + datname)
 
+  print '-----------------------------'    
+  print ' VARIABLE: ', var
+  print '-----------------------------'
+
   # local errors
   errAll = []
   for i in range(0,nLevels-1):
     diff = phiAll[i+1] - phiAll[i]
-    err = np.linalg.norm(diff,2)
+    err = np.linalg.norm(diff,1)
+    print 'error', err
     errAll.append(err)
     
   # now compute order
-  print '-----------------------------'    
-  print ' VARIABLE: ', var
-  print '-----------------------------'
   for i in range(0,nLevels-2):
-    print np.log( errAll[i+1]/errAll[i] ) / np.log(0.5)
+    print 'order:', np.log( errAll[i+1]/errAll[i] ) / np.log(0.5)
 
 os.system('rm -rf *.uda*')
 os.system('rm -rf *.dot')
