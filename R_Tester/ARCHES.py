@@ -44,6 +44,7 @@ else :
 NIGHTLYTESTS = [
    ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"   , ["exactComparison"])   , 
    ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
+   ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
    ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"   , ["exactComparison"     , "no_restart"]) , 
    ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"   , ["exactComparison"])   , 
    ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"   , ["exactComparison"])   , 
@@ -104,6 +105,7 @@ NIGHTLYTESTS = [
 LOCALTESTS = [
    ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"  , ["exactComparison"]) , 
    ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"  , ["exactComparison"]) , 
+   ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"  , ["exactComparison"])   , 
    ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
    ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"  , ["exactComparison"]) , 
