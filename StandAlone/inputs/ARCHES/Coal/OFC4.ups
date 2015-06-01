@@ -1600,8 +1600,6 @@
 
           <ClassicTable>
           <enthalpy_label>enthalpy</enthalpy_label>
-          <!--originalOFC-->
-          <!--<inputfile>inputs/ARCHES/ClassicMixingTables/coal/oxy-coal.mix.gz</inputfile>-->
           <inputfile>inputs/ARCHES/ClassicMixingTables/coal/OFC.mix.gz</inputfile>
           <coal eta_label="coal_gas_mix_frac" fp_label="mixture_fraction_2" hl_label="heat_loss"/>
           <cold_flow>false</cold_flow>
