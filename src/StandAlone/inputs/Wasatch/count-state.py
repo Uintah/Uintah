@@ -24,6 +24,17 @@ from __future__ import division # float division
 import lxml.etree as et
 import sys, getopt
 import glob
+import os
+
+def walklevel(some_dir, level=1):
+    some_dir = some_dir.rstrip(os.path.sep)
+    assert os.path.isdir(some_dir)
+    num_sep = some_dir.count(os.path.sep)
+    for root, dirs, files in os.walk(some_dir):
+        yield root, dirs, files
+        num_sep_this = root.count(os.path.sep)
+        if num_sep + level <= num_sep_this:
+            del dirs[:]
 
 def help():
   print 'usage: count-state.py -i <inputfile> -d <directory>'
@@ -112,27 +123,43 @@ def count_state(fname):
     #print '  done!'  
 
 if __name__ == "__main__":
-   fname, inputdir = main(sys.argv[1:])
-   if inputdir != '':
+   fname, rootdir = main(sys.argv[1:])
+   if rootdir != '':
      statedynamic = 0
      statenone = 0
      staten = 0
      stateforward  = 0
-     for fname in glob.glob(inputdir + "/*.ups"):
-          statedynamic_, statenone_,staten_, stateforward_ = count_state(fname)
-          statedynamic += statedynamic_
-          statenone += statenone_
-          staten += staten_
-          stateforward += stateforward_
-      
+     nfiles = 0
+     # first handle the root directory
+     for fname in glob.glob(rootdir + "/*.ups"):
+         nfiles +=1
+         statedynamic_, statenone_,staten_, stateforward_ = count_state(fname)
+         statedynamic += statedynamic_
+         statenone += statenone_
+         staten += staten_
+         stateforward += stateforward_
+     # now recurse over all subdirectories for a total depth of 10 levels.
+     for root, subFolders, files in walklevel(rootdir,10):
+          print 'subfolders = ', subFolders
+          for inputdir in subFolders:
+              print 'inputdir = ', root + '/' + inputdir
+              for fname in glob.glob( root + '/' + inputdir + "/*.ups"):
+                  nfiles +=1
+                  statedynamic_, statenone_,staten_, stateforward_ = count_state(fname)
+                  statedynamic += statedynamic_
+                  statenone += statenone_
+                  staten += staten_
+                  stateforward += stateforward_
+           
      allstates = statedynamic + statenone + staten + stateforward
      print '************************'
      print 'OVERALL STATS '
-     print '************************'     
-     print 'STATE_DYNAMIC: ', statedynamic/allstates*100, '%'
-     print 'STATE_NONE: ', statenone/allstates*100, '%'
-     print 'STATE_N: ', staten/allstates*100, '%'
-     print 'CARRY_FORWARD: ', stateforward/allstates*100, '%'      
+     print '************************'
+     print 'NUMBER of FILES:', nfiles     
+     print 'STATE_DYNAMIC:  %.2f' % (statedynamic/allstates*100), '%', '(',statedynamic,')'
+     print 'STATE_NONE:     %.2f' % (statenone/allstates*100), '%', '(',statenone,')'
+     print 'STATE_N:        %.2f' % (staten/allstates*100), '%', '(',staten,')'
+     print 'CARRY_FORWARD:  %.2f' % (stateforward/allstates*100), '%','(', stateforward,')'
      print '************************'          
    elif fname != '':
      count_state(fname)

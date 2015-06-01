@@ -150,6 +150,7 @@ private:
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
   const bool useOnePredictor_;
+  const Wasatch::VarDenParameters varDenParams_;
   
   DECLARE_FIELD(FieldT, x_)
   DECLARE_FIELD(XVolField, u_)

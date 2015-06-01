@@ -22,6 +22,7 @@ USE_TREE="new"
 VERBOSE="no"
 COMMON_GROUP=""
 CHECKPOINTS=""
+MPIRUN=""
 
 ID=`date +%m%d%y`
 
@@ -49,7 +50,6 @@ if [ "$MACHINE" == "rt" ]; then
   WEBLOG=http://155.98.58.231:8050/~csafe-tester/Uintah.html
 fi
 
-
 if test "$MACHINE" = "albion" ; then
   DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
   REPLY_TO="t.harman@utah.edu"
@@ -59,10 +59,27 @@ if test "$MACHINE" = "albion" ; then
   TEMP_DIR=/home/rt/"$OS"
   SCRIPT_DIR=/home/rt/scripts
   CHECKPOINTS=/home/rt/CheckPoints
-  export TEST_COMPONENTS=GPU             # only run gpu tests
+  MPIRUN=/usr/local/openmpi/bin/
+  export TEST_COMPONENTS="Examples"             # only run gpu tests
   
   # Where the webpage will be, and init webpage.  (SEE above notes)
   HTMLLOG=/home/rt/public_html/Uintah.html
+  WEBLOG=NONE
+fi
+
+if test "$MACHINE" = "cyrus.mech.utah.edu" ; then
+  DEFAULT_MAIL_TO="ahumphrey@sci.utah.edu,t.harman@utah.edu"
+  REPLY_TO="t.harman@utah.edu"
+  COMMON_GROUP="users"
+  BUILD_DIR=/raid/home/rt/"$OS"
+  TEST_DATA=/raid/home/rt/"$OS"/TestData
+  TEMP_DIR=/raid/home/rt/"$OS"
+  SCRIPT_DIR=/raid/home/rt/scripts
+  CHECKPOINTS=/raid/home/rt/CheckPoints
+  export TEST_COMPONENTS="Examples"             # only run gpu tests
+  
+  # Where the webpage will be, and init webpage.  (SEE above notes)
+  HTMLLOG=/raid/home/rt/public_html/Uintah.html
   WEBLOG=NONE
 fi
 
@@ -183,7 +200,7 @@ EOF
 fi
 
 
-PATH="$PATH":"$SCRIPT_DIR":.
+PATH="$PATH":"$SCRIPT_DIR":.:"$MPIRUN"
 export PATH NOTESTS COMPILE LOCAL_OR_NIGHTLY_TEST WHICH_TESTS COMMON_GROUP CHECKPOINTS
 
 # set number of processors to use when building

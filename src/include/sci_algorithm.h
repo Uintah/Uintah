@@ -32,9 +32,10 @@
 #ifndef SCI_INCLUDE_ALGORITHM
 #define SCI_INCLUDE_ALGORITHM
 
+#include <sci_defs/uintah_defs.h>
 #include <algorithm>
 
-#if ( defined(__ECC) || defined(_MSC_VER) || HAVE_EXT_ALGORITHM ) // forget about using extension library
+#if (!defined(HAVE_CXX11)) && ( HAVE_EXT_ALGORITHM ) // forget about using extension library
 
 namespace std {
   template <class Iter, class Compare>
@@ -71,3 +72,4 @@ namespace std {
 }
 #endif
 #endif
+

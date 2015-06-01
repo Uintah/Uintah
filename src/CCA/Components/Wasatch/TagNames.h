@@ -118,7 +118,8 @@ namespace Wasatch{
     pressuresrc,
     vardenalpha, vardenbeta,
     divmomstar, drhodtstar,
-    drhodt,drhodtnp1;
+    drhodt,drhodtnp1,
+    unconvergedpts;
     
     // mms varden
     const Expr::Tag

@@ -265,11 +265,11 @@ RadPropertyCalculator::HottelSarofim::compute_abskg( const Patch* patch,
 vector<std::string> 
 RadPropertyCalculator::HottelSarofim::get_sp(){
 
-  _the_species.clear(); 
-  _the_species.push_back(_co2_name);
-  _the_species.push_back(_h2o_name);
-  _the_species.push_back(_soot_name);
-   return _the_species;
+  vector<std::string> temp (0);
+  temp.push_back(_co2_name);
+  temp.push_back(_h2o_name);
+  temp.push_back(_soot_name);
+   return temp;
 
 }
 

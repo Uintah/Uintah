@@ -18,6 +18,8 @@
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
 #include <CCA/Components/Arches/SourceTerms/ManifoldRxn.h>
 #include <CCA/Components/Arches/SourceTerms/MomentumDragSrc.h>
+#include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSMF.h>
+#include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSCont.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -334,6 +336,14 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         
       } else if ( src_type == "momentum_drag_src" ) {
         SourceTermBase::Builder* srcBuilder = scinew MomentumDragSrc::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+        
+      } else if ( src_type == "shunn_moin_mf_mms" ) {
+        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSMF::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+        
+      } else if ( src_type == "shunn_moin_cont_mms" ) {
+        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSCont::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
         
       } else {

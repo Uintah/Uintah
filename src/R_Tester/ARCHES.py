@@ -44,6 +44,7 @@ else :
 NIGHTLYTESTS = [
    ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"   , ["exactComparison"])   , 
    ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
+   ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"   , ["exactComparison"])   , 
    ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"   , ["exactComparison"     , "no_restart"]) , 
    ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"   , ["exactComparison"])   , 
    ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"   , ["exactComparison"])   , 
@@ -89,9 +90,12 @@ NIGHTLYTESTS = [
    ("SimpleBoxPTC"                      , "CQMOM_regression/SimpleBoxPTC.ups"                       , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("PTC_2D"                            , "CQMOM_regression/PTC_2D.ups"                             , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("PTC_3D"                            , "CQMOM_regression/PTC_3D.ups"                             , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
-   ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
+   ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
+   ("CQMOM_7D"                          , "CQMOM_regression/CQMOM_7D.ups"                           , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
+   ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux" , ["startFromCheckpoint" , "no_restart"]) , 
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
+   ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
 
 
 # multi-threaded NIGHTLY tests
@@ -104,6 +108,7 @@ NIGHTLYTESTS = [
 LOCALTESTS = [
    ("constantMMS__NEW"                  , "mms/constantMMS__NEW.ups"                                , 1.1 , "All"  , ["exactComparison"]) , 
    ("almgrenMMS__NEW"                   , "mms/almgrenMMS__NEW.ups"                                 , 1.1 , "All"  , ["exactComparison"]) , 
+   ("oned_pulse_conv"                   , "mms/oned_pulse_conv.ups"                                 , 1.1 , "All"  , ["exactComparison"])   , 
    ("isotropic-turbulence-decay__NEW"   , "periodicTurb/isotropic-turbulence-decay__NEW.ups"        , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("helium_1m__NEW"                    , "helium_1m__NEW.ups"                                      , 1.1 , "All"  , ["exactComparison"]) , 
    ("methane_fire__NEW"                 , "methane_fire__NEW.ups"                                   , 1.1 , "All"  , ["exactComparison"]) , 
@@ -150,8 +155,11 @@ LOCALTESTS = [
    ("SimpleBoxPTC"                      , "CQMOM_regression/SimpleBoxPTC.ups"                       , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("PTC_2D"                            , "CQMOM_regression/PTC_2D.ups"                             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("PTC_3D"                            , "CQMOM_regression/PTC_3D.ups"                             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("CQMOM_4D"                          , "CQMOM_regression/CQMOM_4D.ups"                           , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
+   ("CQMOM_7D"                          , "CQMOM_regression/CQMOM_7D.ups"                           , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
+   ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
+   ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
    
 # multi-threaded LOCAL tests
    ("rmcrt_bm1_1L_thread"                , "RMCRT/rmcrt_bm1_1L.ups"               , 1.1 , "Linux"    , ["no_restart", "exactComparison", "sus_options=-nthreads 4"]),
@@ -207,6 +215,8 @@ CQMOMTESTS = [
   ("PTC_2D"                      , "CQMOM_regression/PTC_2D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("PTC_3D"                      , "CQMOM_regression/PTC_3D.ups"                  , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("CQMOM_4D"                    , "CQMOM_regression/CQMOM_4D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("CQMOM_7D"                    , "CQMOM_regression/CQMOM_7D.ups"                , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("singleJet_poly"              , "CQMOM_regression/singleJet_poly.ups"          , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 # NO RMCRT due to the segfault on the MAC

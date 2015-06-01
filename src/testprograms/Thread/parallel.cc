@@ -35,8 +35,6 @@
 #include <cstring>
 #include <unistd.h>
 
-using namespace std;
-using namespace SCIRun;
 
 class ParallelWorker {
 
@@ -57,8 +55,8 @@ public:
   }
   
   void do_work(int proc) {
-    //cerr << "Proc: "<<proc<<" of "<<np<<" working\n";
-    cerr << proc;
+    //std::cerr << "Proc: "<<proc<<" of "<<np<<" working\n";
+    std::cerr << proc;
 #if 0
     int start = (int)((float)buff_size / np * proc);
     int end = (int)((float)buff_size / np * (proc+1));
@@ -76,22 +74,22 @@ public:
 
   void print_test() {
     if (buff_size <= 0) {
-      cout << "ParallelWorker is empty\n";
+      std::cout << "ParallelWorker is empty\n";
       return;
     }
     int prev = buffer[0];
-    cout << "ParallelWorker: buff_size("<<buff_size<<"), np("<<np<<")\n";
-    cout << "buffer[0] = "<<prev<<endl;
+    std::cout << "ParallelWorker: buff_size("<<buff_size<<"), np("<<np<<")\n";
+    std::cout << "buffer[0] = "<<prev<<std::endl;
     for (int i = 0; i < buff_size; i++) {
       if (prev != buffer[i]) {
 	prev = buffer[i];
-	cout << "buffer["<<i<<"] = "<<prev<<endl;
+	std::cout << "buffer["<<i<<"] = "<<prev<<std::endl;
 
       }
     }
   }
 private:
-  WorkQueue   work;
+  SCIRun::WorkQueue   work;
   int       * buffer;
   int         buff_size;
   int         np;
@@ -115,9 +113,9 @@ main(int argc, char *argv[])
       i++;
       granularity = atoi(argv[i]);
     } else {
-      cout << "parallel -np [int] -size [int]\n";
-      cout << "-np\tnumber of processors/helpers to use.\n";
-      cout << "-size\tsize of array to use\n";
+      std::cout << "parallel -np [int] -size [int]\n";
+      std::cout << "-np\tnumber of processors/helpers to use.\n";
+      std::cout << "-size\tsize of array to use\n";
       return 1;
     }
   }
@@ -126,15 +124,15 @@ main(int argc, char *argv[])
   if (np < 1) np = 1;
   if (buff_size < 1) buff_size = 100;
   if (granularity < 0) granularity = 5;
-  cout <<"np = "<<np<<", buff_size = "<<buff_size<<", granularity = "<<granularity<<endl;
+  std::cout <<"np = "<<np<<", buff_size = "<<buff_size<<", granularity = "<<granularity<<std::endl;
   
   ParallelWorker worker(buff_size,np,granularity);
-  ThreadNS::Parallel<ParallelWorker> phelper(&worker, &ParallelWorker::do_work);
-  Thread::parallel(phelper, np, true);
+  SCIRun::ThreadNS::Parallel<ParallelWorker> phelper(&worker, &ParallelWorker::do_work);
+  SCIRun::Thread::parallel(phelper, np, true);
 
   worker.print_test();
-  cerr << "Program end\n";
-  Thread::exitAll(0);
+  std::cerr << "Program end\n";
+  SCIRun::Thread::exitAll(0);
 
   return 0;
 }

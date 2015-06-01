@@ -37,7 +37,6 @@
 #include <cmath>
 
 namespace Uintah {
-using namespace SCIRun;
 
    class ProcessorGroup;
    class Patch;

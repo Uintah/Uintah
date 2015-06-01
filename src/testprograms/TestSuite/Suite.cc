@@ -27,10 +27,9 @@
 #include <string>
 #include <cassert>
 
-using namespace std;
 
 // construct a Suite with the given name
-Suite::Suite(const string& name)
+Suite::Suite(const std::string& name)
 : myName(name)
 { 
 }
@@ -38,7 +37,7 @@ Suite::Suite(const string& name)
 // delete all created tests and myName
 Suite::~Suite()
 { 
-  list<Test*>::iterator it = myOrderedTests.begin();
+  std::list<Test*>::iterator it = myOrderedTests.begin();
   for ( ; it != myOrderedTests.end(); it++) {
     delete *it;
   }
@@ -47,7 +46,7 @@ Suite::~Suite()
 // if the given testName has been used, return NULL;
 // otherwise, create a test with the given name,
 // add it to the suite, and return a pointer to it.
-Test* Suite::addTest(const string& testName)
+Test* Suite::addTest(const std::string& testName)
 {
   Test* newTest = new Test(testName);
   testMapPair name_test_pair(testName, newTest);
@@ -55,7 +54,7 @@ Test* Suite::addTest(const string& testName)
   
   if (!insertResult) {
     // test name is already used, so cannot add
-    cerr << "**ERROR**  Test name " << testName << " already used.";
+    std::cerr << "**ERROR**  Test name " << testName << " already used.";
     delete newTest;
     return NULL; 
   }
@@ -64,7 +63,7 @@ Test* Suite::addTest(const string& testName)
   return newTest; // new test added successfully
 }
 
-Test* Suite::addTest(const string& testName, bool result)
+Test* Suite::addTest(const std::string& testName, bool result)
 {
   Test* tst = addTest(testName);
   if (tst == NULL)
@@ -75,7 +74,7 @@ Test* Suite::addTest(const string& testName, bool result)
   }
 }
 
-Test* Suite::findOrAddTest(const string& testName)
+Test* Suite::findOrAddTest(const std::string& testName)
 {
   Test* foundTest = findTest(testName);
   if (foundTest != NULL)
@@ -89,7 +88,7 @@ Test* Suite::findOrAddTest(const string& testName)
   }
 }
 
-Test* Suite::findOrAddTest(const string& testName, bool results)
+Test* Suite::findOrAddTest(const std::string& testName, bool results)
 {
   Test* tst = findOrAddTest(testName);
   tst->setResults(results);
@@ -98,7 +97,7 @@ Test* Suite::findOrAddTest(const string& testName, bool results)
 
 // if there is a test in this suite with the given
 // name, return a pointer to it; otherwise return NULL.
-Test* Suite::findTest(const string& testName)
+Test* Suite::findTest(const std::string& testName)
 {
 	// try to locate the test
   testMapIterator it = myTests.find(testName);
@@ -118,40 +117,40 @@ void Suite::report()
   int num_not_run = 0;
   Test* test = NULL;
 
-  cout << "=============================\n";
-  cout << "Suite: " << myName << endl;
-  cout << "-----------------------------\n\n";
+  std::cout << "=============================\n";
+  std::cout << "Suite: " << myName << std::endl;
+  std::cout << "-----------------------------\n\n";
 
-  list<Test*>::iterator it = myOrderedTests.begin();
+  std::list<Test*>::iterator it = myOrderedTests.begin();
   for ( ; it != myOrderedTests.end(); it++) {
     test = (*it);
     if (test->hasBeenRun()) {
       if (test->hasPassed()) {
-        cout << "Passed\t";
+        std::cout << "Passed\t";
         num_passed++;
       }
       else {
-        cout << "Failed\t";
+        std::cout << "Failed\t";
         num_failed++;
       }
     }
     else {
-      cout << "Not Run\t";
+      std::cout << "Not Run\t";
       num_not_run++;
     }
-    cout << test->getName() << endl;
+    std::cout << test->getName() << std::endl;
   }
 
-  cout << "-----------------------------\n\n";
+  std::cout << "-----------------------------\n\n";
 
-  cout << num_passed << " Passed\n";
-  cout << num_failed << " Failed\n";
-  cout << num_not_run << " Not Run\n";
+  std::cout << num_passed << " Passed\n";
+  std::cout << num_failed << " Failed\n";
+  std::cout << num_not_run << " Not Run\n";
 }
 
 bool Suite::hasAllPassed()
 {
-  list<Test*>::iterator it = myOrderedTests.begin();
+  std::list<Test*>::iterator it = myOrderedTests.begin();
   for ( ; it != myOrderedTests.end(); it++) {
     if (!(*it)->hasPassed())
       return false;
@@ -161,7 +160,7 @@ bool Suite::hasAllPassed()
 
 bool Suite::hasAllBeenRun()
 {
-  list<Test*>::iterator it = myOrderedTests.begin();
+  std::list<Test*>::iterator it = myOrderedTests.begin();
   for ( ; it != myOrderedTests.end(); it++) {
     if (!(*it)->hasBeenRun())
       return false;

@@ -54,6 +54,8 @@
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
+
 
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
@@ -220,6 +222,7 @@ Arches::~Arches()
   
   if (d_doCQMOM) {
     delete d_cqmomSolver;
+    delete d_cqmomConvect;
   }
   releasePort("solver");
 
@@ -694,7 +697,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (cqmom_db) {
     d_doCQMOM = true;
     // require that we have weighted or unweighted explicitly specified as an attribute to CQMOM
-    cqmom_db->getAttribute( "type", d_which_cqmom );
+    cqmom_db->getAttribute( "partvel", d_usePartVel );
    
     //register all equations.
     Arches::registerCQMOMEqns(cqmom_db);
@@ -751,11 +754,18 @@ Arches::problemSetup(const ProblemSpecP& params,
 //    }
     
     // set up the linear solver:
-    d_cqmomSolver = scinew CQMOM( d_lab, d_which_cqmom );
+    d_cqmomSolver = scinew CQMOM( d_lab, d_usePartVel );
     d_cqmomSolver->problemSetup( cqmom_db );
     
     //pass it to the explicit solver
     d_nlSolver->setCQMOMSolver( d_cqmomSolver );
+    
+    // set up convection
+    d_cqmomConvect = scinew CQMOM_Convection( d_lab );
+    if (d_usePartVel ) {
+      d_cqmomConvect-> problemSetup( cqmom_db );
+      d_nlSolver->setCQMOMConvect( d_cqmomConvect );
+    }
   }
 
   
@@ -954,6 +964,13 @@ Arches::scheduleInitialize(const LevelP& level,
   d_props->doTableMatching();
   d_props->sched_computeProps( level, sched, initialize_it, modify_ref_den, time_substep );
 
+  for ( PropertyModelFactory::PropMap::iterator iprop = all_prop_models.begin();
+      iprop != all_prop_models.end(); iprop++){
+    PropertyModelBase* prop_model = iprop->second;
+        if ( prop_model->initType()=="physical" )
+          prop_model->sched_computeProp( level, sched, 1 );
+  }
+
   //Setup BC areas
   d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
 
@@ -1063,6 +1080,9 @@ Arches::scheduleInitialize(const LevelP& level,
   if ( _doLagrangianParticles ){ 
     _particlesHelper->schedule_sync_particle_position(level,sched,true);
   }
+
+  //finally set the momentum (velocity) initial condition
+  d_nlSolver->sched_setInitVelCond( level, sched, matls );
 
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true );
 }
@@ -1259,9 +1279,6 @@ Arches::paramInit(const ProcessorGroup* pg,
     double visVal = d_physicalConsts->getMolecularViscosity();
     viscosity.initialize(visVal);
     turb_viscosity.initialize(0.0);
-
-    //----- momentum initial condition
-    d_nlSolver->setInitVelConditionInterface( patch, uVelocity, vVelocity, wVelocity );
 
   } // patches
 }

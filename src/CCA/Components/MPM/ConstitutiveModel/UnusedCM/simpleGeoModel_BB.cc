@@ -930,7 +930,7 @@ void simpleGeoModel_BB::computeStressTensor(const PatchSubset* patches,
       // update the position of the cap
       pKappa_new[idx] = kappa_new;
 
-      if (isnan(strain_inc.Norm()) || isnan(rotation.Norm())) {
+      if (std::isnan(strain_inc.Norm()) || std::isnan(rotation.Norm())) {
         cerr << "**ERROR** Strain is nan." << endl;
         cerr << "eps_p = " << eps_p << " epsv_p = " << epsv_p << " epsv_e = " << epsv_e << endl;
         cerr << "strain_inc = " << strain_inc << endl; 
@@ -1055,7 +1055,7 @@ void simpleGeoModel_BB::computeStress(const long64 idx, int& lvl, const double d
 
   // Compute deformation gradient and rate of deformation tensor
   F_new = (L_new*delT+One)*F_old;
-  if (isnan(F_new(0,0))) {
+  if (std::isnan(F_new(0,0))) {
     cerr << "F_new = " << F_new << endl;
     cerr << "F_old = " << F_old << endl;
     cerr << "L_new = " << L_new << endl;

@@ -1366,7 +1366,7 @@ TaskGraph::createDetailedDependencies( DetailedTask*     task,
             neighbors.push_back(patch);
           }
         }
-        ASSERT(is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
+        ASSERT(std::is_sorted(neighbors.begin(), neighbors.end(), Patch::Compare()));
         if (detaileddbg.active()) {
           detaileddbg << d_myworld->myrank() << "    Creating dependency on " << neighbors.size() << " neighbors\n";
           detaileddbg << d_myworld->myrank() << "      Low=" << low << ", high=" << high << ", var=" << req->var->getName()

@@ -411,6 +411,31 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
       add_char_birth = true; 
       new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
     }
+
+    double max_char_reaction_rate_O2_;
+    double char_reaction_rate_;
+    double char_production_rate_;
+    double particle_temp_rate_;
+    int NIter;
+    double rc_destruction_rate_;
+    double PO2_surf;
+    double PO2_surf_guess;
+    double PO2_surf_tmp;
+    double PO2_surf_new;
+    double PO2_surf_old;
+    double CO2CO;
+    double OF;
+    double ks;
+    double q;
+
+    double d_tol;
+    double delta;
+    double Conc;
+    double DO2;
+    double gamma;
+    double f0;
+    double f1;
+    int icount;
     
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -440,6 +465,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         double devolRCph=devolRC[c];
         double RHS_sourceph=RHS_source[c];
 
+        double PO2_inf = O2ph/_WO2/MWmixph;
         double AreaSum =0;
         for (int i=0; i<_nQn_part;i++ ){ 
           AreaSum+=  weight[i][c]*length[i][c]*length[i][c];
@@ -447,7 +473,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
         double surfaceAreaFraction=weightph*lengthph*lengthph/AreaSum;
         
 
-        PO2_inf = O2ph/_WO2/MWmixph;
+
         if((PO2_inf < 1e-12) || (rawcoal_massph+char_massph) < _small) {
           PO2_surf = 0.0;
           CO2CO = 0.0;

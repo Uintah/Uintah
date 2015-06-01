@@ -24,16 +24,17 @@
 
 #include <sci_defs/cuda_defs.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Core/Grid/DbgOutput.h>
 #ifdef HAVE_CUDA
   #include <CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh>
 #endif
-
+#include <iostream>
 
 #define BLOCKSIZE 16
-//#define PRINTF            // if using printf statements to debug
 
 using namespace Uintah;
+using namespace std;
 
 static DebugStream dbggpu("RAYGPU", false);
 
@@ -58,18 +59,21 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
   if (event == Task::GPU) {
 #ifdef HAVE_CUDA
 
-    if (doCarryForward(radCalc_freq)) {
+    if ( doCarryForward( radCalc_freq ) ) {
+      printTask(patches,patches->get(0), dbggpu,"Doing Ray::rayTraceGPU (carryForward)");
+      bool replaceVar = true;
+      new_dw->transferFrom( old_dw, d_divQLabel,          patches, matls, replaceVar );
+      new_dw->transferFrom( old_dw, d_boundFluxLabel,     patches, matls, replaceVar );
+      new_dw->transferFrom( old_dw, d_radiationVolqLabel, patches, matls, replaceVar );
       return;
     }
+    
+    const Level* level = getLevel(patches);
+    const int levelIndx = level->getIndex();
 
     //__________________________________
     //  increase the size of the printbuffer on the device
-#ifdef PRINTF
-    size_t size;
-    cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize);
-    cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size );
-    printf(" Increasing the size of the print buffer to %d bytes\n", (int)10 * size );
-#endif
+
 
     //__________________________________
     //
@@ -82,23 +86,19 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
     //__________________________________
     //  varLabel name struct
-    varLabelNames labelNames;
+    varLabelNames*  labelNames;
 #if 0
-    labelNames.abskg = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
-    labelNames.sigmaT4 = d_sigmaT4Label->getName().c_str();
-    labelNames.divQ = d_divQLabel->getName().c_str();
-    labelNames.celltype = d_cellTypeLabel->getName().c_str();
-    labelNames.boundFlux = d_boundFluxLabel->getName().c_str();
-    labelNames.radVolQ = d_radiationVolqLabel->getName().c_str();
+    varLabelNames*  labelNames = new varLabelNames;
 
-    cout << " abskg:   " << d_abskgLabel->getName() << endl;
-    cout << " sigmaT4: " << d_sigmaT4Label->getName() << endl;
-    cout << " divQ:    " << d_divQLabel->getName() << endl;
-    cout << " cellType:" << d_cellTypeLabel->getName() << endl;
-    cout << " boundFlux: " << d_boundFluxLabel->getName() << endl;
-    cout << " radVolQ:   " << d_radiationVolqLabel->getName() << endl;
+    labelNames->abskg   = d_abskgLabel->getName().c_str();    // CUDA doesn't support C++ strings
+    labelNames->sigmaT4 = d_sigmaT4Label->getName().c_str();
+    labelNames->divQ    = d_divQLabel->getName().c_str();
+    labelNames->celltype  = d_cellTypeLabel->getName().c_str();
+    labelNames->boundFlux = d_boundFluxLabel->getName().c_str();
+    labelNames->radVolQ   = d_radiationVolqLabel->getName().c_str();
+    
+    labelNames->print();
 #endif
-
     //__________________________________
     //  RMCRT_flags
     RMCRT_flags RT_flags;
@@ -120,7 +120,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
     double start = clock();
 
     //______________________________________________________________________
-    //
     // patch loop
     int numPatches = patches->size();
     for (int p = 0; p < numPatches; ++p) {
@@ -138,7 +137,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
 
       const int xdim = patchSize.x();
       const int ydim = patchSize.y();
-      const int zdim = patchSize.z();
 
       // get the cell spacing and convert patch extents to CUDA vector type
       patchParams patchP;
@@ -151,7 +149,6 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       patchP.hiEC = make_int3(hiEC.x(), hiEC.y(), hiEC.z());
 
       patchP.ID = patch->getID();
-      patchP.nCells = make_int3(xdim, ydim, zdim);
 
       // define dimensions of the thread grid to be launched
       int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
@@ -167,8 +164,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       dim3 dimGrid(xblocks, yblocks, 1);
 
 #ifdef DEBUG
-      cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
-      cout << " lo   : " << lo << " hi:  " << hi << endl;
+      patchP.print();
       cout << " xdim: " << xdim << " ydim: " << ydim << endl;
       cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
 #endif
@@ -180,6 +176,7 @@ void Ray::rayTraceGPU(Task::CallBackEvent event,
       launchRayTraceKernel<T>(dimGrid,
                               dimBlock,
                               d_matl,
+                              levelIndx,
                               patchP,
                               (cudaStream_t*)stream,
                               RT_flags, labelNames, abskg_gdw,
@@ -237,13 +234,23 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       new_dw->transferFrom( old_dw, d_radiationVolqLabel, finePatches, matls, true );
       return;
     }
-    
+
+    //__________________________________
+    //  bulletproofing   FIX ME 
+    const Level* fineLevel = getLevel(finePatches);
+    const int maxLevels   = fineLevel->getGrid()->numLevels();
+    if ( maxLevels > d_MAXLEVELS) {
+      ostringstream warn;
+      warn << "\nERROR:  RMCRT:GPU The maximum number of levels allowed ("<<d_MAXLEVELS<< ") has been exceeded." << endl;
+      warn << " To increase that value see /src/CCA/Components/Models/Radiation/RMCRT/RayGPU.cuh \n";
+      throw InternalError(warn.str(), __FILE__, __LINE__);
+    }
 
     //__________________________________
     //  Grid Parameters
     gridParams gridP;
-    const Level* fineLevel = getLevel(finePatches);
-    const int maxLevels   = fineLevel->getGrid()->numLevels();
+//    const Level* fineLevel = getLevel(finePatches);
+//    const int maxLevels   = fineLevel->getGrid()->numLevels();
     gridP.maxLevels = maxLevels;
     LevelP level_0  = new_dw->getGrid()->getLevel(0);
 
@@ -256,51 +263,22 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     gridP.domain_BB.hi = make_double3( hi.x(), hi.y(), hi.z() );
 
     //__________________________________
-    //  Level Parameters
+    //  Level Parameters - first batch of level data
     levelParams levelP[maxLevels];
-    //______________________________________________________________________
-    //      FIX ME!!    
-    // Allocate host memory
-    bool hasFinerLevel_0, hasFinerLevel_1;
-    double DyDx_0, DyDx_1;
-    double DzDx_0, DzDx_1;
-    GPUVector Dx_0, Dx_1;
-
-    //__________________________________
-    // Retrieve fine level data
-    for (int l = 0; l < maxLevels; ++l) {
-      LevelP level = new_dw->getGrid()->getLevel(l);
-      SCIRun::Vector dx = level->dCell();
-      
-      if( l == 0 ){
-        hasFinerLevel_0 = level->hasFinerLevel();
-        Dx_0   = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
-        DyDx_0 = dx.y() / dx.x();
-        DzDx_0 = dx.z() / dx.x();
-      } else {
-        hasFinerLevel_1 = level->hasFinerLevel();
-        Dx_1   = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
-        DyDx_1 = dx.y() / dx.x();
-        DzDx_1 = dx.z() / dx.x();
-      }
-    }
-   //______________________________________________________________________
-   //
-
-    // Turn this on when 2-level hard-wiring is removed... this is computing correctly
-#if 1
-    //__________________________________
-    // Retrieve first batch of level data
     for (int l = 0; l < maxLevels; ++l) {
       LevelP level = new_dw->getGrid()->getLevel(l);      
       levelP[l].hasFinerLevel = level->hasFinerLevel();
 
       SCIRun::Vector dx = level->dCell();
+      levelP[l].Dx    = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
       levelP[l].DyDx  = dx.y() / dx.x();
       levelP[l].DzDx  = dx.z() / dx.x();
-      levelP[l].Dx = GPUVector(make_double3(dx.x(), dx.y(), dx.z()));
+      levelP[l].index = level->getIndex();
+      Point anchor    = level->getAnchor();
+      levelP[l].anchor = GPUPoint( make_double3(anchor.x(), anchor.y(), anchor.z()));
+      IntVector RR = level->getRefinementRatio();
+      levelP[l].refinementRatio = GPUIntVector( make_int3(RR.x(), RR.y(), RR.z() ) );
     }
-#endif
 
     //__________________________________
     //   Assign dataWarehouses
@@ -330,7 +308,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     RT_flags.nFluxRays         = d_nFluxRays;
     RT_flags.whichROI_algo     = d_whichROI_algo;
 
-    
     double start = clock();
         
     //______________________________________________________________________
@@ -340,47 +317,28 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
     for (int p = 0; p < numPatches; ++p) {
 
       const Patch* finePatch = finePatches->get(p);
-      printTask(finePatches, finePatch, dbggpu, "Doing Ray::rayTraceGPU");
+      printTask(finePatches, finePatch, dbggpu, "Doing Ray::rayTraceDataOnionGPU");
       
-      IntVector fine_ROI_Lo = IntVector(-9,-9,-9);
-      IntVector fine_ROI_Hi = IntVector(-9,-9,-9);
+      IntVector ROI_Lo = IntVector(-9,-9,-9);
+      IntVector ROI_Hi = IntVector(-9,-9,-9);
       std::vector<IntVector> regionLo(maxLevels);
       std::vector<IntVector> regionHi(maxLevels);
-      
   
       //__________________________________
       // compute ROI the extents for "dynamic", "fixed" and "patch_based" ROI    
-      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw,fine_ROI_Lo, fine_ROI_Hi, regionLo,  regionHi);
-
-      // Turn this on when 2-level hard-wiring is removed... this is computing correctly
-#if 1
-      printf("CPU levelParams\n");
+      computeExtents(level_0, fineLevel, finePatch, maxLevels, new_dw, ROI_Lo, ROI_Hi, regionLo,  regionHi);
+      
+      // move everything into GPU vars
+      GPUIntVector fineLevel_ROI_Lo = GPUIntVector( make_int3(ROI_Lo.x(), ROI_Lo.y(), ROI_Lo.z()) );
+      GPUIntVector fineLevel_ROI_Hi = GPUIntVector( make_int3(ROI_Hi.x(), ROI_Hi.y(), ROI_Hi.z()) );
+      
       for (int l = 0; l < maxLevels; ++l) {
         IntVector rlo = regionLo[l];
         IntVector rhi = regionHi[l];
         levelP[l].regionLo = GPUIntVector(make_int3(rlo.x(), rlo.y(), rlo.z()));
         levelP[l].regionHi = GPUIntVector(make_int3(rhi.x(), rhi.y(), rhi.z()));
-        printf("Level-%d ", l);
-        levelP[l].print();
       }
-#endif
-      
-      //__________________________________
-      //  FIX ME!!!
-      GPUVector regionLo_0, regionLo_1;
-      GPUVector regionHi_0, regionHi_1;
-      
-      regionLo_0 = GPUVector(make_double3(regionLo[0].x(), regionLo[0].y(), regionLo[0].z()));
-      regionLo_1 = GPUVector(make_double3(regionLo[1].x(), regionLo[1].y(), regionLo[1].z()));
-      
-      regionHi_0 = GPUVector(make_double3(regionHi[0].x(), regionHi[0].y(), regionHi[0].z()));
-      regionHi_1 = GPUVector(make_double3(regionHi[1].x(), regionHi[1].y(), regionHi[1].z()));
-      
-      GPUIntVector fineLevel_ROI_Lo, fineLevel_ROI_Hi;
-      fineLevel_ROI_Lo = GPUIntVector(make_int3(fine_ROI_Lo.x(), fine_ROI_Lo.y(), fine_ROI_Lo.z()));
-      fineLevel_ROI_Hi = GPUIntVector(make_int3(fine_ROI_Hi.x(), fine_ROI_Hi.y(), fine_ROI_Hi.z()));
-      
-      //__________________________________
+
       //
       // Calculate the memory block size
       const IntVector loEC = finePatch->getExtraCellLowIndex();
@@ -392,7 +350,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
 
       const int xdim = patchSize.x();
       const int ydim = patchSize.y();
-      const int zdim = patchSize.z();
 
       // get the cell spacing and convert patch extents to CUDA vector type
       patchParams patchP;
@@ -405,7 +362,6 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       patchP.hiEC = make_int3(hiEC.x(), hiEC.y(), hiEC.z());
 
       patchP.ID = finePatch->getID();
-      patchP.nCells = make_int3(xdim, ydim, zdim);
 
       // define dimensions of the thread grid to be launched
       int xblocks = (int)ceil((float)xdim / BLOCKSIZE);
@@ -421,8 +377,7 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
       dim3 dimGrid(xblocks, yblocks, 1);
 
 #ifdef DEBUG
-      cout << " lowEC: " << loEC << " hiEC " << hiEC << endl;
-      cout << " lo   : " << lo << " hi:  " << hi << endl;
+      patchP.print();
       cout << " xdim: " << xdim << " ydim: " << ydim << endl;
       cout << " blocksize: " << blocksize << " xblocks: " << xblocks << " yblocks: " << yblocks << endl;
 #endif
@@ -438,16 +393,8 @@ void Ray::rayTraceDataOnionGPU( Task::CallBackEvent event,
                                        patchP,
                                        gridP,
                                        levelP,
-                                       //__________________________________
-                                       //  FIX ME!!!
-                                       Dx_0, Dx_1,
-                                       hasFinerLevel_0, hasFinerLevel_1,
-                                       DyDx_0, DyDx_1,
-                                       DzDx_0, DzDx_1,
-                                       regionLo_0, regionLo_1,
-                                       regionHi_0, regionHi_1,
-                                       fineLevel_ROI_Lo, fineLevel_ROI_Hi,
-                                       //__________________________________
+                                       fineLevel_ROI_Lo,
+                                       fineLevel_ROI_Hi,
                                        (cudaStream_t*)stream,
                                        RT_flags, 
                                        abskg_gdw,

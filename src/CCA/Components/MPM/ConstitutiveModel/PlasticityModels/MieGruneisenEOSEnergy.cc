@@ -262,7 +262,7 @@ MieGruneisenEOSEnergy::computePressure(const double& rho_orig,
   dp_drho = dp_dJ*dJ_drho;
   csquared = dp_dJ/rho_cur;
 
-  if (isnan(pressure) || fabs(dp_dJ) < 1.0e-30) {
+  if (std::isnan(pressure) || fabs(dp_dJ) < 1.0e-30) {
     ostringstream desc;
     desc << "pressure = " << -pressure << " rho_cur = " << rho_cur 
          << " dp_drho = " << -dp_drho << " c^2 = " << csquared << endl;

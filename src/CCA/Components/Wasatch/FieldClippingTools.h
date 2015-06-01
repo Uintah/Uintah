@@ -56,12 +56,13 @@ namespace Wasatch{
   public:
     MinMaxClip( const Expr::Tag& volFracTag,
                 const double min,
-                const double max ) :
-    min_(min),
-    max_(max),
-    hasVolFrac_(volFracTag != Expr::Tag())
+                const double max )
+    : Expr::Expression<FieldT>(),
+      min_(min),
+      max_(max),
+      hasVolFrac_( volFracTag != Expr::Tag() )
     {
-      if (hasVolFrac_)  volFrac_ = this->template create_field_request<FieldT>(volFracTag);
+      if( hasVolFrac_ )  volFrac_ = this->template create_field_request<FieldT>(volFracTag);
     }
     
     class Builder : public Expr::ExpressionBuilder
@@ -76,13 +77,13 @@ namespace Wasatch{
        * @param flatInteriorPoints  flat indices of the interior points that are used to set the ghost value.
        */
       Builder( const Expr::Tag& resultTag,
-              const Expr::Tag& volFracTag,
-              const double min,
-              const double max) :
-      ExpressionBuilder(resultTag),
-      volFracTag_(volFracTag),
-      min_(min),
-      max_(max)
+               const Expr::Tag& volFracTag,
+               const double min,
+               const double max )
+        : ExpressionBuilder(resultTag),
+          volFracTag_(volFracTag),
+          min_(min),
+          max_(max)
       {}
       Expr::ExpressionBase* build() const{ return new MinMaxClip(volFracTag_, min_, max_); }
     private:
@@ -109,15 +110,12 @@ namespace Wasatch{
   {
     using namespace SpatialOps;
     FieldT& f = this->value();
-    if (hasVolFrac_) {
+    if( hasVolFrac_ ){
       const FieldT& volFrac = volFrac_->field_ref();
-      f <<= volFrac * cond( f < min_, min_ )
-                ( f > max_, max_ )
-                ( f );
-    } else {
-      f <<= cond( f < min_, min_ )
-                ( f > max_, max_ )
-                ( f );
+      f <<= volFrac * max( min( f, max_ ), min_ );
+    }
+    else{
+      f <<= max( min( f, max_ ), min_ );
     }
   }
 
@@ -130,17 +128,17 @@ namespace Wasatch{
   
   template<typename FieldT>
   void
-  clip_expr(const Uintah::PatchSet* const localPatches, 
-            GraphHelper& graphHelper,
-            const Category& cat,
-            const Expr::Tag& fieldTag,
-            const double min,
-            const double max,
-            const Expr::Tag& volFracTag)
+  clip_expr( const Uintah::PatchSet* const localPatches,
+             GraphHelper& graphHelper,
+             const Category& cat,
+             const Expr::Tag& fieldTag,
+             const double min,
+             const double max,
+             const Expr::Tag& volFracTag )
   {
     Expr::ExpressionFactory& factory = *graphHelper.exprFactory;
     
-    if (cat == POSTPROCESSING) {
+    if( cat == POSTPROCESSING ){
       const Expr::ExpressionID expID = factory.get_id(fieldTag);
       graphHelper.rootIDs.insert(expID);
     }
@@ -164,8 +162,8 @@ namespace Wasatch{
   
   void
   process_field_clipping( Uintah::ProblemSpecP parser,
-                         GraphCategories& gc,
-                         const Uintah::PatchSet* const localPatches)
+                          GraphCategories& gc,
+                          const Uintah::PatchSet* const localPatches )
   {
     Expr::Tag svolFracTag;
     Expr::Tag xvolFracTag;
@@ -173,7 +171,7 @@ namespace Wasatch{
     Expr::Tag zvolFracTag;
     const bool hasVolFrac = parser->findBlock("EmbeddedGeometry");
     const EmbeddedGeometryHelper& vNames = EmbeddedGeometryHelper::self();
-    if (hasVolFrac) {
+    if( hasVolFrac ){
       svolFracTag = vNames.vol_frac_tag<SVolField>();
       xvolFracTag = vNames.vol_frac_tag<XVolField>();
       yvolFracTag = vNames.vol_frac_tag<YVolField>();

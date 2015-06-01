@@ -392,25 +392,37 @@ namespace Wasatch {
     using SCIRun::IntVector;
     std::ostringstream msg;
     if (patch->containsCell(refCell)) {
-      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) &&
-                                        patch->containsCell(refCell + IntVector(0,1,0)) &&
-                                        patch->containsCell(refCell + IntVector(0,0,1));
-      // check if all cell neighbors are contained in this patch:
-      if ( !containsAllNeighbors ) {
-        msg << std::endl
-        << "  Invalid reference cell specified for poisson system." << std::endl
-        << "  The reference cell, as well as its north, east, and top neighbors must be in the same patch." << std::endl
-        << std::endl;
-        throw std::runtime_error( msg.str() );
-      }
+
       Uintah::Stencil4& refCoef = poissonMatrix[refCell];
       refCoef.w = 0.0;
       refCoef.s = 0.0;
       refCoef.b = 0.0;
       refCoef.p = 1.0;
-      poissonMatrix[refCell + IntVector(1,0,0)].w = 0.0;
-      poissonMatrix[refCell + IntVector(0,1,0)].s = 0.0;
-      poissonMatrix[refCell + IntVector(0,0,1)].b = 0.0;
+      
+      const SCIRun::IntVector refCellip1 = refCell + IntVector(1,0,0);
+      const SCIRun::IntVector refCelljp1 = refCell + IntVector(0,1,0);
+      const SCIRun::IntVector refCellkp1 = refCell + IntVector(0,0,1);
+      
+      SCIRun::IntVector l, h;
+      patch->getLevel()->findCellIndexRange(l,h);
+      
+      const int nx = h.x() - l.x();
+      const int ny = h.y() - l.y();
+      const int nz = h.z() - l.z();
+      
+      // if this patch owns x+1 cell, then set that cell's coefficients appropriately
+      if ( patch->containsCell(refCellip1) && nx != 1 ) {
+        poissonMatrix[refCellip1].w = 0.0;
+      }
+
+      if ( patch->containsCell(refCelljp1) && ny != 1) {
+        poissonMatrix[refCelljp1].s = 0.0;
+      }
+
+      if ( patch->containsCell(refCellkp1) && nz != 1) {
+        poissonMatrix[refCellkp1].b = 0.0;
+      }
+
     }
   }
 
@@ -433,37 +445,78 @@ namespace Wasatch {
       // NOTE: for some reason, for the [0,0,0] cell, we are able to set the RHS of the "ghost" or "extra" cells although
       // the patch reports that those cells are not contained in that patch... Hence the crazy logic in the following lines to
       // take care of the [0,0,0] cell.
-      const bool containsAllNeighbors = patch->containsCell(refCell + IntVector(1,0,0)) &&
-                                        patch->containsCell(refCell + IntVector(0,1,0)) &&
-                                        patch->containsCell(refCell + IntVector(0,0,1)) &&
-                                       (patch->containsCell(refCell + IntVector(-1,0,0)) || refCell.x() == 0) &&
-                                       (patch->containsCell(refCell + IntVector(0,-1,0)) || refCell.y() == 0) &&
-                                       (patch->containsCell(refCell + IntVector(0,0,-1)) || refCell.z() == 0) ;
-      // check if all cell neighbors are contained in this patch:
-      if ( !containsAllNeighbors ) {
+      
+      SCIRun::IntVector l, h;
+      patch->getLevel()->findCellIndexRange(l,h);
+      const int nx = h.x() - l.x();
+      const int ny = h.y() - l.y();
+      const int nz = h.z() - l.z();
+      const int oneDx = (nx == 1) ? 0 : 1;
+      const int oneDy = (ny == 1) ? 0 : 1;
+      const int oneDz = (nz == 1) ? 0 : 1;
+
+      const SCIRun::IntVector refCellip1 = refCell + IntVector(1,0,0);
+      const SCIRun::IntVector refCelljp1 = refCell + IntVector(0,1,0);
+      const SCIRun::IntVector refCellkp1 = refCell + IntVector(0,0,1);
+      const SCIRun::IntVector refCellim1 = refCell - IntVector(1,0,0);
+      const SCIRun::IntVector refCelljm1 = refCell - IntVector(0,1,0);
+      const SCIRun::IntVector refCellkm1 = refCell - IntVector(0,0,1);
+
+      const bool hasXNeighbors = patch->containsCell(refCellip1) &&
+                                (patch->containsCell(refCellim1) || refCell.x() == 0);
+
+      const bool hasYNeighbors = patch->containsCell(refCelljp1) &&
+                                (patch->containsCell(refCelljm1) || refCell.y() == 0);
+
+      const bool hasZNeighbors = patch->containsCell(refCellkp1) &&
+                                (patch->containsCell(refCellkm1) || refCell.z() == 0);
+
+      // remember, indexing is local for SpatialOps so we must offset by the patch's low index
+      const SCIRun::IntVector refCellWithOffset = refCell - patch->getCellLowIndex(0);
+      const SpatialOps::IntVec refCellIJK(refCellWithOffset.x(),refCellWithOffset.y(),refCellWithOffset.z());
+      const int irefCell = poissonRHS.window_without_ghost().flat_index(refCellIJK);
+      poissonRHS[irefCell] = refpoissonValue;
+      // modify rhs for neighboring cells
+      const Uintah::Vector spacing = patch->dCell();
+      const double dx2 = spacing[0]*spacing[0];
+      const double dy2 = spacing[1]*spacing[1];
+      const double dz2 = spacing[2]*spacing[2];
+
+      bool fault = false;
+      if (nx != 1) {
+        if (hasXNeighbors) {
+          poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(1,0,0) ) ] += refpoissonValue/dx2;
+          poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK - SpatialOps::IntVec(1,0,0) ) ] += refpoissonValue/dx2;
+        } else {
+          fault = true;
+        }
+      }
+
+      if (ny != 1) {
+        if (hasYNeighbors) {
+          poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,1,0) ) ] += refpoissonValue/dy2;
+          poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK - SpatialOps::IntVec(0,1,0) ) ] += refpoissonValue/dy2;
+        } else {
+          fault = true;
+        }
+      }
+
+      if (nz != 1) {
+        if (hasZNeighbors) {
+          poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
+          poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK - SpatialOps::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
+        } else {
+          fault = true;
+        }
+      }
+
+      if ( fault ) {
         msg << std::endl
         << "  Invalid reference poisson cell." << std::endl
         << "  The reference poisson cell as well as its north, east, and top neighbors must be contained in the same patch." << std::endl
         << std::endl;
         throw std::runtime_error( msg.str() );
       }
-      // remember, indexing is local for SpatialOps so we must offset by the patch's low index
-      const SCIRun::IntVector refCellWithOffset = refCell - patch->getCellLowIndex(0);
-      const SpatialOps::IntVec refCellIJK(refCellWithOffset.x(),refCellWithOffset.y(),refCellWithOffset.z());
-      const int irefCell = poissonRHS.window_without_ghost().flat_index(refCellIJK);
-      poissonRHS[irefCell] = refpoissonValue;
-
-      // modify rhs for neighboring cells
-      const Uintah::Vector spacing = patch->dCell();
-      const double dx2 = spacing[0]*spacing[0];
-      const double dy2 = spacing[1]*spacing[1];
-      const double dz2 = spacing[2]*spacing[2];
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(1,0,0) ) ] += refpoissonValue/dx2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,1,0) ) ] += refpoissonValue/dy2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,0,1) ) ] += refpoissonValue/dz2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(-1,0,0) )] += refpoissonValue/dx2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,-1,0) )] += refpoissonValue/dy2;
-      poissonRHS[poissonRHS.window_without_ghost().flat_index(refCellIJK + SpatialOps::IntVec(0,0,-1) )] += refpoissonValue/dz2;
     }
   }
 

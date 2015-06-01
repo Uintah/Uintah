@@ -63,7 +63,7 @@ namespace Uintah {
       static void clearMessages() {d_messages.str(std::string());}
       static void printMessages(std::ostream &out)
       {
-          out << d_messages;
+        out << d_messages.str();
       }
       static std::stringstream d_messages;
     private:

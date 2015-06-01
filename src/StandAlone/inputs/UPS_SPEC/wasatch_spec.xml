@@ -7,7 +7,7 @@
     -->
     <NameTag  spec="OPTIONAL NO_DATA"
               attribute1="name REQUIRED STRING"
-              attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'" />
+              attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'" />
 
 		<!-- ================================================================================== -->            
 		<!-- Specification of the diffusive flux -->
@@ -734,8 +734,9 @@
     <!-- CAUTION! FOR DEVELOPER USE ONLY -->
     <!-- =========================================================================== -->
     <VariableDensity spec="OPTIONAL NO_DATA" 
-                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, DYNAMIC'"
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, SMOOTHIMPULSE, DYNAMIC'"
                      attribute2="coefficient REQUIRED DOUBLE">
+      <ImpulseWidth spec="OPTIONAL DOUBLE" need_applies_to="model SMOOTHIMPULSE"/>
       <UseOnePredictor spec="OPTIONAL NO_DATA"/>
     </VariableDensity>
     
@@ -1006,6 +1007,8 @@
                                     attribute1="value    REQUIRED DOUBLE">
              <ReferenceCell         spec="REQUIRED VECTOR" />                       
           </ReferencePressure>
+          <!-- solvability will ALWAYS be enforced on periodic problems -->
+          <EnforceSolvability spec="OPTIONAL NO_DATA"/>          
           <!-- Enforce the use of the full 3D laplacian in the construction of the pressure coefficient matrix. This affects all 2D momentum transport cases. 3D Laplacian is turned on by default for all cases. To turned it off set the following to false. For 3D cases, the code will always use a 3D Laplacian regardless of the value set here -->
           <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>          
           <Parameters         spec="OPTIONAL NO_DATA">      

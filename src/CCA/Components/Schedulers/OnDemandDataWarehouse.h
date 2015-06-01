@@ -578,6 +578,13 @@ class OnDemandDataWarehouse : public DataWarehouse {
                        AccessType accessType,
                        const PatchSubset* patches,
                        const MaterialSubset* matls);
+    
+    void printDebuggingPutInfo( const VarLabel* label,
+                                int matlIndex,
+                                const Patch* patch,
+                                int line);
+                       
+                       
 
     struct dataLocation {
         const Patch * patch;

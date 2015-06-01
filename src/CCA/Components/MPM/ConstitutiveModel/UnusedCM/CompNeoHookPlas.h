@@ -35,7 +35,6 @@ namespace Uintah {
 
 #include <Core/Util/Endian.h>
 namespace SCIRun {
-  using namespace Uintah;
   inline void swapbytes( Uintah::CompNeoHookPlasStateData& d)
     { swapbytes(d.Alpha); }
 } // namespace SCIRun

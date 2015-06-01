@@ -42,7 +42,6 @@
  *  \tparam StrainT The type of field for this Strain component.
  *  \tparam Vel1T   The type of field for the first velocity component.
  *  \tparam Vel2T   The type of field for the second velocity component.
- *  \tparam ViscT   The type of field for the viscosity.
  */
 template< typename StrainT,
 typename Vel1T,
@@ -52,15 +51,15 @@ class Strain
 {
   
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, StrainT >::type  SVol2StrainInterpT;
-  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    Vel1T, StrainT >::type  Vel1GradT;  // jcs this will likely be insufficient
-  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    Vel2T, StrainT >::type  Vel2GradT;  // jcs this will likely be insufficient
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    Vel1T,     StrainT >::type  Vel1GradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    Vel2T,     StrainT >::type  Vel2GradT;
   
   const SVol2StrainInterpT* svolInterpOp_; ///< Interpolate viscosity to the face where we are building the Strain
-  const Vel1GradT*   vel1GradOp_;   ///< Calculate the velocity gradient dui/dxj at the Strain face
-  const Vel2GradT*   vel2GradOp_;   ///< Calculate the velocity gradient duj/dxi at the Strain face
+  const Vel1GradT*          vel1GradOp_;   ///< Calculate the velocity gradient dui/dxj at the Strain face
+  const Vel2GradT*          vel2GradOp_;   ///< Calculate the velocity gradient duj/dxi at the Strain face
   
-  DECLARE_FIELD(Vel1T, u1_)
-  DECLARE_FIELD(Vel2T, u2_)
+  DECLARE_FIELD( Vel1T, u1_ )
+  DECLARE_FIELD( Vel2T, u2_ )
   
   Strain( const Expr::Tag& vel1Tag,
           const Expr::Tag& vel2Tag );
@@ -79,9 +78,9 @@ public:
      *         dilatational Strain term will be added.
      */
     Builder( const Expr::Tag& result,
-            const Expr::Tag& vel1Tag,
-            const Expr::Tag& vel2Tag,
-            const Expr::Tag& dilTag );
+             const Expr::Tag& vel1Tag,
+             const Expr::Tag& vel2Tag,
+             const Expr::Tag& dilTag );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
     
@@ -99,7 +98,7 @@ public:
 
 
 /**
- *  specialized version of the Strain tensor for normal Straines.
+ *  specialized version of the Strain tensor for normal Strain.
  *
  */
 template< typename StrainT,
@@ -109,13 +108,13 @@ class Strain< StrainT, VelT, VelT >
 {
  
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, SVolField, StrainT >::type  SVol2StrainInterpT;
-  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    VelT,  StrainT >::type  VelGradT;
+  typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient,    VelT,      StrainT >::type  VelGradT;
   
   const SVol2StrainInterpT* svolInterpOp_; ///< Interpolate viscosity to the face where we are building the Strain
-  const VelGradT*    velGradOp_;    ///< Calculate the velocity gradient dui/dxj at the Strain face
+  const VelGradT*           velGradOp_;    ///< Calculate the velocity gradient dui/dxj at the Strain face
   
-  DECLARE_FIELD(VelT, u_)
-  DECLARE_FIELD(SVolField, dil_)
+  DECLARE_FIELD( VelT,      u_   )
+  DECLARE_FIELD( SVolField, dil_ )
   
   Strain( const Expr::Tag& velTag,
           const Expr::Tag& dilTag );
@@ -138,9 +137,9 @@ public:
      *  Strain builder.
      */
     Builder( const Expr::Tag& result,
-            const Expr::Tag& vel1Tag,
-            const Expr::Tag& vel2Tag,
-            const Expr::Tag& dilTag );
+             const Expr::Tag& vel1Tag,
+             const Expr::Tag& vel2Tag,
+             const Expr::Tag& dilTag );
     ~Builder(){}
     Expr::ExpressionBase* build() const;
     

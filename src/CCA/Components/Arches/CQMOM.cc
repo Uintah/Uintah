@@ -37,8 +37,8 @@ using namespace std;
 using namespace Uintah;
 
 
-CQMOM::CQMOM(ArchesLabel* fieldLabels, std::string which_cqmom):
-d_fieldLabels(fieldLabels), d_which_cqmom(which_cqmom)
+CQMOM::CQMOM(ArchesLabel* fieldLabels, bool usePartVel):
+d_fieldLabels(fieldLabels), d_usePartVel(usePartVel)
 {
 //  string varname;
   nMoments = 0;
@@ -57,12 +57,6 @@ CQMOM::~CQMOM()
 void CQMOM::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params;
-  
-  //leave a boolean in for a normalized pdf = 1 option later?
-  if ( d_which_cqmom == "normalized" )
-    d_normalized = true;
-  else
-    d_normalized = false;
   
   int index_length = 0;
   db->get("NumberInternalCoordinates",M);   //get number of coordiantes

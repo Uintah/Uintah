@@ -884,7 +884,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
 
         // Check whether the step is elastic or plastic
         double f_0 = d_yield->evalYieldCondition(xi_trial, state);
-        if (isnan(f_0)) {
+        if (std::isnan(f_0)) {
           cout << "idx = " << idx 
                << " epdot = " << state->plasticStrainRate 
                << " ep = " << state->plasticStrain 
@@ -947,7 +947,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
             // compute delta gamma (k)
             double denom = df_dxi_k.Contract(term1_k) - h_alpha_k*df_dep_k - h_phi_k*df_dphi_k;
             double delta_gamma_k = f_k/denom;
-            if (isnan(f_k) || isnan(delta_gamma_k)) {
+            if (std::isnan(f_k) || std::isnan(delta_gamma_k)) {
               cout << "idx = " << idx << " iter = " << count 
                    << " f_k = " << f_k << " delta_gamma_k = " << delta_gamma_k 
                    << " sigy = " << state->yieldStress

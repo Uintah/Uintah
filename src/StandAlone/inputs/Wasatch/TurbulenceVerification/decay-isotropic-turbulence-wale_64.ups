@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
 
     <Density>
@@ -14,7 +14,7 @@
     
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="xvelcc" state="STATE_NONE" />
+      <NameTag name="xvelcc"/>
       <InterpolateExpression type="XVOL">
           <NameTag name="x-mom" state="STATE_DYNAMIC"/>
       </InterpolateExpression>
@@ -22,7 +22,7 @@
     
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="yvelcc" state="STATE_NONE" />
+      <NameTag name="yvelcc"/>
       <InterpolateExpression type="YVOL">
           <NameTag name="y-mom" state="STATE_DYNAMIC"/>
       </InterpolateExpression>
@@ -30,16 +30,16 @@
     
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="zvelcc" state="STATE_NONE" />
+      <NameTag name="zvelcc"/>
       <InterpolateExpression type="ZVOL">
           <NameTag name="z-mom" state="STATE_DYNAMIC"/>
       </InterpolateExpression>
     </PostProcessingExpression>
     
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="xvelcc" state="STATE_NONE" />
-      <NameTag name="yvelcc" state="STATE_NONE" />
-      <NameTag name="zvelcc" state="STATE_NONE" />
+      <NameTag name="xvelcc"/>
+      <NameTag name="yvelcc"/>
+      <NameTag name="zvelcc"/>
     </ForceOnGraph>
 
 
@@ -51,7 +51,7 @@
     <!-- Set the initial condition for x-mom -->
     <BasicExpression type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_NONE" />
+      <NameTag name="x-mom"/>
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_u.gz</FileName>
       </ReadFromFile>
@@ -60,7 +60,7 @@
     <!-- Set the initial condition for y-mom -->
     <BasicExpression type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_NONE" />
+      <NameTag name="y-mom"/>
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_v.gz</FileName>
       </ReadFromFile>
@@ -69,7 +69,7 @@
     <!-- Set the initial condition for z-mom -->
     <BasicExpression type="ZVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="z-mom" state="STATE_NONE" />
+      <NameTag name="z-mom"/>
       <ReadFromFile>
         <FileName>inputs/Wasatch/TurbulenceVerification/cbc64_uvw_wasatch_w.gz</FileName>
       </ReadFromFile>
@@ -78,7 +78,7 @@
     
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity"/>
       <Constant>1e-5</Constant>
     </BasicExpression>
 
@@ -93,7 +93,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>      
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>
@@ -133,7 +133,7 @@
     <filebase>decay-isotropic-turbulence-wale-64.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "1"/>
+    <checkpoint cycle="2" interval="1"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>

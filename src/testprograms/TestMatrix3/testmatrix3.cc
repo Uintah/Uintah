@@ -30,25 +30,22 @@
 #include <iostream>
 #include <unistd.h>
 
-using namespace std;
-using namespace Uintah;
-
 void doMatrixSolvingTests(Suite& suite);
 void doEigenTests(Suite& suite);
 void doPolarDecompTests(Suite& suite);
 void doEigenPlaneTests(Suite& suite);
 
-void addSolveTests(Suite& suite, const string& test_name,
-	       const Matrix3& M, const Vector& rhs, bool exp_return,
+void addSolveTests(Suite& suite, const std::string& test_name,
+	       const Uintah::Matrix3& M, const Uintah::Vector& rhs, bool exp_return,
 	       int exp_xg_basis_size);
 
-//bool testEigenValue(const Matrix3& M, double eigen_value);
-bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value);
+//bool testEigenValue(const Uintah::Matrix3& M, double eigen_value);
+bool testEigenValue(const Uintah::Matrix3& M, double eigen_value, double max_eigen_value);
 
-void randomlyMixup(Matrix3& M, Vector& rhs);
+void randomlyMixup(Uintah::Matrix3& M, Uintah::Vector& rhs);
 
 bool equal_enough(double x1, double x2, double rel_scale);
-bool equal_enough(Vector v1, Vector v2, double rel_scale);
+bool equal_enough(Uintah::Vector v1, Uintah::Vector v2, double rel_scale);
 
 double getRandom(); // returns a random number between -100.000 and 100.000
 
@@ -56,12 +53,12 @@ double getRandom(); // returns a random number between -100.000 and 100.000
 // between -100.000 and 100.000 otherwise.
 double getRandomOrZero(float probability_for_zero); 
 
-Vector randomVector();
-Matrix3 randomMatrix();
+Uintah::Vector randomVector();
+Uintah::Matrix3 randomMatrix();
 
 #define NEAR_ZERO 1e-7
 
-void displayEigen(Matrix3 M);
+void displayEigen(Uintah::Matrix3 M);
 
 #if 0
 
@@ -72,57 +69,57 @@ int main()
 
   Suite test("m3test");
 
-//  Matrix3 testmat(1.0,1.5,0.0,
+//  Uintah::Matrix3 testmat(1.0,1.5,0.0,
 //                  0.0,1.0,0.0,
 //                  0.0,0.0,1.0);
 
   for(int i=0;i<1000;i++){
 
-    Matrix3 testmat(drand48(),drand48(),drand48(),
+    Uintah::Matrix3 testmat(drand48(),drand48(),drand48(),
                     drand48(),drand48(),drand48(),
                     drand48(),drand48(),drand48());
 
-    cout << "testmat = " << endl;
-    cout << testmat << endl;
+    cout << "testmat = " << std::endl;
+    cout << testmat << std::endl;
 
     if(testmat.Determinant()<=0.0){
-      cout << "Skipping this singular test matrix" << endl;
-      cout << "Det(testmat) = " << testmat.Determinant() << endl;
+      cout << "Skipping this singular test matrix" << std::endl;
+      cout << "Det(testmat) = " << testmat.Determinant() << std::endl;
     } else{
 
-      Matrix3 R, U;
+      Uintah::Matrix3 R, U;
 
       testmat.polarDecomposition(U,R,1e-10,true);
 
-      cout << "U = " << endl;
-      cout << U  << endl;
+      cout << "U = " << std::endl;
+      cout << U  << std::endl;
 
-      cout << "R = " << endl;
-      cout << R  << endl;
+      cout << "R = " << std::endl;
+      cout << R  << std::endl;
 
-      cout << "R^T*R = " << endl;
-      cout << R.Transpose()*R  << endl;
+      cout << "R^T*R = " << std::endl;
+      cout << R.Transpose()*R  << std::endl;
 
-      cout << "R*U = " << endl;
-      cout << R*U  << endl;
+      cout << "R*U = " << std::endl;
+      cout << R*U  << std::endl;
 
 
       testmat.polarDecompositionRMB(U,R);
 //  testmat.polarRotationRMB(R);
 
-      cout << "U = " << endl;
-      cout << U  << endl;
+      cout << "U = " << std::endl;
+      cout << U  << std::endl;
 
-      cout << "R = " << endl;
-      cout << R  << endl;
+      cout << "R = " << std::endl;
+      cout << R  << std::endl;
 
-      cout << "R^T*R = " << endl;
-      cout << R.Transpose()*R  << endl;
+      cout << "R^T*R = " << std::endl;
+      cout << R.Transpose()*R  << std::endl;
 
-      cout << "R*U = " << endl;
-      cout << R*U  << endl;
+      cout << "R*U = " << std::endl;
+      cout << R*U  << std::endl;
 
-      cout << "Success!" << endl;
+      cout << "Success!" << std::endl;
    }
   }
 
@@ -133,7 +130,7 @@ int main()
 SuiteTree* matrix3TestTree()
 {
   srand(getpid());  
-  SuiteTreeNode* matrix3Tests = new SuiteTreeNode("Matrix3");
+  SuiteTreeNode* matrix3Tests = new SuiteTreeNode("Uintah::Matrix3");
     
   Suite* solvingTests = new Suite("Solving Ax=b");
   Suite* eigenTests = new Suite("Eigen values/vectors");
@@ -153,29 +150,29 @@ SuiteTree* matrix3TestTree()
 
 }
 
-void displayEigen(Matrix3 M)
+void displayEigen(Uintah::Matrix3 M)
 {
   double e[3];
   int n = M.getEigenValues(e[0], e[1], e[2]);
   for (int i = 0; i < n; i++) {
-    cout << "Eigen value: " << e[i] << endl;
-    std::vector<Vector> eigenVectors = M.getEigenVectors(e[i], M.MaxAbsElem());
-    cout << "Eigen vectors:\n";
+    std::cout << "Eigen value: " << e[i] << std::endl;
+    std::vector<Uintah::Vector> eigenVectors = M.getEigenVectors(e[i], M.MaxAbsElem());
+    std::cout << "Eigen vectors:\n";
     for (int j = 0; j < (int)eigenVectors.size(); j++)
-      cout << eigenVectors[j] << endl;
+      std::cout << eigenVectors[j] << std::endl;
   }
-  cout << endl;
+  std::cout << std::endl;
 }
 
 void doMatrixSolvingTests(Suite& suite)
 {
-  Vector rhs;
-  Vector xp;
-  std::vector<Vector> xg_basis;
-  Matrix3 M;
+  Uintah::Vector rhs;
+  Uintah::Vector xp;
+  std::vector<Uintah::Vector> xg_basis;
+  Uintah::Matrix3 M;
 
   int i = 0;
-  string test_name_base = "Point: {{1, 0, 0} {0, 1, 0} {0, 0, 1}}";
+  std::string test_name_base = "Point: {{1, 0, 0} {0, 1, 0} {0, 0, 1}}";
   bool has_solution = true;
   double a, b, c, e;
 
@@ -245,13 +242,13 @@ void doMatrixSolvingTests(Suite& suite)
     addSolveTests(suite, test_name_base, M, rhs, has_solution, 2);
   }
   test_name_base = "All Space: {{0, 0, 0} {0, 0, 0} {0, 0, 0}}";
-  M = Matrix3();
-  rhs = Vector(0, 0, 0);
+  M = Uintah::Matrix3();
+  rhs = Uintah::Vector(0, 0, 0);
   addSolveTests(suite, test_name_base, M, rhs, true, 3);
 
   for (i = 0; i < 10; i++) {
     rhs = randomVector();
-    addSolveTests(suite, test_name_base, M, rhs, (rhs == Vector(0, 0, 0)), 3);
+    addSolveTests(suite, test_name_base, M, rhs, (rhs == Uintah::Vector(0, 0, 0)), 3);
   }
 }
 
@@ -262,7 +259,7 @@ void doEigenTests(Suite& suite)
   Test* threeEigenTestB = suite.addTest("Three eigenvalues/vectors, e2");
   Test* threeEigenTestC = suite.addTest("Three eigenvalues/vectors, e3");
   Test* oneEigenTest = suite.addTest("One eigenvalue/vector");
-  Matrix3 M;
+  Uintah::Matrix3 M;
   double e1, e2, e3;
   int num_eigen_values;
   
@@ -299,51 +296,51 @@ void doPolarDecompTests(Suite& suite)
 
   for(int i=0;i<1000;i++){
 
-    Matrix3 testmat(drand48(),drand48(),drand48(),
+    Uintah::Matrix3 testmat(drand48(),drand48(),drand48(),
                     drand48(),drand48(),drand48(),
                     drand48(),drand48(),drand48());
 
-    cout << "testmat = " << endl;
-    cout << testmat << endl;
+    std::cout << "testmat = " << std::endl;
+    std::cout << testmat << std::endl;
 
     if(testmat.Determinant()<=0.0){
-      cout << "Skipping this singular test matrix" << endl;
-      cout << "Det(testmat) = " << testmat.Determinant() << endl;
+      std::cout << "Skipping this singular test matrix" << std::endl;
+      std::cout << "Det(testmat) = " << testmat.Determinant() << std::endl;
     } else{
 
-      Matrix3 R, U;
+      Uintah::Matrix3 R, U;
 
       testmat.polarDecomposition(U,R,1e-10,true);
 
-      cout << "U = " << endl;
-      cout << U  << endl;
+      std::cout << "U = " << std::endl;
+      std::cout << U  << std::endl;
 
-      cout << "R = " << endl;
-      cout << R  << endl;
+      std::cout << "R = " << std::endl;
+      std::cout << R  << std::endl;
 
-      cout << "R^T*R = " << endl;
-      cout << R.Transpose()*R  << endl;
+      std::cout << "R^T*R = " << std::endl;
+      std::cout << R.Transpose()*R  << std::endl;
 
-      cout << "R*U = " << endl;
-      cout << R*U  << endl;
+      std::cout << "R*U = " << std::endl;
+      std::cout << R*U  << std::endl;
 
 
       testmat.polarDecompositionRMB(U,R);
 //  testmat.polarRotationRMB(R);
 
-      cout << "U = " << endl;
-      cout << U  << endl;
+      std::cout << "U = " << std::endl;
+      std::cout << U  << std::endl;
 
-      cout << "R = " << endl;
-      cout << R  << endl;
+      std::cout << "R = " << std::endl;
+      std::cout << R  << std::endl;
 
-      cout << "R^T*R = " << endl;
-      cout << R.Transpose()*R  << endl;
+      std::cout << "R^T*R = " << std::endl;
+      std::cout << R.Transpose()*R  << std::endl;
 
-      cout << "R*U = " << endl;
-      cout << R*U  << endl;
+      std::cout << "R*U = " << std::endl;
+      std::cout << R*U  << std::endl;
 
-      cout << "Success!" << endl;
+      std::cout << "Success!" << std::endl;
    }
   }
 
@@ -364,8 +361,8 @@ void doEigenPlaneTests(Suite& suite)
   eigenTestA[2] = suite.addTest("XY e1");
   eigenTestB[2] = suite.addTest("XY e2");
   
-  Matrix3 M;
-  Matrix3 planeM; // 3d version of sub-matrix (with zeroes at bottom and right)
+  Uintah::Matrix3 M;
+  Uintah::Matrix3 planeM; // 3d version of sub-matrix (with zeroes at bottom and right)
   double e1, e2;
   int num_eigen_values;
   
@@ -375,15 +372,15 @@ void doEigenPlaneTests(Suite& suite)
     for (int plane = 1; plane <= 3; plane++) {
       if (plane == 1) {
 	num_eigen_values = M.getYZEigenValues(e1, e2);
-	planeM = Matrix3(M(1, 1), M(1, 2), 0, M(2, 1), M(2, 2), 0, 0, 0, 0);
+	planeM = Uintah::Matrix3(M(1, 1), M(1, 2), 0, M(2, 1), M(2, 2), 0, 0, 0, 0);
       }
       else if (plane == 2) {
 	num_eigen_values = M.getXZEigenValues(e1, e2);
-	planeM = Matrix3(M(0, 0), M(0, 2), 0, M(2, 0), M(2, 2), 0, 0, 0, 0);
+	planeM = Uintah::Matrix3(M(0, 0), M(0, 2), 0, M(2, 0), M(2, 2), 0, 0, 0, 0);
       }
       else {
  	num_eigen_values = M.getXYEigenValues(e1, e2);
-	planeM = Matrix3(M(0, 0), M(0, 1), 0, M(1, 0), M(1, 1), 0, 0, 0, 0);
+	planeM = Uintah::Matrix3(M(0, 0), M(0, 1), 0, M(1, 0), M(1, 1), 0, 0, 0, 0);
       }
 
       // Use the 3x3 test with planeM (which is the sub-matrix
@@ -408,10 +405,10 @@ void doEigenPlaneTests(Suite& suite)
 
 }
 
-bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value)
+bool testEigenValue(const Uintah::Matrix3& M, double eigen_value, double max_eigen_value)
 {
   double rel_scale = fabs(max_eigen_value); //M.MaxAbsElem(); //M.Norm();
-  std::vector<Vector> eigenVectors = M.getEigenVectors(eigen_value, rel_scale);
+  std::vector<Uintah::Vector> eigenVectors = M.getEigenVectors(eigen_value, rel_scale);
 
   if (eigenVectors.size() == 0) {
     return false; // should have at least one Vector for an eigen_value
@@ -425,7 +422,7 @@ bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value
     // try different random linear combinations of eigenVectors
     bool success = true;
     for (int trials = 0; trials < 10; trials++) {
-      Vector x(0, 0, 0);
+      Uintah::Vector x(0, 0, 0);
       for (int i = 0; i < (int)eigenVectors.size(); i++) {
 	x = x + eigenVectors[i] * getRandom();
       }
@@ -436,11 +433,11 @@ bool testEigenValue(const Matrix3& M, double eigen_value, double max_eigen_value
   }
 }
 
-void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
-		   const Vector& rhs, bool exp_return, int exp_xg_basis_size)
+void addSolveTests(Suite& suite, const std::string& test_name, const Uintah::Matrix3& M,
+		   const Uintah::Vector& rhs, bool exp_return, int exp_xg_basis_size)
 {
-  Vector xp;
-  std::vector<Vector> xg_basis;
+  Uintah::Vector xp;
+  std::vector<Uintah::Vector> xg_basis;
   double rel_scale = M.MaxAbsElem();
   bool result = M.solve(rhs, xp, xg_basis, rel_scale);
 
@@ -451,8 +448,8 @@ void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
     suite.findOrAddTest(test_name + ", xp", equal_enough(M * xp, rhs,
 							 rel_scale));
     /*    if (!equal_enough(M * xp, rhs, rel_scale)) {
-      cout << rel_scale << endl;
-      cout << xp << " != " << rhs << endl;
+      std::cout << rel_scale << std::endl;
+      std::cout << xp << " != " << rhs << std::endl;
     }*/
 	
 
@@ -465,11 +462,11 @@ void addSolveTests(Suite& suite, const string& test_name, const Matrix3& M,
       // of basis vectors and testing them out
       bool success = true;
       for (int trial = 0; trial < 50; trial++) {
-	Vector x(0, 0, 0);
+	Uintah::Vector x(0, 0, 0);
 	for (int i = 0; i < (int)xg_basis.size(); i++) {
 	  x = x + xg_basis[i] * getRandom();
 	}
-	if (!equal_enough(M*x, Vector(0, 0, 0), rel_scale))
+	if (!equal_enough(M*x, Uintah::Vector(0, 0, 0), rel_scale))
 	  success = false;
       }
       suite.findOrAddTest(test_name + ", xg_basis", success);
@@ -493,10 +490,10 @@ double getRandomOrZero(float probability_for_zero)
 
 
 // randomly mix up a matrix
-void randomlyMixup(Matrix3& M, Vector& rhs)
+void randomlyMixup(Uintah::Matrix3& M, Uintah::Vector& rhs)
 {
-  Matrix3 new_M(M);
-  Vector new_rhs(rhs);
+  Uintah::Matrix3 new_M(M);
+  Uintah::Vector new_rhs(rhs);
   int i, j, k;
   
   for (i = 0; i < 3; i++) {
@@ -530,14 +527,14 @@ void randomlyMixup(Matrix3& M, Vector& rhs)
   }
 }
 
-Vector randomVector()
+Uintah::Vector randomVector()
 {
-  return Vector(getRandom(), getRandom(), getRandom());
+  return Uintah::Vector(getRandom(), getRandom(), getRandom());
 }
 
-Matrix3 randomMatrix()
+Uintah::Matrix3 randomMatrix()
 {
-  Matrix3 M;
+  Uintah::Matrix3 M;
   for (int i = 0; i < 3; i++)
     for (int j = 0; j < 3; j++)
       M(i, j) = getRandom();
@@ -549,7 +546,7 @@ bool equal_enough(double x1, double x2, double rel_scale)
   return fabs(x2 - x1) <= NEAR_ZERO * (rel_scale > 1 ? rel_scale : 1);
 }
 
-bool equal_enough(Vector v1, Vector v2, double rel_scale)
+bool equal_enough(Uintah::Vector v1, Uintah::Vector v2, double rel_scale)
 {
   for (int i = 0; i < 3; i++) {
     if (!equal_enough(v1[i], v2[i], rel_scale))

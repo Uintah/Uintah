@@ -200,7 +200,8 @@ VarDenMMSOscillatingContinuitySrc( const Expr::Tag densTag,
   vf_ ( vf ),
   a0_(varDenParams.alpha0),
   model_(varDenParams.model),
-  useOnePredictor_(varDenParams.onePredictor)
+  useOnePredictor_(varDenParams.onePredictor),
+  varDenParams_(varDenParams)
 {
   this->set_gpu_runnable( true );
    dens_ = this->template create_field_request<SVolField>(densTag);
@@ -311,6 +312,12 @@ evaluate()
     case Wasatch::VarDenParameters::IMPULSE:
       *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
       break;
+    case Wasatch::VarDenParameters::SMOOTHIMPULSE:
+    {
+      const double c = varDenParams_.gaussWidth;
+      *alpha <<= a0_ + (1.0 - a0_)*exp(- *drhodtstar * *drhodtstar/(2.0*c*c));
+    }
+      break;      
     case Wasatch::VarDenParameters::DYNAMIC:
     {
       SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );

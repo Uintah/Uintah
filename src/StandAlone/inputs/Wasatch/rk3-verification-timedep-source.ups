@@ -17,13 +17,13 @@
     <!-- Set the initial condition for the cell centered scalar scalar phi -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi" state="STATE_NONE" />
+      <NameTag name="phi"/>
       <Constant>-1.0</Constant>
     </BasicExpression>    
     
-    <BasicExpression type="SVOL" >
+    <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="sine-source" state="STATE_NONE" />
+      <NameTag name="sine-source"/>
       <SineTime/>
     </BasicExpression>
 
@@ -32,14 +32,14 @@
     <TransportEquation equation="generic">
       <SolutionVariable>phi</SolutionVariable>
       <SourceTermExpression>
-        <NameTag name="sine-source" state="STATE_NONE" />
+        <NameTag name="sine-source"/>
       </SourceTermExpression>
 
     </TransportEquation>
   </Wasatch>
   <DataArchiver>
     <filebase>RK-verification-sine-source.uda</filebase>
-    <checkpoint cycle = "2" interval = "0.1"/>        
+    <checkpoint cycle="2" interval="0.1"/>        
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <save label="phi"/>

@@ -133,7 +133,8 @@ VarDen1DMMSContinuitySrc( const double rho0,
   is3d_( doX_ && doY_ && doZ_ ),
   a0_( varDenParams.alpha0 ),
   model_( varDenParams.model ),
-  useOnePredictor_(varDenParams.onePredictor)
+  useOnePredictor_(varDenParams.onePredictor),
+  varDenParams_(varDenParams)
 {
   this->set_gpu_runnable( true );
    x_ = this->template create_field_request<FieldT>(xTag);
@@ -187,6 +188,21 @@ evaluate()
   *t <<= time + dt;
   
 
+  SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
+  switch (model_) {
+    case Wasatch::VarDenParameters::IMPULSE:
+    case Wasatch::VarDenParameters::SMOOTHIMPULSE:
+    case Wasatch::VarDenParameters::DYNAMIC:
+    {
+      const SVolField& dens = dens_->field_ref();
+      if (useOnePredictor_)  *drhodtstar <<= (densStar_->field_ref()  - dens) / dt;
+      else                   *drhodtstar <<= (dens2Star_->field_ref() - dens) / (2. * dt);
+    }
+      break;
+    default:
+      break;
+  }
+
   SpatialOps::SpatFldPtr<SVolField> alpha = SpatialOps::SpatialFieldStore::get<SVolField>( result );
 
   switch (model_) {
@@ -195,21 +211,19 @@ evaluate()
       break;
     case Wasatch::VarDenParameters::IMPULSE:
     {
-      const SVolField& dens = dens_->field_ref();
-      SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-      if (useOnePredictor_)  *drhodtstar <<= (densStar_->field_ref()  - dens) / dt;
-      else                   *drhodtstar <<= (dens2Star_->field_ref() - dens) / (2. * dt);
       *alpha <<= cond(*drhodtstar == 0.0, 1.0)(a0_);
     }
       break;
+    case Wasatch::VarDenParameters::SMOOTHIMPULSE:
+    {
+      const double c = varDenParams_.gaussWidth;
+      *alpha <<= a0_ + (1.0 - a0_)*exp(- *drhodtstar * *drhodtstar/(2.0*c*c));
+    }
+      break;      
     case Wasatch::VarDenParameters::DYNAMIC:
     {
       const SVolField& dens = dens_->field_ref();
       SpatialOps::SpatFldPtr<SVolField> velDotDensGrad = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-      SpatialOps::SpatFldPtr<SVolField> drhodtstar = SpatialOps::SpatialFieldStore::get<SVolField>( result );
-
-      if (useOnePredictor_)  *drhodtstar <<= (densStar_->field_ref()  - dens) / dt;
-      else                   *drhodtstar <<= (dens2Star_->field_ref() - dens) / (2. * dt);
       
       if( is3d_ ){ // for 3D cases, inline the whole thing
         *velDotDensGrad <<= (*x2SInterpOp_)(u_->field_ref()) * (*gradXOp_)(dens) + (*y2SInterpOp_)(v_->field_ref()) * (*gradYOp_)(dens) + (*z2SInterpOp_)(w_->field_ref()) * (*gradZOp_)(dens);

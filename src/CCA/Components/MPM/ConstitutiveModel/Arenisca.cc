@@ -845,7 +845,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
       Matrix3 stress_diff_step  = (Identity*lame*(D.Trace()*delT) + D*delT*2.0*shear),
               trial_stress_step = unrotated_stressQS + stress_diff_step;
 
-      if (isnan(trial_stress_step.Norm())) {  //Check stress_iteration for nan
+      if (std::isnan(trial_stress_step.Norm())) {  //Check stress_iteration for nan
         cerr << "pParticleID=" << pParticleID[idx];
         throw InvalidValue("**ERROR**: Nan in trial_stress_step", __FILE__, __LINE__);
       }
@@ -1074,7 +1074,7 @@ void Arenisca::computeStressTensor(const PatchSubset* patches,
 #endif
 #if 0
           // This doesn't seem to be a common problem, so I'm turning it off for efficiency
-          if (isnan(num_steps)) {  //Check stress_iteration for nan
+          if (std::isnan(num_steps)) {  //Check stress_iteration for nan
              cerr << "pParticleID=" << pParticleID[idx]
                   << ", num_steps=" << num_steps << endl;
             throw InvalidValue("**ERROR**: Nan in num_steps", __FILE__, __LINE__);
@@ -1680,13 +1680,13 @@ int Arenisca::computeStressTensorStep(const Matrix3& sigma_trial, // trial stres
     cout << "(2) exceeded max allowable volumetric plastic strain"<< "@line:" << __LINE__;
     return 2;
   }
-  else if(isnan(sigma_new.Norm()) ||
-          isnan(ep_new.Norm())    ||
-          isnan(evp_new)          ||
-          isnan(eve_new)          ||
-          isnan(X_new)            ||
-          isnan(Kappa_new)        ||
-          isnan(Zeta_new) ){
+  else if(std::isnan(sigma_new.Norm()) ||
+          std::isnan(ep_new.Norm())    ||
+          std::isnan(evp_new)          ||
+          std::isnan(eve_new)          ||
+          std::isnan(X_new)            ||
+          std::isnan(Kappa_new)        ||
+          std::isnan(Zeta_new) ){
     cout << "(3) NAN in output"<< "@line:" << __LINE__;
     return 3;
   }

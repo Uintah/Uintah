@@ -139,161 +139,8 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
     }
   }
 
-  // Clipping:
-  // defaults: 
-  clip.activated = false;
-  clip.do_low  = false; 
-  clip.do_high = false; 
-  clip.my_type = ClipInfo::STANDARD;
-
-  ProblemSpecP db_clipping = db->findBlock("Clipping");
-
-  if (db_clipping) {
-
-    std::string type = "default"; 
-    std::fstream inputFile;
-    std::string clip_dep_file; 
-    std::string clip_dep_low_file;   
-    std::string clip_ind_file;      
-
-    if ( db_clipping->getAttribute( "type", type )){
-
-      db_clipping->getAttribute( "type", type );
-      if ( type == "variable_constrained" ){
-
-        clip.my_type = ClipInfo::CONSTRAINED;
-        db_clipping->findBlock("constraint")->getAttribute("label", clip.ind_var );
-
-        db_clipping->require("clip_dep_file",clip_dep_file);
-        db_clipping->require("clip_dep_low_file",clip_dep_low_file);        
-        db_clipping->require("clip_ind_file",clip_ind_file);
-  
-        // read clipping file   
-        double number;
-        inputFile.open(clip_dep_file.c_str());
-        while (inputFile >> number)
-        {
-          clip_dep_vec.push_back(number);
-        }
-        inputFile.close(); 
-  
-        inputFile.open(clip_dep_low_file.c_str());
-        while (inputFile >> number)
-        {
-          clip_dep_low_vec.push_back(number);
-        }
-        inputFile.close(); 
-  
-  
-        // read clipping file   
-        inputFile.open(clip_ind_file.c_str());
-        while (inputFile >> number)
-        {
-          clip_ind_vec.push_back(number);
-        }
-        inputFile.close(); 
-      
-      }
-    
-    } else { 
-
-      clip.activated = true; 
-      
-      db_clipping->getWithDefault("low", clip.low,  -1.e16);
-      db_clipping->getWithDefault("high",clip.high, 1.e16);
-      db_clipping->getWithDefault("tol", clip.tol, 1e-10); 
-
-      if ( db_clipping->findBlock("low") ) 
-        clip.do_low = true; 
-
-      if ( db_clipping->findBlock("high") ) 
-        clip.do_high = true;  
-
-      if ( !clip.do_low && !clip.do_high ) 
-        throw InvalidValue("Error: A low or high clipping must be specified if the <Clipping> section is activated.", __FILE__, __LINE__);
-
-    }
-
-  } 
-
-  // Initialization (new way):
-  ProblemSpecP db_initialValue = db->findBlock("initialization");
-  if (db_initialValue) {
-
-    db_initialValue->getAttribute("type", d_initFunction); 
-
-    if (d_initFunction == "constant") {
-      db_initialValue->require("constant", d_constant_init); 
-
-    } else if (d_initFunction == "step") {
-      db_initialValue->require("step_direction", d_step_dir); 
-      db_initialValue->require("step_value", d_step_value); 
-
-      if( db_initialValue->findBlock("step_start") ) {
-        b_stepUsesPhysicalLocation = true;
-        db_initialValue->require("step_start", d_step_start); 
-        db_initialValue->require("step_end"  , d_step_end); 
-
-      } else if ( db_initialValue->findBlock("step_cellstart") ) {
-        b_stepUsesCellLocation = true;
-        db_initialValue->require("step_cellstart", d_step_cellstart);
-        db_initialValue->require("step_cellend", d_step_cellend);
-      }
-
-    } else if (d_initFunction == "mms1") {
-      //currently nothing to do here. 
-    } else if (d_initFunction == "geometry_fill") {
-
-      db_initialValue->require("constant_inside", d_constant_in_init);              //fill inside geometry
-      db_initialValue->getWithDefault( "constant_outside",d_constant_out_init,0.0); //fill outside geometry 
-
-      ProblemSpecP the_geometry = db_initialValue->findBlock("geom_object"); 
-      if (the_geometry) {
-        GeometryPieceFactory::create(the_geometry, d_initGeom); 
-      } else {
-        throw ProblemSetupException("You are missing the geometry specification (<geom_object>) for the transport eqn. initialization!", __FILE__, __LINE__); 
-      }
-    } else if ( d_initFunction == "gaussian" ) { 
-
-      db_initialValue->require( "amplitude", d_a_gauss ); 
-      db_initialValue->require( "center", d_b_gauss ); 
-      db_initialValue->require( "std", d_c_gauss ); 
-      std::string direction; 
-      db_initialValue->require( "direction", direction ); 
-      if ( direction == "X" || direction == "x" ){ 
-        d_dir_gauss = 0; 
-      } else if ( direction == "Y" || direction == "y" ){ 
-        d_dir_gauss = 1; 
-      } else if ( direction == "Z" || direction == "z" ){
-        d_dir_gauss = 2; 
-      } 
-      db_initialValue->getWithDefault( "shift", d_shift_gauss, 0.0 ); 
-
-    } else if ( d_initFunction == "tabulated" ){ 
-
-      db_initialValue->require( "depend_varname", d_init_dp_varname ); 
-      _table_init = true; 
-      
-    } 
-  }
-
-  // Molecular diffusivity: 
-  d_use_constant_D = false; 
-  if ( db->findBlock( "D_mol" ) ){ 
-    db->findBlock("D_mol")->getAttribute("label", d_mol_D_label_name); 
-  } else if ( db->findBlock( "D_mol_constant" ) ){ 
-    db->findBlock("D_mol_constant")->getAttribute("value", d_mol_diff ); 
-    d_use_constant_D = true; 
-  } else { 
-    d_use_constant_D = true; 
-    d_mol_diff = 0.0; 
-    proc0cout << "NOTICE: For equation " << d_eqnName << " no molecular diffusivity was specified.  Assuming D=0.0. \n";
-  } 
-
-  if ( db->findBlock( "D_mol" ) && db->findBlock( "D_mol_constant" ) ){ 
-    string err_msg = "ERROR: For transport equation: "+d_eqnName+" \n Molecular diffusivity is over specified. \n";
-    throw ProblemSetupException(err_msg, __FILE__, __LINE__); 
-  } 
+  //call common problemSetup
+  commonProblemSetup( db ); 
 
 }
 void
@@ -436,9 +283,6 @@ void ScalarEqn::initializeVariables( const ProcessorGroup* pc,
       pr_no.initialize( d_turbPrNo ); 
 
     }
-
-    curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-    curr_ssp_time = curr_time; 
 
   }
 }
@@ -700,7 +544,7 @@ ScalarEqn::solveTransportEqn( const ProcessorGroup* pc,
 
     // ----FE UPDATE
     //     to get phi^{(j+1)}
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, curr_ssp_time, d_eqnName);
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi, old_den, new_den, RHS, dt, d_eqnName);
 
     if ( clip.activated ) 
       clipPhi( patch, phi ); 
@@ -759,10 +603,6 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT; 
 
-    // Compute the current RK time. 
-    double factor = d_timeIntegrator->time_factor[timeSubStep]; 
-    curr_ssp_time = curr_time + factor * dt;
-
     CCVariable<double> new_phi; 
     constCCVariable<double> old_phi;
     constCCVariable<double> new_den; 
@@ -774,7 +614,7 @@ ScalarEqn::timeAve( const ProcessorGroup* pc,
     old_dw->get( old_den, d_fieldLabels->d_densityCPLabel, matlIndex, patch, gn, 0); 
 
     //----Time averaging done here. 
-    d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, curr_ssp_time, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
+    d_timeIntegrator->timeAvePhi( patch, new_phi, old_phi, new_den, old_den, timeSubStep, clip.tol, clip.do_low, clip.low, clip.do_high, clip.high ); 
 
     //----BOUNDARY CONDITIONS
     //    must update BCs for next substep

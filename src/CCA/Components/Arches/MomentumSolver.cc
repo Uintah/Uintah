@@ -154,6 +154,10 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     } else if ( _init_type == "input"){
 
       _init_function = scinew InputfileInit(); 
+
+    } else if ( _init_type == "shunn_moin" ){ 
+
+      _init_function = scinew ShunnMoin(); 
     
     } else { 
 
@@ -202,13 +206,14 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 void MomentumSolver::setInitVelCondition( const Patch* patch, 
                                           SFCXVariable<double>& uvel, 
                                           SFCYVariable<double>& vvel, 
-                                          SFCZVariable<double>& wvel )  
+                                          SFCZVariable<double>& wvel,
+                                          constCCVariable<double>& rho )  
 {
   if ( _init_type != "none" ){ 
 
-    _init_function->setXVel( patch, uvel ); 
-    _init_function->setYVel( patch, vvel ); 
-    _init_function->setZVel( patch, wvel ); 
+    _init_function->setXVel( patch, uvel, rho ); 
+    _init_function->setYVel( patch, vvel, rho ); 
+    _init_function->setZVel( patch, wvel, rho ); 
 
   }
 }

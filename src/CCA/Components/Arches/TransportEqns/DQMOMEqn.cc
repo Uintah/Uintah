@@ -440,9 +440,6 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
 
-    curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-    curr_ssp_time = curr_time; 
-
   }
 }
 //---------------------------------------------------------------------------
@@ -757,20 +754,17 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     old_dw->get(vol_fraction, d_fieldLabels->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt, curr_ssp_time, d_eqnName );
-
-    double factor = d_timeIntegrator->time_factor[timeSubStep]; 
-    curr_ssp_time = curr_time + factor * dt; 
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt, d_eqnName );
 
     if(d_weight){
         // weights being clipped inside this function call
-        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, 
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, 
             clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, vol_fraction );
     }else{
         constCCVariable<double> w;
         new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
         // weighted abscissa being clipped inside this function call 
-        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, 
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, 
             clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, w, vol_fraction); 
     }
 

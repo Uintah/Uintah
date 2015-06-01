@@ -931,20 +931,24 @@ Task::doit(CallBackEvent event,
 void
 Task::display( ostream & out ) const
 {
-  out <<  Parallel::getMPIRank()<< " " << getName() << " (" << d_tasktype << "): [";
-  out << *patch_set;
+  out <<  Parallel::getMPIRank()<< " " << getName();
+  if (d_usesDevice){
+    out <<  ": GPU task,";
+  }
+  
+  out << " (" << d_tasktype << ")";
+  
   if( d_tasktype ==  Task::Normal && patch_set != NULL){
     out << ", Level " << getLevel(patch_set)->getIndex();
   }
-  out << ", ";
-  out << *matl_set;
+  out << ", " << *matl_set;
   out << ", DWs: ";
   for(int i=0;i<TotalDWs;i++){
     if(i != 0)
       out << ", ";
     out << dwmap[i];
   }
-  out << "]";
+  out <<", " << *patch_set;
 }
 //__________________________________
 namespace Uintah {

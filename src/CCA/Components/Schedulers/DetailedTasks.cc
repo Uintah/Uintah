@@ -275,7 +275,7 @@ DetailedTask::DetailedTask(       Task*           task,
 {
   if (patches) {
     // patches and matls must be sorted
-    ASSERT( std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()) );
+    ASSERT(std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()) );
     patches->addReference();
   }
   if (matls) {
@@ -287,6 +287,7 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
+  setCUDAStream(NULL);
 #endif
 }
 
@@ -1338,7 +1339,7 @@ operator<<(       std::ostream& out,
       if (task.getTask()->getType() == Task::OncePerProc) {
         out << ", on multiple levels";
       }
-      else if (patches->size() > 1) {
+      else {
         out << ", Level " << getLevel(patches)->getIndex();
       }
     }
@@ -1363,6 +1364,12 @@ operator<<(       std::ostream& out,
     else {
       out << task.getAssignedResourceIndex();
     }
+#ifdef HAVE_CUDA
+    if( task.getCUDAStream() ){
+      out << std::hex << " using CUDA stream " << task.getCUDAStream();
+    }
+#endif
+    
   }
   coutLock.unlock();
 

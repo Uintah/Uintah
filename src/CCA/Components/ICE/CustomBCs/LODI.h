@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Containers/StaticArray.h>
 #include <typeinfo>
-using namespace Uintah;
+
 namespace Uintah {
 
   //_____________________________________________________________

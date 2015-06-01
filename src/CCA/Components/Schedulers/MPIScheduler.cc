@@ -929,7 +929,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
     numTasksDone++;
     if (taskorder.active()) {
-      taskorder << d_myworld->myrank() << " Running task static order: " << task->getSaticOrder() << " , scheduled order: "
+      taskorder << d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: "
                 << numTasksDone << std::endl;
     }
 

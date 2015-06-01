@@ -69,6 +69,7 @@ Pressure::Pressure( const std::string& pressureName,
                     const double     refPressureValue,
                     const SCIRun::IntVector refPressureLocation,
                     const bool       use3DLaplacian,
+                    const bool       enforceSolvability,
                     Uintah::SolverParameters& solverParams,
                     Uintah::SolverInterface& solver )
   : Expr::Expression<SVolField>(),
@@ -90,6 +91,7 @@ Pressure::Pressure( const std::string& pressureName,
     refPressureLocation_( refPressureLocation ),
 
     use3DLaplacian_( use3DLaplacian ),
+    enforceSolvability_(enforceSolvability),
 
     solverParams_( solverParams ),
     solver_( solver ),
@@ -127,11 +129,19 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                            const Uintah::MaterialSet* const materials,
                            const int RKStage )
 {
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
+  if (enforceSolvability_) {
+    solver_.scheduleEnforceSolvability<Wasatch::SelectUintahFieldType<SVolField>::type >(level, sched, materials, prhsLabel_, RKStage);
+  }
   solver_.scheduleSolve( level, sched, materials, matrixLabel_, Uintah::Task::NewDW,
                          pressureLabel_, true,
                          prhsLabel_, Uintah::Task::NewDW,
                          pressureLabel_, RKStage == 1 ? Uintah::Task::OldDW : Uintah::Task::NewDW,
                          &solverParams_, RKStage == 1 ? false:true);
+  if(useRefPressure_) {
+    solver_.scheduleSetReferenceValue<Wasatch::SelectUintahFieldType<SVolField>::type >(level, sched, materials, pressureLabel_, RKStage, refPressureLocation_, refPressureValue_);
+  }
 }
 
 //--------------------------------------------------------------------
@@ -275,10 +285,6 @@ Pressure::setup_matrix( const SVolField* const volfrac )
   // When boundary conditions are present, modify the pressure matrix coefficients at the boundary
   if( patch_->hasBoundaryFaces() && bcHelper_ )
     bcHelper_->update_pressure_matrix( matrix_, volfrac, patch_ );
-
-  // if the user specified a reference pressure, then modify the appropriate matrix coefficients
-  if( useRefPressure_ )
-    set_ref_poisson_coefs( matrix_, patch_, refPressureLocation_ );
 }
 
 //--------------------------------------------------------------------
@@ -312,7 +318,6 @@ Pressure::evaluate()
   // - Laplacian(p) = - p_rhs
   const SVolField& pSrc = pSource_->field_ref();
   rhs <<= - pSrc;
-//  rhs <<= 0.0;
   
   //___________________________________________________
   // calculate the RHS field for the poisson solve.
@@ -324,10 +329,6 @@ Pressure::evaluate()
   if( doY_ ) rhs <<= rhs - (*divYOp_)((*interpY_)(fy_->field_ref()));
   if( doZ_ ) rhs <<= rhs - (*divZOp_)((*interpZ_)(fz_->field_ref()));
   if( hasIntrusion_) rhs <<= rhs * volfrac_->field_ref();
-
-  // update pressure rhs for reference pressure
-  if( useRefPressure_ )
-    set_ref_poisson_rhs( rhs, patch_, refPressureValue_, refPressureLocation_ );
 
   // update pressure rhs for any BCs
   if( patch_->hasBoundaryFaces() )
@@ -477,6 +478,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
                             const double     refPressureValue,
                             const SCIRun::IntVector refPressureLocation,
                             const bool       use3dlaplacian,
+                            const bool       enforceSolvability,
                             Uintah::SolverParameters& sparams,
                             Uintah::SolverInterface& solver )
  : ExpressionBuilder(result),
@@ -491,6 +493,7 @@ Pressure::Builder::Builder( const Expr::TagList& result,
    refpressurevalue_( refPressureValue ),
    refpressurelocation_( refPressureLocation ),
    use3dlaplacian_( use3dlaplacian ),
+   enforceSolvability_(enforceSolvability),
    sparams_( sparams ),
    solver_( solver )
 {}
@@ -504,7 +507,7 @@ Pressure::Builder::build() const
   return new Pressure( ptags[0].name(), ptags[1].name(), fxt_, fyt_, fzt_,
                        psrct_, dtt_,volfract_,hasMovingGeometry_, userefpressure_,
                        refpressurevalue_, refpressurelocation_, use3dlaplacian_,
-                       sparams_, solver_ );
+                       enforceSolvability_, sparams_, solver_ );
 }
 
 } // namespace Wasatch

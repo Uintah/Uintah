@@ -44,8 +44,6 @@ extern "C"{
 
 //uncomment to debug matricies
 //#define cqmom_dbg
-using namespace std;
-using namespace Uintah;
 //-------------------------------------------------------
 
 /**
@@ -112,6 +110,10 @@ void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, co
  ****************************/
 void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w, std::vector<double>& x)
 {
+
+  using namespace std; 
+  using namespace Uintah; 
+
   int nEnv = (int) moments.size()/2; //get # nodes
   int nMom = moments.size();
 #ifdef cqmom_dbg
@@ -305,7 +307,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     bool nonrealCheck = false;
     //check a vector for a nan - occurs in point distribution
     for ( int i = 0; i<nEnvOut; i++ ) {
-      if ( isnan(a[i]) || isinf(a[i]) ) {
+      if ( std::isnan(a[i]) || std::isinf(a[i]) ) {
 #ifdef cqmom_dbg
         cout << "WARNING: Arches: CQMOMInversion: not-a-number in a vector encountered. " << endl;
 #endif
@@ -321,7 +323,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     double d_small = 1.0e-14;
     //check the b vector for realizable space
     for ( int i = 0; i<nEnvOut; i++ ) {
-      if ( (b[i] != 0.0 && b[i]<d_small) || isnan(b[i]) ) { //clip if b is very close to zero
+      if ( (b[i] != 0.0 && b[i]<d_small) || std::isnan(b[i]) ) { //clip if b is very close to zero
 #ifdef cqmom_dbg
         cout << "WARNING: Arches: CQMOMInversion: Negative b vector encountered." << endl;
 #endif
@@ -472,6 +474,10 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   //maxInd vector of maxium moment# for flat array
   //For the time being this is only for M = 2 or 3
   //NOTE: to-do: expand to M = 4,5...N etc
+  //
+
+  using namespace std; 
+  using namespace Uintah; 
   
 
   int nTot = 1;  //this could probably be input
