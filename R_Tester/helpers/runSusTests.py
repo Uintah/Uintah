@@ -369,8 +369,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     if outputpath != startpath:
       if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != 1:
         mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
-      system("cp `ls -1 | grep -v uda` %s/%s-results/%s/" % (outputpath, ALGO, testname))
-    
+      system("rsync --exclude '*uda*' %s/%s-results/%s/" % (outputpath, ALGO, testname))
     # Return Code (rc) of 2 means it failed comparison or memory test, so try to run restart
     if rc == 0 or rc == 2:
       # Prepare for restart test
@@ -399,7 +398,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         if outputpath != startpath:
           if path.exists("%s/%s-results/%s/restart" % (outputpath, ALGO, testname)) != 1:
             mkdir("%s/%s-results/%s/restart" % (outputpath, ALGO, testname))
-          system("cp `ls -1 | grep -v uda` %s/%s-results/%s/restart/" % (outputpath, ALGO, testname))
+          system("rsync --exclude '*uda*' %s/%s-results/%s/" % (outputpath, ALGO, testname))
 
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
