@@ -44,8 +44,6 @@ extern "C"{
 
 //uncomment to debug matricies
 //#define cqmom_dbg
-using namespace std;
-using namespace Uintah;
 //-------------------------------------------------------
 
 /**
@@ -112,6 +110,10 @@ void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, co
  ****************************/
 void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w, std::vector<double>& x)
 {
+
+  using namespace std; 
+  using namespace Uintah; 
+
   int nEnv = (int) moments.size()/2; //get # nodes
   int nMom = moments.size();
 #ifdef cqmom_dbg
@@ -472,6 +474,10 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   //maxInd vector of maxium moment# for flat array
   //For the time being this is only for M = 2 or 3
   //NOTE: to-do: expand to M = 4,5...N etc
+  //
+
+  using namespace std; 
+  using namespace Uintah; 
   
 
   int nTot = 1;  //this could probably be input
