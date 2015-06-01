@@ -54,6 +54,8 @@
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
+
 
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
@@ -220,6 +222,7 @@ Arches::~Arches()
   
   if (d_doCQMOM) {
     delete d_cqmomSolver;
+    delete d_cqmomConvect;
   }
   releasePort("solver");
 
@@ -694,7 +697,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   if (cqmom_db) {
     d_doCQMOM = true;
     // require that we have weighted or unweighted explicitly specified as an attribute to CQMOM
-    cqmom_db->getAttribute( "type", d_which_cqmom );
+    cqmom_db->getAttribute( "partvel", d_usePartVel );
    
     //register all equations.
     Arches::registerCQMOMEqns(cqmom_db);
@@ -751,11 +754,18 @@ Arches::problemSetup(const ProblemSpecP& params,
 //    }
     
     // set up the linear solver:
-    d_cqmomSolver = scinew CQMOM( d_lab, d_which_cqmom );
+    d_cqmomSolver = scinew CQMOM( d_lab, d_usePartVel );
     d_cqmomSolver->problemSetup( cqmom_db );
     
     //pass it to the explicit solver
     d_nlSolver->setCQMOMSolver( d_cqmomSolver );
+    
+    // set up convection
+    d_cqmomConvect = scinew CQMOM_Convection( d_lab );
+    if (d_usePartVel ) {
+      d_cqmomConvect-> problemSetup( cqmom_db );
+      d_nlSolver->setCQMOMConvect( d_cqmomConvect );
+    }
   }
 
   
