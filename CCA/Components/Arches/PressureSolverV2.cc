@@ -562,6 +562,9 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
   const VarLabel* b     = d_lab->d_presNonLinSrcPBLMLabel;
   const VarLabel* guess = d_lab->d_pressureGuessLabel;
   // cout << "guess Label " << guess->getName() << endl;
+  //
+
+  d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >( level, sched, matls, b );
 
   d_hypreSolver->scheduleSolve(level, sched,  matls,
                                A,      Task::NewDW,
