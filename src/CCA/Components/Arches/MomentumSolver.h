@@ -683,19 +683,24 @@ private:
 
       void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
 
+        Vector DX = patch->dCell(); 
+
+        double dx2 = DX.x()/2.;
+
         for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
+
           IntVector c = *iter;
           Point p = patch->cellPosition(c);
 
           if ( _plane == "x-y" ){ 
 
-            uvel[c] = 1.0 - _A * cos( 2.0*_pi*p.x() ) 
+            uvel[c] = 1.0 - _A * cos( 2.0*_pi*(p.x() - dx2) ) 
                                * sin( 2.0*_pi*p.y() ); 
 
           } else if ( _plane == "z-x" ){ 
 
             uvel[c] = 1.0 + _B * sin( 2.0*_pi*p.z() ) 
-                               * cos( 2.0*_pi*p.x() ); 
+                               * cos( 2.0*_pi*(p.x() - dx2) ); 
 
           } else { 
             uvel[c] = 0.0; 
@@ -707,19 +712,23 @@ private:
       
       void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
 
+        Vector DX = patch->dCell(); 
+
+        double dy2 = DX.y()/2.;
+
         for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           Point p = patch->cellPosition(c);
 
           if ( _plane == "y-z" ){ 
 
-            vvel[c] = 1.0 - _A * cos( 2.0*_pi*p.y() ) 
+            vvel[c] = 1.0 - _A * cos( 2.0*_pi*(p.y() - dy2) ) 
                                * sin( 2.0*_pi*p.z() ); 
 
           } else if ( _plane == "x-y" ){ 
 
             vvel[c] = 1.0 + _B * sin( 2.0*_pi*p.x() ) 
-                               * cos( 2.0*_pi*p.y() ); 
+                               * cos( 2.0*_pi*(p.y() - dy2) ); 
 
           } else { 
             vvel[c] = 0.0; 
@@ -731,19 +740,24 @@ private:
 
       void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){ 
 
+        Vector DX = patch->dCell(); 
+
+        double dz2 = DX.z()/2.;
+
+
         for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
           IntVector c = *iter;
           Point p = patch->cellPosition(c);
 
           if ( _plane == "z-x" ){ 
 
-            wvel[c] = 1.0 - _A * cos( 2.0*_pi*p.z() ) 
+            wvel[c] = 1.0 - _A * cos( 2.0*_pi*(p.z() - dz2) ) 
                                * sin( 2.0*_pi*p.x() ); 
 
           } else if ( _plane == "y-z" ){ 
 
             wvel[c] = 1.0 + _B * sin( 2.0*_pi*p.y() ) 
-                               * cos( 2.0*_pi*p.z() ); 
+                               * cos( 2.0*_pi*(p.z() - dz2) ); 
 
           } else { 
             wvel[c] = 0.0; 
