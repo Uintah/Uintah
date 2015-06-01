@@ -40,6 +40,7 @@
 #include <CCA/Components/Arches/CQMOM.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
+#include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
 
 //NEW TASK STUFF
 #include <CCA/Components/Arches/Task/TaskInterface.h>
@@ -520,11 +521,20 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     
     if ( d_doCQMOM ) {
       bool doOperatorSplit;
+      bool doPartVel;
+      
       doOperatorSplit = d_cqmomSolver->getOperatorSplitting();
+      doPartVel = d_cqmomSolver->getPartVel();
       CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
       
       if (!doOperatorSplit) {
       //Evaluate CQMOM equations
+        if (doPartVel) {
+          if (curr_level == 0 )
+            d_cqmomConvect->sched_initializeVariables( level, sched );
+          d_cqmomConvect->sched_solveCQMOMConvection( level, sched, curr_level);
+        }
+        
         for ( CQMOMEqnFactory::EqnMap::iterator iEqn = moment_eqns.begin();
              iEqn != moment_eqns.end(); iEqn++){
          

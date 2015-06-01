@@ -6,6 +6,7 @@ SRCS += \
   $(SRCDIR)/Convection_CQMOM.cc   \
   $(SRCDIR)/CQMOMEqn.cc           \
   $(SRCDIR)/CQMOMEqnFactory.cc    \
+  $(SRCDIR)/CQMOM_Convection.cc   \
   $(SRCDIR)/Discretization_new.cc \
   $(SRCDIR)/DQMOMEqn.cc           \
   $(SRCDIR)/DQMOMEqnFactory.cc    \

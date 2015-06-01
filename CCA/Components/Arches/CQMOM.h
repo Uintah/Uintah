@@ -72,7 +72,7 @@ namespace Uintah {
     
   public:
     
-    CQMOM( ArchesLabel* fieldLabels, std::string which_dqmom );
+    CQMOM( ArchesLabel* fieldLabels, bool usePartVel );
     
     ~CQMOM();
     
@@ -154,6 +154,8 @@ namespace Uintah {
     
     inline bool getOperatorSplitting() {return d_doOperatorSplitting; };
     
+    inline bool getPartVel() {return d_usePartVel; };
+    
     inline int getUVelIndex() {return uVelIndex; };
     
     inline int getVVelIndex() {return vVelIndex; };
@@ -183,11 +185,10 @@ namespace Uintah {
     double d_small;                             //below this value of 0th moment assume all weights/abscissa = 0
     
     int d_timeSubStep;
-    bool d_normalized;                          //boolean to normalize weights if needed later
     bool d_adaptive;                            //boolean to use adaptive number of nodes
     bool d_useLapack;                           //boolean to use lapack or vandermonde solver
     bool d_doOperatorSplitting;                 //use operator splitting to calculate nodes for multiple permutations
-    std::string d_which_cqmom;
+    bool d_usePartVel;                          //use particle velocity as an IC
     
     double weightRatio;                         //adaptive double for minimum allowed weigth ratio
     double abscissaRatio;                       //adaptive double for minimum allowed abscissa ratio
