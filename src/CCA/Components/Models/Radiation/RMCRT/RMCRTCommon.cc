@@ -684,7 +684,7 @@ RMCRTCommon::isDbgCell( const IntVector me)
   if(me == IntVector(10,10,10) ){
     return true;
   }
-  for( uint i = 0; i<d_dbgCells.size(); i++) {
+  for( unsigned int i = 0; i<d_dbgCells.size(); i++) {
     if( me == d_dbgCells[i]) {
       return true;
 
