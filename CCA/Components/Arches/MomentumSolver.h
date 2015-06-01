@@ -159,7 +159,8 @@ public:
   void setInitVelCondition( const Patch* patch, 
                             SFCXVariable<double>& uvel, 
                             SFCYVariable<double>& vvel, 
-                            SFCZVariable<double>& wvel );
+                            SFCZVariable<double>& wvel, 
+                            constCCVariable<double>& rho );
 
   inline void setDiscretizationFilter(Filter* filter) {
     d_discretize->setFilter(filter);
@@ -253,9 +254,9 @@ private:
       virtual ~VelocityInitBase(){}; 
 
       virtual void problemSetup( ProblemSpecP db ) = 0; 
-      virtual void setXVel( const Patch* patch, SFCXVariable<double>& vel ) = 0;
-      virtual void setYVel( const Patch* patch, SFCYVariable<double>& vel ) = 0;
-      virtual void setZVel( const Patch* patch, SFCZVariable<double>& vel ) = 0;
+      virtual void setXVel( const Patch* patch, SFCXVariable<double>& vel, constCCVariable<double>& rho ) = 0;
+      virtual void setYVel( const Patch* patch, SFCYVariable<double>& vel, constCCVariable<double>& rho ) = 0;
+      virtual void setZVel( const Patch* patch, SFCZVariable<double>& vel, constCCVariable<double>& rho ) = 0;
 
     protected: 
 
@@ -288,19 +289,19 @@ private:
 
       }; 
 
-      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
 
         uvel.initialize( _const_u ); 
 
       }; 
       
-      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
 
         vvel.initialize( _const_v ); 
 
       }; 
 
-      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){ 
 
         wvel.initialize( _const_w ); 
 
@@ -330,7 +331,7 @@ private:
 
       }; 
 
-      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
 
         gzFile file = gzopen( _input_file.c_str(), "r" );
 
@@ -381,7 +382,7 @@ private:
 
       }; 
       
-      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
 
         gzFile file = gzopen( _input_file.c_str(), "r" );
 
@@ -433,7 +434,7 @@ private:
 
       }; 
 
-      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){ 
 
         gzFile file = gzopen( _input_file.c_str(), "r" );
 
@@ -609,7 +610,7 @@ private:
 
       }; 
 
-      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
 
         if ( _do_u ){ 
           for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
@@ -621,7 +622,7 @@ private:
 
       }; 
       
-      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
 
         if ( _do_v ){ 
           for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
@@ -633,7 +634,7 @@ private:
 
       }; 
 
-      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){ 
 
         if ( _do_w ){ 
           for ( CellIterator iter=patch->getCellIterator(); !iter.done(); iter++ ){
@@ -680,7 +681,7 @@ private:
 
       }; 
 
-      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
 
         for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
           IntVector c = *iter;
@@ -704,7 +705,7 @@ private:
 
       }; 
       
-      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
 
         for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
           IntVector c = *iter;
@@ -728,7 +729,7 @@ private:
 
       }; 
 
-      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){ 
 
         for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){
           IntVector c = *iter;
@@ -777,7 +778,7 @@ private:
 
       }; 
 
-      void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+      void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
 
         double x,y,z;
         Vector Dx = patch->dCell(); 
@@ -798,7 +799,7 @@ private:
       };
 
       
-      void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+      void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
 
         double x,y,z;
         Vector Dx = patch->dCell(); 
@@ -818,7 +819,7 @@ private:
         }    
       }; 
 
-      void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){ 
+      void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){ 
 
         double x,y,z;
         Vector Dx = patch->dCell(); 
@@ -842,6 +843,180 @@ private:
 
       double _c; 
       double _pi;
+
+  };  
+
+  // L. Shunn and P. Moin variable den MMS  ------------------------
+  // Tony Saad (just in case you need to blame someone)
+  class ShunnMoin : public VelocityInitBase { 
+    
+  public: 
+    
+    ShunnMoin(){}
+    ~ShunnMoin(){} 
+    
+    void problemSetup( ProblemSpecP db ){ 
+
+      ProblemSpecP db_prop = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("Properties")->findBlock("ColdFlow"); 
+      db_prop->findBlock("stream_0")->getAttribute("density",_rho0);
+      db_prop->findBlock("stream_1")->getAttribute("density",_rho1);
+      db->require("w", _w); 
+      db->require("k", _k); 
+      db->require("plane",_plane); 
+      db->getWithDefault("uf",_uf,0.0);
+      db->getWithDefault("vf",_vf,0.0);
+      
+    } 
+    
+    void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
+      
+      double x,y,z;
+      Vector Dx = patch->dCell(); 
+      double dx_2 = Dx.x()/2.;
+      const double pi = acos(-1.);
+      
+      for (CellIterator iter=patch->getSFCXIterator(); !iter.done(); iter++){          
+     
+        IntVector c = *iter;
+        Uintah::Point position = patch->getCellPosition(c);        
+        x = position.x() - dx_2; 
+        y = position.y();
+        z = position.z();
+        double rho_face = (rho[c] + rho[c-IntVector(1,0,0)])/2.0;
+
+        if ( _plane == "x-y" ){ 
+
+          double xhat = _k * pi * x;
+          double yhat = _k * pi * y; 
+          double that = _w * pi * _time; 
+
+          uvel[c] = get_u_vel(xhat, yhat, that, rho_face); 
+          
+        } else if ( _plane == "z-x" ){ 
+
+          double xhat = _k * pi * z;
+          double yhat = _k * pi * x; 
+          double that = _w * pi * _time; 
+
+          uvel[c] = get_v_vel(xhat, yhat, that, rho_face); 
+
+        } else { 
+
+          uvel[c] = 0.;
+
+        }
+        
+      }
+      
+    }
+    
+    void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
+      
+      double x,y,z;
+      Vector Dx = patch->dCell(); 
+      const double dy_2 = Dx.y()/2.0;
+
+      const double pi = acos(-1.);
+      
+      for (CellIterator iter=patch->getSFCYIterator(); !iter.done(); iter++){      
+        
+        IntVector c = *iter;
+        Uintah::Point position = patch->getCellPosition(c);        
+        x = position.x(); 
+        y = position.y() - dy_2;
+        z = position.z();
+
+        double rho_face = (rho[c]+rho[c-IntVector(0,1,0)])/2.;
+
+        if ( _plane == "x-y" ){ 
+
+          double xhat = _k * pi * x;
+          double yhat = _k * pi * y; 
+          double that = _w * pi * _time; 
+
+          vvel[c] = get_v_vel(xhat, yhat, that, rho_face); 
+          
+        } else if ( _plane == "y-z" ){ 
+
+          double xhat = _k * pi * y;
+          double yhat = _k * pi * z; 
+          double that = _w * pi * _time; 
+
+          vvel[c] = get_u_vel(xhat, yhat, that, rho_face); 
+
+        } else { 
+
+          vvel[c] = 0.;
+
+        }
+
+        
+      }
+    } 
+    
+    void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){     
+      
+      double x,y,z, r;
+      Vector Dx = patch->dCell(); 
+      const double dz_2 = Dx.z()/2.0;
+      const double pi = acos(-1.);
+      
+      for (CellIterator iter=patch->getSFCZIterator(); !iter.done(); iter++){      
+        
+        IntVector c = *iter;
+        Uintah::Point position = patch->getCellPosition(c);        
+        x = position.x();
+        y = position.y(); 
+        z = position.z() - dz_2;
+
+        double rho_face = (rho[c]+rho[c-IntVector(0,0,1)])/2.;
+
+        if ( _plane == "y-z" ){ 
+
+          double xhat = _k * pi * y;
+          double yhat = _k * pi * z; 
+          double that = _w * pi * _time; 
+
+          wvel[c] = get_v_vel(xhat, yhat, that, rho_face); 
+          
+        } else if ( _plane == "z-x" ){ 
+
+          double xhat = _k * pi * z;
+          double yhat = _k * pi * x; 
+          double that = _w * pi * _time; 
+
+          wvel[c] = get_u_vel(xhat, yhat, that, rho_face); 
+        
+        } else { 
+
+          wvel[c] = 0.;
+
+        }
+        
+        
+      }
+    } 
+    
+  private: 
+
+    double _rho0;  //when f = 1 (different than Shunn's paper)
+    double _rho1; 
+    double _uf, _vf;
+
+    double _w; 
+    double _k; 
+    double _time; 
+
+    std::string _plane; 
+
+    inline double get_u_vel( const double xhat, const double yhat, const double that, const double rho_face ){ 
+      return ( _rho0 - _rho1 )/rho_face * (-_w/(4.*_k))*cos(xhat)*sin(yhat)*sin(that);
+    }
+
+    inline double get_v_vel( const double xhat, const double yhat, const double that, const double rho_face ){
+      return ( _rho0 - _rho1 )/rho_face  * (-_w/(4.*_k))*sin(xhat)*cos(yhat)*sin(that);
+    }
+
 
   };  
   
@@ -869,7 +1044,7 @@ private:
       GR_ = G_/(R_*R_);
     }; 
     
-    void setXVel( const Patch* patch, SFCXVariable<double>& uvel ){ 
+    void setXVel( const Patch* patch, SFCXVariable<double>& uvel, constCCVariable<double>& rho ){ 
       
       double x,y,z,r;
       Vector Dx = patch->dCell(); 
@@ -901,7 +1076,7 @@ private:
     };
     
     
-    void setYVel( const Patch* patch, SFCYVariable<double>& vvel ){ 
+    void setYVel( const Patch* patch, SFCYVariable<double>& vvel, constCCVariable<double>& rho ){ 
       
       double x,y,z,r;
       Vector Dx = patch->dCell(); 
@@ -932,7 +1107,7 @@ private:
       }
     }; 
     
-    void setZVel( const Patch* patch, SFCZVariable<double>& wvel ){     
+    void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){     
       
       double x,y,z, r;
       Vector Dx = patch->dCell(); 

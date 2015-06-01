@@ -62,6 +62,9 @@ public:
   /** @brief Setup any extra information that may need to occur later (like after the table is setup) **/ 
   void extraProblemSetup( ProblemSpecP& db ); 
 
+  /** @brief Auto setup for scalar eqns. All derived eqn types should call this to interact with the input file **/ 
+  void commonProblemSetup( ProblemSpecP& db ); 
+
   /** @brief Creates instances of variables in the new_dw at the begining of the timestep 
              and copies old data into the new variable */
   virtual void sched_initializeVariables( const LevelP&, SchedulerP& sched ) = 0;
@@ -277,6 +280,15 @@ protected:
   double d_shift_gauss;             ///< shifts the gaussian function up or down 
   int d_dir_gauss;                  ///< direction of the gaussian (0,1,2) == [x,y,z]
 
+  // Shunn, Moin periodic variable density initialization
+  double d_rho0;                    ///< density of mixture f=1 (grabbed from ColdFlow model)
+  double d_rho1;                    ///< density of mixture f=0 (grabbed from ColdFlow model)
+  double d_k;                       ///< frequency for space
+  double d_w;                       ///< frequency for time
+  double d_time;                    ///< time (default = 0)
+  int d_dir0;                       ///< integer for the first direction
+  int d_dir1;                       ///< integer for the second direction
+
   // Other:
   double d_turbPrNo;                ///< Turbulent Prandtl number (used for scalar diffusion)
   int _stage;                       ///< At which algorithmic stage should this be computed. 
@@ -286,6 +298,10 @@ protected:
   double d_mol_diff;                  ///< Molecular Diffusivity
   bool d_use_constant_D;              ///< Switch for using constant D or not. 
   bool _table_init;                   ///< Requires a table lookup for initialization 
+
+  std::vector<double> clip_ind_vec;
+  std::vector<double> clip_dep_vec;  
+  std::vector<double> clip_dep_low_vec;
 
 private:
 
@@ -459,6 +475,11 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
     y = P.y(); 
     z = P.z(); 
 
+    std::vector<double> PP; 
+    PP.push_back(x);
+    PP.push_back(y); 
+    PP.push_back(z);
+
     if ( d_initFunction == "constant" || d_initFunction == "env_constant" ) {
       // ========== CONSTANT VALUE INITIALIZATION ============
       phi[c] = d_constant_init;
@@ -527,6 +548,17 @@ void EqnBase::initializationFunction( const Patch* patch, phiType& phi, constCCV
         phi[c] = d_a_gauss * exp( -1.0*std::pow(z-d_b_gauss,2.0)/(2.0*std::pow(d_c_gauss,2.0))) + d_shift_gauss;
 
       } 
+
+    } else if ( d_initFunction == "shunn_moin"){
+
+      double xbar = pi*d_k*(PP[d_dir0]); 
+      double ybar = pi*d_k*(PP[d_dir1]); 
+      double tbar = pi*d_w*d_time; 
+
+      phi[c] = 1+sin(xbar)*sin(ybar)*cos(tbar);
+      //note: from Tony's description, I have reversed the definitions of rho0 and rho1
+      phi[c] /= (1 - d_rho1/d_rho0)*sin(xbar)*sin(ybar)*cos(tbar) + (1 + d_rho1/d_rho0);
+     
 
     } else if (d_initFunction == "geometry_fill") {
       //======= Fills a geometry piece with the value of d_constant_init ======

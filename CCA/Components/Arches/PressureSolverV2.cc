@@ -98,40 +98,6 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   db->getWithDefault("normalize_pressure",      d_norm_press, false);
   db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
 
-  //fix pressure at a point.
-  d_use_ref_point = false; 
-  if ( db->findBlock("use_ref_point") ){ 
-
-    d_ref_value = 0.0;
-
-    ProblemSpecP db_ref = db->findBlock("use_ref_point");
-    d_use_ref_point = true; 
-
-    d_reduce_ref_dims.clear(); 
-    if ( db_ref->findBlock("reduce_dims")){ 
-
-      std::vector<std::string> dims; 
-      db_ref->require("reduce_dims", dims); 
-
-      if ( dims.size() > 2 ){ 
-        throw InvalidValue("Error: Only up to two dimensions may be removed for the reference pressure.",__FILE__,__LINE__); 
-      } else { 
-        d_N_reduce_ref_dims = dims.size(); 
-      }
-
-      for (std::vector<std::string>::iterator i = dims.begin(); i != dims.end(); i++ ){
-        if ( *i == "x" || *i == "X" ){ 
-          d_reduce_ref_dims.push_back(0);
-        } else if ( *i == "y" || *i == "Y" ){ 
-          d_reduce_ref_dims.push_back(1);
-        } else if ( *i == "z" || *i == "Z" ){ 
-          d_reduce_ref_dims.push_back(2);
-        }
-      }
-      
-    }
-  } 
-
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
   
@@ -142,6 +108,11 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   //force a zero setup frequency since nothing else
   //makes any sense at the moment. 
   d_hypreSolver_parameters->setSetupFrequency(0.0); 
+
+  d_enforceSolvability = false; 
+  if ( db->findBlock("enforce_solvability")){ 
+    d_enforceSolvability = true; 
+  }
 
   //__________________________________
   // allow for addition of mass source terms
@@ -177,7 +148,8 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
 void PressureSolver::sched_solve(const LevelP& level,
                                  SchedulerP& sched,
                                  const TimeIntegratorLabel* timelabels,
-                                 bool extraProjection)
+                                 bool extraProjection, 
+                                 const int rk_stage)
 {
 
   d_periodic_vector = level->getPeriodicBoundaries(); 
@@ -197,7 +169,8 @@ void PressureSolver::sched_solve(const LevelP& level,
                            timelabels, extraProjection);
 
   sched_SolveSystem(       sched, perproc_patches, matls, 
-                           timelabels, extraProjection);
+                           timelabels, extraProjection, 
+                           rk_stage );
 
 
   sched_set_BC_RefPress(   sched, perproc_patches, matls,
@@ -397,13 +370,6 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Pressure Diagonal
     discrete->calculatePressDiagonal(patch, &vars);
 
-    if ( d_use_ref_point ){ 
-
-      //This fixes a pressure solution at a point
-      adjustForRefPoint( patch, &vars, &constVars ); 
-
-    } 
-
     d_boundaryCondition->pressureBC(patch, d_indx, &vars, &constVars);
 
   }
@@ -527,7 +493,8 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls,
                                   const TimeIntegratorLabel* timelabels,
-                                  bool extraProjection)
+                                  bool extraProjection, 
+                                  const int rk_stage)
 {
   const LevelP level = getLevelP(patches->getUnion());
 
@@ -561,10 +528,12 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
   const VarLabel* x     = pressLabel;
   const VarLabel* b     = d_lab->d_presNonLinSrcPBLMLabel;
   const VarLabel* guess = d_lab->d_pressureGuessLabel;
-  // cout << "guess Label " << guess->getName() << endl;
-  //
 
-  d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >( level, sched, matls, b );
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
+  if ( isPeriodic || d_enforceSolvability ) {
+    d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, rk_stage);
+  }
 
   d_hypreSolver->scheduleSolve(level, sched,  matls,
                                A,      Task::NewDW,
@@ -572,6 +541,12 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                b,      Task::NewDW,
                                guess,  Task::NewDW,
                                d_hypreSolver_parameters,modifies_hypre);
+
+  //add this?
+  //if ( d_ref_value != 0. ) {
+    //d_hypreSolver->scheduleSetReferenceValue<CCVariable<double> >( level, sched, matls, x, d_ref_loc ); 
+  //}
+
 }
 
 
@@ -647,7 +622,7 @@ PressureSolver::set_BC_RefPress ( const ProcessorGroup* pg,
     
     ArchesVariables vars;
     new_dw->getModifiable(vars.pressure,  pressLabel, d_indx, patch);
-    
+
     //__________________________________
     //  set boundary conditons on pressure
     vector<Patch::FaceType> bf;
@@ -865,7 +840,7 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
     A.n = area_NS/DX.y();
     A.s = area_NS/DX.y();
     A.t = area_TB/DX.z();
-    A.b = area_TB/DX.z(); 
+    A.b = area_TB/DX.z();
   }
 
 #ifdef divergenceconstraint
@@ -929,57 +904,3 @@ PressureSolver::mmModifyPressureCoeffs(const Patch* patch,
     A.b *= 0.5 * (voidFrac[c] + voidFrac[B]);
   }
 }
-
-void 
-PressureSolver::adjustForRefPoint( const Patch* patch, 
-    ArchesVariables* vars, ArchesConstVariables* constvars )
-{ 
-
-  //DEVELOPER NOTE: (TODO) This only works when not next to a patch boundary. 
-  // We might want to figure out how to use this in any valid flow cell 
-  // and specify the physical location rather than the I,J,K index. 
-  Vector Dx = patch->dCell(); 
-  IntVector c = d_pressRef; 
-
-  IntVector low = patch->getExtraCellLowIndex(); 
-  IntVector hi  = patch->getExtraCellHighIndex(); 
-
-  if ( d_N_reduce_ref_dims == 1 ){ 
-
-    int starti = low[d_reduce_ref_dims[0]]; 
-    int endi   = hi[d_reduce_ref_dims[0]];
-
-    for (int i = starti; i < endi; i++ ){
-
-      c[d_reduce_ref_dims[0]] = i; 
-
-      fix_ref_coeffs( patch, vars, constvars, c ); 
-
-    }
-
-
-  } else if ( d_N_reduce_ref_dims == 2 ) { 
-
-    int starti = low[d_reduce_ref_dims[0]]; 
-    int endi   = hi[d_reduce_ref_dims[0]];
-
-    int startj = low[d_reduce_ref_dims[1]]; 
-    int endj   = hi[d_reduce_ref_dims[1]];
-
-    for ( int j = startj; j < endj; j++ ){ 
-      for (int i = starti; i < endi; i++ ){ 
-
-        c[d_reduce_ref_dims[0]] = i; 
-        c[d_reduce_ref_dims[1]] = j; 
-
-        fix_ref_coeffs( patch, vars, constvars, c ); 
-
-      }
-    }
-
-  } else { 
-
-    fix_ref_coeffs( patch, vars, constvars, d_pressRef ); 
-
-  }
-} 

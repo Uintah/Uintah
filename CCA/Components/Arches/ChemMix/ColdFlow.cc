@@ -77,18 +77,27 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
   db_root->findBlock("PhysicalConstants")->require("reference_point", d_ijk_den_ref);  
 
   // d_stream[ kind index (density, temperature) ][ stream index ( 0,1) ]
-  ProblemSpecP db_str1 = db_coldflow->findBlock("Stream_1"); 
-  ProblemSpecP db_str2 = db_coldflow->findBlock("Stream_2"); 
+  ProblemSpecP db_str1 = db_coldflow->findBlock("stream_0"); //corresponds to f = 1 stream
+  ProblemSpecP db_str2 = db_coldflow->findBlock("stream_1"); //corresponds to f = 0 stream
 
-  double den_1 = 0.0; 
-  db_str1->require( "density", den_1 ); 
-  d_stream[0][0] = 1.0/den_1; 
-  db_str1->require( "temperature", d_stream[1][0] ); 
+  double den_1;
+  double den_2;
 
-  double den_2 = 0.0; 
-  db_str2->require( "density", den_2 ); 
-  d_stream[0][1] = 1.0/den_2; 
-  db_str2->require( "temperature", d_stream[1][1] ); 
+  if ( db_str1 ){ 
+    db_str1->getAttribute("density",den_1);
+    d_stream[0][0] = 1.0/den_1; 
+    db_str1->getAttribute("temperature",d_stream[1][0]); 
+  } else { 
+    throw InvalidValue("Error: steam_0 not specified in cold flow model.",__FILE__,__LINE__);
+  } 
+
+  if ( db_str2 ){ 
+    db_str2->getAttribute("density",den_2);
+    d_stream[0][1] = 1.0/den_2; 
+    db_str2->getAttribute("temperature",d_stream[1][1]); 
+  } else { 
+    throw InvalidValue("Error: steam_1 not specified in cold flow model.",__FILE__,__LINE__);
+  }
 
   // allow speciation 
   for ( ProblemSpecP db_sp = db_str1->findBlock("species"); db_sp != 0; db_sp = db_sp->findNextBlock("species") ){
@@ -136,7 +145,7 @@ ColdFlow::problemSetup( const ProblemSpecP& propertiesParameters )
     }
   } 
 
-  db_coldflow->require( "mixture_fraction_label", d_cold_flow_mixfrac ); 
+  db_coldflow->findBlock( "mixture_fraction")->getAttribute("label",d_cold_flow_mixfrac);
 
   // Extract independent and dependent variables from input file
   ProblemSpecP db_rootnode = propertiesParameters;
