@@ -80,23 +80,15 @@
 
       <Properties>
         <ColdFlow>
-          <mixture_fraction_label>f</mixture_fraction_label>
-          <Stream_1>
-            <density>1.0</density>
-            <temperature>298</temperature>
-          </Stream_1>
-          <Stream_2>
-            <density>5.0</density>
-            <temperature>298</temperature>
-          </Stream_2>
+          <mixture_fraction label="f"/>
+          <stream_0 density="1.0" temperature="298"/>
+          <stream_1 density="5.0" temperature="298"/>
         </ColdFlow>
       </Properties>
 
       <ExplicitSolver>
         <PressureSolver>
-          <use_ref_point>
-            <reduce_dims>y,z</reduce_dims>
-          </use_ref_point>
+          <enforce_solvability/>
           <Parameters>
             <solver>           cg     </solver>
             <preconditioner>  pfmg    </preconditioner>

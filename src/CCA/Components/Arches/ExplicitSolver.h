@@ -124,7 +124,8 @@ public:
   void sched_interpolateFromFCToCC(SchedulerP&,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
-                                   const TimeIntegratorLabel* timelabels);
+                                   const TimeIntegratorLabel* timelabels, 
+                                   const int curr_level);
 
   /** @brief Compute the kinetic energy of the system **/ 
   void sched_computeKE( SchedulerP& sched, 
@@ -173,6 +174,11 @@ public:
                                 const MaterialSet* matls,
                                 const TimeIntegratorLabel* timelabels);
 
+  /** @brief Set the initial condition on velocity on the interior **/ 
+  void sched_setInitVelCond( const LevelP& level, 
+                             SchedulerP& sched, 
+                             const MaterialSet* matls );
+
   inline double recomputeTimestep(double current_dt) {
     return current_dt/2;
   }
@@ -188,39 +194,32 @@ public:
     d_numSourceBoundaries = numSourceBoundaries;
   }
 
-  void setInitVelConditionInterface( const Patch* patch, 
-                                     SFCXVariable<double>& uvel, 
-                                     SFCYVariable<double>& vvel, 
-                                     SFCZVariable<double>& wvel );
-
 private:
 
-  // GROUP: Constructors (private):
-  ////////////////////////////////////////////////////////////////////////
-  // Should never be used
   ExplicitSolver();
 
-  // GROUP: Action Methods (private) :
-  ///////////////////////////////////////////////////////////////////////
-  // Actually Initialize the non linear solver
-  //    [in]
-  //        data User data needed for solve
   void setInitialGuess(const ProcessorGroup* pc,
                        const PatchSubset* patches,
                        const MaterialSubset* matls,
                        DataWarehouse* old_dw,
                        DataWarehouse* new_dw);
 
+  /** @brief Set the initial condition on velocity **/
+  void setInitVelCond( const ProcessorGroup* pc, 
+                       const PatchSubset* patches, 
+                       const MaterialSubset*, 
+                       DataWarehouse* old_dw, 
+                       DataWarehouse* new_dw );
 
-  ///////////////////////////////////////////////////////////////////////
-  // Actually Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
-  //    [in]
+
+  /** @brief Interpolate from face-center to cell-center **/
   void interpolateFromFCToCC(const ProcessorGroup* pc,
                              const PatchSubset* patches,
                              const MaterialSubset* matls,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels);
+                             const TimeIntegratorLabel* timelabels, 
+                             const int curr_level);
 
   void computeVorticity(const ProcessorGroup* pc,
                         const PatchSubset* patches,
@@ -344,6 +343,8 @@ private:
 
   bool d_KE_fromFC;
   double d_maxDensityLag;
+  std::vector<std::string> d_mass_sources; 
+  bool d_solvability; 
 
   bool d_extra_table_lookup; 
 

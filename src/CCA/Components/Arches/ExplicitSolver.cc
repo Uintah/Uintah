@@ -267,6 +267,21 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
     proc0cout << "Notice: No efficiency calculators found." << endl;
   } 
 
+  //__________________________________
+  // allow for addition of mass source terms
+  if (db->findBlock("PressureSolver")->findBlock("src")){
+    ProblemSpecP db_p = db->findBlock("PressureSolver"); 
+    string srcname; 
+    for (ProblemSpecP src_db = db_p->findBlock("src"); src_db != 0; src_db = src_db->findNextBlock("src")){
+      src_db->getAttribute("label", srcname);
+      d_mass_sources.push_back( srcname ); 
+    }
+  }
+  d_solvability = false; 
+  if ( db->findBlock("PressureSolver")->findBlock("enforce_solvability")){ 
+    d_solvability = true; 
+  }
+
 }
 
 void 
@@ -784,7 +799,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
                                  d_timeIntegratorLabels[curr_level]);
 
     d_pressSolver->sched_solve(level, sched, d_timeIntegratorLabels[curr_level],
-                               false);
+                               false, curr_level);
 
     // project velocities using the projection step
     d_momSolver->solve(sched, patches, matls,
@@ -799,7 +814,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
 
     // Schedule an interpolation of the face centered velocity data
-    sched_interpolateFromFCToCC(sched, patches, matls, d_timeIntegratorLabels[curr_level]);
+    sched_interpolateFromFCToCC(sched, patches, matls, d_timeIntegratorLabels[curr_level], curr_level);
 
     if (d_mixedModel) {
       d_scaleSimilarityModel->sched_reComputeTurbSubmodel( sched, level, matls,
@@ -895,13 +910,14 @@ void
 ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls,
-                                            const TimeIntegratorLabel* timelabels)
+                                            const TimeIntegratorLabel* timelabels, 
+                                            const int curr_level)
 {
   {
     string taskname =  "ExplicitSolver::interpFCToCC" +
                      timelabels->integrator_step_name;
     Task* tsk = scinew Task(taskname, this,
-                         &ExplicitSolver::interpolateFromFCToCC, timelabels);
+                         &ExplicitSolver::interpolateFromFCToCC, timelabels, curr_level);
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -920,12 +936,18 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 
     }
 
-
     tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel, gaf, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterdrhodtLabel,  gn,  0);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,     gac, 1);
+    tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
+
+    if ( d_solvability ){ 
+      std::stringstream strRKStage;
+      strRKStage << curr_level;
+      tsk->requires(Task::NewDW, VarLabel::find("poisson_rhs_integral"+strRKStage.str())); 
+    }
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       tsk->computes(d_lab->d_CCVelocityLabel);
@@ -942,6 +964,15 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
       tsk->modifies(d_lab->d_CCUVelocityLabel);
       tsk->modifies(d_lab->d_CCVVelocityLabel);
       tsk->modifies(d_lab->d_CCWVelocityLabel);
+    }
+
+    // add access to sources: 
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_mass_sources.begin();
+        iter != d_mass_sources.end(); iter++){
+      SourceTermBase& src = factory.retrieve_source_term( *iter );
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      tsk->requires( Task::NewDW, srcLabel, gn, 0 ); 
     }
 
     sched->addTask(tsk, patches, matls);
@@ -984,7 +1015,8 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                                       const MaterialSubset*,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw,
-                                      const TimeIntegratorLabel* timelabels)
+                                      const TimeIntegratorLabel* timelabels, 
+                                      const int curr_level)
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -1015,10 +1047,25 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
 
+    delt_vartype delT;
+    old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
+    double dt = delT;
+
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
+
+    double vol_integral; 
+    if ( d_solvability ){ 
+
+      std::stringstream strRKStage;
+      strRKStage << curr_level;
+      sum_vartype the_sum; 
+      new_dw->get(the_sum, VarLabel::find("poisson_rhs_integral"+strRKStage.str())); 
+      vol_integral = the_sum; 
+
+    }
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
@@ -1211,6 +1258,19 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
       }
     }
 
+    StaticArray<constCCVariable<double> > mass_srcs(d_mass_sources.size()); 
+    // Add other source terms to the continuity
+    int m=0;
+    SourceTermFactory& factory = SourceTermFactory::self(); 
+    for (vector<std::string>::iterator iter = d_mass_sources.begin();
+        iter != d_mass_sources.end(); iter++){
+
+      SourceTermBase& src = factory.retrieve_source_term( *iter );
+      const VarLabel* srcLabel = src.getSrcLabel(); 
+      new_dw->get( mass_srcs[m], srcLabel, indx, patch, gn, 0 );
+      m++;
+    }
+
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
         for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
@@ -1234,7 +1294,17 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                            0.5*(density[idx]+density[idxyminus])*newVVel[idx])/cellinfo->sns[jj]+
                           (0.5*(density[idxW]+density[idx])*newWVel[idxW]-
                            0.5*(density[idx]+density[idxzminus])*newWVel[idx])/cellinfo->stb[kk]+
-                          drhodt[idx]/vol;
+                          drhodt[idx]/vol; 
+
+          //adding the mass sources to the residual
+          for (int iii=0; iii < d_mass_sources.size(); iii++){ 
+            residual[idx] -= mass_srcs[iii][idx]; 
+          }
+
+          if ( d_solvability ){ 
+            residual[idx] += vol_integral*dt/vol; 
+          }
+
         }
       }
     }
@@ -2036,15 +2106,52 @@ ExplicitSolver::checkDensityLag(const ProcessorGroup* pc,
     }
   }
 }
-void ExplicitSolver::setInitVelConditionInterface( const Patch* patch,
-                                             SFCXVariable<double>& uvel,
-                                             SFCYVariable<double>& vvel,
-                                             SFCZVariable<double>& wvel )
-{
 
-  d_momSolver->setInitVelCondition( patch, uvel, vvel, wvel );
+void 
+ExplicitSolver::sched_setInitVelCond( const LevelP& level, 
+                                      SchedulerP& sched, 
+                                      const MaterialSet* matls ){ 
+    
+  string taskname = "ExplicitSolver::setInitVelCond"; 
+  Task* tsk = scinew Task( taskname, this, &ExplicitSolver::setInitVelCond ); 
+
+  tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 ); 
+  tsk->modifies( d_lab->d_uVelocitySPBCLabel );
+  tsk->modifies( d_lab->d_vVelocitySPBCLabel );
+  tsk->modifies( d_lab->d_wVelocitySPBCLabel );
+
+  sched->addTask( tsk, level->eachPatch(), matls ); 
 
 }
+
+void ExplicitSolver::setInitVelCond( const ProcessorGroup* pc, 
+                                     const PatchSubset* patches, 
+                                     const MaterialSubset*, 
+                                     DataWarehouse* old_dw, 
+                                     DataWarehouse* new_dw )
+{ 
+
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+
+    constCCVariable<double> rho; 
+    SFCXVariable<double> u;
+    SFCYVariable<double> v; 
+    SFCZVariable<double> w; 
+
+    new_dw->get( rho, d_lab->d_densityCPLabel, indx, patch, Ghost::AroundCells, 1 ); 
+    new_dw->getModifiable( u, d_lab->d_uVelocitySPBCLabel, indx, patch );
+    new_dw->getModifiable( v, d_lab->d_vVelocitySPBCLabel, indx, patch );
+    new_dw->getModifiable( w, d_lab->d_wVelocitySPBCLabel, indx, patch );
+
+    d_momSolver->setInitVelCondition( patch, u, v, w, rho );
+
+  }
+}
+
 
 void ExplicitSolver::sched_computeKE( SchedulerP& sched, 
                                        const PatchSet* patches, 

@@ -1071,6 +1071,9 @@ Arches::scheduleInitialize(const LevelP& level,
     _particlesHelper->schedule_sync_particle_position(level,sched,true);
   }
 
+  //finally set the momentum (velocity) initial condition
+  d_nlSolver->sched_setInitVelCond( level, sched, matls );
+
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true );
 }
 
@@ -1266,9 +1269,6 @@ Arches::paramInit(const ProcessorGroup* pg,
     double visVal = d_physicalConsts->getMolecularViscosity();
     viscosity.initialize(visVal);
     turb_viscosity.initialize(0.0);
-
-    //----- momentum initial condition
-    d_nlSolver->setInitVelConditionInterface( patch, uVelocity, vVelocity, wVelocity );
 
   } // patches
 }
