@@ -10,7 +10,7 @@
 <AllTests>
   <replace_lines>
     <max_Timesteps>1</max_Timesteps>
-    <randomSeed> false </randomSeed>
+    <randomSeed> true </randomSeed>
   </replace_lines>
 </AllTests>
 
@@ -20,7 +20,7 @@
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 1</postProcess_cmd>
     <x>8</x>
     <replace_lines>
-      <NoOfRays>          8        </NoOfRays>
+      <nDivQRays>          8        </nDivQRays>
     </replace_lines>
 </Test>
 
@@ -30,7 +30,7 @@
     <postProcess_cmd>RMCRT_wrapper  -bm 1 -L 1</postProcess_cmd>
     <x>16</x>
     <replace_lines>
-      <NoOfRays>          16        </NoOfRays>
+      <nDivQRays>          16        </nDivQRays>
     </replace_lines>
 </Test>
 
@@ -40,7 +40,7 @@
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 1</postProcess_cmd>
     <x>32</x>
     <replace_lines>
-      <NoOfRays>          32        </NoOfRays>
+      <nDivQRays>          32        </nDivQRays>
     </replace_lines>
 </Test>
 
@@ -50,7 +50,7 @@
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 1</postProcess_cmd>
     <x>64</x>
     <replace_lines>
-      <NoOfRays>          64        </NoOfRays>
+      <nDivQRays>          64        </nDivQRays>
     </replace_lines>
 </Test>
 
@@ -60,8 +60,27 @@
     <postProcess_cmd>RMCRT_wrapper -bm 1 -L 1</postProcess_cmd>
     <x>128</x>
     <replace_lines>
-      <NoOfRays>          128        </NoOfRays>
+      <nDivQRays>          128        </nDivQRays>
     </replace_lines>
 </Test>
 
+<Test>
+    <Title>256</Title>
+    <sus_cmd> sus </sus_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 1</postProcess_cmd>
+    <x>256</x>
+    <replace_lines>
+      <nDivQRays>          256        </nDivQRays>
+    </replace_lines>
+</Test>
+
+<Test>
+    <Title>512</Title>
+    <sus_cmd> sus </sus_cmd>
+    <postProcess_cmd>RMCRT_wrapper -bm 1 -L 1</postProcess_cmd>
+    <x>512</x>
+    <replace_lines>
+      <nDivQRays>          512        </nDivQRays>
+    </replace_lines>
+</Test>
 </start>

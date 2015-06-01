@@ -101,7 +101,7 @@ VarDen1DMMSMomentum<FieldT>::evaluate()
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
-    if( this->isStaggered_ ){
+    if( this->isStaggeredNormal_ ){
       if( side_==PLUS_SIDE ){
         const double bcValue = (5 * t * sin((30 * M_PI )/(3 * t + 30)))/(( (t * t) + 1)*((5 / (exp(1125/(t + 10))*(2 * t + 5)) - 1)/rho0_ - 5/(rho1_ * exp(1125/(t + 10))*(2 * t + 5))));
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
@@ -182,7 +182,7 @@ VarDen1DMMSVelocity<FieldT>::evaluate()
   if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
     std::vector<IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost flat index
     std::vector<IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior flat index
-    if( this->isStaggered_ ){
+    if( this->isStaggeredNormal_ ){
       if( side_== PLUS_SIDE ){
         const double bcValue = ( ((-5 * t)/( t * t + 1)) * sin(10 * M_PI / (t + 10) ) );
         for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){

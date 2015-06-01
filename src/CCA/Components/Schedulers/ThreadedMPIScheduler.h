@@ -112,7 +112,9 @@ class TaskWorker : public Runnable {
 
   public:
 
-    TaskWorker( ThreadedMPIScheduler* scheduler, int thread_id ) ;
+    TaskWorker( ThreadedMPIScheduler* scheduler, int thread_id );
+
+    ~TaskWorker();
 
     void run();
 
@@ -136,6 +138,7 @@ class TaskWorker : public Runnable {
     int                   d_iteration;
     double                d_waittime;
     double                d_waitstart;
+    size_t                d_numtasks;
 };
 
 }  // End namespace Uintah

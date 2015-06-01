@@ -87,6 +87,12 @@ void Poisson1::scheduleInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
+void Poisson1::scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
 void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {

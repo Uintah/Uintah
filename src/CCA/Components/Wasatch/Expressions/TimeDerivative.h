@@ -60,8 +60,8 @@ public:
   
 private:
   typedef typename SpatialOps::SingleValueField TimeField;
-  DECLARE_FIELDS(ValT, newvar_, oldvar_);
-  DECLARE_FIELD (TimeField, dt_);
+  DECLARE_FIELDS(ValT, newvar_, oldvar_)
+  DECLARE_FIELD (TimeField, dt_)
   
   TimeDerivative( const Expr::Tag& newVarTag,
                  const Expr::Tag& oldVarTag,

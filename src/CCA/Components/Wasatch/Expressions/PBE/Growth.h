@@ -49,7 +49,7 @@ class Growth
   const bool doGrowth_;
 //  const FieldT* phi_;           ///< this will correspond to m(k + i), i depends on which growth model is used
 //  const FieldT* growthCoef_;    ///< this will correspond to the coefficient in the growth rate term
-  DECLARE_FIELDS(FieldT, phi_, growthCoef_);
+  DECLARE_FIELDS(FieldT, phi_, growthCoef_)
 
   Growth( const Expr::Tag& phiTag,
           const Expr::Tag& growthCoefTag,

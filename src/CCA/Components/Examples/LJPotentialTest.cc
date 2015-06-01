@@ -153,6 +153,12 @@ void LJPotentialTest::scheduleInitialize(const LevelP& level,
   sched->addTask(task, level->eachPatch(), d_sharedState_->allMaterials());
 }
 
+void LJPotentialTest::scheduleRestartInitialize(const LevelP& level,
+                                                SchedulerP& sched)
+{
+  // Do nothing for now
+}
+
 void LJPotentialTest::scheduleComputeStableTimestep(const LevelP& level,
                                                     SchedulerP& sched)
 {

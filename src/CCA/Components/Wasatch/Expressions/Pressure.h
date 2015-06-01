@@ -97,11 +97,11 @@ class Pressure
   const Uintah::VarLabel* pressureLabel_;
   const Uintah::VarLabel* prhsLabel_;
   
-  DECLARE_FIELDS(TimeField, timestep_, t_);
-  DECLARE_FIELDS(SVolField, pSource_, volfrac_);
-  DECLARE_FIELD(XVolField, fx_);
-  DECLARE_FIELD(YVolField, fy_);
-  DECLARE_FIELD(ZVolField, fz_);
+  DECLARE_FIELDS(TimeField, timestep_, t_)
+  DECLARE_FIELDS(SVolField, pSource_, volfrac_)
+  DECLARE_FIELD(XVolField, fx_)
+  DECLARE_FIELD(YVolField, fy_)
+  DECLARE_FIELD(ZVolField, fz_)
 
   // interpolant operators
   typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::SSurfXField >::type  FxInterp;

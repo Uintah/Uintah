@@ -26,8 +26,8 @@ class SolnVarEst
 {  
   typedef SpatialOps::SingleValueField TimeField;
 
-  DECLARE_FIELD(TimeField, dt_);
-  DECLARE_FIELDS(FieldT, fOld_, rhs_);
+  DECLARE_FIELD(TimeField, dt_)
+  DECLARE_FIELDS(FieldT, fOld_, rhs_)
   
   SolnVarEst( const Expr::Tag& solnVarOldTag,
               const Expr::Tag& solnVarRHSTag,

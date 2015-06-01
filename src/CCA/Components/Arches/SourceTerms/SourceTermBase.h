@@ -35,12 +35,15 @@
 
 namespace Uintah {
 
+class BoundaryCondition; 
+
 class SourceTermBase{ 
 
 public: 
 
   SourceTermBase( std::string srcName, SimulationStateP& sharedState, 
                   std::vector<std::string> reqLabelNames, std::string type );
+
   virtual ~SourceTermBase();
 
   /** @brief Indicates the var type of source this is **/ 
@@ -67,7 +70,7 @@ public:
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief Work to be performed after properties are setup */ 
-  virtual void extraSetup( GridP& grid ){ }
+  virtual void extraSetup( GridP& grid, BoundaryCondition* bc ){ }
 
   /** @brief Returns the source label **/ 
   inline const VarLabel* getSrcLabel(){

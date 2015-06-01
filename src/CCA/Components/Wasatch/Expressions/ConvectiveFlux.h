@@ -72,8 +72,8 @@ class ConvectiveFlux
   typedef typename VelInterpT::DestFieldType VelFaceT;
   // the destination field of VelInterpT should be a PhiFaceT
 
-  DECLARE_FIELD(PhiVolT, phi_);
-  DECLARE_FIELD(VelVolT, vel_);
+  DECLARE_FIELD(PhiVolT, phi_)
+  DECLARE_FIELD(VelVolT, vel_)
   
   PhiInterpT* phiInterpOp_;
   const VelInterpT* velInterpOp_;
@@ -153,8 +153,8 @@ class ConvectiveFluxLimiter
 
   const Wasatch::ConvInterpMethods limiterType_;
 
-  DECLARE_FIELDS(PhiVolT, phi_, volFrac_);
-  DECLARE_FIELD(VelVolT, vel_);
+  DECLARE_FIELDS(PhiVolT, phi_, volFrac_)
+  DECLARE_FIELD(VelVolT, vel_)
 
   const bool isUpwind_;
   const bool isCentral_;

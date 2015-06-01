@@ -30,7 +30,9 @@
 namespace Uintah {
 
   extern __device__ bool isThread0_Blk0();
-
+  extern __device__ bool isThread0();
+  extern __device__ void printThread();
+  extern __device__ void printBlock();
 }
 
 #endif

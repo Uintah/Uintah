@@ -108,6 +108,9 @@ public:
 
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
+                                  
+  virtual void scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched);
 
   virtual void restartInitialize();
 

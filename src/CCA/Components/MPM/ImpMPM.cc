@@ -429,6 +429,14 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
 }
 
+//______________________________________________________________________
+//
+void ImpMPM::scheduleRestartInitialize(const LevelP& level,
+                                       SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
 void ImpMPM::switchInitialize(const LevelP& level, SchedulerP& sched)
 {
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))

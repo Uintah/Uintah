@@ -164,9 +164,8 @@ build() const
 //--------------------------------------------------------------------
 
 template<typename FieldT>
-GradPX<FieldT>::
-GradPX( const Expr::Tag& xtag,
-        const Expr::Tag& ytag,
+GradP<FieldT>::
+GradP( const Expr::Tag& xtag,
         const Expr::Tag& ttag,
         const double A,
         const double nu )
@@ -175,7 +174,6 @@ GradPX( const Expr::Tag& xtag,
 {
   this->set_gpu_runnable( true );
   x_ = this->template create_field_request<FieldT>(xtag);
-  y_ = this->template create_field_request<FieldT>(ytag);
   t_ = this->template create_field_request<TimeField>(ttag);
 }
 
@@ -183,24 +181,22 @@ GradPX( const Expr::Tag& xtag,
 
 template< typename FieldT >
 void
-GradPX<FieldT>::
+GradP<FieldT>::
 evaluate()
 {
   using namespace SpatialOps;
   FieldT& phi = this->value();
   const FieldT& x = x_->field_ref();
-  const FieldT& y = y_->field_ref();
   const TimeField& t = t_->field_ref();
-  phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*( 2.0*PI * x - t ) ) * exp( -4.0*nu_ * t );
+  phi <<= -(a_*a_/2.0) * sin( 2.0*( 2.0*PI * x - t ) ) * exp( -4.0*nu_ * t );
 }
 
 //--------------------------------------------------------------------
 
 template< typename FieldT >
-GradPX<FieldT>::Builder::
+GradP<FieldT>::Builder::
 Builder( const Expr::Tag& result,
          const Expr::Tag& xtag,
-         const Expr::Tag& ytag,
          const Expr::Tag& ttag,
          const double A,
          const double nu )
@@ -208,7 +204,6 @@ Builder( const Expr::Tag& result,
     A_(A),
     nu_(nu),
     xt_( xtag ),
-    yt_( ytag ),
     tt_( ttag )
 {}
 
@@ -216,75 +211,10 @@ Builder( const Expr::Tag& result,
 
 template< typename FieldT >
 Expr::ExpressionBase*
-GradPX<FieldT>::Builder::
+GradP<FieldT>::Builder::
 build() const
 {
-  return new GradPX<FieldT>( xt_, yt_, tt_, A_, nu_ );
-}
-
-//--------------------------------------------------------------------
-
-//====================================================================
-
-//--------------------------------------------------------------------
-
-template<typename FieldT>
-GradPY<FieldT>::
-GradPY( const Expr::Tag& xtag,
-        const Expr::Tag& ytag,
-        const Expr::Tag& ttag,
-        const double A,
-        const double nu )
-  : Expr::Expression<FieldT>(),
-    a_(A), nu_(nu)
-{
-  this->set_gpu_runnable( true );
-  x_ = this->template create_field_request<FieldT>(xtag);
-  y_ = this->template create_field_request<FieldT>(ytag);
-  t_ = this->template create_field_request<TimeField>(ttag);
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-void
-GradPY<FieldT>::
-evaluate()
-{
-  using namespace SpatialOps;
-  FieldT& phi = this->value();
-  const FieldT& x = x_->field_ref();
-  const FieldT& y = y_->field_ref();
-  const TimeField& t = t_->field_ref();
-  phi <<= -1.0*(a_*a_/2.0) * sin( 2.0*(2.0*PI * y- t) ) * exp(-4.0 * nu_ * t);
-}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-GradPY<FieldT>::Builder::
-Builder( const Expr::Tag& result,
-         const Expr::Tag& xtag,
-         const Expr::Tag& ytag,
-         const Expr::Tag& ttag,
-         const double A,
-         const double nu )
-  : ExpressionBuilder(result),
-    A_(A),
-    nu_(nu),
-    xt_( xtag ),
-    yt_( ytag ),
-    tt_( ttag )
-{}
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-Expr::ExpressionBase*
-GradPY<FieldT>::Builder::
-build() const
-{
-  return new GradPY<FieldT>( xt_, yt_, tt_, A_, nu_ );
+  return new GradP<FieldT>( xt_, tt_, A_, nu_ );
 }
 
 //--------------------------------------------------------------------
@@ -361,8 +291,7 @@ using namespace Wasatch;
   template class VelocityX< VOL >;	\
   template class VelocityY< VOL >;	\
   template class TaylorGreenVel3D< VOL >;	\
-  template class GradPX< VOL >;		\
-  template class GradPY< VOL >;
+  template class GradP< VOL >;
 
 DECLARE_TAYLOR_MMS( SVolField );
 DECLARE_TAYLOR_MMS( XVolField );

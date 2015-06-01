@@ -2,6 +2,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 //Specific models: 
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
+#include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 
 using namespace Uintah; 
 
@@ -34,7 +35,8 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
     ProblemSpecP db_m = db->findBlock("PropertyModelsV2"); 
 
-    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != 0; db_model=db_model->findNextBlock("model")){ 
+    for ( ProblemSpecP db_model = db_m->findBlock("model"); db_model != 0; 
+          db_model=db_model->findNextBlock("model")){ 
 
       std::string name;
       std::string type; 
@@ -45,9 +47,112 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state ); 
         register_task( name, tsk ); 
+        _pre_update_property_tasks.push_back( name ); 
+
+      } else if ( type == "variable_stats" ){ 
+
+        std::string var_type; 
+        db_model->getWithDefault("variable_type",var_type,"NA");
+
+        bool set_type = true; 
+        TypeDescription::Type the_old_type; 
+        TypeDescription::Type uintah_type;
+
+        if ( var_type == "NA" ){ 
+
+          for ( ProblemSpecP var_db = db_model->findBlock("single_variable"); var_db != 0; 
+                var_db = var_db->findNextBlock("single_variable") ){ 
+
+            std::string var_name; 
+            var_db->getAttribute("label", var_name);
+
+            const VarLabel* varlabel = VarLabel::find(var_name); 
+            if ( varlabel != 0 ){ 
+              uintah_type = varlabel->typeDescription()->getType();
+
+              if ( set_type ){ 
+                the_old_type = uintah_type; 
+                set_type = false;
+              }
+
+              if ( uintah_type != the_old_type ){ 
+                throw ProblemSetupException("Error: Two variables with different types in variable_stats model for model: "+name,__FILE__,__LINE__);
+              }
+            }
+          }
+
+          for ( ProblemSpecP var_db = db_model->findBlock("flux_variable"); var_db != 0; 
+                var_db = var_db->findNextBlock("flux_variable") ){ 
+
+            std::string phi_label = "NA";
+            var_db->getAttribute("phi",phi_label); 
+
+            if ( phi_label != "NA" ){ 
+
+              const VarLabel* varlabel = VarLabel::find(phi_label); 
+              if ( varlabel != 0 ){ 
+
+                uintah_type = varlabel->typeDescription()->getType();
+
+                if ( set_type ){ 
+                  the_old_type = uintah_type; 
+                }
+
+                if ( uintah_type != the_old_type ){ 
+                  throw ProblemSetupException("Error: Two variables with different types in variable_stats model named: "+name,__FILE__,__LINE__);
+                }
+                  
+              }
+            }
+          }
+        } else { 
+          if ( var_type == "svol"){
+            uintah_type = TypeDescription::CCVariable;
+          } else if ( var_type == "xvol"){ 
+            uintah_type = TypeDescription::SFCXVariable;
+          } else if ( var_type == "yvol"){ 
+            uintah_type = TypeDescription::SFCYVariable;
+          } else if ( var_type == "zvol"){ 
+            uintah_type = TypeDescription::SFCZVariable;
+          } else { 
+            throw ProblemSetupException("Error: Explicit variable type description in ups file not recognized for variable_stats model: "+name,__FILE__,__LINE__);
+          }
+        }
+
+        if ( uintah_type == TypeDescription::CCVariable ){ 
+
+          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::SVolField>::Builder( name, 0, _shared_state ); 
+          register_task( name, tsk ); 
+          _finalize_property_tasks.push_back( name ); 
+
+        } else if ( uintah_type == TypeDescription::SFCXVariable ){ 
+
+          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::XVolField>::Builder( name, 0, _shared_state ); 
+          register_task( name, tsk ); 
+          _finalize_property_tasks.push_back( name ); 
+
+        } else if ( uintah_type == TypeDescription::SFCYVariable ){ 
+
+          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::YVolField>::Builder( name, 0, _shared_state ); 
+          register_task( name, tsk ); 
+          _finalize_property_tasks.push_back( name ); 
+
+        } else if ( uintah_type == TypeDescription::SFCZVariable ){ 
+
+          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::ZVolField>::Builder( name, 0, _shared_state ); 
+          register_task( name, tsk ); 
+          _finalize_property_tasks.push_back( name ); 
+
+        } else { 
+
+          throw InvalidValue("Error: variable type not supported for variable_stats property model",__FILE__,__LINE__);
+
+        }
 
       } else { 
+
         throw InvalidValue("Error: Property model not recognized.",__FILE__,__LINE__); 
+
       }
 
 

@@ -21,12 +21,15 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
-#include <Core/GeometryPiece/FileGeometryPiece.h>
-#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+//#include <Core/Geometry/Vector.h>
+#include <Core/GeometryPiece/FileGeometryPiece.h>
+//#include <Core/Grid/Box.h>
+//#include <Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/Matrix3.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/Endian.h>
 #include <fstream>
 #include <iostream>
@@ -125,6 +128,7 @@ FileGeometryPiece::FileGeometryPiece( ProblemSpecP & ps )
   }
 
   ps->getWithDefault("usePFS",d_usePFS,true);
+
   Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
   if(d_usePFS){
     // We must first read in the min and max from file.0 so
@@ -245,8 +249,11 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
 {
   double x1,x2,x3;
 
-  // CPTI and CPDI pass the size matrix columns containing rvec1, rvec2, rvec3
+  // CPTI and CPDI can pass the size matrix columns containing rvec1, rvec2, rvec3
+  // Other interpolators will default to grid spacing and default orientation
   Matrix3 size(1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0);
+  // grid spacing for normalizing size
+  Matrix3 gsize((1./d_DX.x()),0.,0.,0.,(1./d_DX.y()),0.,0.,0.,(1./d_DX.z()));
  
   //__________________________________
   //  TEXT FILE
@@ -452,20 +459,24 @@ FileGeometryPiece::read_line(std::istream & is, Point & xmin, Point & xmax)
       
     }
   }
-   
-  // CPDI and CPTI check for negative volumes due to Rvector order
   double vol = size.Determinant();
+  // CPDI and CPTI check for negative volumes due to Rvector order
   if (vol < 0) {
     // switch r2 and r3 in size to get a positive volume 
-    Matrix3 tmpsize(size(0,0),size(0,2),size(0,1),size(1,0),size(1,2),size(1,1), size(2,0),size(2,2),size(2,1));
-    //vol = tmpsize.Determinant();
-    d_size.push_back(tmpsize);
+    Matrix3 tmpsize(size(0,0),size(0,2),size(0,1),size(1,0),size(1,2),size(1,1),size(2,0),size(2,2),size(2,1));
+    vol = tmpsize.Determinant();
+    // normalize size matrix by grid cell dimensions 
+    size = tmpsize;
   }
-  else {
-    // CPTI and CPDI populate size matrix with Rvectors in columns
-    // normalized by the grid spacing for interpolators in ParticleCreator.cc
-    d_size.push_back(size);
+  // CPDI and CPTI volumes determined prior to grid cell size normalization
+  if(d_useCPTI){
+    vol=size.Determinant()/6.0;
   }
+  d_volume.push_back(vol);
+  // CPTI and CPDI populate size matrix with Rvectors defining the particle domain in columns
+  // Size matrix normalized by the grid spacing for interpolators
+  size = size*gsize;
+  d_size.push_back(size);
  
   xmin = Min(xmin, Point(x1,x2,x3));
   xmax = Max(xmax, Point(x1,x2,x3));
@@ -511,4 +522,11 @@ FileGeometryPiece::createPoints()
 {
   cerr << "You should be reading points .. not creating them" << endl;  
   return 0;
+}
+//______________________________________________________________________
+//
+void 
+FileGeometryPiece::setCpti(bool useCPTI)
+{
+  d_useCPTI = useCPTI;
 }

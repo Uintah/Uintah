@@ -5411,7 +5411,7 @@
     <ARCHES>
       
       <!-- include the coal data base that you are using -->
-      <include href="inputs/ARCHES/CoalDataBase/example_coal.xml" section="Coal_Properties" />
+      <include href="inputs/ARCHES/Coal/CoalDB/example_coal.xml" section="Coal_Properties" />
 
       <!-- TIME INTEGRATOR -->
       <TimeIntegrator>

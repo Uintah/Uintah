@@ -85,8 +85,8 @@ class MomRHSPart
   DECLARE_FIELDS(XFluxT, cFluxX_, tauX_ )
   DECLARE_FIELDS(YFluxT, cFluxY_, tauY_ )
   DECLARE_FIELDS(ZFluxT, cFluxZ_, tauZ_ )
-  DECLARE_FIELDS(SVolField, density_, visc_ );
-  DECLARE_FIELDS(FieldT, bodyForce_, srcTerm_, volfrac_ );
+  DECLARE_FIELDS(SVolField, density_, visc_ )
+  DECLARE_FIELDS(FieldT, bodyForce_, srcTerm_, volfrac_ )
   
   const DivX* divXOp_;
   const DivY* divYOp_;

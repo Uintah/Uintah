@@ -149,6 +149,9 @@ MPMLabel::MPMLabel()
   pSurfLabel = VarLabel::create( "p.surface",
 			ParticleVariable<int>::getTypeDescription() );
 
+  pLastLevelLabel = VarLabel::create( "p.lastlevel",
+			ParticleVariable<int>::getTypeDescription() );
+
   pParticleIDLabel = VarLabel::create("p.particleID",
 			ParticleVariable<long64>::getTypeDescription() );
 
@@ -220,6 +223,9 @@ MPMLabel::MPMLabel()
 			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel_preReloc = VarLabel::create( "p.surface+",
+			ParticleVariable<int>::getTypeDescription() );
+
+  pLastLevelLabel_preReloc = VarLabel::create( "p.lastlevel+",
 			ParticleVariable<int>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+",
@@ -780,6 +786,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pExternalHeatFluxLabel_preReloc);
   VarLabel::destroy(pSurfLabel);
   VarLabel::destroy(pSurfLabel_preReloc);
+  VarLabel::destroy(pLastLevelLabel);
+  VarLabel::destroy(pLastLevelLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
   VarLabel::destroy(pParticleIDLabel_preReloc);
   VarLabel::destroy(czIDLabel);

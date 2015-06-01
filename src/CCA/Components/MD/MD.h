@@ -133,6 +133,14 @@ namespace Uintah {
        * @param
        * @return
        */
+      virtual void scheduleRestartInitialize(const LevelP& level,
+                                             SchedulerP& sched);
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
       virtual void scheduleComputeStableTimestep(const LevelP& level,
                                                  SchedulerP&);
 

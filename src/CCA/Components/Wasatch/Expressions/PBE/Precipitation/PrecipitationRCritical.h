@@ -49,7 +49,7 @@ class PrecipitationRCritical
 //  const FieldT* superSat_;    //field from table of supersaturation
 //  const FieldT* surfaceEng_;  //critcal value of surface energy for small radii
   
-  DECLARE_FIELDS(FieldT, superSat_, surfaceEng_);
+  DECLARE_FIELDS(FieldT, superSat_, surfaceEng_)
   
   PrecipitationRCritical( const Expr::Tag& superSatTag,
                           const Expr::Tag& surfaceEng,
