@@ -986,6 +986,9 @@ Arches::scheduleInitialize(const LevelP& level,
   //Setup the intrusions. 
   d_boundaryCondition->sched_setupNewIntrusions( sched, level, matls );
 
+  //finally set the momentum (velocity) initial condition
+  d_nlSolver->sched_setInitVelCond( level, sched, matls );
+
   sched_getCCVelocities(level, sched);
 
   if (!d_MAlab) {
@@ -1080,9 +1083,6 @@ Arches::scheduleInitialize(const LevelP& level,
   if ( _doLagrangianParticles ){ 
     _particlesHelper->schedule_sync_particle_position(level,sched,true);
   }
-
-  //finally set the momentum (velocity) initial condition
-  d_nlSolver->sched_setInitVelCond( level, sched, matls );
 
   //d_rad_prop_calc->sched_compute_radiation_properties( level, sched, matls, 0, true );
 }

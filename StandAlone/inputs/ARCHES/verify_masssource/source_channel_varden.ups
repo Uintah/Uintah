@@ -193,15 +193,9 @@
       </Turbulence>
       <Properties>
         <ColdFlow>
-          <mixture_fraction_label>mixture_fraction</mixture_fraction_label>
-          <Stream_1>
-            <density>     0.3   </density>
-            <temperature> 298     </temperature>
-          </Stream_1>
-          <Stream_2>
-            <density>     1.0  </density>
-            <temperature> 298     </temperature>
-          </Stream_2>
+          <mixture_fraction label="mixture_fraction"/>
+          <stream_0 density="0.3" temperature="298.0"/>
+          <stream_0 density="1.0" temperature="298.0"/>
           <reference_density value="1.0"/>
         </ColdFlow>
       </Properties>
