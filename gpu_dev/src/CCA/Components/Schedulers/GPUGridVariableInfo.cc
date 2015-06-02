@@ -73,6 +73,10 @@ deviceGridVariables::deviceGridVariables() {
   totalSize = 0;
   for (int i = 0; i < Task::TotalDWs; i++) {
     totalSizeForDataWarehouse[i] = 0;
+    totalVars[i] = 0;
+    totalMaterials[i] = 0;
+    totalLevels[i] = 0;
+
   }
 }
 void deviceGridVariables::add(const Patch* patchPointer,
@@ -89,6 +93,7 @@ void deviceGridVariables::add(const Patch* patchPointer,
           int whichGPU) {
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+  totalVars[dep->mapDataWarehouse()] += 1;
   deviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
   vars.push_back(tmp);
 }
@@ -104,6 +109,7 @@ void deviceGridVariables::add(const Patch* patchPointer,
 
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+  totalVars[dep->mapDataWarehouse()] += 1;
   deviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, materialIndex, patchPointer, dep, validOnDevice,  whichGPU);
   vars.push_back(tmp);
 }
@@ -161,4 +167,53 @@ int deviceGridVariables::getNumGhostCells(int index) {
 
 int deviceGridVariables::getWhichGPU(int index) {
   return vars.at(index).whichGPU;
+}
+
+unsigned int deviceGridVariables::getTotalVars(int DWIndex) {
+  return totalVars[DWIndex];
+}
+
+unsigned int deviceGridVariables::getTotalMaterials(int DWIndex) {
+  return totalMaterials[DWIndex];
+}
+
+unsigned int deviceGridVariables::getTotalLevels(int DWIndex) {
+  return totalLevels[DWIndex];
+}
+
+void GpuUtilities::assignPatchesToGpus(const GridP& grid){
+
+  currentAcceleratorCounter = 0;
+  int numDevices = OnDemandDataWarehouse::getNumDevices();
+  if (numDevices > 0) {
+    std::map<const Patch *, int>::iterator it;
+    for (int i = 0; i < grid->numLevels(); i++) {
+      LevelP level = grid->getLevel(i);
+      for (Level::patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); ++iter){
+        //TODO: Clean up so that instead of assigning round robin, it assigns in blocks.
+        const Patch* patch = *iter;
+        it = patchAcceleratorLocation.find(patch);
+        if (it == patchAcceleratorLocation.end()) {
+          //this patch has not been assigned, so assign it.
+          //assign it to a gpu in a round robin fashion.
+          patchAcceleratorLocation.insert(std::pair<const Patch *,int>(patch,currentAcceleratorCounter));
+          currentAcceleratorCounter++;
+          currentAcceleratorCounter %= numDevices;
+        }
+      }
+    }
+  }
+}
+
+//______________________________________________________________________
+//
+int GpuUtilities::getGpuIndexForPatch(const Patch* patch) {
+
+  std::map<const Patch *, int>::iterator it;
+  it = patchAcceleratorLocation.find(patch);
+  if (it != patchAcceleratorLocation.end()) {
+    return it->second;
+  }
+  return -1;
+
 }

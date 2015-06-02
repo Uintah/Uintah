@@ -311,12 +311,13 @@ public:
                                    const VarLabel* pos_var, int iteration);
 
 #ifdef HAVE_CUDA
+   static int getNumDevices();
+   static void uintahSetCudaDevice(int deviceNum);
    static size_t getTypeDescriptionSize(const TypeDescription::Type& type);
    static GPUGridVariableBase* createGPUGridVariable(size_t sizeOfDataType);
    static GPUPerPatchBase* createGPUPerPatch(size_t sizeOfDataType);
-   void prepareGPUDependencies(DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
-                   OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
    void copyGPUGhostCellsBetweenDevices(DetailedTask* dtask, int numDevices);
+
 #endif
    void sendMPI(DependencyBatch* batch, const VarLabel* pos_var, BufferInfo& buffer, 
                 OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
@@ -505,6 +506,8 @@ private:
    bool hasRestarted_;
 #ifdef HAVE_CUDA
    std::map<Patch*, bool> assignedPatches;
+   // indicates where a given patch should be stored in an accelerator
+
 #endif
 
 };

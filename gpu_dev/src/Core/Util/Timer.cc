@@ -167,16 +167,21 @@ WallClockTimer::~WallClockTimer() {}
 
 double WallClockTimer::get_time()
 {
-#if 0
+//#if 0
   struct timeval tp;
-  if(gettimeofday(&tp) != 0) {
+  if(gettimeofday(&tp,NULL) != 0) {
     cerr << "Time request failed!\n";
   }
   double time=double(tp.tv_sec)+double(tp.tv_usec)/1000000.;
-#endif
+  return time;
+//#endif
+#if 0
   struct tms buffer;
+  //Be careful, on some machines it seems that times() is returning times in milliseconds and not microseconds.
+  //If that's the case, use the above gettimeofday() approach instead.
   double time = double(times(&buffer)) * ci;
   return time;
+#endif
 }
 
 

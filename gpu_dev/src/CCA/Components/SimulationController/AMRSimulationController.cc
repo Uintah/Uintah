@@ -64,6 +64,10 @@
 
 #include <TauProfilerForSCIRun.h>
 
+#ifdef HAVE_CUDA
+//#include <CCA/Components/Schedulers/GPUUtilities.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
 #include <iostream>
 #include <iomanip>
 
@@ -148,7 +152,7 @@ AMRSimulationController::run()
    d_scheduler->advanceDataWarehouse( currentGrid, true );
    d_scheduler->setInitTimestep( true );
 #ifdef HAVE_CUDA
-   d_scheduler->assignPatchesToGpus(currentGrid);
+   GpuUtilities::assignPatchesToGpus(currentGrid);
 #endif
 
    double time;

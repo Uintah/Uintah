@@ -33,19 +33,19 @@
 #include <Core/Grid/Variables/GPUReductionVariable.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Grid/Variables/GPUPerPatch.h>
-#include <Core/Grid/Variables/PerPatchBase.h>
 
 #include <map> //for host code only.
 #include <string>
 #include <vector>
 #include <Core/Thread/CrowdMonitor.h>
 
-#define MAX_ITEM 200  //If we have 100 patches, 2 materials, and 20 grid vars,
+#define MAX_ITEM 1000000  //If we have 100 patches, 2 materials, and 20 grid vars,
                        //that's 100 * 2 * 20 = 4000.  Make sure we have room!
-#define MAX_GHOST_CELLS 1000  //MAX_ITEM * 6 one for each face.
-#define MAX_MATERIALS 10
-#define MAX_LVITEM 10
-#define MAX_LABEL   20
+#define MAX_GHOST_CELLS 30000  //MAX_ITEM * 6 one for each face.
+#define MAX_MATERIALS 20
+#define MAX_LVITEM 20
+
+#define MAX_LABEL   20 //How big a particular label can be.
 
 namespace Uintah {
 
@@ -71,7 +71,7 @@ public:
   GPUDataWarehouse(): allocateLock("allocate lock"), varLock("var lock"){
     d_numItems = 0;
     d_numMaterials = 0;
-    d_numGhostCells = 0;
+    //d_numGhostCells = 0;
     d_device_copy = NULL;
     d_debug = false;
     d_dirty = true;
@@ -92,38 +92,45 @@ public:
     numGhostTypes // 7
   };
 
-  struct dataItem {   // flat array
-    char       label[MAX_LABEL];
-    int        domainID;
-    int        matlIndex;
-    int3       var_offset;  
-    int3       var_size;
-    size_t     num_elems;
-    void*      var_ptr;
-    int        xstride;
-    GhostType  gtype;
-    int        numGhostCells;
-    bool       validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
-    bool       validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
-    bool       queueingOnGPU; //true if we've created the variable but we haven't yet set validOnGPU to true.
-  };
-
   struct materialItem {
-      materialType material;
-      char       simulationType[MAX_LABEL]; //ICE, MPM, etc.  Currently unused
+    materialType material;
+    char       simulationType[MAX_LABEL]; //ICE, MPM, etc.  Currently unused
   };
 
-  struct ghostCellItem {
 
+  //The dataItem can hold two kinds of data.
+  //The first is information related to a regular data variable.
+  //The second is information indicating how a ghost cell should be copied from one var to another
+  //The two types of information are stored in one struct to allow us to make the size of the GPU
+  //data warehouse dynamic.  For small problems the GPUDW can be small, and large problems it can
+  //be large.
+  //The biggest problem is that multiple CPU threads will be adding to the size of the GPUDW
+  //IF we had two separate structs, then we would have to let both grow independently and
+  //it would require two copies to the GPU DW instead of one.
+  //So the solution is to allocate a large buffer of possible GPUDW data in init_device(),
+  //one on the host RAM and device RAM
+  //Then on the CPU side a thread running a task will collect various dataItems, and just before
+  //it sends it to the GPU DW, it will dump its results into the host side buffer (using locks).
+  //Then it can either copy in only as much of the GPUDW as needed, instead of the entire buffer.
+
+  struct VarItem {
+    GhostType       gtype;
+    unsigned int    numGhostCells;
+    bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
+    bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
+    bool            queueingOnGPU; //true if we've created the variable but we haven't yet set validOnGPU to true.
+
+  };
+
+  struct GhostItem {
     //The pointer to the task that needs this ghost cell copy
-    void* cpuDetailedTaskOwner;
-    bool copied;
-
+    void*           cpuDetailedTaskOwner;
+    bool            copied;
     //This assumes the ghost cell is already in the GPU's memory
     //We only need to know the source patch, the destination patch
     //the material number, and the shared coordinates.
-    int3 sharedLowCoordinates;
-    int3 sharedHighCoordinates;
+    int3            sharedLowCoordinates;
+    int3            sharedHighCoordinates;
 
     //Wasatch has virtual patches, which come as a result of periodic boundary cells,
     //which wrap around on each other.  (Like a label wrapping around a soup can, but
@@ -140,15 +147,42 @@ public:
     //The other way is if the data comes from another GPU on the same node,
     //and if so, then the data will be found in d_ghostCellDB instead of d_varDB.
     //If it's the former, then this source_varDB_index will be the correspondinb d_varDB index.
-    //If it's the latter, then this source_varDB_index will be -1.
+    //If it's the latter, then this source_varDB_index will be -1.  //TODO, FIX THIS
     int source_varDB_index;
+
+  };
+
+  struct dataItem {   // flat array  //57 BYTES  combined 110 bytes
+
+    char            label[MAX_LABEL];
+    int             domainID;
+    int             matlIndex;
+    int3            var_offset;
+    int3            var_size;
+    size_t          num_elems;
+    void*           var_ptr;
+    unsigned int    xstride;
+    VarItem         varItem;
+    GhostItem       ghostItem;
+
+  };
+
+  /*
+  struct ghostCellItem { //90 bytes
+
+
+
+
+
+
+
 
     int3 var_offset;
     int3 var_size;
     void * source_ptr;
     int xstride;
 
-  };
+  };*/
 
   struct contiguousArrayInfo {
     void * allocatedDeviceMemory;
@@ -216,7 +250,6 @@ public:
 
   };
 
-
   struct tempGhostCellInfo {  //We only need enough information to copy a linear chunk of data.
     std::string     label;
     int        patchID;
@@ -240,6 +273,7 @@ public:
     //bool copied;
   };
 
+
   //______________________________________________________________________
   // GPU GridVariable methods
   HOST_DEVICE void get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndex);
@@ -252,19 +286,18 @@ public:
 
   //HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
   HOST_DEVICE void put(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
+  HOST_DEVICE void put(char const* label, int patchID, int matlIndex, size_t xstride, GhostType gtype = None, int numGhostCells = 0, GridVariableBase* gridVar = NULL, void* hostPtr = NULL);
+  HOST_DEVICE void put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t xstride, GPUPerPatchBase* gridVar = NULL, void* hostPtr = NULL);
 
   HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
   HOST_DEVICE void allocateAndPut(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex);
   HOST_DEVICE void allocateAndPut(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t sizeOfDataType);
 
   //HOST_DEVICE void* getPointer(char const* label, int patchID, int matlIndex);
-  HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, void *cuda_stream, GhostType gtype = None, int numGhostCells = 0, bool stageOnHost = true);
-  HOST_DEVICE void putContiguous(GPUPerPatchBase& var, const char* indexID, char const* label, int patchID, int matlID, size_t sizeOfDataType, PerPatchBase* patchVar, void *cuda_stream, bool stageOnHost);
+  HOST_DEVICE void putContiguous(GPUGridVariableBase &var, char const* indexID, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GridVariableBase* gridVar, bool stageOnHost);
   HOST_DEVICE void allocate(const char* indexID, size_t size);
 private:
 
-  HOST_DEVICE void put(GPUGridVariableBase &var, char const* label, int patchID, int matlIndex, size_t xstride, GhostType gtype = None, int numGhostCells = 0, GridVariableBase* gridVar = NULL, void* hostPtr = NULL);
-  HOST_DEVICE void put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t xstride, GPUPerPatchBase* gridVar = NULL, void* hostPtr = NULL);
 
 public:
 
@@ -411,22 +444,26 @@ private:
 private:
 
   HOST_DEVICE void printGetError(const char* msg, char const* label, int patchID, int matlIndex);
+  mutable SCIRun::CrowdMonitor allocateLock;
+  mutable SCIRun::CrowdMonitor varLock;
 
 
+  materialItem d_materialDB[MAX_MATERIALS];
+  dataItem d_levelDB[MAX_LVITEM];
+  //TODO:, remove all references
+  //ghostCellItem d_ghostCellDB[MAX_GHOST_CELLS];  //For the device side. This contains information about what ghost cell copies need to complete.
+                                                     //This only covers GPU->same GPU scenarios.  It is meant to copy the data directly into the
+                                                     //correct GPU var, thus completing the ghost cell merging process.
   int d_numItems;
 
-
   int d_numMaterials;
+  bool ghostCellsExist;
+  //int d_numGhostCells;
 
-  int d_numGhostCells;
-
-   materialItem d_materialDB[MAX_MATERIALS];
-  dataItem d_levelDB[MAX_LVITEM];
   GPUDataWarehouse*  d_device_copy;             //The pointer to the copy of this object in the GPU.
-  bool d_dirty;
+  bool d_dirty;                                 //if this changes, we have to recopy the GPUDW.
   int d_device_id;
   bool d_debug;
-
 
   //These being here do not pose a problem for the CUDA compiler
 
@@ -436,7 +473,6 @@ private:
                                                    //of d_varDB because the device doesn't need to know about
                                                    //the host pointers.  Being a map makes this much faster.
 
-  dataItem d_varDB[MAX_ITEM];                      //For the device side.  The variable database.
 
   std::map<std::string, contiguousArrayInfo> contiguousArrays;
 
@@ -445,13 +481,26 @@ private:
                                                  //loads all ghost cells into contiguous chunks ready for copying to the destination.
                                                  //See prepareGPUDependencies for more info.
 
-  ghostCellItem d_ghostCellDB[MAX_GHOST_CELLS];  //For the device side. This contains information about what ghost cell copies need to complete.
-                                                 //This only covers GPU->same GPU scenarios.  It is meant to copy the data directly into the
-                                                 //correct GPU var, thus completing the ghost cell merging process.
-
-
-  mutable SCIRun::CrowdMonitor allocateLock;
-  mutable SCIRun::CrowdMonitor varLock;
+  //This variable MUST be last.  C and C++ emphasize that
+  //dataItem d_varDB[MAX_ITEM];                      //For the device side.  The variable database.
+  dataItem d_varDB[1000000];                      //A very large buffer.  Important note,
+                                                  //we should never transfer a full GPUDataWarehouse object as is.  Instead
+                                                  //we should use malloc and only use a section of it.  See here for more
+                                                  //information:  http://www.open-std.org/Jtc1/sc22/wg14/www/docs/dr_051.html
+                                                  //Doing it this way allows to only need one malloc instead of two.  And the
+                                                  //object is serialized allowing for a single copy if needed instead of
+                                                  //worrying about two copies (one for the GPU DW and one for the array).
+                                                  //As another thread writes to this array, it first accumulates all items that
+                                                  //will go into it, then count them up, write that section in one chunk,
+                                                  //then that thread can copy only that chunk to the GPUDW.
+                                                  //***This must be the last data member of the class***
+                                                  //This follows C++ 98 standards "Nonstatic data members of a (non-union) class
+                                                  //declared without an intervening access-specifier are allocated so that later
+                                                  //members have higher addresses within a class object. The order of allocation of
+                                                  //nonstatic data members separated by an access-specifier is unspecified (11.1).
+                                                  //Implementation alignment requirements might cause two adjacent members not to
+                                                  //be allocated immediately after each other; so might requirements for space for
+                                                  //managing virtual functions (10.3) and virtual base classes (10.1)."
 
 };
 
