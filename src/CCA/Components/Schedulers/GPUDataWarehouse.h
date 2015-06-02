@@ -34,8 +34,8 @@
 #include <Core/Grid/Variables/GPUPerPatch.h>
 #include <Core/Thread/CrowdMonitor.h>
 
-#define MAX_VARDB_ITEMS     200
-#define MAX_LEVELDB_ITEMS   200
+#define MAX_VARDB_ITEMS     400
+#define MAX_LEVELDB_ITEMS   400
 #define MAX_NAME_LENGTH      64
 
 namespace Uintah {
