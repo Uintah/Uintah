@@ -31,8 +31,10 @@
 #include <Core/Grid/LevelP.h>
 #include <CCA/Ports/Scheduler.h>
 #include <CCA/Ports/SchedulerP.h>
+#include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Grid/Variables/Reductions.h>
 #include <Core/Grid/Variables/ReductionVariable.h>
@@ -107,18 +109,18 @@ namespace Uintah {
   
   class SolverInterface : public UintahParallelPort {
   public:
-    SolverInterface(){}
-
+    SolverInterface()
+    {}
     virtual ~SolverInterface()
     {
-      for( unsigned int i = 0; i < varLabels_.size(); ++i ) {
-        VarLabel::destroy( varLabels_[i] );
+      for (int i=0;  i < varLabels_.size(); ++i) {
+        VarLabel::destroy(varLabels_[i]);
       }
     }
 
-    virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-                                              const std::string      & name,
-                                                    SimulationStateP & state ) = 0;
+    virtual SolverParameters* readParameters( ProblemSpecP     & params,
+					                                    const std::string      & name,
+                                              SimulationStateP & state ) = 0;
 
     virtual void scheduleInitialize( const LevelP      & level,
                                            SchedulerP  & sched,
@@ -152,12 +154,36 @@ namespace Uintah {
      (e.g. rkStage) to create unique varlabels
      */
     template <typename FieldT>
-    void scheduleEnforceSolvability( const LevelP      & level,
-                                           SchedulerP  & sched,
-                                     const MaterialSet * matls,
-                                     const VarLabel    * bLabel,
-                                     const int           rkStage );
+    void scheduleEnforceSolvability( const LevelP & level,
+                                     SchedulerP   & sched,
+                                     const MaterialSet  * matls,
+                                     const VarLabel     * bLabel,
+                                     const int rkStage = 1)
+    {
+      std::stringstream strRKStage;
+      strRKStage << rkStage;
+      const std::string varName = "poisson_rhs_integral" + strRKStage.str();
+      VarLabel* rhsIntegralLabel = VarLabel::find(varName);
+      if (rhsIntegralLabel == NULL) {
+        rhsIntegralLabel = VarLabel::create(varName, sum_vartype::getTypeDescription());
+        varLabels_.push_back(rhsIntegralLabel);
+      }
 
+      Task* tskIntegral = scinew Task("SolverInterface::computeRHSIntegral" + strRKStage.str(),
+                                      this, &SolverInterface::computeRHSIntegral<FieldT>, bLabel,
+                                      rhsIntegralLabel);
+      tskIntegral->computes( rhsIntegralLabel );
+      tskIntegral->requires( Uintah::Task::NewDW, bLabel, Ghost::None, 0 );
+      sched->addTask(tskIntegral, level->eachPatch(), matls);
+      
+      Task* tskSolvability = scinew Task("SolverInterface::enforceSolvability"+ strRKStage.str(),
+                                         this, &SolverInterface::enforceSolvability<FieldT>, bLabel,
+                                         rhsIntegralLabel);
+      tskSolvability->requires( Uintah::Task::NewDW, rhsIntegralLabel );
+      tskSolvability->modifies( bLabel );
+      sched->addTask(tskSolvability, level->eachPatch(), matls);
+    }
+    
     //----------------------------------------------------------------------------------------------
     /**
      \brief Set a reference pressure in the domain. The user picks a reference cell (cRef) and a 
@@ -168,13 +194,38 @@ namespace Uintah {
      points in the domain to adjust for the reference pressure.
      */
     template <typename FieldT>
-    void scheduleSetReferenceValue( const LevelP       & level,
-                                          SchedulerP   & sched,
+    void scheduleSetReferenceValue( const LevelP & level,
+                                    SchedulerP   & sched,
                                     const MaterialSet  * matls,
                                     const VarLabel     * xLabel,
-                                    const int            rkStage,
-                                    const IntVector      refCell,
-                                    const double         refValue );
+                                    const int rkStage = 1,
+                                    const IntVector refCell = IntVector(0,0,0),
+                                    const double refValue = 0.0)
+    {
+      std::stringstream strRKStage;
+      strRKStage << rkStage;
+      const std::string varName = "poisson_ref_value_offset" + strRKStage.str();
+      VarLabel* refValueLabel = VarLabel::find(varName);
+      if (refValueLabel == NULL) {
+        refValueLabel = VarLabel::create(varName, sum_vartype::getTypeDescription());
+        varLabels_.push_back(refValueLabel);
+      }
+
+      Task* tskFindDiff = scinew Task("SolverInterface::findRefValueDiff",
+                                      this, &SolverInterface::findRefValueDiff<FieldT>, xLabel,
+                                      refValueLabel, refCell, refValue);
+      tskFindDiff->computes( refValueLabel );
+      tskFindDiff->requires( Uintah::Task::NewDW, xLabel, Ghost::None, 0 );
+      sched->addTask(tskFindDiff, level->eachPatch(), matls);
+      
+      Task* tskSetRefValue = scinew Task("SolverInterface::setRefValue",
+                                         this, &SolverInterface::setRefValue<FieldT>, xLabel,
+                                         refValueLabel);
+      tskSetRefValue->requires( Uintah::Task::NewDW, refValueLabel );
+      tskSetRefValue->modifies( xLabel );
+      sched->addTask(tskSetRefValue, level->eachPatch(), matls);
+    }
+    
 
   private:
     SolverInterface(const SolverInterface&);
@@ -192,16 +243,64 @@ namespace Uintah {
      interface for doing a broadcast.
      */
     template<typename FieldT>
-    void findRefValueDiff( const Uintah::ProcessorGroup *,
-                           const Uintah::PatchSubset    * patches,
-                           const Uintah::MaterialSubset * materials,
-                                 Uintah::DataWarehouse  * old_dw,
-                                 Uintah::DataWarehouse  * new_dw,
-                           const VarLabel               * xLabel,
-                                 VarLabel               * refValueLabel,
-                           const IntVector                refCell,
-                           const double                   refValue );
+    void findRefValueDiff( const Uintah::ProcessorGroup*,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                            Uintah::DataWarehouse* old_dw,
+                            Uintah::DataWarehouse* new_dw,
+                            const VarLabel         * xLabel,
+                          VarLabel         * refValueLabel,
+                          const IntVector refCell,
+                          const double refValue)
+    {
+      for( int ip=0; ip<patches->size(); ++ip ) {
+        const Uintah::Patch* const patch = patches->get(ip);
+        for( int im=0; im<materials->size(); ++im ){
+          int matl = materials->get(im);
+          FieldT x;
+          new_dw->getModifiable(x, xLabel, im, patch);
+          double refValueDiff = 0.0;
+          if (patch->containsCell(refCell)) {
+            const double cellValue = x[refCell];
+            refValueDiff = refValue - cellValue;
+          }
+          new_dw->put( sum_vartype(refValueDiff), refValueLabel );
+        }
+      }
+    }
 
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief This task adds dp (see above) to the pressure at all points in the domain to reflect
+     the reference value specified by the user/developer.
+     */
+    template<typename FieldT>
+    void setRefValue( const Uintah::ProcessorGroup*,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                            Uintah::DataWarehouse* old_dw,
+                            Uintah::DataWarehouse* new_dw,
+                            const VarLabel         * xLabel,
+                            VarLabel* refValueLabel)
+    {
+      // once we've computed the difference needed to set the ref pressure, subtract it from all points
+      for( int ip=0; ip<patches->size(); ++ip ){
+        const Patch* const patch = patches->get(ip);
+        for( int im=0; im<materials->size(); ++im ){
+          int matl = materials->get(im);
+          sum_vartype refValueDiff_;
+          new_dw->get( refValueDiff_, refValueLabel );
+          const double refValueDiff = refValueDiff_;
+          FieldT x;
+          new_dw->getModifiable(x, xLabel, im, patch);
+          for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            IntVector iCell = *iter;
+            x[iCell] += refValueDiff;
+          }
+        }
+      }
+    }
+    
     //----------------------------------------------------------------------------------------------
     /**
      \brief Computes the volume integral of the RHS of the Poisson equation: 1/V * int(rhs*dV)
@@ -209,26 +308,32 @@ namespace Uintah {
      to: 1/n * sum(rhs) where n is the total number of cell sin the domain.
      */
     template<typename FieldT>
-    void computeRHSIntegral( const Uintah::ProcessorGroup *,
-                             const Uintah::PatchSubset    * patches,
-                             const Uintah::MaterialSubset * materials,
-                                   Uintah::DataWarehouse  * old_dw,
-                                   Uintah::DataWarehouse  * new_dw,
-                             const VarLabel               * bLabel,
-                                   VarLabel               * rhsIntegralLabel );
-    //----------------------------------------------------------------------------------------------
-    /**
-     \brief This task adds dp (see above) to the pressure at all points in the domain to reflect
-     the reference value specified by the user/developer.
-     */
-    template<typename FieldT>
-    void setRefValue( const Uintah::ProcessorGroup *,
-                      const Uintah::PatchSubset    * patches,
-                      const Uintah::MaterialSubset * materials,
-                            Uintah::DataWarehouse  * old_dw,
-                            Uintah::DataWarehouse  * new_dw,
-                      const VarLabel               * xLabel,
-                            VarLabel               * refValueLabel );
+    void computeRHSIntegral( const Uintah::ProcessorGroup*,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                            Uintah::DataWarehouse* old_dw,
+                            Uintah::DataWarehouse* new_dw,
+                            const VarLabel         * bLabel,
+                            VarLabel* rhsIntegralLabel)
+    {
+      for( int ip=0; ip<patches->size(); ++ip ) {
+        const Uintah::Patch* const patch = patches->get(ip);
+        for( int im=0; im<materials->size(); ++im ){
+          int matl = materials->get(im);
+          // compute integral of b
+          FieldT b;
+          new_dw->getModifiable(b, bLabel, im, patch);
+          double rhsIntegral = 0.0;
+          for(Uintah::CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            IntVector iCell = *iter;
+            rhsIntegral += b[iCell];
+          }
+          // divide by total volume.
+          rhsIntegral /= patch->getLevel()->totalCells();
+          new_dw->put( sum_vartype(rhsIntegral), rhsIntegralLabel );
+        }
+      }
+    }
 
     //----------------------------------------------------------------------------------------------
     /**
@@ -236,13 +341,31 @@ namespace Uintah {
      on periodic problems.
      */
     template<typename FieldT>
-    void enforceSolvability( const Uintah::ProcessorGroup *,
-                             const Uintah::PatchSubset    * patches,
-                             const Uintah::MaterialSubset * materials,
-                                   Uintah::DataWarehouse  * old_dw,
-                                   Uintah::DataWarehouse  * new_dw,
-                             const VarLabel               * bLabel,
-                                   VarLabel               * rhsIntegralLabel );
+    void enforceSolvability( const Uintah::ProcessorGroup*,
+                            const Uintah::PatchSubset* patches,
+                            const Uintah::MaterialSubset* materials,
+                            Uintah::DataWarehouse* old_dw,
+                            Uintah::DataWarehouse* new_dw,
+                            const VarLabel         * bLabel,
+                            VarLabel * rhsIntegralLabel)
+    {
+      // once we've computed the total integral, subtract it from the poisson rhs
+      for( int ip=0; ip<patches->size(); ++ip ){
+        const Patch* const patch = patches->get(ip);
+        for( int im=0; im<materials->size(); ++im ){
+          int matl = materials->get(im);
+          sum_vartype rhsIntegral_;
+          new_dw->get( rhsIntegral_, rhsIntegralLabel );
+          double rhsIntegral = rhsIntegral_;
+          FieldT b;
+          new_dw->getModifiable(b, bLabel, im, patch);
+          for(CellIterator iter(patch->getCellIterator()); !iter.done(); iter++){
+            IntVector iCell = *iter;
+            b[iCell] -= rhsIntegral;
+          }
+        }
+      }
+    }
     //----------------------------------------------------------------------------------------------
   };
 }
