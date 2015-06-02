@@ -338,7 +338,7 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
   // determine if task will be executed on CPU or device, e.g. GPU or MIC
   if (task->usesDevice()) {
     cudaError_t retVal;
-    SchedulerCommon::uintahSetCudaDevice(getDeviceNum());
+    OnDemandDataWarehouse::uintahSetCudaDevice(getDeviceNum());
     task->doit(event, pg, patches, matls, dws, getCUDAStream(), deviceNum_);
   }
   else {
@@ -1358,7 +1358,7 @@ DetailedDep* DetailedTasks::findMatchingInternalDetailedDep(DependencyBatch* bat
 
       //For the GPUs, ensure that the destinations will be on the same device, and not another device
       //This assumes that a GPU task will not be assigned to multiple patches belonging to more than one device.
-      if (SchedulerCommon::getGpuIndexForPatch(toTask->getPatches()->get(0)) == SchedulerCommon::getGpuIndexForPatch( dep->toTasks.front()->getPatches()->get(0))) {
+      if (getGpuIndexForPatch(toTask->getPatches()->get(0)) == getGpuIndexForPatch( dep->toTasks.front()->getPatches()->get(0))) {
         // total range - the same var in each dep needs to have the same patchlow/high
         dep->patchLow = totalLow = Min(totalLow, dep->patchLow);
         dep->patchHigh = totalHigh = Max(totalHigh, dep->patchHigh);
@@ -1589,7 +1589,7 @@ bool DetailedTask::checkCUDAStreamDone(int deviceNum_)
 {
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
-  SchedulerCommon::uintahSetCudaDevice(deviceNum_);
+  OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum_);
   retVal = cudaStreamQuery(*(d_cudaStreams[deviceNum_]));
   if (retVal == cudaSuccess) {
 //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;

@@ -35,6 +35,9 @@ public:
 
 class deviceGhostCells {
 public:
+
+  deviceGhostCells();
+
   void add(GridVariableBase* gridVar,
       const Patch* sourcePatchPointer,
       int sourceDeviceNum,
@@ -68,7 +71,10 @@ public:
 
   IntVector getVirtualOffset(int index);
 
+  unsigned int getNumGhostCellCopies(int DWIndex);
+
 private:
   vector< deviceGhostCellsInfo > vars;
+  unsigned int totalGhostCellCopies[Task::TotalDWs];
 };
 

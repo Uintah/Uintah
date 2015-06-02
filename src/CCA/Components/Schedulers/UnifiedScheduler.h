@@ -93,11 +93,11 @@ class UnifiedScheduler : public MPIScheduler  {
     
     virtual void runTask( DetailedTask* task, int iteration, int thread_id, Task::CallBackEvent event );
 
-            void runTasks( int thread_id );
+    void runTasks( int thread_id );
 
     friend class UnifiedSchedulerWorker;
 
-    static const int bufferPadding = 8;
+    static const int bufferPadding = 32;
 
   private:
 
@@ -133,6 +133,10 @@ class UnifiedScheduler : public MPIScheduler  {
     int      numThreads_;
 
 #ifdef HAVE_CUDA
+
+
+    void prepareGPUDependencies(DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
+           OnDemandDataWarehouse* dw, OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
 
     void gpuInitialize( bool reset=false );
 

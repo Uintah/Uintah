@@ -40,6 +40,10 @@
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <sci_defs/cuda_defs.h>
 #include <Core/Thread/Thread.h>
+#ifdef HAVE_CUDA
+//#include <CCA/Components/Schedulers/GPUUtilities.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
 
 #define BLOCKSIZE 16
 
@@ -270,10 +274,10 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
 
       // setup and launch kernel
-      GPUDataWarehouse* old_gpudw = old_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->getdevice_ptr();
-      GPUDataWarehouse* new_gpudw = new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->getdevice_ptr();
+      GPUDataWarehouse* old_gpudw = old_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
+      GPUDataWarehouse* new_gpudw = new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
       GPUGridVariable<double> device_var;
-      new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
+      new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
         int3 device_offset;
         int3 device_size;
         //void* device_ptr = NULL;
@@ -338,7 +342,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
           GPUDataWarehouse* old_gpudw = old_dw->getGPUDW()->getdevice_ptr();
           GPUDataWarehouse* new_gpudw = new_dw->getGPUDW()->getdevice_ptr();
           GPUGridVariable<double> device_var;
-          new_dw->getGPUDW(SchedulerCommon::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
+          new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
             int3 device_offset;
             int3 device_size;
             //void* device_ptr = NULL;

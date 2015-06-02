@@ -101,10 +101,27 @@ public:
 
   int getWhichGPU(int index);
 
+  unsigned int getTotalVars(int DWIndex);
+  unsigned int getTotalMaterials(int DWIndex);
+  unsigned int getTotalLevels(int DWIndex);
+
 
 private:
   size_t totalSize;
   size_t totalSizeForDataWarehouse[Task::TotalDWs];
   vector< deviceGridVariableInfo > vars;
+  unsigned int totalVars[Task::TotalDWs];
+  unsigned int totalMaterials[Task::TotalDWs];
+  unsigned int totalLevels[Task::TotalDWs];
+
 };
 
+class GpuUtilities {
+public:
+  static void assignPatchesToGpus(const GridP& grid);
+  static int getGpuIndexForPatch(const Patch* patch);
+
+};
+
+static std::map<const Patch *, int> patchAcceleratorLocation;
+static unsigned int currentAcceleratorCounter;

@@ -63,6 +63,10 @@
 #include <Core/Util/ProgressiveWarning.h>
 #include <CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
+#ifdef HAVE_CUDA
+//#include <CCA/Components/Schedulers/GPUUtilities.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
 
 #include <iostream>
 #include <string>
@@ -145,8 +149,7 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
     }
 
     for (int i = 0; i < numDevices; i++) {
-      GPUDataWarehouse* gpuDW;
-      gpuDW = new GPUDataWarehouse();
+      GPUDataWarehouse* gpuDW = new GPUDataWarehouse();
       gpuDW->setDebug(gpudbg.active());
       gpuDW->init_device(i);
       d_gpuDWs.push_back(gpuDW);
@@ -372,6 +375,36 @@ OnDemandDataWarehouse::exists( const VarLabel* label ) const
 }
 
 #ifdef HAVE_CUDA
+
+void
+OnDemandDataWarehouse::uintahSetCudaDevice(int deviceNum) {
+  if (simulate_multiple_gpus.active()) {
+    CUDA_RT_SAFE_CALL( cudaSetDevice(0) );
+  } else {
+    CUDA_RT_SAFE_CALL( cudaSetDevice(deviceNum) );
+  }
+}
+
+int
+OnDemandDataWarehouse::getNumDevices() {
+  int numDevices = 0;
+  cudaError_t retVal;
+
+  if (Uintah::Parallel::usingDevice()) {
+    if (simulate_multiple_gpus.active()) {
+      numDevices = 3;
+    } else if (!use_single_device.active()) {
+      CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
+    } else {
+      numDevices = 1;
+    }
+  }
+  return numDevices;
+}
+
+//std::map<const Patch *, int> OnDemandDataWarehouse::patchAcceleratorLocation;
+//unsigned int OnDemandDataWarehouse::currentAcceleratorCounter;
+
 size_t
 OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type) {
   switch(type){
@@ -384,7 +417,7 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
       break;
     }
     case TypeDescription::Stencil7 : {
-      return sizeof(double);
+      return sizeof(Stencil7);
       break;
     }
     default : {
@@ -437,119 +470,6 @@ OnDemandDataWarehouse::createGPUPerPatch(size_t sizeOfDataType)
   return device_var;
 }
 
-//______________________________________________________________________
-//
-void
-OnDemandDataWarehouse::prepareGPUDependencies(DetailedTask* task,
-    DependencyBatch* batch,
-    const VarLabel* pos_var,
-    OnDemandDataWarehouse* old_dw,
-    const DetailedDep* dep,
-    LoadBalancer* lb) {
-
-  //This should handle the following scenarios:
-  //GPU -> different GPU same node  (write to GPU array, move to other device memory, copy in via copyGPUGhostCellsBetweenDevices)
-  //GPU -> different GPU another node (write to GPU array, move to host memory, copy via MPI)
-  //GPU -> CPU another node (write to GPU array, move to host memory, copy via MPI)
-  //It should not handle
-  //GPU -> CPU same node (handled in initateH2D)
-  //GPU -> same GPU same node (handled in initateH2D)
-
-  if (dep->isNonDataDependency()) {
-    return;
-  }
-  const VarLabel* label = dep->req->var;
-  const Patch* fromPatch = dep->fromPatch;
-  int matlIndex = dep->matl;
-
-  bool fromGPU;
-  bool toGPU;
-
-  DetailedTask* toTask = dep->toTasks.front();
-  for (list<DetailedTask*>::const_iterator iter = dep->toTasks.begin(); iter != dep->toTasks.end(); ++iter) {
-    toTask = (*iter);
-    //cout << (*iter)->getPatches()->get(0)->getID() << endl;
-
-    int fromresource = task->getAssignedResourceIndex();
-    int toresource = toTask->getAssignedResourceIndex();
-
-    int fromdeviceindex = SchedulerCommon::getGpuIndexForPatch(fromPatch);
-    //For now, assume that task will only work on one device
-    int todeviceindex = SchedulerCommon::getGpuIndexForPatch(toTask->getPatches()->get(0));
-
-    //printf("In OnDemandDataWarehouse::prepareGPUDependencies from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toTask->getPatches()->get(0)->getID(), task, toTask);
-
-    if ( (fromresource == toresource) && (fromdeviceindex == todeviceindex) ) {
-      //don't handle GPU -> same GPU same node here
-      continue;
-    }
-
-    GPUDataWarehouse* gpudw = NULL;
-    if (fromdeviceindex != -1) {
-      gpudw = getGPUDW(fromdeviceindex);
-      if (!gpudw->getValidOnCPU(label->d_name.c_str(), fromPatch->getID(), matlIndex) &&
-           gpudw->getValidOnGPU(label->d_name.c_str(), fromPatch->getID(), matlIndex)) {
-        fromGPU = true;
-      } else {
-        //no need to prepare CPU -> other ghost cell copies here.
-        continue;
-      }
-    } else {
-      SCI_THROW(InternalError("Device index not found for "+label->getFullName(matlIndex, fromPatch), __FILE__, __LINE__));
-    }
-    if (toTask->getTask()->usesDevice()) {
-      //The above tells us that it going to a GPU.
-      //For now, when the receiving end calls getGridVar, it will piece together
-      //the ghost cells, and move it into the GPU if needed.
-      //Therefore, we don't at this moment need to know if it's going to a GPU.
-      //But in the future, if we can manage direct GPU->GPU communication avoiding
-      //the CPU then this is important to know
-      toGPU = true;
-    }
-
-    switch(label->typeDescription()->getType()){
-      case TypeDescription::ParticleVariable:
-        {
-        }
-        break;
-      case TypeDescription::NCVariable:
-      case TypeDescription::CCVariable:
-      case TypeDescription::SFCXVariable:
-      case TypeDescription::SFCYVariable:
-      case TypeDescription::SFCZVariable:
-        {
-          d_lock.readLock();
-          if(!d_varDB.exists(label, matlIndex, fromPatch)) {
-            cout << d_myworld->myrank() << "  Needed by " << *dep << " on task " << *dep->toTasks.front() << endl;
-            SCI_THROW(UnknownVariable(label->getName(), getID(), fromPatch, matlIndex,
-                  "in OnDemandDataWarehouse::prepareGPUDependencies", __FILE__, __LINE__));
-          }
-          GridVariableBase* var;
-          var = dynamic_cast<GridVariableBase*>(d_varDB.get(label, matlIndex, fromPatch));
-          d_lock.readUnlock();
-
-          IntVector host_low, host_high, host_offset, host_size, host_strides;
-          var->getSizes(host_low, host_high, host_offset, host_size, host_strides);
-          gpudw->prepareGpuGhostCellIntoGpuArray(task,
-                                 toTask,
-                                 make_int3(dep->low.x(), dep->low.y(), dep->low.z()),
-                                 make_int3(dep->high.x(), dep->high.y(), dep->high.z()),
-                                 host_strides.x(),
-                                 label->d_name.c_str(),
-                                 matlIndex,
-                                 fromPatch->getID(),
-                                 toTask->getPatches()->get(0)->getID(),
-                                 fromdeviceindex,
-                                 todeviceindex,
-                                 fromresource,
-                                 toresource);
-
-        }
-    }
-  }
-}
-
-
 void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask, int numDevices) {
 
 
@@ -560,13 +480,15 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
   vector<GPUDataWarehouse::tempGhostCellInfo> * tempGhostCellsAllDevices = new vector<GPUDataWarehouse::tempGhostCellInfo>[numDevices];
   for (int i = 0; i < numDevices; i++) {
     //Each device needs its own stream
-    SchedulerCommon::uintahSetCudaDevice(i);
+    OnDemandDataWarehouse::uintahSetCudaDevice(i);
     // this will get put into idle stream queue and properly disposed of later
     streams[i] = (cudaStream_t*)malloc(sizeof(cudaStream_t));
     CUDA_RT_SAFE_CALL( cudaStreamCreate(&(*(streams[i]))));
   }
 
-  //collect from all devices (we'll be adding to it later, so just collect everything up front
+
+
+  //collect from all devices (we'll be adding to it later, so just collect everything up front)
   for (int i = 0; i < numDevices; i++) {
     GpuDwModified[i] = false;
 
@@ -586,12 +508,15 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
            it != tempGhostCellsAllDevices[i].end();
            ++it)
     {
+      //TODO: Make sure on a multi-GPU/multi-node situation this only uses ghost cells that are staying on the same node
+      //At the moment tempGhostCellInfo contains external and internal dependencies.  We don't want to be working with
+      //any external dependencies here.
 
       //only this task should process its own outgoing GPU->other destination ghost cell copies
       //if (dtask == (*it).second.cpuDetailedTaskOwner) {
         //GPUDataWarehouse* gpudw = getGPUDW((*it).second.fromDeviceIndex);
 
-        SchedulerCommon::uintahSetCudaDevice((*it).toDeviceIndex);
+      OnDemandDataWarehouse::uintahSetCudaDevice((*it).toDeviceIndex);
 
 
         //GPUGridVariableBase* device_var = createGPUGridVariable((*it).xstride);
@@ -613,9 +538,17 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
         //Previously we copied ghost cell data into contiguous arrays from the source
         //and put them into the tempGhostCells collection.  Now we're repeating the
         //process for the destination.  Put these back into the tempGhostCells collection
+        //In other words, in the steps of
+        //In the steps of
+        //1) Gather neighbor region into contiguous array on GPU A
+        //2) Create array on GPU B
+        //3) Copy results into GPU B
+        //4) Store information in GPU B on how to scatter results in GPU B
+        //5) Scatter results from array into neighbor ghost cell region in GPU B.
+        //This is step 2
         void * data_ptr = NULL;
         getGPUDW((*it).toDeviceIndex)->prepareGpuToGpuGhostCellDestination((void *)dtask,
-                                                                         (void *)(*it).toDeviceIndex,
+                                                                         (void *)(*it).toDetailedTask,
                                                                          make_int3((*it).ghostCellLow.x,(*it).ghostCellLow.y, (*it).ghostCellLow.z),
                                                                          make_int3((*it).ghostCellHigh.x,(*it).ghostCellHigh.y, (*it).ghostCellHigh.z),
                                                                          (*it).xstride,
@@ -626,7 +559,6 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
                                                                          (*it).fromDeviceIndex,
                                                                          (*it).toDeviceIndex,
                                                                          data_ptr);
-
 
 
          //printf("Copying the ghost cell from device %d address %p to device %d address %p from %s patch %d matl %d for region (%d,%d,%d) to (%d, %d, %d)\n",
@@ -643,6 +575,14 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
          //          (*it).ghostCellHigh.x,
          //          (*it).ghostCellHigh.y,
          //          (*it).ghostCellHigh.z);
+        //In the steps of
+        //1) Gather neighbor region into contiguous array on GPU A
+        //2) Create array on GPU B
+        //3) Copy results into GPU B
+        //4) Store information in GPU B on how to scatter results in GPU B
+        //5) Scatter results from array into neighbor ghost cell region in GPU B.
+        //This is step 3
+
         if (simulate_multiple_gpus.active()) {
           CUDA_RT_SAFE_CALL( cudaMemcpyPeer  (data_ptr,
                       0,
@@ -680,7 +620,7 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
         //+-----------------+-----------------+
 
         // Patch 1 will need to send ghost cells to patch 0 and to patch 3
-        //So in findMatchingInternalDetailedDep(), it has logic to detecft this
+        //So in findMatchingInternalDetailedDep(), it has logic to detect this
         //situation and extend the patch limits to effectively send all of patch 1
         //to cover both regions within patch 1 that need to be sent to GPU 0.
         //The problem is that it now wants to send the entire patch 1 twice
@@ -694,6 +634,13 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
         //source patch with all patches on the destination.  Neither sound fun.
 
 
+        //In the steps of
+        //1) Gather neighbor region into contiguous array on GPU A
+        //2) Create array on GPU B
+        //3) Copy results into GPU B
+        //4) Store information in GPU B on how to scatter results in GPU B
+        //5) Scatter results from array into neighbor ghost cell region in GPU B.
+        //This is step 4
         getGPUDW((*it).toDeviceIndex)->putGhostCell(dtask,
                                                    (*it).label.c_str(),
                                                    (*it).patchID,
@@ -721,11 +668,18 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
   }
   for (int i = 0; i < numDevices; i++) {
     if (GpuDwModified[i]) {
-
+      //In the steps of
+      //1) Gather neighbor region into contiguous array on GPU A
+      //2) Create array on GPU B
+      //3) Copy results into GPU B
+      //4) Store information in GPU B on how to scatter results in GPU B
+      //5) Scatter results from array into neighbor ghost cell region in GPU B.
+      //This is step 5
       getGPUDW(i)->syncto_device(streams[i]);
       getGPUDW(i)->copyGpuGhostCellsToGpuVarsInvoker(streams[i], dtask);
     }
     CUDA_RT_SAFE_CALL(cudaStreamDestroy(*(streams[i])));
+    free(streams[i]);
   }
   delete[] GpuDwModified;
   delete[] streams;
@@ -845,7 +799,7 @@ OnDemandDataWarehouse::sendMPI( DependencyBatch* batch,
       //There are at least four scenarios here, GPU->GPU, GPU->CPU, CPU->GPU, and CPU->CPU
       //Unhandled scenario:  A task needs ghost cell data in the CPU *and* GPU.  Seems rare.
 
-      int index = SchedulerCommon::getGpuIndexForPatch(patch);
+      int index = GpuUtilities::getGpuIndexForPatch(patch);
       GPUDataWarehouse* gpudw = NULL;
       if (index != -1) {
         gpudw = getGPUDW(index);

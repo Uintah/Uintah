@@ -45,6 +45,12 @@ deviceGhostCellsInfo::deviceGhostCellsInfo(GridVariableBase* gridVar,
   this->virtualOffset = virtualOffset;
 }
 
+deviceGhostCells::deviceGhostCells() {
+  for (int i = 0; i < Task::TotalDWs; i++) {
+    totalGhostCellCopies[i] = 0;
+  }
+}
+
 void deviceGhostCells::add(GridVariableBase* gridVar,
           const Patch* sourcePatchPointer,
           int sourceDeviceNum,
@@ -56,6 +62,7 @@ void deviceGhostCells::add(GridVariableBase* gridVar,
           const Task::Dependency* dep,
           IntVector virtualOffset) {
   deviceGhostCellsInfo tmp(gridVar, sourcePatchPointer, sourceDeviceNum, destPatchPointer, destDeviceNum, materialIndex,  low, high, dep, virtualOffset);
+  totalGhostCellCopies[dep->mapDataWarehouse()] += 1;
   vars.push_back(tmp);
 }
 
@@ -100,5 +107,9 @@ const Task::Dependency* deviceGhostCells::getDependency(int index) {
 
 IntVector deviceGhostCells::getVirtualOffset(int index) {
   return vars.at(index).virtualOffset;
+}
+
+unsigned int deviceGhostCells::getNumGhostCellCopies(int DWIndex) {
+  return totalGhostCellCopies[DWIndex];
 }
 

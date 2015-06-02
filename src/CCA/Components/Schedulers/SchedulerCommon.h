@@ -251,13 +251,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
     ReductionTasksMap reductionTasks;
 
-#ifdef HAVE_CUDA
-    int getNumDevices();
-    void assignPatchesToGpus(const GridP& grid);
-    static int getGpuIndexForPatch(const Patch*);
-    static void uintahSetCudaDevice(int deviceNum);
-#endif
-
   protected:
 
     void finalizeTimestep();
@@ -332,12 +325,6 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
     
     // do not checkpoint these variables
     std::set<std::string> notCheckpointVars_;
-
-#ifdef HAVE_CUDA
-    // indicates where a given patch should be stored in an accelerator
-    static std::map<const Patch *, int> patchAcceleratorLocation;
-    static unsigned int currentAcceleratorCounter;
-#endif
 
   private:
 
