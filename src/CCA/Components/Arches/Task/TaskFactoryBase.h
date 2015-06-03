@@ -17,6 +17,7 @@ namespace Uintah{
 
     typedef std::map< std::string, TaskInterface*>              TaskMap; 
     typedef std::map< std::string, TaskInterface::TaskBuilder*> BuildMap; 
+    typedef std::map<std::string, std::vector<std::string> >    TypeToTaskMap; 
 
     //May need to overload for the builders. 
     virtual void register_all_tasks( ProblemSpecP& db ) = 0; 
@@ -35,11 +36,14 @@ namespace Uintah{
     TaskMap   _tasks;             ///< Task map
     TaskMap& retrieve_all_tasks(){ return _tasks; }; 
 
+    const TypeToTaskMap& retrieve_type_to_tasks(){ return _type_to_tasks; }
+
   protected: 
 
-    BuildMap  _builders;          ///< Builder map
+    BuildMap  _builders;                          ///< Builder map
 
     std::vector<std::string> _active_tasks;       ///< Task which are active 
+    TypeToTaskMap _type_to_tasks;                 ///< Collects all tasks of a common type 
 
   private: 
 
