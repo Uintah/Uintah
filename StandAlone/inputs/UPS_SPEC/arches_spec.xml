@@ -21,7 +21,12 @@
         <model                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable, 
-                                                                          variable_stats'">
+                                                                          variable_stats, 
+                                                                          density_predictor'">
+
+          <use_exact_guess              spec="OPTIONAL NO_DATA"
+                                        need_applies_to="type density_predictor"/> <!-- for the cold flow model, use the exact solution for 
+                                                                                        the density-f relationship rather than the guess -->
 
           <!-- For variable_stats, the variable_type is the type for the variable which you are time averaging.
                There is an attempt to determine the variable type automatically. This flag should only be used 
