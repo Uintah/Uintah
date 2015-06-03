@@ -1,0 +1,211 @@
+%% LyX 2.0.6 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english, 12pt]{article}
+ \usepackage{geometry}
+ \geometry{
+ letterpaper,
+ left=1in,
+ right=1in,
+ top=1in,
+ bottom=1in,
+ bindingoffset=0mm
+ }
+
+\usepackage{natbib}
+\usepackage[T1]{fontenc}
+\usepackage[latin9]{inputenc}
+\usepackage{hyperref}
+\hypersetup{%
+        pdftitle={A Concise Representation Shunn's Two-Dimensional Variable-Density MMS Solutions},
+        pdfauthor={Tony Saad},
+        pdfsubject={Pressure projection, variable density, variable-density, reacting flows},
+        pdfkeywords={Pressure projection, variable density, variable-density, reacting flows},
+        pdfview=FitH,
+        pdfborder=0 0 0,        % make all links invisible, so the pdf looks good when printed
+        pdffitwindow=true,      % window fit to page when opened
+        pdfstartview={FitH},    % fits the width of the page to the window
+        pdfnewwindow=true,      % links in new window
+        bookmarksnumbered=true,
+        breaklinks=true,%
+        colorlinks=true, %% to produce a black & white document, use "false"
+        urlcolor=darkblue, % used to be darkblue % color of external links (magenta)
+        filecolor=darkblue, % used to be darkblue % color of file links
+        citecolor=blue, % used to be black % color of text links to bibliography
+        linkcolor=blue} % used to be black % color of internal links
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amstext}
+
+\usepackage{times}
+\usepackage{txfonts}
+
+
+
+%\usepackage{txfonts}
+
+\usepackage{babel}
+\usepackage{cleveref}
+\crefformat{equation}{Equation (#2#1#3)} % this is to remove the space...
+\Crefname{equation}{Equation}{Equations}
+\crefformat{equation}{(#2#1#3)}
+\crefname{equation}{}{}
+
+\crefformat{section}{\S#2#1#3}
+\crefformat{subsection}{\S#2#1#3}
+%\crefname{subsection}{\S}{\S}
+\Crefname{section}{Section}{Sections}
+\Crefname{subsection}{Section}{Sections}
+
+\crefname{figure}{figure}{figures}
+\Crefname{figure}{Figure}{Figures}
+
+\begin{document}
+
+\title{A Concise Representation Shunn's Two-Dimensional Variable-Density MMS Solutions}
+
+
+\author{Tony Saad}
+
+\maketitle
+
+For all the solutions presented in this document, we use a simple mixing model for two streams given by
+\begin{equation}
+\frac{1}{\rho} =\frac{1-f}{{\rho_0}}+\frac{f}{{\rho_1}}
+\end{equation}
+where the mixture fraction $f$ is transported via
+\begin{equation}
+\frac{\partial \rho f}{\partial t} + \nabla\cdot\mathbf{u}\rho f = \nabla \rho \Gamma \cdot \nabla f + R_f
+\end{equation}
+
+This document simplifies the presentation and implementation of two 
+important variable density analytical solutions using the MMS approach.
+Both can be found in \cite{shunn_moin2012}.
+
+\section{Corrugated-Front MMS}
+For this problem, we set
+\begin{equation}
+\hat{x} = u_f t - x + a \cos[k (v_f t - y)];
+\end{equation}
+\begin{equation}
+f = \frac{1 + \tanh(b \hat{x} e^{-w t})}{1 + \tfrac{\rho0}{\rho1} + (1 + \tfrac{\rho0}{\rho1})\tanh(b \hat{x} e^{-w t})}
+\end{equation}
+\begin{equation}
+u = \frac{\rho_1 - \rho_0}{\rho}\left\{-\omega \hat{x} + \frac{ \omega \hat{x} - u_f}{\exp\left[2 b \hat{x} \exp(-\omega t)\right] + 1 } + \frac{\omega \ln\left[\exp(2b\hat{x} \exp(-\omega t) + 1)\right]}{2 b \exp(-\omega t)}\right\}
+%u := (r1 - r0)/\rho*(-w xh + (w xh - uf)/(
+%     Exp[2 b xh Exp[-w t]] + 1) + (w Log[Exp[2 b xh Exp[-w t]] + 1])/(
+%     2 b Exp[-w t]));
+\end{equation}
+\begin{equation}
+v = v_f
+\end{equation}
+The continuity equation does not require a source term. The mixture fraction equation requires the addition of a source term. Let
+\begin{align*}
+s_0 & = e^{t w}; \\
+s_1 & = u_f t - x + a \cos[k (v_f t - y)]; \\
+s_2 & = e^{2 b s_1/s_0}
+%s2 := E^((2 b s1)/s0);
+\end{align*}
+
+\begin{align*}
+R_f = & \frac{r_0 r_1 s_2}{s_0^2 (r_0 + r_1 s_2)^3} \times \\
+      & \left \{-4 A b^2 r_0 - 2 a^2 A b^2 k^2 r_0 + 4 A b^2 r_1 s_2 + 
+ 2 a^2 A b^2 k^2 r_1 s_2 + 2 b r_0 r_1 s_0 u_f \right. \\
+      & + 2 b r_1^2 s_0 s_2 u_f -2 b r_0^2 s_0 t u_f w - 2 b r_0 r_1 s_0 s_2 t u_f w + 2 b r_0^2 s_0 w x \\
+      &+ 2 b r_0 r_1 s_0 s_2 w x +2 a b s_0 (r_0 + r_1 s_2) (A k^2 - r_0 w) \cos[k (t v_f - y)] \\
+      &+ 
+ 2 a^2 A b^2 k^2 (r_0 - r_1 s_2) \cos[2 k (t v_f - y)] +r_0^2 s_0^2 w \ln[1 + s_2] \\
+ & - r_0 r_1 s_0^2 w \ln(1 + s_2) +r_0 r_1 s_0^2 s_2 w \ln(1 + s_2) \\
+ & \left . - r_1^2 s_0^2 s_2 w \ln(1 + s_2)\right\}
+\end{align*}
+
+\section{Oscillating MMS}
+For this periodic problem, we set
+\begin{align*}
+\hat{x} = & x - u_f t \\
+\hat{y} = & y - \varv_f t \\
+\bar{x} = & \pi k \hat{x} \\
+\bar{y} = & \pi k \hat{y} \\
+\bar{t} = & \pi \omega t
+\end{align*}
+
+\begin{equation}
+	f = \frac{\sin (\bar{x} ) \sin (\bar{y}) \cos (\bar{t}) + 1}
+	         {\left(1-\frac{\rho_0}{\rho_1}\right) \sin (\bar{x}) \sin (\bar{y}) \cos (\bar{t})+\left(1 + \frac{{\rho_0}}{{\rho_1}}\right)};
+\end{equation}
+
+
+
+\begin{equation}
+\rho u=\left(\frac{-\omega}{4 k}\right)({\rho_1}-{\rho_0}) \cos (\bar{x}) \sin (\bar{y}) \sin (\bar{t})
+\end{equation}
+
+\begin{equation}
+\rho \varv= \left(\frac{-\omega}{4 k}\right)({\rho_1}-{\rho_0}) \sin (\bar{x}) \cos (\bar{y}) \sin (\bar{t})
+\end{equation}
+The source term for the continuity equation is
+\begin{equation}
+R_\rho=\frac{1}{2} \pi  k ({\rho_0}-{\rho_1}) \cos (\bar{t}) \left[ {u_f} \cos (\bar{x}) \sin (\bar{y})+{\varv_f} \sin (\bar{x}) \cos (\bar{y})\right]
+\end{equation}
+so that
+\begin{equation}
+\frac{\partial \rho}{\partial t} + \nabla\cdot\rho\mathbf{u} = R_\rho
+\end{equation}
+The source term for the mixture fraction is given by $R_f$ such that
+
+\begin{align*}
+&s_0  = \cos(\pi \omega t),\\
+&s_1  = \sin(\pi \omega t),\\ 
+&s_2  = \cos(k \pi x),\\ 
+&s_3  = \sin(k \pi x),\\ 
+&s_4  = \cos(k \pi y),\\
+&s_5  = \sin(k \pi y), \\
+&s_6  = \sin[k \pi (x -t u_f)], \\
+&s_7  = \sin[k \pi (y -t \varv_f)], \\
+&s_8 = \cos[k \pi (x -t u_f)], \\
+&s_9 = \cos[k \pi (y -t \varv_f)], \\
+&s_{10} = \rho_0 + \rho_1, \\
+&s_{11} = \rho_0 - \rho_1 \\
+& A \equiv \rho \Gamma = \text{constant}
+\end{align*}
+
+\begin{align*}
+R_f  = & -\frac{\pi  \rho_1}{4 (s_{10} - s_0 s_6 s_7 s_{11} )^3}\times \\
+       &\left\{
+       16 A k^2 \pi \rho_0 s_0^2 s_9^2 s_{11} s_6^2 \right. \\
+& - 16 A k^2 \pi \rho_0 s_0 s_{10} s_6 s_7 
+  + 16 A k^2 \pi \rho_0 s_0^2 s_8^2 s_{11} s_7^2 \\
+& + 16 A k^2 \pi \rho_0 s_0^2 s_{11} s_6^2 s_7^2
+  + 2 k s_0 s_8 s_{10}^3 s_7 u_f \\
+& - 6 k \rho_0^2 s_0^2 s_8 s_{11} s_6 s_7^2 u_f 
+  - 12 k \rho_0 \rho_1 s_0^2 s_8 s_{11} s_6 s_7^2 u_f \\
+& - 6 k \rho_1^2 s_0^2 s_8 s_{11} s_6 s_7^2 u_f 
+  + 6 k s_0^3 s_8 s_{10} s_{11}^2 s_6^2 s_7^3 u_f \\
+& - 2 k s_0^4 s_8 s_{11}^3 s_6^3 s_7^4 u_f 
+  + 2 k s_0 s_9 s_{10}^3 s_6 \varv_f \\
+& - 6 k \rho_0^2 s_0^2 s_9 s_{11} s_6^2 s_7 \varv_f 
+  - 12 k \rho_0 \rho_1 s_0^2 s_9 s_{11} s_6^2 s_7 \varv_f \\
+& - 6 k \rho_1^2 s_0^2 s_9 s_{11} s_6^2 s_7 \varv_f 
+  + 6 k s_0^3 s_9 s_{10} s_{11}^2 s_6^3 s_7^2 \varv_f \\
+& - 2 k s_0^4 s_9 s_{11}^3 s_6^4 s_7^3 \varv_f
+  - 2 \rho_0 s_0 s_1 s_9^2 s_{10} s_{11} s_6^2 w \\
+& + 4 \rho_0 s_1 s_{10}^2 s_6 s_7 w
+  + 2 \rho_0 s_0^2 s_1 s_9^2 s_{11}^2 s_6^3 s_7 w \\
+& - 5 \rho_0 s_0 s_1 s_{10} s_{11} s_7^2 w
+  + 3 \rho_0 s_0 s_1 s_8^2 s_{10} s_{11} s_7^2 w \\
+& - 3 \rho_0 s_0 s_1 s_{10} s_{11} s_6^2 s_7^2 w
+  + 2 \rho_0 s_0^2 s_1 s_8^2 s_{11}^2 s_6 s_7^3 w \\
+& + 4 \rho_0^2 s_0^2 s_1 s_{11} s_6^3 s_7^3 w 
+ \left. - 4 \rho_0 \rho_1 s_0^2 s_1 s_{11} s_6^3 s_7^3 w \right\}
+%       &  \left \{ k (\rho_0-\rho_1) \cos ^2(\bar{t}) \left(-s_0 -s_1 + s_2 + s_3 + s_4 - s_5 - s_6\right) \right.\\
+%	  & + k (\rho_0+\rho_1) \cos (\bar{t}) \left( s_7 + s_8 \right) \\
+%	  & + k (\rho_0-\rho_1)^2 \sin ^2(\bar{x}) \sin ^2(\bar{y}) \cos ^3(\bar{t}) (u_f \cos (\bar{x}) \sin (\bar{y})+\varv_f \sin (\bar{x}) \cos (\bar{y})) \\
+%	  &\left. +\frac{1}{2} \rho_0 w  \left[s_7      +\sin (\bar{y})  \left(s_8 + s_{11}\right) \right] \right\}
+\end{align*}
+
+%\notice{shunn_verification_2012}
+     
+\bibliographystyle{apalike}
+\bibliography{varden-mms} 
+\nocite{*}
+\end{document}
