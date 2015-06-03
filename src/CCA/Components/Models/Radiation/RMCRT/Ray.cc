@@ -309,7 +309,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 // Increase the printf buffer size only once!  
 #ifdef HAVE_CUDA
   #ifdef CUDA_PRINTF
-  if( Parallel::usingDevice() ){
+  if( Parallel::usingDevice() && Parallel::getMPIRank() == 0){
     size_t size;
     CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize) );
     CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
