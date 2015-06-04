@@ -195,7 +195,7 @@
         <ColdFlow>
           <mixture_fraction label="mixture_fraction"/>
           <stream_0 density="0.3" temperature="298.0"/>
-          <stream_0 density="1.0" temperature="298.0"/>
+          <stream_1 density="1.0" temperature="298.0"/>
           <reference_density value="1.0"/>
         </ColdFlow>
       </Properties>
