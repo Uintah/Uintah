@@ -619,10 +619,12 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     //get the density predictor task and schedule it: 
     const TaskFactoryBase::TypeToTaskMap& den_guess_tasks = i_property_models->second->retrieve_type_to_tasks(); 
     TaskFactoryBase::TypeToTaskMap::const_iterator i_den_guess = den_guess_tasks.find("density_predictor");  
-    for ( std::vector<std::string>::const_iterator idg = i_den_guess->second.begin(); 
-          idg != i_den_guess->second.end(); idg++ ){ 
-      TaskInterface* tsk = i_property_models->second->retrieve_task(*idg); 
-      tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
+    if ( i_den_guess != den_guess_tasks.end() ){ 
+      for ( std::vector<std::string>::const_iterator idg = i_den_guess->second.begin(); 
+            idg != i_den_guess->second.end(); idg++ ){ 
+        TaskInterface* tsk = i_property_models->second->retrieve_task(*idg); 
+        tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
+      }
     }
     //======= END NEW TASK STUFF =======
 
