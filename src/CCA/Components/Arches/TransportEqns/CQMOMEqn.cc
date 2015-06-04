@@ -453,7 +453,7 @@ void
 CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::buildTransportEqn";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildTransportEqn);
+  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildTransportEqn, timeSubStep);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -507,7 +507,8 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
                             const PatchSubset* patches,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
-                            DataWarehouse* new_dw )
+			     DataWarehouse* new_dw,
+                            int timeSubStep )
 {
   //patch loop
   for (int p=0; p < patches->size(); p++) {
@@ -569,7 +570,7 @@ CQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
       Fconv.initialize(0.0);
       
       if ( d_doConv ) {
-        if ( new_dw->exists( d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch) ) {
+        if ( timeSubStep != 0 ) {
           new_dw->get(uVel,   d_fieldLabels->d_uVelocitySPBCLabel, matlIndex, patch, gac, 1);
 #ifdef YDIM
           new_dw->get(vVel,   d_fieldLabels->d_vVelocitySPBCLabel, matlIndex, patch, gac, 1);

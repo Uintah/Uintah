@@ -76,7 +76,8 @@ namespace Uintah{
                            const PatchSubset* patches,
                            const MaterialSubset*,
                            DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
+                           DataWarehouse* new_dw,
+                           int timeSubStep);
     
     /** @brief Schedule the convection for x direction */
     void sched_buildXConvection( const LevelP& level,
