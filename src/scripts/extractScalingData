@@ -19,7 +19,6 @@ endif
 # DEFAULTS:  Edit these
 set startTimestep = "3"
 set endTimestep   = "10"  # timestep to extract elapsed time from.
-set nThreads      = 16     # number of threads per mpi process.
 #__________________________________
 
 set out = ($argv)
@@ -31,19 +30,25 @@ mkdir $here
 touch $here/data
 
 foreach X ( $out[*] )
-
   grep -q "(timestep $endTimestep)" $X
   
   # if the final timestep exists
   if ($status == 0 ) then
     echo $X > $here/file
     grep "Patch layout:" $X | cut -d"(" -f2 > $here/patches
-    grep processors $X | awk -v nThreads=$nThreads -F" " '{ print $2*nThreads }' > $here/processors
+
+    @ procs    = `grep "MPI processes" $X | awk '{print $2}'`
+    @ threads  = `grep "threads per MPI process" $X | awk '{print $2}'`
+    @ nThreads = $procs * $threads
     
+    echo $procs    > $here/nMPI
+    echo $threads  > $here/threadsPerMPI
+    echo $nThreads > $here/nThreads 
+
     grep "(timestep $startTimestep)" $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/startTime
     grep "(timestep $endTimestep)"   $X | awk -F "=" '{print $4}' | cut -d "," -f1 > $here/endTime
 
-    paste -d " " $here/file $here/processors $here/startTime $here/endTime >> $here/data
+    paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/startTime $here/endTime >> $here/data
 
     echo "working on $X"
   else
@@ -56,9 +61,9 @@ end
 
 @ n = $endTimestep - $startTimestep
 echo " computing average mean time per timestep for $n timesteps"
-echo "#file procs startTime endTime aveMean">$here/data2  
+echo "#file MPIprocs threadsPerMPI totalThreads startTime endTime aveMean">$here/data2  
 
-awk -vnSteps=$n '{print ($4-$3)/nSteps}' $here/data >> $here/aveMeanTime
+awk -vnSteps=$n '{print ($6-$5)/nSteps}' $here/data >> $here/aveMeanTime
 
 paste -d " " $here/data $here/aveMeanTime >> $here/data2
 sort -n -k2 $here/data2| column -t >scalingData
@@ -85,7 +90,14 @@ if ( $#these != 0 ) then
       # if the final timestep exists then process it
       if ($status == 0 ) then  
         echo $X > $here/file
-        grep processors $X | awk -v nThreads=$nThreads -F" " '{ print $2*nThreads }' > $here/processors
+
+        @ procs    = `grep "MPI processes" $X | awk '{print $2}'`
+        @ threads  = `grep "threads per MPI process" $X | awk '{print $2}'`
+        @ nThreads = $procs * $threads
+
+        echo $procs    > $here/nMPI
+        echo $threads  > $here/threadsPerMPI
+        echo $nThreads > $here/nThreads
 
         # extract the output between the start and ending timesteps
         @ endingTimestep = $endTimestep + 1
@@ -95,7 +107,7 @@ if ( $#these != 0 ) then
         grep TaskExec $me      | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskExec
         grep TaskLocalComm $me | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskLocalComm
         grep TaskWaitComm $me  | cut -d: -f2 | awk 'BEGIN {sum=0}; {sum=sum+$1}; END {print sum/NR}' > $here/ave.taskWaitComm
-        paste -d " " $here/file $here/processors $here/ave.taskExec $here/ave.taskLocalComm $here/ave.taskWaitComm >> $here/aveComponentTimes
+        paste -d " " $here/file $here/nMPI $here/threadsPerMPI $here/nThreads $here/ave.taskExec $here/ave.taskLocalComm $here/ave.taskWaitComm >> $here/aveComponentTimes
       else
         echo "---------------------$X did not run to completion"
       endif
@@ -103,7 +115,7 @@ if ( $#these != 0 ) then
   end  # loop over files
 
     #  header
-    echo "#file procs aveTaskExec aveTaskLocalComm aveTaskWaitComm" > $here/aveComponentTimes2
+    echo "#file MPIprocs threadsPerMPI totalThreads aveTaskExec aveTaskLocalComm aveTaskWaitComm" > $here/aveComponentTimes2
   sort -n -k2 $here/aveComponentTimes >>  $here/aveComponentTimes2
   column -t $here/aveComponentTimes2 > aveComponentTimes
 
@@ -112,5 +124,5 @@ endif
 
 more scalingData
 
-/bin/rm -rf $here
+#/bin/rm -rf $here
 exit
