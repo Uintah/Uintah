@@ -367,11 +367,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
       sigmaT4_gdw->getLevel( sigmaT4OverPi[l], "sigmaT4",  matl, l);
       cellType_gdw->getLevel( cellType[l],     "cellType", matl, l);
 
-#if 0
-      if (isThread0()) {
-        printf("  GPUVariable Sanity check level: %i\n",l);
-      }
-#endif
       GPUVariableSanityCK(abskg[l],        d_levels[l].regionLo,d_levels[l].regionHi);
       GPUVariableSanityCK(sigmaT4OverPi[l],d_levels[l].regionLo,d_levels[l].regionHi);
     }
@@ -387,11 +382,6 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     sigmaT4_gdw->get(sigmaT4OverPi[fineL], "sigmaT4",  finePatch.ID, matl, fineL);
     cellType_gdw->get(cellType[fineL],     "cellType", finePatch.ID, matl, fineL);
 
-#if 0
-    if (isThread0()) {
-      printf("  GPUVariable Sanity check level: %i\n",fineL);
-    }
-#endif
     GPUVariableSanityCK(abskg[fineL],        fineLevel_ROI_Lo,fineLevel_ROI_Hi);
     GPUVariableSanityCK(sigmaT4OverPi[fineL],fineLevel_ROI_Lo,fineLevel_ROI_Hi);
   }
