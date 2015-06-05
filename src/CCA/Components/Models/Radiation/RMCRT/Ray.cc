@@ -760,6 +760,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->requires(abskg_dw,    d_abskgLabel,    allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
     tsk->requires(sigma_dw,    d_sigmaT4Label,  allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
     tsk->requires(celltype_dw, d_cellTypeLabel, allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
+    proc0cout << "WARNING: RMCRT High communication costs on level:" << l 
+              << ".  Variables from every patch on this level are communicated to every patch on the finest level."<< endl;
   }
 
   if( modifies_divQ ){
