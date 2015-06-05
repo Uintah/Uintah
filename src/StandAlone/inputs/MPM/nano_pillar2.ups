@@ -17,12 +17,13 @@
   </Time>
   <DataArchiver>
     <filebase>nano_pillar2.uda</filebase>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
     <save label="p.mass"/>
     <save label="p.volume"/>
+    <save label="p.scalefactor" />
     <save label="p.concentration" />
     <save label="g.mass"/>
     <save label="g.concentration" />
@@ -43,10 +44,10 @@
   <MaterialProperties>
        <MPM>
          <material name="electrolyte">
-           <density>1000</density> <!-- kg/m^3 -->
+           <density>1000</density> <!-- migrograms/mm^3 -->
            <constitutive_model type="water"> 
-             <bulk_modulus>1.5e6</bulk_modulus> <!-- Pa -->
-             <viscosity>.8</viscosity>
+             <bulk_modulus>1.5</bulk_modulus> <!-- micrograms/mm microsecond^2 -->
+             <viscosity>.8</viscosity> <!-- micrograms / mm microsecond -->
              <gamma>7.0</gamma>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
@@ -60,12 +61,12 @@
                <box label = "boxE">
                  <min>[0.0, 0.0, 0.0]</min>
                  <!--<max>[1.0e-6, 1.0e-6, 0.75e-6]</max>-->
-                 <max>[1.0e-3, 1.0e-3, 1.5e-3]</max>
+                 <max>[1.0, 1.0, 2.0]</max> <!-- units in mm -->
                </box>
                <cylinder label = "pillar_out">
-                 <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom>
-                 <top>[0.5e-3, 0.5e-3, 1.25e-3]</top>
-                 <radius>.25e-3</radius>
+                 <bottom>[0.5, 0.5, 0.0]</bottom> <!-- units in mm -->
+                 <top>[0.5, 0.5, 1.25]</top> <!-- units in mm -->
+                 <radius>.25</radius>
                </cylinder>
 						 </difference>
              <res>[2,2,2]</res>
@@ -78,19 +79,19 @@
          <material name="pillar">
            <density>2330</density> <!-- kg/m^3 -->
            <constitutive_model type="gao_elastic"> 
-             <bulk_modulus>      6.5e6    </bulk_modulus>  <!-- Pa -->
-             <shear_modulus>     3.9e6    </shear_modulus> <!-- Pa -->
-             <alpha>             1.0         </alpha>
+             <bulk_modulus>      6.5e3   </bulk_modulus>  <!-- -->
+             <shear_modulus>     3.9e3   </shear_modulus> <!-- -->
+             <alpha>             1.0     </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
            <diffusion_model type = "gao_diffusion">
-             <diffusivity>        1e-16    </diffusivity> <!-- m^2/s -->
+             <diffusivity>        1e-16    </diffusivity> <!-- mm^2/microsecond -->
              <!--<partial_atomic_vol> 3.3  </partial_atomic_vol> --><!-- m^3/% Atoms -->
-             <partial_atomic_vol> 1e-30  </partial_atomic_vol><!-- m^3/% Atoms -->
+             <partial_atomic_vol> 1e-30  </partial_atomic_vol><!-- mm^3/% Atoms -->
              <max_concentration>  1.0      </max_concentration> <!-- #-->
              <operating_temp>     300      </operating_temp> <!-- Kelvin -->
-             <boltzmann_const>    1.38e-23 </boltzmann_const> <!-- m^2 kg / K s^2 -->
+             <boltzmann_const>    1.38e-20 </boltzmann_const> <!-- mm^2 micrograms / K microsecond^2 -->
            </diffusion_model>
            <geom_object>
              <cylinder label = "pillar_out"/>
@@ -169,10 +170,10 @@
 	      <!-- <lower>[0.0, 0.0, 0.0]   </lower>
 	<upper>[1.0e-6, 1.0e-6, 2.25e-6]</upper> -->
         <lower>[0.0, 0.0, 0.0]   </lower>
-        <upper>[1.0e-3, 1.0e-3, 1.5e-3]</upper>
+        <upper>[1.0, 1.0, 2.0]</upper>
         <resolution>[10, 10, 15]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
-        <patches>[1,2,2]         </patches>
+        <patches>[2,2,2]         </patches>
       </Box>
     </Level>
   </Grid>
