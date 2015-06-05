@@ -113,7 +113,7 @@ namespace Uintah {
     {}
     virtual ~SolverInterface()
     {
-      for (int i=0;  i < varLabels_.size(); ++i) {
+      for (size_t i=0;  i < varLabels_.size(); ++i) {
         VarLabel::destroy(varLabels_[i]);
       }
     }
