@@ -62,6 +62,12 @@ set upsArray = ( "RMCRT_test_1L.ups" "RMCRT_ML.ups" "RMCRT_bm1_DO.ups")
 set udaArray = ( "rmcrt_1L.uda" "RMCRT_ML.uda" "RMCRT_bm1_DO.uda" )
 set descArray = ( "1L" "ML" "DO" )
 
+# Titan
+#set MPIRUN = "aprun -n $np -N 1 -d 16"
+
+set MPIRUN = "mpirun -n $np 
+
+
 if ( $test == 4 ) then
   @ x   = 1
   @ max = 4
@@ -80,9 +86,9 @@ while ( $x < $max)
   
   rm -rf $uda.00* out.$desc.gpu out.$desc.cpu >& /dev/null
   echo "GPU"
-  mpirun -np $np sus -nthreads $threads -gpu  inputs/Examples/$ups >& out.$desc.gpu
+  $MPIRUN sus -do_not_validate -nthreads $threads -gpu  inputs/Examples/$ups >& out.$desc.gpu
   echo "CPU"
-  mpirun -np $np sus -nthreads $threads       inputs/Examples/$ups >& out.$desc.cpu
+  $MPIRUN sus -do_not_validate -nthreads $threads       inputs/Examples/$ups >& out.$desc.cpu
 
   echo "compare"
   compare_uda -abs_tolerance 1e-14 -rel_tolerance 1e-14 -as_warnings $uda.000 $uda.001 >& out.$desc.compare
