@@ -372,6 +372,10 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     if( L_ID == _archesLevelIndex ){
       tsk->computes(_src_label);
       tsk->computes(VarLabel::find("radiationVolq"));
+
+      if(_RMCRT->getBool_solveBoundaryFlux()){
+        tsk->computes(VarLabel::find("boundFlux"));  
+      }
     } else {
       tsk->computes( _abskgLabel );
     }
@@ -412,6 +416,16 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
       CCVariable<double> radVolq;
       new_dw->allocateAndPut( radVolq,VarLabel::find("radiationVolq"), _matl, patch ); 
       radVolq.initialize(0.0);  // needed for coal
+
+      CCVariable<Stencil7> boundFlux;
+      if(_RMCRT->getBool_solveBoundaryFlux()){
+        new_dw->allocateAndPut( boundFlux, VarLabel::find("boundFlux"), _matl, patch );
+        for (CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+          IntVector origin = *iter;
+          boundFlux[origin].initialize(0.0);
+        }
+      }
+
     } else {
       CCVariable<double> abskg;
       new_dw->allocateAndPut( abskg, _abskgLabel, _matl, patch );
