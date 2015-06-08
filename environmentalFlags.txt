@@ -4,6 +4,7 @@ Set these like this:
  -> tcsh: setenv SCI_DEBUG ExecTimes:+
  -> bash: export SCI_DEBUG=ExecTimes:+
 To set multiple flags, use quotation marks and separate flags by a comma:
+(no spaces after commas)
  -> bash: export SCI_DEBUG=“ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+”
 
 
