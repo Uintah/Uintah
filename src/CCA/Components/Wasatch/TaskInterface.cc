@@ -85,15 +85,16 @@ typedef std::map<int,TreePtr> TreeMap;
   tcsh: setenv SCI_DEBUG WASATCH_TASKS:-
   bash: export SCI_DEBUG=WASATCH_TASKS:-
 
- To enable multiple debug flags, use a comma to separate them
-  tcsh: setenv SCI_DEBUG WASATCH_TASKS:+ WASATCH_FIELDS:+
-  bash: export SCI_DEBUG=WASATCH_TASKS:+, WASATCH_FIELDS:+
+ To enable multiple debug flags, put quotation marks around the flags and use a comma 
+ to separate them
+  tcsh: setenv SCI_DEBUG "WASATCH_TASKS:+ WASATCH_FIELDS:+"
+  bash: export SCI_DEBUG="WASATCH_TASKS:+, WASATCH_FIELDS:+"
 
  To enable one flag and disable another that was previously enabled, either
  define a new flag excluding the unwanted flag, or redefine SCI_DEBUG with a -
  after the unwanted flag
-   tcsh: setenv SCI_DEBUG WASATCH_TASKS:- WASATCH_FIELDS:+
-   bash: export SCI_DEBUG=WASATCH_TASKS:-, WASATCH_FIELDS:+
+   tcsh: setenv SCI_DEBUG "WASATCH_TASKS:- WASATCH_FIELDS:+"
+   bash: export SCI_DEBUG="WASATCH_TASKS:-, WASATCH_FIELDS:+"
 
  */
 

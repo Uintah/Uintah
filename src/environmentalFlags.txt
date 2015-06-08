@@ -3,6 +3,9 @@ This file contains the name of environmental variables that can be set
 Set these like this:
  -> tcsh: setenv SCI_DEBUG ExecTimes:+
  -> bash: export SCI_DEBUG=ExecTimes:+
+To set multiple flags, use quotation marks and separate flags by a comma:
+ -> bash: export SCI_DEBUG=“ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+”
+
 
 Name              type               Description
 ______________________________________________________________________
