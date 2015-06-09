@@ -36,10 +36,8 @@
 using namespace Uintah;
 using namespace std;
 
-
 MPMLabel::MPMLabel()
 {
-
   // Heat flux from fire
 
   heatRate_CCLabel = 
@@ -172,7 +170,19 @@ MPMLabel::MPMLabel()
   
   pRefinedLabel_preReloc  = VarLabel::create( "p.refinedMPM+",
 			ParticleVariable<int>::getTypeDescription() );
-  
+
+  pConcentrationLabel       = VarLabel::create( "p.concentration",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pConcentrationLabel_preReloc  = VarLabel::create( "p.concentration+",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pConcPreviousLabel       = VarLabel::create( "p.concPrevious",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pConcPreviousLabel_preReloc  = VarLabel::create( "p.concPrevious+",
+			ParticleVariable<double>::getTypeDescription() );
+
   pFiberDirLabel  = VarLabel::create( "p.fiberdir",
                         ParticleVariable<Vector>::getTypeDescription() );
 
@@ -286,6 +296,18 @@ MPMLabel::MPMLabel()
 
   gExternalHeatFluxLabel = VarLabel::create("g.externalHeatFlux",
                        NCVariable<double>::getTypeDescription());
+
+  gConcentrationLabel = VarLabel::create( "g.concentration",
+                        NCVariable<double>::getTypeDescription());
+
+  gConcentrationNoBCLabel = VarLabel::create( "g.concentrationnobc",
+                        NCVariable<double>::getTypeDescription());
+
+  gConcentrationRateLabel = VarLabel::create( "g.concentrationRate",
+                        NCVariable<double>::getTypeDescription());
+
+  gHydrostaticStressLabel = VarLabel::create("g.hydrostaticStressRD",
+            NCVariable<double>::getTypeDescription());
 
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
@@ -736,6 +758,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pLocalizedMPMLabel_preReloc);
   VarLabel::destroy(pRefinedLabel);
   VarLabel::destroy(pRefinedLabel_preReloc);
+  VarLabel::destroy(pConcentrationLabel);
+  VarLabel::destroy(pConcentrationLabel_preReloc);
+  VarLabel::destroy(pConcPreviousLabel);
+  VarLabel::destroy(pConcPreviousLabel_preReloc);
   VarLabel::destroy(pScratchLabel);
   VarLabel::destroy(pSizeLabel);
   VarLabel::destroy(pSizeLabel_preReloc);
@@ -768,6 +794,10 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gHeatFluxLabel);
   VarLabel::destroy(gExternalHeatRateLabel);
   VarLabel::destroy(gExternalHeatFluxLabel);
+  VarLabel::destroy(gConcentrationLabel);
+  VarLabel::destroy(gConcentrationNoBCLabel);
+  VarLabel::destroy(gConcentrationRateLabel);
+  VarLabel::destroy(gHydrostaticStressLabel);
   VarLabel::destroy(NC_CCweightLabel);
   VarLabel::destroy(gThermalContactTemperatureRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
