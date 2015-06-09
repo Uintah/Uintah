@@ -157,19 +157,20 @@ namespace Uintah {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c];
+          face_values.minus_left = phic;
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c];
+          face_values.plus_right = phic;
         }
         
         return face_values;
@@ -182,19 +183,20 @@ namespace Uintah {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c]/epW;
+          face_values.minus_left = phic/epW;
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c]/epW;
+          face_values.plus_right = phic/epW;
         }
         
         return face_values;
@@ -207,19 +209,20 @@ namespace Uintah {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = -epW*phi[c];
+          face_values.minus_left = -epW*phic;
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = -epW*phi[c];
+          face_values.plus_right = -epW*phic;
         }
         
         return face_values;
@@ -233,19 +236,20 @@ namespace Uintah {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c];
+          face_values.minus_left = phic;
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c];
+          face_values.plus_right = phic;
         }
         
         return face_values;
@@ -258,19 +262,20 @@ namespace Uintah {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c]/epW;
+          face_values.minus_left = phic/epW;
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c]/epW;
+          face_values.plus_right = phic/epW;
         }
         
         return face_values;
@@ -283,19 +288,20 @@ namespace Uintah {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = -epW*phi[c];
+          face_values.minus_left = -epW*phic;
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = -epW*phi[c];
+          face_values.plus_right = -epW*phic;
         }
         
         return face_values;
@@ -318,29 +324,32 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxm] - phi[cxmm]);
-          nxp = (phi[c] - phi[cxm]);
+          nxm = (phicxm - phi[cxmm]);
+          nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
-          face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+          face_values.minus_left = phicxm + 1.0/2.0 * delN;
         } else {
           face_values.minus_left = face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxp] - phi[c]);
-          nxp = (phi[cxpp] - phi[cxp]);
+        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {  //check if wall is present
+          nxm = (phicxp - phic);
+          nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
-          face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+          face_values.plus_right = phicxp - 1.0/2.0 * delN;
         } else {
           face_values.plus_right = face_values.plus_left;
         }
@@ -367,29 +376,32 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxm] - phi[cxmm]);
-          nxp = (phi[c] - phi[cxm]);
+          nxm = (phicxm - phi[cxmm]);
+          nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
-          face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+          face_values.minus_left = phicxm + 1.0/2.0 * delN;
         } else {
           face_values.minus_left = face_values.minus_right/epW;
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxp] - phi[c]);
-          nxp = (phi[cxpp] - phi[cxp]);
+          nxm = (phicxp - phic);
+          nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
-          face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+          face_values.plus_right = phicxp - 1.0/2.0 * delN;
         } else {
           face_values.plus_right = face_values.plus_left/epW;
         }
@@ -416,18 +428,21 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxm] - phi[cxmm]);
-          nxp = (phi[c] - phi[cxm]);
+          nxm = (phicxm - phi[cxmm]);
+          nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
           face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
         } else {
@@ -435,10 +450,10 @@ namespace Uintah {
         }
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxp] - phi[c]);
-          nxp = (phi[cxpp] - phi[cxp]);
+          nxm = (phicxp - phic);
+          nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
-          face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+          face_values.plus_right = phicxp - 1.0/2.0 * delN;
         } else {
           face_values.plus_right = -epW*face_values.plus_left;
         }
@@ -465,23 +480,26 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
           if (isBoundary.minus ) {
-            face_values.minus_left = phi[cxm];
+            face_values.minus_left = phicxm;
           } else {
-            nxm = (phi[cxm] - phi[cxmm]);
-            nxp = (phi[c] - phi[cxm]);
+            nxm = (phicxm - phi[cxmm]);
+            nxp = (phic - phicxm);
             delN = minMod(nxm, nxp);
-            face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+            face_values.minus_left = phicxm + 1.0/2.0 * delN;
           }
         } else {
           face_values.minus_left = face_values.minus_right;
@@ -489,12 +507,12 @@ namespace Uintah {
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
           if (isBoundary.plus ) {
-            face_values.plus_right = phi[cxp];
+            face_values.plus_right = phicxp;
           } else {
-            nxm = (phi[cxp] - phi[c]);
-            nxp = (phi[cxpp] - phi[cxp]);
+            nxm = (phicxp - phic);
+            nxp = (phi[cxpp] - phicxp);
             delN = minMod(nxm, nxp);
-            face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+            face_values.plus_right = phicxp - 1.0/2.0 * delN;
           }
         } else {
           face_values.plus_right = face_values.plus_left;
@@ -522,23 +540,26 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
           if (isBoundary.minus ) {
-            face_values.minus_left = phi[cxm];
+            face_values.minus_left = phicxm;
           } else {
-            nxm = (phi[cxm] - phi[cxmm]);
-            nxp = (phi[c] - phi[cxm]);
+            nxm = (phicxm - phi[cxmm]);
+            nxp = (phic - phicxm);
             delN = minMod(nxm, nxp);
-            face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+            face_values.minus_left = phicxm + 1.0/2.0 * delN;
           }
         } else {
           face_values.minus_left = face_values.minus_right/epW;
@@ -546,12 +567,12 @@ namespace Uintah {
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
           if (isBoundary.plus ) {
-            face_values.plus_right = phi[cxp];
+            face_values.plus_right = phicxp;
           } else {
-            nxm = (phi[cxp] - phi[c]);
-            nxp = (phi[cxpp] - phi[cxp]);
+            nxm = (phicxp - phic);
+            nxp = (phi[cxpp] - phicxp);
             delN = minMod(nxm, nxp);
-            face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+            face_values.plus_right = phicxp - 1.0/2.0 * delN;
           }
         } else {
           face_values.plus_right = face_values.plus_left/epW;
@@ -579,23 +600,26 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
         if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
           if (isBoundary.minus ) {
-            face_values.minus_left = phi[cxm];
+            face_values.minus_left = phicxm;
           } else {
-            nxm = (phi[cxm] - phi[cxmm]);
-            nxp = (phi[c] - phi[cxm]);
+            nxm = (phicxm - phi[cxmm]);
+            nxp = (phic - phicxm);
             delN = minMod(nxm, nxp);
-            face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+            face_values.minus_left = phicxm + 1.0/2.0 * delN;
           }
         } else {
           face_values.minus_left = -epW*face_values.minus_right;
@@ -603,12 +627,12 @@ namespace Uintah {
         
         if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
           if (isBoundary.plus ) {
-            face_values.plus_right = phi[cxp];
+            face_values.plus_right = phicxp;
           } else {
-            nxm = (phi[cxp] - phi[c]);
-            nxp = (phi[cxpp] - phi[cxp]);
+            nxm = (phicxp - phic);
+            nxp = (phi[cxpp] - phicxp);
             delN = minMod(nxm, nxp);
-            face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+            face_values.plus_right = phicxp - 1.0/2.0 * delN;
           }
         } else {
           face_values.plus_right = -epW*face_values.plus_left;
