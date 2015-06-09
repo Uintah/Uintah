@@ -11,8 +11,8 @@
        <maxTime>4</maxTime>
        <initTime>0.0</initTime>
        <delt_min>1.0e-16</delt_min>
-       <delt_max>1.0e-4</delt_max>
-       <!--<max_Timesteps>3</max_Timesteps> -->
+       <delt_max>1.0e-7</delt_max>
+       <max_Timesteps>20000</max_Timesteps>
        <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
   <DataArchiver>
@@ -29,6 +29,7 @@
     <save label="g.concentration" />
     <save label="g.velocity"/>
     <save label="maxHydroStress1" />
+    <save label="minHydroStress1" />
   </DataArchiver>
 
   <MPM>
@@ -77,15 +78,15 @@
          <material name="pillar">
            <density>2330</density> <!-- kg/m^3 -->
            <constitutive_model type="gao_elastic"> 
-             <bulk_modulus>      6.5e6   </bulk_modulus>  <!-- -->
-             <shear_modulus>     3.9e6   </shear_modulus> <!-- -->
+             <bulk_modulus>      6.5e3   </bulk_modulus>  <!-- -->
+             <shear_modulus>     3.9e3   </shear_modulus> <!-- -->
              <alpha>             1.0     </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
            <diffusion_model type = "gao_diffusion">
              <diffusivity>        1e-16    </diffusivity> <!-- mm^2/microsecond -->
-             <partial_atomic_vol> 1e-30  </partial_atomic_vol><!-- mm^3/% Atoms -->
+             <partial_atomic_vol> 1e-21  </partial_atomic_vol><!-- mm^3/% Atoms -->
              <max_concentration>  1.0      </max_concentration> <!-- #-->
              <operating_temp>     300      </operating_temp> <!-- Kelvin -->
              <boltzmann_const>    1.38e-20 </boltzmann_const> <!-- mm^2 micrograms / K microsecond^2 -->
@@ -110,37 +111,31 @@
        
   <Grid>
     <BoundaryConditions>
-      <Face side = "x-">
-        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 0.0  </value>
-        </BCType>
-      </Face>
       <Face side = "x+">
-        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
       </Face>
+      <Face side = "x-">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+				                      <value>[0.0, 0.0, 0.0]</value>
+				</BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>
       <Face side = "y-">
-        <BCType id = "all" label = "Velocity"     var = "symmetry"> </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "all" label = "Velocity"     var = "symmetry"> </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "all" label = "Velocity"     var = "symmetry"> </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "all" label = "Velocity"     var = "symmetry"> </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "symmetry"> </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
       </Face>
     </BoundaryConditions>
     <Level>
