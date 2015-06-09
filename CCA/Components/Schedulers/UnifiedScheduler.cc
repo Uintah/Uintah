@@ -241,22 +241,11 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
       std::cout << "   Using " << numDevices_ << "/" << availableDevices << " available GPU(s)" << std::endl;
       
-      if (numDevices_ > 1){
-        std::ostringstream warn;
-        warn << "ERROR: The results computed using multiple GPUs != 1 GPU.\n";
-        warn << "        A GPU enable task will behave as if it's running when it isn't.\n";
-        warn << "        The computed quantities will be incorrect.\n\n";
-        warn << "        To use one GPU set: \n";
-        warn << "           SCI_DEBUG SingleDevice:+\n";
-        throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
-      }
-      
-      if (numDevices_ == 1){  // we may want to output for all devices -Todd
-        cudaDeviceProp deviceProp;
-        int devID = 0;
-        CUDA_RT_SAFE_CALL(retVal = cudaGetDevice(&devID));
-        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, devID));
-        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+      for (int device_id = 0; device_id < numDevices_; ++ device_id) {
+        cudaDeviceProp device_prop;
+        CUDA_RT_SAFE_CALL(retVal = cudaGetDevice(&device_id));
+        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
+        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n", device_id, device_prop.name, device_prop.major, device_prop.minor);
       }
     }
 #endif
