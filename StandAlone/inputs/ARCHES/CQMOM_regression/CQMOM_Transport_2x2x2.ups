@@ -593,7 +593,7 @@
 
       </ExplicitSolver>
       
-      <CQMOM type="unweighted" partvel="false">
+      <CQMOM partvel="false">
         <!-- base information-->
         <NumberInternalCoordinates> 3 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2,2] </QuadratureNodes>

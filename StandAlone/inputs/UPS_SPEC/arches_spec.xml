@@ -1590,11 +1590,7 @@
 
       <!--CQMOM Block -->
       <CQMOM                            spec="OPTIONAL NO_DATA"
-                                        attribute1="type REQUIRED STRING 'normalized, unweighted'"
-                                        attribute2="partvel REQUIRED BOOLEAN"> <!-- USE PARTICLE VELOCITY OR USE ST << 1-->
-        <Models                         spec="OPTIONAL NO_DATA">
-          <!-- insert future source terms/models here -->
-        </Models>
+                                        attribute1="partvel REQUIRED BOOLEAN"> <!-- USE PARTICLE VELOCITY OR USE ST << 1-->
         <NumberInternalCoordinates      spec="REQUIRED INTEGER"/>
         <QuadratureNodes                spec="REQUIRED MULTIPLE_INTEGERS"/> <!-- this is per direction -->
         <CutOff                         spec="OPTIONAL DOUBLE"/>
