@@ -874,14 +874,18 @@ namespace Uintah {
         if (a[i + nNodes*velIndex].plus_left > 0.0 && w[i].plus_left > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].plus_left),momentIndex[m] );
+            for ( int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].plus_left;
+            }
           }
           hPlus += w[i].plus_left * a[i + nNodes*velIndex].plus_left * nodeVal; //add hplus
         }
         if ( a[i + nNodes*velIndex].plus_right < 0.0 && w[i].plus_right > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].plus_right),momentIndex[m] );
+            for (int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].plus_right;
+            }
           }
           hMinus += w[i].plus_right * a[i + nNodes*velIndex].plus_right * nodeVal; //add hminus
         }
@@ -894,14 +898,18 @@ namespace Uintah {
         if (a[i + nNodes*velIndex].minus_left > 0.0 && w[i].minus_left > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].minus_left),momentIndex[m] );
+            for (int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].minus_left;
+            }
           }
           hPlus += w[i].minus_left * a[i + nNodes*velIndex].minus_left * nodeVal; //add hplus
         }
         if ( a[i + nNodes*velIndex].minus_right < 0.0 && w[i].minus_right > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].minus_right),momentIndex[m] );
+            for (int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].minus_right;
+            }
           }
           hMinus += w[i].minus_right * a[i + nNodes*velIndex].minus_right * nodeVal; //add hminus
         }
