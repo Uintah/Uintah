@@ -11,7 +11,7 @@
        <maxTime>4</maxTime>
        <initTime>0.0</initTime>
        <delt_min>1.0e-16</delt_min>
-       <delt_max>1.0e-4</delt_max>
+       <delt_max>1.0e-7</delt_max>
        <!--<max_Timesteps>3</max_Timesteps> -->
        <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
@@ -29,6 +29,7 @@
     <save label="g.concentration" />
     <save label="g.velocity"/>
 		<save label="maxHydroStress1" />
+		<save label="minHydroStress1" />
   </DataArchiver>
 
   <MPM>
@@ -46,7 +47,7 @@
          <material name="electrolyte">
            <density>1000</density> <!-- migrograms/mm^3 -->
            <constitutive_model type="water"> 
-             <bulk_modulus>1.5</bulk_modulus> <!-- micrograms/mm microsecond^2 -->
+             <bulk_modulus>1.5e3</bulk_modulus> <!-- micrograms/mm microsecond^2 -->
              <viscosity>.8</viscosity> <!-- micrograms / mm microsecond -->
              <gamma>7.0</gamma>
            </constitutive_model>
@@ -60,13 +61,12 @@
 					   <difference>
                <box label = "boxE">
                  <min>[0.0, 0.0, 0.0]</min>
-                 <!--<max>[1.0e-6, 1.0e-6, 0.75e-6]</max>-->
-                 <max>[1.0, 1.0, 2.0]</max> <!-- units in mm -->
+                 <max>[1.0e-3, 1.0e-3, 2.0e-3]</max> <!-- units in mm -->
                </box>
                <cylinder label = "pillar_out">
-                 <bottom>[0.5, 0.5, 0.0]</bottom> <!-- units in mm -->
-                 <top>[0.5, 0.5, 1.25]</top> <!-- units in mm -->
-                 <radius>.25</radius>
+                 <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom> <!-- units in mm -->
+                 <top>[0.5e-3, 0.5e-3, 1.25e-3]</top> <!-- units in mm -->
+                 <radius>.25e-3</radius>
                </cylinder>
 						 </difference>
              <res>[2,2,2]</res>
@@ -88,7 +88,7 @@
            <diffusion_model type = "gao_diffusion">
              <diffusivity>        1e-16    </diffusivity> <!-- mm^2/microsecond -->
              <!--<partial_atomic_vol> 3.3  </partial_atomic_vol> --><!-- m^3/% Atoms -->
-             <partial_atomic_vol> 1e-30  </partial_atomic_vol><!-- mm^3/% Atoms -->
+             <partial_atomic_vol> 1e-21  </partial_atomic_vol><!-- mm^3/% Atoms -->
              <max_concentration>  1.0      </max_concentration> <!-- #-->
              <operating_temp>     300      </operating_temp> <!-- Kelvin -->
              <boltzmann_const>    1.38e-20 </boltzmann_const> <!-- mm^2 micrograms / K microsecond^2 -->
@@ -114,41 +114,31 @@
   <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "z-">
-        <BCType id = "0" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "1" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
@@ -157,23 +147,19 @@
         </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "Neumann">
-                              <value> 0.0  </value>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
         </BCType>
       </Face>
     </BoundaryConditions>
     <Level>
       <Box label="1">
-	      <!-- <lower>[0.0, 0.0, 0.0]   </lower>
-	<upper>[1.0e-6, 1.0e-6, 2.25e-6]</upper> -->
         <lower>[0.0, 0.0, 0.0]   </lower>
-        <upper>[1.0, 1.0, 2.0]</upper>
+        <upper>[1.0e-3, 1.0e-3, 2.0e-3]</upper>
         <resolution>[10, 10, 15]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
-        <patches>[2,2,2]         </patches>
+        <patches>[1,2,2]         </patches>
       </Box>
     </Level>
   </Grid>

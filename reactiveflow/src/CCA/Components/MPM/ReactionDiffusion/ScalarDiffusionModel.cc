@@ -46,6 +46,7 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
 
   ps->require("diffusivity", diffusivity);
   ps->require("max_concentration", max_concentration);
+	min_concentration = 0;
 
   if(d_Mflag->d_8or27==8){
     NGP=1;
@@ -420,6 +421,7 @@ void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
 
     pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
     pConcentrationNew[idx] = min(pConcentrationNew[idx],max_concentration);
+    pConcentrationNew[idx] = max(pConcentrationNew[idx],min_concentration);
     pConcPreviousNew[idx]  = pConcentration[idx];
   }
   delete interpolator;
