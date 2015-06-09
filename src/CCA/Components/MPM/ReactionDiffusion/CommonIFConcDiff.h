@@ -59,25 +59,28 @@ namespace Uintah {
     virtual void interpolateParticlesToGrid(const Patch* patch,
                                             DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+#if 0
     virtual void scheduleComputeFlux(Task* task, const PatchSet* patch) const;
 
     virtual void computeFlux(const Patch* patch, DataWarehouse* old_dw,
 		                         DataWarehouse* new_dw);
 
     virtual void scheduleComputeDivergence(Task* task, const PatchSet* patch) const;
+#endif
 
     virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
 		                               DataWarehouse* new_dw);
 
+#if 0
     virtual void scheduleInterpolateToParticlesAndUpdate(Task* task,
-		                                                     const PatchSet* patch) const;
+                                                   const PatchSet* patch) const;
 
     virtual void interpolateToParticlesAndUpdate(const Patch* patch, 
                                                  DataWarehouse* old_dw,
                                                  DataWarehouse* new_dw);
 
-#if 0
-    virtual void scheduleFinalParticleUpdate(Task* task, const PatchSet* patch) const;
+    virtual void scheduleFinalParticleUpdate(Task* task,
+                                             const PatchSet* patch) const;
 
     virtual void finalParticleUpdate(const Patch* patch, DataWarehouse* old_dw,
 		                                 DataWarehouse* new_dw);

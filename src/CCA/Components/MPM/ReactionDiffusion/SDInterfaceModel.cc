@@ -81,30 +81,7 @@ void SDInterfaceModel::initializeSDMData(const Patch* patch, DataWarehouse* new_
   }
 }
 
-void SDInterfaceModel::scheduleInterpolateParticlesToGrid(Task* task,
-                                                          const PatchSet* patches) const
-{
-  int numMPM = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    sdm->scheduleInterpolateParticlesToGrid(task, mpm_matl, patches);
-  }
-}
-
-void SDInterfaceModel::interpolateParticlesToGrid(const Patch* patch,
-                                                  DataWarehouse* old_dw,
-                                                  DataWarehouse* new_dw)
-{
-  int numMPM = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMPM; m++){
-    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-    ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-    sdm->interpolateParticlesToGrid(patch, mpm_matl, old_dw, new_dw);
-  }
-}
-
-
+#if 0
 void SDInterfaceModel::scheduleComputeFlux(Task* task, const PatchSet* patches) const
 {
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -113,7 +90,6 @@ void SDInterfaceModel::scheduleComputeFlux(Task* task, const PatchSet* patches) 
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->scheduleComputeFlux(task, mpm_matl, patches);
   }
-
 }
 
 void SDInterfaceModel::computeFlux(const Patch* patch, DataWarehouse* old_dw,
@@ -136,8 +112,8 @@ void SDInterfaceModel::scheduleComputeDivergence(Task* task, const PatchSet* pat
     ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
     sdm->scheduleComputeDivergence(task, mpm_matl, patches);
   }
-
 }
+#endif
 
 void SDInterfaceModel::computeDivergence(const Patch* patch, DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
@@ -151,6 +127,7 @@ void SDInterfaceModel::computeDivergence(const Patch* patch, DataWarehouse* old_
   }
 }
 
+#if 0
 void SDInterfaceModel::scheduleInterpolateToParticlesAndUpdate(Task* task,
 		                                                           const PatchSet* patches) const
 {
@@ -177,7 +154,6 @@ void SDInterfaceModel::interpolateToParticlesAndUpdate(const Patch* patch,
 
 }
 
-#if 0
 void SDInterfaceModel::scheduleFinalParticleUpdate(Task* task, const PatchSet* patches) const
 {
   int numMPM = d_sharedState->getNumMPMMatls();

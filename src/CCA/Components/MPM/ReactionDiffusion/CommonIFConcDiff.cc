@@ -290,7 +290,7 @@ void CommonIFConcDiff::interpolateParticlesToGrid(const Patch* patch, DataWareho
 
 }
 
-
+#if 0
 void CommonIFConcDiff::scheduleComputeFlux(Task* task, const PatchSet* patches) const
 {
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -324,8 +324,10 @@ void CommonIFConcDiff::scheduleComputeDivergence(Task* task, const PatchSet* pat
   }
 
 }
+#endif
 
-void CommonIFConcDiff::computeDivergence(const Patch* patch, DataWarehouse* old_dw,
+void CommonIFConcDiff::computeDivergence(const Patch* patch,
+                                         DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
   int numMPM = d_sharedState->getNumMPMMatls();
@@ -350,8 +352,8 @@ void CommonIFConcDiff::computeDivergence(const Patch* patch, DataWarehouse* old_
   for(int m = 0; m < numMPM; m++){
     int dwi = d_sharedState->getMPMMaterial(m)->getDWIndex();
 
-    new_dw->get(gmass,     d_lb->gMassLabel,                dwi, patch, gnone, 0);
-    new_dw->get(gConcRate, d_rdlb->gConcentrationRateLabel, dwi, patch, gnone, 0);
+    new_dw->get(gmass,     d_lb->gMassLabel,               dwi, patch, gnone,0);
+    new_dw->get(gConcRate, d_rdlb->gConcentrationRateLabel,dwi, patch, gnone,0);
 
     for(NodeIterator iter=patch->getExtraNodeIterator();
                      !iter.done();iter++){
@@ -374,6 +376,7 @@ void CommonIFConcDiff::computeDivergence(const Patch* patch, DataWarehouse* old_
   }
 }
 
+#if 0
 void CommonIFConcDiff::scheduleInterpolateToParticlesAndUpdate(Task* task,
 		                                                           const PatchSet* patches) const
 {
@@ -400,7 +403,6 @@ void CommonIFConcDiff::interpolateToParticlesAndUpdate(const Patch* patch,
 
 }
 
-#if 0
 void CommonIFConcDiff::scheduleFinalParticleUpdate(Task* task, const PatchSet* patches) const
 {
   int numMPM = d_sharedState->getNumMPMMatls();

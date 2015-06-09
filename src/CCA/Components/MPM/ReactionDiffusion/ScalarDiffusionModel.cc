@@ -30,10 +30,16 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/AMR.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/DbgOutput.h>
+#include <Core/Util/DebugStream.h>
 
 #include <iostream>
 using namespace std;
 using namespace Uintah;
+
+static DebugStream cout_doing("AMRMPM", false);
 
 
 ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFlags* Mflag, string diff_type)
@@ -63,15 +69,26 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
 
   diffusion_type = diff_type;
   include_hydrostress = false;
+
+  d_one_matl = scinew MaterialSubset();
+  d_one_matl->add(0);
+  d_one_matl->addReference();
 }
 
 ScalarDiffusionModel::~ScalarDiffusionModel() {
   delete d_lb;
   delete d_rdlb;
+
+  if (d_one_matl->removeReference())
+    delete d_one_matl;
 }
 
 string ScalarDiffusionModel::getDiffusionType(){
   return diffusion_type;
+}
+
+double ScalarDiffusionModel::getMaxConcentration(){
+  return max_concentration;
 }
 
 void ScalarDiffusionModel::setIncludeHydroStress(bool value){
@@ -115,24 +132,24 @@ void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
 }
 
 void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
-                                                             const MPMMaterial* matl,
-                                                             const PatchSet* patch) const
+                                                   const MPMMaterial* matl,
+                                                   const PatchSet* patch) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
   Ghost::GhostType  gan = Ghost::AroundNodes;
-  Ghost::GhostType  gnone = Ghost::None;
+//  Ghost::GhostType  gnone = Ghost::None;
 
-  task->requires(Task::OldDW, d_lb->pXLabel,                  matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pMassLabel,               matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pSizeLabel,               matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gan, NGP);
-  task->requires(Task::OldDW, d_lb->pStressLabel,             matlset, gan, NGP);
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,    matlset, gan, NGP);
-  task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
+  task->requires(Task::OldDW, d_lb->pXLabel,                 matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pMassLabel,              matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pSizeLabel,              matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pStressLabel,            matlset, gan, NGP);
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,   matlset, gan, NGP);
+//task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
 
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
-  task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
+  task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
 }
 
 void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
@@ -141,7 +158,6 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
                                                       DataWarehouse* new_dw)
 {
   Ghost::GhostType  gan = Ghost::AroundNodes;
-  Ghost::GhostType  gnone = Ghost::None;
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
 
@@ -150,11 +166,11 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
 
   constParticleVariable<Point>  px;
   constParticleVariable<double> pmass;
-  constParticleVariable<double> pConcentration;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pFOld;
+  constParticleVariable<double> pConcentration;
   constParticleVariable<Matrix3> pStress;
-  constNCVariable<double>       gmass;
+//  constNCVariable<double>       gmass;
 
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
@@ -162,14 +178,11 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
 
   old_dw->get(px,             d_lb->pXLabel,                  pset);
   old_dw->get(pmass,          d_lb->pMassLabel,               pset);
-  old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,    pset);
   old_dw->get(psize,          d_lb->pSizeLabel,               pset);
   old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
+  old_dw->get(pConcentration, d_rdlb->pConcentrationLabel,    pset);
   old_dw->get(pStress,        d_lb->pStressLabel,             pset);
 
-  new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
-
-  double phydrostress;
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> ghydrostaticstress;
@@ -187,46 +200,187 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
 
   int n8or27 = d_Mflag->d_8or27;
   double one_third = 1./3.;
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+  for (ParticleSubset::iterator iter  = pset->begin(); 
+                                iter != pset->end(); iter++){
     particleIndex idx = *iter;
 
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
-    phydrostress = one_third*pStress[idx].Trace();
+    double phydrostress = one_third*pStress[idx].Trace();
 
     IntVector node;
     for(int k = 0; k < n8or27; k++) {
       node = ni[k];
       if(patch->containsNode(node)) {
-        ghydrostaticstress[node] += phydrostress * pmass[idx] * S[k];
-        gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
+        ghydrostaticstress[node] += phydrostress        * pmass[idx] * S[k];
+        gconcentration[node]     += pConcentration[idx] * pmass[idx] * S[k];
       }
     }
   }
 
-  for(NodeIterator iter=patch->getExtraNodeIterator();
-                   !iter.done();iter++){
-    IntVector c = *iter; 
-    ghydrostaticstress[c]   /= gmass[c];
-    gconcentration[c]       /= gmass[c];
-    gconcentrationNoBC[c]    = gconcentration[c];
-  }
-
-  MPMBoundCond bc;
-  bc.setBoundaryCondition(patch,dwi,"SD-Type",gconcentration, d_Mflag->d_interpolator_type);
+  // Mass Normalization takes place in 
+  // ScalarDiffusion::MassNormalizeConcentration() task
 
   delete interpolator;
 }
 
-void ScalarDiffusionModel::scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
-		                                                const PatchSet* patch) const
+#if 0
+//  You need particle data from the coarse levels at the CFI on the fine level
+void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid_CFI(Task* t,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet* patch) const
 {
+  const MaterialSubset* matlset = matl->thisMaterial();
+  Ghost::GhostType  gac  = Ghost::AroundCells;
+  Task::MaterialDomainSpec  ND  = Task::NormalDomain;
 
+/*`==========TESTING==========*/
+    // Linear 1 coarse Level cells:
+    // Gimp:  2 coarse level cells:
+//    int npc = d_nPaddingCells_Coarse;
+    int npc = 1;  // For now...
+/*===========TESTING==========`*/
+
+  #define allPatches 0
+  //__________________________________
+  // Note: were using nPaddingCells to extract the region of coarse level
+  // particles around every fine patch.   Technically, these are ghost
+  // cells but somehow it works.
+  t->requires(Task::NewDW, d_lb->gZOILabel,                d_one_matl,  Ghost::None, 0);
+  t->requires(Task::OldDW, d_lb->pXLabel,                  allPatches, Task::CoarseLevel,matlset, ND, gac, npc);
+  t->requires(Task::OldDW, d_lb->pMassLabel,               allPatches, Task::CoarseLevel,matlset, ND, gac, npc);
+  t->requires(Task::OldDW, d_rdlb->pConcentrationLabel,    allPatches, Task::CoarseLevel,matlset, ND, gac, npc);
+  t->requires(Task::OldDW, d_lb->pStressLabel,             allPatches, Task::CoarseLevel,matlset, ND, gac, npc);
+//  t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, allPatches, Task::CoarseLevel,matlset, ND, gac, npc);
+//  t->requires(Task::OldDW, d_lb->pSizeLabel,               allPatches, Task::CoarseLevel,matlset, ND, gac, npc);
+
+  t->modifies(d_rdlb->gConcentrationLabel,     matlset);
+  t->modifies(d_rdlb->gHydrostaticStressLabel, matlset);
 }
 
-void ScalarDiffusionModel::computeFlux(const Patch* patch, const MPMMaterial* matl,
-                                            DataWarehouse* old_dw, DataWarehouse* new_dw)
+void ScalarDiffusionModel::interpolateParticlesToGrid_CFI(
+                                                 const PatchSubset* finePatches,
+                                                 const MPMMaterial* mpm_matl,
+                                                 DataWarehouse* old_dw,
+                                                 DataWarehouse* new_dw)
 {
+  const Level* fineLevel = getLevel(finePatches);
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  IntVector refineRatio(fineLevel->getRefinementRatio());
 
+  for(int fp=0; fp<finePatches->size(); fp++){
+    const Patch* finePatch = finePatches->get(fp);
+    printTask(finePatches,finePatch,cout_doing,
+                       "Doing ScalarDiffusion::interpolateParticlesToGrid_CFI");
+
+    ParticleInterpolator* interpolator = 
+                                      d_Mflag->d_interpolator->clone(finePatch);
+
+    constNCVariable<Stencil7> zoi_fine;
+    new_dw->get(zoi_fine, d_lb->gZOILabel, 0, finePatch, Ghost::None, 0 );
+
+    // Determine extents for coarser level particle data
+    // Linear Interpolation:  1 layer of coarse level cells
+    // Gimp Interpolation:    2 layers
+/*==========TESTING==========*/
+//    IntVector nLayers(d_nPadCellsCoarse,d_nPadCellsCoarse,d_nPadCellsCoarse);
+    IntVector nLayers(1, 1, 1);  // For now... JG
+    IntVector nPaddingCells = nLayers * (fineLevel->getRefinementRatio());
+/*===========TESTING==========*/
+
+    int nGhostCells = 0;
+    bool returnExclusiveRange=false;
+    IntVector cl_tmp, ch_tmp, fl, fh;
+
+    getCoarseLevelRange(finePatch, coarseLevel, cl_tmp, ch_tmp, fl, fh,
+                        nPaddingCells, nGhostCells,returnExclusiveRange);
+
+    // expand cl_tmp when a neighor patch exists.
+    // This patch owns the low nodes.
+    // You need particles from the neighbor patch.
+    cl_tmp -= finePatch->neighborsLow() * nLayers;
+
+    // find the coarse patches under the fine patch.
+    // You must add a single layer of padding cells.
+    int padding = 1;
+    Level::selectType coarsePatches;
+    finePatch->getOtherLevelPatches(-1, coarsePatches, padding);
+
+    int dwi = mpm_matl->getDWIndex();
+
+    // get fine level nodal data
+    NCVariable<double> gMass_fine;
+    NCVariable<double> gConc_fine;
+    NCVariable<double> gHStress_fine;
+
+    new_dw->getModifiable(gMass_fine,d_lb->gMassLabel,           dwi,finePatch);
+    new_dw->getModifiable(gConc_fine,d_rdlb->gConcentrationLabel,dwi,finePatch);
+    new_dw->getModifiable(gHStress_fine,
+                                 d_rdlb->gHydrostaticStressLabel,dwi,finePatch);
+
+    // loop over the coarse patches under the fine patches.
+    for(int cp=0; cp<coarsePatches.size(); cp++){
+      const Patch* coarsePatch = coarsePatches[cp];
+
+      // get coarse level particle data
+      constParticleVariable<Point>  pX_coarse;
+      constParticleVariable<double> pMass_coarse;
+      constParticleVariable<double> pConc_coarse;
+      constParticleVariable<Matrix3> pStress_coarse;
+//    constParticleVariable<Matrix3> pDefMeasure_coarse;
+
+      // coarseLow and coarseHigh cannot lie outside of the coarse patch
+      IntVector cl = Max(cl_tmp, coarsePatch->getCellLowIndex());
+      IntVector ch = Min(ch_tmp, coarsePatch->getCellHighIndex());
+
+      ParticleSubset* pset=0;
+
+      pset = old_dw->getParticleSubset(dwi, cl, ch,coarsePatch,d_lb->pXLabel);
+      old_dw->get(pX_coarse,            d_lb->pXLabel,                  pset);
+      old_dw->get(pMass_coarse,         d_lb->pMassLabel,               pset);
+      old_dw->get(pConc_coarse,         d_rdlb->pConcentrationLabel,    pset);
+      old_dw->get(pStress_coarse,       d_lb->pStressLabel,             pset);
+//    old_dw->get(pDefMeasure_coarse,   d_lb->pDeformationMeasureLabel, pset);
+
+      double one_third = 1./3.;
+      for (ParticleSubset::iterator iter  = pset->begin();
+                                    iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        // Get the node indices that surround the fine patch cell
+        vector<IntVector> ni;
+        vector<double> S;
+
+        double ConcMass         = pConc_coarse[idx]*pMass_coarse[idx];
+        double phydrostressmass = one_third*pStress_coarse[idx].Trace()
+                                           *pMass_coarse[idx];
+
+        interpolator->findCellAndWeights_CFI(pX_coarse[idx],ni,S,zoi_fine);
+
+        // Add each particle's contribution to the local mass & velocity 
+        IntVector fineNode;
+        for(int k = 0; k < (int) ni.size(); k++) {
+          fineNode = ni[k];
+          gConc_fine[fineNode]       += ConcMass         * S[k];
+          gHStress_fine[fineNode]    += phydrostressmass * S[k];
+        }
+      }  // End of particle loop
+    }  // loop over coarse patches
+    delete interpolator;
+  }  // End loop over fine patches
+}
+#endif
+
+void ScalarDiffusionModel::scheduleComputeFlux(Task* task,
+                                               const MPMMaterial* matl, 
+		                               const PatchSet* patch) const
+{
+}
+
+void ScalarDiffusionModel::computeFlux(const Patch* patch,
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw)
+{
 }
 
 void ScalarDiffusionModel::scheduleComputeDivergence(Task* task, 
@@ -352,6 +506,7 @@ void ScalarDiffusionModel::computeDivergence(const Patch* patch,
   }
 }
 
+#if 0
 void ScalarDiffusionModel::scheduleInterpolateToParticlesAndUpdate(Task* task,
                                                            const MPMMaterial* matl,     
                                                            const PatchSet* patch) const
@@ -372,9 +527,9 @@ void ScalarDiffusionModel::scheduleInterpolateToParticlesAndUpdate(Task* task,
 }
 
 void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
-                                                           const MPMMaterial* matl,
-                                                           DataWarehouse* old_dw,
-                                                           DataWarehouse* new_dw)
+                                                        const MPMMaterial* matl,
+                                                        DataWarehouse* old_dw,
+                                                        DataWarehouse* new_dw)
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   int dwi = matl->getDWIndex();
@@ -423,18 +578,5 @@ void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
     pConcPreviousNew[idx]  = pConcentration[idx];
   }
   delete interpolator;
-}
-
-#if 0
-void ScalarDiffusionModel::scheduleFinalParticleUpdate(Task* task, const MPMMaterial* matl, 
-		                                                   const PatchSet* patch) const
-{
-
-}
-
-void ScalarDiffusionModel::finalParticleUpdate(const Patch* patch, const MPMMaterial* matl,
-                                     DataWarehouse* old_dw, DataWarehouse* new_dw)
-{
-
 }
 #endif

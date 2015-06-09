@@ -104,10 +104,12 @@ namespace Uintah {
       const VarLabel* pLocalizedMPMLabel_preReloc;
       const VarLabel* pRefinedLabel;
       const VarLabel* pRefinedLabel_preReloc;
-
+      const VarLabel* pConcentrationLabel;
+      const VarLabel* pConcentrationLabel_preReloc;
+      const VarLabel* pConcPreviousLabel;
+      const VarLabel* pConcPreviousLabel_preReloc;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
-
       const VarLabel* pScaleFactorLabel;
       const VarLabel* pScaleFactorLabel_preReloc;
       
@@ -133,6 +135,10 @@ namespace Uintah {
       const VarLabel* gHeatFluxLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gExternalHeatFluxLabel;
+      const VarLabel* gConcentrationLabel;
+      const VarLabel* gConcentrationNoBCLabel;
+      const VarLabel* gConcentrationRateLabel;
+      const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;
