@@ -361,7 +361,7 @@
 
       </ExplicitSolver>
       
-      <CQMOM type="unweighted" partvel="true">
+      <CQMOM partvel="true">
         <!-- base information-->
         <NumberInternalCoordinates> 2 </NumberInternalCoordinates>
         <QuadratureNodes> [2,2] </QuadratureNodes>
