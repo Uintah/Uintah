@@ -22,16 +22,18 @@
 #______________________________________________________________________
 
 count=`ls -1 exectimes.* | wc -l`
+timesteps=`cat exectimes.* | grep -i -m1 "Reported" | awk -F " " '{print $8 " " $9 " " $10}'`
+
 echo "----------------------------------------------------------"
 echo "  Reported values are cumulative over:"
-echo "       1) 10 timesteps"
+echo "       1) 10 timesteps $timesteps"
 echo "       2) $count processors"
 echo "      3a) nthreads when using the UnifiedScheduler"
 echo "      3b) nthreads-1 when using the ThreadedMPIScheduler"
 echo "----------------------------------------------------------"
 
 echo "Processors=$count"
-cat exectimes.* > .exectimes.tmp
+cat exectimes.* | grep -Ev "Reported" > .exectimes.tmp
 cat .exectimes.tmp | awk -v count=$count -- \
   'BEGIN{
            total=0
