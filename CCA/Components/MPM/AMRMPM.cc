@@ -3303,8 +3303,7 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constNCVariable<double> gTemperatureRate;
       constNCVariable<double> dTdt, frictionTempRate;
       double Cp = mpm_matl->getSpecificHeat();
-      ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
-      double max_conc = sdm->getMaxConcentration();
+      double max_conc = 0.0;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
@@ -3333,6 +3332,8 @@ void AMRMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
                                         lb->pConcentrationLabel_preReloc, pset);
         new_dw->allocateAndPut(pConcPreviousNew,
                                         lb->pConcPreviousLabel_preReloc,  pset);
+        ScalarDiffusionModel* sdm = mpm_matl->getScalarDiffusionModel();
+        max_conc = sdm->getMaxConcentration();
       }
 
       ParticleSubset* delset = scinew ParticleSubset(0, dwi, patch);
