@@ -777,12 +777,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 void
 UnifiedScheduler::runTasks( int thread_id )
 {
-  static volatile int s_once_per_proc = 0;  // Flag to control access to once_per_proc tasks.
-  static volatile int s_thread_state[MAX_THREADS] = {};
-  enum {WAKE = 0, SLEEP = 1};
-
-  bool ran_once_per_proc = false;
-  
   int me = d_myworld->myrank();
 
   while( numTasksDone < ntasks ) {
@@ -804,17 +798,7 @@ UnifiedScheduler::runTasks( int thread_id )
     //    Check if anything this thread can do concurrently.
     //    If so, then update the various scheduler counters.
     // ----------------------------------------------------------------------------------
-    do {
-      //Todo: Flag to control once per proc tasks.
-      if (s_once_per_proc) {
-        s_thread_state[thread_id] = SLEEP;
-        while (s_thread_state[thread_id] != WAKE) {
-          SCIRun::Thread::self()->yield();
-        }
-        s_thread_state[thread_id-1] = WAKE;
-      }
-    } while(!schedulerLock.tryLock());
-      
+    schedulerLock.lock();
     while (!havework) {
       /*
        * (1.1)
@@ -826,7 +810,6 @@ UnifiedScheduler::runTasks( int thread_id )
         readyTask = phaseSyncTask[currphase];
         havework = true;
         numTasksDone++;
-        // What is taskorder doing??? jas 5/19/15
         if (taskorder.active()) {
           if (me == d_myworld->size() / 2) {
             cerrLock.lock();
@@ -844,23 +827,6 @@ UnifiedScheduler::runTasks( int thread_id )
                     << phaseTasks[currphase] << std::endl;
             cerrLock.unlock();
           }
-        }
-        // Check for once per proc task.
-        if ( readyTask != NULL && readyTask->getTask()->getType() == Task::OncePerProc) {
-          s_once_per_proc = 1;
-          for (int i = 0; i < Uintah::Parallel::getNumThreads(); ++i) {
-            while ( i != thread_id && s_thread_state[i] != SLEEP) {
-              asm volatile("": : : "memory");
-            }
-          }
-          runTask(readyTask, currentIteration, thread_id, Task::CPU);
-          s_once_per_proc = 0;
-          for (int i = 0; i <  Uintah::Parallel::getNumThreads(); ++i) {
-            s_thread_state[i] = WAKE;
-          }
-          readyTask = NULL;
-          havework = false;
-          ran_once_per_proc = true;
         }
         break;
       }
@@ -919,26 +885,6 @@ UnifiedScheduler::runTasks( int thread_id )
 #ifdef HAVE_CUDA
         }
 #endif
-          // Check for once per proc task.
-          // If once per proc task set flag and wait and execute.
-          // Set readyTask = NULL
-          // havework = false
-          if ( readyTask != NULL && readyTask->getTask()->getType() == Task::OncePerProc) {
-            s_once_per_proc = 1;
-            for (int i = 0; i < Uintah::Parallel::getNumThreads(); ++i) {
-              while (i != thread_id && s_thread_state[i] != SLEEP) {
-                asm volatile("": : : "memory");
-              }
-            }
-            runTask(readyTask, currentIteration, thread_id, Task::CPU);
-            s_once_per_proc = 0;
-            for (int i = 0; i <  Uintah::Parallel::getNumThreads(); ++i) {
-              s_thread_state[i] = WAKE;
-            }
-            readyTask = NULL;
-            havework = false;
-            ran_once_per_proc = true;
-          }
           break;
         }
       }
@@ -1110,8 +1056,6 @@ UnifiedScheduler::runTasks( int thread_id )
     }
     else if (pendingMPIMsgs > 0) {
       processMPIRecvs(TEST);
-    }
-    else if (ran_once_per_proc) {
     }
     else {
       // This can only happen when all tasks have finished.
