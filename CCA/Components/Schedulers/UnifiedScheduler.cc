@@ -241,12 +241,11 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
       std::cout << "   Using " << numDevices_ << "/" << availableDevices << " available GPU(s)" << std::endl;
       
-//      for (int device_id = 0; device_id < availableDevices; ++device_id) {
-//        cudaDeviceProp device_prop;
-//        CUDA_RT_SAFE_CALL(retVal = cudaGetDevice(&device_id));
-//        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
-//        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n", device_id, device_prop.name, device_prop.major, device_prop.minor);
-//      }
+      for (int device_id = 0; device_id < availableDevices; device_id++) {
+        cudaDeviceProp device_prop;
+        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
+        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n", device_id, device_prop.name, device_prop.major, device_prop.minor);
+      }
     }
 #endif
   }
