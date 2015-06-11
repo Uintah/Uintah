@@ -319,8 +319,8 @@ namespace Wasatch{
 
 #     ifdef HAVE_CUDA
       // For Heterogeneous case only
-      if( taskName != "initialization" && !isGPUTask ){
-        // For a heterogenous task, restore the GPU runnable property for the expressions.
+      if( taskName != "initialization" && tree->is_homogeneous_gpu() && Uintah::Parallel::usingDevice() ){
+        // For a heterogeneous task, restore the GPU runnable property for the expressions.
         tree->restore_gpu_runnable();
       }
 #     endif
@@ -628,7 +628,7 @@ namespace Wasatch{
 
     if( event == Uintah::Task::CPU || event == Uintah::Task::GPU ){
 
-      bool isGPUTask = false;
+      const bool isGPUTask = (event == Uintah::Task::GPU);
 
       // preventing postGPU / preGPU callbacks to execute the tree again
       for( int ip=0; ip<patches->size(); ++ip ){
@@ -640,11 +640,10 @@ namespace Wasatch{
         const TreePtr tree = iptm->second.tree;
 
 #       ifdef HAVE_CUDA
-        if( event == Uintah::Task::GPU ){ // homogeneous GPU task
-          isGPUTask = true;
+        if( isGPUTask ){ // homogeneous GPU task
           dbg_tasks << endl
               << "Executing -  Wasatch as Homogeneous GPU Task : " << taskName_
-              << " for patch : " << patch->getID()
+              << " on patch : " << patch->getID()
               << endl;
 
           // set the device index passed from Uintah to the Expression tree
