@@ -272,13 +272,14 @@ namespace Wasatch{
 
 #     ifdef HAVE_CUDA
       bool isGPUTask = tree->is_homogeneous_gpu();
-
+      bool gpuTurnedOff = false;
       if( !(isGPUTask && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
         // Force everything to CPU for initialization & also for heterogeneous tasks.
         // For heterogeneous graphs, ExprLib will control GPU execution.
         tree->turn_off_gpu_runnable();
         isGPUTask = false;
-
+	gpuTurnedOff = true;
+	
         // Get the best device available
         tree->set_device_index( GPULoadBalancer::get_device_index(), *fml_ );
       }
@@ -321,7 +322,7 @@ namespace Wasatch{
       // For Heterogeneous case only
       if( taskName != "initialization" && tree->is_homogeneous_gpu() && Uintah::Parallel::usingDevice() ){
         // For a heterogeneous task, restore the GPU runnable property for the expressions.
-        tree->restore_gpu_runnable();
+        if (gpuTurnedOff) tree->restore_gpu_runnable();
       }
 #     endif
 
