@@ -84,7 +84,7 @@ public:
   void evaluate();
   
 private:
-  DECLARE_VECTOR_OF_FIELDS(FieldT, srcFields_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, srcFields_)
   
   const OperationType algebraicOperation_;
   const bool isModifierExpr_;

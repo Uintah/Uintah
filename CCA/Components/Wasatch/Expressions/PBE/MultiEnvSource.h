@@ -41,7 +41,7 @@ template< typename FieldT >
 class MultiEnvSource
 : public Expr::Expression<FieldT>
 {
-  DECLARE_VECTOR_OF_FIELDS(FieldT, weightsAndDerivs_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weightsAndDerivs_)
   DECLARE_FIELD(FieldT, phi_)
   
   const double initialMoment_;
