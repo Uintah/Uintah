@@ -306,6 +306,9 @@ MPMLabel::MPMLabel()
   gConcentrationRateLabel = VarLabel::create( "g.concentrationRate",
                         NCVariable<double>::getTypeDescription());
 
+  gConcentrationStarLabel = VarLabel::create( "g.concentrationStar",
+                        NCVariable<double>::getTypeDescription());
+
   gHydrostaticStressLabel = VarLabel::create("g.hydrostaticStressRD",
             NCVariable<double>::getTypeDescription());
 
@@ -797,6 +800,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gConcentrationLabel);
   VarLabel::destroy(gConcentrationNoBCLabel);
   VarLabel::destroy(gConcentrationRateLabel);
+  VarLabel::destroy(gConcentrationStarLabel);
   VarLabel::destroy(gHydrostaticStressLabel);
   VarLabel::destroy(NC_CCweightLabel);
   VarLabel::destroy(gThermalContactTemperatureRateLabel);
