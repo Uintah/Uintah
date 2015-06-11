@@ -40,7 +40,7 @@
 template< typename FieldT >
 class ScalabilityTestSrcUncoupled : public Expr::Expression<FieldT>
 {
-  DECLARE_FIELD(FieldT, f_);
+  DECLARE_FIELD(FieldT, f_)
   
   ScalabilityTestSrcUncoupled( const Expr::Tag& var );
   
@@ -76,7 +76,7 @@ public:
 template< typename FieldT >
 class ScalabilityTestSrc : public Expr::Expression<FieldT>
 {
-  DECLARE_VECTOR_OF_FIELDS(FieldT, phi_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, phi_)
   const int nvar_;
 
   std::vector<double> tmpVec_;

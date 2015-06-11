@@ -169,12 +169,12 @@ Builder( const Expr::Tag& result,
 //==========================================================================
 // Explicit template instantiation for supported versions of this expression
 #include <spatialops/structured/FVStaggered.h>
-#define DECLARE_VARIATNS(VOL)                             \
+#define DECLARE_VARIAMTS(VOL)                             \
 template class ScalabilityTestSrcUncoupled< VOL >; \
 template class ScalabilityTestSrc< VOL >;
 
-DECLARE_VARIATNS(SpatialOps::SVolField);
-DECLARE_VARIATNS(SpatialOps::XVolField);
-DECLARE_VARIATNS(SpatialOps::YVolField);
-DECLARE_VARIATNS(SpatialOps::ZVolField);
+DECLARE_VARIAMTS(SpatialOps::SVolField)
+DECLARE_VARIAMTS(SpatialOps::XVolField)
+DECLARE_VARIAMTS(SpatialOps::YVolField)
+DECLARE_VARIAMTS(SpatialOps::ZVolField)
 //==========================================================================

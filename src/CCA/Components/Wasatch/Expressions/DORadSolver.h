@@ -242,7 +242,7 @@ namespace Wasatch{
     const bool hasAbsCoef_;
 
     DECLARE_FIELDS(SVolField, temperature_, absCoef_)
-    DECLARE_VECTOR_OF_FIELDS(SVolField, intensity_);
+    DECLARE_VECTOR_OF_FIELDS(SVolField, intensity_)
 
     DORadSrc( const Expr::Tag& temperatureTag,
               const Expr::Tag& absCoefTag,
