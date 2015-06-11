@@ -54,23 +54,6 @@ namespace Uintah {
     virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
 		                               DataWarehouse* new_dw);
 
-#if 0
-    virtual void scheduleComputeFlux(Task* task, const PatchSet* patch) const;
-
-    virtual void computeFlux(const Patch* patch, DataWarehouse* old_dw,
-		                         DataWarehouse* new_dw);
-
-    virtual void scheduleComputeDivergence(Task* task,
-                                           const PatchSet* patch) const;
-
-    virtual void scheduleInterpolateToParticlesAndUpdate(Task* task,
-		                                  const PatchSet* patch) const;
-
-    virtual void interpolateToParticlesAndUpdate(const Patch* patch, 
-                                                 DataWarehouse* old_dw,
-                                                 DataWarehouse* new_dw);
-#endif
-
   protected:
     MPMLabel* d_lb;
     MPMFlags* d_Mflag;

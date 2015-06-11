@@ -53,38 +53,17 @@ namespace Uintah {
 
     virtual void initializeSDMData(const Patch* patch, DataWarehouse* new_dw);
 
+#if 0
     virtual void scheduleInterpolateParticlesToGrid(Task* task,
-                                                    const PatchSet* patches) const;
+                                                 const PatchSet* patches) const;
 
     virtual void interpolateParticlesToGrid(const Patch* patch,
-                                            DataWarehouse* old_dw, DataWarehouse* new_dw);
-
-#if 0
-    virtual void scheduleComputeFlux(Task* task, const PatchSet* patch) const;
-
-    virtual void computeFlux(const Patch* patch, DataWarehouse* old_dw,
-		                         DataWarehouse* new_dw);
-
-    virtual void scheduleComputeDivergence(Task* task, const PatchSet* patch) const;
+                                            DataWarehouse* old_dw,
+                                            DataWarehouse* new_dw);
 #endif
 
     virtual void computeDivergence(const Patch* patch, DataWarehouse* old_dw,
 		                               DataWarehouse* new_dw);
-
-#if 0
-    virtual void scheduleInterpolateToParticlesAndUpdate(Task* task,
-                                                   const PatchSet* patch) const;
-
-    virtual void interpolateToParticlesAndUpdate(const Patch* patch, 
-                                                 DataWarehouse* old_dw,
-                                                 DataWarehouse* new_dw);
-
-    virtual void scheduleFinalParticleUpdate(Task* task,
-                                             const PatchSet* patch) const;
-
-    virtual void finalParticleUpdate(const Patch* patch, DataWarehouse* old_dw,
-		                                 DataWarehouse* new_dw);
-#endif 
 
   protected:
     MPMLabel* d_lb;
@@ -93,7 +72,7 @@ namespace Uintah {
     ReactionDiffusionLabel* d_rdlb;
 
     int NGP, NGN;
-		int numMPMmatls;
+    int numMPMmatls;
     bool do_explicit;
     bool include_hydrostress;
 

@@ -66,35 +66,6 @@ namespace Uintah {
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to);
 
-    virtual void scheduleInterpolateParticlesToGrid(Task* task,
-                                                   const MPMMaterial* matl,
-                                                   const PatchSet* patch) const;
-
-    virtual void interpolateParticlesToGrid(const Patch* patch,
-                                            const MPMMaterial* matl,
-                                            DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw);
-#if 0
-    virtual void scheduleInterpolateParticlesToGrid_CFI(Task* task,
-		                                        const MPMMaterial* matl,
-                                                        const PatchSet* patch)
-                                                                         const;
-
-    virtual void interpolateParticlesToGrid_CFI(const PatchSubset* patches,
-                                                const MPMMaterial* mpm_matl,
-                                                DataWarehouse* old_dw,
-                                                DataWarehouse* new_dw);
-
-    virtual void scheduleInterpolateToParticlesAndUpdate(Task* task,
-                                                   const MPMMaterial* matl,
-                                                   const PatchSet* patch) const;
-
-    virtual void interpolateToParticlesAndUpdate(const Patch* patch,
-                                                 const MPMMaterial* matl,
-                                                 DataWarehouse* old_dw,
-                                                 DataWarehouse* new_dw);
-#endif
-
     virtual void scheduleComputeFlux(Task* task, const MPMMaterial* matl, 
 		                                 const PatchSet* patch) const;
 
@@ -106,6 +77,15 @@ namespace Uintah {
 
     virtual void computeDivergence(const Patch* patch, const MPMMaterial* matl,
                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
+
+    virtual void scheduleComputeDivergence_CFI(Task* task, 
+                                               const MPMMaterial* matl, 
+                                               const PatchSet* patch) const;
+
+    virtual void computeDivergence_CFI(const PatchSubset* finePatches,
+                                       const MPMMaterial* matl,
+                                       DataWarehouse* old_dw,
+                                       DataWarehouse* new_dw);
 
   protected:
     MPMLabel* d_lb;

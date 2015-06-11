@@ -115,9 +115,12 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
   old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
 
-  new_dw->get(gConcentration,     d_rdlb->gConcentrationLabel,     dwi, patch, gac,2*NGN);
-  new_dw->get(gMass,              d_lb->gMassLabel,                dwi, patch, gnone, 0);
-  new_dw->get(gHydrostaticStress, d_rdlb->gHydrostaticStressLabel, dwi, patch, gac,2*NGN);
+  new_dw->get(gConcentration,     d_rdlb->gConcentrationLabel,     dwi, 
+                                                              patch, gac,2*NGN);
+  new_dw->get(gMass,              d_lb->gMassLabel,                dwi,
+                                                              patch, gnone, 0);
+  new_dw->get(gHydrostaticStress, d_rdlb->gHydrostaticStressLabel, dwi,
+                                                              patch, gac,2*NGN);
 
   //new_dw->allocateAndPut(pConcGradient, d_rdlb->pConcGradientLabel, pset);
   new_dw->allocateTemporary(pConcGradient, pset);
@@ -127,18 +130,22 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
   
   double chem_potential;
   double mech_potential; 
-  for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
+  for (ParticleSubset::iterator iter = pset->begin();
+                                iter != pset->end(); iter++){
     particleIndex idx = *iter;
 
     // Get the node indices that surround the cell
-    interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+    interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                              deformationGradient[idx]);
 
     pConcGradient[idx]        = Vector(0.0,0.0,0.0);
     pHydroStressGradient[idx] = Vector(0.0,0.0,0.0);
     for (int k = 0; k < d_Mflag->d_8or27; k++){
       for (int j = 0; j<3; j++) {
-          pConcGradient[idx][j]        += gConcentration[ni[k]]     * d_S[k][j] * oodx[j];
-          pHydroStressGradient[idx][j] += gHydrostaticStress[ni[k]] * d_S[k][j] * oodx[j];
+          pConcGradient[idx][j]      
+                            += gConcentration[ni[k]]     * d_S[k][j] * oodx[j];
+          pHydroStressGradient[idx][j]
+                            += gHydrostaticStress[ni[k]] * d_S[k][j] * oodx[j];
       }
 	  }
 
@@ -149,5 +156,5 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
     //cout << "id: " << idx << " CG: " << pConcentrationGradient[idx] << ", PF: " << pPotentialFlux[idx] << endl;
   } //End of Particle Loop
 
-	delete interpolator;
+  delete interpolator;
 }

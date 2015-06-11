@@ -514,38 +514,6 @@ private:
   };
 
   //--------------- Reaction Diffusion -----------------------
-#if 0
-  void scheduleSDInterpolateParticlesToGrid(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSet* matls);
-
-  void sdInterpolateParticlesToGrid(const ProcessorGroup*,
-                                    const PatchSubset* patches,
-                                    const MaterialSubset* matls,
-                                    DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw);
-
-  void scheduleSDInterpolateParticlesToGrid_CFI(SchedulerP& sched,
-                                                const PatchSet* patches,
-                                                const MaterialSet* matls);
-
-  void sdInterpolateParticlesToGrid_CFI(const ProcessorGroup*,
-                                        const PatchSubset* patches,
-                                        const MaterialSubset* matls,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw);
-  virtual void scheduleSDInterpolateToParticlesAndUpdate(SchedulerP& sched,
-                                                      const PatchSet* patches,
-                                                      const MaterialSet* matls);
-
-  virtual void sdInterpolateToParticlesAndUpdate(const ProcessorGroup*,
-                                                 const PatchSubset* patches,
-                                                 const MaterialSubset* matls,
-                                                 DataWarehouse* old_dw,
-                                                 DataWarehouse* new_dw);
-
-#endif
-
   void scheduleCoarsenNodalScalarData_CFI(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSet*);
@@ -572,8 +540,18 @@ private:
                                  const MaterialSubset* matls,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw);
+
+  virtual void scheduleComputeDivergence_CFI(SchedulerP&,
+                                             const PatchSet*,
+                                             const MaterialSet*);
+
+  virtual void computeDivergence_CFI(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 };
-      
+
 } // end namespace Uintah
 
 #endif
