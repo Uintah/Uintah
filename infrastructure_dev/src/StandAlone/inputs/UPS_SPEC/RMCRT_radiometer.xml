@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>      
+   <Radiometer                   spec="OPTIONAL NO_DATA"     attribute1="type OPTIONAL STRING 'float, double'">
+   
+      <temperature               spec="OPTIONAL NO_DATA"     attribute1="label REQUIRED STRING"/> 
+      <cellType                  spec="OPTIONAL NO_DATA"     attribute1="label REQUIRED STRING"/>
+      <abskg                     spec="OPTIONAL NO_DATA"     attribute1="label REQUIRED STRING"/>
+      
+      <VRViewAngle               spec="REQUIRED DOUBLE  'positive'"/>
+      <VROrientation             spec="REQUIRED VECTOR"/>
+      <VRLocationsMin            spec="REQUIRED VECTOR  'positive'"/>
+      <VRLocationsMax            spec="REQUIRED VECTOR  'positive'"/>
+      <nRadRays                  spec="REQUIRED INTEGER 'positive'"/>
+      
+      <!--  If using OnTheFly: Radiometer you also need these -->
+      <Threshold                 spec="OPTIONAL DOUBLE  'positive'"/>
+      <randomSeed                spec="OPTIONAL BOOLEAN"/>
+      <sigmaScat                 spec="OPTIONAL DOUBLE  'positive'"/>
+      <allowReflect              spec="OPTIONAL BOOLEAN"/>
+      <StefanBoltzmann           spec="OPTIONAL DOUBLE  'positive'"/>
+    </Radiometer>
+</Uintah_Include>

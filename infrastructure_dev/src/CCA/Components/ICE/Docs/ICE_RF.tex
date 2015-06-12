@@ -1,0 +1,148 @@
+\documentclass[fleqn]{article}
+\usepackage{amsmath}
+\usepackage{setspace}
+\usepackage{vmargin}
+\setmarginsrb{1.0in}{1.0in}{1.0in}{1.0in}{0pt}{0mm}{0pt}{0mm}
+\doublespacing
+%..............................
+% Alias commands
+%..............................    
+\newcommand{\B}[1]          {\biggr{#1}}            
+\newcommand{\U}             {{\vec{U}}}                    
+\newcommand{\uo}            {\ensuremath{\vec{U}_o}}                  
+\newcommand{\delt}          {\ensuremath{\Delta{t}} }                 
+\newcommand{\delx}          {\ensuremath{\Delta{x}} } 
+\newcommand{\f}             {\ensuremath{f^{\theta}_r} }
+\newcommand{\sv}[1]         {\ensuremath{v^o_{r_{#1}} }}                 
+%..............................
+%
+%..............................  
+\begin{document}
+\setlength{\abovedisplayskip}{0.01in}
+\setlength{\abovedisplayshortskip}{0.01in}
+\setlength{\belowdisplayskip}{0.01in}
+\setlength{\belowdisplayshortskip}{0.01in}
+\setlength{\topsep}{0.01in}
+\setlength{\mathindent}{0.01in}
+\doublespacing
+
+\underline{I C E R F \quad  (a = 1), no mass exchange \hspace{ 0.5in}08/19/02}
+
+\begin{enumerate}
+
+
+\item compute $\delt$\\
+%__________________________________
+  $ \delt = [ \sum_{dir=1}^{dim}\frac{1}{\delt_{dir}} ]^{-1}  $\hspace{0.5in}(see pg 46)\\
+  $ \delt_{dir} = \frac{\text{CFL}(\delx)}{c^*_r} $\hspace {0.5in} where CFL $<= 0.5$\\
+  $  c^*_r 
+   = [\frac{ \sv{L} + \sv{R} }{\kappa_{r_L} + \kappa_{r_R}}]^{\frac{1}{2}} 
+   + |((U_{r_R})_{magnitude} - (U_{r_L})_{magnitude})| $
+%__________________________________
+\item Compute the "pressure"  (eq. 4.9a-d)\\
+  $
+    \theta_r = \frac{M_r \sv{} }{\sum{M_r \sv{} }}; \hspace{0.25in}
+    \f = \frac{\theta_r \kappa_r}{\sum{\theta_s \kappa_s}};\hspace{0.25in}
+    P_r = EOS(); \hspace{0.25in}
+    P = \sum{f^{\theta}_s P_s}; \hspace{0.25in}
+    \sigma = -PI; \hspace{0.25in}
+    c = [\frac{dp}{de}\frac{dp}{d\rho} P_r {\sv{r}}^2]^{0.5}
+  $
+\item Compute local time increment and limiter at each face $\phi^*$\\
+   $D^* = \nabla^* \cdot { (\theta_r \vec{U_r} )} = \frac{ (\theta_r\vec{U_r})_{i+1} - (\theta_r\vec{U_r})_{i-1}}{2\delx}$  \\
+   $\phi^*_r = 2 - max[min(1,2r^+),0]-max[(1,2r^-),0];$ \\
+   $ r^+ = 2 \tilde r^{+} - 1;   \quad r^- = 2 \tilde r^{-} - 1$\\
+   $ \tilde r^{+} = \frac{D_R}{D^*}; \quad  \tilde r^{-} = \frac{D_L}{D^*}$\\
+   $ c^*_r 
+   = [\frac{ \sv{L} + \sv{R} }{\kappa_{r_L} + \kappa_{r_R}}]^{\frac{1}{2}} 
+   + |((U_{r_R})_{magnitude} - (U_{r_L})_{magnitude})| $   \hspace{0.5in}(eq. 4.13 d)\\
+   $ \delt^\prime = \delt + 
+                        \frac{1}{2} \phi^*_r [\frac{\delx}{c^*_r} -
+                        \delt ]$  \hspace{0.5in}(eq. 4.10 d)
+%__________________________________
+\item Compute the face-centered velocities \\
+  $ \langle \vec{U}_r \rangle = 
+          \frac{ \sv{R} \vec{U}_{r_L} + \sv{L} \vec{U}_{r_R}}{\sv{L} + \sv{R}}$ \hspace{0.5in}(eq. 4.10 b)\\
+  $ \langle \sv{} \rangle = \frac{ 2\sv{R} \sv{L} }{ \sv{L} + \sv{R} }$\hspace{0.5in}(eq. 4.10 c)\\
+  $ \sigma_r = n \cdot [ (\theta_r(\sigma_r - \sigma)] \cdot n$ \\
+  $ \bar \sigma_r = n \cdot [ (\theta_r(\sigma_r - \sigma)]^* \cdot n$\\
+  $\langle \rho_r \rangle = \frac{\rho_{r_L}\rho_{r_R} }{ \rho_{r_L} + \rho_{r_R}}$ \\
+Devatoric: $[\theta_r(\tau_r - \tau)]^* = \langle \rho_r \rangle[\sv{L}(\tau_r - \tau)_L + 
+                                                                 \sv{R}(\tau_r - \tau)_R] $
+                                                               \hspace{ 0.5 in} (eq 4.13a) (not included) \\
+Isotropic: $[\theta_r(P_r - P)]^* I = \langle \rho_r \rangle[\sv{L}(P_r - P)_L +         
+                                                             \sv{R}(P_r - P)_R]I
+                                         + \overbrace{\langle \rho_r \rangle(\sv{L} + 
+                                           \sv{R})\delta P^*_r I}^{\text{not included in vel\_FC calc}} $ \\
+ where
+  $\langle \rho_r\rangle(\sv{L} + \sv{R})\delta P^*_r = 
+        -\langle \rho_R\rangle\phi^*_r c^*_r ((U_{r_R})_{magnitude} 
+        - (U_{r_L})_{magnitude})$  \hspace{ 0.5 in} (eq 4.13c)\\ \\
+  $
+      \vec{U_r}^{*^{f}} 
+       = \langle \vec{U}_r \rangle 
+       - \langle \sv{} \rangle \frac{\delt^\prime}{\delx} (P_R - P_L) 
+       - \langle \sv{} \rangle \frac{\delt^\prime}{\delx}\biggl[ \frac{(\bar{\sigma_r} - \sigma_{r_L})}{\theta_{r_L}} +
+                                                  \frac{({\sigma_{r_R}} - \bar\sigma_{r})}{\theta_{r_R}} \biggr]
+      + \frac{1}{2}
+        \langle \sv{} \rangle \delt(\theta_{s_L}K_L + \theta_{s_R}K_R)(\vec{U}^*_s - \vec{U}^*_r)
+ $ (eq. 4.10 a)\\
+   This involves a pointwise implicit solve.
+%__________________________________
+\item Compute $\Delta P$ (eq 2.12)\\
+$
+     \Delta P = -\delt \frac{\nabla \cdot \sum{\theta_r \vec{U_r}^*} + 
+                             \sum {\theta_s \alpha_s \dot{T_s}}  }
+     {\sum\theta_s \kappa_s} 
+$ \\
+$P^{n+1} = P + \bar{\phi}\Delta{P};$ \hspace {0.5in}
+$P_r^{n+1} = P_r + \bar{\phi}\Delta{P}$ \\
+where $\bar{\phi}$ is a average of $\phi^*$
+%__________________________________
+\item Compute the face centered pressure.\\
+$
+    P^{*^{f}} = \frac{\frac{P_L}{\rho_L} + \frac{ P_R}{\rho_R}}
+                     {\frac{1}{\rho_L} + \frac{1}{\rho_R}}
+$ \hspace{ 0.5 in} (eq 4.12)\\
+if $V^n_L = V^n_R$
+
+%__________________________________
+\item Evaluate work flux term in energy eq. $[\vec{U}_r \cdot \theta_r(\sigma_r - \sigma)]^*$ 
+      \hspace{ 0.5 in} (eq 4.14)\\
+$ = \overbrace{\langle \rho_r\rangle[\sv{L}\vec{U}_{r_L} \cdot {(\tau_r - \tau)_L} 
+                        + \sv{R}\vec{U}_{r_L} \cdot {(\tau_r - \tau)_R}] }^{\text{not included}}
+                        - \vec{U}^*_r[\theta_r(P_r - P)]^*I$
+%__________________________________
+\item Accumulate sources (eq 4.8)\\  
+   $\Delta(m\vec{U})_r = -\delt \theta_r V \nabla P^* 
+                         + \delt V\nabla \cdot [\theta_r(\sigma_r - \sigma)]^*
+                         + \delt V \sum \theta_s \theta_r K (\vec{U}^L_s - \vec{U}^L_r)$
+   \begin{eqnarray*}
+   \Delta(mE)_r &= -\delt \f V \nabla \cdot P^* \sum{\theta^*_{r_{upwinded}}\vec{U^*_r}} 
+                 + \delt[\f \sum{\theta_r\vec{U_r}} - \theta_r\vec{U_r}] \cdot V \nabla P ^*
+                &- \delt P V[\theta_r \alpha_r \dot{T_r} - \f \sum{\theta_s \alpha_s \dot{T_s}}] \\
+                &+ \delt V \nabla \cdot [ \vec{U_r} \cdot \theta_r( \sigma_r - \sigma)] ^*
+                 + V \delt\sum \theta_r \theta_s R(T^L_s - T^L_r)
+   \end{eqnarray*}
+  $\Delta(mv^o)_r = \delt \f V \nabla \cdot \sum{\theta^*_{r_{upwinded}}\vec{U^*_r}}
+                + \delt V [\theta_r \alpha_r \dot{T_r} 
+                - \f \sum{\theta_s \alpha_s \dot{T_s}}] $\\
+  $\dot{T} = \frac{T^L - T^n}{\delt}$
+%__________________________________
+\item Compute Lagrangian quantities\\
+    $\rho^L_r = \rho_r + (\frac{\Delta{m}}{V})_r$ \\
+    $(m \vec{U})^L_r = (m\vec{U})_r + \Delta(m\vec{U})_r$ \\
+    $(mE)^L_r = (mE)_r + \Delta(mE)_r $\\
+    $(mv^o)^L_r = (mv^o)_r + \Delta(mv^o)_r $\\
+    \text{Note this includes the pointwise implicit solve for the momentum and energy exchange}
+%__________________________________
+\item Advect and advance in time\\
+$   \rho^{n+1}_r         = \rho^L_r     - \delt\text{Advection}(\rho^L_r, \vec{U_r}^*)$\\
+$   (m\vec{U})^{n+1}_r   = (m\vec{U})^L_r - \delt\text{Advection}((\rho\vec{U})^L_r, \vec{U_r}^*)$\\
+$   (mE)^{n+1}_r         = (mE)^L_r       - \delt\text{Advection}((\rho E)^L_r, \vec{U_r}^*) $ \\
+$   (mv^o)^{n+1}_r     = (mv^o)^L_r   - \delt\text{Advection}((\rho v^o)^L_r, \vec{U_r}^*) $
+
+\end{enumerate}
+%______________________________________________________________________
+
+\end{document}
