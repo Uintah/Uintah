@@ -47,8 +47,8 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
   d_Mflag = Mflag;
   d_sharedState = sS;
 
-  d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
+  d_lb = new MPMLabel;
+  d_rdlb = new ReactionDiffusionLabel();
 
   ps->require("diffusivity", diffusivity);
   ps->require("max_concentration", max_concentration);
@@ -70,7 +70,7 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
   diffusion_type = diff_type;
   include_hydrostress = false;
 
-  d_one_matl = scinew MaterialSubset();
+  d_one_matl = new MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
 }

@@ -29,7 +29,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/Assert.h>
 #include <iterator>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Variables/GridIterator.h>
 namespace Uintah {
 
@@ -221,7 +221,7 @@ WARNING
 
      GridSurfaceIterator* clone() const
      {
-       return scinew GridSurfaceIterator(*this);
+       return new GridSurfaceIterator(*this);
      }
 
      std::ostream& put(std::ostream& out) const

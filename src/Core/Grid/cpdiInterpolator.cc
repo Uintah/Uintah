@@ -25,7 +25,7 @@
 #include <Core/Grid/cpdiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 
@@ -60,7 +60,7 @@ cpdiInterpolator::~cpdiInterpolator()
 
 cpdiInterpolator* cpdiInterpolator::clone(const Patch* patch)
 {
-  return scinew cpdiInterpolator(patch, d_lcrit);
+  return new cpdiInterpolator(patch, d_lcrit);
 }
     
 void cpdiInterpolator::findCellAndWeights(const Point& pos,

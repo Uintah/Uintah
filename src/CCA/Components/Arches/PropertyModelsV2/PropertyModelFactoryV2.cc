@@ -46,7 +46,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       if ( type == "wall_heatflux_variable" ){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew WallHFVariable::Builder( name, 0, _shared_state ); 
+        TaskInterface::TaskBuilder* tsk = new WallHFVariable::Builder( name, 0, _shared_state ); 
         register_task( name, tsk ); 
         _pre_update_property_tasks.push_back( name ); 
 
@@ -122,25 +122,25 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         if ( uintah_type == TypeDescription::CCVariable ){ 
 
-          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::SVolField>::Builder( name, 0, _shared_state ); 
+          TaskInterface::TaskBuilder* tsk = new VariableStats<SpatialOps::SVolField>::Builder( name, 0, _shared_state ); 
           register_task( name, tsk ); 
           _finalize_property_tasks.push_back( name ); 
 
         } else if ( uintah_type == TypeDescription::SFCXVariable ){ 
 
-          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::XVolField>::Builder( name, 0, _shared_state ); 
+          TaskInterface::TaskBuilder* tsk = new VariableStats<SpatialOps::XVolField>::Builder( name, 0, _shared_state ); 
           register_task( name, tsk ); 
           _finalize_property_tasks.push_back( name ); 
 
         } else if ( uintah_type == TypeDescription::SFCYVariable ){ 
 
-          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::YVolField>::Builder( name, 0, _shared_state ); 
+          TaskInterface::TaskBuilder* tsk = new VariableStats<SpatialOps::YVolField>::Builder( name, 0, _shared_state ); 
           register_task( name, tsk ); 
           _finalize_property_tasks.push_back( name ); 
 
         } else if ( uintah_type == TypeDescription::SFCZVariable ){ 
 
-          TaskInterface::TaskBuilder* tsk = scinew VariableStats<SpatialOps::ZVolField>::Builder( name, 0, _shared_state ); 
+          TaskInterface::TaskBuilder* tsk = new VariableStats<SpatialOps::ZVolField>::Builder( name, 0, _shared_state ); 
           register_task( name, tsk ); 
           _finalize_property_tasks.push_back( name ); 
 
@@ -152,7 +152,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "density_predictor" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 ); 
+        TaskInterface::TaskBuilder* tsk = new DensityPredictor::Builder( name, 0 ); 
         register_task( name, tsk ); 
 
 

@@ -98,13 +98,13 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   dwmap[Task::OldDW] = 0;
   dwmap[Task::NewDW] = Task::NoDW;
 
-  stask_ = scinew Task( "send old data", Task::InitialSend );
+  stask_ = new Task( "send old data", Task::InitialSend );
   stask_->d_phase = 0;
   stask_->setMapping( dwmap );
 
   // Create a send old detailed task for every processor in my neighborhood.
   for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
-    DetailedTask* newtask = scinew DetailedTask( stask_, 0, 0, this );
+    DetailedTask* newtask = new DetailedTask( stask_, 0, 0, this );
     newtask->assignResource(*iter);
     //use a map because the processors in this map are likely to be sparse
     sendoldmap_[*iter] = tasks_.size();
@@ -310,7 +310,6 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
                           vector<DataWarehouseP>&         dws,
                           Task::CallBackEvent             event /* = Task::CPU */ )
 {
-  TAU_PROFILE("DetailedTask::doit", " ", TAU_USER);
   if (mixedDebug.active()) {
     cerrLock.lock();
     mixedDebug << "DetailedTask " << this << " begin doit()\n";
@@ -372,8 +371,8 @@ DetailedTasks::initializeScrubs( vector<OnDemandDataWarehouseP>& dws,
     // TODO APH - clean this up (01/31/15)
 //    if (dw != 0) dw->copyKeyDB(varKeyDB, levelKeyDB);
     if (dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete) {
-      // only a OldDW or a CoarseOldDW will have scrubComplete 
-      //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws 
+      // only a OldDW or a CoarseOldDW will have scrubComplete
+      //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws
       //   between New and Old.  In this case, the scrub count needs to be complemented with CoarseOldDW
       int tgtype = getTaskGraph()->getType();
       if (!initialized[dwmap[i]] || tgtype == Scheduler::IntermediateTaskGraph) {
@@ -578,7 +577,7 @@ DetailedTasks::addScrubCount( const VarLabel* var,
   ScrubItem* result;
   result = (first ? first->scrubCountTable_ : scrubCountTable_).lookup(&key);
   if (!result) {
-    result = scinew ScrubItem(var, matlindex, patch, dw);
+    result = new ScrubItem(var, matlindex, patch, dw);
     (first ? first->scrubCountTable_ : scrubCountTable_).insert(result);
   }
   result->count++;
@@ -828,10 +827,10 @@ DetailedTasks::findMatchingDetailedDep(       DependencyBatch*  batch,
  * This function will create the detailed dependency for the
  * parameters passed in.  If a similar detailed dependency
  * already exists it will combine those dependencies into a single
- * dependency.  
+ * dependency.
  *
- * Dependencies are ordered from oldest to newest in a linked list.  It is vital that 
- * this order is maintained.  Failure to maintain this order can cause messages to be combined 
+ * Dependencies are ordered from oldest to newest in a linked list.  It is vital that
+ * this order is maintained.  Failure to maintain this order can cause messages to be combined
  * inconsistently across different tasks causing various problems.  New dependencies are added
  * to the end of the list.  If a dependency was combined then the extended dependency is added
  * at the same location that i was first combined.  This is to ensure all future dependencies
@@ -849,7 +848,6 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
                                          const IntVector&                 high,
                                                DetailedDep::CommCondition cond )
 {
-  TAU_PROFILE("DetailedTasks::possiblyCreateDependency", " ", TAU_USER);
 
   ASSERTRANGE(from->getAssignedResourceIndex(), 0, d_myworld->size());
   ASSERTRANGE(to->getAssignedResourceIndex(),   0, d_myworld->size());
@@ -911,7 +909,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
 
   //if batch doesn't exist then create it
   if (!batch) {
-    batch = scinew DependencyBatch(toresource, from, to);
+    batch = new DependencyBatch(toresource, from, to);
     batches_.push_back(batch);
     from->addComputes(batch);
 #if SCI_ASSERTION_LEVEL >= 2
@@ -937,7 +935,7 @@ DetailedTasks::possiblyCreateDependency(       DetailedTask*              from,
   IntVector varRangeLow(INT_MAX, INT_MAX, INT_MAX), varRangeHigh(INT_MIN, INT_MIN, INT_MIN);
 
   // create the new dependency
-  DetailedDep* new_dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, low, high, cond);
+  DetailedDep* new_dep = new DetailedDep(batch->head, comp, req, to, fromPatch, matl, low, high, cond);
 
   // search for a dependency that can be combined with this dependency
 
@@ -1112,7 +1110,7 @@ DetailedTasks::getOldDWSendTask( int proc )
     std::cout << d_myworld->myrank() << " Error trying to get oldDWSendTask for processor: " << proc << " but it does not exist\n";
     throw InternalError("oldDWSendTask does not exist", __FILE__, __LINE__);
   }
-#endif 
+#endif
   return tasks_[sendoldmap_[proc]];
 }
 
@@ -1368,7 +1366,7 @@ operator<<(       std::ostream& out,
       out << std::hex << " using CUDA stream " << task.getCUDAStream();
     }
 #endif
-    
+
   }
   coutLock.unlock();
 
@@ -1607,7 +1605,7 @@ DependencyBatch::reset()
 {
   if (toTasks.size() > 1) {
     if (lock_ == 0) {
-      lock_ = scinew Mutex("DependencyBatch receive lock");
+      lock_ = new Mutex("DependencyBatch receive lock");
     }
   }
   received_ = false;

@@ -891,7 +891,7 @@ void
 BoundaryCondition_new::sched_create_masks(const LevelP& level, SchedulerP& sched, const MaterialSet* matls)
 {
 
-  Task* tsk = scinew Task( "BoundaryCondition_new::create_masks", this, &BoundaryCondition_new::create_masks);
+  Task* tsk = new Task( "BoundaryCondition_new::create_masks", this, &BoundaryCondition_new::create_masks);
   sched->addTask(tsk, level->eachPatch(), matls);
 
 }

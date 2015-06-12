@@ -107,7 +107,7 @@ namespace Wasatch{
         strTsrMagTag = tagNames.straintensormag;//( "StrainTensorMagnitude", Expr::STATE_NONE );
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
-          factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
+          factory.register_expression( new StrTsrMagT(strTsrMagTag,
                                                          tagNames.tauxx,tagNames.tauyx,tagNames.tauzx,
                                                          tagNames.tauyy,tagNames.tauzy,
                                                          tagNames.tauzz) );
@@ -120,7 +120,7 @@ namespace Wasatch{
         vremanTsrMagTag = tagNames.vremantensormag;
         if( !factory.have_entry( vremanTsrMagTag ) ){
           typedef VremanTensorMagnitude::Builder VremanTsrMagT;
-          factory.register_expression( scinew VremanTsrMagT(vremanTsrMagTag, velTags ) );
+          factory.register_expression( new VremanTsrMagT(vremanTsrMagTag, velTags ) );
         }
       }
         break;
@@ -130,7 +130,7 @@ namespace Wasatch{
         strTsrMagTag = tagNames.straintensormag;
         if( !factory.have_entry( strTsrMagTag ) ){
           typedef StrainTensorSquare::Builder StrTsrMagT;
-          factory.register_expression( scinew StrTsrMagT(strTsrMagTag,
+          factory.register_expression( new StrTsrMagT(strTsrMagTag,
                                                          tagNames.tauxx,tagNames.tauyx,tagNames.tauzx,
                                                          tagNames.tauyy,tagNames.tauzy,
                                                          tagNames.tauzz) );
@@ -140,7 +140,7 @@ namespace Wasatch{
         waleTsrMagTag = tagNames.waletensormag;
         if( !factory.have_entry( waleTsrMagTag ) ){
           typedef WaleTensorMagnitude::Builder waleStrTsrMagT;
-          factory.register_expression( scinew waleStrTsrMagT(waleTsrMagTag, velTags ) );
+          factory.register_expression( new waleStrTsrMagT(waleTsrMagTag, velTags ) );
         }
       }
         break;
@@ -159,7 +159,7 @@ namespace Wasatch{
         if( !factory.have_entry( dynSmagCoefTag )&&
             !factory.have_entry( strTsrMagTag )     ){
           typedef DynamicSmagorinskyCoefficient::Builder dynSmagConstT;
-          factory.register_expression( scinew dynSmagConstT(dynamicSmagTagList,
+          factory.register_expression( new dynSmagConstT(dynamicSmagTagList,
                                                             velTags,
                                                             densTag,
                                                             isConstDensity) );
@@ -183,8 +183,8 @@ namespace Wasatch{
       // and comment out the "exOp_->apply_to_field(result)" line at the end
       // of the evaluate method.
       typedef TurbulentViscosity::Builder TurbViscT;
-      factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
-//      const Expr::ExpressionID turbViscID = factory.register_expression( scinew TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
+      factory.register_expression( new TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
+//      const Expr::ExpressionID turbViscID = factory.register_expression( new TurbViscT(turbViscTag, densTag, strTsrMagTag, waleTsrMagTag, vremanTsrMagTag, dynSmagCoefTag, turbParams ) );
 //      factory.cleave_from_parents(turbViscID);
     }
   }
@@ -385,7 +385,7 @@ namespace Wasatch{
     typedef typename StrainHelper<FaceFieldT>::Vel1T Vel1T;  // type of velocity component 1
     typedef typename StrainHelper<FaceFieldT>::Vel2T Vel2T;  // type of velocity component 2
     typedef typename Strain< FaceFieldT, Vel1T, Vel2T >::Builder StrainT;
-    return factory.register_expression( scinew StrainT( strainTag, vel1Tag, vel2Tag, dilTag ) );
+    return factory.register_expression( new StrainT( strainTag, vel1Tag, vel2Tag, dilTag ) );
   }
 
   //==================================================================
@@ -452,7 +452,7 @@ namespace Wasatch{
       typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, MomT,   FluxT >::type  MomInterpOp;
       typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Interpolant, AdvelT, FluxT >::type  AdvelInterpOp;
       typedef typename ConvectiveFlux<MomInterpOp, AdvelInterpOp >::Builder ConvFlux;
-      return factory.register_expression( scinew ConvFlux( fluxTag, momTag, advelTag ) );
+      return factory.register_expression( new ConvFlux( fluxTag, momTag, advelTag ) );
     }
     else{
       typedef typename SpatialOps::VolType<FluxT>::VolField  MomT;
@@ -462,7 +462,7 @@ namespace Wasatch{
       typename OperatorTypeBuilder<Interpolant,MomT,FluxT>::type, // scalar interp type
       typename OperatorTypeBuilder<Interpolant,AdvelT,FluxT>::type  // velocity interp type
       >::Builder ConvFluxLim;
-      return factory.register_expression( scinew ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
+      return factory.register_expression( new ConvFluxLim( fluxTag, momTag, advelTag, convInterpMethod, volFracTag ) );
       
     }
   }
@@ -790,14 +790,14 @@ namespace Wasatch{
           
           // we need to create two expressions
           const Expr::Tag tkeTempTag("TotalKE_temp", Expr::STATE_NONE);
-          factory.register_expression(scinew typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
+          factory.register_expression(new typename TotalKineticEnergy<XVolField,YVolField,ZVolField>::Builder( tkeTempTag,
                                                                                                                  velTags_[0],velTags_[1],velTags_[2] ),true);
           
           ReductionHelper::self().add_variable<SpatialOps::SingleValueField, ReductionSumOpT>(ADVANCE_SOLUTION, TagNames::self().totalKineticEnergy, tkeTempTag, outputKE, false);
         }
       } else if (!factory.have_entry( TagNames::self().kineticEnergy )) { // calculate local, pointwise kinetic energy
         const Expr::ExpressionID keID = factory.register_expression(
-            scinew typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
+            new typename KineticEnergy<SVolField,XVolField,YVolField,ZVolField>::Builder(
                 TagNames::self().kineticEnergy, velTags_[0],velTags_[1],velTags_[2] ), true);
         graphHelper.rootIDs.insert( keID );
       }
@@ -829,7 +829,7 @@ namespace Wasatch{
 
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
     typedef typename MomRHS<FieldT>::Builder RHS;
-    return factory.register_expression( scinew RHS( rhsTag_,
+    return factory.register_expression( new RHS( rhsTag_,
                                                     (enablePressureSolve ? pressure_tag() : Expr::Tag()),
                                                     rhs_part_tag(solnVarTag_),
                                                     volFracTag ) );
@@ -1030,7 +1030,7 @@ namespace Wasatch{
                 const Expr::Tag velStarBCTag(thisVelStarTag.name() + "_" + bndName + "_copier", Expr::STATE_NONE);
                 // create and register the BCCopier
                 typedef typename BCCopier<FieldT>::Builder Copier;
-                advSlnFactory.register_expression(scinew Copier(velStarBCTag,thisVelTag_));
+                advSlnFactory.register_expression(new Copier(velStarBCTag,thisVelTag_));
                 // specify the bc on velstart using the bc copier functor
                 BndCondSpec velStarBCSpec = {thisVelStarTag.name(), velStarBCTag.name(), 0.0, DIRICHLET, FUNCTOR_TYPE};
                 // add it to the boundary conditions!
@@ -1046,8 +1046,8 @@ namespace Wasatch{
             // register outflow functor for this boundary. we'll register one functor per boundary
             const Expr::Tag outBCTag(bndName + "_outflow_bc", Expr::STATE_NONE);
             typedef typename OutflowBC<FieldT>::Builder Builder;
-            //bcHelper.register_functor_expression( scinew Builder( outBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
-            advSlnFactory.register_expression( scinew Builder( outBCTag, solution_variable_tag() ) );
+            //bcHelper.register_functor_expression( new Builder( outBCTag, thisVelTag_ ), ADVANCE_SOLUTION );
+            advSlnFactory.register_expression( new Builder( outBCTag, solution_variable_tag() ) );
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(solution_variable_tag())).name(),outBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
@@ -1093,7 +1093,7 @@ namespace Wasatch{
             // register pressurebc functor for this boundary. we'll register one functor per boundary
             const Expr::Tag openBCTag(bndName + "_open_bc", Expr::STATE_NONE);
             typedef typename OpenBC<FieldT>::Builder Builder;
-            advSlnFactory.register_expression( scinew Builder( openBCTag, solution_variable_tag() ) );
+            advSlnFactory.register_expression( new Builder( openBCTag, solution_variable_tag() ) );
             BndCondSpec rhsPartBCSpec = {(rhs_part_tag(solution_variable_tag())).name(),openBCTag.name(), 0.0, DIRICHLET,FUNCTOR_TYPE};
             bcHelper.add_boundary_condition(bndName, rhsPartBCSpec);
             
@@ -1230,7 +1230,7 @@ namespace Wasatch{
     if( icFactory.have_entry( thisVelTag_ ) ) {
       typedef typename InterpolateExpression<SVolField, FieldT>::Builder Builder;
       Expr::Tag interpolatedDensityTag(densityTag_.name() +"_interp_" + this->dir_name(), Expr::STATE_NONE);
-      icFactory.register_expression(scinew Builder(interpolatedDensityTag, Expr::Tag(densityTag_.name(),Expr::STATE_NONE)));
+      icFactory.register_expression(new Builder(interpolatedDensityTag, Expr::Tag(densityTag_.name(),Expr::STATE_NONE)));
       
       // register expression to calculate the momentum initial condition from the initial conditions on
       // velocity and density in the cases that we are initializing velocity in the input file

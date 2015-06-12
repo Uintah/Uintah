@@ -169,7 +169,7 @@ SimulationController::SimulationController( const ProcessorGroup * myworld,
   d_papiErrorCodes.insert(pair<int, string>(-23, "Too many events or attributes"));
   d_papiErrorCodes.insert(pair<int, string>(-24, "Bad combination of features"));
 
-  d_eventValues = scinew long long[d_papiEvents.size()];
+  d_eventValues = new long long[d_papiEvents.size()];
   d_eventSet = PAPI_NULL;
   int retp = -1;
 
@@ -285,7 +285,7 @@ SimulationController::doRestart( const string & restartFromDir, int timestep,
 void
 SimulationController::preGridSetup( void )
 {
-  d_sharedState = scinew SimulationState(d_ups);
+  d_sharedState = new SimulationState(d_ups);
     
   d_output = dynamic_cast<Output*>(getPort("output"));
     
@@ -305,7 +305,7 @@ SimulationController::preGridSetup( void )
   }
   
   // Parse time struct
-  d_timeinfo = scinew SimulationTime( d_ups );
+  d_timeinfo = new SimulationTime( d_ups );
   d_sharedState->d_simTime = d_timeinfo;
 }
 
@@ -325,7 +325,7 @@ SimulationController::gridSetup( void )
 
     Dir restartFromDir( d_fromDir );
     Dir checkpointRestartDir = restartFromDir.getSubdir( "checkpoints" );
-    d_archive = scinew DataArchive( checkpointRestartDir.getName(),
+    d_archive = new DataArchive( checkpointRestartDir.getName(),
                                     d_myworld->myrank(), d_myworld->size() );
 
     vector<int>    indices;
@@ -374,7 +374,7 @@ SimulationController::gridSetup( void )
   }
 
   if( !d_restarting ) {
-    grid = scinew Grid;
+    grid = new Grid;
     d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
     if( !d_sim ) {
       throw InternalError("No simulation component", __FILE__, __LINE__);
@@ -621,9 +621,9 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
       char filename[256];
       sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
       if ( timestep == 0 ) {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::trunc );
+        mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
       } else {
-        mallocPerProcStream = scinew ofstream( filename, ios::out | ios::app );
+        mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
       }
       if ( !mallocPerProcStream ) {
         delete mallocPerProcStream;
@@ -635,10 +635,6 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
     *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
     *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
-#ifndef DISABLE_SCI_MALLOC
-    *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
-    *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
-#endif
     *mallocPerProcStream << "\n";
     if ( mallocPerProcStream != &dbg ) {
       delete mallocPerProcStream;

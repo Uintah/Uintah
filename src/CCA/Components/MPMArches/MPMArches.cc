@@ -84,14 +84,14 @@ using namespace std;
   MPMArches::MPMArches(const ProcessorGroup* myworld, const bool doAMR)
 : UintahParallelComponent(myworld)
 {
-  Mlb  = scinew MPMLabel();
-  d_MAlb = scinew MPMArchesLabel();
+  Mlb  = new MPMLabel();
+  d_MAlb = new MPMArchesLabel();
 #ifdef RIGID_MPM
-  d_mpm      = scinew RigidMPM(myworld);
+  d_mpm      = new RigidMPM(myworld);
 #else
-  d_mpm      = scinew SerialMPM(myworld);
+  d_mpm      = new SerialMPM(myworld);
 #endif
-  d_arches      = scinew Arches(myworld, doAMR);
+  d_arches      = new Arches(myworld, doAMR);
   d_SMALL_NUM = 1.e-100;
   nofTimeSteps = 0;
   d_doingRestart = false; 
@@ -297,7 +297,7 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
 {
   const MaterialSubset* mpm_matls = d_sharedState->allMPMMaterials()->getUnion();
   // set initial values for Stability factors due to drag
-  Task* t = scinew Task("MPMArches::initializeKStability",
+  Task* t = new Task("MPMArches::initializeKStability",
       this, &MPMArches::initializeKStability);
   t->computes(d_MAlb->KStabilityULabel);
   t->computes(d_MAlb->KStabilityVLabel);
@@ -389,7 +389,7 @@ void MPMArches::scheduleInitializeCutCells(SchedulerP& sched,
     const PatchSet* patches,
     const MaterialSet* arches_matls)
 {
-  Task* t = scinew Task("MPMArches::initializeCutCells",
+  Task* t = new Task("MPMArches::initializeCutCells",
       this, &MPMArches::initializeCutCells);
 
   t->computes(d_MAlb->cutCellLabel);
@@ -454,7 +454,7 @@ void MPMArches::initializeCutCells(const ProcessorGroup*,
     if (new_dw->exists(d_MAlb->d_cutCellInfoLabel, matlindex, patch)) 
       new_dw->get(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
     else {
-      cutCellInfoP.setData(scinew CutCellInfo());
+      cutCellInfoP.setData(new CutCellInfo());
       new_dw->put(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
     }
     CutCellInfo* ccinfo = cutCellInfoP.get().get_rep();
@@ -856,7 +856,7 @@ void MPMArches::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
    *             using P.NAT_X and some shape function evaluations)
    *   out(G.MASS, G.VELOCITY) */
 
-  Task* t = scinew Task("MPMArches::interpolateParticlesToGrid",
+  Task* t = new Task("MPMArches::interpolateParticlesToGrid",
       this,&MPMArches::interpolateParticlesToGrid);
   int numGhostCells = 1;
 
@@ -901,7 +901,7 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
@@ -1172,7 +1172,7 @@ void MPMArches::scheduleInterpolateNCToCC(SchedulerP& sched,
   /* interpolate variables from node centers to cell center */
 
   // primitive variable initialization
-  Task* t=scinew Task("MPMArches::interpolateNCToCC",
+  Task* t=new Task("MPMArches::interpolateNCToCC",
       this, &MPMArches::interpolateNCToCC);
   int numGhostCells = 1;
 
@@ -1291,7 +1291,7 @@ void MPMArches::scheduleInterpolateCCToFC(SchedulerP& sched,
     const PatchSet* patches,
     const MaterialSet* matls)
 {
-  Task* t=scinew Task("MPMArches::interpolateCCToFC",
+  Task* t=new Task("MPMArches::interpolateCCToFC",
       this, &MPMArches::interpolateCCToFC);
   int numGhostCells = 1;
 
@@ -1557,7 +1557,7 @@ void MPMArches::scheduleComputeVoidFracMPM(SchedulerP& sched,
 {
   // primitive variable initialization
 
-  Task* t=scinew Task("MPMArches::computeVoidFracMPM",
+  Task* t=new Task("MPMArches::computeVoidFracMPM",
       this, &MPMArches::computeVoidFracMPM);
 
   int zeroGhostCells = 0;
@@ -1698,7 +1698,7 @@ void MPMArches::scheduleCopyCutCells(SchedulerP& sched,
 
 { 
   // primitive variable initialization
-  Task* t=scinew Task("MPMArches::copyCutCells",
+  Task* t=new Task("MPMArches::copyCutCells",
       this, &MPMArches::copyCutCells);
   int numGhostCells = 0;
 
@@ -1936,7 +1936,7 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 {
   // primitive variable initialization
 
-  Task* t=scinew Task("MPMArches::computeVoidFrac",
+  Task* t=new Task("MPMArches::computeVoidFrac",
       this, &MPMArches::computeVoidFrac);
 
   int zeroGhostCells = 0;
@@ -2013,7 +2013,7 @@ void MPMArches::scheduleComputeIntegratedSolidProps(SchedulerP& sched,
 {
   // primitive variable initialization
 
-  Task* t=scinew Task("MPMArches::getIntegratedProps",
+  Task* t=new Task("MPMArches::getIntegratedProps",
       this, &MPMArches::computeIntegratedSolidProps);
 
   int zeroGhostCells = 0;
@@ -2134,7 +2134,7 @@ void MPMArches::scheduleComputeTotalHT(SchedulerP& sched,
 {
   // primitive variable initialization
 
-  Task* t=scinew Task("MPMArches::getTotalHeatFlux",
+  Task* t=new Task("MPMArches::getTotalHeatFlux",
       this, &MPMArches::computeTotalHT);
 
   // Purposes: 1. To calculate the TOTAL heat transfer to 
@@ -2329,7 +2329,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
 
 { 
   // primitive variable initialization
-  Task* t=scinew Task("MPMArches::doMomExchange",
+  Task* t=new Task("MPMArches::doMomExchange",
       this, &MPMArches::doMomExchange);
   int numGhostCells = 1;
 
@@ -2460,7 +2460,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // cell-centered sources
 
   // primitive variable initialization
-  t=scinew Task("MPMArches::collectToCCGasMomExchSrcs",
+  t=new Task("MPMArches::collectToCCGasMomExchSrcs",
       this, &MPMArches::collectToCCGasMomExchSrcs);
 
   t->requires(Task::NewDW, d_MAlb->d_uVel_mmLinSrc_CCLabel, arches_matls->getUnion(),
@@ -2527,7 +2527,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
 
   // primitive variable initialization
 
-  t=scinew Task("MPMArches::interpolateCCToFCGasMomExchSrcs",
+  t=new Task("MPMArches::interpolateCCToFCGasMomExchSrcs",
       this, &MPMArches::interpolateCCToFCGasMomExchSrcs);
   // requires
 
@@ -2571,7 +2571,7 @@ void MPMArches::scheduleMomExchange(SchedulerP& sched,
   // to supply to mpm
 
   // primitive variable initialization
-  t=scinew Task("MPMArches::redistributeDragForceFromCCtoFC",
+  t=new Task("MPMArches::redistributeDragForceFromCCtoFC",
       this, &MPMArches::redistributeDragForceFromCCtoFC);
   numGhostCells = 1;
 
@@ -2746,7 +2746,7 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     if (old_dw->exists(d_Alab->d_cellInfoLabel, matlIndex, patch)) {
       old_dw->get(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch); }
     else {
-      cellInfoP.setData(scinew CellInformation(patch));
+      cellInfoP.setData(new CellInformation(patch));
     }
     new_dw->put(cellInfoP, d_Alab->d_cellInfoLabel, matlIndex, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
@@ -3552,7 +3552,7 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
   // this; Arches requires a further processing step to put sources
   // at cell centers.
 
-  Task* t=scinew Task("MPMArches::doEnergyExchange",
+  Task* t=new Task("MPMArches::doEnergyExchange",
       this, &MPMArches::doEnergyExchange);
 
   int numGhostCells = 1;
@@ -3689,7 +3689,7 @@ void MPMArches::scheduleEnergyExchange(SchedulerP& sched,
 
   // primitive variable initialization
 
-  t=scinew Task("MPMArches::collectToCCGasEnergyExchSrcs",
+  t=new Task("MPMArches::collectToCCGasEnergyExchSrcs",
       this, &MPMArches::collectToCCGasEnergyExchSrcs);
 
   numGhostCells = 1;
@@ -4225,7 +4225,7 @@ void MPMArches::schedulePutAllForcesOnCC(SchedulerP& sched,
   // Grab all of the forces and energy fluxes which Arches wants to 
   // give to MPM and accumulate them on the cell centers
 
-  Task* t=scinew Task("MPMArches::putAllForcesOnCC",
+  Task* t=new Task("MPMArches::putAllForcesOnCC",
       this, &MPMArches::putAllForcesOnCC);
 
   int zeroGhostCells = 0;
@@ -4425,7 +4425,7 @@ void MPMArches::schedulePutAllForcesOnNC(SchedulerP& sched,
 {
   // Take the cell centered forces from Arches and put them on the
   // nodes where SerialMPM can grab and use them
-  Task* t=scinew Task("MPMArches::putAllForcesOnNC",
+  Task* t=new Task("MPMArches::putAllForcesOnNC",
       this, &MPMArches::putAllForcesOnNC);
 
   int numGhostCells = 1;
@@ -4529,7 +4529,7 @@ void MPMArches::scheduleComputeAndIntegrateAcceleration(SchedulerP& sched,
     const PatchSet* patches,
     const MaterialSet* matls)
 {
-  Task* t = scinew Task("MPMArches::computeAndIntegrateAcceleration",
+  Task* t = new Task("MPMArches::computeAndIntegrateAcceleration",
       this, &MPMArches::computeAndIntegrateAcceleration);
 
   t->requires(Task::OldDW, d_sharedState->get_delt_label() );
@@ -4600,7 +4600,7 @@ void MPMArches::scheduleSolveHeatEquations(SchedulerP& sched,
 {
   d_mpm->scheduleSolveHeatEquations(sched,patches,matls);
 
-  Task* t = scinew Task("MPMArches::solveHeatEquations",
+  Task* t = new Task("MPMArches::solveHeatEquations",
       this, &MPMArches::solveHeatEquations);
 
   t->requires(Task::NewDW, Mlb->heaTranSolid_NCLabel,  Ghost::None);
@@ -4676,7 +4676,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
           "cutcell", true, 
           &makeMPI_cutcell);
     }

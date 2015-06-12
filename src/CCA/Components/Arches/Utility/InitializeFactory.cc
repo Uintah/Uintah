@@ -61,16 +61,16 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         if ( dependent_type == "svol"){ 
 
           if ( independent_type == "svol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SVol, SVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<SVol, SVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else if ( independent_type == "xvol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<XVol, SVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<XVol, SVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else if ( independent_type == "yvol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<YVol, SVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<YVol, SVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else if ( independent_type == "zvol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<ZVol, SVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<ZVol, SVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else { 
             throw InvalidValue("Error: SpatalOps grid variable type not recognized for waveform.",__FILE__,__LINE__);
@@ -81,16 +81,16 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
         } else if ( dependent_type == "xvol"){ 
 
           if ( independent_type == "svol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<SVol, XVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<SVol, XVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else if ( independent_type == "xvol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<XVol, XVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<XVol, XVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else if ( independent_type == "yvol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<YVol, XVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<YVol, XVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else if ( independent_type == "zvol"){ 
-            TaskInterface::TaskBuilder* tsk = scinew WaveFormInit<ZVol, XVol>::Builder(task_name, 0, eqn_name); 
+            TaskInterface::TaskBuilder* tsk = new WaveFormInit<ZVol, XVol>::Builder(task_name, 0, eqn_name); 
             register_task( task_name, tsk ); 
           } else { 
             throw InvalidValue("Error: SpatalOps grid variable type not recognized for waveform.",__FILE__,__LINE__);
@@ -104,19 +104,19 @@ InitializeFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "random_lagrangian_particles"){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew RandParticleLoc::Builder( task_name, 0 ); 
+        TaskInterface::TaskBuilder* tsk = new RandParticleLoc::Builder( task_name, 0 ); 
         register_task( task_name, tsk ); 
         _active_tasks.push_back(task_name); 
 
       } else if ( type == "lagrangian_particle_velocity"){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew InitLagrangianParticleVelocity::Builder( task_name, 0 ); 
+        TaskInterface::TaskBuilder* tsk = new InitLagrangianParticleVelocity::Builder( task_name, 0 ); 
         register_task( task_name, tsk ); 
         _active_tasks.push_back(task_name); 
 
       } else if ( type == "lagrangian_particle_size"){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew InitLagrangianParticleSize::Builder( task_name, 0 ); 
+        TaskInterface::TaskBuilder* tsk = new InitLagrangianParticleSize::Builder( task_name, 0 ); 
         register_task( task_name, tsk ); 
         _active_tasks.push_back(task_name); 
 

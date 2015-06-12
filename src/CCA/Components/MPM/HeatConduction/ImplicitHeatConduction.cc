@@ -60,7 +60,7 @@ ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
   do_IHC=d_flag->d_doImplicitHeatConduction;
   d_HC_transient=d_flag->d_doTransientImplicitHeatConduction;
 
-  one_matl = scinew MaterialSubset();
+  one_matl = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
 
@@ -92,11 +92,11 @@ void ImplicitHeatConduction::problemSetup(string solver_type)
 {
 
   if (solver_type == "petsc") {
-    d_HC_solver = scinew MPMPetscSolver();
+    d_HC_solver = new MPMPetscSolver();
     d_HC_solver->initialize();
   }
   else {
-    d_HC_solver=scinew SimpleSolver();
+    d_HC_solver=new SimpleSolver();
     d_HC_solver->initialize();
   }
 }
@@ -106,7 +106,7 @@ void ImplicitHeatConduction::scheduleDestroyHCMatrix(SchedulerP& sched,
                                                      const MaterialSet* matls)
 {
  if(do_IHC){
-   Task* t = scinew Task("ImpMPM::destroyHCMatrix",this,
+   Task* t = new Task("ImpMPM::destroyHCMatrix",this,
                          &ImplicitHeatConduction::destroyHCMatrix);                                                                                
    t->setType(Task::OncePerProc);
    sched->addTask(t, patches, matls);
@@ -118,7 +118,7 @@ void ImplicitHeatConduction::scheduleCreateHCMatrix(SchedulerP& sched,
                                                     const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::createHCMatrix",this,
+  Task* t = new Task("ImpMPM::createHCMatrix",this,
                         &ImplicitHeatConduction::createHCMatrix);
                                                                                 
   t->requires(Task::OldDW, lb->pXLabel,Ghost::AroundNodes,1);
@@ -136,7 +136,7 @@ void ImplicitHeatConduction::scheduleApplyHCBoundaryConditions(SchedulerP& schd,
                                                const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::applyHCBoundaryCondition", this,
+  Task* t = new Task("ImpMPM::applyHCBoundaryCondition", this,
                         &ImplicitHeatConduction::applyHCBoundaryConditions);
                                                                                 
   t->computes(lb->gTemperatureStarLabel,one_matl);
@@ -152,7 +152,7 @@ void ImplicitHeatConduction::scheduleFindFixedHCDOF(SchedulerP& sched,
                                                     const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::findFixedHCDOF", this,
+  Task* t = new Task("ImpMPM::findFixedHCDOF", this,
                         &ImplicitHeatConduction::findFixedHCDOF);
                                                                                 
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None, 0);
@@ -168,7 +168,7 @@ void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
                                                      const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::formHCStiffnessMatrix",this,
+  Task* t = new Task("ImpMPM::formHCStiffnessMatrix",this,
                         &ImplicitHeatConduction::formHCStiffnessMatrix);
 
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
@@ -185,7 +185,7 @@ void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
                                              const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::formHCQ", this,
+  Task* t = new Task("ImpMPM::formHCQ", this,
                         &ImplicitHeatConduction::formHCQ);
                                                                                 
   t->requires(Task::OldDW,      d_sharedState->get_delt_label());
@@ -204,7 +204,7 @@ void ImplicitHeatConduction::scheduleAdjustHCQAndHCKForBCs(SchedulerP& sched,
                                                      const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::adjustHCQAndHCKForBCs", this,
+  Task* t = new Task("ImpMPM::adjustHCQAndHCKForBCs", this,
                         &ImplicitHeatConduction::adjustHCQAndHCKForBCs);
 
   Ghost::GhostType  gnone = Ghost::None;
@@ -221,7 +221,7 @@ void ImplicitHeatConduction::scheduleSolveForTemp(SchedulerP& sched,
                                                   const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::solveForTemp", this,
+  Task* t = new Task("ImpMPM::solveForTemp", this,
                         &ImplicitHeatConduction::solveForTemp);
   
 #if 0
@@ -239,7 +239,7 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
                                                        const MaterialSet* matls)
 {
  if(do_IHC){
-  Task* t = scinew Task("ImpMPM::getTemperatureIncrement", this,
+  Task* t = new Task("ImpMPM::getTemperatureIncrement", this,
                         &ImplicitHeatConduction::getTemperatureIncrement);
 
   t->requires(Task::OldDW,      d_sharedState->get_delt_label());
@@ -250,7 +250,7 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   sched->addTask(t, patches, matls);
  }
  else{
-  Task* t = scinew Task("ImpMPM::fillgTemperatureRate", this,
+  Task* t = new Task("ImpMPM::fillgTemperatureRate", this,
                         &ImplicitHeatConduction::fillgTemperatureRate);
 
   t->computes(lb->gTemperatureRateLabel,one_matl);
@@ -553,7 +553,7 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
 
     Vector dx = patch->dCell();
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);
 
     d_HC_solver->copyL2G(l2g,patch);
     int numMatls = d_sharedState->getNumMPMMatls();
@@ -650,7 +650,7 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     }
     Array3<int> l2g(lowIndex,highIndex);
 
-    LinearInterpolator* interpolator = scinew LinearInterpolator(patch);                                                                                
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);                                                                                
     d_HC_solver->copyL2G(l2g,patch);
 
     constNCVariable<double> temperature;

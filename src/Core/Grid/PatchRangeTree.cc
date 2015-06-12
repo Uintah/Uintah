@@ -37,14 +37,13 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
      d_patchPoints(new PatchPoint[patches.size()]),
      d_numPatches((int)patches.size())
 {
-  TAU_PROFILE("PatchRangeTree::PatchRangeTree-a", " ", TAU_USER);
   list<PatchPoint*> pointList;
   IntVector dimensions;
-  
+
   for (int i = 0; i < (int)patches.size(); i++) {
     d_patchPoints[i].setPatch(patches[i]);
     pointList.push_back(&d_patchPoints[i]);
-    
+
     dimensions =
       patches[i]->getExtraNodeHighIndex() - patches[i]->getExtraNodeLowIndex();
 
@@ -55,7 +54,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
     }
   }
 
-  d_rangeTree = scinew RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
+  d_rangeTree = new RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
 }
 
 PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
@@ -63,14 +62,13 @@ PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
      d_patchPoints(new PatchPoint[patches.size()]),
      d_numPatches((int)patches.size())
 {
-  TAU_PROFILE("PatchRangeTree::PatchRangeTree-b", " ", TAU_USER);
   list<PatchPoint*> pointList;
   IntVector dimensions;
-  
+
   for (int i = 0; i < (int)patches.size(); i++) {
     d_patchPoints[i].setPatch(patches[i]);
     pointList.push_back(&d_patchPoints[i]);
-    
+
     dimensions =
       patches[i]->getExtraNodeHighIndex() - patches[i]->getExtraNodeLowIndex();
 
@@ -81,7 +79,7 @@ PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
     }
   }
 
-  d_rangeTree = scinew RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
+  d_rangeTree = new RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
 }
 
 PatchRangeTree::~PatchRangeTree()
@@ -118,7 +116,7 @@ void PatchRangeTree::query(const IntVector& low, const IntVector& high,
 
   //foundPatches.reserve(foundPatches.size() + foundPoints.size());
   for (list<PatchPoint*>::iterator it = foundPoints.begin();
-       it != foundPoints.end(); it++) {    
+       it != foundPoints.end(); it++) {
     const Patch* patch = (*it)->getPatch();
     IntVector l=Max(patch->getCellLowIndex(), low);
     IntVector u=Min(patch->getCellHighIndex(), high);

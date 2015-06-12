@@ -42,6 +42,9 @@
 
 @DEF_RAY_SCATTER@
 
+#define SCIRUN_SRCDIR "@scirun_src_dir@"
+#define SCIRUN_OBJDIR "@scirun_obj_dir@"
+
 #if !defined( FIX_NAME )
 #  if defined( FORTRAN_UNDERSCORE_END )
      // This ## magic (apparently) concatenates the _ to the 'fun' varaible.

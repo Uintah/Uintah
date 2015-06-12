@@ -232,7 +232,7 @@ namespace Uintah {
       throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
     }
     // this task will allocate a particle subset and create particle positions
-    Uintah::Task* task = scinew Uintah::Task("initialize particles memory",
+    Uintah::Task* task = new Uintah::Task("initialize particles memory",
                                              this, &ParticlesHelper::initialize);
     task->computes(pPosLabel_);
     task->computes(pIDLabel_);
@@ -264,7 +264,7 @@ namespace Uintah {
         const int patchID = patch->getID();
         
         lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
-        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patchID, scinew ParticleSubset(0,matl,patch)));
+        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patchID, new ParticleSubset(0,matl,patch)));
         
         // create a subset with the correct number of particles. This will serve as the initial memory
         // block for particles
@@ -290,7 +290,7 @@ namespace Uintah {
                                                      Uintah::SchedulerP& sched)
   {
     // this task will allocate a particle subset and create particle positions
-    Uintah::Task* task = scinew Uintah::Task("restart initialize particles",
+    Uintah::Task* task = new Uintah::Task("restart initialize particles",
                                              this, &ParticlesHelper::restart_initialize);
     task->requires(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
@@ -316,7 +316,7 @@ namespace Uintah {
         const int patchID = patch->getID();
         
         lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
-        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patchID, scinew ParticleSubset(0,matl,patch)));
+        thisMaterialDeleteSet.insert( std::pair<int, ParticleSubset*>(patchID, new ParticleSubset(0,matl,patch)));
         
         ParticleSubset* pset = new_dw->haveParticleSubset(matl,patch) ? new_dw->getParticleSubset(matl, patch) : old_dw->getParticleSubset(matl, patch);
         
@@ -340,7 +340,7 @@ namespace Uintah {
                                                           Uintah::SchedulerP& sched)
   {
     using namespace Uintah;
-    Uintah::Task* task = scinew Uintah::Task("delete outside particles",
+    Uintah::Task* task = new Uintah::Task("delete outside particles",
                                              this, &ParticlesHelper::delete_outside_particles);
     task->modifies(pXLabel_);
     task->modifies(pYLabel_);
@@ -428,7 +428,7 @@ namespace Uintah {
     sched->scheduleParticleRelocation(level, pPosLabel_, otherParticleVars, materials_);
     
     // clean the delete set
-    Task* task = scinew Task("cleanup deleteset", this, &ParticlesHelper::clear_deleteset);
+    Task* task = new Task("cleanup deleteset", this, &ParticlesHelper::clear_deleteset);
     sched->addTask(task, level->eachPatch(), materials_);
   }
   
@@ -449,7 +449,7 @@ namespace Uintah {
         const Patch* patch = patches->get(p);
         ParticleSubset* existingDelset = thisMatDelSet[patch->getID()];
         if( existingDelset->numParticles() > 0 ){
-          ParticleSubset* delset = scinew ParticleSubset(0,matl, patch);
+          ParticleSubset* delset = new ParticleSubset(0,matl, patch);
           thisMatDelSet[patch->getID()] = delset;
         }
       }
@@ -463,7 +463,7 @@ namespace Uintah {
                                                        Uintah::SchedulerP& sched)
   {
     using namespace Uintah;
-    Uintah::Task* task = scinew Uintah::Task( "transfer particles IDs",
+    Uintah::Task* task = new Uintah::Task( "transfer particles IDs",
                                               this, &ParticlesHelper::transfer_particle_ids );
     task->computes(pIDLabel_);
     task->requires(Task::OldDW, pIDLabel_, Uintah::Ghost::None, 0);
@@ -501,7 +501,7 @@ namespace Uintah {
                                                          const bool initialization )
   {
     using namespace Uintah;
-    Uintah::Task* task = scinew Uintah::Task("sync particles", this, &ParticlesHelper::sync_particle_position, initialization );
+    Uintah::Task* task = new Uintah::Task("sync particles", this, &ParticlesHelper::sync_particle_position, initialization );
     if( initialization ){
       task->modifies( pPosLabel_ );
     }
@@ -629,7 +629,7 @@ namespace Uintah {
   {
     
     // this task will allocate a particle subset and create particle positions
-    Uintah::Task* task = scinew Uintah::Task("find boundary particles",
+    Uintah::Task* task = new Uintah::Task("find boundary particles",
                                              this, &ParticlesHelper::find_boundary_particles);
     task->requires(Task::OldDW, pPosLabel_, Uintah::Ghost::None, 0);
     sched->addTask(task, level->eachPatch(), materials_);
@@ -832,7 +832,7 @@ namespace Uintah {
   {
     if( needsBC_.size() == 0 ) return;
     // this task will allocate a particle subset and create particle positions
-    Uintah::Task* task = scinew Uintah::Task( "add particles",
+    Uintah::Task* task = new Uintah::Task( "add particles",
                                               this, &ParticlesHelper::add_particles );
     for( size_t i=0; i<needsBC_.size(); ++i ){
       task->modifies(Uintah::VarLabel::find(needsBC_[i]));

@@ -361,7 +361,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
       case CC_INT:
         if ( ivar.depend == REQUIRES ){ 
 
-          constCCVariable<int>* var = scinew constCCVariable<int>; 
+          constCCVariable<int>* var = new constCCVariable<int>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           ArchesFieldContainer::ConstFieldContainer icontain; 
           icontain.set_field(var);
@@ -372,7 +372,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else if ( ivar.depend == MODIFIES ){ 
 
-          CCVariable<int>* var = scinew CCVariable<int>;
+          CCVariable<int>* var = new CCVariable<int>;
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -381,7 +381,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else { 
 
-          CCVariable<int>* var = scinew CCVariable<int>;
+          CCVariable<int>* var = new CCVariable<int>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -395,7 +395,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         if ( ivar.depend == REQUIRES ){ 
 
-          constCCVariable<double>* var = scinew constCCVariable<double>; 
+          constCCVariable<double>* var = new constCCVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           ArchesFieldContainer::ConstFieldContainer icontain; 
           icontain.set_field(var);
@@ -405,7 +405,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else if ( ivar.depend == MODIFIES ){ 
 
-          CCVariable<double>* var = scinew CCVariable<double>;
+          CCVariable<double>* var = new CCVariable<double>;
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -414,7 +414,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
             
         } else { 
 
-          CCVariable<double>* var = scinew CCVariable<double>;
+          CCVariable<double>* var = new CCVariable<double>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -428,7 +428,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         if ( ivar.depend == REQUIRES ){ 
 
-          constCCVariable<Vector>* var = scinew constCCVariable<Vector>; 
+          constCCVariable<Vector>* var = new constCCVariable<Vector>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           ArchesFieldContainer::ConstFieldContainer icontain; 
           icontain.set_field(var);
@@ -438,7 +438,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else if ( ivar.depend == MODIFIES ){ 
 
-          CCVariable<Vector>* var = scinew CCVariable<Vector>;
+          CCVariable<Vector>* var = new CCVariable<Vector>;
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -447,7 +447,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else { 
 
-          CCVariable<Vector>* var = scinew CCVariable<Vector>;
+          CCVariable<Vector>* var = new CCVariable<Vector>;
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -461,7 +461,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         if ( ivar.depend == REQUIRES ){ 
 
-          constSFCXVariable<double>* var = scinew constSFCXVariable<double>; 
+          constSFCXVariable<double>* var = new constSFCXVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           ArchesFieldContainer::ConstFieldContainer icontain; 
           icontain.set_field(var);
@@ -471,7 +471,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else if ( ivar.depend == MODIFIES ){ 
 
-          SFCXVariable<double>* var = scinew SFCXVariable<double>; 
+          SFCXVariable<double>* var = new SFCXVariable<double>; 
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -480,7 +480,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else { 
 
-          SFCXVariable<double>* var = scinew SFCXVariable<double>; 
+          SFCXVariable<double>* var = new SFCXVariable<double>; 
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -494,7 +494,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         if ( ivar.depend == REQUIRES ){ 
 
-          constSFCYVariable<double>* var = scinew constSFCYVariable<double>; 
+          constSFCYVariable<double>* var = new constSFCYVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           ArchesFieldContainer::ConstFieldContainer icontain; 
           icontain.set_field(var);
@@ -504,7 +504,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else if ( ivar.depend == MODIFIES ){ 
 
-          SFCYVariable<double>* var = scinew SFCYVariable<double>; 
+          SFCYVariable<double>* var = new SFCYVariable<double>; 
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -513,7 +513,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else { 
 
-          SFCYVariable<double>* var = scinew SFCYVariable<double>; 
+          SFCYVariable<double>* var = new SFCYVariable<double>; 
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -527,7 +527,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         if ( ivar.depend == REQUIRES ){ 
 
-          constSFCZVariable<double>* var = scinew constSFCZVariable<double>; 
+          constSFCZVariable<double>* var = new constSFCZVariable<double>; 
           resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep ); 
           ArchesFieldContainer::ConstFieldContainer icontain; 
           icontain.set_field(var);
@@ -537,7 +537,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else if ( ivar.depend == MODIFIES ){ 
 
-          SFCZVariable<double>* var = scinew SFCZVariable<double>; 
+          SFCZVariable<double>* var = new SFCZVariable<double>; 
           new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -546,7 +546,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         } else { 
 
-          SFCZVariable<double>* var = scinew SFCZVariable<double>; 
+          SFCZVariable<double>* var = new SFCZVariable<double>; 
           new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
           ArchesFieldContainer::FieldContainer icontain; 
           icontain.set_field(var);
@@ -560,7 +560,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 
         if ( ivar.depend == REQUIRES ){ 
 
-          constParticleVariable<double>* var = scinew constParticleVariable<double>; 
+          constParticleVariable<double>* var = new constParticleVariable<double>; 
 
           if ( ivar.dw_inquire ){ 
             if ( time_substep > 0 ){ 
@@ -591,7 +591,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           //not sure what to do here about the particleSubset...
           //for now grabbing only from old: 
           ParticleSubset* subset = old_dw->getParticleSubset( _matl_index, patch ); 
-          ParticleVariable<double>* var = scinew ParticleVariable<double>; 
+          ParticleVariable<double>* var = new ParticleVariable<double>; 
           new_dw->getModifiable( *var, ivar.label, subset ); 
           ArchesFieldContainer::ParticleFieldContainer icontain; 
           icontain.set_field(var); 
@@ -609,7 +609,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
           } else { 
             subset = old_dw->getParticleSubset( _matl_index, patch ); 
           }
-          ParticleVariable<double>* var = scinew ParticleVariable<double>; 
+          ParticleVariable<double>* var = new ParticleVariable<double>; 
           new_dw->allocateAndPut( *var, ivar.label, subset ); 
           ArchesFieldContainer::ParticleFieldContainer icontain; 
           icontain.set_field(var); 
@@ -646,9 +646,9 @@ void TaskInterface::schedule_task( const LevelP& level,
   Task* tsk;
   
   if ( task_type == STANDARD_TASK )
-    tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
+    tsk = new Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
   else if ( task_type == BC_TASK )
-    tsk = scinew Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep ); 
+    tsk = new Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep ); 
   else 
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
 
@@ -728,9 +728,9 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   Task* tsk;
   if ( is_restart ){ 
-    tsk = scinew Task( _task_name+"_restart_initialize", this, &TaskInterface::do_restart_init, variable_registry ); 
+    tsk = new Task( _task_name+"_restart_initialize", this, &TaskInterface::do_restart_init, variable_registry ); 
   } else { 
-    tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
+    tsk = new Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
   }
 
   int counter = 0;
@@ -783,7 +783,7 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
   resolve_labels( variable_registry ); 
 
-  Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry ); 
+  Task* tsk = new Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry ); 
 
   int counter = 0; 
 
@@ -844,7 +844,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch); 
   
     SchedToTaskInfo info; 
 
@@ -854,7 +854,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     info.dt = DT; 
     info.time_substep = time_substep; 
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
     resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false ); 
@@ -888,7 +888,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch); 
   
     SchedToTaskInfo info; 
 
@@ -898,7 +898,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     info.dt = DT; 
     info.time_substep = time_substep; 
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
     resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false ); 
@@ -931,7 +931,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch); 
 
     SchedToTaskInfo info; 
 
@@ -939,7 +939,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     info.dt = 0; 
     info.time_substep = 0; 
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
     resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, true ); 
@@ -972,7 +972,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch); 
 
     SchedToTaskInfo info; 
 
@@ -980,7 +980,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
     info.dt = 0; 
     info.time_substep = 0; 
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
     resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, true ); 
@@ -1013,7 +1013,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+    ArchesFieldContainer* field_container = new ArchesFieldContainer(ainfo, patch); 
 
     SchedToTaskInfo info; 
 
@@ -1021,7 +1021,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     info.dt = 0; 
     info.time_substep = 0; 
 
-    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
+    ArchesTaskInfoManager* tsk_info_mngr = new ArchesTaskInfoManager(variable_registry, patch, info); 
 
     //doing DW gets...
     resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false ); 

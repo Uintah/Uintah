@@ -34,7 +34,7 @@ RichardsFletcherDevolBuilder::RichardsFletcherDevolBuilder( const std::string   
 RichardsFletcherDevolBuilder::~RichardsFletcherDevolBuilder(){}
 
 ModelBase* RichardsFletcherDevolBuilder::build() {
-  return scinew RichardsFletcherDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new RichardsFletcherDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -174,7 +174,7 @@ void
 RichardsFletcherDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "RichardsFletcherDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &RichardsFletcherDevol::computeModel, timeSubStep);
+  Task* tsk = new Task(taskname, this, &RichardsFletcherDevol::computeModel, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
 

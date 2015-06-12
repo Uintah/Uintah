@@ -29,7 +29,7 @@
 #include <Core/Grid/Grid.h>
 
 #include <Core/Util/NotFinished.h>
-#include <Core/Malloc/Allocator.h>
+
 
 using namespace std;
 
@@ -39,7 +39,7 @@ using namespace SCIRun;
 
 static Persistent* maker()
 {
-    return scinew TensorParticles;
+    return new TensorParticles;
 }
 
 PersistentTypeID TensorParticles::type_id("TensorParticles", "ParticleSet", maker);

@@ -31,7 +31,7 @@
 #include <Core/Grid/Patch.h>
 
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include <cmath>
 
@@ -74,7 +74,7 @@ SphereMembraneGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 SphereMembraneGeometryPiece::clone() const
 {
-  return scinew SphereMembraneGeometryPiece(*this);
+  return new SphereMembraneGeometryPiece(*this);
 }
 
 bool

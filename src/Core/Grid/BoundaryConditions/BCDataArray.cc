@@ -32,7 +32,7 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 #include <algorithm>
 #include <set>
@@ -123,7 +123,7 @@ BCDataArray& BCDataArray::operator=(const BCDataArray& rhs)
 
 BCDataArray* BCDataArray::clone()
 {
-  return scinew BCDataArray(*this);
+  return new BCDataArray(*this);
 }
 
 //------------------------------------------------------------------------------------------------
@@ -270,7 +270,7 @@ void BCDataArray::combineBCGeometryTypes(int mat_id)
   if (count_if(d_BCDataArray_vec.begin(),d_BCDataArray_vec.end(),
                cmp_type<SideBCData>()) > 1) {
     
-    SideBCData* side_bc = scinew SideBCData();
+    SideBCData* side_bc = new SideBCData();
     for (vector<BCGeomBase*>::const_iterator itr = d_BCDataArray_vec.begin();
          itr != d_BCDataArray_vec.end(); ++ itr) {
       if (typeid(*(*itr)) == typeid(SideBCData)) {

@@ -40,7 +40,7 @@
 #include <Core/Persistent/Pstreams.h>
 
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Endian.h>
 #include <Core/Util/StringUtil.h>
 
@@ -798,7 +798,7 @@ TextPiostream::TextPiostream(const string& filename, Direction dir,
   else
   {
     istr=0;
-    ostr=scinew ofstream(filename.c_str());
+    ostr=new ofstream(filename.c_str());
     ostream& out=*ostr;
     if (!out)
     {

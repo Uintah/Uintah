@@ -147,7 +147,7 @@ DynamicMPIScheduler::~DynamicMPIScheduler()
 SchedulerP
 DynamicMPIScheduler::createSubScheduler()
 {
-  DynamicMPIScheduler* newsched = scinew DynamicMPIScheduler(d_myworld, m_outPort, this);
+  DynamicMPIScheduler* newsched = new DynamicMPIScheduler(d_myworld, m_outPort, this);
   newsched->d_sharedState = d_sharedState;
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
@@ -166,17 +166,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     return;
   }
 
-  MALLOC_TRACE_TAG_SCOPE("DynamicMPIScheduler::execute");
 
-  TAU_PROFILE("DynamicMPIScheduler::execute()", " ", TAU_USER); 
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[DynamicMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[DynamicMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[DynamicMPIScheduler::execute()] " , TAU_USER); 
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[DynamicMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[DynamicMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[DynamicMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[DynamicMPIScheduler::execute()] ",TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[DynamicMPIScheduler::execute()] ", TAU_USER);
 
   ASSERTRANGE(tgnum, 0, (int)graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -197,7 +187,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     }
     return;
   }
-  
+
   int ntasks = dts->numLocalTasks();
   dts->initializeScrubs(dws, dwmap);
   dts->initTimestep();
@@ -239,8 +229,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[DynamicMPIScheduler::execute() loop] ", TAU_USER); 
-  TAU_PROFILE_START(doittimer);
 
 #if 0
   // hook to post all the messages up front
@@ -260,7 +248,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   for (int i = 0; i < ntasks; i++) {
     phaseTasks[dts->localTask(i)->getTask()->d_phase]++;
   }
-  
+
   if (dynamicmpi_dbg.active()) {
     cerrLock.lock();
     dynamicmpi_dbg << me << " Executing " << dts->numTasks() << " tasks (" << ntasks << " local)";
@@ -278,7 +266,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   while( numTasksDone < ntasks ) {
     i++;
 
-    // 
+    //
     // The following checkMemoryUse() is commented out to allow for
     // maintaining the same functionality as before this commit...
     // In other words, so that memory highwater checking is only done
@@ -297,7 +285,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     DetailedTask * task = 0;
 
     // if we have an internally-ready task, initiate its recvs
-    while(dts->numInternalReadyTasks() > 0) { 
+    while(dts->numInternalReadyTasks() > 0) {
       DetailedTask * task = dts->getNextInternalReadyTask();
 
       if ((task->getTask()->getType() == Task::Reduction) || (task->getTask()->usesMPI())) {  //save the reduction task for later
@@ -324,7 +312,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         }
         histogram[dts->numExternalReadyTasks()]++;
       }
-     
+
       DetailedTask * task = dts->getNextExternalReadyTask();
 #ifdef USE_TAU_PROFILING
       int id;
@@ -389,7 +377,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 #ifdef USE_TAU_PROFILING
       TAU_MAPPING_PROFILE_STOP(doitprofiler);
 #endif
-    } 
+    }
 
     if ((phaseSyncTask.find(currphase) != phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {  //if it is time to run the reduction task
       if (dynamicmpi_queuelength.active()) {
@@ -457,8 +445,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
     }
   } // end while( numTasksDone < ntasks )
 
-  TAU_PROFILE_STOP(doittimer);
-  
+
   if (dynamicmpi_queuelength.active()) {
     float lengthsum = 0;
     totaltasks += ntasks;
@@ -473,7 +460,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
 
     proc0cout << "average queue length:" << allqueuelength / d_myworld->size() << std::endl;
   }
-  
+
   if (dynamicmpi_timeout.active()) {
     emitTime("MPI send time", mpi_info_.totalsendmpi);
     emitTime("MPI Testsome time", mpi_info_.totaltestmpi);
@@ -521,7 +508,7 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
   }
 
   finalizeTimestep();
-  
+
 
   log.finishTimestep();
   if( dynamicmpi_timeout.active() && !parentScheduler_ ){ // only do on toplevel scheduler

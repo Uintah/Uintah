@@ -39,7 +39,7 @@
 #include <Core/Datatypes/DenseColMajMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/Expon.h>
 #include <Core/Math/LinAlg.h>
 #include <iostream>
@@ -51,7 +51,7 @@ namespace SCIRun {
 
 static Persistent* maker()
 {
-    return scinew ColumnMatrix(0);
+    return new ColumnMatrix(0);
 }
 
 PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Matrix", maker);
@@ -60,7 +60,7 @@ ColumnMatrix::ColumnMatrix(int rows) :
   Matrix(rows, 1)
 {
     if(nrows_)
-	data=scinew double[nrows_];
+	data=new double[nrows_];
     else
 	data=0;
 }
@@ -69,7 +69,7 @@ ColumnMatrix::ColumnMatrix(const ColumnMatrix& c) :
   Matrix(c.nrows_, 1)
 {
   if(nrows_){
-    data=scinew double[nrows_];
+    data=new double[nrows_];
     for(int i=0;i<nrows_;i++)
       data[i]=c.data[i];
   } else {
@@ -88,7 +88,7 @@ ColumnMatrix::column()
 DenseMatrix *
 ColumnMatrix::dense()
 {
-  DenseMatrix *dm = scinew DenseMatrix(nrows_, 1);
+  DenseMatrix *dm = new DenseMatrix(nrows_, 1);
   for (int i = 0; i < nrows_; i++)
   {
     (*dm)[i][0] = data[i];
@@ -100,7 +100,7 @@ ColumnMatrix::dense()
 DenseColMajMatrix *
 ColumnMatrix::dense_col_maj()
 {
-  DenseColMajMatrix *dm = scinew DenseColMajMatrix(nrows_, 1);
+  DenseColMajMatrix *dm = new DenseColMajMatrix(nrows_, 1);
   for (int i = 0; i < nrows_; i++)
   {
     dm->iget(i, 0) = data[i];
@@ -114,12 +114,12 @@ ColumnMatrix::sparse()
 {
   int nnz = 0;
   int r;
-  int *row = scinew int[nrows_+1];
+  int *row = new int[nrows_+1];
   for (r=0; r<nrows_; r++)
     if (data[r] != 0) nnz++;
   
-  int *columns = scinew int[nnz];
-  double *a = scinew double[nnz];
+  int *columns = new int[nnz];
+  double *a = new double[nnz];
   
   int count=0;
   for (r=0; r<nrows_; r++) {
@@ -131,7 +131,7 @@ ColumnMatrix::sparse()
     }
   }
   row[nrows_]=count;
-  return scinew SparseRowMatrix(nrows_, 1, row, columns, nnz, a);
+  return new SparseRowMatrix(nrows_, 1, row, columns, nnz, a);
 }
 
 
@@ -150,14 +150,14 @@ ColumnMatrix::get_data_size()
 
 
 Matrix *ColumnMatrix::transpose() {
-  DenseMatrix *dm = scinew DenseMatrix(1, nrows_);
+  DenseMatrix *dm = new DenseMatrix(1, nrows_);
   for (int i=0; i<nrows_; i++)
     (*dm)[0][i] = data[i];
   return dm;
 }
 
 ColumnMatrix* ColumnMatrix::clone() {
-    return scinew ColumnMatrix(*this);
+    return new ColumnMatrix(*this);
 }
 
 ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)
@@ -165,7 +165,7 @@ ColumnMatrix& ColumnMatrix::operator=(const ColumnMatrix& c)
     if(nrows_ != c.nrows_){
 	if(data)delete[] data;
 	nrows_=c.nrows_;
-	data=scinew double[nrows_];
+	data=new double[nrows_];
     }
     for(int i=0;i<nrows_;i++)
 	data[i]=c.data[i];
@@ -317,7 +317,7 @@ void ColumnMatrix::io(Piostream& stream)
 
     if (stream.reading())
     {
-      data = scinew double[nrows_];
+      data = new double[nrows_];
     }
 
     if (!stream.block_io(data, sizeof(double), nrows_))
@@ -506,7 +506,7 @@ ColumnMatrix::submatrix(int r1, int c1, int r2, int c2)
   ASSERTEQ(c1, 0);
   ASSERTEQ(c2, 0);
 
-  ColumnMatrix *mat = scinew ColumnMatrix(r2 - r1 + 1);
+  ColumnMatrix *mat = new ColumnMatrix(r2 - r1 + 1);
   memcpy(mat->data, data + r1, (r2 - r1 + 1) * sizeof(double));
 
   return mat;

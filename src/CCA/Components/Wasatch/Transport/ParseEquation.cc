@@ -133,23 +133,23 @@ namespace Wasatch{
 
     if( eqnLabel == "generic" ){
        typedef ScalarTransportEquation< SVolField > ScalarTransEqn;
-        transeqn = scinew ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
+        transeqn = new ScalarTransEqn( ScalarTransEqn::get_solnvar_name( params ),
                                           params,
                                           gc,
                                           densityTag,
                                           isConstDensity,
                                           turbParams );
-        adaptor = scinew EqnTimestepAdaptor< SVolField >( transeqn );
+        adaptor = new EqnTimestepAdaptor< SVolField >( transeqn );
     }
     else if( eqnLabel == "enthalpy" ){
       typedef EnthalpyTransportEquation TransEqn;
-      transeqn = scinew TransEqn( ScalarTransportEquation<SVolField>::get_solnvar_name(params),
+      transeqn = new TransEqn( ScalarTransportEquation<SVolField>::get_solnvar_name(params),
                                   params,
                                   gc,
                                   densityTag,
                                   isConstDensity,
                                   turbParams );
-      adaptor = scinew EqnTimestepAdaptor<SVolField>(transeqn);
+      adaptor = new EqnTimestepAdaptor<SVolField>(transeqn);
     }
     else {
       std::ostringstream msg;
@@ -206,12 +206,12 @@ namespace Wasatch{
       const Expr::Tag icTag( thisPhiName, Expr::STATE_NONE );
       const Expr::Tag indepVarTag( "XSVOL", Expr::STATE_NONE );
       typedef Expr::SinFunction<SVolField>::Builder Builder;
-      icGraphHelper->exprFactory->register_expression( scinew Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
+      icGraphHelper->exprFactory->register_expression( new Builder( icTag, indepVarTag, 1.0, 1, 0.0) );
 
       // create the transport equation with all-to-all source term
       typedef ScalabilityTestTransportEquation< SVolField > ScalTestEqn;
-      EquationBase* scaltesteqn = scinew ScalTestEqn( gc, thisPhiName, params );
-      adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
+      EquationBase* scaltesteqn = new ScalTestEqn( gc, thisPhiName, params );
+      adaptors.push_back( new EqnTimestepAdaptor< SVolField >( scaltesteqn ) );
 
       //_____________________________________________________
       // set up initial conditions on this equation
@@ -619,7 +619,7 @@ namespace Wasatch{
     if( doxvel && doxmom ){
       proc0cout << "Setting up X momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< XVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( xvelname,
+      EquationBase* momtranseq = new MomTransEq( xvelname,
                                                          xmomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -630,13 +630,13 @@ namespace Wasatch{
                                                          turbParams,
                                                          varDenParams,
                                                          linSolver, sharedState );
-      adaptors.push_back( scinew EqnTimestepAdaptor<XVolField>(momtranseq) );
+      adaptors.push_back( new EqnTimestepAdaptor<XVolField>(momtranseq) );
     }
 
     if( doyvel && doymom ){
       proc0cout << "Setting up Y momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< YVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( yvelname,
+      EquationBase* momtranseq = new MomTransEq( yvelname,
                                                          ymomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -647,13 +647,13 @@ namespace Wasatch{
                                                          turbParams,
                                                          varDenParams,
                                                          linSolver,sharedState );
-      adaptors.push_back( scinew EqnTimestepAdaptor<YVolField>(momtranseq) );
+      adaptors.push_back( new EqnTimestepAdaptor<YVolField>(momtranseq) );
     }
 
     if( dozvel && dozmom ){
       proc0cout << "Setting up Z momentum transport equation" << std::endl;
       typedef MomentumTransportEquation< ZVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( zvelname,
+      EquationBase* momtranseq = new MomTransEq( zvelname,
                                                          zmomname,
                                                          densityTag,
                                                          isConstDensity,
@@ -664,7 +664,7 @@ namespace Wasatch{
                                                          turbParams,
                                                          varDenParams,
                                                          linSolver,sharedState );
-      adaptors.push_back( scinew EqnTimestepAdaptor<ZVolField>(momtranseq) );
+      adaptors.push_back( new EqnTimestepAdaptor<ZVolField>(momtranseq) );
     }
 
     //
@@ -674,7 +674,7 @@ namespace Wasatch{
       const Expr::Tag yVelTag = doyvel ? Expr::Tag(yvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag zVelTag = dozvel ? Expr::Tag(zvelname, Expr::STATE_NONE) : Expr::Tag();
       const Expr::Tag viscTag = (momentumSpec->findBlock("Viscosity")) ? parse_nametag( momentumSpec->findBlock("Viscosity")->findBlock("NameTag") ) : Expr::Tag();
-      const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(scinew StableTimestep::Builder( TagNames::self().stableTimestep,
+      const Expr::ExpressionID stabDtID = solnGraphHelper->exprFactory->register_expression(new StableTimestep::Builder( TagNames::self().stableTimestep,
                                                                                                                            densityTag,
                                                                                                                            viscTag,
                                                                                                                            xVelTag,yVelTag,zVelTag ), true);
@@ -762,31 +762,31 @@ namespace Wasatch{
     proc0cout << "------------------------------------------------" << std::endl;
     
     proc0cout << "Setting up particle x-coordinate equation" << std::endl;
-    EquationBase* pxeq = scinew ParticlePositionEquation( pxname,
+    EquationBase* pxeq = new ParticlePositionEquation( pxname,
                                                           XDIR,
                                                           pPosTags,
                                                           pSizeTag,
                                                           particleSpec,
                                                           gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pxeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pxeq) );
     
     proc0cout << "Setting up particle y-coordinate equation" << std::endl;
-    EquationBase* pyeq = scinew ParticlePositionEquation( pyname,
+    EquationBase* pyeq = new ParticlePositionEquation( pyname,
                                                           YDIR,
                                                           pPosTags,
                                                           pSizeTag,
                                                           particleSpec,
                                                           gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pyeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pyeq) );
 
     proc0cout << "Setting up particle z-coordinate equation" << std::endl;
-    EquationBase* pzeq = scinew ParticlePositionEquation( pzname,
+    EquationBase* pzeq = new ParticlePositionEquation( pzname,
                                                           ZDIR,
                                                           pPosTags,
                                                           pSizeTag,
                                                           particleSpec,
                                                           gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pzeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pzeq) );
 
     
     std::string puname,pvname,pwname;
@@ -801,56 +801,56 @@ namespace Wasatch{
     const Expr::Tag pMassTag    = parse_nametag(particleSpec->findBlock("ParticleMass"));
     const std::string pMassName = pMassTag.name();
     proc0cout << "Setting up particle mass equation" << std::endl;
-    EquationBase* pmeq = scinew ParticleMassEquation( pMassName,
+    EquationBase* pmeq = new ParticleMassEquation( pMassName,
                                                       NODIR,
                                                       pPosTags,
                                                       pSizeTag,
                                                       particleSpec,
                                                       gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pmeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pmeq) );
 
     //___________________________________________________________________________
     // resolve the momentum equation to be solved and create the adaptor for it.
     //
     Expr::ExpressionFactory& factory = *(gc[ADVANCE_SOLUTION]->exprFactory);
     proc0cout << "Setting up particle x-momentum equation" << std::endl;
-    EquationBase* pueq = scinew ParticleMomentumEquation( puname,
+    EquationBase* pueq = new ParticleMomentumEquation( puname,
                                                           XDIR,
                                                           pPosTags,
                                                           pSizeTag,
                                                           particleSpec,
                                                           gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pueq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pueq) );
     
     proc0cout << "Setting up particle y-momentum equation" << std::endl;
-    EquationBase* pveq = scinew ParticleMomentumEquation( pvname,
+    EquationBase* pveq = new ParticleMomentumEquation( pvname,
                                                           YDIR,
                                                           pPosTags,
                                                           pSizeTag,
                                                           particleSpec,
                                                           gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pveq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pveq) );
     
     proc0cout << "Setting up particle z-momentum equation" << std::endl;
-    EquationBase* pweq = scinew ParticleMomentumEquation( pwname,
+    EquationBase* pweq = new ParticleMomentumEquation( pwname,
                                                           ZDIR,
                                                           pPosTags,
                                                           pSizeTag,
                                                           particleSpec,
                                                           gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(pweq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(pweq) );
 
     //___________________________________________________________________________
     // resolve the particle size equation to be solved and create the adaptor for it.
     //
     proc0cout << "Setting up particle size equation" << std::endl;
-    EquationBase* psizeeq = scinew ParticleSizeEquation( pSizeName,
+    EquationBase* psizeeq = new ParticleSizeEquation( pSizeName,
                                                          NODIR,
                                                          pPosTags,
                                                          pSizeTag,
                                                          particleSpec,
                                                          gc );
-    adaptors.push_back( scinew EqnTimestepAdaptor<ParticleField>(psizeeq) );
+    adaptors.push_back( new EqnTimestepAdaptor<ParticleField>(psizeeq) );
 
     //___________________________________________________________________________
     // Two way coupling between particles and the gas phase
@@ -869,21 +869,21 @@ namespace Wasatch{
         if (doxmom) {
           typedef ParticleGasMomentumSrc<XVolField>::Builder XMomSrcT;
           const Expr::Tag xMomRHSTag (xmomname + "_rhs_partial", Expr::STATE_NONE);
-          factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, tNames.pdragx, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( new XMomSrcT( tNames.pmomsrcx, tNames.pdragx, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcx, xMomRHSTag);
         }
         
         if (doymom) {
           typedef ParticleGasMomentumSrc<YVolField>::Builder YMomSrcT;
           const Expr::Tag yMomRHSTag (ymomname + "_rhs_partial", Expr::STATE_NONE);
-          factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, tNames.pdragy, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( new YMomSrcT( tNames.pmomsrcy, tNames.pdragy, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcy, yMomRHSTag);
         }
         
         if (dozmom) {
           typedef ParticleGasMomentumSrc<ZVolField>::Builder ZMomSrcT;
           const Expr::Tag zMomRHSTag (zmomname + "_rhs_partial", Expr::STATE_NONE);
-          factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, tNames.pdragz, pMassTag, pSizeTag, pPosTags ));
+          factory.register_expression( new ZMomSrcT( tNames.pmomsrcz, tNames.pdragz, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcz, zMomRHSTag);
         }
       }
@@ -969,14 +969,14 @@ namespace Wasatch{
 
       // create moment transport equation
       typedef MomentTransportEquation< SVolField > MomTransEq;
-      EquationBase* momtranseq = scinew MomTransEq( thisPhiName,
+      EquationBase* momtranseq = new MomTransEq( thisPhiName,
                                                          gc,
                                                          momentID,
                                                          isConstDensity,
                                                          params,
                                                          initialMoments[iMom] );
 
-      adaptors.push_back( scinew EqnTimestepAdaptor< SVolField >( momtranseq ) );
+      adaptors.push_back( new EqnTimestepAdaptor< SVolField >( momtranseq ) );
 
       // tsaad: MUST INSERT ROOT IDS INTO THE SOLUTION GRAPH HELPER. WE NEVER DO
       // THAT ELSEWHERE, BUT THIS IS NEEDED TO MAKE THINGS EASIER WHEN USING
@@ -1055,7 +1055,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   XFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,XVolField,XFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        builder = new ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
       else if( dir=="Y" ){
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Y DIRECTION USING " << interpMethod << std::endl;
@@ -1065,7 +1065,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   YFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,YVolField,YFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        builder = new ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
       else if( dir=="Z") {
         proc0cout << "SETTING UP CONVECTIVE FLUX EXPRESSION IN Z DIRECTION USING " << interpMethod << std::endl;
@@ -1075,7 +1075,7 @@ namespace Wasatch{
             typename OperatorTypeBuilder<Interpolant,FieldT,   ZFace>::type, // scalar interp type
             typename OperatorTypeBuilder<Interpolant,ZVolField,ZFace>::type  // velocity interp type
             >::Builder ConvFluxLim;
-        builder = scinew ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
+        builder = new ConvFluxLim( convFluxTag, solnVarCorrectedTag, advVelocityTag, convMethod, info[VOLUME_FRAC] );
       }
 
       if( builder == NULL ){
@@ -1149,7 +1149,7 @@ namespace Wasatch{
     if( diffFluxParams->findAttribute("coefficient") ){
       double coef;
       diffFluxParams->getAttribute("coefficient",coef);
-      return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
+      return new Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     else if( diffFluxParams->findBlock("DiffusionCoefficient") ){
       /**
@@ -1162,7 +1162,7 @@ namespace Wasatch{
        *        coefficient...  Arrrgghh.
        */
       const Expr::Tag coef = parse_nametag( diffFluxParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-      return scinew Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
+      return new Flux( diffFluxTag, primVarTag, coef, turbDiffTag, densityTag );
     }
     return NULL;
   }
@@ -1259,7 +1259,7 @@ namespace Wasatch{
     if( diffVelParams->findAttribute("coefficient") ){
       double coef;
       diffVelParams->getAttribute("coefficient",coef);
-      return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
+      return new Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
     else if( diffVelParams->findBlock("DiffusionCoefficient") ){
       /**
@@ -1272,7 +1272,7 @@ namespace Wasatch{
        *        coefficient...  Arrrgghh.
        */
       const Expr::Tag coef = parse_nametag( diffVelParams->findBlock("DiffusionCoefficient")->findBlock("NameTag") );
-      return scinew Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
+      return new Velocity( diffVelTag, primVarTag, coef, turbDiffTag );
     }
     return NULL;
   }

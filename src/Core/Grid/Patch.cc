@@ -55,13 +55,13 @@ extern SCIRun::Mutex coutLock; // Used to sync (when output by multiple threads)
 
 Patch::Patch(const Level* level,
              const IntVector& lowIndex, const IntVector& highIndex,
-             const IntVector& inLowIndex, const IntVector& inHighIndex, 
+             const IntVector& inLowIndex, const IntVector& inHighIndex,
              unsigned int levelIndex,  int id)
-  : d_lowIndex(inLowIndex), d_highIndex(inHighIndex), 
+  : d_lowIndex(inLowIndex), d_highIndex(inHighIndex),
     d_grid(0), d_id(id) , d_realPatch(0), d_level_index(-1),
     d_arrayBCS(0), d_interiorBndArrayBCS(0)
 {
-  
+
   if(d_id == -1){
     d_id = ids++;
 
@@ -69,8 +69,8 @@ Patch::Patch(const Level* level,
     if(d_id >= ids)
       ids.set(d_id+1);
   }
-   
-  // DON'T call setBCType here     
+
+  // DON'T call setBCType here
   d_patchState.xminus=None;
   d_patchState.yminus=None;
   d_patchState.zminus=None;
@@ -78,14 +78,14 @@ Patch::Patch(const Level* level,
   d_patchState.yplus=None;
   d_patchState.zplus=None;
 
-  
+
   //set the level index
   d_patchState.levelIndex=levelIndex;
 
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
-    : 
+    :
       d_lowIndex(realPatch->getCellLowIndex()+virtualOffset),
       d_highIndex(realPatch->getCellHighIndex()+virtualOffset),
       d_grid(realPatch->d_grid),
@@ -98,7 +98,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   d_id = -1000 * realPatch->d_id; // temporary
   int index = 1;
   int numVirtualPatches = 0;
-  
+
   //set the level index
   d_patchState.levelIndex=realPatch->d_patchState.levelIndex;
 
@@ -112,7 +112,7 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
   }
 
   d_id -= index;
-  
+
   //set boundary conditions
   d_patchState.xminus=realPatch->getBCType(xminus);
   d_patchState.yminus=realPatch->getBCType(yminus);
@@ -128,7 +128,7 @@ Patch::~Patch()
       face <= Patch::endFace; face=Patch::nextFace(face)) {
     if ( d_arrayBCS)
       delete (*d_arrayBCS)[face];
-    
+
     if (d_interiorBndArrayBCS) {
       delete (*d_interiorBndArrayBCS)[face];
     }
@@ -225,7 +225,7 @@ Point Patch::cellPosition(const IntVector& idx) const {
 }
 
 void Patch::findCellsFromNode( const IntVector& nodeIndex,
-                               IntVector cellIndex[8]) 
+                               IntVector cellIndex[8])
 {
    int ix = nodeIndex.x();
    int iy = nodeIndex.y();
@@ -265,14 +265,14 @@ namespace Uintah {
     coutLock.lock();  // needed to eliminate threadsanitizer warnings
     out.setf(ios::scientific,ios::floatfield);
     out.precision(4);
-    out << "(Patch " << r.getID() 
-        << ", lowIndex=" << r.getExtraCellLowIndex() << ", highIndex=" 
+    out << "(Patch " << r.getID()
+        << ", lowIndex=" << r.getExtraCellLowIndex() << ", highIndex="
         << r.getExtraCellHighIndex() << ")";
     out.setf(ios::scientific ,ios::floatfield);
     coutLock.unlock();
     return out;
   }
-    
+
   ostream&
   operator<<(ostream& out, const Patch::FaceType& face)
   {
@@ -284,7 +284,7 @@ namespace Uintah {
 void
 Patch::performConsistencyCheck() const
 {
-  // make sure that the patch's size is at least [1,1,1] 
+  // make sure that the patch's size is at least [1,1,1]
   IntVector res(getExtraCellHighIndex()-getExtraCellLowIndex());
   if(res.x() < 1 || res.y() < 1 || res.z() < 1) {
     ostringstream msg;
@@ -342,7 +342,7 @@ Patch::setArrayBCValues( Patch::FaceType face, BCDataArray * bc )
   bctmp->determineIteratorLimits(face,this);
   (*d_arrayBCS)[face] = bctmp->clone();
   delete bctmp;
-}  
+}
 
 //-----------------------------------------------------------------------------------------------
 
@@ -394,7 +394,7 @@ const BCDataArray* Patch::getInteriorBndBCDataArray(Patch::FaceType face) const
     SCI_THROW(InternalError("Error: d_interiorBndArrayBCS not allocated. This means that no boundary conditions were found. If you are solving a periodic problem, please add a <periodic> tag to your input file to avoid this error. Otherwise, add a <BoundaryConditions> block.",
                             __FILE__, __LINE__));
   }
-  
+
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -403,7 +403,7 @@ const BoundCondBase*
 Patch::getArrayBCValues(Patch::FaceType face,
                         int mat_id,
                         const string& type,
-                        Iterator& cell_ptr, 
+                        Iterator& cell_ptr,
                         Iterator& node_ptr,
                         int child) const
 {
@@ -447,7 +447,7 @@ Patch::getInteriorBndArrayBCValues(Patch::FaceType face,
 
 //-----------------------------------------------------------------------------------------------
 
-bool 
+bool
 Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
               const string& bc_variable) const
 {
@@ -460,9 +460,9 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
 #endif
     BCDataArray::bcDataArrayType::const_iterator v_itr;
     vector<BCGeomBase*>::const_iterator it;
-    
+
     v_itr = itr->d_BCDataArray.find(mat_id);
-    if (v_itr != itr->d_BCDataArray.end()) { 
+    if (v_itr != itr->d_BCDataArray.end()) {
       for (it = v_itr->second.begin(); it != v_itr->second.end(); ++it) {
         BCData bc;
         (*it)->getBCData(bc);
@@ -471,7 +471,7 @@ Patch::haveBC(FaceType face,int mat_id,const string& bc_type,
           return true;
         }
       }
-    } 
+    }
     // Check the mat_it = "all" case
     v_itr = itr->d_BCDataArray.find(-1);
     if (v_itr != itr->d_BCDataArray.end()) {
@@ -748,9 +748,9 @@ Patch::getCellCenterIterator(const Box& b) const
  *     ExtraPlusEdgeCells:     All extra cells beyond the face including the edge cells.
  *     FaceNodes:              All nodes on the face.
  *     SFCVars:                All face centered nodes on the face.
- *     InteriorFaceCells:      All cells on the interior of the face.                                                             
+ *     InteriorFaceCells:      All cells on the interior of the face.
  */
-CellIterator    
+CellIterator
 Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) const
 {
   IntVector lowPt, highPt;
@@ -791,7 +791,7 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
       //grab patch region with extra cells
       lowPt =  getExtraCellLowIndex();
       highPt = getExtraCellHighIndex();
-     
+
       //select the face
       if(plusface){
           //move low point to plus face
@@ -822,7 +822,7 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
       }
       break;
     case SFCVars:
-     
+
       //grab patch region without extra cells
       switch(dim)
       {
@@ -859,7 +859,7 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
     case InteriorFaceCells:
       lowPt =  getCellLowIndex();
       highPt = getCellHighIndex();
-      
+
       //select the face
       if(plusface){
           //restrict index to face
@@ -885,8 +885,8 @@ Patch::getFaceIterator(const FaceType& face, const FaceIteratorType& domain) con
  * ExtraMinusCornerCells:  returns the intersecting extra cells minus the corner cells on two faces
  * SFCVars: returns the intersecting SFC vars between two faces
  */
-CellIterator    
-Patch::getEdgeCellIterator(const FaceType& face0, 
+CellIterator
+Patch::getEdgeCellIterator(const FaceType& face0,
                            const FaceType& face1,const EdgeIteratorType &type) const
 {
   FaceType face[2]={face0,face1};
@@ -954,7 +954,7 @@ Patch::getEdgeCellIterator(const FaceType& face0,
           patchExtraHigh=getSFCZHighIndex();
           break;
       }
-       
+
       break;
     default:
 
@@ -966,13 +966,13 @@ Patch::getEdgeCellIterator(const FaceType& face0,
 
       throw SCIRun::InternalError("Invalid EdgeIteratorType Specified", __FILE__, __LINE__);
   };
-  vector<IntVector>loPt(2), hiPt(2); 
+  vector<IntVector>loPt(2), hiPt(2);
 
   loPt[0] = loPt[1] = patchExtraLow;
   hiPt[0] = hiPt[1] = patchExtraHigh;
 
   //restrict to edge
-  for (int f = 0; f < 2 ; f++ ) 
+  for (int f = 0; f < 2 ; f++ )
   {
     switch(face[f])
     {
@@ -1075,7 +1075,7 @@ Patch::getNodeIterator(const Box& b) const
 IntVector Patch::getSFCXFORTLowIndex__Old() const
 {
   IntVector h(getFortranExtraCellLowIndex()+
-              IntVector(getBCType(xminus) == Neighbor?0:2, 
+              IntVector(getBCType(xminus) == Neighbor?0:2,
                         getBCType(yminus) == Neighbor?0:1,
                         getBCType(zminus) == Neighbor?0:1));
   return h;
@@ -1094,7 +1094,7 @@ IntVector Patch::getSFCXFORTHighIndex__Old() const
 IntVector Patch::getSFCYFORTLowIndex__Old() const
 {
   IntVector h(getFortranExtraCellLowIndex()+
-              IntVector(getBCType(xminus) == Neighbor?0:1, 
+              IntVector(getBCType(xminus) == Neighbor?0:1,
                         getBCType(yminus) == Neighbor?0:2,
                         getBCType(zminus) == Neighbor?0:1));
   return h;
@@ -1102,7 +1102,7 @@ IntVector Patch::getSFCYFORTLowIndex__Old() const
 // if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
 IntVector Patch::getSFCYFORTHighIndex__Old() const
 {
-   IntVector h(getFortranExtraCellHighIndex() - 
+   IntVector h(getFortranExtraCellHighIndex() -
                IntVector(getBCType(xplus) == Neighbor?0:1,
                          getBCType(yplus) == Neighbor?0:1,
                          getBCType(zplus) == Neighbor?0:1));
@@ -1113,7 +1113,7 @@ IntVector Patch::getSFCYFORTHighIndex__Old() const
 IntVector Patch::getSFCZFORTLowIndex__Old() const
 {
   IntVector h(getFortranExtraCellLowIndex()+
-              IntVector(getBCType(xminus) == Neighbor?0:1, 
+              IntVector(getBCType(xminus) == Neighbor?0:1,
                         getBCType(yminus) == Neighbor?0:1,
                         getBCType(zminus) == Neighbor?0:2));
   return h;
@@ -1121,7 +1121,7 @@ IntVector Patch::getSFCZFORTLowIndex__Old() const
 // if next to a boundary then highindex = cellhighindex - 1 - 1(coz of fortran)
 IntVector Patch::getSFCZFORTHighIndex__Old() const
 {
-   IntVector h(getFortranExtraCellHighIndex() - 
+   IntVector h(getFortranExtraCellHighIndex() -
                IntVector(getBCType(xplus) == Neighbor?0:1,
                          getBCType(yplus) == Neighbor?0:1,
                          getBCType(zplus) == Neighbor?0:1));
@@ -1136,7 +1136,6 @@ IntVector Patch::getSFCZFORTHighIndex__Old() const
 void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* neighbor,
                              IntVector& region_low, IntVector& region_high) const
 {
-  TAU_PROFILE("Patch::cullIntersection", " ", TAU_USER); 
   // on certain AMR grid configurations, with extra cells, patches can overlap
   // such that the extra cell of one patch overlaps a normal cell of another
   // in such conditions, we shall exclude that extra cell from MPI communication
@@ -1165,8 +1164,8 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
     //is equal to 2 times the number of extra cells,
     //and the patches are adjacent on this dimension
       //then increment the bad_diffs counter
-    if (diff[dim]!=0 && diff[dim] == 2*getExtraCells()[dim] 
-        && (p_int_low[dim]==n_int_high[dim] || n_int_low[dim]==p_int_high[dim]) ) 
+    if (diff[dim]!=0 && diff[dim] == 2*getExtraCells()[dim]
+        && (p_int_low[dim]==n_int_high[dim] || n_int_low[dim]==p_int_high[dim]) )
       bad_diffs++;
 
     // depending on the region, cull away the portion of the region that in 'this'
@@ -1177,7 +1176,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
       region_low[dim] = Max(region_low[dim], neighbor->getLowIndex(basis)[dim]);
     }
   }
-  
+
   // prune it back if heuristic met or if already empty
     //if bad_diffs is >=2 then we have a bad corner/edge that needs to be pruned
   IntVector region_diff = region_high - region_low;
@@ -1190,7 +1189,6 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
                             int numGhostCells,
                             IntVector& lowOffset, IntVector& highOffset)
 {
-  MALLOC_TRACE_TAG_SCOPE("Patch::getGhostOffsets");
   // This stuff works by assuming there are no neighbors.  If there are
   // neighbors, it can simply cut back appropriately later (no neighbor
   // essentially means no ghost cell on that side).
@@ -1224,7 +1222,7 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
     }
     else if (basis == (VariableBasis)gtype) {
       // nodes around nodes or faces around faces
-      lowOffset = highOffset = g * dir; 
+      lowOffset = highOffset = g * dir;
     }
     else if (gtype == Ghost::AroundFaces) {
       lowOffset = highOffset = g;
@@ -1238,7 +1236,7 @@ void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
   }
 
   ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
-         highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0); 
+         highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
 }
 
 void Patch::computeVariableExtents(VariableBasis basis,
@@ -1294,7 +1292,7 @@ void Patch::computeExtents(VariableBasis basis,
 {
   ASSERT(lowOffset[0] >= 0 && lowOffset[1] >= 0 && lowOffset[2] >= 0 &&
          highOffset[0] >= 0 && highOffset[2] >= 0 && highOffset[2] >= 0);
-  
+
   IntVector origLowIndex = getExtraLowIndex(basis, boundaryLayer);
   IntVector origHighIndex = getExtraHighIndex(basis, boundaryLayer);
   low = origLowIndex - neighborsLow()*lowOffset;
@@ -1309,7 +1307,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
 
   // include the padding cells in the final low/high indices
   IntVector pc(nPaddingCells, nPaddingCells, nPaddingCells);
-  
+
   Point lowPt = getLevel()->getCellPosition(getExtraCellLowIndex());
   Point hiPt  = getLevel()->getCellPosition(getExtraCellHighIndex());
 
@@ -1332,29 +1330,29 @@ void Patch::getOtherLevelPatches(int levelOffset,
                      (highIndex.z() % crr.z()) == 0 ? 0 : 1);
     high += offset;
   }
-  
+
   if (levelOffset > 0) {
     // the getCellPosition->getCellIndex seems to always add one...
     // maybe we should just separate this back to coarser/finer patches
     // and use mapCellToFiner...
-    
-    // also subtract more from low and keep high where it is to get extra 
-    // cells, since selectPatches doesn't 
-    // use extra cells. 
+
+    // also subtract more from low and keep high where it is to get extra
+    // cells, since selectPatches doesn't
+    // use extra cells.
     low = low - IntVector(2,2,2);
   }
 
   //cout << "  Patch:Golp: " << low-pc << " " << high+pc << endl;
   Level::selectType patches;
-  otherLevel->selectPatches(low-pc, high+pc, patches); 
-  
+  otherLevel->selectPatches(low-pc, high+pc, patches);
+
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
   for (int i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraCellLowIndex();
     IntVector hi = patches[i]->getExtraCellHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
-    
+
     if (levelOffset < 0 || intersect) {
       selected_patches.push_back(patches[i]);
     }
@@ -1369,7 +1367,7 @@ void Patch::getOtherLevelPatchesNB(int levelOffset,
 
   // include the padding cells in the final low/high indices
   IntVector pc(nPaddingCells, nPaddingCells, nPaddingCells);
-  
+
   Point lowPt = getLevel()->getNodePosition(getExtraNodeLowIndex());
   Point hiPt  = getLevel()->getNodePosition(getExtraNodeHighIndex());
 
@@ -1392,29 +1390,29 @@ void Patch::getOtherLevelPatchesNB(int levelOffset,
                      (highIndex.z() % crr.z()) == 0 ? 0 : 1);
     high += offset;
   }
-  
+
   if (levelOffset > 0) {
     // the getCellPosition->getCellIndex seems to always add one...
     // maybe we should just separate this back to coarser/finer patches
     // and use mapCellToFiner...
-    
-    // also subtract more from low and keep high where it is to get extra 
-    // cells, since selectPatches doesn't 
-    // use extra cells. 
+
+    // also subtract more from low and keep high where it is to get extra
+    // cells, since selectPatches doesn't
+    // use extra cells.
     low = low - IntVector(2,2,2);
   }
 
   //cout << "  Patch:Golp: " << low-pc << " " << high+pc << endl;
   Level::selectType patches;
-  otherLevel->selectPatches(low-pc, high+pc, patches); 
-  
+  otherLevel->selectPatches(low-pc, high+pc, patches);
+
   // based on the expanded range above to search for extra cells, we might
   // have grabbed more patches than we wanted, so refine them here
   for (int i = 0; i < patches.size(); i++) {
     IntVector lo = patches[i]->getExtraNodeLowIndex();
     IntVector hi = patches[i]->getExtraNodeHighIndex();
     bool intersect = doesIntersect(low-pc, high+pc, lo, hi );
-    
+
     if (levelOffset < 0 || intersect) {
       selected_patches.push_back(patches[i]);
     }
@@ -1495,7 +1493,7 @@ IntVector Patch::neighborsHigh() const
 
 /**
 * Returns the low index for a variable of type basis with extraCells or
-* the boundaryLayer specified in boundaryLayer.  Boundary layers take 
+* the boundaryLayer specified in boundaryLayer.  Boundary layers take
 * precidence over extra cells.
 */
 IntVector Patch::getExtraLowIndex(VariableBasis basis,
@@ -1546,16 +1544,16 @@ IntVector Patch::getExtraLowIndex(VariableBasis basis,
 
   }
 }
- 
+
 /**
 * Returns the high index for a variable of type basis with extraCells or
-* the boundaryLayer specified in boundaryLayer.  Boundary layers take precidence 
+* the boundaryLayer specified in boundaryLayer.  Boundary layers take precidence
 * over extra cells.
 */
 IntVector Patch::getExtraHighIndex(VariableBasis basis,
                               const IntVector& boundaryLayer) const
 {
- 
+
   if(boundaryLayer==IntVector(0,0,0))
   {
     switch (basis) {
@@ -1682,8 +1680,7 @@ IntVector Patch::getHighIndexWithDomainLayer(VariableBasis basis) const
 
 void Patch::finalizePatch()
 {
-  TAU_PROFILE("Patch::finalizePatch()", " ", TAU_USER);
- 
+
 }
 
 /**
@@ -1691,7 +1688,7 @@ void Patch::finalizePatch()
  * if all of the levels were taken into account
  * This query is O(L) where L is the number of levels.
  */
-int Patch::getGridIndex() const 
+int Patch::getGridIndex() const
 {
   int index = d_level_index;
   int levelid = getLevel()->getIndex();
@@ -1747,7 +1744,7 @@ void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) cons
 
   //2D array of indices first dimension is determined by minus or plus face
   //second dimension is the low point/high point of the corner
-  IntVector indices[2][2]={ 
+  IntVector indices[2][2]={
                             {getExtraCellLowIndex(),getCellLowIndex()},  //x-,y-,z- corner
                             {getCellHighIndex(),getExtraCellHighIndex()} //x+,y+,z+ corner
                           };
@@ -1758,24 +1755,24 @@ void Patch::getCornerCells(vector<IntVector> & cells, const FaceType& face) cons
   bool zneighbor[2]={getBCType(zminus)==Neighbor,getBCType(zplus)==Neighbor};
 
   cells.clear();
- 
+
   for(int x=xstart;x<xend;x++)  //For the x faces
   {
     if(xneighbor[x])  //if we have a neighbor on this face a corner cannot exist
       continue;         //continue to next x face
-    
+
     for(int y=ystart;y<yend;y++)  //For the y faces
     {
       if(yneighbor[y]) //if we have a neighbor on this face a corner cannot exist
         continue;         //continue to next y face
-      
+
       for(int z=zstart;z<zend;z++) //For the z faces
       {
         if(zneighbor[z]) //if we have a neighbor on this face a corner cannot exist
-          continue;         //continue to next z face 
-        
+          continue;         //continue to next z face
+
         //a corner exists
-    
+
         //grab low and high points of corner from indices array
         IntVector low=IntVector(indices[x][0].x(),indices[y][0].y(),indices[z][0].z());
         IntVector high=IntVector(indices[x][1].x(),indices[y][1].y(),indices[z][1].z());
@@ -1800,10 +1797,10 @@ void Patch::initializeBoundaryConditions()
     d_arrayBCS->clear();
     delete d_arrayBCS;
   }
-  d_arrayBCS = scinew vector<BCDataArray*>(6);
+  d_arrayBCS = new vector<BCDataArray*>(6);
   for (unsigned int i = 0; i< 6; ++i)
     (*d_arrayBCS)[i] = 0;
-  
+
   if (d_interiorBndArrayBCS) {
     for (unsigned int i = 0; i< 6; ++i) {
       delete (*d_interiorBndArrayBCS)[i];
@@ -1811,7 +1808,7 @@ void Patch::initializeBoundaryConditions()
     d_interiorBndArrayBCS->clear();
     delete d_interiorBndArrayBCS;
   }
-  d_interiorBndArrayBCS = scinew vector<BCDataArray*>(6);
+  d_interiorBndArrayBCS = new vector<BCDataArray*>(6);
   for (unsigned int i = 0; i< 6; ++i)
     (*d_interiorBndArrayBCS)[i] = 0;
 }
@@ -1835,27 +1832,27 @@ void Patch::initializeBoundaryConditions()
 void Patch::getFinestRegionsOnPatch(vector<Region>& difference) const
 {
   const Level* level = getLevel();
-  vector<Region> coarsePatch_q,finePatch_q;                                              
+  vector<Region> coarsePatch_q,finePatch_q;
   IntVector zero(0,0,0);
   finePatch_q.push_back(Region(zero,zero));
-  
+
   //only search for fine patches if the finer level exists
-  if(level->hasFinerLevel()){ 
+  if(level->hasFinerLevel()){
     Patch::selectType finePatches;
-    getFineLevelPatches(finePatches); 
-    const LevelP& fineLevel = getLevel()->getFinerLevel(); 
-    
-    //add overlapping fine patches to finePatch_q                                                       
+    getFineLevelPatches(finePatches);
+    const LevelP& fineLevel = getLevel()->getFinerLevel();
+
+    //add overlapping fine patches to finePatch_q
     for(int fp=0;fp<finePatches.size();fp++){
       IntVector lo = fineLevel->mapCellToCoarser(finePatches[fp]->getCellLowIndex() );
-      IntVector hi = fineLevel->mapCellToCoarser(finePatches[fp]->getCellHighIndex());                              
-      finePatch_q.push_back(Region(lo, hi));                        
-    }                                                           
-  }                                                                                                   
+      IntVector hi = fineLevel->mapCellToCoarser(finePatches[fp]->getCellHighIndex());
+      finePatch_q.push_back(Region(lo, hi));
+    }
+  }
 
-  //add coarse patch to coarsePatch_q                                                                 
-  coarsePatch_q.push_back(Region(getCellLowIndex(),getCellHighIndex())); 
+  //add coarse patch to coarsePatch_q
+  coarsePatch_q.push_back(Region(getCellLowIndex(),getCellHighIndex()));
 
-  //compute region of coarse patches that do not contain fine patches                                 
-  difference=Region::difference(coarsePatch_q, finePatch_q);                                                                                 
+  //compute region of coarse patches that do not contain fine patches
+  difference=Region::difference(coarsePatch_q, finePatch_q);
 }

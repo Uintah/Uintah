@@ -59,10 +59,11 @@ class ThreadSafeDebugStream {
 
     ~ThreadSafeDebugStream();
 
-    ThreadSafeDebugStream& operator <<(std::iostream& arg)
+    template < typename Message >
+    ThreadSafeDebugStream& operator <<(const Message& msg)
     {
       if (m_default_on || checkenv()) {
-        m_out << arg;
+        m_out << msg;
       }
       return *this;
     }

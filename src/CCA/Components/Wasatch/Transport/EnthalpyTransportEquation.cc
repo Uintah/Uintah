@@ -116,7 +116,7 @@ namespace Wasatch {
     const Expr::Tag lambdaTag( parse_nametag( params->findBlock("ThermalConductivity")->findBlock("NameTag") ) );
     const Expr::Tag cpTag    ( parse_nametag( params->findBlock("HeatCapacity"       )->findBlock("NameTag") ) );
     gc[ADVANCE_SOLUTION]->exprFactory->register_expression(
-        scinew EnthDiffCoeff::Builder( diffCoeffTag_, lambdaTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl )
+        new EnthDiffCoeff::Builder( diffCoeffTag_, lambdaTag, cpTag, turbViscTag, turbulenceParams.turbPrandtl )
     );
 
     setup();
@@ -146,9 +146,9 @@ namespace Wasatch {
     const Expr::Tag zDiffFluxTag( solnVarName_ + tagNames.diffusiveflux + "z", Expr::STATE_NONE );
 
     Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
-    if( doX ){ info[DIFFUSIVE_FLUX_X]=xDiffFluxTag; factory.register_expression( scinew XFlux( xDiffFluxTag, primVarTag_, diffCoeffTag_, turbDiffTag_ ) ); }
-    if( doY ){ info[DIFFUSIVE_FLUX_Y]=yDiffFluxTag; factory.register_expression( scinew YFlux( yDiffFluxTag, primVarTag_, diffCoeffTag_, turbDiffTag_ ) ); }
-    if( doZ ){ info[DIFFUSIVE_FLUX_Z]=zDiffFluxTag; factory.register_expression( scinew ZFlux( zDiffFluxTag, primVarTag_, diffCoeffTag_, turbDiffTag_ ) ); }
+    if( doX ){ info[DIFFUSIVE_FLUX_X]=xDiffFluxTag; factory.register_expression( new XFlux( xDiffFluxTag, primVarTag_, diffCoeffTag_, turbDiffTag_ ) ); }
+    if( doY ){ info[DIFFUSIVE_FLUX_Y]=yDiffFluxTag; factory.register_expression( new YFlux( yDiffFluxTag, primVarTag_, diffCoeffTag_, turbDiffTag_ ) ); }
+    if( doZ ){ info[DIFFUSIVE_FLUX_Z]=zDiffFluxTag; factory.register_expression( new ZFlux( zDiffFluxTag, primVarTag_, diffCoeffTag_, turbDiffTag_ ) ); }
 
     // if doing convection, we will likely have a pressure solve that requires
     // predicted scalar values to approximate the density time derivatives
@@ -158,9 +158,9 @@ namespace Wasatch {
       const Expr::Tag yFluxTagNew  ( solnVarName_ + suffix + tagNames.diffusiveflux + "y", Expr::STATE_NONE    );
       const Expr::Tag zFluxTagNew  ( solnVarName_ + suffix + tagNames.diffusiveflux + "z", Expr::STATE_NONE    );
       const Expr::Tag primVarTagNew( primVarTag_.name()  + suffix, Expr::STATE_NONE    );
-      if( doX ){ infoStar_[DIFFUSIVE_FLUX_X]=xFluxTagNew; factory.register_expression( scinew XFlux( xFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
-      if( doY ){ infoStar_[DIFFUSIVE_FLUX_Y]=yFluxTagNew; factory.register_expression( scinew YFlux( yFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
-      if( doZ ){ infoStar_[DIFFUSIVE_FLUX_Z]=zFluxTagNew; factory.register_expression( scinew ZFlux( zFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
+      if( doX ){ infoStar_[DIFFUSIVE_FLUX_X]=xFluxTagNew; factory.register_expression( new XFlux( xFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
+      if( doY ){ infoStar_[DIFFUSIVE_FLUX_Y]=yFluxTagNew; factory.register_expression( new YFlux( yFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
+      if( doZ ){ infoStar_[DIFFUSIVE_FLUX_Z]=zFluxTagNew; factory.register_expression( new ZFlux( zFluxTagNew, primVarTagNew, diffCoeffTag_, turbDiffTag_ ) ); }
     }
   }
 

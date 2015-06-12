@@ -25,7 +25,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/JWLppMPM.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <CCA/Ports/DataWarehouse.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Level.h>
@@ -217,7 +217,7 @@ void JWLppMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 JWLppMPM* JWLppMPM::clone()
 {
-  return scinew JWLppMPM(*this);
+  return new JWLppMPM(*this);
 }
 
 void JWLppMPM::initializeCMData(const Patch* patch,

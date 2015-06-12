@@ -29,7 +29,7 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/XMLUtils.h>
 
 #include <iostream>
@@ -58,7 +58,6 @@ ProblemSpec::ProblemSpec( const string & buffer ) : d_documentNode( true )
 ProblemSpecP
 ProblemSpec::findBlock() const
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlock()");
   const xmlNode* child = d_node->children;
   if (child != 0) {
     if (child->type == XML_TEXT_NODE) {
@@ -69,7 +68,7 @@ ProblemSpec::findBlock() const
      return 0;
   }
   else {
-     return scinew ProblemSpec( child, false );
+     return new ProblemSpec( child, false );
   }
 }
 
@@ -82,7 +81,6 @@ ProblemSpec::findBlock() const
 bool
 ProblemSpec::findBlock( const string & name, FILE *& fp )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlock(string,FILE)");
 
   while( true ) {
     string line = UintahXML::getLine( fp );
@@ -98,10 +96,9 @@ ProblemSpec::findBlock( const string & name, FILE *& fp )
 //______________________________________________________________________
 //
 
-ProblemSpecP 
-ProblemSpec::findBlock( const string & name ) const 
+ProblemSpecP
+ProblemSpec::findBlock( const string & name ) const
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlock(string)");
   if (d_node == 0) {
     return 0;
   }
@@ -110,7 +107,7 @@ ProblemSpec::findBlock( const string & name ) const
     //    string child_name(to_char_ptr(child->name));
     string child_name((const char *)(child->name));
     if (name == child_name) {
-      return scinew ProblemSpec( child, false );
+      return new ProblemSpec( child, false );
     }
     child = child->next;
   }
@@ -119,18 +116,17 @@ ProblemSpec::findBlock( const string & name ) const
 
 //______________________________________________________________________
 //
-ProblemSpecP 
+ProblemSpecP
 ProblemSpec::findBlockWithAttribute(const string& name,
-                                    const string& attribute) const 
+                                    const string& attribute) const
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithAttribute(string,string)");
-  
+
   for (ProblemSpecP ps = this->findBlock(name); ps != 0;
        ps = ps->findNextBlock(name) ) {
 
     string attr="";
     ps->getAttribute(attribute,attr);
-    if (attr.length() > 0) 
+    if (attr.length() > 0)
       return ps;
     else
       continue;
@@ -141,12 +137,11 @@ ProblemSpec::findBlockWithAttribute(const string& name,
 
 //______________________________________________________________________
 //
-ProblemSpecP 
+ProblemSpecP
 ProblemSpec::findBlockWithOutAttribute(const string& name) const
 
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findBlockWithOutAttribute(string)");
-  
+
   for( ProblemSpecP ps = this->findBlock(name); ps != 0; ps = ps->findNextBlock(name) ) {
 
     map<string,string> attributes;
@@ -166,29 +161,27 @@ ProblemSpec::findBlockWithOutAttribute(const string& name) const
 //
 ProblemSpecP ProblemSpec::findNextBlock() const
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findNextBlock()");
   const xmlNode* found_node = d_node->next;
-  
+
   if (found_node != 0) {
     if (found_node->type == XML_TEXT_NODE) {
       found_node = found_node->next;
     }
   }
-    
+
   if (found_node == NULL ) {
      return 0;
   }
   else {
-     return scinew ProblemSpec( found_node, false );
+     return new ProblemSpec( found_node, false );
   }
 }
 
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::findNextBlock(const string& name) const 
+ProblemSpec::findNextBlock(const string& name) const
 {
-  MALLOC_TRACE_TAG_SCOPE("findNextBlock(string)");
   // Iterate through all of the child nodes of the next node
   // until one is found that has this name
 
@@ -207,7 +200,7 @@ ProblemSpec::findNextBlock(const string& name) const
      return 0;
   }
   else {
-     return scinew ProblemSpec( found_node, false );
+     return new ProblemSpec( found_node, false );
   }
 }
 
@@ -216,11 +209,10 @@ ProblemSpec::findNextBlock(const string& name) const
 ProblemSpecP
 ProblemSpec::findTextBlock()
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::findTextBlock()");
    for (xmlNode* child = d_node->children; child != 0;
         child = child->next) {
      if (child->type == XML_TEXT_NODE) {
-       return scinew ProblemSpec( child, false );
+       return new ProblemSpec( child, false );
       }
    }
    return NULL;
@@ -238,7 +230,7 @@ ProblemSpec::getNodeName() const
 //______________________________________________________________________
 //
 short
-ProblemSpec::getNodeType() 
+ProblemSpec::getNodeType()
 {
   return d_node->type;
 }
@@ -246,12 +238,11 @@ ProblemSpec::getNodeType()
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::importNode(ProblemSpecP src, bool deep) 
+ProblemSpec::importNode(ProblemSpecP src, bool deep)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::ImportNode()");
   xmlNode* d = xmlDocCopyNode(src->d_node, d_node->doc, deep ? 1 : 0);
   if (d)
-    return scinew ProblemSpec(d, false );
+    return new ProblemSpec(d, false );
   else
     return 0;
 }
@@ -261,7 +252,6 @@ ProblemSpec::importNode(ProblemSpecP src, bool deep)
 void
 ProblemSpec::addComment( string comment )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::addComment()");
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
   xmlAddChild(d_node, commentNode);
 }
@@ -271,18 +261,16 @@ ProblemSpec::addComment( string comment )
 ProblemSpecP
 ProblemSpec::makeComment( string comment )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::makeComment()");
   xmlNodePtr commentNode = xmlNewComment(BAD_CAST comment.c_str());
-  return scinew ProblemSpec( commentNode, false );
+  return new ProblemSpec( commentNode, false );
 }
 
 //______________________________________________________________________
 //
 void
-ProblemSpec::replaceChild(ProblemSpecP toreplace, 
-                          ProblemSpecP replaced) 
+ProblemSpec::replaceChild(ProblemSpecP toreplace,
+                          ProblemSpecP replaced)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::replaceChild()");
   xmlNode* d = xmlReplaceNode(toreplace->d_node, replaced->d_node);
 
   if (d)
@@ -294,7 +282,6 @@ ProblemSpec::replaceChild(ProblemSpecP toreplace,
 void
 ProblemSpec::removeChild(ProblemSpecP child)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::removeChild()");
   xmlUnlinkNode(child->getNode());
   xmlFreeNode(child->getNode());
 }
@@ -306,7 +293,6 @@ ProblemSpec::removeChild(ProblemSpecP child)
 ProblemSpecP
 ProblemSpec::get(const string& name, double &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -315,7 +301,7 @@ ProblemSpec::get(const string& name, double &value)
     return ps;
   }
   else {
-    UintahXML::validateType( stringValue, UintahXML::FLOAT_TYPE ); 
+    UintahXML::validateType( stringValue, UintahXML::FLOAT_TYPE );
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -323,7 +309,7 @@ ProblemSpec::get(const string& name, double &value)
       //      cout << "WARNING: ProblemSpec.cc: get(%s, double): stringstream failed..." << name << endl;
     }
   }
-          
+
   return ps;
 }
 
@@ -332,7 +318,6 @@ ProblemSpec::get(const string& name, double &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, unsigned int &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -341,7 +326,7 @@ ProblemSpec::get(const string& name, unsigned int &value)
     return ps;
   }
   else {
-    UintahXML::validateType( stringValue, UintahXML::INT_TYPE ); 
+    UintahXML::validateType( stringValue, UintahXML::INT_TYPE );
     istringstream ss(stringValue);
     ss >> value;
     if( !ss ) {
@@ -349,7 +334,7 @@ ProblemSpec::get(const string& name, unsigned int &value)
       ps = 0;
     }
   }
-          
+
   return ps;
 
 }
@@ -359,7 +344,6 @@ ProblemSpec::get(const string& name, unsigned int &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, int &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -385,7 +369,6 @@ ProblemSpec::get(const string& name, int &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, long &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -411,7 +394,6 @@ ProblemSpec::get(const string& name, long &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, bool &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -448,7 +430,6 @@ ProblemSpec::get(const string& name, bool &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, string &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   // the other gets will call this one to get the string...
   ProblemSpecP ps = this;
   ProblemSpecP node = findBlock(name);
@@ -458,7 +439,7 @@ ProblemSpec::get(const string& name, string &value)
   }
   else {  // eliminate spaces
     value = node->getNodeValue();
-   
+
     // elminate spaces from string
 
     stringstream in_stream(value);
@@ -487,7 +468,6 @@ ProblemSpec::get(const string& name, string &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, Point &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
     Vector v;
     ProblemSpecP ps = get(name, v);
     value = Point(v);
@@ -499,7 +479,6 @@ ProblemSpec::get(const string& name, Point &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, Vector &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -513,7 +492,7 @@ ProblemSpec::get(const string& name, Vector &value)
 
     value = Vector::fromString( stringValue );
   }
-          
+
   return ps;
 }
 
@@ -545,20 +524,19 @@ ProblemSpec::getInputType(const std::string& stringValue) {
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<double>& value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   vector<string> string_values;
   if(!this->get(name, string_values)) {
     return 0;
   }
-  
+
   for(vector<string>::const_iterator vit(string_values.begin());
       vit!=string_values.end();vit++) {
     const string v(*vit);
-    
-    UintahXML::validateType( v, UintahXML::FLOAT_TYPE ); 
+
+    UintahXML::validateType( v, UintahXML::FLOAT_TYPE );
     value.push_back( atof(v.c_str()) );
   }
-  
+
   return this;
 }
 
@@ -568,20 +546,19 @@ ProblemSpec::get(const string& name, vector<double>& value)
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<double>& value, const int nItems)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   vector<string> string_values;
   if(!this->get(name, string_values,nItems)) {
     return 0;
   }
-  
+
   for(vector<string>::const_iterator vit(string_values.begin());
       vit!=string_values.end();vit++) {
     const string v(*vit);
-    
+
     UintahXML::validateType( v, UintahXML::FLOAT_TYPE );
     value.push_back( atof(v.c_str()) );
   }
-  
+
   return this;
 }
 
@@ -591,21 +568,20 @@ ProblemSpec::get(const string& name, vector<double>& value, const int nItems)
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<int>& value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   vector<string> string_values;
   if(!this->get(name, string_values)) {
     return 0;
   }
-  
+
   for( vector<string>::const_iterator vit(string_values.begin()); vit!=string_values.end();vit++ ) {
     const string v(*vit);
-    
-    UintahXML::validateType( v, UintahXML::FLOAT_TYPE ); 
+
+    UintahXML::validateType( v, UintahXML::FLOAT_TYPE );
     value.push_back( atoi(v.c_str()) );
   }
-  
+
   return this;
-} 
+}
 
 //______________________________________________________________________
 //
@@ -613,7 +589,6 @@ ProblemSpec::get(const string& name, vector<int>& value)
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<string>& value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -639,7 +614,7 @@ ProblemSpec::get(const string& name, vector<string>& value)
     }
   }
   return ps;
-} 
+}
 
 //______________________________________________________________________
 //
@@ -647,9 +622,8 @@ ProblemSpec::get(const string& name, vector<string>& value)
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<string>& value, const int nItems)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
-  
+
   string stringValue;
   ps = get(name, stringValue);
   if (ps == 0) {
@@ -682,7 +656,6 @@ ProblemSpec::get(const string& name, vector<string>& value, const int nItems)
 ProblemSpecP
 ProblemSpec::get(const string& name, IntVector &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
 
   ProblemSpecP ps;
   string       stringValue;
@@ -701,7 +674,6 @@ ProblemSpec::get(const string& name, IntVector &value)
 ProblemSpecP
 ProblemSpec::get(const string& name, vector<IntVector>& value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   ProblemSpecP ps;
 
   string stringValue;
@@ -750,7 +722,7 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
       result += c;
     }  // end while (!in.eof())
   }
-  
+
   return ps;
 }
 
@@ -760,7 +732,6 @@ ProblemSpec::get(const string& name, vector<IntVector>& value)
 bool
 ProblemSpec::get(int &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
   if (!get(stringValue))
     return false;
@@ -773,7 +744,6 @@ ProblemSpec::get(int &value)
 bool
 ProblemSpec::get(long &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
   if (!get(stringValue))
     return false;
@@ -786,7 +756,6 @@ ProblemSpec::get(long &value)
 bool
 ProblemSpec::get(double &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
   if (!get(stringValue))
     return false;
@@ -799,7 +768,6 @@ ProblemSpec::get(double &value)
 bool
 ProblemSpec::get(string &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string tmp = getNodeValue();
   if (tmp == "")
     return false;
@@ -814,7 +782,6 @@ ProblemSpec::get(string &value)
 bool
 ProblemSpec::get(Vector &value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::get()");
   string stringValue;
   if (!get(stringValue))
     return false;
@@ -823,28 +790,27 @@ ProblemSpec::get(Vector &value)
   string::size_type i2 = stringValue.find_first_of(",");
   string::size_type i3 = stringValue.find_last_of(",");
   string::size_type i4 = stringValue.find("]");
-  
+
   string x_val(stringValue,i1+1,i2-i1-1);
   string y_val(stringValue,i2+1,i3-i2-1);
   string z_val(stringValue,i3+1,i4-i3-1);
-  
+
   UintahXML::validateType( x_val, UintahXML::FLOAT_TYPE );
   UintahXML::validateType( y_val, UintahXML::FLOAT_TYPE );
   UintahXML::validateType( z_val, UintahXML::FLOAT_TYPE );
-  
+
   value.x(atof(x_val.c_str()));
   value.y(atof(y_val.c_str()));
-  value.z(atof(z_val.c_str()));      
+  value.z(atof(z_val.c_str()));
   return true;
 }
 
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            double& value, double defaultVal) 
+ProblemSpec::getWithDefault(const string& name,
+                            double& value, double defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
@@ -862,10 +828,9 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
+ProblemSpec::getWithDefault(const string& name,
                             int& value, int defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
@@ -883,10 +848,9 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
+ProblemSpec::getWithDefault(const string& name,
                             bool& value, bool defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
@@ -904,11 +868,10 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            string& value, 
+ProblemSpec::getWithDefault(const string& name,
+                            string& value,
                             const string& defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
@@ -925,11 +888,10 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            IntVector& value, 
+ProblemSpec::getWithDefault(const string& name,
+                            IntVector& value,
                             const IntVector& defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
@@ -947,11 +909,10 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            Vector& value, 
+ProblemSpec::getWithDefault(const string& name,
+                            Vector& value,
                             const Vector& defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
@@ -969,11 +930,10 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            Point& value, 
+ProblemSpec::getWithDefault(const string& name,
+                            Point& value,
                             const Point& defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
 
@@ -991,11 +951,10 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            vector<double>& value, 
+ProblemSpec::getWithDefault(const string& name,
+                            vector<double>& value,
                             const vector<double>& defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   value.clear();
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
@@ -1018,11 +977,10 @@ ProblemSpec::getWithDefault(const string& name,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getWithDefault(const string& name, 
-                            vector<int>& value, 
+ProblemSpec::getWithDefault(const string& name,
+                            vector<int>& value,
                             const vector<int>& defaultVal)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getWithDefault()");
   value.clear();
   ProblemSpecP ps = get(name, value);
   if (ps == 0) {
@@ -1045,9 +1003,8 @@ ProblemSpec::getWithDefault(const string& name,
 ProblemSpecP
 ProblemSpec::appendElement(const char* name, const string& value)
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::appendElement()");
   xmlNode* newnode = xmlNewChild(d_node, 0, BAD_CAST name, BAD_CAST value.c_str());
-  return scinew ProblemSpec( newnode, false );
+  return new ProblemSpec( newnode, false );
 }
 
 //______________________________________________________________________
@@ -1104,7 +1061,7 @@ ProblemSpec::appendElement(const char* name, const Point& value)
 {
 
   ostringstream val;
-  val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", " 
+  val << '[' << setprecision(17) << value.x() << ", " << setprecision(17) << value.y() << ", "
       << setprecision(17) << value.z() << ']';
   return appendElement(name, val.str());
 
@@ -1142,7 +1099,7 @@ ProblemSpec::appendElement( const char* name, const vector<double>& value)
      val << setprecision(17) << value[i];
      if (i !=  value.size()-1)
        val << ',';
-     
+
    }
    val << ']';
    return appendElement(name, val.str());
@@ -1160,7 +1117,7 @@ ProblemSpec::appendElement(const char* name, const vector<int>& value)
      val << setprecision(17) << value[i];
      if (i !=  value.size()-1)
        val << ',';
-     
+
    }
    val << ']';
    return appendElement(name, val.str());
@@ -1177,7 +1134,7 @@ ProblemSpec::appendElement(const char* name, const vector<string >& value)
      val <<  value[i];
      if (i !=  value.size()-1)
        val << ',';
-     
+
    }
    val << ']';
    return appendElement(name, val.str());
@@ -1282,12 +1239,12 @@ ProblemSpec::require(const string& name, vector<double>& value)
 void
 ProblemSpec::require(const string& name, vector<string>& value)
 {
-  
+
   // Check if the prob_spec is NULL
-  
+
   if (! this->get(name,value))
     throw ParameterNotFound(name, __FILE__, __LINE__);
-  
+
 }
 
 //______________________________________________________________________
@@ -1301,7 +1258,7 @@ ProblemSpec::require(const string& name, vector<int>& value)
   if (! this->get(name,value))
     throw ParameterNotFound(name, __FILE__, __LINE__);
 
-} 
+}
 
 //______________________________________________________________________
 //
@@ -1311,7 +1268,7 @@ ProblemSpec::require(const string& name, vector<IntVector>& value)
   // Check if the prob_spec is NULL
   if (! this->get(name,value))
     throw ParameterNotFound(name, __FILE__, __LINE__);
-} 
+}
 
 //______________________________________________________________________
 //
@@ -1340,9 +1297,9 @@ ProblemSpec::findAttribute(const string& attribute) const
 {
   map<string, string> attributes;
   getAttributes(attributes);
-  
+
   map<string,string>::iterator iter = attributes.find(attribute);
-  
+
   if (iter != attributes.end()) {
     return true;
   }
@@ -1401,7 +1358,7 @@ ProblemSpec::getAttribute(const string& name, vector<double>& value) const
     const string v(*vit);
     UintahXML::validateType( v, UintahXML::FLOAT_TYPE );
     value.push_back( atof(v.c_str()) );
-  }  
+  }
   return true;
 }
 
@@ -1420,15 +1377,15 @@ ProblemSpec::getAttribute(const string& name, Vector& value) const
   string::size_type i2 = stringValue.find_first_of(",");
   string::size_type i3 = stringValue.find_last_of(",");
   string::size_type i4 = stringValue.find("]");
-  
+
   string x_val(stringValue,i1+1,i2-i1-1);
   string y_val(stringValue,i2+1,i3-i2-1);
   string z_val(stringValue,i3+1,i4-i3-1);
-  
+
   UintahXML::validateType( x_val, UintahXML::FLOAT_TYPE );
   UintahXML::validateType( y_val, UintahXML::FLOAT_TYPE );
   UintahXML::validateType( z_val, UintahXML::FLOAT_TYPE );
-  
+
   value.x(atof(x_val.c_str()));
   value.y(atof(y_val.c_str()));
   value.z(atof(z_val.c_str()));
@@ -1445,13 +1402,13 @@ ProblemSpec::getAttribute(const string& name, double &value) const
   if(!getAttribute(name, stringValue)) {
     return false;
   }
-  UintahXML::validateType( stringValue, UintahXML::FLOAT_TYPE ); 
+  UintahXML::validateType( stringValue, UintahXML::FLOAT_TYPE );
   istringstream ss(stringValue);
   ss >> value;
   if( !ss ) {
     printf( "WARNING: ProblemSpec.cc: getAttribute(%s, double): stringstream failed...\n", name.c_str() );
   }
-          
+
   return true;
 }
 
@@ -1470,7 +1427,7 @@ ProblemSpec::getAttribute(const string& name, int &value) const
   if( !ss ) {
     printf( "WARNING: ProblemSpec.cc: getAttribute(%s, int): stringstream failed...\n", name.c_str() );
   }
-  
+
   return true;
 }
 
@@ -1490,7 +1447,7 @@ ProblemSpec::getAttribute(const string& name, bool &value) const
   if( !result_stream ) {
     printf( "WARNING: ProblemSpec.cc: get(%s, bool): stringstream failed...\n", name.c_str() );
   }
-  
+
   if (nospace_cmp == "false") {
     value = false;
   }
@@ -1508,12 +1465,12 @@ ProblemSpec::getAttribute(const string& name, bool &value) const
 bool
 ProblemSpec::getAttribute(const string& attribute, std::vector<std::string>& result) const
 {
-  
+
   map<string, string> attributes;
   getAttributes(attributes);
-  
+
   map<string,string>::iterator iter = attributes.find(attribute);
-  
+
   if (iter != attributes.end()) {
     std::string attributeName = iter->second;
     std::stringstream ss(attributeName);
@@ -1532,7 +1489,7 @@ ProblemSpec::getAttribute(const string& attribute, std::vector<std::string>& res
 //______________________________________________________________________
 //
 void
-ProblemSpec::setAttribute(const string& name, 
+ProblemSpec::setAttribute(const string& name,
                           const string& value)
 {
   xmlNewProp(d_node, BAD_CAST name.c_str(), BAD_CAST value.c_str());
@@ -1559,12 +1516,11 @@ ProblemSpec::replaceAttributeValue(const std::string& attrName,
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getFirstChild() 
+ProblemSpec::getFirstChild()
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getFirstChild()");
   xmlNode* d = d_node->children;
   if (d) {
-    return scinew ProblemSpec( d, false );
+    return new ProblemSpec( d, false );
   }
   else {
     return 0;
@@ -1574,12 +1530,11 @@ ProblemSpec::getFirstChild()
 //______________________________________________________________________
 //
 ProblemSpecP
-ProblemSpec::getNextSibling() 
+ProblemSpec::getNextSibling()
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getNextSibling()");
   xmlNode* d = d_node->next;
   if( d ) {
-    return scinew ProblemSpec( d, false );
+    return new ProblemSpec( d, false );
   }
   else {
     return 0;
@@ -1589,7 +1544,7 @@ ProblemSpec::getNextSibling()
 //______________________________________________________________________
 //
 string
-ProblemSpec::getNodeValue() 
+ProblemSpec::getNodeValue()
 {
   string ret;
   for (xmlNode *child = d_node->children; child != 0;
@@ -1608,10 +1563,9 @@ ProblemSpec::getNodeValue()
 ProblemSpecP
 ProblemSpec::appendChild( const char *str )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::appendChild()");
   xmlNode* elt = xmlNewChild(d_node, 0, BAD_CAST str, 0);
-  
-  return scinew ProblemSpec( elt, false );
+
+  return new ProblemSpec( elt, false );
 }
 
 //______________________________________________________________________
@@ -1619,14 +1573,13 @@ ProblemSpec::appendChild( const char *str )
 void
 ProblemSpec::appendChild( ProblemSpecP pspec )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::appendChild()");
   xmlAddChild(d_node, pspec->d_node);
 }
 
 //______________________________________________________________________
 //
 void
-ProblemSpec::output( const char * filename ) const 
+ProblemSpec::output( const char * filename ) const
 {
   xmlKeepBlanksDefault(0);
   int bytes_written = xmlSaveFormatFileEnc( filename, d_node->doc, "UTF-8", 1 );
@@ -1639,7 +1592,7 @@ ProblemSpec::output( const char * filename ) const
 //______________________________________________________________________
 //
 void
-ProblemSpec::releaseDocument() 
+ProblemSpec::releaseDocument()
 {
   xmlFreeDoc( d_node->doc );
 }
@@ -1649,9 +1602,8 @@ ProblemSpec::releaseDocument()
 ProblemSpecP
 ProblemSpec::getRootNode()
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::getRootNode()");
   xmlNode* root_node = xmlDocGetRootElement(d_node->doc);
-  return scinew ProblemSpec( root_node, false ); // don't mark as toplevel as this is just a copy
+  return new ProblemSpec( root_node, false ); // don't mark as toplevel as this is just a copy
 }
 
 //______________________________________________________________________
@@ -1667,19 +1619,18 @@ ProblemSpec::getTypeDescription()
 //
 // static
 ProblemSpecP
-ProblemSpec::createDocument( const string & name ) 
+ProblemSpec::createDocument( const string & name )
 {
-  MALLOC_TRACE_TAG_SCOPE("ProblemSpec::createDocument()");
   xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
   xmlNodePtr node = xmlNewDocRawNode(doc, 0, BAD_CAST name.c_str(), 0);
 
   xmlDocSetRootElement(doc, node);
 
-  return scinew ProblemSpec(node, true );
+  return new ProblemSpec(node, true );
 }
 
 string
-ProblemSpec::getFile() const 
+ProblemSpec::getFile() const
 {
   if( d_node->doc->URL ) {
     return (const char *)( d_node->doc->URL );
@@ -1693,22 +1644,22 @@ ProblemSpec::getFile() const
 }
 
 //______________________________________________________________________
-//   Search through the saved labels in the ups:DataArchive section and 
+//   Search through the saved labels in the ups:DataArchive section and
 //   return true if name is found
 bool
 ProblemSpec::isLabelSaved(const std::string& name )
 {
   ProblemSpecP root   = getRootNode();
   ProblemSpecP DA_ps  = root->findBlock("DataArchiver");
-  
+
   if( !DA_ps ){
     string error = "ERROR:  The <DataArchiver> node was not found";
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
-  
-  for (ProblemSpecP var_ps = DA_ps->findBlock("save");var_ps != 0; 
-                    var_ps=var_ps->findNextBlock("save")) { 
-                          
+
+  for (ProblemSpecP var_ps = DA_ps->findBlock("save");var_ps != 0;
+                    var_ps=var_ps->findNextBlock("save")) {
+
     map<string,string> saveLabel;
     var_ps->getAttributes(saveLabel);
     if ( saveLabel["label"] == name ) {

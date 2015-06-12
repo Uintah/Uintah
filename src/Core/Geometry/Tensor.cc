@@ -383,7 +383,7 @@ const TypeDescription* get_type_description(Tensor*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("Tensor", Tensor::get_h_file_path(), 
+    td = new TypeDescription("Tensor", Tensor::get_h_file_path(), 
 				"SCIRun", 
 				TypeDescription::DATA_E);
   }

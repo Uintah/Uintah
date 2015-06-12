@@ -69,7 +69,7 @@ namespace Uintah{
       ~Builder(){}; 
       
       DissipationSource* build()
-      { return scinew DissipationSource( _name, _shared_state, _required_label_names, _type ); };
+      { return new DissipationSource( _name, _shared_state, _required_label_names, _type ); };
       
     private: 
       

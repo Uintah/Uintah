@@ -69,7 +69,7 @@ create_tau_mapping( const string & taskname, const PatchSubset * patches )
 {
   string full_name = taskname;
 
-#ifdef TAU_SEPARATE_PATCHES 
+#ifdef TAU_SEPARATE_PATCHES
   if( patches ) {
     for(int i=0;i<patches->size();i++) {
 
@@ -113,8 +113,8 @@ create_tau_mapping( const string & taskname, const PatchSubset * patches )
 
 /////////////// Worker //////////////////
 
-Worker::Worker( ThreadPool * parent, int id, 
-		Mutex * ready ) : 
+Worker::Worker( ThreadPool * parent, int id,
+		Mutex * ready ) :
   d_ready( ready ), d_id( id ), d_parent( parent ), d_task( 0 ), quit_( false )
 {
   proc_group_ = Parallel::getRootProcessorGroup()->myrank();
@@ -124,7 +124,7 @@ void
 Worker::quit()
 {
   quit_ = true;
-  d_ready->unlock();  
+  d_ready->unlock();
 }
 
 void
@@ -133,7 +133,7 @@ Worker::assignTask( DetailedTask          * task)
 #if DAV_DEBUG
   if( mixedDebug.active() ) {
     cerrLock.lock();
-    mixedDebug << "Worker " << proc_group_ << "-" << d_id 
+    mixedDebug << "Worker " << proc_group_ << "-" << d_id
 	       << ": assignTask:   " << *task << "\n";
     cerrLock.unlock();
   }
@@ -147,12 +147,10 @@ void
 Worker::run()
 {
   TAU_REGISTER_THREAD();
-  TAU_PROFILE("Worker_run()", "void ()", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(doittimer, "doit Task", "[Worker::run()]", TAU_DEFAULT);
 
   //if( mixedDebug.active() ) {
    cerrLock.lock();
-   cerr/*mixedDebug*/ << "Worker " << proc_group_ << "-" << d_id 
+   cerr/*mixedDebug*/ << "Worker " << proc_group_ << "-" << d_id
 	       << ", Begin run() -- PID is " << getpid() << "\n";
    cerrLock.unlock();
     //}
@@ -160,7 +158,7 @@ Worker::run()
   for(;;){
 
     if( mixedDebug.active() ) {
-      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id 
+      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id
 				  << " waiting for a task\n";
       cerrLock.unlock();
     }
@@ -168,23 +166,22 @@ Worker::run()
     d_ready->lock();
 
     if( mixedDebug.active() ) {
-      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id 
+      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id
 				  << " unlocked\n";
       cerrLock.unlock();
     }
 
     if( quit_ ) {
-      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id 
+      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id
 				  << " quitting\n";
       cerrLock.unlock();
-      TAU_PROFILE_EXIT( "thread quitting" );
       return;
     }
 
     double beginTime = Time::currentSeconds();
 #if DAV_DEBUG
     if( mixedDebug.active() ) {
-      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id 
+      cerrLock.lock(); mixedDebug << "Worker "  << proc_group_ << "-" << d_id
 				  << " running: " << *d_task << "\n";
       cerrLock.unlock();
     }
@@ -196,20 +193,20 @@ Worker::run()
 
 #if DAV_DEBUG
     if( mixedDebug.active() ) {
-      cerrLock.lock(); mixedDebug << "Worker " << proc_group_ << "-" << d_id 
-				  << " calling doit for detailed task: " 
-				  << task << " which has task: " 
+      cerrLock.lock(); mixedDebug << "Worker " << proc_group_ << "-" << d_id
+				  << " calling doit for detailed task: "
+				  << task << " which has task: "
 				  << task->getTask() << "\n";
       cerrLock.unlock();
     }
 #endif
-    
+
     try {
       d_parent->getScheduler()->runTask(task, 0); // calls task->doit - TODO: Fix iteration when we do MixedScheduler again
     } catch (Exception& e) {
 
-      cerrLock.lock(); cerr << "Worker " << proc_group_ << "-" << d_id 
-			    << ": Caught exception: " 
+      cerrLock.lock(); cerr << "Worker " << proc_group_ << "-" << d_id
+			    << ": Caught exception: "
 			    << e.message() << '\n';
       if(e.stackTrace())
 	cerr << "Stack trace: " << e.stackTrace() << '\n';
@@ -218,30 +215,30 @@ Worker::run()
       //      Thread::exitAll(1);
     } catch (std::bad_alloc e) {
       cerrLock.lock();
-      cerr << "Worker " << proc_group_ << "-" << d_id 
+      cerr << "Worker " << proc_group_ << "-" << d_id
 	   << ": Caught std exception 'std::bad_alloc': " << e.what() << '\n';
       cerrLock.unlock();
       //      Thread::exitAll(1);
     } catch (std::bad_exception e) {
       cerrLock.lock();
-      cerr << "Worker " << proc_group_ << "-" << d_id 
+      cerr << "Worker " << proc_group_ << "-" << d_id
 	   << ": Caught std exception 'std::bad_exception: " << e.what() << '\n';
       cerrLock.unlock();
       //      Thread::exitAll(1);
     } catch (std::ios_base::failure e) {
       cerrLock.lock();
-      cerr << "Worker " << proc_group_ << "-" << d_id 
+      cerr << "Worker " << proc_group_ << "-" << d_id
 	   << ": Caught std exception 'std::ios_base::failure': " << e.what() << '\n';
       cerrLock.unlock();
       //      Thread::exitAll(1);
     } catch (std::exception e){
       cerrLock.lock();
-      cerr << "Worker " << proc_group_ << "-" << d_id 
+      cerr << "Worker " << proc_group_ << "-" << d_id
 	   << ": Caught std exception: " << e.what() << '\n';
       cerrLock.unlock();
       //      Thread::exitAll(1);
     } catch(...){
-      cerrLock.lock(); cerr << "Worker " << proc_group_ << "-" << d_id 
+      cerrLock.lock(); cerr << "Worker " << proc_group_ << "-" << d_id
 			    << ": Caught unknown exception\n";
       cerrLock.unlock();
       //      Thread::exitAll(1);
@@ -249,7 +246,7 @@ Worker::run()
 
 #if DAV_DEBUG
     if( mixedDebug.active() ) {
-      cerrLock.lock(); mixedDebug << "Worker " << proc_group_ << "-" << d_id 
+      cerrLock.lock(); mixedDebug << "Worker " << proc_group_ << "-" << d_id
 			    << " done with done()\n";
       cerrLock.unlock();
     }
@@ -277,7 +274,7 @@ Receiver::Receiver( ThreadPool * parent, int id )
     d_lock("ThreadPool Receiver lock"),
     quit_(false)
 {
-  proc_group_ = Parallel::getRootProcessorGroup()->myrank();  
+  proc_group_ = Parallel::getRootProcessorGroup()->myrank();
 }
 
 void
@@ -286,7 +283,7 @@ Receiver::assignTask(DetailedTask* task)
 #if DAV_DEBUG
   if( mixedDebug.active() ) {
     cerrLock.lock();
-    mixedDebug << "Receiver " << proc_group_ << "-" << d_id 
+    mixedDebug << "Receiver " << proc_group_ << "-" << d_id
 	       << ": assignTask:   " << *task << "\n";
     cerrLock.unlock();
   }
@@ -299,7 +296,7 @@ Receiver::assignTask(DetailedTask* task)
   }
   newTasks_.push(task);
  d_lock.unlock();
-  MPI_Send(0, 0, MPI_INT, pg_->myrank(), d_id, pg_->getComm());  
+  MPI_Send(0, 0, MPI_INT, pg_->myrank(), d_id, pg_->getComm());
 }
 
 void
@@ -307,7 +304,7 @@ Receiver::quit()
 {
   ASSERT(pg_ == 0); // must be finished with its work before calling this
   quit_ = true;
-  my_thread_->resume();  
+  my_thread_->resume();
 }
 
 bool
@@ -321,7 +318,7 @@ Receiver::addAwaitingTasks()
   while (!newTasks_.empty()) {
     DetailedTask* task = newTasks_.front();
     newTasks_.pop();
-    
+
     // If a slot in the awaitingTasks_ array is available, use it;
     // otherwise make the array bigger.
     int slot = -1;
@@ -334,12 +331,12 @@ Receiver::addAwaitingTasks()
       awaitingTasks_.push_back(0);
     }
 
-    recvs_.setDefaultGroupID(slot);    
+    recvs_.setDefaultGroupID(slot);
     list<DependencyBatch*> externalRecvs;
     unsigned long prevNumRequests = recvs_.numRequests();
     d_parent->getScheduler()->postMPIRecvs(task, false, 0, 0); // FIX iteration
     ASSERT(awaitingTasks_[slot] == 0);
-    awaitingTasks_[slot] = scinew AwaitingTask(task, externalRecvs, d_id);
+    awaitingTasks_[slot] = new AwaitingTask(task, externalRecvs, d_id);
     if (recvs_.numRequests() == prevNumRequests) {
       // No new requests added -- so the task is not waiting on any receives
       // it has personally posted.
@@ -348,7 +345,7 @@ Receiver::addAwaitingTasks()
     addedTasks = true;
   }
   d_lock.unlock();
-  
+
   return addedTasks;
 }
 
@@ -356,20 +353,18 @@ void
 Receiver::run()
 {
   TAU_REGISTER_THREAD();
-  TAU_PROFILE("Receiver_run()", "void ()", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(doittimer, "doit Task", "[Receiver::run()]", TAU_DEFAULT);
 
   cerr << "Running thread " << my_thread_ << "\n";
 
   //if( mixedDebug.active() ) {
     cerrLock.lock();
-    cerr/*mixedDebug*/ << "Receiver " << proc_group_ << "-" << d_id 
+    cerr/*mixedDebug*/ << "Receiver " << proc_group_ << "-" << d_id
 	       << ", Begin run() -- PID is " << getpid() << "\n";
     cerrLock.unlock();
     //}
 
   MPI_Request wakeUpRequest;
-  MPI_Status status;  
+  MPI_Status status;
 
   cout << "Here: pg_ is " << pg_ << "\n";
   cout << " and size of it is: " << pg_->size() << "\n";
@@ -382,16 +377,15 @@ Receiver::run()
 
   int preBytesLeft = recvs_.getUnfinishedBytes();
 
-  ASSERT(pg_ != 0);  
+  ASSERT(pg_ != 0);
   for(;;){
     bool addedTasks = false;
-    
+
     if( quit_ ) {
       MPI_Cancel(&wakeUpRequest);
       cerrLock.lock(); mixedDebug << "Receiver " << proc_group_
 				  << "-" << d_id << " quitting\n";
       cerrLock.unlock();
-      TAU_PROFILE_EXIT( "thread quitting" );
       return;
     }
 
@@ -415,7 +409,7 @@ Receiver::run()
     // if their external recvs are finished.
     if (hasWakeUpSignal) {
       // clear out all wake-up signals since it's already awake
-      int flag;	
+      int flag;
       do {
 	MPI_Iprobe(pg_->myrank(), d_id, pg_->getComm(), &flag, &status);
 	if (flag) {
@@ -423,20 +417,20 @@ Receiver::run()
 		   &status);
 	}
       } while (flag);
-      
+
       // wake up signal -- may mean more tasks to add
       // (or can indicate externally requested receives came in)
       addedTasks = addAwaitingTasks();
-      
+
       // post wake up signal receive again
       MPI_Irecv(0, 0, MPI_INT, pg_->myrank(), d_id, pg_->getComm(),
 		&wakeUpRequest);
-      recvs_.add(wakeUpRequest, 0, 0,"",0,-1);	
+      recvs_.add(wakeUpRequest, 0, 0,"",0,-1);
     }
-  
+
     iter = semiReadyTasks_.begin();
     while (iter != semiReadyTasks_.end()) {
-      int taskIndex = *iter;      
+      int taskIndex = *iter;
       ASSERT(taskIndex != -1); // these should have been removed
       if (awaitingTasks_[taskIndex]->isReady()) {
 	// task has received all it needs and is ready to go
@@ -529,8 +523,6 @@ void MPIReducer::quit(  )
 void MPIReducer::run()
 {
   TAU_REGISTER_THREAD();
-  TAU_PROFILE("Reducer_run()", "void ()", TAU_DEFAULT);
-  TAU_PROFILE_TIMER(doittimer, "doit Task", "[Reducer::run()]", TAU_DEFAULT);
 
   //if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -550,8 +542,7 @@ void MPIReducer::run()
     if (quit_) {
       cerrLock.lock(); mixedDebug << "MPIReducer quitting\n";
       cerrLock.unlock();
-      TAU_PROFILE_EXIT( "thread quitting" );
-      return;  
+      return;
     }
     ASSERT(!tasks_.empty());
     DetailedTask* reductionTask = tasks_.front();
@@ -580,7 +571,7 @@ ThreadPool::ThreadPool( MixedScheduler* scheduler,
   d_numReceiversAddingTasks = d_maxBytesWhileAddingTasks = 0;
   d_beginTime = Time::currentSeconds();
 
-  d_timeUsed = scinew double[ maxWorkers ];
+  d_timeUsed = new double[ maxWorkers ];
 
   //if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -588,18 +579,18 @@ ThreadPool::ThreadPool( MixedScheduler* scheduler,
 	       << " -- PID is " << getpid() << "\n";
     cerrLock.unlock();
     //}
-  
+
   char name[1024];
-  
-  num_workers_ = scinew Semaphore( "number of threads", maxWorkers );
+
+  num_workers_ = new Semaphore( "number of threads", maxWorkers );
 
   // Only one thing (worker thread or threadPool itself) can be
   // modifying the workerQueue (actually a stack) at a time.
-  d_workerQueueLock = scinew Mutex( "ThreadPool Worker Queue Lock" );
+  d_workerQueueLock = new Mutex( "ThreadPool Worker Queue Lock" );
 
-  d_workerReadyLocks = scinew Mutex*[ maxWorkers ];
+  d_workerReadyLocks = new Mutex*[ maxWorkers ];
 
-  d_workers = scinew Worker*[ maxWorkers ];
+  d_workers = new Worker*[ maxWorkers ];
 
   for( int i = 0; i < maxWorkers; i++ ){
 
@@ -607,18 +598,18 @@ ThreadPool::ThreadPool( MixedScheduler* scheduler,
 
     d_availableWorkers.push( i );
 
-    d_workerReadyLocks[ i ] = scinew Mutex( "Worker Ready Lock" );
+    d_workerReadyLocks[ i ] = new Mutex( "Worker Ready Lock" );
     // None of the workers are allowed to run until the ThreadPool
     // tells them to run... therefore they must be locked initially.
     d_workerReadyLocks[ i ]->lock();
 
-    Worker * worker = scinew Worker( this, i,
+    Worker * worker = new Worker( this, i,
 				     d_workerReadyLocks[ i ] );
 
     sprintf( name, "Worker %d-%d",
 	     Parallel::getRootProcessorGroup()->myrank(), i );
 
-    Thread * t = scinew Thread( worker, name );
+    Thread * t = new Thread( worker, name );
     t->detach();
 
     d_workers[ i ] = worker;
@@ -626,33 +617,33 @@ ThreadPool::ThreadPool( MixedScheduler* scheduler,
 
   ReceiverPriorityQueue::iterator initReceivers =
     d_receiverQueue.insert(make_pair(0 /* zero bytes receiving so far */,
-				     scinew list<Receiver*>())).first;
+				     new list<Receiver*>())).first;
   list<Receiver*>* initReceiversList = initReceivers->second;
-  d_receivers = scinew Receiver*[ maxReceivers ];
+  d_receivers = new Receiver*[ maxReceivers ];
   for (int i = 0; i < maxReceivers; ++i) {
-    d_receivers[i] = scinew Receiver(this, i);
-    list<Receiver*>::iterator posIter = 
+    d_receivers[i] = new Receiver(this, i);
+    list<Receiver*>::iterator posIter =
       initReceiversList->insert(initReceiversList->end(), d_receivers[i]);
     ReceiverPriorityQueueItem priorityItem =
       make_pair(initReceiversList, posIter);
-    
+
     // tell the receiver where it is in the priority queue
     d_receivers[i]->setPriorityItem(priorityItem);
-    
+
     sprintf( name, "Receiver %d-%d",
 	     Parallel::getRootProcessorGroup()->myrank(), i );
 
-    Thread * t = scinew Thread(d_receivers[i], name);
+    Thread * t = new Thread(d_receivers[i], name);
     t->detach();
   }
   sprintf( name, "MPIReducer %d",
 	   Parallel::getRootProcessorGroup()->myrank());
-  d_reducer = scinew MPIReducer(this);
-  Thread * t = scinew Thread(d_reducer, name);
+  d_reducer = new MPIReducer(this);
+  Thread * t = new Thread(d_reducer, name);
   t->detach();
-  
+
   ASSERT(d_waitingForReprioritizingThread == 0);
-  Thread::yield(); // let other threads start ??? 
+  Thread::yield(); // let other threads start ???
 }
 
 ThreadPool::~ThreadPool()
@@ -667,7 +658,7 @@ ThreadPool::~ThreadPool()
   cout << "Telling all threads to quit\n";
   for( int i = 0; i < d_maxReceivers; i++ ){
     d_receivers[ i ]->quit();
-  }  
+  }
   for( int i = 0; i < d_maxWorkers; i++ ){
     d_workers[ i ]->quit();
   }
@@ -707,7 +698,7 @@ ThreadPool::available()
   cnt++;
   avg += d_numBusy;
   if( cnt % 50000 == 0 ){
-    cerr << "ThreadPool: number of threads available: " 
+    cerr << "ThreadPool: number of threads available: "
 	 << d_maxWorkers - d_numBusy << ", min: " << minFree << "\n";
     cerr << "            avg busy: " << avg / cnt << "\n";
   }
@@ -722,9 +713,9 @@ void
 ThreadPool::addTask( DetailedTask* task )
 {
   // use addReductionTask for reduction tasks
-  ASSERT(task->getTask()->getType() != Task::Reduction);  
+  ASSERT(task->getTask()->getType() != Task::Reduction);
  d_receiverQueueLock.lock();
-  d_numWaiting++; 
+  d_numWaiting++;
   ReceiverPriorityQueue::iterator head_iter;
   for (head_iter = d_receiverQueue.begin();
        head_iter != d_receiverQueue.end(); ++head_iter) {
@@ -738,16 +729,16 @@ ThreadPool::addTask( DetailedTask* task )
     d_waitingForReprioritizingThread = Thread::self();
    d_receiverQueueLock.unlock();
     d_waitingForReprioritizingThread->stop();
-   d_receiverQueueLock.lock(); 
+   d_receiverQueueLock.lock();
 
     for (head_iter = d_receiverQueue.begin();
 	 head_iter != d_receiverQueue.end(); ++head_iter) {
       if (!head_iter->second->empty() &&
 	  head_iter->second->front() != 0) break;
     }
-    ASSERT(head_iter != d_receiverQueue.end()); // should have one ready 
+    ASSERT(head_iter != d_receiverQueue.end()); // should have one ready
     ASSERT(d_numReceiversAddingTasks == 0 ||
-	   head_iter->first <= d_maxBytesWhileAddingTasks);       
+	   head_iter->first <= d_maxBytesWhileAddingTasks);
   }
 
   list<Receiver*>* topPriority = head_iter->second;
@@ -784,13 +775,13 @@ ThreadPool::reprioritize( Receiver* receiver, ReceiverPriorityQueueItem& item,
 {
   static set<int> emptyBins;
 
- d_receiverQueueLock.lock();  
+ d_receiverQueueLock.lock();
   if (receiver->hasNewTasks()) {
     // wait til the tasks are added before adding it back into the queue
-    d_receiverQueueLock.unlock();    
+    d_receiverQueueLock.unlock();
     return false;
   }
-  
+
   list<Receiver*>* oldList = item.first;
   int bytes = receiver->getUnfinishedBytes();
 
@@ -822,11 +813,11 @@ ThreadPool::reprioritize( Receiver* receiver, ReceiverPriorityQueueItem& item,
       ASSERTEQ(toRemove->second, oldList);
       delete oldList;
       d_receiverQueue.erase(toRemove);
-    }  
-    
+    }
+
     // insert the item into a new location
-    list<Receiver*>* receiverList = scinew list<Receiver*>();
-    pair<ReceiverPriorityQueue::iterator, bool> insertResult = 
+    list<Receiver*>* receiverList = new list<Receiver*>();
+    pair<ReceiverPriorityQueue::iterator, bool> insertResult =
       d_receiverQueue.insert(make_pair(bytes, receiverList));
     if (!insertResult.second) {
       delete receiverList; // list already existed
@@ -836,19 +827,19 @@ ThreadPool::reprioritize( Receiver* receiver, ReceiverPriorityQueueItem& item,
     // set new location
     item = make_pair(receiverList, receiverList->begin());
   }
-  
+
   if (tasksAdded) {
     // reprioritized one of the recently assigned-to receivers
     --d_numReceiversAddingTasks;
   }
-  
+
   if (d_waitingForReprioritizingThread != 0 &&
       (bytes < d_maxBytesWhileAddingTasks || d_numReceiversAddingTasks == 0)){
     d_waitingForReprioritizingThread->resume();
     d_waitingForReprioritizingThread = 0;
   }
 
-#if 0    
+#if 0
   /* for testing */
   cerrLock.lock();
   for (ReceiverPriorityQueue::iterator iter = d_receiverQueue.begin();
@@ -864,7 +855,7 @@ ThreadPool::reprioritize( Receiver* receiver, ReceiverPriorityQueueItem& item,
   cerrLock.unlock();
   /* end for testing */
 #endif
-  
+
  d_receiverQueueLock.unlock();
  return true;
 }
@@ -903,7 +894,7 @@ ThreadPool::launchTask( DetailedTask          * task )
   //  if( d_availableWorkers.empty() ){
   //    throw( InternalError( "All threads busy..." ) );
   //  }
-  
+
   Worker * worker;
   int      id = d_availableWorkers.top();
 
@@ -912,7 +903,7 @@ ThreadPool::launchTask( DetailedTask          * task )
   worker = d_workers[ id ];
 
   d_numBusy++;
- d_receiverQueueLock.lock();  
+ d_receiverQueueLock.lock();
   d_numWaiting--;
  d_receiverQueueLock.unlock();
   worker->assignTask( task );
@@ -948,7 +939,7 @@ ThreadPool::all_done()
   }
 
   if (d_numBusy + d_numWaiting > 0 || d_numReduces > d_numReduced) {
-    d_waitingTilDoneThread = Thread::self();      
+    d_waitingTilDoneThread = Thread::self();
     d_waitingTilDoneThread->stop();
   }
   ASSERT(d_numBusy + d_numWaiting == 0);
@@ -965,7 +956,7 @@ ThreadPool::all_done()
 void
 ThreadPool::done( int id, DetailedTask * task, double timeUsed )
 {
-  
+
 #if DAV_DEBUG
   if( mixedDebug.active() ) {
     cerrLock.lock();
@@ -998,7 +989,7 @@ ThreadPool::done( int id, DetailedTask * task, double timeUsed )
 
   if( mixedDebug.active() ) {
     cerrLock.lock();
-    mixedDebug << "numBusy: " << d_numBusy << "\n"; 
+    mixedDebug << "numBusy: " << d_numBusy << "\n";
     cerrLock.unlock();
   }
 
@@ -1008,7 +999,7 @@ ThreadPool::done( int id, DetailedTask * task, double timeUsed )
 #if DAV_DEBUG
   if( mixedDebug.active() ) {
     cerrLock.lock();
-    mixedDebug << "Worker " << id 
+    mixedDebug << "Worker " << id
 	       << " added back to the list of threads available\n";
     cerrLock.unlock();
   }

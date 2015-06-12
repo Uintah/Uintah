@@ -32,7 +32,7 @@ SimpleBirthBuilder::SimpleBirthBuilder( const std::string         & modelName,
 SimpleBirthBuilder::~SimpleBirthBuilder(){}
 
 ModelBase* SimpleBirthBuilder::build(){
-  return scinew SimpleBirth( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new SimpleBirth( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
 // End Builder
@@ -144,7 +144,7 @@ void
 SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "SimpleBirth::computeModel";
-  Task* tsk = scinew Task(taskname, this, &SimpleBirth::computeModel, timeSubStep );
+  Task* tsk = new Task(taskname, this, &SimpleBirth::computeModel, timeSubStep );
 
   if ( !_is_weight ){ 
     std::string abscissa_name = ParticleHelper::append_env( _abscissa_name, d_quadNode ); 

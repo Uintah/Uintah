@@ -33,7 +33,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
 #include <Core/Math/MinMax.h>
@@ -70,7 +70,7 @@ namespace SCIRun {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
+      td = new TypeDescription("Matrix3", Matrix3::get_h_file_path(), "Uintah");
     }
     return td;
   }
@@ -934,7 +934,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
+      td = new TypeDescription(TypeDescription::Matrix3, "Matrix3", true,
                                   &makeMPI_Matrix3);
     }
     return td;

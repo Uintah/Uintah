@@ -177,7 +177,7 @@ main( int argc, char *argv[] )
     usage("You must specify -arches or -ice", "", argv[0]);
   }
   
-  DataArchive* da1 = scinew DataArchive(udaFileName);
+  DataArchive* da1 = new DataArchive(udaFileName);
   ProblemSpecP docTop = ProblemSpecReader().readInputFile( udaFileName + "/input.xml" );
   double A;
   double dyVis;

@@ -258,13 +258,13 @@ namespace Wasatch{
       patches_( patches ),
       materials_( materials ),
       taskName_( taskName ),
-      fml_( scinew Expr::FieldManagerList(taskName) )
+      fml_( new Expr::FieldManagerList(taskName) )
   {
     assert( treeMap.size() > 0 );
     hasPressureExpression_ = false;
     hasBeenScheduled_ = false;
 
-    Uintah::Task* tsk = scinew Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
+    Uintah::Task* tsk = new Uintah::Task( taskName, this, &TreeTaskExecute::execute, rkStage );
     BOOST_FOREACH( TreeMap::value_type& vt, treeMap ){
 
       const int patchID = vt.first;
@@ -747,7 +747,7 @@ namespace Wasatch{
 
     for( int ip=0; ip<localPatches->size(); ++ip ){
       const int patchID = localPatches->get(ip)->getID();
-      TreePtr tree( scinew Expr::ExpressionTree(roots,factory,patchID,taskName) );
+      TreePtr tree( new Expr::ExpressionTree(roots,factory,patchID,taskName) );
       const TreeList treeList = tree->split_tree();
 
       // write out graph information.
@@ -779,7 +779,7 @@ namespace Wasatch{
     // create a TreeTaskExecute for each tree (on all patches)
     BOOST_FOREACH( TreeMapTranspose::value_type& tlpair, trLstTrns ){
       TreeMap& tl = tlpair.second;
-      execList_.push_back( scinew TreeTaskExecute( tl, tl.begin()->second->name(),
+      execList_.push_back( new TreeTaskExecute( tl, tl.begin()->second->name(),
                                                    sched, patches, materials,
                                                    info, rkStage, state,
                                                    ioFieldSet, lockAllFields ) );

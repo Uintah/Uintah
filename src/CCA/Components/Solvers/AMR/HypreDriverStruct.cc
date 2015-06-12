@@ -210,7 +210,7 @@ HypreDriverStruct::makeLinearSystem_CC(const int matl)
 
     // Feed it to Hypre
     if(_params->symmetric){
-      double* values = scinew double[(h.x()-l.x())*4];	
+      double* values = new double[(h.x()-l.x())*4];	
       int stencil_indices[] = {0,1,2,3};
       for(int z=l.z();z<h.z();z++){
         for(int y=l.y();y<h.y();y++){

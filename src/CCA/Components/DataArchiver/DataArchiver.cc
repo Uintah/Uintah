@@ -49,7 +49,6 @@
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/Endian.h>
-#include <Core/Util/Environment.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/StringUtil.h>
@@ -386,7 +385,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
      } else {
        int inlen;
        MPI_Bcast(&inlen, 1, MPI_INT, 0, d_myworld->getComm());
-       char* inbuf = scinew char[inlen+1];
+       char* inbuf = new char[inlen+1];
        MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
        inbuf[inlen]='\0';
        basename=inbuf;
@@ -489,7 +488,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
 
    if (d_writeMeta) {
 
-     string svn_diff_file = string( sci_getenv("SCIRUN_OBJDIR") ) + "/svn_diff.txt";
+     string svn_diff_file = string( getenv("SCIRUN_OBJDIR") ) + "/svn_diff.txt";
      if( !validFile( svn_diff_file ) ) {
        cout << "\n";
        cout << "WARNING: 'svn diff' file '" << svn_diff_file << "' does not appear to exist!\n";
@@ -497,7 +496,7 @@ DataArchiver::initializeOutput(const ProblemSpecP& params)
      } 
      else {
        string svn_diff_out = d_dir.getName() + "/svn_diff.txt";
-       string svn_diff_on = string( sci_getenv("SCIRUN_OBJDIR") ) + "/.do_svn_diff";
+       string svn_diff_on = string( getenv("SCIRUN_OBJDIR") ) + "/.do_svn_diff";
        if( !validFile( svn_diff_on ) ) {
          cout << "\n";
          cout << "WARNING: Adding 'svn diff' file to UDA, but AUTO DIFF TEXT CREATION is OFF!\n";
@@ -1061,7 +1060,7 @@ DataArchiver::sched_allOutputTasks(double delt,
   
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) &&  (delt != 0 || d_outputInitTimestep)) {
     
-    Task* t = scinew Task("DataArchiver::outputReductionVars",this, 
+    Task* t = new Task("DataArchiver::outputReductionVars",this, 
                           &DataArchiver::outputReductionVars);
     
     for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
@@ -1088,7 +1087,7 @@ DataArchiver::sched_allOutputTasks(double delt,
   //  chedule Checkpoint (reduction variables)
   if (delt != 0 && d_checkpointCycle>0 && (d_checkpointInterval>0 || d_checkpointTimestepInterval>0 ||  d_checkpointWalltimeInterval>0 ) ) {
     // output checkpoint timestep
-    Task* t = scinew Task("DataArchiver::outputVariables (CheckpointReduction)",this, 
+    Task* t = new Task("DataArchiver::outputVariables (CheckpointReduction)",this, 
                           &DataArchiver::outputVariables, CHECKPOINT_REDUCTION);
     
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
@@ -1706,7 +1705,7 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
      taskName += "(checkpoint)";
     }
     
-    Task* t = scinew Task(taskName, this, &DataArchiver::outputVariables, isThisCheckpoint?CHECKPOINT:OUTPUT);
+    Task* t = new Task(taskName, this, &DataArchiver::outputVariables, isThisCheckpoint?CHECKPOINT:OUTPUT);
     
     //__________________________________
     //
@@ -2113,7 +2112,7 @@ DataArchiver::outputVariables(const ProcessorGroup * /*world*/,
           // Pad appropriately
           if(cur%PADSIZE != 0){
             long pad = PADSIZE-cur%PADSIZE;
-            char* zero = scinew char[pad];
+            char* zero = new char[pad];
             memset(zero, 0, pad);
             int err = (int)write(fd, zero, pad);
             if (err != pad) {
@@ -2478,7 +2477,7 @@ DataArchiver::SaveItem::setMaterials(int level,
   }
   else {
     MaterialSetP& m = matlSet[level];
-    m = scinew MaterialSet();
+    m = new MaterialSet();
     vector<int> matlVec;
     matlVec.reserve(matls.size());
     for (ConsecutiveRangeSet::iterator iter = matls.begin();

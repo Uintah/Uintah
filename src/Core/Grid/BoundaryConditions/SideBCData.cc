@@ -29,7 +29,7 @@
 #include <Core/Grid/Variables/NodeIterator.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 
 using std::endl;
@@ -66,7 +66,7 @@ bool SideBCData::operator==(const BCGeomBase& rhs) const
 
 SideBCData* SideBCData::clone()
 {
-  return scinew SideBCData(*this);
+  return new SideBCData(*this);
 
 }
 void SideBCData::addBCData(BCData& bc)

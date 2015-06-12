@@ -53,7 +53,7 @@ void TabStripFactor::problemSetup( const ProblemSpecP& inputdb )
 void TabStripFactor::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
 {
   std::string taskname = "TabStripFactor::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &TabStripFactor::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &TabStripFactor::computeProp, time_substep ); 
 
   tsk->modifies( _prop_label ); 
 
@@ -124,7 +124,7 @@ void TabStripFactor::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "TabStripFactor::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &TabStripFactor::initialize);
+  Task* tsk = new Task(taskname, this, &TabStripFactor::initialize);
   tsk->computes(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

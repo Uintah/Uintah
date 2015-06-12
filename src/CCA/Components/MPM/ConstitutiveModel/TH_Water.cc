@@ -38,7 +38,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 
 using namespace std;
@@ -106,7 +106,7 @@ void TH_Water::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 TH_Water* TH_Water::clone()
 {
-  return scinew TH_Water(*this);
+  return new TH_Water(*this);
 }
 
 void TH_Water::initializeCMData(const Patch* patch,
@@ -431,7 +431,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "TH_Water::StateData", 
                                   true, &makeMPI_CMData);
     }

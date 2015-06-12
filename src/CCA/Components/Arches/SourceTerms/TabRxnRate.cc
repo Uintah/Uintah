@@ -42,7 +42,7 @@ void
 TabRxnRate::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "TabRxnRate::eval";
-  Task* tsk = scinew Task(taskname, this, &TabRxnRate::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &TabRxnRate::computeSource, timeSubStep);
 
   if (timeSubStep == 0) { 
 
@@ -103,7 +103,7 @@ TabRxnRate::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "TabRxnRate::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &TabRxnRate::initialize);
+  Task* tsk = new Task(taskname, this, &TabRxnRate::initialize);
 
   tsk->computes(_src_label);
 

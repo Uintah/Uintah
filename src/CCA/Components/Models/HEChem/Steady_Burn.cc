@@ -57,10 +57,10 @@ Steady_Burn::Steady_Burn(const ProcessorGroup* myworld,
                          const ProblemSpecP& prob_spec)
   : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
-  d_saveConservedVars = scinew saveConservedVars();
+  Mlb  = new MPMLabel();
+  Ilb  = new ICELabel();
+  MIlb = new MPMICELabel();
+  d_saveConservedVars = new saveConservedVars();
   //__________________________________
   //  diagnostic labels
   BurningCellLabel = VarLabel::create("SteadyBurn.BurningCell",
@@ -139,7 +139,7 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   
   //__________________________________
   //  define the materialSet
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                                 // needed for the pressure and NC_CCWeight
@@ -176,7 +176,7 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
 void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
   printSchedule(level, cout_doing,"Steady_Burn::scheduleInitialize");
   
-  Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
+  Task* t = new Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
   t->computes(TsLabel, react_matl);
   sched->addTask(t, level->eachPatch(), mymatls);
@@ -219,7 +219,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();  
 
-  Task* t1 = scinew Task("Steady_Burn::computeNumPPC", this, 
+  Task* t1 = new Task("Steady_Burn::computeNumPPC", this, 
                          &Steady_Burn::computeNumPPC, mi);
 
   printSchedule(level, cout_doing,"Steady_Burn::scheduleComputeNumPPC");  
@@ -231,7 +231,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
 
   //__________________________________
-  Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
+  Task* t = new Task("Steady_Burn::computeModelSources", this, 
                         &Steady_Burn::computeModelSources, mi);
 
   printSchedule(level,cout_doing,"Steady_Burn::scheduleComputeModelSources");  
@@ -241,7 +241,7 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
   
-  MaterialSubset* one_matl     = scinew MaterialSubset();
+  MaterialSubset* one_matl     = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   

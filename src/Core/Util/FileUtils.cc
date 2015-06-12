@@ -26,7 +26,6 @@
 
 #include <Core/OS/Dir.h>
 #include <Core/Util/Assert.h>
-#include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/StringUtil.h>
@@ -169,7 +168,7 @@ substituteTilde( const string & dirstr ) {
 
   string::size_type pos = realdirstr.find("~");
   if (pos != string::npos && (pos == 0 || dirstr[pos-1] == '/')) {
-    string HOME = sci_getenv("HOME");
+    string HOME = getenv("HOME");
     realdirstr = HOME + "/" + 
       dirstr.substr(pos+1, dirstr.size()-pos-1);
   }

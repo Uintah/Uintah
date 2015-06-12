@@ -37,7 +37,7 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   
   _FLT_DBL = TypeDescription::double_type;        // HARDWIRED: double;
   
-   _RMCRT = scinew Ray( _FLT_DBL );          
+   _RMCRT = new Ray( _FLT_DBL );          
   
   //Declare the source type: 
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
@@ -365,7 +365,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     ostringstream taskname;
     taskname << "RMCRT_Radiation::sched_initialize_L-" << L_ID;
 
-    Task* tsk = scinew Task( taskname.str(), this, &RMCRT_Radiation::initialize );
+    Task* tsk = new Task( taskname.str(), this, &RMCRT_Radiation::initialize );
     printSchedule( level, dbg, taskname.str() );
 
     //  only schedule src on arches level
@@ -466,10 +466,10 @@ RMCRT_Radiation::sched_setBoundaryConditions( const LevelP& level,
   Task* tsk = NULL;
   if( _FLT_DBL == TypeDescription::double_type ){
 
-    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >,
+    tsk= new Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< double >,
                       temp_dw, radCalc_freq, backoutTemp );
   } else {
-    tsk= scinew Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< float >,
+    tsk= new Task( taskname, this, &RMCRT_Radiation::setBoundaryConditions< float >,
                       temp_dw, radCalc_freq, backoutTemp );
   }
 

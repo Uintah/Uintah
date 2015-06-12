@@ -31,7 +31,7 @@
 #include <CCA/Components/MPM/MPMFlags.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Grid/SimulationState.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -49,19 +49,19 @@ ParticleCreator* ParticleCreatorFactory::create(ProblemSpecP& ps,
   cm_ps->getAttribute("type",mat_type);
 
   if (flags->d_integrator_type == "implicit") 
-    return scinew ImplicitParticleCreator(mat,flags);
+    return new ImplicitParticleCreator(mat,flags);
 
   else if (flags->d_integrator_type == "fracture") 
-    return scinew FractureParticleCreator(mat,flags);
+    return new FractureParticleCreator(mat,flags);
 
   else if (mat_type == "membrane")
-    return scinew MembraneParticleCreator(mat,flags);
+    return new MembraneParticleCreator(mat,flags);
 
   else if (mat_type == "shell_CNH")
-    return scinew ShellParticleCreator(mat,flags);
+    return new ShellParticleCreator(mat,flags);
   
   else
-    return scinew ParticleCreator(mat,flags);
+    return new ParticleCreator(mat,flags);
 
 }
 

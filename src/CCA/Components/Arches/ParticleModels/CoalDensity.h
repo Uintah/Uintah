@@ -55,7 +55,7 @@ public:
       ~Builder(){}
 
       CoalDensity* build()
-      { return scinew CoalDensity( _task_name, _matl_index ); }
+      { return new CoalDensity( _task_name, _matl_index ); }
 
       private: 
 

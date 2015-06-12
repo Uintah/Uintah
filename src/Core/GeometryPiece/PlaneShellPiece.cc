@@ -28,7 +28,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 
 using namespace std;
@@ -81,7 +81,7 @@ void PlaneShellPiece::outputHelper( ProblemSpecP & plane_ps ) const
 GeometryPieceP
 PlaneShellPiece::clone() const
 {
-  return scinew PlaneShellPiece(*this);
+  return new PlaneShellPiece(*this);
 }
 
 //////////

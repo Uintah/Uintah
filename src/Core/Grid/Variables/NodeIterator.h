@@ -27,7 +27,7 @@
 #define UINTAH_HOMEBREW_NodeIterator_H
 
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Variables/BaseIterator.h>
 
 namespace Uintah {
@@ -188,7 +188,7 @@ namespace Uintah {
 
         NodeIterator* clone() const
         {
-          return scinew NodeIterator(*this);
+          return new NodeIterator(*this);
         }
         
         std::ostream& put(std::ostream& out) const

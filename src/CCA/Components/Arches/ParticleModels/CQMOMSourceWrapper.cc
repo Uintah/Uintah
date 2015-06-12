@@ -66,7 +66,7 @@ void
 CQMOMSourceWrapper::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CQMOMSourceWrapper::initializeVariables";
-  Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::initializeVariables);
+  Task* tsk = new Task(taskname, this, &CQMOMSourceWrapper::initializeVariables);
 
   //New
   tsk->computes(d_modelLabel);
@@ -104,7 +104,7 @@ void
 CQMOMSourceWrapper::sched_buildSourceTerm( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMSourceWrapper::buildSourceTerm";
-  Task* tsk = scinew Task(taskname, this, &CQMOMSourceWrapper::buildSourceTerm);
+  Task* tsk = new Task(taskname, this, &CQMOMSourceWrapper::buildSourceTerm);
 
   //----NEW----
   tsk->modifies(d_modelLabel);

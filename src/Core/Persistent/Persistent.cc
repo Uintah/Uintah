@@ -35,7 +35,7 @@
 
 #include <Core/Persistent/Persistent.h>
 
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/Endian.h>
@@ -91,7 +91,7 @@ PersistentTypeID::PersistentTypeID(const string& typeName,
   persistentTypeIDMutex.lock();
   if (!table)
   {
-    table = scinew Piostream::MapStringPersistentTypeID;
+    table = new Piostream::MapStringPersistentTypeID;
 
 #if DEBUG
     printf( "created table:  %p\n", table);
@@ -184,7 +184,7 @@ Piostream::Piostream(Direction dir, int version, const string &name,
 {
   if (reporter_ == NULL)
   {
-    reporter_ = scinew ProgressReporter();
+    reporter_ = new ProgressReporter();
     own_reporter_ = true;
   }
 }
@@ -445,7 +445,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       // Insert this pointer in the database.
       if (!inpointers)
       {
-	inpointers = scinew MapIntPersistent;
+	inpointers = new MapIntPersistent;
       }
       (*inpointers)[pointer_id] = data;
     }
@@ -498,7 +498,7 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       pointer_id = current_pointer_id++;
       if (!outpointers)
       {
-	outpointers = scinew MapPersistentInt;
+	outpointers = new MapPersistentInt;
       }
       (*outpointers)[data] = pointer_id;
     }
@@ -572,13 +572,13 @@ auto_istream(const string& filename, ProgressReporter *pr)
       machine_endian = Piostream::Little;
 
     if (file_endian == machine_endian) 
-      return scinew BinaryPiostream(filename, Piostream::Read, version, pr);
+      return new BinaryPiostream(filename, Piostream::Read, version, pr);
     else 
-      return scinew BinarySwapPiostream(filename, Piostream::Read, version,pr);
+      return new BinarySwapPiostream(filename, Piostream::Read, version,pr);
   }
   else if (m1 == 'A' && m2 == 'S' && m3 == 'C')
   {
-    return scinew TextPiostream(filename, Piostream::Read, pr);
+    return new TextPiostream(filename, Piostream::Read, pr);
   }
 
   if (pr) pr->error(filename + " is an unknown type!");
@@ -601,19 +601,19 @@ auto_ostream(const string& filename, const string& type, ProgressReporter *pr)
   Piostream* stream;
   if (type == "Binary")
   {
-    stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
+    stream = new BinaryPiostream(filename, Piostream::Write, -1, pr);
   }
   else if (type == "Text")
   {
-    stream = scinew TextPiostream(filename, Piostream::Write, pr);
+    stream = new TextPiostream(filename, Piostream::Write, pr);
   }
   else if (type == "Fast")
   {
-    stream = scinew FastPiostream(filename, Piostream::Write, pr);
+    stream = new FastPiostream(filename, Piostream::Write, pr);
   }
   else
   {
-    stream = scinew BinaryPiostream(filename, Piostream::Write, -1, pr);
+    stream = new BinaryPiostream(filename, Piostream::Write, -1, pr);
   }
   return stream;
 }

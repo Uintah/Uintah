@@ -153,19 +153,19 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
   if ( db_parent->findBlock("BoundaryConditions") ){ 
     if ( db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" ) ){
       ProblemSpecP db_wall_ht = db_parent->findBlock("BoundaryConditions")->findBlock( "WallHT" );  
-      d_wall_ht_models = scinew WallModelDriver( d_lab->d_sharedState ); 
+      d_wall_ht_models = new WallModelDriver( d_lab->d_sharedState ); 
       d_wall_ht_models->problemSetup( db_wall_ht ); 
     }
   } 
 
 
-  d_pressSolver = scinew PressureSolver( d_lab, d_MAlab,
+  d_pressSolver = new PressureSolver( d_lab, d_MAlab,
                                          d_boundaryCondition,
                                          d_physicalConsts, d_myworld,
                                          d_hypreSolver );
   d_pressSolver->problemSetup( db, state );
 
-  d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
+  d_momSolver = new MomentumSolver(d_lab, d_MAlab,
                                         d_turbModel, d_boundaryCondition,
                                         d_physicalConsts);
   
@@ -201,39 +201,39 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
   } 
 
   if (d_timeIntegratorType == "FE") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::FE));
     numTimeIntegratorLevels = 1;
   }
   else if (d_timeIntegratorType == "RK2") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::OldPredictor));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::OldCorrector));
     numTimeIntegratorLevels = 2;
   }
   else if (d_timeIntegratorType == "RK2SSP") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Predictor));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Corrector));
     numTimeIntegratorLevels = 2;
   }
   else if (d_timeIntegratorType == "RK3SSP") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Predictor));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::Intermediate));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::CorrectorRK3));
     numTimeIntegratorLevels = 3;
   }
   else if (d_timeIntegratorType == "BEEmulation") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::BEEmulation1));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::BEEmulation2));
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::BEEmulation3));
     numTimeIntegratorLevels = 3;
   }
@@ -261,7 +261,7 @@ ExplicitSolver::problemSetup( const ProblemSpecP & params, SimulationStateP & st
   d_mixedModel=d_turbModel->getMixedModel();
 
   bool check_calculator; 
-  d_eff_calculator = scinew EfficiencyCalculator( d_boundaryCondition, d_lab ); 
+  d_eff_calculator = new EfficiencyCalculator( d_boundaryCondition, d_lab ); 
   check_calculator = d_eff_calculator->problemSetup( db ); 
 
   if ( !check_calculator ){ 
@@ -885,7 +885,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "ExplicitSolver::setInitialGuess",this,
+  Task* tsk = new Task( "ExplicitSolver::setInitialGuess",this,
                            &ExplicitSolver::setInitialGuess);
 
   Ghost::GhostType  gn = Ghost::None;
@@ -940,7 +940,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   {
     string taskname =  "ExplicitSolver::interpFCToCC" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                          &ExplicitSolver::interpolateFromFCToCC, timelabels, curr_level);
 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1005,7 +1005,7 @@ ExplicitSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
   {
     string taskname =  "ExplicitSolver::computeVorticity" +
                      timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                          &ExplicitSolver::computeVorticity, timelabels);
 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -1475,7 +1475,7 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     PerPatch<CellInformationP> cellInfoP;
     if (!(d_MAlab))
     {
-      cellInfoP.setData(scinew CellInformation(patch));
+      cellInfoP.setData(new CellInformation(patch));
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
     else
@@ -1532,7 +1532,7 @@ ExplicitSolver::sched_printTotalKE( SchedulerP& sched,
                                    
 {
   string taskname =  "ExplicitSolver::printTotalKE";
-  Task* tsk = scinew Task( taskname,
+  Task* tsk = new Task( taskname,
                            this, &ExplicitSolver::printTotalKE );
 
   tsk->requires(Task::NewDW, d_lab->d_totalKineticEnergyLabel);
@@ -1566,7 +1566,7 @@ ExplicitSolver::sched_saveTempCopies(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::saveTempCopies" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::saveTempCopies,
                           timelabels);
 
@@ -1612,7 +1612,7 @@ ExplicitSolver::sched_getDensityGuess(SchedulerP& sched,
   string taskname =  "ExplicitSolver::getDensityGuess" +
                      timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::getDensityGuess,
                           timelabels);
 
@@ -1861,7 +1861,7 @@ ExplicitSolver::sched_checkDensityGuess(SchedulerP& sched,
   string taskname =  "ExplicitSolver::checkDensityGuess" +
                      timelabels->integrator_step_name;
 
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::checkDensityGuess,
                           timelabels);
 
@@ -1949,7 +1949,7 @@ ExplicitSolver::sched_updateDensityGuess(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::updateDensityGuess" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::updateDensityGuess,
                           timelabels);
 
@@ -1995,7 +1995,7 @@ ExplicitSolver::sched_computeDensityLag(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::computeDensityLag" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::computeDensityLag,
                           timelabels, after_average);
   Ghost::GhostType  gn = Ghost::None;
@@ -2075,7 +2075,7 @@ ExplicitSolver::sched_checkDensityLag(SchedulerP& sched,
 {
   string taskname =  "ExplicitSolver::checkDensityLag" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &ExplicitSolver::checkDensityLag,
                           timelabels, after_average);
 
@@ -2137,7 +2137,7 @@ ExplicitSolver::sched_setInitVelCond( const LevelP& level,
                                       const MaterialSet* matls ){ 
     
   string taskname = "ExplicitSolver::setInitVelCond"; 
-  Task* tsk = scinew Task( taskname, this, &ExplicitSolver::setInitVelCond ); 
+  Task* tsk = new Task( taskname, this, &ExplicitSolver::setInitVelCond ); 
 
   tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 1 ); 
   tsk->modifies( d_lab->d_uVelocitySPBCLabel );
@@ -2182,7 +2182,7 @@ void ExplicitSolver::sched_computeKE( SchedulerP& sched,
                                        const MaterialSet* matls )
 {
   string taskname = "ExplicitSolver::computeKE"; 
-  Task* tsk = scinew Task( taskname, this, &ExplicitSolver::computeKE ); 
+  Task* tsk = new Task( taskname, this, &ExplicitSolver::computeKE ); 
   
   tsk->computes(d_lab->d_totalKineticEnergyLabel); 
   tsk->computes(d_lab->d_kineticEnergyLabel); 

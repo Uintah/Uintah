@@ -71,7 +71,7 @@ public:
       ~Builder(){}; 
 
       CoalGasMomentum* build()
-      { return scinew CoalGasMomentum( _name, _shared_state, _required_label_names, _type ); };
+      { return new CoalGasMomentum( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

@@ -28,7 +28,7 @@
 #include "KinematicHardening_Armstrong.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -42,7 +42,7 @@ KinematicHardeningModel* KinematicHardeningModelFactory::create(ProblemSpecP& ps
    ProblemSpecP child = ps->findBlock("kinematic_hardening_model");
    if(!child) {
       cerr << "**WARNING** Creating default (no kinematic hardening) model" << endl;
-      return(scinew KinematicHardening_None());
+      return(new KinematicHardening_None());
       //throw ProblemSetupException("Cannot find kinematic hardening model tag", __FILE__, __LINE__);
    }
 
@@ -51,14 +51,14 @@ KinematicHardeningModel* KinematicHardeningModelFactory::create(ProblemSpecP& ps
       throw ProblemSetupException("No type for kinematic hardening model", __FILE__, __LINE__);
 
    if (mat_type == "none")
-      return(scinew KinematicHardening_None(child));
+      return(new KinematicHardening_None(child));
    else if (mat_type == "prager_hardening")
-      return(scinew KinematicHardening_Prager(child));
+      return(new KinematicHardening_Prager(child));
    else if (mat_type == "armstrong_frederick_hardening")
-      return(scinew KinematicHardening_Armstrong(child));
+      return(new KinematicHardening_Armstrong(child));
    else {
       cerr << "**WARNING** Creating default (no kinematic hardening) model" << endl;
-      return(scinew KinematicHardening_None(child));
+      return(new KinematicHardening_None(child));
       //throw ProblemSetupException("Unknown KinematicHardening Model ("+mat_type+")", __FILE__, __LINE__);
    }
 }
@@ -67,19 +67,19 @@ KinematicHardeningModel*
 KinematicHardeningModelFactory::createCopy(const KinematicHardeningModel* pm)
 {
    if (dynamic_cast<const KinematicHardening_None*>(pm))
-      return(scinew KinematicHardening_None(dynamic_cast<const 
+      return(new KinematicHardening_None(dynamic_cast<const 
                                         KinematicHardening_None*>(pm)));
 
    else if (dynamic_cast<const KinematicHardening_Prager*>(pm))
-      return(scinew KinematicHardening_Prager(dynamic_cast<const 
+      return(new KinematicHardening_Prager(dynamic_cast<const 
                                        KinematicHardening_Prager*>(pm)));
 
    else if (dynamic_cast<const KinematicHardening_Armstrong*>(pm))
-      return(scinew KinematicHardening_Armstrong(dynamic_cast<const KinematicHardening_Armstrong*>(pm)));
+      return(new KinematicHardening_Armstrong(dynamic_cast<const KinematicHardening_Armstrong*>(pm)));
 
    else {
       cerr << "**WARNING** Creating copy of default (no kinematic hardening) model" << endl;
-      return(scinew KinematicHardening_None(dynamic_cast<const 
+      return(new KinematicHardening_None(dynamic_cast<const 
                                         KinematicHardening_None*>(pm)));
       //throw ProblemSetupException("Cannot create copy of unknown kinematic_hardening model", __FILE__, __LINE__);
    }

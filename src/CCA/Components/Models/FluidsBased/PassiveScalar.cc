@@ -68,8 +68,8 @@ PassiveScalar::PassiveScalar(const ProcessorGroup* myworld,
 {
   d_doAMR = doAMR;
   d_matl_set = 0;
-  lb  = scinew ICELabel();
-  Slb = scinew PassiveScalarLabel();
+  lb  = new ICELabel();
+  Slb = new PassiveScalarLabel();
 }
 
 //__________________________________
@@ -137,7 +137,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
   d_matl_sub = d_matl_set->getUnion();
@@ -145,7 +145,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   //__________________________________
   // - create Label names
   // - register the scalar to be transported
-  d_scalar = scinew Scalar();
+  d_scalar = new Scalar();
   d_scalar->index = 0;
   d_scalar->name  = "f";
   
@@ -207,12 +207,12 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
     if(pieces.size() == 0){
      throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
-     mainpiece = scinew UnionGeometryPiece(pieces);
+     mainpiece = new UnionGeometryPiece(pieces);
     } else {
      mainpiece = pieces[0];
     }
 
-    d_scalar->regions.push_back(scinew Region(mainpiece, geom_obj_ps));
+    d_scalar->regions.push_back(new Region(mainpiece, geom_obj_ps));
   }
   if(d_scalar->regions.size() == 0) {
     throw ProblemSetupException("Variable: scalar-f does not have any initial value regions",
@@ -254,7 +254,7 @@ void PassiveScalar::scheduleInitialize(SchedulerP& sched,
                                        const ModelInfo*)
 {
   cout_doing << "PassiveScalar::scheduleInitialize " << endl;
-  Task* t = scinew Task("PassiveScalar::initialize", 
+  Task* t = new Task("PassiveScalar::initialize", 
                   this, &PassiveScalar::initialize);
   
   t->computes(d_scalar->scalar_CCLabel);
@@ -416,7 +416,7 @@ void PassiveScalar::scheduleModifyThermoTransportProperties(SchedulerP& sched,
                                                             const MaterialSet* /*ice_matls*/)
 {
   cout_doing << "PASSIVE_SCALAR::scheduleModifyThermoTransportProperties" << endl;
-  Task* t = scinew Task("PassiveScalar::modifyThermoTransportProperties", 
+  Task* t = new Task("PassiveScalar::modifyThermoTransportProperties", 
                    this,&PassiveScalar::modifyThermoTransportProperties);
   t->computes(d_scalar->diffusionCoefLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
@@ -457,7 +457,7 @@ void PassiveScalar::scheduleComputeModelSources(SchedulerP& sched,
                                                 const ModelInfo* mi)
 {
   cout_doing << "PASSIVE_SCALAR::scheduleComputeModelSources " << endl;
-  Task* t = scinew Task("PassiveScalar::computeModelSources", 
+  Task* t = new Task("PassiveScalar::computeModelSources", 
                    this,&PassiveScalar::computeModelSources, mi);
                      
   Ghost::GhostType  gac = Ghost::AroundCells;
@@ -527,7 +527,7 @@ void PassiveScalar::scheduleTestConservation(SchedulerP& sched,
   
   if(d_test_conservation && L == 0){
     cout_doing << "PASSIVESCALAR::scheduleTestConservation " << endl;
-    Task* t = scinew Task("PassiveScalar::testConservation", 
+    Task* t = new Task("PassiveScalar::testConservation", 
                      this,&PassiveScalar::testConservation, mi);
 
     Ghost::GhostType  gn = Ghost::None;
@@ -601,7 +601,7 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   cout_doing << "PassiveScalar::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
   
-  Task* t = scinew Task("PassiveScalar::errorEstimate", 
+  Task* t = new Task("PassiveScalar::errorEstimate", 
                   this, &PassiveScalar::errorEstimate, false);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 
@@ -620,7 +620,7 @@ void PassiveScalar::scheduleErrorEstimate(const LevelP& coarseLevel,
   if(d_matl->getDWIndex() != 0){
     m.push_back(d_matl->getDWIndex());
   }
-  matl_set = scinew MaterialSet();
+  matl_set = new MaterialSet();
   matl_set->addAll(m);
   matl_set->addReference();
     

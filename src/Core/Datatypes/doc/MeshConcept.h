@@ -133,7 +133,7 @@ public:
    */
   MeshConcept();
   MeshConcept(const MeshConcept &copy);
-  virtual MeshConcept *clone() { return scinew MeshConcept(*this); }
+  virtual MeshConcept *clone() { return new MeshConcept(*this); }
   virtual ~MeshConcept();
   //@}
 

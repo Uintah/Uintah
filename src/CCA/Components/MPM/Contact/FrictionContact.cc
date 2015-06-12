@@ -631,14 +631,14 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
                                                           const PatchSet* patches,
                                                           const MaterialSet* ms)
 {
-  Task * t = scinew Task("Friction::exMomInterpolated", 
+  Task * t = new Task("Friction::exMomInterpolated", 
                       this, &FrictionContact::exMomInterpolated);
 
   Ghost::GhostType  gp;
   int ngc_p;
   d_sharedState->getParticleGhostLayer(gp, ngc_p);
 
-  MaterialSubset* z_matl = scinew MaterialSubset();
+  MaterialSubset* z_matl = new MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
   
@@ -669,10 +669,10 @@ void FrictionContact::addComputesAndRequiresIntegrated(SchedulerP & sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* ms) 
 {
-  Task * t = scinew Task("Friction::exMomIntegrated", 
+  Task * t = new Task("Friction::exMomIntegrated", 
                       this, &FrictionContact::exMomIntegrated);
 
-  MaterialSubset* z_matl = scinew MaterialSubset();
+  MaterialSubset* z_matl = new MaterialSubset();
   z_matl->add(0);
   z_matl->addReference();
   

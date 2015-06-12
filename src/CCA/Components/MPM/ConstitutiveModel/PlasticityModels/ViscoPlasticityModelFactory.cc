@@ -26,7 +26,7 @@
 #include "SuvicI.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -44,7 +44,7 @@ ViscoPlasticityModel* ViscoPlasticityModelFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type for visco_plasticity_model", __FILE__, __LINE__);
 
 if (mat_type == "suvic_i")
-      return(scinew SuvicI(child));
+      return(new SuvicI(child));
    else 
       throw ProblemSetupException("Unknown ViscoPlasticity Model ("+mat_type+")", __FILE__, __LINE__);
 }
@@ -55,7 +55,7 @@ ViscoPlasticityModelFactory::createCopy(const ViscoPlasticityModel* pm)
 
    
    if (dynamic_cast<const SuvicI*>(pm))
-      return(scinew SuvicI(dynamic_cast<const SuvicI*>(pm)));
+      return(new SuvicI(dynamic_cast<const SuvicI*>(pm)));
    
    else 
       throw ProblemSetupException("Cannot create copy of unknown Viscoplasticity model", __FILE__, __LINE__);

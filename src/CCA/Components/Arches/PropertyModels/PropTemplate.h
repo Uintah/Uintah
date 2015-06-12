@@ -59,7 +59,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           CLASSNAME* build()
-          { return scinew CLASSNAME( _name, _shared_state ); };
+          { return new CLASSNAME( _name, _shared_state ); };
 
         private: 
 

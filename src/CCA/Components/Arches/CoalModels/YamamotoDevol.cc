@@ -34,7 +34,7 @@ YamamotoDevolBuilder::YamamotoDevolBuilder( const std::string         & modelNam
 YamamotoDevolBuilder::~YamamotoDevolBuilder(){}
 
 ModelBase* YamamotoDevolBuilder::build() {
-  return scinew YamamotoDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new YamamotoDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -161,7 +161,7 @@ void
 YamamotoDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "YamamotoDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &YamamotoDevol::computeModel, timeSubStep);
+  Task* tsk = new Task(taskname, this, &YamamotoDevol::computeModel, timeSubStep);
 
   Ghost::GhostType gn = Ghost::None;
 

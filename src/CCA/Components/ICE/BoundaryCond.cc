@@ -1337,8 +1337,8 @@ void setBC(CCVariable<double>& var,
           const int mat_id,
           DataWarehouse* new_dw)
 {
-  customBC_globalVars* globalVars = scinew customBC_globalVars();
-  customBC_localVars* localVars   = scinew customBC_localVars();
+  customBC_globalVars* globalVars = new customBC_globalVars();
+  customBC_localVars* localVars   = new customBC_localVars();
   constCCVariable<double> placeHolder;
   
   setBC(var, type, placeHolder, placeHolder, patch, sharedState, 
@@ -1359,8 +1359,8 @@ void setBC(CCVariable<double>& press_CC,
          const int mat_id, 
          DataWarehouse* new_dw) {
          
-  customBC_globalVars* globalVars = scinew customBC_globalVars();
-  customBC_localVars* localVars   = scinew customBC_localVars();
+  customBC_globalVars* globalVars = new customBC_globalVars();
+  customBC_localVars* localVars   = new customBC_localVars();
   
   setBC(press_CC, rho_micro, sp_vol, surroundingMatl_indx,
         whichVar, kind, p, sharedState, mat_id, new_dw, globalVars, localVars); 
@@ -1376,8 +1376,8 @@ void setBC(CCVariable<Vector>& variable,
           const int mat_id,
           DataWarehouse* new_dw)
 { 
-  customBC_globalVars* globalVars  = scinew customBC_globalVars();
-  customBC_localVars* localVars    = scinew customBC_localVars();
+  customBC_globalVars* globalVars  = new customBC_globalVars();
+  customBC_localVars* localVars    = new customBC_localVars();
    
   setBC( variable, type, p, sharedState, mat_id, new_dw,globalVars, localVars);
   

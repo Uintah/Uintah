@@ -145,7 +145,7 @@ void Lodi_maxMach_patchSubset(const LevelP& level,
   //__________________________________
   // now put each patch into a patchSubsets
   for (int f = 0; f<Patch::numFaces; f++) {
-    PatchSubset* subset = scinew PatchSubset(p[f].begin(), p[f].end());
+    PatchSubset* subset = new PatchSubset(p[f].begin(), p[f].end());
     subset->addReference();
     maxMach_patchSubset[f]=subset;
   } 

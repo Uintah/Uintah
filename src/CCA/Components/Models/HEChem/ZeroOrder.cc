@@ -53,8 +53,8 @@ ZeroOrder::ZeroOrder(const ProcessorGroup* myworld,
   : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
-  d_saveConservedVars = scinew saveConservedVars();
+  Ilb  = new ICELabel();
+  d_saveConservedVars = new saveConservedVars();
   
   //__________________________________
   //  diagnostic labels
@@ -119,7 +119,7 @@ void ZeroOrder::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
 
   //__________________________________
   //  define the materialSet
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                       // needed for the pressure and NC_CCWeight
@@ -170,14 +170,14 @@ void ZeroOrder::scheduleComputeModelSources(SchedulerP& sched,
                                             const LevelP& level,
                                             const ModelInfo* mi)
 {
-  Task* t = scinew Task("ZeroOrder::computeModelSources", this, 
+  Task* t = new Task("ZeroOrder::computeModelSources", this, 
                         &ZeroOrder::computeModelSources, mi);
   cout_doing << "ZeroOrder::scheduleComputeModelSources "<<  endl;  
 
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
-  MaterialSubset* one_matl     = scinew MaterialSubset();
+  MaterialSubset* one_matl     = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;

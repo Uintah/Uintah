@@ -69,7 +69,7 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
                                                      const PatchSet* patches,
                                                      const MaterialSet* matls)
 {  
-  Task* t = scinew Task("MPM::computeInternalHeatRate",
+  Task* t = new Task("MPM::computeInternalHeatRate",
                         this, &HeatConduction::computeInternalHeatRate);
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -105,7 +105,7 @@ void HeatConduction::scheduleComputeNodalHeatFlux(SchedulerP& sched,
   // This task only exists to compute the diagnostic gHeatFluxLabel
   // which is not used in any of the subsequent calculations
     
-  Task* t = scinew Task("MPM::computeNodalHeatFlux",
+  Task* t = new Task("MPM::computeNodalHeatFlux",
                         this, &HeatConduction::computeNodalHeatFlux);
 
   Ghost::GhostType  gan = Ghost::AroundNodes;
@@ -130,7 +130,7 @@ void HeatConduction::scheduleSolveHeatEquations(SchedulerP& sched,
    *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
    *   out(G.TEMPERATURERATE) */
 
-  Task* t = scinew Task("MPM::solveHeatEquations",
+  Task* t = new Task("MPM::solveHeatEquations",
                         this, &HeatConduction::solveHeatEquations);
 
   Ghost::GhostType  gnone = Ghost::None;
@@ -162,7 +162,7 @@ void HeatConduction::scheduleIntegrateTemperatureRate(SchedulerP& sched,
    *   operation(t* = t + t_rate * dt)
    *   out(G.TEMPERATURE_STAR) */
 
-  Task* t = scinew Task("MPM::integrateTemperatureRate",
+  Task* t = new Task("MPM::integrateTemperatureRate",
                         this, &HeatConduction::integrateTemperatureRate);
 
   const MaterialSubset* mss = matls->getUnion();

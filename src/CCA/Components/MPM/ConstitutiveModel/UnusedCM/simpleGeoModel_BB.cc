@@ -39,7 +39,7 @@
 #include <Core/Math/Matrix3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include <sci_values.h>
 #include <iostream>
@@ -138,7 +138,7 @@ void simpleGeoModel_BB::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 simpleGeoModel_BB* simpleGeoModel_BB::clone()
 {
-  return scinew simpleGeoModel_BB(*this);
+  return new simpleGeoModel_BB(*this);
 }
 
 void simpleGeoModel_BB::initializeCMData(const Patch* patch,

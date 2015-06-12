@@ -25,7 +25,6 @@
 // soloader.cpp written by Chris Moulding 11/98
 #include <Core/Util/Assert.h>
 #include <Core/Util/soloader.h>
-#include <Core/Util/Environment.h>
 #include <iostream>
 #include <string>
 
@@ -39,8 +38,8 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 {
   LIBRARY_HANDLE LibraryHandle = 0;
   
-  ASSERT(SCIRun::sci_getenv("SCIRUN_OBJDIR"));
-  string name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" + 
+  ASSERT(std::getenv("SCIRUN_OBJDIR"));
+  string name = string(std::getenv("SCIRUN_OBJDIR")) + "/lib/" + 
     string(libname);
   LibraryHandle = dlopen(name.c_str(), RTLD_LAZY|RTLD_GLOBAL);
 
@@ -88,7 +87,7 @@ void* GetLibrarySymbolAddress(const char* libname, const char* symbolname)
 LIBRARY_HANDLE findLib(string lib)
 {
   LIBRARY_HANDLE handle = 0;
-  const char *env = SCIRun::sci_getenv("PACKAGE_LIB_PATH");
+  const char *env = std::getenv("PACKAGE_LIB_PATH");
   string tempPaths(env ? env : "");
   // try to find the library in the specified path
   while (tempPaths != "") {
@@ -150,8 +149,8 @@ LIBRARY_HANDLE GetLibraryHandle(const char* libname)
   if (libname[0] == '/')
     name = libname;
   else {
-    ASSERT(SCIRun::sci_getenv("SCIRUN_OBJDIR"));
-    name = string(SCIRun::sci_getenv("SCIRUN_OBJDIR")) + "/lib/" + string(libname);
+    ASSERT(std::getenv("SCIRUN_OBJDIR"));
+    name = string(std::getenv("SCIRUN_OBJDIR")) + "/lib/" + string(libname);
   }
 
   LIBRARY_HANDLE lh;

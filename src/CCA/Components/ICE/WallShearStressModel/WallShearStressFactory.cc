@@ -30,7 +30,7 @@
 
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+
 
 using namespace Uintah;
 using namespace std;
@@ -57,10 +57,10 @@ WallShearStress* WallShearStressFactory::create( ProblemSpecP& ps,
     }
     
     if (WSS_model == "logLawModel"){
-      return( scinew logLawModel( wss_ps, sharedState ) );
+      return( new logLawModel( wss_ps, sharedState ) );
     }
     else if (WSS_model == "smoothWall"){
-      return( scinew smoothwall( wss_ps, sharedState) );
+      return( new smoothwall( wss_ps, sharedState) );
     }
 else{
       ostringstream warn;

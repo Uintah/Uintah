@@ -60,10 +60,10 @@ Unsteady_Burn::Unsteady_Burn(const ProcessorGroup* myworld,
                              const ProblemSpecP& prob_spec)
   : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
-  Mlb  = scinew MPMLabel();
-  Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
-  d_saveConservedVars = scinew saveConservedVars();
+  Mlb  = new MPMLabel();
+  Ilb  = new ICELabel();
+  MIlb = new MPMICELabel();
+  d_saveConservedVars = new saveConservedVars();
   
   BurningCellLabel  = VarLabel::create("UnsteadyBurn.BurningCell",            CCVariable<double>::getTypeDescription());
   TsLabel           = VarLabel::create("UnsteadyBurn.SurfTemp",               CCVariable<double>::getTypeDescription());
@@ -145,7 +145,7 @@ void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSet
     
   //__________________________________
   //  define the materialSet
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                                 // needed for the pressure and NC_CCWeight
@@ -186,7 +186,7 @@ void Unsteady_Burn::outputProblemSpec(ProblemSpecP& ps)
 
 void Unsteady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
   printSchedule(level,cout_doing,"Unsteady_Burn::scheduleInitialize");
-  Task* t = scinew Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
+  Task* t = new Task("Unsteady_Burn::initialize", this, &Unsteady_Burn::initialize);                        
   const MaterialSubset* react_matl = matl0->thisMaterial();
   t->computes(BurningCellLabel, react_matl);
   t->computes(TsLabel,          react_matl);
@@ -246,7 +246,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
     return;  
   }
   
-  Task* t = scinew Task("Unsteady_Burn::computeModelSources", this, 
+  Task* t = new Task("Unsteady_Burn::computeModelSources", this, 
                         &Unsteady_Burn::computeModelSources, mi);
   
   printSchedule(level,cout_doing,"Unsteady_Burn::scheduleComputeModelSources");  
@@ -258,7 +258,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched,
   d_sharedState->getParticleGhostLayer(gp, ngc_p);
 
   const MaterialSubset* react_matl = matl0->thisMaterial();
-  MaterialSubset* one_matl   = scinew MaterialSubset();
+  MaterialSubset* one_matl   = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
 

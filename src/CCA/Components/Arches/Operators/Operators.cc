@@ -19,9 +19,9 @@ using namespace Uintah;
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;         \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;         \
   typedef UpwindInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;         \
-  pi._sodb.register_new_operator<OpX>( scinew OpX() );                \
-  pi._sodb.register_new_operator<OpY>( scinew OpY() );                \
-  pi._sodb.register_new_operator<OpZ>( scinew OpZ() );                \
+  pi._sodb.register_new_operator<OpX>( new OpX() );                \
+  pi._sodb.register_new_operator<OpY>( new OpY() );                \
+  pi._sodb.register_new_operator<OpZ>( new OpZ() );                \
 }
 
 #define BUILD_UPWIND_LIMITER( VOLT )                                      \
@@ -29,9 +29,9 @@ using namespace Uintah;
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::XFace> OpX;        \
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::YFace> OpY;        \
   typedef FluxLimiterInterpolant<VOLT,FaceTypes<VOLT>::ZFace> OpZ;        \
-  pi._sodb.register_new_operator<OpX>( scinew OpX(dim,bcPlus,bcMinus) );  \
-  pi._sodb.register_new_operator<OpY>( scinew OpY(dim,bcPlus,bcMinus) );  \
-  pi._sodb.register_new_operator<OpZ>( scinew OpZ(dim,bcPlus,bcMinus) );  \
+  pi._sodb.register_new_operator<OpX>( new OpX(dim,bcPlus,bcMinus) );  \
+  pi._sodb.register_new_operator<OpY>( new OpY(dim,bcPlus,bcMinus) );  \
+  pi._sodb.register_new_operator<OpZ>( new OpZ(dim,bcPlus,bcMinus) );  \
 }
 
 #define BUILD_PARTICLE_OPS( VOLT )                                                                     \
@@ -39,8 +39,8 @@ using namespace Uintah;
   typedef SpatialOps::Particle::CellToParticle<VOLT> C2P;                                               \
   typedef SpatialOps::Particle::ParticleToCell<VOLT> P2C;                                               \
   const SCIRun::Point low = arches_get_low_position<VOLT>(*patch);                                               \
-  pi._sodb.register_new_operator<C2P>(scinew C2P(Dx.x(), low.x(), Dx.y(), low.y(), Dx.z(), low.z()) );\
-  pi._sodb.register_new_operator<P2C>(scinew P2C(Dx.x(), low.x(), Dx.y(), low.y(), Dx.z(), low.z()) );\
+  pi._sodb.register_new_operator<C2P>(new C2P(Dx.x(), low.x(), Dx.y(), low.y(), Dx.z(), low.z()) );\
+  pi._sodb.register_new_operator<P2C>(new P2C(Dx.x(), low.x(), Dx.y(), low.y(), Dx.z(), low.z()) );\
 }
 
 Operators& 
@@ -111,7 +111,7 @@ Operators::create_patch_operators( const LevelP& level, SchedulerP& sched, const
     const Uintah::PatchSubset* pss = patches->getSubset(ipss);
     for( int ip=0; ip<pss->size(); ++ip ){
 
-      //SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+      //SpatialOps::OperatorDatabase* const opdb = new SpatialOps::OperatorDatabase();
       const Uintah::Patch* const patch = pss->get(ip);
 
       IntVector low = patch->getExtraCellLowIndex(); 
@@ -180,7 +180,7 @@ Operators::get_patchset( const PatchsetSelector pss,
 
       //if( ip != patchesForOperators_.end() ) return ip->second;
 
-      Uintah::PatchSet* patches = scinew Uintah::PatchSet;
+      Uintah::PatchSet* patches = new Uintah::PatchSet;
       patches->addEach( localPatches->getVector() );
       _patches_for_operators[levelID] = patches;
       return patches;

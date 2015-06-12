@@ -32,7 +32,7 @@
 #include "PTWFlow.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -49,22 +49,22 @@ FlowModel* FlowStressModelFactory::create(ProblemSpecP& ps)
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type for flow_model", __FILE__, __LINE__);
    if (mat_type == "isotropic_hardening")
-      return(scinew IsoHardeningFlow(child));
+      return(new IsoHardeningFlow(child));
    else if (mat_type == "johnson_cook")
-      return(scinew JohnsonCookFlow(child));
+      return(new JohnsonCookFlow(child));
    else if (mat_type == "zerilli_armstrong")
-      return(scinew ZAFlow(child));
+      return(new ZAFlow(child));
    else if (mat_type == "zerilli_armstrong_polymer")
-      return(scinew ZAPolymerFlow(child));
+      return(new ZAPolymerFlow(child));
    else if (mat_type == "mts_model")
-      return(scinew MTSFlow(child));
+      return(new MTSFlow(child));
    else if (mat_type == "steinberg_cochran_guinan")
-      return(scinew SCGFlow(child));
+      return(new SCGFlow(child));
    else if (mat_type == "preston_tonks_wallace")
-      return(scinew PTWFlow(child));
+      return(new PTWFlow(child));
    else {
       //cerr << "**WARNING** Creating default isotropic hardening flow model" << endl;
-      //return(scinew IsoHardeningFlow(child));
+      //return(new IsoHardeningFlow(child));
       throw ProblemSetupException("Unknown flow Model ("+mat_type+")", __FILE__, __LINE__);
    }
 }
@@ -73,31 +73,31 @@ FlowModel*
 FlowStressModelFactory::createCopy(const FlowModel* pm)
 {
    if (dynamic_cast<const IsoHardeningFlow*>(pm))
-      return(scinew IsoHardeningFlow(dynamic_cast<const 
+      return(new IsoHardeningFlow(dynamic_cast<const 
                                         IsoHardeningFlow*>(pm)));
 
    else if (dynamic_cast<const JohnsonCookFlow*>(pm))
-      return(scinew JohnsonCookFlow(dynamic_cast<const 
+      return(new JohnsonCookFlow(dynamic_cast<const 
                                        JohnsonCookFlow*>(pm)));
 
    else if (dynamic_cast<const ZAFlow*>(pm))
-      return(scinew ZAFlow(dynamic_cast<const ZAFlow*>(pm)));
+      return(new ZAFlow(dynamic_cast<const ZAFlow*>(pm)));
       
    else if (dynamic_cast<const ZAPolymerFlow*>(pm))
-      return(scinew ZAPolymerFlow(dynamic_cast<const ZAPolymerFlow*>(pm)));
+      return(new ZAPolymerFlow(dynamic_cast<const ZAPolymerFlow*>(pm)));
 
    else if (dynamic_cast<const MTSFlow*>(pm))
-      return(scinew MTSFlow(dynamic_cast<const MTSFlow*>(pm)));
+      return(new MTSFlow(dynamic_cast<const MTSFlow*>(pm)));
    
    else if (dynamic_cast<const SCGFlow*>(pm))
-      return(scinew SCGFlow(dynamic_cast<const SCGFlow*>(pm)));
+      return(new SCGFlow(dynamic_cast<const SCGFlow*>(pm)));
 
    else if (dynamic_cast<const PTWFlow*>(pm))
-      return(scinew PTWFlow(dynamic_cast<const PTWFlow*>(pm)));
+      return(new PTWFlow(dynamic_cast<const PTWFlow*>(pm)));
    
    else {
       //cerr << "**WARNING** Creating copy of default isotropic hardening flow model" << endl;
-      //return(scinew IsoHardeningFlow(dynamic_cast<const 
+      //return(new IsoHardeningFlow(dynamic_cast<const 
       //                                  IsoHardeningFlow*>(pm)));
       throw ProblemSetupException("Cannot create copy of unknown flow model", __FILE__, __LINE__);
    }

@@ -69,7 +69,7 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);
+    MPMMaterial *mat = new MPMMaterial(ps, sharedState, flags);
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
@@ -113,7 +113,7 @@ void MPMCommon::cohesiveZoneProblemSetup(const ProblemSpecP& prob_spec,
     // cout << "Material attribute = " << index_val << ", " << index << ", " << id << "\n";
 
     //Create and register as an MPM material
-    CZMaterial *mat = scinew CZMaterial(ps, sharedState, flags);
+    CZMaterial *mat = new CZMaterial(ps, sharedState, flags);
 
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will

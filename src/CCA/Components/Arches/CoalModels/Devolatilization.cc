@@ -89,7 +89,7 @@ void
 Devolatilization::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "Devolatilization::initVars";
-  Task* tsk = scinew Task(taskname, this, &Devolatilization::initVars);
+  Task* tsk = new Task(taskname, this, &Devolatilization::initVars);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }

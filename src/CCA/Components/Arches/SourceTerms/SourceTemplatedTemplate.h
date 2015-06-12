@@ -84,7 +84,7 @@ public:
       ~Builder(){}; 
 
       CLASSNAME<TEMP_PARAMS>* build()
-      { return scinew CLASSNAME<TEMP_PARAMS>( _name, _shared_state, _required_label_names ); };
+      { return new CLASSNAME<TEMP_PARAMS>( _name, _shared_state, _required_label_names ); };
 
     private: 
 
@@ -172,7 +172,7 @@ template <TEMP_PARAMS>
 void CLASSNAME<TEMP_PARAMS>::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "CLASSNAME::eval";
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &CLASSNAME::computeSource, timeSubStep);
 
   if (timeSubStep == 0) {
 
@@ -265,7 +265,7 @@ void CLASSNAME<TEMP_PARAMS>::sched_initialize( const LevelP& level, SchedulerP& 
 {
   string taskname = "CLASSNAME::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
+  Task* tsk = new Task(taskname, this, &CLASSNAME::initialize);
 
   tsk->computes(_src_label);
 

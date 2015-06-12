@@ -28,7 +28,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/Variables/UnionIterator.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <algorithm>
@@ -101,7 +101,7 @@ bool UnionBCData::operator==(const BCGeomBase& rhs) const
 
 UnionBCData* UnionBCData::clone()
 {
-  return scinew UnionBCData(*this);
+  return new UnionBCData(*this);
 }
 
 void UnionBCData::addBCData(BCData& bc)

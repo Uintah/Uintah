@@ -26,7 +26,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 
@@ -68,7 +68,7 @@ bool CircleBCData::operator==(const BCGeomBase& rhs) const
 
 CircleBCData* CircleBCData::clone()
 {
-  return scinew CircleBCData(*this);
+  return new CircleBCData(*this);
 }
 
 void CircleBCData::addBCData(BCData& bc) 

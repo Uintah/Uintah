@@ -26,7 +26,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 
@@ -69,7 +69,7 @@ bool AnnulusBCData::operator==(const BCGeomBase& rhs) const
 
 AnnulusBCData* AnnulusBCData::clone()
 {
-  return scinew AnnulusBCData(*this);
+  return new AnnulusBCData(*this);
 }
 
 void AnnulusBCData::addBCData(BCData& bc) 

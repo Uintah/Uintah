@@ -31,7 +31,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Endian.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Variables/ParticleVariableBase.h>
 #include <Core/Grid/Variables/constGridVariable.h>
 #include <CCA/Ports/InputContext.h>
@@ -111,9 +111,9 @@ public:
   virtual const ParticleVariableBase* cloneSubset(ParticleSubset*) const;
 
   virtual ParticleVariableBase* cloneType() const
-  { return scinew ParticleVariable<T>(); }
+  { return new ParticleVariable<T>(); }
   virtual constParticleVariableBase* cloneConstType() const
-  { return scinew constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>();
+  { return new constVariable<ParticleVariableBase, ParticleVariable<T>, T, particleIndex>();
   }
 
   
@@ -226,7 +226,7 @@ private:
   ParticleVariable<T>::getTypeDescription()
   {
     if(!td){
-      td = scinew TypeDescription(TypeDescription::ParticleVariable,
+      td = new TypeDescription(TypeDescription::ParticleVariable,
                                   "ParticleVariable", &maker,
                                   fun_getTypeDescription((T*)0));
     }
@@ -237,7 +237,7 @@ private:
   Variable*
   ParticleVariable<T>::maker()
   {
-    return scinew ParticleVariable<T>();
+    return new ParticleVariable<T>();
   }
    
   template<class T>
@@ -257,7 +257,7 @@ private:
   ParticleVariable<T>::ParticleVariable(ParticleSubset* pset)
     : ParticleVariableBase(pset)
   {
-    d_pdata=scinew ParticleData<T>(pset->numParticles());
+    d_pdata=new ParticleData<T>(pset->numParticles());
     d_pdata->addReference();
   }
    
@@ -269,7 +269,7 @@ private:
 
     // this is a pset-less storage as it could have several.  Should be used for
     // foreign data only.  To iterate over particles in this pset, use gather
-    d_pdata=scinew ParticleData<T>(totalParticles);
+    d_pdata=new ParticleData<T>(totalParticles);
     d_pdata->addReference();
   }
 
@@ -290,7 +290,7 @@ private:
     d_pset->addReference();
 
     TAU_PROFILE_START(t2);
-    d_pdata=scinew ParticleData<T>(pset->numParticles());
+    d_pdata=new ParticleData<T>(pset->numParticles());
     TAU_PROFILE_STOP(t2);
 
     d_pdata->addReference();
@@ -299,22 +299,22 @@ private:
   template<class T>
   ParticleVariableBase*
   ParticleVariable<T>::clone()
-  { return scinew ParticleVariable<T>(*this); }
+  { return new ParticleVariable<T>(*this); }
 
   template<class T>
   const ParticleVariableBase*
   ParticleVariable<T>::clone() const
-  { return scinew ParticleVariable<T>(*this); }
+  { return new ParticleVariable<T>(*this); }
    
   template<class T>
   ParticleVariableBase*
   ParticleVariable<T>::cloneSubset(ParticleSubset* pset)
-  { return scinew ParticleVariable<T>(d_pdata, pset); }
+  { return new ParticleVariable<T>(d_pdata, pset); }
 
   template<class T>
   const ParticleVariableBase*
   ParticleVariable<T>::cloneSubset(ParticleSubset* pset) const
-  { return scinew ParticleVariable<T>(d_pdata, pset); }
+  { return new ParticleVariable<T>(d_pdata, pset); }
 
   template<class T>
   const ParticleVariable<T>& ParticleVariable<T>::castFromBase(const ParticleVariableBase* srcptr)
@@ -403,7 +403,7 @@ template<class T>
       delete d_pset;
     d_pset = pset;
     pset->addReference();
-    d_pdata=scinew ParticleData<T>(pset->numParticles());
+    d_pdata=new ParticleData<T>(pset->numParticles());
     d_pdata->addReference();
     ASSERTEQ(subsets.size(), srcs.size());
     ParticleSubset::iterator dstiter = pset->begin();

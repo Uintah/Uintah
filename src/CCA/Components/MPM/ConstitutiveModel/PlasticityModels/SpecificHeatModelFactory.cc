@@ -28,7 +28,7 @@
 #include "SteelCp.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -43,7 +43,7 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
   ProblemSpecP child = ps->findBlock("specific_heat_model");
   if(!child) {
     proc0cout << "** WARNING ** Creating default (constant specific heat) model" << endl;
-    return(scinew ConstantCp());
+    return(new ConstantCp());
     //ostringstream desc;
     //desc << "**Error in Input UPS File: " 
         // << "MPM:SpecificHeatModel:  "
@@ -61,14 +61,14 @@ SpecificHeatModel* SpecificHeatModelFactory::create(ProblemSpecP& ps)
   }
    
   if (mat_type == "constant_Cp")
-    return(scinew ConstantCp(child));
+    return(new ConstantCp(child));
   else if (mat_type == "copper_Cp")
-    return(scinew CopperCp(child));
+    return(new CopperCp(child));
   else if (mat_type == "steel_Cp")
-    return(scinew SteelCp(child));
+    return(new SteelCp(child));
   else {
     proc0cout << "** WARNING ** Creating default (constant specific heat) model" << endl;
-    return(scinew ConstantCp(child));
+    return(new ConstantCp(child));
     //ostringstream desc;
     //desc << "**Error in Input UPS File: " 
          //<< "MPM:SpecificHeatModel:  "
@@ -84,14 +84,14 @@ SpecificHeatModel*
 SpecificHeatModelFactory::createCopy(const SpecificHeatModel* smm)
 {
   if (dynamic_cast<const ConstantCp*>(smm))
-    return(scinew ConstantCp(dynamic_cast<const ConstantCp*>(smm)));
+    return(new ConstantCp(dynamic_cast<const ConstantCp*>(smm)));
   else if (dynamic_cast<const CopperCp*>(smm))
-    return(scinew CopperCp(dynamic_cast<const CopperCp*>(smm)));
+    return(new CopperCp(dynamic_cast<const CopperCp*>(smm)));
   else if (dynamic_cast<const SteelCp*>(smm))
-    return(scinew SteelCp(dynamic_cast<const SteelCp*>(smm)));
+    return(new SteelCp(dynamic_cast<const SteelCp*>(smm)));
   else {
     proc0cout << "** WARNING ** Creating copy of default (constant specific heat) model" << endl;
-    return(scinew ConstantCp(dynamic_cast<const ConstantCp*>(smm)));
+    return(new ConstantCp(dynamic_cast<const ConstantCp*>(smm)));
     //ostringstream desc;
     //desc << "**Error in Material Copying: " 
         // << "MPM:SpecificHeatModel:  "

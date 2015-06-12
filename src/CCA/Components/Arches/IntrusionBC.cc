@@ -129,17 +129,17 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
         if ( vel_type == "flat" ){ 
 
           intrusion.type = IntrusionBC::INLET; 
-          intrusion.velocity_inlet_generator = scinew FlatVelProf(); 
+          intrusion.velocity_inlet_generator = new FlatVelProf(); 
 
         } else if ( vel_type == "from_file" ){
 
           intrusion.type = IntrusionBC::INLET; 
-          intrusion.velocity_inlet_generator = scinew InputFileVelocity(); 
+          intrusion.velocity_inlet_generator = new InputFileVelocity(); 
 
         } else if ( vel_type == "massflow" ){
 
           intrusion.type = IntrusionBC::INLET; 
-          intrusion.velocity_inlet_generator = scinew FlatVelProf(); 
+          intrusion.velocity_inlet_generator = new FlatVelProf(); 
 
           double flow_rate = 0.0; 
           db_intrusion->findBlock("velocity")->getWithDefault("flow_rate",flow_rate, 0.0);
@@ -176,15 +176,15 @@ IntrusionBC::problemSetup( const ProblemSpecP& params )
 
           if ( scalar_type == "flat" ){ 
 
-            scalar_bc = scinew constantScalar(); 
+            scalar_bc = new constantScalar(); 
 
           }  else if ( scalar_type == "from_file" ){ 
 
-            scalar_bc = scinew scalarFromInput( scalar_label ); 
+            scalar_bc = new scalarFromInput( scalar_label ); 
 
           } else if ( scalar_type == "tabulated" ){ 
 
-            scalar_bc = scinew tabulatedScalar(); 
+            scalar_bc = new tabulatedScalar(); 
 
           } else { 
 
@@ -310,7 +310,7 @@ IntrusionBC::sched_computeBCArea( SchedulerP& sched,
                                   const MaterialSet* matls )
 {
 
-  Task* tsk = scinew Task("IntrusionBC::computeBCArea", this, &IntrusionBC::computeBCArea); 
+  Task* tsk = new Task("IntrusionBC::computeBCArea", this, &IntrusionBC::computeBCArea); 
 
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
 
@@ -397,7 +397,7 @@ IntrusionBC::sched_computeProperties( SchedulerP& sched,
                                       const LevelP& level, 
                                       const MaterialSet* matls )
 {
-  Task* tsk = scinew Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
+  Task* tsk = new Task("IntrusionBC::computeProperties", this, &IntrusionBC::computeProperties); 
 
   sched->addTask(tsk, level->eachPatch(), matls); 
 }
@@ -677,7 +677,7 @@ IntrusionBC::sched_setIntrusionVelocities( SchedulerP& sched,
                                            const LevelP& level, 
                                            const MaterialSet* matls )
 {
-  Task* tsk = scinew Task("IntrusionBC::setIntrusionVelocities", this, &IntrusionBC::setIntrusionVelocities); 
+  Task* tsk = new Task("IntrusionBC::setIntrusionVelocities", this, &IntrusionBC::setIntrusionVelocities); 
 
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
 
@@ -738,7 +738,7 @@ IntrusionBC::sched_setCellType( SchedulerP& sched,
                                 const MaterialSet* matls, 
                                 const bool doing_restart )
 {
-  Task* tsk = scinew Task("IntrusionBC::setCellType", this, &IntrusionBC::setCellType, doing_restart); 
+  Task* tsk = new Task("IntrusionBC::setCellType", this, &IntrusionBC::setCellType, doing_restart); 
 
   if ( !doing_restart ){ 
     tsk->modifies( _lab->d_cellTypeLabel ); 
@@ -942,7 +942,7 @@ IntrusionBC::sched_gatherReductionInformation( SchedulerP& sched,
                                                const LevelP& level, 
                                                const MaterialSet* matls )
 {
-  Task* tsk = scinew Task("IntrusionBC::gatherReductionInformation", this, &IntrusionBC::gatherReductionInformation); 
+  Task* tsk = new Task("IntrusionBC::gatherReductionInformation", this, &IntrusionBC::gatherReductionInformation); 
 
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
 
@@ -1030,7 +1030,7 @@ IntrusionBC::sched_printIntrusionInformation( SchedulerP& sched,
                                               const MaterialSet* matls )
 {
 
-  Task* tsk = scinew Task("IntrusionBC::printIntrusionInformation", this, &IntrusionBC::printIntrusionInformation); 
+  Task* tsk = new Task("IntrusionBC::printIntrusionInformation", this, &IntrusionBC::printIntrusionInformation); 
 
   for ( IntrusionMap::iterator i = _intrusion_map.begin(); i != _intrusion_map.end(); ++i ){ 
 
@@ -1366,7 +1366,7 @@ IntrusionBC::sched_setIntrusionT( SchedulerP& sched,
                                   const MaterialSet* matls )
 { 
   if ( _do_energy_exchange ){ 
-    Task* tsk = scinew Task("IntrusionBC::setIntrusionT", this, &IntrusionBC::setIntrusionT); 
+    Task* tsk = new Task("IntrusionBC::setIntrusionT", this, &IntrusionBC::setIntrusionT); 
 
     _T_label = VarLabel::find("temperature"); 
 

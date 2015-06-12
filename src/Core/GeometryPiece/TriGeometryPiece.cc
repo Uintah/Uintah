@@ -28,7 +28,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Plane.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include   <iostream>
 #include   <fstream>
@@ -59,7 +59,7 @@ TriGeometryPiece::TriGeometryPiece(ProblemSpecP &ps)
   Tri tri;
 
   tri_list = tri.makeTriList(d_tri,d_points);
-  d_grid = scinew UniformGrid(d_box);
+  d_grid = new UniformGrid(d_box);
   d_grid->buildUniformGrid(tri_list);
 			      
 
@@ -73,7 +73,7 @@ TriGeometryPiece::TriGeometryPiece(const TriGeometryPiece& copy)
   d_planes = copy.d_planes;
   d_boxes = copy.d_boxes;
 
-  d_grid = scinew UniformGrid(*copy.d_grid);
+  d_grid = new UniformGrid(*copy.d_grid);
 
 }
 
@@ -98,7 +98,7 @@ TriGeometryPiece& TriGeometryPiece::operator=(const TriGeometryPiece& rhs)
   d_planes = rhs.d_planes;
   d_boxes = rhs.d_boxes;
 
-  d_grid = scinew UniformGrid(*rhs.d_grid);
+  d_grid = new UniformGrid(*rhs.d_grid);
 
   return *this;
 }
@@ -117,7 +117,7 @@ TriGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 TriGeometryPiece::clone() const
 {
-  return scinew TriGeometryPiece(*this);
+  return new TriGeometryPiece(*this);
 }
 
 bool

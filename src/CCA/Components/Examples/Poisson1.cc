@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
@@ -69,7 +69,7 @@ void Poisson1::problemSetup(const ProblemSpecP& params,
   
   poisson->require("delt", delt_);
   
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   
   sharedState->registerSimpleMaterial(mymat_);
 }
@@ -78,7 +78,7 @@ void Poisson1::problemSetup(const ProblemSpecP& params,
 void Poisson1::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  Task* task = scinew Task("Poisson1::initialize",
+  Task* task = new Task("Poisson1::initialize",
                      this, &Poisson1::initialize);
                      
   task->computes(phi_label);
@@ -96,7 +96,7 @@ void Poisson1::scheduleRestartInitialize(const LevelP& level,
 void Poisson1::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {
-  Task* task = scinew Task("Poisson1::computeStableTimestep",
+  Task* task = new Task("Poisson1::computeStableTimestep",
                      this, &Poisson1::computeStableTimestep);
                      
   task->requires(Task::NewDW, residual_label);
@@ -109,7 +109,7 @@ void
 Poisson1::scheduleTimeAdvance( const LevelP& level, 
                                SchedulerP& sched)
 {
-  Task* task = scinew Task("Poisson1::timeAdvance",
+  Task* task = new Task("Poisson1::timeAdvance",
                      this, &Poisson1::timeAdvance);
                      
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);

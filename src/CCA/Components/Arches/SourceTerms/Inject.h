@@ -94,7 +94,7 @@ public:
       ~Builder(){}; 
 
       Inject<sT>* build()
-      { return scinew Inject<sT>( _name, _shared_state, _required_label_names, _type ); };
+      { return new Inject<sT>( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 
@@ -217,7 +217,7 @@ private:
   void Inject<sT>::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
   {
     std::string taskname = "Inject::eval";
-    Task* tsk = scinew Task(taskname, this, &Inject::computeSource, timeSubStep);
+    Task* tsk = new Task(taskname, this, &Inject::computeSource, timeSubStep);
   
     if (timeSubStep == 0) { 
       tsk->computes(_src_label);
@@ -327,7 +327,7 @@ private:
   {
     std::string taskname = "Inject::initialize";
   
-    Task* tsk = scinew Task(taskname, this, &Inject::initialize);
+    Task* tsk = new Task(taskname, this, &Inject::initialize);
   
     tsk->computes(_src_label);
   

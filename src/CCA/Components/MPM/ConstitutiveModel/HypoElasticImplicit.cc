@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -39,7 +39,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/FastMatrix.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -81,7 +81,7 @@ void HypoElasticImplicit::outputProblemSpec(ProblemSpecP& ps,
 
 HypoElasticImplicit* HypoElasticImplicit::clone()
 {
-  return scinew HypoElasticImplicit(*this);
+  return new HypoElasticImplicit(*this);
 }
 
 void HypoElasticImplicit::initializeCMData(const Patch* patch,
@@ -517,7 +517,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "HypoElasticImplicit::StateData", true, 
                                   &makeMPI_CMData);
     }

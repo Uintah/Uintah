@@ -26,7 +26,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Grid/Box.h>
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 
@@ -71,7 +71,7 @@ bool EllipseBCData::operator==(const BCGeomBase& rhs) const
 
 EllipseBCData* EllipseBCData::clone()
 {
-  return scinew EllipseBCData(*this);
+  return new EllipseBCData(*this);
 }
 
 void EllipseBCData::addBCData(BCData& bc) 

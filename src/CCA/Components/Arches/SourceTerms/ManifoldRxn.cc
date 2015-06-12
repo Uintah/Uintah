@@ -36,7 +36,7 @@ ManifoldRxn::problemSetup(const ProblemSpecP& inputdb)
 
   _source_grid_type = CC_SRC; 
 
-  _disc = scinew Discretization_new(); 
+  _disc = new Discretization_new(); 
 
   db->require("manifold_label",_manifold_var_name); 
 
@@ -59,7 +59,7 @@ void
 ManifoldRxn::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "ManifoldRxn::eval";
-  Task* tsk = scinew Task(taskname, this, &ManifoldRxn::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &ManifoldRxn::computeSource, timeSubStep);
 
   _manifold_label = VarLabel::find( _manifold_var_name );
   if ( _manifold_label == 0 ){
@@ -185,7 +185,7 @@ ManifoldRxn::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "ManifoldRxn::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &ManifoldRxn::initialize);
+  Task* tsk = new Task(taskname, this, &ManifoldRxn::initialize);
 
   tsk->computes(_src_label);
 

@@ -49,10 +49,10 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps, const ProcessorGroup
       std::cout << "Using Regridder " << regridderName << std::endl;
     }
     if (regridderName == "Tiled") {
-      regridder = scinew TiledRegridder(world);
+      regridder = new TiledRegridder(world);
     }
     else if (regridderName == "SingleLevel") {
-      regridder = scinew SingleLevelRegridder(world);
+      regridder = new SingleLevelRegridder(world);
     }
     else {
       regridder = 0;

@@ -48,7 +48,7 @@ public:
       ~Builder(){}
 
       ScalarRHS* build()
-      { return scinew ScalarRHS( _task_name, _matl_index ); }
+      { return new ScalarRHS( _task_name, _matl_index ); }
 
       private: 
 

@@ -38,7 +38,7 @@
 #define PropertyManager_h 
 
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Datatype.h>
@@ -88,7 +88,7 @@ public:
   }
   //Property(const Property &p) :  PropertyBase(p), obj_(p.obj_) {}
   virtual PropertyBase *clone() const 
-  { return scinew Property(obj_, transient()); }
+  { return new Property(obj_, transient()); }
 
   static const std::string type_name(int n = -1);
   virtual void io(Piostream &stream);
@@ -159,7 +159,7 @@ Persistent*
 Property<T>::maker()
 {
   // Properties in a file start out to be non-transient.
-  return scinew Property<T>();
+  return new Property<T>();
 }
 
 template<class T>
@@ -257,7 +257,7 @@ PropertyManager::set_property(const std::string &name,  const T& obj,
   {
     delete loc->second;
   }
-  properties_[name] = scinew Property<T>(obj, is_transient);
+  properties_[name] = new Property<T>(obj, is_transient);
   pmlock_.unlock();
 }
 

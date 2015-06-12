@@ -84,7 +84,7 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
 
   vel_db->getWithDefault( "partvelBC_eq_gasvelBC", d_gasBC, false ); 
 
-  d_boundaryCond = scinew BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
+  d_boundaryCond = new BoundaryCondition_new( d_fieldLabels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
 
 
@@ -97,7 +97,7 @@ PartVel::schedInitPartVel( const LevelP& level, SchedulerP& sched )
 {
  
   string taskname = "PartVel::InitPartVel";
-  Task* tsk = scinew Task(taskname, this, &PartVel::InitPartVel);
+  Task* tsk = new Task(taskname, this, &PartVel::InitPartVel);
 
   // actual velocity we will compute
   for (ArchesLabel::PartVelMap::iterator i = d_fieldLabels->partVel.begin(); 
@@ -118,7 +118,7 @@ PartVel::schedComputePartVel( const LevelP& level, SchedulerP& sched, const int 
 {
  
   string taskname = "PartVel::ComputePartVel";
-  Task* tsk = scinew Task(taskname, this, &PartVel::ComputePartVel, rkStep);
+  Task* tsk = new Task(taskname, this, &PartVel::ComputePartVel, rkStep);
 
   Ghost::GhostType gn = Ghost::None;
 

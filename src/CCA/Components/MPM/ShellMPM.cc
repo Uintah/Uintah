@@ -104,7 +104,7 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState,flags);
+    MPMMaterial *mat = new MPMMaterial(ps, sharedState,flags);
 
     //register as an MPM material
     sharedState->registerMPMMaterial(mat);
@@ -136,7 +136,7 @@ ShellMPM::schedInterpolateParticleRotToGrid(SchedulerP& sched,
                                             const PatchSet* patches,
                                             const MaterialSet* matls)
 {
-  Task* t = scinew Task("ShellMPM::interpolateParticleRotToGrid",
+  Task* t = new Task("ShellMPM::interpolateParticleRotToGrid",
                         this,&ShellMPM::interpolateParticleRotToGrid);
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
@@ -196,7 +196,7 @@ ShellMPM::schedComputeRotInternalMoment(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-  Task* t = scinew Task("MPM::computeRotInternalMoment",
+  Task* t = new Task("MPM::computeRotInternalMoment",
                         this, &ShellMPM::computeRotInternalMoment);
   int numMatls = d_sharedState->getNumMPMMatls();
   for(int m = 0; m < numMatls; m++){
@@ -253,7 +253,7 @@ ShellMPM::schedComputeRotAcceleration(SchedulerP& sched,
                                       const PatchSet* patches,
                                       const MaterialSet* matls)
 {
-  Task* t = scinew Task("MPM::computeRotAcceleration",
+  Task* t = new Task("MPM::computeRotAcceleration",
                         this, &ShellMPM::computeRotAcceleration);
 
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -313,7 +313,7 @@ ShellMPM::schedParticleNormalRotRateUpdate(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSet* matls)
 {
-  Task* t=scinew Task("ShellMPM::schedParticleNormalRotRateUpdate",
+  Task* t=new Task("ShellMPM::schedParticleNormalRotRateUpdate",
                       this, &ShellMPM::particleNormalRotRateUpdate);
 
   int numMatls = d_sharedState->getNumMPMMatls();

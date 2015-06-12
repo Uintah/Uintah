@@ -25,7 +25,7 @@
 #ifndef UINTAH_HOMEBREW_fixedvector_H
 #define UINTAH_HOMEBREW_fixedvector_H
 
-#include <Core/Malloc/Allocator.h>
+
 namespace Uintah {
   /**************************************
 
@@ -93,7 +93,7 @@ namespace Uintah {
 
         void enlarge() {
           curalloc+=(curalloc>>1);
-          T* newdata = scinew T[curalloc];
+          T* newdata = new T[curalloc];
           for(int i=0;i<cursize;i++)
             newdata[i]=data[i];
           if(data != &fixed[0])

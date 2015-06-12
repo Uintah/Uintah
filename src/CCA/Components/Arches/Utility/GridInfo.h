@@ -47,7 +47,7 @@ public:
       ~Builder(){}
 
       GridInfo* build()
-      { return scinew GridInfo( _task_name, _matl_index ); }
+      { return new GridInfo( _task_name, _matl_index ); }
 
       private: 
 

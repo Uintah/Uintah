@@ -45,16 +45,16 @@ ShellGeometryFactory::create( ProblemSpecP & ps )
   std::string go_type = ps->getNodeName();
 
   if (     go_type == PlaneShellPiece::TYPE_NAME ) {
-    return scinew PlaneShellPiece(ps);
+    return new PlaneShellPiece(ps);
   }
   else if( go_type == SphereShellPiece::TYPE_NAME ) {
-    return scinew SphereShellPiece(ps);
+    return new SphereShellPiece(ps);
   }
   else if (go_type == CylinderShellPiece::TYPE_NAME ) {
-    return scinew CylinderShellPiece(ps);
+    return new CylinderShellPiece(ps);
   }
 //  else if (go_type == GUVSphereShellPiece::TYPE_NAME ) {
-//    return scinew GUVSphereShellPiece(ps);
+//    return new GUVSphereShellPiece(ps);
 //  }
   return NULL;
 }

@@ -29,7 +29,7 @@
 #include <Core/Grid/Grid.h>
 
 #include <Core/Util/NotFinished.h>
-#include <Core/Malloc/Allocator.h>
+
 
 using std::vector;
 
@@ -39,7 +39,7 @@ using namespace SCIRun;
 
 static Persistent* maker()
 {
-    return scinew PSet;
+    return new PSet;
 }
 
 PersistentTypeID PSet::type_id("PSet", "ParticleSet", maker);

@@ -17,7 +17,7 @@ HeatLoss::HeatLoss( std::string prop_name, SimulationStateP& shared_state ) : Pr
 
   _constant_heat_loss = false; 
 
-  _boundary_condition = scinew BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
+  _boundary_condition = new BoundaryCondition_new( shared_state->getArchesMaterial(0)->getDWIndex() ); 
 
   _low_hl  = -1; 
   _high_hl =  1;
@@ -79,7 +79,7 @@ void HeatLoss::sched_computeProp( const LevelP& level, SchedulerP& sched, int ti
 {
 
   std::string taskname = "HeatLoss::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &HeatLoss::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &HeatLoss::computeProp, time_substep ); 
 
   _enthalpy_label = 0; 
 
@@ -317,7 +317,7 @@ void HeatLoss::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "HeatLoss::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &HeatLoss::initialize);
+  Task* tsk = new Task(taskname, this, &HeatLoss::initialize);
   tsk->computes(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

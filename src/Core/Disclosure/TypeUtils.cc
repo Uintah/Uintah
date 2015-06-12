@@ -29,7 +29,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include <sci_defs/bits_defs.h> // for SCI_32BITS
 #include <sci_defs/osx_defs.h>  // for OSX_SNOW_LEOPARD_OR_LATER
@@ -54,7 +54,7 @@ const TypeDescription* get_type_description(Uintah::long64*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("long64", "builtin", "builtin");
+    td = new TypeDescription("long64", "builtin", "builtin");
   }
   return td;
 }
@@ -69,7 +69,7 @@ const TypeDescription* fun_getTypeDescription(double*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::double_type,
+      td = new TypeDescription(TypeDescription::double_type,
 				  "double", true, MPI_DOUBLE);
    }
    return td;
@@ -79,7 +79,7 @@ const TypeDescription* fun_getTypeDescription(float*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::float_type,
+      td = new TypeDescription(TypeDescription::float_type,
 				  "float", true, MPI_FLOAT);
    }
    return td;
@@ -89,7 +89,7 @@ const TypeDescription* fun_getTypeDescription(int*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::int_type,
+      td = new TypeDescription(TypeDescription::int_type,
 				  "int", true, MPI_INT);
    }
    return td;
@@ -99,7 +99,7 @@ const TypeDescription* fun_getTypeDescription(short int*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::short_int_type,
+      td = new TypeDescription(TypeDescription::short_int_type,
 				  "short int", true, MPI_INT);
    }
    return td;
@@ -109,7 +109,7 @@ const TypeDescription* fun_getTypeDescription(FILE**)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::ParticleVariable,
+      td = new TypeDescription(TypeDescription::ParticleVariable,
                                "filePointer",true, MPI_BYTE);
    }
    return td;
@@ -119,7 +119,7 @@ const TypeDescription* fun_getTypeDescription(FILE**)
 //  {
 //     static TypeDescription* td;
 //     if(!td){
-//        td = scinew TypeDescription(TypeDescription::long_type,
+//        td = new TypeDescription(TypeDescription::long_type,
 //  				  "long", true,
 //  #ifdef SCI_64BITS
 //        MPI_LONG_LONG_INT
@@ -135,7 +135,7 @@ const TypeDescription* fun_getTypeDescription(long64*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::long64_type,
+      td = new TypeDescription(TypeDescription::long64_type,
 				  "long64", true, MPI_LONG_LONG_INT);
    }
    return td;
@@ -147,7 +147,7 @@ const TypeDescription* fun_getTypeDescription(long long*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::long64_type,
+      td = new TypeDescription(TypeDescription::long64_type,
 				  "long64", true, MPI_LONG_LONG_INT);
    }
    return td;
@@ -158,7 +158,7 @@ const TypeDescription* fun_getTypeDescription(bool*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::bool_type,
+      td = new TypeDescription(TypeDescription::bool_type,
 				  "bool", true, MPI_UB);
    }
    return td;
@@ -168,7 +168,7 @@ const TypeDescription* fun_getTypeDescription(unsigned char*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::bool_type,
+      td = new TypeDescription(TypeDescription::bool_type,
 				  "uchar", true, MPI_UB);
    }
    return td;
@@ -187,7 +187,7 @@ const TypeDescription* fun_getTypeDescription(Point*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Point,
+      td = new TypeDescription(TypeDescription::Point,
 				  "Point", true, &makeMPI_Point);
    }
    return td;
@@ -206,7 +206,7 @@ const TypeDescription* fun_getTypeDescription(Vector*)
 {
    static TypeDescription* td;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Vector,
+      td = new TypeDescription(TypeDescription::Vector,
 				  "Vector", true, &makeMPI_Vector);
    }
    return td;

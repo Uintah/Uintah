@@ -30,7 +30,7 @@
 #include "BorjaHyperelasticShear.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <string>
 #include <iostream>
 
@@ -53,15 +53,15 @@ ShearStressModel* ShearStressModelFactory::create(ProblemSpecP& ps)
    }
    
    if (model_type == "linear_elastic")
-      return(scinew LinearElasticShear(child));
+      return(new LinearElasticShear(child));
    else if (model_type == "neo_hookean")
-      return(scinew NeoHookean(child));
+      return(new NeoHookean(child));
    else if (model_type == "mooney_rivlin")
-      return(scinew MooneyRivlin(child));
+      return(new MooneyRivlin(child));
    else if (model_type == "gent")
-      return(scinew GentHyperelastic(child));
+      return(new GentHyperelastic(child));
    else if (model_type == "borja")
-      return(scinew BorjaHyperelasticShear(child));
+      return(new BorjaHyperelasticShear(child));
    else {
       ostringstream msg;
       msg << "Unknown type in <shear_stress_model type=" << model_type << "> in input file." << endl;
@@ -73,15 +73,15 @@ ShearStressModel*
 ShearStressModelFactory::createCopy(const ShearStressModel* smm)
 {
    if (dynamic_cast<const LinearElasticShear*>(smm))
-      return(scinew LinearElasticShear(dynamic_cast<const LinearElasticShear*>(smm)));
+      return(new LinearElasticShear(dynamic_cast<const LinearElasticShear*>(smm)));
    else if (dynamic_cast<const NeoHookean*>(smm))
-      return(scinew NeoHookean(dynamic_cast<const MTSShear*>(smm)));
+      return(new NeoHookean(dynamic_cast<const MTSShear*>(smm)));
    else if (dynamic_cast<const MooneyRivlin*>(smm))
-      return(scinew MooneyRivlin(dynamic_cast<const MooneyRivlin*>(smm)));
+      return(new MooneyRivlin(dynamic_cast<const MooneyRivlin*>(smm)));
    else if (dynamic_cast<const GentHyperelastic*>(smm))
-      return(scinew GentHyperelastic(dynamic_cast<const GentHyperelastic*>(smm)));
+      return(new GentHyperelastic(dynamic_cast<const GentHyperelastic*>(smm)));
    else if (dynamic_cast<const BorjaHyperelasticShear*>(smm))
-      return(scinew BorjaHyperelasticShear(dynamic_cast<const BorjaHyperelasticShear*>(smm)));
+      return(new BorjaHyperelasticShear(dynamic_cast<const BorjaHyperelasticShear*>(smm)));
    else {
       ostringstream msg;
       msg << "The type in <shear_stress_model type=" << model_type << "> does not exist." << endl;

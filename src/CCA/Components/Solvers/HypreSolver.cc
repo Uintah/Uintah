@@ -170,13 +170,13 @@ namespace Uintah {
       else {
 
         SoleVariable<hypre_solver_structP> hypre_solverP_;
-        hypre_solver_struct* hypre_solver_ = scinew hypre_solver_struct;
+        hypre_solver_struct* hypre_solver_ = new hypre_solver_struct;
         
-        hypre_solver_->solver = scinew HYPRE_StructSolver;
-        hypre_solver_->precond_solver = scinew HYPRE_StructSolver;
-        hypre_solver_->HA = scinew HYPRE_StructMatrix;
-        hypre_solver_->HX = scinew HYPRE_StructVector;
-        hypre_solver_->HB = scinew HYPRE_StructVector;
+        hypre_solver_->solver = new HYPRE_StructSolver;
+        hypre_solver_->precond_solver = new HYPRE_StructSolver;
+        hypre_solver_->HA = new HYPRE_StructMatrix;
+        hypre_solver_->HX = new HYPRE_StructVector;
+        hypre_solver_->HB = new HYPRE_StructVector;
 
         hypre_solverP_.setData(hypre_solver_);
         hypre_solver_s =  hypre_solverP_.get().get_rep();
@@ -314,7 +314,7 @@ namespace Uintah {
             // Feed it to Hypre
             if(params->symmetric){
               
-              double* values = scinew double[(h.x()-l.x())*4];
+              double* values = new double[(h.x()-l.x())*4];
               int stencil_indices[] = {0,1,2,3};
               
               
@@ -1131,7 +1131,7 @@ namespace Uintah {
                                                  const string& varname,
                                                  SimulationStateP& state)
   {
-    HypreSolver2Params* p = scinew HypreSolver2Params();
+    HypreSolver2Params* p = new HypreSolver2Params();
     p->state = state;
     bool found=false;
     if(params){
@@ -1193,7 +1193,7 @@ namespace Uintah {
   void HypreSolver2::scheduleInitialize(const LevelP& level,SchedulerP& sched,
                                         const MaterialSet* matls)
   {
-    Task* task = scinew Task("initialize_hypre", this,
+    Task* task = new Task("initialize_hypre", this,
                              &HypreSolver2::initialize);
 
     task->computes(hypre_solver_label);
@@ -1209,13 +1209,13 @@ namespace Uintah {
     //cout << "Doing HypreSolver2::allocateHypreMatrices" << endl;
 
     SoleVariable<hypre_solver_structP> hypre_solverP_;
-    hypre_solver_struct* hypre_solver_ = scinew hypre_solver_struct;
+    hypre_solver_struct* hypre_solver_ = new hypre_solver_struct;
 
-    hypre_solver_->solver = scinew HYPRE_StructSolver;
-    hypre_solver_->precond_solver = scinew HYPRE_StructSolver;
-    hypre_solver_->HA = scinew HYPRE_StructMatrix;
-    hypre_solver_->HX = scinew HYPRE_StructVector;
-    hypre_solver_->HB = scinew HYPRE_StructVector;
+    hypre_solver_->solver = new HYPRE_StructSolver;
+    hypre_solver_->precond_solver = new HYPRE_StructSolver;
+    hypre_solver_->HA = new HYPRE_StructMatrix;
+    hypre_solver_->HX = new HYPRE_StructVector;
+    hypre_solver_->HB = new HYPRE_StructVector;
 
     hypre_solverP_.setData(hypre_solver_);
     new_dw->put(hypre_solverP_,hypre_solver_label);
@@ -1287,37 +1287,37 @@ namespace Uintah {
     switch(domtype){
     case TypeDescription::SFCXVariable:
       {
-        HypreStencil7<SFCXTypes>* that = scinew HypreStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<SFCXTypes>* that = new HypreStencil7<SFCXTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
         Handle<HypreStencil7<SFCXTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCX)", that, &HypreStencil7<SFCXTypes>::solve, handle);
+        task = new Task("Hypre:Matrix solve (SFCX)", that, &HypreStencil7<SFCXTypes>::solve, handle);
       }
       break;
     case TypeDescription::SFCYVariable:
       {
-        HypreStencil7<SFCYTypes>* that = scinew HypreStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<SFCYTypes>* that = new HypreStencil7<SFCYTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
         Handle<HypreStencil7<SFCYTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCY)", that, &HypreStencil7<SFCYTypes>::solve, handle);
+        task = new Task("Hypre:Matrix solve (SFCY)", that, &HypreStencil7<SFCYTypes>::solve, handle);
       }
       break;
     case TypeDescription::SFCZVariable:
       {
-        HypreStencil7<SFCZTypes>* that = scinew HypreStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<SFCZTypes>* that = new HypreStencil7<SFCZTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
         Handle<HypreStencil7<SFCZTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (SFCZ)", that, &HypreStencil7<SFCZTypes>::solve, handle);
+        task = new Task("Hypre:Matrix solve (SFCZ)", that, &HypreStencil7<SFCZTypes>::solve, handle);
       }
       break;
     case TypeDescription::CCVariable:
       {
-        HypreStencil7<CCTypes>* that = scinew HypreStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<CCTypes>* that = new HypreStencil7<CCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
         Handle<HypreStencil7<CCTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (CC)", that, &HypreStencil7<CCTypes>::solve, handle);
+        task = new Task("Hypre:Matrix solve (CC)", that, &HypreStencil7<CCTypes>::solve, handle);
       }
       break;
     case TypeDescription::NCVariable:
       {
-        HypreStencil7<NCTypes>* that = scinew HypreStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
+        HypreStencil7<NCTypes>* that = new HypreStencil7<NCTypes>(level.get_rep(), matls, A, which_A_dw, x, modifies_x, b, which_b_dw, guess, which_guess_dw, dparams,modifies_hypre);
         Handle<HypreStencil7<NCTypes> > handle = that;
-        task = scinew Task("Hypre:Matrix solve (NC)", that, &HypreStencil7<NCTypes>::solve, handle);
+        task = new Task("Hypre:Matrix solve (NC)", that, &HypreStencil7<NCTypes>::solve, handle);
       }
       break;
     default:

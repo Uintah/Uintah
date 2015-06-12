@@ -34,7 +34,7 @@
  *  Manage properties of persistent objects.
  */
 
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Assert.h>
 #include <Core/Datatypes/PropertyManager.h>
 
@@ -48,13 +48,13 @@ PropertyBase::type_id("PropertyBase", "Datatype", maker);
 
 Persistent* PropertyBase::maker()
 {
-  return scinew PropertyBase(false);
+  return new PropertyBase(false);
 }
 
 
 Persistent* make_PropertyManager()
 {
-  return scinew PropertyManager;
+  return new PropertyManager;
 }
 
 PersistentTypeID PropertyManager::type_id("PropertyManager", 

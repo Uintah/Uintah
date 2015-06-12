@@ -34,7 +34,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/ConditionVariable.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <sys/time.h>
 #include <Core/Parallel/MPI_Communicator.h>
 
@@ -93,7 +93,7 @@ int MPI_Init_thread(int* argc, char*** argv,
   if ( threadmpi ){
     int retval = 0;
     cout<<"Using seperate MPI thread for async communication"<<endl;
-    Init_threadMpiCall *myCall = scinew Init_threadMpiCall(argc,argv,threadlevel,thread_supported, &retval);
+    Init_threadMpiCall *myCall = new Init_threadMpiCall(argc,argv,threadlevel,thread_supported, &retval);
     MPICommObj.schedule(myCall);
     delete myCall;
     return retval;
@@ -125,7 +125,7 @@ int MPI_Finalize(){
   if (pthread_getspecific(MPICommObj.thread_running)){
     int retval = 0;
     //cout<<"Call to MPI_Finalize intercepted by library"<<endl;
-    FinalizeMpiCall *myCall = scinew FinalizeMpiCall(&retval);
+    FinalizeMpiCall *myCall = new FinalizeMpiCall(&retval);
     MPICommObj.schedule(myCall);
     delete myCall;
     return retval;
@@ -159,7 +159,7 @@ int MPI_Communicator::schedule(Init_threadMpiCall* someCall){
     this->mutey.lock();{
       this->mpiCallQueue.push(someCall); //the MPI thread does not do the call
       someCall->mainexecute();           //we make the call ourselves here
-      MPIThread = scinew Thread(this, "Handle MPI calls asynchronously");
+      MPIThread = new Thread(this, "Handle MPI calls asynchronously");
       pthread_setspecific(this->thread_running, (const void*)1);
       this->MPICallQueue.conditionSignal();
       this->blockingMPICall.wait(this->mutey);
@@ -311,7 +311,7 @@ MPI_CLASS(NAME)::~MPI_CLASS(NAME)(){\
 RET_TYPE MPI_CALL(NAME)(CALLSIG){\
   if (pthread_getspecific(MPICommObj.thread_running)){\
     RET_TYPE retval;\
-    MPI_CLASS(NAME) *myCall = scinew MPI_CLASS(NAME)(CALLARGS, &retval);\
+    MPI_CLASS(NAME) *myCall = new MPI_CLASS(NAME)(CALLARGS, &retval);\
     MPICommObj.schedule(myCall);\
     delete myCall;\
     return retval;\

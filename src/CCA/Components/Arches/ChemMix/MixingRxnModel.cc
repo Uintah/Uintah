@@ -89,47 +89,47 @@ MixingRxnModel::problemSetupCommon( const ProblemSpecP& params, MixingRxnModel* 
   d_has_transform = true; 
   if ( db->findBlock("coal") ) {
 
-    _iv_transform = scinew CoalTransform( d_constants, model ); 
+    _iv_transform = new CoalTransform( d_constants, model ); 
 
   } else if ( db->findBlock("rcce") ){ 
 
-    _iv_transform = scinew CoalTransform( d_constants, model ); 
+    _iv_transform = new CoalTransform( d_constants, model ); 
 
   } else if ( db->findBlock("rcce_fp") ){ 
 
-    _iv_transform = scinew RCCETransform( d_constants, model ); 
+    _iv_transform = new RCCETransform( d_constants, model ); 
 
   } else if ( db->findBlock("rcce_eta") ){ 
 
-    _iv_transform = scinew RCCETransform( d_constants, model ); 
+    _iv_transform = new RCCETransform( d_constants, model ); 
 
   } else if ( db->findBlock("acidbase") ) {
 
-    _iv_transform = scinew AcidBase( d_constants, model ); 
+    _iv_transform = new AcidBase( d_constants, model ); 
 
   } else if ( db->findBlock("inert_mixing") ) {
 
-    _iv_transform = scinew InertMixing( d_constants, model ); 
+    _iv_transform = new InertMixing( d_constants, model ); 
 
   } else if ( db->findBlock("standard_flamelet" ) ) {
 
-    _iv_transform = scinew SingleMF( d_constants, model ); 
+    _iv_transform = new SingleMF( d_constants, model ); 
 
   } else if ( db->findBlock("standard_equilibrium" ) ) { 
 
-    _iv_transform = scinew SingleMF( d_constants, model ); 
+    _iv_transform = new SingleMF( d_constants, model ); 
 
   } else if ( db->findBlock("single_iv") ) {
 
-    _iv_transform = scinew SingleIV( d_constants, model ); 
+    _iv_transform = new SingleIV( d_constants, model ); 
 
   } else if ( db->findBlock("mixfrac_with_heatloss") ) { 
 
-    _iv_transform = scinew MFHLTransform( d_constants, model ); 
+    _iv_transform = new MFHLTransform( d_constants, model ); 
 
   } else { 
 
-    _iv_transform = scinew NoTransform();
+    _iv_transform = new NoTransform();
     d_has_transform = false; 
 
   }

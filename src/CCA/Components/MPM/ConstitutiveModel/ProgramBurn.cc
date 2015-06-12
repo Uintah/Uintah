@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/ProgramBurn.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -39,7 +39,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -146,7 +146,7 @@ void ProgramBurn::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ProgramBurn* ProgramBurn::clone()
 {
-  return scinew ProgramBurn(*this);
+  return new ProgramBurn(*this);
 }
 
 void ProgramBurn::initializeCMData(const Patch* patch,

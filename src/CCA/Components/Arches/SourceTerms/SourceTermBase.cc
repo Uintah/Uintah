@@ -12,7 +12,7 @@ _src_name(src_name), _type(type), _shared_state( shared_state ), _required_label
 {
   _init_type = "constant"; 
   _stage = -1; 
-  _table_lookup_species = scinew ChemHelper::TableLookup; 
+  _table_lookup_species = new ChemHelper::TableLookup; 
 }
 
 SourceTermBase::~SourceTermBase()

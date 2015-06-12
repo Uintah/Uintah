@@ -19,7 +19,7 @@ RadProperties::RadProperties( std::string prop_name, SimulationStateP& shared_st
   _before_table_lookup = true; 
 
   int matlIndex = _shared_state->getArchesMaterial(0)->getDWIndex(); 
-  _boundaryCond = scinew BoundaryCondition_new( matlIndex );
+  _boundaryCond = new BoundaryCondition_new( matlIndex );
 
 
 
@@ -62,14 +62,14 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
   }
 
   if ( calculator_type == "constant" ){ 
-    _calc = scinew RadPropertyCalculator::ConstantProperties(); 
+    _calc = new RadPropertyCalculator::ConstantProperties(); 
   } else if ( calculator_type == "burns_christon" ){ 
-    _calc = scinew RadPropertyCalculator::BurnsChriston(); 
+    _calc = new RadPropertyCalculator::BurnsChriston(); 
   } else if ( calculator_type == "hottel_sarofim"){
-    _calc = scinew RadPropertyCalculator::HottelSarofim(); 
+    _calc = new RadPropertyCalculator::HottelSarofim(); 
   } else if ( calculator_type == "radprops" ){
 #ifdef HAVE_RADPROPS
-    _calc = scinew RadPropertyCalculator::RadPropsInterface(); 
+    _calc = new RadPropertyCalculator::RadPropsInterface(); 
 #else
     throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
 #endif
@@ -113,11 +113,11 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
     std::string particle_calculator_type; 
     db_calc->findBlock("particles")->getAttribute("type",particle_calculator_type); 
     if(particle_calculator_type == "basic"){
-      _ocalc = scinew RadPropertyCalculator::basic(db_calc,_scatteringOn); 
+      _ocalc = new RadPropertyCalculator::basic(db_calc,_scatteringOn); 
     }else if(particle_calculator_type == "coal"){
-      _ocalc = scinew RadPropertyCalculator::coalOptics(db_calc,_scatteringOn); 
+      _ocalc = new RadPropertyCalculator::coalOptics(db_calc,_scatteringOn); 
     }else if(particle_calculator_type == "constantCIF"){
-      _ocalc = scinew RadPropertyCalculator::constantCIF(db_calc,_scatteringOn); 
+      _ocalc = new RadPropertyCalculator::constantCIF(db_calc,_scatteringOn); 
     }else{
       throw InvalidValue("Particle radiative property model not found!! Name:"+particle_calculator_type,__FILE__, __LINE__); 
     }
@@ -162,7 +162,7 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
 
 
   std::string taskname = "RadProperties::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &RadProperties::computeProp, 
+  Task* tsk = new Task( taskname, this, &RadProperties::computeProp, 
                            time_substep ); 
 
   _temperature_label = VarLabel::find(_temperature_name); 
@@ -502,7 +502,7 @@ void RadProperties::sched_initialize( const LevelP& level, SchedulerP& sched )
 
   std::string taskname = "RadProperties::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &RadProperties::initialize);
+  Task* tsk = new Task(taskname, this, &RadProperties::initialize);
 
   tsk->computes(_prop_label);                     //the total 
   tsk->computes( _calc->get_abskg_label() );      //gas only

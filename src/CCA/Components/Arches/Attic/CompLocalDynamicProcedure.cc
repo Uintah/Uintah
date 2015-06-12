@@ -81,7 +81,7 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for CompLocalDynamicProcedure
 //****************************************************************************
-CompLocalDynamicProcedure::CompLocalDynamicProcedure(const ArchesLabel* label, 
+CompLocalDynamicProcedure::CompLocalDynamicProcedure(const ArchesLabel* label,
                                    const MPMArchesLabel* MAlb,
                                    PhysicalConstants* phyConsts,
                                    BoundaryCondition* bndry_cond):
@@ -99,17 +99,17 @@ CompLocalDynamicProcedure::~CompLocalDynamicProcedure()
 }
 
 //****************************************************************************
-//  Get the molecular viscosity from the Physical Constants object 
+//  Get the molecular viscosity from the Physical Constants object
 //****************************************************************************
-double 
+double
 CompLocalDynamicProcedure::getMolecularViscosity() const {
   return d_physicalConsts->getMolecularViscosity();
 }
 
 //****************************************************************************
-// Problem Setup 
+// Problem Setup
 //****************************************************************************
-void 
+void
 CompLocalDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   cout << "WARNING!!!!! This model is a mess. It has been out of sync" << endl;
@@ -130,7 +130,7 @@ CompLocalDynamicProcedure::problemSetup(const ProblemSpecP& params)
     throw InvalidValue("Dynamic scalar model is out of date here and "
                        "not supported: ", __FILE__, __LINE__);
    d_lower_limit = d_turbPrNo;
-   d_turbPrNo = 1.0; 
+   d_turbPrNo = 1.0;
   }
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 #ifndef PetscFilter
@@ -148,28 +148,28 @@ CompLocalDynamicProcedure::initializeSmagCoeff( const ProcessorGroup*,
                                                 DataWarehouse* new_dw,
                                                 const TimeIntegratorLabel* ) {
   int archIndex = 0; // only one arches material
-  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+  int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    CCVariable<double> Cs; //smag coeff 
-    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);  
+    CCVariable<double> Cs; //smag coeff
+    new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
     Cs.initialize(0.0);
   }
 }
 
 //****************************************************************************
-// Schedule initialization of the smag coeff sub model 
+// Schedule initialization of the smag coeff sub model
 //****************************************************************************
-void 
-CompLocalDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched, 
+void
+CompLocalDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched,
                                                       const PatchSet* patches,
                                                       const MaterialSet* matls,
                                                       const TimeIntegratorLabel* timelabels )
 {
   string taskname =  "CompLocalDynamicProcedure::initializeSmagCoeff" + timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &CompLocalDynamicProcedure::initializeSmagCoeff,
                           timelabels);
 
@@ -180,10 +180,10 @@ CompLocalDynamicProcedure::sched_initializeSmagCoeff( SchedulerP& sched,
 
 
 //****************************************************************************
-// Schedule recomputation of the turbulence sub model 
+// Schedule recomputation of the turbulence sub model
 //****************************************************************************
-void 
-CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched, 
+void
+CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls,
                                                        const TimeIntegratorLabel* timelabels)
@@ -195,7 +195,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeTurbSubmodel" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeTurbSubmodel,
                             timelabels);
     // Requires
@@ -249,7 +249,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       if (d_calcReactingScalar)
         tsk->modifies(d_lab->d_filterRhoRFLabel);
     }
-  }  
+  }
 
     sched->addTask(tsk, patches, matls);
   }
@@ -258,7 +258,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeStrainRateTensors" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeStrainRateTensors,
                             timelabels);
     // Requires
@@ -287,7 +287,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->requires(Task::NewDW, d_lab->d_filterRhoRFLabel,   gac, 1);
       }
     }
-        
+
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_strainTensorCompLabel,
@@ -313,7 +313,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->computes(d_lab->d_filterReactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
-    }  
+    }
   }
   else {
     tsk->modifies(d_lab->d_strainTensorCompLabel,
@@ -339,8 +339,8 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->modifies(d_lab->d_filterReactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams);
       }
-    }  
-  }  
+    }
+  }
 
     sched->addTask(tsk, patches, matls);
   }
@@ -349,7 +349,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeFilterValues" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeFilterValues,
                             timelabels);
 
@@ -358,12 +358,12 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     // initialize with the value of zero at the physical bc's
     // construct a stress tensor and stored as a array with the following order
     // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-    
+
     tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,      gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterRhoLabel,      gac, 1);
     tsk->requires(Task::OldDW, d_lab->d_CsLabel,             gac, 1);
-    
+
     tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
                   d_lab->d_symTensorMatl, oams, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_filterStrainTensorCompLabel,
@@ -394,8 +394,8 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->requires(Task::NewDW, d_lab->d_filterReactScalarGradientCompLabel,
                       d_lab->d_vectorMatl, oams, gac, 1);
       }
-    }  
-    
+    }
+
     // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_strainMagnitudeLabel);
@@ -419,7 +419,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->computes(d_lab->d_reactScalarNumeratorLabel);
         tsk->computes(d_lab->d_reactScalarDenominatorLabel);
       }
-    }      
+    }
   }
   else {
     tsk->modifies(d_lab->d_strainMagnitudeLabel);
@@ -443,9 +443,9 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->modifies(d_lab->d_reactScalarNumeratorLabel);
         tsk->modifies(d_lab->d_reactScalarDenominatorLabel);
       }
-    }      
+    }
   }
-    
+
     sched->addTask(tsk, patches, matls);
   }
   //______________________________________________________________________
@@ -453,7 +453,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
   {
     string taskname =  "CompLocalDynamicProcedure::reComputeSmagCoeff" +
                        timelabels->integrator_step_name;
-    Task* tsk = scinew Task(taskname, this,
+    Task* tsk = new Task(taskname, this,
                             &CompLocalDynamicProcedure::reComputeSmagCoeff,
                             timelabels);
 
@@ -476,7 +476,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_LIJCompLabel,
                   d_lab->d_symTensorMatl, oams, gac, 1);
     tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
-    
+
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         tsk->requires(Task::NewDW, d_lab->d_scalarNumeratorLabel,  gac, 1);
@@ -490,13 +490,13 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
         tsk->requires(Task::NewDW, d_lab->d_reactScalarNumeratorLabel,  gac, 1);
         tsk->requires(Task::NewDW, d_lab->d_reactScalarDenominatorLabel,gac, 1);
       }
-    }      
+    }
 
     // for multimaterial
     if (d_MAlab){
       tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
     }
-    
+
     // Computes
     tsk->modifies(d_lab->d_viscosityCTSLabel);
     if (d_dynScalarModel) {
@@ -509,7 +509,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       if (d_calcReactingScalar) {
         tsk->modifies(d_lab->d_reactScalarDiffusivityLabel);
       }
-    }      
+    }
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_CsLabel);
@@ -523,7 +523,7 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       if (d_calcReactingScalar) {
         tsk->computes(d_lab->d_ShRFLabel);
       }
-    }      
+    }
   }
   else {
     tsk->modifies(d_lab->d_CsLabel);
@@ -537,18 +537,18 @@ CompLocalDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
       if (d_calcReactingScalar) {
         tsk->modifies(d_lab->d_ShRFLabel);
       }
-    }      
+    }
   }
-    
+
     sched->addTask(tsk, patches, matls);
   }
 }
 
 
 //****************************************************************************
-// Actual recompute 
+// Actual recompute
 //****************************************************************************
-void 
+void
 CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
                                                  const PatchSubset* patches,
                                                  const MaterialSubset*,
@@ -559,7 +559,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -574,7 +574,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
+
 
     // Get the velocity
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -597,7 +597,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 2);
 
-    
+
     SFCXVariable<double> filterRhoU;
     SFCYVariable<double> filterRhoV;
     SFCZVariable<double> filterRhoW;
@@ -640,7 +640,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     filterRhoV.initialize(0.0);
     filterRhoW.initialize(0.0);
     filterRho.initialize(0.0);
-    
+
     if (d_dynScalarModel) {
       if (d_calcScalar){
         filterRhoF.initialize(0.0);
@@ -665,12 +665,12 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     IntVector indexHighV = patch->getSFCYFORTHighIndex__Old();
     IntVector indexLowW = patch->getSFCZFORTLowIndex__Old();
     IntVector indexHighW = patch->getSFCZFORTHighIndex__Old();
-    if (xminus) indexLowU -= IntVector(1,0,0); 
-    if (yminus) indexLowV -= IntVector(0,1,0); 
-    if (zminus) indexLowW -= IntVector(0,0,1); 
-    if (xplus) indexHighU += IntVector(1,0,0); 
-    if (yplus) indexHighV += IntVector(0,1,0); 
-    if (zplus) indexHighW += IntVector(0,0,1); 
+    if (xminus) indexLowU -= IntVector(1,0,0);
+    if (yminus) indexLowV -= IntVector(0,1,0);
+    if (zminus) indexLowW -= IntVector(0,0,1);
+    if (xplus) indexHighU += IntVector(1,0,0);
+    if (yplus) indexHighV += IntVector(0,1,0);
+    if (zplus) indexHighW += IntVector(0,0,1);
 
     int flowID = d_boundaryCondition->flowCellType();
     int mmWallID = d_boundaryCondition->getMMWallId();
@@ -794,7 +794,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
         for (int colX = indexLowW.x(); colX <= indexHighW.x(); colX ++) {
           IntVector currCell(colX, colY, colZ);
           IntVector shift(0,0,0);
-          if ((zplus)&&((colZ == indexHighW.z())||(colZ == indexHighW.z()-1))) 
+          if ((zplus)&&((colZ == indexHighW.z())||(colZ == indexHighW.z()-1)))
             shift = IntVector(0,0,-1);
           int bndry_count=0;
           if  (!(cellType[currCell + shift - IntVector(1,0,0)] == flowID))
@@ -888,7 +888,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
                       patch->getExtraCellHighIndex());
 #ifdef PetscFilter
     d_filter->applyFilter<constCCVariable<double> >(pc, patch, density, filterRho);
-    // making filterRho nonzero 
+    // making filterRho nonzero
     sum_vartype den_ref_var;
     if (mmWallID > 0) {
       new_dw->get(den_ref_var, timelabels->ref_density);
@@ -902,7 +902,7 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
 
             IntVector currCell(colX, colY, colZ);
 
-            if (filterRho[currCell] < 1.0e-15) 
+            if (filterRho[currCell] < 1.0e-15)
               filterRho[currCell]=den_ref_var;
 
           }
@@ -921,9 +921,9 @@ CompLocalDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
   }
 }
 //****************************************************************************
-// Actual recompute 
+// Actual recompute
 //****************************************************************************
-void 
+void
 CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
@@ -934,7 +934,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -950,10 +950,10 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     constCCVariable<double> filterRhoE;
     constCCVariable<double> filterRhoRF;
 
-    // Get the velocity  
+    // Get the velocity
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
-    
+
     new_dw->get(uVel, d_lab->d_uVelocitySPBCLabel,    indx, patch, gaf, 1);
     new_dw->get(vVel, d_lab->d_vVelocitySPBCLabel,    indx, patch, gaf, 1);
     new_dw->get(wVel, d_lab->d_wVelocitySPBCLabel,    indx, patch, gaf, 1);
@@ -961,7 +961,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     new_dw->get(filterRhoV, d_lab->d_filterRhoVLabel, indx, patch, gaf, 1);
     new_dw->get(filterRhoW, d_lab->d_filterRhoWLabel, indx, patch, gaf, 1);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel,   indx, patch, gac, 1);
-    
+
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         new_dw->get(scalar,     d_lab->d_scalarSPLabel,   indx, patch, gac, 1);
@@ -981,8 +981,8 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
-    
+
+
     // Get the patch and variable details
     // compatible with fortran index
     StencilMatrix<CCVariable<double> > SIJ;    //6 point tensor
@@ -1037,7 +1037,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
         }
       }
     }
-    
+
     //__________________________________
     if (d_dynScalarModel) {
       if (d_calcScalar) {
@@ -1107,51 +1107,51 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
                       uVel[IntVector(colX+1,colY-1,colZ)] +
                       uVel[IntVector(colX,colY-1,colZ)]);
           utp = 0.25*(uvelxp1 + uvelcur +
-                      uVel[IntVector(colX+1,colY,colZ+1)] + 
+                      uVel[IntVector(colX+1,colY,colZ+1)] +
                       uVel[IntVector(colX,colY,colZ+1)]);
-          ubp = 0.25*(uvelxp1 + uvelcur + 
-                      uVel[IntVector(colX+1,colY,colZ-1)] + 
+          ubp = 0.25*(uvelxp1 + uvelcur +
+                      uVel[IntVector(colX+1,colY,colZ-1)] +
                       uVel[IntVector(colX,colY,colZ-1)]);
 
           vnp = vvelyp1;
           vsp = vvelcur;
           vep = 0.25*(vvelyp1 + vvelcur +
-                      vVel[IntVector(colX+1,colY+1,colZ)] + 
+                      vVel[IntVector(colX+1,colY+1,colZ)] +
                       vVel[IntVector(colX+1,colY,colZ)]);
           vwp = 0.25*(vvelyp1 + vvelcur +
-                      vVel[IntVector(colX-1,colY+1,colZ)] + 
+                      vVel[IntVector(colX-1,colY+1,colZ)] +
                       vVel[IntVector(colX-1,colY,colZ)]);
-          vtp = 0.25*(vvelyp1 + vvelcur + 
-                      vVel[IntVector(colX,colY+1,colZ+1)] + 
+          vtp = 0.25*(vvelyp1 + vvelcur +
+                      vVel[IntVector(colX,colY+1,colZ+1)] +
                       vVel[IntVector(colX,colY,colZ+1)]);
           vbp = 0.25*(vvelyp1 + vvelcur +
-                      vVel[IntVector(colX,colY+1,colZ-1)] + 
+                      vVel[IntVector(colX,colY+1,colZ-1)] +
                       vVel[IntVector(colX,colY,colZ-1)]);
 
           wtp = wvelzp1;
           wbp = wvelcur;
-          wep = 0.25*(wvelzp1 + wvelcur + 
-                      wVel[IntVector(colX+1,colY,colZ+1)] + 
+          wep = 0.25*(wvelzp1 + wvelcur +
+                      wVel[IntVector(colX+1,colY,colZ+1)] +
                       wVel[IntVector(colX+1,colY,colZ)]);
           wwp = 0.25*(wvelzp1 + wvelcur +
-                      wVel[IntVector(colX-1,colY,colZ+1)] + 
+                      wVel[IntVector(colX-1,colY,colZ+1)] +
                       wVel[IntVector(colX-1,colY,colZ)]);
-          wnp = 0.25*(wvelzp1 + wvelcur + 
-                      wVel[IntVector(colX,colY+1,colZ+1)] + 
+          wnp = 0.25*(wvelzp1 + wvelcur +
+                      wVel[IntVector(colX,colY+1,colZ+1)] +
                       wVel[IntVector(colX,colY+1,colZ)]);
           wsp = 0.25*(wvelzp1 + wvelcur +
-                      wVel[IntVector(colX,colY-1,colZ+1)] + 
+                      wVel[IntVector(colX,colY-1,colZ+1)] +
                       wVel[IntVector(colX,colY-1,colZ)]);
 
           //     calculate the grid strain rate tensor
           (SIJ[0])[currCell] = (uep-uwp)/sewcur;
           (SIJ[1])[currCell] = (vnp-vsp)/snscur;
           (SIJ[2])[currCell] = (wtp-wbp)/stbcur;
-          (SIJ[3])[currCell] = 0.5*((unp-usp)/snscur + 
+          (SIJ[3])[currCell] = 0.5*((unp-usp)/snscur +
                                (vep-vwp)/sewcur);
-          (SIJ[4])[currCell] = 0.5*((utp-ubp)/stbcur + 
+          (SIJ[4])[currCell] = 0.5*((utp-ubp)/stbcur +
                                (wep-wwp)/sewcur);
-          (SIJ[5])[currCell] = 0.5*((vtp-vbp)/stbcur + 
+          (SIJ[5])[currCell] = 0.5*((vtp-vbp)/stbcur +
                                (wnp-wsp)/snscur);
 
           double fuep, fuwp, funp, fusp, futp, fubp;
@@ -1180,7 +1180,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
           fuep = fuvelxp1;
           fuwp = fuvelcur;
           funp = 0.25*(fuvelxp1 + fuvelcur +
-                      filterRhoU[IntVector(colX+1,colY+1,colZ)]/ 
+                      filterRhoU[IntVector(colX+1,colY+1,colZ)]/
                       (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
                        filterRho[IntVector(colX+1,colY+1,colZ)])) +
                       filterRhoU[IntVector(colX,colY+1,colZ)]/
@@ -1200,7 +1200,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
                       filterRhoU[IntVector(colX,colY,colZ+1)]/
                       (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
                        filterRho[IntVector(colX-1,colY,colZ+1)])));
-          fubp = 0.25*(fuvelxp1 + fuvelcur + 
+          fubp = 0.25*(fuvelxp1 + fuvelcur +
                       filterRhoU[IntVector(colX+1,colY,colZ-1)]/
                       (0.5*(filterRho[IntVector(colX,colY,colZ-1)] +
                        filterRho[IntVector(colX+1,colY,colZ-1)])) +
@@ -1224,7 +1224,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
                       filterRhoV[IntVector(colX-1,colY,colZ)]/
                       (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
                        filterRho[IntVector(colX-1,colY-1,colZ)])));
-          fvtp = 0.25*(fvvelyp1 + fvvelcur + 
+          fvtp = 0.25*(fvvelyp1 + fvvelcur +
                       filterRhoV[IntVector(colX,colY+1,colZ+1)]/
                       (0.5*(filterRho[IntVector(colX,colY,colZ+1)] +
                        filterRho[IntVector(colX,colY+1,colZ+1)])) +
@@ -1241,7 +1241,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 
           fwtp = fwvelzp1;
           fwbp = fwvelcur;
-          fwep = 0.25*(fwvelzp1 + fwvelcur + 
+          fwep = 0.25*(fwvelzp1 + fwvelcur +
                       filterRhoW[IntVector(colX+1,colY,colZ+1)]/
                       (0.5*(filterRho[IntVector(colX+1,colY,colZ)] +
                        filterRho[IntVector(colX+1,colY,colZ+1)])) +
@@ -1255,7 +1255,7 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
                       filterRhoW[IntVector(colX-1,colY,colZ)]/
                       (0.5*(filterRho[IntVector(colX-1,colY,colZ)] +
                        filterRho[IntVector(colX-1,colY,colZ-1)])));
-          fwnp = 0.25*(fwvelzp1 + fwvelcur + 
+          fwnp = 0.25*(fwvelzp1 + fwvelcur +
                       filterRhoW[IntVector(colX,colY+1,colZ+1)]/
                       (0.5*(filterRho[IntVector(colX,colY+1,colZ)] +
                        filterRho[IntVector(colX,colY+1,colZ+1)])) +
@@ -1274,11 +1274,11 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
           (filterSIJ[0])[currCell] = (fuep-fuwp)/sewcur;
           (filterSIJ[1])[currCell] = (fvnp-fvsp)/snscur;
           (filterSIJ[2])[currCell] = (fwtp-fwbp)/stbcur;
-          (filterSIJ[3])[currCell] = 0.5*((funp-fusp)/snscur + 
+          (filterSIJ[3])[currCell] = 0.5*((funp-fusp)/snscur +
                                      (fvep-fvwp)/sewcur);
-          (filterSIJ[4])[currCell] = 0.5*((futp-fubp)/stbcur + 
+          (filterSIJ[4])[currCell] = 0.5*((futp-fubp)/stbcur +
                                      (fwep-fwwp)/sewcur);
-          (filterSIJ[5])[currCell] = 0.5*((fvtp-fvbp)/stbcur + 
+          (filterSIJ[5])[currCell] = 0.5*((fvtp-fvbp)/stbcur +
                                      (fwnp-fwsp)/snscur);
 
           double scalarxp, scalarxm, scalaryp;
@@ -1438,11 +1438,11 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
                               filterRhoRF[IntVector(colX,colY,colZ+1)]/
                               filterRho[IntVector(colX,colY,colZ+1)]);
 
-              (filterReactScalarGrad[0])[currCell] = 
+              (filterReactScalarGrad[0])[currCell] =
                       (freactScalarxp-freactScalarxm)/sewcur;
-              (filterReactScalarGrad[1])[currCell] = 
+              (filterReactScalarGrad[1])[currCell] =
                       (freactScalaryp-freactScalarym)/snscur;
-              (filterReactScalarGrad[2])[currCell] = 
+              (filterReactScalarGrad[2])[currCell] =
                       (freactScalarzp-freactScalarzm)/stbcur;
             }
           }
@@ -1456,9 +1456,9 @@ CompLocalDynamicProcedure::reComputeStrainRateTensors(const ProcessorGroup*,
 
 
 //****************************************************************************
-// Actual recompute 
+// Actual recompute
 //****************************************************************************
-void 
+void
 CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
@@ -1468,11 +1468,9 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 {
   //int nofTimeSteps=d_lab->d_sharedState->getCurrentTopLevelTimeStep();
   for (int p = 0; p < patches->size(); p++) {
-  TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
-  TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<double> den;
@@ -1504,14 +1502,14 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         new_dw->get(reactScalar, d_lab->d_reactscalarSPLabel, indx, patch, gac, 1);
         new_dw->get(filterRhoRF, d_lab->d_filterRhoRFLabel,   indx, patch, gac, 1);
       }
-    }  
+    }
 
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
-    
+
+
     IntVector idxLo = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
     IntVector idxHi = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
 
@@ -1584,7 +1582,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         reactScalarBetaHat[ii].resize(idxLo, idxHi);
         reactScalarBetaHat[ii].initialize(0.0);
       }
-    }  
+    }
     }
 
     CCVariable<double> IsImag;
@@ -1600,7 +1598,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     CCVariable<double> reactScalarNum;
     CCVariable<double> reactScalarDenom;
     StencilMatrix<CCVariable<double> > lij;    //6 point tensor
-    
+
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
         new_dw->allocateAndPut(lij[ii], d_lab->d_LIJCompLabel, ii, patch);
@@ -1672,10 +1670,10 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         reactScalarNum.initialize(0.0);
         reactScalarDenom.initialize(0.0);
       }
-    }  
+    }
 
 
-    // compute test filtered velocities, density and product 
+    // compute test filtered velocities, density and product
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
     // using a box filter, generalize it to use other filters such as Gaussian
@@ -1735,7 +1733,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         rhoRFW.resize(idxLo, idxHi);
         rhoRFW.initialize(0.0);
       }
-    }  
+    }
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
     bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1755,7 +1753,6 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
-  TAU_PROFILE_START(compute1);
 //#ifdef use_fortran
 //    IntVector start(startX, startY, startZ);
 //    IntVector end(endX - 1, endY - 1, endZ -1);
@@ -1802,7 +1799,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                          cellinfo->sns[colY]*cellinfo->stb[colZ];
           double filter = pow(delta, 1.0/3.0);
 
-          IsI[currCell] = isi_cur; 
+          IsI[currCell] = isi_cur;
 
           (betaIJ[0])[currCell] = den_cur*isi_cur*(sij0-trace);
           (betaIJ[1])[currCell] = den_cur*isi_cur*(sij1-trace);
@@ -1855,12 +1852,11 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
               rhoRFV[currCell] = den_cur*reactScalar_cur*vvel_cur;
               rhoRFW[currCell] = den_cur*reactScalar_cur*wvel_cur;
             }
-          }  
+          }
         }
       }
     }
 //#endif
-  TAU_PROFILE_STOP(compute1);
     Array3<double> filterRhoUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterRhoUU.initialize(0.0);
     Array3<double> filterRhoUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -1914,7 +1910,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         filterRhoRFW.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
         filterRhoRFW.initialize(0.0);
       }
-    }  
+    }
 
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
@@ -1960,12 +1956,11 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           d_filter->applyFilter<Array3<double> >(pc, patch, reactScalarBeta[ii], reactScalarBetaHat[ii]);
         }
       }
-    }  
+    }
 
     if (pc->myrank() == 0)
-      cerr << "Time for the Filter operation in Turbulence Model: " << 
+      cerr << "Time for the Filter operation in Turbulence Model: " <<
         Time::currentSeconds()-start_turbTime << " seconds\n";
-  TAU_PROFILE_START(compute2);
 #endif
 #ifdef use_fortran
     fort_comp_dynamic_2loop(cellinfo->sew,cellinfo->sns,cellinfo->stb,
@@ -1974,7 +1969,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         betaHATIJ[3],betaHATIJ[4],betaHATIJ[5],
         filterRho, filterRhoU,
         filterRhoV,filterRhoW,filterRhoUU, filterRhoVV, filterRhoWW,
-        filterRhoUV, filterRhoUW, filterRhoVW, 
+        filterRhoUV, filterRhoUW, filterRhoVW,
         MLI,MMI, indexLow,indexHigh);
     if (d_dynScalarModel) {
      if (d_calcScalar) {
@@ -2029,14 +2024,14 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           double shatij4 = (SHATIJ[4])[currCell];
           double shatij5 = (SHATIJ[5])[currCell];
           double IshatIcur = sqrt(2.0*(shatij0*shatij0 + shatij1*shatij1 +
-                                       shatij2*shatij2 + 2.0*(shatij3*shatij3 + 
+                                       shatij2*shatij2 + 2.0*(shatij3*shatij3 +
                                        shatij4*shatij4 + shatij5*shatij5)));
           double filterDencur = filterRho[currCell];
 //        ignoring the trace
 //          double trace = (shatij0 + shatij1 + shatij2)/3.0;
           double trace = 0.0;
 
-          IsImag[currCell] = IsI[currCell]; 
+          IsImag[currCell] = IsI[currCell];
 
           double MIJ0cur = 2.0*filter*filter*
                                ((betaHATIJ[0])[currCell]-
@@ -2077,7 +2072,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                            filterRhoVcur*filterRhoWcur/filterDencur;
 
 // Explicitly making LIJ traceless here
-// Actually, trace has been ignored          
+// Actually, trace has been ignored
 //   double LIJtrace = (LIJ0cur + LIJ1cur + LIJ2cur)/3.0;
           double LIJtrace = 0.0;
           LIJ0cur = LIJ0cur - LIJtrace;
@@ -2111,9 +2106,9 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                 alphaIJ4 = filterDencur*IshatIcur*shatij4*filter*filter*2.0*2.0;
                 alphaIJ5 = filterDencur*IshatIcur*shatij5*filter*filter*2.0*2.0;
 
-                alphaalpha[currCell] = alphaIJ0*alphaIJ0 + alphaIJ1*alphaIJ1 + 
-                           alphaIJ2*alphaIJ2 + 2.0*(alphaIJ3*alphaIJ3 + 
-                           alphaIJ4*alphaIJ4 + alphaIJ5*alphaIJ5);        
+                alphaalpha[currCell] = alphaIJ0*alphaIJ0 + alphaIJ1*alphaIJ1 +
+                           alphaIJ2*alphaIJ2 + 2.0*(alphaIJ3*alphaIJ3 +
+                           alphaIJ4*alphaIJ4 + alphaIJ5*alphaIJ5);
                 Lalpha[currCell] = alphaIJ0*LIJ0cur + alphaIJ1*LIJ1cur +
                         alphaIJ2*LIJ2cur + 2.0*(alphaIJ3*LIJ3cur +
                         alphaIJ4*LIJ4cur + alphaIJ5*LIJ5cur);
@@ -2122,7 +2117,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                         (cbetaHATIJ[2])[currCell]*alphaIJ2 +
                         2*((cbetaHATIJ[3])[currCell]*alphaIJ3 +
                         (cbetaHATIJ[4])[currCell]*alphaIJ4 +
-                        (cbetaHATIJ[5])[currCell]*alphaIJ5); 
+                        (cbetaHATIJ[5])[currCell]*alphaIJ5);
           double filterRhoFcur, scalarLX, scalarLY, scalarLZ;
           double scalarMX, scalarMY, scalarMZ;
           double filterRhoEcur, enthalpyLX, enthalpyLY, enthalpyLZ;
@@ -2211,12 +2206,11 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                                            reactScalarMY*reactScalarLY +
                                            reactScalarMZ*reactScalarLZ;
             }
-          }  
+          }
         }
       }
     }
 #endif
-  TAU_PROFILE_STOP(compute2);
 
   }
 }
@@ -2225,7 +2219,7 @@ CompLocalDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
 //______________________________________________________________________
 //
-void 
+void
 CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                               const PatchSubset* patches,
                                               const MaterialSubset*,
@@ -2238,7 +2232,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;
@@ -2250,10 +2244,10 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     constCCVariable<double> enthalpyDenom;
     constCCVariable<double> reactScalarNum;
     constCCVariable<double> reactScalarDenom;
-    CCVariable<double> Cs; //smag coeff 
-    CCVariable<double> ShF; //Shmidt number 
-    CCVariable<double> ShE; //Shmidt number 
-    CCVariable<double> ShRF; //Shmidt number 
+    CCVariable<double> Cs; //smag coeff
+    CCVariable<double> ShF; //Shmidt number
+    CCVariable<double> ShE; //Shmidt number
+    CCVariable<double> ShRF; //Shmidt number
     constCCVariable<double> den;
     constCCVariable<double> filterRho;
     constCCVariable<double> voidFraction;
@@ -2262,7 +2256,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     CCVariable<double> scalardiff;
     CCVariable<double> enthalpydiff;
     CCVariable<double> reactScalardiff;
-    
+
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
        new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
        if (d_dynScalarModel) {
@@ -2275,7 +2269,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
          if (d_calcReactingScalar) {
            new_dw->allocateAndPut(ShRF, d_lab->d_ShRFLabel, indx, patch);
          }
-       }      
+       }
     }
     else {
        new_dw->getModifiable(Cs, d_lab->d_CsLabel, indx, patch);
@@ -2289,9 +2283,9 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
          if (d_calcReactingScalar) {
            new_dw->getModifiable(ShRF, d_lab->d_ShRFLabel, indx, patch);
          }
-       }      
+       }
     }
-    
+
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         ShF.initialize(0.0);
@@ -2302,7 +2296,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       if (d_calcReactingScalar) {
         ShRF.initialize(0.0);
       }
-    }      
+    }
 
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel,indx, patch);
     if (d_dynScalarModel) {
@@ -2315,7 +2309,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
       if (d_calcReactingScalar) {
         new_dw->getModifiable(reactScalardiff, d_lab->d_reactScalarDiffusivityLabel,indx, patch);
       }
-    }      
+    }
 
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gn = Ghost::None;
@@ -2326,7 +2320,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     new_dw->get(alphaalpha,     d_lab->d_alphaalphaLabel,       indx, patch, gac, 1);
     new_dw->get(Lalpha,         d_lab->d_LalphaLabel,           indx, patch, gac, 1);
     new_dw->get(cbetaHATalpha,  d_lab->d_cbetaHATalphaLabel,    indx, patch, gac, 1);
-    
+
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         new_dw->get(scalarNum,   d_lab->d_scalarNumeratorLabel,  indx, patch, gac, 1);
@@ -2340,7 +2334,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         new_dw->get(reactScalarNum,   d_lab->d_reactScalarNumeratorLabel,indx,   patch,gac, 1);
         new_dw->get(reactScalarDenom, d_lab->d_reactScalarDenominatorLabel,indx, patch, gac, 1);
       }
-    }      
+    }
 
     new_dw->get(den,       d_lab->d_densityCPLabel, indx, patch, gac, 1);
     new_dw->get(filterRho, d_lab->d_filterRhoLabel, indx, patch, gac, 1);
@@ -2354,13 +2348,13 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
+
     // get physical constants
     double viscos; // molecular viscosity
     viscos = d_physicalConsts->getMolecularViscosity();
- 
 
-    // compute test filtered velocities, density and product 
+
+    // compute test filtered velocities, density and product
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
     // using a box filter, generalize it to use other filters such as Gaussian
@@ -2393,7 +2387,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         reactScalarDenomHat.resize(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
         reactScalarDenomHat.initialize(0.0);
       }
-    }      
+    }
     IntVector indexLow = patch->getFortranCellLowIndex();
     IntVector indexHigh = patch->getFortranCellHighIndex();
     IntVector idxLo = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
@@ -2414,12 +2408,12 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         d_filter->applyFilter<constCCVariable<double> >(pc, patch, reactScalarNum, reactScalarNumHat);
         d_filter->applyFilter<constCCVariable<double> >(pc, patch, reactScalarDenom, reactScalarDenomHat);
       }
-    }      
+    }
 #endif
     CCVariable<double> tempCs;
     tempCs.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     tempCs.initialize(0.0);
-    
+
     CCVariable<double> tempShF;
     CCVariable<double> tempShE;
     CCVariable<double> tempShRF;
@@ -2436,7 +2430,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
         tempShRF.allocate(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
         tempShRF.initialize(0.0);
       }
-    }      
+    }
           //     calculate the local Smagorinsky coefficient
           //     perform "clipping" in case MLij is negative...
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
@@ -2482,13 +2476,13 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                     reactScalarDenomHat[currCell];
               tempShRF[currCell] = reactScalar_value;
             }
-          }      
+          }
         }
       }
     }
     if (nofTimeSteps<=initialTimeStep) {
       if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
-      // filtering for periodic case is not implemented 
+      // filtering for periodic case is not implemented
       // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
         d_filter->applyFilter<Array3<double> >(pc, patch, tempCs, Cs);
@@ -2502,14 +2496,14 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           if (d_calcReactingScalar) {
             d_filter->applyFilter<Array3<double> >(pc, patch, tempShRF, ShRF);
           }
-        }      
+        }
 #endif
       }
       else
         Cs.copy(tempCs, tempCs.getLowIndex(),
                       tempCs.getHighIndex());
   }
-    
+
     if (d_dynScalarModel) {
       if (d_calcScalar) {
         ShF.copy(tempShF, tempShF.getLowIndex(),
@@ -2524,7 +2518,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                             tempShRF.getHighIndex());
       }
     }
-    //__________________________________    
+    //__________________________________
     if (nofTimeSteps>initialTimeStep) {
       for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
         for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -2534,12 +2528,12 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
           }
         }
       }
-      
+
       if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
-        // filtering for periodic case is not implemented 
+        // filtering for periodic case is not implemented
         // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
-        d_filter->applyFilter<Array3<double> >(pc, patch, tempCs, Cs);      
+        d_filter->applyFilter<Array3<double> >(pc, patch, tempCs, Cs);
 #endif
       }
       else
@@ -2547,7 +2541,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                       tempCs.getHighIndex());
     }
 
-          
+
 //------------------------------------------------------------------------------------
     double factor = 1.0;
 
@@ -2614,7 +2608,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                   reactScalardiff[currCell] = viscos*voidFraction[currCell]/
                                               laminarPrNo;
               }
-            }      
+            }
           }
         }
       }
@@ -2628,7 +2622,7 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                            cellinfo->sns[colY]*cellinfo->stb[colZ];
             double filter = pow(delta, 1.0/3.0);
 
-            if (Cs[currCell]>0.0) 
+            if (Cs[currCell]>0.0)
                     Cs[currCell] = Min((Cs[currCell]),0.1);
             else
                     Cs[currCell]=Max((Cs[currCell]),-0.1);
@@ -2674,11 +2668,11 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                 else
                   reactScalardiff[currCell] = viscos/laminarPrNo;
               }
-            }      
+            }
           }
         }
       }
-    
+
     }
 
     // boundary conditions...make a separate function apply Boundary
@@ -2706,11 +2700,11 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
             }
             if (d_calcReactingScalar) {
-              reactScalardiff[currCell] = 
+              reactScalardiff[currCell] =
                       reactScalardiff[IntVector(colX,colY,colZ)];
             }
           }
-          }          
+          }
         }
       }
     }
@@ -2731,11 +2725,11 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
             }
             if (d_calcReactingScalar) {
-              reactScalardiff[currCell] = 
+              reactScalardiff[currCell] =
                       reactScalardiff[IntVector(colX,colY,colZ)];
             }
           }
-          }          
+          }
         }
       }
     }
@@ -2756,11 +2750,11 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
             }
             if (d_calcReactingScalar) {
-              reactScalardiff[currCell] = 
+              reactScalardiff[currCell] =
                       reactScalardiff[IntVector(colX,colY,colZ)];
             }
           }
-          }          
+          }
         }
       }
     }
@@ -2781,11 +2775,11 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
             }
             if (d_calcReactingScalar) {
-              reactScalardiff[currCell] = 
+              reactScalardiff[currCell] =
                       reactScalardiff[IntVector(colX,colY,colZ)];
             }
           }
-          }          
+          }
         }
       }
     }
@@ -2806,11 +2800,11 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
             }
             if (d_calcReactingScalar) {
-              reactScalardiff[currCell] = 
+              reactScalardiff[currCell] =
                       reactScalardiff[IntVector(colX,colY,colZ)];
             }
           }
-          }          
+          }
         }
       }
     }
@@ -2831,11 +2825,11 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
               enthalpydiff[currCell] = enthalpydiff[IntVector(colX,colY,colZ)];
             }
             if (d_calcReactingScalar) {
-              reactScalardiff[currCell] = 
+              reactScalardiff[currCell] =
                       reactScalardiff[IntVector(colX,colY,colZ)];
             }
           }
-          }          
+          }
         }
       }
     }
@@ -2844,15 +2838,15 @@ CompLocalDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 }
 
 //______________________________________________________________________
-void 
-CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched, 
+void
+CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
                                                        const PatchSet* patches,
                                                        const MaterialSet* matls,
                                                        const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarVaraince" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &CompLocalDynamicProcedure::computeScalarVariance,
                           timelabels);
 
@@ -2870,7 +2864,7 @@ CompLocalDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-void 
+void
 CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
                                                  const PatchSubset* patches,
                                                  const MaterialSubset*,
@@ -2881,14 +2875,14 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
     constCCVariable<int> cellType;
-    
+
     Ghost::GhostType  gac = Ghost::AroundCells;
-    new_dw->get(scalar,   d_lab->d_scalarSPLabel, indx, patch,gac, 1);    
+    new_dw->get(scalar,   d_lab->d_scalarSPLabel, indx, patch,gac, 1);
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch, gac, 1);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
@@ -2897,7 +2891,7 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       new_dw->getModifiable(scalarVar,  d_lab->d_scalarVarSPLabel, indx,patch);
     }
     scalarVar.initialize(0.0);
-    
+
     IntVector idxLo = patch->getExtraCellLowIndex(Arches::ONEGHOSTCELL);
     IntVector idxHi = patch->getExtraCellHighIndex(Arches::ONEGHOSTCELL);
     Array3<double> phiSqr(idxLo, idxHi);
@@ -2938,7 +2932,7 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
 
-    
+
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3020,30 +3014,30 @@ CompLocalDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
         }
       }
     }
-    
+
   }
 }
 //****************************************************************************
-// Schedule recomputation of the turbulence sub model 
+// Schedule recomputation of the turbulence sub model
 //****************************************************************************
-void 
-CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched, 
+void
+CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
                                                           const PatchSet* patches,
                                                           const MaterialSet* matls,
                                                           const TimeIntegratorLabel* timelabels )
 {
   string taskname =  "CompLocalDynamicProcedure::computeScalarDissipation" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &CompLocalDynamicProcedure::computeScalarDissipation,
                           timelabels );
 
-  
+
   // Requires, only the scalar corresponding to matlindex = 0 is
   //           required. For multiple scalars this will be put in a loop
   // assuming scalar dissipation is computed before turbulent viscosity calculation
   Ghost::GhostType  gac = Ghost::AroundCells;
-   
+
   tsk->requires(Task::NewDW,   d_lab->d_scalarSPLabel,        gac, 1);
   if (d_dynScalarModel)
     tsk->requires(Task::NewDW, d_lab->d_scalarDiffusivityLabel,gac, 1);
@@ -3062,7 +3056,7 @@ CompLocalDynamicProcedure::sched_computeScalarDissipation(SchedulerP& sched,
 }
 
 //______________________________________________________________________
-void 
+void
 CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
                                                     const PatchSubset* patches,
                                                     const MaterialSubset*,
@@ -3073,17 +3067,17 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constCCVariable<double> viscosity;
     constCCVariable<double> scalar;
     constCCVariable<int> cellType;
     CCVariable<double> scalarDiss;  // dissipation..chi
-    
+
     Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->get(scalar, d_lab->d_scalarSPLabel, indx, patch, gac, 1);
     new_dw->get(cellType, d_lab->d_cellTypeLabel, indx, patch,gac, 1);
-    
+
     if (d_dynScalarModel){
       new_dw->get(viscosity, d_lab->d_scalarDiffusivityLabel, indx, patch, gac, 1);
     }else{
@@ -3097,12 +3091,12 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     }
     scalarDiss.initialize(0.0);
 
-    
+
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
+
     // compatible with fortran index
     IntVector idxLo = patch->getFortranCellLowIndex();
     IntVector idxHi = patch->getFortranCellHighIndex();
@@ -3127,12 +3121,12 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
           double dfdz = (scalt-scalb)/cellinfo->stb[colZ];
           scalarDiss[currCell] = viscosity[currCell]*
                                 (dfdx*dfdx + dfdy*dfdy + dfdz*dfdz)/
-                                d_turbPrNo; 
+                                d_turbPrNo;
         }
       }
     }
 
-    
+
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
     bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -3214,6 +3208,6 @@ CompLocalDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
         }
       }
     }
-    
+
   }
 }

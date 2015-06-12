@@ -57,7 +57,7 @@ using namespace Uintah;
 PCTProps::PCTProps( ArchesLabel* labels, const MPMArchesLabel* MAlabels ) :
   MixingRxnModel( labels, MAlabels )
 {
-  _boundary_condition = scinew BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
+  _boundary_condition = new BoundaryCondition_new( labels->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
 }
 
 //--------------------------------------------------------------------------- 
@@ -98,7 +98,7 @@ PCTProps::sched_getState( const LevelP& level,
   string taskname = "PCTProps::getState"; 
   Ghost::GhostType  gn = Ghost::None;
 
-  Task* tsk = scinew Task(taskname, this, &PCTProps::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
+  Task* tsk = new Task(taskname, this, &PCTProps::getState, time_labels, initialize_me, with_energy_exch, modify_ref_den );
 
   // dependent variables
   if ( initialize_me ) {

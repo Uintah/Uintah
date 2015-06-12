@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -38,7 +38,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -217,7 +217,7 @@ void ViscoTransIsoHyper::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ViscoTransIsoHyper* ViscoTransIsoHyper::clone()
 {
-  return scinew ViscoTransIsoHyper(*this);
+  return new ViscoTransIsoHyper(*this);
 }
 
 void ViscoTransIsoHyper::initializeCMData(const Patch* patch,
@@ -917,7 +917,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "ViscoTransIsoHyper::StateData", true, &makeMPI_CMData);
     }
     return td;

@@ -33,7 +33,7 @@
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include <fstream>
 #include <iostream>
@@ -65,13 +65,13 @@ ScalarDiffusionModel* ScalarDiffusionModelFactory::create(ProblemSpecP& ps,
   }
 
   if (diffusion_type == "linear")
-    return(scinew ScalarDiffusionModel(child, ss, flags, diffusion_type));
+    return(new ScalarDiffusionModel(child, ss, flags, diffusion_type));
   if (diffusion_type == "jg")
-    return(scinew JGConcentrationDiffusion(child, ss, flags, diffusion_type));
+    return(new JGConcentrationDiffusion(child, ss, flags, diffusion_type));
   else if (diffusion_type == "rf1")
-    return(scinew RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
+    return(new RFConcDiffusion1MPM(child, ss, flags, diffusion_type));
   else if (diffusion_type == "gao_diffusion")
-    return(scinew GaoDiffusion(child, ss, flags, diffusion_type));
+    return(new GaoDiffusion(child, ss, flags, diffusion_type));
 
   else
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diffusion_type+")", __FILE__, __LINE__);

@@ -25,7 +25,7 @@
 #include <Core/Grid/axiCptiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 
@@ -51,7 +51,7 @@ axiCptiInterpolator::~axiCptiInterpolator()
 
 axiCptiInterpolator* axiCptiInterpolator::clone(const Patch* patch)
 {
-  return scinew axiCptiInterpolator(patch);
+  return new axiCptiInterpolator(patch);
 }
     
 void axiCptiInterpolator::findCellAndWeights(const Point& pos,

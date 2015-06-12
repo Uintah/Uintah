@@ -103,7 +103,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("MomentumSolver");
 
-  d_discretize = scinew Discretization(d_physicalConsts);
+  d_discretize = new Discretization(d_physicalConsts);
 
   string conv_scheme;
   d_central = false;
@@ -133,31 +133,31 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 
     if ( _init_type == "constant" ){ 
   
-      _init_function = scinew ConstantVel(); 
+      _init_function = new ConstantVel(); 
 
     } else if ( _init_type == "taylor-green" ){ 
     
-      _init_function = scinew TaylorGreen3D(); 
+      _init_function = new TaylorGreen3D(); 
 
     } else if ( _init_type == "almgren" ){ 
 
-      _init_function = scinew AlmgrenVel(); 
+      _init_function = new AlmgrenVel(); 
 
     } else if ( _init_type == "exponentialvortex" ){ 
     
-     _init_function = scinew ExponentialVortex(); 
+     _init_function = new ExponentialVortex(); 
 
     } else if ( _init_type == "StABL" ){ 
 
-      _init_function = scinew StABLVel(); 
+      _init_function = new StABLVel(); 
 
     } else if ( _init_type == "input"){
 
-      _init_function = scinew InputfileInit(); 
+      _init_function = new InputfileInit(); 
 
     } else if ( _init_type == "shunn_moin" ){ 
 
-      _init_function = scinew ShunnMoin(); 
+      _init_function = new ShunnMoin(); 
     
     } else { 
 
@@ -171,7 +171,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
   
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 
-  d_source = scinew Source(d_physicalConsts);
+  d_source = new Source(d_physicalConsts);
   
   // New Source terms (ala the new transport eqn):
   if (db->findBlock("src")){
@@ -199,7 +199,7 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  d_rhsSolver = scinew RHSSolver();
+  d_rhsSolver = new RHSSolver();
   d_mixedModel=d_turbModel->getMixedModel();
 }
 
@@ -256,7 +256,7 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
     taskname += "extraProjection";
   }
 
-  Task* tsk = scinew Task(taskname,
+  Task* tsk = new Task(taskname,
                           this, &MomentumSolver::buildLinearMatrix,
                           timelabels, extraProjection);
 
@@ -445,7 +445,7 @@ MomentumSolver::sched_buildLinearMatrixVelHat(SchedulerP& sched,
 {
   string taskname =  "MomentumSolver::BuildCoeffVelHat" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, 
+  Task* tsk = new Task(taskname, 
                           this, &MomentumSolver::buildLinearMatrixVelHat,
                           timelabels);
 
@@ -950,7 +950,7 @@ MomentumSolver::sched_averageRKHatVelocities(SchedulerP& sched,
 {
   string taskname =  "MomentumSolver::averageRKHatVelocities" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &MomentumSolver::averageRKHatVelocities,
                           timelabels);
   
@@ -1099,7 +1099,7 @@ MomentumSolver::sched_computeMomentum( const LevelP& level,
                                          const bool isInitialization )
 { 
 
-  Task* tsk = scinew Task( "MomentumSolver::computeMomentum", this,
+  Task* tsk = new Task( "MomentumSolver::computeMomentum", this,
                             &MomentumSolver::computeMomentum, timesubstep, isInitialization );
 
   Task::WhichDW which_dw; 

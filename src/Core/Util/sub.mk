@@ -33,7 +33,6 @@ SRCS += \
         $(SRCDIR)/DebugStream.cc            \
         $(SRCDIR)/DynamicLoader.cc          \
         $(SRCDIR)/Endian.cc                 \
-        $(SRCDIR)/Environment.cc            \
         $(SRCDIR)/FileUtils.cc              \
         $(SRCDIR)/ProgressiveWarning.cc     \
         $(SRCDIR)/ProgressReporter.cc       \

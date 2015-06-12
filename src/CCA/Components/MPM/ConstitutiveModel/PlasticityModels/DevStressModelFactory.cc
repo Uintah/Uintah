@@ -25,7 +25,7 @@
 #include "HypoViscoElasticDevStress.h" 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <string>
 
  using namespace std;
@@ -43,16 +43,16 @@ DevStressModel* DevStressModelFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type specified for DeviatoricStress", __FILE__, __LINE__);
     }
     if (type == "hypoElastic"){
-      return( scinew HypoElasticDevStress() );
+      return( new HypoElasticDevStress() );
 
     } else if (type == "hypoViscoElastic"){
-      return( scinew HypoViscoElasticDevStress(dsm_ps) );
+      return( new HypoViscoElasticDevStress(dsm_ps) );
 
     } else {
       throw ProblemSetupException("Unknown DeviatoricStress type ("+type+")", __FILE__, __LINE__);
     }
   } else{
-    return( scinew HypoElasticDevStress() );  // DEFAULT  Deviatoric Stress Model
+    return( new HypoElasticDevStress() );  // DEFAULT  Deviatoric Stress Model
   }
 }
 

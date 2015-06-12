@@ -29,7 +29,7 @@
 //#define SUPERBOX_DEBUGGING
 //#define SUPERBOX_PERFORMANCE_TESTING
 
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Exceptions/InternalError.h>
 
 #include <sci_hash_map.h>
@@ -708,7 +708,7 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap& box
   */
 #endif
   if (activeBoxes.size() == 0)
-    return scinew SBS();
+    return new SBS();
 
   SB            * pick = 0;
   std::vector< SB* >   keepers;
@@ -850,11 +850,11 @@ findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, typename SBS::BoxHashMap&
 #endif
 
   if (activeBoxes.size() == 0)
-    return scinew SBS();
+    return new SBS();
 
   SB* pick = 0;
   std::vector<SB*> keepers;
-  SBS* result = scinew SBS();
+  SBS* result = new SBS();
 
   do {
     // pick the highest valued SuperBox
@@ -1003,9 +1003,9 @@ makeCompositeBox(typename SBS::BoxHashMap& boxMap, BoxPIterator begin, BoxPItera
   // SuperBox<>.  The orginal 'return' statement is left here for now
   // for comparison.
   //
-  //  return scinew CB(basicBoxes, Region(low, high), totalVolume);
+  //  return new CB(basicBoxes, Region(low, high), totalVolume);
   //
-  return scinew CB(basicBoxes, SuperBox<BoxP, Point, Volume, Value, Evaluator>::Region(low, high), totalVolume);
+  return new CB(basicBoxes, SuperBox<BoxP, Point, Volume, Value, Evaluator>::Region(low, high), totalVolume);
 }
 
 
@@ -1387,7 +1387,7 @@ makeSmallestContainingSuperBox(RangeQuerier& rangeQuerier,
   if (totalVolume == enclosedVolume) {
     basicBoxes = getBasicBoxes(boxMap);
     basicBoxes.push_back(neighbor);
-    return scinew CB(basicBoxes, Region(low, high), totalVolume);
+    return new CB(basicBoxes, Region(low, high), totalVolume);
   }
 
   unsigned long prevNumBoxes = 2;
@@ -1422,7 +1422,7 @@ makeSmallestContainingSuperBox(RangeQuerier& rangeQuerier,
   } while (totalVolume != enclosedVolume);
 
   // totalVolume == enclosedVolume so a new superbox was found
-  return scinew CB(basicBoxes, Region(low, high), totalVolume);
+  return new CB(basicBoxes, Region(low, high), totalVolume);
 }
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
@@ -1518,7 +1518,7 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   int i = 0;
   for (BoxIterator it = begin; it != end; it++, i++) {
     BoxP box = *it;
-    BB* basicBox = scinew BB(box);
+    BB* basicBox = new BB(box);
     boxMap[box] = basicBox;
     basicBoxes[i] = basicBox;
   }
@@ -1564,11 +1564,11 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   // Copy the other SuperBoxes to a new SuperBoxSet.  These new SuperBoxes
   // will be simple SuperBoxes without the extraneous garbage of BasicBox
   // and CompositeBox.
-  SuperBoxSet* result = scinew SuperBoxSet();
+  SuperBoxSet* result = new SuperBoxSet();
   typename SuperBoxContainer::const_iterator const_iter;
   for (const_iter = superBoxSet->getSuperBoxes().begin();
        const_iter != superBoxSet->getSuperBoxes().end(); const_iter++) {
-    result->addSuperBox(scinew SB(**const_iter));
+    result->addSuperBox(new SB(**const_iter));
   }
 
   // Take ownership of these super boxes so they will be deleted when the

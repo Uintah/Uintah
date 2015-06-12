@@ -141,7 +141,7 @@ void
 WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "WestbrookDryer::eval";
-  Task* tsk = scinew Task(taskname, this, &WestbrookDryer::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &WestbrookDryer::computeSource, timeSubStep);
 
   _temperatureLabel   = VarLabel::find( d_T_label );
   _denLabel           = VarLabel::find( d_rho_label );
@@ -406,7 +406,7 @@ WestbrookDryer::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "WestbrookDryer::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &WestbrookDryer::initialize);
+  Task* tsk = new Task(taskname, this, &WestbrookDryer::initialize);
 
   tsk->computes(_src_label);
 

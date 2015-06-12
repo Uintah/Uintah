@@ -28,7 +28,7 @@
 #include <Core/Grid/BoundaryConditions/BoundCondFactory.h>
 #include <Core/Grid/Variables/DifferenceIterator.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <set>
 #include <iostream>
@@ -96,7 +96,7 @@ bool DifferenceBCData::operator==(const BCGeomBase& rhs) const
 
 DifferenceBCData* DifferenceBCData::clone()
 {
-  return scinew DifferenceBCData(*this);
+  return new DifferenceBCData(*this);
 }
 
 void DifferenceBCData::addBCData(BCData& bc)

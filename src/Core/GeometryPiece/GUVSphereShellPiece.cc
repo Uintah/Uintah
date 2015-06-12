@@ -29,7 +29,7 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include <iostream>
 #include <cmath>
@@ -97,7 +97,7 @@ GUVSphereShellPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 GUVSphereShellPiece::clone() const
 {
-  return scinew GUVSphereShellPiece(*this);
+  return new GUVSphereShellPiece(*this);
 }
 
 bool 

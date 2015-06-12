@@ -196,7 +196,7 @@ void NodalSVFContact::addComputesAndRequiresInterpolated(
 
 void NodalSVFContact::addComputesAndRequiresIntegrated(
                            SchedulerP & sched, const PatchSet* patches, const MaterialSet* ms) {
-  Task * t = scinew Task("NodalSVFContact::exMomIntegrated", this, &NodalSVFContact::exMomIntegrated);
+  Task * t = new Task("NodalSVFContact::exMomIntegrated", this, &NodalSVFContact::exMomIntegrated);
   
   const MaterialSubset* mss = ms->getUnion();
   t->requires(Task::OldDW, lb->delTLabel);    

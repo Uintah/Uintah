@@ -58,7 +58,7 @@ namespace Uintah{
   {
 
     // this task will allocate a particle subset and create particle positions
-    Uintah::Task* task = scinew Uintah::Task("initialize particles",
+    Uintah::Task* task = new Uintah::Task("initialize particles",
                                              this, &ArchesParticlesHelper::initialize);
     task->computes(pPosLabel_);
     task->computes(pIDLabel_);
@@ -157,7 +157,7 @@ namespace Uintah{
         lastPIDPerPatch.insert( std::pair<int, long64>(patchID, 0 ) );
         
         // create an empty delete set
-        thisMatDelSet.insert( std::pair<int, ParticleSubset*>(patch->getID(), scinew ParticleSubset(0,matl,patch)));
+        thisMatDelSet.insert( std::pair<int, ParticleSubset*>(patch->getID(), new ParticleSubset(0,matl,patch)));
         
         // If the particle position initialization is bounded, make sure that the bounds are within
         // this patch. If the bounds are NOT, then set the number of particles on this patch to 0.

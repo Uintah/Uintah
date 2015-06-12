@@ -74,7 +74,7 @@ public:
     Builder( std::string name, SimulationStateP& shared_state ) : _name(name), _shared_state(shared_state) {};
     ~Builder(){}; 
 
-    HeatLoss* build() { return scinew HeatLoss( _name, _shared_state ); };
+    HeatLoss* build() { return new HeatLoss( _name, _shared_state ); };
 
   private: 
 

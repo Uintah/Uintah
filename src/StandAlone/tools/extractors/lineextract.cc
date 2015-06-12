@@ -227,27 +227,27 @@ printData(       DataArchive             * archive,
           if (patches[p]->isVirtual()) continue;
           switch (variable_type->getType()) {
           case Uintah::TypeDescription::CCVariable:
-            vars[p] = scinew CCVariable<T>;
+            vars[p] = new CCVariable<T>;
             archive->query( *(CCVariable<T>*)vars[p], variable_name, 
                             material, patches[p], time_step);
             break;
           case Uintah::TypeDescription::NCVariable:
-            vars[p] = scinew NCVariable<T>;
+            vars[p] = new NCVariable<T>;
             archive->query( *(NCVariable<T>*)vars[p], variable_name, 
                             material, patches[p], time_step);
             break;
           case Uintah::TypeDescription::SFCXVariable:
-            vars[p] = scinew SFCXVariable<T>;
+            vars[p] = new SFCXVariable<T>;
             archive->query( *(SFCXVariable<T>*)vars[p], variable_name, 
                             material, patches[p], time_step);
             break;
           case Uintah::TypeDescription::SFCYVariable:
-            vars[p] = scinew SFCYVariable<T>;
+            vars[p] = new SFCYVariable<T>;
             archive->query( *(SFCYVariable<T>*)vars[p], variable_name, 
                             material, patches[p], time_step);
             break;
           case Uintah::TypeDescription::SFCZVariable:
-            vars[p] = scinew SFCZVariable<T>;
+            vars[p] = new SFCZVariable<T>;
             archive->query( *(SFCZVariable<T>*)vars[p], variable_name, 
                             material, patches[p], time_step);
             break;
@@ -507,13 +507,13 @@ printData_PV(       DataArchive             * archive,
       vector<Variable*> vars(patches.size());
       vector<Variable*> ave(patches.size());
       for (int p = 0; p < patches.size(); p++) {
-        vars[p] = scinew ParticleVariable<T>;
-        ave[p]  = scinew CCVariable<T>;
+        vars[p] = new ParticleVariable<T>;
+        ave[p]  = new CCVariable<T>;
 
         archive->query( *(ParticleVariable<T>*)vars[p], variable_name, 
                         material, patches[p], time_step);
         Variable* pos;
-        pos = scinew ParticleVariable<Point>;    
+        pos = new ParticleVariable<Point>;    
 
         archive->query( *(ParticleVariable<Point>*)pos, "p.x", material, patches[p], time_step);
 
@@ -776,7 +776,7 @@ main( int argc, char** argv )
 #endif
 
   try {
-    DataArchive* archive = scinew DataArchive(input_uda_name);
+    DataArchive* archive = new DataArchive(input_uda_name);
     
     vector<string> vars;
     vector<const Uintah::TypeDescription*> types;

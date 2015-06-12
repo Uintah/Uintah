@@ -209,7 +209,7 @@ const TypeDescription* get_type_description(Vector*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("Vector", Vector::get_h_file_path(), "SCIRun", 
+    td = new TypeDescription("Vector", Vector::get_h_file_path(), "SCIRun", 
 				TypeDescription::DATA_E);
   }
   return td;

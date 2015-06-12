@@ -41,14 +41,14 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
+
 
 using namespace Uintah;
 
 SolverTest1::SolverTest1(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
-  lb_ = scinew ExamplesLabel();
+  lb_ = new ExamplesLabel();
 }
 //__________________________________
 //
@@ -93,7 +93,7 @@ void SolverTest1::problemSetup(const ProblemSpecP& prob_spec,
   if (!x_laplacian && !y_laplacian && !z_laplacian)
     throw ProblemSetupException("SolverTest: Must specify one of X_Laplacian, Y_Laplacian, or Z_Laplacian",
                                 __FILE__, __LINE__);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
 //__________________________________
@@ -114,7 +114,7 @@ void SolverTest1::scheduleRestartInitialize(const LevelP& level,
 void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",this, 
+  Task* task = new Task("computeStableTimestep",this, 
                            &SolverTest1::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -124,7 +124,7 @@ void SolverTest1::scheduleComputeStableTimestep(const LevelP& level,
 void
 SolverTest1::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("timeAdvance",
+  Task* task = new Task("timeAdvance",
                            this, &SolverTest1::timeAdvance,
                            level, sched.get_rep());
   task->computes(lb_->pressure_matrix);

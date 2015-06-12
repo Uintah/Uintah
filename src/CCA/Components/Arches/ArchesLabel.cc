@@ -59,7 +59,7 @@ ArchesLabel::ArchesLabel()
 
   // Seven point stencil
   int numberStencilComponents = 7;
-  d_stencilMatl = scinew MaterialSubset();
+  d_stencilMatl = new MaterialSubset();
   for (int i = 0; i < numberStencilComponents; i++){
     d_stencilMatl->add(i);
   }
@@ -67,7 +67,7 @@ ArchesLabel::ArchesLabel()
 
   // Vector (1 order tensor)
   int numberVectorComponents = 3;
-  d_vectorMatl = scinew MaterialSubset();
+  d_vectorMatl = new MaterialSubset();
   for (int i = 0; i < numberVectorComponents; i++){
     d_vectorMatl->add(i);
   }
@@ -75,7 +75,7 @@ ArchesLabel::ArchesLabel()
 
   // Second order tensor
   int numberTensorComponents = 9;
-  d_tensorMatl = scinew MaterialSubset();
+  d_tensorMatl = new MaterialSubset();
   for (int i = 0; i < numberTensorComponents; i++){
     d_tensorMatl->add(i);
   }
@@ -83,7 +83,7 @@ ArchesLabel::ArchesLabel()
 
   // Second order symmetric tensor
   int numberSymTensorComponents = 6;
-  d_symTensorMatl = scinew MaterialSubset();
+  d_symTensorMatl = new MaterialSubset();
   for (int i = 0; i < numberSymTensorComponents; i++){
     d_symTensorMatl->add(i);
   }

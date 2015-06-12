@@ -238,7 +238,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   for (int m = 0; m< numMatls; m++){
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
-  Task* t = scinew Task("Relocate::relocateParticles",
+  Task* t = new Task("Relocate::relocateParticles",
                         this, &Relocate::relocateParticlesModifies, coarsestLevelwithParticles.get_rep());
   if(lb){
     t->usesMPI(true);
@@ -247,7 +247,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   //t->modifies( reloc_old_posLabel );
   
   for(int m=0;m < numMatls;m++){
-    MaterialSubset* thismatl = scinew MaterialSubset();
+    MaterialSubset* thismatl = new MaterialSubset();
     thismatl->add(matlsub->get(m));
     
     for(int i=0;i<(int)reloc_old_labels[m].size();i++){
@@ -268,7 +268,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }else {
     GridP grid = coarsestLevelwithParticles->getGrid();
     // make per-proc patch set of each level >= level
-    patches = scinew PatchSet();
+    patches = new PatchSet();
     patches->createEmptySubsets(pg->size());
     
     for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
@@ -334,7 +334,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   for (int m = 0; m< numMatls; m++){
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
   }
-  Task* t = scinew Task("Relocate::relocateParticles",
+  Task* t = new Task("Relocate::relocateParticles",
                   this, &Relocate::relocateParticles, coarsestLevelwithParticles.get_rep());
   if(lb){
     t->usesMPI(true);
@@ -342,7 +342,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   t->requires( Task::NewDW, old_posLabel, Ghost::None);
   
   for(int m=0;m < numMatls;m++){
-    MaterialSubset* thismatl = scinew MaterialSubset();
+    MaterialSubset* thismatl = new MaterialSubset();
     thismatl->add(matlsub->get(m));
     
     for(int i=0;i<(int)old_labels[m].size();i++){
@@ -362,7 +362,7 @@ Relocate::scheduleParticleRelocation(Scheduler* sched,
   }else {
     GridP grid = coarsestLevelwithParticles->getGrid();
     // make per-proc patch set of each level >= level
-    patches = scinew PatchSet();
+    patches = new PatchSet();
     patches->createEmptySubsets(pg->size());
    
     for (int i = coarsestLevelwithParticles->getIndex(); i < grid->numLevels(); i++) {
@@ -392,7 +392,7 @@ void MPIScatterRecords::saveRecv(const Patch* to, int matl,
 {
   recvmaptype::key_type key(to, matl);
   recvmaptype::iterator iter = recvs.find(key);
-  MPIRecvBuffer* record = scinew MPIRecvBuffer(databuf, datasize, numParticles);
+  MPIRecvBuffer* record = new MPIRecvBuffer(databuf, datasize, numParticles);
   
   if(iter == recvs.end()){
     recvs[key]=record;
@@ -442,8 +442,8 @@ ScatterRecord* MPIScatterRecords::findOrInsertRecord(const Patch* fromPatch,
   //__________________________________
   //  Create a new record and insert it into
   //  all records
-  ScatterRecord* rec = scinew ScatterRecord(fromPatch, toPatch, matl, curLevelIndex);
-  rec->send_pset = scinew ParticleSubset(0, -1, 0);
+  ScatterRecord* rec = new ScatterRecord(fromPatch, toPatch, matl, curLevelIndex);
+  rec->send_pset = new ParticleSubset(0, -1, 0);
   records.insert(maptype::value_type(make_pair(realToPatch, matl), rec));
   return rec;
 }
@@ -505,7 +505,7 @@ void MPIScatterRecords::addNeighbor(LoadBalancer* lb,
   procmaptype::iterator iter = procs.find(toProc);
   
   if(iter == procs.end()){
-    MPIScatterProcessorRecord* pr = scinew MPIScatterProcessorRecord();
+    MPIScatterProcessorRecord* pr = new MPIScatterProcessorRecord();
     procs[toProc]=pr;
     pr->patches.push_back(neighbor);
   } else {
@@ -623,7 +623,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     
     
     // Create the buffer for this message
-    char* buf = scinew char[sendsize];
+    char* buf = new char[sendsize];
     int position=0;
 
     // And go through it again to pack the message
@@ -671,7 +671,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
             // MPI mis-esimated the size of the message.  For some
             // reason, mpich does this all the time.  We must pad...
             int diff=datasize-size;
-            char* junk = scinew char[diff];
+            char* junk = new char[diff];
             MPI_Pack(junk, diff, MPI_CHAR, buf, sendsize, &position, pg->getComm());
             
             ASSERTEQ(position, start+datasize);
@@ -719,7 +719,7 @@ Relocate::exchangeParticles(const ProcessorGroup* pg,
     MPI_Get_count(&status, MPI_PACKED, &size);
     ASSERT(size != 0);
     
-    char* buf = scinew char[size];
+    char* buf = new char[size];
     recvbuffers[idx]=buf;
     mpidbg << pg->myrank() << " Recv relocate msg size " << size << " tag " << RELOCATE_TAG << " from " << iter->first << endl;
     MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first, RELOCATE_TAG, pg->getComm(), &status);
@@ -960,7 +960,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
         constParticleVariable<Point> px;
         new_dw->get(px, reloc_old_posLabel, pset);
         
-        ParticleSubset* keep_pset    = scinew ParticleSubset(0, -1, 0);
+        ParticleSubset* keep_pset    = new ParticleSubset(0, -1, 0);
         ParticleSubset* delete_pset  = new_dw->getDeleteSubset(matl, patch);
         
         keep_pset->expand(numParticles);
@@ -1243,7 +1243,7 @@ Relocate::relocateParticlesModifies(const ProcessorGroup* pg,
           particleIndex idx = totalParticles-numRemote;
           for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
             int position=0;
-            ParticleSubset* unpackset = scinew ParticleSubset(0, matl, toPatch);
+            ParticleSubset* unpackset = new ParticleSubset(0, matl, toPatch);
             unpackset->resize(buf->numParticles);
             
             for(int p=0;p<buf->numParticles;p++,idx++){
@@ -1404,7 +1404,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
         constParticleVariable<Point> px;
         new_dw->get(px, reloc_old_posLabel, pset);
 
-        ParticleSubset* keep_pset    = scinew ParticleSubset(0, -1, 0);
+        ParticleSubset* keep_pset    = new ParticleSubset(0, -1, 0);
         ParticleSubset* delete_pset  = new_dw->getDeleteSubset(matl, patch);
 
         keep_pset->expand(numParticles);
@@ -1707,7 +1707,7 @@ Relocate::relocateParticles(const ProcessorGroup* pg,
           particleIndex idx = totalParticles-numRemote;
           for(MPIRecvBuffer* buf=recvs;buf!=0;buf=buf->next){
             int position=0;
-            ParticleSubset* unpackset = scinew ParticleSubset(0, matl, toPatch);
+            ParticleSubset* unpackset = new ParticleSubset(0, matl, toPatch);
             unpackset->resize(buf->numParticles);
             
             for(int p=0;p<buf->numParticles;p++,idx++){

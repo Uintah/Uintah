@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
@@ -141,7 +141,7 @@ void
 BufferInfo::addSendlist( RefCounted* obj )
 {
   obj->addReference();
-  d_sendlist = scinew Sendlist( d_sendlist, obj );
+  d_sendlist = new Sendlist( d_sendlist, obj );
 }
 
 Sendlist*

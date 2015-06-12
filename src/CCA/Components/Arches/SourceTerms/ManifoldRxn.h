@@ -50,7 +50,7 @@ public:
       ~Builder(){}; 
 
       ManifoldRxn* build()
-      { return scinew ManifoldRxn( _name, _shared_state, _required_label_names, _type ); };
+      { return new ManifoldRxn( _name, _shared_state, _required_label_names, _type ); };
 
     private: 
 

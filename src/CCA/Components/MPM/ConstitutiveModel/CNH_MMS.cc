@@ -1,5 +1,5 @@
 #include <CCA/Components/MPM/ConstitutiveModel/CNH_MMS.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -15,7 +15,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -57,7 +57,7 @@ void CNH_MMS::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CNH_MMS* CNH_MMS::clone()
 {
-  return scinew CNH_MMS(*this);
+  return new CNH_MMS(*this);
 }
 
 void CNH_MMS::initializeCMData(const Patch* patch,

@@ -24,7 +24,7 @@
 
 
 #include <Core/Parallel/UintahParallelComponent.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <algorithm>
 
 using namespace Uintah;
@@ -50,7 +50,7 @@ UintahParallelComponent::attachPort(const string& name,
 {
     map<string, PortRecord*>::iterator iter = portmap.find(name);
     if(iter == portmap.end()){
-	portmap[name]=scinew PortRecord(port);
+	portmap[name]=new PortRecord(port);
     } else {
 	iter->second->connections.push_back(port);
     }

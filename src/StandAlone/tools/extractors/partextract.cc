@@ -181,7 +181,7 @@ main( int argc, char** argv )
   }
 
   try {
-    DataArchive* da = scinew DataArchive(filebase);
+    DataArchive* da = new DataArchive(filebase);
     
     // Get the particle stresses
     if (do_part_stress) {

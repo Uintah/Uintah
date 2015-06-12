@@ -52,7 +52,7 @@
 #include <Core/Math/SymmMatrix3.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <cmath>
 #include <iostream>
@@ -160,7 +160,7 @@ void CamClay::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CamClay* CamClay::clone()
 {
-  return scinew CamClay(*this);
+  return new CamClay(*this);
 }
 
 
@@ -511,7 +511,7 @@ CamClay::computeStressTensor(const PatchSubset* patches,
       double strain_elast_s_tr = sqrtTwoThird*strain_elast_devtr_norm;
 
       // Set up the ModelState (for t_n)
-      UintahBB::ModelState* state = scinew UintahBB::ModelState();
+      UintahBB::ModelState* state = new UintahBB::ModelState();
       state->density             = rho_cur;
       state->initialDensity      = rho_0;
       state->volume              = pVol_new[idx];

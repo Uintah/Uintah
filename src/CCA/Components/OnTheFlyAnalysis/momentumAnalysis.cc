@@ -79,12 +79,12 @@ momentumAnalysis::momentumAnalysis(ProblemSpecP& module_spec,
   d_matlIndx     = -9;
   d_pressIndx    = 0;              // For ICE/MPMICE it's always 0.
   
-  d_pressMatl = scinew MaterialSubset();
+  d_pressMatl = new MaterialSubset();
   d_pressMatl->add(0);
   d_pressMatl->addReference();
   
 
-  labels = scinew MA_Labels();
+  labels = new MA_Labels();
 
   labels->lastCompTime       = VarLabel::create( "lastCompTime",      max_vartype::getTypeDescription() );
   labels->fileVarsStruct     = VarLabel::create( "FileInfo_MA",       PerPatch<FileInfoP>::getTypeDescription() );
@@ -146,17 +146,17 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
   d_prob_spec->require( "timeStart",         d_StartTime );
   d_prob_spec->require( "timeStop",          d_StopTime );
 
-  d_zeroMatl = scinew MaterialSubset();
+  d_zeroMatl = new MaterialSubset();
   d_zeroMatl->add(0);
   d_zeroMatl->addReference();
 
-  d_zeroMatlSet = scinew MaterialSet();
+  d_zeroMatlSet = new MaterialSet();
   d_zeroMatlSet->add(0);
   d_zeroMatlSet->addReference();
 
   // one patch
   const Patch* p = grid->getPatchByID(0,0);
-  d_zeroPatch = scinew PatchSet();
+  d_zeroPatch = new PatchSet();
   d_zeroPatch->add(p);
   d_zeroPatch->addReference();
 
@@ -188,7 +188,7 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
   it = unique(m.begin(), m.end());
   m.erase(it, m.end());
   
-  d_matl_set = scinew MaterialSet();
+  d_matl_set = new MaterialSet();
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
@@ -244,7 +244,7 @@ void momentumAnalysis::problemSetup(const ProblemSpecP&,
     }
 
     // put the input variables into the global struct
-    cv_face* cvFace    = scinew cv_face;
+    cv_face* cvFace    = new cv_face;
     cvFace->p_dir      = p_dir;
     cvFace->normalDir  = norm;
     cvFace->face       = type;
@@ -262,7 +262,7 @@ void momentumAnalysis::scheduleInitialize( SchedulerP& sched,
 {
   printSchedule(level,cout_doing,"momentumAnalysis::scheduleInitialize");
 
-  Task* t = scinew Task("momentumAnalysis::initialize",
+  Task* t = new Task("momentumAnalysis::initialize",
                   this, &momentumAnalysis::initialize);
 
   t->computes( labels->lastCompTime );
@@ -289,7 +289,7 @@ void momentumAnalysis::initialize( const ProcessorGroup*,
     //__________________________________
     //  initialize fileInfo struct
     PerPatch<FileInfoP> fileInfo;
-    FileInfo* myFileInfo = scinew FileInfo();
+    FileInfo* myFileInfo = new FileInfo();
     fileInfo.get() = myFileInfo;
 
     new_dw->put(fileInfo,    labels->fileVarsStruct, 0, patch);
@@ -329,12 +329,12 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
   //  compute the total momentum and fluxes
   printSchedule( level,cout_doing,"momentumAnalysis::scheduleDoAnalysis" );
 
-  Task* t0 = scinew Task( "momentumAnalysis::integrateMomentumField",
+  Task* t0 = new Task( "momentumAnalysis::integrateMomentumField",
                      this,&momentumAnalysis::integrateMomentumField );
 
   Ghost::GhostType  gn  = Ghost::None;
 
-  MaterialSubset* matl_SS = scinew MaterialSubset();
+  MaterialSubset* matl_SS = new MaterialSubset();
   matl_SS->add( d_matlIndx );
   matl_SS->addReference();
 
@@ -365,7 +365,7 @@ void momentumAnalysis::scheduleDoAnalysis(SchedulerP& sched,
 
   //__________________________________
   //  Task that outputs the contributions
-  Task* t1 = scinew Task("momentumAnalysis::doAnalysis",
+  Task* t1 = new Task("momentumAnalysis::doAnalysis",
                     this,&momentumAnalysis::doAnalysis );
 
   t1->requires( Task::OldDW, labels->lastCompTime );
@@ -416,7 +416,7 @@ void momentumAnalysis::integrateMomentumField(const ProcessorGroup* pg,
 
     Vector totalCVMomentum = Vector(0.,0.,0.);
 
-    faceQuantities* faceQ = scinew faceQuantities;
+    faceQuantities* faceQ = new faceQuantities;
 
     initializeVars( faceQ );
 
@@ -588,7 +588,7 @@ void momentumAnalysis::doAnalysis(const ProcessorGroup* pg,
       if( old_dw->exists( labels->fileVarsStruct, 0, patch ) ){
         old_dw->get(fileInfo, labels->fileVarsStruct, 0, patch);
       }else{
-        FileInfo* myFileInfo = scinew FileInfo();
+        FileInfo* myFileInfo = new FileInfo();
         fileInfo.get() = myFileInfo;
       }
 

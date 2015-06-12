@@ -38,7 +38,7 @@
 #define SCI_Containers_AVLTree_h 1
 
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
+
 
 namespace SCIRun {
 
@@ -131,7 +131,7 @@ AVLTree<Key, Data>::~AVLTree()
 template <class Key, class Data>
 void AVLTree<Key, Data>::insert(const Key& key, const Data& data)
 {
-    TreeLink<Key, Data>* newnode=scinew TreeLink<Key, Data>(key, data);
+    TreeLink<Key, Data>* newnode=new TreeLink<Key, Data>(key, data);
     nitems++;
     newnode->left=newnode->right=newnode->parent=0;
     newnode->deleted=newnode->balance_factor=0;
@@ -502,7 +502,7 @@ template<class Key, class Data>
 void AVLTree<Key, Data>::cleanup()
 {
     if(!root)return;
-    TreeLink<Key, Data>** oldnodes=scinew TreeLink<Key, Data>*[nitems];
+    TreeLink<Key, Data>** oldnodes=new TreeLink<Key, Data>*[nitems];
     int idx=0;
     fillin_array(root, oldnodes, idx);
     int n=nitems;

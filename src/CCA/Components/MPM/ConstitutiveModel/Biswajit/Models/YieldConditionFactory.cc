@@ -28,7 +28,7 @@
 #include "YieldCond_CamClay.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <string>
 
 using namespace std;
@@ -46,11 +46,11 @@ YieldCondition* YieldConditionFactory::create(Uintah::ProblemSpecP& ps)
       throw ProblemSetupException("MPM::ConstitutiveModel:No type for yield condition.", __FILE__, __LINE__);
    
    if (mat_type == "vonMises")
-      return(scinew YieldCond_vonMises(child));
+      return(new YieldCond_vonMises(child));
    else if (mat_type == "gurson")
-      return(scinew YieldCond_Gurson(child));
+      return(new YieldCond_Gurson(child));
    else if (mat_type == "camclay_yield_function")
-      return(scinew YieldCond_CamClay(child));
+      return(new YieldCond_CamClay(child));
    else 
       throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Yield Condition ("+mat_type+")",
                                   __FILE__, __LINE__);
@@ -60,13 +60,13 @@ YieldCondition*
 YieldConditionFactory::createCopy(const YieldCondition* yc)
 {
    if (dynamic_cast<const YieldCond_vonMises*>(yc))
-      return(scinew YieldCond_vonMises(dynamic_cast<const YieldCond_vonMises*>(yc)));
+      return(new YieldCond_vonMises(dynamic_cast<const YieldCond_vonMises*>(yc)));
 
    else if (dynamic_cast<const YieldCond_Gurson*>(yc))
-      return(scinew YieldCond_Gurson(dynamic_cast<const YieldCond_Gurson*>(yc)));
+      return(new YieldCond_Gurson(dynamic_cast<const YieldCond_Gurson*>(yc)));
 
    else if (dynamic_cast<const YieldCond_CamClay*>(yc))
-      return(scinew YieldCond_CamClay(dynamic_cast<const YieldCond_CamClay*>(yc)));
+      return(new YieldCond_CamClay(dynamic_cast<const YieldCond_CamClay*>(yc)));
 
    else 
       throw ProblemSetupException("Cannot create copy of unknown yield condition", __FILE__, __LINE__);
