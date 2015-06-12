@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<Uintah_Include>
+  <flow_model type="johnson_cook">
+    <A>90.0e1</A>
+    <B>292.0e1</B>
+    <C>0.025</C>
+    <n>0.31</n>
+    <m>1.09</m>
+    <epdot_0>1.e-6</epdot_0>
+    <T_m>1356.0</T_m>
+  </flow_model>
+</Uintah_Include>

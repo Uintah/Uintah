@@ -1,0 +1,106 @@
+#!/bin/csh -f
+#______________________________________________________________________
+#  combinePlaneData:
+#   This script is used in conjunction with on-the-fly data analysis module
+#       <DataAnalysis>
+#           <Module name="planeExtract">
+#           </Module>
+#       </DataAnalysis>
+#
+#   The script glues together all data files in a given plane,level and timestep.  
+#   This script assumes that following directory structure exists:
+#
+#    XY_plane/
+#    |-- t00039                        < timestep
+#    |   |-- L-0                       < level
+#    |   |   |-- 33:press_CC_0.dat     < patch 33 data for press_CC (mat 0)
+#    |   |   |-- 34:press_CC_0.dat
+#    |   |   |-- 35:press_CC_0.dat
+#    |   |   |-- 36:press_CC_0.dat
+#    |   `-- L-1
+#    |       |-- 37:press_CC_0.dat
+#    |       |-- 38:press_CC_0.dat
+#    |       |-- 40:press_CC_0.dat
+#    |       |-- 41:press_CC_0.dat
+#    |-- t00040
+#    |   |-- L-0
+#    |   |   |-- 33:press_CC_0.dat
+#    |   |   |-- 34:press_CC_0.dat
+#    |   |   |-- 35:press_CC_0.dat
+#    |   |   |-- 36:press_CC_0.dat
+#    |   `-- L-1
+#    |       |-- 37:press_CC_0.dat
+#    |       |-- 38:press_CC_0.dat
+#    |       |-- 40:press_CC_0.dat
+#    |       |-- 41:press_CC_0.dat
+#    <snip>
+#
+#  Each file  has the format of 
+#
+#  # X      Y      Z      press_CC(0)
+#  4.062500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002026E+05
+#  4.187500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002026E+05
+#  4.312500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002026E+05
+#  4.437500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002027E+05
+#  4.562500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002027E+05
+#  4.687500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002026E+05
+#  4.812500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002026E+05
+#  4.937500000000000E-01    4.062500000000000E-01   2.500000000000000E-02      1.013250000002026E+05
+#  4.062500000000000E-01    4.187500000000000E-01   2.500000000000000E-02      1.013250000002026E+05
+
+#______________________________________________________________________
+
+# Loop over timesteps
+foreach T (t*)
+  cd $T
+  echo "Working on timestep $T"
+  
+  # Loop over Levels
+  foreach L (L-*)
+    cd $L
+    echo "        $L "
+    
+    
+    # Loop over variables
+    set labels = `find -type f -name "[0-9]*.dat" | cut -d: -f2 | sort -u`
+    
+    foreach X ( $labels[*]:q ) 
+      echo "            $X"
+
+
+      @ rc = 0       # keep track of the return codes from each command
+      
+      cat [0-9]*$X > All_$X
+      @ rc += $status
+      
+      # save file header
+      head -1 All_$X > header
+      @ rc += $status
+      
+      # remove the header lines
+      sed -i /\#/d All_$X
+      @ rc += $status
+      
+      # copy header line to All file
+      cat header > All_$X.clean
+      @ rc += $status
+
+      # sort the data by column 2 then column 1 then column 3
+      sort -k2,2g -k1,1g -k3,3g All_$X >> All_$X.clean
+      @ rc += $status
+
+      mv All_$X.clean All_$X
+      @ rc += $status
+      rm header
+      
+      if( $rc != 0 ) then
+        echo "ERROR there was a problem processing this variable"
+        echo " Now exiting"
+        exit(1)
+      endif
+
+    end
+    cd ..
+  end
+  cd ..
+end

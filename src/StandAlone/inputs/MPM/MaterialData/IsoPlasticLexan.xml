@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Lexan -->
+<Uintah_Include>
+  <flow_model type="isotropic_hardening">
+    <sigma_Y>0.10e9</sigma_Y>
+    <K>0.10e6</K>
+  </flow_model>
+</Uintah_Include>
+
