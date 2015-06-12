@@ -22,54 +22,68 @@
  * IN THE SOFTWARE.
  */
 
-//    File   : sci_algorithm.h
-//    Author : Wayne Witzel
-//    Date   : Jul 7 2002
-//
-// Some ports don't implement the std algorithms we use, so we
-// implement them here on our own.
 
-#ifndef SCI_INCLUDE_ALGORITHM
-#define SCI_INCLUDE_ALGORITHM
+#ifndef CORE_UTIL_THREADSAFEDEBUGSTREAM_H
+#define CORE_UTIL_THREADSAFEDEBUGSTREAM_H
 
-#include <sci_defs/uintah_defs.h>
-#include <algorithm>
+#include <cstdlib> // for getenv()
+#include <cstdio>  // for printf()
+#include <string>
+#include <sstream>
+#include <ostream>
+#include <iostream>
 
-#if (!defined(HAVE_CXX11)) && ( HAVE_EXT_ALGORITHM ) // forget about using extension library
+namespace Uintah {
 
-namespace std {
-  template <class Iter, class Compare>
-  bool is_sorted(Iter begin, Iter end, Compare compare)
-  {
-    if(begin == end)
-      return true;
-    Iter cur = begin;
-    Iter next = cur; next++;
-    while(next != end){
-      if (compare(*next, *cur))
-	return false;
-      cur = next;
-      next++;
+class ThreadSafeDebugStream {
+
+  private:
+
+    // identifies me uniquely
+    std::string m_name;
+
+    std::ostringstream m_out;
+
+    // my default action (used if nothing is specified in SCI_DEBUG)
+    bool m_default_on;
+
+    // check the environment variable
+    bool checkenv();
+
+
+  public:
+
+    ThreadSafeDebugStream();
+
+    ThreadSafeDebugStream(const std::string& name, bool defaulton = true);
+
+    ~ThreadSafeDebugStream();
+
+    ThreadSafeDebugStream& operator <<(std::iostream& arg)
+    {
+      if (m_default_on || checkenv()) {
+        m_out << arg;
+      }
+      return *this;
     }
-    return true;
-  }
 
-  template <class Iter>
-  bool is_sorted(Iter begin, Iter end)
-  {
-    if(begin == end)
-      return true;
-    Iter cur = begin;
-    Iter next = cur; next++;
-    while(next != end){
-      if (*next < *cur)
-	return false;
-      cur = next;
-      next++;
+    void flush() {
+      printf("%s", m_out.str().c_str());
+      m_out.clear();
     }
-    return true;
-  }
-}
-#endif
-#endif
 
+    struct replace
+    {
+      void operator()(char& c)
+      {
+        if (c == ':') {
+          c = ' ';
+        }
+      }
+    };
+
+};
+
+}  // End namespace Uintah
+
+#endif // end CORE_UTIL_THREADSAFEDEBUGSTREAM_H

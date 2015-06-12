@@ -1900,28 +1900,24 @@ esac
 ##  ----------------------------------------------------------------------
 
 AC_LANG([C++])
-# Each of the HAVE_??? statements for these header files is found
-# in include/sci_defs/config_testedefs.h
 AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.h inttypes.h)
 
 AC_CONFIG_HEADER(include/sci_defs/config_testdefs.h)
 sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 
 # Check if we are using a c++-11 compiler
-
-AC_MSG_CHECKING(if using a c++-11 compiler)
-have_cxx11="no"
+echo
+AC_MSG_CHECKING(for required c++11 compiler)
+echo
 
 AC_TRY_COMPILE([#include <iostream>],
                 [int a; decltype(a) b; auto d = a; auto l = [](){};],
                 [have_cxx11=yes],
                 [have_cxx11=no])
 
-if test $have_cxx11 = yes; then
-   DEF_CXX11="#define HAVE_CXX11 1"
+if test $have_cxx11 = no; then
+  AC_MSG_ERROR( [Must have a C++11 compliant compiler for Uintah] )
 fi   
-AC_MSG_RESULT($have_cxx11)
-AC_SUBST(DEF_CXX11)
 
 
 ##  ----------------------------------------------------------------------

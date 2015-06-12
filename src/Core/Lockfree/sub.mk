@@ -25,41 +25,14 @@
 # 
 # 
 # 
-# Makefile fragment for this subdirectory
+# Makefile fragment for this subdirectory 
 
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+SRCDIR := Core/Lockfree
 
-SRCDIR := Core
-
-SUBDIRS := \
-	$(SRCDIR)/Containers \
-	$(SRCDIR)/DataArchive \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Disclosure \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GeometryPiece \
-	$(SRCDIR)/Grid \
-	$(SRCDIR)/Labels \
-	$(SRCDIR)/Lockfree \
-	$(SRCDIR)/IO \
-	$(SRCDIR)/Malloc \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/OS \
-	$(SRCDIR)/Parallel \
-	$(SRCDIR)/Persistent \
-	$(SRCDIR)/ProblemSpec \
-	$(SRCDIR)/Thread \
-	$(SRCDIR)/Util \
-#[INSERT NEW CATEGORY DIR HERE]
-
+SUBDIRS := $(SRCDIR)/impl
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := 
-
-LIBS := $(THREAD_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) 
-
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

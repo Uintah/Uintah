@@ -22,44 +22,13 @@
 #  IN THE SOFTWARE.
 # 
 # 
-# 
-# 
-# 
-# Makefile fragment for this subdirectory
+# Makefile fragment for this subdirectory 
 
+SRCDIR := Core/Lockfree/impl
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+SRCS += $(SRCDIR)/Lockfree_MMapAllocator.cpp
 
-SRCDIR := Core
+PSELIBS :=
 
-SUBDIRS := \
-	$(SRCDIR)/Containers \
-	$(SRCDIR)/DataArchive \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Disclosure \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GeometryPiece \
-	$(SRCDIR)/Grid \
-	$(SRCDIR)/Labels \
-	$(SRCDIR)/Lockfree \
-	$(SRCDIR)/IO \
-	$(SRCDIR)/Malloc \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/OS \
-	$(SRCDIR)/Parallel \
-	$(SRCDIR)/Persistent \
-	$(SRCDIR)/ProblemSpec \
-	$(SRCDIR)/Thread \
-	$(SRCDIR)/Util \
-#[INSERT NEW CATEGORY DIR HERE]
-
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := 
-
-LIBS := $(THREAD_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY) 
-
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
+LIBS :=
 

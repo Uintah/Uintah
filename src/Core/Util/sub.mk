@@ -30,23 +30,24 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR := Core/Util
 
 SRCS += \
-        $(SRCDIR)/DebugStream.cc        \
-        $(SRCDIR)/DynamicLoader.cc      \
-        $(SRCDIR)/Endian.cc             \
-        $(SRCDIR)/Environment.cc        \
-        $(SRCDIR)/FileUtils.cc          \
-        $(SRCDIR)/ProgressiveWarning.cc \
-        $(SRCDIR)/ProgressReporter.cc   \
-        $(SRCDIR)/RWS.cc                \
-        $(SRCDIR)/sci_system.cc         \
-        $(SRCDIR)/SizeTypeConvert.cc    \
-        $(SRCDIR)/Signals.cc            \
-        $(SRCDIR)/Socket.cc             \
-        $(SRCDIR)/soloader.cc           \
-        $(SRCDIR)/StringUtil.cc         \
-        $(SRCDIR)/Timer.cc              \
-        $(SRCDIR)/TypeDescription.cc    \
-        $(SRCDIR)/XMLUtils.cc           \
+        $(SRCDIR)/DebugStream.cc            \
+        $(SRCDIR)/DynamicLoader.cc          \
+        $(SRCDIR)/Endian.cc                 \
+        $(SRCDIR)/Environment.cc            \
+        $(SRCDIR)/FileUtils.cc              \
+        $(SRCDIR)/ProgressiveWarning.cc     \
+        $(SRCDIR)/ProgressReporter.cc       \
+        $(SRCDIR)/RWS.cc                    \
+        $(SRCDIR)/sci_system.cc             \
+        $(SRCDIR)/SizeTypeConvert.cc        \
+        $(SRCDIR)/Signals.cc                \
+        $(SRCDIR)/Socket.cc                 \
+        $(SRCDIR)/soloader.cc               \
+        $(SRCDIR)/StringUtil.cc             \
+        $(SRCDIR)/ThreadSafeDebugStream.cc  \
+        $(SRCDIR)/Timer.cc                  \
+        $(SRCDIR)/TypeDescription.cc        \
+        $(SRCDIR)/XMLUtils.cc               \
         $(SRCDIR)/Util.cc               
 
 SRCS += $(REFCOUNT_IMPL)

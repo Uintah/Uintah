@@ -34,10 +34,12 @@
 #include <Core/Grid/Variables/SFCXVariable.h>
 #include <Core/Grid/Variables/SFCYVariable.h>
 #include <Core/Grid/Variables/SFCZVariable.h>
+#include <Core/Lockfree/Lockfree_MMapAllocator.hpp>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/ThreadGroup.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/ThreadSafeDebugStream.h>
 
 #ifdef HAVE_CUDA
 #  include <CCA/Components/Schedulers/GPUDataWarehouse.h>
@@ -49,12 +51,14 @@
 
 #include <cstring>
 #include <iomanip>
+#include <iostream>
+#include <ostream>
+
 #define USE_PACKING
 
 using namespace Uintah;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
 extern DebugStream taskdbg;
@@ -74,6 +78,8 @@ static DebugStream unified_timeout(         "Unified_TimingsOut",      false);
 static DebugStream unified_queuelength(     "Unified_QueueLength",     false);
 static DebugStream unified_threaddbg(       "Unified_ThreadDBG",       false);
 static DebugStream unified_compactaffinity( "Unified_CompactAffinity", true);
+
+static ThreadSafeDebugStream tsds_test("Unified_TSDS", true);
 
 #ifdef HAVE_CUDA
   static DebugStream gpu_stats(        "GPUStats",     false);

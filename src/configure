@@ -798,7 +798,6 @@ THREAD_IMPL
 RT_LIB_FLAG
 M_LIB_DIR_FLAG
 M_LIB_FLAG
-DEF_CXX11
 TEMPLATE_BOX
 TEMPLATE_TAG
 REPOSITORY_FLAGS
@@ -8597,8 +8596,6 @@ ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
-# Each of the HAVE_??? statements for these header files is found
-# in include/sci_defs/config_testedefs.h
 
 
 for ac_header in limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.h inttypes.h
@@ -8620,10 +8617,10 @@ ac_config_headers="$ac_config_headers include/sci_defs/config_testdefs.h"
 sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 
 # Check if we are using a c++-11 compiler
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if using a c++-11 compiler" >&5
-$as_echo_n "checking if using a c++-11 compiler... " >&6; }
-have_cxx11="no"
+echo
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for required c++11 compiler" >&5
+$as_echo_n "checking for required c++11 compiler... " >&6; }
+echo
 
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -8643,12 +8640,9 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
-if test $have_cxx11 = yes; then
-   DEF_CXX11="#define HAVE_CXX11 1"
+if test $have_cxx11 = no; then
+  as_fn_error $? "Must have a C++11 compliant compiler for Uintah " "$LINENO" 5
 fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_cxx11" >&5
-$as_echo "$have_cxx11" >&6; }
-
 
 
 ##  ----------------------------------------------------------------------
