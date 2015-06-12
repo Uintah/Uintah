@@ -1,6 +1,3 @@
-#ifndef UINTAH_DEFS_H
-#define UINTAH_DEFS_H
-
 /*
  * The MIT License
  *
@@ -25,30 +22,57 @@
  * IN THE SOFTWARE.
  */
 
-@DEF_ZOLTAN@
 
-@DEF_TABPROPS@
-@DEF_RADPROPS@
+#include <Core/Util/ThreadSafeDebugStream.h>
 
-@DEF_ARCHES@
-@DEF_ICE@
-@DEF_MPM@
-@DEF_MODELS_RADIATION@
+#include <algorithm>
+#include <sstream>
 
-@DEF_WASATCH@
+namespace Uintah {
 
-@DEF_NO_FORTRAN@
-@DEF_FORTRAN_UNDERSCORE@
+static const char* DEBUG_ENV_VAR = "SCI_THREADSAFE_DEBUG";
 
-@DEF_RAY_SCATTER@
+ThreadSafeDebugStream::ThreadSafeDebugStream()
+{}
 
-#if !defined( FIX_NAME )
-#  if defined( FORTRAN_UNDERSCORE_END )
-     // This ## magic (apparently) concatenates the _ to the 'fun' varaible.
-#    define FIX_NAME(fun) fun ## _
-#  else // NONE
-#    define FIX_NAME(fun) fun
-#  endif
-#endif
 
-#endif // UINTAH_DEFS_H
+ThreadSafeDebugStream::ThreadSafeDebugStream(const std::string& name, bool status)
+  : m_name{name}
+  , m_default_on{status}
+{}
+
+
+ThreadSafeDebugStream::~ThreadSafeDebugStream()
+{}
+
+
+bool ThreadSafeDebugStream::checkenv()
+{
+  char* vars = getenv(DEBUG_ENV_VAR);
+  if(vars == nullptr) {
+     return false;
+  }
+
+  std::string var(vars);
+
+  // if SCI_THREADSAFE_DEBUG was defined, parse the string and store appropriate values
+  if(!var.empty()) {
+    var.erase(std::remove(var.begin(), var.end(), ':'), var.end());
+    std::replace(var.begin(), var.end(), ',', ' ');
+
+    std::string token;
+    std::istringstream iss(var);
+
+    while (iss >> token) {
+      if (token == m_name) {
+        return true;
+      }
+    }
+    return false;
+  }
+  else{
+    return false;
+  }
+}
+
+} // End namespace SCIRun

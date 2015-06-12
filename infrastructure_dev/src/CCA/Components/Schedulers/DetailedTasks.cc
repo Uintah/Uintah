@@ -42,7 +42,6 @@
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <sci_defs/config_defs.h>
-#include <sci_algorithm.h>
 #include <sci_defs/cuda_defs.h>
 
 using namespace Uintah;

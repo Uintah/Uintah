@@ -96,6 +96,7 @@ ALL_PSE_LIBS =             \
         Core/GeometryPiece \
         Core/Grid          \
         Core/Labels        \
+        Core/Lockfree      \
         Core/Malloc        \
         Core/Math          \
         Core/OS            \
@@ -152,6 +153,7 @@ ALL_STATIC_PSE_LIBS =                   \
     Core/Datatypes                      \
     Core/DataArchive                    \
     Core/Grid                           \
+    Core/Lockfree                       \
     Core/ProblemSpec                    \
     Core/GeometryPiece                  \
     CCA/Components/ProblemSpecification \
