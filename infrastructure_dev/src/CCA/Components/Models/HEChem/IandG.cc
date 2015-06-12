@@ -48,7 +48,7 @@ IandG::IandG(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
+  Ilb  = new ICELabel();
   //__________________________________
   //  diagnostic labels
   reactedFractionLabel   = VarLabel::create("IandG:F",
@@ -105,7 +105,7 @@ void IandG::problemSetup(GridP&, SimulationStateP& sharedState,
 
   //__________________________________
   //  define the materialSet
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                       // needed for the pressure and NC_CCWeight
@@ -168,14 +168,14 @@ void IandG::scheduleComputeModelSources(SchedulerP& sched,
                                         const LevelP& level,
                                         const ModelInfo* mi)
 {
-  Task* t = scinew Task("IandG::computeModelSources", this, 
+  Task* t = new Task("IandG::computeModelSources", this, 
                         &IandG::computeModelSources, mi);
   cout_doing << "IandG::scheduleComputeModelSources "<<  endl;  
   
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
-  MaterialSubset* one_matl     = scinew MaterialSubset();
+  MaterialSubset* one_matl     = new MaterialSubset();
   one_matl->add(0);
   one_matl->addReference();
   MaterialSubset* press_matl   = one_matl;

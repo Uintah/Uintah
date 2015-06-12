@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/MurnaghanMPM.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -39,7 +39,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -88,7 +88,7 @@ void MurnaghanMPM::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 MurnaghanMPM* MurnaghanMPM::clone()
 {
-  return scinew MurnaghanMPM(*this);
+  return new MurnaghanMPM(*this);
 }
 
 void MurnaghanMPM::initializeCMData(const Patch* patch,
@@ -358,7 +358,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "MurnaghanMPM::StateData", 
                                   true, &makeMPI_CMData);
     }

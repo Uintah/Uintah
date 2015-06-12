@@ -190,10 +190,10 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
   // Create the TaskWorkers here (pinned to cores in TaskWorker::run())
   char name[1024];
   for (int i = 0; i < numThreads_; i++) {
-    TaskWorker* worker = scinew TaskWorker(this, i);
+    TaskWorker* worker = new TaskWorker(this, i);
     t_worker[i] = worker;
     sprintf(name, "Computing Worker %d-%d", Parallel::getRootProcessorGroup()->myrank(), i);
-    Thread* t = scinew Thread(worker, name);
+    Thread* t = new Thread(worker, name);
     t_thread[i] = t;
   }
 
@@ -207,7 +207,7 @@ ThreadedMPIScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 SchedulerP
 ThreadedMPIScheduler::createSubScheduler()
 {
-  ThreadedMPIScheduler* subsched = scinew ThreadedMPIScheduler(d_myworld, m_outPort, this);
+  ThreadedMPIScheduler* subsched = new ThreadedMPIScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   subsched->attachPort("load balancer", lbp);
   subsched->d_sharedState = d_sharedState;
@@ -234,10 +234,10 @@ ThreadedMPIScheduler::createSubScheduler()
     char name[1024];
     ThreadGroup* subGroup = new ThreadGroup("subscheduler-group", 0);  // 0 is main/parent thread group
     for (int i = 0; i < subsched->numThreads_; i++) {
-      TaskWorker* worker = scinew TaskWorker(subsched, i);
+      TaskWorker* worker = new TaskWorker(subsched, i);
       subsched->t_worker[i] = worker;
       sprintf(name, "Task Compute Thread ID: %d", i + subsched->numThreads_);
-      Thread* t = scinew Thread(worker, name, subGroup);
+      Thread* t = new Thread(worker, name, subGroup);
       subsched->t_thread[i] = t;
     }
   }
@@ -259,17 +259,7 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     return;
   }
 
-  MALLOC_TRACE_TAG_SCOPE("ThreadedMPIScheduler::execute");
 
-  TAU_PROFILE("ThreadedMPIScheduler::execute()", " ", TAU_USER);
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[ThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[ThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[ThreadedMPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[ThreadedMPIScheduler::execute()] ", TAU_USER);
 
   ASSERTRANGE(tgnum, 0, static_cast<int>(graphs.size()));
   TaskGraph* tg = graphs[tgnum];
@@ -329,8 +319,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[ThreadedMPIScheduler::execute() loop] ", TAU_USER);
-  TAU_PROFILE_START(doittimer);
 
   int currphase = 0;
   int numPhases = tg->getNumTaskPhases();
@@ -494,7 +482,6 @@ ThreadedMPIScheduler::execute( int tgnum     /* = 0 */,
 
   }  // end while( numTasksDone < ntasks )
 
-  TAU_PROFILE_STOP(doittimer);
 
   // wait for all tasks to finish
   d_nextmutex.lock();

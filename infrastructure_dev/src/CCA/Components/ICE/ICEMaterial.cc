@@ -104,13 +104,13 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps,
     if(pieces.size() == 0){
       throw ParameterNotFound("No piece specified in geom_object", __FILE__, __LINE__);
     } else if(pieces.size() > 1){
-      mainpiece = scinew UnionGeometryPiece(pieces);
+      mainpiece = new UnionGeometryPiece(pieces);
     } else {
       mainpiece = pieces[0];
     }
 
     piece_num++;
-    d_geom_objs.push_back(scinew GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
+    d_geom_objs.push_back(new GeometryObject(mainpiece, geom_obj_ps, geom_obj_data));
   }
 }
 //__________________________________

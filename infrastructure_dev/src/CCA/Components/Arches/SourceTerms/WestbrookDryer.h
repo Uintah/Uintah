@@ -96,7 +96,7 @@ public:
       ~Builder(){}; 
 
       WestbrookDryer* build()
-      { return scinew WestbrookDryer( _name, _field_labels, _required_label_names, _type ); };
+      { return new WestbrookDryer( _name, _field_labels, _required_label_names, _type ); };
 
     private: 
 

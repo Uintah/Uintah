@@ -159,7 +159,7 @@ Grid::getLevel( int l ) const
 
 //
 // Parse in the <Patch> from the input file (most likely 'timestep.xml').  We should only need to parse
-// three tags: <id>, <proc>, <lowIndex>, <highIndex>, <interiorLowIndex>, <nnodes>, <lower>, <upper>, 
+// three tags: <id>, <proc>, <lowIndex>, <highIndex>, <interiorLowIndex>, <nnodes>, <lower>, <upper>,
 // <totalCells>, and </Patch>
 // as the XML should look like this (and we've already parsed <Patch> to get here - and the Level parsing
 // will eat up </Patch>):
@@ -206,7 +206,7 @@ Grid::parsePatchFromFile( FILE * fp, LevelP level, vector<int> & procMapForLevel
   while( !doneWithPatch ) {
     string line = UintahXML::getLine( fp );
     //    proc0cout << "4) parsing: " << line << "\n";
-    
+
     if( line == "</Patch>" ) {
       doneWithPatch = true;
     }
@@ -324,7 +324,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
   while( !done_with_level ) {
     string line = UintahXML::getLine( fp );
     //proc0cout << "3) parsing: " << line << "\n";
-    
+
     if( line == "</Level>" ) {
       done_with_level = true;
       levelCreated = false;
@@ -345,7 +345,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
         // the level here as it is needed by parsePatchFromFile so that the patch
         // can be added to the level.
         //
-        
+
         //if( !foundStretch ) {
         //  dcell *= d_cell_scale;
         //}
@@ -443,7 +443,7 @@ Grid::parseLevelFromFile( FILE * fp, vector<int> & procMapForLevel )
   return done_with_level;
 
 } // end parseLevelFromFile()
-            
+
 //
 // Parse in the <Grid> from the input file (most likely 'timestep.xml').  We should only need to parse
 // three tags: <numLevels>, <Level>, and </Grid> as the XML should look like this (and we've already
@@ -464,7 +464,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
   bool doneWithGrid   = false;
   bool foundLevelTag  = false;
 
-  while( !doneWithGrid ) { 
+  while( !doneWithGrid ) {
 
     // Parse all of the Grid...  When we are done with it, we are done parsing the file, hence the reason
     // we can use "done" for both while loops.
@@ -480,7 +480,7 @@ Grid::parseGridFromFile( FILE * fp, vector< vector<int> > & procMap )
 
       procMap.push_back( vector<int>() );
       vector<int> & procMapForLevel = procMap[ numLevelsRead ];
- 
+
       numLevelsRead++;
 
       parseLevelFromFile( fp, procMapForLevel );
@@ -563,8 +563,8 @@ Level *
 Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
 {
   // Find the new level's refinement ratio.
-  // This should only be called when a new grid is created, so if this level index 
-  // is > 0, then there is a coarse-fine relationship between this level and the 
+  // This should only be called when a new grid is created, so if this level index
+  // is > 0, then there is a coarse-fine relationship between this level and the
   // previous one.
 
   IntVector ratio;
@@ -583,7 +583,7 @@ Grid::addLevel( const Point & anchor, const Vector & dcell, int id )
     ratio = IntVector(1,1,1);
 
 
-  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);  
+  Level* level = new Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);
 
   d_levels.push_back( level );
   return level;
@@ -595,7 +595,6 @@ void
 Grid::performConsistencyCheck() const
 {
 #if SCI_ASSERTION_LEVEL > 0
-  TAU_PROFILE("Grid::performConsistencyCheck()", " ", TAU_USER);
   // Verify that patches on a single level do not overlap
   for(int i=0;i<(int)d_levels.size();i++)
     d_levels[i]->performConsistencyCheck();
@@ -605,7 +604,7 @@ Grid::performConsistencyCheck() const
   // Compute total volume - compare if not first time
 
   //cerr << "Grid::performConsistencyCheck not done\n";
-  
+
   //__________________________________
   //  bullet proofing with multiple levels
   if(d_levels.size() > 0) {
@@ -614,18 +613,18 @@ Grid::performConsistencyCheck() const
       LevelP fineLevel = level->getFinerLevel();
       //Vector dx_level     = level->dCell();
       Vector dx_fineLevel = fineLevel->dCell();
-      
+
       //__________________________________
       // finer level can't lay outside of the coarser level
       BBox C_box,F_box;
       level->getSpatialRange(C_box);
       fineLevel->getSpatialRange(F_box);
-      
+
       Point Cbox_min = C_box.min();
-      Point Cbox_max = C_box.max(); 
+      Point Cbox_max = C_box.max();
       Point Fbox_min = F_box.min();
       Point Fbox_max = F_box.max();
-      
+
       if(Fbox_min.x() < Cbox_min.x() ||
          Fbox_min.y() < Cbox_min.y() ||
          Fbox_min.z() < Cbox_min.z() ||
@@ -642,31 +641,31 @@ Grid::performConsistencyCheck() const
       //__________________________________
       //  finer level must have a box width that is
       //  an integer of the cell spacing
-      Vector integerTest_min(remainder(Fbox_min.x(),dx_fineLevel.x() ), 
+      Vector integerTest_min(remainder(Fbox_min.x(),dx_fineLevel.x() ),
                              remainder(Fbox_min.y(),dx_fineLevel.y() ),
                              remainder(Fbox_min.z(),dx_fineLevel.z() ) );
-                             
-      Vector integerTest_max(remainder(Fbox_max.x(),dx_fineLevel.x() ), 
+
+      Vector integerTest_max(remainder(Fbox_max.x(),dx_fineLevel.x() ),
                              remainder(Fbox_max.y(),dx_fineLevel.y() ),
                              remainder(Fbox_max.z(),dx_fineLevel.z() ) );
-      
+
       Vector distance = Fbox_max.asVector() - Fbox_min.asVector();
-      
+
       Vector integerTest_distance(remainder(distance.x(), dx_fineLevel.x() ),
                                   remainder(distance.y(), dx_fineLevel.y() ),
                                   remainder(distance.z(), dx_fineLevel.z() ) );
       Vector smallNum(1e-14,1e-14,1e-14);
-      
-      if( (integerTest_min >smallNum || integerTest_max > smallNum) && 
+
+      if( (integerTest_min >smallNum || integerTest_max > smallNum) &&
            integerTest_distance > smallNum){
         ostringstream desc;
         desc << " The finer Level " << fineLevel->getIndex()
              << " "<< Fbox_min << " "<< Fbox_max
              << " upper or lower limits are not divisible by the cell spacing "
-             << dx_fineLevel << " \n Remainder of level box/dx: lower" 
+             << dx_fineLevel << " \n Remainder of level box/dx: lower"
              << integerTest_min << " upper " << integerTest_max<< endl;
         throw InvalidGrid(desc.str(),__FILE__,__LINE__);
-      } 
+      }
     }
   }
 #endif
@@ -710,7 +709,7 @@ Grid::getSpatialRange( BBox & b ) const
   }
 }
 
-////////// 
+//////////
 // Returns the boundary of the grid exactly (without
 // extra cells).  The value returned is the same value
 // as found in the .ups file.
@@ -742,7 +741,7 @@ Grid::getLength( Vector & length, const string & flag ) const
   }
 }
 
-void 
+void
 Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do_amr)
 {
    ProblemSpecP grid_ps = params->findBlock("Grid");
@@ -775,7 +774,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       if(level_ps->get("spacing", spacing))
         have_levelspacing=true;
       bool have_patchspacing=false;
-        
+
 
       // first pass - find upper/lower corner, find resolution/spacing and extraCells
       IntVector extraCells(0, 0, 0);
@@ -790,11 +789,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         }
         levelAnchor=Min(lower, levelAnchor);
         levelHighPoint=Max(upper, levelHighPoint);
-        
+
         IntVector resolution;
         if(box_ps->get("resolution", resolution)){
            if(have_levelspacing){
-              throw ProblemSetupException("Cannot specify level spacing and patch resolution", 
+              throw ProblemSetupException("Cannot specify level spacing and patch resolution",
                                           __FILE__, __LINE__);
            } else {
               // all boxes on same level must have same spacing
@@ -810,11 +809,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               have_patchspacing=true;
            }
         }
-        
+
         IntVector ec;
         box_ps->getWithDefault("extraCells", ec, d_extraCells);
         extraCells = Max(ec, extraCells);
-        
+
         // bulletproofing
         if(have_levelspacing || have_patchspacing){
           for(int dir = 0; dir<3; dir++){
@@ -822,15 +821,15 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               ostringstream msg;
               msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                  << " \n The computational domain " << lower<<", " << upper
-                 << " must have a positive distance in each coordinate direction  " << upper-lower << endl; 
+                 << " must have a positive distance in each coordinate direction  " << upper-lower << endl;
               throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
             }
-          
+
             if (spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0){
               ostringstream msg;
               msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
-                 << " \n The spacing " << spacing 
-                 << " must be less than the upper - lower corner and positive " << upper << endl; 
+                 << " \n The spacing " << spacing
+                 << " must be less than the upper - lower corner and positive " << upper << endl;
               throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
             }
           }
@@ -1046,7 +1045,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       // use only the interior cells instead of including the extraCell
       // limits.
       level->setExtraCells(extraCells);
-        
+
       if(stretch_count != 0){
         for(int axis = 0; axis < 3; axis++){
           OffsetArray1<double> faces;
@@ -1091,15 +1090,15 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         Point lower, upper;
         box_ps->require("lower", lower);
         box_ps->require("upper", upper);
-        
+
         //__________________________________
         // bullet proofing inputs
         for(int dir = 0; dir<3; dir++){
           if (lower(dir) >= upper(dir)){
             ostringstream msg;
             msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
-               << " \n The lower corner " << lower 
-               << " must be smaller than the upper corner " << upper << endl; 
+               << " \n The lower corner " << lower
+               << " must be smaller than the upper corner " << upper << endl;
             throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
           }
         }
@@ -1119,7 +1118,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         double epsilon = 1.e-14;
 
         Vector ep_v  = Vector( epsilon, epsilon, epsilon );
-        
+
         // NEW Version
         IntVector lowCell  = level->getCellIndex( lower + Vector( fabs(lower.x())*epsilon,
                                                                   fabs(lower.y())*epsilon,
@@ -1147,7 +1146,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cerr << setprecision(16) << "highCell =" << highCell << '\n';
           cerr << setprecision(16) << "lower2=" << lower2 << '\n';
           cerr << setprecision(16) << "diff=" << diff_lower << '\n';
-        
+
           throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
 
@@ -1165,7 +1164,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cerr << "highCell: " << highCell << " lowCell: " << lowCell << '\n';
           throw ProblemSetupException("Degenerate patch", __FILE__, __LINE__);
         }
-        
+
         // Check if autoPatch is enabled, if it is ignore the values in the
         // patches tag and compute them based on the number or processors
 
@@ -1188,10 +1187,10 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           patchAttributes.clear();
           box_ps->getAttributes(patchAttributes);
           proc0cout << "Automatically performing patch layout.\n";
-          
+
           int numProcs = pg->size();
           int targetPatches = (int)(numProcs * autoPatchValue);
-          
+
           Primes::FactorType factors;
           int numFactors = Primes::factorize(targetPatches, factors);
           list<int> primeList;
@@ -1207,7 +1206,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             bres_ = resolution.z();
             tempPatches = run_partition2D(primeList);
             patches = IntVector(1,tempPatches.x(), tempPatches.y());
-          } 
+          }
           else if ( patchAttributes["flatten"] == "y" || resolution.y() == 1 )
           {
             ares_ = resolution.x();
@@ -1222,7 +1221,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             tempPatches = run_partition2D(primeList);
             patches = IntVector(tempPatches.x(),tempPatches.y(),1);
           }
-          else 
+          else
           {
             // 3D case
             // Store the resolution in member variables
@@ -1232,13 +1231,13 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
             patches = run_partition3D(primeList);
           }
-        } 
-        else { // autoPatching is not enabled, get the patch field 
+        }
+        else { // autoPatching is not enabled, get the patch field
           box_ps->getWithDefault("patches", patches, IntVector(1,1,1));
           nf_ = 0;
         }
 
-        // If the value of the norm nf_ is too high, then user chose a 
+        // If the value of the norm nf_ is too high, then user chose a
         // bad number of processors, warn them.
         if( nf_ > 3 ) {
           cout << "\n********************\n";
@@ -1250,7 +1249,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           cout << "*\n";
           cout << "********************\n\n";
         }
-  
+
         proc0cout << "Patch layout: \t\t(" << patches.x() << ","
                   << patches.y() << "," << patches.z() << ")\n";
 
@@ -1263,9 +1262,9 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
               IntVector inStartCell(startcell);
               IntVector inEndCell(endcell);
-              
+
               // this algorithm for finding extra cells is not sufficient for AMR
-              // levels - it only finds extra cells on the domain boundary.  The only 
+              // levels - it only finds extra cells on the domain boundary.  The only
               // way to find extra cells for them is to do neighbor queries, so we will
               // potentially adjust extra cells in Patch::setBCType (called from Level::setBCTypes)
               startcell -= IntVector(startcell.x() == anchorCell.x() ? extraCells.x():0,
@@ -1274,12 +1273,12 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               endcell += IntVector(endcell.x() == highPointCell.x() ? extraCells.x():0,
                                    endcell.y() == highPointCell.y() ? extraCells.y():0,
                                    endcell.z() == highPointCell.z() ? extraCells.z():0);
-            
-              if (inStartCell.x() % refineRatio.x() || inEndCell.x() % refineRatio.x() || 
-                  inStartCell.y() % refineRatio.y() || inEndCell.y() % refineRatio.y() || 
+
+              if (inStartCell.x() % refineRatio.x() || inEndCell.x() % refineRatio.x() ||
+                  inStartCell.y() % refineRatio.y() || inEndCell.y() % refineRatio.y() ||
                   inStartCell.z() % refineRatio.z() || inEndCell.z() % refineRatio.z()) {
                 ostringstream desc;
-                desc << "The finer patch boundaries (" << inStartCell << "->" << inEndCell 
+                desc << "The finer patch boundaries (" << inStartCell << "->" << inEndCell
                      << ") do not coincide with a coarse cell"
                      << "\n(i.e., they are not divisible by te refinement ratio " << refineRatio << ')';
                 throw InvalidGrid(desc.str(),__FILE__,__LINE__);
@@ -1294,7 +1293,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         throw ProblemSetupException("Number of patches must >= the number of processes in an mpi run",
                                     __FILE__, __LINE__);
       }
-      
+
       IntVector periodicBoundaries;
       if(level_ps->get("periodic", periodicBoundaries)){
        level->finalizeLevel(periodicBoundaries.x() != 0,
@@ -1322,7 +1321,7 @@ namespace Uintah
     out << "Grid has " << grid.numLevels() << " level(s)" << endl;
     for ( int levelIndex = 0; levelIndex < grid.numLevels(); levelIndex++ ) {
       LevelP level = grid.getLevel( levelIndex );
-      out << "  Level " << level->getID() 
+      out << "  Level " << level->getID()
           << ", indx: "<< level->getIndex()
           << " has " << level->numPatches() << " patch(es)" << endl;
       for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
@@ -1346,22 +1345,22 @@ Grid::operator==( const Grid & othergrid ) const
     const Level* otherlevel = othergrid.getLevel(i).get_rep();
     if (level->numPatches() != otherlevel->numPatches())
       return false;
-      
+
     // do the patches have the same number of cells and
-    // cover the same physical domain?  
+    // cover the same physical domain?
     Level::const_patchIterator iter = level->patchesBegin();
     Level::const_patchIterator otheriter = otherlevel->patchesBegin();
     for (; iter != level->patchesEnd(); iter++, otheriter++) {
       const Patch* patch = *iter;
       const Patch* otherpatch = *otheriter;
-      
+
       IntVector lo, o_lo;
       IntVector hi, o_hi;
       lo   = patch->getCellLowIndex();
       o_lo = otherpatch->getCellLowIndex();
       hi   = patch->getCellHighIndex();
       o_hi = otherpatch->getCellHighIndex();
-       
+
       if ( lo !=  o_lo || hi != o_hi ){
         return false;
       }
@@ -1370,20 +1369,20 @@ Grid::operator==( const Grid & othergrid ) const
         return false;
       }
     }
-      
+
   }
   return true;
 
 }
 
-//This seems to have performance issues when there are lots of patches. This could be 
-//partially avoided by parallelizing it.  
+//This seems to have performance issues when there are lots of patches. This could be
+//partially avoided by parallelizing it.
 bool Grid::isSimilar(const Grid& othergrid) const
 {
   if(numLevels() != othergrid.numLevels())
      return false;
 
- 
+
   for(int i=numLevels()-1;i>=0;i--)
   {
     vector<Region> r1, r2, difference;
@@ -1399,7 +1398,7 @@ bool Grid::isSimilar(const Grid& othergrid) const
       a1+=Region::getVolume(patch->getCellLowIndex(),patch->getCellHighIndex());
       r1.push_back(Region(patch->getCellLowIndex(),patch->getCellHighIndex()));
     }
-    
+
     for(iter=l2->patchesBegin(); iter!=l2->patchesEnd();iter++)
     {
       const Patch* patch=*iter;
@@ -1410,7 +1409,7 @@ bool Grid::isSimilar(const Grid& othergrid) const
     //if volumes are not the same the grids cannot be the same
     if(a1!=a2)
       return false;
-    
+
     //compare regions
     difference=Region::difference(r1,r2);
     if(!difference.empty())  //if region in r1 that is not in r2
@@ -1434,21 +1433,21 @@ void Grid::partition3D(list<int> primes, int a, int b, int c)
   // of a,b,c if they are the best so far.
   if( primes.size() == 0 ) {
     double new_norm = sqrt( (double)(max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_)) *
-                            (max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_)) + 
+                            (max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_)) +
                             (max(b,c)/min(b,c) - max(bres_,cres_)/min(bres_,cres_)) *
                             (max(b,c)/min(b,c) - max(bres_,cres_)/min(bres_,cres_)) +
                             (max(a,c)/min(a,c) - max(ares_,cres_)/min(ares_,cres_)) *
                             (max(a,c)/min(a,c) - max(ares_,cres_)/min(ares_,cres_))
                           );
 
-    if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_, 
+    if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_,
                                        // should always be overwritten
       nf_ = new_norm;
       af_ = a;
       bf_ = b;
       cf_ = c;
     }
-    
+
     return;
   }
 
@@ -1474,13 +1473,13 @@ void Grid::partition2D(std::list<int> primes, int a, int b)
   if( primes.size() == 0 ) {
     double new_norm = (double)max(a,b)/min(a,b) - max(ares_,bres_)/min(ares_,bres_);
 
-    if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_, 
+    if( new_norm < nf_ || nf_ == -1 ) { // negative 1 flags initial trash value of nf_,
                                        // should always be overwritten
       nf_ = new_norm;
       af_ = a;
       bf_ = b;
     }
-    
+
     return;
   }
 
@@ -1510,7 +1509,6 @@ Grid::getPatchByID( int patchid, int startingLevel ) const
 void
 Grid::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
 {
-  TAU_PROFILE("Grid::assignBCS()", " ", TAU_USER);
   for( int l = 0; l < numLevels(); l++ )
   {
     LevelP level = getLevel( l );

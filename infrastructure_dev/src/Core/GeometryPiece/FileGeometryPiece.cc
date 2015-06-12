@@ -26,7 +26,7 @@
 #include <Core/GeometryPiece/FileGeometryPiece.h>
 //#include <Core/Grid/Box.h>
 //#include <Core/Grid/Patch.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/Matrix3.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -197,7 +197,7 @@ FileGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 FileGeometryPiece::clone() const
 {
-  return scinew FileGeometryPiece(*this);
+  return new FileGeometryPiece(*this);
 }
 //______________________________________________________________________
 //

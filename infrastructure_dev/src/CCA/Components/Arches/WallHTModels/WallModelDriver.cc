@@ -105,7 +105,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
     
     if ( type == "simple_ht" ) {
       
-      HTModelBase* simple_ht = scinew SimpleHT(); 
+      HTModelBase* simple_ht = new SimpleHT(); 
       
       simple_ht->problemSetup( db_model ); 
       
@@ -113,7 +113,7 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       
     } else if ( type == "region_ht" ){ 
       
-      HTModelBase* alstom_ht = scinew RegionHT(); 
+      HTModelBase* alstom_ht = new RegionHT(); 
       
       alstom_ht->problemSetup( db_model ); 
       
@@ -132,7 +132,7 @@ void
 WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const int time_subset )
 {
   
-  Task* task = scinew Task( "WallModelDriver::doWallHT", this, 
+  Task* task = new Task( "WallModelDriver::doWallHT", this, 
                            &WallModelDriver::doWallHT, time_subset ); 
   
   _T_label        = VarLabel::find( _T_label_name );
@@ -413,7 +413,7 @@ void
 WallModelDriver::sched_copyWallTintoT( const LevelP& level, SchedulerP& sched )
 {
   
-  Task* task = scinew Task( "WallModelDriver::copyWallTintoT", this, 
+  Task* task = new Task( "WallModelDriver::copyWallTintoT", this, 
                             &WallModelDriver::copyWallTintoT ); 
 
   //WARNING: Hardcoding temperature for now:

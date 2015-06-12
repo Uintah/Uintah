@@ -41,7 +41,7 @@ void
 DissipationSource::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "DissipationSource::eval";
-  Task* tsk = scinew Task(taskname, this, &DissipationSource::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &DissipationSource::computeSource, timeSubStep);
   
   if (timeSubStep == 0 ) { 
     tsk->computes(_src_label);
@@ -230,7 +230,7 @@ DissipationSource::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "DissipationSource::initialize"; 
   
-  Task* tsk = scinew Task(taskname, this, &DissipationSource::initialize);
+  Task* tsk = new Task(taskname, this, &DissipationSource::initialize);
   
   tsk->computes(_src_label);
   

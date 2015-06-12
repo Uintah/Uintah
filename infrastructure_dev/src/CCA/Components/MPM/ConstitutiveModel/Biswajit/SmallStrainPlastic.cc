@@ -58,7 +58,7 @@
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <cmath>
 #include <iostream>
@@ -322,7 +322,7 @@ void SmallStrainPlastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 SmallStrainPlastic* SmallStrainPlastic::clone()
 {
-  return scinew SmallStrainPlastic(*this);
+  return new SmallStrainPlastic(*this);
 }
 
 
@@ -806,7 +806,7 @@ SmallStrainPlastic::computeStressTensorExplicit(const PatchSubset* patches,
       backStress_new = backStress_old;
       
       // Set up the ModelState (for t_n)
-      UintahBB::ModelState* state = scinew UintahBB::ModelState();
+      UintahBB::ModelState* state = new UintahBB::ModelState();
       state->strainRate          = pStrainRate_new[idx];
       state->plasticStrainRate   = pPlasticStrainRate_old[idx];
       state->plasticStrain       = pPlasticStrain_old[idx];

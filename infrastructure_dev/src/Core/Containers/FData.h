@@ -39,7 +39,7 @@
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Assert.h>
 #include <string>
 
@@ -142,10 +142,10 @@ FData3d<Data, Msh>::get_type_description(int n) const
   if (n == -1) {
     static TypeDescription* tdn1 = 0;
     if (tdn1 == 0) {
-      TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
+      TypeDescription::td_vec *subs = new TypeDescription::td_vec(2);
       (*subs)[0] = sub1;
       (*subs)[1] = sub2;
-      tdn1 = scinew TypeDescription(name, subs, path, namesp,
+      tdn1 = new TypeDescription(name, subs, path, namesp,
 				    TypeDescription::CONTAINER_E);
     } 
     return tdn1;
@@ -153,7 +153,7 @@ FData3d<Data, Msh>::get_type_description(int n) const
   else if(n == 0) {
     static TypeDescription* tdn0 = 0;
     if (tdn0 == 0) {
-      tdn0 = scinew TypeDescription(name, 0, path, namesp,
+      tdn0 = new TypeDescription(name, 0, path, namesp,
 				    TypeDescription::CONTAINER_E);
     }
     return tdn0;
@@ -176,10 +176,10 @@ get_type_description(FData3d<Data, Msh>*)
 
   static TypeDescription* tdn1 = 0;
   if (tdn1 == 0) {
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
+    TypeDescription::td_vec *subs = new TypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    tdn1 = scinew TypeDescription(name, subs, path, namesp,
+    tdn1 = new TypeDescription(name, subs, path, namesp,
 				  TypeDescription::CONTAINER_E);
   }
   return tdn1;
@@ -279,10 +279,10 @@ get_type_description(FData2d<Data, Msh>*)
 
   static TypeDescription* tdn1 = 0;
   if (tdn1 == 0) {
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
+    TypeDescription::td_vec *subs = new TypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    tdn1 = scinew TypeDescription(name, subs, path, namesp,
+    tdn1 = new TypeDescription(name, subs, path, namesp,
 				  TypeDescription::CONTAINER_E);
   }
   return tdn1;

@@ -37,7 +37,7 @@
 #include <Core/Parallel/Vampir.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
@@ -138,7 +138,7 @@ MPIScheduler::~MPIScheduler()
 SchedulerP
 MPIScheduler::createSubScheduler()
 {
-  MPIScheduler* newsched = scinew MPIScheduler(d_myworld, m_outPort, this);
+  MPIScheduler* newsched = new MPIScheduler(d_myworld, m_outPort, this);
   UintahParallelPort* lbp = getPort("load balancer");
   newsched->attachPort("load balancer", lbp);
   newsched->d_sharedState=d_sharedState;
@@ -152,7 +152,6 @@ MPIScheduler::verifyChecksum()
 {
 #if SCI_ASSERTION_LEVEL >= 3
   if (Uintah::Parallel::usingMPI()) {
-    TAU_PROFILE("MPIScheduler::verifyChecksum()", " ", TAU_USER);
 
     // Compute a simple checksum to make sure that all processes are trying to
     // execute the same graph.  We should do two things in the future:
@@ -219,8 +218,6 @@ void MPIScheduler::initiateTask( DetailedTask* task,
                                  int           abort_point,
                                  int           iteration )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::initiateTask");
-  TAU_PROFILE("MPIScheduler::initiateTask()", " ", TAU_USER);
 
   postMPIRecvs(task, only_old_recvs, abort_point, iteration);
   if (only_old_recvs) {
@@ -233,7 +230,6 @@ void MPIScheduler::initiateTask( DetailedTask* task,
 void
 MPIScheduler::initiateReduction( DetailedTask* task )
 {
-  TAU_PROFILE("MPIScheduler::initiateReduction()", " ", TAU_USER);
 
   if (reductionout.active() && d_myworld->myrank() == 0) {
     coutLock.lock();
@@ -259,8 +255,6 @@ MPIScheduler::runTask( DetailedTask* task,
                        int           iteration,
                        int           thread_id /*=0*/ )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask");
-  TAU_PROFILE("MPIScheduler::runTask()", " ", TAU_USER);
 
   if (waitout.active()) {
     waittimesLock.lock();
@@ -280,7 +274,6 @@ MPIScheduler::runTask( DetailedTask* task,
   }
 
   {
-    MALLOC_TRACE_TAG_SCOPE("MPIScheduler::runTask::doit(" + task->getName() + ")");
     task->doit(d_myworld, dws, plain_old_dws);
   }
 
@@ -345,7 +338,7 @@ MPIScheduler::runReductionTask( DetailedTask* task )
 {
   const Task::Dependency* mod = task->getTask()->getModifies();
   ASSERT(!mod->next);
-  
+
   OnDemandDataWarehouse* dw = dws[mod->mapDataWarehouse()].get_rep();
   ASSERT(task->getTask()->d_comm>=0);
   dw->reduceMPI(mod->var, mod->reductionLevel, mod->matls, task->getTask()->d_comm);
@@ -359,7 +352,6 @@ MPIScheduler::postMPISends( DetailedTask* task,
                             int           iteration,
                             int           thread_id  /*=0*/ )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPISends");
   double sendstart = Time::currentSeconds();
   bool dbg_active = dbg.active();
 
@@ -549,10 +541,8 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
                                  int           abort_point,
                                  int           iteration )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::postMPIRecvs");
 
   double recvstart = Time::currentSeconds();
-  TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER);
 
   bool dbg_active = dbg.active();
   // Receive any of the foreign requires
@@ -613,11 +603,11 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
       }
 
       // Prepare to receive a message
-      BatchReceiveHandler* pBatchRecvHandler = scinew BatchReceiveHandler(batch);
+      BatchReceiveHandler* pBatchRecvHandler = new BatchReceiveHandler(batch);
       PackBufferInfo* p_mpibuff = 0;
 
 #ifdef USE_PACKING
-      p_mpibuff = scinew PackBufferInfo();
+      p_mpibuff = new PackBufferInfo();
       PackBufferInfo& mpibuff = *p_mpibuff;
 #else
       BufferInfo mpibuff;
@@ -726,7 +716,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 
         MPI_Irecv(buf, count, datatype, from, batch->messageTag, d_myworld->getComm(), &requestid);
         int bytes = count;
-        recvs_.add(requestid, bytes, scinew ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
+        recvs_.add(requestid, bytes, new ReceiveHandler(p_mpibuff, pBatchRecvHandler), ostr.str(), batch->messageTag);
         mpi_info_.totalrecvmpi += Time::currentSeconds() - start;
 
         /*}
@@ -745,7 +735,7 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
         // otherwise, these will be deleted after it receives and unpacks the data.
         delete p_mpibuff;
         delete pBatchRecvHandler;
-#endif          
+#endif
       }
     }  // end for loop over requires
   }
@@ -760,7 +750,6 @@ void MPIScheduler::postMPIRecvs( DetailedTask* task,
 //
 void MPIScheduler::processMPIRecvs(int how_much)
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::processMPIRecvs"); TAU_PROFILE("MPIScheduler::processMPIRecvs()", " ", TAU_USER);
 
   // Should only have external receives in the MixedScheduler version which
   // shouldn't use this function.
@@ -822,17 +811,7 @@ void
 MPIScheduler::execute( int tgnum     /* = 0 */,
                        int iteration /* = 0 */ )
 {
-  MALLOC_TRACE_TAG_SCOPE("MPIScheduler::execute");
 
-  TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER);
-  TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(sendtimer, "Send Dependency", "[MPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(recvtimer, "Recv Dependency", "[MPIScheduler::execute()] " , TAU_USER);
-  TAU_PROFILE_TIMER(outputtimer, "Task Graph Output", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(testsometimer, "Test Some", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(finalwaittimer, "Final Wait", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sorttimer, "Topological Sort", "[MPIScheduler::execute()] ", TAU_USER);
-  TAU_PROFILE_TIMER(sendrecvtimer, "Initial Send Recv", "[MPIScheduler::execute()] ", TAU_USER);
 
   ASSERTRANGE(tgnum, 0, (int )graphs.size());
   TaskGraph* tg = graphs[tgnum];
@@ -903,13 +882,12 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     dws[dwmap[Task::OldDW]]->exchangeParticleQuantities(dts, getLoadBalancer(), reloc_new_posLabel_, iteration);
   }
 
-  TAU_PROFILE_TIMER(doittimer, "Task execution", "[MPIScheduler::execute() loop] ", TAU_USER); TAU_PROFILE_START(doittimer);
 
   int i = 0;
   while (numTasksDone < ntasks) {
     i++;
 
-    // 
+    //
     // The following checkMemoryUse() is commented out to allow for
     // maintaining the same functionality as before this commit...
     // In other words, so that memory highwater checking is only done
@@ -998,7 +976,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
         printTaskLevels(d_myworld, taskLevel_dbg, task);
       }
     }
-  
+
       TAU_MAPPING_PROFILE_STOP(0);
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){
@@ -1008,7 +986,6 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     }
   } // end while( numTasksDone < ntasks )
 
-  TAU_PROFILE_STOP(doittimer);
 
   if (timeout.active()) {
     emitTime("MPI send time", mpi_info_.totalsendmpi);
@@ -1162,7 +1139,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
     d_lasttime = time;
     //timeout << "MPIScheduler: TOTAL                                    "
     //        << total << '\n';
-    //timeout << "MPIScheduler: time sum reduction (one processor only): " 
+    //timeout << "MPIScheduler: time sum reduction (one processor only): "
     //        << rtime << '\n';
   }
 

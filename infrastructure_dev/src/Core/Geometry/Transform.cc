@@ -920,7 +920,7 @@ SCIRun::get_type_description(Transform*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("Transform", Transform::get_h_file_path(), 
+    td = new TypeDescription("Transform", Transform::get_h_file_path(), 
                                 "SCIRun");
   }
   return td;

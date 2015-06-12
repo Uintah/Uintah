@@ -20,7 +20,7 @@ SampleFactory::register_all_tasks( ProblemSpecP& db )
 
   //The sample task: 
   std::string tname = "sample_task"; 
-  TaskInterface::TaskBuilder* sample_builder = scinew SampleTask::Builder(tname,0); 
+  TaskInterface::TaskBuilder* sample_builder = new SampleTask::Builder(tname,0); 
   register_task(tname, sample_builder); 
 
   _active_tasks.push_back(tname); 
@@ -28,7 +28,7 @@ SampleFactory::register_all_tasks( ProblemSpecP& db )
   //The templated task: 
   tname = "templated_task";
   TaskInterface::TaskBuilder* templated_sample_builder = 
-    scinew TemplatedSampleTask<SpatialOps::SVolField>::Builder(tname,0); 
+    new TemplatedSampleTask<SpatialOps::SVolField>::Builder(tname,0); 
   register_task(tname, templated_sample_builder); 
 
   _active_tasks.push_back(tname); 

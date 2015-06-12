@@ -37,9 +37,9 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Parallel/Parallel.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
 
@@ -83,14 +83,14 @@ void AdvectSlabs::problemSetup(const ProblemSpecP& params,
   sharedState_ = sharedState;
   ProblemSpecP ps = params->findBlock("AdvectSlabs");
   ps->require("delt", delt_);
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   sharedState->registerSimpleMaterial(mymat_);
 }
  
 void AdvectSlabs::scheduleInitialize(const LevelP& level,
                                SchedulerP& sched)
 {
-  Task* task = scinew Task("initialize",
+  Task* task = new Task("initialize",
                            this, &AdvectSlabs::initialize);
   task->computes(mass_label);
   task->computes(massAdvected_label);
@@ -105,7 +105,7 @@ void AdvectSlabs::scheduleRestartInitialize(const LevelP& level,
 void AdvectSlabs::scheduleComputeStableTimestep(const LevelP& level,
                                           SchedulerP& sched)
 {
-  Task* task = scinew Task("computeStableTimestep",
+  Task* task = new Task("computeStableTimestep",
                            this, &AdvectSlabs::computeStableTimestep);
   task->computes(sharedState_->get_delt_label(),level.get_rep());
   sched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
@@ -114,7 +114,7 @@ void AdvectSlabs::scheduleComputeStableTimestep(const LevelP& level,
 void
 AdvectSlabs::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  Task* task = scinew Task("timeAdvance",
+  Task* task = new Task("timeAdvance",
                            this, &AdvectSlabs::timeAdvance);
 
   task->requires(Task::OldDW, mass_label, Ghost::AroundCells, 2);

@@ -53,7 +53,7 @@ LightTime::LightTime(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
+  Ilb  = new ICELabel();
   //__________________________________
   //  diagnostic labels
   reactedFractionLabel= VarLabel::create("F",
@@ -119,7 +119,7 @@ void LightTime::problemSetup(GridP&,
   // the direction of burning
   //__________________________________
   //  define the materialSet
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                   // needed for the pressure and NC_CCWeight
@@ -136,7 +136,7 @@ void LightTime::scheduleInitialize(SchedulerP& sched,
                                const ModelInfo*)
 {
   cout_doing << "LightTime::scheduleInitialize " << endl;
-  Task* t = scinew Task("LightTime::initialize", this, &LightTime::initialize);
+  Task* t = new Task("LightTime::initialize", this, &LightTime::initialize);
 
   const MaterialSubset* react_matl = matl0->thisMaterial();
 
@@ -178,7 +178,7 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
                                             const LevelP& level,
                                             const ModelInfo* mi)
 {
-  Task* t = scinew Task("LightTime::computeModelSources", this, 
+  Task* t = new Task("LightTime::computeModelSources", this, 
                         &LightTime::computeModelSources, mi);
   cout_doing << "LightTime::scheduleComputeModelSources "<<  endl;  
   
@@ -367,7 +367,7 @@ void LightTime::scheduleErrorEstimate(const LevelP& coarseLevel,
   cout_doing << "LightTime::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
   
-  Task* t = scinew Task("LightTime::errorEstimate", 
+  Task* t = new Task("LightTime::errorEstimate", 
                   this, &LightTime::errorEstimate);  
   
   

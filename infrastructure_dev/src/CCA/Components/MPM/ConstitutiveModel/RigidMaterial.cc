@@ -24,7 +24,7 @@
 
 #include "RigidMaterial.h"
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -38,7 +38,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -80,7 +80,7 @@ void RigidMaterial::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 RigidMaterial* RigidMaterial::clone()
 {
-  return scinew RigidMaterial(*this);
+  return new RigidMaterial(*this);
 }
 
 

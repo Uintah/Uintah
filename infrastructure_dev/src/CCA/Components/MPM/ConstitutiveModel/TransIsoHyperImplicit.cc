@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -38,7 +38,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -132,7 +132,7 @@ void TransIsoHyperImplicit::outputProblemSpec(ProblemSpecP& ps,
 
 TransIsoHyperImplicit* TransIsoHyperImplicit::clone()
 {
-  return scinew TransIsoHyperImplicit(*this);
+  return new TransIsoHyperImplicit(*this);
 }
 
 void TransIsoHyperImplicit::initializeCMData(const Patch* patch,
@@ -1150,7 +1150,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "TransIsoHyperImplicit::StateData", true,
                                   &makeMPI_CMData);
     }

@@ -34,7 +34,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/FastMatrix.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <cmath>
 #include <iostream>
 
@@ -43,12 +43,12 @@ using namespace Uintah;
 
 ImplicitCM::ImplicitCM()
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 ImplicitCM::ImplicitCM(const ImplicitCM* cm)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 }
 
 ImplicitCM::~ImplicitCM()

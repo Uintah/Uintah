@@ -415,7 +415,7 @@ void MaterialParticleVarData::createPatchMap()
   if (d_patchMap)
     delete d_patchMap;
   
-  d_patchMap = scinew map<long64, const Patch*>();
+  d_patchMap = new map<long64, const Patch*>();
   
   for (unsigned int patch = 0; patch < d_particleVars.size(); patch++) {
     particleIndex count = d_particleVars[patch]->getParticleSubset()->numParticles();
@@ -524,7 +524,7 @@ void MaterialParticleData::sort()
     subsetIndices[idIndices[i].second] = i;
   }
 
-  ParticleSubset* subset = scinew ParticleSubset(0, matl_, 0);
+  ParticleSubset* subset = new ParticleSubset(0, matl_, 0);
   subset->expand(subsetIndices.size());
   for (unsigned int i = 0; i < subsetIndices.size(); i++) {
     subset->addParticle(subsetIndices[i]);
@@ -759,25 +759,25 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
           ParticleVariableBase* pvb = NULL;
           switch(subtype->getType()){
           case Uintah::TypeDescription::double_type:
-            pvb = scinew ParticleVariable<double>();
+            pvb = new ParticleVariable<double>();
             break;
           case Uintah::TypeDescription::float_type:
-            pvb = scinew ParticleVariable<float>();
+            pvb = new ParticleVariable<float>();
             break;
           case Uintah::TypeDescription::long64_type:
-            pvb = scinew ParticleVariable<long64>();
+            pvb = new ParticleVariable<long64>();
             break;
           case Uintah::TypeDescription::int_type:
-            pvb = scinew ParticleVariable<int>();
+            pvb = new ParticleVariable<int>();
             break;
           case Uintah::TypeDescription::Point:
-            pvb = scinew ParticleVariable<Point>();
+            pvb = new ParticleVariable<Point>();
             break;
           case Uintah::TypeDescription::Vector:
-            pvb = scinew ParticleVariable<Vector>(); 
+            pvb = new ParticleVariable<Vector>(); 
             break;
           case Uintah::TypeDescription::Matrix3:
-            pvb = scinew ParticleVariable<Matrix3>();
+            pvb = new ParticleVariable<Matrix3>();
             break;
           default:
             cerr << "addParticleData: ParticleVariable of unsupported type: " 
@@ -944,22 +944,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     NodeIterator iter = patch->getNodeIterator();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
-      return scinew
+      return new
         SpecificFieldComparator<NCVariable<double>,  NodeIterator>(iter);
     case Uintah::TypeDescription::float_type:
-      return scinew
+      return new
         SpecificFieldComparator<NCVariable<float>,   NodeIterator>(iter);
     case Uintah::TypeDescription::int_type:
-      return scinew
+      return new
         SpecificFieldComparator<NCVariable<int>,     NodeIterator>(iter);
     case Uintah::TypeDescription::Point:
-      return scinew
+      return new
         SpecificFieldComparator<NCVariable<Point>,   NodeIterator>(iter);
     case Uintah::TypeDescription::Vector:
-      return scinew
+      return new
         SpecificFieldComparator<NCVariable<Vector>,  NodeIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
-      return scinew
+      return new
         SpecificFieldComparator<NCVariable<Matrix3>, NodeIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: NC Variable of unsupported type: " << subtype->getName() << '\n';
@@ -971,25 +971,25 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     CellIterator iter = patch->getCellIterator();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
-      return scinew
+      return new
         SpecificFieldComparator<CCVariable<double>,  CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
-      return scinew
+      return new
         SpecificFieldComparator<CCVariable<float>,   CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
-      return scinew
+      return new
         SpecificFieldComparator<CCVariable<int>,     CellIterator>(iter);
     case Uintah::TypeDescription::Point:
-      return scinew
+      return new
         SpecificFieldComparator<CCVariable<Point>,   CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
-      return scinew
+      return new
         SpecificFieldComparator<CCVariable<Vector>,  CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
-      return scinew
+      return new
         SpecificFieldComparator<CCVariable<Matrix3>, CellIterator>(iter);
     case Uintah::TypeDescription::Stencil7:
-      return scinew
+      return new
         SpecificFieldComparator<CCVariable<Stencil7>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: CC Variable of unsupported type: " << subtype->getName() << '\n';
@@ -1001,22 +1001,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     CellIterator iter = patch->getSFCXIterator();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCXVariable<double>, CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCXVariable<float>,  CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCXVariable<int>,    CellIterator>(iter);
     case Uintah::TypeDescription::Point:
-      return scinew
+      return new
         SpecificFieldComparator<SFCXVariable<Point>,  CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
-      return scinew
+      return new
         SpecificFieldComparator<SFCXVariable<Vector>, CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
-      return scinew
+      return new
         SpecificFieldComparator<SFCXVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCX Variable of unsupported type: " << subtype->getName() << '\n';
@@ -1028,22 +1028,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     CellIterator iter = patch->getSFCYIterator();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCYVariable<double>,  CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCYVariable<float>,   CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCYVariable<int>,     CellIterator>(iter);
     case Uintah::TypeDescription::Point:
-      return scinew
+      return new
         SpecificFieldComparator<SFCYVariable<Point>,   CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
-      return scinew
+      return new
         SpecificFieldComparator<SFCYVariable<Vector>,  CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
-      return scinew
+      return new
         SpecificFieldComparator<SFCYVariable<Matrix3>, CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCY Variable of unsupported type: " << subtype->getName() << '\n';
@@ -1055,22 +1055,22 @@ makeFieldComparator(const Uintah::TypeDescription* td,
     CellIterator iter = patch->getSFCZIterator();
     switch(subtype->getType()){
     case Uintah::TypeDescription::double_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCZVariable<double>,   CellIterator>(iter);
     case Uintah::TypeDescription::float_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCZVariable<float>,    CellIterator>(iter);
     case Uintah::TypeDescription::int_type:
-      return scinew
+      return new
         SpecificFieldComparator<SFCZVariable<int>,      CellIterator>(iter);
     case Uintah::TypeDescription::Point:
-      return scinew
+      return new
         SpecificFieldComparator<SFCZVariable<Point>,    CellIterator>(iter);
     case Uintah::TypeDescription::Vector:
-      return scinew
+      return new
         SpecificFieldComparator<SFCZVariable<Vector>,   CellIterator>(iter);
     case Uintah::TypeDescription::Matrix3:
-      return scinew
+      return new
         SpecificFieldComparator<SFCZVariable<Matrix3>,  CellIterator>(iter);
     default:
       cerr << "FieldComparator::makeFieldComparator: SFCZ Variable of unsupported type: " << subtype->getName() << '\n';
@@ -1124,7 +1124,7 @@ SpecificFieldComparator<Field, Iterator>::compareFields( DataArchive            
           ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2, timestep);
           ASSERT(matls == matls2); // check should have been made previously
         }
-        field2 = scinew Field();
+        field2 = new Field();
         patch2FieldMap[patch2] = field2;
         da2->query(*field2, var, matl, patch2, timestep);
       }
@@ -1336,8 +1336,8 @@ main(int argc, char** argv)
   cout << setprecision(digits_precision);
 
   try {
-    DataArchive* da1 = scinew DataArchive(d_filebase1);
-    DataArchive* da2 = scinew DataArchive(d_filebase2);
+    DataArchive* da1 = new DataArchive(d_filebase1);
+    DataArchive* da2 = new DataArchive(d_filebase2);
 
     vector<string> vars;    
     vector<const Uintah::TypeDescription*> types;

@@ -35,7 +35,7 @@ DragModelBuilder::DragModelBuilder( const std::string         & modelName,
 DragModelBuilder::~DragModelBuilder(){}
 
 ModelBase* DragModelBuilder::build(){
-  return scinew DragModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new DragModel( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 
 // End Builder
@@ -174,7 +174,7 @@ void
 DragModel::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "DragModel::computeModel";
-  Task* tsk = scinew Task( taskname, this, &DragModel::computeModel, timeSubStep );
+  Task* tsk = new Task( taskname, this, &DragModel::computeModel, timeSubStep );
 
   Ghost::GhostType  gn  = Ghost::None;
 

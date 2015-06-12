@@ -153,7 +153,7 @@ Pressure::schedule_set_pressure_bcs( const Uintah::LevelP& level,
                           const int RKStage )
 {
   // hack in a task to apply boundary condition on the pressure after the pressure solve
-  Uintah::Task* task = scinew Uintah::Task("Pressure: process pressure bcs", this,
+  Uintah::Task* task = new Uintah::Task("Pressure: process pressure bcs", this,
                                            &Pressure::process_bcs);
   const Uintah::Ghost::GhostType gt = get_uintah_ghost_type<SVolField>();
   const int ng = get_n_ghost<SVolField>();

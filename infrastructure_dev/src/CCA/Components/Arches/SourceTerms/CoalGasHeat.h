@@ -78,7 +78,7 @@ class CoalGasHeat: public SourceTermBase {
       ~Builder(){}; 
 
       CoalGasHeat* build()
-      { return scinew CoalGasHeat( _name, _required_label_names, _shared_state, _type ); };
+      { return new CoalGasHeat( _name, _required_label_names, _shared_state, _type ); };
 
     private: 
 

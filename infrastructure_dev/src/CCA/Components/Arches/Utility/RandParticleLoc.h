@@ -46,7 +46,7 @@ public:
       ~Builder(){}
 
       RandParticleLoc* build()
-      { return scinew RandParticleLoc( _task_name, _matl_index ); }
+      { return new RandParticleLoc( _task_name, _matl_index ); }
 
       private: 
 

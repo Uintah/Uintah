@@ -30,7 +30,7 @@
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Util/constHandle.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Geometry/IntVector.h>
 #include <Core/Parallel/Parallel.h>
 
@@ -772,7 +772,7 @@ class Task {
                         const MaterialSubset* matls,
                         DataWarehouse* fromDW,
                         DataWarehouse* toDW))
-        : d_taskName(taskName), d_action(scinew Action<T>(ptr, pmf))
+        : d_taskName(taskName), d_action(new Action<T>(ptr, pmf))
     {
       d_tasktype = Normal;
       initialize();
@@ -788,7 +788,7 @@ class Task {
                         DataWarehouse* toDW,
                         Arg1 arg1),
          Arg1 arg1)
-        : d_taskName(taskName), d_action(scinew Action1<T, Arg1>(ptr, pmf, arg1))
+        : d_taskName(taskName), d_action(new Action1<T, Arg1>(ptr, pmf, arg1))
     {
       d_tasktype = Normal;
       initialize();
@@ -808,7 +808,7 @@ class Task {
          Arg2 arg2)
         :
           d_taskName(taskName),
-            d_action(scinew Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
+            d_action(new Action2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
     {
       d_tasktype = Normal;
       initialize();
@@ -830,7 +830,7 @@ class Task {
          Arg3 arg3)
         :
           d_taskName(taskName),
-            d_action(scinew Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
+            d_action(new Action3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
     {
       d_tasktype = Normal;
       initialize();
@@ -854,7 +854,7 @@ class Task {
          Arg4 arg4)
         :
           d_taskName(taskName),
-            d_action(scinew Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
+            d_action(new Action4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
     {
       d_tasktype = Normal;
       initialize();
@@ -880,7 +880,7 @@ class Task {
          Arg5 arg5)
         :
           d_taskName(taskName),
-            d_action(scinew Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+            d_action(new Action5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
     {
       d_tasktype = Normal;
       initialize();
@@ -904,7 +904,7 @@ class Task {
                         int deviceID))
         :
           d_taskName(taskName),
-            d_action(scinew ActionDevice<T>(ptr, pmf))
+            d_action(new ActionDevice<T>(ptr, pmf))
     {
       initialize();
       d_tasktype = Normal;
@@ -926,7 +926,7 @@ class Task {
          Arg1 arg1)
         :
           d_taskName(taskName),
-            d_action(scinew ActionDevice1<T, Arg1>(ptr, pmf, arg1))
+            d_action(new ActionDevice1<T, Arg1>(ptr, pmf, arg1))
     {
       initialize();
       d_tasktype = Normal;
@@ -949,7 +949,7 @@ class Task {
          Arg2 arg2)
         :
           d_taskName(taskName),
-            d_action(scinew ActionDevice2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
+            d_action(new ActionDevice2<T, Arg1, Arg2>(ptr, pmf, arg1, arg2))
     {
       initialize();
       d_tasktype = Normal;
@@ -974,7 +974,7 @@ class Task {
          Arg3 arg3)
         :
           d_taskName(taskName),
-            d_action(scinew ActionDevice3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
+            d_action(new ActionDevice3<T, Arg1, Arg2, Arg3>(ptr, pmf, arg1, arg2, arg3))
     {
       initialize();
       d_tasktype = Normal;
@@ -1001,7 +1001,7 @@ class Task {
          Arg4 arg4)
         :
           d_taskName(taskName),
-            d_action(scinew ActionDevice4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
+            d_action(new ActionDevice4<T, Arg1, Arg2, Arg3, Arg4>(ptr, pmf, arg1, arg2, arg3, arg4))
     {
       initialize();
       d_tasktype = Normal;
@@ -1030,7 +1030,7 @@ class Task {
          Arg5 arg5)
         :
           d_taskName(taskName),
-            d_action(scinew ActionDevice5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
+            d_action(new ActionDevice5<T, Arg1, Arg2, Arg3, Arg4, Arg5>(ptr, pmf, arg1, arg2, arg3, arg4, arg5))
     {
       initialize();
       d_tasktype = Normal;

@@ -40,7 +40,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 
 #include <Core/Containers/StaticArray.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/MinMax.h>
 
 #include <sci_defs/uintah_defs.h>
@@ -211,7 +211,7 @@ void Diamm::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Diamm* Diamm::clone()
 {
-  return scinew Diamm(*this);
+  return new Diamm(*this);
 }
 
 void Diamm::initializeCMData(const Patch* patch,

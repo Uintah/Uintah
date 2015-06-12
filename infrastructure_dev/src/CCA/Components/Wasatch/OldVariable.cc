@@ -231,7 +231,7 @@ namespace Wasatch {
     if( varHelpers_.size() == 0 ) return;
 
     // create the Uintah task to accomplish this.
-    Uintah::Task* oldVarTask = scinew Uintah::Task( "set old variables", this, &OldVariable::populate_old_variable, rkStage );
+    Uintah::Task* oldVarTask = new Uintah::Task( "set old variables", this, &OldVariable::populate_old_variable, rkStage );
     
     BOOST_FOREACH( VarHelperBase* vh, varHelpers_ ){
       oldVarTask->requires( Uintah::Task::OldDW, vh->get_var_label(), vh->get_ghost_type() );

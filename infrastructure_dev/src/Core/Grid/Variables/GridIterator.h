@@ -201,7 +201,7 @@ namespace Uintah {
      * this should be used only by the Iterator class
      */
     GridIterator* clone() const {
-      return scinew GridIterator(*this);
+      return new GridIterator(*this);
     }
 
 

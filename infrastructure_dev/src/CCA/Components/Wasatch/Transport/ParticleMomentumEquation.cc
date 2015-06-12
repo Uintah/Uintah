@@ -114,7 +114,7 @@ namespace Wasatch{
     // build a particle density expression
     if( !factory.have_entry( pRhoTag_ ) ){
       typedef ParticleDensity::Builder ParticleDensity;
-      factory.register_expression( scinew ParticleDensity(pRhoTag_, pMassTag_, pSizeTag_ ) );
+      factory.register_expression( new ParticleDensity(pRhoTag_, pMassTag_, pSizeTag_ ) );
     }
 
     //_____________________________
@@ -129,7 +129,7 @@ namespace Wasatch{
         default:                                            break;
       }
       typedef ParticleBodyForce<SVolField>::Builder BodyForce;
-      factory.register_expression( scinew BodyForce(pBodyForceTag, gRhoTag_, pRhoTag_, pSizeTag_, pPosTags_ ) );
+      factory.register_expression( new BodyForce(pBodyForceTag, gRhoTag_, pRhoTag_, pSizeTag_, pPosTags_ ) );
     }
 
     Expr::Tag pDragForceTag;
@@ -139,7 +139,7 @@ namespace Wasatch{
       const Expr::Tag pTauTag = TagNames::self().presponse;
       if( !factory.have_entry( pTauTag ) ){
         typedef ParticleResponseTime<SVolField>::Builder ParticleTau;
-        factory.register_expression( scinew ParticleTau(pTauTag, pRhoTag_, pSizeTag_, gViscTag_, pPosTags_ ) );
+        factory.register_expression( new ParticleTau(pTauTag, pRhoTag_, pSizeTag_, gViscTag_, pPosTags_ ) );
       }
       
       //_____________________________
@@ -149,7 +149,7 @@ namespace Wasatch{
         typedef ParticleRe<XVolField, YVolField, ZVolField, SVolField>::Builder ParticleReB;
         const Expr::TagList gVelTags(tag_list(gUTag_, gVTag_, gWTag_));
         const Expr::TagList pVelTags(tag_list(pUTag_, pVTag_, pWTag_));
-        factory.register_expression( scinew ParticleReB(pReTag, pSizeTag_, gRhoTag_, gViscTag_, pPosTags_, pVelTags, gVelTags ) );
+        factory.register_expression( new ParticleReB(pReTag, pSizeTag_, gRhoTag_, gViscTag_, pPosTags_, pVelTags, gVelTags ) );
       }
       
       //_____________________________
@@ -157,7 +157,7 @@ namespace Wasatch{
       const Expr::Tag pDragCoefTag = TagNames::self().pdragcoef;
       if( !factory.have_entry(pDragCoefTag) ){
         typedef  ParticleDragCoefficient::Builder DragCoef;
-        factory.register_expression( scinew DragCoef(pDragCoefTag, pReTag ) );
+        factory.register_expression( new DragCoef(pDragCoefTag, pReTag ) );
       }
       
       //_____________________________
@@ -167,21 +167,21 @@ namespace Wasatch{
         {
           pDragForceTag = TagNames::self().pdragx;
           typedef ParticleDragForce<XVolField>::Builder DragForce;
-          factory.register_expression( scinew DragForce(pDragForceTag, gUTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
+          factory.register_expression( new DragForce(pDragForceTag, gUTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
         case YDIR:
         {
           pDragForceTag = TagNames::self().pdragy;
           typedef ParticleDragForce<YVolField>::Builder DragForce;
-          factory.register_expression( scinew DragForce(pDragForceTag, gVTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
+          factory.register_expression( new DragForce(pDragForceTag, gVTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
         case ZDIR:
         {
           pDragForceTag = TagNames::self().pdragz;
           typedef ParticleDragForce<ZVolField>::Builder DragForce;
-          factory.register_expression( scinew DragForce(pDragForceTag, gWTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
+          factory.register_expression( new DragForce(pDragForceTag, gWTag_, pDragCoefTag, pTauTag, solution_variable_tag(), pSizeTag_, pPosTags_ ) );
           break;
         }
         default:
@@ -190,7 +190,7 @@ namespace Wasatch{
     }
     
     typedef ParticleMomentumRHS::Builder RHSBuilder;
-    return factory.register_expression( scinew RHSBuilder(rhsTag_, pBodyForceTag, pDragForceTag ) );
+    return factory.register_expression( new RHSBuilder(rhsTag_, pBodyForceTag, pDragForceTag ) );
   }
   
   //------------------------------------------------------------------

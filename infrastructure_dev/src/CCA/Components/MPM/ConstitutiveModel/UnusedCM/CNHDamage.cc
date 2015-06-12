@@ -37,7 +37,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <Core/Math/MinMax.h>
@@ -108,7 +108,7 @@ void CNHDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CNHDamage* CNHDamage::clone()
 {
-  return scinew CNHDamage(*this);
+  return new CNHDamage(*this);
 }
 
 void 

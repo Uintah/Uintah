@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -38,7 +38,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -80,7 +80,7 @@ void IdealGasMP::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 IdealGasMP* IdealGasMP::clone()
 {
-  return scinew IdealGasMP(*this);
+  return new IdealGasMP(*this);
 }
 
 void IdealGasMP::initializeCMData(const Patch* patch,

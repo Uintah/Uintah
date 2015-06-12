@@ -45,7 +45,7 @@ TestModel::TestModel(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
   mymatls = 0;
-  MIlb  = scinew MPMICELabel();
+  MIlb  = new MPMICELabel();
   totalMassXLabel = 0;
   totalIntEngXLabel = 0;
 }
@@ -84,7 +84,7 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
   vector<int> m(2);
   m[0] = matl0->getDWIndex();
   m[1] = matl1->getDWIndex();
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();
  
@@ -142,7 +142,7 @@ void TestModel::scheduleComputeModelSources(SchedulerP& sched,
                                                 const LevelP& level,
                                                 const ModelInfo* mi)
 {
-  Task* t = scinew Task("TestModel::computeModelSources",this, 
+  Task* t = new Task("TestModel::computeModelSources",this, 
                         &TestModel::computeModelSources, mi);
   t->modifies(mi->modelMass_srcLabel);
   t->modifies(mi->modelMom_srcLabel);

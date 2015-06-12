@@ -70,7 +70,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_values.h>
 #include <Core/Math/Weibull.h> // For variability
@@ -306,7 +306,7 @@ void Arenisca4::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Arenisca4* Arenisca4::clone()
 {
-  return scinew Arenisca4(*this);
+  return new Arenisca4(*this);
 }
 
 void Arenisca4::initializeCMData(const Patch* patch,

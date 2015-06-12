@@ -177,8 +177,8 @@ namespace Wasatch{
           std::string axis;
           valParams->get("Axis",axis);
           typedef OscillatingCylinder::Builder Builder;
-          volFracBuilderInit = scinew Builder( vNames.vol_frac_tag<SVolField>(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
-          if (movingGeom) volFracBuilder = scinew Builder( vNames.vol_frac_tag<SVolField>(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          volFracBuilderInit = new Builder( vNames.vol_frac_tag<SVolField>(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
+          if (movingGeom) volFracBuilder = new Builder( vNames.vol_frac_tag<SVolField>(), axis, origin, oscillatingdir, insideValue, outsideValue, radius,frequency, amplitude );
         }
         
       } else {
@@ -191,8 +191,8 @@ namespace Wasatch{
           Uintah::GeometryPieceFactory::create(intrusionParams->findBlock("geom_object"),geomObjects);
         }
         typedef GeometryPieceWrapper::Builder svolfracBuilder;        
-        volFracBuilderInit = scinew svolfracBuilder( vNames.vol_frac_tag<SVolField>(), geomObjects, inverted );
-        if (movingGeom) volFracBuilder = scinew svolfracBuilder( vNames.vol_frac_tag<SVolField>(), geomObjects, inverted );
+        volFracBuilderInit = new svolfracBuilder( vNames.vol_frac_tag<SVolField>(), geomObjects, inverted );
+        if (movingGeom) volFracBuilder = new svolfracBuilder( vNames.vol_frac_tag<SVolField>(), geomObjects, inverted );
       }
       
       // register the volume fractions
@@ -204,15 +204,15 @@ namespace Wasatch{
       typedef AreaFraction<YVolField>::Builder yvolfracBuilder;
       typedef AreaFraction<ZVolField>::Builder zvolfracBuilder;
       
-      initgh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.vol_frac_tag<XVolField>(), vNames.vol_frac_tag<SVolField>() ) );
-      initgh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.vol_frac_tag<YVolField>(), vNames.vol_frac_tag<SVolField>() ) );
-      initgh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.vol_frac_tag<ZVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+      initgh->exprFactory->register_expression( new xvolfracBuilder( vNames.vol_frac_tag<XVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+      initgh->exprFactory->register_expression( new yvolfracBuilder( vNames.vol_frac_tag<YVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+      initgh->exprFactory->register_expression( new zvolfracBuilder( vNames.vol_frac_tag<ZVolField>(), vNames.vol_frac_tag<SVolField>() ) );
 
       if (movingGeom) {
         // when the geometry is moving, then recalculate volume fractions at every timestep
-        solngh->exprFactory->register_expression( scinew xvolfracBuilder( vNames.vol_frac_tag<XVolField>(), vNames.vol_frac_tag<SVolField>() ) );
-        solngh->exprFactory->register_expression( scinew yvolfracBuilder( vNames.vol_frac_tag<YVolField>(), vNames.vol_frac_tag<SVolField>() ) );
-        solngh->exprFactory->register_expression( scinew zvolfracBuilder( vNames.vol_frac_tag<ZVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+        solngh->exprFactory->register_expression( new xvolfracBuilder( vNames.vol_frac_tag<XVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+        solngh->exprFactory->register_expression( new yvolfracBuilder( vNames.vol_frac_tag<YVolField>(), vNames.vol_frac_tag<SVolField>() ) );
+        solngh->exprFactory->register_expression( new zvolfracBuilder( vNames.vol_frac_tag<ZVolField>(), vNames.vol_frac_tag<SVolField>() ) );
       } else {
         // when the geometry is not moving, copy the volume fractions from the previous timestep
         OldVariable& oldVar = OldVariable::self();

@@ -29,7 +29,7 @@
 #include <Core/Exceptions/TypeMismatchException.h>
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/TypeUtils.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include <cstring>
 
@@ -132,7 +132,7 @@ WARNING
      Variable*
      PerPatch<T>::maker()
      {
-       return scinew PerPatch<T>();
+       return new PerPatch<T>();
      }
 
    template<class T>
@@ -144,7 +144,7 @@ WARNING
           // var for some functions the perpatches are used in (i.e., task->computes).
           // Since they're not fully-qualified variables, maker
           // would fail anyway.  And since most instances use Handle, it would be difficult.
-          td = scinew TypeDescription(TypeDescription::PerPatch,
+          td = new TypeDescription(TypeDescription::PerPatch,
                                       "PerPatch", &maker,
                                       fun_getTypeDescription((int*)0));
         }
@@ -160,7 +160,7 @@ WARNING
       PerPatchBase*
       PerPatch<T>::clone() const
       {
-         return scinew PerPatch<T>(*this);
+         return new PerPatch<T>(*this);
       }
    
    template<class T>

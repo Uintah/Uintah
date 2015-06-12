@@ -30,7 +30,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 
 #include <Core/Geometry/IntVector.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Endian.h>
 #include <iostream>
 
@@ -86,7 +86,7 @@ SecondOrderAdvector* SecondOrderAdvector::clone(DataWarehouse* new_dw,
                                                 const Patch* patch,
                                                 const bool isNewGrid)
 {
-  return scinew SecondOrderAdvector(new_dw,patch, isNewGrid);
+  return new SecondOrderAdvector(new_dw,patch, isNewGrid);
 }
 
 /* ---------------------------------------------------------------------

@@ -27,7 +27,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 using namespace Uintah;
@@ -46,7 +46,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Stencil4,
+      td = new TypeDescription(TypeDescription::Stencil4,
                                   "Stencil4", true, 
                                   &makeMPI_Stencil4);
     }

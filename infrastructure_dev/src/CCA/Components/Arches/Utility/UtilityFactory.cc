@@ -16,7 +16,7 @@ UtilityFactory::register_all_tasks( ProblemSpecP& db )
 
   //GRID INFORMATION
   std::string tname = "grid_info"; 
-  TaskInterface::TaskBuilder* tsk = scinew GridInfo::Builder(tname,0); 
+  TaskInterface::TaskBuilder* tsk = new GridInfo::Builder(tname,0); 
   register_task(tname, tsk); 
 
   _active_tasks.push_back(tname); 

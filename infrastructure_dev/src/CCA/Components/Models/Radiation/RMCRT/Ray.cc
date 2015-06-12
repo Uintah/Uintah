@@ -183,7 +183,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
   //  Radiometer setup
   ProblemSpecP rad_ps = rmcrt_ps->findBlock("Radiometer");
   if( rad_ps ) {
-    d_radiometer = scinew Radiometer( d_FLT_DBL );
+    d_radiometer = new Radiometer( d_FLT_DBL );
     bool getExtraInputs = false;
     d_radiometer->problemSetup( prob_spec, rad_ps, grid, sharedState, getExtraInputs );
   }
@@ -391,10 +391,10 @@ Ray::sched_rayTrace( const LevelP& level,
     }
   
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< double >,
+      tsk = new Task( taskname, this, &Ray::rayTraceGPU< double >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceGPU< float >,
+      tsk = new Task( taskname, this, &Ray::rayTraceGPU< float >,
                            modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
 
     }
@@ -402,10 +402,10 @@ Ray::sched_rayTrace( const LevelP& level,
   } else {                                // C P U
 
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ) {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<double>,
+      tsk = new Task( taskname, this, &Ray::rayTrace<double>,
                           modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTrace<float>,
+      tsk = new Task( taskname, this, &Ray::rayTrace<float>,
                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     }
   }
@@ -702,21 +702,21 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     
     
     if ( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-      tsk = scinew Task( taskname, this, &Ray::rayTraceDataOnionGPU< double >,
+      tsk = new Task( taskname, this, &Ray::rayTraceDataOnionGPU< double >,
                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     } else {
-      tsk = scinew Task( taskname, this, &Ray::rayTraceDataOnionGPU< float >,
+      tsk = new Task( taskname, this, &Ray::rayTraceDataOnionGPU< float >,
                          modifies_divQ, abskg_dw, sigma_dw, celltype_dw, radCalc_freq );
     }
     tsk->usesDevice(true);
   } else {                                // CPU
     taskname = "Ray::rayTrace_dataOnion";
     if (RMCRTCommon::d_FLT_DBL == TypeDescription::double_type) {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
+      tsk = new Task(taskname, this, &Ray::rayTrace_dataOnion<double>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
                         radCalc_freq);
     }
     else {
-      tsk = scinew Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
+      tsk = new Task(taskname, this, &Ray::rayTrace_dataOnion<float>, modifies_divQ, abskg_dw, sigma_dw, celltype_dw,
                         radCalc_freq);
     }
   }
@@ -1226,10 +1226,10 @@ Ray::sched_setBoundaryConditions( const LevelP& level,
   Task* tsk = NULL;
   if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
 
-    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< double >,
+    tsk= new Task( taskname, this, &Ray::setBoundaryConditions< double >,
                       temp_dw, radCalc_freq, backoutTemp );
   } else {
-    tsk= scinew Task( taskname, this, &Ray::setBoundaryConditions< float >,
+    tsk= new Task( taskname, this, &Ray::setBoundaryConditions< float >,
                       temp_dw, radCalc_freq, backoutTemp );
   }
 
@@ -1443,7 +1443,7 @@ void Ray::sched_Refine_Q(SchedulerP& sched,
   if(L_indx > 0 ){
      printSchedule(patches,dbg,"Ray::scheduleRefine_Q (divQ)");
 
-    Task* task = scinew Task("Ray::refine_Q",this,
+    Task* task = new Task("Ray::refine_Q",this,
                              &Ray::refine_Q,  radCalc_freq);
 
     Task::MaterialDomainSpec  ND  = Task::NormalDomain;
@@ -1534,9 +1534,9 @@ void Ray::sched_ROI_Extents ( const LevelP& level,
 
   Task* tsk = NULL;
   if( RMCRTCommon::d_FLT_DBL == TypeDescription::double_type ){
-    tsk= scinew Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< double >);
+    tsk= new Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< double >);
   } else {
-    tsk= scinew Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< float >);
+    tsk= new Task( "Ray::ROI_Extents", this, &Ray::ROI_Extents< float >);
   }
 
   tsk->requires( Task::NewDW, d_abskgLabel,    d_gac, 1 );
@@ -1649,11 +1649,11 @@ void Ray::sched_Coarsen_Q ( const LevelP& coarseLevel,
   Task* tsk = NULL;
   switch( subtype ) {
     case TypeDescription::double_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< double >,
+      tsk = new Task( taskname, this, &Ray::coarsen_Q< double >,
                          variable, modifies, this_dw, radCalc_freq );
       break;
     case TypeDescription::float_type:
-      tsk = scinew Task( taskname, this, &Ray::coarsen_Q< float >,
+      tsk = new Task( taskname, this, &Ray::coarsen_Q< float >,
                          variable, modifies, this_dw, radCalc_freq );
       break;
     default:
@@ -1732,7 +1732,7 @@ void Ray::sched_computeCellType ( const LevelP& level,
                                   SchedulerP& sched,
                                   const int value)
 {
-    Task* tsk = scinew Task( "Ray::computeCellType", this,
+    Task* tsk = new Task( "Ray::computeCellType", this,
                              &Ray::computeCellType, value );
     tsk->computes( d_cellTypeLabel );
     sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -2018,7 +2018,7 @@ Ray::sched_filter( const LevelP& level,
                     bool modifies_divQFilt )
 {
   std::string taskname = "Ray::filter";
-  Task* tsk= scinew Task( taskname, this, &Ray::filter, which_divQ_dw, includeEC, modifies_divQFilt );
+  Task* tsk= new Task( taskname, this, &Ray::filter, which_divQ_dw, includeEC, modifies_divQFilt );
 
   printSchedule(level,dbg,taskname);
 

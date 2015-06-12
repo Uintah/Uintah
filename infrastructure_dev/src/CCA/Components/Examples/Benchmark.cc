@@ -35,7 +35,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <CCA/Ports/Scheduler.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 
@@ -69,7 +69,7 @@ void Benchmark::problemSetup(const ProblemSpecP& params,
   
   poisson->require("delt", delt_);
   
-  mymat_ = scinew SimpleMaterial();
+  mymat_ = new SimpleMaterial();
   
   sharedState->registerSimpleMaterial(mymat_);
 }
@@ -78,7 +78,7 @@ void Benchmark::problemSetup(const ProblemSpecP& params,
 void Benchmark::scheduleInitialize(const LevelP& level,
                                   SchedulerP& sched)
 {
-  Task* task = scinew Task("Benchmark::initialize",
+  Task* task = new Task("Benchmark::initialize",
                      this, &Benchmark::initialize);
                      
   task->computes(phi_label);
@@ -96,7 +96,7 @@ void Benchmark::scheduleRestartInitialize(const LevelP& level,
 void Benchmark::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {
-  Task* task = scinew Task("Benchmark::computeStableTimestep",
+  Task* task = new Task("Benchmark::computeStableTimestep",
                      this, &Benchmark::computeStableTimestep);
                      
   task->requires(Task::NewDW, residual_label);
@@ -109,7 +109,7 @@ void
 Benchmark::scheduleTimeAdvance( const LevelP& level, 
                                SchedulerP& sched)
 {
-  Task* task = scinew Task("Benchmark::timeAdvance",
+  Task* task = new Task("Benchmark::timeAdvance",
                      this, &Benchmark::timeAdvance);
                      
   task->requires(Task::OldDW, phi_label, Ghost::AroundNodes, 1);

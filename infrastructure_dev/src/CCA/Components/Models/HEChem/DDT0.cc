@@ -61,9 +61,9 @@ DDT0::DDT0(const ProcessorGroup* myworld,
 {
   d_mymatls  = 0;
   d_one_matl = 0;
-  Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
-  Mlb  = scinew MPMLabel();
+  Ilb  = new ICELabel();
+  MIlb = new MPMICELabel();
+  Mlb  = new MPMLabel();
   
 
   //__________________________________
@@ -78,7 +78,7 @@ DDT0::DDT0(const ProcessorGroup* myworld,
                                       CCVariable<double>::getTypeDescription());
   //__________________________________
   //  diagnostic labels Simple Burn    
-  d_saveConservedVars = scinew saveConservedVars();
+  d_saveConservedVars = new saveConservedVars();
   onSurfaceLabel   = VarLabel::create("onSurface",
                                        CCVariable<double>::getTypeDescription());
     
@@ -161,7 +161,7 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
 
   //__________________________________
   //  define the materialSet
-  d_mymatls = scinew MaterialSet();
+  d_mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                                 // needed for the pressure and NC_CCWeight
@@ -171,7 +171,7 @@ void DDT0::problemSetup(GridP&, SimulationStateP& sharedState,
   d_mymatls->addAll_unique(m);                    // elimiate duplicate entries
   d_mymatls->addReference();
 
-  d_one_matl = scinew MaterialSubset();
+  d_one_matl = new MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
 
@@ -228,7 +228,7 @@ void DDT0::scheduleInitialize(SchedulerP& sched,
                                const ModelInfo*)
 {
   printSchedule(level,cout_doing,"DDT0::scheduleInitialize");
-  Task* t = scinew Task("DDT0::initialize", this, &DDT0::initialize);
+  Task* t = new Task("DDT0::initialize", this, &DDT0::initialize);
   const MaterialSubset* react_matl = d_matl0->thisMaterial();
   t->computes(reactedFractionLabel, react_matl);
   t->computes(burningLabel,         react_matl);
@@ -276,7 +276,7 @@ void DDT0::scheduleComputeModelSources(SchedulerP& sched,
     return;    // only schedule on the finest level
   }
 
-  Task* t = scinew Task("DDT0::computeModelSources", this, 
+  Task* t = new Task("DDT0::computeModelSources", this, 
                         &DDT0::computeModelSources, mi);
   cout_doing << "DDT0::scheduleComputeModelSources "<<  endl;  
   Ghost::GhostType  gac = Ghost::AroundCells;

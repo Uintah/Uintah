@@ -50,7 +50,7 @@ void
 ConstSrcTerm::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "ConstSrcTerm::eval";
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &ConstSrcTerm::computeSource, timeSubStep);
 
   if (timeSubStep == 0) { 
 
@@ -137,7 +137,7 @@ ConstSrcTerm::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "ConstSrcTerm::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &ConstSrcTerm::initialize);
+  Task* tsk = new Task(taskname, this, &ConstSrcTerm::initialize);
 
   tsk->computes(_src_label);
 

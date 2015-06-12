@@ -157,7 +157,7 @@ const int Arches::NDIM = 3;
 Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   UintahParallelComponent(myworld)
 {
-  d_lab =  scinew  ArchesLabel();
+  d_lab =  new  ArchesLabel();
   d_MAlab                 =  0;      //will  be  set  by  setMPMArchesLabel
   d_props                 =  0;
   d_turbModel             =  0;
@@ -181,7 +181,7 @@ Arches::Arches(const ProcessorGroup* myworld, const bool doAMR) :
   d_doCQMOM                        = false;
 
   //lagrangian particles: 
-  _particlesHelper = scinew ArchesParticlesHelper(); 
+  _particlesHelper = new ArchesParticlesHelper(); 
   _particlesHelper->sync_with_arches(this); 
 
 }
@@ -241,7 +241,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   d_sharedState= sharedState;
   d_lab->setSharedState(sharedState);
-  ArchesMaterial* mat= scinew ArchesMaterial();
+  ArchesMaterial* mat= new ArchesMaterial();
   sharedState->registerArchesMaterial(mat);
   ProblemSpecP db = params->findBlock("CFD")->findBlock("ARCHES");
   _arches_spec = db; 
@@ -253,12 +253,12 @@ Arches::problemSetup(const ProblemSpecP& params,
 
   //==============NEW TASK STUFF
   //build the factories
-  boost::shared_ptr<UtilityFactory> UtilF(scinew UtilityFactory()); 
-  boost::shared_ptr<TransportFactory> TransF(scinew TransportFactory()); 
-  boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory()); 
-  boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory()); 
-  boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory()); 
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(sharedState)); 
+  boost::shared_ptr<UtilityFactory> UtilF(new UtilityFactory()); 
+  boost::shared_ptr<TransportFactory> TransF(new TransportFactory()); 
+  boost::shared_ptr<InitializeFactory> InitF(new InitializeFactory()); 
+  boost::shared_ptr<ParticleModelFactory> PartModF(new ParticleModelFactory()); 
+  boost::shared_ptr<LagrangianParticleFactory> LagF(new LagrangianParticleFactory()); 
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(new PropertyModelFactoryV2(sharedState)); 
 
   _boost_factory_map.clear(); 
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF)); 
@@ -317,12 +317,12 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // physical constant
-  d_physicalConsts = scinew PhysicalConstants();
+  d_physicalConsts = new PhysicalConstants();
   const ProblemSpecP db_root = db->getRootNode();
   d_physicalConsts->problemSetup(db_root);
 
   //create a time integrator.
-  d_timeIntegrator = scinew ExplicitTimeInt(d_lab);
+  d_timeIntegrator = new ExplicitTimeInt(d_lab);
   ProblemSpecP time_db = db->findBlock("TimeIntegrator");
   if (time_db) {
     string time_order;
@@ -443,14 +443,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   //Radiation Properties: 
   ProblemSpecP rad_properties_db = db->findBlock("RadiationProperties"); 
   int matl_index = d_sharedState->getArchesMaterial(0)->getDWIndex();
-  d_rad_prop_calc = scinew RadPropertyCalculator(matl_index); 
+  d_rad_prop_calc = new RadPropertyCalculator(matl_index); 
   if ( rad_properties_db ){
     d_rad_prop_calc->problemSetup(rad_properties_db); 
   }
 
   // read properties
   // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
+  d_props = new Properties(d_lab, d_MAlab, d_physicalConsts, d_myworld);
 
   d_props->problemSetup(db);
 
@@ -489,7 +489,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   // read boundary condition information
-  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
+  d_boundaryCondition = new BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
                                                  d_props );
 
   // send params, boundary type defined at the level of Grid
@@ -502,17 +502,17 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   if ( d_whichTurbModel == "smagorinsky"){
-    d_turbModel = scinew SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new SmagorinskyModel(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
   }else  if ( d_whichTurbModel == "dynamicprocedure"){
-    d_turbModel = scinew IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new IncDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
   }else if ( d_whichTurbModel == "compdynamicprocedure"){
-    d_turbModel = scinew CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new CompDynamicProcedure(d_lab, d_MAlab, d_physicalConsts,
                                           d_boundaryCondition);
   } else if ( d_whichTurbModel == "none" ){ 
     proc0cout << "\n Notice: Turbulence model specificied as: none. Running without momentum closure. \n";
-    d_turbModel = scinew TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
+    d_turbModel = new TurbulenceModelPlaceholder(d_lab, d_MAlab, d_physicalConsts,
                                                     d_boundaryCondition);
   } else {
     proc0cout << "\n Notice: No Turbulence model found. \n" << endl;
@@ -522,7 +522,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     
   d_turbModel->setMixedModel(d_mixedModel);
   if (d_mixedModel) {
-    d_scaleSimilarityModel=scinew ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
+    d_scaleSimilarityModel=new ScaleSimilarityModel(d_lab, d_MAlab, d_physicalConsts,
                                                        d_boundaryCondition);
     d_scaleSimilarityModel->problemSetup(db);
 
@@ -539,7 +539,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   }
 
   if (nlSolver == "explicit") {
-    d_nlSolver = scinew ExplicitSolver(d_lab, d_MAlab, d_props,
+    d_nlSolver = new ExplicitSolver(d_lab, d_MAlab, d_props,
                                        d_boundaryCondition,
                                        d_turbModel, d_scaleSimilarityModel,
                                        d_physicalConsts, 
@@ -612,7 +612,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     Arches::registerModels(dqmom_db);
 
     // Create a velocity model
-    d_partVel = scinew PartVel( d_lab );
+    d_partVel = new PartVel( d_lab );
     d_partVel->problemSetup( dqmom_db );
     d_nlSolver->setPartVel( d_partVel );
     // Do through and initialze all DQMOM equations and call their respective problem setups.
@@ -682,7 +682,7 @@ Arches::problemSetup(const ProblemSpecP& params,
     }
 
     // set up the linear solver:
-    d_dqmomSolver = scinew DQMOM( d_lab, d_which_dqmom );
+    d_dqmomSolver = new DQMOM( d_lab, d_which_dqmom );
     d_dqmomSolver->problemSetup( dqmom_db );
 
     // now pass it off to the nonlinear solver:
@@ -754,14 +754,14 @@ Arches::problemSetup(const ProblemSpecP& params,
 //    }
     
     // set up the linear solver:
-    d_cqmomSolver = scinew CQMOM( d_lab, d_usePartVel );
+    d_cqmomSolver = new CQMOM( d_lab, d_usePartVel );
     d_cqmomSolver->problemSetup( cqmom_db );
     
     //pass it to the explicit solver
     d_nlSolver->setCQMOMSolver( d_cqmomSolver );
     
     // set up convection
-    d_cqmomConvect = scinew CQMOM_Convection( d_lab );
+    d_cqmomConvect = new CQMOM_Convection( d_lab );
     if (d_usePartVel ) {
       d_cqmomConvect-> problemSetup( cqmom_db );
       d_nlSolver->setCQMOMConvect( d_cqmomConvect );
@@ -942,7 +942,7 @@ Arches::scheduleInitialize(const LevelP& level,
   d_turbModel->set3dPeriodic(d_3d_periodic);
   d_props->set3dPeriodic(d_3d_periodic);
 
-  init_timelabel = scinew TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
+  init_timelabel = new TimeIntegratorLabel(d_lab, TimeIntegratorStepType::FE);
   init_timelabel_allocated = true;
 
   // Property model initialization
@@ -1124,7 +1124,7 @@ Arches::sched_paramInit(const LevelP& level,
                         SchedulerP& sched)
 {
     // primitive variable initialization
-    Task* tsk = scinew Task( "Arches::paramInit", this, &Arches::paramInit);
+    Task* tsk = new Task( "Arches::paramInit", this, &Arches::paramInit);
 
     printSchedule(level,dbg,"Arches::paramInit");
 
@@ -1186,7 +1186,7 @@ Arches::paramInit(const ProcessorGroup* pg,
 
     // Initialize cellInformation
     PerPatch<CellInformationP> cellInfoP;
-    cellInfoP.setData(scinew CellInformation(patch));
+    cellInfoP.setData(new CellInformation(patch));
     new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
 
     CCVariable<double> density_guess;
@@ -1292,7 +1292,7 @@ Arches::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {  
   // primitive variable initialization
-  Task* tsk = scinew Task( "Arches::computeStableTimeStep",this,
+  Task* tsk = new Task( "Arches::computeStableTimeStep",this,
                            &Arches::computeStableTimeStep);
 
   printSchedule(level,dbg, "Arches::computeStableTimeStep");
@@ -1631,7 +1631,7 @@ void
 Arches::sched_scalarInit( const LevelP& level,
                           SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "Arches::scalarInit",
+  Task* tsk = new Task( "Arches::scalarInit",
                            this, &Arches::scalarInit);
 
   printSchedule(level,dbg,"Arches::scalarInit");
@@ -1708,7 +1708,7 @@ void
 Arches::sched_weightInit( const LevelP& level,
                          SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "Arches::weightInit",
+  Task* tsk = new Task( "Arches::weightInit",
                            this, &Arches::weightInit);
 
   printSchedule(level,dbg,"Arches::weightInit");
@@ -1812,7 +1812,7 @@ void
 Arches::sched_weightedAbsInit( const LevelP& level,
                                SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "Arches::weightedAbsInit",
+  Task* tsk = new Task( "Arches::weightedAbsInit",
                            this, &Arches::weightedAbsInit);
   // DQMOM transport vars
   DQMOMEqnFactory& dqmomFactory = DQMOMEqnFactory::self();
@@ -1979,7 +1979,7 @@ void
 Arches::sched_momentInit( const LevelP& level,
                           SchedulerP& sched )
 {
-  Task* tsk = scinew Task( "Arches::momentInit",
+  Task* tsk = new Task( "Arches::momentInit",
                           this, &Arches::momentInit);
   
   printSchedule(level,dbg,"Arches::momentInit");
@@ -2063,7 +2063,7 @@ Arches::momentInit( const ProcessorGroup* ,
 void
 Arches::sched_getCCVelocities(const LevelP& level, SchedulerP& sched)
 {
-  Task* tsk = scinew Task("Arches::getCCVelocities", this,
+  Task* tsk = new Task("Arches::getCCVelocities", this,
                           &Arches::getCCVelocities);
 
   printSchedule(level,dbg,"Arches::getCCVelocities");
@@ -2325,34 +2325,34 @@ void Arches::registerModels(ProblemSpecP& db)
 
         if ( model_type == "ConstantModel" ) {
           // Model term G = constant (G = 1)
-          ModelBuilder* modelBuilder = scinew ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new ConstantModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "KobayashiSarofimDevol" ) {
           // Kobayashi Sarofim devolatilization model
-          ModelBuilder* modelBuilder = scinew KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new KobayashiSarofimDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "RichardsFletcherDevol" ) {
           // Richards Fletcher devolatilization model
-          ModelBuilder* modelBuilder = scinew RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new RichardsFletcherDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "FOWYDevol" ) {
           // Biagini Tognotti devolatilization model
-          ModelBuilder* modelBuilder = scinew FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new FOWYDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "YamamotoDevol" ) {
-          ModelBuilder* modelBuilder = scinew YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new YamamotoDevolBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "CharOxidationShaddix" ) {
-          ModelBuilder* modelBuilder = scinew CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new CharOxidationShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
-          ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
+          ModelBuilder* modelBuilder = new EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
-          ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "SimpleBirth" ) {
-          ModelBuilder* modelBuilder = scinew SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
+          ModelBuilder* modelBuilder = new SimpleBirthBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else {
           proc0cout << "For model named: " << temp_model_name << endl;
@@ -2395,7 +2395,7 @@ void Arches::registerTransportEqns(ProblemSpecP& db)
       // The keys are currently strings which might be something we want to change if this becomes inefficient
       if ( eqn_type == "CCscalar" ) {
 
-        EqnBuilder* scalarBuilder = scinew CCScalarEqnBuilder( d_lab, d_timeIntegrator, eqn_name );
+        EqnBuilder* scalarBuilder = new CCScalarEqnBuilder( d_lab, d_timeIntegrator, eqn_name );
         eqnFactory.register_scalar_eqn( eqn_name, scalarBuilder );
 
       // ADD OTHER OPTIONS HERE if ( eqn_type == ....
@@ -2557,7 +2557,7 @@ void Arches::registerCQMOMEqns(ProblemSpecP& db)
       moment_name += mIndex;
       proc0cout << moment_name << endl;
       
-      CQMOMEqnBuilderBase* eqnBuilder = scinew CQMOMEqnBuilder( d_lab, d_timeIntegrator, moment_name );
+      CQMOMEqnBuilderBase* eqnBuilder = new CQMOMEqnBuilder( d_lab, d_timeIntegrator, moment_name );
       cqmom_eqnFactory.register_scalar_eqn( moment_name, eqnBuilder );
       nMoments++;
     }

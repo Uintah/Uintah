@@ -136,19 +136,19 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
     }
   }
 
-  d_pressSolver = scinew PressureSolver(d_lab, d_MAlab,
+  d_pressSolver = new PressureSolver(d_lab, d_MAlab,
                                         d_boundaryCondition,
                                         d_physicalConsts, d_myworld,
                                         d_hypreSolver);
   d_pressSolver->problemSetup(db);
 
-  d_momSolver = scinew MomentumSolver(d_lab, d_MAlab,
+  d_momSolver = new MomentumSolver(d_lab, d_MAlab,
                                       d_turbModel, d_boundaryCondition,
                                       d_physicalConsts);
   d_momSolver->problemSetup(db);
 
   if (d_calScalar) {
-    d_scalarSolver = scinew ScalarSolver(d_lab, d_MAlab,
+    d_scalarSolver = new ScalarSolver(d_lab, d_MAlab,
                                          d_turbModel, d_boundaryCondition,
                                          d_physicalConsts);
     d_scalarSolver->problemSetup(db);
@@ -157,7 +157,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   d_DORadiationCalc = false;
   
   if (d_enthalpySolve) {
-    d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
+    d_enthalpySolver = new EnthalpySolver(d_lab, d_MAlab,
                                              d_turbModel, d_boundaryCondition,
                                              d_physicalConsts, d_myworld);
     d_enthalpySolver->problemSetup(db);
@@ -167,7 +167,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("timeIntegratorType",d_timeIntegratorType,"BE");
     
   if (d_timeIntegratorType == "BE") {
-    d_timeIntegratorLabels.push_back(scinew TimeIntegratorLabel(d_lab,
+    d_timeIntegratorLabels.push_back(new TimeIntegratorLabel(d_lab,
                                      TimeIntegratorStepType::BE));
     numTimeIntegratorLevels = 1;
   }
@@ -207,7 +207,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   d_perproc_patches = lb->getPerProcessorPatchSet(level);
   d_perproc_patches->addReference();
 
-  Task* tsk = scinew Task("PicardNonlinearSolver::recursiveSolver",
+  Task* tsk = new Task("PicardNonlinearSolver::recursiveSolver",
                            this, &PicardNonlinearSolver::recursiveSolver,
                            level, sched.get_rep());
   tsk->hasSubScheduler();
@@ -824,7 +824,7 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
   // use BE timelabels for nosolve
-  nosolve_timelabels = scinew TimeIntegratorLabel(d_lab,
+  nosolve_timelabels = new TimeIntegratorLabel(d_lab,
                                             TimeIntegratorStepType::BE);
   nosolve_timelabels_allocated = true;
 
@@ -892,7 +892,7 @@ PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched,
 {
   //copies old db to new_db and then uses non-linear
   //solver to compute new values
-  Task* tsk = scinew Task( "PicardNonlinearSolver::setInitialGuess",
+  Task* tsk = new Task( "PicardNonlinearSolver::setInitialGuess",
                           this, &PicardNonlinearSolver::setInitialGuess);
                           
   Ghost::GhostType  gn = Ghost::None;
@@ -975,7 +975,7 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
                                         const PatchSet* patches,
                                         const MaterialSet* matls)
 {
-  Task* tsk = scinew Task( "PicardNonlinearSolver::dataCopy",
+  Task* tsk = new Task( "PicardNonlinearSolver::dataCopy",
                            this, &PicardNonlinearSolver::dummySolve);
 
   tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, Ghost::None, 0);
@@ -1016,7 +1016,7 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::interpFCToCC" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this, 
+  Task* tsk = new Task(taskname, this, 
                          &PicardNonlinearSolver::interpolateFromFCToCC, timelabels);
 
   Ghost::GhostType  gn = Ghost::None;
@@ -1676,7 +1676,7 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched,
                                        const PatchSet* patches,
                                        const MaterialSet* matls)
 {
-  Task* tsk = scinew Task( "PicardNonlinearSolver::probeData",
+  Task* tsk = new Task( "PicardNonlinearSolver::probeData",
                      this, &PicardNonlinearSolver::probeData);
                      
   Ghost::GhostType  gn = Ghost::None;
@@ -1921,7 +1921,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
       if (old_dw->exists(d_lab->d_cellInfoLabel, indx, patch)){ 
         old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
       }else {
-        cellInfoP.setData(scinew CellInformation(patch));
+        cellInfoP.setData(new CellInformation(patch));
       }
       new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     }
@@ -2077,7 +2077,7 @@ PicardNonlinearSolver::sched_printTotalKE(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::printTotalKE" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname,
+  Task* tsk = new Task(taskname,
                           this, &PicardNonlinearSolver::printTotalKE,
                           timelabels);
   
@@ -2142,7 +2142,7 @@ PicardNonlinearSolver::sched_saveTempCopies(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::saveTempCopies" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PicardNonlinearSolver::saveTempCopies,
                           timelabels);
                           
@@ -2208,7 +2208,7 @@ PicardNonlinearSolver::sched_getDensityGuess(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::getDensityGuess" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PicardNonlinearSolver::getDensityGuess,
                           timelabels);
 
@@ -2461,7 +2461,7 @@ PicardNonlinearSolver::sched_checkDensityGuess(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::checkDensityGuess" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PicardNonlinearSolver::checkDensityGuess,
                           timelabels);
 
@@ -2543,7 +2543,7 @@ PicardNonlinearSolver::sched_updateDensityGuess(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::updateDensityGuess" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PicardNonlinearSolver::updateDensityGuess,
                           timelabels);
 
@@ -2588,7 +2588,7 @@ PicardNonlinearSolver::sched_syncRhoF(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::syncRhoF" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PicardNonlinearSolver::syncRhoF, timelabels);
                           
   Ghost::GhostType  gn = Ghost::None;
@@ -2671,7 +2671,7 @@ PicardNonlinearSolver::sched_saveFECopies(SchedulerP& sched,
 {
   string taskname =  "PicardNonlinearSolver::saveFECopies" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &PicardNonlinearSolver::saveFECopies,
                           timelabels);
 

@@ -302,7 +302,7 @@ void compareFields(Norms<subtype>* norms,
     int count = patch_FieldMap.count(patch2);
     
     if (count == 0 ) {                       // field is not in the map and has not been loaded previously
-      field2 = scinew Field();
+      field2 = new Field();
       
       patch_FieldMap[patch2] = field2;       // store value (field) in the map
       
@@ -499,8 +499,8 @@ main(int argc, char** argv)
     usage("", argv[0]);
   }
 
-  DataArchive* da1 = scinew DataArchive(filebase1);
-  DataArchive* da2 = scinew DataArchive(filebase2);
+  DataArchive* da1 = new DataArchive(filebase1);
+  DataArchive* da2 = new DataArchive(filebase2);
 
   vector<string> vars, vars2;
   vector<const Uintah::TypeDescription*> types, types2;
@@ -674,10 +674,10 @@ main(int argc, char** argv)
           string filename = fname.str();
           createFile(filename, t);
           
-          Norms<int>* inorm       = scinew Norms<int>();
-          Norms<double>* dnorm    = scinew Norms<double>();
-          Norms<Vector>* vnorm    = scinew Norms<Vector>();
-          Norms<Stencil7>* s7norm = scinew Norms<Stencil7>();
+          Norms<int>* inorm       = new Norms<int>();
+          Norms<double>* dnorm    = new Norms<double>();
+          Norms<Vector>* vnorm    = new Norms<Vector>();
+          Norms<Stencil7>* s7norm = new Norms<Stencil7>();
           
           Vector zeroV = Vector(0,0,0);
           Stencil7 zeroS7;

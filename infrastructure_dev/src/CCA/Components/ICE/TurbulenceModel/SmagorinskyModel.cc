@@ -161,7 +161,7 @@ void Smagorinsky_Model::scheduleComputeVariance(SchedulerP& sched,
   if(filterScalars.size() > 0){
     for(int i=0;i<static_cast<int>(filterScalars.size());i++){
       FilterScalar* s = filterScalars[i];
-      Task* task = scinew Task("Smagorinsky_Model::computeVariance",this, 
+      Task* task = new Task("Smagorinsky_Model::computeVariance",this, 
                                &Smagorinsky_Model::computeVariance, s);
                                
       task->requires(Task::OldDW, s->scalar, Ghost::AroundCells, 1);

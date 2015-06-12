@@ -23,7 +23,7 @@
  */
 
 #include <Core/Grid/LinearInterpolator.h>
-#include <Core/Malloc/Allocator.h>
+
 
 using namespace Uintah;
 using namespace std;
@@ -46,7 +46,7 @@ LinearInterpolator::~LinearInterpolator()
 
 LinearInterpolator* LinearInterpolator::clone(const Patch* patch)
 {
-  return scinew LinearInterpolator(patch);
+  return new LinearInterpolator(patch);
  }
     
 //__________________________________

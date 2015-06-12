@@ -81,7 +81,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           CLASSNAMETEMP_PARAMS* build()
-          { return scinew CLASSNAMETEMP_PARAMS( _name, _shared_state ); };
+          { return new CLASSNAMETEMP_PARAMS( _name, _shared_state ); };
 
         private: 
 
@@ -147,7 +147,7 @@ namespace Uintah{
   void CLASSNAME<TEMP_PARAMS>::sched_computeProp( const LevelP& level, SchedulerP& sched, int time_substep )
   {
     std::string taskname = "CLASSNAME::computeProp"; 
-    Task* tsk = scinew Task( taskname, this, &CLASSNAME::computeProp, time_substep ); 
+    Task* tsk = new Task( taskname, this, &CLASSNAME::computeProp, time_substep ); 
 
     if ( time_substep == 0 ) {
       
@@ -234,7 +234,7 @@ namespace Uintah{
   {
     std::string taskname = "CLASSNAME::initialize"; 
 
-    Task* tsk = scinew Task(taskname, this, &CLASSNAME::initialize);
+    Task* tsk = new Task(taskname, this, &CLASSNAME::initialize);
     tsk->computes(_prop_label); 
 
     sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

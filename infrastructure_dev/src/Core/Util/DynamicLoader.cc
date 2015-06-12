@@ -30,7 +30,6 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
-#include <Core/Util/Environment.h>
 #include <Core/Util/StringUtil.h>
 
 #include <fstream>
@@ -276,8 +275,8 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
     ++iter;
   }
 
-  ASSERT(sci_getenv("SCIRUN_SRCDIR"));
-  const std::string srcdir(sci_getenv("SCIRUN_SRCDIR"));
+  ASSERT(getenv("SCIRUN_SRCDIR"));
+  const std::string srcdir(getenv("SCIRUN_SRCDIR"));
   // Generate other includes.
   iter = incl.begin();
   while (iter != incl.end())
@@ -340,7 +339,7 @@ CompileInfo::create_cc(ostream &fstr, bool empty) const
     fstr << "  return 0;" << endl << "//";
   }
 
-  fstr << "  return scinew " << template_class_name_ << "<"
+  fstr << "  return new " << template_class_name_ << "<"
        << template_arg_ << ">;" << endl
        << "}" << endl << "}" << endl;
 }
@@ -630,8 +629,6 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
 void
 DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
 {
-  if (sci_getenv_p("SCIRUN_NOCLEANUPCOMPILE")) { return; }
-
   const string base = otf_dir() + "/" + info->filename_;
 
   const string full_cc = base + "cc";
@@ -737,8 +734,8 @@ DynamicLoader::maybe_get(const CompileInfo &ci, DynamicAlgoHandle &algo)
 string
 DynamicLoader::otf_dir()
 {
-  ASSERT(sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
-  return string(sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
+  ASSERT(getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
+  return string(getenv("SCIRUN_ON_THE_FLY_LIBS_DIR"));
 }
 
 } // End namespace SCIRun

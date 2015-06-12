@@ -60,7 +60,7 @@
 #include <Core/Math/FastMatrix.h>
 #include <Core/Math/TangentModulusTensor.h>
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <cmath>
 #include <iostream>
@@ -90,7 +90,7 @@ GaoElastic::GaoElastic(ProblemSpecP& ps,MPMFlags* Mflag)
   ps->get("useModifiedEOS",d_useModifiedEOS);
 
   initializeLocalMPMLabels();
-  d_rdlb = scinew ReactionDiffusionLabel();
+  d_rdlb = new ReactionDiffusionLabel();
 }
 
 GaoElastic::GaoElastic(const GaoElastic* cm) :
@@ -102,7 +102,7 @@ GaoElastic::GaoElastic(const GaoElastic* cm) :
   d_tol = cm->d_tol ;
   
   initializeLocalMPMLabels();
-  d_rdlb = scinew ReactionDiffusionLabel();
+  d_rdlb = new ReactionDiffusionLabel();
 }
 
 GaoElastic::~GaoElastic()
@@ -137,7 +137,7 @@ void GaoElastic::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 GaoElastic* GaoElastic::clone()
 {
-  return scinew GaoElastic(*this);
+  return new GaoElastic(*this);
 }
 
 //______________________________________________________________________
@@ -515,7 +515,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       // This is simply the previous timestep deviatoric stress plus a
       // deviatoric elastic increment based on the shear modulus supplied by
       // the strength routine in use.
-      DeformationState* defState = scinew DeformationState();
+      DeformationState* defState = new DeformationState();
       defState->tensorD    = tensorD;
       defState->tensorEta  = tensorEta;
       defState->viscoElasticWorkRate = 0.0;

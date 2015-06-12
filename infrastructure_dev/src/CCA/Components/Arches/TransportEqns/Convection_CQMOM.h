@@ -819,9 +819,9 @@ namespace Uintah{
     //CQMOM with IC as velocity needs its own set of convection schemes, for now labled as simply first/second
     if (d_convScheme == "first") {
       
-      FirstOrderInterpolation<fT>* the_interpolant = scinew FirstOrderInterpolation<fT>();
+      FirstOrderInterpolation<fT>* the_interpolant = new FirstOrderInterpolation<fT>();
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
-      scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      new ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
       convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
@@ -830,9 +830,9 @@ namespace Uintah{
       
     } else if (d_convScheme == "second") {
       
-      SecondOrderInterpolation<fT>* the_interpolant = scinew SecondOrderInterpolation<fT>();
+      SecondOrderInterpolation<fT>* the_interpolant = new SecondOrderInterpolation<fT>();
       ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
-      scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      new ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
       convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, uVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
@@ -856,9 +856,9 @@ namespace Uintah{
     int dim = 1;
     
     if (d_convScheme == "first") {
-      FirstOrderInterpolation<fT>* the_interpolant = scinew FirstOrderInterpolation<fT>();
+      FirstOrderInterpolation<fT>* the_interpolant = new FirstOrderInterpolation<fT>();
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
-      scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      new ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
       convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
@@ -867,9 +867,9 @@ namespace Uintah{
       
     } else if (d_convScheme == "second") {
       
-      SecondOrderInterpolation<fT>* the_interpolant = scinew SecondOrderInterpolation<fT>();
+      SecondOrderInterpolation<fT>* the_interpolant = new SecondOrderInterpolation<fT>();
       ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
-      scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      new ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
       convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, vVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
@@ -893,9 +893,9 @@ namespace Uintah{
     int dim = 2;
     
     if (d_convScheme == "first") {
-      FirstOrderInterpolation<fT>* the_interpolant = scinew FirstOrderInterpolation<fT>();
+      FirstOrderInterpolation<fT>* the_interpolant = new FirstOrderInterpolation<fT>();
       ConvHelper1<FirstOrderInterpolation<fT>, fT>* convection_helper =
-      scinew ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      new ConvHelper1<FirstOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
       convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       
@@ -904,9 +904,9 @@ namespace Uintah{
       
     } else if (d_convScheme == "second") {
       
-      SecondOrderInterpolation<fT>* the_interpolant = scinew SecondOrderInterpolation<fT>();
+      SecondOrderInterpolation<fT>* the_interpolant = new SecondOrderInterpolation<fT>();
       ConvHelper1<SecondOrderInterpolation<fT>, fT>* convection_helper =
-      scinew ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
+      new ConvHelper1<SecondOrderInterpolation<fT>, fT>(the_interpolant, Fconv);
       
       convection_helper->do_convection( p, Fconv, weights, abscissas, M, nNodes, wVelIndex, momentIndex, dim, cellType, epW, d_convWeightLimit, this );
       

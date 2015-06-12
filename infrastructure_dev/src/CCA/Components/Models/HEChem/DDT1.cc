@@ -65,12 +65,12 @@ DDT1::DDT1(const ProcessorGroup* myworld,
 {
   d_mymatls  = 0;
   d_one_matl = 0;
-  Ilb  = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
-  Mlb  = scinew MPMLabel();
+  Ilb  = new ICELabel();
+  MIlb = new MPMICELabel();
+  Mlb  = new MPMLabel();
 
-  d_adj_IO_Press = scinew adj_IO();
-  d_adj_IO_Det   = scinew adj_IO();
+  d_adj_IO_Press = new adj_IO();
+  d_adj_IO_Det   = new adj_IO();
   //__________________________________
   //  diagnostic labels JWL++
   reactedFractionLabel   = VarLabel::create("F",
@@ -86,7 +86,7 @@ DDT1::DDT1(const ProcessorGroup* myworld,
                                       CCVariable<double>::getTypeDescription());
   //__________________________________
   //  diagnostic labels   
-  d_saveConservedVars = scinew saveConservedVars();
+  d_saveConservedVars = new saveConservedVars();
   
   onSurfaceLabel   = VarLabel::create("onSurface",
                                        CCVariable<double>::getTypeDescription());
@@ -247,7 +247,7 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
     
   //__________________________________
   //  define the materialSet
-  d_mymatls = scinew MaterialSet();
+  d_mymatls = new MaterialSet();
 
   vector<int> m;
   m.push_back(0);                                 // needed for the pressure and NC_CCWeight
@@ -258,7 +258,7 @@ void DDT1::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*)
   d_mymatls->addAll_unique(m);                    // elimiate duplicate entries
   d_mymatls->addReference();
 
-  d_one_matl = scinew MaterialSubset();
+  d_one_matl = new MaterialSubset();
   d_one_matl->add(0);
   d_one_matl->addReference();
 
@@ -424,7 +424,7 @@ void DDT1::scheduleInitialize(SchedulerP& sched,
                               const ModelInfo*)
 {
   printSchedule(level,cout_doing,"DDT1::scheduleInitialize");
-  Task* t = scinew Task("DDT1::initialize", this, &DDT1::initialize);
+  Task* t = new Task("DDT1::initialize", this, &DDT1::initialize);
   const MaterialSubset* react_matl = d_matl0->thisMaterial();
   t->computes(reactedFractionLabel, react_matl);
   t->computes(burningLabel,         react_matl);
@@ -531,7 +531,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   //__________________________________
   //
   // Task for computing the particles in a cell
-  Task* t0 = scinew Task("DDT1::computeNumPPC", this, 
+  Task* t0 = new Task("DDT1::computeNumPPC", this, 
                          &DDT1::computeNumPPC, mi);
     
   printSchedule(level,cout_doing,"DDT1::scheduleComputeNumPPC");  
@@ -550,7 +550,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
   
   //__________________________________
   //
-  Task* t1 = scinew Task("DDT1::computeBurnLogic", this, 
+  Task* t1 = new Task("DDT1::computeBurnLogic", this, 
                          &DDT1::computeBurnLogic, mi);    
     
   printSchedule(level,cout_doing,"DDT1::computeBurnLogic");  
@@ -610,7 +610,7 @@ void DDT1::scheduleComputeModelSources(SchedulerP& sched,
     
   //__________________________________
   //
-  Task* t2 = scinew Task("DDT1::computeModelSources", this, 
+  Task* t2 = new Task("DDT1::computeModelSources", this, 
                          &DDT1::computeModelSources, mi);
                         
   if(d_useCrackModel){  // Because there is a particle loop already in computeNumPPC, 
@@ -1506,7 +1506,7 @@ void DDT1::scheduleRefine(const PatchSet* patches,
   if(level->hasFinerLevel() == false){  // only on finest level
     printSchedule( patches ,cout_doing,"DDT1::scheduleRefine" );
     
-    Task* t = scinew Task("DDT1::refine",this, &DDT1::refine);
+    Task* t = new Task("DDT1::refine",this, &DDT1::refine);
     
     const MaterialSubset* react_matl = d_matl0->thisMaterial();
     t->computes( burningLabel,       react_matl );

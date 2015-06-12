@@ -38,7 +38,7 @@ void
 MMS1::sched_computeSource( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "MMS1::eval";
-  Task* tsk = scinew Task(taskname, this, &MMS1::computeSource, timeSubStep);
+  Task* tsk = new Task(taskname, this, &MMS1::computeSource, timeSubStep);
 
   if (timeSubStep == 0) { 
 
@@ -111,7 +111,7 @@ MMS1::sched_initialize( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "MMS1::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &MMS1::initialize);
+  Task* tsk = new Task(taskname, this, &MMS1::initialize);
 
   tsk->computes(_src_label);
 

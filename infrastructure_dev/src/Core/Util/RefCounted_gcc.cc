@@ -26,7 +26,7 @@
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
+
 using namespace Uintah;
 using namespace SCIRun;
 

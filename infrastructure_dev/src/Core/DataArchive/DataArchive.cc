@@ -301,7 +301,7 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */ )
     throw InternalError("DataArchive::queryGrid() failed to open input file.\n", __FILE__, __LINE__);
   }
 
-  GridP grid = scinew Grid;
+  GridP grid = new Grid;
 
   vector< vector<int> > procMap; // One vector<int> per level.
 
@@ -452,7 +452,7 @@ DataArchive::queryVariables( FILE                                   * fp,
       if( !td ){
         static TypeDescription* unknown_type = 0;
         if( !unknown_type ) {
-          unknown_type = scinew TypeDescription( TypeDescription::Unknown, "-- unknown type --", false, MPI_Datatype(-1) );
+          unknown_type = new TypeDescription( TypeDescription::Unknown, "-- unknown type --", false, MPI_Datatype(-1) );
         }
         td = unknown_type;
       }
@@ -479,10 +479,6 @@ DataArchive::query(       Variable     & var,
                           DataFileInfo * dfi /* = 0 */ )
 {
   double tstart = Time::currentSeconds();
-
-#if !defined( DISABLE_SCI_MALLOC )
-  const char* tag = AllocatorSetDefaultTag("QUERY");
-#endif
 
   d_lock.lock();
   TimeData& timedata = getTimeData(index);
@@ -553,7 +549,7 @@ DataArchive::query(       Variable     & var,
     }
     if (psubset == 0 || (int)psubset->numParticles() != dfi->numParticles)
     {
-      psubset = scinew ParticleSubset(dfi->numParticles, matlIndex, patch);
+      psubset = new ParticleSubset(dfi->numParticles, matlIndex, patch);
       //      cout << "numParticles: " << dfi->numParticles << "\n";
       //      cout << "d_pset size: " << d_psetDB.size() << "\n";
       //      cout << "1. key is: " << key.first << "\n";
@@ -596,10 +592,6 @@ DataArchive::query(       Variable     & var,
     cerr << "Error closing file: " << data_filename.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (close call)", errno, __FILE__, __LINE__);
   }
-
-#if !defined( DISABLE_SCI_MALLOC )
-  AllocatorSetDefaultTag(tag);
-#endif
   dbg << "DataArchive::query() completed in " << Time::currentSeconds()-tstart << " seconds\n";
 }
 
@@ -978,7 +970,7 @@ DataArchive::queryRestartTimestep( int & timestep )
       if( restart_ps ) {
         delete restart_ps;
       }
-      restart_ps = scinew ProblemSpec( line );
+      restart_ps = new ProblemSpec( line );
     }
   }
 

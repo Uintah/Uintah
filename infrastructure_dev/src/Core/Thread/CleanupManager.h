@@ -41,7 +41,7 @@
 //  Make a callback function that takes zero arguements and returns
 //  void.  Be very careful about introducing crashes into this
 //  callback function as it then becomes difficult to exit from
-//  scirun.  It's recommended that you avoid calling scinew from
+//  scirun.  It's recommended that you avoid calling new from
 //  within your callback.
 //  
 //  Register with CleanupManager::add_callback(YOUR_CALLBACK_HERE, MISC_DATA);

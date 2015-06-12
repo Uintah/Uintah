@@ -80,7 +80,7 @@ namespace Wasatch{
       Expr::ExpressionFactory& factory = *gc_[ADVANCE_SOLUTION]->exprFactory;
       if( !factory.have_entry( turbDiffTag_ ) ){
         typedef typename TurbulentDiffusivity::Builder TurbDiffT;
-        factory.register_expression( scinew TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
+        factory.register_expression( new TurbDiffT( turbDiffTag_, densityTag_, turbulenceParams.turbSchmidt, turbViscTag ) );
       }
     }
 
@@ -250,11 +250,11 @@ namespace Wasatch{
         }
         const Expr::Tag solnVarTagNp1( solnVarTag_.name(), Expr::STATE_NONE );
         factory.register_expression( new typename PrimVar<FieldT,SVolField>::Builder( primVarStarTag, solnVarTagNp1, densityStarTag ) );
-        factory.register_expression( scinew RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
+        factory.register_expression( new RHSBuilder( rhsStarTag, infoStar_, srcTags, densityStarTag, isConstDensity_, isStrong_, tagNames.drhodtstar ) );
       }
     }
 
-    return factory.register_expression( scinew RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
+    return factory.register_expression( new RHSBuilder( rhsTag_, info, srcTags, densityTag_, isConstDensity_, isStrong_, tagNames.drhodt ) );
   }
 
   //------------------------------------------------------------------

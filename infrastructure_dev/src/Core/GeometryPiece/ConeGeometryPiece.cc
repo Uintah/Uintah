@@ -27,7 +27,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 
 #ifndef M_PI
@@ -100,7 +100,7 @@ ConeGeometryPiece::~ConeGeometryPiece()
 GeometryPieceP
 ConeGeometryPiece::clone() const
 {
-  return scinew ConeGeometryPiece(*this);
+  return new ConeGeometryPiece(*this);
 }
 
 void

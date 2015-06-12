@@ -77,7 +77,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
           if ( independent_type == "svol"){ 
 
-            TaskInterface::TaskBuilder* tsk = scinew 
+            TaskInterface::TaskBuilder* tsk = new 
               ExampleParticleModel<SVol,SVol>::Builder(task_name, 0, model_name, N); 
 
             register_task( task_name, tsk ); 
@@ -105,7 +105,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           
           if ( independent_type == "svol"){
             
-            TaskInterface::TaskBuilder* tsk = scinew
+            TaskInterface::TaskBuilder* tsk = new
             DragModel<SVol,SVol>::Builder(task_name, 0, model_name, N);
             
             register_task( task_name, tsk );
@@ -132,7 +132,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           
           if ( independent_type == "svol"){
             
-            TaskInterface::TaskBuilder* tsk = scinew
+            TaskInterface::TaskBuilder* tsk = new
             BodyForce<SVol,SVol>::Builder(task_name, 0, model_name, N);
             
             register_task( task_name, tsk );
@@ -159,7 +159,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
           
           if ( independent_type == "svol"){
             
-            TaskInterface::TaskBuilder* tsk = scinew
+            TaskInterface::TaskBuilder* tsk = new
             Constant<SVol>::Builder(task_name, 0, model_name, N);
             
             register_task( task_name, tsk );
@@ -177,7 +177,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
   
       } else if ( type == "coal_density" ){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(task_name,0); 
+        TaskInterface::TaskBuilder* tsk = new CoalDensity::Builder(task_name,0); 
         register_task( task_name, tsk ); 
 
         _active_tasks.push_back(task_name); 
@@ -186,7 +186,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "coal_temperature" ) { 
 
-        TaskInterface::TaskBuilder* tsk = scinew CoalTemperature::Builder(task_name,0); 
+        TaskInterface::TaskBuilder* tsk = new CoalTemperature::Builder(task_name,0); 
         register_task( task_name, tsk ); 
 
         _active_tasks.push_back(task_name); 
@@ -195,7 +195,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "coal_temperature_nebo" ) { 
 
-        TaskInterface::TaskBuilder* tsk = scinew CoalTemperatureNebo::Builder(task_name,0); 
+        TaskInterface::TaskBuilder* tsk = new CoalTemperatureNebo::Builder(task_name,0); 
         register_task( task_name, tsk ); 
 
         _active_tasks.push_back(task_name); 
@@ -204,7 +204,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "coal_mass_clip" ) { 
 
-        TaskInterface::TaskBuilder* tsk = scinew CoalMassClip::Builder(task_name, 0, N); 
+        TaskInterface::TaskBuilder* tsk = new CoalMassClip::Builder(task_name, 0, N); 
         register_task( task_name, tsk );
 
         _active_tasks.push_back(task_name); 
@@ -212,7 +212,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "total_number_density" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew TotNumDensity::Builder(task_name, 0); 
+        TaskInterface::TaskBuilder* tsk = new TotNumDensity::Builder(task_name, 0); 
         register_task( task_name, tsk );
 
         _active_tasks.push_back(task_name); 

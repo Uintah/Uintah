@@ -55,7 +55,7 @@ namespace Uintah{
           ~Builder(){}; 
 
           ConstProperty<pT, constpT>* build()
-          { return scinew ConstProperty<pT, constpT>( _name, _shared_state ); };
+          { return new ConstProperty<pT, constpT>( _name, _shared_state ); };
 
         private: 
 
@@ -100,7 +100,7 @@ namespace Uintah{
   {
 
     std::string taskname = "ConstProperty::computeProp"; 
-    Task* tsk = scinew Task( taskname, this, &ConstProperty::computeProp, time_substep ); 
+    Task* tsk = new Task( taskname, this, &ConstProperty::computeProp, time_substep ); 
 
     tsk->modifies( _prop_label ); 
 
@@ -136,7 +136,7 @@ namespace Uintah{
   {
     std::string taskname = "ConstProperty::initialize"; 
 
-    Task* tsk = scinew Task(taskname, this, &ConstProperty::initialize);
+    Task* tsk = new Task(taskname, this, &ConstProperty::initialize);
     tsk->computes(_prop_label); 
 
     sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

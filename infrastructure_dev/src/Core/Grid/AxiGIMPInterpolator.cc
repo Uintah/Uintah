@@ -25,7 +25,7 @@
 #include <Core/Grid/AxiGIMPInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/MiscMath.h>
 
 using namespace SCIRun;
@@ -50,7 +50,7 @@ AxiGIMPInterpolator::~AxiGIMPInterpolator()
 
 AxiGIMPInterpolator* AxiGIMPInterpolator::clone(const Patch* patch)
 {
-  return scinew AxiGIMPInterpolator(patch);
+  return new AxiGIMPInterpolator(patch);
 }
 
 void AxiGIMPInterpolator::findCellAndWeights(const Point& pos,

@@ -25,7 +25,7 @@
 #include <Core/Grid/BSplineInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/MiscMath.h>
 
 using namespace SCIRun;
@@ -50,7 +50,7 @@ BSplineInterpolator::~BSplineInterpolator()
 
 BSplineInterpolator* BSplineInterpolator::clone(const Patch* patch)
 {
-  return scinew BSplineInterpolator(patch);
+  return new BSplineInterpolator(patch);
 }
  
 void BSplineInterpolator::findNodeComponents(const int& ix, int* xn, int& count,

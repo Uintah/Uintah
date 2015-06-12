@@ -39,7 +39,7 @@
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Short27.h> //for Fracture
 #include <Core/Grid/Variables/VarTypes.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <CCA/Components/MPM/ConstitutiveModel/PlasticityState.h>
@@ -552,7 +552,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_0/J;
 
       // Set up the PlasticityState
-      PlasticityState* state = scinew PlasticityState();
+      PlasticityState* state = new PlasticityState();
       state->plasticStrainRate = plasticStrainRate;
       state->plasticStrain = plasticStrain;
       state->pressure = pressure;

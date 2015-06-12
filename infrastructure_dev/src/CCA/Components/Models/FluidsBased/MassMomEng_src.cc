@@ -42,10 +42,10 @@ MassMomEng_src::MassMomEng_src(const ProcessorGroup* myworld, ProblemSpecP& para
   : ModelInterface(myworld), params(params)
 {
   mymatls = 0;
-  Ilb  = scinew ICELabel();
+  Ilb  = new ICELabel();
   totalMass_srcLabel = 0;
   totalEng_srcLabel = 0;
-  d_src = scinew src();
+  d_src = new src();
 }
 
 MassMomEng_src::~MassMomEng_src()
@@ -83,7 +83,7 @@ void MassMomEng_src::problemSetup(GridP&, SimulationStateP& sharedState,
 
   vector<int> m(1);
   m[0] = d_matl->getDWIndex();
-  mymatls = scinew MaterialSet();
+  mymatls = new MaterialSet();
   mymatls->addAll(m);
   mymatls->addReference();   
   
@@ -127,7 +127,7 @@ void MassMomEng_src::scheduleComputeModelSources(SchedulerP& sched,
                                                 const LevelP& level,
                                                 const ModelInfo* mi)
 { 
-  Task* t = scinew Task("MassMomEng_src::computeModelSources",this, 
+  Task* t = new Task("MassMomEng_src::computeModelSources",this, 
                         &MassMomEng_src::computeModelSources, mi);
   t->modifies(mi->modelMass_srcLabel);
   t->modifies(mi->modelMom_srcLabel);

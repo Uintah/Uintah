@@ -45,7 +45,7 @@ using namespace std;
 CohesiveZone::CohesiveZone(CZMaterial* czmat, MPMFlags* flags,
                            SimulationStateP& ss)
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
 
   d_flags = flags;
 
@@ -257,10 +257,10 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
                                       SchedulerP& sched,
                                       CZMaterial* czmat)
 {
-  Task* t = scinew Task("CohesiveZone::initialize",
+  Task* t = new Task("CohesiveZone::initialize",
                   this, &CohesiveZone::initialize);
 
-  MaterialSubset* zeroth_matl = scinew MaterialSubset();
+  MaterialSubset* zeroth_matl = new MaterialSubset();
   zeroth_matl->add(0);
   zeroth_matl->addReference();
 
@@ -280,7 +280,7 @@ void CohesiveZone::scheduleInitialize(const LevelP& level,
 
   vector<int> m(1);
   m[0] = czmat->getDWIndex();
-  MaterialSet* cz_matl_set = scinew MaterialSet();
+  MaterialSet* cz_matl_set = new MaterialSet();
   cz_matl_set->addAll(m);
   cz_matl_set->addReference();
 

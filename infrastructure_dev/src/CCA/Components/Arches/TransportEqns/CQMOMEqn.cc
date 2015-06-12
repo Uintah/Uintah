@@ -23,7 +23,7 @@ CQMOMEqnBuilder::~CQMOMEqnBuilder(){}
 
 EqnBase*
 CQMOMEqnBuilder::build(){
-  return scinew CQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
+  return new CQMOMEqn(d_fieldLabels, d_timeIntegrator, d_eqnName);
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -64,7 +64,7 @@ EqnBase( fieldLabels, timeIntegrator, eqnName )
   d_FconvZLabel = VarLabel::create(varname, CCVariable<double>::getTypeDescription());
   
   uVelIndex = -1; vVelIndex = -1; wVelIndex = -1;
-  d_cqmomConv = scinew Convection_CQMOM();
+  d_cqmomConv = new Convection_CQMOM();
   
 }
 
@@ -190,7 +190,7 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       source_label = d_eqnName + "_" + model_name + "_src";
       proc0cout << "Creating source label: " << source_label << endl;
       CQMOMSourceWrapper * cqmomSource;
-      cqmomSource =  scinew CQMOMSourceWrapper(d_fieldLabels, source_label, momentIndex, nIC) ;
+      cqmomSource =  new CQMOMSourceWrapper(d_fieldLabels, source_label, momentIndex, nIC) ;
       cqmomSource->problemSetup( m_db );
       d_sources.push_back(cqmomSource);
     }
@@ -310,7 +310,7 @@ void
 CQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
 {
   string taskname = "CQMOMEqn::initializeVariables";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::initializeVariables);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::initializeVariables);
   Ghost::GhostType gn = Ghost::None;
   //New
   tsk->computes(d_transportVarLabel);
@@ -391,7 +391,7 @@ void
 CQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::computeSources";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::computeSources);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::computeSources);
   
   // This scheduler only calls other schedulers
   for (vector<CQMOMSourceWrapper* >::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
@@ -453,7 +453,7 @@ void
 CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::buildTransportEqn";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildTransportEqn, timeSubStep);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::buildTransportEqn, timeSubStep);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -642,7 +642,7 @@ void
 CQMOMEqn::sched_solveTransportEqn( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::solveTransportEqn";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::solveTransportEqn, timeSubStep);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::solveTransportEqn, timeSubStep);
   
   //New
   tsk->modifies(d_transportVarLabel);
@@ -720,7 +720,7 @@ void
 CQMOMEqn::sched_buildXConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::buildXConvection";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildXConvection);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::buildXConvection);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -825,7 +825,7 @@ void
 CQMOMEqn::sched_buildYConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::buildYConvection";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildYConvection);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::buildYConvection);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -923,7 +923,7 @@ void
 CQMOMEqn::sched_buildZConvection( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::buildZConvection";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildZConvection);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::buildZConvection);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);
@@ -1021,7 +1021,7 @@ void
 CQMOMEqn::sched_buildSplitRHS( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   string taskname = "CQMOMEqn::buildSplitRHS";
-  Task* tsk = scinew Task(taskname, this, &CQMOMEqn::buildSplitRHS);
+  Task* tsk = new Task(taskname, this, &CQMOMEqn::buildSplitRHS);
   
   //----NEW----
   tsk->modifies(d_transportVarLabel);

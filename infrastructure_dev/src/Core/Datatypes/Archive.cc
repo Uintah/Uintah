@@ -24,14 +24,14 @@
 
 #include <Core/Datatypes/Archive.h>
 #include <Core/Util/NotFinished.h>
-#include <Core/Malloc/Allocator.h>
+
 
 namespace Uintah {
 using namespace SCIRun;
 
 static Persistent* maker()
 {
-    return scinew Archive;
+    return new Archive;
 }
 
 PersistentTypeID Archive::type_id("Data Archive", "Archive", maker);

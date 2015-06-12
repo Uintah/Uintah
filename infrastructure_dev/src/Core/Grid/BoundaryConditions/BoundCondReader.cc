@@ -38,7 +38,7 @@
 #include <Core/Grid/BoundaryConditions/BCData.h>
 #include <Core/Grid/BoundaryConditions/BoundCond.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 
 #include   <utility>
@@ -178,7 +178,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
   if (values.find("side") != values.end()) {
     fc = values["side"];
     whichPatchFace(fc, face_side, plusMinusFaces, p_dir);
-    bcGeom = scinew SideBCData();
+    bcGeom = new SideBCData();
   }
   else if (values.find("circle") != values.end()) {
     fc = values["circle"];
@@ -225,7 +225,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
     }
     
     
-    bcGeom = scinew CircleBCData(p,r);
+    bcGeom = new CircleBCData(p,r);
   }
   else if (values.find("annulus") != values.end()) {
     fc = values["annulus"];
@@ -267,7 +267,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
           << " you must specify origin [x,y,z], inner_radius [r] outer_radius [r] \n\n";
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
-    bcGeom = scinew AnnulusBCData(p,i_r,o_r);
+    bcGeom = new AnnulusBCData(p,i_r,o_r);
   }
   else if (values.find("ellipse") != values.end()) {
     fc = values["ellipse"];
@@ -320,7 +320,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    bcGeom = scinew EllipseBCData(p,minor_r,major_r,fc,angle);
+    bcGeom = new EllipseBCData(p,minor_r,major_r,fc,angle);
   }
   
   else if (values.find("rectangle") != values.end()) {
@@ -367,7 +367,7 @@ BCGeomBase* BoundCondReader::createBoundaryConditionFace(ProblemSpecP& face_ps,
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    bcGeom = scinew RectangleBCData(l,u);
+    bcGeom = new RectangleBCData(l,u);
   }
   
   else {
@@ -526,7 +526,7 @@ BCGeomBase* BoundCondReader::createInteriorBndBoundaryConditionFace(ProblemSpecP
     if( !radius_stream || !origin_stream ) {
       std::cout <<  "WARNING: BoundCondReader.cc: stringstream failed..." << std::endl;
     }
-    bcGeom = scinew CircleBCData(p,r);
+    bcGeom = new CircleBCData(p,r);
   }
   else if (values.find("annulus") != values.end()) {
     fc = values["annulus"];
@@ -549,7 +549,7 @@ BCGeomBase* BoundCondReader::createInteriorBndBoundaryConditionFace(ProblemSpecP
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     Point p = moveToClosestNode(level, p_dir, plusMinusFaces, p0);
-    bcGeom = scinew AnnulusBCData(p,i_r,o_r);
+    bcGeom = new AnnulusBCData(p,i_r,o_r);
   }
   else if (values.find("ellipse") != values.end()) {
     fc = values["ellipse"];
@@ -584,7 +584,7 @@ BCGeomBase* BoundCondReader::createInteriorBndBoundaryConditionFace(ProblemSpecP
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    bcGeom = scinew EllipseBCData(p,minor_r,major_r,fc,angle);
+    bcGeom = new EllipseBCData(p,minor_r,major_r,fc,angle);
   }
   
   else if (values.find("rectangle") != values.end()) {
@@ -614,7 +614,7 @@ BCGeomBase* BoundCondReader::createInteriorBndBoundaryConditionFace(ProblemSpecP
       throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
     }
     
-    bcGeom = scinew RectangleBCData(l,u);
+    bcGeom = new RectangleBCData(l,u);
   }
   
   else {
@@ -957,7 +957,7 @@ BoundCondReader::readDomainBCs(ProblemSpecP& bc_ps, const ProblemSpecP& grid_ps)
 //    }
 //    for (set<int>::const_iterator i = materials.begin(); i != materials.end();
 //         i++) {
-//      BoundCondBase* bc = scinew BoundCond<NoValue>("Auxiliary");
+//      BoundCondBase* bc = new BoundCond<NoValue>("Auxiliary");
 //      bctype_data.insert(pair<int,BoundCondBase*>(*i,bc->clone()));
 //      delete bc;
 //    }
@@ -1172,7 +1172,7 @@ void BoundCondReader::combineBCS()
           side_bc = dynamic_cast<SideBCData*>((*side_index)->clone());
           other_bc = (*other_index)->clone();
 
-          diff_bc = scinew DifferenceBCData(side_bc,other_bc);
+          diff_bc = new DifferenceBCData(side_bc,other_bc);
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
           diff_bc->setBndType( side_bc->getBndType() ); //make sure the new piece has the correct boundary type
@@ -1186,7 +1186,7 @@ void BoundCondReader::combineBCS()
 
         } else {
 
-          union_bc = scinew UnionBCData();
+          union_bc = new UnionBCData();
           // Need to clone the RectangleBC that are being inserted 
           // into the UnionBC 
           // remove_copy_if(bcgeom_vec.begin(),bcgeom_vec.end(),
@@ -1205,7 +1205,7 @@ void BoundCondReader::combineBCS()
 
           UnionBCData* union_bc_clone = union_bc->clone(); 
 
-          diff_bc = scinew DifferenceBCData(side_bc,union_bc_clone);
+          diff_bc = new DifferenceBCData(side_bc,union_bc_clone);
 
           diff_bc->setBCName( side_bc->getBCName() ); //make sure the new piece has the right name
           diff_bc->setBndType( side_bc->getBndType() ); //make sure the new piece has the correct boundary type

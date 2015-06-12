@@ -76,7 +76,7 @@ public:
       ~Builder(){}
 
       VariableStats* build()
-      { return scinew VariableStats<T>( _task_name, _matl_index, _shared_state ); }
+      { return new VariableStats<T>( _task_name, _matl_index, _shared_state ); }
 
       private: 
 

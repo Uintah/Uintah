@@ -81,7 +81,7 @@ void MPMPetscSolver::initialize()
 
   // Null argument ("") is needed as it normaly stores the command
   args.push_back(const_cast<char*>(""));
-  
+
 #ifdef DEBUG_PETSC
   args.push_back("ImpMPM::problemSetup");
   args.push_back("-on_error_attach_debugger");
@@ -106,7 +106,7 @@ void MPMPetscSolver::initialize()
 
   // copy the vector to argv, as I think petsc wants to store it around -- bjw
   if (argc > 0) {
-    argv = scinew char*[argc];
+    argv = new char*[argc];
     for (int i = 0; i < argc; i++) {
       argv[i] = args[i];
     }
@@ -132,8 +132,8 @@ void MPMPetscSolver::initialize()
     delete [] argv;
 }
 /**************************************************************
- * Creates a mapping from nodal coordinates, IntVector(x,y,z), 
- * to global matrix coordinates.  The matrix is laid out as 
+ * Creates a mapping from nodal coordinates, IntVector(x,y,z),
+ * to global matrix coordinates.  The matrix is laid out as
  * follows:
  *
  * Proc 0 patches
@@ -147,22 +147,21 @@ void MPMPetscSolver::initialize()
  * ...
  *
  * Thus the entrance at node xyz provides the global index into the
- * matrix for that nodes entry.  And each processor owns a 
- * consecutive block of those rows.  In order to translate a 
- * nodal position to the processors local position (needed when using 
+ * matrix for that nodes entry.  And each processor owns a
+ * consecutive block of those rows.  In order to translate a
+ * nodal position to the processors local position (needed when using
  * a local array) the global index
  * of the processors first patch must be subtracted from the global
- * index of the node in question.  This will provide a zero-based index 
+ * index of the node in question.  This will provide a zero-based index
  * into each processors data.
  *************************************************************/
-void 
+void
 MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
                                            const PatchSet* perproc_patches,
                                            const PatchSubset* patches,
                                            const int DOFsPerNode,
                                            const int n8or27)
 {
-  TAU_PROFILE("MPMPetscSolver::createLocalToGlobalMapping", " ", TAU_USER);
   int numProcessors = d_myworld->size();
   d_numNodes.resize(numProcessors, 0);
   d_startIndex.resize(numProcessors);
@@ -225,27 +224,27 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
       //intersect my patch with my neighbor patch
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
-      if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+      if( ( high.x() < low.x() ) || ( high.y() < low.y() )
                                  || ( high.z() < low.z() ) )
          throw InternalError("Patch doesn't overlap?", __FILE__, __LINE__);
-     
+
       //global start for this neighbor
       int petscglobalIndex = d_petscGlobalStart[neighbor];
       IntVector dnodes = phigh-plow;
       IntVector start = low-plow;
 
-#if 0     
+#if 0
       petscglobalIndex += start.z()*dnodes.x()*dnodes.y()*DOFsPerNode
                        + start.y()*dnodes.x()*(DOFsPerNode-1) + start.x();
 #endif
 
       //compute the starting index by computing the starting node index and multiplying it by the degrees of freedom per node
-      petscglobalIndex += (start.z()*dnodes.x()*dnodes.y()+ start.y()*dnodes.x()+ start.x())*DOFsPerNode; 
+      petscglobalIndex += (start.z()*dnodes.x()*dnodes.y()+ start.y()*dnodes.x()+ start.x())*DOFsPerNode;
 
       for (int colZ = low.z(); colZ < high.z(); colZ ++) {
         int idx_slab = petscglobalIndex;
         petscglobalIndex += dnodes.x()*dnodes.y()*DOFsPerNode;
-        
+
         for (int colY = low.y(); colY < high.y(); colY ++) {
           int idx = idx_slab;
           idx_slab += dnodes.x()*DOFsPerNode;
@@ -265,8 +264,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::solve(vector<double>& guess)
 {
-  TAU_PROFILE("MPMPetscSolver::solve", " ", TAU_USER);
-  PC          precond;           
+  PC          precond;
   KSP         solver;
 #if 0
   if(d_DOFsPerNode<3){
@@ -298,10 +296,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
     }
 
   }
-  TAU_PROFILE_TIMER(solve, "Petsc:KPSolve()", "", TAU_USER);
-  TAU_PROFILE_START(solve);
   KSPSolve(solver,d_B,d_x);
-  TAU_PROFILE_STOP(solve);
 #ifdef LOG
   KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
   int its;
@@ -319,17 +314,16 @@ void MPMPetscSolver::solve(vector<double>& guess)
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                                   const map<int,int>& dof_diag)
 {
-  TAU_PROFILE("MPMPetscSolver::createMatrix", " ", TAU_USER);
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
-  
+
   int numlcolumns = numlrows;
   int globalrows = (int)d_totalNodes;
-  int globalcolumns = (int)d_totalNodes; 
+  int globalcolumns = (int)d_totalNodes;
 
   int *diag, *onnz;
-  diag = scinew int[numlrows];
-  onnz = scinew int[numlrows];
+  diag = new int[numlrows];
+  onnz = new int[numlrows];
   for (int i = 0; i < numlrows; i++)
     diag[i] = 1;
 
@@ -352,7 +346,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   cerr << "numlcolumns = " << numlcolumns << endl;
   cerr << "globalrows = " << globalrows << endl;
   cerr << "globalcolumns = " << globalcolumns << endl;
-  for (int i = 0; i < numlrows; i++) 
+  for (int i = 0; i < numlrows; i++)
     cerr << "diag[" << i << "] = " << diag[i] << endl;
 #endif
 
@@ -384,7 +378,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #if 0
     // This one works
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-                    globalcolumns, PETSC_DEFAULT, diag, 
+                    globalcolumns, PETSC_DEFAULT, diag,
                     PETSC_DEFAULT,PETSC_NULL, &d_A);
 #endif
 
@@ -428,11 +422,11 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                     PETSC_DEFAULT, onnz, &d_A);
 #else
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
-                    globalcolumns, PETSC_DEFAULT, diag, 
+                    globalcolumns, PETSC_DEFAULT, diag,
                     PETSC_DEFAULT, onnz, &d_A);
 #endif
 #endif
-  
+
     //allocate the diagonal
     int low,high;
     MatGetOwnershipRange(d_A,&low,&high);
@@ -456,7 +450,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
       MatSetOption(d_A, MAT_USE_INODES);
 #endif
     }
-    
+
 #if (PETSC_VERSION_MAJOR==3)
 #if (PETSC_VERSION_MINOR >= 1)
     MatSetOption(d_A,MAT_KEEP_NONZERO_PATTERN, PETSC_TRUE);
@@ -489,7 +483,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::destroyMatrix(bool recursion)
 {
-  TAU_PROFILE("MPMPetscSolver::destroyMatrix", " ", TAU_USER);
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
@@ -499,7 +492,7 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
       VecSet(&zero,d_x);
       VecSet(&zero,d_t);
       VecSet(&zero,d_flux);
-#else 
+#else
       VecSet(d_B,zero);
       VecSet(d_diagonal,zero);
       VecSet(d_x,zero);
@@ -575,7 +568,7 @@ MPMPetscSolver::fillVector(int i,double v,bool add)
   PetscScalar value = v;
   if (add) {
     VecSetValues(d_B,1,&i,&value,ADD_VALUES);
-  } 
+  }
   else {
     VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
   }
@@ -635,12 +628,11 @@ MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 void
 MPMPetscSolver::removeFixedDOF()
 {
-  TAU_PROFILE("MPMPetscSolver::removeFixedDOF", " ", TAU_USER);
   flushMatrix();
   IS is;
   int* indices;
   int in=0;
-  indices = scinew int[d_DOF.size()];
+  indices = new int[d_DOF.size()];
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end();
        iter++) {
     indices[in++] = *iter;
@@ -648,7 +640,7 @@ MPMPetscSolver::removeFixedDOF()
     // Take care of the d_B side
     PetscScalar v = 0.;
     const int index = *iter;
-      
+
     VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
     MatSetValue(d_A,index,index,1.,INSERT_VALUES);
   }
@@ -660,10 +652,10 @@ MPMPetscSolver::removeFixedDOF()
   MatZeroRows(d_A,is,&one);
   MatTranspose(d_A,PETSC_NULL);
 #endif
-  
+
   PetscScalar one = 1.0;
 
-  // Make sure the nodes that are outside of the material have values 
+  // Make sure the nodes that are outside of the material have values
   // assigned and solved for.  The solutions will be 0.
   int low=0,high=0;
   MatGetOwnershipRange(d_A,&low,&high);
@@ -672,7 +664,7 @@ MPMPetscSolver::removeFixedDOF()
   MatGetDiagonal(d_A,d_diagonal);
   PetscScalar* diag;
   VecGetArray(d_diagonal,&diag);
-  
+
   for (int j = 0; j < size; j++) {
     if (compare(diag[j],0.)) {
       VecSetValues(d_diagonal,1,&j,&one,INSERT_VALUES);
@@ -687,7 +679,7 @@ MPMPetscSolver::removeFixedDOF()
   VecAssemblyBegin(d_diagonal);
   VecAssemblyEnd(d_diagonal);
   MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
-  
+
 #if ((PETSC_VERSION_MAJOR == 3) && (PETSC_VERSION_MINOR >= 2))
   ISCreateGeneral(PETSC_COMM_SELF, d_DOF.size(), indices, PETSC_COPY_VALUES, &is);
 #else
@@ -714,15 +706,15 @@ MPMPetscSolver::removeFixedDOF()
   //  debugging
 #ifdef OUTPUT_A_B
   char matfile[100],vecfile[100];
-  
+
   PetscViewer matview, vecview;
   sprintf(vecfile,"output/vector.%d.%d",Parallel::getMPISize(),d_iteration);
   sprintf(matfile,"output/matrix.%d.%d",Parallel::getMPISize(),d_iteration);
-  
+
   PetscViewerASCIIOpen(PETSC_COMM_WORLD,vecfile,&vecview);
   VecView(d_B,vecview);
   PetscViewerDestroy(vecview);
-  
+
   PetscViewerASCIIOpen(PETSC_COMM_WORLD,matfile,&matview);
   MatView(d_A,matview);
   PetscViewerDestroy(matview);
@@ -733,10 +725,9 @@ MPMPetscSolver::removeFixedDOF()
 
 void MPMPetscSolver::removeFixedDOFHeat()
 {
-  TAU_PROFILE("MPMPetscSolver::removeFixedDOFHEAT", " ", TAU_USER);
 
-  //do matrix modifications first 
- 
+  //do matrix modifications first
+
   for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
        iter++) {
     int j = *iter;
@@ -747,12 +738,12 @@ void MPMPetscSolver::removeFixedDOFHeat()
     MatSetValue(d_A,j,j,1.,INSERT_VALUES);
 
   }
-  
+
   // Zero the rows/columns that contain the node numbers with BCs.
 
-  int* indices = scinew int[d_DOF.size()];  
+  int* indices = new int[d_DOF.size()];
   int in = 0;
-  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end();
        iter++) {
     indices[in++] = *iter;
   }
@@ -760,7 +751,7 @@ void MPMPetscSolver::removeFixedDOFHeat()
   if( d_DOF.size() !=0)
   {
     // zeroing out the columns
-    for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
+    for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end();
        iter++) {
       const int index = *iter;
       vector<int>& neighbors = d_DOFNeighbors[index];
@@ -775,7 +766,7 @@ void MPMPetscSolver::removeFixedDOFHeat()
       }
     }
   }
-  
+
   finalizeMatrix();
 
   if (d_DOF.size() != 0) {
@@ -803,7 +794,7 @@ void MPMPetscSolver::removeFixedDOFHeat()
   ISDestroy(is);
 #endif
 
-  int* indices_flux = scinew int[d_DOFFlux.size()];
+  int* indices_flux = new int[d_DOFFlux.size()];
   in = 0;
   for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end();
        iter++) {
@@ -813,8 +804,8 @@ void MPMPetscSolver::removeFixedDOFHeat()
 
   //do vector modifications
 
-  PetscScalar* y = scinew PetscScalar[d_DOF.size()];
-  PetscScalar* y_flux = scinew PetscScalar[d_DOFFlux.size()];
+  PetscScalar* y = new PetscScalar[d_DOF.size()];
+  PetscScalar* y_flux = new PetscScalar[d_DOFFlux.size()];
 
   assembleFluxVector();
 #if ( PETSC_VERSION_MAJOR==2 && PETSC_VERSION_MINOR == 2)
@@ -848,7 +839,7 @@ void MPMPetscSolver::removeFixedDOFHeat()
   VecGetValues(d_t,d_DOF.size(),indices,y);
   VecGetValues(d_flux,d_DOFFlux.size(),indices_flux,y_flux);
 #endif
-  
+
   VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
   assembleVector();
   VecSetValues(d_B,d_DOFFlux.size(),indices_flux,y_flux,ADD_VALUES);
@@ -872,15 +863,15 @@ void MPMPetscSolver::removeFixedDOFHeat()
   //  debugging
 #ifdef OUTPUT_A_B
   char matfile[100],vecfile[100];
-  
+
   PetscViewer matview, vecview;
   sprintf(vecfile,"output/HeatVector.%d.%d",Parallel::getMPISize(),d_iteration);
   sprintf(matfile,"output/HeatMatrix.%d.%d",Parallel::getMPISize(),d_iteration);
-  
+
   PetscViewerASCIIOpen(PETSC_COMM_WORLD,vecfile,&vecview);
   VecView(d_B,vecview);
   PetscViewerDestroy(vecview);
-  
+
   PetscViewerASCIIOpen(PETSC_COMM_WORLD,matfile,&matview);
   MatView(d_A,matview);
   PetscViewerDestroy(matview);

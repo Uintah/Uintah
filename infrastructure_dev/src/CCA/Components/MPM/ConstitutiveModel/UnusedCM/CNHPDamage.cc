@@ -40,7 +40,7 @@
 #include <Core/Grid/Variables/NodeIterator.h> 
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ParameterNotFound.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <iostream>
 
 
@@ -85,7 +85,7 @@ void CNHPDamage::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 CNHPDamage* CNHPDamage::clone()
 {
-  return scinew CNHPDamage(*this);
+  return new CNHPDamage(*this);
 }
 
 void 

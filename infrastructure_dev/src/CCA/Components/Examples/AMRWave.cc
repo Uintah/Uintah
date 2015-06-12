@@ -85,7 +85,7 @@ void AMRWave::scheduleCoarsen(const LevelP& coarseLevel, SchedulerP& sched)
 {
   if (!do_coarsen)
     return;
-  Task* task = scinew Task("coarsen", this, &AMRWave::coarsen);
+  Task* task = new Task("coarsen", this, &AMRWave::coarsen);
   task->requires(Task::NewDW, phi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
   task->modifies(phi_label);
   task->requires(Task::NewDW, pi_label, 0, Task::FineLevel, 0, Task::NormalDomain, Ghost::None, 0);
@@ -98,7 +98,7 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
 {
   if (!do_refine)
     return;
-  Task* task = scinew Task("refine", this, &AMRWave::refine);
+  Task* task = new Task("refine", this, &AMRWave::refine);
   task->requires(Task::NewDW, phi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
   task->requires(Task::NewDW, pi_label, 0, Task::CoarseLevel, 0, Task::NormalDomain, Ghost::AroundCells, 1);
 
@@ -114,7 +114,7 @@ void AMRWave::scheduleRefine (const PatchSet* patches, SchedulerP& sched)
 void AMRWave::scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched)
 {
-  Task* task = scinew Task("errorEstimate", this, &AMRWave::errorEstimate);
+  Task* task = new Task("errorEstimate", this, &AMRWave::errorEstimate);
   task->requires(Task::NewDW, phi_label, Ghost::AroundCells, 1);
   task->modifies(sharedState_->get_refineFlag_label(), sharedState_->refineFlagMaterials());
   task->modifies(sharedState_->get_refinePatchFlag_label(), sharedState_->refineFlagMaterials());

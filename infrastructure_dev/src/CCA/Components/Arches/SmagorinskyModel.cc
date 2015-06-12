@@ -112,7 +112,7 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 {
   string taskname =  "SmagorinskyModel::ReTurbSubmodel" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &SmagorinskyModel::reComputeTurbSubmodel,
                           timelabels);
 

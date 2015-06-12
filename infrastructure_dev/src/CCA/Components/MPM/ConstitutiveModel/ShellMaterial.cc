@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/ShellMaterial.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -38,7 +38,7 @@
 #include <Core/Grid/Variables/NodeIterator.h> // just added
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/DebugStream.h>
 #include <fstream>
 #include <iostream>
@@ -195,7 +195,7 @@ void ShellMaterial::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ShellMaterial* ShellMaterial::clone()
 {
-  return scinew ShellMaterial(*this);
+  return new ShellMaterial(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

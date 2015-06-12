@@ -66,7 +66,7 @@ using namespace Uintah;
 //****************************************************************************
 // Default constructor for IncDynamicProcedure
 //****************************************************************************
-IncDynamicProcedure::IncDynamicProcedure(const ArchesLabel* label, 
+IncDynamicProcedure::IncDynamicProcedure(const ArchesLabel* label,
                                          const MPMArchesLabel* MAlb,
                                          PhysicalConstants* phyConsts,
                                          BoundaryCondition* bndry_cond):
@@ -84,20 +84,20 @@ IncDynamicProcedure::~IncDynamicProcedure()
 }
 
 //****************************************************************************
-//  Get the molecular viscosity from the Physical Constants object 
+//  Get the molecular viscosity from the Physical Constants object
 //****************************************************************************
-double 
+double
 IncDynamicProcedure::getMolecularViscosity() const {
   return d_physicalConsts->getMolecularViscosity();
 }
 
 //****************************************************************************
-// Problem Setup 
+// Problem Setup
 //****************************************************************************
-void 
+void
 IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
-  problemSetupCommon( params ); 
+  problemSetupCommon( params );
   ProblemSpecP db = params->findBlock("Turbulence");
 
   // actually, Shmidt number, not Prandtl number
@@ -110,17 +110,17 @@ IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 }
 
 //****************************************************************************
-// Schedule recomputation of the turbulence sub model 
+// Schedule recomputation of the turbulence sub model
 //****************************************************************************
-void 
-IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched, 
+void
+IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
                                                   const LevelP& level,
                                                   const MaterialSet* matls,
                                                   const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "IncDynamicProcedure::reComputeTurbSubmodel" +
                      timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
+  Task* tsk = new Task(taskname, this,
                           &IncDynamicProcedure::reComputeTurbSubmodel,
                           timelabels);
 
@@ -129,7 +129,7 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  Ghost::GhostType  gn  = Ghost::None; 
+  Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
   Ghost::GhostType  gaf = Ghost::AroundFaces;
   Task::MaterialDomainSpec oams = Task::OutOfDomain;  //outside of arches matlSet.
@@ -137,23 +137,23 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,  gaf, 1);
   tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
-      
+
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     tsk->computes(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
                   oams);
-  }else{ 
+  }else{
     tsk->modifies(d_lab->d_strainTensorCompLabel, d_lab->d_symTensorMatl,
                   oams);
   }
-    
+
   sched->addTask(tsk, level->eachPatch(), matls);
 
   //__________________________________
   taskname =  "IncDynamicProcedure::reComputeFilterValues" +
                      timelabels->integrator_step_name;
-  tsk = scinew Task(taskname, this,
+  tsk = new Task(taskname, this,
                     &IncDynamicProcedure::reComputeFilterValues,
                     timelabels);
 
@@ -162,15 +162,15 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   // initialize with the value of zero at the physical bc's
   // construct a stress tensor and stored as a array with the following order
   // {t11, t12, t13, t21, t22, t23, t31, t23, t33}
-  
+
   tsk->requires(Task::NewDW, d_lab->d_CCVelocityLabel, gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_strainTensorCompLabel,
                 d_lab->d_symTensorMatl, oams, gac, 1);
-  
+
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, gac, 1);
   tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel, gac, 1);
-  
+
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_strainMagnitudeLabel);
@@ -182,12 +182,12 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
     tsk->modifies(d_lab->d_strainMagnitudeMLLabel);
     tsk->modifies(d_lab->d_strainMagnitudeMMLabel);
   }
-    
+
   sched->addTask(tsk, level->eachPatch(), matls);
   //__________________________________
   taskname =  "IncDynamicProcedure::reComputeSmagCoeff" +
                timelabels->integrator_step_name;
-  tsk = scinew Task(taskname, this,
+  tsk = new Task(taskname, this,
                     &IncDynamicProcedure::reComputeSmagCoeff,
                     timelabels);
 
@@ -202,30 +202,30 @@ IncDynamicProcedure::sched_reComputeTurbSubmodel( SchedulerP& sched,
   tsk->requires(Task::NewDW, d_lab->d_strainMagnitudeMMLabel, gac, 1);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,          gac, 1);
-  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,      gac, 1); 
+  tsk->requires(Task::NewDW, d_lab->d_filterVolumeLabel,      gac, 1);
 
   // for multimaterial
   if (d_MAlab){
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, gn, 0);
   }
-  
+
   // Computes
   tsk->modifies(d_lab->d_viscosityCTSLabel);
   tsk->modifies(d_lab->d_turbViscosLabel);
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_CsLabel);
-  }else{ 
+  }else{
     tsk->modifies(d_lab->d_CsLabel);
-  }  
+  }
   sched->addTask(tsk, level->eachPatch(), matls);
 }
 
 
 //****************************************************************************
-// Actual recompute 
+// Actual recompute
 //****************************************************************************
-void 
+void
 IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset*,
@@ -236,7 +236,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constSFCXVariable<double> uVel;
     constSFCYVariable<double> vVel;
@@ -246,7 +246,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
     // Get the velocity, density and viscosity from the old data warehouse
-    
+
     Ghost::GhostType  gac = Ghost::AroundCells;
     Ghost::GhostType  gaf = Ghost::AroundFaces;
     new_dw->get(uVel,     d_lab->d_uVelocitySPBCLabel,  indx, patch, gaf, 1);
@@ -259,17 +259,17 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
-    
+
+
     // Get the patch and variable details
     // compatible with fortran index
     StencilMatrix<CCVariable<double> > SIJ;    //6 point tensor
     for (int ii = 0; ii < d_lab->d_symTensorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
-        new_dw->allocateAndPut(SIJ[ii], 
+        new_dw->allocateAndPut(SIJ[ii],
                              d_lab->d_strainTensorCompLabel, ii, patch);
-      }else{ 
-        new_dw->getModifiable(SIJ[ii], 
+      }else{
+        new_dw->getModifiable(SIJ[ii],
                              d_lab->d_strainTensorCompLabel, ii, patch);
       }
       SIJ[ii].initialize(0.0);
@@ -334,17 +334,17 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
           (SIJ[0])[currCell] = (uep-uwp)/sewcur;
           (SIJ[1])[currCell] = (vnp-vsp)/snscur;
           (SIJ[2])[currCell] = (wtp-wbp)/stbcur;
-          (SIJ[3])[currCell] = 0.5*((unp-usp)/snscur + 
+          (SIJ[3])[currCell] = 0.5*((unp-usp)/snscur +
                                (vep-vwp)/sewcur);
-          (SIJ[4])[currCell] = 0.5*((utp-ubp)/stbcur + 
+          (SIJ[4])[currCell] = 0.5*((utp-ubp)/stbcur +
                                (wep-wwp)/sewcur);
-          (SIJ[5])[currCell] = 0.5*((vtp-vbp)/stbcur + 
+          (SIJ[5])[currCell] = 0.5*((vtp-vbp)/stbcur +
                                (wnp-wsp)/snscur);
 
         }
       }
     }
-    if (xminus) { 
+    if (xminus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
         for (int colY = startY; colY < endY; colY ++) {
           IntVector currCell(startX-1, colY, colZ);
@@ -372,7 +372,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
         }
       }
     }
-    if (yminus) { 
+    if (yminus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
         for (int colX = startX; colX < endX; colX ++) {
           IntVector currCell(colX, startY-1, colZ);
@@ -400,7 +400,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
         }
       }
     }
-    if (zminus) { 
+    if (zminus) {
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
           IntVector currCell(colX, colY, startZ-1);
@@ -409,11 +409,11 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
           (SIJ[1])[currCell] =  (SIJ[1])[prevCell];
           (SIJ[2])[currCell] =  (SIJ[2])[prevCell];
           (SIJ[3])[currCell] =  (SIJ[3])[prevCell];
-                               
+
           (SIJ[4])[currCell] =  (SIJ[4])[prevCell];
-                               
+
           (SIJ[5])[currCell] =  (SIJ[5])[prevCell];
-                               
+
 
         }
       }
@@ -427,11 +427,11 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
           (SIJ[1])[currCell] =  (SIJ[1])[prevCell];
           (SIJ[2])[currCell] =  (SIJ[2])[prevCell];
           (SIJ[3])[currCell] =  (SIJ[3])[prevCell];
-                               
+
           (SIJ[4])[currCell] =  (SIJ[4])[prevCell];
-                               
+
           (SIJ[5])[currCell] =  (SIJ[5])[prevCell];
-                               
+
 
         }
       }
@@ -526,7 +526,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
         (SIJ[4])[currCell] =  (SIJ[4])[prevCell];
         (SIJ[5])[currCell] =  (SIJ[5])[prevCell];
       }
-        
+
     }
     if (xplus) {
       if (yminus) {
@@ -617,7 +617,7 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
         (SIJ[4])[currCell] =  (SIJ[4])[prevCell];
         (SIJ[5])[currCell] =  (SIJ[5])[prevCell];
       }
-        
+
     }
     // for yminus&&zminus fill the corner cells for all internal x
     if (yminus&&zminus) {
@@ -667,16 +667,16 @@ IncDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup*,
         (SIJ[4])[currCell] =  (SIJ[4])[prevCell];
         (SIJ[5])[currCell] =  (SIJ[5])[prevCell];
       }
-    }        
+    }
   }
 }
 
 
 
 //****************************************************************************
-// Actual recompute 
+// Actual recompute
 //****************************************************************************
-void 
+void
 IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                                            const PatchSubset* patches,
                                            const MaterialSubset*,
@@ -685,17 +685,13 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
                                            const TimeIntegratorLabel* timelabels)
 {
   for (int p = 0; p < patches->size(); p++) {
-    TAU_PROFILE_TIMER(compute1, "Compute1", "[reComputeFilterValues::compute1]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute2, "Compute2", "[reComputeFilterValues::compute2]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute3, "Compute3", "[reComputeFilterValues::compute3]" , TAU_USER);
-    TAU_PROFILE_TIMER(compute4, "Compute4", "[reComputeFilterValues::compute4]" , TAU_USER);
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constCCVariable<Vector> ccVel;
     constCCVariable<int> cellType;
-    constCCVariable<double> filterVolume; 
+    constCCVariable<double> filterVolume;
     // Get the velocity, density and viscosity from the old data warehouse
 
     Ghost::GhostType  gac = Ghost::AroundCells;
@@ -707,8 +703,8 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
-    
+
+
     // Get the patch and variable details
     // compatible with fortran index
     StencilMatrix<constCCVariable<double> > SIJ; //6 point tensor
@@ -741,20 +737,20 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     CCVariable<double> IsImag;
     CCVariable<double> MLI;
     CCVariable<double> MMI;
-    
+
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    new_dw->allocateAndPut(IsImag, 
+    new_dw->allocateAndPut(IsImag,
                            d_lab->d_strainMagnitudeLabel, indx, patch);
-    new_dw->allocateAndPut(MLI, 
+    new_dw->allocateAndPut(MLI,
                            d_lab->d_strainMagnitudeMLLabel, indx, patch);
-    new_dw->allocateAndPut(MMI, 
+    new_dw->allocateAndPut(MMI,
                            d_lab->d_strainMagnitudeMMLabel, indx, patch);
     }else {
-    new_dw->getModifiable(IsImag, 
+    new_dw->getModifiable(IsImag,
                            d_lab->d_strainMagnitudeLabel, indx, patch);
-    new_dw->getModifiable(MLI, 
+    new_dw->getModifiable(MLI,
                            d_lab->d_strainMagnitudeMLLabel, indx, patch);
-    new_dw->getModifiable(MMI, 
+    new_dw->getModifiable(MMI,
                            d_lab->d_strainMagnitudeMMLabel, indx, patch);
     }
     IsImag.initialize(0.0);
@@ -762,7 +758,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     MMI.initialize(0.0);
 
 
-    // compute test filtered velocities, density and product 
+    // compute test filtered velocities, density and product
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
     // using a box filter, generalize it to use other filters such as Gaussian
@@ -803,7 +799,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     int endX = idxHi.x();
     if (xplus) endX--;
 
-  TAU_PROFILE_START(compute1);
     for (int colZ = startZ; colZ < endZ; colZ ++) {
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
@@ -822,7 +817,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           double vvel_cur = ccVel[currCell].y();
           double wvel_cur = ccVel[currCell].z();
 
-          IsI[currCell] = isi_cur; 
+          IsI[currCell] = isi_cur;
 
           //    calculate the grid filtered stress tensor, beta
 
@@ -842,7 +837,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-  TAU_PROFILE_STOP(compute1);
     Array3<double> filterUU(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
     filterUU.initialize(0.0);
     Array3<double> filterUV(patch->getExtraCellLowIndex(), patch->getExtraCellHighIndex());
@@ -883,7 +877,6 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
     string msg = "Time for the Filter operation in Turbulence Model: ";
     proc0cerr << msg << Time::currentSeconds() - start_turbTime << " seconds\n";
 
-    TAU_PROFILE_START( compute2 );
 
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
@@ -904,12 +897,12 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           double shatij4 = (SHATIJ[4])[currCell];
           double shatij5 = (SHATIJ[5])[currCell];
           double IshatIcur = sqrt(2.0*(shatij0*shatij0 + shatij1*shatij1 +
-                                       shatij2*shatij2 + 2.0*(shatij3*shatij3 + 
+                                       shatij2*shatij2 + 2.0*(shatij3*shatij3 +
                                        shatij4*shatij4 + shatij5*shatij5)));
 
 //          IshatI[currCell] = IshatIcur;
 
-          IsImag[currCell] = IsI[currCell]; 
+          IsImag[currCell] = IsI[currCell];
 
 
           double MIJ0cur = 2.0*(filter*filter)*
@@ -935,7 +928,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           double MIJ5cur =  2.0*(filter*filter)*
                                ((betaHATIJ[5])[currCell]-
                                 2.0*2.0*IshatIcur*shatij5);
-//          (MIJ[5])[currCell] = MIJ5cur; 
+//          (MIJ[5])[currCell] = MIJ5cur;
 
 
           // compute Leonard stress tensor
@@ -950,7 +943,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           double LIJ1cur = (filterVV[currCell] -
                                 filterVVelcur*
                                 filterVVelcur);
-//          (LIJ[1])[currCell] = LIJ1cur; 
+//          (LIJ[1])[currCell] = LIJ1cur;
           double LIJ2cur = (filterWW[currCell] -
                                 filterWVelcur*
                                 filterWVelcur);
@@ -985,16 +978,14 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-  TAU_PROFILE_STOP(compute2);
-  TAU_PROFILE_START(compute3);
     startZ = indexLow.z();
     endZ = indexHigh.z()+1;
     startY = indexLow.y();
     endY = indexHigh.y()+1;
     startX = indexLow.x();
     endX = indexHigh.x()+1;
-    
-    if (xminus) { 
+
+    if (xminus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
         for (int colY = startY; colY < endY; colY ++) {
           IntVector currCell(startX-1, colY, colZ);
@@ -1014,7 +1005,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-    if (yminus) { 
+    if (yminus) {
       for (int colZ = startZ; colZ < endZ; colZ ++) {
         for (int colX = startX; colX < endX; colX ++) {
           IntVector currCell(colX, startY-1, colZ);
@@ -1034,7 +1025,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
         }
       }
     }
-    if (zminus) { 
+    if (zminus) {
       for (int colY = startY; colY < endY; colY ++) {
         for (int colX = startX; colX < endX; colX ++) {
           IntVector currCell(colX, colY, startZ-1);
@@ -1112,7 +1103,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           MLI[currCell] = MLI[prevCell];
           MMI[currCell] = MMI[prevCell];
       }
-        
+
     }
     if (xplus) {
       if (yminus) {
@@ -1171,7 +1162,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           MLI[currCell] = MLI[prevCell];
           MMI[currCell] = MMI[prevCell];
       }
-        
+
     }
     // for yminus&&zminus fill the corner cells for all internal x
     if (yminus&&zminus) {
@@ -1205,9 +1196,8 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
           MLI[currCell] = MLI[prevCell];
           MMI[currCell] = MMI[prevCell];
       }
-    }        
+    }
 
-  TAU_PROFILE_STOP(compute3);
 
   }
 }
@@ -1216,7 +1206,7 @@ IncDynamicProcedure::reComputeFilterValues(const ProcessorGroup* pc,
 
 //______________________________________________________________________
 //
-void 
+void
 IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
                                         const PatchSubset* patches,
                                         const MaterialSubset*,
@@ -1228,18 +1218,18 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
-    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    int indx = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     // Variables
     constCCVariable<double> IsI;
     constCCVariable<double> MLI;
     constCCVariable<double> MMI;
-    CCVariable<double> Cs; //smag coeff 
+    CCVariable<double> Cs; //smag coeff
     constCCVariable<double> den;
     constCCVariable<double> voidFraction;
     constCCVariable<int> cellType;
-    constCCVariable<double> filterVolume; 
+    constCCVariable<double> filterVolume;
     CCVariable<double> viscosity;
-    CCVariable<double> turbViscosity; 
+    CCVariable<double> turbViscosity;
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
        new_dw->allocateAndPut(Cs, d_lab->d_CsLabel, indx, patch);
@@ -1253,10 +1243,10 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
 
     new_dw->getModifiable(viscosity, d_lab->d_viscosityCTSLabel, indx, patch);
     new_dw->getModifiable(turbViscosity, d_lab->d_turbViscosLabel, indx, patch);
-    
+
     new_dw->get(IsI,d_lab->d_strainMagnitudeLabel,    indx, patch, gn, 0);
     // using a box filter of 2*delta...will require more ghost cells if the size of filter is increased
-    new_dw->get(MLI, d_lab->d_strainMagnitudeMLLabel, indx, patch, gac, 1);  
+    new_dw->get(MLI, d_lab->d_strainMagnitudeMLLabel, indx, patch, gac, 1);
     new_dw->get(MMI, d_lab->d_strainMagnitudeMMLabel, indx, patch, gac, 1);
     new_dw->get(den, d_lab->d_densityCPLabel,         indx, patch, gac, 1);
 
@@ -1270,13 +1260,13 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     PerPatch<CellInformationP> cellInfoP;
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, indx, patch);
     CellInformation* cellinfo = cellInfoP.get().get_rep();
-    
+
     // get physical constants
     double viscos; // molecular viscosity
     viscos = d_physicalConsts->getMolecularViscosity();
- 
 
-    // compute test filtered velocities, density and product 
+
+    // compute test filtered velocities, density and product
     // (den*u*u, den*u*v, den*u*w, den*v*v,
     // den*v*w, den*w*w)
     // using a box filter, generalize it to use other filters such as Gaussian
@@ -1310,7 +1300,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
     }
 
     if ((d_filter_cs_squared)&&(!(d_3d_periodic))) {
-    // filtering for periodic case is not implemented 
+    // filtering for periodic case is not implemented
     // if it needs to be then tempCs will require 1 layer of boundary cells to be computed
     d_filter->applyFilter_noPetsc<CCVariable<double> >(pc, patch, tempCs, filterVolume, cellType, Cs);
     }
@@ -1337,7 +1327,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos*voidFraction[currCell];
 
-            turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell]; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos*voidFraction[currCell];
           }
         }
       }
@@ -1354,7 +1344,7 @@ IncDynamicProcedure::reComputeSmagCoeff(const ProcessorGroup* pc,
             viscosity[currCell] =  Cs[currCell] * Cs[currCell] * filter * filter *
               IsI[currCell] * den[currCell] + viscos;
 
-            turbViscosity[currCell] = viscosity[currCell] - viscos; 
+            turbViscosity[currCell] = viscosity[currCell] - viscos;
           }
         }
       }

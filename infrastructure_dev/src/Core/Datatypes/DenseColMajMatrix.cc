@@ -43,7 +43,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Util/Assert.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/Assert.h>
 #include <Core/Exceptions/FileNotFound.h>
@@ -61,7 +61,7 @@ namespace SCIRun {
 
 static Persistent* maker()
 {
-  return scinew DenseColMajMatrix;
+  return new DenseColMajMatrix;
 }
 
 PersistentTypeID DenseColMajMatrix::type_id("DenseColMajMatrix", "Matrix", maker);
@@ -69,7 +69,7 @@ PersistentTypeID DenseColMajMatrix::type_id("DenseColMajMatrix", "Matrix", maker
 DenseColMajMatrix*
 DenseColMajMatrix::clone()
 {
-  return scinew DenseColMajMatrix(*this);
+  return new DenseColMajMatrix(*this);
 }
 
 
@@ -83,14 +83,14 @@ DenseColMajMatrix::DenseColMajMatrix() :
 DenseColMajMatrix::DenseColMajMatrix(int r, int c) :
   Matrix(r, c)
 {
-  dataptr_ = scinew double[nrows_ * ncols_];
+  dataptr_ = new double[nrows_ * ncols_];
 }
 
 
 DenseColMajMatrix::DenseColMajMatrix(const DenseColMajMatrix& m) :
   Matrix(m.nrows_, m.ncols_)
 {
-  dataptr_ = scinew double[nrows_ * ncols_];
+  dataptr_ = new double[nrows_ * ncols_];
   memcpy(dataptr_, m.dataptr_, sizeof(double) * nrows_ * ncols_);
 }
 
@@ -98,7 +98,7 @@ DenseColMajMatrix::DenseColMajMatrix(const DenseColMajMatrix& m) :
 DenseMatrix *
 DenseColMajMatrix::dense()
 {
-  DenseMatrix *m = scinew DenseMatrix(nrows_, ncols_);
+  DenseMatrix *m = new DenseMatrix(nrows_, ncols_);
   for (int i = 0; i < nrows_; i++)
     for (int j = 0; j < ncols_; j++)
       (*m)[i][j] = iget(i, j);
@@ -109,7 +109,7 @@ DenseColMajMatrix::dense()
 ColumnMatrix *
 DenseColMajMatrix::column()
 {
-  ColumnMatrix *cm = scinew ColumnMatrix(nrows_);
+  ColumnMatrix *cm = new ColumnMatrix(nrows_);
   for (int i=0; i<nrows_; i++)
     (*cm)[i] = iget(i, 0);
   return cm;
@@ -121,13 +121,13 @@ DenseColMajMatrix::sparse()
 {
   int nnz = 0;
   int r, c;
-  int *rows = scinew int[nrows_ + 1];
+  int *rows = new int[nrows_ + 1];
   for (r=0; r<nrows_; r++)
     for (c=0; c<ncols_; c++)
       if (iget(r, c) != 0.0) nnz++;
 
-  int *columns = scinew int[nnz];
-  double *a = scinew double[nnz];
+  int *columns = new int[nnz];
+  double *a = new double[nnz];
 
   int count = 0;
   for (r=0; r<nrows_; r++)
@@ -143,7 +143,7 @@ DenseColMajMatrix::sparse()
   }
   rows[nrows_] = count;
 
-  return scinew SparseRowMatrix(nrows_, ncols_, rows, columns, nnz, a);
+  return new SparseRowMatrix(nrows_, ncols_, rows, columns, nnz, a);
 }
 
 
@@ -183,7 +183,7 @@ DenseColMajMatrix::operator=(const DenseColMajMatrix& m)
 
   nrows_ = m.nrows_;
   ncols_ = m.ncols_;
-  dataptr_ = scinew double[nrows_ * ncols_];
+  dataptr_ = new double[nrows_ * ncols_];
   memcpy(dataptr_, m.dataptr_, sizeof(double) * nrows_ * ncols_);
 
   return *this;
@@ -220,7 +220,7 @@ DenseColMajMatrix::add(int r, int c, double d)
 DenseColMajMatrix *
 DenseColMajMatrix::transpose()
 {
-  DenseColMajMatrix *m = scinew DenseColMajMatrix(ncols_, nrows_);
+  DenseColMajMatrix *m = new DenseColMajMatrix(ncols_, nrows_);
   for (int c=0; c<ncols_; c++)
     for (int r=0; r<nrows_; r++)
       m->iget(c, r) = iget(r, c);
@@ -249,7 +249,7 @@ DenseColMajMatrix::zero()
 DenseColMajMatrix *
 DenseColMajMatrix::identity(int size)
 {
-  DenseColMajMatrix *result = scinew DenseColMajMatrix(size, size);
+  DenseColMajMatrix *result = new DenseColMajMatrix(size, size);
   result->zero();
   for (int i = 0; i < size; i++)
   {
@@ -289,7 +289,7 @@ DenseColMajMatrix::submatrix(int r1, int c1, int r2, int c2)
   ASSERTRANGE(r2, r1, nrows_);
   ASSERTRANGE(c1, 0, c2+1);
   ASSERTRANGE(c2, c1, ncols_);
-  DenseColMajMatrix *mat = scinew DenseColMajMatrix(r2 - r1 + 1, c2 - c1 + 1);
+  DenseColMajMatrix *mat = new DenseColMajMatrix(r2 - r1 + 1, c2 - c1 + 1);
   for (int i = c1; i <= c2; i++)
   {
     // TODO: Test this.
@@ -399,7 +399,7 @@ DenseColMajMatrix::io(Piostream& stream)
   stream.io(ncols_);
   if (stream.reading())
   {
-    dataptr_ = scinew double[nrows_ * ncols_];
+    dataptr_ = new double[nrows_ * ncols_];
   }
   stream.begin_cheap_delim();
 
@@ -707,7 +707,7 @@ DenseColMajMatrix::eigenvalues(ColumnMatrix& R, ColumnMatrix& I)
   double *Er = R.get_data_pointer();
   double *Ei = I.get_data_pointer();
 
-  double **data = scinew double*[nrows_];
+  double **data = new double*[nrows_];
   for (int i = 0; i < nrows_; i++)
   {
     data[i] = dataptr_ + i*ncols_;
@@ -728,13 +728,13 @@ DenseColMajMatrix::eigenvectors(ColumnMatrix& R, ColumnMatrix& I, DenseColMajMat
   double *Er = R.get_data_pointer();
   double *Ei = I.get_data_pointer();
 
-  double **data = scinew double*[nrows_];
+  double **data = new double*[nrows_];
   for (int i = 0; i < nrows_; i++)
   {
     data[i] = dataptr_ + i*ncols_;
   }
 
-  double **data = scinew double*[nrows_];
+  double **data = new double*[nrows_];
   for (int i = 0; i < nrows_; i++)
   {
     data[i] = dataptr_ + i*ncols_;

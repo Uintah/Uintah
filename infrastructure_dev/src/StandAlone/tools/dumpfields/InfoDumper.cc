@@ -58,7 +58,7 @@ namespace Uintah {
   InfoDumper::Step * 
   InfoDumper::addStep(int timestep, double time, int index)
   {
-    return scinew Step(this->archive(), this->dirName(time, index), timestep, time, index, opts_, fselect_);
+    return new Step(this->archive(), this->dirName(time, index), timestep, time, index, opts_, fselect_);
   }
 
   void

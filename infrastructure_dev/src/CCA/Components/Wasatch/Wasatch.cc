@@ -36,7 +36,7 @@
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
@@ -122,8 +122,8 @@ namespace Wasatch{
     timeStepper_ = NULL;
     linSolver_   = NULL;
 
-    cellType_ = scinew CellType();
-    rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
+    cellType_ = new CellType();
+    rmcrt_ = new Uintah::Ray( Uintah::TypeDescription::double_type );
     
     isRestarting_ = false;
 
@@ -133,14 +133,14 @@ namespace Wasatch{
     Uintah::OnDemandDataWarehouse::d_combineMemory = false;
 
     const bool log = false;
-    graphCategories_[ INITIALIZATION     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
-    graphCategories_[ TIMESTEP_SELECTION ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
-    graphCategories_[ ADVANCE_SOLUTION   ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
-    graphCategories_[ POSTPROCESSING     ] = scinew GraphHelper( scinew Expr::ExpressionFactory(log) );
+    graphCategories_[ INITIALIZATION     ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ TIMESTEP_SELECTION ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ ADVANCE_SOLUTION   ] = new GraphHelper( new Expr::ExpressionFactory(log) );
+    graphCategories_[ POSTPROCESSING     ] = new GraphHelper( new Expr::ExpressionFactory(log) );
 
     OldVariable::self().sync_with_wasatch( this );
     ReductionHelper::self().sync_with_wasatch( this );
-    particlesHelper_ = scinew WasatchParticlesHelper();
+    particlesHelper_ = new WasatchParticlesHelper();
     particlesHelper_->sync_with_wasatch(this);
   }
 
@@ -490,7 +490,7 @@ namespace Wasatch{
     // Material
     //
     if( buildWasatchMaterial_ ){
-      Uintah::WasatchMaterial* mat= scinew Uintah::WasatchMaterial();
+      Uintah::WasatchMaterial* mat= new Uintah::WasatchMaterial();
       sharedState->registerWasatchMaterial(mat);
     }
 
@@ -669,7 +669,7 @@ namespace Wasatch{
     }
 
     if( buildTimeIntegrator_ ){
-      timeStepper_ = scinew TimeStepper( sharedState_, graphCategories_, timeIntegrator_ );
+      timeStepper_ = new TimeStepper( sharedState_, graphCategories_, timeIntegrator_ );
     }    
     
     //
@@ -807,7 +807,7 @@ namespace Wasatch{
       particlesHelper_->schedule_initialize(level,sched);
     }
     
-    bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+    bcHelperMap_[level->getID()] = new BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     
     // handle intrusion boundaries
     if( wasatchSpec_->findBlock("EmbeddedGeometry") ){
@@ -821,7 +821,7 @@ namespace Wasatch{
     timeTags.push_back( TagNames::self().dt       );
     timeTags.push_back( TagNames::self().timestep );
     timeTags.push_back( TagNames::self().rkstage  );
-    exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+    exprFactory.register_expression( new SetCurrentTime::Builder(timeTags), true );
     
     //_____________________________________________
     // Build the initial condition expression graph
@@ -857,7 +857,7 @@ namespace Wasatch{
 
       // -----------------------------------------------------------------------
       try{
-        TaskInterface* const task = scinew TaskInterface( icGraphHelper->rootIDs,
+        TaskInterface* const task = new TaskInterface( icGraphHelper->rootIDs,
                                                           "initialization",
                                                           *icGraphHelper->exprFactory,
                                                           level, sched,
@@ -933,14 +933,14 @@ namespace Wasatch{
     for( int ipss=0; ipss<patches->size(); ++ipss ){
       const Uintah::PatchSubset* pss = patches->getSubset(ipss);
       for( int ip=0; ip<pss->size(); ++ip ){
-        SpatialOps::OperatorDatabase* const opdb = scinew SpatialOps::OperatorDatabase();
+        SpatialOps::OperatorDatabase* const opdb = new SpatialOps::OperatorDatabase();
         const Uintah::Patch* const patch = pss->get(ip);
 
         //tsaad: register an patch container as an operator for easy access to the Uintah patch
         // inside of an expression.
-        opdb->register_new_operator<UintahPatchContainer>(scinew UintahPatchContainer(patch) );
+        opdb->register_new_operator<UintahPatchContainer>(new UintahPatchContainer(patch) );
         
-        opdb->register_new_operator<TimeIntegrator>(scinew TimeIntegrator(timeIntegrator_.name) );
+        opdb->register_new_operator<TimeIntegrator>(new TimeIntegrator(timeIntegrator_.name) );
         
         build_operators( *patch, *opdb );
         PatchInfo& pi = patchInfoMap_[patch->getID()];
@@ -966,7 +966,7 @@ namespace Wasatch{
       // create the TaskInterface and schedule this task for
       // execution.  Note that field dependencies are assigned
       // within the TaskInterface object.
-      TaskInterface* const task = scinew TaskInterface( tsGraphHelper->rootIDs,
+      TaskInterface* const task = new TaskInterface( tsGraphHelper->rootIDs,
                                                         "compute timestep",
                                                         *tsGraphHelper->exprFactory,
                                                         level, sched,
@@ -981,7 +981,7 @@ namespace Wasatch{
 
       proc0cout << "Scheduling Task 'compute timestep' COMPUTES 'delT' in NEW data warehouse" << endl;
 
-      Uintah::Task* task = scinew Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
+      Uintah::Task* task = new Uintah::Task( "compute timestep", this, &Wasatch::computeDelT );
 
       // jcs it appears that for reduction variables we cannot specify the patches - only the materials.
       	task->computes( sharedState_->get_delt_label(),
@@ -1025,7 +1025,7 @@ namespace Wasatch{
         particlesHelper_->schedule_find_boundary_particles(level,sched);
       }
 
-      bcHelperMap_[level->getID()] = scinew BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
+      bcHelperMap_[level->getID()] = new BCHelper(localPatches, materials_, patchInfoMap_, graphCategories_,  bcFunctorMap_);
     }
     
     if( doParticles_ ){
@@ -1105,7 +1105,7 @@ namespace Wasatch{
     GraphHelper* const postProcGH = graphCategories_[ POSTPROCESSING ];
     Expr::ExpressionFactory& postProcFactory = *postProcGH->exprFactory;
     if( !postProcGH->rootIDs.empty() ){
-      TaskInterface* const task = scinew TaskInterface( postProcGH->rootIDs,
+      TaskInterface* const task = new TaskInterface( postProcGH->rootIDs,
                                                        "postprocessing",
                                                        postProcFactory,
                                                        level, sched,
@@ -1185,7 +1185,7 @@ namespace Wasatch{
       timeTags.push_back( TagNames::self().dt     );
       timeTags.push_back( TagNames::self().timestep );
       timeTags.push_back( TagNames::self().rkstage  );
-      timeID = exprFactory.register_expression( scinew SetCurrentTime::Builder(timeTags), true );
+      timeID = exprFactory.register_expression( new SetCurrentTime::Builder(timeTags), true );
     }
     else{
       timeID = exprFactory.get_id(TagNames::self().time);

@@ -112,7 +112,7 @@ BoxRangeQuerier::BoxRangeQuerier(BoxPIterator begin, BoxPIterator end)
     }
   }
 
-  d_rangeTree = scinew SCIRun::RangeTree<BoxPoint, int>(pointList, 3 /*dimensions*/);
+  d_rangeTree = new SCIRun::RangeTree<BoxPoint, int>(pointList, 3 /*dimensions*/);
 }
   
 } // end namespace Uintah

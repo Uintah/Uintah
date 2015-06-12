@@ -74,7 +74,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
@@ -82,7 +82,6 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
-#include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
 
 #include <sci_defs/hypre_defs.h>
@@ -130,7 +129,7 @@ using namespace std;
   };
 #endif
 
-// If we are using MPICH version 1, 
+// If we are using MPICH version 1,
 // we must call MPI_Init() before parsing args
 #if defined(HAVE_MPICH) && (MPI_VERSION < 2)
 #  define HAVE_MPICH_OLD
@@ -235,18 +234,19 @@ abortCleanupFunc()
 }
 
 int
-main( int argc, char *argv[], char *env[] )
+main( int argc, char *argv[] )
 {
-#if defined( USE_LENNY_HACK )
-  atexit( SCIRun::shutdown );
-#endif
+  std::string obj_dir = std::string("SCIRUN_OBJDIR=") + std::string(SCIRUN_OBJDIR);
+  std::string src_dir = std::string("SCIRUN_SRCDIR=") + std::string(SCIRUN_SRCDIR);
+
+  putenv((char*)obj_dir.c_str());
+  putenv((char*)src_dir.c_str());
 
   sanityChecks();
 
   string oldTag;
-  MALLOC_TRACE_TAG_SCOPE("main()");
 
-  // Turn off Thread asking so sus can cleanly exit on abortive behavior.  
+  // Turn off Thread asking so sus can cleanly exit on abortive behavior.
   // Can override this behavior with the environment variable SCI_SIGNALMODE
   Thread::setDefaultAbortMode("exit");
   Thread::self()->setCleanupFunction( &abortCleanupFunc );
@@ -255,17 +255,14 @@ main( int argc, char *argv[], char *env[] )
 
   // WARNING:
   //cout << "about to call tau_profile... if it dies now, it is in "
-  //       << "sus.cc at the TAU_PROFILE() call.  This has only been "
-  //       << "happening in 32 bit tau use.";  
+  //       << "happening in 32 bit tau use.";
   //
   // Got rid of this print as it appears 100s of times when 100s of procs.
 #endif
   // Causes buserr for some reason in 32 bit mode... may be fixed now:
-  TAU_PROFILE("main()", "void (int, char **)", TAU_DEFAULT);
 
   // This seems to be causing a problem when using LAM, disabling for now.
-  //   TAU_PROFILE_INIT(argc,argv);
-  
+
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
@@ -315,7 +312,7 @@ main( int argc, char *argv[], char *env[] )
   // NOTE: The main problem with calling initializeManager() before
   // parsing the args is that we don't know if thread MPI is going to
   // However, MPICH veriosn 1 does not support Thread safety, so we will just dis-allow that.
-  
+
   Uintah::Parallel::initializeManager( argc, argv );
 #endif
   /*
@@ -467,9 +464,6 @@ main( int argc, char *argv[], char *env[] )
       }
     }
   }
- 
-  // Pass the env into the sci env so it can be used there...
-  create_sci_environment( env, 0, true );
 
   if( filename == "" ) {
     usage("No input file specified", "", argv[0]);
@@ -498,7 +492,6 @@ main( int argc, char *argv[], char *env[] )
   }
 
   if (!Uintah::Parallel::usingMPI()) {
-    TAU_PROFILE_SET_NODE(0);
   }
 
   #ifdef USE_VAMPIR
@@ -569,10 +562,10 @@ main( int argc, char *argv[], char *env[] )
       cout << "Assertion level: " << SCI_ASSERTION_LEVEL << "\n";
       cout << "CFLAGS: " << CFLAGS << "\n";
 
-      // Run svn commands on Packages/Uintah 
+      // Run svn commands on Packages/Uintah
       if (do_svnDiff || do_svnStat) {
         cout << "____SVN_____________________________________________________________\n";
-        string sdir = string(sci_getenv("SCIRUN_SRCDIR"));
+        string sdir = string(getenv("SCIRUN_SRCDIR"));
         if (do_svnDiff) {
           string cmd = "svn diff --username anonymous --password \"\" " + sdir;
           system(cmd.c_str());
@@ -603,21 +596,21 @@ main( int argc, char *argv[], char *env[] )
     //__________________________________
     // Read input file
     ProblemSpecP ups;
-    try {
+//    try {
       ups = ProblemSpecReader().readInputFile( filename, validateUps );
-    }
-    catch( ... ) {
-      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
-      // instead of a UPS file.
-      proc0cout   << "\n";
-      proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
-      if( validDir( filename ) ) {
-        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
-      }
-      proc0cout   << "\n";
-      Uintah::Parallel::finalizeManager();
-      Thread::exitAll( 0 );
-    }
+//    }
+//    catch( ... ) {
+//      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
+//      // instead of a UPS file.
+//      proc0cout   << "\n";
+//      proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
+//      if( validDir( filename ) ) {
+//        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
+//      }
+//      proc0cout   << "\n";
+//      Uintah::Parallel::finalizeManager();
+//      Thread::exitAll( 0 );
+//    }
 
     if( onlyValidateUps ) {
       cout << "\nValidation of .ups File finished... good bye.\n\n";
@@ -639,11 +632,11 @@ main( int argc, char *argv[], char *env[] )
     if(reduce_uda){
       do_AMR = false;
     }
-    
+
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
-    SimulationController* ctl = scinew AMRSimulationController( world, do_AMR, ups );
+    SimulationController* ctl = new AMRSimulationController( world, do_AMR, ups );
 
 #ifdef HAVE_VISIT
     ((AMRSimulationController*) ctl)->SetVisIt( do_VisIt );
@@ -663,7 +656,6 @@ main( int argc, char *argv[], char *env[] )
 
     proc0cout << "Implicit Solver: \t" << solve->getName() << "\n";
 
-    MALLOC_TRACE_TAG("main():create components");
     //______________________________________________________________________
     // Create the components
 
@@ -681,11 +673,11 @@ main( int argc, char *argv[], char *env[] )
     ctl->attachPort("sim", sim);
     comp->attachPort("solver", solve);
     comp->attachPort("regridder", reg);
-    
+
 #ifndef NO_ICE
     //__________________________________
     //  Model
-    ModelMaker* modelmaker = scinew ModelFactory(world);
+    ModelMaker* modelmaker = new ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
 #endif
 
@@ -697,16 +689,16 @@ main( int argc, char *argv[], char *env[] )
       reg->attachPort("load balancer", lbc);
       lbc->attachPort("regridder",reg);
     }
-    
+
     //__________________________________
     // Output
-    DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
+    DataArchiver* dataarchiver = new DataArchiver(world, udaSuffix);
     Output* output = dataarchiver;
     ctl->attachPort("output", dataarchiver);
     dataarchiver->attachPort("load balancer", lbc);
     comp->attachPort("output", dataarchiver);
     dataarchiver->attachPort("sim", sim);
-    
+
     //__________________________________
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
@@ -716,7 +708,7 @@ main( int argc, char *argv[], char *env[] )
     comp->attachPort("scheduler", sched);
 
     sched->setStartAddr( start_addr );
-    
+
     if (reg) {
       reg->attachPort("scheduler", sched);
     }
@@ -726,14 +718,13 @@ main( int argc, char *argv[], char *env[] )
       sched->doEmitTaskGraphDocs();
     }
 
-    MALLOC_TRACE_TAG(oldTag);
 
     //__________________________________
     // Start the simulation controller
     if (restart) {
       ctl->doRestart(udaDir, restartTimestep, restartFromScratch, restartRemoveOldDir);
     }
-    
+
     // This gives memory held by the 'ups' back before the simulation starts... Assuming
     // no one else is holding on to it...
     ups = 0;
@@ -812,7 +803,7 @@ main( int argc, char *argv[], char *env[] )
     cerrLock.unlock();
     thrownException = true;
   }
-  
+
   Uintah::TypeDescription::deleteAll();
 
   /*

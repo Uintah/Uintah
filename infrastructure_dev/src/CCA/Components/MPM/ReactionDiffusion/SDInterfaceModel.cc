@@ -36,8 +36,8 @@ SDInterfaceModel::SDInterfaceModel(ProblemSpecP& ps, SimulationStateP& sS, MPMFl
   d_Mflag = Mflag;
   d_sharedState = sS;
 
-  d_lb = scinew MPMLabel;
-  d_rdlb = scinew ReactionDiffusionLabel();
+  d_lb = new MPMLabel;
+  d_rdlb = new ReactionDiffusionLabel();
 
   if(d_Mflag->d_8or27==8){
     NGP=1;

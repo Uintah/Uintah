@@ -30,7 +30,7 @@
 #include "Pressure_Borja.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -50,13 +50,13 @@ PressureModel* PressureModelFactory::create(ProblemSpecP& ps)
       throw ProblemSetupException("No type for pressure_model", __FILE__, __LINE__);
    
    if (mat_type == "mie_gruneisen")
-      return(scinew Pressure_MieGruneisen(child));
+      return(new Pressure_MieGruneisen(child));
    else if (mat_type == "default_hypo")
-      return(scinew Pressure_Hypoelastic(child));
+      return(new Pressure_Hypoelastic(child));
    else if (mat_type == "default_hyper")
-      return(scinew Pressure_Hyperelastic(child));
+      return(new Pressure_Hyperelastic(child));
    else if (mat_type == "borja_pressure")
-      return(scinew Pressure_Borja(child));
+      return(new Pressure_Borja(child));
    else {
       throw ProblemSetupException("Cannot create pressure_model.", __FILE__, __LINE__);
    }
@@ -66,13 +66,13 @@ PressureModel*
 PressureModelFactory::createCopy(const PressureModel* eos)
 {
    if (dynamic_cast<const Pressure_Borja*>(eos))
-      return(scinew Pressure_Borja(dynamic_cast<const Pressure_Borja*>(eos)));
+      return(new Pressure_Borja(dynamic_cast<const Pressure_Borja*>(eos)));
 
    else if (dynamic_cast<const Pressure_MieGruneisen*>(eos))
-      return(scinew Pressure_MieGruneisen(dynamic_cast<const Pressure_MieGruneisen*>(eos)));
+      return(new Pressure_MieGruneisen(dynamic_cast<const Pressure_MieGruneisen*>(eos)));
 
    else if (dynamic_cast<const Pressure_Hypoelastic*>(eos))
-      return(scinew Pressure_Hypoelastic(dynamic_cast<const Pressure_Hypoelastic*>(eos)));
+      return(new Pressure_Hypoelastic(dynamic_cast<const Pressure_Hypoelastic*>(eos)));
 
    else {
       throw ProblemSetupException("Cannot create copy of pressure_model.", __FILE__, __LINE__);

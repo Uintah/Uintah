@@ -24,7 +24,7 @@
 
 #include <CCA/Components/ICE/Advection/Advector.h>
 #include <Core/Parallel/Parallel.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
@@ -108,7 +108,7 @@ namespace Uintah {
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "fflux", true, 
                                   &makeMPI_fflux);
     }

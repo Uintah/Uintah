@@ -24,7 +24,7 @@
 
 #include <CCA/Components/Arches/OdtData.h>
 #include <Core/Util/Endian.h>
-#include <Core/Malloc/Allocator.h>
+
 
 //__________________________________
   static MPI_Datatype makeMPI_odtData()
@@ -44,7 +44,7 @@
   {
     static Uintah::TypeDescription* td = 0;
     if(!td){
-      td = scinew Uintah::TypeDescription(Uintah::TypeDescription::Other,
+      td = new Uintah::TypeDescription(Uintah::TypeDescription::Other,
                                           "odtData", true, 
                                           &makeMPI_odtData);
     }

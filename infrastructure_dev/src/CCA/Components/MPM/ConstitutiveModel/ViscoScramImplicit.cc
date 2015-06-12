@@ -24,7 +24,7 @@
 
 #include <CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Math/Matrix3.h>
 #include <Core/Math/Rand48.h>
 #include <Core/Grid/Patch.h>
@@ -41,7 +41,7 @@
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/FastMatrix.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -259,7 +259,7 @@ void ViscoScramImplicit::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 ViscoScramImplicit* ViscoScramImplicit::clone()
 {
-  return scinew ViscoScramImplicit(*this);
+  return new ViscoScramImplicit(*this);
 }
 
 void ViscoScramImplicit::addInitialComputesAndRequires(Task* task,

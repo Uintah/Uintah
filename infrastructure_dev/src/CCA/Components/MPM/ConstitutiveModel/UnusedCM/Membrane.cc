@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/Membrane.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -39,7 +39,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -119,7 +119,7 @@ void Membrane::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Membrane* Membrane::clone()
 {
-  return scinew Membrane(*this);
+  return new Membrane(*this);
 }
 
 void Membrane::initializeCMData(const Patch* patch,
@@ -602,7 +602,7 @@ const TypeDescription* fun_getTypeDescription(Membrane::StateData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                "Membrane::StateData", true, &makeMPI_CMData);
    }
    return td;

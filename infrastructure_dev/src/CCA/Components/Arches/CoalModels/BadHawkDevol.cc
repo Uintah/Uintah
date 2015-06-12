@@ -32,7 +32,7 @@ BadHawkDevolBuilder::BadHawkDevolBuilder( const std::string         & modelName,
 BadHawkDevolBuilder::~BadHawkDevolBuilder(){}
 
 ModelBase* BadHawkDevolBuilder::build() {
-  return scinew BadHawkDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
+  return new BadHawkDevol( d_modelName, d_sharedState, d_fieldLabels, d_icLabels, d_scalarLabels, d_quadNode );
 }
 // End Builder
 //---------------------------------------------------------------------------
@@ -195,7 +195,7 @@ BadHawkDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
 
   std::string taskname = "BadHawkDevol::initVars";
-  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::initVars);
+  Task* tsk = new Task(taskname, this, &BadHawkDevol::initVars);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -222,7 +222,7 @@ void
 BadHawkDevol::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
 {
   std::string taskname = "BadHawkDevol::computeModel";
-  Task* tsk = scinew Task(taskname, this, &BadHawkDevol::computeModel);
+  Task* tsk = new Task(taskname, this, &BadHawkDevol::computeModel);
 
   Ghost::GhostType gn = Ghost::None;
 

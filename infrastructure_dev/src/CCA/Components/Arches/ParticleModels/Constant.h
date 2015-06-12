@@ -46,7 +46,7 @@ namespace Uintah{
       ~Builder(){}
       
       Constant* build()
-      { return scinew Constant<T>( _task_name, _matl_index, _base_var_name, _N ); }
+      { return new Constant<T>( _task_name, _matl_index, _base_var_name, _N ); }
       
     private:
       

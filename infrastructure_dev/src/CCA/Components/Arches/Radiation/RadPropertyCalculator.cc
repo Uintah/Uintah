@@ -44,14 +44,14 @@ RadPropertyCalculator::problemSetup( const ProblemSpecP& db ){
     db_pc->getAttribute("type", calculator_type); 
 
     if ( calculator_type == "constant" ){ 
-      calculator = scinew ConstantProperties(); 
+      calculator = new ConstantProperties(); 
     } else if ( calculator_type == "burns_christon" ){ 
-      calculator = scinew BurnsChriston(); 
+      calculator = new BurnsChriston(); 
     } else if ( calculator_type == "hottel_sarofim"){
-      calculator = scinew HottelSarofim(); 
+      calculator = new HottelSarofim(); 
     } else if ( calculator_type == "radprops" ){
 #ifdef HAVE_RADPROPS
-      calculator = scinew RadPropsInterface(); 
+      calculator = new RadPropsInterface(); 
 #else
       throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
 #endif
@@ -300,7 +300,7 @@ bool RadPropertyCalculator::RadPropsInterface::problemSetup( const ProblemSpecP&
     db_gg->require("inputfile",inputfile); 
 
     //allocate gray gas object: 
-    _gg_radprops = scinew GreyGas( inputfile ); 
+    _gg_radprops = new GreyGas( inputfile ); 
 
     //get list of species: 
     _radprops_species = _gg_radprops->species();
@@ -539,7 +539,7 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
     throw InvalidValue( "Error: Particle model not recognized for abskp.",__FILE__,__LINE__);
   }   
 
-  _part_radprops = scinew ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
+  _part_radprops = new ParticleRadCoeffs3D( _LowComplex, _HighComplex,3, 1e-6, 3e-4, 10  );
 
   _computeComplexIndex = true; // complex index of refraction needed
 }
@@ -756,7 +756,7 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     db->findBlock("particles")->require("complex_ir_imag",imagCIF); 
     db->findBlock("particles")->getWithDefault("const_asymmFact",_constAsymmFact,0.0); 
     std::complex<double>  CIF(realCIF, imagCIF );  
-    _part_radprops = scinew ParticleRadCoeffs(CIF,1e-6,3e-4,10);  
+    _part_radprops = new ParticleRadCoeffs(CIF,1e-6,3e-4,10);  
     std::string which_model = "none"; 
     db->findBlock("particles")->require("model_type", which_model);
     if ( which_model == "planck" ){ 

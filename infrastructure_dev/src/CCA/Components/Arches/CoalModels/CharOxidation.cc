@@ -100,7 +100,7 @@ void
 CharOxidation::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
   std::string taskname = "CharOxidation::initVars";
-  Task* tsk = scinew Task(taskname, this, &CharOxidation::initVars);
+  Task* tsk = new Task(taskname, this, &CharOxidation::initVars);
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }

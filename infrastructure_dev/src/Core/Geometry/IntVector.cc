@@ -57,7 +57,7 @@ get_type_description(IntVector*)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("IntVector", IntVector::get_h_file_path(), "SCIRun");
+    td = new TypeDescription("IntVector", IntVector::get_h_file_path(), "SCIRun");
   }
   return td;
 }

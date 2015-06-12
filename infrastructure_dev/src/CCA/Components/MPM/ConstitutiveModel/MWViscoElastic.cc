@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -37,7 +37,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -122,7 +122,7 @@ void MWViscoElastic::outputProblemSpec(ProblemSpecP& ps,
 
 MWViscoElastic* MWViscoElastic::clone()
 {
-  return scinew MWViscoElastic(*this);
+  return new MWViscoElastic(*this);
 }
 
 void MWViscoElastic::initializeCMData(const Patch* patch,
@@ -477,7 +477,7 @@ const TypeDescription* fun_getTypeDescription(MWViscoElastic::StateData*)
 {
    static TypeDescription* td = 0;
    if(!td){
-      td = scinew
+      td = new
         TypeDescription(TypeDescription::Other,
                         "MWViscoElastic::StateData", true, &makeMPI_CMData);
    }

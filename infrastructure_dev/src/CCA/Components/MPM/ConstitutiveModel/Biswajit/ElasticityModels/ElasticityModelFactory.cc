@@ -31,7 +31,7 @@
 #include "BorjaHyperelastic.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -50,17 +50,17 @@ ElasticityModel* ElasticityModelFactory::create(ProblemSpecP& ps)
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("No type specified for <elasticity_model type=?>", __FILE__, __LINE__);
    if (mat_type == "isotropic_linear_elastic")
-      return(scinew IsotropicLinearElastic(child));
+      return(new IsotropicLinearElastic(child));
    else if (mat_type == "anisotropic_linear_elastic")
-      return(scinew AnisotropicLinearElastic(child));
+      return(new AnisotropicLinearElastic(child));
    else if (mat_type == "neo_hookean")
-      return(scinew NeoHookean(child));
+      return(new NeoHookean(child));
    else if (mat_type == "mooney_rivlin")
-      return(scinew MooneyRivlin(child));
+      return(new MooneyRivlin(child));
    else if (mat_type == "gent_hyperelastic")
-      return(scinew GentHyperelastic(child));
+      return(new GentHyperelastic(child));
    else if (mat_type == "borja_hyperelastic")
-      return(scinew BorjaHyperelastic(child));
+      return(new BorjaHyperelastic(child));
    else {
       throw ProblemSetupException("Unknown Elasticity Model ("+mat_type+")", __FILE__, __LINE__);
    }
@@ -70,23 +70,23 @@ ElasticityModel*
 ElasticityModelFactory::createCopy(const ElasticityModel* pm)
 {
    if (dynamic_cast<const IsotropicLinearElastic*>(pm))
-      return(scinew IsotropicLinearElastic(dynamic_cast<const IsotropicLinearElastic*>(pm)));
+      return(new IsotropicLinearElastic(dynamic_cast<const IsotropicLinearElastic*>(pm)));
 
    else if (dynamic_cast<const AnisotropicLinearElastic*>(pm))
-      return(scinew AnisotropicLinearElastic(dynamic_cast<const 
+      return(new AnisotropicLinearElastic(dynamic_cast<const 
                                        AnisotropicLinearElastic*>(pm)));
 
    else if (dynamic_cast<const NeoHookean*>(pm))
-      return(scinew NeoHookean(dynamic_cast<const NeoHookean*>(pm)));
+      return(new NeoHookean(dynamic_cast<const NeoHookean*>(pm)));
       
    else if (dynamic_cast<const MooneyRivlin*>(pm))
-      return(scinew MooneyRivlin(dynamic_cast<const MooneyRivlin*>(pm)));
+      return(new MooneyRivlin(dynamic_cast<const MooneyRivlin*>(pm)));
 
    else if (dynamic_cast<const GentHyperelastic*>(pm))
-      return(scinew GentHyperelastic(dynamic_cast<const GentHyperelastic*>(pm)));
+      return(new GentHyperelastic(dynamic_cast<const GentHyperelastic*>(pm)));
 
    else if (dynamic_cast<const BorjaHyperelastic*>(pm))
-      return(scinew BorjaHyperelastic(dynamic_cast<const BorjaHyperelastic*>(pm)));
+      return(new BorjaHyperelastic(dynamic_cast<const BorjaHyperelastic*>(pm)));
 
    else {
       throw ProblemSetupException("Cannot create copy of unknown elasticity model", __FILE__, __LINE__);

@@ -40,7 +40,6 @@
  */
 
 #include <Core/OS/Dir.h>
-#include <Core/Util/Environment.h>
 
 #include <CCA/Components/DataArchiver/DataArchiver.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
@@ -97,9 +96,6 @@ usage( const string & badarg, const string & progname )
 int
 main( int argc, char *argv[], char *env[] )
 {
-  // Pass the env into the sci env so it can be used there...
-  create_sci_environment( env, 0, true );
-
   bool move = false;
   int i = 1;
   for (i = 1; i < argc; i++) {

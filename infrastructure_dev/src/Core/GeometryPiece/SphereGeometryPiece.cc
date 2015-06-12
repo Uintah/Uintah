@@ -27,7 +27,7 @@
 #include <Core/Grid/Box.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -77,7 +77,7 @@ SphereGeometryPiece::outputHelper( ProblemSpecP & ps ) const
 GeometryPieceP
 SphereGeometryPiece::clone() const
 {
-  return scinew SphereGeometryPiece(*this);
+  return new SphereGeometryPiece(*this);
 }
 
 bool

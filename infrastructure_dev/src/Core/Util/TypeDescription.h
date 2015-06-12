@@ -28,7 +28,7 @@
 #if ! defined(Disclosure_TypeDescription_h)
 #define Disclosure_TypeDescription_h
 
-#include <Core/Malloc/Allocator.h>
+
 
 #include <vector>
 #include <string>
@@ -123,9 +123,9 @@ const TypeDescription* get_type_description(std::vector<T>*)
   static TypeDescription* td = 0;
   if(!td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    TypeDescription::td_vec *subs = new TypeDescription::td_vec(1);
     (*subs)[0] = sub;
-    td = scinew TypeDescription("vector", subs, "std::vector", "std",
+    td = new TypeDescription("vector", subs, "std::vector", "std",
 				TypeDescription::CONTAINER_E);
   }
   return td;
@@ -138,10 +138,10 @@ const TypeDescription* get_type_description (std::pair<T1,T2> *)
   if(!td){
     const TypeDescription *sub1 = SCIRun::get_type_description((T1*)0);
     const TypeDescription *sub2 = SCIRun::get_type_description((T2*)0);
-    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
+    TypeDescription::td_vec *subs = new TypeDescription::td_vec(2);
     (*subs)[0] = sub1;
     (*subs)[1] = sub2;
-    td = scinew TypeDescription("pair", subs, "std::utility", "std",
+    td = new TypeDescription("pair", subs, "std::utility", "std",
 				TypeDescription::CONTAINER_E);
   }
   return td;

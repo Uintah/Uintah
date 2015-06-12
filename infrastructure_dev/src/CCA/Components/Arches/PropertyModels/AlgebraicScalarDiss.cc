@@ -71,7 +71,7 @@ void AlgebraicScalarDiss::sched_computeProp( const LevelP& level, SchedulerP& sc
   }
   
   std::string taskname = "AlgebraicScalarDiss::computeProp"; 
-  Task* tsk = scinew Task( taskname, this, &AlgebraicScalarDiss::computeProp, time_substep ); 
+  Task* tsk = new Task( taskname, this, &AlgebraicScalarDiss::computeProp, time_substep ); 
 
   if ( time_substep == 0 ){ 
 
@@ -169,7 +169,7 @@ void AlgebraicScalarDiss::sched_initialize( const LevelP& level, SchedulerP& sch
 {
   std::string taskname = "AlgebraicScalarDiss::initialize"; 
 
-  Task* tsk = scinew Task(taskname, this, &AlgebraicScalarDiss::initialize);
+  Task* tsk = new Task(taskname, this, &AlgebraicScalarDiss::initialize);
   tsk->computes(_prop_label); 
 
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());

@@ -29,7 +29,7 @@
 #include "DruckerBeckerCheck.h"
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <string>
 #include <Core/Parallel/Parallel.h>
 
@@ -43,7 +43,7 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
   ProblemSpecP child = ps->findBlock("stability_check");
   if(!child) {
     proc0cout << "**WARNING** Creating default action (no stability check)" << endl;
-    return(scinew NoneCheck());
+    return(new NoneCheck());
     throw ProblemSetupException("Cannot find stability check criterion.", __FILE__, __LINE__);
   }
 
@@ -52,16 +52,16 @@ StabilityCheck* StabilityCheckFactory::create(ProblemSpecP& ps)
     throw ProblemSetupException("No type for stability check criterion.", __FILE__, __LINE__);
    
   if (mat_type == "drucker")
-    return(scinew DruckerCheck(child));
+    return(new DruckerCheck(child));
   else if (mat_type == "becker")
-    return(scinew BeckerCheck(child));
+    return(new BeckerCheck(child));
   else if (mat_type == "drucker_becker")
-    return(scinew DruckerBeckerCheck(child));
+    return(new DruckerBeckerCheck(child));
   else if (mat_type == "none")
-    return(scinew NoneCheck(child));
+    return(new NoneCheck(child));
   else {
     proc0cout << "**WARNING** Creating default action (no stability check)" << endl;
-    return(scinew NoneCheck(child));
+    return(new NoneCheck(child));
     // throw ProblemSetupException("Unknown Stability Check ("+mat_type+")", __FILE__, __LINE__);
   }
 }
@@ -70,19 +70,19 @@ StabilityCheck*
 StabilityCheckFactory::createCopy(const StabilityCheck* sc)
 {
   if (dynamic_cast<const DruckerCheck*>(sc))
-    return(scinew DruckerCheck(dynamic_cast<const DruckerCheck*>(sc)));
+    return(new DruckerCheck(dynamic_cast<const DruckerCheck*>(sc)));
 
   else if (dynamic_cast<const BeckerCheck*>(sc))
-    return(scinew BeckerCheck(dynamic_cast<const BeckerCheck*>(sc)));
+    return(new BeckerCheck(dynamic_cast<const BeckerCheck*>(sc)));
 
   else if (dynamic_cast<const DruckerBeckerCheck*>(sc))
-    return(scinew DruckerBeckerCheck(dynamic_cast<const DruckerBeckerCheck*>(sc)));
+    return(new DruckerBeckerCheck(dynamic_cast<const DruckerBeckerCheck*>(sc)));
   else if (dynamic_cast<const NoneCheck*>(sc))
-    return(scinew NoneCheck(dynamic_cast<const NoneCheck*>(sc)));
+    return(new NoneCheck(dynamic_cast<const NoneCheck*>(sc)));
 
   else {
     proc0cout << "**WARNING** Creating copy of default action (no stability check)" << endl;
-    return(scinew NoneCheck(dynamic_cast<const NoneCheck*>(sc)));
+    return(new NoneCheck(dynamic_cast<const NoneCheck*>(sc)));
     //  return 0;
   }
 }

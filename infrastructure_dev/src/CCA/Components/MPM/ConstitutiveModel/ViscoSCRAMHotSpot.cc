@@ -39,7 +39,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Labels/MPMLabel.h>
 
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Util/Endian.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MinMax.h>
@@ -161,7 +161,7 @@ ViscoSCRAMHotSpot::~ViscoSCRAMHotSpot()
 
 ViscoSCRAMHotSpot* ViscoSCRAMHotSpot::clone()
 {
-  return scinew ViscoSCRAMHotSpot(*this);
+  return new ViscoSCRAMHotSpot(*this);
 }
 
 void 
@@ -793,7 +793,7 @@ ViscoSCRAMHotSpot::evaluateRateEquations(const ViscoSCRAMHotSpot::FVector& Y,
   // Get the data from Y ( c and s_n ) and compute total deviatoric stress
   int numMaxwellElem = Y.nn;
   double c = Y.a;
-  Matrix3* s_n = scinew Matrix3[numMaxwellElem];
+  Matrix3* s_n = new Matrix3[numMaxwellElem];
   Matrix3 s(0.0);
   for (int imw = 0; imw < numMaxwellElem; ++imw) {
     s_n[imw] = Y.b_n[imw];
@@ -802,7 +802,7 @@ ViscoSCRAMHotSpot::evaluateRateEquations(const ViscoSCRAMHotSpot::FVector& Y,
 
   // evaluate the rate equations
   double cdot = computeCdot(s, sig_m, c, vres);
-  Matrix3* sdot_n = scinew Matrix3[numMaxwellElem];
+  Matrix3* sdot_n = new Matrix3[numMaxwellElem];
   for (int imw = 0; imw < numMaxwellElem; ++imw) {
     sdot_n[imw] = computeSdot_mw(edot, s, s_n, G_n, c, cdot,
                                  imw, numMaxwellElem);

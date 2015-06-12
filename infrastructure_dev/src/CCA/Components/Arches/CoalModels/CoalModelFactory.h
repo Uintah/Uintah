@@ -54,7 +54,7 @@ public:
 
   /**
    *  build the Model.  Should be implemented using the
-   *  "scinew" operator.  Ownership is transfered.
+   *  "new" operator.  Ownership is transfered.
    */
   virtual ModelBase* build() = 0;
 protected: 

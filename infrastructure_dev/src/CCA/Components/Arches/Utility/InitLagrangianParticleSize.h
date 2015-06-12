@@ -46,7 +46,7 @@ public:
       ~Builder(){}
 
       InitLagrangianParticleSize* build()
-      { return scinew InitLagrangianParticleSize( _task_name, _matl_index ); }
+      { return new InitLagrangianParticleSize( _task_name, _matl_index ); }
 
       private: 
 

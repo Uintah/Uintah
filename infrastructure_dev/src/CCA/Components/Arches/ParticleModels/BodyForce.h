@@ -49,7 +49,7 @@ namespace Uintah{
       ~Builder(){}
       
       BodyForce* build()
-      { return scinew BodyForce<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
+      { return new BodyForce<IT, DT>( _task_name, _matl_index, _base_var_name, _N ); }
       
     private:
       

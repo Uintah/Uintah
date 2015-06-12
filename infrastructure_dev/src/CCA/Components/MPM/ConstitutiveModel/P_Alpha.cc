@@ -23,7 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/P_Alpha.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/NCVariable.h>
@@ -39,7 +39,7 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ParameterNotFound.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -127,7 +127,7 @@ void P_Alpha::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 P_Alpha* P_Alpha::clone()
 {
-  return scinew P_Alpha(*this);
+  return new P_Alpha(*this);
 }
 
 void P_Alpha::addInitialComputesAndRequires(Task* task,

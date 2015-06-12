@@ -27,7 +27,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 
@@ -241,9 +241,6 @@ Parallel::initializeManager(int& argc, char**& argv)
 #endif
 
     int status;
-#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
-    const char* oldtag = SCIRun::AllocatorSetDefaultTagMalloc("MPI initialization");
-#endif
 #ifdef THREADED_MPI_AVAILABLE
     if( ( status = MPI_Init_thread( &argc, &argv, required, &provided ) ) != MPI_SUCCESS) {
 #else
@@ -269,11 +266,7 @@ Parallel::initializeManager(int& argc, char**& argv)
       MpiError(const_cast<char*>("MPI_Comm_rank"), status);
     }
 
-#if ( !defined( DISABLE_SCI_MALLOC ) || defined( SCI_MALLOC_TRACE ) )
-    SCIRun::AllocatorSetDefaultTagMalloc(oldtag);
-    SCIRun::AllocatorMallocStatsAppendNumber( worldRank_ );
-#endif
-    rootContext_ = scinew ProcessorGroup( 0, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
+    rootContext_ = new ProcessorGroup( 0, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
 
     if(rootContext_->myrank() == 0) {
       std::string plural = (rootContext_->size() > 1) ? "processes" : "process" ;
@@ -289,7 +282,7 @@ Parallel::initializeManager(int& argc, char**& argv)
   }
   else {
     worldRank_   = 0;
-    rootContext_ = scinew ProcessorGroup(0, 0, false, 0, 1, 0);
+    rootContext_ = new ProcessorGroup(0, 0, false, 0, 1, 0);
   }
 }
 

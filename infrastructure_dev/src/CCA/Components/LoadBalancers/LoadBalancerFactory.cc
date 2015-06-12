@@ -62,17 +62,17 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
     cout << "Load Balancer: \t\t" << loadbalancer << endl;
 
   if(loadbalancer == "SingleProcessorLoadBalancer"){
-    bal = scinew SingleProcessorLoadBalancer(world);
+    bal = new SingleProcessorLoadBalancer(world);
   } else if(loadbalancer == "RoundRobinLoadBalancer" || 
             loadbalancer == "RoundRobin" || 
             loadbalancer == "roundrobin"){
-    bal = scinew RoundRobinLoadBalancer(world);
+    bal = new RoundRobinLoadBalancer(world);
   } else if(loadbalancer == "SimpleLoadBalancer") {
-    bal = scinew SimpleLoadBalancer(world);
+    bal = new SimpleLoadBalancer(world);
   } else if(loadbalancer == "DLB") {
-    bal = scinew DynamicLoadBalancer(world);
+    bal = new DynamicLoadBalancer(world);
   } else if(loadbalancer == "PLB") {
-    bal = scinew ParticleLoadBalancer(world);
+    bal = new ParticleLoadBalancer(world);
   } else {
     bal = 0;   
     throw ProblemSetupException("Unknown load balancer", __FILE__, __LINE__);

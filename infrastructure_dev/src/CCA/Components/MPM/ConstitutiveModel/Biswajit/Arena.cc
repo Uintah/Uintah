@@ -64,7 +64,7 @@ porosity).
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Matrix3.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <sci_values.h>
 #include <iostream>
@@ -177,7 +177,7 @@ void Arena::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
 
 Arena* Arena::clone()
 {
-  return scinew Arena(*this);
+  return new Arena(*this);
 }
 
 void Arena::initializeCMData(const Patch* patch,
@@ -444,7 +444,7 @@ void Arena::computeStressTensor(const PatchSubset* patches,
     double max_X = 0.00001 * p0_crush_curve;
 
     // Set up the initial ModelState (for t_n)
-    UintahBB::ModelState* state = scinew UintahBB::ModelState();
+    UintahBB::ModelState* state = new UintahBB::ModelState();
     state->local_var[0] = 0.0;            // kappa value
     state->local_var[1] = cap_r_initial;  // initial cap radius
     state->local_var[2] = max_X;          // max_X

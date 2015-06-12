@@ -29,7 +29,7 @@
 
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Malloc/Allocator.h>
+
 
 #include <fstream>
 #include <iostream>
@@ -68,9 +68,9 @@ SDInterfaceModel* SDInterfaceModelFactory::create(ProblemSpecP& ps,
   }
 
   if (diff_interface_type == "common"){
-    return(scinew CommonIFConcDiff(mpm_ps, ss, flags));
+    return(new CommonIFConcDiff(mpm_ps, ss, flags));
   }else if (diff_interface_type == "paired"){
-    return(scinew SDInterfaceModel(child, ss, flags));
+    return(new SDInterfaceModel(child, ss, flags));
   }else{
     throw ProblemSetupException("Unknown Scalar Diffusion Type ("+diff_interface_type+")", __FILE__, __LINE__);
   }

@@ -28,7 +28,7 @@
 #include <CCA/Components/ICE/TurbulenceModel/DynamicModel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Malloc/Allocator.h>
+
 
 using namespace Uintah;
 using namespace std;
@@ -51,9 +51,9 @@ Turbulence* TurbulenceFactory::create(ProblemSpecP& ps, SimulationStateP& shared
       throw ProblemSetupException("No model for turbulence", __FILE__, __LINE__); 
     }
     if (turbulence_model == "Smagorinsky"){
-      return(scinew Smagorinsky_Model(turb_ps, sharedState));
+      return(new Smagorinsky_Model(turb_ps, sharedState));
     }else if (turbulence_model == "Germano"){ 
-      return(scinew DynamicModel(turb_ps, sharedState));
+      return(new DynamicModel(turb_ps, sharedState));
     }else{
       ostringstream warn;
       warn << "ERROR ICE: Unknown turbulence model ("<< turbulence_model << " )\n"

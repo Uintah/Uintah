@@ -30,7 +30,7 @@ public:
       ~Builder(){}
 
       SSPInt* build()
-      { return scinew SSPInt<T>( _task_name, _matl_index, _eqn_names ); }
+      { return new SSPInt<T>( _task_name, _matl_index, _eqn_names ); }
 
       private: 
 
