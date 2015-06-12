@@ -338,8 +338,10 @@
       <Coal                             spec="OPTIONAL NO_DATA">
 
         <!-- Coal Properties -->
+
         <Properties                     spec="REQUIRED NO_DATA">
           <diameter_distribution        spec="REQUIRED MULTIPLE_DOUBLES" />    <!-- Initial particle size distribution in particle diameter --> 
+          <particle_weights             spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- This is not used (it is for python script) --> 
           <small_weights                spec="OPTIONAL MULTIPLE_DOUBLES" />    <!-- small value for each scaled weight (used in temperature calculation --> 
           <density                      spec="REQUIRED DOUBLE" />              <!-- Initial coal density -->
           <temperature                  spec="REQUIRED DOUBLE" />              <!-- Initial coal temperature -->
@@ -392,16 +394,14 @@
 
         </Properties>
 
-        <!-- Helper python information -->
-        <Python                         spec="OPTIONAL NO_DATA">
-          <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
-          <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
-          <compute_scaling_const          spec="OPTIONAL STRING" /> <!-- used in python script only -->
-          <particle_weights               spec="OPTIONAL MULTIPLE_DOUBLES" /> <!-- used in python script only -->
-          <particle_temperature           spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
-        </Python>
-
       </Coal>
+        <!-- Helper python information -->
+      <Python_BC                        spec="OPTIONAL NO_DATA">
+        <HHV                            spec="OPTIONAL DOUBLE" /> <!-- used in python script only -->
+        <use_HHV_est                    spec="OPTIONAL STRING" /> <!-- used in python script only -->
+        <scaling_const_file             spec="OPTIONAL STRING" /> <!-- used in python script only -->
+        <set_nominal_values             spec="OPTIONAL BOOLEAN" /> <!-- used in python script only -->
+      </Python_BC>
       
       <Turbulence                       spec="OPTIONAL NO_DATA"
                                         attribute1="model REQUIRED STRING 'compdynamicprocedure, dynamicprocedure, 
