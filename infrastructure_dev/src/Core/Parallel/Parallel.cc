@@ -52,8 +52,6 @@ using std::ostringstream;
 #  undef THREADED_MPI_AVAILABLE
 #endif
 
-// bool         Parallel::allowThreads_;
-
 int             Parallel::numThreads_           = -1;
 bool            Parallel::determinedIfUsingMPI_ = false;
 
@@ -120,13 +118,11 @@ void
 Parallel::setNumThreads( int num)
 {
    numThreads_ = num;
-   //allowThreads = true;
 }
 
 void
 Parallel::noThreading()
 {
-  //allowThreads_ = false;
   numThreads_ = 1;
 }
 

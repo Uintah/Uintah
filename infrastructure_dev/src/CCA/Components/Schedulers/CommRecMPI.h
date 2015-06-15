@@ -42,43 +42,19 @@ class ProcessorGroup;
 class CommRecMPI {
 
   public:
-    CommRecMPI() : groupIDDefault_(0), totalBytes_(0) {}
+    CommRecMPI() : totalBytes_(0) {}
 
-    // Returns true while there are more tests to wait for.
-    // bool waitsome(MPI_Comm comm, int me); // return false when all done
-    // bool testsome(MPI_Comm comm, int me); // return false when all done
+    bool waitsome( const ProcessorGroup * pg );
 
-    bool waitsome( const ProcessorGroup * pg,
-                         std::list<int> * finishedGroups = 0 );
-
-    // overload waitsome to take another CommRecMPI and do a waitsome on the
-    // union of the two sets
-    bool waitsome( const ProcessorGroup * pg,
-                         CommRecMPI     & cr,
-                         std::list<int> * finishedGroups = 0 );
-
-    bool testsome( const ProcessorGroup * pg,
-                         std::list<int> * finishedGroups = 0 );
+    bool testsome( const ProcessorGroup * pg );
 
     void waitall( const ProcessorGroup * pg );
-
-    void add(       MPI_Request                 id,
-                    int                         bytes,
-                    AfterCommunicationHandler * handler,
-              const std::string               & var,
-                    int                         message )
-    {
-      add( id, bytes, handler, var, message, groupIDDefault_ );
-    }
 
     void add( MPI_Request                 id,
               int                         bytes,
               AfterCommunicationHandler * handler,
               const std::string         & var,
-              int                         message,
-              int                         groupID );
-
-    void          setDefaultGroupID( int groupID ) { groupIDDefault_ = groupID; }
+              int                         message );
 
     int           getUnfinishedBytes() const { return totalBytes_; }
 
@@ -90,13 +66,10 @@ class CommRecMPI {
 
   private:
     std::vector<MPI_Request>                ids_;
-    std::vector<int>                        groupIDs_;
     std::vector<AfterCommunicationHandler*> handlers_;
     std::vector<int>                        byteCounts_;
     std::vector<std::string>                vars_;
     std::vector<int>                        messageNums_;
-    std::map<int, int>                      groupWaitCount_;  // groupID -> # receives waiting
-    int                                     groupIDDefault_;
     int                                     totalBytes_;
 
     // temporary, used in calls to waitsome, testsome, and waitall
@@ -105,8 +78,7 @@ class CommRecMPI {
 
     bool donesome( const ProcessorGroup    * pg,
                    int                       donecount,
-                   std::vector<MPI_Status> & statii,
-                   std::list<int>          * finishedGroups = 0 );
+                   std::vector<MPI_Status> & statii );
 };
 
 // AfterCommunicationHandler is defined in BufferInfo.h with Sendlist

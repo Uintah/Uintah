@@ -86,7 +86,7 @@ std::ostream & operator<<(std::ostream & out, TagStats<Tag> const& stats)
   return out;
 }
 
-std::ostream & operator<<(std::ostream & out, TagStats<void> const& stats)
+inline std::ostream & operator<<(std::ostream & out, TagStats<void> const& stats)
 {
   out << "Global :";
   out << " alloc_size[ "  << Impl::bytes_to_string( stats.alloc_size()  ) << " ] ,";

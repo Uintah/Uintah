@@ -7,7 +7,7 @@
 
 namespace Lockfree { namespace Impl {
 
-std::string bytes_to_string( uint64_t bytes )
+inline std::string bytes_to_string( uint64_t bytes )
 {
   enum {
      KB = 1ull << 10
@@ -42,7 +42,7 @@ std::string bytes_to_string( uint64_t bytes )
 }
 
 
-std::string big_round_number( double i )
+inline std::string big_round_number( double i )
 {
   enum : uint64_t {
      HUNDRED = 100ull

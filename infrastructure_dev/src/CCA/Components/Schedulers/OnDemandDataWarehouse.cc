@@ -2601,6 +2601,16 @@ OnDemandDataWarehouse::initializeScrubs(       int                       dwid,
 
 //______________________________________________________________________
 //
+Variable*
+OnDemandDataWarehouse::getVar( const VarLabel * label,
+                                     int        matlIndex,
+                               const Patch    * patch )
+{
+  return d_varDB.get( label, matlIndex, patch );
+}
+
+//______________________________________________________________________
+//
 void
 OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
                                    const VarLabel*         label,

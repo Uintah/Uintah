@@ -35,6 +35,7 @@
 #include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>
+#include <Core/Parallel/CommunicationList.h>
 
 #include <vector>
 #include <map>
@@ -112,7 +113,6 @@ class MPIScheduler : public SchedulerCommon {
     const ProcessorGroup* getProcessorGroup() { return d_myworld; }
     
     void compile() {
-      numMessages_   = 0;
       messageVolume_ = 0;
       SchedulerCommon::compile();
     }
@@ -125,9 +125,10 @@ class MPIScheduler : public SchedulerCommon {
         unsigned int max_messages;
         double max_volume;
 
-        MPI_Reduce(&numMessages_,&total_messages,1,MPI_UNSIGNED,MPI_SUM,0,d_myworld->getComm());
+        unsigned num_messages = static_cast<unsigned>(m_send_lists[0].size() + m_recv_lists[0].size());
+        MPI_Reduce(&num_messages,&total_messages,1,MPI_UNSIGNED,MPI_SUM,0,d_myworld->getComm());
         MPI_Reduce(&messageVolume_,&total_volume,1,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
-        MPI_Reduce(&numMessages_,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
+        MPI_Reduce(&num_messages,&max_messages,1,MPI_UNSIGNED,MPI_MAX,0,d_myworld->getComm());
         MPI_Reduce(&messageVolume_,&max_volume,1,MPI_DOUBLE,MPI_MAX,0,d_myworld->getComm());
 
         if( d_myworld->myrank() == 0 ) {
@@ -157,26 +158,22 @@ class MPIScheduler : public SchedulerCommon {
 
     MessageLog                  log;
     const Output*               oport_;
-    CommRecMPI                  sends_[MAX_THREADS];
-    CommRecMPI                  recvs_;
+    std::vector<SendCommList>   m_send_lists;
+    std::vector<RecvCommList>   m_recv_lists;
 
     double                      d_lasttime;
     std::vector<const char*>    d_labels;
     std::vector<double>         d_times;
-    std::ofstream               timingStats, maxStats, avgStats;
+    std::ofstream               timingStats;
+    std::ofstream               maxStats;
+    std::ofstream               avgStats;
 
-    unsigned int                numMessages_;
     double                      messageVolume_;
 
-    //-------------------------------------------------------------------------
-    // The following locks are for multi-threaded schedulers that derive from MPIScheduler
-    //   This eliminates miles of unnecessarily redundant code
-    //-------------------------------------------------------------------------
-    // multiple reader, single writer lock (pthread_rwlock_t wrapper)
-    mutable CrowdMonitor        recvLock;               // CommRecMPI recvs lock
-    mutable CrowdMonitor        sendLock;               // CommRecMPI sends lock
     Mutex                       dlbLock;                // load balancer lock
     Mutex                       waittimesLock;          // MPI wait times lock
+    Mutex                       m_sends_lock;           // MPI sends lock (need to figure out how to remove this one)
+    Mutex                       m_recvs_lock;           // MPI recvs lock (need to figure out how to remove this one)
 
   private:
 

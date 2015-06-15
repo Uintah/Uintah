@@ -93,8 +93,10 @@ public:
 
   TypeDescription(Type type, const std::string& name,
                   bool isFlat, MPI_Datatype (*make_mpitype)());
+
   TypeDescription(Type type, const std::string& name,
                   bool isFlat, MPI_Datatype mpitype);
+
   TypeDescription(Type type, const std::string& name,
                   Variable* (*maker)(),
                   const TypeDescription* subtype);
@@ -102,12 +104,15 @@ public:
   bool isReductionVariable() const {
     return d_type == ReductionVariable;
   }
+
   Type getType() const {
     return d_type;
   }
+
   const TypeDescription* getSubType() const {
     return d_subtype;
   }
+
   std::string getName() const;
   std::string getFileName() const;
 
