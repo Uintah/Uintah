@@ -22,7 +22,11 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+#define CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H
+
 #include <CCA/Components/Schedulers/DetailedTasks.h>
+
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 
 namespace Uintah {
@@ -43,4 +47,7 @@ private:
   DependencyBatch* batch_;
   
 };
-}
+
+} // end namespace Uintah
+
+#endif //end CCA_COMPONENTS_SCHEDULERS_BATCHRECEIVEHANDLER_H

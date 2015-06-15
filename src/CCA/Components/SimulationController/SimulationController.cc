@@ -34,6 +34,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/SimulationTime.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/OS/Dir.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/Parallel/Parallel.h>
@@ -1013,6 +1014,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 
   // Reset mem use tracking variable for next iteration
   d_scheduler->resetMaxMemValue();
+
+  print_malloc_stats(d_myworld->getComm());
 
 } // end printSimulationStats()
   

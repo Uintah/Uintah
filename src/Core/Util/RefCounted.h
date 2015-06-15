@@ -68,7 +68,7 @@ WARNING
       bool removeReference() const;
 
       int getReferenceCount() const {
-	 return d_refCount;
+        return d_refCount;
       }
 
    private:

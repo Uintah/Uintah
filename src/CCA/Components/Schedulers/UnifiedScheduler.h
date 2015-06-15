@@ -26,6 +26,7 @@
 #define CCA_COMPONENTS_SCHEDULERS_UNIFIEDSCHEDULER_H
 
 #include <CCA/Components/Schedulers/MPIScheduler.h>
+#include <Core/Grid/Task.h>
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Runnable.h>
 

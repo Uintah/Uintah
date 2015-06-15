@@ -50,9 +50,7 @@ public:
 
   PoolAllocator()
     : m_list{s_list}
-  {
-    printf("Node Size: %d\n", (int)(sizeof(Node)) );
-  }
+  {}
 
   PoolAllocator( const PoolAllocator & )
     : m_list{s_list}

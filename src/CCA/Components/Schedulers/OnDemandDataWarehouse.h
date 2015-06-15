@@ -299,6 +299,10 @@ class OnDemandDataWarehouse : public DataWarehouse {
                        Ghost::GhostType gtype = Ghost::None,
                        int numGhostCells = 0);
 
+    Variable* getVar(const VarLabel * label,
+                           int        matlIndex,
+                     const Patch    * patch);
+
     void allocateTemporary(GridVariableBase& var,
                            const Patch* patch,
                            Ghost::GhostType gtype,

@@ -40,5 +40,16 @@
 #  include "MallocTraceMPIOn.h"
 #endif
 
+// Error handling wrapper for MPI calls
+#  define MPI_SAFE_CALL( call )                                                           \
+    do {                                                                                  \
+      int error = call;                                                                   \
+      if(error != MPI_SUCCESS) {                                                          \
+          fprintf(stderr, "MPI error  detected by call %i in file '%s' on line %i.\n\n", \
+                  error, __FILE__, __LINE__ );                                            \
+         throw;                                                                           \
+      }                                                                                   \
+    } while (false)
+
 #endif
 

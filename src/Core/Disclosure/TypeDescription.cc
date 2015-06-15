@@ -41,9 +41,9 @@ using namespace std;
 static Mutex tdLock("TypeDescription::getMPIType lock");
 static CrowdMonitor tpLock("TypeDescription type lock"); 
 
-static map<string, const TypeDescription*>* types = 0;
-static vector<const TypeDescription*>* typelist=0;
-static bool killed=false;
+static map<string, const TypeDescription*> * types    = 0;
+static vector<const TypeDescription*>      * typelist = 0;
+static bool                                  killed   = false;
 
 void
 TypeDescription::deleteAll()

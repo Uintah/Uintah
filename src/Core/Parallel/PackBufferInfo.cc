@@ -28,6 +28,8 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 
+#include <Core/Lockfree/Lockfree_MMapAllocator.hpp>
+
 using namespace Uintah;
 
 #include <iostream>
