@@ -612,7 +612,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   unsigned long memuse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
 
-  // Get memory stats for each proc if MALLOC_PERPROC is in the environent.
+  // Get memory stats for each proc if MALLOC_PERPROC is in the environment.
   if ( getenv( "MALLOC_PERPROC" ) ) {
     ostream* mallocPerProcStream = NULL;
     char* filenamePrefix = getenv( "MALLOC_PERPROC" );

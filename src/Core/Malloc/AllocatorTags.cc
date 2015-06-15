@@ -81,17 +81,17 @@ void print_malloc_stats(MPI_Comm comm, int root)
     std::vector<std::string> tag_names;
 
     tag_names.push_back("Global");
-    local_stats.push_back(Lockfree::TagStats<void>::alloc_size());
-    local_stats.push_back(Lockfree::TagStats<void>::num_alloc());
-    local_stats.push_back(Lockfree::TagStats<void>::num_dealloc());
-    local_high_water.push_back(Lockfree::TagStats<void>::high_water());
+    local_stats.push_back(TagStats<void>::alloc_size());
+    local_stats.push_back(TagStats<void>::num_alloc());
+    local_stats.push_back(TagStats<void>::num_dealloc());
+    local_high_water.push_back(TagStats<void>::high_water());
 
     if ( Impl::MallocStats::is_tag_enabled(CommListTag())) {
       tag_names.push_back(CommListTag::name());
-      local_stats.push_back(Lockfree::TagStats<CommListTag>::alloc_size());
-      local_stats.push_back(Lockfree::TagStats<CommListTag>::num_alloc());
-      local_stats.push_back(Lockfree::TagStats<CommListTag>::num_dealloc());
-      local_high_water.push_back(Lockfree::TagStats<CommListTag>::high_water());
+      local_stats.push_back(TagStats<CommListTag>::alloc_size());
+      local_stats.push_back(TagStats<CommListTag>::num_alloc());
+      local_stats.push_back(TagStats<CommListTag>::num_dealloc());
+      local_high_water.push_back(TagStats<CommListTag>::high_water());
     }
 
     std::vector<unsigned long long> global_stats(local_stats.size());

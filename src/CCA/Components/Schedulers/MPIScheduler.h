@@ -32,10 +32,10 @@
 #include <CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 
-#include <Core/Parallel/PackBufferInfo.h>
 #include <Core/Grid/Task.h>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/CommunicationList.h>
+#include <Core/Parallel/PackBufferInfo.h>
 
 #include <vector>
 #include <map>

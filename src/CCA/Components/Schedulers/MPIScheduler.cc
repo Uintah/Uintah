@@ -27,7 +27,6 @@
 #include <CCA/Components/Schedulers/MPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/SendState.h>
-#include <CCA/Components/Schedulers/CommRecMPI.h>
 #include <CCA/Components/Schedulers/DetailedTasks.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
 #include <CCA/Ports/LoadBalancer.h>
