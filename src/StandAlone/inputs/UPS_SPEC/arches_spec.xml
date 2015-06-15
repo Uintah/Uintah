@@ -586,6 +586,10 @@
 
       <BoundaryConditions               spec="OPTIONAL NO_DATA" > 
 
+        <check_for_inlet_obstructions   spec="OPTIONAL NO_DATA"/> <!-- If present, then the code will 1) throw an error when massflow inlets
+                                                                       are obstructed by intrusions 2) provide a warning when velocity inlets
+                                                                       are obstructed by intrusions. -->
+
         <ignore_invalid_celltype        spec="OPTIONAL NO_DATA"/> <!-- If present, the code will not exit with error 
                                                                        when a celltype of 999 (invalid) is present in 
                                                                        the simulation -->
