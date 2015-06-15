@@ -69,7 +69,10 @@ private:
     std::string _flux_x; 
     std::string _flux_y; 
     std::string _flux_z; 
+    std::string _net_power; 
     std::string _area; 
+
+    double _eps; 
 
     int _f;
 
