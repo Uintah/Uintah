@@ -1,6 +1,7 @@
 #ifndef CORE_MALLOC_ALLOCATOR_TAGS_HPP
 #define CORE_MALLOC_ALLOCATOR_TAGS_HPP
 
+#include <Core/Lockfree/Lockfree_TrackingAllocator.hpp>
 #include <sci_defs/mpi_defs.h>
 
 #include <vector>
@@ -39,6 +40,8 @@ struct CommListTag
 
 // the reduction operations
 void print_malloc_stats(MPI_Comm comm, int root = 0);
+
+template < typename T > using TagStats = Lockfree::TagStats<T>;
 
 
 } // end namespace Uintah
