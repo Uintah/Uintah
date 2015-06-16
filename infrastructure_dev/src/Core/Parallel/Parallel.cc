@@ -25,9 +25,10 @@
 #define MPI_VERSION_CHECK
 
 #include <Core/Parallel/Parallel.h>
-#include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Exceptions/InternalError.h>
 
+#include <Core/Malloc/AllocatorTags.hpp>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 
@@ -140,7 +141,7 @@ Parallel::forceNoMPI()
   usingMPI_             = false;
 }
 
-bool 
+bool
 Parallel::isInitialized()
 {
   return initialized_;
@@ -165,9 +166,9 @@ Parallel::determineIfRunningUnderMPI( int argc, char** argv )
       throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n", __FILE__, __LINE__ );
     }
   }
-  
+
   // Try to automatically determine if we are running under MPI (many MPIs set environment variables
-  // that can be used for this.) 
+  // that can be used for this.)
   if(getenv("MPI_ENVIRONMENT")){                                  // Look for SGI MPI
     usingMPI_ =true;
   }
@@ -227,7 +228,7 @@ Parallel::initializeManager(int& argc, char**& argv)
   int provided = -1;
   int required = MPI_THREAD_SINGLE;
 #endif
-  if( usingMPI_ ){     
+  if( usingMPI_ ){
 #ifdef THREADED_MPI_AVAILABLE
     if( numThreads_ > 0 ) {
       required = MPI_THREAD_MULTIPLE;
@@ -262,7 +263,9 @@ Parallel::initializeManager(int& argc, char**& argv)
       MpiError(const_cast<char*>("MPI_Comm_rank"), status);
     }
 
-    rootContext_ = new ProcessorGroup( 0, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
+    MallocAllocator<ProcessorGroup> allocator;
+    rootContext_ = allocator.allocate(1);
+    allocator.construct(rootContext_, nullptr, Uintah::worldComm_, true, worldRank_, worldSize_, numThreads_ );
 
     if(rootContext_->myrank() == 0) {
       std::string plural = (rootContext_->size() > 1) ? "processes" : "process" ;
@@ -277,8 +280,10 @@ Parallel::initializeManager(int& argc, char**& argv)
      //MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
   }
   else {
-    worldRank_   = 0;
-    rootContext_ = new ProcessorGroup(0, 0, false, 0, 1, 0);
+    worldRank_  = 0;
+    MallocAllocator<ProcessorGroup> allocator;
+    rootContext_ = allocator.allocate(1);
+    allocator.construct(rootContext_, nullptr, nullptr, false, 0, 1, 0);
   }
 }
 
@@ -350,8 +355,9 @@ Parallel::finalizeManager( Circumstances circumstances /* = NormalShutdown */ )
     }
   }
   if( rootContext_ ) {
-    delete rootContext_;
-    rootContext_ = 0;
+    MallocAllocator<ProcessorGroup> allocator;
+    allocator.destroy(rootContext_);
+    allocator.deallocate(rootContext_, 1);
   }
 
   // MPI can no longer be used.

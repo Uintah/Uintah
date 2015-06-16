@@ -158,26 +158,31 @@ using RecvCommNode = CommNode<RecvHandle>;
 
 
 template < typename T >
-using ListPoolAllocator = Lockfree::PoolAllocator<   T
-                                                   , Uintah::MMapAllocator
-                                                 >;
-
-template < typename T >
 using TrackingListPoolAllocator = Lockfree::TrackingAllocator<   T
-                                                               , ListPoolAllocator
+                                                               , Uintah::PoolAllocator
                                                                , CommListTag
                                                                , false    // don't track globally
                                                              >;
 
+template < typename T >
+using TrackingListMallocAllocator = Lockfree::TrackingAllocator<   T
+                                                               , Uintah::MallocAllocator
+                                                               , CommListTag
+                                                               , false    // don't track globally
+                                                             >;
+
+
 using SendCommList = Lockfree::UnorderedList<  SendCommNode
                                              , Lockfree::EXCLUSIVE_INSTANCE // usage model
                                              , TrackingListPoolAllocator    // allocator
+                                             , TrackingListMallocAllocator  // size_type allocator
                                             >;
 
 
 using RecvCommList = Lockfree::UnorderedList<  RecvCommNode
                                              , Lockfree::EXCLUSIVE_INSTANCE // usage model
                                              , TrackingListPoolAllocator    // allocator
+                                             , TrackingListMallocAllocator  // size_type allocator
                                             >;
 
 } // end namespace Uintah

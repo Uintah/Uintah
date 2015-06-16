@@ -609,8 +609,8 @@ SimulationController::initSimulationStatsVars ( void )
 void
 SimulationController::printSimulationStats ( int timestep, double delt, double time )
 {
-  unsigned long memuse    = Lockfree::TagStats<>::alloc_size();
-  unsigned long highwater = Lockfree::TagStats<>::high_water();
+  unsigned long memuse    = GlobalStats::alloc_size();
+  unsigned long highwater = GlobalStats::high_water();
 
   // TODO - need to get rid of this call
 //  d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );

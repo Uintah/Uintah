@@ -24,6 +24,7 @@
 
 
 #include <Core/Parallel/UintahParallelComponent.h>
+#include <Core/Malloc/AllocatorTags.hpp>
 
 #include <algorithm>
 
@@ -38,22 +39,27 @@ UintahParallelComponent::UintahParallelComponent(const ProcessorGroup* myworld)
 
 UintahParallelComponent::~UintahParallelComponent()
 {
-  for(map<string, PortRecord*>::iterator iter = portmap.begin(); 
-      iter != portmap.end(); iter++) 
-    delete iter->second;
+  MallocAllocator<PortRecord> allocator;
 
+  for (map<string, PortRecord*>::iterator iter = portmap.begin(); iter != portmap.end(); iter++) {
+    allocator.destroy(iter->second);
+    allocator.deallocate(iter->second, 1);
+  }
 }
 
 void
 UintahParallelComponent::attachPort(const string& name,
 				    UintahParallelPort* port)
 {
-    map<string, PortRecord*>::iterator iter = portmap.find(name);
-    if(iter == portmap.end()){
-	portmap[name]=new PortRecord(port);
-    } else {
-	iter->second->connections.push_back(port);
-    }
+  map<string, PortRecord*>::iterator iter = portmap.find(name);
+  if (iter == portmap.end()) {
+    MallocAllocator<PortRecord> allocator;
+    PortRecord* tmp = allocator.allocate(1);
+    allocator.construct(tmp, port);
+    portmap[name] = tmp;
+  } else {
+    iter->second->connections.push_back(port);
+  }
 }
 
 UintahParallelComponent::PortRecord::PortRecord(UintahParallelPort* port)
@@ -63,13 +69,16 @@ UintahParallelComponent::PortRecord::PortRecord(UintahParallelPort* port)
 
 UintahParallelPort* UintahParallelComponent::getPort(const std::string& name)
 {
-    map<string, PortRecord*>::iterator iter = portmap.find(name);
-    if(iter == portmap.end())
-	return 0;
-    else if(iter->second->connections.size()> 1)
-	return iter->second->connections.back();
-    else
-	return iter->second->connections[0];
+  map<string, PortRecord*>::iterator iter = portmap.find(name);
+  if(iter == portmap.end()) {
+    return 0;
+  }
+  else if(iter->second->connections.size()> 1) {
+    return iter->second->connections.back();
+  }
+  else {
+    return iter->second->connections[0];
+  }
 }
 
 UintahParallelPort* UintahParallelComponent::getPort(const std::string& name,
@@ -93,6 +102,6 @@ unsigned int UintahParallelComponent::numConnections(const std::string& name)
   map<string, PortRecord*>::iterator iter = portmap.find(name);
   if(iter == portmap.end())
     return 0;
-  else 
+  else
     return iter->second->connections.size();
 }

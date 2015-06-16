@@ -121,6 +121,7 @@ public:
     }
   }
 
+
 private:
   static list_type s_list;
 };

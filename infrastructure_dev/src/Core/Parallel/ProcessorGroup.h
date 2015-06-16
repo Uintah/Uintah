@@ -63,6 +63,13 @@ class ProcessorGroup {
 
   public:
 
+    ProcessorGroup( const ProcessorGroup* parent,
+                          MPI_Comm        comm,
+                          bool            allmpi,
+                          int             rank,
+                          int             size,
+                          int             threads );
+
     ~ProcessorGroup();
 
     int size() const { return d_size; }
@@ -91,13 +98,6 @@ class ProcessorGroup {
     const ProcessorGroup* d_parent;
 
     friend class Parallel;
-
-    ProcessorGroup( const ProcessorGroup* parent,
-                          MPI_Comm        comm,
-                          bool            allmpi,
-                          int             rank,
-                          int             size,
-                          int             threads );
 
     int                           d_rank;
     int                           d_size;
