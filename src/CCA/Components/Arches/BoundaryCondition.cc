@@ -2533,7 +2533,11 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
 
   }
 
-  tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 ); 
+  if ( doing_restart ){ 
+    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 ); 
+  } else { 
+    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 ); 
+  }
 
   if ( doing_restart ){ 
     tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
@@ -2567,8 +2571,10 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
 
     if ( doing_restart ){ 
      old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+     old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 ); 
     } else { 
      new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+     new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 ); 
     }
 
     proc0cout << "\nDomain boundary condition summary: \n";
