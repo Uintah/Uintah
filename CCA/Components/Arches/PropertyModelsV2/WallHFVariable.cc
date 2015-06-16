@@ -214,47 +214,54 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
       if ( (*volFraction)[c] < 1.0 ){ 
 
+        double Q_in = 0.0;
+        double Q_emit = 0.0;
         double darea = 0.0;
-        double total_in = 0.0;
 
         ////check neighbors to see if we populate a flux here: 
         double a = DX.y()*DX.z(); 
         if ( (*volFraction)[cxm] > 0.0 ){ 
           (*flux_x)[c] = (*flux_x)[c] + (*Fe)[cxm];
-          total_in += (*Fe)[cxm]*a; 
+          Q_in += (*Fe)[cxm]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
           darea += a; 
         }
         if ( (*volFraction)[cxp] > 0.0 ){ 
           (*flux_x)[c] = (*flux_x)[c] + (*Fw)[cxp];
-          total_in += (*Fw)[cxp]*a; 
+          Q_in += (*Fw)[cxp]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
           darea += a; 
         }
         a = DX.x()*DX.z();
         if ( (*volFraction)[cym] > 0.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fn)[cym];
-          total_in += (*Fn)[cym]*a; 
+          Q_in += (*Fn)[cym]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
           darea += a; 
         }
         if ( (*volFraction)[cyp] > 0.0 ){ 
           (*flux_y)[c] = (*flux_y)[c] + (*Fs)[cyp];
-          total_in += (*Fs)[cyp]*a; 
+          Q_in += (*Fs)[cyp]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
           darea += a; 
         }
         a = DX.x()*DX.y(); 
         if ( (*volFraction)[czm] > 0.0 ){ 
           (*flux_z)[c] = (*flux_z)[c] + (*Ft)[czm];
-          total_in += (*Ft)[czm]*a; 
+          Q_in += (*Ft)[czm]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
           darea += a; 
         }
         if ( (*volFraction)[czp] > 0.0 ){ 
           (*flux_z)[c] = (*flux_z)[c] + (*Fb)[czp];
-          total_in += (*Fb)[czp]*a; 
+          Q_in += (*Fb)[czp]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
           darea += a; 
         }
 
-        (*total)[c] = total_in/(darea+SMALLNUM); 
+        (*total)[c] = Q_in/(darea+SMALLNUM); 
         (*area)[c] = darea;
-        (*power)[c] = _eps * ( total_in - sigma * (*T)[c] * (*T)[c] * (*T)[c] * (*T)[c] * darea );
+        (*power)[c] = _eps * ( Q_in - Q_emit );
 
       }
     }
@@ -278,7 +285,8 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
          IntVector c = *citer;
          IntVector cxp = c - insideCellDir;
 
-         double total_in = 0.;
+         double Q_in = 0.;
+         double Q_emit = 0.;
          double darea = 0.;
 
          constCCVariable<double>* F; 
@@ -309,14 +317,15 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
          if ( (*volFraction)[c] < SMALLNUM ){ 
            if ( (*volFraction)[cxp] > 0.0 ){ 
              (*flux)[c] = (*flux)[c] + (*F)[cxp];
-             total_in += (*F)[cxp]*a; 
-             darea += a; 
+             Q_in   += (*F)[cxp]*a; 
+             Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+             darea  += a;
            }
          }
 
-         (*total)[c] = total_in/(darea+SMALLNUM); 
-         (*area)[c] = darea;
-         (*power)[c] = _eps * ( total_in - sigma * (*T)[c] * (*T)[c] * (*T)[c] * (*T)[c] * darea );
+         (*total)[c] = Q_in / (darea+SMALLNUM); 
+         (*area)[c]  = darea;
+         (*power)[c] = _eps * ( Q_in - Q_emit );
 
        }
     }
