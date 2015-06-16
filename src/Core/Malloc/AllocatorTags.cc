@@ -81,10 +81,10 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
     std::vector<std::string> tag_names;
 
     tag_names.push_back("Global");
-    local_stats.push_back(TagStats<void>::alloc_size());
-    local_stats.push_back(TagStats<void>::num_alloc());
-    local_stats.push_back(TagStats<void>::num_dealloc());
-    local_high_water.push_back(TagStats<void>::high_water());
+    local_stats.push_back(GlobalStats::alloc_size());
+    local_stats.push_back(GlobalStats::num_alloc());
+    local_stats.push_back(GlobalStats::num_dealloc());
+    local_high_water.push_back(GlobalStats::high_water());
 
     if (Impl::MallocStats::is_tag_enabled(MMapTag())) {
       tag_names.push_back(MMapTag::name());
@@ -133,6 +133,8 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
                , static_cast<int>(local_high_water.size())
                , MPI_UNSIGNED_LONG_LONG
                , MPI_MAX, root, comm);
+
+    // TODO - add reporting on rank of max high water
 
     if (Parallel::getMPIRank() == root) {
       FILE* p_file = Impl::MallocStats::file();

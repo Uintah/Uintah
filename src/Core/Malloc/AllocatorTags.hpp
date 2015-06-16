@@ -51,13 +51,31 @@ template < typename T >
 using MMapAllocator = Lockfree::TrackingAllocator<   T
                                                    , Lockfree::MMapAllocator
                                                    , MMapTag
+                                                   , true
                                                  >;
 
 template < typename T >
 using MallocAllocator = Lockfree::TrackingAllocator<   T
                                                      , Lockfree::MallocAllocator
                                                      , MallocTag
+                                                     , true
                                                    >;
+namespace Impl {
+
+template < typename T >
+using PoolAllocator = Lockfree::PoolAllocator<   T
+                                               , MMapAllocator
+                                               , MallocAllocator
+                                             >;
+
+}
+
+template < typename T >
+using PoolAllocator = Lockfree::TrackingAllocator<   T
+                                                   , Impl::PoolAllocator
+                                                   , PoolTag
+                                                   , false
+                                                 >;
 
 struct CommListTag
 {
@@ -72,7 +90,9 @@ struct CommListTag
 // the reduction operations
 void print_malloc_stats(MPI_Comm comm, int time_step, int root = 0);
 
-template < typename T > using TagStats = Lockfree::TagStats<T>;
+template < typename T > using TagStats = Lockfree::TagStats< T >;
+
+using GlobalStats = Lockfree::TagStats<>;
 
 
 } // end namespace Uintah

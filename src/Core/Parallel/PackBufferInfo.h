@@ -26,31 +26,41 @@
 #define UINTAH_HOMEBREW_PackBufferInfo_H
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
+
+#include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
-#include <Core/Util/RefCounted.h>
 #include <Core/Parallel/ProcessorGroup.h>
+#include <Core/Util/RefCounted.h>
 
 
 namespace Uintah {
 
 class PackedBuffer : public RefCounted {
 
+  using allocator_type = MallocAllocator<char>;
+
 public:
-  PackedBuffer(int bytes) :
-    buf((void*)(new char[bytes])), bufsize(bytes) {}
-  
-  ~PackedBuffer() {
-    delete[] (char*)buf;
-    buf = 0;
+  PackedBuffer(size_t bytes)
+    : m_buffer()
+    , m_size(bytes)
+  {
+    allocator_type allocator;
+    m_buffer = allocator.allocate(bytes);
   }
 
-  void* getBuffer() { return buf; }
+  ~PackedBuffer()
+  {
+    allocator_type allocator;
+    allocator.deallocate(m_buffer, m_size);
+  }
 
-  int getBufSize()  { return bufsize; }
+  void* getBuffer() { return reinterpret_cast<void*>(m_buffer); }
+
+  size_t getBufSize()  { return m_size; }
 
 private:
-  void*  buf;
-  int    bufsize;
+  char   * m_buffer;
+  size_t   m_size;
 };
 
 class PackBufferInfo : public BufferInfo {

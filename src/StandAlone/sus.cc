@@ -251,18 +251,6 @@ main( int argc, char *argv[] )
   Thread::setDefaultAbortMode("exit");
   Thread::self()->setCleanupFunction( &abortCleanupFunc );
 
-#ifdef USE_TAU_PROFILING
-
-  // WARNING:
-  //cout << "about to call tau_profile... if it dies now, it is in "
-  //       << "happening in 32 bit tau use.";
-  //
-  // Got rid of this print as it appears 100s of times when 100s of procs.
-#endif
-  // Causes buserr for some reason in 32 bit mode... may be fixed now:
-
-  // This seems to be causing a problem when using LAM, disabling for now.
-
 #if HAVE_IEEEFP_H
   fpsetmask(FP_X_OFL|FP_X_DZ|FP_X_INV);
 #endif
@@ -342,9 +330,6 @@ main( int argc, char *argv[] )
                "or increase MAX_THREADS (.../src/Core/Thread/Threads.h) and recompile.", arg, argv[0] );
       }
       Uintah::Parallel::setNumThreads( numThreads );
-    }
-    else if (arg == "-threadmpi") {
-      //used threaded mpi (this option is handled in MPI_Communicator.cc  MPI_Init_thread
     }
     else if (arg == "-solver") {
       if (++i == argc) {

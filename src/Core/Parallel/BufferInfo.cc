@@ -26,6 +26,7 @@
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
+#include <Core/Malloc/AllocatorTags.hpp>
 
 using namespace Uintah;
 using std::vector;
@@ -58,8 +59,9 @@ BufferInfo::~BufferInfo()
   }
 
   if( d_sendlist ) {
-    delete d_sendlist;
-    d_sendlist = 0;
+    MallocAllocator<Sendlist> allocator;
+    allocator.destroy(d_sendlist);
+    allocator.deallocate(d_sendlist, 1);
   }
 }
 
@@ -141,7 +143,10 @@ void
 BufferInfo::addSendlist( RefCounted* obj )
 {
   obj->addReference();
-  d_sendlist = new Sendlist( d_sendlist, obj );
+  MallocAllocator<Sendlist> allocator;
+  decltype(d_sendlist) list = d_sendlist;
+  d_sendlist = allocator.allocate(1);
+  allocator.construct(d_sendlist, list, obj);
 }
 
 Sendlist*

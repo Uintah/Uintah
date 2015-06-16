@@ -23,12 +23,12 @@
  */
 
 #include <Core/Parallel/PackBufferInfo.h>
-#include <Core/Parallel/Parallel.h>
-#include <Core/Util/RefCounted.h>
-#include <Core/Exceptions/InternalError.h>
-#include <Core/Util/Assert.h>
 
-#include <Core/Lockfree/Lockfree_MMapAllocator.hpp>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/Parallel/Parallel.h>
+#include <Core/Malloc/AllocatorTags.hpp>
+#include <Core/Util/RefCounted.h>
+#include <Core/Util/Assert.h>
 
 using namespace Uintah;
 
@@ -45,8 +45,9 @@ PackBufferInfo::PackBufferInfo() :
 PackBufferInfo::~PackBufferInfo()
 {
   if (packedBuffer && packedBuffer->removeReference()) {
-    delete packedBuffer;
-    packedBuffer = 0;
+    MallocAllocator<PackedBuffer> allocator;
+    allocator.destroy(packedBuffer);
+    allocator.deallocate(packedBuffer, 1);
   }
 }
 
@@ -67,7 +68,9 @@ PackBufferInfo::get_type( void*&         out_buf,
       }
     }
 
-    packedBuffer = new PackedBuffer(total_packed_size);
+    MallocAllocator<PackedBuffer> allocator;
+    packedBuffer = allocator.allocate(1);
+    allocator.construct(packedBuffer, total_packed_size);
     packedBuffer->addReference();
 
     datatype = MPI_PACKED;
