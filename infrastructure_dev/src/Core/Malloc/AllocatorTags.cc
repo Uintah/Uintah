@@ -68,11 +68,11 @@ namespace Uintah {
 
 //----------------------------------------------------------------------------------
 // NOTE:
-// for every new Tag, update both reduce_malloc_stats and print_global_malloc_stats
+// for every new Tag, update print_malloc_stats()
 //----------------------------------------------------------------------------------
 
 // the reduction operations
-void print_malloc_stats(MPI_Comm comm, int root)
+void print_malloc_stats(MPI_Comm comm, int time_step, int root)
 {
   if (Impl::MallocStats::is_enabled()) {
 
@@ -86,7 +86,34 @@ void print_malloc_stats(MPI_Comm comm, int root)
     local_stats.push_back(TagStats<void>::num_dealloc());
     local_high_water.push_back(TagStats<void>::high_water());
 
-    if ( Impl::MallocStats::is_tag_enabled(CommListTag())) {
+    if (Impl::MallocStats::is_tag_enabled(MMapTag())) {
+      tag_names.push_back(MMapTag::name());
+      local_stats.push_back(TagStats<MMapTag>::alloc_size());
+      local_stats.push_back(TagStats<MMapTag>::num_alloc());
+      local_stats.push_back(TagStats<MMapTag>::num_dealloc());
+      local_high_water.push_back(TagStats<MMapTag>::high_water());
+    }
+
+    if (Impl::MallocStats::is_tag_enabled(MallocTag())) {
+      tag_names.push_back(MallocTag::name());
+      local_stats.push_back(TagStats<MallocTag>::alloc_size());
+      local_stats.push_back(TagStats<MallocTag>::num_alloc());
+      local_stats.push_back(TagStats<MallocTag>::num_dealloc());
+      local_high_water.push_back(TagStats<MallocTag>::high_water());
+    }
+
+    if (Impl::MallocStats::is_tag_enabled(PoolTag())) {
+      tag_names.push_back(PoolTag::name());
+      local_stats.push_back(TagStats<PoolTag>::alloc_size());
+      local_stats.push_back(TagStats<PoolTag>::num_alloc());
+      local_stats.push_back(TagStats<PoolTag>::num_dealloc());
+      local_high_water.push_back(TagStats<PoolTag>::high_water());
+    }
+
+    //-------------------------------------------------------------------------------
+    // Custom tags go here
+
+    if (Impl::MallocStats::is_tag_enabled(CommListTag())) {
       tag_names.push_back(CommListTag::name());
       local_stats.push_back(TagStats<CommListTag>::alloc_size());
       local_stats.push_back(TagStats<CommListTag>::num_alloc());
@@ -109,16 +136,32 @@ void print_malloc_stats(MPI_Comm comm, int root)
 
     if (Parallel::getMPIRank() == root) {
       FILE* p_file = Impl::MallocStats::file();
-      for (size_t i = 0, n = tag_names.size(); i < n; ++i) {
+
+      fprintf(p_file, "Timestep: %d\n", time_step);
+
+      // print global stats
+      fprintf(   p_file
+               , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n"
+               , tag_names[0].c_str()
+               , Lockfree::Impl::bytes_to_string(global_stats[0]).c_str()
+               , Lockfree::Impl::bytes_to_string(global_high_water[0]).c_str()
+               , global_stats[1]
+               , global_stats[2]
+             );
+
+      // print tag stats
+      for (size_t i = 1, n = tag_names.size(); i < n; ++i) {
         fprintf( p_file
-                , "%s: alloc_size{%s}, num_alloc{%llu}, num_dealloc{%llu}, high_water{%s}\n"
+                , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n"
                 , tag_names[i].c_str()
                 , Lockfree::Impl::bytes_to_string(global_stats[3*i]).c_str()
+                , Lockfree::Impl::bytes_to_string(global_high_water[i]).c_str()
                 , global_stats[3*i+1]
                 , global_stats[3*i+2]
-                , Lockfree::Impl::bytes_to_string(global_high_water[i]).c_str()
               );
       }
+
+      fprintf(p_file, "End Timestep: %d\n\n", time_step);
     }
   }
 }

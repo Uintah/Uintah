@@ -7,11 +7,15 @@
 #include <memory>
 #include <type_traits>
 #include <iostream>
+#include <utility>
+#include <cstdlib>
 
 
 namespace Lockfree {
 
-template < typename Tag = void >
+struct GlobalTag { static constexpr const char * const name() { return "Global"; } };
+
+template < typename Tag = GlobalTag >
 class TagStats
 {
   static constexpr size_t one  = 1;
@@ -43,20 +47,12 @@ public:
         }
       }
     } while (current_mem > old_high_water);
-
-    if (!std::is_same<void, Tag>::value) {
-      TagStats<void>::allocate(n);
-    }
   }
 
   static void deallocate( void *,  size_t n )
   {
     __sync_fetch_and_add(s_data + DEALLOC_NUM, one);
     __sync_fetch_and_sub(s_data + ALLOC_SIZE, n);
-
-    if (!std::is_same<void, Tag>::value) {
-      TagStats<void>::deallocate(nullptr, n);
-    }
   }
 
   static uint64_t alloc_size()  { return s_data[ALLOC_SIZE];  }
@@ -86,26 +82,20 @@ std::ostream & operator<<(std::ostream & out, TagStats<Tag> const& stats)
   return out;
 }
 
-inline std::ostream & operator<<(std::ostream & out, TagStats<void> const& stats)
-{
-  out << "Global :";
-  out << " alloc_size[ "  << Impl::bytes_to_string( stats.alloc_size()  ) << " ] ,";
-  out << " high_water[ "  << Impl::bytes_to_string( stats.high_water()  ) << " ] ,";
-  out << " num_alloc[ "   << stats.num_alloc()   << " ] ,";
-  out << " num_dealloc[ " << stats.num_dealloc() << " ]";
-  return out;
-}
-
-
 template <   typename T
-           , typename Tag = void
            , template < typename > class BaseAllocator = std::allocator
+           , typename Tag = GlobalTag
+           , bool CallGlobal = !std::is_same<GlobalTag, Tag>::value
          >
 class TrackingAllocator
 {
   using base_allocator_type = BaseAllocator<T>;
 
 public:
+
+  using tag = Tag;
+  using global_tag = GlobalTag;
+  static constexpr bool call_global = CallGlobal;
 
   using size_type       = typename base_allocator_type::size_type;
   using difference_type = typename base_allocator_type::difference_type;
@@ -118,7 +108,11 @@ public:
   template <class U>
   struct rebind
   {
-    using other = TrackingAllocator<U, Tag, BaseAllocator>;
+    using other = TrackingAllocator<  U
+                                    , BaseAllocator
+                                    , Tag
+                                    , CallGlobal
+                                   >;
   };
 
   TrackingAllocator()
@@ -150,13 +144,19 @@ public:
 
   pointer allocate( size_type n, void * hint = nullptr)
   {
-    m_stats.allocate(n*sizeof(value_type));
+    TagStats<tag>::allocate(n*sizeof(value_type));
+    if (call_global) {
+      TagStats<global_tag>::allocate(n*sizeof(value_type));
+    }
     return m_base_allocator.allocate(n, hint);
   }
 
   void deallocate( pointer ptr, size_type n )
   {
-    m_stats.deallocate(ptr, n*sizeof(value_type));
+    TagStats<tag>::deallocate(ptr, n*sizeof(value_type));
+    if (call_global) {
+      TagStats<global_tag>::deallocate(ptr, n*sizeof(value_type));
+    }
     m_base_allocator.deallocate(ptr, n);
   }
 
@@ -164,7 +164,6 @@ private:
 
   // Let other allocators determine const correctness
   base_allocator_type m_base_allocator;
-  TagStats<Tag> m_stats;
 
 };
 

@@ -609,8 +609,11 @@ SimulationController::initSimulationStatsVars ( void )
 void
 SimulationController::printSimulationStats ( int timestep, double delt, double time )
 {
-  unsigned long memuse, highwater, maxMemUse;
-  d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
+  unsigned long memuse    = Lockfree::TagStats<>::alloc_size();
+  unsigned long highwater = Lockfree::TagStats<>::high_water();
+
+  // TODO - need to get rid of this call
+//  d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
 
   // Get memory stats for each proc if MALLOC_PERPROC is in the environment.
   if ( getenv( "MALLOC_PERPROC" ) ) {
@@ -631,12 +634,14 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
         mallocPerProcStream = &dbg;
       }
     }
+
     *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
     *mallocPerProcStream << "Timestep " << timestep << "   ";
     *mallocPerProcStream << "Size "     << ProcessInfo::getMemoryUsed() << "   ";
     *mallocPerProcStream << "RSS "      << ProcessInfo::getMemoryResident() << "   ";
     *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - d_scheduler->getStartAddr() << "   ";
     *mallocPerProcStream << "\n";
+
     if ( mallocPerProcStream != &dbg ) {
       delete mallocPerProcStream;
     }
@@ -683,8 +688,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   // one reduce for max
   std::vector<double>      toReduce;
   std::vector<double>      avgReduce;
-  std::vector<double_int>  toReduceMax;
-  std::vector<double_int>  maxReduce;
+  std::vector<double_int>  toReduceMax;  // for MPI_MAXLOC
+  std::vector<double_int>  maxReduce;    // for MPI_MAXLOC
   std::vector<const char*> statLabels;
 
   int    rank             = d_myworld->myrank();
@@ -717,6 +722,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   toReduceMax.push_back(double_int(d_sharedState->outputTime,rank));
   toReduce.push_back(d_sharedState->taskWaitThreadTime);
   toReduceMax.push_back(double_int(d_sharedState->taskWaitThreadTime,rank));
+
 #ifdef USE_PAPI_COUNTERS
   if (d_papiEvents.find(PAPI_FP_OPS)->second.isSupported) {
     toReduce.push_back(flop);
@@ -735,6 +741,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     toReduceMax.push_back(double_int(l3_misses, rank));
   }
 #endif
+
   statLabels.push_back("Mem usage");
   statLabels.push_back("Recompile");
   statLabels.push_back("Regridding");
@@ -747,6 +754,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   statLabels.push_back("TaskWaitCommTime");
   statLabels.push_back("Output");
   statLabels.push_back("TaskWaitThreadTime");
+
 #ifdef USE_PAPI_COUNTERS
   if (d_papiEvents.find(PAPI_FP_OPS)->second.isSupported) {
     statLabels.push_back(d_papiEvents.find(PAPI_FP_OPS)->second.simStatName.c_str());
@@ -1015,7 +1023,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   // Reset mem use tracking variable for next iteration
   d_scheduler->resetMaxMemValue();
 
-  print_malloc_stats(d_myworld->getComm());
+  print_malloc_stats(d_myworld->getComm(), d_sharedState->getCurrentTopLevelTimeStep());
 
 } // end printSimulationStats()
   

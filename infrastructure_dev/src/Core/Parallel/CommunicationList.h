@@ -29,10 +29,6 @@
 
 #include <CCA/Components/Schedulers/BatchReceiveHandler.h>
 
-#include <Core/Lockfree/Lockfree_MMapAllocator.hpp>
-#include <Core/Lockfree/Lockfree_PoolAllocator.hpp>
-#include <Core/Lockfree/Lockfree_UnorderedList.hpp>
-#include <Core/Lockfree/Lockfree_TrackingAllocator.hpp>
 #include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Parallel/BufferInfo.h>
 #include <Core/Parallel/PackBufferInfo.h>
@@ -160,38 +156,28 @@ class CommNode
 using SendCommNode = CommNode<SendHandle>;
 using RecvCommNode = CommNode<RecvHandle>;
 
-namespace Impl {
 
-template < typename T > using PoolAllocator = Lockfree::PoolAllocator<   T
-                                                                       , 128
-                                                                       , uint64_t
-                                                                       , Lockfree::MMapAllocator
-                                                                       , Lockfree::MMapAllocator
-                                                                     >;
+template < typename T >
+using ListPoolAllocator = Lockfree::PoolAllocator<   T
+                                                   , Uintah::MMapAllocator
+                                                 >;
 
-template < typename T > using TrackingPoolAllocator = Lockfree::TrackingAllocator<   T
-                                                                                   , CommListTag
-                                                                                   , PoolAllocator
-                                                                                 >;
-}
+template < typename T >
+using TrackingListPoolAllocator = Lockfree::TrackingAllocator<   T
+                                                               , ListPoolAllocator
+                                                               , CommListTag
+                                                               , false    // don't track globally
+                                                             >;
 
 using SendCommList = Lockfree::UnorderedList<  SendCommNode
                                              , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                             , uint64_t                     // bitset datatype
-                                             , 128                          // alignment
-                                             , size_t                       // size type
-                                             , Impl::TrackingPoolAllocator  // allocator
-                                             , Impl::TrackingPoolAllocator  // size type allocator
+                                             , TrackingListPoolAllocator    // allocator
                                             >;
 
 
 using RecvCommList = Lockfree::UnorderedList<  RecvCommNode
                                              , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                             , uint64_t                     // bitset datatype
-                                             , 128                          // alignment
-                                             , size_t                       // size type
-                                             , Impl::TrackingPoolAllocator  // allocator
-                                             , Impl::TrackingPoolAllocator  // size type allocator
+                                             , TrackingListPoolAllocator    // allocator
                                             >;
 
 } // end namespace Uintah
