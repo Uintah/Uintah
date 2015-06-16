@@ -79,12 +79,12 @@ char* SchedulerCommon::start_addr = NULL;
 
 SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
                                  const Output*         oport)
-  : UintahParallelComponent(myworld),
-    m_outPort(oport),
-    trackingVarsPrintLocation_(0),
-    d_maxMemUse(0),
-    m_graphDoc(NULL),
-    m_nodes(NULL)
+  : UintahParallelComponent{myworld},
+    m_outPort{oport},
+    trackingVarsPrintLocation_{0},
+    d_maxMemUse{0},
+    m_graphDoc{nullptr},
+    m_nodes{nullptr}
 {
   d_generation = 0;
   numOldDWs    = 0;
@@ -92,7 +92,7 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
   emit_taskgraph     = false;
   d_useSmallMessages = true;
   restartable        = false;
-  memlogfile         = 0;
+  memlogfile         = nullptr;
 
   for (int i = 0; i < Task::TotalDWs; i++) {
     dwmap[i] = Task::InvalidDW;
@@ -120,15 +120,18 @@ SchedulerCommon::SchedulerCommon(const ProcessorGroup* myworld,
 
 SchedulerCommon::~SchedulerCommon()
 {
-  if(memlogfile)
+  if (memlogfile) {
     delete memlogfile;
+  }
 
   // list of vars used for AMR regridding
-  for (unsigned i = 0; i < label_matls_.size(); i++)
-    for ( label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++)
+  for (unsigned i = 0; i < label_matls_.size(); i++) {
+    for (label_matl_map::iterator iter = label_matls_[i].begin(); iter != label_matls_[i].end(); iter++) {
       if (iter->second->removeReference()) {
         delete iter->second;
       }
+    }
+  }
 
   for (unsigned i = 0; i < graphs.size(); i++) {
     delete graphs[i];
@@ -151,7 +154,6 @@ SchedulerCommon::checkMemoryUse( unsigned long & memuse,
   memuse    = 0;
 
   if( memuse > d_maxMemUse ) {
-    // printf("Max memuse increased\n");
     d_maxMemUse = memuse;
   }
   maxMemUse = d_maxMemUse;
@@ -1071,7 +1073,7 @@ SchedulerCommon::getSuperPatchExtents( const VarLabel*        label,
 void
 SchedulerCommon::logMemoryUse()
 {
-  if (!memlogfile) {
+  if (memlogfile != nullptr) {
     ostringstream fname;
     fname << "uintah_memuse.log.p" << setw(5) << setfill('0') << d_myworld->myrank() << "." << d_myworld->size();
     memlogfile = new ofstream(fname.str().c_str());
@@ -1079,8 +1081,8 @@ SchedulerCommon::logMemoryUse()
       cerr << "Error opening file: " << fname.str() << '\n';
     }
   }
-
   *memlogfile << '\n';
+
   unsigned long total = 0;
 
   for (int i = 0; i < (int)dws.size(); i++) {

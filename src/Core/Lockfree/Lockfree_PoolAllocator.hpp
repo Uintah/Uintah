@@ -2,19 +2,20 @@
 #define LOCKFREE_POOL_ALLOCATOR_HPP
 
 #include "Lockfree_UnorderedList.hpp"
-
 #include "impl/Lockfree_Macros.hpp"
 
 #include <stdexcept> // for runtime_error
 #include <new> // for bad_alloc
+#include <utility>
+#include <cstdlib>
 
 namespace Lockfree {
 
 template <  typename T
+          , template <typename> class BaseAllocator = std::allocator
+          , template <typename> class SizeTypeAllocator = BaseAllocator
           , int Alignment = 16
           , typename BitsetType = uint64_t
-          , template <typename> class BaseAllocator = std::allocator
-          , template <typename> class SizeTypeAllocator = std::allocator
         >
 class PoolAllocator
 {
@@ -29,7 +30,14 @@ class PoolAllocator
     void * m_list_node;
   };
 
-  using list_type = UnorderedList< Node, SHARED_INSTANCE, BitsetType, Alignment, size_t, BaseAllocator, SizeTypeAllocator >;
+  using list_type = UnorderedList<  Node
+                                  , SHARED_INSTANCE
+                                  , BaseAllocator
+                                  , SizeTypeAllocator
+                                  , size_t
+                                  , BitsetType
+                                  , Alignment
+                                >;
   using list_node_type = typename list_type::impl_node_type;
 
 public:
@@ -45,17 +53,16 @@ public:
   template <class U>
   struct rebind
   {
-    using other = PoolAllocator<U, Alignment, BitsetType, BaseAllocator, SizeTypeAllocator>;
+    using other = PoolAllocator<  U
+                                 , BaseAllocator
+                                 , SizeTypeAllocator
+                                 , Alignment
+                                 , BitsetType
+                              >;
   };
 
-  PoolAllocator()
-    : m_list{s_list}
-  {}
-
-  PoolAllocator( const PoolAllocator & )
-    : m_list{s_list}
-  {}
-
+  PoolAllocator() {}
+  PoolAllocator( const PoolAllocator & ) {}
   PoolAllocator & operator=( const PoolAllocator & ) {}
   ~PoolAllocator() {}
 
@@ -76,13 +83,13 @@ public:
     p->~U();
   }
 
-  pointer allocate( size_type n, void * = nullptr)
+  static pointer allocate( size_type n, void * = nullptr)
   {
     if (n > max_size() ) {
       throw std::runtime_error("Error: Pool allocator cannot allocate arrays.");
     }
 
-    typename list_type::iterator itr = m_list.emplace();
+    typename list_type::iterator itr = s_list.emplace();
 
     if (!itr) {
       throw std::bad_alloc();
@@ -95,7 +102,7 @@ public:
     return reinterpret_cast<pointer>(itr->m_buffer);
   }
 
-  void deallocate( pointer p, size_type n )
+  static void deallocate( pointer p, size_type n )
   {
     if (n > max_size() ) {
       printf("Error: Pool allocator cannot deallocate arrays.");
@@ -107,7 +114,7 @@ public:
     typename list_type::iterator itr = list_node->get_iterator( node );
 
     if (itr) {
-      m_list.erase(itr);
+      s_list.erase(itr);
     }
     else {
       printf("Error: double deallocate.");
@@ -116,17 +123,26 @@ public:
 
 private:
   static list_type s_list;
-  list_type        m_list;
 };
 
 template <  typename T
-          , int Alignment
-          , typename BitsetType
           , template <typename> class BaseAllocator
           , template <typename> class SizeTypeAllocator
+          , int Alignment
+          , typename BitsetType
         >
-typename PoolAllocator<T, Alignment, BitsetType, BaseAllocator, SizeTypeAllocator>::list_type
-PoolAllocator<T, Alignment, BitsetType, BaseAllocator, SizeTypeAllocator>::s_list{};
+typename PoolAllocator<  T
+                       , BaseAllocator
+                       , SizeTypeAllocator
+                       , Alignment
+                       , BitsetType
+                      >::list_type
+PoolAllocator<  T
+              , BaseAllocator
+              , SizeTypeAllocator
+              , Alignment
+              , BitsetType
+             >::s_list{};
 
 } // namespace Lockfree
 

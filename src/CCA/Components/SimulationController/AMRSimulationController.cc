@@ -202,6 +202,7 @@ AMRSimulationController::run()
      d_scheduler->setRestartInitTimestep(first);
    }
 
+   // main timestepping loop
    while( ( time < d_timeinfo->maxTime ) &&
           ( iterations < d_timeinfo->maxTimestep ) &&
           ( d_timeinfo->max_wall_time == 0 || getWallTime() < d_timeinfo->max_wall_time )  ) {
@@ -219,10 +220,6 @@ AMRSimulationController::run()
          barrier_times[i]=0;
        }
      }
-#ifdef USE_TAU_PROFILING
-     char tmpname[512];
-     sprintf (tmpname, "Iteration %d", iterations);
-#endif
 
      //__________________________________
      //    Regridding
@@ -264,9 +261,9 @@ AMRSimulationController::run()
      // printSimulationStats( d_sharedState, delt, time );
 
      if(log_dw_mem){
-       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
-       // (So usually in optimized mode this will not be run.)
+       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set (So usually in optimized mode this will not be run.)
        d_scheduler->logMemoryUse();
+
        ostringstream fn;
        fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
        string filename(fn.str());

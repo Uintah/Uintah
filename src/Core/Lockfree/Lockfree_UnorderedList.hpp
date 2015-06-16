@@ -17,11 +17,11 @@ namespace Lockfree {
 // It is not thread safe for multiple threads to interact with the same instance of a list
 template <  typename T
           , UsageModel Model = SHARED_INSTANCE
-          , typename BitsetType = uint64_t
-          , int Alignment = 128
-          , typename SizeType = uint64_t
           , template <typename> class Allocator = std::allocator
-          , template <typename> class SizeTypeAllocator = std::allocator
+          , template <typename> class SizeTypeAllocator = Allocator
+          , typename SizeType = uint64_t
+          , typename BitsetType = uint64_t
+          , int Alignment = 16
          >
 class UnorderedList
 {
@@ -34,7 +34,14 @@ public:
   static constexpr UsageModel usage_model = Model;
   template <typename U> using allocator = Allocator<U>;
 
-  using list_type = UnorderedList<T, Model, BitsetType, Alignment, SizeType, Allocator, SizeTypeAllocator>;
+  using list_type = UnorderedList<  T
+                                  , Model
+                                  , Allocator
+                                  , SizeTypeAllocator
+                                  , SizeType
+                                  , BitsetType
+                                  , Alignment
+                                 >;
 
   using impl_node_type = Impl::UnorderedNode<T, BitsetType, Alignment>;
 
