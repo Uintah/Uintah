@@ -28,6 +28,7 @@
 #include <Core/Grid/Variables/GridVariable.h>
 #include <Core/Grid/Variables/constGridVariable.h>
 #include <Core/Grid/Patch.h>
+#include <Core/Malloc/AllocatorTags.hpp>
 
 namespace Uintah {
 
@@ -61,109 +62,92 @@ WARNING
   
 ****************************************/
 
-  template<class T> 
-  class CCVariable : public GridVariable<T> {
-    friend class constVariable<GridVariableBase, CCVariable<T>, T, const IntVector&>;
+template<class T>
+class CCVariable : public GridVariable<T> {
+
+//  template < typename U >
+//  using allocator_type = TrackingAllocator<   U
+//                                            , Uintah::Tags::CCVariable
+//                                            , Uintah::MallocAllocator
+//                                          >;
+
+  friend class constVariable<GridVariableBase, CCVariable<T>, T, const IntVector&>;
+
   public:
-    CCVariable();
-    virtual ~CCVariable();
+    CCVariable() = default;
+
+    CCVariable& operator=(const CCVariable&) = delete;
+
+    virtual ~CCVariable() {}
       
     //////////
     // Insert Documentation Here:
     const TypeDescription* virtualGetTypeDescription() const 
     { return getTypeDescription(); }
-    static const TypeDescription* getTypeDescription();
+
+    static const TypeDescription* getTypeDescription()
+    {
+      if (!td) {
+        td = new TypeDescription(TypeDescription::CCVariable, "CCVariable", &maker, fun_getTypeDescription((T*)0));
+      }
+      return td;
+    }
     
-    virtual GridVariableBase* clone();
-    virtual const GridVariableBase* clone() const;
+    virtual GridVariableBase* clone()
+    {
+      return new CCVariable<T>(*this);
+    }
+
+    virtual const GridVariableBase* clone() const
+    {
+      return new CCVariable<T>(*this);
+    }
+
     virtual GridVariableBase* cloneType() const
-    { return new CCVariable<T>(); }
+    {
+      return new CCVariable<T>();
+    }
     
     // allocate(IntVector, IntVector) is hidden without this
     using GridVariable<T>::allocate;
+
     virtual void allocate(const Patch* patch, const IntVector& boundary)
     {      
       IntVector l,h;
-      patch->computeVariableExtents(Patch::CellBased, boundary, 
-                                    Ghost::None, 0, l, h);
+      patch->computeVariableExtents(Patch::CellBased, boundary, Ghost::None, 0, l, h);
       GridVariable<T>::allocate(l, h);
     }
 
-    static TypeDescription::Register registerMe;
+  private:
+    static Variable* maker()
+    {
+      return new CCVariable<T>();
+    }
 
   protected:
-    CCVariable(const CCVariable<T>&);
+    CCVariable(const CCVariable&) = default;
 
-  private:
+  public: // public data member
+    static TypeDescription::Register registerMe;
+
+  private: // private data members
     static TypeDescription* td;
-    
-    CCVariable<T>& operator=(const CCVariable<T>&);
 
-    static Variable* maker();
-  };
+};
 
-  template<class T>
-  TypeDescription* CCVariable<T>::td = 0;
+  // declare linkage
+  template<class T> TypeDescription* CCVariable<T>::td = 0;
+  template<class T> TypeDescription::Register CCVariable<T>::registerMe(getTypeDescription());
 
-  template<class T>
-  TypeDescription::Register
-  CCVariable<T>::registerMe(getTypeDescription());
-   
-  template<class T>
-  const TypeDescription*
-  CCVariable<T>::getTypeDescription()
-  {
-    if(!td){
-      td = new TypeDescription(TypeDescription::CCVariable,
-                                  "CCVariable", &maker,
-                                  fun_getTypeDescription((T*)0));
-    }
-    return td;
-  }
-    
-  template<class T>
-  Variable*
-  CCVariable<T>::maker()
-  {
-    return new CCVariable<T>();
-  }
-   
-  template<class T>
-  CCVariable<T>::~CCVariable()
-  {
-  }
-   
-  template<class T>
-  GridVariableBase*
-  CCVariable<T>::clone()
-  {
-    return new CCVariable<T>(*this);
-  }
 
-  template<class T>
-  const GridVariableBase*
-  CCVariable<T>::clone() const
-  {
-    return new CCVariable<T>(*this);
-  }
 
-  template<class T>
-  CCVariable<T>::CCVariable()
-  {
-  }
-
-  template<class T>
-  CCVariable<T>::CCVariable(const CCVariable<T>& copy)
-    : GridVariable<T>(copy)
-  {
-  }
-
+  // constCCVariable class
   template <class T>
   class constCCVariable : public constGridVariable<GridVariableBase, CCVariable<T>, T>
   {
-  public:
-    constCCVariable() : constGridVariable<GridVariableBase, CCVariable<T>, T>() {}
-    constCCVariable(const CCVariable<T>& copy) : constGridVariable<GridVariableBase, CCVariable<T>, T>(copy) {}
+    public:
+      constCCVariable() : constGridVariable<GridVariableBase, CCVariable<T>, T>() {}
+      constCCVariable(const CCVariable<T>& copy) : constGridVariable<GridVariableBase, CCVariable<T>, T>(copy) {}
   };
 
 

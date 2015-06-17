@@ -443,9 +443,7 @@ namespace Uintah {
       bool no_reallocation_needed = false;
       if (inside) {
         // just rewindow
-        d_window=
-          new Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(),
-              lowIndex, highIndex);
+        d_window= new Array3Window<T>(oldWindow->getData(), oldWindow->getOffset(), lowIndex, highIndex);
         no_reallocation_needed = true;
       }
       else {
@@ -453,11 +451,8 @@ namespace Uintah {
         IntVector encompassingLow = SCIRun::Min(lowIndex, oldWindow->getLowIndex());
         IntVector encompassingHigh = SCIRun::Max(highIndex, oldWindow->getHighIndex());
 
-        Array3Data<T>* newData =
-          new Array3Data<T>(encompassingHigh - encompassingLow);
-        Array3Window<T> tempWindow(newData, encompassingLow,
-            oldWindow->getLowIndex(),
-            oldWindow->getHighIndex());
+        Array3Data<T>* newData = new Array3Data<T>(encompassingHigh - encompassingLow);
+        Array3Window<T> tempWindow(newData, encompassingLow, oldWindow->getLowIndex(), oldWindow->getHighIndex());
         tempWindow.copy(oldWindow); // copies into newData
 
         Array3Window<T>* new_window=
