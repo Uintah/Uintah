@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 //-- Uintah component includes --//
 #include <CCA/Components/Regridder/RegridderCommon.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>

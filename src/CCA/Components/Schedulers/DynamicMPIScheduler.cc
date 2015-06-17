@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/DynamicMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>
@@ -51,11 +49,6 @@ extern DebugStream        taskorder;
 static DebugStream dynamicmpi_dbg(        "DynamicMPI_DBG",         false);
 static DebugStream dynamicmpi_timeout(    "DynamicMPI_TimingsOut",  false);
 static DebugStream dynamicmpi_queuelength("DynamicMPI_QueueLength", false);
-
-#ifdef USE_TAU_PROFILING
-extern int create_tau_mapping( const string&      taskname,
-                               const PatchSubset* patches );  // ThreadPool.cc
-#endif
 
 //______________________________________________________________________
 //
@@ -314,45 +307,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
       }
 
       DetailedTask * task = dts->getNextExternalReadyTask();
-#ifdef USE_TAU_PROFILING
-      int id;
-      const PatchSubset* patches = task->getPatches();
-      id = create_tau_mapping( task->getTask()->getName(), patches );
-
-      string phase_name = "no patches";
-      if (patches && patches->size() > 0) {
-        phase_name = "level";
-        for(int i=0;i<patches->size();i++) {
-
-          ostringstream patch_num;
-          patch_num << patches->get(i)->getLevel()->getIndex();
-
-          if (i == 0) {
-            phase_name = phase_name + " " + patch_num.str();
-          } else {
-            phase_name = phase_name + ", " + patch_num.str();
-          }
-        }
-      }
-
-      static map<string,int> phase_map;
-      static int unique_id = 99999;
-      int phase_id;
-      map<string,int>::iterator iter = phase_map.find( phase_name );
-      if( iter != phase_map.end() ) {
-        phase_id = (*iter).second;
-      } else {
-        TAU_MAPPING_CREATE( phase_name, "",
-            (TauGroup_t) unique_id, "TAU_USER", 0 );
-        phase_map[ phase_name ] = unique_id;
-        phase_id = unique_id++;
-      }
-      // Task name
-      TAU_MAPPING_OBJECT(tautimer)
-      TAU_MAPPING_LINK(tautimer, (TauGroup_t)id);  // EXTERNAL ASSOCIATION
-      TAU_MAPPING_PROFILE_TIMER(doitprofiler, tautimer, 0)
-      TAU_MAPPING_PROFILE_START(doitprofiler,0);
-#endif
       if (taskdbg.active()) {
         cerrLock.lock();
         taskdbg << d_myworld->myrank() << " Running task " << *task << "(" << dts->numExternalReadyTasks() << "/"
@@ -373,10 +327,6 @@ DynamicMPIScheduler::execute( int tgnum     /*=0*/,
         }
       }
       phaseTasksDone[task->getTask()->d_phase]++;
-
-#ifdef USE_TAU_PROFILING
-      TAU_MAPPING_PROFILE_STOP(doitprofiler);
-#endif
     }
 
     if ((phaseSyncTask.find(currphase) != phaseSyncTask.end()) && (phaseTasksDone[currphase] == phaseTasks[currphase] - 1)) {  //if it is time to run the reduction task

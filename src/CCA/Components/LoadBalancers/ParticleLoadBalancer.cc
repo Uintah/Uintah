@@ -50,8 +50,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <iostream> // debug only
 #include <stack>
 #include <vector>

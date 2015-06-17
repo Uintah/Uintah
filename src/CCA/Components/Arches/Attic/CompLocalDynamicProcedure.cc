@@ -24,7 +24,6 @@
 
 //----- CompLocalDynamicProcedure.cc --------------------------------------------------
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Arches/CompLocalDynamicProcedure.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>

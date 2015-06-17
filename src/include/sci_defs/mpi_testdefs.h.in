@@ -35,11 +35,6 @@
 
 #include <mpi.h>
 
-#ifdef MALLOC_TRACE
-#  include "MallocTraceMPI.h"
-#  include "MallocTraceMPIOn.h"
-#endif
-
 // Error handling wrapper for MPI calls
 #  define MPI_SAFE_CALL( call )                                                           \
     do {                                                                                  \

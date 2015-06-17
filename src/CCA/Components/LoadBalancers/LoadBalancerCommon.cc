@@ -40,8 +40,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <sci_values.h>
 #include <sstream>
 

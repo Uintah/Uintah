@@ -110,8 +110,6 @@ extern "C" {
   #define SigContext struct sigcontext
 #endif
 
-#include <TauProfilerForSCIRun.h>
-
 //#define __ia64__
 #ifdef __ia64__
 #  ifndef __int64
@@ -484,8 +482,6 @@ static
 void*
 run_threads(void* priv_v)
 {
-  TAU_REGISTER_THREAD();
-
   Thread_private* priv = (Thread_private*)priv_v;
   if (pthread_setspecific(thread_key, priv->thread)) {
     throw ThreadError("pthread_setspecific: Unknown error.");
@@ -505,8 +501,9 @@ run_threads(void* priv_v)
 void
 Thread::os_start(bool stopped)
 {
-  if (!initialized)
+  if (!initialized) {
     Thread::initialize();
+  }
 
   priv_ = new Thread_private(stopped);
 
@@ -540,14 +537,11 @@ void
 Thread::stop()
 {
   lock_scheduler();
-  if (priv_->block_sema.tryDown() == false)
-  {
-    if (this == self())
-    {
+  if (priv_->block_sema.tryDown() == false) {
+    if (this == self()) {
       priv_->block_sema.down();
     }
-    else
-    {
+    else {
       pthread_kill(priv_->threadid, SIGUSR2);
     }
   }

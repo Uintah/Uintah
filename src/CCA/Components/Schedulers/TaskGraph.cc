@@ -43,8 +43,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/ProgressiveWarning.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <sci_defs/config_defs.h>
 
 #include <fstream>

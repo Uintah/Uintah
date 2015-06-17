@@ -26,6 +26,15 @@
 #include <sci_defs/gperftools_defs.h>
 
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
+#include <CCA/Components/ReduceUda/UdaReducer.h>
+#include <CCA/Components/Regridder/PerPatchVars.h>
+#include <CCA/Ports/DataWarehouse.h>
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SimulationInterface.h>
 
 #include <Core/Containers/Array3.h>
 #include <Core/Exceptions/ProblemSetupException.h>
@@ -50,19 +59,6 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Thread/Time.h>
-
-#include <CCA/Components/ReduceUda/UdaReducer.h>
-#include <CCA/Components/Regridder/PerPatchVars.h>
-
-#include <CCA/Ports/DataWarehouse.h>
-#include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/ProblemSpecInterface.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
-
-#include <TauProfilerForSCIRun.h>
 
 #include <iostream>
 #include <iomanip>
@@ -419,11 +415,7 @@ AMRSimulationController::run()
        d_output->findNext_OutputCheckPoint_Timestep(  delt, currentGrid );
        d_output->writeto_xml_files( delt, currentGrid );
      }
-#ifdef USE_TAU_PROFILING
-//      sleep(1);
-#endif
      time += delt;
-     TAU_DB_DUMP();
 
      // If VisIt has been included into the build, check the lib sim state
      // to see if there is a connection and if so if anything needs to be
