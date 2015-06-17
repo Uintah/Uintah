@@ -15,8 +15,26 @@
 
 namespace Lockfree { namespace Impl {
 
+namespace {
+
+constexpr size_t page_size = 4096;
+
+volatile size_t g_mmap_excess = 0;;
+
+} // namespace
+
+
+size_t mmap_excess()
+{
+  return g_mmap_excess;
+}
+
 void * mmap_allocate( size_t num_bytes )
 {
+
+  const size_t excess = page_size - (num_bytes & (page_size - 1u));
+  __sync_fetch_and_add( &g_mmap_excess, excess );
+
   void *ptr = nullptr;
   if (num_bytes) {
     ptr = mmap( nullptr, num_bytes, MMAP_PROTECTION, MMAP_FLAGS, -1 /*file descriptor*/, 0 /*offset*/);
@@ -31,6 +49,9 @@ void * mmap_allocate( size_t num_bytes )
 
 void mmap_deallocate( void * ptr, size_t num_bytes )
 {
+  const size_t excess = page_size - (num_bytes & (page_size - 1u));
+  __sync_fetch_and_sub( &g_mmap_excess, excess );
+
   munmap(ptr, num_bytes);
 }
 
