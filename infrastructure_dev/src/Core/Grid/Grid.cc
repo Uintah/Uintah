@@ -40,8 +40,6 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/XMLUtils.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <iomanip>
 #include <iostream>
 #include <sci_values.h>

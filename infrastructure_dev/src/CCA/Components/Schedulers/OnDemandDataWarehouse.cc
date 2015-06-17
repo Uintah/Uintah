@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>

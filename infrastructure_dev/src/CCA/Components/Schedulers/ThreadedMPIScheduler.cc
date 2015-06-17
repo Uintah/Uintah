@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Schedulers/ThreadedMPIScheduler.h>
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <CCA/Components/Schedulers/TaskGraph.h>

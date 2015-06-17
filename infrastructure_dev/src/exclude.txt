@@ -6,7 +6,6 @@ doc/movies
 doc/MPM
 doc/Release
 doc/runLatex
-doc/TAU
 doc/uda2nrrd
 doc/.htaccess
 doc/DeveloperGuide/*.aux
@@ -27,7 +26,6 @@ doc/UserGuide/*.toc
 
 R_Tester
 orderAccuracy
-tau
 TODO
 exclude.txt
 scripts

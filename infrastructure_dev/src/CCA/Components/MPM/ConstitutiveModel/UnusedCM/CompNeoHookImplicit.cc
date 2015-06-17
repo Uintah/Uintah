@@ -41,7 +41,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <TauProfilerForSCIRun.h>
 
 using std::cerr;
 using namespace Uintah;

@@ -53,8 +53,6 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
 
-#include <TauProfilerForSCIRun.h>
-
 #include <cerrno>
 #include <cstdlib>
 #include <fstream>

@@ -27,7 +27,6 @@
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/petsc_defs.h>
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/MPM/PetscSolver.h>
 #include <Core/Exceptions/UintahPetscError.h>
 #include <Core/Parallel/ProcessorGroup.h>

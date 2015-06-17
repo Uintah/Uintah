@@ -24,8 +24,6 @@
 
 //----- CompDynamicProcedure.cc --------------------------------------------------
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>

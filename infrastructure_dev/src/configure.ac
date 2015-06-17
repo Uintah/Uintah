@@ -404,13 +404,6 @@ SCI_ARG_WITH(zoltan,
    sci_required_zoltan=yes],
   [with_zoltan=""])
   
-SCI_ARG_WITH(tau,
-  AC_HELP_STRING(--with-tau=<tau-makefile>,
-                 Specify a Tau Makefile),
-  [with_tau="$withval"
-   sci_required_tau=yes],
-  [with_tau=""])
-  
 SCI_ARG_WITH(papi,
   AC_HELP_STRING(--with-papi=DIR,
                  Use the papi installation in DIR),
@@ -1205,45 +1198,6 @@ AC_SUBST(SOFLAGS)
 AC_SUBST(IS_STATIC_BUILD)
 AC_SUBST(SO_OR_ARCHIVE_EXTENSION)
 
-##  --  search for MallocTrace ------------------------
-
-if test "$with_malloc_trace"; then
-  if test "$with_malloc_trace" = "yes"; then
-    AC_MSG_ERROR( --with-malloc_trace=DIR requires a Directory be provided. )
-  else
-    AC_MSG_CHECKING(for MallocTrace files (For now we are just verifying the existence of lib and .h files)) 
-    if test ! -d $with_malloc_trace; then
-      AC_MSG_ERROR( '$with_malloc_trace' directory does not exist. )
-    fi
-    if test "$IS_STATIC_BUILD" = "yes"; then
-       if test ! -f $with_malloc_trace/lib/libMallocTrace.a; then
-       	  AC_MSG_ERROR( '$with_malloc_trace/lib/libMallocTrace.a' does not exist. )
-       fi
-    else
-	if test ! -f $with_malloc_trace/lib/shared/libMallocTrace.so; then
-      	   AC_MSG_ERROR( '$with_malloc_trace/lib/shared/libMallocTrace.so' does not exist. )
-    	fi
-    fi
-    if test ! -f $with_malloc_trace/include/MallocTrace.h; then
-      AC_MSG_ERROR( '$with_malloc_trace/include/MallocTrace.h' does not exist. )
-    fi
-    AC_MSG_RESULT(yes)
-    DEF_MALLOC_TRACE="#define MALLOC_TRACE 1"
-    INC_MALLOC_TRACE_H="-I$with_malloc_trace/include"
-    if test "$IS_STATIC_BUILD" = "yes"; then
-       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib -L$with_malloc_trace/lib"
-    else								     
-       MALLOC_TRACE_LIB_DIR_FLAG="$LDRUN_PREFIX$with_malloc_trace/lib/shared -L$with_malloc_trace/lib/shared"
-    fi
-    MALLOC_TRACE_LIB_FLAG="-lMallocTrace"
-    MALLOC_TRACE_LIB_MPI_FLAG="-lMallocTraceMPI"
-  fi
-fi
-AC_SUBST(DEF_MALLOC_TRACE)
-AC_SUBST(INC_MALLOC_TRACE_H)
-AC_SUBST(MALLOC_TRACE_LIB_FLAG)
-AC_SUBST(MALLOC_TRACE_LIB_DIR_FLAG)
-AC_SUBST(MALLOC_TRACE_LIB_MPI_FLAG)
 
 ##  --  Check for 64 vs 80 bit floating point number storage in register precision error ------------------------
 
@@ -3314,8 +3268,6 @@ EOF
      SCI_MSG_ERROR(one or more of the MPI components is missing.)
   fi
 
-  MPI_LIB_FLAG="$MPI_LIB_FLAG $MALLOC_TRACE_LIB_MPI_FLAG"
-  MPI_LIB_DIR_FLAG="$MPI_LIB_DIR_FLAG $MALLOC_TRACE_LIB_DIR_FLAG"
 fi #end sci_required_mpi
 
 AC_SUBST(HAVE_MPI)
@@ -3397,7 +3349,7 @@ else
                       $_sci_inc,
                       petsc petscvec petscmat petscdm petscsnes petscts petscksp,
                       $_sci_lib_dir,
-                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                      $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                       ,
                       optional)
 
@@ -3420,7 +3372,7 @@ else
                             $_sci_inc,
                             $the_libs,
                             $_sci_lib_dir,
-                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                            $INC_MPI_H -DMPIPP_H $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                             ,
                             optional)
                # bail if a suitable library is found
@@ -3495,45 +3447,6 @@ fi
 
 AC_SUBST(XALAN_PATH)
 
-##  --  if building uintah, search for TAU makefile  ---------------------
-
-if test "$sci_required_tau" = "yes"; then
-  if test ! -f "$with_tau" ; then
-    SCI_MSG_ERROR($with_tau does not exist.  Bye!)
-  fi
-
-  AC_MSG_RESULT(Using TAU makefile: $with_tau)
-
-  cat > conftest-tau.cc <<EOF
-
-  #include <Profile/Profiler.h>
-
-  int main(int argc, char **argv)
-  {
-    TAU_PROFILE("main", "int (int, char **)", TAU_DEFAULT);
-    TAU_PROFILE_INIT(argc, argv);
-    return 0;
-  }
-EOF
-
-  cat > conftest-tau-makefile <<EOF
-include $with_tau
-all:
-	\$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
-EOF
-
-  ac_try="$MAKE TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
-  if test "$ac_status" != 0; then
-    SCI_MSG_ERROR(TAU libraries not working. Bye!)
-  fi
-
-  TAU_MAKEFILE="$with_tau"
-fi
-
-AC_SUBST(TAU_MAKEFILE)
 
 ##  --  search for papi stuff  -------------------------------------------
 _sci_lib=
@@ -4420,7 +4333,7 @@ else
             SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                         HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
                         $_sci_lib,
-                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                        $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                         ,
                         optional)
 
@@ -4428,7 +4341,7 @@ else
            SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                            HYPRE,
                            $_sci_lib,
-                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
+                           $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                            ,
                            optional)
 

@@ -24,7 +24,6 @@
 
 //----- IncDynamicProcedure.cc --------------------------------------------------
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Arches/IncDynamicProcedure.h>
 #include <CCA/Components/Arches/PhysicalConstants.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>

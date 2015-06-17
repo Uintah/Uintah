@@ -23,16 +23,15 @@
  */
 
 //----- Properties.cc --------------------------------------------------
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #if HAVE_TABPROPS
 # include <CCA/Components/Arches/ChemMix/TabPropsInterface.h>
 #endif 
-# include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
-# include <CCA/Components/Arches/ChemMix/ColdFlow.h>
-# include <CCA/Components/Arches/ChemMix/ConstantProps.h>
+#include <CCA/Components/Arches/ChemMix/ClassicTableInterface.h>
+#include <CCA/Components/Arches/ChemMix/ColdFlow.h>
+#include <CCA/Components/Arches/ChemMix/ConstantProps.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <CCA/Components/Arches/CellInformation.h>
@@ -48,18 +47,17 @@
 #include <Core/Grid/Variables/CellIterator.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Grid/SimulationState.h>
-
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/VariableNotFoundInGrid.h>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-
 #include <Core/Thread/Time.h>
 #include <Core/Math/MiscMath.h>
 
 #include <iostream>
+
 using namespace std;
 using namespace Uintah;
 

@@ -24,7 +24,6 @@
 
 //----- MomentumSolver.cc ----------------------------------------------
 
-#include <TauProfilerForSCIRun.h>
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/ArchesMaterial.h>
@@ -50,6 +49,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/ConstSrcTerm.h>
+
 using namespace Uintah;
 using namespace std;
 

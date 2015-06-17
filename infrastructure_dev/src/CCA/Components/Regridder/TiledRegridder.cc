@@ -27,8 +27,6 @@
 //#define AG_HACK
 
 
-#include <TauProfilerForSCIRun.h>
-
 #include <CCA/Components/Regridder/TiledRegridder.h>
 #include <CCA/Ports/LoadBalancer.h>
 #include <CCA/Ports/Scheduler.h>
@@ -41,10 +39,11 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
-using namespace Uintah;
 
 #include <iomanip>
 #include <cstdio>
+
+using namespace Uintah;
 using namespace std;
 
 static DebugStream grid_dbg("GridDBG",false);

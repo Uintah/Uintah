@@ -27,8 +27,6 @@
 //#define AG_HACK
 
 
-#include <TauProfilerForSCIRun.h>
-
 #include <Core/Grid/Level.h>
 #include <Core/Util/Handle.h>
 #include <Core/Grid/Grid.h>
@@ -41,9 +39,7 @@
 #include <Core/Exceptions/InvalidGrid.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BoundCondReader.h>
-
 #include <Core/Geometry/BBox.h>
-
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
@@ -52,8 +48,6 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/ProgressiveWarning.h>
-
-#include <TauProfilerForSCIRun.h>
 
 #include <iostream>
 #include <algorithm>

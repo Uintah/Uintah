@@ -22,8 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <TauProfilerForSCIRun.h>
-
 #include <Core/Grid/PatchRangeTree.h>
 #include <list>
 

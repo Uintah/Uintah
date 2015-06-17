@@ -53,7 +53,7 @@ ALLTARGETS := $(ALLTARGETS) $(PROGRAM)
 ALLSRCS := $(ALLSRCS) $(SRCS)
 
 # Tuck the value of $(LIBS) away in a mangled variable
-$(PROGRAM)_LIBS := $(LIBS) ${MALLOC_TRACE_LIBRARY}
+$(PROGRAM)_LIBS := $(LIBS)
 
 # The dependencies can be either .o files or .so files.  The .so
 # files are other shared libraries within the PSE.  This allows
@@ -72,10 +72,10 @@ $(PROGRAM) : prereqs $(OBJS) $(patsubst %,$(LIBDIR)/lib%.$(SO_OR_A_FILE),$(PSELI
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@rm -f $@
 	@echo "Building:  $@"
-	@$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
+	@$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS)
 else
 	rm -f $@
-	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS) $(TAU_LIBRARY)
+	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS)
 endif
 
 
