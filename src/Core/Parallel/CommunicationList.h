@@ -159,13 +159,13 @@ using RecvCommNode = CommNode<RecvHandle>;
 
 template < typename T >
 using TrackingListPoolAllocator = Lockfree::TrackingAllocator<   T
-                                                               , CommListTag
+                                                               , Tags::CommList
                                                                , Uintah::PoolAllocator
                                                              >;
 
 template < typename T >
 using TrackingListMallocAllocator = Lockfree::TrackingAllocator<   T
-                                                                 , CommListTag
+                                                                 , Tags::CommList
                                                                  , Uintah::MallocAllocator
                                                                >;
 

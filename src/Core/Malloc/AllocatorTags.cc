@@ -33,6 +33,9 @@ std::vector<std::string> parse_string(std::string str)
 
 namespace Uintah { namespace Impl {
 
+// declare linkage
+std::vector<TagBase*> TagBase::s_tags;
+
 const std::vector<std::string> MallocStats::s_malloc_stats = parse_string(getenv("MALLOC_STATS") != nullptr ? getenv("MALLOC_STATS") : "" );
 
 FILE* MallocStats::file()
@@ -44,11 +47,11 @@ FILE* MallocStats::file()
   return stdout;
 }
 
-template < typename Tag >
-bool MallocStats::is_tag_enabled(const Tag&)
+bool MallocStats::is_tag_enabled(const TagBase* tag)
 {
+  std::string name = tag->data().name;
   for( size_t i=1, n = s_malloc_stats.size(); i<n; ++i) {
-    if (std::string(Tag::name()) == s_malloc_stats[i]) {
+    if (name == s_malloc_stats[i]) {
       return true;
     }
   }
@@ -62,6 +65,23 @@ bool MallocStats::is_enabled()
 }
 
 }} // end namespace Uintah::Impl
+
+namespace Uintah { namespace Tags { namespace {
+
+// Add default tags first (printed out in the order registered)
+UINTAH_REGISTER_TAG(Global);
+UINTAH_REGISTER_TAG(MMap);
+UINTAH_REGISTER_TAG(Malloc);
+UINTAH_REGISTER_TAG(Pool);
+
+// -------------------------------------
+
+// Add custom tags here (printed out in the order registered)
+UINTAH_REGISTER_TAG(CommList);
+UINTAH_REGISTER_TAG(PackedBuffer);
+UINTAH_REGISTER_TAG(GridVariable);
+
+}}} // end namspace Uintah::Tags
 
 namespace Uintah {
 
@@ -80,45 +100,15 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
     std::vector<unsigned long long> local_high_water;
     std::vector<std::string> tag_names;
 
-    tag_names.push_back("Global");
-    local_stats.push_back(GlobalStats::alloc_size());
-    local_stats.push_back(GlobalStats::num_alloc());
-    local_stats.push_back(GlobalStats::num_dealloc());
-    local_high_water.push_back(GlobalStats::high_water());
-
-    if (Impl::MallocStats::is_tag_enabled(MMapTag())) {
-      tag_names.push_back(MMapTag::name());
-      local_stats.push_back(TagStats<MMapTag>::alloc_size());
-      local_stats.push_back(TagStats<MMapTag>::num_alloc());
-      local_stats.push_back(TagStats<MMapTag>::num_dealloc());
-      local_high_water.push_back(TagStats<MMapTag>::high_water());
-    }
-
-    if (Impl::MallocStats::is_tag_enabled(MallocTag())) {
-      tag_names.push_back(MallocTag::name());
-      local_stats.push_back(TagStats<MallocTag>::alloc_size());
-      local_stats.push_back(TagStats<MallocTag>::num_alloc());
-      local_stats.push_back(TagStats<MallocTag>::num_dealloc());
-      local_high_water.push_back(TagStats<MallocTag>::high_water());
-    }
-
-    if (Impl::MallocStats::is_tag_enabled(PoolTag())) {
-      tag_names.push_back(PoolTag::name());
-      local_stats.push_back(TagStats<PoolTag>::alloc_size());
-      local_stats.push_back(TagStats<PoolTag>::num_alloc());
-      local_stats.push_back(TagStats<PoolTag>::num_dealloc());
-      local_high_water.push_back(TagStats<PoolTag>::high_water());
-    }
-
-    //-------------------------------------------------------------------------------
-    // Custom tags go here
-
-    if (Impl::MallocStats::is_tag_enabled(CommListTag())) {
-      tag_names.push_back(CommListTag::name());
-      local_stats.push_back(TagStats<CommListTag>::alloc_size());
-      local_stats.push_back(TagStats<CommListTag>::num_alloc());
-      local_stats.push_back(TagStats<CommListTag>::num_dealloc());
-      local_high_water.push_back(TagStats<CommListTag>::high_water());
+    for (const auto & base : Impl::TagBase::s_tags) {
+      if (Impl::MallocStats::is_tag_enabled(base)) {
+        Impl::TagData d = base->data();
+        tag_names.push_back(d.name);
+        local_stats.push_back(d.alloc_size);
+        local_stats.push_back(d.num_alloc);
+        local_stats.push_back(d.num_dealloc);
+        local_high_water.push_back(d.high_water);
+      }
     }
 
     std::vector<unsigned long long> global_stats(local_stats.size());

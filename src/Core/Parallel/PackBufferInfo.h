@@ -37,7 +37,10 @@ namespace Uintah {
 
 class PackedBuffer : public RefCounted {
 
-  using allocator_type = MallocAllocator<char>;
+  using allocator_type = Lockfree::TrackingAllocator<   char
+                                                      , Uintah::Tags::PackedBuffer
+                                                      , Uintah::MMapAllocator
+                                                    >;
 
 public:
   PackedBuffer(size_t bytes)

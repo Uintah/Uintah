@@ -13,12 +13,37 @@
 
 namespace Uintah { namespace Impl {
 
+struct TagData
+{
+    const char* name;
+    unsigned long long alloc_size;
+    unsigned long long high_water;
+    unsigned long long num_alloc;
+    unsigned long long num_dealloc;
+};
+
+
+struct TagBase
+{
+    virtual TagData data() const = 0;
+
+    template < typename Tag >
+    static bool register_tag()
+    {
+      static Tag t;
+      static bool ok = ( s_tags.push_back(&t) , (s_tags.back() == &t) );
+      return ok;
+    }
+
+    static std::vector<TagBase*> s_tags;
+};
+
+
 struct MallocStats
 {
     static FILE* file();
 
-    template < typename Tag >
-    static bool is_tag_enabled(const Tag&);
+    static bool is_tag_enabled(const TagBase*);
 
     static bool is_enabled();
 
@@ -28,56 +53,78 @@ struct MallocStats
 
 };
 
+
 }} // end namespace Uintah::Impl
+
+#define UINTAH_CREATE_TAG(TagName)                                  \
+  struct TagName : public ::Uintah::Impl::TagBase                   \
+  {                                                                 \
+    static constexpr const char* const name()                       \
+    { return #TagName; }                                            \
+    virtual ::Uintah::Impl::TagData data() const                    \
+    {                                                               \
+      ::Uintah::Impl::TagData d;                                    \
+      d.name = name();                                              \
+      d.alloc_size  = ::Lockfree::TagStats<TagName>::alloc_size();  \
+      d.high_water  = ::Lockfree::TagStats<TagName>::high_water();  \
+      d.num_alloc   = ::Lockfree::TagStats<TagName>::num_alloc();   \
+      d.num_dealloc = ::Lockfree::TagStats<TagName>::num_dealloc(); \
+      return d;                                                     \
+    }                                                               \
+  }
+
+#define UINTAH_REGISTER_TAG(TagName)                                         \
+    bool impl_##TagName = ::Uintah::Impl::TagBase::register_tag<TagName>()
+
+namespace Uintah { namespace Tags {
+
+// create default tags first
+UINTAH_CREATE_TAG(Global);
+UINTAH_CREATE_TAG(MMap);
+UINTAH_CREATE_TAG(Malloc);
+UINTAH_CREATE_TAG(Pool);
+
+// -------------------------------------
+
+// Remember to register tags in AllocatorTags.cc
+// create custom tags here
+UINTAH_CREATE_TAG(CommList);
+UINTAH_CREATE_TAG(PackedBuffer);
+UINTAH_CREATE_TAG(GridVariable);
+
+}} // end namspace Uintah::Tags
 
 namespace Uintah {
 
-struct GlobalTag
-{
-    static constexpr const char* const name() { return "Global"; }
-};
 
 namespace Impl {
 
 template < typename T >
 using MMapAllocator = Lockfree::TrackingAllocator<   T
-                                                   , GlobalTag
+                                                   , Tags::Global
                                                    , Lockfree::MMapAllocator
                                                  >;
 
 template < typename T >
 using MallocAllocator = Lockfree::TrackingAllocator<   T
-                                                     , GlobalTag
+                                                     , Tags::Global
                                                      , Lockfree::MallocAllocator
                                                    >;
 } // end namespace Impl
 
-struct MMapTag
-{
-    static constexpr const char* const name() { return "MMap"; }
-};
-
-struct MallocTag
-{
-    static constexpr const char* const name() { return "Malloc"; }
-};
-
-struct PoolTag
-{
-    static constexpr const char* const name() { return "Pool"; }
-};
 
 template < typename T >
 using MMapAllocator = Lockfree::TrackingAllocator<   T
-                                                   , MMapTag
+                                                   , Tags::MMap
                                                    , Impl::MMapAllocator
                                                  >;
 
 template < typename T >
 using MallocAllocator = Lockfree::TrackingAllocator<   T
-                                                     , MallocTag
+                                                     , Tags::Malloc
                                                      , Impl::MallocAllocator
                                                    >;
+
 namespace Impl {
 
 template < typename T >
@@ -89,14 +136,10 @@ using PoolAllocator = Lockfree::PoolAllocator<   T
 
 template < typename T >
 using PoolAllocator = Lockfree::TrackingAllocator<   T
-                                                   , PoolTag
+                                                   , Tags::Pool
                                                    , Impl::PoolAllocator
                                                  >;
 
-struct CommListTag
-{
-    static constexpr const char* const name() { return "CommList"; }
-};
 
 //----------------------------------------------------------------------------------
 // NOTE:
@@ -108,7 +151,7 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root = 0);
 
 template < typename T > using TagStats = Lockfree::TagStats< T >;
 
-using GlobalStats = Lockfree::TagStats<GlobalTag>;
+using GlobalStats = Lockfree::TagStats<Tags::Global>;
 
 } // end namespace Uintah
 
