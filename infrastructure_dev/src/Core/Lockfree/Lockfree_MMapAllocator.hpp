@@ -3,11 +3,9 @@
 
 #include "impl/Lockfree_Macros.hpp"
 
-#include <utility>
-#include <cstdlib>
-
 namespace Lockfree { namespace Impl {
 
+size_t mmap_excess();
 void * mmap_allocate( size_t num_bytes );
 void mmap_deallocate( void * ptr, size_t num_bytes );
 

@@ -25,8 +25,9 @@
 #ifndef UINTAH_HOMEBREW_ARRAY3DATA_H
 #define UINTAH_HOMEBREW_ARRAY3DATA_H
 
-#include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Malloc/AllocatorTags.hpp>
+#include <Core/Util/RefCounted.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/FancyAssert.h>
 
@@ -62,6 +63,13 @@ namespace Uintah {
    ****************************************/
 
   template<class T> class Array3Data : public RefCounted {
+
+    template < typename U >
+    using allocator_type = Lockfree::TrackingAllocator<   U
+                                                        , Uintah::Tags::Array3Data
+                                                        , Uintah::MMapAllocator
+                                                      >;
+
     public:
       Array3Data(const IntVector& size);
       virtual ~Array3Data();
@@ -187,34 +195,56 @@ namespace Uintah {
     Array3Data<T>::Array3Data(const IntVector& size)
     : d_size(size)
     {
-      long s=d_size.x()*d_size.y()*d_size.z();
-      if(s){
-        d_data=new T[s];
-        d_data3=new T**[d_size.z()];
-        d_data3[0]=new T*[d_size.z()*d_size.y()];
-        d_data3[0][0]=d_data;
-        for(int i=1;i<d_size.z();i++){
-          d_data3[i]=d_data3[i-1]+d_size.y();
+      allocator_type<T>   allocator;
+      allocator_type<T*>  allocator_ptr;
+      allocator_type<T**> allocator_ptr_ptr;
+
+      const size_t sx = d_size.x();
+      const size_t sy = d_size.y();
+      const size_t sz = d_size.z();
+      const size_t s = sx * sy * sz;
+      if (s) {
+        d_data = allocator.allocate(s);
+        for (size_t i = 0; i < s; ++i) {
+          allocator.construct(d_data + i);
         }
-        for(int j=1;j<d_size.z()*d_size.y();j++){
-          d_data3[0][j]=d_data3[0][j-1]+d_size.x();
+
+        d_data3 = allocator_ptr_ptr.allocate(sz);
+        d_data3[0] = allocator_ptr.allocate(sz * sy);
+
+        d_data3[0][0] = d_data;
+        for (int i = 1; i < d_size.z(); i++) {
+          d_data3[i] = d_data3[i - 1] + d_size.y();
         }
-      } else {
-        d_data=0;
-        d_data3=0;
+        for (int j = 1; j < d_size.z() * d_size.y(); j++) {
+          d_data3[0][j] = d_data3[0][j - 1] + d_size.x();
+        }
+      }
+      else {
+        d_data = 0;
+        d_data3 = 0;
       }
     }
 
   template<class T>
     Array3Data<T>::~Array3Data()
     {
-      if(d_data){
-        delete[] d_data;
-        d_data=0;
-        delete[] d_data3[0];
-        d_data3[0]=0;
-        delete[] d_data3;
-        d_data3=0;
+      allocator_type<T>   allocator;
+      allocator_type<T*>  allocator_ptr;
+      allocator_type<T**> allocator_ptr_ptr;
+
+      const size_t sx = d_size.x();
+      const size_t sy = d_size.y();
+      const size_t sz = d_size.z();
+      const size_t s = sx * sy * sz;
+
+      if (d_data) {
+        allocator_ptr.deallocate(d_data3[0] ,sz * sy);
+        allocator_ptr_ptr.deallocate(d_data3, sz);
+        for (size_t i = 0; i < s; ++i) {
+          allocator.destroy(d_data + i);
+        }
+        allocator.deallocate(d_data, s);
       }
     }
 

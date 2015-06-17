@@ -109,6 +109,10 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
         local_stats.push_back(d.alloc_size);
         local_stats.push_back(d.num_alloc);
         local_stats.push_back(d.num_dealloc);
+        local_stats.push_back(d.h0);
+        local_stats.push_back(d.h1);
+        local_stats.push_back(d.h2);
+        local_stats.push_back(d.h3);
         local_high_water.push_back(d.high_water);
       }
     }
@@ -135,25 +139,35 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
 
       // print global stats
       fprintf(   p_file
-               , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n"
+               , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n              H0: %llu\n              H1: %llu\n              H2: %llu\n              H3: %llu\n"
                , tag_names[0].c_str()
                , Lockfree::Impl::bytes_to_string(global_stats[0]).c_str()
                , Lockfree::Impl::bytes_to_string(global_high_water[0]).c_str()
                , global_stats[1]
                , global_stats[2]
+               , global_stats[3]
+               , global_stats[4]
+               , global_stats[5]
+               , global_stats[6]
              );
 
       // print tag stats
       for (size_t i = 1, n = tag_names.size(); i < n; ++i) {
         fprintf( p_file
-                , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n"
+                , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n              H0: %llu\n              H1: %llu\n              H2: %llu\n              H3: %llu\n"
                 , tag_names[i].c_str()
-                , Lockfree::Impl::bytes_to_string(global_stats[3*i]).c_str()
+                , Lockfree::Impl::bytes_to_string(global_stats[7*i]).c_str()
                 , Lockfree::Impl::bytes_to_string(global_high_water[i]).c_str()
-                , global_stats[3*i+1]
-                , global_stats[3*i+2]
+                , global_stats[7*i+1]
+                , global_stats[7*i+2]
+                , global_stats[7*i+3]
+                , global_stats[7*i+4]
+                , global_stats[7*i+5]
+                , global_stats[7*i+6]
               );
       }
+
+      fprintf(p_file, "  MMap excess: %s\n", Lockfree::Impl::bytes_to_string(Lockfree::Impl::mmap_excess()).c_str());
 
       fprintf(p_file, "End Timestep: %d\n\n", time_step);
     }

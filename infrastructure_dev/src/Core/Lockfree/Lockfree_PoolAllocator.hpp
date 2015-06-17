@@ -2,12 +2,11 @@
 #define LOCKFREE_POOL_ALLOCATOR_HPP
 
 #include "Lockfree_UnorderedList.hpp"
+
 #include "impl/Lockfree_Macros.hpp"
 
 #include <stdexcept> // for runtime_error
 #include <new> // for bad_alloc
-#include <utility>
-#include <cstdlib>
 
 namespace Lockfree {
 
@@ -120,7 +119,6 @@ public:
       printf("Error: double deallocate.");
     }
   }
-
 
 private:
   static list_type s_list;

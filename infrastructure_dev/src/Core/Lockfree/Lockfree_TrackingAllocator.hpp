@@ -21,15 +21,40 @@ class TagStats
 public:
 
   enum {
-     ALLOC_SIZE = 0
-   , ALLOC_NUM = 1
-   , DEALLOC_NUM = 2
-   , HIGH_WATER = 3
+     H0 = 64ull
+   , H1 = 4096ull
+   , H2 = 8ull*H1
+  };
+
+  enum {
+     ALLOC_SIZE
+   , ALLOC_NUM
+   , DEALLOC_NUM
+   , HIGH_WATER
+   , HISTOGRAM_0
+   , HISTOGRAM_1
+   , HISTOGRAM_2
+   , HISTOGRAM_3
+   , SIZE
   };
 
 
   static void allocate( size_t n )
   {
+    // compute histogram
+    if ( n <= H0 ) {
+      __sync_fetch_and_add( s_data + HISTOGRAM_0, one );
+    }
+    else if ( n <= H1 ) {
+      __sync_fetch_and_add( s_data + HISTOGRAM_1, one );
+    }
+    else if ( n <= H2 ) {
+      __sync_fetch_and_add( s_data + HISTOGRAM_2, one );
+    }
+    else {
+      __sync_fetch_and_add( s_data + HISTOGRAM_3, one );
+    }
+
     __sync_fetch_and_add(s_data + ALLOC_NUM, one);
     size_t current_mem = __sync_add_and_fetch(s_data + ALLOC_SIZE, n);
 
@@ -55,17 +80,23 @@ public:
   static uint64_t alloc_size()  { return s_data[ALLOC_SIZE];  }
   static uint64_t num_alloc()   { return s_data[ALLOC_NUM];   }
   static uint64_t num_dealloc() { return s_data[DEALLOC_NUM]; }
-  static uint64_t high_water()  { return s_data[HIGH_WATER];   }
+  static uint64_t high_water()  { return s_data[HIGH_WATER];  }
+
+  static uint64_t histogram( unsigned i )
+  {
+    i = i < 4 ? i : 3;
+    return *(s_data + HISTOGRAM_0 + i);
+  }
 
   static volatile uint64_t const * const data() { return s_data; }
 
 private:
 
-  static volatile uint64_t s_data[4];
+  static volatile uint64_t s_data[SIZE];
 };
 
 // Declare linkage
-template < typename Tag > volatile uint64_t TagStats<Tag>::s_data[4] = {};
+template < typename Tag > volatile uint64_t TagStats<Tag>::s_data[SIZE] = {};
 
 
 template <typename Tag>
@@ -75,7 +106,11 @@ std::ostream & operator<<(std::ostream & out, TagStats<Tag> const& stats)
   out << " alloc_size[ "  << Impl::bytes_to_string( stats.alloc_size()  ) << " ] ,";
   out << " high_water[ "  << Impl::bytes_to_string( stats.high_water()  ) << " ] ,";
   out << " num_alloc[ "   << stats.num_alloc()   << " ] ,";
-  out << " num_dealloc[ " << stats.num_dealloc() << " ]";
+  out << " num_dealloc[ " << stats.num_dealloc() << " ] : ";
+  out << " H0[ " << stats.histogram(0) << " ]";
+  out << " H1[ " << stats.histogram(1) << " ]";
+  out << " H2[ " << stats.histogram(2) << " ]";
+  out << " H3[ " << stats.histogram(3) << " ]";
   return out;
 }
 

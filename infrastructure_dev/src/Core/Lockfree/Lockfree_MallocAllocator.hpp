@@ -3,8 +3,8 @@
 
 #include "impl/Lockfree_Macros.hpp"
 
-#include <utility>
 #include <cstdlib>
+#include <utility>
 
 namespace Lockfree {
 

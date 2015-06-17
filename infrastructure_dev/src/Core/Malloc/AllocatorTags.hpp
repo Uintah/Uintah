@@ -20,6 +20,10 @@ struct TagData
     unsigned long long high_water;
     unsigned long long num_alloc;
     unsigned long long num_dealloc;
+    unsigned long long h0;
+    unsigned long long h1;
+    unsigned long long h2;
+    unsigned long long h3;
 };
 
 
@@ -69,6 +73,10 @@ struct MallocStats
       d.high_water  = ::Lockfree::TagStats<TagName>::high_water();  \
       d.num_alloc   = ::Lockfree::TagStats<TagName>::num_alloc();   \
       d.num_dealloc = ::Lockfree::TagStats<TagName>::num_dealloc(); \
+      d.h0          = ::Lockfree::TagStats<TagName>::histogram(0);  \
+      d.h1          = ::Lockfree::TagStats<TagName>::histogram(1);  \
+      d.h2          = ::Lockfree::TagStats<TagName>::histogram(2);  \
+      d.h3          = ::Lockfree::TagStats<TagName>::histogram(3);  \
       return d;                                                     \
     }                                                               \
   }
