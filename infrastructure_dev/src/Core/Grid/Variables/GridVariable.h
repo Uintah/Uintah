@@ -65,7 +65,7 @@ GENERAL INFORMATION
   
 
 KEYWORDS
-   Variable__Cell_Centered
+   Variable - GridVariable parent class
 
 DESCRIPTION
    Long description...
@@ -101,6 +101,7 @@ WARNING
 #if !defined(_AIX)
     using GridVariableBase::allocate; // Quiets PGI compiler warning about hidden virtual function...
 #endif
+
     virtual void allocate(const IntVector& lowIndex, const IntVector& highIndex);
       
     //////////
@@ -164,25 +165,26 @@ WARNING
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
     }
 
-    virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h,
-                         ProblemSpecP /*varnode*/)
+    virtual bool emitRLE(std::ostream& out, const IntVector& l, const IntVector& h, ProblemSpecP /*varnode*/)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if(td->isFlat()){
+      if(td->isFlat()) {
         SCIRun::RunLengthEncoder<T> rle(typename Array3<T>::iterator(this, l),
                                         typename Array3<T>::iterator(this, h));
         rle.write(out);
       }
-      else
+      else {
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+      }
       return true;
     }
 
     virtual void readNormal(std::istream& in, bool swapBytes)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if(td->isFlat())
+      if (td->isFlat()) {
         Array3<T>::read(in, swapBytes);
+      }
       else
         SCI_THROW(InternalError("Cannot yet read non-flat objects!\n", __FILE__, __LINE__));
     }
@@ -190,22 +192,27 @@ WARNING
     virtual void readRLE(std::istream& in, bool swapBytes, int nByteMode)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
-      if(td->isFlat()){
+      if (td->isFlat()) {
         SCIRun::RunLengthEncoder<T> rle(in, swapBytes, nByteMode);
         rle.copyOut(Array3<T>::begin(), Array3<T>::end());
       }
-      else
+      else {
         SCI_THROW(InternalError("Cannot yet write non-flat objects!\n", __FILE__, __LINE__));
+      }
     }
 
     virtual RefCounted* getRefCounted() { return this->getWindow(); }
 
+
   protected:
     GridVariable(const GridVariable<T>& copy) : Array3<T>(copy) {}
    
+
   private:
     GridVariable(Array3Window<T>* window)
-      : Array3<T>(window) {}
+      : Array3<T>(window)
+    {}
+
     GridVariable<T>& operator=(const GridVariable<T>&);
   };
 
@@ -214,8 +221,9 @@ template<class T>
   GridVariable<T>::copyPointer(Variable& copy)
   {
     GridVariable<T>* c = dynamic_cast<GridVariable<T>* >(&copy);
-    if(!c)
+    if(!c) {
       SCI_THROW(TypeMismatchException("Type mismatch in Grid variable", __FILE__, __LINE__));
+    }
     copyPointer(*c);
   }
 
@@ -223,8 +231,9 @@ template<class T>
   const GridVariable<T>& GridVariable<T>::castFromBase(const GridVariableBase* srcptr)
   {
     const GridVariable<T>* c = dynamic_cast<const GridVariable<T>* >(srcptr);
-    if(!c)
+    if(!c) {
       SCI_THROW(TypeMismatchException("Type mismatch in CC variable", __FILE__, __LINE__));
+    }
     return *c;
   }
 
@@ -232,17 +241,17 @@ template<class T>
   void GridVariable<T>::allocate( const IntVector& lowIndex,
                                   const IntVector& highIndex )
   {
-    if(this->getWindow())
-      SCI_THROW(InternalError("Allocating a Gridvariable that "
-                          "is apparently already allocated!", __FILE__, __LINE__));
+    if(this->getWindow()) {
+      SCI_THROW(InternalError("Allocating a Gridvariable that is apparently already allocated!", __FILE__, __LINE__));
+    }
     this->resize(lowIndex, highIndex);
   }
 
   template<class T>
   void
   GridVariable<T>::copyPatch(const GridVariable<T>& src,
-                           const IntVector& lowIndex,
-                           const IntVector& highIndex)
+                             const IntVector& lowIndex,
+                             const IntVector& highIndex)
   {
     if (this->getWindow()->getData() == src.getWindow()->getData() &&
         this->getWindow()->getOffset() == src.getWindow()->getOffset()) {
@@ -263,7 +272,7 @@ template<class T>
   template<class T>
   void
   GridVariable<T>::getSizes(IntVector& low, IntVector& high, 
-                          IntVector& siz) const
+                            IntVector& siz) const
   {
     low = this->getLowIndex();
     high = this->getHighIndex();
@@ -273,15 +282,14 @@ template<class T>
   template<class T>
   void
   GridVariable<T>::getSizes(IntVector& low, IntVector& high,
-                          IntVector& dataLow, IntVector& siz,
-                          IntVector& strides) const
+                            IntVector& dataLow, IntVector& siz,
+                            IntVector& strides) const
   {
-    low=this->getLowIndex();
-    high=this->getHighIndex();
+    low = this->getLowIndex();
+    high = this->getHighIndex();
     dataLow = this->getWindow()->getOffset();
-    siz=this->size();
-    strides = IntVector(sizeof(T), (int)(sizeof(T)*siz.x()),
-                        (int)(sizeof(T)*siz.y()*siz.x()));
+    siz = this->size();
+    strides = IntVector(sizeof(T), (int)(sizeof(T) * siz.x()), (int)(sizeof(T) * siz.y() * siz.x()));
   }
 
 } // end namespace Uintah

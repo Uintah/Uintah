@@ -79,7 +79,9 @@ UINTAH_REGISTER_TAG(Pool);
 // Add custom tags here (printed out in the order registered)
 UINTAH_REGISTER_TAG(CommList);
 UINTAH_REGISTER_TAG(PackedBuffer);
-UINTAH_REGISTER_TAG(GridVariable);
+UINTAH_REGISTER_TAG(CCVariable);
+UINTAH_REGISTER_TAG(Array3);
+UINTAH_REGISTER_TAG(Array3Data);
 
 }}} // end namspace Uintah::Tags
 
@@ -100,7 +102,7 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
     std::vector<unsigned long long> local_high_water;
     std::vector<std::string> tag_names;
 
-    for (const auto & base : Impl::TagBase::s_tags) {
+    for (auto && base : Impl::TagBase::s_tags) {
       if (Impl::MallocStats::is_tag_enabled(base)) {
         Impl::TagData d = base->data();
         tag_names.push_back(d.name);

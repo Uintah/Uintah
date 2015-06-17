@@ -90,40 +90,44 @@ UINTAH_CREATE_TAG(Pool);
 // create custom tags here
 UINTAH_CREATE_TAG(CommList);
 UINTAH_CREATE_TAG(PackedBuffer);
-UINTAH_CREATE_TAG(GridVariable);
+UINTAH_CREATE_TAG(CCVariable);
+UINTAH_CREATE_TAG(Array3);
+UINTAH_CREATE_TAG(Array3Data);
 
 }} // end namspace Uintah::Tags
 
 namespace Uintah {
 
+template < typename T, typename Tag, template< typename > class BaseAllocator >
+using TrackingAllocator = Lockfree::TrackingAllocator< T, Tag, BaseAllocator >;
 
 namespace Impl {
 
 template < typename T >
-using MMapAllocator = Lockfree::TrackingAllocator<   T
-                                                   , Tags::Global
-                                                   , Lockfree::MMapAllocator
-                                                 >;
+using MMapAllocator = TrackingAllocator<   T
+                                         , Tags::Global
+                                         , Lockfree::MMapAllocator
+                                       >;
 
 template < typename T >
-using MallocAllocator = Lockfree::TrackingAllocator<   T
-                                                     , Tags::Global
-                                                     , Lockfree::MallocAllocator
-                                                   >;
+using MallocAllocator = TrackingAllocator<   T
+                                           , Tags::Global
+                                           , Lockfree::MallocAllocator
+                                         >;
 } // end namespace Impl
 
 
 template < typename T >
-using MMapAllocator = Lockfree::TrackingAllocator<   T
-                                                   , Tags::MMap
-                                                   , Impl::MMapAllocator
-                                                 >;
+using MMapAllocator = TrackingAllocator<   T
+                                         , Tags::MMap
+                                         , Impl::MMapAllocator
+                                       >;
 
 template < typename T >
-using MallocAllocator = Lockfree::TrackingAllocator<   T
-                                                     , Tags::Malloc
-                                                     , Impl::MallocAllocator
-                                                   >;
+using MallocAllocator = TrackingAllocator<   T
+                                           , Tags::Malloc
+                                           , Impl::MallocAllocator
+                                         >;
 
 namespace Impl {
 
@@ -135,10 +139,10 @@ using PoolAllocator = Lockfree::PoolAllocator<   T
 } // end Impl namespace
 
 template < typename T >
-using PoolAllocator = Lockfree::TrackingAllocator<   T
-                                                   , Tags::Pool
-                                                   , Impl::PoolAllocator
-                                                 >;
+using PoolAllocator = TrackingAllocator<   T
+                                         , Tags::Pool
+                                         , Impl::PoolAllocator
+                                       >;
 
 
 //----------------------------------------------------------------------------------
