@@ -283,7 +283,7 @@ Parallel::initializeManager(int& argc, char**& argv)
     worldRank_  = 0;
     MallocAllocator<ProcessorGroup> allocator;
     rootContext_ = allocator.allocate(1);
-    allocator.construct(rootContext_, nullptr, nullptr, false, 0, 1, 0);
+    allocator.construct(rootContext_, nullptr, (MPI_Comm)(0), false, 0, 1, 0);
   }
 }
 
