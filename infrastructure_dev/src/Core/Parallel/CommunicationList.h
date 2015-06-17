@@ -159,17 +159,15 @@ using RecvCommNode = CommNode<RecvHandle>;
 
 template < typename T >
 using TrackingListPoolAllocator = Lockfree::TrackingAllocator<   T
-                                                               , Uintah::PoolAllocator
                                                                , CommListTag
-                                                               , false    // don't track globally
+                                                               , Uintah::PoolAllocator
                                                              >;
 
 template < typename T >
 using TrackingListMallocAllocator = Lockfree::TrackingAllocator<   T
-                                                               , Uintah::MallocAllocator
-                                                               , CommListTag
-                                                               , false    // don't track globally
-                                                             >;
+                                                                 , CommListTag
+                                                                 , Uintah::MallocAllocator
+                                                               >;
 
 
 using SendCommList = Lockfree::UnorderedList<  SendCommNode

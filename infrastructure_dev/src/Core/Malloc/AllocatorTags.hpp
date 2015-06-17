@@ -32,6 +32,26 @@ struct MallocStats
 
 namespace Uintah {
 
+struct GlobalTag
+{
+    static constexpr const char* const name() { return "Global"; }
+};
+
+namespace Impl {
+
+template < typename T >
+using MMapAllocator = Lockfree::TrackingAllocator<   T
+                                                   , GlobalTag
+                                                   , Lockfree::MMapAllocator
+                                                 >;
+
+template < typename T >
+using MallocAllocator = Lockfree::TrackingAllocator<   T
+                                                     , GlobalTag
+                                                     , Lockfree::MallocAllocator
+                                                   >;
+} // end namespace Impl
+
 struct MMapTag
 {
     static constexpr const char* const name() { return "MMap"; }
@@ -49,32 +69,28 @@ struct PoolTag
 
 template < typename T >
 using MMapAllocator = Lockfree::TrackingAllocator<   T
-                                                   , Lockfree::MMapAllocator
                                                    , MMapTag
-                                                   , true
+                                                   , Impl::MMapAllocator
                                                  >;
 
 template < typename T >
 using MallocAllocator = Lockfree::TrackingAllocator<   T
-                                                     , Lockfree::MallocAllocator
                                                      , MallocTag
-                                                     , true
+                                                     , Impl::MallocAllocator
                                                    >;
 namespace Impl {
 
 template < typename T >
 using PoolAllocator = Lockfree::PoolAllocator<   T
-                                               , MMapAllocator
-                                               , MallocAllocator
+                                               , Uintah::MMapAllocator
+                                               , Uintah::MallocAllocator
                                              >;
-
-}
+} // end Impl namespace
 
 template < typename T >
 using PoolAllocator = Lockfree::TrackingAllocator<   T
-                                                   , Impl::PoolAllocator
                                                    , PoolTag
-                                                   , false
+                                                   , Impl::PoolAllocator
                                                  >;
 
 struct CommListTag
@@ -92,8 +108,7 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root = 0);
 
 template < typename T > using TagStats = Lockfree::TagStats< T >;
 
-using GlobalStats = Lockfree::TagStats<>;
-
+using GlobalStats = Lockfree::TagStats<GlobalTag>;
 
 } // end namespace Uintah
 

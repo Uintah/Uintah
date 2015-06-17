@@ -7,15 +7,12 @@
 #include <memory>
 #include <type_traits>
 #include <iostream>
-#include <utility>
-#include <cstdlib>
 
 
 namespace Lockfree {
 
-struct GlobalTag { static constexpr const char * const name() { return "Global"; } };
 
-template < typename Tag = GlobalTag >
+template < typename Tag >
 class TagStats
 {
   static constexpr size_t one  = 1;
@@ -83,9 +80,8 @@ std::ostream & operator<<(std::ostream & out, TagStats<Tag> const& stats)
 }
 
 template <   typename T
+           , typename Tag
            , template < typename > class BaseAllocator = std::allocator
-           , typename Tag = GlobalTag
-           , bool CallGlobal = !std::is_same<GlobalTag, Tag>::value
          >
 class TrackingAllocator
 {
@@ -94,8 +90,6 @@ class TrackingAllocator
 public:
 
   using tag = Tag;
-  using global_tag = GlobalTag;
-  static constexpr bool call_global = CallGlobal;
 
   using size_type       = typename base_allocator_type::size_type;
   using difference_type = typename base_allocator_type::difference_type;
@@ -109,9 +103,8 @@ public:
   struct rebind
   {
     using other = TrackingAllocator<  U
-                                    , BaseAllocator
                                     , Tag
-                                    , CallGlobal
+                                    , BaseAllocator
                                    >;
   };
 
@@ -145,18 +138,12 @@ public:
   pointer allocate( size_type n, void * hint = nullptr)
   {
     TagStats<tag>::allocate(n*sizeof(value_type));
-    if (call_global) {
-      TagStats<global_tag>::allocate(n*sizeof(value_type));
-    }
     return m_base_allocator.allocate(n, hint);
   }
 
   void deallocate( pointer ptr, size_type n )
   {
     TagStats<tag>::deallocate(ptr, n*sizeof(value_type));
-    if (call_global) {
-      TagStats<global_tag>::deallocate(ptr, n*sizeof(value_type));
-    }
     m_base_allocator.deallocate(ptr, n);
   }
 
