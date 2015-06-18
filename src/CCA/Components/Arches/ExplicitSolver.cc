@@ -1321,7 +1321,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                           drhodt[idx]/vol; 
 
           //adding the mass sources to the residual
-          for (int iii=0; iii < d_mass_sources.size(); iii++){ 
+          for (unsigned int iii=0; iii < d_mass_sources.size(); iii++){ 
             residual[idx] -= mass_srcs[iii][idx]; 
           }
 
