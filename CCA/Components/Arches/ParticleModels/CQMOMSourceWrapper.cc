@@ -324,15 +324,13 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
                 double product = 1.0;
                 for (int m = 0; m < M; m++ ) { //loop each internal coordinate
                   if ( m != nIC[s] ) {
-//                    for ( int j = 0; j < temp_moment_index[m]; j++ ) {
-//                      product *= temp_abscissas[i + _N * m];
-//                    }
-                    product *= pow( temp_abscissas[i + _N * m], temp_moment_index[m] );
+                    for ( int j = 0; j < temp_moment_index[m]; j++ ) {
+                      product *= temp_abscissas[i + _N * m];
+                    }
                   } else {
-//                    for ( int j = 0; j < temp_moment_index[m]-1; j++ ) {
-//                      product *= temp_abscissas[i + _N * m];
-//                    }
-                    product *= pow( temp_abscissas[i + _N * m], temp_moment_index[m]-1 );
+                    for ( int j = 0; j < temp_moment_index[m]-1; j++ ) {
+                      product *= temp_abscissas[i + _N * m];
+                    }
                   }
                 }
                 product *= temp_weights[i] * temp_sources[i + s * _N];
