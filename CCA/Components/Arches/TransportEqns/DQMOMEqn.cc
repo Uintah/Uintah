@@ -198,7 +198,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
 
-  int Nqn = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
+  unsigned int Nqn = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
 
   if ( Nqn != d_scalingConstant.size() ){ 
     throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);

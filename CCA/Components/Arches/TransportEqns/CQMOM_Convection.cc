@@ -244,7 +244,6 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
   for (int p=0; p < patches->size(); p++) {
     
     Ghost::GhostType  gac = Ghost::AroundCells;
-    Ghost::GhostType  gn  = Ghost::None;
     
     const Patch* patch = patches->get(p);
     int archIndex = 0;
