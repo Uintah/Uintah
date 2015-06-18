@@ -218,8 +218,8 @@ namespace Uintah{
     double d_convWeightLimit;      //the minimum value for a calculated weight to be to actually compute convection, this helps limit bad abscissa
     
     Convection_CQMOM * d_cqmomConv; //class for cqmom-specific convection
-    
-    std::vector<CQMOMSourceWrapper* > d_sources;
+        
+    std::vector<const VarLabel *> d_sourceLabels; //list of needed source labels
   }; // class CQMOMEqn
 } // namespace Uintah
 

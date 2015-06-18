@@ -81,9 +81,6 @@ CQMOMEqn::~CQMOMEqn()
   VarLabel::destroy(d_FconvYLabel);
   VarLabel::destroy(d_FconvZLabel);
   delete d_cqmomConv;
-  for (unsigned int i = 0; i < d_sources.size(); i++ ) {
-    delete d_sources[i];
-  }
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -188,13 +185,14 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       
       m_db->getAttribute("label",model_name);
       source_label = d_eqnName + "_" + model_name + "_src";
-      proc0cout << "Creating source label: " << source_label << endl;
-      CQMOMSourceWrapper * cqmomSource;
-      cqmomSource =  scinew CQMOMSourceWrapper(d_fieldLabels, source_label, momentIndex, nIC) ;
-      cqmomSource->problemSetup( m_db );
-      d_sources.push_back(cqmomSource);
+//      proc0cout << "Finding source label: " << source_label;
+      
+      const VarLabel * tempLabel;
+      tempLabel = VarLabel::find( source_label );
+      d_sourceLabels.push_back( tempLabel );
     }
   }
+  
   // Clipping:
   clip.activated = false;
   clip.do_low  = false;
@@ -323,10 +321,6 @@ CQMOMEqn::sched_initializeVariables( const LevelP& level, SchedulerP& sched )
     tsk->computes(d_FconvLabel);
   }
   
-  for (std::vector<CQMOMSourceWrapper* >::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
-    (*iter)->sched_initializeVariables( level, sched );
-  }
-  
   //Old
   tsk->requires(Task::OldDW, d_transportVarLabel, gn, 0);
   sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
@@ -393,11 +387,9 @@ CQMOMEqn::sched_computeSources( const LevelP& level, SchedulerP& sched, int time
   string taskname = "CQMOMEqn::computeSources";
   Task* tsk = scinew Task(taskname, this, &CQMOMEqn::computeSources);
   
-  // This scheduler only calls other schedulers
-  for (vector<CQMOMSourceWrapper* >::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
-    const VarLabel * temp_src = (*iter)->getSourceLabel( );
-    tsk->requires(Task::NewDW, temp_src, Ghost::None, 0);
-    (*iter)->sched_buildSourceTerm( level, sched, timeSubStep );
+  for ( unsigned int i = 0; i < d_sourceLabels.size(); i++ ) {
+    const VarLabel* tempLabel = d_sourceLabels[i];
+    tsk->requires( Task::NewDW, tempLabel, Ghost::None, 0 );
   }
   
   if (timeSubStep == 0) {
@@ -434,9 +426,9 @@ CQMOMEqn::computeSources( const ProcessorGroup* pc,
     
     totalSource.initialize(0.0);
     
-    for (vector<CQMOMSourceWrapper* >::iterator iter = d_sources.begin(); iter != d_sources.end(); iter++){
+    for ( unsigned int i = 0; i < d_sourceLabels.size(); i++) {
       constCCVariable<double> thisSrc;
-      const VarLabel* temp_src = (*iter)->getSourceLabel( );
+      const VarLabel* temp_src = d_sourceLabels[i];
       new_dw->get(thisSrc, temp_src, matlIndex, patch, gn, 0);
     
       for (CellIterator citer=patch->getCellIterator(); !citer.done(); citer++){
