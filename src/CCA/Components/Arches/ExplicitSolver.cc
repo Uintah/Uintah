@@ -522,11 +522,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( d_doCQMOM ) {
       bool doOperatorSplit;
       bool doPartVel;
+      bool doSourceTerms;
       
       doOperatorSplit = d_cqmomSolver->getOperatorSplitting();
       doPartVel = d_cqmomSolver->getPartVel();
+      doSourceTerms = d_cqmomSource->getAddSources();
       CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
       
+      if ( doSourceTerms ) {
+        if (curr_level == 0)
+          d_cqmomSource->sched_initializeVariables( level, sched );
+        d_cqmomSource->sched_buildSourceTerm( level, sched, curr_level );
+      }
+
       if (!doOperatorSplit) {
       //Evaluate CQMOM equations
         if (doPartVel) {

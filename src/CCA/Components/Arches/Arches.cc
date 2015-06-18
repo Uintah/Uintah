@@ -55,7 +55,7 @@
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/CQMOM_Convection.h>
-
+#include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
 
 #include <CCA/Components/Arches/PropertyModels/PropertyModelBase.h>
 #include <CCA/Components/Arches/PropertyModels/PropertyModelFactory.h>
@@ -223,6 +223,7 @@ Arches::~Arches()
   if (d_doCQMOM) {
     delete d_cqmomSolver;
     delete d_cqmomConvect;
+    delete d_cqmomSource;
   }
   releasePort("solver");
 
@@ -696,22 +697,20 @@ Arches::problemSetup(const ProblemSpecP& params,
   ProblemSpecP cqmom_db = db->findBlock("CQMOM");
   if (cqmom_db) {
     d_doCQMOM = true;
-    // require that we have weighted or unweighted explicitly specified as an attribute to CQMOM
     cqmom_db->getAttribute( "partvel", d_usePartVel );
    
+    //set up source terms and pass to explicit solver
+    d_cqmomSource = scinew CQMOMSourceWrapper( d_lab );
+    d_cqmomSource->problemSetup( cqmom_db );
+    d_nlSolver->setCQMOMSource( d_cqmomSource );
+    
     //register all equations.
     Arches::registerCQMOMEqns(cqmom_db);
-    
-    //register all models/srcs
-//    CoalModelFactory& model_factory = CoalModelFactory::self();
-//    model_factory.problemSetup(cqmom_db);
-//    Arches::registerModels(cqmom_db);
   
     // initialze all CQMOM equations and call their respective problem setups.
     CQMOMEqnFactory& eqn_factory = CQMOMEqnFactory::self();
     const int numMoments = eqn_factory.get_number_moments();
     proc0cout << "Feeding these " << numMoments << " eqns into CQMOM Eqn Factory" << endl;
-//    model_factory.setArchesLabel( d_lab );
     
     int M;
     cqmom_db->get("NumberInternalCoordinates",M);
@@ -740,18 +739,6 @@ Arches::problemSetup(const ProblemSpecP& params,
       CQMOMEqn& moment = dynamic_cast<CQMOMEqn&>(a_moment);
       moment.problemSetup( db_moments );
     }
-    
-    // Now go through models and initialize all defined models and call
-    // their respective problemSetup
-//    ProblemSpecP models_db = cqmom_db->findBlock("Models");
-//    if (models_db) {
-//      for (ProblemSpecP m_db = models_db->findBlock("model"); m_db != 0; m_db = m_db->findNextBlock("model")){
-//        std::string model_name;
-//        m_db->getAttribute("label", model_name);
-//        for (int i = 0; i < nMoments; i++){
-//        }
-//      }
-//    }
     
     // set up the linear solver:
     d_cqmomSolver = scinew CQMOM( d_lab, d_usePartVel );
