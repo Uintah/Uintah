@@ -22,10 +22,14 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
-#include <sci_defs/papi_defs.h> // for PAPI performance counters
-
 #include <CCA/Components/SimulationController/SimulationController.h>
+
+#include <CCA/Ports/LoadBalancer.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/ProblemSpecInterface.h>
+#include <CCA/Ports/Regridder.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SimulationInterface.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/PapiInitializationError.h>
@@ -44,12 +48,7 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
 
-#include <CCA/Ports/LoadBalancer.h>
-#include <CCA/Ports/Output.h>
-#include <CCA/Ports/ProblemSpecInterface.h>
-#include <CCA/Ports/Regridder.h>
-#include <CCA/Ports/Scheduler.h>
-#include <CCA/Ports/SimulationInterface.h>
+#include <sci_defs/papi_defs.h> // for PAPI performance counters
 
 #include <cstring>
 #include <fstream>

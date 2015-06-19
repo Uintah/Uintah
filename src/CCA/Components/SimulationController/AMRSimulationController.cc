@@ -22,9 +22,6 @@
  * IN THE SOFTWARE.
  */
 
-#include <sci_defs/malloc_defs.h>
-#include <sci_defs/gperftools_defs.h>
-
 #include <CCA/Components/SimulationController/AMRSimulationController.h>
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <CCA/Components/Regridder/PerPatchVars.h>
@@ -59,6 +56,8 @@
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Thread/Time.h>
+
+#include <sci_defs/gperftools_defs.h>
 
 #include <iostream>
 #include <iomanip>
@@ -256,7 +255,7 @@ AMRSimulationController::run()
 
      // printSimulationStats( d_sharedState, delt, time );
 
-     if(log_dw_mem){
+     if(log_dw_mem) {
        // Remember, this isn't logged if DISABLE_SCI_MALLOC is set (So usually in optimized mode this will not be run.)
        d_scheduler->logMemoryUse();
 
@@ -274,7 +273,7 @@ AMRSimulationController::run()
      // Yes, I know this is kind of hacky, but this is the only way to
      // get a new grid from UdaReducer Needs to be done before
      // advanceDataWarehouse
-     if (d_reduceUda){
+     if (d_reduceUda) {
       currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
      }
 

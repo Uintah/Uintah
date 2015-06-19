@@ -147,24 +147,11 @@ Parallel::isInitialized()
   return initialized_;
 }
 
-
 void
 Parallel::determineIfRunningUnderMPI( int argc, char** argv )
 {
   if( determinedIfUsingMPI_ ) {
     return;
-  }
-  if( char * max = getenv( "PSE_MAX_THREADS" ) ){
-    numThreads_ = atoi( max );
-    // allowThreads_ = true;
-    cerr << "PSE_MAX_THREADS set to " << numThreads_ << "\n";
-
-    if( numThreads_ <= 0 || numThreads_ > 16 ){
-      // Empirical evidence points to 16 being the most threads
-      // that we should use... (this isn't conclusive evidence)
-      cerr << "PSE_MAX_THREADS is out of range 1..16\n";
-      throw InternalError( "PSE_MAX_THREADS is out of range 1..16\n", __FILE__, __LINE__ );
-    }
   }
 
   // Try to automatically determine if we are running under MPI (many MPIs set environment variables

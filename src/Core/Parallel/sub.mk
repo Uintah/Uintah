@@ -38,8 +38,7 @@ SRCS     += \
 	$(SRCDIR)/Parallel.cc                \
 	$(SRCDIR)/ProcessorGroup.cc          \
 	$(SRCDIR)/UintahParallelComponent.cc \
-	$(SRCDIR)/UintahParallelPort.cc      \
-	$(SRCDIR)/Vampir.cc
+	$(SRCDIR)/UintahParallelPort.cc
 
 PSELIBS := \
 	Core/Thread \
@@ -47,7 +46,7 @@ PSELIBS := \
 	Core/ProblemSpec \
 	Core/Util
 
-LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) 
+LIBS := $(XML2_LIBRARY) $(MPI_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

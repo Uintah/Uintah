@@ -380,10 +380,6 @@ DynamicLoader::DynamicLoader() :
   map_lock_.lock();
   algo_map_.clear();
   map_lock_.unlock();
-
-#ifdef _MSC_VER
-  set_vc_dirs();
-#endif
 }
 
 

@@ -83,17 +83,12 @@
 #include <Core/Util/FileUtils.h>
 
 #include <sci_defs/hypre_defs.h>
-#include <sci_defs/malloc_defs.h>
 #include <sci_defs/mpi_defs.h>
 #include <sci_defs/uintah_defs.h>
 #include <sci_defs/visit_defs.h>
 #include <sci_defs/cuda_defs.h>
 
 #include <svn_info.h>
-
-#ifdef USE_VAMPIR
-#  include <Core/Parallel/Vampir.h>
-#endif
 
 #ifdef HAVE_VISIT
 #  include <VisIt/libsim/visit_libsim.h>
@@ -203,26 +198,7 @@ usage(const std::string& message, const std::string& badarg, const std::string& 
 void
 sanityChecks()
 {
-#if defined( DISABLE_SCI_MALLOC )
-  if (getenv("MALLOC_STATS")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STATS set, but  --enable-sci-malloc was not configured...\n");
-    printf("ERROR:\n\n");
-    Thread::exitAll(1);
-  }
-  if (getenv("MALLOC_TRACE")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_TRACE set, but  --enable-sci-malloc was not configured...\n");
-    printf("ERROR:\n\n");
-    Thread::exitAll(1);
-  }
-  if (getenv("MALLOC_STRICT")) {
-    printf("\nERROR:\n");
-    printf("ERROR: Environment variable MALLOC_STRICT set, but --enable-sci-malloc  was not configured...\n");
-    printf("ERROR:\n\n");
-    Thread::exitAll(1);
-  }
-#endif
+  // need sanity checks for new allocator approach
 }
 
 void
@@ -478,10 +454,6 @@ main( int argc, char *argv[] )
   if (!Uintah::Parallel::usingMPI()) {
   }
 
-  #ifdef USE_VAMPIR
-  VTsetup();
-  #endif
-
   char * start_addr = (char*)sbrk(0);
 
 #if defined(__SGI__)
@@ -573,21 +545,22 @@ main( int argc, char *argv[] )
     //__________________________________
     // Read input file
     ProblemSpecP ups;
-//    try {
-      ups = ProblemSpecReader().readInputFile( filename, validateUps );
-//    }
-//    catch( ... ) {
-//      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
-//      // instead of a UPS file.
-//      proc0cout   << "\n";
-//      proc0cout   << "ERROR - Failed to parse UPS file: " << filename << ".\n";
-//      if( validDir( filename ) ) {
-//        proc0cout << "ERROR - Note: '" << filename << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
-//      }
-//      proc0cout   << "\n";
-//      Uintah::Parallel::finalizeManager();
-//      Thread::exitAll( 0 );
-//    }
+    try {
+      ups = ProblemSpecReader().readInputFile(filename, validateUps);
+    }
+    catch (...) {
+      // Bulletproofing.  Catches the case where a user accidentally specifies a UDA directory
+      // instead of a UPS file.
+      proc0cout << "\n";
+      proc0cout << "ERROR - Failed to parse UPS file: " << filename << ".\n";
+      if (validDir(filename)) {
+        proc0cout << "ERROR - Note: '" << filename
+                  << "' is a directory! Did you mistakenly specify a UDA instead of an UPS file?\n";
+      }
+      proc0cout << "\n";
+      Uintah::Parallel::finalizeManager();
+      Thread::exitAll(0);
+    }
 
     if( onlyValidateUps ) {
       std::cout << "\nValidation of .ups File finished... good bye.\n\n";
@@ -609,7 +582,6 @@ main( int argc, char *argv[] )
     if(reduce_uda){
       do_AMR = false;
     }
-
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
 
@@ -694,7 +666,6 @@ main( int argc, char *argv[] )
     if (emit_graphs) {
       sched->doEmitTaskGraphDocs();
     }
-
 
     //__________________________________
     // Start the simulation controller
@@ -786,8 +757,7 @@ main( int argc, char *argv[] )
   /*
    * Finalize MPI
    */
-  Uintah::Parallel::finalizeManager( thrownException ?
-                                        Uintah::Parallel::Abort : Uintah::Parallel::NormalShutdown);
+  Uintah::Parallel::finalizeManager( thrownException ? Uintah::Parallel::Abort : Uintah::Parallel::NormalShutdown);
 
   if (thrownException) {
     if( Uintah::Parallel::getMPIRank() == 0 ) {

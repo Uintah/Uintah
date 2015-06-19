@@ -1870,7 +1870,7 @@ void Ray::computeCellType( const ProcessorGroup*,
       
       Point pos = level->getCellPosition(cur);           // position could be outside of domain
       in_domain = domain_BB.inside(pos);
-      //in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L resullts
+//      in_domain = (cellType[L][cur] == d_flowCell);    // use this when direct comparison with 1L results
 
       bool ray_outside_ROI    = ( containsCell( fineLevel_ROI_Lo, fineLevel_ROI_Hi, cur, dir ) == false );
       bool ray_outside_Region = ( containsCell( regionLo[L], regionHi[L], cur, dir ) == false );

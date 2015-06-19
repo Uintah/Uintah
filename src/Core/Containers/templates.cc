@@ -38,7 +38,8 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 
-using namespace SCIRun;
+namespace SCIRun {
+
 
 template class Array1<int>;
 template class Array1<double>;
@@ -47,3 +48,4 @@ template class Array2<int>;
 template class Array2<double>;
 
 
+} // end namespace SCIRun

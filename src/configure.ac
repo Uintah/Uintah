@@ -258,13 +258,6 @@ SCI_ARG_WITH(blas,
    sci_required_blas=yes],
   [with_blas=""])
   
-SCI_ARG_WITH(electric_fence,
-  AC_HELP_STRING(--with-electric-fence=DIR,
-                 Use Electric Fence (Memory Tracking) library in DIR),
-  [with_electric_fence="$withval"
-   sci_required_electric_fence=yes],
-  [with_electric_fence=""])
-  
 SCI_ARG_WITH(lapack,
   AC_HELP_STRING(--with-lapack=DIR, 
                  Use the lapack installation in DIR),
@@ -565,29 +558,11 @@ SCI_ARG_ENABLE(largesos,
   [largesos="$enableval"],
   [largesos=${largesos='no'}])
   
-SCI_ARG_ENABLE(sci-malloc,
-  AC_HELP_STRING(--enable-sci-malloc,
-                 Use SCI memory allocation/deallocation checks.  Note: you cannot use sci-malloc-trace at the same time.),
-  [enable_sci_malloc="$enableval"],
-  [enable_sci_malloc=${enable_sci_malloc='no'}])
-  
-SCI_ARG_WITH(MallocTrace,
-  AC_HELP_STRING(--with-MallocTrace=DIR,
-                 Use MallocTrace library.  Note: you cannot use sci-malloc at the same time.),
-  [with_malloc_trace="$withval"],
-  [with_malloc_trace=""])
-  
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3) (Where 0 turns off assertions, and 3 turns on all assertions.)),
   [enable_assertion_level="$enableval"],
   [enable_assertion_level=""])
-  
-SCI_ARG_ENABLE(new-line-numbers,
-  AC_HELP_STRING(--enable-new-line-numbers,
-                 Have SCI malloc store the file and line that calls 'new'),
-  [enable_new_line_numbers="yes"],
-  [enable_new_line_numbers="no"])
   
 SCI_ARG_ENABLE(throw-level,
   AC_HELP_STRING(--enable-throw-level=N,
@@ -677,10 +652,6 @@ if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
   BUILD_WASATCH=yes
   msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
   add_important_warning "$msg"
-fi
-
-if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
-   AC_MSG_ERROR( You cannot use both --with-MallocTrace and --enable-sci-malloc! )
 fi
 
 if test "$enable_rpath" = "no"; then
@@ -965,13 +936,6 @@ case $host in
         fi
 
 	SO_OR_ARCHIVE_EXTENSION=dylib
-
-        if test "$enable_sci_malloc" = "yes"; then
-           AC_MSG_ERROR(sci_malloc does not work under mac osx. Though you can try to use: --enable-sci-malloc=force)
-           enable_sci_malloc="no"
-        elif test "$enable_sci_malloc" = "force"; then
-           enable_sci_malloc="yes"
-        fi
 	;;
 	
      *)
@@ -994,36 +958,10 @@ fi
 
 LARGESOS=$largesos
 
-if test "$enable_sci_malloc" = "yes"; then
-  SCI_MALLOC_ON="yes"
-  DEF_MALLOC=""
-else
-  SCI_MALLOC_ON="no"
-  DEF_MALLOC="#define DISABLE_SCI_MALLOC 1"
-fi
-
-if test "$with_malloc_trace" ; then
-  if test "$IS_OSX" = "yes"; then
-      AC_MSG_ERROR(Malloc trace is not supported on Mac OSX...)
-  fi
-fi
-
-if test "$enable_new_line_numbers" = "yes"; then
-  DEF_MALLOC_LINENUMBERS="#define USE_TAG_LINENUM 1"
-else
-  DEF_MALLOC_LINENUMBERS=""
-fi
-
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(EXENAME)
 AC_SUBST(LARGESOS)
 AC_SUBST(TIME_IMPL)
-
-AC_SUBST(SCI_MALLOC_ON)
-AC_SUBST(DEF_MALLOC)
-AC_SUBST(DEF_MALLOC_LINENUMBERS)
-sci_defs_files="$sci_defs_files include/sci_defs/malloc_testdefs.h"
-
 AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(THROW_LEVEL)
 sci_defs_files="$sci_defs_files include/sci_defs/error_testdefs.h"
@@ -1842,8 +1780,10 @@ AC_TRY_COMPILE([#include <iostream>],
                 [have_cxx11=yes],
                 [have_cxx11=no])
 
-if test $have_cxx11 = no; then
+if test $have_cxx11 = yes; then
   AC_MSG_ERROR( [Must have a C++11 compliant compiler for Uintah] )
+else
+  CXXFLAGS="$CXXFLAGS -std=c++11"  
 fi   
 
 
@@ -2565,29 +2505,6 @@ if test "$with_fortran" = no; then
   msg="Though Fortran is not being used, assuming FORTRAN_UNDERSCORE=end for Core/Math/sci_lapack.cc..."
   add_important_warning "$msg"
 fi
-
-##  --  Electric Fence  -------------------------------------
-
-if test "$with_electric_fence"; then
-
-  if test "$with_electric_fence" = "yes"; then
-    SCI_TRY_LINK(ELECTRIC_FENCE,
-                 electric fence library,,,
-                 efence,
-                 ,,,
-                 required)
-  else
-    SCI_TRY_LINK(ELECTRIC_FENCE,
-                 electric fence library,,,
-                 efence,$with_electric_fence,
-                 ,,
-                 specific)
-  fi
-fi
-
-AC_SUBST(HAVE_ELECTRIC_FENCE)
-AC_SUBST(ELECTRIC_FENCE_LIB_FLAG)
-AC_SUBST(ELECTRIC_FENCE_LIB_DIR_FLAG)
 
 ##  --  search for acml (optimized blas/lapack) stuff  -------------------------------------
 

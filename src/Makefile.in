@@ -450,7 +450,7 @@ endif
 # Targets for regression testing...
 
 gold_standards :
-	@mkdir -p $(OBJTOP_ABS)/TestData;                                                                        \
+	@mkdir -p $(OBJTOP_ABS)/TestData;                                                                              \
          echo -n "Started at: "; date;                                                                           \
          cd $(OBJTOP_ABS)/TestData;                                                                              \
          components=`$(SRCTOP_ABS)/R_Tester/helpers/selectComponents.sh $(SRCTOP_ABS)/R_Tester`;                 \
@@ -458,7 +458,7 @@ gold_standards :
             export PYTHONPATH="$(SRCTOP_ABS)/R_Tester/toplevel:$(SRCTOP_ABS)/R_Tester";                          \
             $(SRCTOP_ABS)/R_Tester/toplevel/generateGoldStandards.py                                             \
                                                    -d $(IS_DEBUG) -b $(OBJTOP_ABS) -s $(SRCTOP_ABS) $$components \
-                                                   -m $(SCI_MALLOC_ON) -j $(MAKE_PARALLELISM) -v;                \
+                                                   -m -j $(MAKE_PARALLELISM) -v;                                 \
          fi;                                                                                                     \
          echo -n "Ended at: "; date
 
@@ -466,7 +466,7 @@ gold_standards :
 #  to execute the local regression tester
 runLocalRT:
 	@cd $(OBJTOP_ABS)
-	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS) $(IS_DEBUG) $(SCI_MALLOC_ON)
+	@$(SRCTOP)/R_Tester/toplevel/startLocalTest $(OBJTOP_ABS) $(SRCTOP_ABS) $(IS_DEBUG)
 
 
 ###############################################################################################
