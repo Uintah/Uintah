@@ -1775,15 +1775,15 @@ echo
 AC_MSG_CHECKING(for required c++11 compiler)
 echo
 
+CXXFLAGS="$CXXFLAGS -std=c++11"
+
 AC_TRY_COMPILE([#include <iostream>],
                 [int a; decltype(a) b; auto d = a; auto l = [](){};],
                 [have_cxx11=yes],
                 [have_cxx11=no])
 
-if test $have_cxx11 = yes; then
+if test $have_cxx11 = no; then
   AC_MSG_ERROR( [Must have a C++11 compliant compiler for Uintah] )
-else
-  CXXFLAGS="$CXXFLAGS -std=c++11"  
 fi   
 
 
