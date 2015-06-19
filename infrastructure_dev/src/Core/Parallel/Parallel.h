@@ -152,15 +152,11 @@ class Parallel {
       ~Parallel();
       Parallel& operator=( const Parallel& );
 
-//     static bool          allowThreads;
-
       static int             numThreads_;
       static bool            determinedIfUsingMPI_;
-
       static bool            initialized_;
       static bool            usingMPI_;
       static bool            usingDevice_;
-//      static MPI_Comm        worldComm_;
       static int             worldRank_;
       static int             worldSize_;
       static ProcessorGroup* rootContext_;

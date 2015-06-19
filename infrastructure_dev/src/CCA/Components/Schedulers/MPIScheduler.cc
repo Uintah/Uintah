@@ -31,7 +31,6 @@
 #include <CCA/Ports/Output.h>
 
 #include <Core/Parallel/ProcessorGroup.h>
-#include <Core/Parallel/Vampir.h>
 #include <Core/Grid/Variables/ParticleSubset.h>
 #include <Core/Grid/Variables/ComputeSet.h>
 #include <Core/Thread/Time.h>

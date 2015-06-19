@@ -266,10 +266,8 @@ SchedulerCommon::problemSetup( const ProblemSpecP     & prob_spec,
 {
   d_sharedState = state;
 
-  // Initializing trackingStartTime_ and trackingEndTime_ to default values
-  // so that we do not crash when running MALLOC_STRICT.
   trackingStartTime_ = 1;
-  trackingEndTime_ = 0;
+  trackingEndTime_   = 0;
   trackingVarsPrintLocation_ = PRINT_AFTER_EXEC;
 
   ProblemSpecP params = prob_spec->findBlock("Scheduler");

@@ -1,3 +1,27 @@
+/*
+ * The MIT License
+ *
+ * Copyright (c) 1997-2015 The University of Utah
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
 #include <Core/Malloc/AllocatorTags.hpp>
 #include <Core/Lockfree/Lockfree_TrackingAllocator.hpp>
 #include <Core/Parallel/Parallel.h>
@@ -29,7 +53,7 @@ std::vector<std::string> parse_string(std::string str)
   return std::move(results);
 }
 
-} // namespace
+} // end namespace
 
 namespace Uintah { namespace Impl {
 
@@ -41,7 +65,9 @@ const std::vector<std::string> MallocStats::s_malloc_stats = parse_string(getenv
 FILE* MallocStats::file()
 {
   if (s_malloc_stats.size() > 0u ) {
-    static FILE* fp = std::fopen(s_malloc_stats[0].c_str(), "w");
+    int comm_size = Parallel::getMPISize();
+    std::string filename = s_malloc_stats[0] + "." + std::to_string(comm_size);
+    static FILE* fp = std::fopen(filename.c_str(), "w");
     return fp;
   }
   return stdout;
@@ -139,7 +165,7 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
 
       // print global stats
       fprintf(   p_file
-               , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n              H0: %llu\n              H1: %llu\n              H2: %llu\n              H3: %llu\n"
+               , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n          <=64 B: %llu\n          <=4 KB: %llu\n         <=32 KB: %llu\n          >32 KB: %llu\n"
                , tag_names[0].c_str()
                , Lockfree::Impl::bytes_to_string(global_stats[0]).c_str()
                , Lockfree::Impl::bytes_to_string(global_high_water[0]).c_str()
@@ -154,7 +180,7 @@ void print_malloc_stats(MPI_Comm comm, int time_step, int root)
       // print tag stats
       for (size_t i = 1, n = tag_names.size(); i < n; ++i) {
         fprintf( p_file
-                , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n              H0: %llu\n              H1: %llu\n              H2: %llu\n              H3: %llu\n"
+                , "  %s:\n     total alloc: %s\n      high water: %s\n       #   alloc: %llu\n       # dealloc: %llu\n          <=64 B: %llu\n          <=4 KB: %llu\n         <=32 KB: %llu\n          >32 KB: %llu\n"
                 , tag_names[i].c_str()
                 , Lockfree::Impl::bytes_to_string(global_stats[7*i]).c_str()
                 , Lockfree::Impl::bytes_to_string(global_high_water[i]).c_str()
