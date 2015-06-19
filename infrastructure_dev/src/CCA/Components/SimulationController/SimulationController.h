@@ -46,7 +46,7 @@ class  LoadBalancer;
 class  Output;
 class  Regridder;
 class  SimulationInterface;
-struct SimulationTime;
+class SimulationTime;
 
 /**************************************
       
