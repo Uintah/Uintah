@@ -676,6 +676,7 @@ main(int argc, char** argv)
           
           Norms<int>* inorm       = scinew Norms<int>();
           Norms<double>* dnorm    = scinew Norms<double>();
+          Norms<float>*  fnorm    = scinew Norms<float>();
           Norms<Vector>* vnorm    = scinew Norms<Vector>();
           Norms<Stencil7>* s7norm = scinew Norms<Stencil7>();
           
@@ -685,6 +686,7 @@ main(int argc, char** argv)
           
           inorm->setNorms(0, 0, 0, 0);
           dnorm->setNorms(0, 0, 0, 0);
+          fnorm->setNorms(0, 0, 0, 0);
           vnorm->setNorms(  zeroV,  zeroV,  zeroV,  0);
           s7norm->setNorms( zeroS7, zeroS7, zeroS7, 0 ); 
                     
@@ -701,10 +703,14 @@ main(int argc, char** argv)
                     compareFields<CCVariable<int>,int>( inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<CCVariable<float>,float>(fnorm,da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    break;
+                  }
                   case Uintah::TypeDescription::double_type:{
                     compareFields<CCVariable<double>,double>(dnorm,da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
-                  }               
+                  }             
                   case Uintah::TypeDescription::Vector:{
                     compareFields<CCVariable<Vector>,Vector>(vnorm,da1, da2, var, matl, patch, cellToPatchMap2, t);  
                     break;
@@ -723,6 +729,10 @@ main(int argc, char** argv)
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
                     compareFields<NCVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<NCVariable<float>,float>(fnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
@@ -745,6 +755,10 @@ main(int argc, char** argv)
                     compareFields<SFCXVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<SFCXVariable<float>,float>(fnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    break;
+                  }
                   case Uintah::TypeDescription::double_type:{
                     compareFields<SFCXVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
@@ -761,6 +775,10 @@ main(int argc, char** argv)
                     compareFields<SFCYVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
                     break;
                   }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<SFCYVariable<float>,float>(fnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    break;
+                  }
                   case Uintah::TypeDescription::double_type:{
                     compareFields<SFCYVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
@@ -775,6 +793,10 @@ main(int argc, char** argv)
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
                     compareFields<SFCZVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<SFCZVariable<float>,float>(fnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
@@ -795,7 +817,11 @@ main(int argc, char** argv)
           if (inorm->get_n() > 0){        // integers     
             inorm->printNorms(); 
             inorm->outputNorms(time1, filename);      
-          }                            
+          }
+          if (fnorm->get_n() > 0){        // floats
+            fnorm->printNorms();
+            fnorm->outputNorms(time1, filename);      
+          }                       
           if (dnorm->get_n() > 0){        // doubles
             dnorm->printNorms();
             dnorm->outputNorms(time1, filename);      
@@ -808,7 +834,8 @@ main(int argc, char** argv)
             s7norm->printNormsS7();
             s7norm->outputNorms(time1, filename);   
           }                           
-          delete inorm;                
+          delete inorm; 
+          delete fnorm;               
           delete dnorm;                
           delete vnorm;
           delete s7norm;
