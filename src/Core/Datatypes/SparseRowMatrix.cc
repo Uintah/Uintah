@@ -281,7 +281,7 @@ SparseRowMatrix::transpose() const
     }
   }
 
-  delete at;
+  delete[] at;
   return t;
 }
 
@@ -326,7 +326,7 @@ SparseRowMatrix::transpose()
     }
   }
 
-  delete at;
+  delete[] at;
   return t;
 }
 
