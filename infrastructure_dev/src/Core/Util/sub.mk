@@ -40,7 +40,6 @@ SRCS += \
         $(SRCDIR)/sci_system.cc             \
         $(SRCDIR)/SizeTypeConvert.cc        \
         $(SRCDIR)/Signals.cc                \
-        $(SRCDIR)/Socket.cc                 \
         $(SRCDIR)/soloader.cc               \
         $(SRCDIR)/StringUtil.cc             \
         $(SRCDIR)/ThreadSafeDebugStream.cc  \

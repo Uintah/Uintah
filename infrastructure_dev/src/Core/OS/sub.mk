@@ -40,7 +40,6 @@ ifeq ($(HAVE_BOOST),yes)
 else
    SRCS += $(SRCDIR)/Dir.cc
 endif
-   SRCS += $(SRCDIR)/sock.cc
 
 
 PSELIBS := Core/Exceptions
