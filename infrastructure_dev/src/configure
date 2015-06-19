@@ -8406,6 +8406,8 @@ echo
 $as_echo_n "checking for required c++11 compiler... " >&6; }
 echo
 
+CXXFLAGS="$CXXFLAGS -std=c++11"
+
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <iostream>
@@ -8424,10 +8426,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 
-if test $have_cxx11 = yes; then
+if test $have_cxx11 = no; then
   as_fn_error $? "Must have a C++11 compliant compiler for Uintah " "$LINENO" 5
-else
-  CXXFLAGS="$CXXFLAGS -std=c++11"
 fi
 
 
