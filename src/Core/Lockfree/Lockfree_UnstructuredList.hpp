@@ -1,10 +1,11 @@
-#ifndef LOCKFREE_UNORDERED_LIST
-#define LOCKFREE_UNORDERED_LIST
+#ifndef LOCKFREE_UNSTRUCTURED_LIST
+#define LOCKFREE_UNSTRUCTURED_LIST
+
+#include "impl/Lockfree_Macros.hpp"
+#include "impl/Lockfree_UnstructuredNode.hpp"
 
 #include "Lockfree_UsageModel.hpp"
 
-#include "impl/Lockfree_Macros.hpp"       // for LOCKFREE_ENABLE_CXX11
-#include "impl/Lockfree_UnorderedNode.hpp"
 
 #include <array>
 #include <memory> // for std::allocator
@@ -18,32 +19,29 @@ namespace Lockfree {
 template <  typename T
           , UsageModel Model = SHARED_INSTANCE
           , template <typename> class Allocator = std::allocator
-          , template <typename> class SizeTypeAllocator = Allocator
-          , typename SizeType = uint64_t
+          , template <typename> class SizeTypeAllocator = std::allocator
           , typename BitsetType = uint64_t
           , int Alignment = 16
          >
-class UnorderedList
+class UnstructuredList
 {
-  static_assert( std::is_integral<SizeType>::value, "ERROR: SizeType must be an integer type!" );
 public:
-  using size_type = SizeType;
+  using size_type = size_t;
   using value_type = T;
   using bitset_type = BitsetType;
   static constexpr int alignment = Alignment;
   static constexpr UsageModel usage_model = Model;
   template <typename U> using allocator = Allocator<U>;
 
-  using list_type = UnorderedList<  T
+  using list_type = UnstructuredList<  T
                                   , Model
                                   , Allocator
                                   , SizeTypeAllocator
-                                  , SizeType
                                   , BitsetType
                                   , Alignment
                                  >;
 
-  using impl_node_type = Impl::UnorderedNode<T, BitsetType, Alignment>;
+  using impl_node_type = Impl::UnstructuredNode<T, BitsetType, Alignment>;
 
 private:
 
@@ -58,7 +56,14 @@ private:
     size_type num_nodes;
   };
 
-  using shared_allocator_type = SizeTypeAllocator<shared_data>;
+  enum {
+      SHARED_SIZE
+    , SHARED_NUM_NODES
+    , SHARED_REF_COUNT
+    , SHARED_LENGTH
+  };
+
+  using shared_allocator_type = SizeTypeAllocator<size_type>;
 
 
 public:
@@ -80,7 +85,7 @@ public:
   {
     iterator itr;
 
-    __sync_fetch_and_add( &(m_shared->size), one );
+    __sync_fetch_and_add( (m_shared + SHARED_SIZE), one );
 
     impl_node_type * const start = get_insert_head();
     impl_node_type * curr = start;
@@ -100,7 +105,7 @@ public:
       impl_node_type * new_node = m_node_allocator.allocate(1);
       m_node_allocator.construct( new_node );
 
-      __sync_fetch_and_add( &(m_shared->num_nodes), 1 );
+      __sync_fetch_and_add( (m_shared + SHARED_NUM_NODES), 1 );
 
       // will always succeed since the node is not in the list
       itr = new_node->try_atomic_emplace( std::forward<Args>(args)... );
@@ -163,7 +168,7 @@ public:
   {
     if ( itr ) {
       impl_node_type::erase( itr );
-      __sync_sub_and_fetch( &(m_shared->size), one );
+      __sync_sub_and_fetch( (m_shared + SHARED_SIZE), one );
     }
   }
 
@@ -176,7 +181,7 @@ public:
   {
     if ( itr ) {
       impl_node_type::erase_and_advance( itr, pred );
-      __sync_sub_and_fetch( &(m_shared->size), one );
+      __sync_sub_and_fetch( (m_shared + SHARED_SIZE), one );
     }
 
     // set the front of the list to the new iterator
@@ -201,7 +206,7 @@ public:
   LOCKFREE_FORCEINLINE
   size_type size() const
   {
-    return m_shared->size;
+    return m_shared[SHARED_SIZE];
   }
 
   /// capacity()
@@ -219,7 +224,7 @@ public:
   LOCKFREE_FORCEINLINE
   size_type num_nodes() const
   {
-    return m_shared->num_nodes;
+    return m_shared[SHARED_NUM_NODES];
   }
 
   /// num_bytes()
@@ -236,7 +241,7 @@ public:
   /// number of references to the list
   size_type ref_count() const
   {
-    return m_shared->ref_count;
+    return m_shared[SHARED_REF_COUNT];
   }
 
   /// empty()
@@ -263,7 +268,7 @@ public:
   }
 
   /// Contruct a list
-  UnorderedList()
+  UnstructuredList()
     : m_insert_head{}
     , m_find_head{}
     , m_shared{}
@@ -277,23 +282,23 @@ public:
     }
 
     {
-      m_shared = m_shared_allocator.allocate(1);
-      m_shared->size = 0;
-      m_shared->ref_count = 1;
-      m_shared->num_nodes = 1;
+      m_shared = m_shared_allocator.allocate(SHARED_LENGTH);
+      m_shared[SHARED_SIZE] = 0;
+      m_shared[SHARED_NUM_NODES] = 1;
+      m_shared[SHARED_REF_COUNT] = 1;
     }
     __sync_synchronize();
   }
 
   // shallow copy with a hint on how many task this thread will insert
-  UnorderedList( UnorderedList const & list, const size_type num_insert_hint = 0  )
+  UnstructuredList( UnstructuredList const & list, const size_type num_insert_hint = 0  )
     : m_insert_head{}
     , m_find_head{}
     , m_shared{ list.m_shared }
     , m_node_allocator{ list.m_node_allocator }
     , m_shared_allocator{ list.m_shared_allocator }
   {
-    __sync_fetch_and_add( &(m_shared->ref_count), one );
+    __sync_fetch_and_add( (m_shared + SHARED_REF_COUNT), one );
 
     const size_type num_insert_nodes = (num_insert_hint + impl_node_type::capacity - one) / impl_node_type::capacity;
 
@@ -327,7 +332,7 @@ public:
         curr->set_next( next );
       } while ( ! head->try_update_next( next, start ) );
 
-      __sync_fetch_and_add( &(m_shared->num_nodes), num_insert_nodes );
+      __sync_fetch_and_add( (m_shared + SHARED_NUM_NODES), num_insert_nodes );
     }
     else {
       m_insert_head = list.m_insert_head;
@@ -338,7 +343,7 @@ public:
 
 
   // shallow copy
-  UnorderedList & operator=( UnorderedList const & list )
+  UnstructuredList & operator=( UnstructuredList const & list )
   {
     // check for self assignment
     if ( this != & list ) {
@@ -353,7 +358,7 @@ public:
   }
 
   // move constructor
-  UnorderedList( UnorderedList && list )
+  UnstructuredList( UnstructuredList && list )
     : m_insert_head{ list.m_insert_head }
     , m_find_head{ list.m_find_head }
     , m_shared{ list.m_shared }
@@ -371,7 +376,7 @@ public:
   // move assignement
   //
   // NOT thread safe if UsageModel is SHARED_INSTANCE
-  UnorderedList & operator=( UnorderedList && list )
+  UnstructuredList & operator=( UnstructuredList && list )
   {
     std::swap( m_insert_head, list.m_insert_head );
     std::swap( m_find_head, list.m_find_head );
@@ -382,7 +387,7 @@ public:
     return *this;
   }
 
-  ~UnorderedList()
+  ~UnstructuredList()
   {
     destroy_helper();
   }
@@ -434,7 +439,7 @@ private: // member functions
   // destroy the list
   void destroy_helper()
   {
-    if ( m_shared &&  __sync_sub_and_fetch( &(m_shared->ref_count), one ) == 0u ) {
+    if ( m_shared &&  __sync_sub_and_fetch( (m_shared+SHARED_REF_COUNT), one ) == 0u ) {
 
       impl_node_type * start = get_insert_head();
       impl_node_type * curr = start;
@@ -448,7 +453,7 @@ private: // member functions
         curr = next;
       } while ( curr != start );
 
-      m_shared_allocator.deallocate( m_shared, 1 );
+      m_shared_allocator.deallocate( m_shared, SHARED_LENGTH );
     }
   }
 
@@ -456,7 +461,7 @@ private: // data members
 
   mutable impl_node_type * m_insert_head;
   mutable impl_node_type * m_find_head;
-  shared_data            * m_shared;
+  size_type              * m_shared;
   node_allocator_type      m_node_allocator;
   shared_allocator_type    m_shared_allocator;
 };
@@ -465,4 +470,4 @@ private: // data members
 } // namespace Lockfree
 
 
-#endif //LOCKFREE_UNORDERED_LIST
+#endif //LOCKFREE_UNSTRUCTURED_LIST

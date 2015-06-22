@@ -4,8 +4,7 @@
 #include "impl/Lockfree_Macros.hpp"
 #include "impl/Lockfree_IOHelpers.hpp"
 
-#include <memory>
-#include <type_traits>
+#include <memory>   // for std::allocator
 #include <iostream>
 
 
@@ -113,6 +112,8 @@ std::ostream & operator<<(std::ostream & out, TagStats<Tag> const& stats)
   out << " H3[ " << stats.histogram(3) << " ]";
   return out;
 }
+
+
 
 template <   typename T
            , typename Tag

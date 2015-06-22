@@ -170,18 +170,18 @@ using TrackingListMallocAllocator = Lockfree::TrackingAllocator<   T
                                                                >;
 
 
-using SendCommList = Lockfree::UnorderedList<  SendCommNode
-                                             , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                             , TrackingListPoolAllocator    // allocator
-                                             , TrackingListMallocAllocator  // size_type allocator
-                                            >;
+using SendCommList = Lockfree::UnstructuredList<   SendCommNode
+                                                 , Lockfree::EXCLUSIVE_INSTANCE // usage model
+                                                 , TrackingListPoolAllocator    // allocator
+                                                 , TrackingListMallocAllocator  // size_type allocator
+                                               >;
 
 
-using RecvCommList = Lockfree::UnorderedList<  RecvCommNode
-                                             , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                             , TrackingListPoolAllocator    // allocator
-                                             , TrackingListMallocAllocator  // size_type allocator
-                                            >;
+using RecvCommList = Lockfree::UnstructuredList<   RecvCommNode
+                                                 , Lockfree::EXCLUSIVE_INSTANCE // usage model
+                                                 , TrackingListPoolAllocator    // allocator
+                                                 , TrackingListMallocAllocator  // size_type allocator
+                                               >;
 
 } // end namespace Uintah
 
