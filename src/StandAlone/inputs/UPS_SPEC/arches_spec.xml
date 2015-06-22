@@ -98,6 +98,7 @@
                                                                           extent_rxn, tab_strip_factor, 
                                                                           particle_absorption_coefficient, 
                                                                           empirical_soot, 
+                                                                          fv_soot,
                                                                           algebraic_scalar_diss,
                                                                           scalsim_variance, 
                                                                           heat_loss,
@@ -201,6 +202,15 @@
                                         need_applies_to="type empirical_soot"/> <!-- default of "absorpIN" --> 
           <mixture_fraction_label       spec="OPTIONAL STRING"
                                         need_applies_to="type empirical_soot, scalsim_variance"/> <!-- default of "mixture_fraction" --> 
+
+          <!-- fv_soot --> 
+          <density_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type fv_soot"/> 
+          <Ysoot_label                  spec="OPTIONAL STRING"
+                                        need_applies_to="type fv_soot"/> 
+          <absorption_label             spec="OPTIONAL STRING"
+                                        need_applies_to="type fv_soot"/> 
+
 
           <!-- Heat loss --> 
           <enthalpy_label               spec="REQUIRED STRING"
@@ -1143,6 +1153,9 @@
                                                                            fx_intrusion_inlet,                                                     
                                                                            fy_intrusion_inlet,                                                     
                                                                            fz_intrusion_inlet,                                                     
+                                                                           BrownSootFormation_rhoYs,                                                     
+                                                                           BrownSootFormation_nd,                                                     
+                                                                           BrownSootFormation_Tar,                                                     
                                                                            do_radiation,                                                           
                                                                            rmcrt_radiation, 
                                                                            bowman_nox,
@@ -1154,6 +1167,13 @@
                                                                            shunn_moin_mf_mms, 
                                                                            shunn_moin_cont_mms'">
 
+            <!-- Specs for BrownSootFormation model -->
+            <mixture_fraction_label     spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
+            <tar_label                  spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
+            <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
+            <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
+            <temperature_label          spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
+            
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
 

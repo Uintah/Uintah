@@ -62,6 +62,7 @@
 #include <CCA/Components/Arches/PropertyModels/ConstProperty.h>
 #include <CCA/Components/Arches/PropertyModels/ExtentRxn.h>
 #include <CCA/Components/Arches/PropertyModels/TabStripFactor.h>
+#include <CCA/Components/Arches/PropertyModels/fvSootFromYsoot.h>
 #include <CCA/Components/Arches/PropertyModels/EmpSoot.h>
 #include <CCA/Components/Arches/PropertyModels/AlgebraicScalarDiss.h>
 #include <CCA/Components/Arches/PropertyModels/HeatLoss.h>
@@ -2446,7 +2447,13 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
         
         // emperical soot model (computes soot volume fraction and abskp) 
         PropertyModelBase::Builder* the_builder = new EmpSoot::Builder( prop_name, d_sharedState ); 
-        prop_factory.register_property_model( prop_name, the_builder ); 
+        prop_factory.register_property_model( prop_name, the_builder );
+
+      } else if ( prop_type == "fv_soot" ){
+
+        // Computes the soot volume fraction from the soot mass fraction (which is assumed transported) 
+        PropertyModelBase::Builder* the_builder = new fvSootFromYsoot::Builder( prop_name, d_sharedState );
+        prop_factory.register_property_model( prop_name, the_builder );
 
       } else if ( prop_type == "algebraic_scalar_diss" ){ 
 

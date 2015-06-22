@@ -18,6 +18,10 @@ SRCS += \
 				$(SRCDIR)/DORadiation.cc \
 				$(SRCDIR)/RMCRT.cc \
 				$(SRCDIR)/BowmanNOx.cc \
+       	$(SRCDIR)/BrownSootFormation_nd.cc \
+      	$(SRCDIR)/BrownSootFormation_rhoYs.cc \
+      	$(SRCDIR)/BrownSootFormation_Tar.cc \
+	$(SRCDIR)/SootMassBalance.cc \
 				$(SRCDIR)/PCTransport.cc \
 				$(SRCDIR)/MMS1.cc \
 				$(SRCDIR)/SecondMFMoment.cc \
