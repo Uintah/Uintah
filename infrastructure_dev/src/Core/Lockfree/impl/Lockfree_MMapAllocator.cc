@@ -19,7 +19,7 @@ namespace {
 
 constexpr size_t page_size = 4096;
 
-volatile size_t g_mmap_excess = 0;;
+volatile size_t g_mmap_excess = 0;
 
 } // namespace
 

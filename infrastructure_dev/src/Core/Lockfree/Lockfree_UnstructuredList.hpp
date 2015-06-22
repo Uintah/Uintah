@@ -34,27 +34,23 @@ public:
   template <typename U> using allocator = Allocator<U>;
 
   using list_type = UnstructuredList<  T
-                                  , Model
-                                  , Allocator
-                                  , SizeTypeAllocator
-                                  , BitsetType
-                                  , Alignment
-                                 >;
+                                     , Model
+                                     , Allocator
+                                     , SizeTypeAllocator
+                                     , BitsetType
+                                     , Alignment
+                                    >;
 
   using impl_node_type = Impl::UnstructuredNode<T, BitsetType, Alignment>;
 
+  using node_allocator_type   = allocator<impl_node_type>;
+  using size_t_allocator_type = SizeTypeAllocator<size_type>;
+
 private:
 
-  using node_allocator_type = allocator<impl_node_type>;
 
   static constexpr size_type one = 1;
   static constexpr impl_node_type * null_node = nullptr;
-
-  struct shared_data {
-    size_type size;
-    size_type ref_count;
-    size_type num_nodes;
-  };
 
   enum {
       SHARED_SIZE
@@ -63,7 +59,6 @@ private:
     , SHARED_LENGTH
   };
 
-  using shared_allocator_type = SizeTypeAllocator<size_type>;
 
 
 public:
@@ -268,12 +263,14 @@ public:
   }
 
   /// Contruct a list
-  UnstructuredList()
+  UnstructuredList(  node_allocator_type   arg_node_allocator   = node_allocator_type{}
+                   , size_t_allocator_type arg_size_t_allocator = size_t_allocator_type{}
+                  )
     : m_insert_head{}
     , m_find_head{}
     , m_shared{}
-    , m_node_allocator{}
-    , m_shared_allocator{}
+    , m_node_allocator{ arg_node_allocator }
+    , m_shared_allocator{ arg_size_t_allocator }
   {
     {
       m_insert_head = m_node_allocator.allocate(1);
@@ -291,12 +288,12 @@ public:
   }
 
   // shallow copy with a hint on how many task this thread will insert
-  UnstructuredList( UnstructuredList const & list, const size_type num_insert_hint = 0  )
-    : m_insert_head{}
-    , m_find_head{}
-    , m_shared{ list.m_shared }
-    , m_node_allocator{ list.m_node_allocator }
-    , m_shared_allocator{ list.m_shared_allocator }
+  UnstructuredList( UnstructuredList const & rhs, const size_type num_insert_hint = 0  )
+    : m_insert_head{ rhs.m_insert_head }
+    , m_find_head{ rhs.m_find_head }
+    , m_shared{ rhs.m_shared }
+    , m_node_allocator{ rhs.m_node_allocator }
+    , m_shared_allocator{ rhs.m_shared_allocator }
   {
     __sync_fetch_and_add( (m_shared + SHARED_REF_COUNT), one );
 
@@ -325,7 +322,7 @@ public:
       __sync_synchronize();
 
       // add all the new nodes to the list
-      impl_node_type * head = list.get_insert_head();
+      impl_node_type * head = rhs.get_insert_head();
       impl_node_type * next;
       do {
         next = head->next();
@@ -335,61 +332,77 @@ public:
       __sync_fetch_and_add( (m_shared + SHARED_NUM_NODES), num_insert_nodes );
     }
     else {
-      m_insert_head = list.m_insert_head;
-      m_find_head = list.m_find_head;
       advance_head( ref_count() );
     }
   }
 
 
   // shallow copy
-  UnstructuredList & operator=( UnstructuredList const & list )
+  UnstructuredList & operator=( UnstructuredList const & rhs )
   {
     // check for self assignment
-    if ( this != & list ) {
-      destroy_helper();
+    if ( this != & rhs ) {
+      m_insert_head      = rhs.m_insert_head;
+      m_find_head        = rhs.m_find_head;
+      m_shared           = rhs.m_shared;
+      m_node_allocator   = rhs.m_node_allocator;
+      m_shared_allocator = rhs.m_shared_allocator;
 
-      // make a copy of list
-      // use move assignement operator
-      *this = iterator(list);
+      size_t rcount = __sync_add_and_fetch( (m_shared + SHARED_REF_COUNT), one );
+      advance_head( rcount );
     }
 
     return *this;
   }
 
   // move constructor
-  UnstructuredList( UnstructuredList && list )
-    : m_insert_head{ list.m_insert_head }
-    , m_find_head{ list.m_find_head }
-    , m_shared{ list.m_shared }
-    , m_node_allocator{ list.m_node_allocator }
-    , m_shared_allocator{ list.m_shared_allocator }
+  UnstructuredList( UnstructuredList && rhs )
+    : m_insert_head{ std::move( rhs.m_insert_head ) }
+    , m_find_head{ std::move( rhs.m_find_head ) }
+    , m_shared{ std::move( rhs.m_shared ) }
+    , m_node_allocator{ std::move( rhs.m_node_allocator ) }
+    , m_shared_allocator{ std::move( rhs.m_shared_allocator ) }
   {
-    // invalidate list
-    list.m_insert_head = nullptr;
-    list.m_find_head = nullptr;
-    list.m_shared = nullptr;
-    list.m_node_allocator = node_allocator_type{};
-    list.m_shared_allocator = shared_allocator_type{};
+    // invalidate rhs
+    rhs.m_insert_head      = nullptr;
+    rhs.m_find_head        = nullptr;
+    rhs.m_shared           = nullptr;
+    rhs.m_node_allocator   = node_allocator_type{};
+    rhs.m_shared_allocator = size_t_allocator_type{};
   }
 
   // move assignement
   //
   // NOT thread safe if UsageModel is SHARED_INSTANCE
-  UnstructuredList & operator=( UnstructuredList && list )
+  UnstructuredList & operator=( UnstructuredList && rhs )
   {
-    std::swap( m_insert_head, list.m_insert_head );
-    std::swap( m_find_head, list.m_find_head );
-    std::swap( m_shared, list.m_shared );
-    std::swap( m_node_allocator, list.m_node_allocator );
-    std::swap( m_shared_allocator, list.m_shared_allocator );
+    std::swap( m_insert_head, rhs.m_insert_head );
+    std::swap( m_find_head, rhs.m_find_head );
+    std::swap( m_shared, rhs.m_shared );
+    std::swap( m_node_allocator, rhs.m_node_allocator );
+    std::swap( m_shared_allocator, rhs.m_shared_allocator );
 
     return *this;
   }
 
   ~UnstructuredList()
   {
-    destroy_helper();
+    if ( m_shared &&  __sync_sub_and_fetch( (m_shared+SHARED_REF_COUNT), one ) == 0u ) {
+
+      impl_node_type * start = get_insert_head();
+      impl_node_type * curr = start;
+      impl_node_type * next;
+
+      // iterate circular list deleting nodes
+      do {
+        next = curr->next();
+        m_node_allocator.destroy(curr);
+        m_node_allocator.deallocate( curr, 1 );
+        curr = next;
+      } while ( curr != start );
+
+      m_shared_allocator.deallocate( m_shared, SHARED_LENGTH );
+    }
   }
 
 private: // member functions
@@ -436,34 +449,13 @@ private: // member functions
     }
   }
 
-  // destroy the list
-  void destroy_helper()
-  {
-    if ( m_shared &&  __sync_sub_and_fetch( (m_shared+SHARED_REF_COUNT), one ) == 0u ) {
-
-      impl_node_type * start = get_insert_head();
-      impl_node_type * curr = start;
-      impl_node_type * next;
-
-      // iterate circular list deleting nodes
-      do {
-        next = curr->next();
-        m_node_allocator.destroy(curr);
-        m_node_allocator.deallocate( curr, 1 );
-        curr = next;
-      } while ( curr != start );
-
-      m_shared_allocator.deallocate( m_shared, SHARED_LENGTH );
-    }
-  }
-
 private: // data members
 
   mutable impl_node_type * m_insert_head;
   mutable impl_node_type * m_find_head;
   size_type              * m_shared;
   node_allocator_type      m_node_allocator;
-  shared_allocator_type    m_shared_allocator;
+  size_t_allocator_type    m_shared_allocator;
 };
 
 

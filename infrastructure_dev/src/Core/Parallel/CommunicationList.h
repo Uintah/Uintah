@@ -158,29 +158,23 @@ using RecvCommNode = CommNode<RecvHandle>;
 
 
 template < typename T >
-using TrackingListPoolAllocator = Lockfree::TrackingAllocator<   T
-                                                               , Tags::CommList
-                                                               , Uintah::PoolAllocator
-                                                             >;
-
-template < typename T >
-using TrackingListMallocAllocator = Lockfree::TrackingAllocator<   T
-                                                                 , Tags::CommList
-                                                                 , Uintah::MallocAllocator
-                                                               >;
+using TrackingListAllocator = Uintah::TrackingAllocator<   T
+                                                         , Tags::CommList
+                                                         , Uintah::HybridAllocator
+                                                       >;
 
 
 using SendCommList = Lockfree::UnstructuredList<   SendCommNode
                                                  , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                                 , TrackingListPoolAllocator    // allocator
-                                                 , TrackingListMallocAllocator  // size_type allocator
+                                                 , TrackingListAllocator        // allocator
+                                                 , TrackingListAllocator        // size_type allocator
                                                >;
 
 
 using RecvCommList = Lockfree::UnstructuredList<   RecvCommNode
                                                  , Lockfree::EXCLUSIVE_INSTANCE // usage model
-                                                 , TrackingListPoolAllocator    // allocator
-                                                 , TrackingListMallocAllocator  // size_type allocator
+                                                 , TrackingListAllocator        // allocator
+                                                 , TrackingListAllocator        // size_type allocator
                                                >;
 
 } // end namespace Uintah

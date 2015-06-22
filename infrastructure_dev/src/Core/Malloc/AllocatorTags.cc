@@ -23,7 +23,6 @@
  */
 
 #include <Core/Malloc/AllocatorTags.hpp>
-#include <Core/Lockfree/Lockfree_TrackingAllocator.hpp>
 #include <Core/Parallel/Parallel.h>
 #include <Core/Thread/Thread.h>
 
@@ -40,14 +39,16 @@ namespace {
 
 std::vector<std::string> parse_string(std::string str)
 {
-  std::replace(str.begin(), str.end(), ',', '\n');
-  std::istringstream sin(str);
-
   std::vector<std::string> results;
-  std::string s;
-  while (!sin.eof()) {
-    sin >> s;
-    results.push_back(s);
+  if (str != "") {
+    std::replace(str.begin(), str.end(), ',', '\n');
+    std::istringstream sin(str);
+
+    std::string s;
+    while (!sin.eof()) {
+      sin >> s;
+      results.push_back(s);
+    }
   }
 
   return std::move(results);
@@ -98,15 +99,12 @@ namespace Uintah { namespace Tags { namespace {
 UINTAH_REGISTER_TAG(Global);
 UINTAH_REGISTER_TAG(MMap);
 UINTAH_REGISTER_TAG(Malloc);
-UINTAH_REGISTER_TAG(Pool);
 
 // -------------------------------------
 
 // Add custom tags here (printed out in the order registered)
 UINTAH_REGISTER_TAG(CommList);
 UINTAH_REGISTER_TAG(PackedBuffer);
-UINTAH_REGISTER_TAG(CCVariable);
-UINTAH_REGISTER_TAG(Array3);
 UINTAH_REGISTER_TAG(Array3Data);
 
 }}} // end namspace Uintah::Tags

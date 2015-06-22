@@ -65,10 +65,10 @@ namespace Uintah {
   template<class T> class Array3Data : public RefCounted {
 
     template < typename U >
-    using allocator_type = Lockfree::TrackingAllocator<   U
-                                                        , Uintah::Tags::Array3Data
-                                                        , Uintah::MMapAllocator
-                                                      >;
+    using allocator_type = Uintah::TrackingAllocator<   U
+                                                      , Uintah::Tags::Array3Data
+                                                      , Uintah::HybridAllocator
+                                                    >;
 
     public:
       Array3Data(const IntVector& size);
