@@ -247,42 +247,37 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
       }
       srcs.push_back( tempCCVar );
     }
-    
-    vector<constCCVarWrapper> cqmomWeights;
-    vector<constCCVarWrapper> cqmomAbscissas;
-    vector<constCCVarWrapper> nodeSource;
  
-//    StaticArray <constCCVariable<double> > testWeight( _N );
+    StaticArray <constCCVariable<double> > cqmomWeights( _N );
+    StaticArray <constCCVariable<double> > cqmomAbscissas( _N * M);
+    StaticArray <constCCVariable<double> > nodeSource( _N * nSources);
     
     //get weights and abscissas from dw
+    int j = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
-      constCCVarWrapper tempWrapper;
       if (new_dw->exists( tempLabel, matlIndex, patch) ) {
-        new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+        new_dw->get( cqmomWeights[j], tempLabel, matlIndex, patch, gn, 0 );
       } else {
-        old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+        old_dw->get( cqmomWeights[j], tempLabel, matlIndex, patch, gn, 0 );
       }
-      cqmomWeights.push_back(tempWrapper);
+      j++;
     }
-        
+    
+    j = 0;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
-      constCCVarWrapper tempWrapper;
       if (new_dw->exists( tempLabel, matlIndex, patch) ) {
-        new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+        new_dw->get( cqmomAbscissas[j], tempLabel, matlIndex, patch, gn, 0 );
       } else {
-        old_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
+        old_dw->get( cqmomAbscissas[j], tempLabel, matlIndex, patch, gn, 0 );
       }
-      cqmomAbscissas.push_back(tempWrapper);
+      j++;
     }
-
-    //get the list of source terms for each of the nodes
+    
     for ( int i = 0; i < _N * nSources; i++ ) {
       const VarLabel* tempLabel = d_nodeSources[i];
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gn, 0 );
-      nodeSource.push_back( tempWrapper );
+      new_dw->get( nodeSource[i], tempLabel, matlIndex, patch, gn, 0);
     }
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
@@ -293,23 +288,16 @@ CQMOMSourceWrapper::buildSourceTerm( const ProcessorGroup* pc,
       std::vector<double> temp_sources ( _N * nSources, 0.0 );
       
       //put all the weigths, abscissas and sources in temp vectors
-      int ii = 0;
-      for (vector<constCCVarWrapper>::iterator iter = cqmomWeights.begin(); iter!= cqmomWeights.end(); ++iter) {
-        double temp_value = (iter->data)[c];
-        temp_weights[ii] = temp_value;
-        ii++;
+      for (int i = 0; i < _N; i++) {
+        temp_weights[i] = cqmomWeights[i][c];
       }
-      ii = 0;
-      for (vector<constCCVarWrapper>::iterator iter = cqmomAbscissas.begin(); iter!= cqmomAbscissas.end(); ++iter) {
-        double temp_value = (iter->data)[c];
-        temp_abscissas[ii] = temp_value;
-        ii++;
+      
+      for (int i = 0; i < _N * M; i++ ) {
+        temp_abscissas[i] = cqmomAbscissas[i][c];
       }
-      ii = 0;
-      for (vector<constCCVarWrapper>::iterator iter = nodeSource.begin(); iter!= nodeSource.end(); ++iter) {
-        double temp_value = (iter->data)[c];
-        temp_sources[ii] = temp_value;
-        ii++;
+      
+      for (int i = 0; i < _N * nSources; i++ ) {
+        temp_sources[i] = nodeSource[i][c];
       }
       
       if (volFrac[c] > 0.0 ) { //if not flow cell set src = 0
