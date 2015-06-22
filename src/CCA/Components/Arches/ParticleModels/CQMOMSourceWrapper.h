@@ -95,9 +95,6 @@ namespace Uintah{
     std::vector<const VarLabel*> d_sourceLabels;  //labels for all source terms for all the moments
     const VarLabel* volfrac_label;                //volfrac label
     std::vector<const VarLabel *> d_nodeSources;  //list of all node source for all models
-    struct constCCVarWrapper {
-      constCCVariable<double> data;
-    };
     
   }; // class CQMOMWrapper
 } // namespace Uintah

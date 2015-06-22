@@ -199,17 +199,6 @@ namespace Uintah {
     
     std::vector<std::string> varTypes;
 
-    struct constCCVarWrapper {
-      constCCVariable<double> data;
-    };
-    
-    typedef constCCVarWrapper constCCVarWrapperTypeDef;
-    
-    struct constCCVarWrapper_withModels {
-      constCCVariable<double> data;
-      std::vector<constCCVarWrapperTypeDef> models;
-    };
-
     int uVelIndex;
     int vVelIndex;
     int wVelIndex;
