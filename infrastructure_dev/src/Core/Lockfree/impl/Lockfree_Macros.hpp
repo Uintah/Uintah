@@ -22,6 +22,11 @@
 #include <climits>
 #include <limits>
 
+// std::move and std::forward
+#include <utility>
+
+#include <type_traits>
+
 // wrap compiler attributes
 #define LOCKFREE_FORCEINLINE inline __attribute__((always_inline))
 #define LOCKFREE_MAY_ALIAS __attribute__((__may_alias__))

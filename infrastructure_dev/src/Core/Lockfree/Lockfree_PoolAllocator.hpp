@@ -1,11 +1,10 @@
 #ifndef LOCKFREE_POOL_ALLOCATOR_HPP
 #define LOCKFREE_POOL_ALLOCATOR_HPP
 
-#include "Lockfree_UnorderedList.hpp"
-
 #include "impl/Lockfree_Macros.hpp"
 
-#include <stdexcept> // for runtime_error
+#include "Lockfree_UnstructuredList.hpp"
+
 #include <new> // for bad_alloc
 
 namespace Lockfree {
@@ -29,11 +28,10 @@ class PoolAllocator
     void * m_list_node;
   };
 
-  using list_type = UnorderedList<  Node
+  using list_type = UnstructuredList<  Node
                                   , SHARED_INSTANCE
                                   , BaseAllocator
                                   , SizeTypeAllocator
-                                  , size_t
                                   , BitsetType
                                   , Alignment
                                 >;
@@ -85,7 +83,7 @@ public:
   static pointer allocate( size_type n, void * = nullptr)
   {
     if (n > max_size() ) {
-      throw std::runtime_error("Error: Pool allocator cannot allocate arrays.");
+      throw std::bad_alloc();
     }
 
     typename list_type::iterator itr = s_list.emplace();

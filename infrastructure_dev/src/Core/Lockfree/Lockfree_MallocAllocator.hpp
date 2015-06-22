@@ -2,9 +2,7 @@
 #define LOCKFREE_MALLOC_ALLOCATOR_HPP
 
 #include "impl/Lockfree_Macros.hpp"
-
 #include <cstdlib>
-#include <utility>
 
 namespace Lockfree {
 
