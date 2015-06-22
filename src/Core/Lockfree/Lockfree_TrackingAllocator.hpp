@@ -121,9 +121,9 @@ template <   typename T
          >
 class TrackingAllocator
 {
-  using base_allocator_type = BaseAllocator<T>;
-
 public:
+
+  using base_allocator_type = BaseAllocator<T>;
 
   using tag = Tag;
 
@@ -144,15 +144,31 @@ public:
                                    >;
   };
 
-  TrackingAllocator()
-    : m_base_allocator{}
+  TrackingAllocator( base_allocator_type arg_base_allocator = base_allocator_type{} )
+    : m_base_allocator{ arg_base_allocator }
   {}
 
-  TrackingAllocator( const TrackingAllocator & )
-    : m_base_allocator{}
+  TrackingAllocator( const TrackingAllocator & rhs )
+    : m_base_allocator{ rhs.m_base_allocator }
   {}
 
-  TrackingAllocator & operator=( const TrackingAllocator & ) { return *this; }
+  TrackingAllocator & operator=( const TrackingAllocator & rhs )
+  {
+    m_base_allocator = rhs.m_base_allocator;
+    return *this;
+  }
+
+  TrackingAllocator( TrackingAllocator && rhs )
+    : m_base_allocator{ std::move( rhs.m_base_allocator ) }
+  {}
+
+  TrackingAllocator & operator=( TrackingAllocator && rhs )
+  {
+    m_base_allocator = std::move( rhs.m_base_allocator );
+    return *this;
+  }
+
+  ~TrackingAllocator() {}
 
         pointer address(       reference x ) const noexcept { return m_base_allocator.address(x); }
   const_pointer address( const_reference x ) const noexcept { return m_base_allocator.address(x); }

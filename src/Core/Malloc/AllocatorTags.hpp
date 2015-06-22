@@ -25,10 +25,7 @@
 #ifndef CORE_MALLOC_ALLOCATORTAGS_HPP
 #define CORE_MALLOC_ALLOCATORTAGS_HPP
 
-#include <Core/Lockfree/Lockfree_MallocAllocator.hpp>
-#include <Core/Lockfree/Lockfree_MMapAllocator.hpp>
-#include <Core/Lockfree/Lockfree_PoolAllocator.hpp>
-#include <Core/Lockfree/Lockfree_TrackingAllocator.hpp>
+#include <Core/Lockfree/Lockfree.hpp>
 
 #include <sci_defs/mpi_defs.h>
 
@@ -114,7 +111,6 @@ namespace Uintah { namespace Tags {
 UINTAH_CREATE_TAG(Global);
 UINTAH_CREATE_TAG(MMap);
 UINTAH_CREATE_TAG(Malloc);
-UINTAH_CREATE_TAG(Pool);
 
 // -------------------------------------
 
@@ -122,8 +118,6 @@ UINTAH_CREATE_TAG(Pool);
 // create custom tags here
 UINTAH_CREATE_TAG(CommList);
 UINTAH_CREATE_TAG(PackedBuffer);
-UINTAH_CREATE_TAG(CCVariable);
-UINTAH_CREATE_TAG(Array3);
 UINTAH_CREATE_TAG(Array3Data);
 
 }} // end namspace Uintah::Tags
@@ -161,20 +155,18 @@ using MallocAllocator = TrackingAllocator<   T
                                            , Impl::MallocAllocator
                                          >;
 
-namespace Impl {
-
 template < typename T >
 using PoolAllocator = Lockfree::PoolAllocator<   T
                                                , Uintah::MMapAllocator
                                                , Uintah::MallocAllocator
                                              >;
-} // end Impl namespace
 
 template < typename T >
-using PoolAllocator = TrackingAllocator<   T
-                                         , Tags::Pool
-                                         , Impl::PoolAllocator
-                                       >;
+using HybridAllocator = Lockfree::HybridAllocator<   T
+                                                   , 4096ull * 8
+                                                   , Uintah::MallocAllocator
+                                                   , Uintah::MMapAllocator
+                                                 >;
 
 
 //----------------------------------------------------------------------------------

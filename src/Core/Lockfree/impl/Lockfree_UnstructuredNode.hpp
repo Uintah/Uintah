@@ -67,6 +67,14 @@ public:
     LOCKFREE_FORCEINLINE
     explicit operator bool() const { return m_node != nullptr; }
 
+
+    // release the iterator
+    LOCKFREE_FORCEINLINE
+    void clear()
+    {
+      *this = iterator{};
+    }
+
     // construct an invalid iterator
     iterator()
       : m_node{ nullptr }
@@ -381,11 +389,13 @@ public:
   /// Destroy the values in the node
   ~UnstructuredNode()
   {
+    const bitset_type curr_valid = __sync_fetch_and_and( &m_valid_bitset, zero );
     for (int i=0; i<capacity; ++i) {
-      if (try_atomic_claim(i)) {
-        atomic_erase(i);
+      if ( curr_valid & ( one << i) ) {
+        (m_values + i)->~value_type();
       }
     }
+    __sync_synchronize();
   }
 
 private: // private functions

@@ -54,6 +54,13 @@ public:
     , gt_allocator{}
   {}
 
+  HybridAllocator(  le_allocator_type arg_le_allocator
+                  , gt_allocator_type arg_gt_allocator
+                 )
+    : le_allocator{ arg_le_allocator }
+    , gt_allocator{ arg_gt_allocator }
+  {}
+
   HybridAllocator( const HybridAllocator & rhs )
     : le_allocator{ rhs.le_allocator }
     , gt_allocator{ rhs.gt_allocator }
@@ -65,6 +72,20 @@ public:
     gt_allocator = rhs.gt_allocator;
     return *this;
   }
+
+  HybridAllocator( HybridAllocator && rhs )
+    : le_allocator{ std::move( rhs.le_allocator ) }
+    , gt_allocator{ std::move( rhs.gt_allocator ) }
+  {}
+
+  HybridAllocator & operator=( HybridAllocator && rhs )
+  {
+    le_allocator = std::move( rhs.le_allocator );
+    gt_allocator = std::move( rhs.gt_allocator );
+    return *this;
+  }
+
+  ~HybridAllocator() {}
 
   pointer address( reference x ) noexcept
   {
@@ -97,7 +118,7 @@ public:
   {
     const size_type num_bytes = n * sizeof( value_type );
     pointer ptr = nullptr;
-    if ( num_bytes < CompareBytes ) {
+    if ( num_bytes <= CompareBytes ) {
       ptr = le_allocator.allocate( n, hint );
     }
     else {
@@ -109,7 +130,7 @@ public:
   void deallocate( pointer ptr, size_type n )
   {
     const size_type num_bytes = n * sizeof( value_type );
-    if ( num_bytes < CompareBytes ) {
+    if ( num_bytes <= CompareBytes ) {
       le_allocator.deallocate( ptr, n );
     }
     else {
