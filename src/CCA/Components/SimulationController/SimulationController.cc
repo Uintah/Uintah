@@ -896,10 +896,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     char walltime[96];
     if (d_n > 3) {
       //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
-      sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
+      sprintf( walltime, ", elap T = %6.2lf (mean: %6.2lf), ", d_wallTime, mean );
     }
     else {
-      sprintf(walltime, ", elap T = %.2lf", d_wallTime);
+      sprintf( walltime, ", elap T = %6.2lf,                ", d_wallTime );
     }
     ostringstream message;
 
@@ -907,7 +907,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
             << " (timestep "  << timestep 
             << "), delT="     << delt
             << walltime;
-    message << ", Memory Use = ";
+    message << "Memory Use = ";
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
       message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {
