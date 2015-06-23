@@ -123,9 +123,8 @@ unifiedSchedulerTestKernel( int                patchID,
 
     }
   }
+
   //}
-
-
 }
 
 void

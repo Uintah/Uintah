@@ -917,13 +917,16 @@ Task::doit(CallBackEvent event,
            const PatchSubset* patches,
            const MaterialSubset* matls,
            vector<DataWarehouseP>& dws,
+           void* oldTaskGpuDW,
+           void* newTaskGpuDW,
            void* stream,
            int deviceID)
 {
   DataWarehouse* fromDW = mapDataWarehouse(Task::OldDW, dws);
   DataWarehouse* toDW = mapDataWarehouse(Task::NewDW, dws);
+
   if (d_action) {
-    d_action->doit(event, pg, patches, matls, fromDW, toDW, stream, deviceID);
+    d_action->doit(event, pg, patches, matls, fromDW, toDW, oldTaskGpuDW, newTaskGpuDW, stream, deviceID);
   }
 }
 

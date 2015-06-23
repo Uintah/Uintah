@@ -23,93 +23,108 @@
  */
 #include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
 
-deviceGhostCellsInfo::deviceGhostCellsInfo(GridVariableBase* gridVar,
-          const Patch* sourcePatchPointer,
-          int sourceDeviceNum,
-          const Patch* destPatchPointer,
-          int destDeviceNum,
-          int materialIndex,
-          IntVector low,
-          IntVector high,
-          const Task::Dependency* dep,
-          IntVector virtualOffset) {
-  this->gridVar = gridVar;
+DeviceGhostCellsInfo::DeviceGhostCellsInfo(char const* label,
+    const Patch* sourcePatchPointer,
+    const Patch* destPatchPointer,
+    int materialIndex,
+    IntVector low,
+    IntVector high,
+    int xstride,
+    IntVector virtualOffset,
+    int sourceDeviceNum,
+    int destDeviceNum,
+    int fromResource,  //fromNode
+    int toResource,    //toNode, needed when preparing contiguous arrays to send off host for MPI
+    Task::WhichDW dwIndex,
+    DeviceGhostCells::Destination dest) {
+  this->label = label;
   this->sourcePatchPointer = sourcePatchPointer;
-  this->sourceDeviceNum = sourceDeviceNum;
   this->destPatchPointer = destPatchPointer;
-  this->destDeviceNum = destDeviceNum;
   this->materialIndex = materialIndex;
   this->low = low;
   this->high = high;
-  this->dep = dep;
+  this->xstride = xstride;
   this->virtualOffset = virtualOffset;
+  this->sourceDeviceNum = sourceDeviceNum;
+  this->destDeviceNum = destDeviceNum;
+  this->fromResource = fromResource;
+  this->toResource = toResource;
+  this->dwIndex = dwIndex;
+  this->dest = dest;
 }
 
-deviceGhostCells::deviceGhostCells() {
+DeviceGhostCells::DeviceGhostCells() {
   for (int i = 0; i < Task::TotalDWs; i++) {
     totalGhostCellCopies[i] = 0;
   }
 }
 
-void deviceGhostCells::add(GridVariableBase* gridVar,
+void DeviceGhostCells::add(char const* label,
           const Patch* sourcePatchPointer,
-          int sourceDeviceNum,
           const Patch* destPatchPointer,
-          int destDeviceNum,
           int materialIndex,
           IntVector low,
           IntVector high,
-          const Task::Dependency* dep,
-          IntVector virtualOffset) {
-  deviceGhostCellsInfo tmp(gridVar, sourcePatchPointer, sourceDeviceNum, destPatchPointer, destDeviceNum, materialIndex,  low, high, dep, virtualOffset);
-  totalGhostCellCopies[dep->mapDataWarehouse()] += 1;
+          int xstride,
+          IntVector virtualOffset,
+          int sourceDeviceNum,
+          int destDeviceNum,
+          int fromResource,  //fromNode
+          int toResource,
+          Task::WhichDW dwIndex,
+          Destination dest) {   //toNode, needed when preparing contiguous arrays to send off host for MPI
+  DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, materialIndex,
+                           low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
+                           fromResource, toResource, dwIndex, dest);
+  totalGhostCellCopies[dwIndex] += 1;
   vars.push_back(tmp);
 }
 
-unsigned int deviceGhostCells::numItems() {
+
+unsigned int DeviceGhostCells::numItems() {
   return vars.size();
 }
 
-int deviceGhostCells::getMaterialIndex(int index) {
+char const * DeviceGhostCells::getLabelName(int index) {
+  return vars.at(index).label;
+}
+
+int DeviceGhostCells::getMaterialIndex(int index) {
   return vars.at(index).materialIndex;
 }
 
-const Patch* deviceGhostCells::getSourcePatchPointer(int index) {
+const Patch* DeviceGhostCells::getSourcePatchPointer(int index) {
   return vars.at(index).sourcePatchPointer;
 }
 
-int deviceGhostCells::getSourceDeviceNum(int index) {
+int DeviceGhostCells::getSourceDeviceNum(int index) {
   return vars.at(index).sourceDeviceNum;
 }
 
-const Patch* deviceGhostCells::getDestPatchPointer(int index) {
+const Patch* DeviceGhostCells::getDestPatchPointer(int index) {
   return vars.at(index).destPatchPointer;
 }
 
-int deviceGhostCells::getDestDeviceNum(int index) {
+int DeviceGhostCells::getDestDeviceNum(int index) {
   return vars.at(index).destDeviceNum;
 }
 
-IntVector deviceGhostCells::getLow(int index) {
+IntVector DeviceGhostCells::getLow(int index) {
   return vars.at(index).low;
 }
-IntVector deviceGhostCells::getHigh(int index) {
+IntVector DeviceGhostCells::getHigh(int index) {
   return vars.at(index).high;
 }
 
-GridVariableBase* deviceGhostCells::getGridVar(int index) {
-  return vars.at(index).gridVar;
-}
-
-const Task::Dependency* deviceGhostCells::getDependency(int index) {
-  return vars.at(index).dep;
-}
-
-IntVector deviceGhostCells::getVirtualOffset(int index) {
+IntVector DeviceGhostCells::getVirtualOffset(int index) {
   return vars.at(index).virtualOffset;
 }
 
-unsigned int deviceGhostCells::getNumGhostCellCopies(int DWIndex) {
-  return totalGhostCellCopies[DWIndex];
+Task::WhichDW DeviceGhostCells::getDwIndex(int index) {
+  return vars.at(index).dwIndex;
+}
+
+unsigned int DeviceGhostCells::getNumGhostCellCopies(Task::WhichDW dwIndex) const {
+  return totalGhostCellCopies[dwIndex];
 }
 

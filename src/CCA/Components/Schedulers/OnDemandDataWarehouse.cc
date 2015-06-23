@@ -21,7 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
 #include <TauProfilerForSCIRun.h>
 
 #include <CCA/Components/Schedulers/OnDemandDataWarehouse.h>
@@ -87,11 +86,12 @@ extern DebugStream mixedDebug;
 #ifdef HAVE_CUDA
   extern DebugStream use_single_device;
   extern DebugStream simulate_multiple_gpus;
+  extern DebugStream gpudbg;
 #endif
 
 
 static DebugStream dbg( "OnDemandDataWarehouse", false );
-static DebugStream gpudbg( "GPUDataWarehouse", false );
+
 static DebugStream warn( "OnDemandDataWarehouse_warn", true );
 static DebugStream particles("DWParticles", false);
 static DebugStream particles2("DWParticles2", false);
@@ -149,9 +149,16 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
     }
 
     for (int i = 0; i < numDevices; i++) {
-      GPUDataWarehouse* gpuDW = new GPUDataWarehouse();
+      //those gpuDWs should only live host side.
+      //Ideally these don't need to be created at all as a separate datawarehouse,
+      //but could be contained within this datawarehouse
+
+      //Using "placement new" to create the object in the buffer.
+      //GPUDataWarehouse* gpuDW = new GPUDataWarehouse();
+      void *placementNewBuffer = malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_ITEM);
+      //GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_ITEM);
+      GPUDataWarehouse* gpuDW = new (placementNewBuffer) GPUDataWarehouse(i, placementNewBuffer);
       gpuDW->setDebug(gpudbg.active());
-      gpuDW->init_device(i);
       d_gpuDWs.push_back(gpuDW);
     }
   }
@@ -209,7 +216,11 @@ OnDemandDataWarehouse::clear()
   if (Uintah::Parallel::usingDevice()) {
     for (size_t i = 0; i < d_gpuDWs.size(); i++) {
       d_gpuDWs[i]->clear();
-      delete d_gpuDWs[i];
+
+      //because it was created using placement new, we have to deallocate this way instead of through delete.
+      void * getPlacementNewBuffer = d_gpuDWs[i]->getPlacementNewBuffer();
+      d_gpuDWs[i]->~GPUDataWarehouse();
+      free(getPlacementNewBuffer);
     }
   }
 #endif
@@ -421,7 +432,7 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
       break;
     }
     default : {
-      SCI_THROW(InternalError("Unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
+      SCI_THROW(InternalError("OnDemandDataWarehouse::getTypeDescriptionSize unsupported GPU Variable base type: " + type, __FILE__, __LINE__));
     }
   }
 }
@@ -429,6 +440,7 @@ OnDemandDataWarehouse::getTypeDescriptionSize(const TypeDescription::Type& type)
 GPUGridVariableBase*
 OnDemandDataWarehouse::createGPUGridVariable(size_t sizeOfDataType)
 {
+  //Note: For C++11, these should return a unique_ptr.
   GPUGridVariableBase* device_var = NULL;
   switch ( sizeOfDataType ) {
     case sizeof(int) : {
@@ -548,7 +560,6 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
         //This is step 2
         void * data_ptr = NULL;
         getGPUDW((*it).toDeviceIndex)->prepareGpuToGpuGhostCellDestination((void *)dtask,
-                                                                         (void *)(*it).toDetailedTask,
                                                                          make_int3((*it).ghostCellLow.x,(*it).ghostCellLow.y, (*it).ghostCellLow.z),
                                                                          make_int3((*it).ghostCellHigh.x,(*it).ghostCellHigh.y, (*it).ghostCellHigh.z),
                                                                          (*it).xstride,
@@ -641,8 +652,7 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
         //4) Store information in GPU B on how to scatter results in GPU B
         //5) Scatter results from array into neighbor ghost cell region in GPU B.
         //This is step 4
-        getGPUDW((*it).toDeviceIndex)->putGhostCell(dtask,
-                                                   (*it).label.c_str(),
+        getGPUDW((*it).toDeviceIndex)->putGhostCell((*it).label.c_str(),
                                                    (*it).patchID,
                                                    (*it).toPatchID,
                                                    (*it).matlIndex,
@@ -676,7 +686,7 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
       //5) Scatter results from array into neighbor ghost cell region in GPU B.
       //This is step 5
       getGPUDW(i)->syncto_device(streams[i]);
-      getGPUDW(i)->copyGpuGhostCellsToGpuVarsInvoker(streams[i], dtask);
+      getGPUDW(i)->copyGpuGhostCellsToGpuVarsInvoker(streams[i]);  //TODO: shouldn't happen here!
     }
     CUDA_RT_SAFE_CALL(cudaStreamDestroy(*(streams[i])));
     free(streams[i]);
@@ -828,9 +838,9 @@ OnDemandDataWarehouse::sendMPI( DependencyBatch* batch,
         //Create a host var to hold the GPU ghost cells.
         GridVariableBase* tempGhostvar = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
         tempGhostvar->allocate(dep->low, dep->high);
-        //allocate space on the GPU, have the GPU copy the ghost cell data to that
-        //allocated space. Then copy that data from the GPU to the CPU.
-        //Note: In order to make *GPU context aware* MPI work, then the receiving end will have had to prepare
+        //Previously we made sure the ghost cell data is a contiguous array on the GPU.
+        //Here we will copy that data from the GPU to the CPU.
+        //Note: In order to make *GPU context aware* MPI work, the receiving end will have had to prepare
         //space in GPU memory to receive such ghost cell data, *and* that address information
         //will have to be known among the sending processes.  So for now, do it the slower, manual way.
         IntVector host_low, host_high, host_offset, host_size, host_strides;

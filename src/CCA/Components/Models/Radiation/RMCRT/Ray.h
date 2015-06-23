@@ -212,6 +212,8 @@ namespace Uintah{
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw,
+                        void* oldTaskGpuDW,
+                        void* newTaskGpuDW,
                         void* stream,
                         int deviceID,
                         bool modifies_divQ,

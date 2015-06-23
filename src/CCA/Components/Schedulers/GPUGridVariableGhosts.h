@@ -1,3 +1,6 @@
+#ifndef CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEGHOSTS_H
+#define CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEGHOSTS_H
+
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Datatypes/TypeName.h>
@@ -7,49 +10,38 @@
 using namespace std;
 using namespace Uintah;
 
+class DeviceGhostCells;
+class DeviceGhostCellsInfo;
 
-class deviceGhostCellsInfo {
+class DeviceGhostCells {
 public:
-  deviceGhostCellsInfo(GridVariableBase* gridVar,
+
+  enum Destination {
+    sameDeviceSameNode = 0,
+    anotherDeviceSameNode = 1,
+    anotherNode = 2
+  };
+
+  DeviceGhostCells();
+
+  void add(char const* label,
       const Patch* sourcePatchPointer,
-      int sourceDeviceNum,
       const Patch* destPatchPointer,
-      int destDeviceNum,
       int materialIndex,
       IntVector low,
       IntVector high,
-      const Task::Dependency* dep,
-      IntVector virtualOffset);
-  GridVariableBase* gridVar;
-  const Patch* sourcePatchPointer;
-  int sourceDeviceNum;
-  const Patch* destPatchPointer;
-  int destDeviceNum;
-  int materialIndex;
-  IntVector low;
-  IntVector high;
-  IntVector virtualOffset;
-  const Task::Dependency* dep;
-};
-
-
-class deviceGhostCells {
-public:
-
-  deviceGhostCells();
-
-  void add(GridVariableBase* gridVar,
-      const Patch* sourcePatchPointer,
+      int xstride,
+      IntVector virtualOffset,
       int sourceDeviceNum,
-      const Patch* destPatchPointer,
       int destDeviceNum,
-      int materialIndex,
-      IntVector low,
-      IntVector high,
-      const Task::Dependency* dep,
-      IntVector virtualOffset);
+      int fromResource,  //fromNode
+      int toResource,
+      Task::WhichDW dwIndex,
+      Destination dest);    //toNode, needed when preparing contiguous arrays to send off host for MPI
 
   unsigned int numItems();
+
+  char const * getLabelName(int index);
 
   int getMaterialIndex(int index);
 
@@ -65,16 +57,48 @@ public:
 
   IntVector getHigh(int index);
 
-  GridVariableBase* getGridVar(int index);
-
-  const Task::Dependency* getDependency(int index);
-
   IntVector getVirtualOffset(int index);
 
-  unsigned int getNumGhostCellCopies(int DWIndex);
+  Task::WhichDW getDwIndex(int index);
+
+  unsigned int getNumGhostCellCopies(Task::WhichDW dwIndex) const;
 
 private:
-  vector< deviceGhostCellsInfo > vars;
+  vector< DeviceGhostCellsInfo > vars;
   unsigned int totalGhostCellCopies[Task::TotalDWs];
 };
 
+class DeviceGhostCellsInfo {
+public:
+  DeviceGhostCellsInfo(char const* label,
+      const Patch* sourcePatchPointer,
+      const Patch* destPatchPointer,
+      int materialIndex,
+      IntVector low,
+      IntVector high,
+      int xstride,
+      IntVector virtualOffset,
+      int sourceDeviceNum,
+      int destDeviceNum,
+      int fromResource,  //fromNode
+      int toResource,    //toNode, needed when preparing contiguous arrays to send off host for MPI
+      Task::WhichDW dwIndex,
+      DeviceGhostCells::Destination dest);
+  char const* label;
+  const Patch* sourcePatchPointer;
+  const Patch* destPatchPointer;
+  int materialIndex;
+  IntVector low;
+  IntVector high;
+  int xstride;
+  IntVector virtualOffset;
+  int sourceDeviceNum;
+  int destDeviceNum;
+  int fromResource;  //fromNode
+  int toResource;    //toNode, needed when preparing contiguous arrays to send off host for MPI
+  Task::WhichDW dwIndex;
+  DeviceGhostCells::Destination dest;
+};
+
+
+#endif // End CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEGHOSTS_H

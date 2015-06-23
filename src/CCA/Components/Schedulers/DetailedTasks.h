@@ -326,6 +326,13 @@ namespace Uintah {
 
     bool checkAllCUDAStreamsDone();
 
+    GPUDataWarehouse* TaskGPUDataWarehouses[2];
+
+    void setTaskGPUDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW);
+
+    GPUDataWarehouse* getTaskGPUDataWarehouse(Task::WhichDW DW);
+
+
 
 #endif
 
