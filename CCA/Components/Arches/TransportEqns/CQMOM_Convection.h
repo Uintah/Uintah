@@ -64,10 +64,6 @@ namespace Uintah {
     
     typedef std::vector<int> MomentVector;
     
-    struct constCCVarWrapper {
-      constCCVariable<double> data;
-    };
-    
     /** @brief Obtain parameters from input file and process */
     void problemSetup( const ProblemSpecP& params );
     
