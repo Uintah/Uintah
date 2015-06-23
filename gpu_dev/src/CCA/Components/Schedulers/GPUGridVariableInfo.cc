@@ -24,7 +24,7 @@
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
-deviceGridVariableInfo::deviceGridVariableInfo(Variable* var,
+DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -50,7 +50,7 @@ deviceGridVariableInfo::deviceGridVariableInfo(Variable* var,
   this->whichGPU = whichGPU;
 }
 
-deviceGridVariableInfo::deviceGridVariableInfo(Variable* var,
+DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             size_t sizeOfDataType,
             size_t varMemSize,
             int materialIndex,
@@ -69,7 +69,7 @@ deviceGridVariableInfo::deviceGridVariableInfo(Variable* var,
 }
 
 
-deviceGridVariables::deviceGridVariables() {
+DeviceGridVariables::DeviceGridVariables() {
   totalSize = 0;
   for (int i = 0; i < Task::TotalDWs; i++) {
     totalSizeForDataWarehouse[i] = 0;
@@ -79,7 +79,7 @@ deviceGridVariables::deviceGridVariables() {
 
   }
 }
-void deviceGridVariables::add(const Patch* patchPointer,
+void DeviceGridVariables::add(const Patch* patchPointer,
           int materialIndex,
           IntVector sizeVector,
           size_t varMemSize,
@@ -94,11 +94,11 @@ void deviceGridVariables::add(const Patch* patchPointer,
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalVars[dep->mapDataWarehouse()] += 1;
-  deviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
+  DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
   vars.push_back(tmp);
 }
 
-void deviceGridVariables::add(const Patch* patchPointer,
+void DeviceGridVariables::add(const Patch* patchPointer,
           int materialIndex,
           size_t varMemSize,
           size_t sizeOfDataType,
@@ -110,74 +110,74 @@ void deviceGridVariables::add(const Patch* patchPointer,
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalVars[dep->mapDataWarehouse()] += 1;
-  deviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, materialIndex, patchPointer, dep, validOnDevice,  whichGPU);
+  DeviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, materialIndex, patchPointer, dep, validOnDevice,  whichGPU);
   vars.push_back(tmp);
 }
 
 
 
-size_t deviceGridVariables::getTotalSize() {
+size_t DeviceGridVariables::getTotalSize() {
   return totalSize;
 }
 
-size_t deviceGridVariables::getSizeForDataWarehouse(int dwIndex) {
+size_t DeviceGridVariables::getSizeForDataWarehouse(int dwIndex) {
   return totalSizeForDataWarehouse[dwIndex];
 }
 
-unsigned int deviceGridVariables::numItems() {
+unsigned int DeviceGridVariables::numItems() {
   return vars.size();
 }
 
 
-int deviceGridVariables::getMaterialIndex(int index) {
+int DeviceGridVariables::getMaterialIndex(int index) {
   return vars.at(index).materialIndex;
 }
-const Patch* deviceGridVariables::getPatchPointer(int index) {
+const Patch* DeviceGridVariables::getPatchPointer(int index) {
   return vars.at(index).patchPointer;
 }
-IntVector deviceGridVariables::getSizeVector(int index) {
+IntVector DeviceGridVariables::getSizeVector(int index) {
   return vars.at(index).sizeVector;
 }
-IntVector deviceGridVariables::getOffset(int index) {
+IntVector DeviceGridVariables::getOffset(int index) {
     return vars.at(index).offset;
 }
 
-Variable* deviceGridVariables::getVar(int index) {
+Variable* DeviceGridVariables::getVar(int index) {
   return vars.at(index).var;
 }
-const Task::Dependency* deviceGridVariables::getDependency(int index) {
+const Task::Dependency* DeviceGridVariables::getDependency(int index) {
   return vars.at(index).dep;
 }
 
-size_t deviceGridVariables::getSizeOfDataType(int index) {
+size_t DeviceGridVariables::getSizeOfDataType(int index) {
   return vars.at(index).sizeOfDataType;
 }
 
-size_t deviceGridVariables::getVarMemSize(int index) {
+size_t DeviceGridVariables::getVarMemSize(int index) {
   return vars.at(index).varMemSize;
 }
 
-Ghost::GhostType deviceGridVariables::getGhostType(int index) {
+Ghost::GhostType DeviceGridVariables::getGhostType(int index) {
   return vars.at(index).gtype;
 }
 
-int deviceGridVariables::getNumGhostCells(int index) {
+int DeviceGridVariables::getNumGhostCells(int index) {
   return vars.at(index).numGhostCells;
 }
 
-int deviceGridVariables::getWhichGPU(int index) {
+int DeviceGridVariables::getWhichGPU(int index) {
   return vars.at(index).whichGPU;
 }
 
-unsigned int deviceGridVariables::getTotalVars(int DWIndex) {
+unsigned int DeviceGridVariables::getTotalVars(int DWIndex) const {
   return totalVars[DWIndex];
 }
 
-unsigned int deviceGridVariables::getTotalMaterials(int DWIndex) {
+unsigned int DeviceGridVariables::getTotalMaterials(int DWIndex) const {
   return totalMaterials[DWIndex];
 }
 
-unsigned int deviceGridVariables::getTotalLevels(int DWIndex) {
+unsigned int DeviceGridVariables::getTotalLevels(int DWIndex) const {
   return totalLevels[DWIndex];
 }
 

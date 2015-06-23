@@ -1,3 +1,5 @@
+#ifndef CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H
+#define CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H
 
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Variables/GridVariableBase.h>
@@ -9,9 +11,9 @@ using namespace std;
 using namespace Uintah;
 
 
-class deviceGridVariableInfo {
+class DeviceGridVariableInfo {
 public:
-  deviceGridVariableInfo(Variable* var,
+  DeviceGridVariableInfo(Variable* var,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -24,7 +26,7 @@ public:
             int numGhostCells,
             int whichGPU);
 
-  deviceGridVariableInfo(Variable* var,
+  DeviceGridVariableInfo(Variable* var,
             size_t sizeOfDataType,
             size_t varMemSize,
             int materialIndex,
@@ -48,9 +50,9 @@ public:
 };
 
 
-class deviceGridVariables {
+class DeviceGridVariables {
 public:
-  deviceGridVariables();
+  DeviceGridVariables();
   void add(const Patch* patchPointer,
             int materialIndex,
             IntVector sizeVector,
@@ -72,6 +74,8 @@ public:
               const Task::Dependency* dep,
               bool validOnDevice,
               int whichGPU);
+
+
 
   size_t getTotalSize();
 
@@ -101,15 +105,15 @@ public:
 
   int getWhichGPU(int index);
 
-  unsigned int getTotalVars(int DWIndex);
-  unsigned int getTotalMaterials(int DWIndex);
-  unsigned int getTotalLevels(int DWIndex);
+  unsigned int getTotalVars(int DWIndex) const;
+  unsigned int getTotalMaterials(int DWIndex) const;
+  unsigned int getTotalLevels(int DWIndex) const;
 
 
 private:
   size_t totalSize;
   size_t totalSizeForDataWarehouse[Task::TotalDWs];
-  vector< deviceGridVariableInfo > vars;
+  vector< DeviceGridVariableInfo > vars;
   unsigned int totalVars[Task::TotalDWs];
   unsigned int totalMaterials[Task::TotalDWs];
   unsigned int totalLevels[Task::TotalDWs];
@@ -125,3 +129,5 @@ public:
 
 static std::map<const Patch *, int> patchAcceleratorLocation;
 static unsigned int currentAcceleratorCounter;
+
+#endif // End CCA_COMPONENTS_SCHEDULERS_GPUGRIDVARIABLEINFO_H

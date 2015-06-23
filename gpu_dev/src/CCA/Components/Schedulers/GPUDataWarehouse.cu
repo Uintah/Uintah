@@ -53,6 +53,8 @@ namespace Uintah {
 HOST_DEVICE void
 GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndex)
 {
+#ifdef __CUDA_ARCH__
+  //device code
   GPUDataWarehouse::dataItem* item = getItem(label, patchID, matlIndex);
   if (item) {
     var.setArray3(item->var_offset, item->var_size, item->var_ptr);
@@ -60,13 +62,29 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int pat
   else {
     printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, patchID, matlIndex);
   }
+#else
+  //host code
+  varLock.readLock();
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    allVarPointersInfo vp = varPointers[lpm];
+    var.setArray3(vp.device_offset, vp.device_size, vp.device_ptr);
+  }
+  else {
+    printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, patchID, matlIndex);
+  }
+  varLock.readUnlock();
+#endif
 }
+
 
 //______________________________________________________________________
 //
 HOST_DEVICE void
 GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex)
 {
+#ifdef __CUDA_ARCH__
+  //device code
   GPUDataWarehouse::dataItem* item = getItem(label, patchID, matlIndex);
   if (item) {
     var.setData(item->var_ptr);
@@ -74,6 +92,19 @@ GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, in
   else {
     printGetError("GPUDataWarehouse::get(GPUReductionVariableBase& var, ...)", label, patchID, matlIndex);
   }
+#else
+  //host code
+  varLock.readLock();
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    allVarPointersInfo vp = varPointers[lpm];
+    var.setData(vp.device_ptr);
+  }
+  else {
+    printGetError("GPUDataWarehouse::get(GPUReductionVariableBase& var, ...)", label, patchID, matlIndex);
+  }
+  varLock.readUnlock();
+#endif
 }
 
 //______________________________________________________________________
@@ -81,6 +112,8 @@ GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, in
 HOST_DEVICE void
 GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, int patchID, int matlIndex)
 {
+#ifdef __CUDA_ARCH__
+  //device code
   GPUDataWarehouse::dataItem* item = getItem(label, patchID, matlIndex);
   if (item) {
     var.setData(item->var_ptr);
@@ -88,6 +121,19 @@ GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, int patchID
   else {
     printGetError("GPUDataWarehouse::get(GPUPerPatchBase& var, ...)", label, patchID, matlIndex);
   }
+#else
+  //host code
+  varLock.readLock();
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    allVarPointersInfo vp = varPointers[lpm];
+    var.setData(vp.device_ptr);
+  }
+  else {
+    printGetError("GPUDataWarehouse::get(GPUPerPatchBase& var, ...)", label, patchID, matlIndex);
+  }
+  varLock.readUnlock();
+#endif
 }
 
 //______________________________________________________________________
@@ -95,6 +141,8 @@ GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, int patchID
 HOST_DEVICE void
 GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex)
 {
+#ifdef __CUDA_ARCH__
+  //device code
   //Both the CPU and GPU share this code
   GPUDataWarehouse::dataItem* item = getItem(label, patchID, matlIndex);
   if (item) {
@@ -103,6 +151,19 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* label, int
   else {
     printGetError("GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, ...)", label, patchID, matlIndex);
   }
+#else
+  //host code
+  varLock.readLock();
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    allVarPointersInfo vp = varPointers[lpm];
+    var.setArray3(vp.device_offset, vp.device_size, vp.device_ptr);
+  }
+  else {
+    printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, patchID, matlIndex);
+  }
+  varLock.readUnlock();
+#endif
 }
 
 
@@ -111,6 +172,8 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* label, int
 HOST_DEVICE void
 GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex)
 {
+#ifdef __CUDA_ARCH__
+  //device code
   GPUDataWarehouse::dataItem* item = getItem(label, patchID, -1 /* matlIndex */);
   if (item) {
     var.setData(item->var_ptr);
@@ -118,6 +181,19 @@ GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* label
   else {
     printGetError("GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, ...)", label, patchID, matlIndex);
   }
+#else
+  //host code
+  varLock.readLock();
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    allVarPointersInfo vp = varPointers[lpm];
+    var.setData(vp.device_ptr);
+  }
+  else {
+    printGetError("GPUDataWarehouse::get(GPUReductionVariableBase& var, ...)", label, patchID, matlIndex);
+  }
+  varLock.readUnlock();
+#endif
 }
 
 //______________________________________________________________________
@@ -125,6 +201,8 @@ GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* label
 HOST_DEVICE void
 GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex)
 {
+#ifdef __CUDA_ARCH__
+  //device code
   GPUDataWarehouse::dataItem* item = getItem(label, patchID, matlIndex);
   if (item) {
     var.setData(item->var_ptr);
@@ -132,6 +210,19 @@ GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, char const* label, int pat
   else {
     printGetError("GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, ...)", label, patchID, matlIndex);
   }
+#else
+  //host code
+  varLock.readLock();
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    allVarPointersInfo vp = varPointers[lpm];
+    var.setData(vp.device_ptr);
+  }
+  else {
+    printGetError("GPUDataWarehouse::get(GPUPerPatchBase& var, ...)", label, patchID, matlIndex);
+  }
+  varLock.readUnlock();
+#endif
 }
 
 //______________________________________________________________________
@@ -157,37 +248,60 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* label, int patchID, 
   //for (std::map<charlabelPatchMatl, allVarPointersInfo>::iterator it = varPointers.begin(); it != varPointers.end();  ++it) {
   //    printf("For label %s patch %d matl %d on device %d I have an entry\n", (*it).first.label.c_str(), d_device_id, (*it).first.patchID, (*it).first.matlIndex);
   //}
-
-  int i=d_numItems;
-  d_numItems++;
-  strncpy(d_varDB[i].label, label, MAX_LABEL);
-  d_varDB[i].domainID = patchID;
-  d_varDB[i].matlIndex = matlIndex;
-  d_varDB[i].xstride = xstride;
-  d_varDB[i].varItem.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
-  d_varDB[i].varItem.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
-  d_varDB[i].varItem.validOnCPU = false; //We don't know here if the data is on the CPU.
-  d_varDB[i].varItem.gtype = gtype;
-  d_varDB[i].varItem.numGhostCells = numGhostCells;
-  var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
-
-  //Now store them in a map for easier lookups on the host
-  //Without this map, we would have to loop through hundreds of array
-  //The above is a good idea when we start implementing modified instead of just required and compute
-  //elements looking for the right key.  With a map, we can find
-  //our matching data faster, and we can store far more information
-  //that the host should know and the device doesn't need to know about.
   allVarPointersInfo vp;
   vp.gridVar = gridVar;
   vp.host_contiguousArrayPtr = host_ptr;
-  vp.device_ptr = d_varDB[i].var_ptr;
-  vp.device_offset = d_varDB[i].var_offset;
-  vp.device_size = d_varDB[i].var_size;
-  vp.varDB_index = i;
 
+  if (d_device_copy != NULL ) {
+    int i=d_numItems;
+    d_numItems++;
+    strncpy(d_varDB[i].label, label, MAX_LABEL);
+    d_varDB[i].domainID = patchID;
+    d_varDB[i].matlIndex = matlIndex;
+    d_varDB[i].xstride = xstride;
+    d_varDB[i].varItem.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+    d_varDB[i].varItem.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
+    d_varDB[i].varItem.validOnCPU = false; //We don't know here if the data is on the CPU.
+    d_varDB[i].varItem.gtype = gtype;
+    d_varDB[i].varItem.numGhostCells = numGhostCells;
+    d_varDB[i].ghostItem.dest_varDB_index = -1; //Signify that this d_varDB item is NOT meta data to copy a ghost cell.
+    var.getArray3(d_varDB[i].var_offset, d_varDB[i].var_size, d_varDB[i].var_ptr);
+
+    //Now store them in a map for easier lookups on the host
+    //Without this map, we would have to loop through hundreds of array
+    //The above is a good idea when we start implementing modified instead of just required and compute
+    //elements looking for the right key.  With a map, we can find
+    //our matching data faster, and we can store far more information
+    //that the host should know and the device doesn't need to know about.
+
+    vp.device_ptr = d_varDB[i].var_ptr;
+    vp.device_offset = d_varDB[i].var_offset;
+    vp.device_size = d_varDB[i].var_size;
+    vp.xstride = xstride;
+    vp.gtype = gtype;
+    vp.numGhostCells = numGhostCells;
+    vp.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+    vp.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
+    vp.validOnCPU = false; //We don't know here if the data is on th
+    vp.varDB_index = i;
+    d_dirty=true;
+    if (d_debug){
+      printf("host put \"%s\" (patch: %d) material %d, location %p into GPUDW %p into d_varDB index %d on device %d, size [%d,%d,%d]\n", label, patchID, matlIndex, d_varDB[i].var_ptr, d_device_copy, i, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+    }
+
+  } else {
+    var.getArray3(vp.device_offset, vp.device_size, vp.device_ptr);
+    vp.varDB_index = -1;
+    vp.xstride = xstride;
+    vp.gtype = gtype;
+    vp.numGhostCells = numGhostCells;
+    vp.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+    vp.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
+    vp.validOnCPU = false; //We don't know here if the data is on th
+  }
 
   if (varPointers.find(lpm) == varPointers.end()) {
-    //printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d on device %d\n",label, label, patchID, matlIndex, d_device_id);
+    printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d on device %d in this DW %p\n",label, label, patchID, matlIndex, d_device_id, this);
     varPointers.insert( std::map<charlabelPatchMatl, allVarPointersInfo>::value_type( lpm, vp ) );
   } else {
     printf("ERROR:\nGPUDataWarehouse::put( %s )  This gpudw database already has a variable for label %s patch %d matl %d on device %d in GPUDW at %p\n",label, label, patchID, matlIndex, d_device_id, d_device_copy);
@@ -198,10 +312,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, char const* label, int patchID, 
   //if (strcmp(label, "sp_vol_CC") == 0) {
   //  printf("host put %s (patch: %d) loc %p into GPUDW %p on device %d, size [%d,%d,%d] with data %1.15e\n", label, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z, *((double *)vp.host_contiguousArrayPtr));
   //}
-  if (d_debug){
-    printf("host put \"%s\" (patch: %d) material %d, location %p into GPUDW %p into d_varDB index %d on device %d, size [%d,%d,%d]\n", label, patchID, matlIndex, d_varDB[i].var_ptr, d_device_copy, i, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
-  }
-  d_dirty=true;
+
 
 #endif
 }
@@ -225,7 +336,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   //thread B's GPU patch 2 needs data from CPU patch 0.  This is a messy scenario, but the cleanest
   //is to have the first arriver between A and B to allocate memory on the GPU,
   //then the second arriver will use the same memory. The simplest approach is to have
-  //threads A and B both copy patch 0 into this GPU memory.  This should be ok as ghost cell
+  //threads A and B both copy the entire patch 0 into this GPU memory.  This should be ok as ghost cell
   //data cannot be modified, so in case of a race condition, nothing will be modified
   //if a memory chunk is being both read and written to simultaneously.
   //So allow duplicates if the data is read only, otherwise don't allow duplicates.
@@ -236,14 +347,13 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   //first check if this patch/var/matl is in the process of loading in.
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   if (varPointers.find(lpm) != varPointers.end()) {
-    int index = varPointers[lpm].varDB_index;
-    if (d_varDB[index].varItem.queueingOnGPU == true) {
-      //It's loading up, use that and return.
+    if (varPointers[lpm].queueingOnGPU) {
+      //Another task needs this same patch for ghost cells, it already allocated space for it.   Use that and return.
       if (d_debug){
         printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
 
       }
-      var.setArray3(d_varDB[index].var_offset, d_varDB[index].var_size, d_varDB[index].var_ptr);
+      var.setArray3(varPointers[lpm].device_offset, varPointers[lpm].device_size, varPointers[lpm].device_ptr);
       varLock.writeUnlock();
       return;
     }
@@ -260,7 +370,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   CUDA_RT_SAFE_CALL( cudaMalloc(&addr, var.getMemSize()) );
   
   if (d_debug) {
-    printf("In allocateAndPut(), cudaMalloc for \"%s\ patch %d size %ld from (%d,%d,%d) to (%d,%d,%d) on thread %d ", label, patchID, var.getMemSize(),
+    printf("In allocateAndPut(), cudaMalloc for %s patch %d size %ld from (%d,%d,%d) to (%d,%d,%d) on thread %d ", label, patchID, var.getMemSize(),
             low.x, low.y, low.z, high.x, high.y, high.z, SCIRun::Thread::self()->myid());
     printf(" at %p on device %d\n", addr, d_device_id);
   }
@@ -284,14 +394,13 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
     //first check if this patch/var/matl is in the process of loading in.
     charlabelPatchMatl lpm(label, patchID, matlIndex);
     if (varPointers.find(lpm) != varPointers.end()) {
-      int index = varPointers[lpm].varDB_index;
-      if (d_varDB[index].varItem.queueingOnGPU == true) {
-        //It's loading up, use that and return.
+      if (varPointers[lpm].queueingOnGPU) {
+        //Another task needs this same patch for ghost cells, it already allocated space for it.   Use that and return.
         if (d_debug){
           printf("GPUDataWarehouse::putContiguous( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
 
         }
-        var.setArray3(d_varDB[index].var_offset, d_varDB[index].var_size, d_varDB[index].var_ptr);
+        var.setArray3(varPointers[lpm].device_offset, varPointers[lpm].device_size, varPointers[lpm].device_ptr);
         varLock.writeUnlock();
         return;
       }
@@ -511,9 +620,9 @@ GPUDataWarehouse::copyHostContiguousToHost(GPUGridVariableBase& device_var, Grid
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   if (varPointers.find(lpm) != varPointers.end()) {
     allVarPointersInfo info = varPointers[lpm];
+
+    device_var.setArray3(varPointers[lpm].device_offset, varPointers[lpm].device_offset, info.device_ptr);
     varLock.readUnlock();
-    int i = info.varDB_index;
-    device_var.setArray3(d_varDB[i].var_offset, d_varDB[i].var_size, info.device_ptr);
    // size_t size = device_var.getMemSize();
     //printf("Copying %s %d %d from host address %p to host address %p\n", label, patchID, matlIndex, info.host_contiguousArrayPtr, info.gridVar->getBasePointer());
 
@@ -625,11 +734,13 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* label, int patc
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n", label);
 #else
-
+  //TODO: This hasn't been updated like grid vars and perpatch vars.  It's still old code.
+  allocateLock.writeLock();
   //__________________________________
   //cpu code
   if (d_numItems == MAX_ITEM) {
     printf("out of GPUDataWarehouse space.  You can try increasing GPUDataWarehouse.h: #define MAX_ITEMS");
+    allocateLock.writeUnlock();
     exit(-1);
   }
 
@@ -646,6 +757,7 @@ GPUDataWarehouse::put(GPUReductionVariableBase& var, char const* label, int patc
            d_device_id);
   }
   d_dirty = true;
+  allocateLock.writeUnlock();
 #endif
 }
 
@@ -671,35 +783,50 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int 
   //first check if this patch/var/matl is in the process of loading in.
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   //for (std::map<charlabelPatchMatl, allVarPointersInfo>::iterator it = varPointers.begin(); it != varPointers.end();  ++it) {
-  //    printf("For label %s patch %d matl %d on device %d I have an entry\n", (*it).first.label.c_str(), d_device_id, (*it).first.patchID, (*it).first.matlIndex);
+  //    printf("For label %s patch %d matl %d on device %d   I have an entry\n", (*it).first.label.c_str(), d_device_id, (*it).first.patchID, (*it).first.matlIndex);
   //}
 
-  int i=d_numItems;
-  d_numItems++;
-  strncpy(d_varDB[i].label, label, MAX_LABEL);
-  d_varDB[i].domainID = patchID;
-  d_varDB[i].matlIndex = matlIndex;
-  d_varDB[i].xstride = xstride;
-  d_varDB[i].varItem.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
-  d_varDB[i].varItem.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
-  d_varDB[i].varItem.validOnCPU = false; //We don't know here if the data is on the CPU.
-  d_varDB[i].varItem.gtype = None;  //PerPatch has no ghost cells
-  d_varDB[i].varItem.numGhostCells = 0;
-  var.getData(d_varDB[i].var_ptr);
-
-  //Now store them in a map for easier lookups on the host
-  //Without this map, we would have to loop through hundreds of array
-  //The above is a good idea when we start implementing modified instead of just required and compute
-  //elements looking for the right key.  With a map, we can find
-  //our matching data faster, and we can store far more information
-  //that the host should know and the device doesn't need to know about.
   allVarPointersInfo vp;
-  vp.gridVar = NULL; //TODO: Is this even needed?
+  vp.gridVar = NULL;
   vp.host_contiguousArrayPtr = host_ptr;
-  vp.device_ptr = d_varDB[i].var_ptr;
-  vp.device_offset = d_varDB[i].var_offset;
-  vp.device_size = d_varDB[i].var_size;
-  vp.varDB_index = i;
+
+  if (d_device_copy != NULL ) {
+    int i=d_numItems;
+    d_numItems++;
+    strncpy(d_varDB[i].label, label, MAX_LABEL);
+    d_varDB[i].domainID = patchID;
+    d_varDB[i].matlIndex = matlIndex;
+    d_varDB[i].xstride = xstride;
+    d_varDB[i].varItem.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+    d_varDB[i].varItem.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
+    d_varDB[i].varItem.validOnCPU = false; //We don't know here if the data is on the CPU.
+    d_varDB[i].varItem.gtype = None;  //PerPatch has no ghost cells
+    d_varDB[i].varItem.numGhostCells = 0;
+    d_varDB[i].ghostItem.dest_varDB_index = -1; //Signify that this d_varDB item is NOT meta data to copy a ghost cell.
+    var.getData(d_varDB[i].var_ptr);
+
+    vp.device_ptr = d_varDB[i].var_ptr;
+    vp.xstride = xstride;
+    vp.gtype = None;
+    vp.numGhostCells = 0;
+    vp.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+    vp.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
+    vp.validOnCPU = false; //We don't know here if the data is on th
+    vp.varDB_index = i;
+    if (d_debug){
+      printf("host put perPatch \"%s\" (patch: %d) material %d, location %p into GPUDW %p into d_varDB index %d on device %d, size [%d,%d,%d]\n", label, patchID, matlIndex, d_varDB[i].var_ptr, d_device_copy, i, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+    }
+    d_dirty=true;
+  } else {
+    var.getData(vp.device_ptr);
+    vp.varDB_index = -1;
+    vp.xstride = xstride;
+    vp.gtype = None;
+    vp.numGhostCells = 0;
+    vp.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+    vp.queueingOnGPU = true; //Assume that because we created space for this variable, data will soon be arriving.
+    vp.validOnCPU = false; //We don't know here if the data is on th
+  }
 
 
   if (varPointers.find(lpm) == varPointers.end()) {
@@ -714,10 +841,7 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, char const* label, int patchID, int 
   //if (strcmp(label, "sp_vol_CC") == 0) {
   //  printf("host put %s (patch: %d) loc %p into GPUDW %p on device %d, size [%d,%d,%d] with data %1.15e\n", label, patchID, d_varDB[i].var_ptr, d_device_copy, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z, *((double *)vp.host_contiguousArrayPtr));
   //}
-  if (d_debug){
-    printf("host put perPatch \"%s\" (patch: %d) material %d, location %p into GPUDW %p into d_varDB index %d on device %d, size [%d,%d,%d]\n", label, patchID, matlIndex, d_varDB[i].var_ptr, d_device_copy, i, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
-  }
-  d_dirty=true;
+
 #endif
 }
 
@@ -755,30 +879,17 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc()\n",label);
 #else
-  //__________________________________
-  //  cpu code
-  //check if it exists prior to allocating memory for it.
-  //One scenario in which we need to handle is when two patches need ghost cells from the
-  //same neighbor patch.  Suppose thread A's GPU patch 1 needs data from CPU patch 0, and
-  //thread B's GPU patch 2 needs data from CPU patch 0.  This is a messy scenario, but the cleanest
-  //is to have the first arriver between A and B to allocate memory on the GPU,
-  //then the second arriver will use the same memory. The simplest approach is to have
-  //threads A and B both copy patch 0 into this GPU memory.  This should be ok as ghost cell
-  //data cannot be modified, so in case of a race condition, nothing will be modified
-  //if a memory chunk is being both read and written to simultaneously.
-  //So allow duplicates if the data is read only, otherwise don't allow duplicates.
+
   varLock.writeLock();
   //first check if this patch/var/matl is in the process of loading in.
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   if (varPointers.find(lpm) != varPointers.end()) {
-    int index = varPointers[lpm].varDB_index;
-    if (d_varDB[index].varItem.queueingOnGPU == true) {
-     //It's loading up, use that and return.
-     if (d_debug){
-       printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
+    if (varPointers[lpm].queueingOnGPU) {
+      //Another task needs this same patch for ghost cells, it already allocated space for it.   Use that and return.
+      if (d_debug){
+        printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d on device %d.  Reusing it.\n", label, label, patchID, matlIndex, d_device_id);
       }
-     var.setData(d_varDB[index].var_ptr);
-
+     var.setData(varPointers[lpm].device_ptr);
      varLock.writeUnlock();
      return;
    }
@@ -868,7 +979,7 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndex)
 #else
   //__________________________________
   // cpu code
-  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  /*charlabelPatchMatl lpm(label, patchID, matlIndex);
   int i = 0;
   varLock.readLock();
   if (varPointers.find(lpm) != varPointers.end()) {
@@ -888,7 +999,9 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndex)
     printf("ERROR:\nGPUDataWarehouse::getItem( %s ), data does not match what was expected\n",label);
     exit(-1);
   }
-  return &d_varDB[i];
+  */
+  printf("ERROR:\nGPUDataWarehouse::getItem() should only be called device side.\n",label);
+  return &d_varDB[0];
 #endif
 }
 
@@ -898,7 +1011,7 @@ HOST_DEVICE bool
 GPUDataWarehouse::exist(char const* label, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
-  printf("exist() is only for framework code\n");
+  printf("exist() is not yet implemented for the device.\n");
   return false;
 #else
   charlabelPatchMatl lpm(label, patchID, matlIndex);
@@ -915,7 +1028,7 @@ HOST_DEVICE bool
 GPUDataWarehouse::exist(char const* label, int patchID, int matlIndex, int3 host_size, int3 host_offset, bool skipContiguous, bool onlyContiguous )
 {
 #ifdef __CUDA_ARCH__
-  printf("exist() is only for framework code\n");
+  printf("exist() is not yet implemented for the device.\n");
   return false;
 #else
   //check if we have matching label, patch, material, size and offsets.
@@ -955,17 +1068,17 @@ HOST_DEVICE bool
 GPUDataWarehouse::remove(char const* label, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
-  printf("GPUDataWarehouse::remove() should only be called by the framework\n");
+  printf("GPUDataWarehouse::remove() should not be called on device.\n");
   return false;
 #else
-  //Remove may be a bad idea entirely, avoid calling this unless you are
-  //absolutely sure what you are doing
+  //It seems there are few, if any, use case scenarios for calling remove.
+  //Avoid calling this unless you are absolutely sure what you are doing
   bool retVal = false;
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   varLock.writeLock();
   if (varPointers.find(lpm) != varPointers.end()) {
-    int i = varPointers[lpm].varDB_index;
-    d_varDB[i].label[0] = '\0'; //leave a hole in the flat array, not deleted.
+    //int i = varPointers[lpm].varDB_index;
+    //d_varDB[i].label[0] = '\0'; //leave a hole in the flat array, not deleted.
     varPointers.erase(lpm);
     retVal = true;
     d_dirty=true;
@@ -976,27 +1089,49 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlIndex)
 #endif
 }
 
+//______________________________________________________________________
+//
+HOST_DEVICE void
+GPUDataWarehouse::init()
+{
+#ifdef __CUDA_ARCH__
+  printf("GPUDataWarehouse::init() should not be called on the device.\n");
+#else
+  //other data members are initialized in the constructor
+  d_numItems = 0;
+  d_numMaterials = 0;
+  d_debug = false;
+  //d_numGhostCells = 0;
+  d_device_copy = NULL;
+  d_dirty = true;
+  objectSizeInBytes = 0;
+  resetdVarDB();
+  numGhostCellCopiesNeeded = 0;
+
+#endif
+}
 
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::init_device(int id)
+GPUDataWarehouse::init_device(size_t objectSizeInBytes)
 {
 #ifdef __CUDA_ARCH__
-  printf("GPUDataWarehouse::remove() should only be called by the framework\n");
+  printf("GPUDataWarehouse::init_device() should only be called by the framework\n");
 #else
 
-  d_device_id = id;
-  OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
-  void* temp = NULL;
-  CUDA_RT_SAFE_CALL(cudaMalloc(&temp, sizeof(GPUDataWarehouse)));
-  d_device_copy = (GPUDataWarehouse*)temp;
-  //cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
-  if (d_debug) {
-    printf("Init GPUDW on-device copy %lu bytes to %p on device %u\n", sizeof(GPUDataWarehouse), d_device_copy, d_device_id);
-  }
+    this->objectSizeInBytes = objectSizeInBytes;
+    OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
+    void* temp = NULL;
+    CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
+    d_device_copy = (GPUDataWarehouse*)temp;
+    //cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
+    if (d_debug) {
+      printf("init_device() allocated %lu bytes at %p on device %u\n", objectSizeInBytes, d_device_copy, d_device_id);
+    }
 
-  d_dirty = true;
+    d_dirty = true;
+
 #endif 
 }
 
@@ -1018,15 +1153,17 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
   if (d_dirty){
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     //Even though this is in a writeLock state on the CPU, the nature of multiple threads
-    //each with their own stream copying to a GPU means that one stream might seemingly go out
+    //each with their own stream copying to a GPU means that one stream might seemingly go outg
     //of order.  This is ok for two reasons. 1) Nothing should ever be *removed* from a gpu data warehouse
     //2) Therefore, it doesn't matter if streams go out of order, each thread will still ensure it copies
     //exactly what it needs.  Other streams may write additional data to the gpu data warehouse, but cpu
     //threads will only access their own data, not data copied in by other cpu threada via streams.
 
     //This approach does NOT require CUDA pinned memory.
+    unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
+    cudaStream_t* ptr = (cudaStream_t*)(cuda_stream);
 
-    CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, sizeof(GPUDataWarehouse), cudaMemcpyHostToDevice, *((cudaStream_t*)cuda_stream)));
+    CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice, *ptr));
 
 
     if (d_debug) {
@@ -1068,11 +1205,11 @@ GPUDataWarehouse::clear()
   for (varIter = varPointers.begin(); varIter != varPointers.end(); ++varIter) {
     if (varIter->second.host_contiguousArrayPtr == NULL) {
       if (d_debug){
-        printf("cuda Free for %s at device ptr %p on device %d\n" , d_varDB[varIter->second.varDB_index].label, d_varDB[varIter->second.varDB_index].var_ptr, d_device_id );
+        printf("cuda Free for %s at device ptr %p on device %d\n" , varIter->first.label.c_str(), varIter->second.device_ptr, d_device_id );
 
       }
-      CUDA_RT_SAFE_CALL(cudaFree(d_varDB[varIter->second.varDB_index].var_ptr));
-      d_varDB[varIter->second.varDB_index].var_ptr == NULL;
+      CUDA_RT_SAFE_CALL(cudaFree(varIter->second.device_ptr));
+      varIter->second.device_ptr == NULL;
     }
   }
 
@@ -1103,9 +1240,6 @@ GPUDataWarehouse::clear()
   }
   contiguousArrays.clear();
 
-  d_numItems=0;
-  ghostCellsExist = false;
-  resetdVarDB();
   varLock.writeUnlock();
   if ( d_device_copy ) {
     if(d_debug){
@@ -1115,6 +1249,9 @@ GPUDataWarehouse::clear()
     CUDA_RT_SAFE_CALL(cudaFree( d_device_copy ));
 
   }
+
+  init();
+
 #endif
 }
 
@@ -1126,40 +1263,42 @@ GPUDataWarehouse::resetdVarDB()
 #ifdef __CUDA_ARCH__
   //no meaning in device method
 #else
-  //This is designed to help stop tricky race scenarios.  One such scenario I encountered was as follows:
-  //Thread A would call getItem() on the GPU, and look thruogh d_varDB for a matching label/patch/matl tuple
-  //Thread B would have previously added a new item to the d_varDB, then called syncto_device.
-  //Thread B would be partway through updating d_varDB on the GPU.  It would increase the number of items by one
-  //And it would write the label.  But it wouldn't yet write the patch or matl part of the tuple. By coincidence
-  //the old garbage data in the GPU would have exactly the patch and matl that matches thread A's query
-  //For a very brief window, there would be 2 tuples matching that label/patch/matl pair in d_varDB because
-  //thread B hasn't fully written in all of his data.
-  //Thread A's getItem() would run exactly in this brief window, find the wrong match, and use the wrong
-  //memory address, and the program would crash with an invalid address.
-  //The answer is to initialize d_varDB to items that should never provide an accidental match.
-  //This should also occur for all other arrays.
 
-  //TODO: Should this be could be cleaned up to only reset as much as was used.
-  for (int i = 0; i < MAX_ITEM; i++) {
-    d_varDB[i].label[0] = '\0';
-    d_varDB[i].domainID = -1;
-    d_varDB[i].matlIndex = -1;
-    d_varDB[i].var_ptr = NULL;
-    d_varDB[i].ghostItem.cpuDetailedTaskOwner = NULL;
-    d_varDB[i].ghostItem.source_varDB_index = -1;
-    d_varDB[i].ghostItem.dest_varDB_index = -1;
+  if (d_device_copy != NULL) {
+    //TODO: When TaskDWs are removed, this section shouldn't be needed as there won't be concurrency problems
 
-  }
-  for (int i = 0; i < MAX_LVITEM; i++) {
-    d_levelDB[i].label[0] = '\0';
-    d_levelDB[i].domainID = -1;
-    d_levelDB[i].matlIndex = -1;
-    d_levelDB[i].var_ptr = NULL;
-  }
-  for (int i = 0; i < MAX_MATERIALS; i++) {
-    d_materialDB[i].simulationType[0] = '\0';
-  }
+    //This is designed to help stop tricky race scenarios.  One such scenario I encountered was as follows:
+    //Thread A would call getItem() on the GPU, and look thruogh d_varDB for a matching label/patch/matl tuple
+    //Thread B would have previously added a new item to the d_varDB, then called syncto_device.
+    //Thread B would be partway through updating d_varDB on the GPU.  It would increase the number of items by one
+    //And it would write the label.  But it wouldn't yet write the patch or matl part of the tuple. By coincidence
+    //the old garbage data in the GPU would have exactly the patch and matl that matches thread A's query
+    //For a very brief window, there would be 2 tuples matching that label/patch/matl pair in d_varDB because
+    //thread B hasn't fully written in all of his data.
+    //Thread A's getItem() would run exactly in this brief window, find the wrong match, and use the wrong
+    //memory address, and the program would crash with an invalid address.
+    //The answer is to initialize d_varDB to items that should never provide an accidental match.
+    //This should also occur for all other arrays.
 
+    //TODO: Should this be could be cleaned up to only reset as much as was used.
+    for (int i = 0; i < MAX_ITEM; i++) {
+      d_varDB[i].label[0] = '\0';
+      d_varDB[i].domainID = -1;
+      d_varDB[i].matlIndex = -1;
+      d_varDB[i].var_ptr = NULL;
+      d_varDB[i].ghostItem.dest_varDB_index = -1;
+
+    }
+    for (int i = 0; i < MAX_LVITEM; i++) {
+      d_levelDB[i].label[0] = '\0';
+      d_levelDB[i].domainID = -1;
+      d_levelDB[i].matlIndex = -1;
+      d_levelDB[i].var_ptr = NULL;
+    }
+    for (int i = 0; i < MAX_MATERIALS; i++) {
+      d_materialDB[i].simulationType[0] = '\0';
+    }
+  }
 #endif
 }
 
@@ -1234,7 +1373,7 @@ __global__ void prepareGpuGhostCellIntoGpuArrayKernel(GPUDataWarehouse *gpudw, v
 }
 
 HOST_DEVICE void
-GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner, void* toDetailedTask,
+GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner,
                                                     int3 ghostCellLow, int3 ghostCellHigh,
                                                     int xstride,
                                                     char const* label, int matlIndex,
@@ -1247,26 +1386,24 @@ GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner, vo
 #else
 
 
-  int index = 0;
   charlabelPatchMatl lpm(label, fromPatchID, matlIndex);
+  allVarPointersInfo vp;
   varLock.writeLock();
   if (varPointers.find(lpm) != varPointers.end()) {
-    index = varPointers[lpm].varDB_index;
-
+    vp = varPointers[lpm];
   } else {
     varLock.writeUnlock();
 
     printf("ERROR:\nGPUDataWarehouse::prepareGhostCellForCopyingInvoker, label: %s source patch ID %d, materialID %d not found in variable database", label, fromPatchID, matlIndex);
     exit(-1);
   }
-  int ghostCellSize = (ghostCellHigh.x-ghostCellLow.x) * (ghostCellHigh.y-ghostCellLow.y) * (ghostCellHigh.z-ghostCellLow.z) * d_varDB[index].xstride;
+  int ghostCellSize = (ghostCellHigh.x-ghostCellLow.x) * (ghostCellHigh.y-ghostCellLow.y) * (ghostCellHigh.z-ghostCellLow.z) * xstride;
 
   tempGhostCellInfo tgci;
   tgci.label = label;
   tgci.patchID = fromPatchID;
   tgci.matlIndex = matlIndex;
   tgci.cpuDetailedTaskOwner = cpuDetailedTaskOwner;
-  tgci.toDetailedTask = toDetailedTask;
   //tgci->copied = false;
   tgci.memSize = ghostCellSize;
   tgci.ghostCellLow = ghostCellLow;
@@ -1276,15 +1413,14 @@ GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner, vo
   tgci.fromDeviceIndex = fromDeviceIndex;
   tgci.toDeviceIndex = toDeviceIndex;
 
-  if (d_varDB[index].var_offset.x == ghostCellLow.x &&
-      d_varDB[index].var_offset.x == ghostCellLow.x &&
-      d_varDB[index].var_offset.x == ghostCellLow.x &&
-      d_varDB[index].var_offset.x+d_varDB[index].var_size.x == ghostCellHigh.x &&
-      d_varDB[index].var_offset.y+d_varDB[index].var_size.y == ghostCellHigh.y &&
-      d_varDB[index].var_offset.z+d_varDB[index].var_size.z == ghostCellHigh.y) {
+  if (vp.device_offset.x == ghostCellLow.x &&
+      vp.device_offset.y == ghostCellLow.y &&
+      vp.device_offset.z == ghostCellLow.z &&
+      vp.device_offset.x+vp.device_size.x == ghostCellHigh.x &&
+      vp.device_offset.y+vp.device_size.y == ghostCellHigh.y &&
+      vp.device_offset.z+vp.device_size.z == ghostCellHigh.z) {
     //The entire source is the ghost cell, so use that.
-    tgci.device_ptr = d_varDB[index].var_ptr;
-    tgci.usingVarDBData = true;
+    tgci.device_ptr = vp.device_ptr;
   } else {
     void *d_ghostCellData = NULL;
 
@@ -1299,13 +1435,12 @@ GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner, vo
     dim3 dimGrid(xblocks, yblocks, zblocks);
 
     //TODO, stream this?
-    prepareGpuGhostCellIntoGpuArrayKernel<<< dimGrid, dimBlock>>>(this->d_device_copy, d_ghostCellData, index, ghostCellLow, ghostCellHigh);
+    //prepareGpuGhostCellIntoGpuArrayKernel<<< dimGrid, dimBlock>>>(this->d_device_copy, d_ghostCellData, index, ghostCellLow, ghostCellHigh);
 
     //This copied ghost cell is only temporary.  Don't store it in the varDB, it should be moved and deleted very quickly.
     //Another reason not to store it in this object is the varPointers collection is a map, not a multimap.  We
     //do not want two entries for the same label/patch/matl tuple.
     tgci.device_ptr = d_ghostCellData;
-    tgci.usingVarDBData = false;
 
   }
 
@@ -1318,7 +1453,7 @@ GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner, vo
 }
 
 HOST_DEVICE void
-GPUDataWarehouse::prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner, void* toDetailedTask,
+GPUDataWarehouse::prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner,
                                                     int3 ghostCellLow, int3 ghostCellHigh,
                                                     int xstride,
                                                     char const* label, int matlIndex,
@@ -1346,7 +1481,6 @@ GPUDataWarehouse::prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner
   tgci.patchID = fromPatchID;
   tgci.matlIndex = matlIndex;
   tgci.cpuDetailedTaskOwner = cpuDetailedTaskOwner;
-  tgci.toDetailedTask = toDetailedTask;
   //tgci->copied = false;
   tgci.device_ptr = data_ptr;
   tgci.memSize = ghostCellSize;
@@ -1488,6 +1622,8 @@ GPUDataWarehouse::copyTempGhostCellsToHostVar(void* hostVarPointer, int3 ghostCe
   //Check to make sure we have *exactly* the ghost cell we want.  (Other
   //CPU threads running other tasks can add their own data to the
   //tempGhostCells collection.
+  //TODO: Make sure we only copy out external dependencies.  tempGhostCells can have both
+  //internal (GPU -> another GPU same node) and external (GPU -> another node) dependencies.
   for (vector<tempGhostCellInfo>::iterator it = tempGhostCells.begin();
          it != tempGhostCells.end();
          ++it)
@@ -1522,7 +1658,7 @@ GPUDataWarehouse::copyTempGhostCellsToHostVar(void* hostVarPointer, int3 ghostCe
 }
 
 HOST_DEVICE void
-GPUDataWarehouse::copyGpuGhostCellsToGpuVars(void* taskID) {
+GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
 #ifndef __CUDA_ARCH__
   //Not for the host side
 #else
@@ -1540,13 +1676,13 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars(void* taskID) {
    int threadID = threadIdx.x +  blockDim.x * threadIdx.y + (blockDim.x * blockDim.y) * threadIdx.z;  //threadID in the block
    int totalThreads = numThreads * gridDim.x * gridDim.y * gridDim.z;
    int assignedCellID;
-
    //go through every ghost cell var we need
    for (int i = 0; i < d_numItems; i++) {
-     //don't copy somebody else's ghost cell, only our own, and only do it once.
-     if (d_varDB[i].ghostItem.cpuDetailedTaskOwner == taskID && d_varDB[i].ghostItem.copied == false) {
+     //some things in d_varDB are meta data for simulation variables
+     //other things in d_varDB are meta data for how to copy ghost cells.
+     //Make sure we're only dealing with ghost cells here
+     if(d_varDB[i].ghostItem.dest_varDB_index != -1) {
        assignedCellID = blockID * numThreads + threadID;
-       int sourceIndex = d_varDB[i].ghostItem.source_varDB_index;
        int destIndex = d_varDB[i].ghostItem.dest_varDB_index;
 
 
@@ -1580,17 +1716,8 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars(void* taskID) {
 
            int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
 
-           //printf("id is %d\n", assignedCellID);
-
-
            //copy all 8 bytes of a double in one shot
            if (d_varDB[i].xstride == sizeof(double)) {
-             //if (destOffset == 134) {
-             //if (d_ghostCellDB[i].sharedLowCoordinates.x == 0 && d_ghostCellDB[i].sharedLowCoordinates.y == 1 && d_ghostCellDB[i].sharedLowCoordinates.z == 1) {
-               //printf("here: from %d (%d, %d, %d) to %d (%d, %d, %d) address is %p and offset it becomes %p and the value is %1.6lf\n",  sourceIndex,x_source_real,y_source_real,z_source_real, destIndex, x_dest_real,y_dest_real,z_dest_real, d_varDB[sourceIndex].var_ptr, (double*)(d_varDB[sourceIndex].var_ptr) + sourceOffset, *((double*)(d_varDB[sourceIndex].var_ptr) + sourceOffset));
-             //  printf("copyGpuGhostCellsToGpuVars: copying between (%d, %d, %d) to (%d, %d, %d) address is %p and offset it becomes %p and the value is %1.6lf\n",  d_ghostCellDB[i].sharedLowCoordinates.x, d_ghostCellDB[i].sharedLowCoordinates.y, d_ghostCellDB[i].sharedLowCoordinates.z, d_ghostCellDB[i].sharedHighCoordinates.x, d_ghostCellDB[i].sharedHighCoordinates.y, d_ghostCellDB[i].sharedHighCoordinates.z, d_ghostCellDB[i].source_ptr, (double*)(d_ghostCellDB[i].source_ptr) + sourceOffset, *((double*)(d_ghostCellDB[i].source_ptr) + sourceOffset));
-               //printf("copyGpuGhostCellsToGpuVars: copying from %d to %d - (%d, %d, %d) address is %p and offset it becomes %p and the value is %1.6lf\n", d_varDB[sourceIndex].domainID, d_varDB[destIndex].domainID, x, y, d_ghostCellDB[i].sharedLowCoordinates.z, d_varDB[sourceIndex].var_ptr, (double*)(d_varDB[sourceIndex].var_ptr) + sourceOffset, *((double*)(d_varDB[sourceIndex].var_ptr) + sourceOffset));
-             //}
              *((double*)(d_varDB[destIndex].var_ptr) + destOffset) = *((double*)(d_varDB[i].var_ptr) + sourceOffset);
            }
            //or copy all 4 bytes of an int in one shot.
@@ -1611,32 +1738,27 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars(void* taskID) {
 #endif
 }
 
- __global__ void copyGpuGhostCellsToGpuVarsKernel( GPUDataWarehouse *gpudw, void* taskID) {
-   gpudw->copyGpuGhostCellsToGpuVars(taskID);
+ __global__ void copyGpuGhostCellsToGpuVarsKernel( GPUDataWarehouse *gpudw) {
+   gpudw->copyGpuGhostCellsToGpuVars();
 }
 
 HOST_DEVICE void
-GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream, void* taskID)
+GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream)
 {
 #ifdef __CUDA_ARCH__
   //Not for the device side
 #else
 
-  bool copy_ghostCellsExist;
   //see if this GPU datawarehouse has ghost cells in it.
-  varLock.readLock();
-  //numGhostCells = d_numGhostCells;
-  copy_ghostCellsExist = ghostCellsExist;
-  varLock.readUnlock();
-  if (copy_ghostCellsExist > 0) {
+  if (numGhostCellCopiesNeeded > 0) {
     //call a kernel which gets the copy process started.
     OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
-    const int BLOCKSIZE = 24;
+    const int BLOCKSIZE = 1;
     int xblocks = 32;
     int yblocks = 1;
     int zblocks = 1;
-    dim3 dimBlock(BLOCKSIZE, BLOCKSIZE, 1);  //hopefully 24 *24 * 32 threads is enough for us.
-    dim3 dimGrid(xblocks, yblocks, zblocks);
+    dim3 dimBlock(32, 32, 1);
+    dim3 dimGrid(1, 1, 1);  //Give each ghost copying kernel 32 * 32 = 1024 threads to copy
     //printf("Launching copyGpuGhostCellsToGpuVarsKernel\n");
     //cudaDeviceSynchronize();
 
@@ -1665,7 +1787,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream, void* 
     }
     */
 
-    copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy, taskID);
+    copyGpuGhostCellsToGpuVarsKernel<<< dimGrid, dimBlock, 0, *stream >>>(this->d_device_copy);
 
     /*
     {
@@ -1692,14 +1814,26 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream, void* 
 
   }
 
-
-
 #endif
 }
 
 
+
+HOST_DEVICE bool
+GPUDataWarehouse::ghostCellCopiesNeeded()
+{
+#ifdef __CUDA_ARCH__
+  //Not implemented for the device side
+#else
+
+  //see if this GPU datawarehouse has ghost cells in it.
+  return (numGhostCellCopiesNeeded > 0);
+
+#endif
+}
+
 HOST_DEVICE void
-GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID, int destPatchID, int matlIndex,
+GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPatchID, int matlIndex,
                                int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset,
                                bool sourceIsInTempGhostCells, void * data_ptr, int3 var_offset, int3 var_size, int xstride) {
 #ifdef __CUDA_ARCH__
@@ -1707,12 +1841,9 @@ GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID
 #else
   //Add information describing a ghost cell that needs to be copied internally from
   //one chunk of data to the destination.  This covers a GPU -> same GPU copy scenario.
-  varLock.writeLock();
   int i = d_numItems;
   d_numItems++;
-  ghostCellsExist = true;
-  d_varDB[i].ghostItem.cpuDetailedTaskOwner = dtask;
-  d_varDB[i].ghostItem.copied = false;
+  numGhostCellCopiesNeeded++;
   d_varDB[i].ghostItem.sharedLowCoordinates = sharedLowCoordinates;
   d_varDB[i].ghostItem.sharedHighCoordinates = sharedHighCoordinates;
   d_varDB[i].ghostItem.virtualOffset = virtualOffset;
@@ -1720,7 +1851,6 @@ GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID
     printf("Placed into the ghostCellDB in index %d from %d to %d has shared coordinates (%d, %d, %d), (%d, %d, %d)\n", i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z);
   }
   if (sourceIsInTempGhostCells) {
-    d_varDB[i].ghostItem.source_varDB_index = -1;
     d_varDB[i].var_offset = var_offset;
     d_varDB[i].var_size = var_size;
     d_varDB[i].var_ptr = data_ptr;
@@ -1730,13 +1860,13 @@ GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID
     charlabelPatchMatl lpm_source(label, sourcePatchID, matlIndex);
     if (varPointers.find(lpm_source) != varPointers.end()) {
       int index = varPointers[lpm_source].varDB_index;
+      //printf("The found index %d for var %s patch %d matl %d\n", index, label, sourcePatchID, matlIndex);
       if (d_varDB[index].varItem.validOnGPU == false && d_varDB[index].varItem.queueingOnGPU == false) {
         //Steps prior to this point should have checked for this scenario.
         //This is just a failsafe.
         printf("ERROR:\nGPUDataWarehouse::putGhostCell, attempting to use label: %s source patch ID %d, materialID %d, it exists but the data is not valid and not going to be valid on this GPU.", label, sourcePatchID, matlIndex);
         exit(-1);
       }
-      d_varDB[i].ghostItem.source_varDB_index = index;
       d_varDB[i].var_offset = d_varDB[index].var_offset;
       d_varDB[i].var_size = d_varDB[index].var_size;
       d_varDB[i].var_ptr = d_varDB[index].var_ptr;
@@ -1751,51 +1881,34 @@ GPUDataWarehouse::putGhostCell(void* dtask, char const* label, int sourcePatchID
   if (varPointers.find(lpm_dest) != varPointers.end()) {
     d_varDB[i].ghostItem.dest_varDB_index = varPointers[lpm_dest].varDB_index;
   } else {;
-    printf("ERROR:\nGPUDataWarehouse::putGhostCell, label: %s destination patch ID %d, materialID %d not found in variable database", label, destPatchID, matlIndex);
+    printf("ERROR:\nGPUDataWarehouse::putGhostCell, label: %s destination patch ID %d, materialID %d not found in variable database-c", label, destPatchID, matlIndex);
     exit(-1);
   }
   d_dirty=true;
-  varLock.writeUnlock();
 #endif
 }
-
-HOST_DEVICE int
-GPUDataWarehouse::getNumGhostCells() {
-#ifdef __CUDA_ARCH__
-
-  //return d_numGhostCells;
-  return -1;
-#else
-  //return d_numGhostCells;
-  return -1;
-#endif
-}
-
-HOST_DEVICE void GPUDataWarehouse::markGhostCellsCopied(void* taskID) {
-#ifdef __CUDA_ARCH__
-  printf("ERROR:\nGPUDataWarehouse::markGhostCellsCopied()  Not implemented for GPU\n");
-#else
-  int numItems = d_numItems;
-  for (int i = 0; i < numItems; i++) {
-    if (d_varDB[i].ghostItem.cpuDetailedTaskOwner == taskID && d_varDB[i].ghostItem.copied == false) {
-      d_varDB[i].ghostItem.copied = true;
-    }
-  }
-#endif
-}
-
 
 HOST_DEVICE void
 GPUDataWarehouse::getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, int& numGhostCells,
-    char const* label, int patchID, int matlIndex) {
-  GPUDataWarehouse::dataItem* item = getItem(label, patchID, matlIndex);
-  low = item->var_offset;
-  high.x = item->var_size.x - item->var_offset.x;
-  high.y = item->var_size.y - item->var_offset.y;
-  high.z = item->var_size.z - item->var_offset.z;
-  siz = item->var_size;
-  gtype = item->varItem.gtype;
-  numGhostCells = item->varItem.numGhostCells;
+  char const* label, int patchID, int matlIndex) {
+#ifdef __CUDA_ARCH__
+  printf("ERROR:\nGPUDataWarehouse::getSizes()  Not implemented for GPU\n");
+#else
+  varLock.readLock();
+  charlabelPatchMatl lpm(label, patchID, matlIndex);
+  if (varPointers.find(lpm) != varPointers.end()) {
+    allVarPointersInfo info = varPointers[lpm];
+    low = info.device_offset;
+    high.x = info.device_size.x - info.device_offset.x;
+    high.y = info.device_size.y - info.device_offset.y;
+    high.z = info.device_size.z - info.device_offset.z;
+    siz = info.device_size;
+    gtype = info.gtype;
+    numGhostCells = info.numGhostCells;
+  }
+  varLock.readUnlock();
+
+#endif
 }
 
 HOST_DEVICE void GPUDataWarehouse::getTempGhostCells(void * dtask, std::vector<tempGhostCellInfo>& temp) {
@@ -1823,7 +1936,7 @@ HOST_DEVICE bool
 GPUDataWarehouse::getValidOnGPU(char const* label, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
-  printf("ERROR:\nGPUDataWarehouse::getValidOnGPU( %s )  Not implemented yet for GPU\n",label);
+  printf("ERROR:\nGPUDataWarehouse::getValidOnGPU( %s )  Not implemented for GPU\n",label);
   return false;
 #else
   //__________________________________
@@ -1831,9 +1944,10 @@ GPUDataWarehouse::getValidOnGPU(char const* label, int patchID, int matlIndex)
   varLock.readLock();
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   if (varPointers.find(lpm) != varPointers.end()) {
-    allVarPointersInfo info = varPointers[lpm];
-    int i = info.varDB_index;
-    bool retVal = d_varDB[i].varItem.validOnGPU;
+    bool retVal = varPointers[lpm].validOnGPU;
+    //allVarPointersInfo info = varPointers[lpm];
+    //int i = info.varDB_index;
+    //bool retVal = d_varDB[i].varItem.validOnGPU;
     varLock.readUnlock();
     return retVal;
 
@@ -1848,19 +1962,20 @@ HOST_DEVICE void
 GPUDataWarehouse::setValidOnGPU(char const* label, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
-  printf("ERROR:\nGPUDataWarehouse::setValidOnGPU( %s )  Not implemented yet for GPU\n",label);
+  printf("ERROR:\nGPUDataWarehouse::setValidOnGPU( %s )  Not implemented for GPU\n",label);
 #else
   //__________________________________
   //  cpu code
-  varLock.readLock();
+  varLock.writeLock();
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   if (varPointers.find(lpm) != varPointers.end()) {
-    allVarPointersInfo info = varPointers[lpm];
-    int i = info.varDB_index;
-    d_varDB[i].varItem.validOnGPU = true;
-    varLock.readUnlock();
+    varPointers[lpm].validOnGPU = true;
+    //allVarPointersInfo info = varPointers[lpm];
+    //int i = info.varDB_index;
+    //d_varDB[i].varItem.validOnGPU = true;
+    varLock.writeUnlock();
   } else {
-    varLock.readUnlock();
+    varLock.writeUnlock();
     printf("host setValidOnGPU unknown variable %s on GPUDataWarehouse\n", label);
     exit(-1);
   }
@@ -1871,7 +1986,7 @@ HOST_DEVICE bool
 GPUDataWarehouse::getValidOnCPU(char const* label, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
-  printf("ERROR:\nGPUDataWarehouse::getValidOnCPU( %s )  Not implemented yet for GPU\n",label);
+  printf("ERROR:\nGPUDataWarehouse::getValidOnCPU( %s )  Not implemented for GPU\n",label);
   return false;
 #else
   //__________________________________
@@ -1879,9 +1994,10 @@ GPUDataWarehouse::getValidOnCPU(char const* label, int patchID, int matlIndex)
   varLock.readLock();
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   if (varPointers.find(lpm) != varPointers.end()) {
-    allVarPointersInfo info = varPointers[lpm];
-    int i = info.varDB_index;
-    bool retVal = d_varDB[i].varItem.validOnCPU;
+    bool retVal = varPointers[lpm].validOnCPU;
+    //allVarPointersInfo info = varPointers[lpm];
+    //int i = info.varDB_index;
+    //bool retVal = d_varDB[i].varItem.validOnCPU;
     varLock.readUnlock();
     return retVal;
 
@@ -1895,19 +2011,20 @@ HOST_DEVICE void
 GPUDataWarehouse::setValidOnCPU(char const* label, int patchID, int matlIndex)
 {
 #ifdef __CUDA_ARCH__
-  printf("ERROR:\nGPUDataWarehouse::setValidOnCPU( %s )  Not implemented yet for GPU\n",label);
+  printf("ERROR:\nGPUDataWarehouse::setValidOnCPU( %s )  Not implemented for GPU\n",label);
 #else
   //__________________________________
   //  cpu code
-  varLock.readLock();
+  varLock.writeLock();
   charlabelPatchMatl lpm(label, patchID, matlIndex);
   if (varPointers.find(lpm) != varPointers.end()) {
-    allVarPointersInfo info = varPointers[lpm];
-    int i = info.varDB_index;
-    d_varDB[i].varItem.validOnCPU = true;
-    varLock.readUnlock();
+    varPointers[lpm].validOnCPU = true;
+    //allVarPointersInfo info = varPointers[lpm];
+    //int i = info.varDB_index;
+    //d_varDB[i].varItem.validOnCPU = true;
+    varLock.writeUnlock();
   } else {
-    varLock.readUnlock();
+    varLock.writeUnlock();
     printf("host setValidOnCPU unknown variable %s on GPUDataWarehouse\n", label);
     exit(-1);
   }
@@ -1933,6 +2050,15 @@ GPUDataWarehouse::printGetError(const char* msg, char const* label, int patchID,
 
 #else
   printf("\t ERROR: %s( \"%s\", patchID: %i, matl: %i )  unknown variable\n", msg, label, patchID, matlIndex);
+#endif
+}
+
+HOST_DEVICE void*
+GPUDataWarehouse::getPlacementNewBuffer() {
+#ifdef __CUDA_ARCH__
+  printf("GPUDataWarehouse::getPlacementNewBuffer() not for device code\n");
+#else
+  return placementNewBuffer;
 #endif
 }
 

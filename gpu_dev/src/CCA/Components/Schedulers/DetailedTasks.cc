@@ -21,7 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-
+#include <Core/Thread/Time.h>
 #include <TauProfilerForSCIRun.h>
 
 #include <CCA/Components/Schedulers/DetailedTasks.h>
@@ -104,7 +104,6 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   stask_ = scinew Task( "send old data", Task::InitialSend );
   stask_->d_phase = 0;
   stask_->setMapping( dwmap );
-
   // Create a send old detailed task for every processor in my neighborhood.
   for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
     DetailedTask* newtask = scinew DetailedTask( stask_, 0, 0, this );
@@ -290,6 +289,8 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
+  TaskGPUDataWarehouses[0] = NULL;
+  TaskGPUDataWarehouses[1] = NULL;
 #endif
 }
 
@@ -339,13 +340,13 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
   if (task->usesDevice()) {
     cudaError_t retVal;
     OnDemandDataWarehouse::uintahSetCudaDevice(getDeviceNum());
-    task->doit(event, pg, patches, matls, dws, getCUDAStream(), deviceNum_);
+    task->doit(event, pg, patches, matls, dws, getTaskGPUDataWarehouse(Task::OldDW), getTaskGPUDataWarehouse(Task::NewDW), getCUDAStream(), deviceNum_);
   }
   else {
-    task->doit(event, pg, patches, matls, dws, NULL, -1);
+    task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
   }
 #else
-  task->doit(event, pg, patches, matls, dws, NULL, -1);
+  task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
 #endif
 
   for (int i = 0; i < (int)dws.size(); i++) {
@@ -1602,6 +1603,8 @@ bool DetailedTask::checkCUDAStreamDone(int deviceNum_)
     SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
     return false;
   } else { //other error
+    printf("Waiting for 60\n");
+    Time::waitFor( (double)60 );
     CUDA_RT_SAFE_CALL (retVal);
     return false;
   }
@@ -1620,6 +1623,14 @@ bool DetailedTask::checkAllCUDAStreamsDone()
     }
   }
   return true;
+}
+
+void DetailedTask::setTaskGPUDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
+  TaskGPUDataWarehouses[DW] = TaskDW;
+}
+
+GPUDataWarehouse* DetailedTask::getTaskGPUDataWarehouse(Task::WhichDW DW) {
+  return TaskGPUDataWarehouses[DW];
 }
 
 #endif // HAVE_CUDA

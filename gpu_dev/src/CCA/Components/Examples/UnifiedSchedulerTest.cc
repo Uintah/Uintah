@@ -182,6 +182,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
                                               const MaterialSubset* matls,
                                               DataWarehouse* old_dw,
                                               DataWarehouse* new_dw,
+                                              void* old_TaskGpuDW,
+                                              void* new_TaskGpuDW,
                                               void* stream,
                                               int deviceID)
 {
@@ -274,8 +276,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
       uint3 domainHigh = make_uint3(h.x(), h.y(), h.z());
 
       // setup and launch kernel
-      GPUDataWarehouse* old_gpudw = old_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
-      GPUDataWarehouse* new_gpudw = new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
+      //GPUDataWarehouse* old_gpudw = old_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
+      //GPUDataWarehouse* new_gpudw = new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->getdevice_ptr();
       GPUGridVariable<double> device_var;
       new_dw->getGPUDW(GpuUtilities::getGpuIndexForPatch(patch))->get(device_var, "phi", patch->getID(), 0);
         int3 device_offset;
@@ -293,8 +295,8 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
                                        patchNodeHighIndex,
                                        domainLow,
                                        domainHigh,
-                                       old_gpudw,
-                                       new_gpudw);
+                                       ((GPUDataWarehouse*)old_TaskGpuDW)->getdevice_ptr(),
+                                       ((GPUDataWarehouse*)new_TaskGpuDW)->getdevice_ptr());
 
       // residual is automatically "put" with the D2H copy of the GPUReductionVariable
       // new_dw->put(sum_vartype(residual), residual_label);
@@ -302,6 +304,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
     } // end patch for loop
   } //end GPU
   if (event == Task::postGPU) {
+    /*
     int numPatches = patches->size();
         for (int p = 0; p < numPatches; p++) {
 
@@ -350,7 +353,7 @@ void UnifiedSchedulerTest::timeAdvanceUnified(Task::CallBackEvent event,
             //device_ptr = device_var.getPointer();
 
           //printf("Finished unifiedSchedulerTestKernel for (%d,%d,%d) to (%d,%d,%d) with device variable at %p on stream %p on threadID %d\n", patchNodeLowIndex.x,patchNodeLowIndex.y,patchNodeLowIndex.z, patchNodeHighIndex.x, patchNodeHighIndex.y, patchNodeHighIndex.z, device_ptr, stream, SCIRun::Thread::self()->myid());
-    }
+    }*/
   }
 }
 

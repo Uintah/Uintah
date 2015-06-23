@@ -39,9 +39,8 @@
 #include <vector>
 #include <Core/Thread/CrowdMonitor.h>
 
-#define MAX_ITEM 1000000  //If we have 100 patches, 2 materials, and 20 grid vars,
-                       //that's 100 * 2 * 20 = 4000.  Make sure we have room!
-#define MAX_GHOST_CELLS 30000  //MAX_ITEM * 6 one for each face.
+#define MAX_ITEM 10000000
+#define MAX_GHOST_CELLS 30000
 #define MAX_MATERIALS 20
 #define MAX_LVITEM 20
 
@@ -68,15 +67,11 @@ class GPUDataWarehouse {
 
 public:
 
-  GPUDataWarehouse(): allocateLock("allocate lock"), varLock("var lock"){
-    d_numItems = 0;
-    d_numMaterials = 0;
-    //d_numGhostCells = 0;
-    d_device_copy = NULL;
-    d_debug = false;
-    d_dirty = true;
-    d_device_id = -1;
-    resetdVarDB();
+  GPUDataWarehouse(int id, void * placementNewBuffer): allocateLock("allocate lock"), varLock("var lock"){
+    d_device_id = id;
+    objectSizeInBytes = 0;
+    this->placementNewBuffer = placementNewBuffer;
+    init();
 
   }
   virtual ~GPUDataWarehouse() {};
@@ -116,16 +111,13 @@ public:
   struct VarItem {
     GhostType       gtype;
     unsigned int    numGhostCells;
-    bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
-    bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
-    bool            queueingOnGPU; //true if we've created the variable but we haven't yet set validOnGPU to true.
+    bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data. //TODO: Remove me
+    bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)  //TODO: Remove me
+    bool            queueingOnGPU; //true if we've created the variable but we haven't yet set validOnGPU to true. //TODO: Remove me
 
   };
 
   struct GhostItem {
-    //The pointer to the task that needs this ghost cell copy
-    void*           cpuDetailedTaskOwner;
-    bool            copied;
     //This assumes the ghost cell is already in the GPU's memory
     //We only need to know the source patch, the destination patch
     //the material number, and the shared coordinates.
@@ -140,15 +132,14 @@ public:
     int3 virtualOffset;
 
     //So we can look up the size and offset information in the d_varDB
-    int dest_varDB_index;
+    int dest_varDB_index;  //Will be set to -1 if this d_varDB item isn't a ghost cell item.
 
     //Ghost cells can come from two locations.  The first way is that they are already in the
     //d_varDB (such as same GPU->same GPU ghost cell, or CPU ghost cell->GPU).
     //The other way is if the data comes from another GPU on the same node,
     //and if so, then the data will be found in d_ghostCellDB instead of d_varDB.
-    //If it's the former, then this source_varDB_index will be the correspondinb d_varDB index.
-    //If it's the latter, then this source_varDB_index will be -1.  //TODO, FIX THIS
-    int source_varDB_index;
+    //Fortunately it turns out that this isn't needed.
+    //int source_varDB_index;
 
   };
 
@@ -167,22 +158,6 @@ public:
 
   };
 
-  /*
-  struct ghostCellItem { //90 bytes
-
-
-
-
-
-
-
-
-    int3 var_offset;
-    int3 var_size;
-    void * source_ptr;
-    int xstride;
-
-  };*/
 
   struct contiguousArrayInfo {
     void * allocatedDeviceMemory;
@@ -216,11 +191,19 @@ public:
     int3       device_offset;
     int3       device_size;
     void*      host_contiguousArrayPtr;  //Use this address only if partOfContiguousArray is set to true.
-    GridVariableBase* gridVar;  //The host variable, which also holds the host pointer to the data, and
-                                //retains a reference so the variable isn't deleted
+    GridVariableBase* gridVar;  //TODO: Rename, not everything is a gridvar, e.g. perpatch.
+                               //The host variable, which also holds the host pointer to the data, and
+
+    unsigned int    xstride;
+    GhostType       gtype;
+    unsigned int    numGhostCells;
 
     int        varDB_index;     //Where this also shows up in the varDB.  We can use this to
                                 //get the rest of the information we need.
+
+    bool            validOnGPU; //true if the GPU copy is the "live" copy and not an old version of the data.
+    bool            validOnCPU; //true if the CPU copy is the current "live" copy. (It's possible to be both.)
+    bool            queueingOnGPU; //true if we've created the variable but we haven't yet set validOnGPU to true.
 
   };
 
@@ -257,7 +240,6 @@ public:
 
     void* cpuDetailedTaskOwner;   //Only the task that placed the item in should be the one that copies it.
 
-    void* toDetailedTask;  //When we move this into the d_ghostDB, we need to know what task gets to do the copies.
     int        xstride;
 
     void*      device_ptr;
@@ -267,7 +249,6 @@ public:
     int toPatchID;
     int fromDeviceIndex;
     int toDeviceIndex;
-    bool usingVarDBData;
     //int fromresource;
     //int toresource;
     //bool copied;
@@ -286,7 +267,7 @@ public:
 
   //HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
   HOST_DEVICE void put(GPUReductionVariableBase& var, char const* label, int patchID, int matlIndex, bool overWrite=false);
-  HOST_DEVICE void put(char const* label, int patchID, int matlIndex, size_t xstride, GhostType gtype = None, int numGhostCells = 0, GridVariableBase* gridVar = NULL, void* hostPtr = NULL);
+  HOST_DEVICE void put(GPUGridVariableBase& var, char const* label, int patchID, int matlIndex, size_t xstride, GhostType gtype = None, int numGhostCells = 0, GridVariableBase* gridVar = NULL, void* hostPtr = NULL);
   HOST_DEVICE void put(GPUPerPatchBase& var, char const* label, int patchID, int matlIndex, size_t xstride, GPUPerPatchBase* gridVar = NULL, void* hostPtr = NULL);
 
   HOST_DEVICE void allocateAndPut(GPUGridVariableBase& var, char const* label, int patchID, int matlID, int3 low, int3 high, size_t sizeOfDataType, GhostType gtype = None, int numGhostCells = 0);
@@ -308,7 +289,7 @@ public:
   HOST_DEVICE bool exist(char const* label, int patchID, int matlID, int3 host_size, int3 host_offset, bool skipContiguous = false, bool onlyContiguous = false);
   HOST_DEVICE bool existContiguously(char const* label, int patchID, int matlIndex, int3 host_size, int3 host_offset);
   HOST_DEVICE bool remove(char const* label, int patchID, int matlID);
-  HOST_DEVICE void init_device(int id);
+  HOST_DEVICE void init_device(size_t objectSizeInBytes );
   HOST_DEVICE void syncto_device(void *cuda_stream);
   HOST_DEVICE void clear();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
@@ -322,7 +303,7 @@ public:
   HOST_DEVICE void putMaterials(std::vector< std::string > materials);
   HOST_DEVICE materialType getMaterial(int i) const;
   HOST_DEVICE int getNumMaterials() const;
-  HOST_DEVICE void putGhostCell(void* dtask, char const* label, int sourcePatchID, int destPatchID, int matlID,
+  HOST_DEVICE void putGhostCell(char const* label, int sourcePatchID, int destPatchID, int matlID,
                                 int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset,
                                 bool sourceIsInTempGhostCells, void * data_ptr, int3 var_offset, int3 var_size, int xstride);
   HOST_DEVICE bool getValidOnGPU(char const* label, int patchID, int matlID);
@@ -335,14 +316,14 @@ public:
   //Scenario 2: ghost cell on CPU -> var on different CPU:  Managed by sendMPI()
   //Scenario 3: ghost cell on different CPU -> var on CPU:  Managed by recvMPI() and then getGridVar().
 
-  //Scenario 4: ghost cell on GPU -> var on different host's CPU:  Immediately after a task runs,
+  //Scenario 4: ghost cell on GPU -> var on different host's CPU:  Immediately after a task runs (send_old_data only?),
   // prepareGPUDependencies is invoked, and it discovers all external dependencies.  It then calls
   // the correct GPU DW's prepareGpuGhostCellIntoGpuArray which stages the ghost cell into an array on
   // that GPU.  Then sendMPI() is called, which calls copyTempGhostCellsToHostVar(), which finds the
   // correct array previously made and copies it to a host grid var.  From there the MPI engine
   // can manage it normally.
 
-  //Scenario 5: ghost cell on GPU -> var on different host's GPU:  Immediately after a task runs,
+  //Scenario 5: ghost cell on GPU -> var on different host's GPU:  Immediately after a task runs (send_old_data only?),
   // prepareGPUDependencies is invoked, and it discovers all external dependencies.  It then calls
   // the correct GPU DW's prepareGpuGhostCellIntoGpuArray which stages the ghost cell into an array on
   // that GPU.  Then sendMPI() is called, which calls copyTempGhostCellsToHostVar(), which finds the
@@ -403,7 +384,7 @@ public:
   //Called by prepareGPUDependencies, handles the GPU->anywhere else but the same GPU
   //It does this by staging the ghost cell data into an array for something else to pick up and copy.
   //These arrays are tracked by the tempGhostCells collection.
-  HOST_DEVICE void prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner, void* toDetailedTask,
+  HOST_DEVICE void prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner,
                                                     int3 ghostCellLow, int3 ghostCellHigh,
                                                     int xstride,
                                                     char const* label, int matlID,
@@ -417,13 +398,13 @@ public:
 
   //This and the function below go through the d_ghostCellData array and copies data into
   //the correct destination GPU var.  This would be the final step of a GPU ghost cell transfer.
-  HOST_DEVICE void copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream, void* taskID);
-  HOST_DEVICE void copyGpuGhostCellsToGpuVars(void* taskID);
+  HOST_DEVICE void copyGpuGhostCellsToGpuVarsInvoker(cudaStream_t* stream);
+  HOST_DEVICE void copyGpuGhostCellsToGpuVars();
 
   //Called by copyGPUGhostCellsBetweenDevices().  If the destination is another GPU on the same physical node
   //then this creates room on the destination GPU and stores that information in d_ghostCellDB to
   //later process.
-  HOST_DEVICE void prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner, void* toDetailedTask,
+  HOST_DEVICE void prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner,
                                                       int3 ghostCellLow, int3 ghostCellHigh,
                                                       int xstride,
                                                       char const* label, int matlID,
@@ -431,19 +412,24 @@ public:
                                                       int fromDeviceIndex, int toDeviceIndex,
                                                       void * &data_ptr);
 
-  HOST_DEVICE int getNumGhostCells();
-  HOST_DEVICE void markGhostCellsCopied(void* taskID);
+  HOST_DEVICE bool ghostCellCopiesNeeded();
   HOST_DEVICE void getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, int& numGhostCells, char const* label, int patchID, int matlIndex);
-
-  HOST_DEVICE dataItem* getItem(char const* label, int patchID, int matlID);
   HOST_DEVICE void getTempGhostCells(void * dtask, std::vector<tempGhostCellInfo>& temp);
+
+  HOST_DEVICE void* getPlacementNewBuffer();
+
 private:
+  HOST_DEVICE void init();
+  HOST_DEVICE dataItem* getItem(char const* label, int patchID, int matlID);
   HOST_DEVICE void resetdVarDB();
  // HOST_DEVICE void copyGpuGhostCellsToGpuVars();
 
 private:
 
   HOST_DEVICE void printGetError(const char* msg, char const* label, int patchID, int matlIndex);
+
+  void * placementNewBuffer;                        //For task DWs, we want to seraliaze and size this object as small as possible.
+                                                    //So we create a buffer, and keep track of the start of that buffer here.
   mutable SCIRun::CrowdMonitor allocateLock;
   mutable SCIRun::CrowdMonitor varLock;
 
@@ -457,13 +443,14 @@ private:
   int d_numItems;
 
   int d_numMaterials;
-  bool ghostCellsExist;
+  int numGhostCellCopiesNeeded;
   //int d_numGhostCells;
 
   GPUDataWarehouse*  d_device_copy;             //The pointer to the copy of this object in the GPU.
   bool d_dirty;                                 //if this changes, we have to recopy the GPUDW.
   int d_device_id;
   bool d_debug;
+  size_t objectSizeInBytes;
 
   //These being here do not pose a problem for the CUDA compiler
 
@@ -481,9 +468,11 @@ private:
                                                  //loads all ghost cells into contiguous chunks ready for copying to the destination.
                                                  //See prepareGPUDependencies for more info.
 
+  //dataItem *d_varDB;
+
   //This variable MUST be last.  C and C++ emphasize that
   //dataItem d_varDB[MAX_ITEM];                      //For the device side.  The variable database.
-  dataItem d_varDB[1000000];                      //A very large buffer.  Important note,
+  dataItem d_varDB[MAX_ITEM];                      //A very large buffer.  Important note,
                                                   //we should never transfer a full GPUDataWarehouse object as is.  Instead
                                                   //we should use malloc and only use a section of it.  See here for more
                                                   //information:  http://www.open-std.org/Jtc1/sc22/wg14/www/docs/dr_051.html

@@ -29,6 +29,11 @@
 #include <Core/Thread/ConditionVariable.h>
 #include <Core/Thread/Runnable.h>
 
+#ifdef HAVE_CUDA
+#include <CCA/Components/Schedulers/GPUGridVariableGhosts.h>
+#include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+#endif
+
 #include <sci_defs/cuda_defs.h>
 
 #include <string>
@@ -134,9 +139,17 @@ class UnifiedScheduler : public MPIScheduler  {
 
 #ifdef HAVE_CUDA
 
+    void findIntAndExtGpuDependencies(DeviceGhostCells& ghostVars, DetailedTask* task, int iteration, int t_id);
 
-    void prepareGPUDependencies(DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
-           OnDemandDataWarehouse* dw, OnDemandDataWarehouse* old_dw, const DetailedDep* dep, LoadBalancer* lb);
+    void prepareGpuDependencies(DeviceGhostCells& ghostVars, DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
+                                OnDemandDataWarehouse* dw, OnDemandDataWarehouse* old_dw, const DetailedDep* dep,
+                                LoadBalancer* lb, DeviceGhostCells::Destination dest);
+
+    void copyGpuInternalDependencies(DetailedTask * task, int iteration, int t_id);
+
+    void createTaskDWs(DetailedTask * task, const DeviceGridVariables& taskVars,
+                       const DeviceGhostCells& ghostVars, const int device_id);
+
 
     void gpuInitialize( bool reset=false );
 
@@ -185,10 +198,6 @@ class UnifiedScheduler : public MPIScheduler  {
     void clearGpuDBMaps();
 
     void assignDevice(DetailedTask* task);
-
-    void prepareGPUDependencies( DetailedTask* task, int iteration, int t_id);
-
-    void copyGPUInternalDependencies(DetailedTask * task, int iteration, int t_id);
 
     struct GPUGridVariableInfo {
       DetailedTask* dtask;
