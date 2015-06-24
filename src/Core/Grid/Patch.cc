@@ -387,7 +387,7 @@ const BCDataArray* Patch::getInteriorBndBCDataArray(Patch::FaceType face) const
     } else {
       ostringstream msg;
       msg << "face = " << face << endl;
-      SCI_THROW(InternalError("d_arrayBCS[face] has not been allocated",
+      SCI_THROW(InternalError("d_interiorBndArrayBCS[face] has not been allocated",
                               __FILE__, __LINE__));
     }
   } else {

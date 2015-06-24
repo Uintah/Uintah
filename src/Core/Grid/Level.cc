@@ -989,7 +989,7 @@ Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
         if (patch->getBCType(face_side) == Patch::None) {
           patch->setArrayBCValues(face_side,&(reader.d_BCReaderData[face_side]));
         }
-        //patch->setInteriorBndArrayBCValues(face_side,&(reader.d_interiorBndBCReaderData[face_side]));
+        patch->setInteriorBndArrayBCValues(face_side,&(reader.d_interiorBndBCReaderData[face_side]));
       }  // end of face iterator
     }
   } //end of patch iterator
