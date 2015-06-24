@@ -19,7 +19,6 @@ using namespace std;
 using namespace Uintah; 
 
 //_________________________________________
-
 WallModelDriver::WallModelDriver( SimulationStateP& shared_state ) :
 _shared_state( shared_state )
 {
@@ -137,6 +136,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
   
   _T_label        = VarLabel::find( _T_label_name );
   _cellType_label = VarLabel::find( "cellType" );
+  _cc_vel_label   = VarLabel::find( "CCVelocity" ); 
   
   if ( _rad_type == DORADIATION ){
     _HF_E_label     = VarLabel::find( "radiationFluxE" );
@@ -159,6 +159,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
     
     task->computes( _T_copy_label ); 
     task->computes( _True_T_Label ); 
+    task->requires( Task::OldDW , _cc_vel_label   , Ghost::None , 0 ); 
     task->requires( Task::OldDW , _T_label        , Ghost::None , 0 ); 
     //Use the restart information from the gas temperature label since the 
     //True wall temperature may not exisit. 
@@ -180,7 +181,7 @@ WallModelDriver::sched_doWallHT( const LevelP& level, SchedulerP& sched, const i
       
     } else if (_rad_type == RMCRT ) { 
       
-      task->requires(Task::OldDW, _Total_HF_label, Ghost::AroundCells, 1 ); 
+      task->modifies( _Total_HF_label ); 
       
     }
     
@@ -207,52 +208,86 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
 {
   
   //patch loop
+  for (int p=0; p < patches->size(); p++){
+    
+    int timestep = _shared_state->getCurrentTopLevelTimeStep(); 
+    
+    const Patch* patch = patches->get(p);
+    HTVariables vars;
     
     // Note: The local T_copy is necessary because boundary conditions are being applied 
     // in the table lookup to T based on the conditions for the independent variables. These 
     // BCs are being applied regardless of the type of wall temperature model. 
-        int timestep = _shared_state->getCurrentTopLevelTimeStep(); 
     
     if( time_subset == 0 && timestep % _calc_freq == 0 ){
-
-        StaticArray< CCVariable<double> > wallTemp(patches->size());
-        StaticArray< CCVariable<double> > T_copy(patches->size());
       
-      for (int p=0; p < patches->size(); p++){
+      // actually compute the wall HT model 
+      
+      old_dw->get( vars.T_old      , _T_label      , _matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.cc_vel     , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
+      old_dw->get( vars.T_real_old , VarLabel::find("temperature"), _matl_index, patch, Ghost::None, 0 ); 
+      //old_dw->get( vars.T_real_old , _True_T_Label , _matl_index , patch , Ghost::None , 0 );
+      
+      new_dw->getModifiable(  vars.T, _T_label, _matl_index   , patch ); 
+      new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
+      new_dw->allocateAndPut( vars.T_real     , _True_T_Label , _matl_index, patch ); 
+      new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::AroundCells, 1 );
 
-        const Patch* patch = patches->get(p);
-
-        new_dw->getModifiable(  wallTemp[p], _T_label, _matl_index   , patch ); 
-        new_dw->allocateAndPut( T_copy[p]  , _T_copy_label , _matl_index, patch ); 
+      vars.T_real.initialize(0.0); 
+      
+      if ( _rad_type == DORADIATION ){
+        
+        old_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        old_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch, Ghost::AroundCells, 1 );
+        
+      } else if ( _rad_type == RMCRT ){
+        
+        CCVariable<Stencil7> total_hf; 
+        new_dw->getModifiable( total_hf, _Total_HF_label, _matl_index, patch, Ghost::None, 0 );
+        //new_dw->allocateTemporary( vars.incident_hf_e, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_w, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_n, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_s, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_t, patch );
+        //new_dw->allocateTemporary( vars.incident_hf_b, patch );
+        
+        for (CellIterator iter=patch->getCellIterator();
+             !iter.done(); iter++){
+          
+          //copy because RMCRT has fluxes stored in Stencil7 container: 
+          IntVector c = *iter; 
+          //vars.incident_hf_e[c] = total_hf[c].e;
+          //vars.incident_hf_w[c] = total_hf[c].w; 
+          //vars.incident_hf_n[c] = total_hf[c].n;
+          //vars.incident_hf_s[c] = total_hf[c].s; 
+          //vars.incident_hf_t[c] = total_hf[c].t;
+          //vars.incident_hf_b[c] = total_hf[c].b; 
+          
+        }
       }
-
+      
       std::vector<WallModelDriver::HTModelBase*>::iterator iter; 
       
-
       for ( iter = _all_ht_models.begin(); iter != _all_ht_models.end(); iter++ ){
         
-        (*iter)->computeHTWrapper(wallTemp, 
-                           patches, 
-                           old_dw, 
-                           new_dw, this); 
+        (*iter)->computeHT( patch, vars, vars.T );
         
       }
       
       //Do a wholesale copy of T -> T_copy.  Note that we could force the derived models to do this
       //but that creates a danger of a developer forgeting to perform the operation. For now, do it 
       //here for saftey and simplicity. Maybe rethink this if efficiency becomes an issue.
-      for (int p=0; p < patches->size(); p++){
-        T_copy[p].copyData( wallTemp[p] ); 
-      }
+      vars.T_copy.copyData( vars.T ); 
       
     } else if ( time_subset == 0 && timestep % _calc_freq != 0 ) {
       
       // no ht solve this step: 
       // 1) copy T_old (from OldDW) -> T   (to preserve BCs)
       // 2) copy T -> T_copy  (for future RK steps)
-  for (int p=0; p < patches->size(); p++){
-    
-    const Patch* patch = patches->get(p);
       
       CCVariable<double> T; 
       CCVariable<double> T_copy; 
@@ -301,16 +336,13 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
         //std::cout << "NOT DOING RADIATION SOLVE AND REQUIRING PLAIN T LABEL " << std::endl;
         //T_real.copyData( T_old ); 
       //}
-      }
+
       
     } else { 
       
       // no ht solve for RK steps > 0: 
       // 1) T_copy (NewDW) should have the BC's from previous solution
       // 2) copy BC information from T_copy (NewDW) -> T to preserve BCs
-  for (int p=0; p < patches->size(); p++){
-    
-    const Patch* patch = patches->get(p);
       
       CCVariable<double> T; 
       constCCVariable<double> T_old; 
@@ -329,83 +361,6 @@ WallModelDriver::doWallHT( const ProcessorGroup* my_world,
       }
     } 
   }
-}
-
-void WallModelDriver::populateHTVar(HTVariables<CCVariable<double> >  & vars,  
-                                              const Patch* patch, 
-                                              DataWarehouse* old_dw, 
-                                              DataWarehouse* new_dw){
-  // actually compute the wall HT model 
-  
-  old_dw->get( vars.T_old      , _T_label      , _matl_index , patch , Ghost::None , 0 );
-  //old_dw->get( vars.cc_vel     , _cc_vel_label , _matl_index , patch , Ghost::None , 0 );
-  old_dw->get( vars.T_real_old , VarLabel::find("temperature"), _matl_index, patch, Ghost::None, 0 ); 
-
-  new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
-  new_dw->allocateAndPut( vars.T_real     , _True_T_Label , _matl_index, patch ); 
-  new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::AroundCells, 1 );
-
-  vars.T_real.initialize(0.0); 
-
-  IntVector domLo = patch->getCellLowIndex();
-  IntVector domHi = patch->getCellHighIndex();
-
-  domLo[0]=domLo[0] -1;domLo[1]=domLo[1] -1;domLo[2]=domLo[2] -1; // low is inclusive
-  domHi[0]=domHi[0] +1;domHi[1]=domHi[1] +1;domHi[2]=domHi[2] +1; // hi is exclusive
-
-
-  constCCVariable<Stencil7> total_hf; 
-  old_dw->get( total_hf, _Total_HF_label, _matl_index, patch, Ghost::AroundCells, 1 );
-  vars.incident_hf_e.allocate(domLo,domHi);
-  vars.incident_hf_w.allocate(domLo,domHi);
-  vars.incident_hf_n.allocate(domLo,domHi);
-  vars.incident_hf_s.allocate(domLo,domHi);
-  vars.incident_hf_t.allocate(domLo,domHi);
-  vars.incident_hf_b.allocate(domLo,domHi);
-
-  IntVector c(0,0,0); // i,j,k iterator cycles over all patch cells+ghost cells
-  for (int i= domLo[0]; i<domHi[0]; i++){
-    c[0]=i;
-    for (int j= domLo[1]; j<domHi[1]; j++){
-      c[1]=j;
-      for (int k= domLo[2]; k<domHi[2]; k++){
-        c[2]=k;
-        ////copy because RMCRT has fluxes stored in Stencil7 container: 
-        vars.incident_hf_e[c] = total_hf[c].e;
-        vars.incident_hf_w[c] = total_hf[c].w; 
-        vars.incident_hf_n[c] = total_hf[c].n;
-        vars.incident_hf_s[c] = total_hf[c].s; 
-        vars.incident_hf_t[c] = total_hf[c].t;
-        vars.incident_hf_b[c] = total_hf[c].b; 
-      }
-    }
-  } // end i,j,k iterator
-}
-
-void WallModelDriver::populateHTVar(HTVariables<constCCVariable<double> > & vars,  
-                                              const Patch* patch, 
-                                              DataWarehouse* old_dw, 
-                                              DataWarehouse* new_dw){
-
-  // actually compute the wall HT model 
-   
-  old_dw->get( vars.T_old      , _T_label      , _matl_index , patch , Ghost::None , 0 );
-  old_dw->get( vars.T_real_old , VarLabel::find("temperature"), _matl_index, patch, Ghost::None, 0 ); 
-
-  new_dw->allocateAndPut( vars.T_copy     , _T_copy_label , _matl_index, patch ); 
-  new_dw->allocateAndPut( vars.T_real     , _True_T_Label , _matl_index, patch ); 
-  new_dw->get(   vars.celltype , _cellType_label , _matl_index , patch , Ghost::AroundCells, 1 );
-
-  vars.T_real.initialize(0.0); 
-
-  old_dw->get(   vars.incident_hf_e     , _HF_E_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-  old_dw->get(   vars.incident_hf_w     , _HF_W_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-  old_dw->get(   vars.incident_hf_n     , _HF_N_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-  old_dw->get(   vars.incident_hf_s     , _HF_S_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-  old_dw->get(   vars.incident_hf_t     , _HF_T_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-  old_dw->get(   vars.incident_hf_b     , _HF_B_label     , _matl_index , patch, Ghost::AroundCells, 1 );
-
-
 }
 
 //_________________________________________
@@ -490,95 +445,61 @@ WallModelDriver::SimpleHT::problemSetup( const ProblemSpecP& input_db ){
 
 //----------------------------------
 void 
-WallModelDriver::SimpleHT::computeHTWrapper(StaticArray <CCVariable<double> >&  Temp,
-                           const PatchSubset* patches, 
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,
-                           WallModelDriver* classAboveMe  ){ 
-
-  for (int p=0; p < patches->size(); p++){
-    const Patch* patch = patches->get(p);
-    HTVariables<constCCVariable<double>  > DOvars;
-    HTVariables<CCVariable<double>  >   RMCRTvars;
-
-    if ( classAboveMe->get_rad_type() == DORADIATION ){
-      classAboveMe->WallModelDriver::populateHTVar(DOvars, patch, old_dw, new_dw);
-      computeHT(Temp[p], patch, old_dw, new_dw,DOvars);
-
-    } else if ( classAboveMe->get_rad_type() == RMCRT ){
-      classAboveMe->WallModelDriver::populateHTVar(RMCRTvars, patch, old_dw, new_dw);
-      computeHT(Temp[p], patch, old_dw, new_dw,RMCRTvars);
+WallModelDriver::SimpleHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){ 
+  
+  double T_wall, net_q;
+  vector<Patch::FaceType> bf;
+  patch->getBoundaryFaces(bf);
+  
+  for( vector<Patch::FaceType>::const_iterator face_iter = bf.begin(); face_iter != bf.end(); ++face_iter ){
+    
+    Patch::FaceType face = *face_iter;
+    IntVector offset = patch->faceDirection(face);
+    CellIterator cell_iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
+    
+    constCCVariable<double>* q; 
+    switch (face) {
+      case Patch::xminus:
+        q = &(vars.incident_hf_w);
+        break; 
+      case Patch::xplus:
+        q = &(vars.incident_hf_e);
+        break; 
+      case Patch::yminus:
+        q = &(vars.incident_hf_s); 
+        break; 
+      case Patch::yplus:
+        q = &(vars.incident_hf_n);
+        break; 
+      case Patch::zminus:
+        q = &(vars.incident_hf_b);
+        break; 
+      case Patch::zplus:
+        q = &(vars.incident_hf_t);
+        break; 
+      default: 
+        break; 
+    }
+    
+    for(;!cell_iter.done(); cell_iter++){
+      
+      IntVector c = *cell_iter;        //this is the interior cell 
+      IntVector adj = c + offset;      //this is the cell IN the wall 
+      
+      if ( vars.celltype[c + offset] == BoundaryCondition_new::WALL ){ 
+        
+        net_q = (*q)[c] - _sigma_constant * pow( vars.T_old[adj], 4 );
+        net_q = net_q > 0 ? net_q : 0;
+        T_wall = _T_inner + net_q * _dy / _k;
+        
+        T_wall = T_wall > _T_max ? _T_max : T_wall;
+        T_wall = T_wall < _T_min ? _T_min : T_wall;
+        
+        T[adj] = ( 1.0 - _relax ) * vars.T_old[adj] + ( _relax ) * T_wall;
+        
+      }
     }
   }
-}
-
-template <class TYPE>
-void 
-WallModelDriver::SimpleHT::computeHT(CCVariable<double> &  Temp,
-                           const Patch* patch, 
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,
-                           HTVariables<TYPE> &  vars){
-
-
-    double T_wall, net_q;
-    vector<Patch::FaceType> bf;
-    patch->getBoundaryFaces(bf);
-
-    for( vector<Patch::FaceType>::const_iterator face_iter = bf.begin(); face_iter != bf.end(); ++face_iter ){
-
-      Patch::FaceType face = *face_iter;
-      IntVector offset = patch->faceDirection(face);
-      CellIterator cell_iter = patch->getFaceIterator(face, Patch::InteriorFaceCells);
-
-      TYPE* q; 
-      switch (face) {
-        case Patch::xminus:
-          q = &(vars.incident_hf_w);
-          break; 
-        case Patch::xplus:
-          q = &(vars.incident_hf_e);
-          break; 
-        case Patch::yminus:
-          q = &(vars.incident_hf_s); 
-          break; 
-        case Patch::yplus:
-          q = &(vars.incident_hf_n);
-          break; 
-        case Patch::zminus:
-          q = &(vars.incident_hf_b);
-          break; 
-        case Patch::zplus:
-          q = &(vars.incident_hf_t);
-          break; 
-        default: 
-          q = NULL;
-          throw InvalidValue("Error: Unable to find face type" ,__FILE__, __LINE__);
-          break; 
-      }
-        
-      //if (q == NULL) {
-
-      //}
-      for(;!cell_iter.done(); cell_iter++){
-
-        IntVector c = *cell_iter;        //this is the interior cell 
-        IntVector adj = c + offset;      //this is the cell IN the wall 
-
-        if ( vars.celltype[c + offset] == BoundaryCondition_new::WALL ){ 
-
-          net_q = (*q)[c] - _sigma_constant * pow( vars.T_old[adj], 4 );
-          net_q = net_q > 0 ? net_q : 0;
-          T_wall = _T_inner + net_q * _dy / _k;
-
-          T_wall = T_wall > _T_max ? _T_max : T_wall;
-          T_wall = T_wall < _T_min ? _T_min : T_wall;
-
-          Temp[adj] = ( 1.0 - _relax ) * vars.T_old[adj] + ( _relax ) * T_wall;
-
-        }
-      }
-    }
 }
 //----------------------------------
 void 
@@ -628,10 +549,6 @@ WallModelDriver::RegionHT::~RegionHT(){
 }; 
 
 //----------------------------------
-//
-//
-//
-//
 void 
 WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){ 
   
@@ -659,40 +576,10 @@ WallModelDriver::RegionHT::problemSetup( const ProblemSpecP& input_db ){
 
 //----------------------------------
 void 
-WallModelDriver::RegionHT::computeHTWrapper( StaticArray <CCVariable<double> >&  Temp,  
-                           const PatchSubset* patches, 
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,  
-                           WallModelDriver* classAboveMe  ){ 
-
-  for (int p=0; p < patches->size(); p++){
-    const Patch* patch = patches->get(p);
-    HTVariables<constCCVariable<double>  > DOvars;
-    HTVariables<CCVariable<double>  >   RMCRTvars;
-
-    if ( classAboveMe->get_rad_type() == DORADIATION ){
-      classAboveMe->WallModelDriver::populateHTVar(DOvars, patch, old_dw, new_dw);
-      computeHT(Temp[p], patch, old_dw, new_dw,DOvars);
-
-    } else if ( classAboveMe->get_rad_type() == RMCRT ){
-      classAboveMe->WallModelDriver::populateHTVar(RMCRTvars, patch, old_dw, new_dw);
-      computeHT(Temp[p], patch, old_dw, new_dw,RMCRTvars);
-    }
-  }
-}
-
-
-template <class TYPE>
-void 
-WallModelDriver::RegionHT::computeHT(CCVariable<double> & Temp,  
-                           const Patch* patch, 
-                           DataWarehouse* old_dw, 
-                           DataWarehouse* new_dw,  
-                           HTVariables<TYPE> &  vars){
-
-
-
-  double net_q, rad_q, total_area_face;
+WallModelDriver::RegionHT::computeHT( const Patch* patch, HTVariables& vars, CCVariable<double>& T ){ 
+  
+  int num;
+  double TW1, TW0, Tmax, Tmin, net_q, error, initial_error, rad_q, total_area_face;
   vector<Patch::FaceType> bf;
   patch->getBoundaryFaces(bf);
   Vector Dx = patch->dCell(); // cell spacing
@@ -731,7 +618,7 @@ WallModelDriver::RegionHT::computeHT(CCVariable<double> & Temp,
       if ( !box.degenerate() ){ 
         
         CellIterator iter = patch->getCellCenterIterator( box ); 
-        TYPE* q; 
+        constCCVariable<double>* q; 
         
         for (; !iter.done(); iter++){ 
           
@@ -842,7 +729,7 @@ WallModelDriver::RegionHT::computeHT(CCVariable<double> & Temp,
               
               TW = pow( (rad_q-net_q) / _sigma_constant, 0.25);  
  
-              Temp[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
+              T[c] = ( 1 - wi.relax ) * vars.T_old[c] + wi.relax * TW;
 
             }
           } 
