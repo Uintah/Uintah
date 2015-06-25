@@ -1168,11 +1168,12 @@
                                                                            shunn_moin_cont_mms'">
 
             <!-- Specs for BrownSootFormation model -->
+            <!-- mixture_fraction_label, and temperature_label are also required 
+                 but are listed below as they span other sources -->
             <mixture_fraction_label     spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
             <tar_label                  spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
             <Ysoot_label                spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
             <Ns_label                   spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
-            <temperature_label          spec="OPTIONAL STRING" need_applies_to="type BrownSootFormation_rhoYs, BrownSootFormation_nd, BrownSootFormation_Tar" />
             
             <!-- Specs for coal gas devol model -->
             <devol_model_name           spec="REQUIRED STRING" need_applies_to="type coal_gas_devol" />
@@ -1201,7 +1202,10 @@
             <scalar_dissipation_label   spec="REQUIRED STRING" need_applies_to="type moment2_mixture_fraction_src"/> 
             
             <!-- specs needed for the dissipation term for 2eqn scalr var model -->
-            <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- mixture fraction label -->
+            <mixture_fraction_label     spec="REQUIRED STRING" need_applies_to="type dissipation_src, 
+                                                                                     BrownSootFormation_rhoYs, 
+                                                                                     BrownSootFormation_nd, 
+                                                                                     BrownSootFormation_Tar"/> <!-- mixture fraction label -->
             <gradmixfrac_label          spec="REQUIRED STRING" need_applies_to="type dissipation_src"/> <!-- label for the gradient of the mixture fraction -->
             <D                          spec="REQUIRED DOUBLE" need_applies_to="type dissipation_src"/> <!-- Molecular diffusivity (?) -->
             <turb_visc_label            spec="OPTIONAL STRING" need_applies_to="type dissipation_src"/> <!-- label for the turbulent viscosity. Default = turb_viscosity -->
@@ -1335,7 +1339,11 @@
 
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) --> 
-            <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- temperature label (default = temperature) --> 
+            <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, 
+                                                                                     bowman_nox, 
+                                                                                     BrownSootFormation_rhoYs, 
+                                                                                     BrownSootFormation_nd, 
+                                                                                     BrownSootFormation_Tar"/> <!-- temperature label (default = temperature) --> 
             <density_label              spec="OPTIONAL STRING" need_applies_to="type moment2_mixture_fraction_src, 
                                                                                      dissipation_src, 
                                                                                      westbrook_dryer, 
