@@ -832,6 +832,8 @@ namespace Uintah {
       bool d_fixTemp;
       bool d_cutCells;
 
+      bool d_check_inlet_obstructions; 
+
       bool d_ignore_invalid_celltype; 
 
       IntrusionBC* _intrusionBC; 

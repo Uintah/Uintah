@@ -193,6 +193,6 @@ if [ $retval != "0" ]; then
   fi
 fi
 
-echo "Sus compiled successfully"
-echo "Sus compiled successfully" >> $HTMLLOG
+echo "Sus compiled successfully: `date +%I:%M:%S`"
+echo "Sus compiled successfully: `date +%I:%M:%S`" >> $HTMLLOG
 exit 0

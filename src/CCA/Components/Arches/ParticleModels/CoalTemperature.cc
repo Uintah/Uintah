@@ -298,7 +298,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double hint = 0.0;
       double Ha = 0.0;
       double Hc = 0.0;
-      double Hh = 0.0;
+      //double Hh = 0.0; unused
       double H = 0.0;
       double f1 = 0.0;
       double f2 = 0.0;

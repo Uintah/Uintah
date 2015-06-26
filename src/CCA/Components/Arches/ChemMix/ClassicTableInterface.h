@@ -135,8 +135,8 @@ public:
 
   protected:
 
-    const std::vector<int>&  d_allIndepVarNo;
     const std::vector<std::vector<double> >& table2;
+    const std::vector<int>&  d_allIndepVarNo;
     const std::vector< std::vector <double> >&  indep;
     const std::vector< std::vector <double > >&  ind_1;
 

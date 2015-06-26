@@ -110,8 +110,6 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   // check for char mass and get scaling constant
   std::string charqn_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
 
-  EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
-  DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
   std::string char_ic_RHS = charqn_name+"_RHS";
   _char_RHS_source_varlabel = VarLabel::find(char_ic_RHS);
   

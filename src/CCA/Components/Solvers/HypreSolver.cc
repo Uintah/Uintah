@@ -1347,6 +1347,7 @@ namespace Uintah {
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
                                     false,true,true);
 
+    task->setType(Task::OncePerProc);
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 

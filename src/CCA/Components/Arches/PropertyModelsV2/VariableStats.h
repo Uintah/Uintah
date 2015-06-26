@@ -190,6 +190,7 @@ private:
   
       if (var_db->findBlock("new")){ 
         _new_variables.push_back(var_ave_name); 
+        _new_variables.push_back(sqr_name); 
       }
   
     }
@@ -257,6 +258,9 @@ private:
         _new_variables.push_back(x_var_name); 
         _new_variables.push_back(y_var_name); 
         _new_variables.push_back(z_var_name); 
+        _new_variables.push_back(x_var_sqr_name); 
+        _new_variables.push_back(y_var_sqr_name); 
+        _new_variables.push_back(z_var_sqr_name); 
       }
   
     }

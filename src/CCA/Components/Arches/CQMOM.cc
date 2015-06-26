@@ -23,6 +23,7 @@
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Thread/Time.h>
+#include <Core/Containers/StaticArray.h>
 
 #include <iostream>
 #include <sstream>
@@ -280,16 +281,12 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
    
     
     // get moments from data warehouse and put into CCVariable
-    vector<constCCVarWrapper> momentCCVars;
+    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      
-      // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
-      
-      // put the wrapper into a vector
-      momentCCVars.push_back(tempWrapper);
+      new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
+      i++;
     }
     
     //get/allocate the weights
@@ -328,9 +325,8 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
       
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
-      int ii = 0;
-      for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
-        double temp_value = (iter->data)[c];
+      for ( int ii = 0; ii < nMoments; ii++ ) {
+        double temp_value = momentCCVars[ii][c];
         vector<int> temp_index = momentIndexes[ii];
         
         int flatIndex = temp_index[0];
@@ -343,7 +339,6 @@ void CQMOM::solveCQMOMInversion( const ProcessorGroup* pc,
         }
         
         temp_moments[flatIndex] = temp_value;
-        ii++;
       }
       
       //actually do the cqmom inversion step
@@ -614,18 +609,13 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     
-    
     // get moments from data warehouse and put into CCVariable
-    vector<constCCVarWrapper> momentCCVars;
+    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      
-      // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
-      old_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
-      
-      // put the wrapper into a vector
-      momentCCVars.push_back(tempWrapper);
+      new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
+      i++;
     }
     
     //get/allocate the weights
@@ -664,9 +654,8 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
       
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
-      int ii = 0;
-      for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
-        double temp_value = (iter->data)[c];
+      for ( int ii = 0; ii < nMoments; ii++ ) {
+        double temp_value = momentCCVars[ii][c];
         int flatIndex = 0;
         
         vector<int> temp_index = momentIndexes[ii];
@@ -680,7 +669,6 @@ void CQMOM::solveCQMOMInversion321( const ProcessorGroup* pc,
         }
         
         temp_moments[flatIndex] = temp_value;
-        ii++;
       }
       
       //actually do the cqmom inversion step
@@ -780,18 +768,13 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     
-    
     // get moments from data warehouse and put into CCVariable
-    vector<constCCVarWrapper> momentCCVars;
+    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      
-      // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
-      
-      // put the wrapper into a vector
-      momentCCVars.push_back(tempWrapper);
+      new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
+      i++;
     }
     
     //get/allocate the weights
@@ -821,9 +804,8 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
       
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
-      int ii = 0;
-      for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
-        double temp_value = (iter->data)[c];
+      for ( int ii = 0; ii < nMoments; ii++ ) {
+        double temp_value = momentCCVars[ii][c];
         int flatIndex = 0;
         
         vector<int> temp_index = momentIndexes[ii];
@@ -838,7 +820,6 @@ void CQMOM::solveCQMOMInversion312( const ProcessorGroup* pc,
         }
         
         temp_moments[flatIndex] = temp_value;
-        ii++;
       }
       
       //actually do the cqmom inversion step
@@ -949,16 +930,12 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     
     // get moments from data warehouse and put into CCVariable
-    vector<constCCVarWrapper> momentCCVars;
+    StaticArray <constCCVariable<double> > momentCCVars ( nMoments );
+    int i = 0;
     for( vector<CQMOMEqn*>::iterator iEqn = momentEqns.begin(); iEqn != momentEqns.end(); ++iEqn ) {
       const VarLabel* equation_label = (*iEqn)->getTransportEqnLabel();
-      
-      // instead of using a CCVariable, use a constCCVarWrapper struct
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, equation_label, matlIndex, patch, Ghost::None, 0 );
-      
-      // put the wrapper into a vector
-      momentCCVars.push_back(tempWrapper);
+      new_dw->get( momentCCVars[i], equation_label, matlIndex, patch, Ghost::None, 0);
+      i++;
     }
     
     //get/allocate the weights
@@ -988,9 +965,8 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
       
       //loop over moments and put in vector
       //these are numbered into a flatindex based on moment index
-      int ii = 0;
-      for (vector<constCCVarWrapper>::iterator iter = momentCCVars.begin(); iter!= momentCCVars.end(); ++iter) {
-        double temp_value = (iter->data)[c];
+      for ( int ii = 0; ii < nMoments; ii++ ) {
+        double temp_value = momentCCVars[ii][c];
         int flatIndex = 0;
         
         vector<int> temp_index = momentIndexes[ii];
@@ -1005,7 +981,6 @@ void CQMOM::solveCQMOMInversion213( const ProcessorGroup* pc,
         }
         
         temp_moments[flatIndex] = temp_value;
-        ii++;
       }
       
       //actually do the cqmom inversion step

@@ -896,24 +896,24 @@
 			<MaximumParticles spec="OPTIONAL INTEGER"/>
 			<ParticleDensity 	spec="OPTIONAL NO_DATA"
 												attribute1="name REQUIRED STRING"
-												attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+												attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 
 			<!-- this solves d size/dt = rhs -->
 			<ParticleSize spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
 				<SourceTerm spec="OPTIONAL NO_DATA"
 							attribute1="name REQUIRED STRING"
-							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+							attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
 			</ParticleSize>
 
 			<!-- this solves dm/dt = rhs -->
 			<ParticleMass spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
 				<SourceTerm spec="OPTIONAL NO_DATA"
 							attribute1="name REQUIRED STRING"
-							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+							attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
 			</ParticleMass>										
 
 			<!-- this solves dx/dt = u -->			
@@ -924,13 +924,13 @@
 				<Velocity	spec = "REQUIRED NO_DATA">
 						<XVel spec="OPTIONAL NO_DATA"
                   attribute1="name REQUIRED STRING"
-                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+                  attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 						<YVel spec="OPTIONAL NO_DATA"
                   attribute1="name REQUIRED STRING"
-                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+                  attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 						<ZVel spec="OPTIONAL NO_DATA"
                   attribute1="name REQUIRED STRING"
-                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+                  attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
 				</Velocity>
 			</ParticlePosition>
 
@@ -948,20 +948,20 @@
 				<GasProperties spec="REQUIRED NO_DATA">
 					<GasDensity   spec="OPTIONAL NO_DATA"
     										attribute1="name REQUIRED STRING"
-		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>									
+		    								attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>									
 					<GasViscosity spec="OPTIONAL NO_DATA"
     										attribute1="name REQUIRED STRING"
-		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+		    								attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 					<GasVelocity	spec = "REQUIRED NO_DATA">
 							<XVel spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 							<YVel spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 							<ZVel spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
 					</GasVelocity>												
 				</GasProperties>				
 			</ParticleMomentum>												

@@ -933,7 +933,6 @@ namespace Uintah{
           Discretization_new::FaceData1D face_values; 
           face_values.minus = 0.0;
           face_values.plus = 0.0;
-          const double tiny = 1.0e-16; 
 
           IntVector cxp = c + coord; 
           IntVector cxm = c - coord; 
@@ -986,7 +985,6 @@ namespace Uintah{
           face_values.minus = 0.0;
           face_values.plus = 0.0;
 
-          const double tiny = 1.0e-16; 
           IntVector cxp = c + coord; 
           IntVector cxm = c - coord; 
           IntVector cxmm = c - coord - coord; 
@@ -1067,7 +1065,6 @@ namespace Uintah{
           Discretization_new::FaceData1D face_values; 
           face_values.minus = 0.0;
           face_values.plus = 0.0;
-          const double tiny = 1.0e-16; 
 
           IntVector cxp = c + coord; 
           IntVector cxm = c - coord; 
@@ -1118,7 +1115,6 @@ namespace Uintah{
           face_values.minus = 0.0;
           face_values.plus = 0.0;
 
-          const double tiny = 1.0e-16; 
           IntVector cxp = c + coord; 
           IntVector cxm = c - coord; 
           IntVector cxmm = c - coord - coord; 
