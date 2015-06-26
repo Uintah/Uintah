@@ -21,10 +21,6 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
-//Allgatherv currently performs poorly on Kraken.
-//This hack changes the Allgatherv to an allgather
-//by padding the digits
-//#define AG_HACK
 
 
 #include <Core/Grid/Level.h>
@@ -66,29 +62,34 @@ static DebugStream bcout("BCTypes", false);
 static DebugStream rgtimes("RGTimes",false);
 //______________________________________________________________________
 //
-Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
-             int index, IntVector refinementRatio, int id /*=-1*/)
-   : grid(grid), d_anchor(anchor), d_dcell(dcell),
-     d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
-     d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
-     d_index(index),
-     d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
-     d_refinementRatio(refinementRatio),
-     d_cachelock("Level Cache Lock")
+Level::Level(       Grid      * grid,
+              const Point     & anchor,
+              const Vector    & dcell, 
+                    int         index,
+                    IntVector   refinementRatio,
+                    int         id /* = -1 */ ) :
+  d_grid(grid), d_anchor(anchor), d_dcell(dcell), 
+  d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
+  d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
+  d_index(index),
+  d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
+  d_refinementRatio(refinementRatio),
+  d_cachelock("Level Cache Lock")
 {
-  d_stretched = false;
-  d_each_patch    =0;
-  d_all_patches   =0;
-  d_bvh = NULL;
-  d_finalized=false;
-  d_extraCells = IntVector(0,0,0);
-  d_totalCells = 0;
+  d_stretched   = false;
+  d_each_patch  = 0;
+  d_all_patches = 0;
+  d_bvh         = NULL;
+  d_finalized   = false;
+  d_extraCells  = IntVector(0,0,0);
+  d_totalCells  = 0;
 
-  if(d_id == -1){
+  if( d_id == -1 ) {
     d_id = ids++;
-  } else if(d_id >= ids) {
+  }
+  else if(d_id >= ids) {
     ids.set(d_id+1);
-}
+  }
 }
 //______________________________________________________________________
 //
@@ -164,11 +165,11 @@ Level::const_patchIterator Level::allPatchesEnd() const
 }
 //______________________________________________________________________
 //
-Patch* Level::addPatch(const IntVector& lowIndex,
-                       const IntVector& highIndex,
-                       const IntVector& inLowIndex,
-                       const IntVector& inHighIndex,
-                       Grid* grid)
+Patch* Level::addPatch( const IntVector & lowIndex,
+                 const IntVector & highIndex,
+                 const IntVector & inLowIndex, 
+                 const IntVector & inHighIndex,
+                       Grid      * grid )
 {
     Patch* r = new Patch(this, lowIndex,highIndex,inLowIndex,
                             inHighIndex,getIndex());
@@ -340,14 +341,14 @@ void Level::setExtraCells(const IntVector& ec)
 //
 GridP Level::getGrid() const
 {
-   return grid;
+   return d_grid;
 }
 
 //______________________________________________________________________
 //
 const LevelP& Level::getRelativeLevel(int offset) const
 {
-  return grid->getLevel(d_index + offset);
+  return d_grid->getLevel(d_index + offset);
 }
 
 //______________________________________________________________________
@@ -596,9 +597,10 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
 
   BBox bbox;
 
-  if (d_index > 0){
-    grid->getLevel(0)->getInteriorSpatialRange(bbox);
-  }else{
+  if (d_index > 0) {
+    d_grid->getLevel(0)->getInteriorSpatialRange(bbox);
+  }
+  else {
     getInteriorSpatialRange(bbox);
   }
 
@@ -1034,7 +1036,7 @@ bool Level::hasCoarserLevel() const
 //
 bool Level::hasFinerLevel() const
 {
-  return getIndex() < grid->numLevels()-1;
+  return getIndex() < d_grid->numLevels()-1;
 }
 
 //______________________________________________________________________
@@ -1043,7 +1045,7 @@ IntVector Level::mapCellToCoarser(const IntVector& idx, int level_offset) const
 {
   IntVector refinementRatio = d_refinementRatio;
   while (--level_offset){
-    refinementRatio =  refinementRatio * grid->getLevel(d_index-level_offset)->d_refinementRatio;
+    refinementRatio =  refinementRatio * d_grid->getLevel(d_index-level_offset)->d_refinementRatio;
   }
   IntVector ratio = idx/refinementRatio;
 
@@ -1069,7 +1071,7 @@ IntVector Level::mapCellToCoarser(const IntVector& idx, int level_offset) const
 //
 IntVector Level::mapCellToFiner(const IntVector& idx) const
 {
-  IntVector r_ratio = grid->getLevel(d_index+1)->d_refinementRatio;
+  IntVector r_ratio = d_grid->getLevel(d_index+1)->d_refinementRatio;
   IntVector fineCell = idx*r_ratio;
 
   IntVector offset(0,0,0);
@@ -1115,7 +1117,7 @@ IntVector Level::mapNodeToCoarser(const IntVector& idx) const
 //  What is returned   40                  44
 IntVector Level::mapNodeToFiner(const IntVector& idx) const
 {
-  return idx*grid->getLevel(d_index+1)->d_refinementRatio;
+  return idx * d_grid->getLevel(d_index+1)->d_refinementRatio;
 }
 
 //______________________________________________________________________

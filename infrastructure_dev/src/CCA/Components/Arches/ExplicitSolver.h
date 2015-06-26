@@ -79,6 +79,7 @@ class PartVel;
 class DQMOM;
 class CQMOM;
 class CQMOM_Convection;
+class CQMOMSourceWrapper;
 class EfficiencyCalculator; 
 class WallModelDriver; 
 class RadPropertyCalculator; 
@@ -305,6 +306,9 @@ private:
   
   void setCQMOMConvect( CQMOM_Convection* cqmomConvect ) {
     d_cqmomConvect = cqmomConvect; };
+  
+  void setCQMOMSource( CQMOMSourceWrapper* cqmomSource ) {
+    d_cqmomSource = cqmomSource; };
 
   // const VarLabel*
   ArchesLabel* d_lab;
@@ -368,6 +372,7 @@ private:
   bool d_doCQMOM;
   CQMOM* d_cqmomSolver;
   CQMOM_Convection* d_cqmomConvect;
+  CQMOMSourceWrapper* d_cqmomSource;
 
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;

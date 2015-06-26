@@ -72,6 +72,7 @@ class PartVel;
 class DQMOM;
 class CQMOM;
 class CQMOM_Convection;
+class CQMOMSourceWrapper;
 class MomentumSolver;
 class NonlinearSolver {
 
@@ -129,6 +130,8 @@ public:
   virtual void setCQMOMSolver(CQMOM* cqmomSolver) = 0;
   
   virtual void setCQMOMConvect(CQMOM_Convection* cqmomConvect) = 0;
+  
+  virtual void setCQMOMSource(CQMOMSourceWrapper* cqmomSource) = 0;
 
   virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched, const MaterialSet* mats) = 0;
   

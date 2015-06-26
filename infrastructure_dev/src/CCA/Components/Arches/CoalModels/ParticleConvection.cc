@@ -134,13 +134,6 @@ ParticleConvection::computeModel( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
-    Vector DX = patch->dCell(); 
-    double vol = DX.x()*DX.y()*DX.z();
-
-    delt_vartype DT;
-    old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-    double dt = DT; 
-
     CCVariable<double> model; 
     CCVariable<double> gas_source;
     DataWarehouse* which_dw; 

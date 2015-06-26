@@ -13,6 +13,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Arches/Directives.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Containers/StaticArray.h>
 
 //#define cqmom_transport_dbg
 //==========================================================================
@@ -44,10 +45,6 @@
  *        The first and second order convection schemes can be found in Vikas et. al. 2011
  */
 
-//NOTE: placing this here lets both cqmomeqn & this functino use it, possibly move it later?
-struct constCCVarWrapper {
-  Uintah::constCCVariable<double> data;
-};
 
 namespace Uintah{
   class Convection_CQMOM {
@@ -68,21 +65,21 @@ namespace Uintah{
     /** @brief Computes the x-convection term. */
     template<class fT > void
     doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
+             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
              const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
     /** @brief Computes the y-convection term. */
     template<class fT > void
     doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
+             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
              const int M, const int nNodes, const int yVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
     /** @brief Computes the z-convection term. */
     template<class fT > void
     doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
+             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
              const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
              const double epW);
     
@@ -381,7 +378,7 @@ namespace Uintah{
 
       
       template<class fT>
-      void do_convection( const Patch* p, fT& Fconv, std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
+      void do_convection( const Patch* p, fT& Fconv, StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
                          const int& M, const int& nNodes, const int& velIndex, const std::vector<int>& momentIndex, const int& dim,
                          constCCVariable<int>& cellType, const double epW, const double d_convWeightLimit, Convection_CQMOM* D)
       {
@@ -418,22 +415,18 @@ namespace Uintah{
           bool isWeight = true; //bool to determine treatment of a weight near a wall
           bool currVel = false;
           
-          int ii = 0;
-          for (std::vector<constCCVarWrapper>::iterator iter = weights.begin(); iter != weights.end(); ++iter) {
-            faceWeights[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
-            ii++;
+          for ( int i = 0; i < nNodes; i++ ) {
+            faceWeights[i] = _opr->no_bc( c, coord, weights[i], isWeight, currVel, cellType, epW );
           }
           
           isWeight = false;
-          ii = 0;
-          for (std::vector<constCCVarWrapper>::iterator iter = abscissas.begin(); iter != abscissas.end(); ++iter) {
-            if ( ii >= (velIndex*nNodes) && ii < (velIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+          for ( int i = 0; i < aSize; i++ ) {
+            if ( i >= (velIndex*nNodes) && i < (velIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
               currVel = true;
             } else {
               currVel = false;
             }
-            faceAbscissas[ii] = _opr->no_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW );
-            ii++;
+            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], isWeight, currVel, cellType, epW );
           }
 #ifdef cqmom_transport_dbg
           std::cout << "Cell location: " << c << " in dimension " << dim << std::endl;
@@ -475,22 +468,18 @@ namespace Uintah{
             
             //swapped boundary cells to use same code as interior cells
             //keeping the iterators separate in case this behavoir needs to change later
-            int ii = 0;
-            for (std::vector<constCCVarWrapper>::iterator iter = weights.begin(); iter != weights.end(); ++iter) {
-              faceWeights[ii] = _opr->with_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW, faceIsBoundary );
-              ii++;
+            for ( int i = 0; i < nNodes; i++ ) {
+              faceWeights[i] = _opr->with_bc( c, coord, weights[i], isWeight, currVel, cellType, epW, faceIsBoundary );
             }
             
             isWeight = false;
-            ii = 0;
-            for (std::vector<constCCVarWrapper>::iterator iter = abscissas.begin(); iter != abscissas.end(); ++iter) {
-              if ( ii >= (velIndex*nNodes) && ii < (velIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+            for ( int i = 0; i < aSize; i++ ) {
+              if ( i >= (velIndex*nNodes) && i < (velIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
                 currVel = true;
               } else {
                 currVel = false;
               }
-              faceAbscissas[ii] = _opr->with_bc( c, coord, (iter->data), isWeight, currVel, cellType, epW, faceIsBoundary );
-              ii++;
+              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], isWeight, currVel, cellType, epW, faceIsBoundary );
             }
 #ifdef cqmom_transport_dbg
             std::cout << "Cell location: " << c << " in dimension " << dim << std::endl;
@@ -810,7 +799,7 @@ namespace Uintah{
   //x direction convection
   template<class fT > void
   Convection_CQMOM::doConvX( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                             std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
+                             StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
                              const int M, const int nNodes, const int uVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                              const double epW)
   {
@@ -849,7 +838,7 @@ namespace Uintah{
   //y direction convection
   template<class fT> void
   Convection_CQMOM::doConvY( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                            std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
+                            StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
                             const int M, const int nNodes, const int vVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                             const double epW)
   {
@@ -886,7 +875,7 @@ namespace Uintah{
   //z directino convection
   template<class fT> void
   Convection_CQMOM::doConvZ( const Patch* p, fT& Fconv, const std::string d_convScheme, const double d_convWeightLimit,
-                            std::vector<constCCVarWrapper> weights, std::vector<constCCVarWrapper> abscissas,
+                            StaticArray<constCCVariable<double> >& weights, StaticArray<constCCVariable<double> >& abscissas,
                             const int M, const int nNodes, const int wVelIndex, const std::vector<int> momentIndex, constCCVariable<int>& cellType,
                             const double epW)
   {

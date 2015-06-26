@@ -970,7 +970,7 @@ private:
     
     void setZVel( const Patch* patch, SFCZVariable<double>& wvel, constCCVariable<double>& rho ){     
       
-      double x,y,z, r;
+      double x,y,z;
       Vector Dx = patch->dCell(); 
       const double dz_2 = Dx.z()/2.0;
       const double pi = acos(-1.);

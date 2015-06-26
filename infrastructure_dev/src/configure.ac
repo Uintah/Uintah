@@ -3252,7 +3252,7 @@ else
           fi
         fi
 
-        if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+        if [[[ $CC = *mpigcc* && $IS_BGQ = yes ]]]; then
            msg="Updating CFLAGS with PETSc required flags due to using xlC compiled PETSC with gcc compiler..."
            add_important_warning "$msg"
            #CFLAGS="  $CFLAGS   -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED(why)= "
@@ -3334,10 +3334,11 @@ AC_LANG([C])
 # Vulcan with the gcc compilers... And the compilicated CFLAGS will not
 # pass through configure into configVars.mk correctly... sigh.
 #
-if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+# Note, the above "[[[" turns into the desired "[[" once passed through autoconf...
+#
+if [[[ $CC = *mpigcc* && $IS_BGQ = yes ]]]; then
    CXXFLAGS=$ORIG_CXXFLAGS
 fi
-
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
