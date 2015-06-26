@@ -168,6 +168,3 @@ Builder::build() const
 
 //--- Explicit template instantiations ---
 template class MonolithicRHS<SpatialOps::SVolField>;
-template class MonolithicRHS<SpatialOps::XVolField>;
-template class MonolithicRHS<SpatialOps::YVolField>;
-template class MonolithicRHS<SpatialOps::ZVolField>;

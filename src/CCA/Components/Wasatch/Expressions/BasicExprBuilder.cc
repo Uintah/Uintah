@@ -370,7 +370,7 @@ namespace Wasatch{
       valParams->getAttribute("rho0", rho0);
       valParams->getAttribute("rho1", rho1);
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
-      typedef typename VarDen1DMMSMixFracSrc<FieldT>::Builder Builder;
+      typedef typename VarDen1DMMSMixFracSrc<SVolField>::Builder Builder;
       builder = scinew Builder( tag, xTag, tagNames.time, D, rho0, rho1 );
     }
     
@@ -1233,9 +1233,6 @@ namespace Wasatch{
       
       switch( get_field_type(fieldType) ){
         case SVOL : builder = build_precipitation_expr< SVolField >( exprParams , parser);  break;
-        case XVOL : builder = build_precipitation_expr< XVolField >( exprParams , parser);  break;
-        case YVOL : builder = build_precipitation_expr< YVolField >( exprParams , parser);  break;
-        case ZVOL : builder = build_precipitation_expr< ZVolField >( exprParams , parser);  break;
         default:
           std::ostringstream msg;
           msg << "ERROR: unsupported field type '" << fieldType << "'" << std::endl;

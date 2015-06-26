@@ -798,25 +798,11 @@ build() const
 #include <CCA/Components/Wasatch/FieldTypes.h>
 template class VarDenMMSOscillatingMixFracSrc<SVolField>;
 
-template class VarDenMMSOscillatingMixFracSrc<XVolField>;
-template class VarDenMMSOscillatingMixFracSrc<YVolField>;
-template class VarDenMMSOscillatingMixFracSrc<ZVolField>;
-
 template class VarDenMMSOscillatingContinuitySrc<SVolField>;
 
 template class VarDenOscillatingMMSxVel<XVolField>;
-template class VarDenOscillatingMMSxVel<YVolField>;
-template class VarDenOscillatingMMSxVel<ZVolField>;
-template class VarDenOscillatingMMSxVel<SVolField>;
 template class VarDenOscillatingMMSyVel<YVolField>;
-template class VarDenOscillatingMMSyVel<XVolField>;
-template class VarDenOscillatingMMSyVel<ZVolField>;
-template class VarDenOscillatingMMSyVel<SVolField>;
+
 template class VarDenOscillatingMMSMixFrac<SVolField>;
-template class VarDenOscillatingMMSMixFrac<XVolField>;
-template class VarDenOscillatingMMSMixFrac<YVolField>;
-template class VarDenOscillatingMMSMixFrac<ZVolField>;
+
 template class DiffusiveConstant<SVolField>;
-template class DiffusiveConstant<XVolField>;
-template class DiffusiveConstant<YVolField>;
-template class DiffusiveConstant<ZVolField>;
