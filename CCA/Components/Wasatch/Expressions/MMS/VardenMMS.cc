@@ -380,10 +380,5 @@ build() const
 // EXPLICIT INSTANTIATION
 #include <CCA/Components/Wasatch/FieldTypes.h>
 template class VarDen1DMMSMixFracSrc<SVolField>;
-template class VarDen1DMMSMixFracSrc<XVolField>;
-template class VarDen1DMMSMixFracSrc<YVolField>;
-template class VarDen1DMMSMixFracSrc<ZVolField>;
-
 template class VarDen1DMMSContinuitySrc<SVolField>;
-
 template class VarDen1DMMSPressureContSrc<SVolField>;
