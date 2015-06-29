@@ -872,140 +872,7 @@ namespace Wasatch{
     }
     return builder;
   }
-  
-  //------------------------------------------------------------------
-  
-  template<typename FieldT>
-  Expr::ExpressionBuilder*
-  build_post_processing_expr( Uintah::ProblemSpecP params )
-  {
-    const Expr::Tag tag = parse_nametag( params->findBlock("NameTag") );
-    
-    Expr::ExpressionBuilder* builder = NULL;
-    if( params->findBlock("VelocityMagnitude") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("VelocityMagnitude");
-      
-      Expr::Tag xVelTag = Expr::Tag();
-      if (valParams->findBlock("XVelocity"))
-        xVelTag = parse_nametag( valParams->findBlock("XVelocity")->findBlock("NameTag") );
-      
-      Expr::Tag yVelTag = Expr::Tag();
-      if (valParams->findBlock("YVelocity"))
-        yVelTag = parse_nametag( valParams->findBlock("YVelocity")->findBlock("NameTag") );
-      
-      Expr::Tag zVelTag = Expr::Tag();
-      if (valParams->findBlock("ZVelocity"))
-        zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
-      
-      typedef typename VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
-      builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
-    }
-    
-    else if( params->findBlock("Vorticity") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("Vorticity");
-      std::string vorticityComponent;
-      valParams->require("Component",vorticityComponent);
-      
-      Expr::Tag vel1Tag = Expr::Tag();
-      if (valParams->findBlock("Vel1"))
-        vel1Tag = parse_nametag( valParams->findBlock("Vel1")->findBlock("NameTag") );
-      Expr::Tag vel2Tag = Expr::Tag();
-      if (valParams->findBlock("Vel2"))
-        vel2Tag = parse_nametag( valParams->findBlock("Vel2")->findBlock("NameTag") );
-      if (vorticityComponent == "X") {
-        typedef typename Vorticity<SVolField, ZVolField, YVolField>::Builder Builder;
-        builder = scinew Builder(tag, vel1Tag, vel2Tag);
-      } else if (vorticityComponent == "Y") {
-        typedef typename Vorticity<SVolField, XVolField, ZVolField>::Builder Builder;
-        builder = scinew Builder(tag, vel1Tag, vel2Tag);
-      } else if (vorticityComponent == "Z") {
-        typedef typename Vorticity<SVolField, YVolField, XVolField>::Builder Builder;
-        builder = scinew Builder(tag, vel1Tag, vel2Tag);
-      }
-    }
-    
-    else if( params->findBlock("InterpolateExpression") ){
-      Uintah::ProblemSpecP valParams = params->findBlock("InterpolateExpression");
-      std::string srcFieldType;
-      valParams->getAttribute("type",srcFieldType);
-      const Expr::Tag srcTag = parse_nametag( valParams->findBlock("NameTag") );
-      
-      switch( get_field_type(srcFieldType) ){
-        case SVOL : {
-          typedef typename InterpolateExpression<SVolField, FieldT>::Builder Builder;
-          builder = scinew Builder(tag, srcTag);
-          break;
-        }
-        case XVOL : {
-          typedef typename InterpolateExpression<XVolField, FieldT>::Builder Builder;
-          builder = scinew Builder(tag, srcTag);
-          break;
-        }
-        case YVOL : {
-          typedef typename InterpolateExpression<YVolField, FieldT>::Builder Builder;
-          builder = scinew Builder(tag, srcTag);
-          break;
-        }
-        case ZVOL : {
-          typedef typename InterpolateExpression<ZVolField, FieldT>::Builder Builder;
-          builder = scinew Builder(tag, srcTag);
-          break;
-        }
-        case PARTICLE : {
-          typedef typename InterpolateParticleExpression<SVolField>::Builder Builder;
-          Uintah::ProblemSpecP pInfoSpec = valParams->findBlock("ParticleInfo");
-          std::string psize, px, py, pz;
-          
-          pInfoSpec->getAttribute("size",psize);
-          const Expr::Tag psizeTag(psize,Expr::STATE_NP1);
-          
-          pInfoSpec->getAttribute("px",px);
-          const Expr::Tag pxTag(px,Expr::STATE_NP1);
-          
-          pInfoSpec->getAttribute("py",py);
-          const Expr::Tag pyTag(py,Expr::STATE_NP1);
 
-          pInfoSpec->getAttribute("pz",pz);
-          const Expr::Tag pzTag(pz,Expr::STATE_NP1);
-          
-          const Expr::TagList pPosTags = tag_list(pxTag,pyTag,pzTag);
-          builder = scinew Builder(tag, srcTag, psizeTag, pPosTags );
-          break;
-        }
-        default:
-          std::ostringstream msg;
-          msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
-      }
-    } else if( params->findBlock("KineticEnergy") ) {
-      Uintah::ProblemSpecP keSpec = params->findBlock("KineticEnergy");
-      
-      Expr::Tag xVelTag = Expr::Tag();
-      if (keSpec->findBlock("XVelocity"))
-        xVelTag = parse_nametag( keSpec->findBlock("XVelocity")->findBlock("NameTag") );
-      
-      Expr::Tag yVelTag = Expr::Tag();
-      if (keSpec->findBlock("YVelocity"))
-        yVelTag = parse_nametag( keSpec->findBlock("YVelocity")->findBlock("NameTag") );
-      
-      Expr::Tag zVelTag = Expr::Tag();
-      if (keSpec->findBlock("ZVelocity"))
-        zVelTag = parse_nametag( keSpec->findBlock("ZVelocity")->findBlock("NameTag") );
-      
-      bool totalKE=false;
-      keSpec->getAttribute("total",totalKE);
-      if (totalKE) {
-        typedef typename TotalKineticEnergy<XVolField, YVolField, ZVolField>::Builder Builder;
-        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
-      } else {
-        typedef typename KineticEnergy<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
-        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
-      }      
-    }
-    
-    return builder;
-  }
-  
   //------------------------------------------------------------------
   
   template<typename FieldT>
@@ -1252,16 +1119,122 @@ namespace Wasatch{
       std::string fieldType;
       exprParams->getAttribute("type",fieldType);
       
-      switch( get_field_type(fieldType) ){
-        case SVOL : builder = build_post_processing_expr< SVolField >( exprParams );  break;
-        case XVOL : builder = build_post_processing_expr< XVolField >( exprParams );  break;
-        case YVOL : builder = build_post_processing_expr< YVolField >( exprParams );  break;
-        case ZVOL : builder = build_post_processing_expr< ZVolField >( exprParams );  break;
-        default:
-          std::ostringstream msg;
-          msg << "ERROR: unsupported field type '" << fieldType << "'. Postprocessing expressions are setup with SVOLFields as destination fields only." << std::endl
-          << "You were trying to register a postprocessing expression with a non cell centered destination field. Please revise you input file." << std::endl;
-          throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+      const Expr::Tag tag = parse_nametag( exprParams->findBlock("NameTag") );
+    
+      if( exprParams->findBlock("VelocityMagnitude") ){
+        Uintah::ProblemSpecP valParams = exprParams->findBlock("VelocityMagnitude");
+        
+        Expr::Tag xVelTag = Expr::Tag();
+        if (valParams->findBlock("XVelocity"))
+          xVelTag = parse_nametag( valParams->findBlock("XVelocity")->findBlock("NameTag") );
+        
+        Expr::Tag yVelTag = Expr::Tag();
+        if (valParams->findBlock("YVelocity"))
+          yVelTag = parse_nametag( valParams->findBlock("YVelocity")->findBlock("NameTag") );
+        
+        Expr::Tag zVelTag = Expr::Tag();
+        if (valParams->findBlock("ZVelocity"))
+          zVelTag = parse_nametag( valParams->findBlock("ZVelocity")->findBlock("NameTag") );
+        
+        typedef VelocityMagnitude<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
+        builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+      }
+      
+      else if( exprParams->findBlock("Vorticity") ){
+        Uintah::ProblemSpecP valParams = exprParams->findBlock("Vorticity");
+        std::string vorticityComponent;
+        valParams->require("Component",vorticityComponent);
+        
+        Expr::Tag vel1Tag = Expr::Tag();
+        if (valParams->findBlock("Vel1"))
+          vel1Tag = parse_nametag( valParams->findBlock("Vel1")->findBlock("NameTag") );
+        Expr::Tag vel2Tag = Expr::Tag();
+        if (valParams->findBlock("Vel2"))
+          vel2Tag = parse_nametag( valParams->findBlock("Vel2")->findBlock("NameTag") );
+        if (vorticityComponent == "X") {
+          typedef Vorticity<SVolField, ZVolField, YVolField>::Builder Builder;
+          builder = scinew Builder(tag, vel1Tag, vel2Tag);
+        } else if (vorticityComponent == "Y") {
+          typedef Vorticity<SVolField, XVolField, ZVolField>::Builder Builder;
+          builder = scinew Builder(tag, vel1Tag, vel2Tag);
+        } else if (vorticityComponent == "Z") {
+          typedef Vorticity<SVolField, YVolField, XVolField>::Builder Builder;
+          builder = scinew Builder(tag, vel1Tag, vel2Tag);
+        }
+      }
+      
+      else if( exprParams->findBlock("KineticEnergy") ) {
+        Uintah::ProblemSpecP keSpec = exprParams->findBlock("KineticEnergy");
+        
+        Expr::Tag xVelTag = Expr::Tag();
+        if (keSpec->findBlock("XVelocity"))
+          xVelTag = parse_nametag( keSpec->findBlock("XVelocity")->findBlock("NameTag") );
+        
+        Expr::Tag yVelTag = Expr::Tag();
+        if (keSpec->findBlock("YVelocity"))
+          yVelTag = parse_nametag( keSpec->findBlock("YVelocity")->findBlock("NameTag") );
+        
+        Expr::Tag zVelTag = Expr::Tag();
+        if (keSpec->findBlock("ZVelocity"))
+          zVelTag = parse_nametag( keSpec->findBlock("ZVelocity")->findBlock("NameTag") );
+        
+        bool totalKE=false;
+        keSpec->getAttribute("total",totalKE);
+        if (totalKE) {
+          typedef TotalKineticEnergy<XVolField, YVolField, ZVolField>::Builder Builder;
+          builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+        } else {
+          typedef KineticEnergy<SVolField, XVolField, YVolField, ZVolField>::Builder Builder;
+          builder = scinew Builder(tag, xVelTag, yVelTag, zVelTag);
+        }
+      }  else if( exprParams->findBlock("InterpolateExpression") ){
+        Uintah::ProblemSpecP valParams = exprParams->findBlock("InterpolateExpression");
+        std::string srcFieldType;
+        valParams->getAttribute("type",srcFieldType);
+        const Expr::Tag srcTag = parse_nametag( valParams->findBlock("NameTag") );
+        
+        switch( get_field_type(srcFieldType) ){
+          case XVOL : {
+            typedef InterpolateExpression<XVolField, SVolField>::Builder Builder;
+            builder = scinew Builder(tag, srcTag);
+            break;
+          }
+          case YVOL : {
+            typedef InterpolateExpression<YVolField, SVolField>::Builder Builder;
+            builder = scinew Builder(tag, srcTag);
+            break;
+          }
+          case ZVOL : {
+            typedef InterpolateExpression<ZVolField, SVolField>::Builder Builder;
+            builder = scinew Builder(tag, srcTag);
+            break;
+          }
+          case PARTICLE : {
+            typedef InterpolateParticleExpression<SVolField>::Builder Builder;
+            Uintah::ProblemSpecP pInfoSpec = valParams->findBlock("ParticleInfo");
+            std::string psize, px, py, pz;
+            
+            pInfoSpec->getAttribute("size",psize);
+            const Expr::Tag psizeTag(psize,Expr::STATE_NP1);
+            
+            pInfoSpec->getAttribute("px",px);
+            const Expr::Tag pxTag(px,Expr::STATE_NP1);
+            
+            pInfoSpec->getAttribute("py",py);
+            const Expr::Tag pyTag(py,Expr::STATE_NP1);
+            
+            pInfoSpec->getAttribute("pz",pz);
+            const Expr::Tag pzTag(pz,Expr::STATE_NP1);
+            
+            const Expr::TagList pPosTags = tag_list(pxTag,pyTag,pzTag);
+            builder = scinew Builder(tag, srcTag, psizeTag, pPosTags );
+            break;
+          }
+          default:
+            std::ostringstream msg;
+            msg << "ERROR: unsupported field type '" << srcFieldType << "'" << "while parsing an InterpolateExpression." << std::endl;
+            throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+        }
       }
 
       const Category cat = parse_tasklist(exprParams,false);

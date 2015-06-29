@@ -1525,9 +1525,14 @@ namespace Wasatch {
   template void BCHelper::create_dummy_dependency< SpatialOps::SingleValueField, VOLT >( const Expr::Tag& attachDepToThisTag, \
                                                                                  const Expr::TagList dependencies,     \
                                                                                  const Category taskCat );
-  INSTANTIATE_BC_TYPES(ParticleField);
+
   INSTANTIATE_BC_TYPES(SpatialOps::SVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::XVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::YVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::ZVolField);
+  
+  template void BCHelper::apply_boundary_condition< ParticleField >( const Expr::Tag& varTag,
+                                                                     const Category& taskCat,
+                                                                     const bool setOnExtraOnly);
+
 } // class BCHelper
