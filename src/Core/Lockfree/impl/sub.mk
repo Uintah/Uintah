@@ -26,7 +26,7 @@
 
 SRCDIR := Core/Lockfree/impl
 
-SRCS += $(SRCDIR)/Lockfree_MMapAllocator.cc
+SRCS += $(SRCDIR)/Lockfree_MMapAllocator.cpp
 
 PSELIBS :=
 
