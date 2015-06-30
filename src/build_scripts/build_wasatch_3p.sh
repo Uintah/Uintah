@@ -96,7 +96,7 @@ run "rm -rf install/*"
 
 run "cd src"
 run "rm -rf SpatialOps"
-run "git clone --depth 1 git://software.crsim.utah.edu/SpatialOps.git SpatialOps"
+run "git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git SpatialOps"
 if test ! -z $SPATIAL_OPS_TAG ; then
     run "cd SpatialOps"
     run "git reset --hard $SPATIAL_OPS_TAG"
@@ -136,7 +136,7 @@ run "cd ../../.."  # back to Wasatch3P
 
 run "cd src"
 run "rm -rf ExprLib"
-run "git clone --depth 1 git://software.crsim.utah.edu/ExprLib.git ExprLib"
+run "git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git ExprLib"
 if test ! -z $EXPR_LIB_TAG ; then
     run "cd ExprLib"
     run "git reset --hard $EXPR_LIB_TAG"
@@ -174,7 +174,7 @@ run "cd ../../.."  # back to Wasatch3P
 
 run "cd src"
 run "rm -rf TabProps"
-run "git clone --depth 1 git://software.crsim.utah.edu/TabProps.git TabProps"
+run "git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git TabProps"
 if test ! -z $TAB_PROPS_TAG ; then
     run "cd TabProps"
     run "git reset --hard $TAB_PROPS_TAG"
@@ -205,7 +205,7 @@ run "cd ../../.."  # back to Wasatch3P
 
 run "cd src"
 run "rm -rf RadProps"
-run "git clone --depth 1 git://software.crsim.utah.edu/RadProps.git RadProps"
+run "git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git RadProps"
 if test ! -z $RAD_PROPS_TAG ; then
     run "cd RadProps"
     run "git reset --hard $RAD_PROPS_TAG"
