@@ -32,7 +32,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Malloc
 
-SRCS     += $(SRCDIR)/AllocatorTags.cc
+SRCS     += $(SRCDIR)/AllocatorTags.cpp
 
 PSELIBS := 
 
