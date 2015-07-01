@@ -155,6 +155,18 @@ public:
   inline const std::vector<std::string> getModelsList(){
     return d_models; }
 
+  /** @brief Return the model name associated with this equation */ 
+  inline const std::string get_model_by_type( std::string type ){ 
+
+    std::map<std::string, std::string>::iterator i = d_type_to_model.find(type); 
+    if ( i != d_type_to_model.end() ){ 
+      return i->second; 
+    } 
+
+    return "NULLSTRING";
+
+  }
+
   /** @brief Return the VarLabel for this equation's source term. */ 
   inline const VarLabel* getSourceLabel(){
     return d_sourceLabel; }
@@ -215,6 +227,7 @@ private:
   const VarLabel* d_weightLabel;  ///< Label for weight corresponding to this quadrature node
 
   std::vector<std::string> d_models;   ///< This is the list of models for this internal coordinate
+  std::map<std::string, std::string> d_type_to_model; ///< The list of model types and names
   bool d_weight;                  ///< Boolean: is this equation object for a weight?
   std::vector<std::string> d_sources;
   bool d_addExtraSources; 

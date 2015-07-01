@@ -42,7 +42,7 @@ template< typename SrcT, typename TargetT >
 class NullExpression
  : public Expr::Expression<TargetT>
 {
-  DECLARE_VECTOR_OF_FIELDS(SrcT, f_);
+  DECLARE_VECTOR_OF_FIELDS( SrcT, f_ )
   /* declare operators associated with this expression here */
 
     NullExpression( const Expr::TagList& VarNameTags );
@@ -81,6 +81,7 @@ NullExpression<SrcT, TargetT>::
 NullExpression( const Expr::TagList& VarNameTags )
   : Expr::Expression<TargetT>()
 {
+  this->set_gpu_runnable(true);
   this->template create_field_vector_request<SrcT>(VarNameTags, f_);
 }
 

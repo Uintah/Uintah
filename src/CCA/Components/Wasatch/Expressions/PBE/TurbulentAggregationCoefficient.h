@@ -44,7 +44,7 @@ class TurbulentAggregationCoefficient
 : public Expr::Expression<FieldT>
 {
   const double coefVal_;
-  DECLARE_FIELDS(FieldT, kinVisc_, dissipation_);
+  DECLARE_FIELDS(FieldT, kinVisc_, dissipation_)
   
   TurbulentAggregationCoefficient( const Expr::Tag& kinViscTag,
                                    const Expr::Tag& dissipationTag,

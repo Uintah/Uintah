@@ -64,7 +64,7 @@ class DiffusiveFlux
   const GradT* gradOp_;
   const InterpT* interpOp_;
 
-  DECLARE_FIELDS(ScalarT, phi_, turbDiff_, rho_, coef_);
+  DECLARE_FIELDS(ScalarT, phi_, turbDiff_, rho_, coef_)
   
   DiffusiveFlux( const Expr::Tag& rhoTag,
                  const Expr::Tag& turbDiffTag,

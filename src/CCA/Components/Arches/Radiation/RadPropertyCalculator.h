@@ -152,7 +152,6 @@ namespace Uintah {
 
         private: 
 
-          std::vector<std::string> _the_species;     ///< list of species
           std::string _co2_name;                     ///< table name
           std::string _h2o_name;                     ///< table name 
           std::string _soot_name;                    ///< property name

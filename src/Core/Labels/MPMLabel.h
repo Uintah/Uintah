@@ -83,6 +83,8 @@ namespace Uintah {
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel;
       const VarLabel* pSurfLabel_preReloc;
+      const VarLabel* pLastLevelLabel;
+      const VarLabel* pLastLevelLabel_preReloc;
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTempCurrentLabel; //for thermal stress 
@@ -102,10 +104,12 @@ namespace Uintah {
       const VarLabel* pLocalizedMPMLabel_preReloc;
       const VarLabel* pRefinedLabel;
       const VarLabel* pRefinedLabel_preReloc;
-
+      const VarLabel* pConcentrationLabel;
+      const VarLabel* pConcentrationLabel_preReloc;
+      const VarLabel* pConcPreviousLabel;
+      const VarLabel* pConcPreviousLabel_preReloc;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
-
       const VarLabel* pScaleFactorLabel;
       const VarLabel* pScaleFactorLabel_preReloc;
       
@@ -131,6 +135,11 @@ namespace Uintah {
       const VarLabel* gHeatFluxLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gExternalHeatFluxLabel;
+      const VarLabel* gConcentrationLabel;
+      const VarLabel* gConcentrationNoBCLabel;
+      const VarLabel* gConcentrationRateLabel;
+      const VarLabel* gConcentrationStarLabel;
+      const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;
@@ -138,6 +147,7 @@ namespace Uintah {
       const VarLabel* gStressForSavingLabel;
       const VarLabel* gVolumeLabel;
       const VarLabel* gZOILabel;
+      const VarLabel* MPMRefineCellLabel;
       const VarLabel* cVolumeLabel;
       const VarLabel* numLocInCellLabel;
       const VarLabel* numInCellLabel;

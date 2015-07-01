@@ -63,7 +63,8 @@ SRCS   += \
         $(SRCDIR)/NonLocalDruckerPrager.cc      \
         $(SRCDIR)/Arenisca.cc                   \
         $(SRCDIR)/Arenisca3.cc                  \
-        $(SRCDIR)/Arenisca4.cc
+        $(SRCDIR)/Arenisca4.cc                  \
+        $(SRCDIR)/GaoElastic.cc                 \
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \

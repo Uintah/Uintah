@@ -113,6 +113,9 @@ class UnifiedScheduler : public MPIScheduler  {
     int getAvailableThreadNum();
 
     int  pendingMPIRecvs();
+    
+    std::string myRankThread();
+    
 
     ConditionVariable          d_nextsignal;           // conditional wait mutex
     Mutex                      d_nextmutex;            // next mutex
@@ -191,8 +194,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     cudaError_t freeComputesMem();
 
-    cudaError_t unregisterPageLockedHostMem();
-
     void freeCudaEvents();
 
     void clearGpuDBMaps();
@@ -226,7 +227,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     /* thread shared data, needs lock protection when accessed */
     std::vector<std::queue<cudaStream_t*> >  idleStreams;
-    std::set<void*>                          pinnedHostPtrs;
     std::vector< std::string >               materialsNames;
 
     // All are multiple reader, single writer locks (pthread_rwlock_t wrapper)

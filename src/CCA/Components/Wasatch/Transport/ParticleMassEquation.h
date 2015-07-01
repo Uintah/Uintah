@@ -35,7 +35,7 @@
 class ParticleMassIC
 : public Expr::Expression<ParticleField>
 {
-  DECLARE_FIELDS(ParticleField, pRho_, pDiameter_);
+  DECLARE_FIELDS(ParticleField, pRho_, pDiameter_)
   
   /* declare operators associated with this expression here */
   

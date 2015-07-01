@@ -104,6 +104,7 @@ DetailedTasks::DetailedTasks(       SchedulerCommon* sc,
   stask_ = scinew Task( "send old data", Task::InitialSend );
   stask_->d_phase = 0;
   stask_->setMapping( dwmap );
+
   // Create a send old detailed task for every processor in my neighborhood.
   for (std::set<int>::iterator iter = neighborhood_processors.begin(); iter != neighborhood_processors.end(); iter++) {
     DetailedTask* newtask = scinew DetailedTask( stask_, 0, 0, this );
@@ -277,7 +278,7 @@ DetailedTask::DetailedTask(       Task*           task,
 {
   if (patches) {
     // patches and matls must be sorted
-    ASSERT( std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()) );
+    ASSERT(std::is_sorted(patches->getVector().begin(), patches->getVector().end(), Patch::Compare()) );
     patches->addReference();
   }
   if (matls) {
@@ -291,6 +292,7 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceNum_             = -1;
   TaskGPUDataWarehouses[0] = NULL;
   TaskGPUDataWarehouses[1] = NULL;
+  setCUDAStream(NULL);
 #endif
 }
 
@@ -1725,7 +1727,7 @@ operator<<(       std::ostream& out,
       if (task.getTask()->getType() == Task::OncePerProc) {
         out << ", on multiple levels";
       }
-      else if (patches->size() > 1) {
+      else {
         out << ", Level " << getLevel(patches)->getIndex();
       }
     }
@@ -1750,6 +1752,12 @@ operator<<(       std::ostream& out,
     else {
       out << task.getAssignedResourceIndex();
     }
+#ifdef HAVE_CUDA
+    if( task.getCUDAStream() ){
+      out << std::hex << " using CUDA stream " << task.getCUDAStream();
+    }
+#endif
+    
   }
   coutLock.unlock();
 

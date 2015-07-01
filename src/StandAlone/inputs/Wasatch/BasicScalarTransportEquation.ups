@@ -16,9 +16,9 @@
     <!-- Set the initial condition expression for phi1 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi1" state="STATE_NONE"/>
+      <NameTag name="phi1"/>
       <GaussianFunction amplitude="20.0" deviation="2.0" mean="5.0" baseline="1.0">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </GaussianFunction>
     </BasicExpression>
 
@@ -26,7 +26,7 @@
         that is a simple function of phi1 -->
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="phi1-diffcoef" state="STATE_NONE"/>
+      <NameTag name="phi1-diffcoef"/>
       <GaussianFunction amplitude="0.2" deviation="4.0" mean="10.0" baseline="0.1">
         <NameTag name="phi1" state="STATE_DYNAMIC"/>
       </GaussianFunction>
@@ -43,7 +43,7 @@
       <SolutionVariable>phi1</SolutionVariable>
       <DiffusiveFlux direction="XY">
         <DiffusionCoefficient>
-          <NameTag name="phi1-diffcoef" state="STATE_NONE"/>
+          <NameTag name="phi1-diffcoef"/>
         </DiffusionCoefficient>
       </DiffusiveFlux>
       <!-- here we use a constant diffusivity in the z-direction. this is an anisotropic diffusion coefficient... -->
@@ -53,9 +53,9 @@
     <!-- Set the initial condition for phi2 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi2" state="STATE_NONE"/>
+      <NameTag name="phi2"/>
       <LinearFunction slope="1.0" intercept="-2.0">
-        <NameTag name="YSVOL" state="STATE_NONE"/>
+        <NameTag name="YSVOL"/>
       </LinearFunction>
     </BasicExpression>
 
@@ -68,9 +68,9 @@
     <!-- Set the initial condition for phi3 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi3" state="STATE_NONE"/>
+      <NameTag name="phi3"/>
       <SineFunction amplitude="20.0" frequency="0.75" offset="0">
-        <NameTag name="ZSVOL" state="STATE_NONE"/>
+        <NameTag name="ZSVOL"/>
       </SineFunction>
     </BasicExpression>
 
@@ -83,24 +83,24 @@
     <!-- Set the initial condition for phi4 -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi4" state="STATE_NONE"/>
+      <NameTag name="phi4"/>
       <SineFunction amplitude="20.0" frequency="0.75" offset="0">
-        <NameTag name="ZSVOL" state="STATE_NONE"/>
+        <NameTag name="ZSVOL"/>
       </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="phi4 source term" state="STATE_NONE"/>
+      <NameTag name="phi4 source term"/>
       <SineFunction amplitude="1.0" frequency="0.75" offset="-0.0">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </SineFunction>
     </BasicExpression>
 
     <TransportEquation equation="generic">
       <SolutionVariable>phi4</SolutionVariable>
       <SourceTermExpression>
-        <NameTag name="phi4 source term" state="STATE_NONE"/>
+        <NameTag name="phi4 source term"/>
       </SourceTermExpression>
       <DiffusiveFlux direction="X" coefficient="0.1"/>
     </TransportEquation>

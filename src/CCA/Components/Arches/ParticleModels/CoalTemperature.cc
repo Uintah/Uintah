@@ -261,7 +261,7 @@ void
 CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
     SpatialOps::OperatorDatabase& opr ){ 
   const std::string gas_temperature_name   = _gas_temperature_name;
-  constCCVariable<double>* vgas_temperature = tsk_info->get_uintah_const_field<constCCVariable<double> >(gas_temperature_name); 
+  constCCVariable<double>* vgas_temperature = tsk_info->get_const_uintah_field<constCCVariable<double> >(gas_temperature_name); 
   constCCVariable<double>& gas_temperature = *vgas_temperature;
   for ( int i = 0; i < _Nenv; i++ ){ 
     const std::string temperature_name  = get_env_name( i, _task_name );
@@ -274,11 +274,11 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     
     CCVariable<double>* vtemperature = tsk_info->get_uintah_field<CCVariable<double> >(temperature_name); 
     CCVariable<double>* vdTdt = tsk_info->get_uintah_field<CCVariable<double> >(dTdt_name); 
-    constCCVariable<double>* vrcmass = tsk_info->get_uintah_const_field<constCCVariable<double> >(rc_name); 
-    constCCVariable<double>* vchar = tsk_info->get_uintah_const_field<constCCVariable<double> >(char_name); 
-    constCCVariable<double>* venthalpy = tsk_info->get_uintah_const_field<constCCVariable<double> >(enthalpy_name); 
-    constCCVariable<double>* vweight = tsk_info->get_uintah_const_field<constCCVariable<double> >(weight_name); 
-    constCCVariable<double>* vtemperatureold = tsk_info->get_uintah_const_field<constCCVariable<double> >(temperature_name); 
+    constCCVariable<double>* vrcmass = tsk_info->get_const_uintah_field<constCCVariable<double> >(rc_name); 
+    constCCVariable<double>* vchar = tsk_info->get_const_uintah_field<constCCVariable<double> >(char_name); 
+    constCCVariable<double>* venthalpy = tsk_info->get_const_uintah_field<constCCVariable<double> >(enthalpy_name); 
+    constCCVariable<double>* vweight = tsk_info->get_const_uintah_field<constCCVariable<double> >(weight_name); 
+    constCCVariable<double>* vtemperatureold = tsk_info->get_const_uintah_field<constCCVariable<double> >(temperature_name); 
     CCVariable<double>& temperature = *vtemperature;
     CCVariable<double>& dTdt = *vdTdt;
     constCCVariable<double>& temperatureold = *vtemperatureold;
@@ -298,7 +298,7 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double hint = 0.0;
       double Ha = 0.0;
       double Hc = 0.0;
-      double Hh = 0.0;
+      //double Hh = 0.0; unused
       double H = 0.0;
       double f1 = 0.0;
       double f2 = 0.0;
@@ -313,41 +313,57 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double pE = enthalpy[c];
       double wt = weight[c];
 
-      for ( int iter = 0; iter < 15; iter++) {
-        icount++;
-        oldpT = pT;
-        // compute enthalpy given Tguess
-        hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
-        Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293); 
-        Hc = _Hc0 + hint * _RdMW;
-        Hh = _Hh0 + hint * _RdC;
-        H = Hc * (RC + min(0.0,CH)) + Hh * max(0.0,CH) + Ha * _init_ash[i];
-        f1 = pE - H;    
-        // compute enthalpy given Tguess + delta
-        pT = pT + delta;
-        hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
-        Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293); 
-        Hc = _Hc0 + hint * _RdMW;
-        Hh = _Hh0 + hint * _RdC;
-        H = Hc * (RC + min(0.0,CH)) + Hh * max(0.0,CH) + Ha * _init_ash[i];
-        f2 = pE - H;
-        // correct temperature
-        dT = f1 * delta / (f2-f1) + delta; 
-        pT = pT - dT;    //to add an coefficient for steadness
-        // check to see if tolernace has been met
-        tol = abs(oldpT - pT);
-        if (tol < 0.01 ) 
-          break;
+      if (wt < _weight_small[i]){
+        temperature[c]=gT; // gas temperature
+        dTdt[c]=(pT-pT_olddw)/dt;
+      } else {
+        int max_iter=15;
+        int iter =0;
+        for ( ; iter < max_iter; iter++) {
+          icount++;
+          oldpT = pT;
+          // compute enthalpy given Tguess
+          hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+          Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293); 
+          Hc = _Hc0 + hint * _RdMW;
+          H = Hc * (RC + CH) + Ha * _init_ash[i];
+          f1 = pE - H;    
+          // compute enthalpy given Tguess + delta
+          pT = pT + delta;
+          hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
+          Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293); 
+          Hc = _Hc0 + hint * _RdMW;
+          H = Hc * (RC + CH) + Ha * _init_ash[i];
+          f2 = pE - H;
+          // correct temperature
+          dT = f1 * delta / (f2-f1) + delta; 
+          pT = pT - dT;    //to add an coefficient for steadness
+          // check to see if tolernace has been met
+          tol = abs(oldpT - pT);
+
+          if (tol < 0.01 ) 
+           break;
+        }
+        if (iter ==max_iter-1 || pT <273.0 || pT > 3500.0 ){
+          double pT_low=273;
+          hint = -156.076 + 380/(-1 + exp(380 / pT_low)) + 3600/(-1 + exp(1800 / pT_low));
+          Ha = -202849.0 + _Ha0 + pT_low * (593. + pT_low * 0.293);
+          Hc = _Hc0 + hint * _RdMW;
+          double H_low = Hc * (RC + CH) + Ha * _init_ash[i];
+          double pT_high=3500;
+          hint = -156.076 + 380/(-1 + exp(380 / pT_high)) + 3600/(-1 + exp(1800 / pT_high));
+          Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
+          Hc = _Hc0 + hint * _RdMW;
+          double H_high = Hc * (RC + CH) + Ha * _init_ash[i];
+          if (pE < H_low){
+            pT = 273.0;
+          } else if (pE > H_high) {
+            pT = 3500.0;
+          }
+        }
+        temperature[c]=pT;
+        dTdt[c]=(pT-pT_olddw)/dt;
       }
-      // if the temperature calculation is above or below reasonable values or if 
-      // weight of the particles is too small we will set the particle temperature
-      // to the gas temperature
-      if ( (pT > 3500) || (pT < 273) || (wt < _weight_small[i]) ){
-         pT=gT;
-      }
-     
-      temperature[c]=pT;
-      dTdt[c]=(pT-pT_olddw)/dt;
     }
   }
 }

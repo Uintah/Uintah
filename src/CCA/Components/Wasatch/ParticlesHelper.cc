@@ -49,6 +49,9 @@
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Grid/BoundaryConditions/BCDataArray.h>
+#include <Core/Containers/StaticArray.h>
+#include <Core/Grid/BoundaryConditions/BoundCond.h>
 
 std::vector<std::string> Uintah::ParticlesHelper::needsRelocation_;
 std::vector<std::string> Uintah::ParticlesHelper::needsBC_;

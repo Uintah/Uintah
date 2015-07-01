@@ -108,6 +108,8 @@ BoundaryCondition::BoundaryCondition(const ArchesLabel* label,
   index_map[2][1] = 0; 
   index_map[2][2] = 1; 
 
+  d_check_inlet_obstructions = false; 
+
   d_radiation_temperature_label = VarLabel::create("radiation_temperature", CCVariable<double>::getTypeDescription()); 
 
 }
@@ -147,6 +149,10 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("BoundaryConditions");
 
   d_newBC = scinew BoundaryCondition_new( d_lab->d_sharedState->getArchesMaterial(0)->getDWIndex() ); 
+
+  if ( db->findBlock("check_for_inlet_obstructions") ){ 
+    d_check_inlet_obstructions = true;
+  }
 
   if ( db.get_rep() != 0 ) {
 
@@ -2528,6 +2534,12 @@ BoundaryCondition::sched_setupBCInletVelocities__NEW(SchedulerP& sched,
   }
 
   if ( doing_restart ){ 
+    tsk->requires( Task::OldDW, d_lab->d_volFractionLabel, Ghost::None, 0 ); 
+  } else { 
+    tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None, 0 ); 
+  }
+
+  if ( doing_restart ){ 
     tsk->requires( Task::OldDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
   } else { 
     tsk->requires( Task::NewDW, d_lab->d_densityCPLabel, Ghost::AroundCells, 0 ); 
@@ -2555,11 +2567,14 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
     patch->getBoundaryFaces(bf);
 
     constCCVariable<double> density; 
+    constCCVariable<double> volFraction; 
 
     if ( doing_restart ){ 
      old_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+     old_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 ); 
     } else { 
      new_dw->get( density, d_lab->d_densityCPLabel, matl_index, patch, Ghost::None, 0 ); 
+     new_dw->get( volFraction, d_lab->d_volFractionLabel, matl_index, patch, Ghost::None, 0 ); 
     }
 
     proc0cout << "\nDomain boundary condition summary: \n";
@@ -2604,6 +2619,8 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
               getIteratorBCValueBCKind<double>( patch, face, child, bc_iter->second.name, matl_index, bc_value, bound_ptr, bc_kind); 
           } 
 
+          double small = 1e-10;
+
           if ( foundIterator ) {
 
             // Notice: 
@@ -2611,10 +2628,17 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
             // so as to compute the average velocity.  As a result, we will just use the first iterator: 
             for ( bound_ptr.reset(); !bound_ptr.done(); bound_ptr++ ){
 
+              IntVector c = *bound_ptr; 
+
               switch ( bc_iter->second.type ) {
 
                 case ( VELOCITY_INLET ): 
                   bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
+                  if ( d_check_inlet_obstructions ){ 
+                    if ( volFraction[c-insideCellDir] < small ){ 
+                      std::cout << "WARNING: Intrusion blocking a velocity inlet. " << std::endl;
+                    }
+                  }
                   break;
                 case (TURBULENT_INLET):
                   bc_iter->second.mass_flow_rate = bc_iter->second.velocity[norm] * area * density[*bound_ptr];
@@ -2626,6 +2650,15 @@ BoundaryCondition::setupBCInletVelocities__NEW(const ProcessorGroup*,
                     bc_iter->second.velocity[norm] = pm*bc_iter->second.mass_flow_rate / 
                                                    ( area * bc_iter->second.density );
                   }
+
+                  if ( d_check_inlet_obstructions ){ 
+                    if ( volFraction[c-insideCellDir] < small ){ 
+                      std::stringstream msg; 
+                      msg << " Error: Intrusion blocking mass flow inlet on boundary cell: " << c << std::endl; 
+                      throw InvalidValue(msg.str(), __FILE__, __LINE__); 
+                    }
+                  }
+
                   break;
                 }
                 case ( SWIRL ):
@@ -4479,9 +4512,7 @@ BoundaryCondition::create_radiation_temperature( const ProcessorGroup* pc,
 
     radiation_temperature.copyData(old_temperature); 
 
-    d_newBC->setExtraCellScalarValueBC( pc, patch, radiation_temperature, "radiation_temperature" );
+    d_newBC->setExtraCellScalarValueBC<double>( pc, patch, radiation_temperature, "radiation_temperature" );
 
   }
 }
-
-

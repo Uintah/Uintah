@@ -43,9 +43,9 @@ class Dissolution
 //  const Expr::TagList abscissaeTagList_; // these are the tags of all the known absicissae
 //  const Expr::Tag sBarTag_;              // SBar form teh ostwald ripening term
 //  const Expr::Tag superSatTag_;          // Supersaturation in aqueous phase
-  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
-  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
-  DECLARE_FIELDS(FieldT, sBar_, superSat_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_)
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_)
+  DECLARE_FIELDS(FieldT, sBar_, superSat_)
   
   const double rMin_;           //smallest radius possible before deaht occurs
   const double momentOrder_;    // order of the current moment

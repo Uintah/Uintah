@@ -2,7 +2,7 @@
 <upsFile>RMCRT_ML.ups</upsFile>
 <gnuplot>
   <script>plot_refineRatio.gp</script>
-  <title> RMCRT: Div Q Error versus Refinement Ratio \\n Burns and Christon Benchmark \\n 1 timestep (100 Rays per cell), Random Seed, 2 Levels</title>
+  <title> RMCRT: Div Q Error versus Refinement Ratio \\n Burns and Christon Benchmark \\n 1 timestep (100 Rays per cell), 2 Levels</title>
   <ylabel>Div Q Error (L2norm)</ylabel>
   <xlabel>Refinement Ratio</xlabel>
 </gnuplot>
@@ -10,9 +10,13 @@
 <AllTests>
   <replace_lines>
     <max_Timesteps>1</max_Timesteps>
-    <NoOfRays>  100  </NoOfRays>
+    <nDivQRays>  100  </nDivQRays>
     <randomSeed> true </randomSeed>
   </replace_lines>
+  <replace_values>
+       /Uintah_specification/Grid/Level/Box[@label=0]/patches :[1,1,1]
+       /Uintah_specification/Grid/Level/Box[@label=1]/patches :[1,1,1]
+  </replace_values>
 </AllTests>
 
 <Test>
@@ -46,6 +50,7 @@
          /Uintah_specification/Grid/Level/Box[@label=1]/resolution :[164,164,164]
     </replace_values>
 </Test>
+
 <Test>
     <Title>8</Title>
     <sus_cmd> sus </sus_cmd>

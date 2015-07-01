@@ -19,6 +19,9 @@ system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_test_1L.ups RMCRT_FLT_test_1L.ups" 
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_ML.ups      RMCRT_FLT_ML.ups"      % the_dir )
 system("cd %s ; ./RMCRT_doubleToFloat  RMCRT_bm1_DO.ups  RMCRT_FLT_bm1_DO.ups"  % the_dir )
 
+system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_test_1L.ups      RMCRT_GPU_1L.ups"         % the_dir )
+system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_ML.ups           RMCRT_GPU_ML.ups"         % the_dir )
+system("cd %s ; ./RMCRT_gpuWorkAround  RMCRT_1L_reflect.ups   RMCRT_GPU_1L_reflect.ups" % the_dir )
 #______________________________________________________________________
 #  Test syntax: ( "folder name", "input file", # processors, "OS",["flags1","flag2"])
 #  flags:
@@ -78,9 +81,9 @@ FLOATTESTS    = [  ("RMCRT_FLT_test_1L", "RMCRT_FLT_test_1L.ups",    1.1, "ALL",
                    ("RMCRT_FLT_bm1_DO",  "RMCRT_FLT_bm1_DO.ups",     1.1, "ALL", ["exactComparison"])
                  ]
 
-GPUTESTS      = [  ("RMCRT_test_1L",    "RMCRT_test_1L.ups",    1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_ML",         "RMCRT_ML.ups",         1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
-                   ("RMCRT_1L_reflect", "RMCRT_1L_reflect.ups", 1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+GPUTESTS      = [  ("RMCRT_test_1L_GPU",    "RMCRT_GPU_1L.ups",         1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_ML_GPU",         "RMCRT_GPU_ML.ups",         1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
+                   ("RMCRT_1L_reflect_GPU", "RMCRT_GPU_1L_reflect.ups", 1.1, "Linux", ["gpu", "no_restart", "exactComparison", "sus_options=-nthreads 4 -gpu"]),
                ]
 
 DEBUGTESTS   =[]
@@ -102,7 +105,7 @@ def getTestList(me) :
   elif me == "DEBUGTESTS":
     TESTS = DEBUGTESTS
   elif me == "NIGHTLYTESTS":
-    TESTS = NIGHTLYTESTS + FLOATTESTS
+    TESTS = NIGHTLYTESTS + FLOATTESTS + GPUTESTS
   else:
     print "\nERROR:Examples.py  getTestList:  The test list (%s) does not exist!\n\n" % me
     exit(1)

@@ -103,7 +103,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
         break;
       }
       else if ( radiation_model == "rmcrt_radiation"){
-        db->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+        //db->findBlock("RMCRT")->getWithDefault("ScatteringOn" ,_scatteringOn,false) ; 
+        _scatteringOn=false ; 
         break;
       }
     }
@@ -372,7 +373,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //sum in the particle contribution if needed
     if ( _particlesOn  ){ 
       // Create containers to be passed to function that populates abskp
-      DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
+      //DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
       CCCV pWeight;      // particle weights
       CCCV pSize;        // particle sizes
       CCCV pTemperature; // particle Temperatures

@@ -53,8 +53,8 @@ class PrecipitationSource
 //  const Expr::Tag envWeightTag_;           // weight tag for middle environment of multi mix model (optional)
   const std::vector< double > molecVols_;  ///< \f$\nu\f$ in the source evaluation
   const bool hasEnvWeight_;
-  DECLARE_VECTOR_OF_FIELDS(FieldT, sources_);
-  DECLARE_FIELDS(FieldT, etaScale_, density_, envWeight_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, sources_)
+  DECLARE_FIELDS(FieldT, etaScale_, density_, envWeight_)
   
   PrecipitationSource( const Expr::TagList& sourceTagList_,
                        const Expr::Tag& etaScaleTag_,

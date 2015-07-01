@@ -5,7 +5,7 @@
   </Meta>
 
   <SimulationComponent type="wasatch"/>
-   <Solver type="hypre" />
+   <Solver type="hypre"/>
   <Wasatch>
 
     <Density>
@@ -14,33 +14,33 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_NONE" />
+      <NameTag name="vel_magnitude"/>
       <Constant>1.0</Constant>
     </BasicExpression>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vel_magnitude" state="STATE_NONE" />
+      <NameTag name="vel_magnitude"/>
       <VelocityMagnitude>
       <XVelocity>
-        <NameTag name="u" state="STATE_NONE" />
+        <NameTag name="u"/>
       </XVelocity>
       <YVelocity>
-        <NameTag name="v" state="STATE_NONE" />
+        <NameTag name="v"/>
       </YVelocity>
       </VelocityMagnitude>
     </PostProcessingExpression>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="vorticity_z" state="STATE_NONE" />
+      <NameTag name="vorticity_z"/>
       <Vorticity>
       <Component>Z</Component>
       <Vel1>
-        <NameTag name="y-mom" state="STATE_DYNAMIC" />
+        <NameTag name="y-mom" state="STATE_DYNAMIC"/>
       </Vel1>
       <Vel2>
-        <NameTag name="x-mom" state="STATE_DYNAMIC" />
+        <NameTag name="x-mom" state="STATE_DYNAMIC"/>
       </Vel2>
       </Vorticity>
     </PostProcessingExpression>
@@ -49,26 +49,26 @@
     <!-- Set the initial condition expression for x-momentum -->
     <TaylorVortexMMS type="XVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="x-mom" state="STATE_NONE" />
+      <NameTag name="x-mom"/>
       <VelocityX amplitude="1.0" viscosity="0.0">
-        <XCoordinate> <NameTag name="XXVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YXVOL" state="STATE_NONE"/> </YCoordinate>
+        <XCoordinate> <NameTag name="XXVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YXVOL"/> </YCoordinate>
       </VelocityX>
     </TaylorVortexMMS>
 
     <!-- Set the initial condition for y-momentum -->
     <TaylorVortexMMS type="YVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="y-mom" state="STATE_NONE" />
-      <VelocityY amplitude="1.0" viscosity="0.0" >
-        <XCoordinate> <NameTag name="XYVOL" state="STATE_NONE"/> </XCoordinate>
-        <YCoordinate> <NameTag name="YYVOL" state="STATE_NONE"/> </YCoordinate>
+      <NameTag name="y-mom"/>
+      <VelocityY amplitude="1.0" viscosity="0.0">
+        <XCoordinate> <NameTag name="XYVOL"/> </XCoordinate>
+        <YCoordinate> <NameTag name="YYVOL"/> </YCoordinate>
       </VelocityY>
     </TaylorVortexMMS>
 
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE" />
+      <NameTag name="viscosity"/>
       <Constant>0.001</Constant>
     </BasicExpression>
 
@@ -80,7 +80,7 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE" />
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>
@@ -108,11 +108,11 @@
     </MomentumEquations>
 
     <ForceOnGraph tasklist="initialization advance_solution">
-      <NameTag name="vel_magnitude" state="STATE_NONE" />
+      <NameTag name="vel_magnitude"/>
     </ForceOnGraph>
 
     <ForceOnGraph tasklist="advance_solution">
-      <NameTag name="vorticity_z" state="STATE_NONE" />
+      <NameTag name="vorticity_z"/>
     </ForceOnGraph>
 
   </Wasatch>
@@ -132,7 +132,7 @@
     <filebase>force_on_graph_postprocessing_test.uda</filebase>
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
-    <checkpoint cycle = "2" interval = "0.001"/>
+    <checkpoint cycle="2" interval="0.001"/>
     <compression>gzip</compression>
     <save label="x-mom"/>
     <save label="y-mom"/>

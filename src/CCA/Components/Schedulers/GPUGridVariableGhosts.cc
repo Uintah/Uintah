@@ -26,7 +26,8 @@
 DeviceGhostCellsInfo::DeviceGhostCellsInfo(char const* label,
     const Patch* sourcePatchPointer,
     const Patch* destPatchPointer,
-    int materialIndex,
+    int matlIndx,
+    int levelIndx,
     IntVector low,
     IntVector high,
     int xstride,
@@ -40,7 +41,8 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(char const* label,
   this->label = label;
   this->sourcePatchPointer = sourcePatchPointer;
   this->destPatchPointer = destPatchPointer;
-  this->materialIndex = materialIndex;
+  this->matlIndx = matlIndx;
+  this->levelIndx = levelIndx;
   this->low = low;
   this->high = high;
   this->xstride = xstride;
@@ -62,7 +64,8 @@ DeviceGhostCells::DeviceGhostCells() {
 void DeviceGhostCells::add(char const* label,
           const Patch* sourcePatchPointer,
           const Patch* destPatchPointer,
-          int materialIndex,
+          int matlIndx,
+          int levelIndx,
           IntVector low,
           IntVector high,
           int xstride,
@@ -73,7 +76,7 @@ void DeviceGhostCells::add(char const* label,
           int toResource,
           Task::WhichDW dwIndex,
           Destination dest) {   //toNode, needed when preparing contiguous arrays to send off host for MPI
-  DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, materialIndex,
+  DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx,
                            low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
                            fromResource, toResource, dwIndex, dest);
   totalGhostCellCopies[dwIndex] += 1;
@@ -89,8 +92,12 @@ char const * DeviceGhostCells::getLabelName(int index) {
   return vars.at(index).label;
 }
 
-int DeviceGhostCells::getMaterialIndex(int index) {
-  return vars.at(index).materialIndex;
+int DeviceGhostCells::getMatlIndx(int index) {
+  return vars.at(index).matlIndx;
+}
+
+int DeviceGhostCells::getLevelIndx(int index) {
+  return vars.at(index).levelIndx;
 }
 
 const Patch* DeviceGhostCells::getSourcePatchPointer(int index) {

@@ -52,7 +52,7 @@ class MultiEnvMixingModel
 //  const FieldT* scalarVar_; 										 // sclar variance form grid
 //  const FieldT* scalarDiss_;
   
-  DECLARE_FIELDS(FieldT, mixFrac_, scalarVar_, scalarDiss_);
+  DECLARE_FIELDS(FieldT, mixFrac_, scalarVar_, scalarDiss_)
   const double maxDt_;
   
   MultiEnvMixingModel( const Expr::Tag& mixFracTag_,

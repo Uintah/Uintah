@@ -64,9 +64,9 @@
 #include <sci_defs/cuda_defs.h>
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
 
 void launchIceEquilibrationKernelUnified(dim3 dimGrid,
                           dim3 dimBlock,
@@ -77,18 +77,18 @@ void launchIceEquilibrationKernelUnified(dim3 dimGrid,
                           double convergence_crit,
                           int patchID,
                           int zSliceThickness,
-                          GPUDataWarehouse* old_gpudw,
-                          GPUDataWarehouse* new_gpudw);
+                          Uintah::GPUDataWarehouse * old_gpudw,
+                          Uintah::GPUDataWarehouse * new_gpudw);
 
-#ifdef __cplusplus
-}
-#endif
+//#ifdef __cplusplus
+//}
+//#endif
 #endif
 
 #define MAX_MATLS 16
 
 namespace Uintah {
-  using namespace SCIRun;
+
   class ModelInfo;
   class ModelInterface;
   class Turbulence;
@@ -135,6 +135,9 @@ namespace Uintah {
 
       virtual void scheduleInitialize(const LevelP& level,
                                       SchedulerP&);
+
+      virtual void scheduleRestartInitialize(const LevelP& level,
+                                             SchedulerP& sched);
 
       virtual void restartInitialize();
 

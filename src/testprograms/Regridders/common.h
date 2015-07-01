@@ -7,15 +7,15 @@ int rank, num_procs;
 class Sphere {
 
 public:
-  Sphere(Vector center, double rad)
+  Sphere(Uintah::Vector center, double rad)
       : center(center),
         rad(rad)
   { };
 
   bool
-  intersects(Vector i)
+  intersects(Uintah::Vector i)
   {
-    Vector d = center - i;
+    Uintah::Vector d = center - i;
     if (rad > sqrtf(d.x() * d.x() + d.y() * d.y() + d.z() * d.z())) {
       return true;
     }
@@ -25,23 +25,23 @@ public:
   }
 
 private:
-  Vector center;
+  Uintah::Vector center;
   double rad;
 };
 
 class Sphere2 {
 
 public:
-  Sphere2(Vector center, double rad_in, double rad_out)
+  Sphere2(Uintah::Vector center, double rad_in, double rad_out)
       : center(center),
         rad_in(rad_in),
         rad_out(rad_out)
   { };
 
   bool
-  intersects(Vector i)
+  intersects(Uintah::Vector i)
   {
-    Vector d = center - i;
+    Uintah::Vector d = center - i;
     double p = sqrtf(d.x() * d.x() + d.y() * d.y() + d.z() * d.z());
     if (rad_out > p && rad_in < p) {
       return true;
@@ -52,12 +52,12 @@ public:
   }
 
 private:
-  Vector center;
+  Uintah::Vector center;
   double rad_in, rad_out;
 };
 
 unsigned int
-getTotalNumFlags(std::vector<IntVector> flags)
+getTotalNumFlags(std::vector<SCIRun::IntVector> flags)
 {
   unsigned int num = flags.size();
   unsigned int gnum;
@@ -65,7 +65,7 @@ getTotalNumFlags(std::vector<IntVector> flags)
   return gnum;
 }
 unsigned int
-getTotalNumPatches(std::vector<Region> patches)
+getTotalNumPatches(std::vector<Uintah::Region> patches)
 {
   unsigned int num = patches.size();
   unsigned int gnum;
@@ -74,11 +74,11 @@ getTotalNumPatches(std::vector<Region> patches)
 }
 
 void
-makeFlagsList(const std::vector<Region> &patches, std::vector<CCVariable<int>*> flags, std::vector<IntVector> &lflags)
+makeFlagsList(const std::vector<Uintah::Region> &patches, std::vector<Uintah::CCVariable<int>*> flags, std::vector<SCIRun::IntVector> &lflags)
 {
   lflags.resize(0);
   for (unsigned int p = 0; p < patches.size(); p++) {
-    for (CellIterator iter(patches[p].getLow(), patches[p].getHigh()); !iter.done(); iter++) {
+    for (Uintah::CellIterator iter(patches[p].getLow(), patches[p].getHigh()); !iter.done(); iter++) {
       if ((*flags[p])[*iter] == 1) {
         lflags.push_back(*iter);
       }
@@ -87,14 +87,14 @@ makeFlagsList(const std::vector<Region> &patches, std::vector<CCVariable<int>*> 
 }
 
 void
-outputPatches(std::vector<Region> &patches, std::ostream& out)
+outputPatches(std::vector<Uintah::Region> &patches, std::ostream& out)
 {
   if (rank == 0) {
     for (unsigned int i = 0; i < patches.size(); i++) {
-      Region p = patches[i];
+      Uintah::Region p = patches[i];
 
-      IntVector l = p.getLow();
-      IntVector h = p.getHigh();
+      SCIRun::IntVector l = p.getLow();
+      SCIRun::IntVector h = p.getHigh();
 
       out << l[0] << " " << l[1] << " " << l[2] << " " << h[0] << " " << h[1] << " " << h[2] << std::endl;
     }
@@ -102,7 +102,7 @@ outputPatches(std::vector<Region> &patches, std::ostream& out)
 }
 
 void
-gatherFlags(std::vector<IntVector> &flags, std::vector<IntVector> &gflags)
+gatherFlags(std::vector<SCIRun::IntVector> &flags, std::vector<SCIRun::IntVector> &gflags)
 {
   std::vector<int> num_flags(num_procs);
   int num = flags.size();
@@ -114,8 +114,8 @@ gatherFlags(std::vector<IntVector> &flags, std::vector<IntVector> &gflags)
 
   int total = 0;
   for (int i = 0; i < num_procs; i++) {
-    counts[i] = num_flags[i] * sizeof(IntVector);
-    displ[i] = total * sizeof(IntVector);
+    counts[i] = num_flags[i] * sizeof(SCIRun::IntVector);
+    displ[i] = total * sizeof(SCIRun::IntVector);
     total += num_flags[i];
   }
 
@@ -124,14 +124,14 @@ gatherFlags(std::vector<IntVector> &flags, std::vector<IntVector> &gflags)
 }
 
 void
-outputFlags(std::vector<IntVector> &flags, std::ostream &out)
+outputFlags(std::vector<SCIRun::IntVector> &flags, std::ostream &out)
 {
-  std::vector<IntVector> global_flags;
+  std::vector<SCIRun::IntVector> global_flags;
   gatherFlags(flags, global_flags);
 
   if (rank == 0) {
     for (unsigned int i = 0; i < global_flags.size(); i++) {
-      IntVector f = global_flags[i];
+      SCIRun::IntVector f = global_flags[i];
 
       out << f[0] << " " << f[1] << " " << f[2] << std::endl;
     }
@@ -139,7 +139,7 @@ outputFlags(std::vector<IntVector> &flags, std::ostream &out)
 }
 
 void
-gatherPatches(std::vector<Region> &patches, std::vector<Region> &global_patches)
+gatherPatches(std::vector<Uintah::Region> &patches, std::vector<Uintah::Region> &global_patches)
 {
   std::vector<int> num_patches(num_procs);
   int num = patches.size();
@@ -151,8 +151,8 @@ gatherPatches(std::vector<Region> &patches, std::vector<Region> &global_patches)
 
   int total = 0;
   for (int i = 0; i < num_procs; i++) {
-    counts[i] = num_patches[i] * sizeof(Region);
-    displ[i] = total * sizeof(Region);
+    counts[i] = num_patches[i] * sizeof(Uintah::Region);
+    displ[i] = total * sizeof(Uintah::Region);
     total += num_patches[i];
   }
 
@@ -161,9 +161,9 @@ gatherPatches(std::vector<Region> &patches, std::vector<Region> &global_patches)
 }
 
 void
-splitPatches(std::vector<Region> &patches, std::vector<Region> &split_patches, double p)
+splitPatches(std::vector<Uintah::Region> &patches, std::vector<Uintah::Region> &split_patches, double p)
 {
-  std::list<Region> to_split_patches(patches.begin(), patches.end());
+  std::list<Uintah::Region> to_split_patches(patches.begin(), patches.end());
   split_patches.clear();
   long long vol = 0;
   for (size_t i = 0; i < patches.size(); i++)
@@ -182,12 +182,12 @@ splitPatches(std::vector<Region> &patches, std::vector<Region> &split_patches, d
     thresh = 1;
 
   while (!to_split_patches.empty()) {
-    Region patch = to_split_patches.back();
+    Uintah::Region patch = to_split_patches.back();
     to_split_patches.pop_back();
     //std::cout << "thresh: " << thresh << " vol: " << patch.getVolume() << std::endl;
     if (patch.getVolume() > thresh) {
-      IntVector low = patch.getLow(), high = patch.getHigh();
-      IntVector size = high - low;
+      SCIRun::IntVector low = patch.getLow(), high = patch.getHigh();
+      SCIRun::IntVector size = high - low;
       int max_d = 0;
       if (size[max_d] < size[1]) {
         max_d = 1;
@@ -197,7 +197,7 @@ splitPatches(std::vector<Region> &patches, std::vector<Region> &split_patches, d
       }
       int mid = (high[max_d] + low[max_d]) / 2;
 
-      Region left(low, high), right(low, high);
+      Uintah::Region left(low, high), right(low, high);
       left.high()[max_d] = right.low()[max_d] = mid;
 //      std::cout << "low: " << low << " high: " << high << " max_d: " << max_d << " mid: " << mid << std::endl;
 //      std::cout << "Patch: " << patch << " left: " << left << " right: " << right << std::endl;

@@ -16,7 +16,7 @@ class ParticleDragCoefficient
  : public Expr::Expression<ParticleField>
 {
   ParticleDragCoefficient( const Expr::Tag& pReTag );
-  DECLARE_FIELD(ParticleField, pRe_);
+  DECLARE_FIELD(ParticleField, pRe_)
 
 public:
   class Builder : public Expr::ExpressionBuilder

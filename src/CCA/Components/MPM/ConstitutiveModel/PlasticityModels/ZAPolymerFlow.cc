@@ -131,7 +131,7 @@ ZAPolymerFlow::computeFlowStress(const PlasticityState* state,
                  + B * exp( -beta * T_T0 )
                  + B_0 * sqrt(omega * ep)* exp( -alpha * T_T0 );
   
-  if (isnan(sigma_y)) {
+  if (std::isnan(sigma_y)) {
     cout << "WARNING::ZAPolymerFlow::computeFlowStress:: idx = " << idx << " epdot = " << epdot
          << " ep = " << ep << " T = " << T << endl;
     cout << " P = " << P << " d_CM.sigma_g = " << d_CM.sigma_g

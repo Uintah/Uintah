@@ -260,7 +260,7 @@ namespace Uintah {
     
     void assignStaticOrder( int i ) { staticOrder = i; }
 
-    int getSaticOrder() const { return staticOrder; }
+    int getStaticOrder() const { return staticOrder; }
  
     DetailedTasks* getTaskGroup() const { return taskGroup; }
 

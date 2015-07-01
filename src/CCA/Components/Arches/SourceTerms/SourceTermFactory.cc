@@ -18,6 +18,8 @@
 #include <CCA/Components/Arches/SourceTerms/DissipationSource.h>
 #include <CCA/Components/Arches/SourceTerms/ManifoldRxn.h>
 #include <CCA/Components/Arches/SourceTerms/MomentumDragSrc.h>
+#include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSMF.h>
+#include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSCont.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
@@ -133,12 +135,12 @@ void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
   }
 }
 
-void SourceTermFactory::extraSetup( GridP& grid )
+void SourceTermFactory::extraSetup( GridP& grid, BoundaryCondition* bc )
 { 
   for ( std::vector<SourceContainer>::iterator iter = _active_sources.begin();iter != _active_sources.end(); iter++ ){ 
 
     SourceTermBase& src  = this->retrieve_source_term( iter->name ); 
-    src.extraSetup( grid ); 
+    src.extraSetup( grid, bc ); 
 
   }
 }
@@ -307,12 +309,12 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
 
       } else if ( src_type == "do_radiation" ) {
       
-        SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, lab, bcs, my_world );
+        SourceTermBase::Builder* srcBuilder = scinew DORadiation::Builder( src_name, required_varLabels, lab, my_world );
         factory.register_source_term( src_name, srcBuilder );
 
       } else if ( src_type == "rmcrt_radiation" ) {
 
-        SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, bcs, my_world );
+        SourceTermBase::Builder* srcBuilder = scinew RMCRT_Radiation::Builder( src_name, required_varLabels, lab, my_world );
         factory.register_source_term( src_name, srcBuilder );
       
       } else if ( src_type == "pc_transport" ) { 
@@ -334,6 +336,14 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
         
       } else if ( src_type == "momentum_drag_src" ) {
         SourceTermBase::Builder* srcBuilder = scinew MomentumDragSrc::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+        
+      } else if ( src_type == "shunn_moin_mf_mms" ) {
+        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSMF::Builder(src_name, required_varLabels, shared_state );
+        factory.register_source_term( src_name, srcBuilder );
+        
+      } else if ( src_type == "shunn_moin_cont_mms" ) {
+        SourceTermBase::Builder* srcBuilder = scinew ShunnMoinMMSCont::Builder(src_name, required_varLabels, shared_state );
         factory.register_source_term( src_name, srcBuilder );
         
       } else {

@@ -88,34 +88,35 @@ public:
 private:
 
   const VarLabel* _devolCharLabel;
+  const VarLabel* _devolRCLabel;
   const VarLabel* _rcmass_varlabel;
+  const VarLabel* _rcmass_weighted_scaled_varlabel; 
+  const VarLabel* _charmass_weighted_scaled_varlabel; 
   const VarLabel* _char_varlabel;
-  const VarLabel* _length_varlabel;
+  const VarLabel* _RHS_source_varlabel;
+  const VarLabel* _RC_RHS_source_varlabel;
+  std::vector< const VarLabel*> _length_varlabel;
   const VarLabel* _particle_temperature_varlabel;
-  const VarLabel* _weight_varlabel;
+  const VarLabel* _number_density_varlabel;
+  std::vector< const VarLabel*> _weight_varlabel;
   const VarLabel* _gas_temperature_varlabel;
   const VarLabel* _O2_varlabel;
   const VarLabel* _CO2_varlabel;
   const VarLabel* _H2O_varlabel;
   const VarLabel* _N2_varlabel;
   const VarLabel* _MW_varlabel;
+  const VarLabel* _rawcoal_birth_label; 
+  const VarLabel* _char_birth_label; 
   
   std::vector<double>  Shaddix_char_coefficients;
+  int _nQn_part;
   double _As;
   double _Es;
   double _n;
   double _R;
   double _HF_CO2;
   double _HF_CO;
-  double char_reaction_rate_;
-  double char_production_rate_;
-  double particle_temp_rate_;
-  double PO2_inf;
-  double PO2_surf;
-  double CO2CO;
-  double OF;
-  double ks;
-  double q;
+  double _small;
   double _WO2;
   double _WCO2;
   double _WH2O;
@@ -125,20 +126,8 @@ private:
   double _D2;
   double _D3;
   double _T0;
-  double d_tol;
-  double delta;
-  double Conc;
-  double DO2;
-  double gamma;
-  int d_totIter;
-  int NIter;
-  double f1;
-  double f2;
-  double f3;
-  double lower_bound;
-  double upper_bound;
-  int icount;
   double _pi;
+  double _RC_scaling_constant;   ///< Scaling factor for raw coal internal coordinate
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight 
   double _weight_small;   ///< small weight 

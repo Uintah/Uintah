@@ -174,7 +174,7 @@ inline Stencil7 Abs(const Stencil7& a)
   Stencil7 me;
 
   for(int i = 0; i<7; i++){
-    me[i] = Abs( a[i] );
+    me[i] = std::abs( a[i] );
   }
   return me;
 }
@@ -268,8 +268,8 @@ void compareFields(Norms<subtype>* norms,
                    DataArchive* da2, 
                    const string& var,
                    const int matl,
-                   const Patch* patch,
-                   const Array3<const Patch*>& cellToPatchMap,
+                   const Patch* patch1,
+                   const Array3<const Patch*>& cellToPatchMap2,
                    int timestep)
 {
   Field* field2;
@@ -282,13 +282,13 @@ void compareFields(Norms<subtype>* norms,
   norms->getNorms(L1, L2, Linf, n);
   
   const Uintah::TypeDescription * td1 = field1.getTypeDescription();
-  GridIterator iter = getIterator( td1, patch, false);
+  GridIterator iter = getIterator( td1, patch1, false);
   
-  ConsecutiveRangeSet matls1 = da1->queryMaterials(var, patch, timestep);
+  ConsecutiveRangeSet matls1 = da1->queryMaterials(var, patch1, timestep);
   
-  da1->query(field1, var, matl, patch, timestep);
+  da1->query(field1, var, matl, patch1, timestep);
 
-  map<const Patch*, Field*> patch_FieldMap;
+  map<const Patch*, Field*> patch2_FieldMap;
   typename map<const Patch*, Field*>::iterator findIter;
   
   //__________________________________
@@ -296,24 +296,24 @@ void compareFields(Norms<subtype>* norms,
   for( ; !iter.done(); iter++ ) {
     IntVector c = *iter;
     
-    const Patch* patch2 = cellToPatchMap[c];
+    const Patch* patch2 = cellToPatchMap2[c];
 
     // find the number of occurances of the key (patch2) in the map
-    int count = patch_FieldMap.count(patch2);
+    int count = patch2_FieldMap.count(patch2);
     
     if (count == 0 ) {                       // field is not in the map and has not been loaded previously
       field2 = scinew Field();
       
-      patch_FieldMap[patch2] = field2;       // store value (field) in the map
+      patch2_FieldMap[patch2] = field2;       // store value (field) in the map
       
       da2->query(*field2, var, matl, patch2, timestep);
       
     }else {                                  // field is in the map
-      field2 = patch_FieldMap[patch2];       // pull out field
+      field2 = patch2_FieldMap[patch2];       // pull out field
     }
 
     // bulletproofing
-    Point p1 = patch->getCellPosition(c);
+    Point p1 = patch1->getCellPosition(c);
     Point p2 = patch2->getCellPosition(c);
     
     if (p1.x() != p2.x()   ||
@@ -336,8 +336,8 @@ void compareFields(Norms<subtype>* norms,
   norms->setNorms(L1, L2, Linf, n);
   
   // now cleanup memory.
-  typename map<const Patch*, Field*>::iterator itr = patch_FieldMap.begin();
-  for ( ; itr != patch_FieldMap.end(); itr++) {
+  typename map<const Patch*, Field*>::iterator itr = patch2_FieldMap.begin();
+  for ( ; itr != patch2_FieldMap.end(); itr++) {
     delete (*itr).second;
   }
 }
@@ -557,13 +557,13 @@ main(int argc, char** argv)
 
   //__________________________________
   // Look over timesteps
-  for(unsigned long t = 0; t < times.size() && t < times2.size(); t++){
+  for(unsigned long tstep = 0; tstep < times.size() && tstep < times2.size(); tstep++){
 
-    double time1 = times[t];
-    double time2 = times2[t];
+    double time1 = times[tstep];
+    double time2 = times2[tstep];
     cout << "time = " << time1 << "\n";
-    GridP grid1  = da1->queryGrid(t);
-    GridP grid2  = da2->queryGrid(t);
+    GridP grid1  = da1->queryGrid(tstep);
+    GridP grid2  = da2->queryGrid(tstep);
 
     BBox b1, b2;
     grid1->getInteriorSpatialRange(b1);
@@ -583,11 +583,12 @@ main(int argc, char** argv)
       abort_uncomparable();
     }
     
-    if (abs(times[t] - times2[t]) > 1e-5) {
-      cerr << "Timestep at time " << times[t] << " in " << filebase1 << " does not match\n";
-      cerr << "timestep at time " << times2[t] << " in " << filebase2 << " within the allowable tolerance.\n";
+    if (abs(times[tstep] - times2[tstep]) > 1e-5) {
+      cerr << "Timestep at time " << times[tstep] << " in " << filebase1 << " does not match\n";
+      cerr << "timestep at time " << times2[tstep] << " in " << filebase2 << " within the allowable tolerance.\n";
       abort_uncomparable();
     }
+
 
     //__________________________________
     //  Loop over variables
@@ -606,6 +607,31 @@ main(int argc, char** argv)
         LevelP level1  = grid1->getLevel(l);
         LevelP level2  = grid2->getLevel(l);
 
+        //__________________________________
+        //  bulletproofing does the variable exist in both DAs on this timestep?
+        //  This problem mainly occurs if <outputInitTimestep> has been specified.
+        bool existsDA1 = true;
+        bool existsDA2 = true;
+        Level::const_patchIterator iter;
+        for(iter = level1->patchesBegin(); iter != level1->patchesEnd(); iter++) {
+          const Patch* patch = *iter;
+          if ( ! da1->exists( var, patch, tstep ) ){
+            existsDA1 = false;
+          }
+        }
+        for(iter = level2->patchesBegin(); iter != level2->patchesEnd(); iter++) {
+          const Patch* patch = *iter;
+          if ( ! da2->exists( var, patch, tstep ) ){
+            existsDA2 = false;
+          }
+        }
+        if( existsDA1 != existsDA2 ) {
+          cerr << "\nThe variable ("<< var << ") was not found on timestep (" << tstep  <<  ") in both udas. \n"
+               << " uda1: " << existsDA1 << " uda2: " << existsDA2 << "\n"
+               << "If this occurs on timestep 0 then ("<< var<< ") was not computed in the initialization task."<<endl; 
+          abort_uncomparable();
+        }
+    
         //check patch coverage
         vector<Region> region1, region2, difference1, difference2;
 
@@ -659,7 +685,7 @@ main(int argc, char** argv)
         //__________________________________
         //  compare the fields (CC, SFC(X,Y,Z), NC variables
         const Patch* dummyPatch=level1->getPatch(0);
-        ConsecutiveRangeSet matls = da1->queryMaterials(var, dummyPatch, t);
+        ConsecutiveRangeSet matls = da1->queryMaterials(var, dummyPatch, tstep);
         
         for (ConsecutiveRangeSet::iterator matlIter = matls.begin();matlIter != matls.end(); matlIter++){
           int matl = *matlIter;
@@ -672,10 +698,11 @@ main(int argc, char** argv)
           ostringstream fname;
           fname<< path << "/" << var << "_" << matl;
           string filename = fname.str();
-          createFile(filename, t);
+          createFile(filename, tstep);
           
           Norms<int>* inorm       = scinew Norms<int>();
           Norms<double>* dnorm    = scinew Norms<double>();
+          Norms<float>*  fnorm    = scinew Norms<float>();
           Norms<Vector>* vnorm    = scinew Norms<Vector>();
           Norms<Stencil7>* s7norm = scinew Norms<Stencil7>();
           
@@ -685,12 +712,13 @@ main(int argc, char** argv)
           
           inorm->setNorms(0, 0, 0, 0);
           dnorm->setNorms(0, 0, 0, 0);
+          fnorm->setNorms(0, 0, 0, 0);
           vnorm->setNorms(  zeroV,  zeroV,  zeroV,  0);
           s7norm->setNorms( zeroS7, zeroS7, zeroS7, 0 ); 
                     
           Level::const_patchIterator iter;
           for(iter = level1->patchesBegin();iter != level1->patchesEnd(); iter++) {
-            const Patch* patch = *iter;
+            const Patch* patch1 = *iter;
 
             switch(td->getType()){
               //__________________________________
@@ -698,19 +726,23 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::CCVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<CCVariable<int>,int>( inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    compareFields<CCVariable<int>,int>( inorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<CCVariable<float>,float>(fnorm,da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<CCVariable<double>,double>(dnorm,da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    compareFields<CCVariable<double>,double>(dnorm,da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
-                  }               
+                  }             
                   case Uintah::TypeDescription::Vector:{
-                    compareFields<CCVariable<Vector>,Vector>(vnorm,da1, da2, var, matl, patch, cellToPatchMap2, t);  
+                    compareFields<CCVariable<Vector>,Vector>(vnorm,da1, da2, var, matl, patch1, cellToPatchMap2, tstep);  
                     break;
                   }                  
                   case Uintah::TypeDescription::Stencil7:{
-                    compareFields<CCVariable<Stencil7>,Stencil7>(s7norm,da1, da2, var, matl, patch, cellToPatchMap2, t);  
+                    compareFields<CCVariable<Stencil7>,Stencil7>(s7norm,da1, da2, var, matl, patch1, cellToPatchMap2, tstep);  
                     break;
                   }
                   default:
@@ -722,15 +754,19 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::NCVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<NCVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    compareFields<NCVariable<int>,int>(inorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<NCVariable<float>,float>(fnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<NCVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    compareFields<NCVariable<double>,double>(dnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }               
                   case Uintah::TypeDescription::Vector:{
-                    compareFields<NCVariable<Vector>,Vector>(vnorm, da1, da2, var, matl, patch, cellToPatchMap2, t);  
+                    compareFields<NCVariable<Vector>,Vector>(vnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep);  
                     break;
                   }
                   default:
@@ -742,11 +778,15 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::SFCXVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<SFCXVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    compareFields<SFCXVariable<int>,int>(inorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<SFCXVariable<float>,float>(fnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<SFCXVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    compareFields<SFCXVariable<double>,double>(dnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   default:
@@ -758,11 +798,15 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::SFCYVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<SFCYVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    compareFields<SFCYVariable<int>,int>(inorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<SFCYVariable<float>,float>(fnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<SFCYVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    compareFields<SFCYVariable<double>,double>(dnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   default:
@@ -774,11 +818,15 @@ main(int argc, char** argv)
               case Uintah::TypeDescription::SFCZVariable:                                                   
                 switch(subtype->getType()){                                                                 
                   case Uintah::TypeDescription::int_type:{                                                         
-                    compareFields<SFCZVariable<int>,int>(inorm, da1, da2, var, matl, patch, cellToPatchMap2, t);        
+                    compareFields<SFCZVariable<int>,int>(inorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep);        
+                    break;
+                  }
+                  case Uintah::TypeDescription::float_type:{
+                    compareFields<SFCZVariable<float>,float>(fnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   case Uintah::TypeDescription::double_type:{
-                    compareFields<SFCZVariable<double>,double>(dnorm, da1, da2, var, matl, patch, cellToPatchMap2, t); 
+                    compareFields<SFCZVariable<double>,double>(dnorm, da1, da2, var, matl, patch1, cellToPatchMap2, tstep); 
                     break;
                   }
                   default:
@@ -795,7 +843,11 @@ main(int argc, char** argv)
           if (inorm->get_n() > 0){        // integers     
             inorm->printNorms(); 
             inorm->outputNorms(time1, filename);      
-          }                            
+          }
+          if (fnorm->get_n() > 0){        // floats
+            fnorm->printNorms();
+            fnorm->outputNorms(time1, filename);      
+          }                       
           if (dnorm->get_n() > 0){        // doubles
             dnorm->printNorms();
             dnorm->outputNorms(time1, filename);      
@@ -808,7 +860,8 @@ main(int argc, char** argv)
             s7norm->printNormsS7();
             s7norm->outputNorms(time1, filename);   
           }                           
-          delete inorm;                
+          delete inorm; 
+          delete fnorm;               
           delete dnorm;                
           delete vnorm;
           delete s7norm;

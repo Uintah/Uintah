@@ -31,42 +31,41 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Ports
 
-SRCS += $(SRCDIR)/SimulationInterface.cc \
-	$(SRCDIR)/DataWarehouse.cc \
-	$(SRCDIR)/LoadBalancer.cc \
-	$(SRCDIR)/ModelInterface.cc \
-	$(SRCDIR)/ModelMaker.cc \
-	$(SRCDIR)/Output.cc \
-	$(SRCDIR)/ProblemSpecInterface.cc \
-	$(SRCDIR)/Regridder.cc \
-	$(SRCDIR)/Scheduler.cc \
-	$(SRCDIR)/SwitchingCriteria.cc \
-	$(SRCDIR)/SFC.cc 
+SRCS += \
+        $(SRCDIR)/DataWarehouse.cc        \
+        $(SRCDIR)/LoadBalancer.cc         \
+        $(SRCDIR)/ModelInterface.cc       \
+        $(SRCDIR)/ModelMaker.cc           \
+        $(SRCDIR)/Output.cc               \
+        $(SRCDIR)/ProblemSpecInterface.cc \
+        $(SRCDIR)/Regridder.cc            \
+        $(SRCDIR)/Scheduler.cc            \
+        $(SRCDIR)/SFC.cc                  \
+        $(SRCDIR)/SimulationInterface.cc  \
+        $(SRCDIR)/SolverInterface.cc      \
+        $(SRCDIR)/SwitchingCriteria.cc    
 
 ifeq ($(HAVE_PIDX),yes)
-	SRCS += $(SRCDIR)/PIDXOutputContext.cc 
+  SRCS += $(SRCDIR)/PIDXOutputContext.cc 
 endif
 
 PSELIBS := \
-	Core/Parallel    \
-	Core/Util        \
-	Core/Grid        \
-	Core/Disclosure  \
-	Core/Exceptions  \
-	Core/ProblemSpec \
-	Core/Thread                      \
-	Core/Exceptions                  \
-	Core/Geometry                    \
-	Core/Containers                  \
-	Core/Util
+        Core/Containers  \
+        Core/Disclosure  \
+        Core/Exceptions  \
+        Core/Geometry    \
+        Core/Grid        \
+        Core/Math        \
+        Core/Parallel    \
+        Core/ProblemSpec \
+        Core/Thread      \
+        Core/Util        
 
 LIBS := $(MPI_LIBRARY)
 
-#HAVE_PIDX
 ifeq ($(HAVE_PIDX),yes)
-	INCLUDES += ${PIDX_INCLUDE}
-	LIBS += $(PIDX_LIBRARY)
+   INCLUDES += ${PIDX_INCLUDE}
+   LIBS     += $(PIDX_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-

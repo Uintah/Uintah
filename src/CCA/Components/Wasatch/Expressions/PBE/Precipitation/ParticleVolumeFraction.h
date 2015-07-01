@@ -44,8 +44,8 @@ template< typename FieldT >
 class ParticleVolumeFraction
 : public Expr::Expression<FieldT>
 {
-  DECLARE_VECTOR_OF_FIELDS(FieldT, zerothMoments_);
-  DECLARE_VECTOR_OF_FIELDS(FieldT, firstMoments_);
+  DECLARE_VECTOR_OF_FIELDS( FieldT, zerothMoments_)
+  DECLARE_VECTOR_OF_FIELDS( FieldT, firstMoments_ )
 
 //  const Expr::TagList zerothMomentTagList_;            //list of all m0s
 //  const Expr::TagList firstMomentTagList_;             //list of all m1s

@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/csh -f
 #______________________________________________________________________
 #  Usage:  replace_XML_line <replacement Pattern> < filename>
 #

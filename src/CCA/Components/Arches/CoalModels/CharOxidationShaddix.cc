@@ -14,6 +14,7 @@
 #include <Core/Parallel/Parallel.h>
 #include <iostream>
 #include <iomanip>
+#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah; 
@@ -54,6 +55,11 @@ CharOxidationShaddix::CharOxidationShaddix( std::string modelName,
   _WCO2 = 44.0; //g/mol
   _WH2O = 18.0; //g/mol
   _WN2 = 28.0; //g/mol
+  _small = 1e-30;
+
+  _char_birth_label = NULL; 
+  _rawcoal_birth_label = NULL; 
+
 }
 
 CharOxidationShaddix::~CharOxidationShaddix()
@@ -76,16 +82,45 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   // create raw coal mass var label 
   std::string rcmass_root = ParticleHelper::parse_for_role_to_label(db, "raw_coal"); 
   std::string rcmass_name = ParticleHelper::append_env( rcmass_root, d_quadNode ); 
+  std::string rcmassqn_name = ParticleHelper::append_qn_env(rcmass_root, d_quadNode ); 
   _rcmass_varlabel = VarLabel::find(rcmass_name);
+  std::string rc_weighted_scaled_name = ParticleHelper::append_qn_env( rcmass_root, d_quadNode ); 
+  _rcmass_weighted_scaled_varlabel = VarLabel::find(rc_weighted_scaled_name); 
  
   // check for char mass and get scaling constant
   std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
   std::string char_name = ParticleHelper::append_env( char_root, d_quadNode ); 
   std::string charqn_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
   _char_varlabel = VarLabel::find(char_name);
+  std::string char_weighted_scaled_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
+  _charmass_weighted_scaled_varlabel = VarLabel::find(char_weighted_scaled_name); 
+
+
   EqnBase& temp_char_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(charqn_name);
   DQMOMEqn& char_eqn = dynamic_cast<DQMOMEqn&>(temp_char_eqn);
   _char_scaling_constant = char_eqn.getScalingConstant(d_quadNode);
+  std::string ic_RHS = charqn_name+"_RHS";
+  _RHS_source_varlabel = VarLabel::find(ic_RHS);
+
+  //CHAR get the birth term if any: 
+  const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" ); 
+  std::string char_birth_qn_name = ParticleHelper::append_qn_env(char_birth_name, d_quadNode); 
+  if ( char_birth_name != "NULLSTRING" ){ 
+    _char_birth_label = VarLabel::find( char_birth_qn_name ); 
+  }
+
+  EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
+  DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
+  _RC_scaling_constant  = rcmass_eqn.getScalingConstant(d_quadNode)  ;   
+  std::string RC_RHS = rcmassqn_name + "_RHS";  
+  _RC_RHS_source_varlabel = VarLabel::find(RC_RHS);
+
+  //RAW COAL get the birth term if any: 
+  const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" ); 
+  std::string rawcoal_birth_qn_name = ParticleHelper::append_qn_env(rawcoal_birth_name, d_quadNode); 
+  if ( rawcoal_birth_name != "NULLSTRING" ){ 
+    _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name ); 
+  }
 
   // check for particle temperature 
   std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
@@ -96,9 +131,12 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   }
  
   // check for length  
+  _nQn_part = ParticleHelper::get_num_env(db,ParticleHelper::DQMOM); 
   std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
-  std::string length_name = ParticleHelper::append_env( length_root, d_quadNode ); 
-  _length_varlabel = VarLabel::find(length_name);
+  for (int i=0; i<_nQn_part;i++ ){ 
+    std::string length_name = ParticleHelper::append_env( length_root, i ); 
+    _length_varlabel.push_back(  VarLabel::find(length_name));
+  }
   
   // get model coefficients  
   if (db_coal_props->findBlock("Shaddix_char_coefficients")) {
@@ -121,20 +159,26 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   // get weight scaling constant
   std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
-  std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
-  _weight_varlabel = VarLabel::find(weight_name); 
+  for (int i=0; i<_nQn_part;i++ ){ 
+  std::string weight_name = ParticleHelper::append_env("w", i); 
+    _weight_varlabel.push_back( VarLabel::find(weight_name) ); 
+  }
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
-  // get Char source term label from the devolatilization model
+  std::string number_density_name = ParticleHelper::parse_for_role_to_label(db, "total_number_density");
+  _number_density_varlabel = VarLabel::find(number_density_name); 
+
+  // get Char source term label and devol lable from the devolatilization model
   CoalModelFactory& modelFactory = CoalModelFactory::self(); 
   DevolModelMap devolmodels_ = modelFactory.retrieve_devol_models();
   for( DevolModelMap::iterator iModel = devolmodels_.begin(); iModel != devolmodels_.end(); ++iModel ) {
     int modelNode = iModel->second->getquadNode();
     if( modelNode == d_quadNode) {
       _devolCharLabel = iModel->second->getCharSourceLabel();
+      _devolRCLabel = iModel->second->getModelLabel() ;
     }
   }
 
@@ -226,11 +270,19 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
     tsk->modifies(d_PO2surfLabel);
     which_dw = Task::NewDW; 
   }
-  tsk->requires( which_dw, _particle_temperature_varlabel, gn, 0 ); 
+
+  tsk->requires( Task::NewDW, _particle_temperature_varlabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, _number_density_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _rcmass_varlabel, gn, 0 ); 
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
-  tsk->requires( which_dw, _length_varlabel, gn, 0 ); 
-  tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _charmass_weighted_scaled_varlabel, gn, 0 ); 
+  tsk->requires( which_dw, _rcmass_weighted_scaled_varlabel, gn, 0 ); 
+
+  for (int i=0; i<_nQn_part;i++ ){ 
+  tsk->requires( which_dw, _length_varlabel[i], gn, 0 ); 
+  tsk->requires( which_dw, _weight_varlabel[i], gn, 0 ); 
+  }
+
   tsk->requires( which_dw, _gas_temperature_varlabel, gn, 0);
   tsk->requires( which_dw, _O2_varlabel, gn, 0 );
   tsk->requires( which_dw, _CO2_varlabel, gn, 0 );
@@ -238,9 +290,16 @@ CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched
   tsk->requires( which_dw, _N2_varlabel, gn, 0 );
   tsk->requires( which_dw, _MW_varlabel, gn, 0 );
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
+  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
+  tsk->requires( Task::NewDW, _RC_RHS_source_varlabel, gn, 0 ); 
   
   tsk->requires( which_dw, d_fieldLabels->d_densityCPLabel, gn, 0);
-  tsk->requires( which_dw, _devolCharLabel, gn, 0);
+  tsk->requires( Task::NewDW, _devolCharLabel, gn, 0);
+  tsk->requires( Task::NewDW, _devolRCLabel, gn, 0);
+  if ( _char_birth_label != NULL )
+    tsk->requires( Task::NewDW, _char_birth_label, gn, 0 ); 
+  if ( _rawcoal_birth_label != NULL ) 
+    tsk->requires( Task::NewDW, _rawcoal_birth_label, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 }
@@ -264,6 +323,9 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
 
+    Vector Dx = patch->dCell(); 
+    double vol = Dx.x()* Dx.y()* Dx.z(); 
+    
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
     double dt = DT;
@@ -301,15 +363,27 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> temperature;
     which_dw->get( temperature , _gas_temperature_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> particle_temperature;
-    which_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
-    constCCVariable<double> length;
-    which_dw->get( length, _length_varlabel, matlIndex, patch, gn, 0 );
+    new_dw->get( particle_temperature , _particle_temperature_varlabel , matlIndex , patch , gn , 0 );
+    StaticArray< constCCVariable<double> > length(_nQn_part); 
+    StaticArray< constCCVariable<double> > weight(_nQn_part);
+  for (int i=0; i<_nQn_part;i++ ){ 
+      which_dw->get( length[i], _length_varlabel[i], matlIndex, patch, gn, 0 );
+      which_dw->get( weight[i], _weight_varlabel[i], matlIndex, patch, gn, 0 );
+    }
     constCCVariable<double> rawcoal_mass;
     which_dw->get( rawcoal_mass, _rcmass_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> char_mass;
     which_dw->get( char_mass, _char_varlabel, matlIndex, patch, gn, 0 );
-    constCCVariable<double> weight;
-    which_dw->get( weight, _weight_varlabel, matlIndex, patch, gn, 0 );
+    constCCVariable<double> rawcoal_weighted_scaled; 
+    which_dw->get( rawcoal_weighted_scaled, _rcmass_weighted_scaled_varlabel, matlIndex, patch, gn, 0 ); 
+    constCCVariable<double> char_weighted_scaled; 
+    which_dw->get( char_weighted_scaled, _charmass_weighted_scaled_varlabel, matlIndex, patch, gn, 0 ); 
+    constCCVariable<double> RHS_source; 
+    new_dw->get( RHS_source , _RHS_source_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> RC_RHS_source; 
+    new_dw->get( RC_RHS_source , _RC_RHS_source_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> number_density; 
+    new_dw->get( number_density , _number_density_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> O2;
     which_dw->get( O2, _O2_varlabel, matlIndex, patch, gn, 0 );
     constCCVariable<double> CO2;
@@ -321,52 +395,86 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     constCCVariable<double> MWmix;
     which_dw->get( MWmix, _MW_varlabel, matlIndex, patch, gn, 0 );  // in kmol/kg_mix ?
     constCCVariable<double> devolChar;
-    which_dw->get( devolChar, _devolCharLabel, matlIndex, patch, gn, 0 );
+    new_dw->get( devolChar, _devolCharLabel, matlIndex, patch, gn, 0 );
+    constCCVariable<double> devolRC;
+    new_dw->get( devolRC, _devolRCLabel, matlIndex, patch, gn, 0 );
+
+    constCCVariable<double> rawcoal_birth; 
+    constCCVariable<double> char_birth; 
+    bool add_rawcoal_birth = false; 
+    bool add_char_birth = false; 
+    if ( _rawcoal_birth_label != NULL ){ 
+      add_rawcoal_birth = true; 
+      new_dw->get( rawcoal_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
+    }
+    if ( _char_birth_label != NULL ){ 
+      add_char_birth = true; 
+      new_dw->get( char_birth, _rawcoal_birth_label, matlIndex, patch, gn, 0 ); 
+    }
+
+    double max_char_reaction_rate_O2_;
+    double char_reaction_rate_;
+    double char_production_rate_;
+    double particle_temp_rate_;
+    int NIter;
+    double rc_destruction_rate_;
+    double PO2_surf;
+    double PO2_surf_guess;
+    double PO2_surf_tmp;
+    double PO2_surf_new;
+    double PO2_surf_old;
+    double CO2CO;
+    double OF;
+    double ks;
+    double q;
+
+    double d_tol;
+    double delta;
+    double Conc;
+    double DO2;
+    double gamma;
+    double f0;
+    double f1;
+    int icount;
     
+
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
    
-      if (weight[c]/_weight_scaling_constant < _weight_small) {
-        char_production_rate_ = devolChar[c];
-        char_rate[c] = char_production_rate_/(_char_scaling_constant*_weight_scaling_constant);
+      if (weight[d_quadNode][c]/_weight_scaling_constant < _weight_small) {
+        char_production_rate_ = 0.0;
+        char_rate[c] = 0.0;
         gas_char_rate[c] = 0.0;
         particle_temp_rate[c] = 0.0;
         surface_rate[c] = 0.0;
-      } else {
-        double small = 1e-16;
 
+      } else {
         double denph=den[c];
         double temperatureph=temperature[c];
         double particle_temperatureph=particle_temperature[c];
-        double lengthph=length[c];
+        double lengthph=length[d_quadNode][c];
         double rawcoal_massph=rawcoal_mass[c];
         double char_massph=char_mass[c];
-        double weightph=weight[c];
+        double weightph=weight[d_quadNode][c];
         double O2ph=O2[c];
         double CO2ph=CO2[c];
         double H2Oph=H2O[c];
         double N2ph=N2[c];
         double MWmixph=MWmix[c];
         double devolCharph=devolChar[c];
+        double devolRCph=devolRC[c];
+        double RHS_sourceph=RHS_source[c];
+
+        double PO2_inf = O2ph/_WO2/MWmixph;
+        double AreaSum =0;
+        for (int i=0; i<_nQn_part;i++ ){ 
+          AreaSum+=  weight[i][c]*length[i][c]*length[i][c];
+        }
+        double surfaceAreaFraction=weightph*lengthph*lengthph/AreaSum;
         
-        //VERIFICATION
-        //denph=0.394622;
-        //temperatureph=1206.4;
-        //particle_temperatureph=530.79;
-        //lengthph=2e-5;
-        //rawcoal_massph=4.99019e-12;
-        //char_massph=-7.1393e-18;
-        //weightph=1.40781e+09;
-        //O2ph=0.0146663;
-        //CO2ph=0.898772;
-        //H2Oph=0.00334152;
-        //N2ph=0.00186698;
-        //MWmixph=0.025599;
-        //devolCharph=5.67408e-08;
 
 
-        PO2_inf = O2ph/_WO2/MWmixph;
-        if((PO2_inf < 1e-10) || ((rawcoal_massph+char_massph) < small)) {
+        if((PO2_inf < 1e-12) || (rawcoal_massph+char_massph) < _small) {
           PO2_surf = 0.0;
           CO2CO = 0.0;
           q = 0.0;
@@ -374,112 +482,102 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
           char_reaction_rate_ = 0.0;
           char_production_rate_ = 0.0;
           particle_temp_rate_ = 0.0;
-          PO2_surf = PO2_inf;
-          d_totIter = 8;
-          NIter = 3;
-          delta = PO2_inf/30.0;
+          NIter = 15;
+          delta = PO2_inf/4.0;
           d_tol = 1e-15;
-          f1 = 1.0;
+          PO2_surf_old = 0.0;
+          PO2_surf_new = 0.0;
+          PO2_surf_tmp = 0.0;
+          PO2_surf_guess = 0.0;
+          f0 = 0.0;
+          f1 = 0.0;
+          PO2_surf = 0.0;
+          CO2CO = 0.0;
+          q = 0.0;
           icount = 0;
+          
           // Calculate O2 diffusion coefficient
           DO2 = (CO2ph/_WCO2 + H2Oph/_WH2O + N2ph/_WN2)/(CO2ph/(_WCO2*_D1) + H2Oph/(_WH2O*_D2) + N2ph/(_WN2*_D3))*
                 (pow((temperatureph/_T0),1.5));
           // Concentration C = P/RT
           Conc = MWmixph*denph*1000.0;
-
-          // Solving diffusion of O2:
-          // Newton_Raphson method - faster does not always converge 
-          for ( int iter = 0; iter < NIter; iter++) {
-            icount++;
-            CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/particle_temperatureph);
-            OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
-            gamma = -(1.0-OF);
-            ks = _As*exp(-_Es/(_R*particle_temperatureph));
-            q = ks*(pow(PO2_surf,_n));
-            f1 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
-            if (std::abs(f1) < d_tol)
-              break;
-            PO2_surf += delta;
-            CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/particle_temperatureph);
-            OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
-            gamma = -(1.0-OF);
-            ks = _As*exp(-_Es/(_R*particle_temperatureph));
-            q = ks*(pow(PO2_surf,_n));
-            f2 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
-            PO2_surf -= delta + f1*delta/(f2-f1);
-            PO2_surf = min(PO2_inf,max(0.0,PO2_surf));
-          }
+          ks = _As*exp(-_Es/(_R*particle_temperatureph));
           
-          if(std::abs(f1) > d_tol || isnan(f1)){ //switching to bisection technique
-            lower_bound = 0.0;
-            upper_bound = PO2_inf;
-            for ( int iter = 0; iter < d_totIter; iter++) {
-              icount++;
-              PO2_surf = lower_bound;
-              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/particle_temperatureph);
+          PO2_surf_guess = PO2_inf/2.0;
+          PO2_surf_old = PO2_surf_guess-delta;
+          CO2CO = 0.02*(pow(PO2_surf_old,0.21))*exp(3070.0/particle_temperatureph);
+          OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
+          gamma = -(1.0-OF);
+          q = ks*(pow(PO2_surf_old,_n));
+          f0 = PO2_surf_old - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
+          
+          PO2_surf_new = PO2_surf_guess+delta;
+          CO2CO = 0.02*(pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
+          OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
+          gamma = -(1.0-OF);
+          q = ks*(pow(PO2_surf_new,_n));
+          f1 = PO2_surf_new - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
+          
+          for ( int iter=0; iter < NIter; iter++) {
+            icount++;
+            PO2_surf_tmp = PO2_surf_old;
+            PO2_surf_old=PO2_surf_new;
+            PO2_surf_new=PO2_surf_tmp - (PO2_surf_new - PO2_surf_tmp)/(f1-f0) * f0;
+            PO2_surf_new = max(0.0, min(PO2_inf, PO2_surf_new));            
+            if (std::abs(PO2_surf_new-PO2_surf_old) < d_tol){
+              PO2_surf=PO2_surf_new;
+              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(3070.0/particle_temperatureph);
               OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
               gamma = -(1.0-OF);
-              ks = _As*exp(-_Es/(_R*particle_temperatureph));
               q = ks*(pow(PO2_surf,_n));
-              f3 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
-              PO2_surf = upper_bound;
-              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/particle_temperatureph);
-              OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
-              gamma = -(1.0-OF);
-              ks = _As*exp(-_Es/(_R*particle_temperatureph));
-              q = ks*(pow(PO2_surf,_n));
-              f2 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
-              if (std::abs(f2) < d_tol){
-                break;
-              }
-              PO2_surf = 0.5*(lower_bound+upper_bound);
-              CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/particle_temperatureph);
-              OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
-              gamma = -(1.0-OF);
-              ks = _As*exp(-_Es/(_R*particle_temperatureph));
-              q = ks*(pow(PO2_surf,_n));
-              f1 = PO2_surf - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
-
-              if (std::abs(f1) < d_tol){
-                break;
-              }
-              if(icount > d_totIter+NIter-1) {
-                PO2_surf = PO2_inf*2.0/3.0;;
-                CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/particle_temperatureph);
-                OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
-                gamma = -(1.0-OF);
-                ks = _As*exp(-_Es/(_R*particle_temperatureph));
-                q = ks*(pow(PO2_surf,_n));
-                break;
-              }
-
-              if(f2*f1<0){
-                 lower_bound = PO2_surf;
-              } else if(f1*f3<0){
-                 upper_bound = PO2_surf;
-              } else {
-                PO2_surf = PO2_inf*2.0/3.0;
-                CO2CO = 0.02*(pow(PO2_surf,0.21))*exp(-3070.0/particle_temperatureph);
-                OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
-                gamma = -(1.0-OF);
-                ks = _As*exp(-_Es/(_R*particle_temperatureph));
-                q = ks*(pow(PO2_surf,_n));
-                break;
-              }
+              break;
             }
-
-          }              
+            f0 = f1;
+            CO2CO = 0.02*(pow(PO2_surf_new,0.21))*exp(3070.0/particle_temperatureph);
+            OF = 0.5*(1.0 + CO2CO*(1+CO2CO));
+            gamma = -(1.0-OF);
+            q = ks*(pow(PO2_surf_new,_n));
+            f1 = PO2_surf_new - gamma - (PO2_inf-gamma)*exp(-(q*lengthph)/(2*Conc*DO2));
+            PO2_surf=PO2_surf_new; // This is needed to assign PO2_surf if we don't converge.
+          }
         }
 
         char_production_rate_ = devolCharph;
-        char_reaction_rate_ = - 1.0 * min( _pi*( pow(lengthph,2.0))*_WC*q , char_massph+rawcoal_massph+char_production_rate_/weightph*dt );
-        particle_temp_rate_ = char_reaction_rate_/_WC/(1.0+CO2CO)*(CO2CO*_HF_CO2 + _HF_CO); // in J/(s.#)
-          
-        char_rate[c] = (char_reaction_rate_*weightph + char_production_rate_)/(_char_scaling_constant*_weight_scaling_constant);
-        gas_char_rate[c] = -char_reaction_rate_*weightph;
-        particle_temp_rate[c] = particle_temp_rate_*weightph;
-        surface_rate[c] = _WC*q;  // in kg/s/m^2
+        rc_destruction_rate_ = devolRCph;
+        double gamma1=(_WC/_WO2)*((CO2CO+1.0)/(CO2CO+0.5)); 
+        max_char_reaction_rate_O2_ = max( (O2ph*denph*gamma1*surfaceAreaFraction)/(dt*weightph) , 0.0 );
+
+        double max_char_reaction_rate_ = 0.0;
+
+        if ( add_rawcoal_birth && add_char_birth ){ 
+          max_char_reaction_rate_ = max((rawcoal_massph+char_massph)/(dt) 
+              +( (RHS_sourceph + RC_RHS_source[c]) / (vol*weightph) + (char_production_rate_ + rc_destruction_rate_
+              +   char_birth[c] + rawcoal_birth[c] )/ weightph )
+              *_char_scaling_constant*_weight_scaling_constant, 0.0); // equation assumes RC_scaling=Char_scaling
+        } else { 
+          max_char_reaction_rate_ = max((rawcoal_massph+char_massph)/(dt) 
+              +((RHS_sourceph + RC_RHS_source[c]) / (vol*weightph) + (char_production_rate_ + rc_destruction_rate_
+              )/ weightph )
+              *_char_scaling_constant*_weight_scaling_constant, 0.0); // equation assumes RC_scaling=Char_scaling
+        }
+
+        max_char_reaction_rate_ = min( max_char_reaction_rate_ ,max_char_reaction_rate_O2_ );
+        char_reaction_rate_ = min(_pi*(pow(lengthph,2.0))*_WC*q , max_char_reaction_rate_); // kg/(s.#)    
+
+        particle_temp_rate_ = -char_reaction_rate_/_WC/(1.0+CO2CO)*(CO2CO*_HF_CO2 + _HF_CO); // J/(s.#)
+        char_rate[c] = (-char_reaction_rate_*weightph+char_production_rate_)/(_char_scaling_constant*_weight_scaling_constant);
+        gas_char_rate[c] = char_reaction_rate_*weightph;// kg/(m^3.s)
+        particle_temp_rate[c] = particle_temp_rate_*weightph; // J/(s.m^3)
+        surface_rate[c] = -_WC*q;  // in kg/s/m^2
         PO2surf_[c] = PO2_surf;
+        //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
+        if( char_rate[c]>0.0 ) {
+          char_rate[c] = 0;
+          gas_char_rate[c] = 0;
+          particle_temp_rate[c] = 0;
+          surface_rate[c] = 0;  // in kg/s/m^2
+          PO2surf_[c] = PO2_surf;
+        }
       }
     }//end cell loop
   }//end patch loop

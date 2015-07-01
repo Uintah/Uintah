@@ -4,9 +4,7 @@
 #include <cstdlib>
 #include <vector>
 #include <climits>
-using namespace std;
 #include <Core/Math/MiscMath.h>
-using namespace SCIRun;
 struct Range
 {
   double low;
@@ -22,8 +20,8 @@ int main()
   
 
   double minus_one_third=-1.0/3.0;
-  vector<Range> ranges;
-  vector<double> guesses;
+  std::vector<Range> ranges;
+  std::vector<double> guesses;
   ranges.push_back(Range(0,1));
   guesses.push_back(.5);
   ranges.push_back(Range(.5,2));
@@ -57,7 +55,7 @@ int main()
       double cube_ans;
       start=clock();
       for(int i=0;i<ITERS;i++)
-        cube_ans=1.0/cubeRoot(n,guess);  
+        cube_ans=1.0/SCIRun::cubeRoot(n,guess);  
       finish=clock();
       
       cube_root_time+=(finish-start)/double(CLOCKS_PER_SEC);
@@ -72,7 +70,7 @@ int main()
     pow_time/=factor;
     cube_root_time/=factor;
 
-    cout << "Range: [" << range.low << "," << range.high << "] initial guess: " << guess << " pow time: " << pow_time << " cubeRoot time:" << cube_root_time << " avg diff: " << avg_diff << " max diff:" << max_diff << endl;
+    std::cout << "Range: [" << range.low << "," << range.high << "] initial guess: " << guess << " pow time: " << pow_time << " cubeRoot time:" << cube_root_time << " avg diff: " << avg_diff << " max diff:" << max_diff << std::endl;
   }
 
   return 0;

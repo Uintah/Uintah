@@ -113,6 +113,8 @@ namespace Uintah {
   class PartVel;
   class DQMOM;
   class CQMOM;
+  class CQMOM_Convection;
+  class CQMOMSourceWrapper;
   class RadPropertyCalculator; 
   class ArchesParticlesHelper; 
 
@@ -139,6 +141,9 @@ public:
 
   virtual void scheduleInitialize(const LevelP& level,
                                   SchedulerP&);
+                                  
+  virtual void scheduleRestartInitialize(const LevelP& level,
+                                         SchedulerP& sched);
 
   virtual void restartInitialize();
 
@@ -344,8 +349,10 @@ private:
   DQMOM* d_dqmomSolver;
   
   bool d_doCQMOM;
-  std::string d_which_cqmom;
+  bool d_usePartVel;
   CQMOM* d_cqmomSolver;
+  CQMOM_Convection* d_cqmomConvect;
+  CQMOMSourceWrapper* d_cqmomSource;
 
   bool d_doingRestart;
   bool d_newBC_on_Restart;

@@ -419,9 +419,7 @@ namespace Wasatch {
     std::vector<IntVec>& intBndSOIter          = myBndIters.interiorBndCells;
     std::vector<IntVec>& extraPlusBndCells     = myBndIters.extraPlusBndCells;
     
-    std::vector<IntVec>& neboExtraBndSOIter    = myBndIters.neboExtraBndCells;
-    std::vector<IntVec>& neboIntBndSOIter      = myBndIters.neboInteriorBndCells;
-    std::vector<IntVec>& neboExtraPlusBndCells = myBndIters.neboExtraPlusBndCells;
+    std::vector<IntVec> neboExtraBndSOIter;
 
     std::vector<IntVec>& intEdgeSOIter         = myBndIters.interiorEdgeCells;
    
@@ -486,8 +484,6 @@ namespace Wasatch {
 
       bcPointIJK = *bndIter - interiorPatchCellOffset;
       neboExtraBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
-      bcPointIJK -= unitNormal;
-      neboIntBndSOIter.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
     }
     
     // if we are on a plus face, we will most likely need a plus-face iterator for staggered fields
@@ -495,12 +491,94 @@ namespace Wasatch {
       for( bndIter.reset(); !bndIter.done(); ++bndIter ){
         bcPointIJK = *bndIter - patchCellOffset + unitNormal;
         extraPlusBndCells.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
-        
-        bcPointIJK = *bndIter - interiorPatchCellOffset + unitNormal;
-        neboExtraPlusBndCells.push_back(IntVec(bcPointIJK.x(), bcPointIJK.y(), bcPointIJK.z()));
       }
     }
+    
+    // convert the svol extra cell boundary iterator to a spatial mask
+    const int ng = get_n_ghost<SVolField>();
+    SpatialOps::IntVec bcMinus, bcPlus;
+    Wasatch::get_bc_logicals( patch, bcMinus, bcPlus );
+    SpatialOps::BoundaryCellInfo bcInfo = SpatialOps::BoundaryCellInfo::build<SVolField>(bcPlus);
+    SpatialOps::GhostData gd(ng);
+    const SpatialOps::MemoryWindow window = Wasatch::get_memory_window_for_masks<SVolField>( patch );
+    myBndIters.svolExtraCellSpatialMask = new SpatialOps::SpatialMask<SVolField>(window, bcInfo, gd, neboExtraBndSOIter);
+#     ifdef HAVE_CUDA
+    myBndIters.svolExtraCellSpatialMask->add_consumer(GPU_INDEX);
+#     endif
+    
+    const SpatialOps::MemoryWindow xwindow = Wasatch::get_memory_window_for_masks<XVolField>( patch );
+    SpatialOps::BoundaryCellInfo xBCInfo = SpatialOps::BoundaryCellInfo::build<XVolField>(bcPlus);
+    myBndIters.xvolExtraCellSpatialMask = new SpatialOps::SpatialMask<XVolField>(xwindow, xBCInfo, gd, neboExtraBndSOIter);
+#     ifdef HAVE_CUDA
+    myBndIters.xvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
+#     endif
+    
+    const SpatialOps::MemoryWindow ywindow = Wasatch::get_memory_window_for_masks<YVolField>( patch );
+    SpatialOps::BoundaryCellInfo yBCInfo = SpatialOps::BoundaryCellInfo::build<YVolField>(bcPlus);
+    myBndIters.yvolExtraCellSpatialMask = new SpatialOps::SpatialMask<YVolField>(ywindow, yBCInfo, gd, neboExtraBndSOIter);
+#     ifdef HAVE_CUDA
+    myBndIters.yvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
+#     endif
+    
+    const SpatialOps::MemoryWindow zwindow = Wasatch::get_memory_window_for_masks<ZVolField>( patch );
+    SpatialOps::BoundaryCellInfo zBCInfo = SpatialOps::BoundaryCellInfo::build<ZVolField>(bcPlus);
+    myBndIters.zvolExtraCellSpatialMask = new SpatialOps::SpatialMask<ZVolField>(zwindow, zBCInfo, gd, neboExtraBndSOIter);
+#     ifdef HAVE_CUDA
+    myBndIters.zvolExtraCellSpatialMask->add_consumer(GPU_INDEX);
+#     endif
   }
+
+  
+  //============================================================================
+  // Template specialization for the BoundaryIterators get_spatial_mask function
+  template<typename FieldT>
+  SpatialOps::SpatialMask<FieldT>*
+  BoundaryIterators::get_spatial_mask() const
+  {
+    // should never request a spatial_mask of an unsupported type. Supported types are SVol, X-Y-ZVol
+    std::ostringstream msg;
+    msg << "ERROR: It looks like you were trying to retrieve a spatial mask of an unsupported field type. "
+    << " Supported types are: SVol, XVol, YVol, and ZVol." << std::endl;
+    throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+    return NULL;
+  }
+
+  template<>
+  SpatialOps::SpatialMask<SVolField>*
+  BoundaryIterators::get_spatial_mask() const
+  {
+    return svolExtraCellSpatialMask;
+  }
+  
+  template<>
+  SpatialOps::SpatialMask<XVolField>*
+  BoundaryIterators::get_spatial_mask() const
+  {
+    return xvolExtraCellSpatialMask;
+  }
+  
+  template<>
+  SpatialOps::SpatialMask<YVolField>*
+  BoundaryIterators::get_spatial_mask() const
+  {
+    return yvolExtraCellSpatialMask;
+  }
+  
+  template<>
+  SpatialOps::SpatialMask<ZVolField>*
+  BoundaryIterators::get_spatial_mask() const
+  {
+    return zvolExtraCellSpatialMask;
+  }
+  
+  template<>
+  SpatialOps::SpatialMask<ParticleField>*
+  BoundaryIterators::get_spatial_mask() const
+  {
+    return NULL;
+  }
+
+  //============================================================================
 
   //************************************************************************************************
   //
@@ -527,7 +605,19 @@ namespace Wasatch {
   //------------------------------------------------------------------------------------------------
 
   BCHelper::~BCHelper()
-  {}    
+  {
+    typedef MaskMapT::iterator it_type;
+    typedef PatchIDBndItrMapT::iterator secondIt;
+    for(it_type iterator = bndNamePatchIDMaskMap_.begin(); iterator != bndNamePatchIDMaskMap_.end(); iterator++) {
+      PatchIDBndItrMapT pidBndItr = iterator->second;
+      for(secondIt sit = pidBndItr.begin(); sit != pidBndItr.end(); sit++) {
+        delete sit->second.svolExtraCellSpatialMask;
+        delete sit->second.xvolExtraCellSpatialMask;
+        delete sit->second.yvolExtraCellSpatialMask;
+        delete sit->second.zvolExtraCellSpatialMask;
+      }
+    }
+  }
   
   //------------------------------------------------------------------------------------------------
   
@@ -694,31 +784,6 @@ namespace Wasatch {
   
   template<typename FieldT>
   const std::vector<SpatialOps::IntVec>*
-  BCHelper::get_nebo_extra_bnd_mask( const BndSpec& myBndSpec,
-                               const int& patchID ) const
-  {
-    const std::string bndName = myBndSpec.name;
-    const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
-    const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
-    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
-      if ( myMap.find(patchID) != myMap.end() ) {
-        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
-        if (isStagNorm && isPlusSide) {
-          return &(myIters.neboExtraPlusBndCells);
-        } else {
-          return &(myIters.neboExtraBndCells);
-        }
-      }
-    }
-    return NULL;
-  }
-
-
-  //------------------------------------------------------------------------------------------------
-  
-  template<typename FieldT>
-  const std::vector<SpatialOps::IntVec>*
   BCHelper::get_interior_bnd_mask( const BndSpec& myBndSpec,
                                   const int& patchID ) const
   {
@@ -742,31 +807,6 @@ namespace Wasatch {
   
   //------------------------------------------------------------------------------------------------
   
-  template<typename FieldT>
-  const std::vector<SpatialOps::IntVec>*
-  BCHelper::get_nebo_interior_bnd_mask( const BndSpec& myBndSpec,
-                                  const int& patchID ) const
-  {
-    const std::string bndName = myBndSpec.name;
-    const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);
-    const bool isPlusSide = is_plus_side<FieldT>(myBndSpec.face);
-    
-    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
-      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
-      if ( myMap.find(patchID) != myMap.end() ) {
-        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
-        if (isStagNorm && isPlusSide) {
-          return &(myIters.neboExtraBndCells);
-        } else {
-          return &(myIters.neboInteriorBndCells);
-        }
-      }
-    }
-    return NULL;
-  }
-
-  //------------------------------------------------------------------------------------------------
-  
   Uintah::Iterator&
   BCHelper::get_uintah_extra_bnd_mask( const BndSpec& myBndSpec,
                                       const int& patchID )
@@ -787,7 +827,32 @@ namespace Wasatch {
     << "Otherwise, this is likely a major bug that needs to be addressed by a core Wasatch developer." << std::endl;
     throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
   }
+
+  //------------------------------------------------------------------------------------------------
   
+  template<typename FieldT>
+  const SpatialOps::SpatialMask<FieldT>*
+  BCHelper::get_spatial_mask( const BndSpec& myBndSpec,
+                                  const int& patchID ) const
+  {
+    const std::string bndName = myBndSpec.name;
+    
+    if ( bndNamePatchIDMaskMap_.find(bndName) != bndNamePatchIDMaskMap_.end() ) {
+      const PatchIDBndItrMapT& myMap = (*bndNamePatchIDMaskMap_.find(bndName)).second;
+      if ( myMap.find(patchID) != myMap.end() ) {
+        const BoundaryIterators& myIters = (*myMap.find(patchID)).second;
+        return myIters.get_spatial_mask<FieldT>();
+      }
+    }
+    
+    std::ostringstream msg;
+    msg << "ERROR: It looks like you were trying to grab a boundary iterator that doesn't exist! "
+    << "This could be caused by requesting an iterator for a boundary/patch combination that is inconsistent with your input. "
+    << "Otherwise, this is likely a major bug that needs to be addressed by a core Wasatch developer." << std::endl;
+    throw Uintah::ProblemSetupException( msg.str(), __FILE__, __LINE__ );
+  }
+
+
   //------------------------------------------------------------------------------------------------
   
   void BCHelper::print() const
@@ -1200,7 +1265,7 @@ namespace Wasatch {
               // check if this is a staggered field on a face in the same staggered direction (XVolField on x- Face)
               // and whether this a Neumann bc or not.
               const bool isStagNorm = is_staggered_normal<FieldT>(myBndSpec.face);// && myBndCondSpec->bcType!=NEUMANN;
-              modExpr.set_staggered(isStagNorm);
+              modExpr.set_staggered_normal(isStagNorm);
               
               // set the ghost and interior points as well as coefficients
               double ci, cg;
@@ -1215,15 +1280,15 @@ namespace Wasatch {
               modExpr.set_extra_only(setOnExtraOnly);
               modExpr.set_ghost_coef( cg );
               modExpr.set_ghost_points( get_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
-              modExpr.set_nebo_ghost_points( get_nebo_extra_bnd_mask<FieldT>(myBndSpec, patchID) );
               
               modExpr.set_interior_coef( ci );
               modExpr.set_interior_points( get_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
-              modExpr.set_nebo_interior_points( get_nebo_interior_bnd_mask<FieldT>(myBndSpec,patchID) );
               
               modExpr.set_boundary_particles(get_particles_bnd_mask(myBndSpec,patchID));
               // tsaad: do not delete this. this could be needed for some outflow/open boundary conditions
               //modExpr.set_interior_edge_points( get_edge_mask(myBndSpec,patchID) );
+              modExpr.set_spatial_mask(get_spatial_mask<FieldT>(myBndSpec,patchID));
+              modExpr.set_svol_spatial_mask(get_spatial_mask<SVolField>(myBndSpec,patchID));
             }
           }
         }
@@ -1460,7 +1525,6 @@ namespace Wasatch {
   template void BCHelper::create_dummy_dependency< SpatialOps::SingleValueField, VOLT >( const Expr::Tag& attachDepToThisTag, \
                                                                                  const Expr::TagList dependencies,     \
                                                                                  const Category taskCat );
-
   INSTANTIATE_BC_TYPES(ParticleField);
   INSTANTIATE_BC_TYPES(SpatialOps::SVolField);
   INSTANTIATE_BC_TYPES(SpatialOps::XVolField);

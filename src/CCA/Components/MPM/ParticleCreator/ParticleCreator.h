@@ -99,6 +99,7 @@ namespace Uintah {
     ParticleVariable<int> pLoadCurveID;
     ParticleVariable<int> plocalized;
     ParticleVariable<int> prefined;
+    ParticleVariable<int> pLastLevel;
     // ImplicitParticleCreator
     ParticleVariable<Vector> pacceleration;
     ParticleVariable<double> pvolumeold;

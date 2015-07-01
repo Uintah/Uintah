@@ -17,7 +17,7 @@
     <!-- Setup the parameters for variable density MMS -->
     <VarDenOscillatingMMS rho0="5.0" rho1="1.0" w="2.0" k="2.0" d="0.001" uf="0.5" vf="0.5">
        <DiffusionCoefficient>
-          <NameTag name="diffcoef" state="STATE_NONE"/>
+          <NameTag name="diffcoef"/>
        </DiffusionCoefficient>
        <Scalar>f</Scalar>    
        <ConservedScalar>rhof</ConservedScalar>           
@@ -25,21 +25,21 @@
 
     <TwoStreamMixing rho0="5.0" rho1="1.0">
       <Density><NameTag name="density" state="CARRY_FORWARD"/></Density>
-      <MixtureFraction> <NameTag name="f" state="STATE_NONE"/> </MixtureFraction>
-      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_N"/> </DensityWeightedMixtureFraction>
+      <MixtureFraction> <NameTag name="f"/> </MixtureFraction>
+      <DensityWeightedMixtureFraction> <NameTag name="rhof" state="STATE_DYNAMIC"/> </DensityWeightedMixtureFraction>
     </TwoStreamMixing>  
             
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
     
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
@@ -51,19 +51,19 @@
 
       <DiffusiveFlux direction="XY">
         <DiffusionCoefficient>
-          <NameTag name="diffcoef" state="STATE_NONE"/>
+          <NameTag name="diffcoef"/>
         </DiffusionCoefficient>
       </DiffusiveFlux>
 
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="u" state="STATE_NONE"/>
+            <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       
@@ -71,14 +71,14 @@
     
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_NONE"/>        
+        <NameTag name="f"/>        
       </FieldExpression>                    
     </FieldClipping>
         
       
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       <Constant>0.001</Constant>
     </BasicExpression>
         
@@ -90,14 +90,14 @@
       <Y-Momentum>y-mom</Y-Momentum>
          
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       <ComputeMassResidual/>
       <Pressure>
         <ReferencePressure value="0.0">
         	<ReferenceCell>[0,0,0]</ReferenceCell>
         </ReferencePressure>
-        <Use3DLaplacian>   true</Use3DLaplacian>
+        <Use3DLaplacian>false</Use3DLaplacian>
         <Parameters>
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
@@ -105,7 +105,6 @@
             <maxiterations>  100   </maxiterations>
             <relax_type>     2       </relax_type>
            </Parameters>
-
       </Pressure>
     </MomentumEquations>
 
@@ -127,7 +126,6 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.0005"/>
-    <compression>gzip</compression>
     <save label="density"/>
     <!-- save label="u*"/>
     <save label="v*"/>
@@ -162,7 +160,7 @@
       <Box label="1">
         <lower>[-1,-1,0]</lower>
         <upper>[1,1,1]</upper>
-        <resolution>[128,128,2]</resolution>
+        <resolution>[128,128,1]</resolution>
         <patches>[2,2,1]</patches>
       </Box>
       <periodic>[1,1,1]</periodic>

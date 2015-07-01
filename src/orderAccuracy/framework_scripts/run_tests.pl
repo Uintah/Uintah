@@ -31,6 +31,7 @@
 
 use XML::Simple;
 use Data::Dumper;
+use Time::HiRes qw/time/;
 use Cwd;
 
 # create object
@@ -275,7 +276,7 @@ for ($i=0;$i<=$num_of_tests;$i++){
   system("@args")==0 or die("ERROR(run_tests.pl): @args failed: $?");
   
   $fin = time()-$now;
-  print statsFile "Running Time : ".$fin." [secs]\n";
+  printf statsFile ("Running Time : %.3f [secs]\n", $fin);
   print statsFile "---------------------------------------------\n";
   
   #__________________________________

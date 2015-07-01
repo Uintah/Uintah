@@ -27,22 +27,21 @@
 #include <Core/Grid/Region.h>
 
 #include <iostream>
-using namespace std;
-using namespace Uintah;
+
 
 int main()
 {
-  vector<Region> r1, r2, difference;
+  std::vector<Uintah::Region> r1, r2, difference;
 
-  r1.push_back(Region(IntVector(0,0,0),IntVector(4,4,4)));
-  r1.push_back(Region(IntVector(4,4,4),IntVector(8,8,8)));
-  r2.push_back(Region(IntVector(0,0,0),IntVector(2,2,2)));
-  r2.push_back(Region(IntVector(2,2,2),IntVector(4,4,4)));
+  r1.push_back(Uintah::Region(Uintah::IntVector(0,0,0),Uintah::IntVector(4,4,4)));
+  r1.push_back(Uintah::Region(Uintah::IntVector(4,4,4),Uintah::IntVector(8,8,8)));
+  r2.push_back(Uintah::Region(Uintah::IntVector(0,0,0),Uintah::IntVector(2,2,2)));
+  r2.push_back(Uintah::Region(Uintah::IntVector(2,2,2),Uintah::IntVector(4,4,4)));
 
-  difference=Region::difference(r1,r2);
+  difference=Uintah::Region::difference(r1,r2);
 
-  for(vector<Region>::iterator iter=difference.begin();iter!=difference.end();iter++)
+  for(std::vector<Uintah::Region>::iterator iter=difference.begin();iter!=difference.end();iter++)
   {
-    cout << *iter << endl;
+    std::cout << *iter << std::endl;
   }
 }

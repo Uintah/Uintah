@@ -44,8 +44,6 @@ extern "C"{
 
 //uncomment to debug matricies
 //#define cqmom_dbg
-using namespace std;
-using namespace Uintah;
 //-------------------------------------------------------
 
 /**
@@ -112,6 +110,10 @@ void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, co
  ****************************/
 void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w, std::vector<double>& x)
 {
+
+  using namespace std; 
+  using namespace Uintah; 
+
   int nEnv = (int) moments.size()/2; //get # nodes
   int nMom = moments.size();
 #ifdef cqmom_dbg
@@ -305,7 +307,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     bool nonrealCheck = false;
     //check a vector for a nan - occurs in point distribution
     for ( int i = 0; i<nEnvOut; i++ ) {
-      if ( isnan(a[i]) || isinf(a[i]) ) {
+      if ( std::isnan(a[i]) || std::isinf(a[i]) ) {
 #ifdef cqmom_dbg
         cout << "WARNING: Arches: CQMOMInversion: not-a-number in a vector encountered. " << endl;
 #endif
@@ -321,7 +323,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     double d_small = 1.0e-14;
     //check the b vector for realizable space
     for ( int i = 0; i<nEnvOut; i++ ) {
-      if ( (b[i] != 0.0 && b[i]<d_small) || isnan(b[i]) ) { //clip if b is very close to zero
+      if ( (b[i] != 0.0 && b[i]<d_small) || std::isnan(b[i]) ) { //clip if b is very close to zero
 #ifdef cqmom_dbg
         cout << "WARNING: Arches: CQMOMInversion: Negative b vector encountered." << endl;
 #endif
@@ -472,6 +474,10 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   //maxInd vector of maxium moment# for flat array
   //For the time being this is only for M = 2 or 3
   //NOTE: to-do: expand to M = 4,5...N etc
+  //
+
+  using namespace std; 
+  using namespace Uintah; 
   
 
   int nTot = 1;  //this could probably be input
@@ -535,7 +541,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     //vander solve (x,w,q) -> vandersolve sum x_i^k w_i = q_k
     // q contians known moments, x_i contains abscissas, w_i are conditional moments (unknown)
       int n = x1.size();
-      for (int ii = 0; ii < x1.size(); ii++ ) {
+      for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
         if (w1[ii] == 0.0 ) {
           n--;
         }
@@ -657,7 +663,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       if ( !useLapack ) {
       //feed into vandermonde
         int n = x1.size();
-        for (int ii = 0; ii < x1.size(); ii++ ) {
+        for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
           if (w1[ii] == 0.0 ) {
             n--;
           }
@@ -744,7 +750,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       
       if ( !useLapack ) {
         int n = xTemp.size();
-        for (int ii = 0; ii < xTemp.size(); ii++ ) {
+        for ( unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
           if (wTemp[ii] == 0.0 ) {
             n--;
           }
@@ -872,7 +878,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         
         if (!useLapack) {
           int n = x1.size();
-          for (int ii = 0; ii < x1.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
             if (w1[ii] == 0.0 ) {
               n--;
             }
@@ -961,7 +967,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         //now solve the vandermonde matrix for some Omega values
         if (!useLapack) {
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1036,7 +1042,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         
         if ( !useLapack ) {
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1180,7 +1186,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
               for (int j = 0; j<i-1; j++ ) { //create the multiple for this
                 product *= maxInd[j];
               }
-              flatIndex += product;
+              if ( i == m) {
+                flatIndex += product;
+              }
             }
             vanderMom[k1] = moments[flatIndex];
             
@@ -1190,7 +1198,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
           
           int n = x1.size();
-          for (int ii = 0; ii < x1.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
             if (w1[ii] == 0.0 ) {
               n--;
             }
@@ -1229,7 +1237,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
 
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1271,7 +1279,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
           
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1309,7 +1317,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
           
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1326,23 +1334,6 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         }
       }
     }
-    
-    //after the otehr dimensions are dealt with getting the 1 node solved is easy
-    for (int i = 6; i <= m; i++) { //loop from 5 up to current internal coordinate diemnsion
-      int ii = 0;
-      for (int k1 = 0; k1< N_i[0]; k1++) {
-        for (int k2 = 0; k2 < N_i[1]; k2++) {
-          for (int k3 = 0; k3 < N_i[2]; k3++) { //loop each x3
-            for (int k4 = 0; k4 < N_i[3]; k4++) {
-              //to fill absciassa no wheeler alogrithm required and x = m1/m0, and m0 for condtional = 1
-              conditionals[k1][k2][k3][k4] = conditionals[k1][k2][k3][k4]/abscissas[i-2][ii];
-              ii++;
-            }
-          }
-        }
-      }
-    }
-    
     
     for (int k1 = 0; k1< N_i[0]; k1++) {
       for (int k2 = 0; k2 < N_i[1]; k2++) {

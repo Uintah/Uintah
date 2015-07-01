@@ -31,10 +31,9 @@
 #include <Core/Grid/LevelP.h>
 
 #include <iostream>
-using namespace std;
-using namespace Uintah;
 
-bool compareEqual(const Patch* p1, const Patch* p2)
+
+bool compareEqual(const Uintah::Patch* p1, const Uintah::Patch* p2)
 {
   if(p1->getExtraNodeLowIndex()!=p2->getExtraNodeLowIndex())
     return false;
@@ -43,15 +42,15 @@ bool compareEqual(const Patch* p1, const Patch* p2)
   return true;
 }
 
-bool compareQueries( Level::selectType &q1, Level::selectType &q2)
+bool compareQueries( Uintah::Level::selectType &q1, Uintah::Level::selectType &q2)
 {
   if(q1.size()!=q2.size())
     return false;
 
-  for(Level::selectType::iterator iter1=q1.begin(); iter1!=q1.end(); iter1++)
+  for(Uintah::Level::selectType::iterator iter1=q1.begin(); iter1!=q1.end(); iter1++)
   {
     bool found=false;
-    for(Level::selectType::iterator iter2=q2.begin(); iter2!=q2.end(); iter2++)
+    for(Uintah::Level::selectType::iterator iter2=q2.begin(); iter2!=q2.end(); iter2++)
     {
       if(compareEqual(*iter1,*iter2)==true)
           found=true;
@@ -63,146 +62,146 @@ bool compareQueries( Level::selectType &q1, Level::selectType &q2)
 }
 int main()
 {
-  IntVector PatchSize(10,10,10);
+  Uintah::IntVector PatchSize(10,10,10);
   //create a grid iterator to be a list of patches
-  GridIterator iter(IntVector(0,0,0),IntVector(10,10,10));
+  Uintah::GridIterator iter(Uintah::IntVector(0,0,0),Uintah::IntVector(10,10,10));
  
-  Point anchor(0,0,0);
-  Vector dcell(1,1,1);
-  Grid grid;
+  Uintah::Point anchor(0,0,0);
+  Uintah::Vector dcell(1,1,1);
+  Uintah::Grid grid;
 
   grid.addLevel(anchor,dcell);
-  vector<const Patch*> patches;
+  std::vector<const Uintah::Patch*> patches;
 
   int i=0; 
   for(;!iter.done();iter++,i++)
   {
-    LevelP level=grid.getLevel(0);
-    IntVector low=*iter*PatchSize;
-    IntVector high=(*iter+IntVector(1,1,1))*PatchSize;
+    Uintah::LevelP level=grid.getLevel(0);
+    Uintah::IntVector low=*iter*PatchSize;
+    Uintah::IntVector high=(*iter+Uintah::IntVector(1,1,1))*PatchSize;
 
     level->addPatch(low,high,low,high,&grid);
 
     patches.push_back(level->getPatch(i));
   }
   
-  PatchBVH bvh(patches);
-  PatchRangeTree prt(patches);
+  Uintah::PatchBVH bvh(patches);
+  Uintah::PatchRangeTree prt(patches);
 
   //query various regions and check results
-  Level::selectType q_new, q_old;
-  IntVector low,high;
+  Uintah::Level::selectType q_new, q_old;
+  Uintah::IntVector low,high;
   
-  low=IntVector(0,0,0);
-  high=IntVector(10,10,10);
+  low=Uintah::IntVector(0,0,0);
+  high=Uintah::IntVector(10,10,10);
   bvh.query(low,high,q_new);
   prt.query(low,high,q_old);
   if(!compareQueries(q_new,q_old))
   {
-    cout << "Error queries do not match(1)\n";
-    cout << "old:\n";
-    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    std::cout << "Error queries do not match(1)\n";
+    std::cout << "old:\n";
+    for(Uintah::Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
-    cout << "new:\n";
-    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    std::cout << "new:\n";
+    for(Uintah::Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
   }
-  cout << "Query returned size:" << q_new.size() << endl;
+  std::cout << "Query returned size:" << q_new.size() << std::endl;
   q_new.resize(0);
   q_old.resize(0);
   
-  low=IntVector(0,0,0);
-  high=IntVector(12,12,1);
+  low=Uintah::IntVector(0,0,0);
+  high=Uintah::IntVector(12,12,1);
   bvh.query(low,high,q_new);
   prt.query(low,high,q_old);
   if(!compareQueries(q_new,q_old))
   {
-    cout << "Error queries do not match(2)\n";
-    cout << "old:\n";
-    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    std::cout << "Error queries do not match(2)\n";
+    std::cout << "old:\n";
+    for(Uintah::Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
-    cout << "new:\n";
-    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    std::cout << "new:\n";
+    for(Uintah::Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
   }
-  cout << "Query returned size:" << q_new.size() << endl;
+  std::cout << "Query returned size:" << q_new.size() << std::endl;
   q_new.resize(0);
   q_old.resize(0);
       
-  low=IntVector(34,22,28);
-  high=IntVector(73,12,36);
+  low=Uintah::IntVector(34,22,28);
+  high=Uintah::IntVector(73,12,36);
   bvh.query(low,high,q_new);
   prt.query(low,high,q_old);
   if(!compareQueries(q_new,q_old))
   {
-    cout << "Error queries do not match(3)\n";
-    cout << "old:\n";
-    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    std::cout << "Error queries do not match(3)\n";
+    std::cout << "old:\n";
+    for(Uintah::Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
-    cout << "new:\n";
-    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    std::cout << "new:\n";
+    for(Uintah::Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
   }
-  cout << "Query returned size:" << q_new.size() << endl;
+  std::cout << "Query returned size:" << q_new.size() << std::endl;
   q_new.resize(0);
   q_old.resize(0);
   
-  low=IntVector(8,8,8);
-  high=IntVector(8,8,8);
+  low=Uintah::IntVector(8,8,8);
+  high=Uintah::IntVector(8,8,8);
   bvh.query(low,high,q_new);
   prt.query(low,high,q_old);
   if(!compareQueries(q_new,q_old))
   {
-    cout << "Error queries do not match(4)\n";
-    cout << "old:\n";
-    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    std::cout << "Error queries do not match(4)\n";
+    std::cout << "old:\n";
+    for(Uintah::Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
-    cout << "new:\n";
-    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    std::cout << "new:\n";
+    for(Uintah::Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
   }
-  cout << "Query returned size:" << q_new.size() << endl;
+  std::cout << "Query returned size:" << q_new.size() << std::endl;
   q_new.resize(0);
   q_old.resize(0);
   
-  low=IntVector(10,10,10);
-  high=IntVector(9,9,9);
+  low=Uintah::IntVector(10,10,10);
+  high=Uintah::IntVector(9,9,9);
   bvh.query(low,high,q_new);
   prt.query(low,high,q_old);
   if(!compareQueries(q_new,q_old))
   {
-    cout << "Error queries do not match(5)\n";
-    cout << "old:\n";
-    for(Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
+    std::cout << "Error queries do not match(5)\n";
+    std::cout << "old:\n";
+    for(Uintah::Level::selectType::iterator iter=q_old.begin(); iter!=q_old.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
-    cout << "new:\n";
-    for(Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
+    std::cout << "new:\n";
+    for(Uintah::Level::selectType::iterator iter=q_new.begin(); iter!=q_new.end(); iter++)
     {
-      cout << **iter << endl;
+      std::cout << **iter << std::endl;
     }
   }
-  cout << "Query returned size:" << q_new.size() << endl;
+  std::cout << "Query returned size:" << q_new.size() << std::endl;
   q_new.resize(0);
   q_old.resize(0);
   
-  cout << "All tests successfully passed\n";
+  std::cout << "All tests successfully passed\n";
   return 0;
 }

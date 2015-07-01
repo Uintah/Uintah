@@ -139,9 +139,16 @@ SchedulerFactory::create( const ProblemSpecP   & ps,
     throw ProblemSetupException(error, __FILE__, __LINE__);
   }
 
+  //__________________________________
+  //  bulletproofing
   // "-nthreads" at command line, something other than "ThreadedMPI" specified in UPS file (w/ -do_not_validate)
   if ((Uintah::Parallel::getNumThreads() > 0) && ((scheduler != "Unified") && (scheduler != "ThreadedMPI"))) {
     throw ProblemSetupException("ThreadedMPI or Unified Scheduler needed for '-nthreads <n>' option", __FILE__, __LINE__);
+  }
+
+  if ( (scheduler != "Unified") && Uintah::Parallel::usingDevice() ){
+    std::string error = "\n \tTo use '-gpu' option you must invoke the Unified Scheduler.  Add '-nthreads <n>' to the sus command line.";
+    throw ProblemSetupException( error , __FILE__, __LINE__);
   }
 
   // Output which scheduler will be used

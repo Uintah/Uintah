@@ -70,6 +70,9 @@ class EnthalpySolver;
 class TimeIntegratorLabel;
 class PartVel; 
 class DQMOM;
+class CQMOM;
+class CQMOM_Convection;
+class CQMOMSourceWrapper;
 class MomentumSolver;
 class NonlinearSolver {
 
@@ -95,7 +98,8 @@ public:
   virtual void sched_interpolateFromFCToCC(SchedulerP&, 
                                            const PatchSet* patches,
                                            const MaterialSet* matls,
-                                           const TimeIntegratorLabel* timelabels) = 0;
+                                           const TimeIntegratorLabel* timelabels, 
+                                           const int curr_level) = 0;
   // GROUP: Schedule Action Computations :
   ///////////////////////////////////////////////////////////////////////
   // Interface for Solve the nonlinear system, return some error code.
@@ -124,11 +128,12 @@ public:
   virtual void setDQMOMSolver(DQMOM* dqmomSolver) = 0;
   
   virtual void setCQMOMSolver(CQMOM* cqmomSolver) = 0;
+  
+  virtual void setCQMOMConvect(CQMOM_Convection* cqmomConvect) = 0;
+  
+  virtual void setCQMOMSource(CQMOMSourceWrapper* cqmomSource) = 0;
 
-  virtual void setInitVelConditionInterface( const Patch          * patch, 
-                                             SFCXVariable<double> & uvel, 
-                                             SFCYVariable<double> & vvel, 
-                                             SFCZVariable<double> & wvel ) = 0;
+  virtual void sched_setInitVelCond( const LevelP& level, SchedulerP& sched, const MaterialSet* mats) = 0;
   
   virtual void checkMomBCs( SchedulerP& sched,
                             const LevelP& level,

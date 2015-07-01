@@ -625,6 +625,8 @@ namespace Uintah {
 
       BCInfoMap d_bc_information;                           ///< Contains information about each boundary condition spec. (from UPS)
 
+      BoundaryCondition_new* getNewBoundaryCondition(){return d_newBC;}     // needed by Arches:RMCRT
+
     private:
 
       /** @brief Setup new boundary conditions specified under the <Grid><BoundaryCondition> section */
@@ -683,7 +685,6 @@ namespace Uintah {
           const int timesubstep, 
           const bool reinitialize );
 
-    private:
 
       bool d_no_corner_recirc; 
 
@@ -799,9 +800,6 @@ namespace Uintah {
           DataWarehouse*,
           DataWarehouse* new_dw);
 
-
-    private:
-
       // input information
       typedef std::map<IntVector, double> CellToValue; 
       struct FFInfo{ 
@@ -833,6 +831,8 @@ namespace Uintah {
       bool d_calcEnergyExchange;
       bool d_fixTemp;
       bool d_cutCells;
+
+      bool d_check_inlet_obstructions; 
 
       bool d_ignore_invalid_celltype; 
 

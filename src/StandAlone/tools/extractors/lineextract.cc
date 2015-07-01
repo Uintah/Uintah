@@ -98,6 +98,7 @@ usage( const std::string & badarg, const std::string & progname )
   cerr << "  -l,        --level:         [int] (level index to query range from) [defaults to 0]\n";
   cerr << "  -o,        --out:           <outputfilename> [defaults to stdout]\n"; 
   cerr << "  -vv,       --verbose:       (prints status of output)\n";
+  cerr << "  -ni,       --noindex:       Do not print out the cell indices. Only print the value.";
   cerr << "  -q,        --quiet:         (only print data values)\n";
   cerr << "  -pad,        --pad:         (print zero values for cell locations not currently in the specified level)\n";
   cerr << "  -cellCoords:                (prints the cell centered coordinates on that level)\n";
@@ -131,6 +132,7 @@ printData(       DataArchive             * archive,
                  unsigned long             time_start,
                  unsigned long             time_end,
                  unsigned long             output_precision,
+          const  bool                      printValueOnly,
                  ostream                 & out )
 {
   // Query time info from dataarchive.
@@ -316,7 +318,9 @@ printData(       DataArchive             * archive,
               Point point = level->getCellPosition(c);
               Vector here = point.asVector() + shift;
               out << here.x() << " "<< here.y() << " " << here.z() << " "<<val << endl;;
-            }else{
+           } else if (printValueOnly) {
+             out << val << endl;
+           } else{
               out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
             }
           }
@@ -326,7 +330,9 @@ printData(       DataArchive             * archive,
               Point point = level->getCellPosition(c);
               Vector here = point.asVector() + shift;
               out << here.x() << " "<< here.y() << " " << here.z() << " "<< val << endl;;
-            }else{
+           } else if (printValueOnly) {
+             out << val << endl;;
+           } else{
               out << c.x() << " "<< c.y() << " " << c.z() << " "<< val << endl;;
             }
            }// if pad with zeros
@@ -668,7 +674,8 @@ main( int argc, char** argv )
   //  Default Values
   bool              use_cellIndex_file = false;
   bool              findCellIndices = false;
-
+  bool              printValueOnly = false;
+  
   unsigned long     time_start = 0;
   unsigned long     time_end = (unsigned long)-1;
   unsigned long     output_precision = 16;
@@ -747,6 +754,8 @@ main( int argc, char** argv )
       input_uda_name = string(argv[++i]);
     } else if (s == "-o" || s == "--out") {
       output_file_name = string(argv[++i]);
+    } else if (s == "-ni" || s == "--noindex") {
+        printValueOnly = true;
     } else if (s == "--cellIndexFile") {
       use_cellIndex_file = true;
       input_file_cellIndices = string(argv[++i]);
@@ -877,32 +886,32 @@ main( int argc, char** argv )
       case Uintah::TypeDescription::double_type:
         printData<double>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, output_precision, *output_stream);
+                          time_start, time_end, output_precision, printValueOnly, *output_stream);
         break;
       case Uintah::TypeDescription::float_type:
         printData<float>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, output_precision, *output_stream);
+                          time_start, time_end, output_precision, printValueOnly, *output_stream);
         break;
       case Uintah::TypeDescription::int_type:
         printData<int>(archive, variable_name, td, material, use_cellIndex_file,
                        levelIndex, var_start, var_end, cells,
-                       time_start, time_end, output_precision, *output_stream);
+                       time_start, time_end, output_precision, printValueOnly, *output_stream);
         break;
       case Uintah::TypeDescription::Vector:
         printData<Vector>(archive, variable_name, td, material, use_cellIndex_file,
                           levelIndex, var_start, var_end, cells,
-                          time_start, time_end, output_precision, *output_stream);    
+                          time_start, time_end, output_precision, printValueOnly, *output_stream);    
         break;
       case Uintah::TypeDescription::Matrix3:
         printData<Matrix3>(archive, variable_name, td, material, use_cellIndex_file,
                            levelIndex, var_start, var_end, cells,
-                           time_start, time_end, output_precision, *output_stream);    
+                           time_start, time_end, output_precision, printValueOnly, *output_stream);    
         break;
       case Uintah::TypeDescription::Stencil7:
         printData<Stencil7>(archive, variable_name, td, material, use_cellIndex_file,
                             levelIndex, var_start, var_end, cells,
-                            time_start, time_end, output_precision, *output_stream);    
+                            time_start, time_end, output_precision, printValueOnly, *output_stream);    
         break;
         // don't break on else - flow to the error statement
       case Uintah::TypeDescription::bool_type:

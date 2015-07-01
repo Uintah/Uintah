@@ -31,12 +31,12 @@
 #include <CCA/Ports/SolverInterface.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <CCA/Components/Arches/ArchesConstVariables.h>
+#include <CCA/Components/Arches/ArchesVariables.h>
 #include <CCA/Components/Arches/CellInformationP.h>
 #include <Core/ProblemSpec/ProblemSpecP.h>
 #include <CCA/Ports/DataWarehouseP.h>
 #include <Core/Grid/LevelP.h>
 #include <Core/Grid/Task.h>
-
 
 namespace Uintah {
 
@@ -75,9 +75,10 @@ public:
 
   //______________________________________________________________________
   //  Task that is called by Arches and constains scheduling of other tasks  
-  void sched_solve(const LevelP& level, SchedulerP&,
-                   const TimeIntegratorLabel* timelabels,
-                   bool extraProjection);
+  void sched_solve( const LevelP& level, SchedulerP&,
+                    const TimeIntegratorLabel* timelabels,
+                    bool extraProjection, 
+                    const int rk_stage );
 
   //______________________________________________________________________
   // addHydrostaticTermtoPressure:
@@ -145,7 +146,8 @@ private:
                          const PatchSet* patches,
                          const MaterialSet* matls,
                          const TimeIntegratorLabel* timelabels,
-                         bool extraProjection);
+                         bool extraProjection, 
+                         const int rk_stage);
 
   //______________________________________________________________________
   //  setRefPressure:
@@ -195,11 +197,6 @@ private:
   void mmModifyPressureCoeffs(const Patch* patch,
                               ArchesVariables* vars,
                               ArchesConstVariables* constvars);
-  //______________________________________________________________________
-  //
-  /** @brief Adjusts the neighbors of the fix pressure point to account for the 
-   * known pressure **/ 
-  void adjustForRefPoint( const Patch* patch, ArchesVariables* vars, ArchesConstVariables* constvars );
 
   ArchesLabel* d_lab;
   const MPMArchesLabel* d_MAlab;
@@ -214,11 +211,11 @@ private:
   IntVector d_pressRef;   // cell index for reference pressure
 
   const ProcessorGroup* d_myworld;
+  double d_ref_value; 
 
   bool d_norm_press;
   bool d_do_only_last_projection;
-  bool d_use_ref_point; 
-  double d_ref_value; 
+  bool d_enforceSolvability; 
   
   SolverInterface* d_hypreSolver;
   SolverParameters* d_hypreSolver_parameters;

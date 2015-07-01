@@ -20,8 +20,8 @@ template< typename ViscT >
 class ParticleResponseTime
  : public Expr::Expression<ParticleField>
 {
-  DECLARE_FIELDS(ParticleField, pdensity_, psize_, px_, py_, pz_);
-  DECLARE_FIELD(ViscT, gVisc_);
+  DECLARE_FIELDS(ParticleField, pdensity_, psize_, px_, py_, pz_)
+  DECLARE_FIELD(ViscT, gVisc_)
 
   typedef typename SpatialOps::Particle::CellToParticle<ViscT> Scal2POpT;
   Scal2POpT* s2pOp_;

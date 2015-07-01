@@ -35,8 +35,8 @@ template< typename ScalarT >
 class ParticleBodyForce
 : public Expr::Expression<ParticleField>
 {
-  DECLARE_FIELDS(ParticleField, prho_, px_, py_, pz_, psize_);
-  DECLARE_FIELD (ScalarT, grho_);
+  DECLARE_FIELDS(ParticleField, prho_, px_, py_, pz_, psize_)
+  DECLARE_FIELD (ScalarT, grho_)
   
   typedef typename SpatialOps::Particle::CellToParticle<ScalarT> S2POpT;
   S2POpT* sOp_;

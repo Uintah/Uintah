@@ -45,8 +45,12 @@ namespace Wasatch{
     std::string exprName;
     std::string state;
     param->getAttribute( "name", exprName );
-    param->getAttribute( "state", state );
-    return Expr::Tag( exprName, Expr::str2context(state) );
+    // if the user specified a state for this nametag, then return that state
+    if (param->getAttribute( "state", state ))
+      return Expr::Tag( exprName, Expr::str2context(state) );
+    // if the user did not specify a state, then default to state_none
+    else
+      return Expr::Tag( exprName, Expr::STATE_NONE );
   }
 
   //============================================================================

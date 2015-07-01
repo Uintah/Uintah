@@ -102,19 +102,32 @@ void
 DensFromMixfrac<FieldT>::
 evaluate()
 {
-  FieldT& rho = this->value();
+  
+  typedef std::vector<FieldT*> SVolFieldVec;
+
+  SVolFieldVec& results = this->get_value_vec();
+  
+  // jcs: can we do the linear solve in place? We probably can. If so,
+  // we would only need one field, not two...
+  FieldT& rho = *results[0];
+  FieldT& badPts = *results[1];
+  badPts <<= 0.0;
 
   const FieldT& rhoF = rhoF_->field_ref();
   typename FieldT::const_iterator irhoF = rhoF.begin();
   typename FieldT::iterator irho = rho.begin();
+  typename FieldT::iterator ibad = badPts.begin();
   const typename FieldT::iterator irhoe = rho.end();
   size_t nbad = 0;
   DoubleVec soln(1), vals(1);
-  for( ; irho!=irhoe; ++irho, ++irhoF ){
+  for( ; irho!=irhoe; ++irho, ++irhoF, ++ibad){
     vals[0] = *irhoF;
     soln[0] = *irhoF / *irho;   // initial guess for the mixture fraction
     const bool converged = this->solve( vals, soln );  // soln contains the mixture fraction
-    if( !converged ) ++nbad;
+    if( !converged ) {
+      ++nbad;
+      *ibad = 1.0;
+    }
     *irho = *irhoF / soln[0];
   }
   if( nbad>0 ){
@@ -162,13 +175,13 @@ DensFromMixfrac<FieldT>::get_bounds( const unsigned i ) const
 template< typename FieldT >
 DensFromMixfrac<FieldT>::
 Builder::Builder( const InterpT& rhoEval,
-                  const Expr::Tag& resultTag,
+                  const Expr::TagList& resultsTag,
                   const Expr::Tag& rhoFTag  )
-  : ExpressionBuilder( resultTag ),
+  : ExpressionBuilder( resultsTag ),
     rhoFTag_(rhoFTag),
     rhoEval_( rhoEval.clone() )
 {
-  if( resultTag.context() != Expr::CARRY_FORWARD ){
+  if( resultsTag[0].context() != Expr::CARRY_FORWARD ){
     std::ostringstream msg;
     msg << "ERROR: Density must have CARRY_FORWARD context so that an initial guess is available\n\t"
         << __FILE__ << " : " << __LINE__ << std::endl;
@@ -358,7 +371,9 @@ TwoStreamMixingDensity( const Expr::Tag& rhofTag,
                         const double rho0,
                         const double rho1 )
   : Expr::Expression<FieldT>(),
-    rho0_(rho0), rho1_(rho1)
+    rho0_(rho0), rho1_(rho1),
+    rhoMin_( rho0_ < rho1_ ? rho0_ : rho1),
+    rhoMax_( rho0_ > rho1_ ? rho0_ : rho1)
 {
   this->set_gpu_runnable(true);
   
@@ -375,13 +390,12 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   const FieldT& rf = rhof_->field_ref();
-  const double tmp = (1/rho0_ - 1/rho1_);
+  
+  // compute the density in one shot from rhof
+  result <<= rho0_ + (1 - rho0_/rho1_)*rf;
 
-  // first calculate the mixture fraction:
-  result <<= (rf/rho0_) / (1.0+rf*tmp);
-
-  // now use that to get the density:
-  result <<= 1.0 / ( result/rho1_ + (1.0-result)/rho0_ );
+  // repair bounds
+  result <<= max ( min(result, rhoMax_), rhoMin_);
 }
 
 //--------------------------------------------------------------------
@@ -406,7 +420,9 @@ TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
                         const double rho0,
                         const double rho1 )
   : Expr::Expression<FieldT>(),
-    rho0_(rho0), rho1_(rho1)
+    rho0_(rho0), rho1_(rho1),
+    rhoMin_( rho0_ < rho1_ ? rho0_ : rho1),
+    rhoMax_( rho0_ > rho1_ ? rho0_ : rho1)
 {
   this->set_gpu_runnable(true);
   
@@ -423,7 +439,11 @@ evaluate()
   using namespace SpatialOps;
   FieldT& result = this->value();
   const FieldT& f = mixfr_->field_ref();
+  
   result <<= 1.0 / ( f/rho1_ + (1.0-f)/rho0_ );
+  
+  // repair bounds
+  result <<= max ( min(result, rhoMax_), rhoMin_);
 }
 
 //--------------------------------------------------------------------

@@ -39,21 +39,14 @@ SimpleEmission( const Expr::Tag& temperatureTag,
                 const double envTemp,
                 const Expr::Tag& absCoefTag )
   : Expr::Expression<FieldT>(),
-    envTempValue_  ( envTemp        ),
+    envTempValue_   ( envTemp ),
     hasAbsCoef_     ( absCoefTag != Expr::Tag() ),
     hasConstEnvTemp_( envTempTag == Expr::Tag() )
 {
-   temperature_ = this->template create_field_request<FieldT>(temperatureTag);
+  temperature_ = this->template create_field_request<FieldT>(temperatureTag);
   if(!hasConstEnvTemp_)  envTemp_ = this->template create_field_request<FieldT>(envTempTag);
-  if(hasAbsCoef_)  absCoef_ = this->template create_field_request<FieldT>(absCoefTag);
+  if( hasAbsCoef_     )  absCoef_ = this->template create_field_request<FieldT>(absCoefTag);
 }
-
-//--------------------------------------------------------------------
-
-template< typename FieldT >
-SimpleEmission<FieldT>::
-~SimpleEmission()
-{}
 
 //--------------------------------------------------------------------
 
@@ -68,13 +61,14 @@ evaluate()
   
   const double sigma = 5.67037321e-8; // Stefan-Boltzmann constant, W/(m^2 K^4)
   if( hasConstEnvTemp_ ){
-    if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * sigma * ( pow( temperature, 4 ) - pow( envTempValue_, 4 ) );
-    else              divQ <<=             sigma * ( pow( temperature, 4 ) - pow( envTempValue_, 4 ) );
+    const double envTerm = pow( envTempValue_, 4 );
+    if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * sigma * ( pow( temperature, 4 ) - envTerm );
+    else              divQ <<=                         sigma * ( pow( temperature, 4 ) - envTerm );
   }
   else{
     const FieldT& envTemp = envTemp_->field_ref();
     if( hasAbsCoef_ ) divQ <<= absCoef_->field_ref() * sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
-    else              divQ <<=             sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
+    else              divQ <<=                         sigma * ( pow( temperature, 4 ) - pow( envTemp, 4 ) );
   }
 }
 
@@ -88,9 +82,9 @@ Builder::Builder( const Expr::Tag divQTag,
                   const Expr::Tag absCoefTag )
   : ExpressionBuilder( divQTag ),
     temperatureTag_( temperatureTag ),
-    envTempTag_( envTempTag ),
-    absCoefTag_( absCoefTag ),
-    envTemp_   ( 0.0        )
+    envTempTag_    ( envTempTag     ),
+    absCoefTag_    ( absCoefTag     ),
+    envTemp_       ( 0.0            )
 {}
 
 template< typename FieldT >

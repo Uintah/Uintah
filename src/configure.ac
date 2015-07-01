@@ -293,6 +293,13 @@ SCI_ARG_WITH(mx,
    sci_required_mx=no],
   [with_mx=""])
   
+SCI_ARG_WITH(pokitt,
+  AC_HELP_STRING(--with-pokitt=DIR,
+                 Use the PoKiTT installation in DIR),
+  [with_pokitt="$withval"
+   sci_required_pokitt=yes],
+  [with_pokitt=""])
+  
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
@@ -1900,6 +1907,23 @@ AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.
 AC_CONFIG_HEADER(include/sci_defs/config_testdefs.h)
 sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 
+# Check if we are using a c++-11 compiler
+
+AC_MSG_CHECKING(if using a c++-11 compiler)
+have_cxx11="no"
+
+AC_TRY_COMPILE([#include <iostream>],
+                [int a; decltype(a) b; auto d = a; auto l = [](){};],
+                [have_cxx11=yes],
+                [have_cxx11=no])
+
+if test $have_cxx11 = yes; then
+   DEF_CXX11="#define HAVE_CXX11 1"
+fi   
+AC_MSG_RESULT($have_cxx11)
+AC_SUBST(DEF_CXX11)
+
+
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for required libraries and headers  ------
 ##  ----------------------------------------------------------------------
@@ -2079,8 +2103,8 @@ if test "$with_visit" -o "$wasatch_3p" = "yes"; then
 fi
 
 ##  --  search for visit stuff  -------------------------------------------
-# local     - sim/V2/lib/VisItControlInterface_V2.h
-#           - lib/libsimV2.a
+# local     - src/sim/V2/lib/VisItControlInterface_V2.h
+#           - build/lib/libsimV2.a
 
 # installed - linux-x86_64/libsim/V2/include/VisItControlInterface_V2.h
 #           - linux-x86_64/libsim/V2/lib/libsimV2.a
@@ -2097,8 +2121,10 @@ if test "$sci_required_visit" = "yes"; then
     _sci_lib="$with_visit"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     # Check for a local version (compiling against source)
-    if test -e $with_visit/sim/V2/lib; then
+    if test -e $with_visit/sim/V2/lib/VisItControlInterface_V2.h; then
       _sci_inc="$with_visit/sim/V2/lib"
+    elif test -e $with_visit/../src/sim/V2/lib/VisItControlInterface_V2.h; then
+      _sci_inc="$with_visit/../src/sim/V2/lib"
     # Otherwise assume an installed version
     else
       _sci_inc="$with_visit/include"
@@ -2120,8 +2146,14 @@ if test "$sci_required_visit" = "yes"; then
   
   if test "$HAVE_VISIT" = "yes"; then
     DEF_VISIT="#define HAVE_VISIT 1"
-  else
-    DEF_VISIT="#define HAVE_VISIT 1"
+
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+        VISIT_PATH="#define VISIT_PATH ((char*)\"$with_visit\")"
+    # Otherwise assume an installed version
+    else
+        VISIT_PATH="#define VISIT_PATH ((char*)\"${with_visit}/../../../..\")"
+    fi
   fi
 
 fi #end sci_required_visit
@@ -2132,6 +2164,7 @@ AC_SUBST(DEF_VISIT)
 AC_SUBST(INC_VISIT_H)
 AC_SUBST(VISIT_LIB_DIR_FLAG)
 AC_SUBST(VISIT_LIB_FLAG)
+AC_SUBST(VISIT_PATH)
 
 sci_defs_files="$sci_defs_files include/sci_defs/visit_testdefs.h"
 
@@ -3759,12 +3792,19 @@ int main(int argc, char **argv) {
 }
 EOF
 
+##-----------------------------------------------------------------------------
+## Static linking of the cudart_static lib is not working on Titan due
+## to the current CUDA Toolkit version, 5.5. Once Titan is upgraded to
+## CUDA 6.5, we can then use cudart_static in static builds
+##-----------------------------------------------------------------------------
 # use different set of libs if doing a static build
-if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-	_cudart_lib="cudart_static dl pthread rt"
-else
-	_cudart_lib="cudart"
-fi
+#if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+#	_cudart_lib="cudart_static dl pthread rt"
+#else
+#	_cudart_lib="cudart"
+#fi
+
+  _cudart_lib="cudart"
 
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA libraries and headers,
@@ -4198,6 +4238,50 @@ AC_SUBST(INC_SPATIALOPS_H)
 AC_SUBST(SPATIALOPS_LIB_FLAG)
 AC_SUBST(SPATIALOPS_LIB_DIR_FLAG)
 
+##  --  search for PoKiTT Library ------------------------
+
+if test "$with_pokitt"; then
+
+  if test "$with_pokitt" = "yes"; then
+    AC_MSG_ERROR( --with-pokitt=DIR requires a DIRectory be provided. )
+  else
+
+    AC_MSG_CHECKING(for Pokitt files (For now we are just verifying the existence of lib and .h files)) 
+    if test ! -d $with_pokitt; then
+      echo ""
+      AC_MSG_ERROR( PoKiTT directory '$with_pokitt' does not exist. )
+    fi
+    POKITT_INCLUDE_DIR="include/pokitt"
+    # Check includes
+    for file in CanteraObjects.h  MixtureFractionExpr.h PoKiTTVersion.h   SpeciesN.h thermo \
+                MixtureFraction.h MixtureMolWeight.h    SpecFromMixfrac.h kinetics   transport; do
+      if test ! -e $with_pokitt/$POKITT_INCLUDE_DIR/$file; then
+        echo ""
+        AC_MSG_ERROR( '$with_pokitt/$POKITT_INCLUDE_DIR/$file' does not exist. )
+      fi
+    done
+    # Check lib
+    the_lib=$with_pokitt/lib/pokitt/libpokitt.a
+    if test ! -f $the_lib; then
+      echo ""
+      AC_MSG_ERROR( '$the_lib' does not exist. )
+    fi
+  fi
+  AC_MSG_RESULT(yes)
+  DEF_POKITT="#define HAVE_POKITT 1"
+  INC_POKITT_H="-I$with_pokitt/include"
+  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+
+  POKITT_LIB_FLAG="-lpokitt"
+
+  HAVE_POKITT="yes"
+fi
+AC_SUBST(HAVE_POKITT)
+AC_SUBST(DEF_POKITT)
+AC_SUBST(INC_POKITT_H)
+AC_SUBST(POKITT_LIB_FLAG)
+AC_SUBST(POKITT_LIB_DIR_FLAG)
+
 ##  --  search for Exprlib Library ------------------------
 
 if test "$with_exprlib"; then
@@ -4364,7 +4448,7 @@ else
      # We should just be able to link vs. libHYPRE.so...
      #   Also, libHYPRE has some C++ stuff in it, so we need to be in C++ mode...
      AC_LANG([C++])
-     SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+            SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                         HYPRE HYPRE_utilities HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_parcsr_ls HYPRE_krylov HYPRE_parcsr_mv,
                         $_sci_lib,
                         $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
@@ -4372,12 +4456,13 @@ else
                         optional)
 
      if test "$HAVE_HYPRE" != "yes"; then
-        SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
+           SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
                            HYPRE,
                            $_sci_lib,
                            $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $MALLOC_TRACE_LIB_DIR_FLAG $MALLOC_TRACE_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG $M_LIB_DIR_FLAG $M_LIB_FLAG $DL_LIB_FLAG $THREAD_LIB_FLAG,
                            ,
                            optional)
+
      fi
      AC_LANG([C])
 

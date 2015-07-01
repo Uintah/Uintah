@@ -44,8 +44,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
-
  class Patch;
  class DataWarehouse;
  class VarLabel;
@@ -53,6 +51,7 @@ using namespace SCIRun;
  class ConstitutiveModel;
  class MPMLabel;
  class ParticleCreator;
+ class ScalarDiffusionModel;
 
       
 /**************************************
@@ -106,6 +105,8 @@ WARNING
    // Return correct constitutive model pointer for this material
    ConstitutiveModel* getConstitutiveModel() const;
 
+   ScalarDiffusionModel* getScalarDiffusionModel() const;
+
 
    particleIndex createParticles(
                         CCVariable<short int>& cellNAPID,
@@ -154,6 +155,7 @@ WARNING
 
    MPMLabel* d_lb;
    ConstitutiveModel* d_cm;
+   ScalarDiffusionModel* d_sdm;
    ParticleCreator* d_particle_creator;
 
    double d_density;
@@ -183,7 +185,7 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps, MPMFlags* flags);
+   void standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMFlags* flags);
  };
 
 } // End namespace Uintah

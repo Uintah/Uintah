@@ -25,6 +25,7 @@
 #include <CCA/Components/Examples/AMRWave.h>
 #include <CCA/Components/Examples/Benchmark.h>
 #include <CCA/Components/Examples/Burger.h>
+#include <CCA/Components/Examples/DOSweep.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/Poisson1.h>
@@ -169,6 +170,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
 #endif
   if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
+  }
+
+  if (sim_comp == "dosweep" || sim_comp == "DOSWEEP") {
+    return scinew DOSweep(world);
   } 
   if (sim_comp == "wave" || sim_comp == "WAVE") {
     if (doAMR)

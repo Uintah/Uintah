@@ -76,7 +76,7 @@ class RadiationSource
  : public Expr::Expression<SVolField>
 {
 
-  DECLARE_FIELDS(SVolField, divQ_, absCoef_, temperature_, cellType_);
+  DECLARE_FIELDS(SVolField, divQ_, absCoef_, temperature_, cellType_)
   
   const Uintah::VarLabel *temperatureLabel_, *absorptionLabel_, *celltypeLabel_, *divqLabel_, *VRFluxLabel_,
   *boundFluxLabel_, *radiationVolqLabel_;
@@ -90,6 +90,7 @@ class RadiationSource
                    const Expr::Tag& temperatureTag,
                    const Expr::Tag& absorptionTag,
                    const Expr::Tag& celltypeTag,
+                   Uintah::Ray* rmcrt,
                    const Uintah::ProblemSpecP& radiationSpec,
                    Uintah::SimulationStateP sharedState,
                    Uintah::GridP grid);
@@ -98,6 +99,7 @@ public:
   class Builder : public Expr::ExpressionBuilder
   {
     const Expr::Tag temperatureTag_, absorptionTag_, celltypeTag_;
+    Uintah::Ray* rmcrt_;
     Uintah::ProblemSpecP     radiationSpec_;
     Uintah::SimulationStateP sharedState_;
     Uintah::GridP            grid_;
@@ -107,6 +109,7 @@ public:
              const Expr::Tag& temperatureTag,
              const Expr::Tag& absorptionTag,
              const Expr::Tag& celltypeTag,
+             Uintah::Ray* rmcrt,
              Uintah::ProblemSpecP& radiationSpec,
              Uintah::SimulationStateP& sharedState,
              Uintah::GridP& grid);

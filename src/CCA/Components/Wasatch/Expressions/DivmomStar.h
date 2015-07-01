@@ -49,10 +49,10 @@ class DivmomStar : public Expr::Expression<SVolField>
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, YVolField, SVolField >::type GradYT;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, ZVolField, SVolField >::type GradZT;
   
-  DECLARE_FIELD(XVolField, uStar_);
-  DECLARE_FIELD(YVolField, vStar_);
-  DECLARE_FIELD(ZVolField, wStar_);
-  DECLARE_FIELD(SVolField, densStar_);
+  DECLARE_FIELD(XVolField, uStar_)
+  DECLARE_FIELD(YVolField, vStar_)
+  DECLARE_FIELD(ZVolField, wStar_)
+  DECLARE_FIELD(SVolField, densStar_)
   
   const bool doX_, doY_, doZ_, is3d_;
   
