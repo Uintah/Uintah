@@ -498,10 +498,6 @@ DataArchive::query(       Variable     & var,
   string    data_filename;
   int       patchid;
 
-  if( Parallel::getMPIRank() == 1000 ) {
-    cout << "patch is " << patch << "\n";
-  }
-
   if (patch) {
     // we need to use the real_patch (in case of periodic boundaries) to get the data, but we need the
     // passed in patch to allocate the patch to the proper virtual region... (see var.allocate below)
@@ -580,12 +576,6 @@ DataArchive::query(       Variable     & var,
   }
   InputContext ic( fd, data_filename.c_str(), dfi->start );
   double       starttime = Time::currentSeconds();
-
-  if( Parallel::getMPIRank() == 1000 ) {
-    if( patch ) { cout << "reading in data for patch: " << patch->getID() << "\n"; }
-    else { cout << "no patch at this point\n"; }
-    cout << "data file is : " << data_filename << "\n";
-  }
 
   var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
 
