@@ -36,7 +36,7 @@ C
 
 	integer ITEMP
 
-        SAVE
+c        SAVE
 
 	DATA TEMP / 500.0d0, 1000.0d0, 1500.0d0, 2000.0d0, 5000.0d0 /
 	DATA AA /-1.03668d0,-1.26274d0,-1.3823d0,-1.5577d0,-2.7500d0 /

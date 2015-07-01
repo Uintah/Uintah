@@ -21,7 +21,7 @@
     <!-- Set the initial condition for cell centered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-scalar" state="STATE_NONE"/>
+      <NameTag name="phi-scalar"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     
@@ -252,17 +252,17 @@
       <SolutionVariable>phi-scalar</SolutionVariable>
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Z" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="w" state="STATE_NONE"/>
+          <NameTag name="w"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <DiffusiveFlux direction="X" coefficient="0.0001"/>
@@ -272,25 +272,25 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="w" state="STATE_NONE"/>
+       <NameTag name="w"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.000030</Constant>
     </BasicExpression>
 
@@ -305,7 +305,7 @@
       <Z-Velocity>w</Z-Velocity>
       <Z-Momentum>z-mom</Z-Momentum>      
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>

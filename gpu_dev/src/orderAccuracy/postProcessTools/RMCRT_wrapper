@@ -4,8 +4,16 @@
 # This wrapper scripts just calls the RMCRT 
 # 3 times for each direction
 #
-#  Usage:  RMCRT_wrapper  -bm 1 -o out.8.cmp -uda RMCRT_test_1L_8.uda
+#  Usage:  RMCRT_wrapper  -bm 1 -o out.8.cmp -L 0 -plot false -uda RMCRT_test_1L_8.uda
 #__________________________________
+
+set rootPath = `dirname $0`
+
+if ( -l $0 ) then
+  set rootPath  = `readlink $0 | xargs dirname`  # if you're using a symbolic link to script
+endif
+
+set path = ($rootPath $path)
 
 # defaults
 set plot = false

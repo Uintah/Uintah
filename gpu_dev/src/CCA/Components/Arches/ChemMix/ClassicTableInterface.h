@@ -123,25 +123,24 @@ public:
 
   public:
 
-    Interp_class() : d_interpLock("ClassicTable Interp_class lock"){};
-    virtual ~Interp_class() {};
+    Interp_class( const std::vector<std::vector<double> > & table, const std::vector<int>& IndepVarNo, 
+                  const std::vector<std::vector<double> > & indepin, const std::vector<std::vector<double> >& ind_1in ) 
+      : table2(table), d_allIndepVarNo(IndepVarNo), indep(indepin), ind_1(ind_1in) 
+//       ,d_interpLock("ClassicTable Interp_class lock")
+    {}
 
-    virtual inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {return std::vector<double>(1,0.0);};
+    virtual ~Interp_class() {}
+
+    virtual inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {return std::vector<double>(1,0.0);}
 
   protected:
 
-    std::vector<int>  d_allIndepVarNo;
-    std::vector<double> table_vals;
-    std::vector<double> table_vals2;
-    std::vector<double> table_vals3;
-    std::vector<double> dist_vals;
-    std::vector<std::vector<double> >  table2;
-    std::vector< std::vector <double> >  indep;
-    std::vector< std::vector <double > >  ind_1;
-    std::vector<int> lo_index;
-    std::vector<int> hi_index;
+    const std::vector<std::vector<double> >& table2;
+    const std::vector<int>&  d_allIndepVarNo;
+    const std::vector< std::vector <double> >&  indep;
+    const std::vector< std::vector <double > >&  ind_1;
 
-    SCIRun::Mutex d_interpLock; // For synchronization in find_val() functions
+    //SCIRun::Mutex d_interpLock; // For synchronization in find_val() functions
 
   };
 
@@ -149,22 +148,18 @@ public:
     
   public:
 
-    Interp1(std::vector<int> d_allIndepVarNum, std::vector<std::vector<double> > table, 
-            std::vector< std::vector <double> > i1) {
-
-          d_allIndepVarNo = d_allIndepVarNum;
-          ind_1 = i1;
-          table2 = table;
-
-    };
+    Interp1( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table, 
+             const std::vector< std::vector <double> >& i1) 
+      : Interp_class(table, indepVarNo, i1, i1 ) {
+    }
 
     ~Interp1() {};
     
-    inline std::vector<double> find_val( std::vector <double> iv, std::vector<int> var_index) {
+    inline std::vector<double> find_val( const std::vector <double>& iv, const std::vector<int>& var_index) {
       
-      table_vals = std::vector<double>(2);
-      lo_index = std::vector<int>(1);
-      hi_index = std::vector<int>(1);
+      std::vector<double> table_vals = std::vector<double>(2);
+      std::vector<int> lo_index = std::vector<int>(1);
+      std::vector<int> hi_index = std::vector<int>(1);
       int i1dep_ind = 0;
       int mid = 0;
       int lo_ind = 0;
@@ -172,7 +167,7 @@ public:
       double var_val = 0.0;
       std::vector<double> var_values (var_index.size(), 0.0 );
 
-      d_interpLock.lock();
+      //d_interpLock.lock();
       {
 
         int hi_ind = d_allIndepVarNo[0] - 1;
@@ -214,7 +209,7 @@ public:
         }
         
       }
-      d_interpLock.unlock();
+      //d_interpLock.unlock();
 
       return var_values;
 
@@ -225,23 +220,17 @@ public:
   
   public:
 
-    Interp2(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
+    Interp2( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> > & table,
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1) 
+      : Interp_class( table, indepVarNo, indep_headers, i1 ){}
 
-      d_allIndepVarNo = d_allIndepVarNum;
-      indep = indep_headers;
-      ind_1 = i1;
-      table2 = table;
-
-    };
-
-    ~Interp2() {};
+    ~Interp2() {}
     
-    inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {
+    inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
       
-      table_vals = std::vector<double>(4);
-      lo_index = std::vector<int>(2);
-      hi_index = std::vector<int>(2);
+      std::vector<double> table_vals = std::vector<double>(4);
+      std::vector<int> lo_index = std::vector<int>(2);
+      std::vector<int> hi_index = std::vector<int>(2);
       int mid = 0;
       int lo_ind;
       int hi_ind;
@@ -249,7 +238,7 @@ public:
       double var_val = 0.0;
       std::vector<double> var_values (var_index.size(), 0.0 );
 
-      d_interpLock.lock();
+      //d_interpLock.lock();
       {
 
         //binary search loop 2-> N
@@ -334,7 +323,7 @@ public:
         }
         
       }
-      d_interpLock.unlock();
+      //d_interpLock.unlock();
 
       return var_values;
       
@@ -345,23 +334,18 @@ public:
     
   public:
 
-    Interp3(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
+    Interp3( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> > & table,
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1) 
+      : Interp_class( table, indepVarNo, indep_headers, i1 ) {}
 
-      d_allIndepVarNo = d_allIndepVarNum;
-      indep = indep_headers;
-      ind_1 = i1;
-      table2 = table;
-    };
-
-    ~Interp3() {};
+    ~Interp3() {}
     
-    inline std::vector<double> find_val( std::vector<double> iv, std::vector<int> var_index) {
+    inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
 
-      table_vals = std::vector<double>(8,0.0);
-      dist_vals = std::vector<double>(4,0.0); // make sure the default is zero
-      lo_index = std::vector<int>(4,0);
-      hi_index = std::vector<int>(4,0);
+      std::vector<double> table_vals = std::vector<double>(8,0.0);
+      std::vector<double> dist_vals = std::vector<double>(4,0.0); // make sure the default is zero
+      std::vector<int> lo_index = std::vector<int>(4,0);
+      std::vector<int> hi_index = std::vector<int>(4,0);
       int mid = 0;
       double var_val = 0.0;
       int lo_ind;
@@ -369,7 +353,7 @@ public:
       double iv_val;
       std::vector<double> var_values (var_index.size(), 0.0 );
 
-      d_interpLock.lock();
+      //d_interpLock.lock();
       {
 
         // binary search loop 2-> N
@@ -506,7 +490,7 @@ public:
         }
         
       }
-      d_interpLock.unlock();
+      //d_interpLock.unlock();
       return var_values;
 
     };
@@ -516,32 +500,26 @@ public:
 
   public:
 
-    Interp4(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1) {
+    Interp4( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1) 
+      : Interp_class(table, indepVarNo, indep_headers, i1 ){}
 
-      d_allIndepVarNo = d_allIndepVarNum;
-      indep = indep_headers;
-      ind_1 = i1;
-      table2 = table;
-
-    };
-
-    ~Interp4(){};
+    ~Interp4(){}
     
-    inline std::vector<double> find_val(std::vector<double> iv, std::vector<int> var_index) {
+    inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
 
       int mid = 0;
       double var_value = 0.0;
       int lo_ind;
       int hi_ind;
       double iv_val;
-      table_vals = std::vector<double>(16);
-      lo_index = std::vector<int>(4);
-      hi_index = std::vector<int>(4);
+      std::vector<double> table_vals = std::vector<double>(16);
+      std::vector<int> lo_index = std::vector<int>(4);
+      std::vector<int> hi_index = std::vector<int>(4);
       std::vector<double> var_values (var_index.size(), 0.0 );
-      
 
-      d_interpLock.lock();
+      //d_interpLock.lock();
+
       {
 
         // binary search loop 2-> N
@@ -612,7 +590,8 @@ public:
         }
 
         for (unsigned int ii = 0; ii < var_index.size(); ii++) {
-        // popvals
+
+          // popvals
           table_vals[0] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + lo_index[0]];
           table_vals[1] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * lo_index[1] + hi_index[0]];
           table_vals[2] = table2[var_index[ii]][d_allIndepVarNo[2]*d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[3]+d_allIndepVarNo[1]*d_allIndepVarNo[0]*lo_index[2] + d_allIndepVarNo[0] * hi_index[1] + lo_index[0]];
@@ -644,7 +623,7 @@ public:
         }
 
       }
-      d_interpLock.unlock();
+      //d_interpLock.unlock();
 
       return var_values;
       
@@ -655,15 +634,16 @@ public:
 
     public:
 
-    InterpN(std::vector<int> d_allIndepVarNum,std::vector<std::vector<double> > table,
-            std::vector< std::vector <double> > indep_headers,std::vector< std::vector <double > > i1, int d_indepvarscount) {
+    InterpN( const std::vector<int>& indepVarNo, const std::vector<std::vector<double> >& table,
+             const std::vector< std::vector <double> >& indep_headers, const std::vector< std::vector <double > >& i1, int d_indepvarscount) 
+      : Interp_class( table, indepVarNo, indep_headers, i1 ){
 
       multiples = std::vector<int>(d_indepvarscount);
       multtemp = 0;
       for (int i = 0; i < d_indepvarscount; i++) {
         multtemp = 1;
         for (int j = 0; j<i; j++) {
-          multtemp = multtemp * d_allIndepVarNum[j];
+          multtemp = multtemp * indepVarNo[j];
         }
         multiples[i] = multtemp;
       }
@@ -690,29 +670,26 @@ public:
         }
       }
       
-      d_allIndepVarNo = d_allIndepVarNum;
-      indep = indep_headers;
-      ind_1 = i1;
-      table2 = table;
       ivcount = d_indepvarscount;
       vals_size = npts;
-    };
+    }
 
-    ~InterpN(){};
+    ~InterpN(){}
     
-    inline std::vector<double> find_val(std::vector<double> iv, std::vector<int> var_index) {
+    inline std::vector<double> find_val( const std::vector<double>& iv, const std::vector<int>& var_index) {
 
       int mid = 0;
       double var_value = 0.0;
       int lo_ind;
       int hi_ind;
       double iv_val;
-      table_vals = std::vector<double>(vals_size);
-      lo_index = std::vector<int>(ivcount);
-      hi_index = std::vector<int>(ivcount);
+      std::vector<double> table_vals = std::vector<double>(vals_size);
+      std::vector<int> lo_index = std::vector<int>(ivcount);
+      std::vector<int> hi_index = std::vector<int>(ivcount);
       std::vector<double> var_values (var_index.size(), 0.0 );
 
-      d_interpLock.lock();
+      //d_interpLock.lock();
+
       {
 
         // binary search loop 2-> N
@@ -814,7 +791,7 @@ public:
 
         }
       }
-      d_interpLock.unlock();
+      //d_interpLock.unlock();
 
       return var_values;
       

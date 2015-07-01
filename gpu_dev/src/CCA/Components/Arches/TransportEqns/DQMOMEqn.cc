@@ -2,6 +2,8 @@
 #include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarTypes.h>
@@ -63,7 +65,6 @@ EqnBase( fieldLabels, timeIntegrator, eqnName ), d_quadNode(quadNode)
   varname = d_ic_name+"_"+node; 
   d_icLabel = VarLabel::create(varname, 
             CCVariable<double>::getTypeDescription());
-
 }
 
 DQMOMEqn::~DQMOMEqn()
@@ -126,17 +127,21 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   // Models (source terms):
   for (ProblemSpecP m_db = db->findBlock("model"); m_db !=0; m_db = m_db->findNextBlock("model")){
     string model_name; 
+    string model_type; 
     m_db->getAttribute("label", model_name); 
 
     // now tag on the internal coordinate
-    string node;  
-    std::stringstream out; 
-    out << d_quadNode; 
-    node = out.str(); 
-    model_name += "_qn";
-    model_name += node; 
+    std::string model_qn_name = ParticleHelper::append_qn_env(model_name, d_quadNode); 
+
     // put it in the list
-    d_models.push_back(model_name);
+    d_models.push_back(model_qn_name);
+
+    map<string,string>::iterator icheck = d_type_to_model.find(model_type); 
+    if ( icheck == d_type_to_model.end() ){ 
+      std::string model_type = ParticleHelper::get_model_type( m_db, model_name, ParticleHelper::DQMOM ); 
+      d_type_to_model[model_type] = model_name; 
+    }
+
   }  
 
   // Clipping:
@@ -193,7 +198,7 @@ DQMOMEqn::problemSetup( const ProblemSpecP& inputdb )
   // Scaling information:
   db->require( "scaling_const", d_scalingConstant ); 
 
-  int Nqn = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
+  unsigned int Nqn = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
 
   if ( Nqn != d_scalingConstant.size() ){ 
     throw InvalidValue("Error: The number of scaling constants isn't consistent with the number of environments for: "+d_ic_name, __FILE__, __LINE__);
@@ -435,9 +440,6 @@ void DQMOMEqn::initializeVariables( const ProcessorGroup* pc,
     Fconv.initialize(0.0);
     RHS.initialize(0.0);
 
-    curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-    curr_ssp_time = curr_time; 
-
   }
 }
 //---------------------------------------------------------------------------
@@ -574,7 +576,6 @@ DQMOMEqn::buildTransportEqn( const ProcessorGroup* pc,
     if (d_doConv){
 
       d_disc->computeConv( patch, Fconv, phi, partVel, areaFraction, d_convScheme ); 
-
       // look for and add contribution from intrusions.
       if ( _using_new_intrusion ) { 
         _intrusions->addScalarRHS( patch, Dx, d_eqnName, RHS ); 
@@ -753,20 +754,17 @@ DQMOMEqn::solveTransportEqn( const ProcessorGroup* pc,
     old_dw->get(rk1_phi, d_transportVarLabel, matlIndex, patch, gn, 0);
     old_dw->get(vol_fraction, d_fieldLabels->d_volFractionLabel, matlIndex, patch, gn, 0 ); 
 
-    d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt, curr_ssp_time, d_eqnName );
-
-    double factor = d_timeIntegrator->time_factor[timeSubStep]; 
-    curr_ssp_time = curr_time + factor * dt; 
+    d_timeIntegrator->singlePatchFEUpdate( patch, phi, RHS, dt, d_eqnName );
 
     if(d_weight){
         // weights being clipped inside this function call
-        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, 
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, 
             clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, vol_fraction );
     }else{
         constCCVariable<double> w;
         new_dw->get(w, d_weightLabel, matlIndex, patch, gn, 0);
         // weighted abscissa being clipped inside this function call 
-        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, curr_ssp_time, 
+        d_timeIntegrator->timeAvePhi( patch, phi, rk1_phi, timeSubStep, 
             clip.tol, clip.do_low, clip.low, clip.do_high, clip.high, w, vol_fraction); 
     }
 

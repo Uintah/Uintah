@@ -921,7 +921,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-          } else if( isnan( Xlong[z] ) ) {
+          } else if( std::isnan( Xlong[z] ) ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
@@ -943,7 +943,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if(  fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-          } else if( isnan( Xlong[z] ) ){
+          } else if( std::isnan( Xlong[z] ) ){
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
@@ -1279,7 +1279,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-          } else if( isnan( (*XX)[z] ) ) {
+          } else if( std::isnan( (*XX)[z] ) ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
@@ -1301,7 +1301,7 @@ DQMOM::solveLinearSystem( const ProcessorGroup* pc,
             throw InvalidValue(err_msg.str(),__FILE__,__LINE__);
           } else if( fabs(normResNormalizedX[c]) > d_solver_tolerance ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
-          } else if( isnan( (*XX)[z] ) ){
+          } else if( std::isnan( (*XX)[z] ) ){
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;
           } else if( b_calcConditionNumber == true && conditionNumber[c] > d_maxConditionNumber ) {
             (*(Source_weights_weightedAbscissas[z]))[c] = 0.0;

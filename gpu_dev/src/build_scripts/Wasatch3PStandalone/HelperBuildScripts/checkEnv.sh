@@ -3,10 +3,19 @@
 host=`hostname`
 
 echo
+
+which cmake 2> /dev/null
+if test "$?" != 0; then
+   echo "Cmake not found..."
+   echo
+   exit
+fi
+
+echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
    echo "  At Utah: Ember, Ash, or Baja"
-   echo "  At LLNL: Vulcan or Cab"
+   echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
    echo
    exit
@@ -110,6 +119,23 @@ if test "$MACHINE" = "Mapache"; then
   INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
   BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
 else
+if test "$MACHINE" = "Mustang"; then
+  if [[ $host != mu-fe* ]]; then
+     echo "Error: hostname did not return mu-fe*... Goodbye."
+     exit
+  fi
+  COMP=gcc4.7.2
+  echo
+  echo "Have you run the appropriate 'module load' commands? Eg:"
+  echo "   * module load gcc"
+  echo "   * module load cmake/3.0.0"
+  echo
+  sleep 1
+
+  NAME2="Mustang"
+  INSTALL_BASE=/usr/projects/uintah/Thirdparty-Install/$NAME2/Wasatch3P
+  BOOST_LOC=/usr/projects/uintah/Thirdparty-Install/$NAME2/Boost/v1_56_0-$COMP
+else
 if test "$MACHINE" = "Wolf"; then
   if [[ $host != wf-fe* ]]; then
      echo "Error: hostname did not return wf-fe*... Goodbye."
@@ -150,10 +176,39 @@ if test "$MACHINE" = "Vulcan"; then
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/vulcan/Wasatch3P
   BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/vulcan/Boost/v1_55_0
 else
+if test "$MACHINE" = "Surface"; then
+  if [[ $host != surface* ]]; then
+     echo "Error: hostname did not return surface*... Goodbye."
+     exit
+  fi
+  CC=`which mpigcc`
+  CXX=`which mpig++`
+  COMP=gcc-4.4.7
+
+  NAME2="Surface"
+  INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/surface/Wasatch3P
+  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/surface/Boost/v1_55_0
+else
+if test "$MACHINE" = "Syrah"; then
+  if [[ $host != syrah* ]]; then
+     echo "Error: hostname did not return syrah*... Goodbye."
+     exit
+  fi
+  CC=`which mpigcc`
+  CXX=`which mpig++`
+  COMP=gcc-4.4.7
+
+  NAME2="Syrah"
+  INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/syrah/Wasatch3P
+  BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/syrah/Boost/v1_55_0/mpigcc4.7.7-mvapich2.gnu.1.7
+else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
+fi
+fi
 fi
 fi
 fi

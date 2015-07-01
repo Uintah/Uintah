@@ -7,7 +7,7 @@
     -->
     <NameTag  spec="OPTIONAL NO_DATA"
               attribute1="name REQUIRED STRING"
-              attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'" />
+              attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'" />
 
 		<!-- ================================================================================== -->            
 		<!-- Specification of the diffusive flux -->
@@ -661,7 +661,7 @@
                         
     <TaylorVortexMMS      spec="MULTIPLE NO_DATA"
                           attribute1="type REQUIRED STRING 'SVOL,XVOL,YVOL,ZVOL"
-                          children1="ONE_OF(CHILD VelocityX,VelocityY,GradPX,GradPY,TGVel3D)" >
+                          children1="ONE_OF(CHILD VelocityX,VelocityY,GradP,TGVel3D)" >
       <TaskList           spec="REQUIRED STRING 'initialization,timestep_size,advance_solution'" />
       <NameTag            spec="REQUIRED" />
       
@@ -707,28 +707,13 @@
       </VelocityY>
       
       <!-- Taylor Vortex Pressure field gradient function in x direction with amplitude and kinematic viscosity -->
-      <GradPX             spec="OPTIONAL NO_DATA"
+      <GradP             spec="OPTIONAL NO_DATA"
                           attribute1="amplitude REQUIRED DOUBLE"
                           attribute2="viscosity REQUIRED DOUBLE">
-        <XCoordinate      spec="REQUIRED NO_DATA">
+        <Coordinate      spec="REQUIRED NO_DATA">
           <NameTag        spec="REQUIRED"/>
-        </XCoordinate>
-        <YCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </YCoordinate>
-      </GradPX>
-
-      <!-- Taylor Vortex Pressure field gradient function in y direction with amplitude and kinematic viscosity -->
-      <GradPY             spec="OPTIONAL NO_DATA"
-                          attribute1="amplitude REQUIRED DOUBLE"
-                          attribute2="viscosity REQUIRED DOUBLE">
-        <XCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </XCoordinate>
-        <YCoordinate      spec="REQUIRED NO_DATA">
-          <NameTag        spec="REQUIRED"/>
-        </YCoordinate>
-      </GradPY>
+        </Coordinate>
+      </GradP>
 
     </TaylorVortexMMS>
     
@@ -749,8 +734,9 @@
     <!-- CAUTION! FOR DEVELOPER USE ONLY -->
     <!-- =========================================================================== -->
     <VariableDensity spec="OPTIONAL NO_DATA" 
-                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, DYNAMIC'"
+                     attribute1="model REQUIRED STRING 'CONSTANT, IMPULSE, SMOOTHIMPULSE, DYNAMIC'"
                      attribute2="coefficient REQUIRED DOUBLE">
+      <ImpulseWidth spec="OPTIONAL DOUBLE" need_applies_to="model SMOOTHIMPULSE"/>
       <UseOnePredictor spec="OPTIONAL NO_DATA"/>
     </VariableDensity>
     
@@ -863,7 +849,8 @@
         <Z-Velocity         spec="OPTIONAL NO_DATA"> 
             <NameTag        spec="REQUIRED"/>
         </Z-Velocity>        
-        <DoSourceTerm       spec="REQUIRED BOOLEAN"/>
+        <DoSourceTerm       spec="REQUIRED BOOLEAN"
+                            attribute1="kind REQUIRED STRING 'COUPLED, UNCOUPLED'"/>
     </ScalabilityTest>
 
     <!-- ======================================================================== -->
@@ -909,24 +896,24 @@
 			<MaximumParticles spec="OPTIONAL INTEGER"/>
 			<ParticleDensity 	spec="OPTIONAL NO_DATA"
 												attribute1="name REQUIRED STRING"
-												attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+												attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 
 			<!-- this solves d size/dt = rhs -->
 			<ParticleSize spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
 				<SourceTerm spec="OPTIONAL NO_DATA"
 							attribute1="name REQUIRED STRING"
-							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+							attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
 			</ParticleSize>
 
 			<!-- this solves dm/dt = rhs -->
 			<ParticleMass spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'">
 				<SourceTerm spec="OPTIONAL NO_DATA"
 							attribute1="name REQUIRED STRING"
-							attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
+							attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>										
 			</ParticleMass>										
 
 			<!-- this solves dx/dt = u -->			
@@ -937,13 +924,13 @@
 				<Velocity	spec = "REQUIRED NO_DATA">
 						<XVel spec="OPTIONAL NO_DATA"
                   attribute1="name REQUIRED STRING"
-                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+                  attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 						<YVel spec="OPTIONAL NO_DATA"
                   attribute1="name REQUIRED STRING"
-                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+                  attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 						<ZVel spec="OPTIONAL NO_DATA"
                   attribute1="name REQUIRED STRING"
-                  attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+                  attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
 				</Velocity>
 			</ParticlePosition>
 
@@ -961,20 +948,20 @@
 				<GasProperties spec="REQUIRED NO_DATA">
 					<GasDensity   spec="OPTIONAL NO_DATA"
     										attribute1="name REQUIRED STRING"
-		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>									
+		    								attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>									
 					<GasViscosity spec="OPTIONAL NO_DATA"
     										attribute1="name REQUIRED STRING"
-		    								attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+		    								attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 					<GasVelocity	spec = "REQUIRED NO_DATA">
 							<XVel spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 							<YVel spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>
 							<ZVel spec="OPTIONAL NO_DATA"
 										attribute1="name REQUIRED STRING"
-										attribute2="state REQUIRED STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
+										attribute2="state OPTIONAL STRING 'STATE_NONE,STATE_NP1,STATE_N,CARRY_FORWARD,STATE_DYNAMIC'"/>                  
 					</GasVelocity>												
 				</GasProperties>				
 			</ParticleMomentum>												
@@ -1020,6 +1007,8 @@
                                     attribute1="value    REQUIRED DOUBLE">
              <ReferenceCell         spec="REQUIRED VECTOR" />                       
           </ReferencePressure>
+          <!-- solvability will ALWAYS be enforced on periodic problems -->
+          <EnforceSolvability spec="OPTIONAL NO_DATA"/>          
           <!-- Enforce the use of the full 3D laplacian in the construction of the pressure coefficient matrix. This affects all 2D momentum transport cases. 3D Laplacian is turned on by default for all cases. To turned it off set the following to false. For 3D cases, the code will always use a 3D Laplacian regardless of the value set here -->
           <Use3DLaplacian     spec="OPTIONAL BOOLEAN"/>          
           <Parameters         spec="OPTIONAL NO_DATA">      

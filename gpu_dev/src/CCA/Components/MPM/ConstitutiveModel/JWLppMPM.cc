@@ -822,7 +822,7 @@ JWLppMPM::computeWithNewtonIterations(const double& J,
            << Jinv(1,0) << "," << Jinv(1,1) << "]]" 
            << " Finc = [" << Finc[0] << "," << Finc[1] << "]" << endl;
   }
-  if (isnan(p_new) || isnan(f_new)) {
+  if (std::isnan(p_new) || std::isnan(f_new)) {
     cerr << "iter = " << iter << " norm = " << norm << " tol = " << d_newtonIterTol
            << " p_new = " << p_new << " f_new = " << f_new 
            << " p_old = " << p_old << " f_old = " << f_old << " J = " << J << endl;

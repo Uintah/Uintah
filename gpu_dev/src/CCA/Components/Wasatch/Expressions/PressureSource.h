@@ -61,11 +61,11 @@ class PressureSource : public Expr::Expression<SVolField>
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientY, SVolField, SVolField >::type GradYST;
   typedef SpatialOps::OperatorTypeBuilder< SpatialOps::GradientZ, SVolField, SVolField >::type GradZST;
 
-  DECLARE_FIELDS(XVolField, xMom_, xMomOld_, uStar_, xVel_);
-  DECLARE_FIELDS(YVolField, yMom_, yMomOld_, vStar_, yVel_);
-  DECLARE_FIELDS(ZVolField, zMom_, zMomOld_, wStar_, zVel_);
-  DECLARE_FIELDS(SVolField, dil_, dens_, densStar_, dens2Star_, divmomstar_);
-  DECLARE_FIELDS(TimeField, dt_, rkStage_);
+  DECLARE_FIELDS(XVolField, xMom_, xMomOld_, uStar_, xVel_)
+  DECLARE_FIELDS(YVolField, yMom_, yMomOld_, vStar_, yVel_)
+  DECLARE_FIELDS(ZVolField, zMom_, zMomOld_, wStar_, zVel_)
+  DECLARE_FIELDS(SVolField, dil_, dens_, densStar_, dens2Star_, divmomstar_)
+  DECLARE_FIELDS(TimeField, dt_, rkStage_)
   
   const bool isConstDensity_, doX_, doY_, doZ_, is3d_, useOnePredictor_;
   
@@ -73,6 +73,7 @@ class PressureSource : public Expr::Expression<SVolField>
 
   const double a0_;
   const Wasatch::VarDenParameters::VariableDensityModels model_;
+  const Wasatch::VarDenParameters varDenParams_;
   
   const GradXT* gradXOp_;
   const GradYT* gradYOp_;

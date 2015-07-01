@@ -27,7 +27,8 @@ public:
   void add(char const* label,
       const Patch* sourcePatchPointer,
       const Patch* destPatchPointer,
-      int materialIndex,
+      int matlIndx,
+      int levelIndx,
       IntVector low,
       IntVector high,
       int xstride,
@@ -43,7 +44,9 @@ public:
 
   char const * getLabelName(int index);
 
-  int getMaterialIndex(int index);
+  int getMatlIndx(int index);
+
+  int getLevelIndx(int index);
 
   const Patch* getSourcePatchPointer(int index);
 
@@ -73,7 +76,8 @@ public:
   DeviceGhostCellsInfo(char const* label,
       const Patch* sourcePatchPointer,
       const Patch* destPatchPointer,
-      int materialIndex,
+      int matlIndx,
+      int levelIndx,
       IntVector low,
       IntVector high,
       int xstride,
@@ -87,7 +91,8 @@ public:
   char const* label;
   const Patch* sourcePatchPointer;
   const Patch* destPatchPointer;
-  int materialIndex;
+  int matlIndx;
+  int levelIndx;
   IntVector low;
   IntVector high;
   int xstride;

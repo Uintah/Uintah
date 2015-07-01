@@ -56,12 +56,12 @@ class VelEst
   const DivYT* divYOp_;
   const DivZT* divZOp_;
   
-  DECLARE_FIELDS(SVolField, density_, pressure_, visc_);
-  DECLARE_FIELDS(FieldT, vel_, convTerm_);
-  DECLARE_FIELD(XFace, tauxi_);
-  DECLARE_FIELD(YFace, tauyi_);
-  DECLARE_FIELD(ZFace, tauzi_);
-  DECLARE_FIELD(TimeField, dt_);
+  DECLARE_FIELDS(SVolField, density_, pressure_, visc_)
+  DECLARE_FIELDS(FieldT, vel_, convTerm_)
+  DECLARE_FIELD(XFace, tauxi_)
+  DECLARE_FIELD(YFace, tauyi_)
+  DECLARE_FIELD(ZFace, tauzi_)
+  DECLARE_FIELD(TimeField, dt_)
   
   const bool doX_, doY_, doZ_, is3d_;
   

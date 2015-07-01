@@ -79,8 +79,8 @@ private:
              const double nu );
   const double a_, nu_;
   
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
@@ -135,15 +135,15 @@ private:
              const double A,
              const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_, y_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
 
 /**
- *  \class GradPX
- *  \author Amir Biglari
+ *  \class GradP
+ *  \author Amir Biglari, Tony Saad
  *  \date October, 2010
  *  \brief Implements the taylor vortex pressure field gradient in x direction
  *
@@ -161,7 +161,7 @@ private:
  *   - \f$\nu\f$ is kinematic viscosity
  */
 template< typename FieldT >
-class GradPX : public Expr::Expression<FieldT>
+class GradP : public Expr::Expression<FieldT>
 {
   typedef typename SpatialOps::SingleValueField TimeField;
 public:
@@ -173,7 +173,6 @@ public:
   {
     Builder( const Expr::Tag& result,///< dp/dx tag
              const Expr::Tag& xTag,  ///< x-coordinate
-             const Expr::Tag& yTag,  ///< y-coordinate
              const Expr::Tag& tTag,  ///< time
              const double A=1.0,     ///< Amplitude of the function
              const double nu=0.1     ///< Kinematic viscosity of the fluid
@@ -182,82 +181,23 @@ public:
     Expr::ExpressionBase* build() const;
   private:
     const double A_, nu_;
-    const Expr::Tag xt_, yt_, tt_;
+    const Expr::Tag xt_, tt_;
   };
 
   void evaluate();
 
 private:
 
-  GradPX( const Expr::Tag& xTag,
-          const Expr::Tag& yTag,
+  GradP( const Expr::Tag& xTag,
           const Expr::Tag& tTag,
           const double A,
           const double nu );
   const double a_, nu_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
+  DECLARE_FIELDS(FieldT, x_)
+  DECLARE_FIELD(TimeField, t_)
 };
 
 //====================================================================
-
-/**
- *  \class GradPY
- *  \author Amir Biglari
- *  \date October, 2010
- *  \brief Implements the taylor vortex pressure field gradient in y direction
- *
- *  The taylor vortex pressure field is given as
- *  \f[
- *    p(x,y,t)= \frac{-A^{2}}{4}\left[\cos(2(x-t))+\cos(2(y-t))\right]\exp\left(-4\nu t\right)
- *  \f]
- *  So, the gradient in y direction will be
- *  \f[
- *    \frac{\partial p}{\partial x}(x,y,t)= \frac{A^{2}}{2}\sin(2(y-t))\exp\left(-4\nu t\right)
- *  \f]
- *  where
- *   - \f$A\f$ is the amplitude of the function
- *   - \f$t\f$ is the time variable
- *   - \f$\nu\f$ is kinematic viscosity
- */
-template< typename FieldT >
-class GradPY : public Expr::Expression<FieldT>
-{
-  typedef typename SpatialOps::SingleValueField TimeField;
-public:
-
-  /**
-   *  \brief Builds an Expression for Taylor vortex pressure gradient in y direction.
-   */
-  struct Builder : public Expr::ExpressionBuilder
-  {
-    Builder( const Expr::Tag& result,///< dp/dy tag
-             const Expr::Tag& xTag,  ///< x-coordinate
-             const Expr::Tag& yTag,  ///< y-coordinate
-             const Expr::Tag& tTag,  ///< time
-             const double A=1.0,     ///< Amplitude of the function
-             const double nu=0.1     ///< Kinematic viscosity of the fluid
-             );
-    ~Builder(){}
-    Expr::ExpressionBase* build() const;
-  private:
-    const double A_, nu_;
-    const Expr::Tag xt_, yt_, tt_;
-  };
-
-  void evaluate();
-
-private:
-
-  GradPY( const Expr::Tag& xTag,
-          const Expr::Tag& yTag,
-          const Expr::Tag& tTag,
-          const double A,
-          const double nu );
-  const double a_, nu_;
-  DECLARE_FIELDS(FieldT, x_, y_);
-  DECLARE_FIELD(TimeField, t_);
-};
 
 /**
  *  \class VelX3D
@@ -317,7 +257,7 @@ private:
                     const Expr::Tag& zTag,
                     const double angle );
   const double angle_;
-  DECLARE_FIELDS(FieldT, x_, y_, z_);
+  DECLARE_FIELDS(FieldT, x_, y_, z_)
 };
 
 //====================================================================

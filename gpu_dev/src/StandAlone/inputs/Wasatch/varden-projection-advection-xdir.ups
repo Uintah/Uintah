@@ -16,9 +16,9 @@
     <!-- Set the initial condition expression for mixture fraction -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE"/>
+      <NameTag name="f"/>
       <GaussianFunction amplitude="1.0" deviation="1.0" mean="0.0" baseline="0.0">
-        <NameTag name="XSVOL" state="STATE_NONE"/>
+        <NameTag name="XSVOL"/>
       </GaussianFunction> 
     </BasicExpression>
     
@@ -28,13 +28,13 @@
       <TaskList>initialization</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
       <ExtractVariable>
         <NameInTable>Density</NameInTable>
-        <NameTag name="density" state="STATE_NONE"/>
+        <NameTag name="density"/>
       </ExtractVariable>
 
     </TabProps>
@@ -45,7 +45,7 @@
       <TaskList>advance_solution</TaskList>
       
       <IndependentVariable>
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
         <NameInTable>MixtureFraction</NameInTable>
       </IndependentVariable>
       
@@ -53,7 +53,7 @@
         <NameTag name="density" state="CARRY_FORWARD"/>
         <ModelBasedOnMixtureFraction>
           <DensityWeightedMixtureFraction>
-          <NameTag name="rhof" state="STATE_N"/>
+          <NameTag name="rhof" state="STATE_DYNAMIC"/>
           </DensityWeightedMixtureFraction>       
         </ModelBasedOnMixtureFraction>
       </ExtractDensity>
@@ -63,7 +63,7 @@
     <!-- Set the initial condition expression for x-velocity -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>1.0</Constant>
     </BasicExpression>
     
@@ -76,25 +76,25 @@
       
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="u" state="STATE_NONE"/>
+            <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
     </TransportEquation>   
     
     <ForceOnGraph tasklist="advance_solution">
-        <NameTag name="f" state="STATE_NONE"/>
+        <NameTag name="f"/>
     </ForceOnGraph>
     
     <FieldClipping tasklist="advance_solution">
       <FieldExpression type="SVOL" min="0.0" max="1.0">
-        <NameTag name="f" state="STATE_NONE"/>        
+        <NameTag name="f"/>        
       </FieldExpression>                    
     </FieldClipping>
       
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.0</Constant>
     </BasicExpression>
         
@@ -104,7 +104,7 @@
       <X-Momentum>x-mom</X-Momentum>
          
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>
@@ -138,7 +138,6 @@
     <outputTimestepInterval>1</outputTimestepInterval>
     <outputInitTimestep/>
     <checkpoint cycle="2" interval="0.001"/>
-    <compression>gzip</compression>
     <save label="density"/>
     <save label="x-mom"/>
     <save label="x-mom_rhs_partial"/>
@@ -158,21 +157,21 @@
       <!-- BOUNDARY CONDITIONS FOR MOMENTUM -->
 
       <Face side="x-">
-        <BCType label="pressure"          var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom"             var="Neumann"   value="0.0"/>
-        <BCType label="u"                 var="Neumann"   value="0.0"/>
-        <BCType label="rhof"              var="Neumann"   value="0.0"/>
-        <BCType label="f"                 var="Neumann"   value="0.0"/>
-        <BCType label="density"           var="Neumann"   value="0.0"/>
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Neumann" value="0.0"/>
+        <BCType label="u" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
         <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
       <Face side="x+">
-        <BCType label="pressure"          var="Dirichlet" value="0.0"/>
-        <BCType label="x-mom"             var="Neumann"   value="0.0"/>
-        <BCType label="u"                 var="Neumann"   value="0.0"/>
-        <BCType label="rhof"              var="Neumann"   value="0.0"/>
-        <BCType label="f"                 var="Neumann"   value="0.0"/>
-        <BCType label="density"           var="Neumann"   value="0.0"/>
+        <BCType label="pressure" var="Dirichlet" value="0.0"/>
+        <BCType label="x-mom" var="Neumann" value="0.0"/>
+        <BCType label="u" var="Neumann" value="0.0"/>
+        <BCType label="rhof" var="Neumann" value="0.0"/>
+        <BCType label="f" var="Neumann" value="0.0"/>
+        <BCType label="density" var="Neumann" value="0.0"/>
         <BCType label="x-mom_rhs_partial" var="Dirichlet" value="0.0"/>
       </Face>
       </BoundaryConditions>  
@@ -181,7 +180,7 @@
       <Box label="1">
         <lower>[-15,0,0]</lower>
         <upper>[15,1,1]</upper>
-        <resolution>[256,2,2]</resolution>
+        <resolution>[256,1,1]</resolution>
         <patches>[3,1,1]</patches>
       </Box>
       <periodic>[0,1,1]</periodic>

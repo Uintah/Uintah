@@ -87,16 +87,10 @@ AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
   SimulationController(myworld, doAMR, pspec)
 {
-  // If VisIt has been included into the build, initialize the lib sim
-  // so that a user can connect to the simulation via VisIt.
 #ifdef HAVE_VISIT
-
-#ifdef HAVE_MPICH
-  d_visit_simulation_data.isProc0 = isProc0_macro;
+  do_visit = true;
 #endif
 
-  visit_InitLibSim( &d_visit_simulation_data );
-#endif
 }
 
 AMRSimulationController::~AMRSimulationController()
@@ -186,6 +180,21 @@ AMRSimulationController::run()
 #ifndef DISABLE_SCI_MALLOC
    AllocatorSetDefaultTagLineNumber(d_sharedState->getCurrentTopLevelTimeStep());
 #endif
+
+  // If VisIt has been included into the build, initialize the lib sim
+  // so that a user can connect to the simulation via VisIt.
+#ifdef HAVE_VISIT
+
+#ifdef HAVE_MPICH
+  d_visit_simulation_data.isProc0 = isProc0_macro;
+#endif
+
+  if( do_visit )
+  {
+    visit_InitLibSim( &d_visit_simulation_data );
+  }
+#endif
+
    ////////////////////////////////////////////////////////////////////////////
    // The main time loop; here the specified problem is actually getting solved
    
@@ -395,7 +404,7 @@ AMRSimulationController::run()
      }
      
      calcWallTime();
-     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time, "\nStarting execution: " );
+     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep()-1, delt, time );
 
      // Execute the current timestep, restarting if necessary
      d_sharedState->d_current_delt = delt;
@@ -443,35 +452,39 @@ AMRSimulationController::run()
      time += delt;
      TAU_DB_DUMP();
 
-     calcWallTime();
-     printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time, "Finished execution: " );
      // If VisIt has been included into the build, check the lib sim state
      // to see if there is a connection and if so if anything needs to be
      // done.
 #ifdef HAVE_VISIT
-     d_visit_simulation_data.schedulerP = d_scheduler;
-     d_visit_simulation_data.gridP = currentGrid;
-     d_visit_simulation_data.time  = time;
-     d_visit_simulation_data.cycle =
-       d_sharedState->getCurrentTopLevelTimeStep();     
+     if( do_visit )
+     {
+       d_visit_simulation_data.schedulerP = d_scheduler;
+       d_visit_simulation_data.gridP = currentGrid;
+       d_visit_simulation_data.time  = time;
+       d_visit_simulation_data.cycle =
+	 d_sharedState->getCurrentTopLevelTimeStep();
 
-     visit_CheckState( &d_visit_simulation_data );
+       visit_CheckState( &d_visit_simulation_data );
+     }
 #endif
    } // end while ( time is not up, etc )
 
   // If VisIt has been included into the build, stop here so the
   // user can have once last chance see their data via VisIt.
 #ifdef HAVE_VISIT
-   visit_EndLibSim( &d_visit_simulation_data );
+   if( do_visit )
+   {
+     visit_EndLibSim( &d_visit_simulation_data );
+   }
 #endif
 
    // print for the final timestep, as the one above is in the middle of a while loop - get new delt, and set walltime first
-   // delt_vartype delt_var;
-   // d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
-   // delt = delt_var;
-   // adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
-   // calcWallTime();
-   // printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
+   delt_vartype delt_var;
+   d_scheduler->getLastDW()->get(delt_var, d_sharedState->get_delt_label());
+   delt = delt_var;
+   adjustDelT( delt, d_sharedState->d_prev_delt, d_sharedState->getCurrentTopLevelTimeStep(), time );
+   calcWallTime();
+   printSimulationStats( d_sharedState->getCurrentTopLevelTimeStep(), delt, time );
 
    // d_ups->releaseDocument();
 #ifdef USE_GPERFTOOLS
@@ -724,6 +737,16 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     grid->performConsistencyCheck();
   
     d_sim->restartInitialize();
+
+    for (int i = grid->numLevels() - 1; i >= 0; i--) {
+      d_sim->scheduleRestartInitialize(grid->getLevel(i), d_scheduler);
+    }
+    d_scheduler->compile();
+    d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
+    d_scheduler->execute();
+
+    // Now we know we're done with any additions to the new DW - finalize it
+    d_scheduler->get_dw(1)->finalize();
   
     if (d_regridder && d_regridder->isAdaptive()) {
       // On restart:

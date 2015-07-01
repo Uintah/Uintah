@@ -53,9 +53,9 @@ class Dilatation
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel2T, FieldT >::type Vel2GradT;
   typedef typename SpatialOps::OperatorTypeBuilder< SpatialOps::Gradient, Vel3T, FieldT >::type Vel3GradT;
 
-  DECLARE_FIELD(Vel1T, vel1_);
-  DECLARE_FIELD(Vel2T, vel2_);
-  DECLARE_FIELD(Vel3T, vel3_);
+  DECLARE_FIELD(Vel1T, vel1_)
+  DECLARE_FIELD(Vel2T, vel2_)
+  DECLARE_FIELD(Vel3T, vel3_)
 
   const Vel1GradT* vel1GradOp_;
   const Vel2GradT* vel2GradOp_;

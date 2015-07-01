@@ -120,7 +120,7 @@ ZAFlow::computeFlowStress(const PlasticityState* state,
   double beta = d_CM.beta_0 - d_CM.beta_1*log(epdot);
   double sigma_y = sigma_a + d_CM.B*exp(-beta*T) + 
                    d_CM.B_0*sqrt(ep)*exp(-alpha*T);
-  if (isnan(sigma_y)) {
+  if (std::isnan(sigma_y)) {
     cout << "ZA_Flow_Stress:: idx = " << idx << " epdot = " << epdot
          << " ep = " << ep << " T = " << T << endl;
     cout << " idx = " << idx << " sigma_a = " << sigma_a

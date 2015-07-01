@@ -90,6 +90,7 @@ class Pressure
   const double refPressureValue_;
   const SCIRun::IntVector refPressureLocation_;
   const bool use3DLaplacian_;
+  const bool enforceSolvability_;
   
   Uintah::SolverParameters& solverParams_;
   Uintah::SolverInterface& solver_;
@@ -97,11 +98,11 @@ class Pressure
   const Uintah::VarLabel* pressureLabel_;
   const Uintah::VarLabel* prhsLabel_;
   
-  DECLARE_FIELDS(TimeField, timestep_, t_);
-  DECLARE_FIELDS(SVolField, pSource_, volfrac_);
-  DECLARE_FIELD(XVolField, fx_);
-  DECLARE_FIELD(YVolField, fy_);
-  DECLARE_FIELD(ZVolField, fz_);
+  DECLARE_FIELDS(TimeField, timestep_, t_)
+  DECLARE_FIELDS(SVolField, pSource_, volfrac_)
+  DECLARE_FIELD(XVolField, fx_)
+  DECLARE_FIELD(YVolField, fy_)
+  DECLARE_FIELD(ZVolField, fz_)
 
   // interpolant operators
   typedef OperatorTypeBuilder< Interpolant, XVolField, SpatialOps::SSurfXField >::type  FxInterp;
@@ -137,6 +138,7 @@ class Pressure
             const double     refPressureValue,
             const SCIRun::IntVector refPressureLocation,
             const bool       use3dlaplacian,
+            const bool       enforceSolvability,
             Uintah::SolverParameters& solverParams,
             Uintah::SolverInterface& solver );
 
@@ -150,6 +152,8 @@ public:
     const double refpressurevalue_;
     const SCIRun::IntVector refpressurelocation_;
     const bool use3dlaplacian_;
+    const bool enforceSolvability_;
+    
     Uintah::SolverParameters& sparams_;
     Uintah::SolverInterface& solver_;
   public:
@@ -164,7 +168,8 @@ public:
              const bool       useRefPressure,
              const double     refPressureValue,
              const SCIRun::IntVector refPressureLocation,
-             const bool       use3DLaplacian,            
+             const bool       use3DLaplacian,
+             const bool       enforceSolvability,
              Uintah::SolverParameters& sparams,
              Uintah::SolverInterface& solver );
     ~Builder(){}

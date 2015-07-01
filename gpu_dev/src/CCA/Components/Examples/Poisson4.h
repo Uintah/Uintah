@@ -71,8 +71,13 @@ WARNING
     virtual void problemSetup(const ProblemSpecP& params, 
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP&);
-    virtual void scheduleInitialize(const LevelP& level,SchedulerP& sched);
+                              
+    virtual void scheduleInitialize(const LevelP& level,
+                                    SchedulerP& sched);
                                     
+    virtual void scheduleRestartInitialize(const LevelP& level,
+                                           SchedulerP& sched);
+                                           
     virtual void scheduleComputeStableTimestep(const LevelP& level,
                                                SchedulerP&);
                                                
@@ -119,7 +124,7 @@ WARNING
 
     Poisson4(const Poisson4&);
     Poisson4& operator=(const Poisson4&);
-	 
+         
   };
 }
 

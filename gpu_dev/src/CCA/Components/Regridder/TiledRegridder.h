@@ -41,12 +41,12 @@ GENERAL INFORMATION
 
    TiledRegridder.h
 
-	 Justin Luitjens
+   Justin Luitjens
    Department of Computer Science
    University of Utah
 
    Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
+
    
 KEYWORDS
    TiledRegridder

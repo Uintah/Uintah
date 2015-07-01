@@ -20,8 +20,8 @@ class RadPropsEvaluator
 
   GreyGas* greyGas_;
   
-  DECLARE_FIELD(FieldT, temp_);
-  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_);
+  DECLARE_FIELD(FieldT, temp_)
+  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_)
 
   RadPropsEvaluator( const Expr::Tag& tempTag,
                      const RadSpecMap& species,
@@ -76,7 +76,7 @@ class ParticleRadProps
   const ParticleRadCoeffs* const props_;
   const ParticleRadProp prop_;
 
-  DECLARE_FIELDS(FieldT, temp_, pRadius_);
+  DECLARE_FIELDS(FieldT, temp_, pRadius_)
   
   ParticleRadProps( const ParticleRadProp prop,
                     const Expr::Tag& tempTag,

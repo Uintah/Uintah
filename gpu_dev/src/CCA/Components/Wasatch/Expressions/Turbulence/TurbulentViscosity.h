@@ -44,7 +44,7 @@ class TurbulentViscosity
   const GradZT*  gradZOp_;            ///< z-component of the gradient operator
   ExOpT*   exOp_;
   
-  DECLARE_FIELDS(SVolField, dynCoef_, rho_, strTsrSq_, waleTsrMag_, vremanTsrMag_);
+  DECLARE_FIELDS(SVolField, dynCoef_, rho_, strTsrSq_, waleTsrMag_, vremanTsrMag_)
 
   TurbulentViscosity( const Expr::Tag rhoTag,
                       const Expr::Tag strTsrSqTag,

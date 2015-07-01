@@ -56,7 +56,7 @@ class DiffusiveVelocity : public Expr::Expression<VelT>
   const GradT* gradOp_;
   const InterpT* interpOp_;
   
-  DECLARE_FIELDS(ScalarT, phi_, turbDiff_, coef_);
+  DECLARE_FIELDS(ScalarT, phi_, turbDiff_, coef_)
   const double coefVal_;  ///< the value of the diffusion coefficient if constant
 
   DiffusiveVelocity( const Expr::Tag& turbDiffTag,

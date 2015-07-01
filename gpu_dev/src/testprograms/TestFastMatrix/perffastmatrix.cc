@@ -30,9 +30,6 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
-using namespace Uintah;
 
 int main(int argc, char* argv[])
 {
@@ -42,20 +39,20 @@ int main(int argc, char* argv[])
     size=atoi(argv[1]);
   if(argc >= 3)
     reps = atoi(argv[2]);
-  FastMatrix m(size, size);
+  Uintah::FastMatrix m(size, size);
   for(int i=0;i<size;i++){
     for(int j=0;j<size;j++){
       m(i,j)=drand48();
     }
   }
-  FastMatrix minv(size, size);
-  vector<double> b(size);
-  vector<double> b2(size);
+  Uintah::FastMatrix minv(size, size);
+  std::vector<double> b(size);
+  std::vector<double> b2(size);
   for(int i=0;i<size;i++)
     b[i] = b2[i] = drand48();
-  vector<double> x(size);
-  vector<double> x2(size);
-  double start = Time::currentSeconds();
+  std::vector<double> x(size);
+  std::vector<double> x2(size);
+  double start = SCIRun::Time::currentSeconds();
 #if 0
   for(int i=0;i<reps;i++){
     minv.destructiveInvert(m);
@@ -67,8 +64,8 @@ int main(int argc, char* argv[])
     minv.destructiveSolve(&b[0], &b[1]);
   }
 #endif
-  double dt = Time::currentSeconds()-start;
-  cerr << reps << " in " << dt << " seconds, " << dt/reps*1000000 << " us/rep\n";
+  double dt = SCIRun::Time::currentSeconds()-start;
+  std::cerr << reps << " in " << dt << " seconds, " << dt/reps*1000000 << " us/rep\n";
   exit(0);
 }
 

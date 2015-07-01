@@ -433,6 +433,5 @@ SmoothCylGeomPiece::createCylPoints()
     currZ += axisInc;
   } 
 
-
   return count;
 }

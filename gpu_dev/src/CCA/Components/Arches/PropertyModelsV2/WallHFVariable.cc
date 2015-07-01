@@ -4,6 +4,8 @@
 
 #include <spatialops/structured/FVStaggered.h>
 
+#define SMALLNUM 1e-100
+
 using namespace Uintah;
 
 WallHFVariable::WallHFVariable( std::string task_name, int matl_index, SimulationStateP& shared_state ) : 
@@ -12,6 +14,7 @@ TaskInterface( task_name, matl_index ) {
   _flux_x = task_name + "_x"; 
   _flux_y = task_name + "_y"; 
   _flux_z = task_name + "_z";
+  _net_power = task_name + "_power"; 
 
   _shared_state = shared_state; 
 
@@ -25,6 +28,14 @@ WallHFVariable::problemSetup( ProblemSpecP& db ){
 
   db->getWithDefault("frequency",_f,1);
 
+  _new_variables = false; 
+  if ( db->findBlock("new_model"))
+    _new_variables = true; 
+
+  _area = _task_name + "_area"; 
+
+  db->require("emissivity",_eps);
+
 }
 
 void 
@@ -33,6 +44,9 @@ WallHFVariable::create_local_labels(){
   register_new_variable( _flux_x, CC_DOUBLE ); 
   register_new_variable( _flux_y, CC_DOUBLE ); 
   register_new_variable( _flux_z, CC_DOUBLE ); 
+  register_new_variable( _net_power, CC_DOUBLE ); 
+  register_new_variable( _task_name, CC_DOUBLE ); 
+  register_new_variable( _area, CC_DOUBLE); 
 
 }
 
@@ -45,15 +59,18 @@ WallHFVariable::create_local_labels(){
 void 
 WallHFVariable::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
 
-  register_variable( _flux_x, CC_DOUBLE, COMPUTES, variable_registry ); 
-  register_variable( _flux_y, CC_DOUBLE, COMPUTES, variable_registry ); 
-  register_variable( _flux_z, CC_DOUBLE, COMPUTES, variable_registry ); 
+  register_variable( _flux_x   , CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _flux_y   , CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _flux_z   , CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _net_power, CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _task_name, CC_DOUBLE, COMPUTES, variable_registry );
+  register_variable( _area     , CC_DOUBLE, COMPUTES, variable_registry );
 
 }
 
 void 
 WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                      SpatialOps::OperatorDatabase& opr ){ 
+                            SpatialOps::OperatorDatabase& opr ){ 
 
   using namespace SpatialOps;
   using SpatialOps::operator *; 
@@ -63,10 +80,57 @@ WallHFVariable::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x); 
   SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y); 
   SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z); 
+  SVolFP power  = tsk_info->get_so_field<SVolF>(_net_power); 
+  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name); 
+  SVolFP area   = tsk_info->get_so_field<SVolF>(_area); 
 
   *flux_x <<= 0.0;
   *flux_y <<= 0.0;
   *flux_z <<= 0.0;
+  *power <<= 0.0; 
+  *total <<= 0.0; 
+  *area <<= 0.0; 
+
+}
+
+void 
+WallHFVariable::register_restart_initialize( std::vector<VariableInformation>& variable_registry ){ 
+
+  if ( _new_variables ){ 
+
+    register_variable( _flux_x,    CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _flux_y,    CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _flux_z,    CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _net_power, CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _task_name, CC_DOUBLE, COMPUTES, variable_registry ); 
+    register_variable( _area     , CC_DOUBLE, COMPUTES, variable_registry ); 
+
+  }
+  
+}
+
+void 
+WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                                    SpatialOps::OperatorDatabase& opr ){ 
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *; 
+  typedef SpatialOps::SVolField   SVolF;
+  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP; 
+
+  SVolFP flux_x = tsk_info->get_so_field<SVolF>(_flux_x); 
+  SVolFP flux_y = tsk_info->get_so_field<SVolF>(_flux_y); 
+  SVolFP flux_z = tsk_info->get_so_field<SVolF>(_flux_z); 
+  SVolFP power  = tsk_info->get_so_field<SVolF>(_net_power); 
+  SVolFP total  = tsk_info->get_so_field<SVolF>(_task_name); 
+  SVolFP area   = tsk_info->get_so_field<SVolF>(_area); 
+
+  *flux_x <<= 0.0;
+  *flux_y <<= 0.0;
+  *flux_z <<= 0.0;
+  *power <<= 0.0;
+  *total <<= 0.0;
+  *area <<= 0.0; 
 
 }
 
@@ -82,16 +146,23 @@ WallHFVariable::register_timestep_eval( std::vector<VariableInformation>& variab
   register_variable( _flux_x            , CC_DOUBLE , COMPUTES , variable_registry );
   register_variable( _flux_y            , CC_DOUBLE , COMPUTES , variable_registry );
   register_variable( _flux_z            , CC_DOUBLE , COMPUTES , variable_registry );
-  register_variable( "radiationFluxE"   , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
-  register_variable( "radiationFluxW"   , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
-  register_variable( "radiationFluxN"   , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
-  register_variable( "radiationFluxS"   , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
-  register_variable( "radiationFluxT"   , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
-  register_variable( "radiationFluxB"   , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
-  register_variable( "volFraction"      , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( _net_power         , CC_DOUBLE , COMPUTES , variable_registry );
+  register_variable( _task_name         , CC_DOUBLE , COMPUTES , variable_registry );
+  register_variable( _area              , CC_DOUBLE , COMPUTES , variable_registry ); 
+  register_variable( "radiationFluxE"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
+  register_variable( "radiationFluxW"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
+  register_variable( "radiationFluxN"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
+  register_variable( "radiationFluxS"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
+  register_variable( "radiationFluxT"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
+  register_variable( "radiationFluxB"   , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
+  register_variable( "volFraction"      , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
+  register_variable( "radiation_temperature"      , CC_DOUBLE , REQUIRES , 1 , OLDDW , variable_registry );
   register_variable( _flux_x            , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
   register_variable( _flux_y            , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
   register_variable( _flux_z            , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( _net_power         , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( _task_name         , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
+  register_variable( _area              , CC_DOUBLE , REQUIRES , 0 , OLDDW , variable_registry );
 
 }
 
@@ -99,24 +170,32 @@ void
 WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                 SpatialOps::OperatorDatabase& opr ){ 
 
-  constCCVariable<double>* Fe = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxE"); 
-  constCCVariable<double>* Fw = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxW"); 
-  constCCVariable<double>* Fn = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxN"); 
-  constCCVariable<double>* Fs = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxS"); 
-  constCCVariable<double>* Ft = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxT"); 
-  constCCVariable<double>* Fb = tsk_info->get_uintah_const_field<constCCVariable<double> >("radiationFluxB"); 
-  constCCVariable<double>* volFraction = tsk_info->get_uintah_const_field<constCCVariable<double> >("volFraction"); 
-  constCCVariable<double>* old_flux_x = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_x); 
-  constCCVariable<double>* old_flux_y = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_y); 
-  constCCVariable<double>* old_flux_z = tsk_info->get_uintah_const_field<constCCVariable<double> >(_flux_z); 
+  double sigma=5.67e-8;  //  w / m^2 k^4
+
+  constCCVariable<double>* Fe = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxE"); 
+  constCCVariable<double>* Fw = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxW"); 
+  constCCVariable<double>* Fn = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxN"); 
+  constCCVariable<double>* Fs = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxS"); 
+  constCCVariable<double>* Ft = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxT"); 
+  constCCVariable<double>* Fb = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiationFluxB"); 
+  constCCVariable<double>* T = tsk_info->get_const_uintah_field<constCCVariable<double> >("radiation_temperature"); 
+  constCCVariable<double>* volFraction = tsk_info->get_const_uintah_field<constCCVariable<double> >("volFraction"); 
 
   CCVariable<double>* flux_x = tsk_info->get_uintah_field<CCVariable<double> >(_flux_x); 
   CCVariable<double>* flux_y = tsk_info->get_uintah_field<CCVariable<double> >(_flux_y); 
   CCVariable<double>* flux_z = tsk_info->get_uintah_field<CCVariable<double> >(_flux_z); 
+  CCVariable<double>* power  = tsk_info->get_uintah_field<CCVariable<double> >(_net_power); 
+  CCVariable<double>* total  = tsk_info->get_uintah_field<CCVariable<double> >(_task_name); 
+  CCVariable<double>* area   = tsk_info->get_uintah_field<CCVariable<double> >(_area); 
 
   (*flux_x).initialize(0.0); 
   (*flux_y).initialize(0.0); 
   (*flux_z).initialize(0.0); 
+  (*power).initialize(0.0); 
+  (*total).initialize(0.0);
+  (*area).initialize(0.0); 
+
+  Vector DX = patch->dCell(); 
 
   int timestep = _shared_state->getCurrentTopLevelTimeStep(); 
 
@@ -133,36 +212,138 @@ WallHFVariable::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       IntVector czp = c + IntVector(0,0,1); 
       IntVector czm = c - IntVector(0,0,1); 
 
-      if ( (*volFraction)[c] > 0.0 ){ 
+      if ( (*volFraction)[c] < 1.0 ){ 
+
+        double Q_in = 0.0;
+        double Q_emit = 0.0;
+        double darea = 0.0;
 
         ////check neighbors to see if we populate a flux here: 
-        if ( (*volFraction)[cxm] < 1.0 ){ 
-          (*flux_x)[c] = (*flux_x)[c] + (*Fw)[c];
+        double a = DX.y()*DX.z(); 
+        if ( (*volFraction)[cxm] > 0.0 ){ 
+          (*flux_x)[c] = (*flux_x)[c] + (*Fe)[cxm];
+          Q_in += (*Fe)[cxm]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+          darea += a; 
         }
-        if ( (*volFraction)[cxp] < 1.0 ){ 
-          (*flux_x)[c] = (*flux_x)[c] + (*Fe)[c];
+        if ( (*volFraction)[cxp] > 0.0 ){ 
+          (*flux_x)[c] = (*flux_x)[c] + (*Fw)[cxp];
+          Q_in += (*Fw)[cxp]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+          darea += a; 
         }
-        if ( (*volFraction)[cym] < 1.0 ){ 
-          (*flux_y)[c] = (*flux_y)[c] + (*Fs)[c];
+        a = DX.x()*DX.z();
+        if ( (*volFraction)[cym] > 0.0 ){ 
+          (*flux_y)[c] = (*flux_y)[c] + (*Fn)[cym];
+          Q_in += (*Fn)[cym]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+          darea += a; 
         }
-        if ( (*volFraction)[cxp] < 1.0 ){ 
-          (*flux_y)[c] = (*flux_y)[c] + (*Fn)[c];
+        if ( (*volFraction)[cyp] > 0.0 ){ 
+          (*flux_y)[c] = (*flux_y)[c] + (*Fs)[cyp];
+          Q_in += (*Fs)[cyp]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+          darea += a; 
         }
-        if ( (*volFraction)[czm] < 1.0 ){ 
-          (*flux_z)[c] = (*flux_z)[c] + (*Fb)[c];
+        a = DX.x()*DX.y(); 
+        if ( (*volFraction)[czm] > 0.0 ){ 
+          (*flux_z)[c] = (*flux_z)[c] + (*Ft)[czm];
+          Q_in += (*Ft)[czm]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+          darea += a; 
         }
-        if ( (*volFraction)[czp] < 1.0 ){ 
-          (*flux_z)[c] = (*flux_z)[c] + (*Ft)[c];
+        if ( (*volFraction)[czp] > 0.0 ){ 
+          (*flux_z)[c] = (*flux_z)[c] + (*Fb)[czp];
+          Q_in += (*Fb)[czp]*a; 
+          Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+          darea += a; 
         }
+
+        (*total)[c] = Q_in/(darea+SMALLNUM); 
+        (*area)[c] = darea;
+        (*power)[c] = _eps * ( Q_in - Q_emit );
 
       }
     }
+
+    std::vector<Patch::FaceType>::const_iterator bf_iter;
+    std::vector<Patch::FaceType> bf;
+    patch->getBoundaryFaces(bf);
+
+    Vector A = Vector(DX.y()*DX.z(), DX.x()*DX.z(), DX.x()*DX.y());
+
+    for (bf_iter = bf.begin(); bf_iter !=bf.end(); bf_iter++){
+
+       Patch::FaceType face = *bf_iter;
+       Patch::FaceIteratorType PEC = Patch::ExtraPlusEdgeCells;
+       IntVector insideCellDir = patch->faceDirection(face); 
+       int P_dir = patch->getFaceAxes(face)[0]; 
+       double a = A[P_dir];
+
+       for (CellIterator citer =  patch->getFaceIterator(face, PEC); !citer.done(); citer++) {
+
+         IntVector c = *citer;
+         IntVector cxp = c - insideCellDir;
+
+         double Q_in = 0.;
+         double Q_emit = 0.;
+         double darea = 0.;
+
+         constCCVariable<double>* F; 
+         CCVariable<double>* flux; 
+         if ( P_dir == 0 ){ 
+           flux = flux_x;
+           if ( insideCellDir[0] == -1 ){ 
+             F = Fw; 
+           } else { 
+             F = Fe; 
+           }
+         } else if ( P_dir == 1 ){ 
+           flux = flux_y;
+           if ( insideCellDir[1] == -1 ){ 
+             F = Fs; 
+           } else { 
+             F = Fn; 
+           }
+         } else { 
+           flux = flux_z;
+           if ( insideCellDir[2] == -1 ){ 
+             F = Fb; 
+           } else { 
+             F = Ft; 
+           }
+         }
+
+         if ( (*volFraction)[c] < SMALLNUM ){ 
+           if ( (*volFraction)[cxp] > 0.0 ){ 
+             (*flux)[c] = (*flux)[c] + (*F)[cxp];
+             Q_in   += (*F)[cxp]*a; 
+             Q_emit += sigma*(*T)[c]*(*T)[c]*(*T)[c]*(*T)[c]*a; 
+             darea  += a;
+           }
+         }
+
+         (*total)[c] = Q_in / (darea+SMALLNUM); 
+         (*area)[c]  = darea;
+         (*power)[c] = _eps * ( Q_in - Q_emit );
+
+       }
+    }
   } else { 
 
-    (*flux_x).copyData((*old_flux_x));
-    (*flux_y).copyData((*old_flux_y));
-    (*flux_z).copyData((*old_flux_z));
+    constCCVariable<double>* old_flux_x = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_x); 
+    constCCVariable<double>* old_flux_y = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_y); 
+    constCCVariable<double>* old_flux_z = tsk_info->get_const_uintah_field<constCCVariable<double> >(_flux_z); 
+    constCCVariable<double>* old_power  = tsk_info->get_const_uintah_field<constCCVariable<double> >(_net_power); 
+    constCCVariable<double>* old_total  = tsk_info->get_const_uintah_field<constCCVariable<double> >(_task_name); 
+    constCCVariable<double>* old_area   = tsk_info->get_const_uintah_field<constCCVariable<double> >(_area); 
+
+    (*flux_x).copyData(*old_flux_x);
+    (*flux_y).copyData(*old_flux_y);
+    (*flux_z).copyData(*old_flux_z);
+    (*power).copyData(*old_power);
+    (*total).copyData((*old_total)); 
+    (*area).copyData(*old_area); 
 
   }
-  
 }

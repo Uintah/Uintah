@@ -46,7 +46,7 @@ template< typename FieldT >
 class TabPropsHeatLossEvaluator
  : public Expr::Expression<FieldT>
 {
-  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_)
 
   const size_t hlIx_;
   std::vector<double> ivarsPoint_;

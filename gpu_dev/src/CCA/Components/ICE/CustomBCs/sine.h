@@ -35,7 +35,6 @@
 #include <Core/Grid/Variables/CCVariable.h>
 #include <typeinfo>
 
-using namespace Uintah;
 namespace Uintah {
 
   //_____________________________________________________________

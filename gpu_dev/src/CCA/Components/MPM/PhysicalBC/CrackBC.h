@@ -32,8 +32,6 @@
 #include <Core/ProblemSpec/ProblemSpecP.h>
 
 namespace Uintah {
-
-using namespace SCIRun;
    
 /**************************************
 
@@ -77,17 +75,17 @@ WARNING
       double   x4() const;
       double   y4() const;
 
-      const Vector&  e1() const;
-      const Vector&  e2() const;
-      const Vector&  e3() const;
-      const Point&   origin() const;
+      const SCIRun::Vector&  e1() const;
+      const SCIRun::Vector&  e2() const;
+      const SCIRun::Vector&  e3() const;
+      const SCIRun::Point&   origin() const;
          
    private:
       CrackBC(const CrackBC&);
       CrackBC& operator=(const CrackBC&);
       
-      Point  d_origin;
-      Vector d_e1,d_e2,d_e3;
+      SCIRun::Point  d_origin;
+      SCIRun::Vector d_e1,d_e2,d_e3;
       double d_x1,d_y1,d_x2,d_y2,d_x3,d_y3,d_x4,d_y4;
    };
    

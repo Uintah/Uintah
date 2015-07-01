@@ -868,23 +868,21 @@ namespace Wasatch{
         const TagNames tNames = TagNames::self();
         if (doxmom) {
           typedef ParticleGasMomentumSrc<XVolField>::Builder XMomSrcT;
-          const Expr::Tag xMomRHSTag (xmomname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag xMomRHSTag (xmomname + "_rhs_partial", Expr::STATE_NONE);
           factory.register_expression( scinew XMomSrcT( tNames.pmomsrcx, tNames.pdragx, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcx, xMomRHSTag);
         }
         
         if (doymom) {
           typedef ParticleGasMomentumSrc<YVolField>::Builder YMomSrcT;
-          const Expr::Tag yMomRHSTag (ymomname + "_rhs", Expr::STATE_NONE);
-          const Expr::Tag pYMomRHSTag(pvname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag yMomRHSTag (ymomname + "_rhs_partial", Expr::STATE_NONE);
           factory.register_expression( scinew YMomSrcT( tNames.pmomsrcy, tNames.pdragy, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcy, yMomRHSTag);
         }
         
         if (dozmom) {
           typedef ParticleGasMomentumSrc<ZVolField>::Builder ZMomSrcT;
-          const Expr::Tag zMomRHSTag (zmomname + "_rhs", Expr::STATE_NONE);
-          const Expr::Tag pZMomRHSTag(pwname + "_rhs", Expr::STATE_NONE);
+          const Expr::Tag zMomRHSTag (zmomname + "_rhs_partial", Expr::STATE_NONE);
           factory.register_expression( scinew ZMomSrcT( tNames.pmomsrcz, tNames.pdragz, pMassTag, pSizeTag, pPosTags ));
           factory.attach_dependency_to_expression(tNames.pmomsrcz, zMomRHSTag);
         }

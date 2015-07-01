@@ -90,7 +90,7 @@ class DensFromMixfrac : public Expr::Expression<FieldT>, protected DensityCalcul
 {
   const InterpT& rhoEval_;
   const std::pair<double,double> bounds_;
-  DECLARE_FIELD(FieldT, rhoF_);
+  DECLARE_FIELD(FieldT, rhoF_)
   
   DensFromMixfrac( const InterpT& rhoEval,
                    const Expr::Tag& rhoFTag );
@@ -116,7 +116,7 @@ public:
      *  @param rhoFTag the density weighted mixture fraction
      */
     Builder( const InterpT& rhoEval,
-             const Expr::Tag& resultTag,
+             const Expr::TagList& resultsTag,
              const Expr::Tag& rhoFTag );
     ~Builder(){ delete rhoEval_; }
     Expr::ExpressionBase* build() const;
@@ -169,7 +169,7 @@ template< typename FieldT >
 class DensHeatLossMixfrac
  : public Expr::Expression<FieldT>, protected DensityCalculatorBase
 {
-  DECLARE_FIELDS(FieldT, rhof_, rhoh_);
+  DECLARE_FIELDS(FieldT, rhof_, rhoh_)
   const InterpT &densEval_, &enthEval_;
   const std::vector< std::pair<double,double> > bounds_;
 
@@ -247,8 +247,8 @@ public:
 template< typename FieldT >
 class TwoStreamMixingDensity : public Expr::Expression<FieldT>
 {
-  const double rho0_, rho1_;
-  DECLARE_FIELD(FieldT, rhof_);
+  const double rho0_, rho1_, rhoMin_, rhoMax_;
+  DECLARE_FIELD(FieldT, rhof_)
   
   TwoStreamMixingDensity( const Expr::Tag& rhofTag,
                           const double rho0,
@@ -287,8 +287,8 @@ public:
 template< typename FieldT >
 class TwoStreamDensFromMixfr : public Expr::Expression<FieldT>
 {
-  const double rho0_, rho1_;
-  DECLARE_FIELD(FieldT, mixfr_);
+  const double rho0_, rho1_, rhoMin_, rhoMax_;
+  DECLARE_FIELD(FieldT, mixfr_)
   
   TwoStreamDensFromMixfr( const Expr::Tag& mixfrTag,
                           const double rho0,

@@ -47,7 +47,6 @@ struct HyperelasticPlasticStateData {
 #include <Core/Util/Endian.h>
 
 namespace SCIRun {
-  using namespace Uintah;
   inline void swapbytes( Uintah::HyperelasticPlasticStateData& d)
   { swapbytes(d.Alpha); }
 } // namespace SCIRun

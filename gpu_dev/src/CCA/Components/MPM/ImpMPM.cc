@@ -429,6 +429,14 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
 
 }
 
+//______________________________________________________________________
+//
+void ImpMPM::scheduleRestartInitialize(const LevelP& level,
+                                       SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
 void ImpMPM::switchInitialize(const LevelP& level, SchedulerP& sched)
 {
   if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
@@ -1753,7 +1761,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     bool restart_neg_residual=false;
     bool restart_num_iters=false;
 
-    if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax))
+    if ((std::isnan(dispIncQNorm/dispIncQNorm0)||std::isnan(dispIncNorm/dispIncNormMax))
         && dispIncQNorm0!=0.){
       restart_nan=true;
       if(UintahParallelComponent::d_myworld->myrank()==0)
@@ -3160,7 +3168,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         d_solver->fillVector(l2g_node_num+2,double(v[2]));
         Q += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
       }
-      if(isnan(Q)){
+      if(std::isnan(Q)){
         cout << "RHS contains a nan, restarting timestep" << endl;
         new_dw->abortTimestep();
         new_dw->restartTimestep();

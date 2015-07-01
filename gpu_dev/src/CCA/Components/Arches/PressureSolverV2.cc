@@ -98,13 +98,6 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   db->getWithDefault("normalize_pressure",      d_norm_press, false);
   db->getWithDefault("do_only_last_projection", d_do_only_last_projection, false);
 
-  //fix pressure at a point.
-  d_use_ref_point = false; 
-  if ( db->findBlock("use_ref_point") ){ 
-    d_use_ref_point = true; 
-    db->findBlock("use_ref_point")->getAttribute("value", d_ref_value); 
-  } 
-
   // make source and boundary_condition objects
   d_source = scinew Source(d_physicalConsts);
   
@@ -115,6 +108,11 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
   //force a zero setup frequency since nothing else
   //makes any sense at the moment. 
   d_hypreSolver_parameters->setSetupFrequency(0.0); 
+
+  d_enforceSolvability = false; 
+  if ( db->findBlock("enforce_solvability")){ 
+    d_enforceSolvability = true; 
+  }
 
   //__________________________________
   // allow for addition of mass source terms
@@ -150,7 +148,8 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
 void PressureSolver::sched_solve(const LevelP& level,
                                  SchedulerP& sched,
                                  const TimeIntegratorLabel* timelabels,
-                                 bool extraProjection)
+                                 bool extraProjection, 
+                                 const int rk_stage)
 {
 
   d_periodic_vector = level->getPeriodicBoundaries(); 
@@ -170,7 +169,8 @@ void PressureSolver::sched_solve(const LevelP& level,
                            timelabels, extraProjection);
 
   sched_SolveSystem(       sched, perproc_patches, matls, 
-                           timelabels, extraProjection);
+                           timelabels, extraProjection, 
+                           rk_stage );
 
 
   sched_set_BC_RefPress(   sched, perproc_patches, matls,
@@ -370,30 +370,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Pressure Diagonal
     discrete->calculatePressDiagonal(patch, &vars);
 
-    if ( d_use_ref_point ){ 
-
-      adjustForRefPoint( patch, &vars, &constVars ); 
-
-    } 
-
     d_boundaryCondition->pressureBC(patch, d_indx, &vars, &constVars);
 
-    if( patch->containsCell(d_pressRef) && d_use_ref_point ){
-      if ( constVars.cellType[d_pressRef] != -1 ){ 
-        ostringstream msg;
-        msg << "\n ERROR:Arches:PressureSolver  Reference point is not a flow cell.\n";
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
-      } 
-      Stencil7& A = vars.pressCoeff[d_pressRef];
-      A.e = 0.0;
-      A.w = 0.0;
-      A.n = 0.0;
-      A.s = 0.0;
-      A.t = 0.0;
-      A.b = 0.0;
-      A.p = 1.0;
-      vars.pressNonlinearSrc[d_pressRef] = d_ref_value;
-    }
   }
   delete discrete;
 }
@@ -515,7 +493,8 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                   const PatchSet* patches,
                                   const MaterialSet* matls,
                                   const TimeIntegratorLabel* timelabels,
-                                  bool extraProjection)
+                                  bool extraProjection, 
+                                  const int rk_stage)
 {
   const LevelP level = getLevelP(patches->getUnion());
 
@@ -549,7 +528,12 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
   const VarLabel* x     = pressLabel;
   const VarLabel* b     = d_lab->d_presNonLinSrcPBLMLabel;
   const VarLabel* guess = d_lab->d_pressureGuessLabel;
-  // cout << "guess Label " << guess->getName() << endl;
+
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
+  if ( isPeriodic || d_enforceSolvability ) {
+    d_hypreSolver->scheduleEnforceSolvability<CCVariable<double> >(level, sched, matls, b, rk_stage);
+  }
 
   d_hypreSolver->scheduleSolve(level, sched,  matls,
                                A,      Task::NewDW,
@@ -557,6 +541,12 @@ PressureSolver::sched_SolveSystem(SchedulerP& sched,
                                b,      Task::NewDW,
                                guess,  Task::NewDW,
                                d_hypreSolver_parameters,modifies_hypre);
+
+  //add this?
+  //if ( d_ref_value != 0. ) {
+    //d_hypreSolver->scheduleSetReferenceValue<CCVariable<double> >( level, sched, matls, x, d_ref_loc ); 
+  //}
+
 }
 
 
@@ -632,7 +622,7 @@ PressureSolver::set_BC_RefPress ( const ProcessorGroup* pg,
     
     ArchesVariables vars;
     new_dw->getModifiable(vars.pressure,  pressLabel, d_indx, patch);
-    
+
     //__________________________________
     //  set boundary conditons on pressure
     vector<Patch::FaceType> bf;
@@ -850,7 +840,7 @@ PressureSolver::calculatePressureCoeff(const Patch* patch,
     A.n = area_NS/DX.y();
     A.s = area_NS/DX.y();
     A.t = area_TB/DX.z();
-    A.b = area_TB/DX.z(); 
+    A.b = area_TB/DX.z();
   }
 
 #ifdef divergenceconstraint
@@ -914,94 +904,3 @@ PressureSolver::mmModifyPressureCoeffs(const Patch* patch,
     A.b *= 0.5 * (voidFrac[c] + voidFrac[B]);
   }
 }
-
-void 
-PressureSolver::adjustForRefPoint( const Patch* patch, 
-    ArchesVariables* vars, ArchesConstVariables* constvars )
-{ 
-
-  //DEVELOPER NOTE: (TODO) This only works when not next to a patch boundary. 
-  // We might want to figure out how to use this in any valid flow cell 
-  // and specify the physical location rather than the I,J,K index. 
-
-  Vector Dx = patch->dCell(); 
-
-  if ( patch->containsCell( d_pressRef ) ){ 
-
-    IntVector c = d_pressRef; 
-    IntVector E  = c + IntVector(1,0,0);   IntVector W  = c - IntVector(1,0,0); 
-    IntVector N  = c + IntVector(0,1,0);   IntVector S  = c - IntVector(0,1,0);
-    IntVector T  = c + IntVector(0,0,1);   IntVector B  = c - IntVector(0,0,1); 
-
-    if ( constvars->cellType[c] != -1 ) {
-      throw InvalidValue("Error: Your reference pressure point is not a flow cell.", __FILE__, __LINE__);
-    }
-
-    if ( constvars->cellType[E] == -1 ){ 
-      if ( patch->containsCell(E) ){ 
-        vars->pressCoeff[E].w = 0.0; 
-        vars->pressNonlinearSrc[E] += d_ref_value * Dx.y() * Dx.z() / Dx.x();  
-      } else { 
-        if ( d_periodic_vector[0] == 0 ){ 
-          cout << " Reference neighbor = " << E << endl;
-          throw InvalidValue("Error: (EAST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-        }
-      } 
-    } 
-    if ( constvars->cellType[W] == -1 ){ 
-      if ( patch->containsCell(W) ){  
-        vars->pressCoeff[W].e = 0.0; 
-        vars->pressNonlinearSrc[W] += d_ref_value * Dx.y() * Dx.z() / Dx.x();  
-      } else { 
-        if ( d_periodic_vector[0] == 0 ){ 
-          cout << " Reference neighbor = " << W << endl;
-          throw InvalidValue("Error: (WEST DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-        }
-      } 
-    } 
-    if ( constvars->cellType[N] == -1 ){ 
-      if ( patch->containsCell(N) ){ 
-        vars->pressCoeff[N].s= 0.0; 
-        vars->pressNonlinearSrc[N] += d_ref_value * Dx.x() * Dx.z() / Dx.y();  
-      } else { 
-        if ( d_periodic_vector[1] == 0 ){ 
-          cout << " Reference neighbor = " << N << endl;
-          throw InvalidValue("Error: (NORTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-        }
-      } 
-    } 
-    if ( constvars->cellType[S] == -1 ){ 
-      if ( patch->containsCell(S) ){ 
-        vars->pressCoeff[S].n = 0.0; 
-        vars->pressNonlinearSrc[S] += d_ref_value * Dx.x() * Dx.z() / Dx.y();  
-      } else { 
-        if ( d_periodic_vector[1] == 0 ){ 
-          cout << " Reference neighbor = " << S << endl;
-          throw InvalidValue("Error: (SOUTH DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-        }
-      } 
-    } 
-    if ( constvars->cellType[T] == -1 ){ 
-      if ( patch->containsCell(T) ){
-        vars->pressCoeff[T].b= 0.0; 
-        vars->pressNonlinearSrc[T] += d_ref_value * Dx.x() * Dx.y() / Dx.z();  
-      } else { 
-        if ( d_periodic_vector[2] == 0 ){ 
-          cout << " Reference neighbor = " << T << endl;
-          throw InvalidValue("Error: (TOP DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-        }
-      } 
-    } 
-    if ( constvars->cellType[B] == -1 ){ 
-      if ( patch->containsCell(B) ){ 
-        vars->pressCoeff[B].t = 0.0; 
-        vars->pressNonlinearSrc[B] += d_ref_value * Dx.x() * Dx.y() / Dx.z();  
-      } else { 
-        if ( d_periodic_vector[2] == 0 ){ 
-          cout << " Reference neighbor = " << B << endl;
-          throw InvalidValue("Error: (BOTTOM DIRECTION) Reference point cannot be next to a patch boundary.", __FILE__, __LINE__);
-        }
-      } 
-    } 
-  }
-} 

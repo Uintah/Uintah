@@ -21,25 +21,25 @@
 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="parabolic-inlet" state="STATE_NONE"/>
+      <NameTag name="parabolic-inlet"/>
       <ParabolicFunction type="CENTERED">
          <Centered x0="0.5" f0="1" h="0.5"/>
-         <NameTag name="YXVOL" state="STATE_NONE"/>
+         <NameTag name="YXVOL"/>
        </ParabolicFunction>
     </BCExpression>
 
     <BCExpression type="XVOL">
       <TaskList>initialization advance_solution</TaskList>
-      <NameTag name="parabolic-inlet-u" state="STATE_NONE"/>
+      <NameTag name="parabolic-inlet-u"/>
       <ParabolicFunction type="CENTERED">
          <Centered x0="0.5" f0="1" h="0.5"/>
-         <NameTag name="YXVOL" state="STATE_NONE"/>
+         <NameTag name="YXVOL"/>
        </ParabolicFunction>
     </BCExpression>
 
     <PostProcessingExpression type="SVOL">
       <TaskList>post_processing</TaskList>
-      <NameTag name="xvelcc" state="STATE_NONE"/>
+      <NameTag name="xvelcc"/>
       <InterpolateExpression type="XVOL">
           <NameTag name="x-mom" state="STATE_NP1"/>
       </InterpolateExpression>
@@ -47,7 +47,7 @@
     
     <PostProcessingExpression type="SVOL">
       <TaskList>post_processing</TaskList>
-      <NameTag name="yvelcc" state="STATE_NONE"/>
+      <NameTag name="yvelcc"/>
       <InterpolateExpression type="YVOL">
           <NameTag name="y-mom" state="STATE_NP1"/>
       </InterpolateExpression>
@@ -55,22 +55,22 @@
     
     <PostProcessingExpression type="SVOL">
       <TaskList>post_processing</TaskList>
-      <NameTag name="zvelcc" state="STATE_NONE"/>
+      <NameTag name="zvelcc"/>
       <InterpolateExpression type="ZVOL">
           <NameTag name="z-mom" state="STATE_NP1"/>
       </InterpolateExpression>
     </PostProcessingExpression>
     
     <ForceOnGraph tasklist="post_processing">
-      <NameTag name="xvelcc" state="STATE_NONE"/>
-      <NameTag name="yvelcc" state="STATE_NONE"/>
-      <NameTag name="zvelcc" state="STATE_NONE"/>
+      <NameTag name="xvelcc"/>
+      <NameTag name="yvelcc"/>
+      <NameTag name="zvelcc"/>
     </ForceOnGraph>
     
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="f" state="STATE_NONE"/>
+      <NameTag name="f"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     
@@ -85,12 +85,12 @@
  -->
       <ConvectiveFlux direction="X" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
       <!-- 
@@ -98,7 +98,7 @@
         <Method>UPWIND</Method> 
         <Direction>Z</Direction>
         <AdvectiveVelocity>
-            <NameTag name="w" state="STATE_NONE"/>
+            <NameTag name="w" />
         </AdvectiveVelocity>
       </ConvectiveFlux>
  -->
@@ -128,25 +128,25 @@
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>1</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="ZVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="w" state="STATE_NONE"/>
+       <NameTag name="w"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>1.0e-5</Constant>
     </BasicExpression>
 
@@ -161,7 +161,7 @@
       <Z-Momentum>z-mom</Z-Momentum>
       
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>

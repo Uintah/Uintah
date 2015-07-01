@@ -31,8 +31,6 @@
 #include <Core/Grid/LevelP.h>
 
 #include <iostream>
-using namespace std;
-using namespace Uintah;
 
 bool compareEqual(const Patch* p1, const Patch* p2)
 {

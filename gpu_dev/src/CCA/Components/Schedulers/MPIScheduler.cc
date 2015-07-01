@@ -929,7 +929,7 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
 
     numTasksDone++;
     if (taskorder.active()) {
-      taskorder << d_myworld->myrank() << " Running task static order: " << task->getSaticOrder() << " , scheduled order: "
+      taskorder << d_myworld->myrank() << " Running task static order: " << task->getStaticOrder() << " , scheduled order: "
                 << numTasksDone << std::endl;
     }
 
@@ -1175,6 +1175,13 @@ MPIScheduler::execute( int tgnum     /* = 0 */,
       char filename[100];
       sprintf(filename, "exectimes.%d.%d", d_myworld->size(), d_myworld->myrank());
       fout.open(filename);
+
+      // Report which timesteps TaskExecTime values have been accumulated over
+      fout << "Reported values are cumulative over 10 timesteps ("
+           << d_sharedState->getCurrentTopLevelTimeStep()-9
+           << " through "
+           << d_sharedState->getCurrentTopLevelTimeStep()
+           << ")" << std::endl;
 
       for (std::map<std::string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
         fout << std::fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;

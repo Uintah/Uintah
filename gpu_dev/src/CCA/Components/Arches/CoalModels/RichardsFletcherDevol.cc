@@ -76,6 +76,8 @@ RichardsFletcherDevol::problemSetup(const ProblemSpecP& params, int qn)
   EqnBase& temp_rcmass_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(rcmassqn_name);
   DQMOMEqn& rcmass_eqn = dynamic_cast<DQMOMEqn&>(temp_rcmass_eqn);
    _rc_scaling_constant = rcmass_eqn.getScalingConstant(d_quadNode);
+  std::string ic_RHS = rcmassqn_name+"_RHS";
+  _RHS_source_varlabel = VarLabel::find(ic_RHS);
 
   // create char mass var label
   std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
@@ -195,6 +197,7 @@ RichardsFletcherDevol::sched_computeModel( const LevelP& level, SchedulerP& sche
   tsk->requires( which_dw, _char_varlabel, gn, 0 );
   tsk->requires( which_dw, _weight_varlabel, gn, 0 ); 
   tsk->requires( Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label()); 
+  tsk->requires( Task::NewDW, _RHS_source_varlabel, gn, 0 ); 
 
   sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials()); 
 
@@ -217,6 +220,9 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+    
+    Vector Dx = patch->dCell(); 
+    double vol = Dx.x()* Dx.y()* Dx.z(); 
 
     delt_vartype DT;
     old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
@@ -250,8 +256,17 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
     which_dw->get( charmass , _char_varlabel , matlIndex , patch , gn , 0 );
     constCCVariable<double> weight; 
     which_dw->get( weight , _weight_varlabel , matlIndex , patch , gn , 0 );
+    constCCVariable<double> RHS_source; 
+    new_dw->get( RHS_source , _RHS_source_varlabel , matlIndex , patch , gn , 0 );
     
     double rcmass_init = rc_mass_init[d_quadNode];
+    double Xv;
+    double Fv1;
+    double Fv2;
+    double k1;        ///< Rate constant for devolatilization reaction 1
+    double k2;        ///< Rate constant for devolatilization reaction 2
+    double rateMax;
+    double rate;
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
@@ -259,6 +274,7 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
       if (weight[c]/_weight_scaling_constant > _weight_small) {
 
         double rcmassph=rcmass[c];
+        double RHS_sourceph=RHS_source[c];
         double temperatureph=temperature[c];
         double charmassph=charmass[c];
         double weightph=weight[c];
@@ -276,22 +292,24 @@ RichardsFletcherDevol::computeModel( const ProcessorGroup * pc,
         Fv2 = c6_2*pow(Xv,6.0) + c5_2*pow(Xv,5.0) + c4_2*pow(Xv,4.0) + c3_2*pow(Xv,3.0) + c2_2*pow(Xv,2.0) + c1_2*Xv +c0_2;
         k2 = exp(Fv2)*Av2*exp(-Ev2/(temperatureph));
 
-        rateMax = max((0.2*(rcmassph + min(0.0,charmassph))*weightph/dt),0.0);
-        devol_rate[c] = -(k1+k2)*(rcmassph + min(0.0,charmassph))*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
-        gas_devol_rate[c] = (Y1_*k1 + Y2_*k2)*(rcmassph+ min(0.0,charmassph))*weightph; // rate of creation of coal off gas
-        char_rate[c] = ((1.0-Y1_)*k1 + (1.0-Y2_)*k2)*(rcmassph + min(0.0,charmassph))*weightph; // rate of creation of char
-        if( devol_rate[c] < (-rateMax/(_rc_scaling_constant*_weight_scaling_constant))) {
-          devol_rate[c] = -rateMax/(_rc_scaling_constant*_weight_scaling_constant);
-          gas_devol_rate[c] = Y1_*rateMax;
-          char_rate[c] = (1.0-Y1_)*rateMax;
+        rateMax = max( (rcmassph+min(0.0,charmassph))/(dt) + RHS_sourceph/(vol*weightph) , 0.0 );
+        rate = (k1+k2)*(rcmassph+min(0.0,charmassph));
+        devol_rate[c] = -rate*weightph/(_rc_scaling_constant*_weight_scaling_constant); //rate of consumption of raw coal mass
+        gas_devol_rate[c] = (Y1_*k1+Y2_*k2)*(rcmassph+min(0.0,charmassph))*weightph; // rate of creation of coal off gas
+        char_rate[c] = ((1.0-Y1_)*k1+(1.0-Y2_)*k2)*(rcmassph+min(0.0,charmassph))*weightph; // rate of creation of char
+        if( rateMax < rate ) {
+          devol_rate[c] = -rateMax*weightph/(_rc_scaling_constant*_weight_scaling_constant);
+          gas_devol_rate[c] = Y1_*rateMax*weightph;
+          char_rate[c] = (1.0-Y1_)*rateMax*weightph;
         }
+        
         //additional check to make sure we have positive rates when we have small amounts of rc and char.. 
-        if( (devol_rate[c] > -1e-16) && ((rcmassph+min(0.0,charmassph)) < 1e-16)) {
+        if( devol_rate[c]>0.0 || (rcmassph+min(0.0,charmassph)) < 1e-20 ) {
           devol_rate[c] = 0;
           gas_devol_rate[c] = 0;
           char_rate[c] = 0;
         }
-   
+        
       } else {
         devol_rate[c] = 0;
         gas_devol_rate[c] = 0;

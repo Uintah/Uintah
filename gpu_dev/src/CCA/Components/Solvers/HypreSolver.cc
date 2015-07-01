@@ -956,12 +956,12 @@ namespace Uintah {
           // Get the solution back from hypre
           for(int z=l.z();z<h.z();z++){
             for(int y=l.y();y<h.y();y++){
-              const double* values = &Xnew[IntVector(l.x(), y, z)];
+              double* values = &Xnew[IntVector(l.x(), y, z)];
               IntVector ll(l.x(), y, z);
               IntVector hh(h.x()-1, y, z);
               HYPRE_StructVectorGetBoxValues(*HX,
                   ll.get_pointer(), hh.get_pointer(),
-                  const_cast<double*>(values));
+                  values);
             }
           }
         }
@@ -1260,6 +1260,11 @@ namespace Uintah {
     ASSERTEQ(domtype, x->typeDescription()->getType());
     ASSERTEQ(domtype, b->typeDescription()->getType());
 
+    const HypreSolver2Params* dparams = dynamic_cast<const HypreSolver2Params*>(params);
+    if(!dparams){
+      throw InternalError("Wrong type of params passed to hypre solver!", __FILE__, __LINE__);
+    }
+
     //__________________________________
     // bulletproofing
     IntVector periodic = level->getPeriodicBoundaries();
@@ -1267,20 +1272,17 @@ namespace Uintah {
       IntVector l,h;
       level->findCellIndexRange( l, h );
       IntVector range = (h - l ) * periodic;
-      if( fmodf(range.x(),2) !=0 || fmodf(range.y(),2) != 0 || fmodf(range.z(),2) != 0) {
+      if( fmodf(range.x(),2) != 0  || fmodf(range.y(),2) != 0 || fmodf(range.z(),2) != 0 ) {
         ostringstream warn;
-        warn << "\nINPUT FILE ERROR: hypre solver: \n"
-             << "With periodic boundary conditions the resolution of your grid "<<range<<", in each periodic direction, must be a power of 2 (i.e. 2^n), \n"
-             << "e.g., 16,32,64,128....";
-            
-        throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        warn << "\nINPUT FILE WARNING: hypre solver: \n"
+             << "With periodic boundary conditions the resolution of your grid "<<range<<", in each periodic direction, must be as close to a power of 2 as possible (i.e. M x 2^n).\n";
+        if (dparams->solvertype == "SMG")
+          throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+        else
+          proc0cout << warn.str();
       }
     }
     
-    const HypreSolver2Params* dparams = dynamic_cast<const HypreSolver2Params*>(params);
-    if(!dparams){
-      throw InternalError("Wrong type of params passed to hypre solver!", __FILE__, __LINE__);
-    }
 
     switch(domtype){
     case TypeDescription::SFCXVariable:
@@ -1345,6 +1347,7 @@ namespace Uintah {
     sched->overrideVariableBehavior(hypre_solver_label->getName(),false,false,
                                     false,true,true);
 
+    task->setType(Task::OncePerProc);
     sched->addTask(task, lb->getPerProcessorPatchSet(level), matls);
   }
 

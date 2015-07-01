@@ -72,17 +72,17 @@ evaluate()
 {
   using namespace SpatialOps;
   FieldT& result = this->value();
-  result <<= 0.0;
+
   const FieldT&  rhsPart = rhsPart_->field_ref();
 
-  if ( hasP_ ){
+  if( hasP_ ){
     const PFieldT& p = pressure_->field_ref();
     if( hasIntrusion_ )  result <<= volfrac_->field_ref() * ( rhsPart - (*gradOp_)(p) );
-    else                          result <<= rhsPart - (*gradOp_)(p);
+    else                 result <<= rhsPart - (*gradOp_)(p);
   }
   else{
     if( hasIntrusion_ ) result <<= volfrac_->field_ref() * rhsPart;
-    else                         result <<= rhsPart;
+    else                result <<= rhsPart;
   }
 }
 

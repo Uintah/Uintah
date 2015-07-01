@@ -327,7 +327,7 @@ SCGFlow::computeThermallyActivatedYieldStress(const double& epdot,
     tauOld = tau;
     tau -= f/fPrime;
 
-    if (isnan(tau)) {
+    if (std::isnan(tau)) {
       //cout << "iter = " << count << " epdot = " << epdot 
       //     << " T = " << T << endl;
       //cout << "iter = " << count << " Z0 = " << Z0 << " Z1 = " << Z1
@@ -345,7 +345,7 @@ SCGFlow::computeThermallyActivatedYieldStress(const double& epdot,
   
   /* The equation is not appropriate for Newton iterations.
      Do bisection instead. */
-  if (isnan(tau)) {
+  if (std::isnan(tau)) {
     double tau_hi = sigma_P;
     double tau_lo = tolerance; 
     tau = 0.5*(tau_hi + tau_lo);
@@ -378,7 +378,7 @@ SCGFlow::computeThermallyActivatedYieldStress(const double& epdot,
     }
   }
 
-  if (isnan(tau)) {
+  if (std::isnan(tau)) {
     cout << "iter = " << count << " epdot = " << epdot 
          << " T = " << T << endl;
     cout << "iter = " << count << " Z0 = " << Z0 << " Z1 = " << Z1
@@ -648,7 +648,7 @@ SCGFlow::evalDerivativeWRTStrainRate(const PlasticityState* state,
     }
     Z -= g/Dg;
 
-    if (isnan(g) || isnan(Z) || idx == 4924) {
+    if (std::isnan(g) || std::isnan(Z) || idx == 4924) {
       cout << "iter = " << count << " g = " << g << " Dg = " << Dg 
            << " Z = " << Z << " epdot = " << epdot << " T = " << T
            << " A = " << A << " B1 = " << B1 << " B2 = " << B2

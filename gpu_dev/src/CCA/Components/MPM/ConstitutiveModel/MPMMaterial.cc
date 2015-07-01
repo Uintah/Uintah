@@ -29,6 +29,8 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreatorFactory.h>
 #include <CCA/Components/MPM/ParticleCreator/ParticleCreator.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModelFactory.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ScalarDiffusionModel.h>
 #include <Core/GeometryPiece/GeometryObject.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Grid/Box.h>
@@ -60,7 +62,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
 {
   d_lb = scinew MPMLabel();
   // The standard set of initializations needed
-  standardInitialization(ps,flags);
+  standardInitialization(ps,ss,flags);
   
   d_cm->setSharedState(ss.get_rep());
 
@@ -69,19 +71,22 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
 }
 
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
+MPMMaterial::standardInitialization(ProblemSpecP& ps, SimulationStateP& ss, MPMFlags* flags)
 
 {
   // Follow the layout of the input file
   // Steps:
   // 1.  Determine the type of constitutive model and create it.
-  // 2.  Get the general properties of the material such as
+  // 2.  Determine if scalar diffusion is used and the type of
+  //     scalar diffusion model and create it.
+  //     Added for reactive flow component.
+  // 3.  Get the general properties of the material such as
   //     density, thermal_conductivity, specific_heat.
-  // 3.  Loop through all of the geometry pieces that make up a single
+  // 4.  Loop through all of the geometry pieces that make up a single
   //     geometry object.
-  // 4.  Within the geometry object, assign the boundary conditions
+  // 5.  Within the geometry object, assign the boundary conditions
   //     to the object.
-  // 5.  Assign the velocity field.
+  // 6.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
   d_cm = ConstitutiveModelFactory::create(ps,flags);
@@ -93,7 +98,15 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  // Step 2 -- get the general material properties
+  // Step 2 -- check if scalar diffusion is used and
+  // create the scalar diffusion model.
+  if(flags->d_doScalarDiffusion){
+    d_sdm = ScalarDiffusionModelFactory::create(ps,ss,flags);
+  }else{
+    d_sdm = NULL;
+  }
+
+  // Step 3 -- get the general material properties
 
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
@@ -118,7 +131,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   d_includeFlowWork = false;
   ps->get("includeFlowWork",d_includeFlowWork);
 
-  // Step 3 -- Loop through all of the pieces in this geometry object
+  // Step 4 -- Loop through all of the pieces in this geometry object
   //int piece_num = 0;
   list<GeometryObject::DataItem> geom_obj_data;
   geom_obj_data.push_back(GeometryObject::DataItem("res",                    GeometryObject::IntVector));
@@ -133,6 +146,12 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
   if(flags->d_with_color){
     geom_obj_data.push_back(GeometryObject::DataItem("color", GeometryObject::Double));
   } 
+
+  // ReactiveFlow Diffusion Component
+  if(flags->d_doScalarDiffusion){
+    geom_obj_data.push_back(GeometryObject::DataItem("concentration", GeometryObject::Double));
+  }
+
   for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
        geom_obj_ps != 0; 
        geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
@@ -168,6 +187,9 @@ MPMMaterial::~MPMMaterial()
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
     delete d_geom_objs[i];
+  }
+  if(d_sdm){
+    delete d_sdm;
   }
 }
 
@@ -224,6 +246,11 @@ ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
   // with this material
 
   return d_cm;
+}
+
+ScalarDiffusionModel* MPMMaterial::getScalarDiffusionModel() const
+{
+  return d_sdm;
 }
 
 particleIndex MPMMaterial::createParticles(

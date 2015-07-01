@@ -61,6 +61,7 @@ namespace Wasatch {
                                    const Expr::Tag& temperatureTag,
                                    const Expr::Tag& absorptionTag,
                                    const Expr::Tag& celltypeTag,
+                                   Uintah::Ray* rmcrt,
                                    const Uintah::ProblemSpecP& radiationSpec,
                                    Uintah::SimulationStateP sharedState,
                                    Uintah::GridP grid)
@@ -74,13 +75,12 @@ namespace Wasatch {
   celltypeLabel_   ( Uintah::VarLabel::create( celltypeTag.name(),
                                               Wasatch::get_uintah_field_type_descriptor<int>() ) ),
   divqLabel_       ( Uintah::VarLabel::create( radiationSourceName,
-                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) )
+                                              Wasatch::get_uintah_field_type_descriptor<SVolField>() ) ),
+  rmcrt_(rmcrt)
   {
      temperature_ = create_field_request<SVolField>(temperatureTag);
      absCoef_ = create_field_request<SVolField>(absorptionTag);
-    // cellType_ = create_field_request<FieldT>(celltypeTag );
-    
-    rmcrt_ = scinew Uintah::Ray( Uintah::TypeDescription::double_type );
+    // cellType_ = create_field_request<FieldT>(celltypeTag );        
     
     rmcrt_->registerVarLabels( 0,
                               absorptionLabel_,
@@ -244,6 +244,7 @@ namespace Wasatch {
                                     const Expr::Tag& temperatureTag,
                                     const Expr::Tag& absorptionTag,
                                     const Expr::Tag& celltypeTag,
+                                    Uintah::Ray* rmcrt,
                                     Uintah::ProblemSpecP& radiationSpec,
                                     Uintah::SimulationStateP& sharedState,
                                     Uintah::GridP& grid)
@@ -251,6 +252,7 @@ namespace Wasatch {
   temperatureTag_    ( temperatureTag ),
   absorptionTag_     ( absorptionTag  ),
   celltypeTag_       ( celltypeTag    ),
+  rmcrt_             ( rmcrt          ),
   radiationSpec_     ( radiationSpec  ),
   sharedState_       ( sharedState    ),
   grid_              ( grid           )
@@ -262,7 +264,7 @@ namespace Wasatch {
   RadiationSource::Builder::build() const
   {
     const Expr::TagList radTags = get_tags();
-    return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, radiationSpec_, sharedState_, grid_ );
+    return new RadiationSource( radTags[0].name(), temperatureTag_, absorptionTag_, celltypeTag_, rmcrt_, radiationSpec_, sharedState_, grid_ );
   }
   
 } // namespace Wasatch

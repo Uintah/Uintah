@@ -46,7 +46,10 @@
 #include <iostream>
 #include <unistd.h>
 
-using namespace std;
+using std::cout;
+using std::cerr;
+using std::endl;
+using std::list;
 using namespace Uintah;
 
 void

@@ -3,14 +3,18 @@ This file contains the name of environmental variables that can be set
 Set these like this:
  -> tcsh: setenv SCI_DEBUG ExecTimes:+
  -> bash: export SCI_DEBUG=ExecTimes:+
+To set multiple flags, use quotation marks and separate flags by a comma:
+(no spaces after commas)
+ -> bash: export SCI_DEBUG=“ExecTimes:+,TaskGraph:+,WASATCH_FIELDS:+”
+
 
 Name              type               Description
 ______________________________________________________________________
 
 ExecTimes         SCI_DEBUG     Outputs the time for execution on each task
-                                NOTE: TaskExecTimes are: 
+                                NOTE: Reported values are: 
                                          1) Represented in seconds
-                                         2) Cumulative over 10*floor(MaxTimeSteps/10) timesteps
+                                         2) Cumulative over 10 timesteps
                                         3a) Cumulative over nthreads when using the UnifiedScheduler
                                         3b) Cumulative over nthreads-1 when using the ThreadedMPIScheduler
                                 To view the top 10 tasks use:

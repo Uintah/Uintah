@@ -45,14 +45,15 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
 class GeometryObject;
+class SDInterfaceModel;
 
 class AMRMPM : public SerialMPM {
 
 public:
   AMRMPM(const ProcessorGroup* myworld);
   virtual ~AMRMPM();
+  SDInterfaceModel* sdInterfaceModel;
 
   virtual void problemSetup(const ProblemSpecP& params, 
                             const ProblemSpecP& restart_prob_spec,
@@ -94,8 +95,7 @@ public:
   void scheduleInitialErrorEstimate(const LevelP& coarseLevel, SchedulerP& sched);
 
 
-  void setMPMLabel(MPMLabel* Mlb)
-  {
+  void setMPMLabel(MPMLabel* Mlb) {
     delete lb;
     lb = Mlb;
   };
@@ -172,12 +172,11 @@ protected:
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw);
                             
-  void Nodal_velocity_temperature(const ProcessorGroup*,
-                                  const PatchSubset* patches,
-                                  const MaterialSubset* matls,
-                                  DataWarehouse* old_dw,
-                                  DataWarehouse* new_dw);
-
+  void normalizeNodalVelTempConc(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
 
   virtual void computeStressTensor(const ProcessorGroup*,
                                    const PatchSubset* patches,
@@ -239,12 +238,14 @@ protected:
                                                const MaterialSubset* matls,
                                                DataWarehouse* old_dw,
                                                DataWarehouse* new_dw);
+#if 0
   // At Coarse Fine interface
   void interpolateToParticlesAndUpdate_CFI(const ProcessorGroup*,
                                            const PatchSubset* patches,
                                            const MaterialSubset* matls,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw);
+#endif
 
   // Used to compute the particles initial physical size
   // for use in deformed particle visualization
@@ -261,12 +262,33 @@ protected:
                                    DataWarehouse* old_dw,
                                    DataWarehouse* new_dw);
 
+  //////////
+  // Add new particles to the simulation based on criteria TBD:
+  virtual void addParticles(const ProcessorGroup*,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
 
-  void refine(const ProcessorGroup*,
-              const PatchSubset* patches,
-              const MaterialSubset* matls,
-              DataWarehouse*,
-              DataWarehouse* new_dw);
+  ////////
+  // Find the extents of MPMRefineCell for use in generating rectangular
+  // patches
+  virtual void reduceFlagsExtents(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+  void refineGrid(const ProcessorGroup*,
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*,
+                  DataWarehouse* new_dw);
+
+  void coarsen(const ProcessorGroup*,
+               const PatchSubset* patches,
+               const MaterialSubset* matls,
+               DataWarehouse*, DataWarehouse* new_dw);
 
   void errorEstimate(const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -297,7 +319,7 @@ protected:
   void scheduleInterpolateParticlesToGrid_CFI(SchedulerP&, 
                                               const PatchSet*,
                                               const MaterialSet*);
-                                              
+
   void scheduleCoarsenNodalData_CFI(SchedulerP&, 
                                     const PatchSet*,
                                     const MaterialSet*,
@@ -307,9 +329,9 @@ protected:
                                      const PatchSet*,
                                      const MaterialSet*);
                                     
-  void scheduleNodal_velocity_temperature(SchedulerP&, 
-                                          const PatchSet*,
-                                          const MaterialSet*);
+  void scheduleNormalizeNodalVelTempConc(SchedulerP&, 
+                                         const PatchSet*,
+                                         const MaterialSet*);
 
   virtual void scheduleComputeStressTensor(SchedulerP&, 
                                            const PatchSet*,
@@ -345,9 +367,11 @@ protected:
                                                        const PatchSet*,
                                                        const MaterialSet*);
                                                        
+#if 0
   void scheduleInterpolateToParticlesAndUpdate_CFI(SchedulerP&, 
                                                    const PatchSet*,
                                                    const MaterialSet*);
+#endif
 
   virtual void scheduleComputeParticleScaleFactor(SchedulerP&, 
                                                   const PatchSet*,
@@ -356,10 +380,16 @@ protected:
   virtual void scheduleFinalParticleUpdate(SchedulerP&,
                                            const PatchSet*,
                                            const MaterialSet*);
-  
-  //
+
+  virtual void scheduleAddParticles(SchedulerP&,
+                                    const PatchSet*,
+                                    const MaterialSet*);
+
+  virtual void scheduleReduceFlagsExtents(SchedulerP&,
+                                          const PatchSet*,
+                                          const MaterialSet*);
+
   //  count the total number of particles in the domain
-  //
   void scheduleCountParticles(const PatchSet* patches,
                                SchedulerP& sched);
                                                                                          
@@ -381,7 +411,7 @@ protected:
   //
   // returns does coarse patches have a CFI               
   void coarseLevelCFI_Patches(const PatchSubset* patches,
-                               Level::selectType& CFI_patches );
+                              Level::selectType& CFI_patches );
   
   SimulationStateP d_sharedState;
   MPMLabel* lb;
@@ -394,15 +424,23 @@ protected:
   int      d_nPaddingCells_Coarse;  // Number of cells on the coarse level that contain particles and surround a fine patch.
                                     // Coarse level particles are used in the task interpolateToParticlesAndUpdate_CFI.
                                    
-  Vector   d_acc_ans;               // debugging code used to check the answers (acceleration)
+  Vector   d_acc_ans; // debugging code used to check the answers (acceleration)
   double   d_acc_tol;
-  Vector   d_vel_ans;               // debugging code used to check the answers (velocity)
+  Vector   d_vel_ans; // debugging code used to check the answers (velocity)
   double   d_vel_tol;
 
 
   const VarLabel* pDbgLabel;        // debugging labels
   const VarLabel* gSumSLabel;                   
-                                   
+  const VarLabel* gZOINETLabel;                   
+  const VarLabel* gZOISWBLabel;                   
+  const VarLabel* RefineFlagXMaxLabel;
+  const VarLabel* RefineFlagXMinLabel;
+  const VarLabel* RefineFlagYMaxLabel;
+  const VarLabel* RefineFlagYMinLabel;
+  const VarLabel* RefineFlagZMaxLabel;
+  const VarLabel* RefineFlagZMinLabel;
+
   std::vector<MPMPhysicalBC*> d_physicalBCs;
   IntegratorType d_integrator;
 
@@ -475,8 +513,45 @@ private:
     }
   };
 
+  //--------------- Reaction Diffusion -----------------------
+  void scheduleCoarsenNodalScalarData_CFI(SchedulerP&, 
+                                          const PatchSet*,
+                                          const MaterialSet*);
+
+  void coarsenNodalScalarData_CFI(const ProcessorGroup*,
+                                  const PatchSubset* patches,
+                                  const MaterialSubset* matls,
+                                  DataWarehouse* old_dw,
+                                  DataWarehouse* new_dw);
+
+  virtual void scheduleComputeFlux(SchedulerP&,
+                                   const PatchSet*, const MaterialSet*);
+
+  virtual void computeFlux(const ProcessorGroup*, const PatchSubset* patches,
+                           const MaterialSubset* matls, DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
+
+  virtual void scheduleComputeDivergence(SchedulerP&,
+                                         const PatchSet*,
+                                         const MaterialSet*);
+
+  virtual void computeDivergence(const ProcessorGroup*,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw);
+
+  virtual void scheduleComputeDivergence_CFI(SchedulerP&,
+                                             const PatchSet*,
+                                             const MaterialSet*);
+
+  virtual void computeDivergence_CFI(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* matls,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
 };
-      
+
 } // end namespace Uintah
 
 #endif

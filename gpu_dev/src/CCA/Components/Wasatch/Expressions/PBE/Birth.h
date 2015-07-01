@@ -68,7 +68,7 @@ private:
 //  const FieldT* birthCoef_; // this will correspond to the coefficient in the Birth rate term
 //  const FieldT* rStar_; // this will correspond to m(k + x) x depends on which Birth model
   
-  DECLARE_FIELDS(FieldT, birthCoef_, rStar_);
+  DECLARE_FIELDS(FieldT, birthCoef_, rStar_)
 
   Birth( const Expr::Tag& birthCoefTag,
          const Expr::Tag& rStarTag,

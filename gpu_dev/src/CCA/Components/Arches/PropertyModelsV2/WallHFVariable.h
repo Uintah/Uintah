@@ -18,6 +18,8 @@ public:
 
     void register_initialize( std::vector<VariableInformation>& variable_registry );
 
+    void register_restart_initialize( std::vector<VariableInformation>& variable_registry );
+
     void register_timestep_init( std::vector<VariableInformation>& variable_registry ){}
 
     void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ); 
@@ -29,6 +31,9 @@ public:
 
     void initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                      SpatialOps::OperatorDatabase& opr );
+
+    void restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+                             SpatialOps::OperatorDatabase& opr );
     
     void timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
                         SpatialOps::OperatorDatabase& opr ){}
@@ -64,11 +69,16 @@ private:
     std::string _flux_x; 
     std::string _flux_y; 
     std::string _flux_z; 
+    std::string _net_power; 
+    std::string _area; 
+
+    double _eps; 
 
     int _f;
 
     SimulationStateP _shared_state; 
 
+    bool _new_variables; 
 
   };
 }

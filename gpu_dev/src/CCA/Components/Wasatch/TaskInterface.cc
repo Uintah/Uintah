@@ -85,15 +85,16 @@ typedef std::map<int,TreePtr> TreeMap;
   tcsh: setenv SCI_DEBUG WASATCH_TASKS:-
   bash: export SCI_DEBUG=WASATCH_TASKS:-
 
- To enable multiple debug flags, use a comma to separate them
-  tcsh: setenv SCI_DEBUG WASATCH_TASKS:+ WASATCH_FIELDS:+
-  bash: export SCI_DEBUG=WASATCH_TASKS:+, WASATCH_FIELDS:+
+ To enable multiple debug flags, put quotation marks around the flags and use a comma 
+ to separate them (no spaces after commas)
+  tcsh: setenv SCI_DEBUG "WASATCH_TASKS:+ WASATCH_FIELDS:+"
+  bash: export SCI_DEBUG="WASATCH_TASKS:+,WASATCH_FIELDS:+"
 
  To enable one flag and disable another that was previously enabled, either
  define a new flag excluding the unwanted flag, or redefine SCI_DEBUG with a -
- after the unwanted flag
-   tcsh: setenv SCI_DEBUG WASATCH_TASKS:- WASATCH_FIELDS:+
-   bash: export SCI_DEBUG=WASATCH_TASKS:-, WASATCH_FIELDS:+
+ after the unwanted flag (no spaces after commas)
+   tcsh: setenv SCI_DEBUG "WASATCH_TASKS:- WASATCH_FIELDS:+"
+   bash: export SCI_DEBUG="WASATCH_TASKS:-,WASATCH_FIELDS:+"
 
  */
 
@@ -270,27 +271,26 @@ namespace Wasatch{
       TreePtr tree = vt.second;
 
 #     ifdef HAVE_CUDA
-      bool isGPUTask = tree->is_homogeneous_gpu();
-
-      if( !(isGPUTask && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
+      const bool isHomogeneous = tree->is_homogeneous_gpu();
+      bool gpuTurnedOff = !isHomogeneous;
+      if( !(isHomogeneous && Uintah::Parallel::usingDevice()) || (taskName == "initialization") ) {
         // Force everything to CPU for initialization & also for heterogeneous tasks.
         // For heterogeneous graphs, ExprLib will control GPU execution.
         tree->turn_off_gpu_runnable();
-        isGPUTask = false;
-
+	gpuTurnedOff = true;
+	
         // Get the best device available
         tree->set_device_index( GPULoadBalancer::get_device_index(), *fml_ );
       }
 
       // Flag the task as Uintah GPU::Task, if it is homogeneous GPU graph
-      if( isGPUTask && Uintah::Parallel::usingDevice() && taskName != "initialization" ){
+      if( !gpuTurnedOff && Uintah::Parallel::usingDevice() && taskName != "initialization" ){
         tsk->usesDevice( true );
       }
 #     endif
 
       if( !hasPressureExpression_ ){
-        if( tree->computes_field( pressure_tag() ) && taskName != "initialization" )
-        {
+        if( tree->computes_field( pressure_tag() ) && taskName != "initialization" ){
           hasPressureExpression_ = true;
         }
       }
@@ -318,9 +318,9 @@ namespace Wasatch{
 
 #     ifdef HAVE_CUDA
       // For Heterogeneous case only
-      if( taskName != "initialization" && !isGPUTask ){
-        // For a heterogenous task, restore the GPU runnable property for the expressions.
-        tree->restore_gpu_runnable();
+      if( taskName != "initialization" && tree->is_homogeneous_gpu() && Uintah::Parallel::usingDevice() ){
+        // For a heterogeneous task, restore the GPU runnable property for the expressions.
+        if (gpuTurnedOff) tree->restore_gpu_runnable();
       }
 #     endif
 
@@ -625,105 +625,101 @@ namespace Wasatch{
 
     ExecMutex lock; // thread-safe
 
-    if( event == Uintah::Task::CPU || event == Uintah::Task::GPU ){
+    const bool isGPUTask = (event == Uintah::Task::GPU);
 
-      bool isGPUTask = false;
+    // preventing postGPU / preGPU callbacks to execute the tree again
+    for( int ip=0; ip<patches->size(); ++ip ){
 
-      // preventing postGPU / preGPU callbacks to execute the tree again
-      for( int ip=0; ip<patches->size(); ++ip ){
+      const Uintah::Patch* const patch = patches->get(ip);
+      const int patchID = patch->getID();
+      PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
+      ASSERT( iptm != patchTreeMap_.end() );
+      const TreePtr tree = iptm->second.tree;
 
-        const Uintah::Patch* const patch = patches->get(ip);
-        const int patchID = patch->getID();
-        PatchTreeTaskMap::iterator iptm = patchTreeMap_.find(patchID);
-        ASSERT( iptm != patchTreeMap_.end() );
-        const TreePtr tree = iptm->second.tree;
+#     ifdef HAVE_CUDA
+      if( isGPUTask ){ // homogeneous GPU task
+        dbg_tasks << endl
+            << "Executing -  Wasatch as Homogeneous GPU Task : " << taskName_
+            << " on patch : " << patch->getID()
+            << endl;
 
-#       ifdef HAVE_CUDA
-        if( event == Uintah::Task::GPU ){ // homogeneous GPU task
-          isGPUTask = true;
+        // set the device index passed from Uintah to the Expression tree
+        // Currently it is not yet fixed as the callback is not providing deviceID
+        tree->set_device_index( deviceID, *fml_);
+      }
+#     endif
+
+      Expr::ExpressionFactory& factory = tree->get_expression_factory();
+      const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
+
+      for( int im=0; im<materials->size(); ++im ){
+
+        const int material = materials->get(im);
+        try{
           dbg_tasks << endl
-              << "Executing -  Wasatch as Homogeneous GPU Task : " << taskName_
-              << " for patch : " << patch->getID()
-              << endl;
+                    << "Wasatch: executing graph '" << taskName_
+                    << "' for patch " << patch->getID()
+                    << " and material " << material
+                    << endl;
+          if( dbg_tasks_on ) fml_->dump_fields(std::cout);
 
-          // set the device index passed from Uintah to the Expression tree
-          // Currently it is not yet fixed as the callback is not providing deviceID
-          tree->set_device_index( deviceID, *fml_);
-        }
-#       endif
 
-        Expr::ExpressionFactory& factory = tree->get_expression_factory();
-        const SpatialOps::OperatorDatabase& opdb = *iptm->second.operators;
+          Uintah::ParticleSubset* const pset = newDW->haveParticleSubset(material, patch) ?
+              newDW->getParticleSubset(material, patch) :
+              ( oldDW ? (oldDW->haveParticleSubset(material, patch) ? oldDW->getParticleSubset(material, patch) : NULL ) : NULL );
 
-        for( int im=0; im<materials->size(); ++im ){
+          AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
+          fml_->allocate_fields( ainfo );
 
-          const int material = materials->get(im);
-          try{
-            dbg_tasks << endl
-                << "Wasatch: executing graph '" << taskName_
-                << "' for patch " << patch->getID()
-                << " and material " << material
-                << endl;
-            if( dbg_tasks_on ) fml_->dump_fields(std::cout);
+          if( hasPressureExpression_ ){
+            Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+            pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
+          }
 
-            
-            Uintah::ParticleSubset* const pset = newDW->haveParticleSubset(material, patch) ?
-                                                 newDW->getParticleSubset(material, patch) :
-                                                ( oldDW ? (oldDW->haveParticleSubset(material, patch) ? oldDW->getParticleSubset(material, patch) : NULL ) : NULL );
-            
-            AllocInfo ainfo( oldDW, newDW, material, patch, pset, pg, isGPUTask );
-            fml_->allocate_fields( ainfo );
-
-            if( hasPressureExpression_ ){
-              Pressure& pexpr = dynamic_cast<Pressure&>( factory.retrieve_expression( pressure_tag(), patchID, true ) );
+          BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
+            if( tree->computes_field( ptag ) ){
+              PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
               pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
             }
-
-            BOOST_FOREACH( const Expr::Tag& ptag, PoissonExpression::poissonTagList ){
-              if( tree->computes_field( ptag ) ){
-                PoissonExpression& pexpr = dynamic_cast<PoissonExpression&>( factory.retrieve_expression( ptag, patchID, true ) );
-                pexpr.bind_uintah_vars( newDW, patch, material, rkStage );
-              }
-            }
-
-            // In case we want to copy coordinates instead of recomputing them, uncomment the following lines
-//            OldVariable& oldVar = OldVariable::self();
-//            typedef std::map<Expr::Tag, std::string> CoordMapT;
-//            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
-//              const Expr::Tag& coordTag = coordPair.first;
-//              const std::string& coordFieldT = coordPair.second;
-//
-//              if( ! tree->computes_field(coordTag) ) continue;
-//
-//              if     ( coordFieldT == "SVOL" ) oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true );
-//              else if( coordFieldT == "XVOL" ) oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true );
-//              else if( coordFieldT == "YVOL" ) oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true );
-//              else if( coordFieldT == "ZVOL" ) oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true );
-//            }
-
-            BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
-              if( tree->computes_field( tag ) ){
-                DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID, true ) );
-                std::cout << "Binding vars for " << tag << " ..." << std::flush;
-                rad.bind_uintah_vars( newDW, patch, material, rkStage );
-                std::cout << "done\n";
-              }
-            }
-
-            tree->bind_fields( *fml_ );
-            tree->bind_operators( opdb );
-            tree->execute_tree();
-
-            dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
-            fml_->deallocate_fields();
           }
-          catch( std::exception& e ){
-            proc0cout << e.what() << endl;
-            throw std::runtime_error( "Error" );
+
+          // In case we want to copy coordinates instead of recomputing them, uncomment the following lines
+          //            OldVariable& oldVar = OldVariable::self();
+          //            typedef std::map<Expr::Tag, std::string> CoordMapT;
+          //            BOOST_FOREACH( const CoordMapT::value_type& coordPair, CoordinateNames::coordinate_map() ){
+          //              const Expr::Tag& coordTag = coordPair.first;
+          //              const std::string& coordFieldT = coordPair.second;
+          //
+          //              if( ! tree->computes_field(coordTag) ) continue;
+          //
+          //              if     ( coordFieldT == "SVOL" ) oldVar.add_variable<SVolField>( ADVANCE_SOLUTION, coordTag, true );
+          //              else if( coordFieldT == "XVOL" ) oldVar.add_variable<XVolField>( ADVANCE_SOLUTION, coordTag, true );
+          //              else if( coordFieldT == "YVOL" ) oldVar.add_variable<YVolField>( ADVANCE_SOLUTION, coordTag, true );
+          //              else if( coordFieldT == "ZVOL" ) oldVar.add_variable<ZVolField>( ADVANCE_SOLUTION, coordTag, true );
+          //            }
+
+          BOOST_FOREACH( const Expr::Tag& tag, DORadSolver::intensityTags ){
+            if( tree->computes_field( tag ) ){
+              DORadSolver& rad = dynamic_cast<DORadSolver&>( factory.retrieve_expression(tag,patchID, true ) );
+              std::cout << "Binding vars for " << tag << " ..." << std::flush;
+              rad.bind_uintah_vars( newDW, patch, material, rkStage );
+              std::cout << "done\n";
+            }
           }
+
+          tree->bind_fields( *fml_ );
+          tree->bind_operators( opdb );
+          tree->execute_tree();
+
+          dbg_tasks << "Wasatch: done executing graph '" << taskName_ << "'" << endl;
+          fml_->deallocate_fields();
+        }
+        catch( std::exception& e ){
+          proc0cout << e.what() << endl;
+          throw std::runtime_error( "Error" );
         }
       }
-    } // event : GPU, CPU
+    }
   }
 
 

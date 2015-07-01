@@ -15,35 +15,35 @@
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-dirichlet-a" state="STATE_NONE"/>
+      <NameTag name="phi-dirichlet-dirichlet-a"/>
       <Constant>0.0</Constant>
     </BasicExpression>
     
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-dirichlet-b" state="STATE_NONE"/>
+      <NameTag name="phi-dirichlet-dirichlet-b"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-dirichlet-neumann" state="STATE_NONE"/>
+      <NameTag name="phi-dirichlet-neumann"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-neumann-dirichlet" state="STATE_NONE"/>
+      <NameTag name="phi-neumann-dirichlet"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition for non-staggered scalar -->
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi-neumann-neumann" state="STATE_NONE"/>
+      <NameTag name="phi-neumann-neumann"/>
       <Constant>0.0</Constant>
     </BasicExpression>
 

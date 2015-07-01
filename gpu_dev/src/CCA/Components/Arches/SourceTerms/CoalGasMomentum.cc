@@ -52,17 +52,10 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
   std::string taskname = "CoalGasMomentum::eval";
   Task* tsk = scinew Task(taskname, this, &CoalGasMomentum::computeSource, timeSubStep);
 
-  Task::WhichDW which_dw; 
   if (timeSubStep == 0 ) { 
-
     tsk->computes(_src_label);
-    which_dw = Task::OldDW; 
-
   } else {
-
     tsk->modifies(_src_label); 
-    which_dw = Task::NewDW; 
-
   }
 
   DQMOMEqnFactory& dqmomFactory  = DQMOMEqnFactory::self(); 
@@ -81,7 +74,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     ModelBase& modelx = modelFactory.retrieve_model( model_name ); 
 
     const VarLabel* tempgasLabel_x = modelx.getGasSourceLabel();
-    tsk->requires( which_dw, tempgasLabel_x, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempgasLabel_x, Ghost::None, 0 );
 
     model_name = "ydragforce"; 
     model_name += "_qn";
@@ -90,7 +83,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     ModelBase& modely = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_y = modely.getGasSourceLabel();
-    tsk->requires( which_dw, tempgasLabel_y, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempgasLabel_y, Ghost::None, 0 );
 
     model_name = "zdragforce";
     model_name += "_qn";
@@ -99,7 +92,7 @@ CoalGasMomentum::sched_computeSource( const LevelP& level, SchedulerP& sched, in
     ModelBase& modelz = modelFactory.retrieve_model( model_name );
 
     const VarLabel* tempgasLabel_z = modelz.getGasSourceLabel();
-    tsk->requires( which_dw, tempgasLabel_z, Ghost::None, 0 );
+    tsk->requires( Task::NewDW, tempgasLabel_z, Ghost::None, 0 );
 
   }
   
@@ -130,14 +123,11 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
     CoalModelFactory& modelFactory = CoalModelFactory::self(); 
     
     CCVariable<Vector> dragSrc; 
-    DataWarehouse* which_dw; 
     if ( timeSubStep == 0 ){ 
       new_dw->allocateAndPut( dragSrc, _src_label, matlIndex, patch );
       dragSrc.initialize(Vector(0.,0.,0.));
-      which_dw = old_dw; 
     } else { 
       new_dw->getModifiable( dragSrc, _src_label, matlIndex, patch ); 
-      which_dw = new_dw; 
     }
     
     for (int iqn = 0; iqn < dqmomFactory.get_quad_nodes(); iqn++){
@@ -156,7 +146,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       ModelBase& modelx = modelFactory.retrieve_model( model_name );
 
       const VarLabel* XDragGasLabel = modelx.getGasSourceLabel();  
-      which_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
+      new_dw->get( qn_gas_xdrag, XDragGasLabel, matlIndex, patch, gn, 0 );
 
       constCCVariable<double> qn_gas_ydrag;
       model_name = "ydragforce";
@@ -166,7 +156,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       ModelBase& modely = modelFactory.retrieve_model( model_name );
 
       const VarLabel* YDragGasLabel = modely.getGasSourceLabel();
-      which_dw->get( qn_gas_ydrag, YDragGasLabel, matlIndex, patch, gn, 0 );
+      new_dw->get( qn_gas_ydrag, YDragGasLabel, matlIndex, patch, gn, 0 );
 
       constCCVariable<double> qn_gas_zdrag;
       model_name = "zdragforce";
@@ -176,7 +166,7 @@ CoalGasMomentum::computeSource( const ProcessorGroup* pc,
       ModelBase& modelz = modelFactory.retrieve_model( model_name );
 
       const VarLabel* ZDragGasLabel = modelz.getGasSourceLabel();
-      which_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
+      new_dw->get( qn_gas_zdrag, ZDragGasLabel, matlIndex, patch, gn, 0 );
 
 
       for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){

@@ -37,8 +37,8 @@ class QuadratureClosure
  : public Expr::Expression<FieldT>
 {
 
-  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
-  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_)
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_)
 //  const Expr::TagList weightsTagList_; // these are the tags of all the known moments
 //  const Expr::TagList abscissaeTagList_; // these are the tags of all the known moments
   const double momentOrder_; // order of this unclosed moment. this will be used int he quadrature

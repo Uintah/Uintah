@@ -50,7 +50,6 @@
 
 namespace Uintah {
 
-using namespace SCIRun;
  class DataWarehouse;
  class MPMLabel;
  class ProcessorGroup;
@@ -102,6 +101,8 @@ public:
   virtual void outputProblemSpec(ProblemSpecP& ps);
 
   virtual void scheduleInitialize(const LevelP& level, SchedulerP&);
+
+  virtual void scheduleRestartInitialize(const LevelP& level, SchedulerP& sched);
 
   virtual void switchInitialize(const LevelP& level, SchedulerP&);
 

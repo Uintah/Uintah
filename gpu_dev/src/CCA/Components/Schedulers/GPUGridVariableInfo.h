@@ -18,7 +18,8 @@ public:
             size_t sizeOfDataType,
             size_t varMemSize,
             IntVector offset,
-            int materialIndex,
+            int matlIndx,
+            int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
             bool validOnDevice,
@@ -29,7 +30,8 @@ public:
   DeviceGridVariableInfo(Variable* var,
             size_t sizeOfDataType,
             size_t varMemSize,
-            int materialIndex,
+            int matlIndx,
+            int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
             bool validOnDevice,
@@ -40,7 +42,8 @@ public:
   size_t sizeOfDataType;
   size_t varMemSize;
   IntVector offset;
-  int materialIndex;
+  int matlIndx;
+  int levelIndx;
   const Patch* patchPointer;
   const Task::Dependency* dep;
   bool validOnDevice;
@@ -54,7 +57,8 @@ class DeviceGridVariables {
 public:
   DeviceGridVariables();
   void add(const Patch* patchPointer,
-            int materialIndex,
+            int matlIndx,
+            int levelIndx,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -67,7 +71,8 @@ public:
             int whichGPU);
 
   void add(const Patch* patchPointer,
-              int materialIndex,
+              int matlIndx,
+              int levelIndx,
               size_t sizeOfDataType,
               size_t varMemSize,
               Variable* var,
@@ -83,7 +88,9 @@ public:
 
   unsigned int numItems();
 
-  int getMaterialIndex(int index);
+  int getMatlIndx(int index);
+
+  int getLevelIndx(int index);
 
   const Patch* getPatchPointer(int index);
 

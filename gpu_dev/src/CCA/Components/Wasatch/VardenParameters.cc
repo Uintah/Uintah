@@ -30,6 +30,7 @@ namespace Wasatch {
   VarDenParameters::VarDenParameters()
   {
     alpha0  = 0.1;
+    gaussWidth = 0.01;
     model  = CONSTANT;
     onePredictor = false;
   };
@@ -47,10 +48,13 @@ namespace Wasatch {
       varDenInputParams.model = VarDenParameters::CONSTANT;
     } else if ( varDenModelName.compare("IMPULSE") == 0 ) {
       varDenInputParams.model = VarDenParameters::IMPULSE;
+    } else if ( varDenModelName.compare("SMOOTHIMPULSE") == 0 ) {
+      varDenInputParams.model = VarDenParameters::SMOOTHIMPULSE;
+      varDenSpec->get("ImpulseWidth",varDenInputParams.gaussWidth);
     } else if ( varDenModelName.compare("DYNAMIC") == 0 ) {
       varDenInputParams.model = VarDenParameters::DYNAMIC;
     }
-    // get the turbulent Prandtl number
+    // get the alpha0 coefficient
     varDenSpec->getAttribute("coefficient",varDenInputParams.alpha0 );
     
     // check how many predictors to use

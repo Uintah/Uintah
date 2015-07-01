@@ -708,7 +708,12 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
 }
-
+//______________________________________________________________________
+//
+void ICE::scheduleRestartInitialize(const LevelP& level,
+                                    SchedulerP& sched)
+{
+}
 /* _____________________________________________________________________
  Function~  ICE::restartInitialize--
  Purpose:   Set variables that are normally set during the initialization

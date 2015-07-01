@@ -14,97 +14,97 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_central" state="STATE_NONE"/>
+      <NameTag name="phi_central"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_upwind" state="STATE_NONE"/>
+      <NameTag name="phi_upwind"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_superbee" state="STATE_NONE"/>
+      <NameTag name="phi_superbee"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_charm" state="STATE_NONE"/>
+      <NameTag name="phi_charm"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_koren" state="STATE_NONE"/>
+      <NameTag name="phi_koren"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_mc" state="STATE_NONE"/>
+      <NameTag name="phi_mc"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_ospre" state="STATE_NONE"/>
+      <NameTag name="phi_ospre"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_smart" state="STATE_NONE"/>
+      <NameTag name="phi_smart"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_vanleer" state="STATE_NONE"/>
+      <NameTag name="phi_vanleer"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_hcus" state="STATE_NONE"/>
+      <NameTag name="phi_hcus"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_minmod" state="STATE_NONE"/>
+      <NameTag name="phi_minmod"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="phi_hquick" state="STATE_NONE"/>
+      <NameTag name="phi_hquick"/>
       <SineFunction amplitude="1.0" frequency="6.283185307179586" offset="0.0">
-         <NameTag name="YSVOL" state="STATE_NONE"/>
+         <NameTag name="YSVOL"/>
        </SineFunction>
     </BasicExpression>
 
@@ -112,7 +112,7 @@
     <!-- CREATE AN EXPRESSION FOR THE VELOCITY FIELD -->
     <BasicExpression type="YVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="v" state="STATE_NONE"/>
+      <NameTag name="v"/>
       <Constant>1.0</Constant>
     </BasicExpression>
     <!-- Build a non-staggered scalar transport equation -->
@@ -122,7 +122,7 @@
 
       <ConvectiveFlux direction="Y" method="CENTRAL">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -135,7 +135,7 @@
 
       <ConvectiveFlux direction="Y" method="UPWIND">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -148,7 +148,7 @@
 
       <ConvectiveFlux direction="Y" method="SUPERBEE">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -162,7 +162,7 @@
 
       <ConvectiveFlux direction="Y" method="CHARM">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -175,7 +175,7 @@
 
       <ConvectiveFlux direction="Y" method="KOREN">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -189,7 +189,7 @@
 
       <ConvectiveFlux direction="Y" method="MC">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -203,7 +203,7 @@
 
       <ConvectiveFlux direction="Y" method="OSPRE">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -217,7 +217,7 @@
 
       <ConvectiveFlux direction="Y" method="SMART">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -230,7 +230,7 @@
 
       <ConvectiveFlux direction="Y" method="VANLEER">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -243,7 +243,7 @@
 
       <ConvectiveFlux direction="Y" method="HCUS">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -256,7 +256,7 @@
 
       <ConvectiveFlux direction="Y" method="MINMOD">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 
@@ -269,7 +269,7 @@
 
       <ConvectiveFlux direction="Y" method="HQUICK">
         <AdvectiveVelocity>
-            <NameTag name="v" state="STATE_NONE"/>
+            <NameTag name="v"/>
         </AdvectiveVelocity>
       </ConvectiveFlux>
 

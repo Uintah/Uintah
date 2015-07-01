@@ -364,7 +364,7 @@
             <depend_varname>adiabaticenthalpy</depend_varname>
           </initialization>
           <src label="divQ_rmcrt" >
-            <weight>-1 </weight> 
+            <weight>1 </weight> 
           </src>        
         </Eqn>
         

@@ -61,7 +61,7 @@
  *
  *
  */
-class MTRand; //forward declaration for use in updateSumI
+class MTRand; // forward declaration for use in updateSumI
 
 namespace Uintah{
 
@@ -94,6 +94,7 @@ namespace Uintah{
                                      SchedulerP& sched,
                                      Task::WhichDW abskg_dw,
                                      Task::WhichDW sigma_dw,
+                                     Task::WhichDW celltype_dw,
                                      bool modifies_divQ,
                                      const int radCalc_freq );
 
@@ -108,11 +109,11 @@ namespace Uintah{
       //__________________________________
       //  Boundary condition related
       /** @brief Set boundary conditions */
-      
+
       void setBC_onOff( const bool onOff){
         d_onOff_SetBCs = onOff;
       }
-      
+
       void  sched_setBoundaryConditions( const LevelP& level,
                                          SchedulerP& sched,
                                          Task::WhichDW temp_dw,
@@ -120,7 +121,7 @@ namespace Uintah{
                                          const bool backoutTemp = false);
 
       void BC_bulletproofing( const ProblemSpecP& rmcrtps );
-                               
+
 
       template< class T, class V >
       void setBC(CCVariable<T>& Q_CC,
@@ -141,15 +142,20 @@ namespace Uintah{
                              const bool modifiesd_sigmaT4,
                              const int radCalc_freq );
 
+      void sched_computeCellType ( const LevelP& coarseLevel,
+                                   SchedulerP& sched,
+                                   const int value);
 
       void sched_ROI_Extents ( const LevelP& level,
                                SchedulerP& scheduler );
-                               
+
       Radiometer* getRadiometer(){
         return d_radiometer;
       }
-                               
 
+      bool getBool_solveBoundaryFlux(){
+        return d_solveBoundaryFlux;
+      }
 
     //______________________________________________________________________
     private:
@@ -163,11 +169,19 @@ namespace Uintah{
       bool d_solveBoundaryFlux;
       bool d_solveDivQ;
       bool d_CCRays;
-      bool d_onOff_SetBCs;                // switch for setting boundary conditions
+      bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
-      bool d_applyFilter;                 // Allow for filtering of boundFlux and divQ results
+      bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
 
-      enum ROI_algo{fixed, dynamic, patch_based};
+      enum Algorithm{ dataOnion,            
+                      coarseLevel, 
+                      singleLevel
+                    };
+      enum ROI_algo{  fixed,                // user specifies fixed low and high point for a bounding box 
+                      dynamic,              // user specifies thresholds that are used to dynamically determine ROI
+                      patch_based,          // The patch extents + halo are the ROI
+                    };
+                    
       ROI_algo  d_whichROI_algo;
       Point d_ROI_minPt;
       Point d_ROI_maxPt;
@@ -193,7 +207,7 @@ namespace Uintah{
 
       //__________________________________
       template<class T>
-      void rayTrace( const ProcessorGroup* pc,
+      void rayTrace( const ProcessorGroup* pg,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* old_dw,
@@ -220,11 +234,11 @@ namespace Uintah{
                         Task::WhichDW which_abskg_dw,
                         Task::WhichDW whichd_sigmaT4_dw,
                         Task::WhichDW which_celltype_dw,
-                        const int radCalc_freq);
+                        const int radCalc_freq );
 
       //__________________________________
       template<class T>
-      void rayTrace_dataOnion( const ProcessorGroup* pc,
+      void rayTrace_dataOnion( const ProcessorGroup* pg,
                                const PatchSubset* patches,
                                const MaterialSubset* matls,
                                DataWarehouse* old_dw,
@@ -232,40 +246,60 @@ namespace Uintah{
                                bool modifies_divQ,
                                Task::WhichDW which_abskg_dw,
                                Task::WhichDW whichd_sigmaT4_dw,
+                               Task::WhichDW which_celltype_dw,
                                const int radCalc_freq );
-      //__________________________________
-      template<class T>
-      void  updateSumI_ML ( Vector& ray_direction,
-                            Vector& ray_location,
-                            const IntVector& origin,
-                            const std::vector<Vector>& Dx,
-                            const BBox& domain_BB,
-                            const int maxLevels,
-                            const Level* fineLevel,
-                            double DyDx[],
-                            double DzDx[],
-                            const IntVector& fineLevel_ROI_Lo,
-                            const IntVector& fineLevel_ROI_Hi,
-                            std::vector<IntVector>& regionLo,
-                            std::vector<IntVector>& regionHi,
-                            StaticArray< constCCVariable< T > >& sigmaT4Pi,
-                            StaticArray< constCCVariable< T > >& abskg,
-                            unsigned long int& size,
-                            double& sumI,
-                            MTRand& mTwister);
-     //__________________________________
-     void computeExtents(LevelP level_0,
-                        const Level* fineLevel,
-                        const Patch* patch,
-                        const int maxlevels,
-                        DataWarehouse* new_dw,
-                        IntVector& fineLevel_ROI_Lo,
-                        IntVector& fineLevel_ROI_Hi,
-                        std::vector<IntVector>& regionLo,
-                        std::vector<IntVector>& regionHi);
 
       //__________________________________
-      void filter( const ProcessorGroup* pc,
+      template<class T>
+      void rayTraceDataOnionGPU( Task::CallBackEvent event,
+                                 const ProcessorGroup* pg,
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw,
+                                 DataWarehouse* new_dw,
+                                 void* oldTaskGpuDW,
+                                 void* newTaskGpuDW,
+                                 void* stream,
+                                 int deviceID,
+                                 bool modifies_divQ,
+                                 Task::WhichDW which_abskg_dw,
+                                 Task::WhichDW whichd_sigmaT4_dw,
+                                 Task::WhichDW which_celltype_dw,
+                                 const int radCalc_freq );
+      //__________________________________
+      template<class T>
+      void updateSumI_ML ( Vector& ray_direction,
+                           Vector& ray_location,
+                           const IntVector& origin,
+                           const std::vector<Vector>& Dx,
+                           const BBox& domain_BB,
+                           const int maxLevels,
+                           const Level* fineLevel,
+                           double DyDx[],
+                           double DzDx[],
+                           const IntVector& fineLevel_ROI_Lo,
+                           const IntVector& fineLevel_ROI_Hi,
+                           std::vector<IntVector>& regionLo,
+                           std::vector<IntVector>& regionHi,
+                           StaticArray< constCCVariable< T > >& sigmaT4Pi,
+                           StaticArray< constCCVariable< T > >& abskg,
+                           StaticArray< constCCVariable< int > >& cellType,
+                           unsigned long int& size,
+                           double& sumI,
+                           MTRand& mTwister);
+     //__________________________________
+     void computeExtents( LevelP level_0,
+                          const Level* fineLevel,
+                          const Patch* patch,
+                          const int maxlevels,
+                          DataWarehouse* new_dw,
+                          IntVector& fineLevel_ROI_Lo,
+                          IntVector& fineLevel_ROI_Hi,
+                          std::vector<IntVector>& regionLo,
+                          std::vector<IntVector>& regionHi );
+
+      //__________________________________
+      void filter( const ProcessorGroup* pg,
                     const PatchSubset* patches,
                     const MaterialSubset* matls,
                     DataWarehouse* old_dw,
@@ -275,10 +309,10 @@ namespace Uintah{
                     bool modifies_divQFilt);
 
       //__________________________________
-      inline bool containsCell(const IntVector &low,
-                               const IntVector &high,
-                               const IntVector &cell,
-                               const int &dir);
+      inline bool containsCell( const IntVector &low,
+                                const IntVector &high,
+                                const IntVector &cell,
+                                const int &dir );
 
       //__________________________________
       /** @brief Adjust the location of a ray origin depending on the cell face */
@@ -336,7 +370,7 @@ namespace Uintah{
                           const bool modifies,
                           const VarLabel* variable,
                           const int radCalc_freq);
-    
+
     template< class T >
     void coarsen_Q ( const ProcessorGroup*,
                      const PatchSubset* patches,
@@ -347,14 +381,14 @@ namespace Uintah{
                      const bool modifies,
                      Task::WhichDW this_dw,
                      const int radCalc_freq);
-                     
-    void coarsen_cellType( const ProcessorGroup*,
-                           const PatchSubset* patches,       
-                           const MaterialSubset*,      
-                           DataWarehouse*,            
-                           DataWarehouse* new_dw,            
-                           const int radCalc_freq );
-                     
+
+    void computeCellType( const ProcessorGroup*,
+                          const PatchSubset* patches,
+                          const MaterialSubset* matls,
+                          DataWarehouse* old_dw,
+                          DataWarehouse* new_dw,
+                          const int value );
+
     template< class T >
     void ROI_Extents ( const ProcessorGroup*,
                        const PatchSubset* patches,
@@ -370,7 +404,9 @@ namespace Uintah{
     bool greater_Eq( const IntVector& a, const IntVector& b ){
       return ( a.x() >= b.x() && a.y() >= b.y() && a.z() >= b.z() );
     }
-
+    bool greater( const IntVector& a, const IntVector& b ){
+      return ( a.x() > b.x() && a.y() > b.y() && a.z() > b.z() );
+    }
   }; // class Ray
 
 } // namespace Uintah

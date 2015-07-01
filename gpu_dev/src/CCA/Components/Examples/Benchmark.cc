@@ -87,6 +87,12 @@ void Benchmark::scheduleInitialize(const LevelP& level,
 }
 //______________________________________________________________________
 //
+void Benchmark::scheduleRestartInitialize(const LevelP& level,
+                                          SchedulerP& sched)
+{
+}
+//______________________________________________________________________
+//
 void Benchmark::scheduleComputeStableTimestep(const LevelP& level,
                                              SchedulerP& sched)
 {

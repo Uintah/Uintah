@@ -74,14 +74,14 @@ void TiledRegridder::ComputeTiles( vector<IntVector> &tiles,
 
   const PatchSubset *ps=lb_->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
   int newLevelIndex=level->getIndex()+1;
+
   //for each patch I own
-  for(int p=0;p<ps->size();p++)
-  {
+  for(int p=0;p<ps->size();p++) {
 
     const Patch *patch=ps->get(p);
     constCCVariable<int> flags;
     dw->get(flags, d_dilatedCellsRegridLabel, 0, patch, Ghost::None, 0);
-    
+
     //compute fine level patch extents
     IntVector patchLow  = patch->getCellLowIndex()  * cellRefinementRatio;
     IntVector patchHigh = patch->getCellHighIndex() * cellRefinementRatio;
@@ -110,7 +110,6 @@ void TiledRegridder::ComputeTiles( vector<IntVector> &tiles,
       IntVector searchHigh=Min(cellHigh,patchHigh)/cellRefinementRatio;
 
 #if 0
-    //  if(patch->containsCell(target) ){
       if(patch->getID() == 222082){
           cout << "   Patch_ID  " << patch->getID() << endl;
           cout << "   coarsePatch : "<< patch->getCellLowIndex() << " patchHigh: " << patch->getCellHighIndex() << endl;
@@ -166,8 +165,7 @@ double rtimes[20]={0};
 //
 Grid* TiledRegridder::regrid(Grid* oldGrid)
 {
-  if(rgtimes.active())
-  {
+  if(rgtimes.active()) {
     for(int i=0;i<20;i++)
       rtimes[i]=0;
   }
@@ -178,8 +176,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   vector< vector<IntVector> > tiles(min(oldGrid->numLevels()+1,d_maxLevels));
 
   //for each level fine to coarse 
-  for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--)
-  {
+  for(int l=min(oldGrid->numLevels()-1,d_maxLevels-2); l >= 0;l--) {
     //MPI_Barrier(d_myworld->getComm());
     rtimes[15+l]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
@@ -192,14 +189,13 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
     start=Time::currentSeconds();
     
     //compute volume using minimum tile size
-    ComputeTiles( mytiles, level, d_minTileSize[l+1], d_cellRefinementRatio[l] );
+    ComputeTiles(mytiles, level, d_minTileSize[l+1], d_cellRefinementRatio[l]);
     rtimes[1]+=Time::currentSeconds()-start;
     start=Time::currentSeconds();
 
     GatherTiles(mytiles,tiles[l+1]);
 
-    if(l>0) 
-    {
+    if(l>0) {
       //add flags to the coarser level to ensure that boundary layers exist and that fine patches have a coarse patches above them.
       CoarsenFlags(oldGrid,l,tiles[l+1]);
     }
@@ -208,9 +204,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   }
 
   //level 0 does not change so just copy the patches over.
-  for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++)
-  {
-    tiles[0].push_back( computeTileIndex((*p)->getCellLowIndex(), d_tileSize[0]) );
+  for (Level::const_patchIterator p = oldGrid->getLevel(0)->patchesBegin(); p != oldGrid->getLevel(0)->patchesEnd(); p++) {
+    tiles[0].push_back(computeTileIndex((*p)->getCellLowIndex(),d_tileSize[0]));
   }
 
   //Create the grid
@@ -219,9 +214,7 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   rtimes[7]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
 
-
-  if(*newGrid==*oldGrid)
-  {
+  if(*newGrid==*oldGrid) {
     delete newGrid;
     return oldGrid;
   }
@@ -234,14 +227,12 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
 
-  for(int l=0;l<newGrid->numLevels();l++)
-  {
+  for(int l=0;l<newGrid->numLevels();l++) {
     LevelP level= newGrid->getLevel(l);
     level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     //level->assignBCS(grid_ps_,0);
   }
-  
-  
+
   rtimes[9]+=Time::currentSeconds()-start;
   start=Time::currentSeconds();
   TAU_PROFILE_STOP(finalizetimer);
@@ -250,7 +241,6 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
   OutputGridStats(newGrid);
-
 
   //initialize the weights on new patches
   lb_->initializeWeights(oldGrid,newGrid);
@@ -267,8 +257,8 @@ Grid* TiledRegridder::regrid(Grid* oldGrid)
   start=Time::currentSeconds();
 
 
-  if(rgtimes.active())
-  {
+  // ignore...
+  if(rgtimes.active()) {
     double avg[20]={0};
     MPI_Reduce(&rtimes,&avg,20,MPI_DOUBLE,MPI_SUM,0,d_myworld->getComm());
     if(d_myworld->myrank()==0) {
@@ -308,8 +298,7 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tile
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
 
   //For each level Coarse -> Fine
-  for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++)
-  {
+  for(int l=0; l < oldGrid->numLevels()+1 && l < d_maxLevels;l++) {
     // if level is not needed, don't create any more levels
     if(tiles[l].size()==0)
        break;
@@ -319,8 +308,7 @@ Grid* TiledRegridder::CreateGrid(Grid* oldGrid, vector<vector<IntVector> > &tile
 
     //cout << "New level " << l << " num patches " << patch_sets[l-1].size() << endl;
     //for each patch
-    for(unsigned int p=0;p<tiles[l].size();p++)
-    {
+    for(unsigned int p=0;p<tiles[l].size();p++) {
       IntVector low = computeCellLowIndex(  tiles[l][p],d_numCells[l],d_tileSize[l]);
       IntVector high = computeCellHighIndex(tiles[l][p],d_numCells[l],d_tileSize[l]);
       //cout << "level: " << l << " Creating patch from tile " << tiles[l][p] << " at " << low << ", " << high << endl;

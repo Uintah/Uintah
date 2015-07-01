@@ -231,8 +231,8 @@ InternalVar_ArenaKappa::computeInternalVariable(const ModelState* state) const
     // (see "eq:evolutionOfKappaFluidEffect" in the Arenisca manual)
     kappa_new = computeKappaFromX1(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
-    //if (isnan(kappa_new) || kappa_new > 0) {
-    if (isnan(kappa_new)) {
+    //if (std::isnan(kappa_new) || kappa_new > 0) {
+    if (std::isnan(kappa_new)) {
         cerr << " kappa_new = " << kappa_new
              << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
              << " delta_eps_v = " << delta_eps_v << endl;
@@ -245,8 +245,8 @@ InternalVar_ArenaKappa::computeInternalVariable(const ModelState* state) const
     // (for the limitation of max_X see "eq:limitationForX" in the Arenisca manual)
     kappa_new = computeKappaFromX2(kappa_old, eps_v, delta_eps_v,
                                    tolerance, maxiter);
-    //if (isnan(kappa_new) || kappa_new > 0) {
-    if (isnan(kappa_new)) {
+    //if (std::isnan(kappa_new) || kappa_new > 0) {
+    if (std::isnan(kappa_new)) {
         cerr << " kappa_new = " << kappa_new
              << " kappa_old = " << kappa_old << " eps_v = " << eps_v 
              << " delta_eps_v = " << delta_eps_v << endl;
@@ -303,13 +303,13 @@ InternalVar_ArenaKappa::computeKappaFromX1(const double& kappa_old,
     ++iter;
   } while((fabs(kappa_new_iter - kappa_new_iter_old) > tolerance) && (iter < maxiter));
   kappa_new_iter_old = kappa_new_iter;
-  if (!(iter < maxiter) || isnan(kappa_new_iter)) {
+  if (!(iter < maxiter) || std::isnan(kappa_new_iter)) {
     kappa_new_iter = computeKappaAtX1Min(deltaEpsv);
-    if (isnan(kappa_new_iter) & !(isnan(kappa_new_iter_old))) kappa_new_iter = kappa_new_iter_old;
+    if (std::isnan(kappa_new_iter) & !(std::isnan(kappa_new_iter_old))) kappa_new_iter = kappa_new_iter_old;
     //cerr << "Func 1: kappa_new = " << kappa_new_iter << endl;
     //cerr << "    epsv = " << epsv << " deltaEpsv = " << deltaEpsv << " kappa_old = " << kappa_old << endl;
   }
-  // if (isnan(kappa_new_iter)) {
+  // if (std::isnan(kappa_new_iter)) {
   //   cerr << " iter = " << iter << " maxiter = " << maxiter << " kappa[k+1] = " << kappa_new_iter 
   //        << " kappa[k] = " << kappa_new_iter_old << " X1 = " << X1 
   //        << " dX1dkappa = " << dX1dkappa << endl;
@@ -350,7 +350,7 @@ InternalVar_ArenaKappa::computeKappaFromX2(const double& kappa_old,
     kappa_new_iter_old = kappa_new_iter;
     kappa_new_iter -= X2/dX2dkappa;
     ++iter;
-    if (isnan(kappa_new_iter) || kappa_new_iter > 0) {
+    if (std::isnan(kappa_new_iter) || kappa_new_iter > 0) {
       cerr << " iter = " << iter << " maxiter = " << maxiter << " kappa[k+1] = " << kappa_new_iter 
            << " kappa[k] = " << kappa_new_iter_old << " X2 = " << X2 
            << " dX2dkappa = " << dX2dkappa << endl;

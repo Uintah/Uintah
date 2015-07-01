@@ -36,8 +36,6 @@
 namespace Uintah {
 
   class ProcessorGroup;
-
-  using namespace SCIRun;
   
   class MPMCommon {
 

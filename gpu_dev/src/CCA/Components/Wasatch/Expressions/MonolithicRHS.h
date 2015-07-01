@@ -24,10 +24,10 @@ class MonolithicRHS
   typedef typename FaceTypes<FieldT>::YFace  YFaceT;
   typedef typename FaceTypes<FieldT>::ZFace  ZFaceT;
 
-  DECLARE_FIELDS(FieldT, dCoef_, phi_, src_);
-  DECLARE_FIELD(XFaceT, convFluxX_);
-  DECLARE_FIELD(YFaceT, convFluxY_);
-  DECLARE_FIELD(ZFaceT, convFluxZ_);
+  DECLARE_FIELDS(FieldT, dCoef_, phi_, src_)
+  DECLARE_FIELD(XFaceT, convFluxX_)
+  DECLARE_FIELD(YFaceT, convFluxY_)
+  DECLARE_FIELD(ZFaceT, convFluxZ_)
 
   typedef SpatialOps::BasicOpTypes<FieldT>  OpTypes;
 

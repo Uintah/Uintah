@@ -160,13 +160,10 @@ void ExplicitTimeInt::fe_update( const ProcessorGroup*,
       old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
       double dt = DT; 
 
-      double curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-      double curr_ssp_time = curr_time + time_factor[rkstep] * dt;
-
       singlePatchFEUpdate( patch, 
                           phi, 
                           rhs, 
-                          dt, curr_ssp_time, 
+                          dt, 
                           eqn_name);
     } 
   }
@@ -194,8 +191,6 @@ void ExplicitTimeInt::sched_time_ave( SchedulerP& sched,
     tsk->modifies( lab ); 
 
   } 
-
-  tsk->requires(Task::OldDW, d_fieldLabels->d_sharedState->get_delt_label(), Ghost::None, 0);
 
   sched->addTask( tsk, patches, matls ); 
 
@@ -229,14 +224,7 @@ void ExplicitTimeInt::time_ave( const ProcessorGroup*,
       new_dw->getModifiable( phi , phi_lab , indx , patch );
       old_dw->get( old_phi       , phi_lab , indx , patch , ghost_type , extra_cells );
 
-      delt_vartype DT;
-      old_dw->get(DT, d_fieldLabels->d_sharedState->get_delt_label());
-      double dt = DT; 
-
-      double curr_time = d_fieldLabels->d_sharedState->getElapsedTime(); 
-      double curr_ssp_time = curr_time + time_factor[rkstep] * dt;
-
-      timeAvePhi( patch, phi, old_phi, rkstep, curr_ssp_time ); 
+      timeAvePhi( patch, phi, old_phi, rkstep ); 
 
     } 
   }

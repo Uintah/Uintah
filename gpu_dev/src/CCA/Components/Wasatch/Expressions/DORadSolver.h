@@ -139,7 +139,7 @@ namespace Wasatch{
     Uintah::SolverInterface& solver_;
     const Uintah::VarLabel *matrixLabel_, *intensityLabel_, *rhsLabel_;
     
-    DECLARE_FIELDS(SVolField, temperature_, absCoef_, scatCoef_);
+    DECLARE_FIELDS(SVolField, temperature_, absCoef_, scatCoef_)
     
     typedef Uintah::CCVariable<Uintah::Stencil7> MatType;
     MatType matrix_;
@@ -241,8 +241,8 @@ namespace Wasatch{
     const OrdinateDirections& ord_;
     const bool hasAbsCoef_;
 
-    DECLARE_FIELDS(SVolField, temperature_, absCoef_);
-    DECLARE_VECTOR_OF_FIELDS(SVolField, intensity_);
+    DECLARE_FIELDS(SVolField, temperature_, absCoef_)
+    DECLARE_VECTOR_OF_FIELDS(SVolField, intensity_)
 
     DORadSrc( const Expr::Tag& temperatureTag,
               const Expr::Tag& absCoefTag,

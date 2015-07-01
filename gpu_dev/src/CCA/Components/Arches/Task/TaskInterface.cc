@@ -634,6 +634,7 @@ void TaskInterface::resolve_fields( DataWarehouse* old_dw,
 void TaskInterface::schedule_task( const LevelP& level, 
                                    SchedulerP& sched, 
                                    const MaterialSet* matls,
+                                   TASK_TYPE task_type,
                                    int time_substep ){ 
 
   std::vector<VariableInformation> variable_registry; 
@@ -642,78 +643,20 @@ void TaskInterface::schedule_task( const LevelP& level,
 
   resolve_labels( variable_registry ); 
 
-  Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
+  Task* tsk;
+  
+  if ( task_type == STANDARD_TASK )
+    tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
+  else if ( task_type == BC_TASK )
+    tsk = scinew Task( _task_name+"_bc_task", this, &TaskInterface::do_bcs, variable_registry, time_substep ); 
+  else 
+    throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
+
+  int counter = 0;
 
   BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
 
-    switch(ivar.depend){
-
-      case COMPUTES: 
-        if ( time_substep == 0 ){ 
-          tsk->computes( ivar.label ); //only compute on the zero time substep
-        } else { 
-          tsk->modifies( ivar.label );
-          ivar.dw = NEWDW; 
-          ivar.uintah_task_dw = Task::NewDW; 
-          ivar.depend = MODIFIES; 
-        }
-        break; 
-      case MODIFIES: 
-        tsk->modifies( ivar.label );
-        break; 
-      case REQUIRES: 
-        if ( ivar.dw_inquire ){
-          if ( time_substep > 0 ){ 
-            ivar.dw = NEWDW;
-            ivar.uintah_task_dw = Task::NewDW; 
-          } else { 
-            ivar.dw = OLDDW; 
-            ivar.uintah_task_dw = Task::OldDW; 
-          }
-        } else { 
-          if ( ivar.dw == OLDDW ){
-            ivar.uintah_task_dw = Task::OldDW; 
-          } else { 
-            ivar.uintah_task_dw = Task::NewDW; 
-          }
-        }
-        tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
-        break; 
-      default: 
-        throw InvalidValue("Arches Task Error: Cannot schedule task becuase of incomplete variable dependency: "+_task_name, __FILE__, __LINE__); 
-        break; 
-
-    }
-  }
-
-  //other variables: 
-  tsk->requires(Task::OldDW, VarLabel::find("delT")); 
-
-  sched->addTask( tsk, level->eachPatch(), matls );
-
-}
-
-//====================================================================================
-//
-//====================================================================================
-void TaskInterface::schedule_bcs( const LevelP& level, 
-                                  SchedulerP& sched, 
-                                  const MaterialSet* matls,
-                                  int time_substep ){ 
-
-  std::vector<VariableInformation> variable_registry; 
-
-  register_timestep_eval( variable_registry, time_substep ); 
-
-  resolve_labels( variable_registry ); 
-
-  Task* tsk = scinew Task( _task_name, this, &TaskInterface::do_task, variable_registry, time_substep ); 
-
-  int counter = 0; 
-
-  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){ 
-
-    counter++; 
+    counter++;
 
     switch(ivar.depend){
 
@@ -770,15 +713,25 @@ void TaskInterface::schedule_bcs( const LevelP& level,
 //====================================================================================
 void TaskInterface::schedule_init( const LevelP& level, 
                                    SchedulerP& sched, 
-                                   const MaterialSet* matls ){ 
+                                   const MaterialSet* matls, 
+                                   const bool is_restart ){ 
 
   std::vector<VariableInformation> variable_registry; 
 
-  register_initialize( variable_registry ); 
+  if ( is_restart ){ 
+    register_restart_initialize( variable_registry ); 
+  } else { 
+    register_initialize( variable_registry ); 
+  }
 
   resolve_labels( variable_registry ); 
 
-  Task* tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
+  Task* tsk;
+  if ( is_restart ){ 
+    tsk = scinew Task( _task_name+"_restart_initialize", this, &TaskInterface::do_restart_init, variable_registry ); 
+  } else { 
+    tsk = scinew Task( _task_name+"_initialize", this, &TaskInterface::do_init, variable_registry ); 
+  }
 
   int counter = 0;
 
@@ -874,6 +827,9 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
 
 }
 
+//====================================================================================
+// (do tasks)
+//====================================================================================
 void TaskInterface::do_task( const ProcessorGroup* pc, 
                              const PatchSubset* patches, 
                              const MaterialSubset* matls, 
@@ -996,6 +952,47 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
 
     initialize( patch, tsk_info_mngr, i_opr->second._sodb ); 
+
+    //clean up 
+    delete tsk_info_mngr; 
+    delete field_container; 
+  }
+}
+
+void TaskInterface::do_restart_init( const ProcessorGroup* pc, 
+                                     const PatchSubset* patches, 
+                                     const MaterialSubset* matls, 
+                                     DataWarehouse* old_dw, 
+                                     DataWarehouse* new_dw, 
+                                     std::vector<VariableInformation> variable_registry ){
+
+  for (int p = 0; p < patches->size(); p++) {
+    
+    const Patch* patch = patches->get(p);
+
+    const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
+
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch); 
+
+    SchedToTaskInfo info; 
+
+    //get the current dt
+    info.dt = 0; 
+    info.time_substep = 0; 
+
+    ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info); 
+
+    //doing DW gets...
+    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, true ); 
+
+    //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
+    tsk_info_mngr->set_field_container( field_container ); 
+
+    //get the operator DB for this patch
+    Operators& opr = Operators::self(); 
+    Operators::PatchInfoMap::iterator i_opr = opr.patch_info_map.find(patch->getID()); 
+
+    restart_initialize( patch, tsk_info_mngr, i_opr->second._sodb ); 
 
     //clean up 
     delete tsk_info_mngr; 

@@ -73,6 +73,7 @@ WARNING
                               const ProblemSpecP& restart_prob_spec, 
                               GridP& grid, SimulationStateP& state );
     virtual void scheduleInitialize            ( const LevelP& level, SchedulerP& scheduler );
+    virtual void scheduleRestartInitialize     ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleComputeStableTimestep ( const LevelP& level, SchedulerP& scheduler );
     virtual void scheduleTimeAdvance           ( const LevelP& level, SchedulerP& scheduler);
     virtual void scheduleErrorEstimate         ( const LevelP& level, SchedulerP& scheduler );
@@ -83,23 +84,23 @@ WARNING
 
   private:
     void initialize ( const ProcessorGroup*,
-		      const PatchSubset* patches, const MaterialSubset* matls,
-		      DataWarehouse* old_dw, DataWarehouse* new_dw );
+                      const PatchSubset* patches, const MaterialSubset* matls,
+                      DataWarehouse* old_dw, DataWarehouse* new_dw );
 
     void computeStableTimestep ( const ProcessorGroup*,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* old_dw, DataWarehouse* new_dw );
+                                 const PatchSubset* patches,
+                                 const MaterialSubset* matls,
+                                 DataWarehouse* old_dw, DataWarehouse* new_dw );
 
     void timeAdvance ( const ProcessorGroup*,
-		       const PatchSubset* patches,
-		       const MaterialSubset* matls,
-		       DataWarehouse* old_dw, DataWarehouse* new_dw);
+                       const PatchSubset* patches,
+                       const MaterialSubset* matls,
+                       DataWarehouse* old_dw, DataWarehouse* new_dw);
 
     void errorEstimate ( const ProcessorGroup*,
-			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse*, DataWarehouse* new_dw, bool initial);
+                         const PatchSubset* patches,
+                         const MaterialSubset* matls,
+                         DataWarehouse*, DataWarehouse* new_dw, bool initial);
 
     void coarsen ( const ProcessorGroup*,
                    const PatchSubset* patches,
@@ -107,9 +108,9 @@ WARNING
                    DataWarehouse*, DataWarehouse* new_dw);
 
     void refine ( const ProcessorGroup*,
-		  const PatchSubset* patches,
-		  const MaterialSubset* matls,
-		  DataWarehouse*, DataWarehouse* new_dw);
+                  const PatchSubset* patches,
+                  const MaterialSubset* matls,
+                  DataWarehouse*, DataWarehouse* new_dw);
 
     ExamplesLabel*   d_examplesLabel;
     SimulationStateP d_sharedState;

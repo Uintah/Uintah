@@ -12,7 +12,7 @@
       <TaskList>advance_solution</TaskList>
       <NameTag name="xvelcc" state="STATE_DYNAMIC" />
       <InterpolateExpression type="XVOL">
-          <NameTag name="u" state="STATE_NONE"/>
+          <NameTag name="u" />
       </InterpolateExpression>
   </PostProcessingExpression>
 
@@ -20,7 +20,7 @@
       <TaskList>advance_solution</TaskList>
       <NameTag name="yvelcc" state="STATE_DYNAMIC" />
       <InterpolateExpression type="YVOL">
-          <NameTag name="v" state="STATE_NONE"/>
+          <NameTag name="v" />
       </InterpolateExpression>
   </PostProcessingExpression>
   
@@ -35,26 +35,26 @@
     
     <BasicExpression type="SVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="pressure" state="STATE_NONE"/>
+       <NameTag name="pressure"/>
        <Constant>1.0</Constant>
     </BasicExpression>
 
     <!-- Set the initial condition expression for x-momentum -->
     <BasicExpression type="XVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="u" state="STATE_NONE"/>
+       <NameTag name="u"/>
        <Constant>0.0</Constant>
     </BasicExpression>
 
     <BasicExpression type="YVOL">
        <TaskList>initialization</TaskList>
-       <NameTag name="v" state="STATE_NONE"/>
+       <NameTag name="v"/>
        <Constant>0.0</Constant>
     </BasicExpression>
                
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="viscosity" state="STATE_NONE"/>
+      <NameTag name="viscosity"/>
       <Constant>0.01</Constant>
     </BasicExpression>
 
@@ -66,7 +66,7 @@
       <Y-Velocity>v</Y-Velocity>
       <Y-Momentum>y-mom</Y-Momentum>
       <Viscosity>
-        <NameTag name="viscosity" state="STATE_NONE"/>
+        <NameTag name="viscosity"/>
       </Viscosity>
       
       <Pressure>

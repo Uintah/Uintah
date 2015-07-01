@@ -473,8 +473,6 @@ SimulationController::postGridSetup( GridP& grid, double& t )
         d_scheduler->get_dw(1)->override( delt_vartype(delt_fine), d_sharedState->get_delt_label(), level );
       }
     }
-    d_scheduler->get_dw(1)->finalize();
-      
     // This delete is an enigma... I think if it is called then memory is not leaked, but sometimes if it
     // it is called, then everything segfaults...
     //
@@ -607,9 +605,8 @@ SimulationController::initSimulationStatsVars ( void )
 
 //______________________________________________________________________
 //
-
 void
-SimulationController::printSimulationStats ( int timestep, double delt, double time, std::string prefix_msg )
+SimulationController::printSimulationStats ( int timestep, double delt, double time )
 {
   unsigned long memuse, highwater, maxMemUse;
   d_scheduler->checkMemoryUse( memuse, highwater, maxMemUse );
@@ -906,8 +903,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     }
     ostringstream message;
 
-    message << prefix_msg << "  "
-	    << "Time="        << time
+    message << "Time="        << time
             << " (timestep "  << timestep 
             << "), delT="     << delt
             << walltime;
@@ -959,7 +955,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
           }
         }
       }
-      if( d_n > 2 && !isnan(d_sharedState->overheadAvg) ) {
+      if( d_n > 2 && !std::isnan(d_sharedState->overheadAvg) ) {
         stats << "  Percent Time in overhead:" << d_sharedState->overheadAvg*100 <<  "\n";
       }
     } 

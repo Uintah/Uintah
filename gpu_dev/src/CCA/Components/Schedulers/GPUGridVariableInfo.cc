@@ -29,7 +29,8 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             size_t sizeOfDataType,
             size_t varMemSize,
             IntVector offset,
-            int materialIndex,
+            int matlIndx,
+            int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
             bool validOnDevice,
@@ -41,7 +42,8 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
   this->sizeOfDataType = sizeOfDataType;
   this->varMemSize = varMemSize;
   this->offset = offset;
-  this->materialIndex = materialIndex;
+  this->matlIndx = matlIndx;
+  this->levelIndx = levelIndx;
   this->patchPointer = patchPointer;
   this->dep = dep;
   this->validOnDevice = validOnDevice;
@@ -53,7 +55,8 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             size_t sizeOfDataType,
             size_t varMemSize,
-            int materialIndex,
+            int matlIndx,
+            int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
             bool validOnDevice,
@@ -61,7 +64,8 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
   this->var = var;
   this->sizeOfDataType = sizeOfDataType;
   this->varMemSize = varMemSize;
-  this->materialIndex = materialIndex;
+  this->matlIndx = matlIndx;
+  this->levelIndx = levelIndx;
   this->patchPointer = patchPointer;
   this->dep = dep;
   this->validOnDevice = validOnDevice;
@@ -80,7 +84,8 @@ DeviceGridVariables::DeviceGridVariables() {
   }
 }
 void DeviceGridVariables::add(const Patch* patchPointer,
-          int materialIndex,
+          int matlIndx,
+          int levelIndx,
           IntVector sizeVector,
           size_t varMemSize,
           size_t sizeOfDataType,
@@ -94,12 +99,13 @@ void DeviceGridVariables::add(const Patch* patchPointer,
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalVars[dep->mapDataWarehouse()] += 1;
-  DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, materialIndex, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
+  DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
   vars.push_back(tmp);
 }
 
 void DeviceGridVariables::add(const Patch* patchPointer,
-          int materialIndex,
+          int matlIndx,
+          int levelIndx,
           size_t varMemSize,
           size_t sizeOfDataType,
           Variable* var,
@@ -110,7 +116,7 @@ void DeviceGridVariables::add(const Patch* patchPointer,
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalVars[dep->mapDataWarehouse()] += 1;
-  DeviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, materialIndex, patchPointer, dep, validOnDevice,  whichGPU);
+  DeviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, matlIndx, levelIndx, patchPointer, dep, validOnDevice,  whichGPU);
   vars.push_back(tmp);
 }
 
@@ -129,9 +135,14 @@ unsigned int DeviceGridVariables::numItems() {
 }
 
 
-int DeviceGridVariables::getMaterialIndex(int index) {
-  return vars.at(index).materialIndex;
+int DeviceGridVariables::getMatlIndx(int index) {
+  return vars.at(index).matlIndx;
 }
+
+int DeviceGridVariables::getLevelIndx(int index) {
+  return vars.at(index).levelIndx;
+}
+
 const Patch* DeviceGridVariables::getPatchPointer(int index) {
   return vars.at(index).patchPointer;
 }

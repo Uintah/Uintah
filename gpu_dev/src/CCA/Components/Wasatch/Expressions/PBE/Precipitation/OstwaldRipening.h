@@ -55,8 +55,8 @@ class OstwaldRipening
   const double tolmanLength_;            // tolman length
   const double rCutOff_;                 // size to swap r correlation 1/r to r^2
 
-  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_);
-  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, weights_)
+  DECLARE_VECTOR_OF_FIELDS(FieldT, abscissae_)
   DECLARE_FIELD(FieldT, m0_)
   
 

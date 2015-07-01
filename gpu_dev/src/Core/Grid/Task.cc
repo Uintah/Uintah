@@ -934,20 +934,35 @@ Task::doit(CallBackEvent event,
 void
 Task::display( ostream & out ) const
 {
-  out <<  Parallel::getMPIRank()<< " " << getName() << " (" << d_tasktype << "): [";
-  out << *patch_set;
-  if( d_tasktype ==  Task::Normal && patch_set != NULL){
+  out <<  Parallel::getMPIRank()<< " " << getName();
+  if( d_usesDevice ) {
+    out <<  ": GPU task,";
+  }
+  
+  out << " (" << d_tasktype << ")";
+
+  if( d_tasktype ==  Task::Normal && patch_set != NULL ) {
     out << ", Level " << getLevel(patch_set)->getIndex();
   }
-  out << ", ";
-  out << *matl_set;
+
+  if( matl_set == NULL ) {
+    out << ", No-Matl-Set";
+  }
+  else {
+    out << ", " << *matl_set;
+  }
   out << ", DWs: ";
   for(int i=0;i<TotalDWs;i++){
     if(i != 0)
       out << ", ";
     out << dwmap[i];
   }
-  out << "]";
+  if( patch_set == NULL ) {
+    out << ", No-Patch-Set";
+  }
+  else {
+    out << ", " << *patch_set;
+  }
 }
 //__________________________________
 namespace Uintah {
@@ -1111,14 +1126,17 @@ namespace Uintah {
 void
 Task::displayAll(ostream& out) const
 {
-   display(out);
+   display( out );
    out << '\n';
-   for(Task::Dependency* req = req_head; req != 0; req = req->next)
+   for(Task::Dependency* req = req_head; req != 0; req = req->next) {
       out << Parallel::getMPIRank() << "  requires: " << *req << '\n';
-   for(Task::Dependency* comp = comp_head; comp != 0; comp = comp->next)
+   }
+   for(Task::Dependency* comp = comp_head; comp != 0; comp = comp->next) {
       out << Parallel::getMPIRank() <<"  computes: " << *comp << '\n';
-   for(Task::Dependency* mod = mod_head; mod != 0; mod = mod->next)
+   }
+   for(Task::Dependency* mod = mod_head; mod != 0; mod = mod->next) {
       out << Parallel::getMPIRank() <<"  modifies: " << *mod << '\n';
+   }
 }
 
 //__________________________________

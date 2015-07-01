@@ -26,11 +26,10 @@
  
 namespace Uintah {
 
-//
+//______________________________________________________________________
 //  Returns true if threadID and blockID are 0.
 //  Useful in conditional statements for limiting output.
 //
-
 __device__
 bool
 isThread0_Blk0(){
@@ -39,6 +38,38 @@ isThread0_Blk0(){
   
   bool test (blockID == 0 && threadID == 0);
   return test;
+}
+
+//______________________________________________________________________
+//  Returns true if threadID = 0 for this block
+//  Useful in conditional statements for limiting output.
+//
+__device__
+bool
+isThread0(){
+  int threadID = threadIdx.x +  threadIdx.y +  threadIdx.z;
+  bool test (threadID == 0 );
+  return test;
+}
+
+//______________________________________________________________________
+// Output the threadID
+//
+__device__
+void 
+printThread(){ 
+  int threadID = threadIdx.x +  threadIdx.y +  threadIdx.z;
+  printf( "Thread [%i,%i,%i], ID: %i\n", threadIdx.x,threadIdx.y,threadIdx.z, threadID);
+}
+
+//______________________________________________________________________
+// Output the blockID
+//
+__device__
+void 
+printBlock(){ 
+  int blockID  = blockIdx.x + blockIdx.y * gridDim.x + gridDim.x * gridDim.y * blockIdx.z;
+  printf( "Block  [%i,%i,%i], ID: %i\n", blockIdx.x,blockIdx.y,blockIdx.z, blockID);
 }
 
 }  // end namespace Uintah

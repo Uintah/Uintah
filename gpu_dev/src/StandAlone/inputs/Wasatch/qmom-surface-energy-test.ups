@@ -26,67 +26,67 @@
 
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="S" state="STATE_N"/>
+      <NameTag name="S" />
       <Constant>7</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="S" state="STATE_N"/>
+      <NameTag name="S" />
       <Constant>7</Constant>
     </BasicExpression>
     
     <BasicExpression type="SVOL">
       <TaskList>initialization</TaskList>
-      <NameTag name="ceq" state="STATE_N"/>
+      <NameTag name="ceq" />
       <Constant>.1</Constant>
     </BasicExpression>
     <BasicExpression type="SVOL">
       <TaskList>advance_solution</TaskList>
-      <NameTag name="ceq" state="STATE_N"/>
+      <NameTag name="ceq" />
       <Constant>.1</Constant>
     </BasicExpression>
 
     <BasicExpression type="SVOL">
       <TaskList> initialization </TaskList>
-      <NameTag name="sigma" state="STATE_N"/>
+      <NameTag name="sigma" />
       <Constant> 0.0 </Constant>
     </BasicExpression>
 
    <PrecipitationBasicExpression type="SVOL">
     <TaskList> advance_solution </TaskList>
-    <NameTag name="sigma" state="STATE_N"/>
+    <NameTag name="sigma" />
     <CriticalSurfaceEnergy Bulk_Surf_Eng="0.04" Temperature="298" Molar_Vol="3.693e-5">
       <Supersaturation>
-        <NameTag name="S" state="STATE_N"/>
+        <NameTag name="S" />
       </Supersaturation>
      </CriticalSurfaceEnergy>
    </PrecipitationBasicExpression>
 
    <PrecipitationBasicExpression type="SVOL">
      <TaskList> advance_solution </TaskList>
-     <NameTag name="RStarExpr" state="STATE_N"/>
+     <NameTag name="RStarExpr" />
      <PrecipitationClassicRStarValue Surf_Eng="0.04" Molec_Vol="3.693e-5" Temperature="298" Conversion_Fac="1e9">
        <Supersaturation>
-         <NameTag name="S" state="STATE_N"/>
+         <NameTag name="S" />
        </Supersaturation>
        <SurfaceEnergy>
-         <NameTag name="sigma" state="STATE_N"/>
+         <NameTag name="sigma" />
        </SurfaceEnergy>
       </PrecipitationClassicRStarValue>
     </PrecipitationBasicExpression>
 
     <PrecipitationBasicExpression type="SVOL">
       <TaskList> advance_solution </TaskList>
-      <NameTag name="NewBirth" state="STATE_N"/>
+      <NameTag name="NewBirth" />
       <HomogeneousNucleationCoefficient Molar_Vol="3.693e-5" Surf_Eng="0.04" Temperature="298" Diff_Coef="1.0e-9" S_Ratio="1.0">
         <Supersaturation>
-          <NameTag name="S" state="STATE_N"/>  
+          <NameTag name="S" />  
         </Supersaturation> 
         <EquilibriumConcentration>
-          <NameTag name="ceq" state="STATE_N"/>
+          <NameTag name="ceq" />
         </EquilibriumConcentration>
         <SurfaceEnergy>
-          <NameTag name="sigma" state="STATE_N"/>
+          <NameTag name="sigma" />
         </SurfaceEnergy>  
      </HomogeneousNucleationCoefficient>
     </PrecipitationBasicExpression>
@@ -99,10 +99,10 @@
         <BirthExpression>   
           <BirthModel> POINT </BirthModel>
           <BirthCoefficientExpression>
-            <NameTag name="NewBirth" state="STATE_N"/>
+            <NameTag name="NewBirth" />
           </BirthCoefficientExpression> 
           <RStarExpression>
-            <NameTag name="RStarExpr" state="STATE_N"/>
+            <NameTag name="RStarExpr" />
           </RStarExpression> 
         </BirthExpression>
     </MomentTransportEquation>

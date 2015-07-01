@@ -1037,7 +1037,7 @@ void simplifiedGeoModel::computeStress(const particleIndex idx, int& lvl, const 
 
   // Compute deformation gradient and rate of deformation tensor
   F_new = (L_new*delT+One)*F_old;
-  if (isnan(F_new(0,0))) {
+  if (std::isnan(F_new(0,0))) {
     cerr << "F_new = " << F_new << endl;
     cerr << "F_old = " << F_old << endl;
     cerr << "L_new = " << L_new << endl;

@@ -24,7 +24,7 @@ class DynamicSmagorinskyCoefficient
   const bool isConstDensity_;
   const bool doExtraFiltering_; // experimental
   
-  DECLARE_FIELD(SVolField, rho_);
+  DECLARE_FIELD(SVolField, rho_)
   
   // filtering operators
   typedef  SpatialOps::OperatorTypeBuilder< SpatialOps::Filter, SVolField, SVolField >::type BoxFilterT;

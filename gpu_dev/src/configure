@@ -657,8 +657,6 @@ HYPRE_LIB_FLAG
 INC_HYPRE_H
 DEF_HYPRE
 HAVE_HYPRE
-BUILD_WASATCH_IN_ARCHES
-DEF_WASATCH_IN_ARCHES
 RADPROPS_LIB_DIR_FLAG
 RADPROPS_LIB_FLAG
 INC_RADPROPS_H
@@ -674,6 +672,11 @@ EXPRLIB_LIB_FLAG
 INC_EXPRLIB_H
 DEF_EXPRLIB
 HAVE_EXPRLIB
+POKITT_LIB_DIR_FLAG
+POKITT_LIB_FLAG
+INC_POKITT_H
+DEF_POKITT
+HAVE_POKITT
 SPATIALOPS_LIB_DIR_FLAG
 SPATIALOPS_LIB_FLAG
 INC_SPATIALOPS_H
@@ -778,6 +781,7 @@ DEF_IEEEFP
 DEF_STAT64
 DL_LIB_DIR_FLAG
 DL_LIB_FLAG
+VISIT_PATH
 VISIT_LIB_FLAG
 VISIT_LIB_DIR_FLAG
 INC_VISIT_H
@@ -794,6 +798,7 @@ THREAD_IMPL
 RT_LIB_FLAG
 M_LIB_DIR_FLAG
 M_LIB_FLAG
+DEF_CXX11
 TEMPLATE_BOX
 TEMPLATE_TAG
 REPOSITORY_FLAGS
@@ -945,6 +950,7 @@ with_lapack
 with_fortran
 with_ofed
 with_mx
+with_pokitt
 with_mpi
 with_mpi_lib
 with_mpi_include
@@ -974,7 +980,6 @@ with_visit
 with_visus
 with_pidx
 enable_wasatch_3p
-enable_wasatch_in_arches
 enable_static
 enable_verbose
 enable_threads
@@ -1634,9 +1639,6 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
 --enable-wasatch_3p     Download and build the Wasatch Thirdparty libraries
                           - TabProps ExprLibs SpatialOps RadProps.
---enable-wasatch-in-arches
-                          Turn on the use of Wasatch objects in the Arches
-                          component.
 --enable-static         Build a statically linked version of Uintah. Set to
                           'full' to force full static link.
 --enable-verbose        Turn on verbose configure output
@@ -1693,6 +1695,7 @@ Optional Packages:
                           mpi installation
 --with-mx=DIR           Specify that mx - Myrinet - is needed for the mpi
                           installation
+--with-pokitt=DIR       Use the PoKiTT installation in DIR
 --with-mpi=DIR          Use the mpi installation in DIR
 --with-mpi-lib=DIR      Use the mpi libraries installed in DIR
 --with-mpi-include=DIR  Use the mpi include files installed in DIR
@@ -3306,6 +3309,23 @@ fi
 
 
 
+# Check whether --with-pokitt was given.
+if test "${with_pokitt+set}" = set; then :
+  withval=$with_pokitt; with_pokitt="$withval"
+   sci_required_pokitt=yes
+else
+  with_pokitt=""
+fi
+
+  sci_arg_with_list="$sci_arg_with_list --with-pokitt --without-pokitt"
+  if test -n "$pokitt" -a ! -e "$pokitt"; then
+    as_fn_error $? "The file or directory parameter ($pokitt) specified for --with-pokitt does not exist!  Please verify that the path and file are correct." "$LINENO" 5
+  fi
+
+
+
+
+
 # Check whether --with-mpi was given.
 if test "${with_mpi+set}" = set; then :
   withval=$with_mpi; with_mpi="$withval"
@@ -3786,17 +3806,6 @@ else
 fi
 
   sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_3p --disable-wasatch_3p"
-
-
-
-  # Check whether --enable-wasatch_in_arches was given.
-if test "${enable_wasatch_in_arches+set}" = set; then :
-  enableval=$enable_wasatch_in_arches; wasatch_in_arches="yes"
-else
-  wasatch_in_arches="no"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-wasatch_in_arches --disable-wasatch_in_arches"
 
 
 
@@ -8610,6 +8619,38 @@ ac_config_headers="$ac_config_headers include/sci_defs/config_testdefs.h"
 
 sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
 
+# Check if we are using a c++-11 compiler
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking if using a c++-11 compiler" >&5
+$as_echo_n "checking if using a c++-11 compiler... " >&6; }
+have_cxx11="no"
+
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <iostream>
+int
+main ()
+{
+int a; decltype(a) b; auto d = a; auto l = [](){};
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_compile "$LINENO"; then :
+  have_cxx11=yes
+else
+  have_cxx11=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+if test $have_cxx11 = yes; then
+   DEF_CXX11="#define HAVE_CXX11 1"
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $have_cxx11" >&5
+$as_echo "$have_cxx11" >&6; }
+
+
+
 ##  ----------------------------------------------------------------------
 ##  ----------  required checks for required libraries and headers  ------
 ##  ----------------------------------------------------------------------
@@ -10483,8 +10524,8 @@ $as_echo "$as_me: WARNING: Have not tried using cmake v3.x... It might work..." 
 fi
 
 ##  --  search for visit stuff  -------------------------------------------
-# local     - sim/V2/lib/VisItControlInterface_V2.h
-#           - lib/libsimV2.a
+# local     - src/sim/V2/lib/VisItControlInterface_V2.h
+#           - build/lib/libsimV2.a
 
 # installed - linux-x86_64/libsim/V2/include/VisItControlInterface_V2.h
 #           - linux-x86_64/libsim/V2/lib/libsimV2.a
@@ -10542,8 +10583,10 @@ if test "$sci_required_visit" = "yes"; then
   fi
 
     # Check for a local version (compiling against source)
-    if test -e $with_visit/sim/V2/lib; then
+    if test -e $with_visit/sim/V2/lib/VisItControlInterface_V2.h; then
       _sci_inc="$with_visit/sim/V2/lib"
+    elif test -e $with_visit/../src/sim/V2/lib/VisItControlInterface_V2.h; then
+      _sci_inc="$with_visit/../src/sim/V2/lib"
     # Otherwise assume an installed version
     else
       _sci_inc="$with_visit/include"
@@ -11012,13 +11055,20 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
   if test "$HAVE_VISIT" = "yes"; then
     DEF_VISIT="#define HAVE_VISIT 1"
-  else
-    DEF_VISIT="#define HAVE_VISIT 1"
+
+    # Check for a local version (compiling against source)
+    if test -e $with_visit/sim/V2/lib; then
+        VISIT_PATH="#define VISIT_PATH ((char*)\"$with_visit\")"
+    # Otherwise assume an installed version
+    else
+        VISIT_PATH="#define VISIT_PATH ((char*)\"${with_visit}/../../../..\")"
+    fi
   fi
 
 fi #end sci_required_visit
 
 # these are all defined after the call to SCI_COMPILE_LINK_TEST
+
 
 
 
@@ -36665,12 +36715,19 @@ int main(int argc, char **argv) {
 }
 EOF
 
+##-----------------------------------------------------------------------------
+## Static linking of the cudart_static lib is not working on Titan due
+## to the current CUDA Toolkit version, 5.5. Once Titan is upgraded to
+## CUDA 6.5, we can then use cudart_static in static builds
+##-----------------------------------------------------------------------------
 # use different set of libs if doing a static build
-if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-	_cudart_lib="cudart_static dl pthread rt"
-else
-	_cudart_lib="cudart"
-fi
+#if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+#	_cudart_lib="cudart_static dl pthread rt"
+#else
+#	_cudart_lib="cudart"
+#fi
+
+  _cudart_lib="cudart"
 
 
 ## arguments mean:
@@ -36807,8 +36864,11 @@ fi
 NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
+#  * don't pass c++11 flag, CUDA <=6.0 doesn't support it and we don't use it yet in any Uintah CUDA code
 for i in $CXXFLAGS; do
-  NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+  if test "$i" != "-std=c++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+  fi
 done
 
 if test "$debug" != "no"; then
@@ -40324,6 +40384,52 @@ fi
 
 
 
+##  --  search for PoKiTT Library ------------------------
+
+if test "$with_pokitt"; then
+
+  if test "$with_pokitt" = "yes"; then
+    as_fn_error $? "--with-pokitt=DIR requires a DIRectory be provided. " "$LINENO" 5
+  else
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Pokitt files (For now we are just verifying the existence of lib and .h files)" >&5
+$as_echo_n "checking for Pokitt files (For now we are just verifying the existence of lib and .h files)... " >&6; }
+    if test ! -d $with_pokitt; then
+      echo ""
+      as_fn_error $? "PoKiTT directory '$with_pokitt' does not exist. " "$LINENO" 5
+    fi
+    POKITT_INCLUDE_DIR="include/pokitt"
+    # Check includes
+    for file in CanteraObjects.h  MixtureFractionExpr.h PoKiTTVersion.h   SpeciesN.h thermo \
+                MixtureFraction.h MixtureMolWeight.h    SpecFromMixfrac.h kinetics   transport; do
+      if test ! -e $with_pokitt/$POKITT_INCLUDE_DIR/$file; then
+        echo ""
+        as_fn_error $? "'$with_pokitt/$POKITT_INCLUDE_DIR/$file' does not exist. " "$LINENO" 5
+      fi
+    done
+    # Check lib
+    the_lib=$with_pokitt/lib/pokitt/libpokitt.a
+    if test ! -f $the_lib; then
+      echo ""
+      as_fn_error $? "'$the_lib' does not exist. " "$LINENO" 5
+    fi
+  fi
+  { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+$as_echo "yes" >&6; }
+  DEF_POKITT="#define HAVE_POKITT 1"
+  INC_POKITT_H="-I$with_pokitt/include"
+  POKITT_LIB_DIR_FLAG="-L$with_pokitt/lib/pokitt"
+
+  POKITT_LIB_FLAG="-lpokitt"
+
+  HAVE_POKITT="yes"
+fi
+
+
+
+
+
+
 ##  --  search for Exprlib Library ------------------------
 
 if test "$with_exprlib"; then
@@ -40344,7 +40450,7 @@ $as_echo_n "checking for Exprlib files (For now we are just verifying the existe
     SPOPS_INCLUDE_DIR="include/expression"
     # Check includes
     for file in ExprDeps.h ExprLib.h Context.h Expression.h ExpressionID.h FieldManagerList.h \
-                ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldRequest.h FieldManager.h FieldManagerBase.h \
+                ExpressionBase.h ExpressionFactory.h ExpressionTree.h FieldManager.h FieldManagerBase.h \
                 Functions.h Tag.h TransportEquation.h uintah; do
       if test ! -e $with_exprlib/$SPOPS_INCLUDE_DIR/$file; then
         echo ""
@@ -40432,24 +40538,6 @@ fi
 
 
 
-
-
-
-##  --  Handle --enable-wasatch-in-arches --------------------------------
-
-BUILD_WASATCH_IN_ARCHES=no
-
-if test "$wasatch_in_arches" = "yes"; then
-   if test "$BUILD_WASATCH" = "no"; then
-      as_fn_error $? "--enable-wasatch-in-arches specified, but Wasatch component not enabled. " "$LINENO" 5
-   fi
-   if test "$BUILD_ARCHES" = "no"; then
-      as_fn_error $? "--enable-wasatch-in-arches specified, but Arches component not enabled. " "$LINENO" 5
-   fi
-
-   DEF_WASATCH="#define WASATCH_IN_ARCHES 1";
-   BUILD_WASATCH_IN_ARCHES=yes
-fi
 
 
 
@@ -41410,6 +41498,7 @@ _sci_includes=''
 ##
 ## END of SCI_TRY_LINK (HYPRE):  HYPRE libraries and headers
 ##
+
 
 
      fi

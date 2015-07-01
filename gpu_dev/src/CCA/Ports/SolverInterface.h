@@ -27,13 +27,16 @@
 #define Packages_Uintah_CCA_Ports_SolverInterace_h
 
 #include <Core/Parallel/UintahParallelPort.h>
-#include <Core/Grid/LevelP.h>
-#include <CCA/Ports/SchedulerP.h>
-#include <CCA/Ports/DataWarehouse.h>
-#include <Core/Grid/Variables/ComputeSet.h>
-#include <Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Grid/Task.h>
+#include <Core/Grid/LevelP.h>
+#include <CCA/Ports/Scheduler.h>
+#include <CCA/Ports/SchedulerP.h>
 #include <Core/Grid/SimulationState.h>
+#include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/ComputeSet.h>
+#include <Core/Grid/Variables/Reductions.h>
+#include <Core/Grid/Variables/ReductionVariable.h>
+
 #include <string>
 
 
@@ -104,11 +107,17 @@ namespace Uintah {
   
   class SolverInterface : public UintahParallelPort {
   public:
-    SolverInterface() {}
-    virtual ~SolverInterface() {}
+    SolverInterface(){}
+
+    virtual ~SolverInterface()
+    {
+      for (size_t i = 0; i < varLabels_.size(); ++i ) {
+        VarLabel::destroy( varLabels_[i] );
+      }
+    }
 
     virtual SolverParameters* readParameters(       ProblemSpecP     & params,
-					      const std::string      & name,
+                                              const std::string      & name,
                                                     SimulationStateP & state ) = 0;
 
     virtual void scheduleInitialize( const LevelP      & level,
@@ -130,10 +139,111 @@ namespace Uintah {
                                       bool               modifies_hypre = false ) = 0;
 
     virtual std::string getName() = 0;
+    
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief Enforces solvability condition on periodic problems or in domains where boundary
+     conditions on the Poisson system are zero Neumann (dp/dn = 0).
+     \param bLabel Varlabel of the Poisson system right hand side (RHS). The RHS MUST live in the 
+     newDW (i.e. be modifiable).
+     The remaining parameters take the standard form of other Uintah tasks.
+     \param rkStage: In a multistep integration scheme, Uintah is incapable of dealing
+     with multiple reductions on the same variable. Hence the need for a stage number
+     (e.g. rkStage) to create unique varlabels
+     */
+    template <typename FieldT>
+    void scheduleEnforceSolvability( const LevelP      & level,
+                                           SchedulerP  & sched,
+                                     const MaterialSet * matls,
+                                     const VarLabel    * bLabel,
+                                     const int           rkStage );
 
-  private: 
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief Set a reference pressure in the domain. The user picks a reference cell (cRef) and a 
+     desired reference value pRef. The pressure in the reference cell is pCell = p[cRef].
+     Then, pCell + dp = pRef
+     or dp = pRef - pCell
+     The value dp is the pressure difference that needs to be added to the pressure solution at ALL 
+     points in the domain to adjust for the reference pressure.
+     */
+    template <typename FieldT>
+    void scheduleSetReferenceValue( const LevelP       & level,
+                                          SchedulerP   & sched,
+                                    const MaterialSet  * matls,
+                                    const VarLabel     * xLabel,
+                                    const int            rkStage,
+                                    const IntVector      refCell,
+                                    const double         refValue );
+
+  private:
     SolverInterface(const SolverInterface&);
     SolverInterface& operator=(const SolverInterface&);
+    std::vector<VarLabel*> varLabels_;
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief The user picks a reference cell (cRef) and a
+     desired reference value pRef. The pressure in the reference cell is pCell = p[cRef].
+     Then, pCell + dp = pRef
+     or dp = pRef - pCell
+     This task computes dp and broadcasts it across all processors.
+     We do this using a reduction variable because Uintah doesn't provide us with a nice
+     interface for doing a broadcast.
+     */
+    template<typename FieldT>
+    void findRefValueDiff( const Uintah::ProcessorGroup *,
+                           const Uintah::PatchSubset    * patches,
+                           const Uintah::MaterialSubset * materials,
+                                 Uintah::DataWarehouse  * old_dw,
+                                 Uintah::DataWarehouse  * new_dw,
+                           const VarLabel               * xLabel,
+                                 VarLabel               * refValueLabel,
+                           const IntVector                refCell,
+                           const double                   refValue );
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief Computes the volume integral of the RHS of the Poisson equation: 1/V * int(rhs*dV)
+     Since Uintah deals with uniform structured grids, the above equation can be simplified, discretely,
+     to: 1/n * sum(rhs) where n is the total number of cell sin the domain.
+     */
+    template<typename FieldT>
+    void computeRHSIntegral( const Uintah::ProcessorGroup *,
+                             const Uintah::PatchSubset    * patches,
+                             const Uintah::MaterialSubset * materials,
+                                   Uintah::DataWarehouse  * old_dw,
+                                   Uintah::DataWarehouse  * new_dw,
+                             const VarLabel               * bLabel,
+                                   VarLabel               * rhsIntegralLabel );
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief This task adds dp (see above) to the pressure at all points in the domain to reflect
+     the reference value specified by the user/developer.
+     */
+    template<typename FieldT>
+    void setRefValue( const Uintah::ProcessorGroup *,
+                      const Uintah::PatchSubset    * patches,
+                      const Uintah::MaterialSubset * materials,
+                            Uintah::DataWarehouse  * old_dw,
+                            Uintah::DataWarehouse  * new_dw,
+                      const VarLabel               * xLabel,
+                            VarLabel               * refValueLabel );
+
+    //----------------------------------------------------------------------------------------------
+    /**
+     \brief Modifies the RHS of the Poisson equation to satisfy the solvability condition
+     on periodic problems.
+     */
+    template<typename FieldT>
+    void enforceSolvability( const Uintah::ProcessorGroup *,
+                             const Uintah::PatchSubset    * patches,
+                             const Uintah::MaterialSubset * materials,
+                                   Uintah::DataWarehouse  * old_dw,
+                                   Uintah::DataWarehouse  * new_dw,
+                             const VarLabel               * bLabel,
+                                   VarLabel               * rhsIntegralLabel );
+    //----------------------------------------------------------------------------------------------
   };
 }
 

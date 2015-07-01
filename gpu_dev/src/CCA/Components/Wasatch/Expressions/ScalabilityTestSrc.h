@@ -30,6 +30,42 @@
 /**
  *  \ingroup 	Expressions
  *  \class 	ScalabilityTestSrc
+ *  \date 	March, 2015
+ *  \author 	Tony Saad
+ *
+ *  \brief Creates a nonlinear, uncoupled, source term for use in
+ *         scalability tests.
+ *
+ */
+template< typename FieldT >
+class ScalabilityTestSrcUncoupled : public Expr::Expression<FieldT>
+{
+  DECLARE_FIELD(FieldT, f_)
+  
+  ScalabilityTestSrcUncoupled( const Expr::Tag& var );
+  
+  ~ScalabilityTestSrcUncoupled();
+  
+public:
+  
+  void evaluate();
+  
+  class Builder : public Expr::ExpressionBuilder
+  {
+  public:
+    Expr::ExpressionBase* build() const;
+    Builder( const Expr::Tag& result,
+            const Expr::Tag& var );
+    ~Builder(){}
+  private:
+    const Expr::Tag tag_;
+  };
+  
+};
+
+/**
+ *  \ingroup 	Expressions
+ *  \class 	ScalabilityTestSrc
  *  \date 	April, 2011
  *  \author 	Tony Saad
  *
@@ -40,7 +76,7 @@
 template< typename FieldT >
 class ScalabilityTestSrc : public Expr::Expression<FieldT>
 {
-  DECLARE_VECTOR_OF_FIELDS(FieldT, phi_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, phi_)
   const int nvar_;
 
   std::vector<double> tmpVec_;

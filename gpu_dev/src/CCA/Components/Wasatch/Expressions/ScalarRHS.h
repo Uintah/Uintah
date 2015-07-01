@@ -190,9 +190,9 @@ protected:
   const Expr::Tag densityTag_;
 
   DECLARE_FIELDS( SVolField, rho_, volfrac_, drhodt_, phi_ )
-  DECLARE_FIELD( XVolField, xareafrac_  )
-  DECLARE_FIELD( YVolField, yareafrac_  )
-  DECLARE_FIELD( ZVolField, zareafrac_  )
+  DECLARE_FIELD( XVolField, xareafrac_ )
+  DECLARE_FIELD( YVolField, yareafrac_ )
+  DECLARE_FIELD( ZVolField, zareafrac_ )
 
   // Operators
   const SVolToFieldTInterpT* volFracInterpOp_;
@@ -212,10 +212,10 @@ protected:
   const DivY* divOpY_;
   const DivZ* divOpZ_;
 
-  DECLARE_FIELDS( XFluxT, xConvFlux_, xDiffFlux_  )
-  DECLARE_FIELDS( YFluxT, yConvFlux_, yDiffFlux_  )
-  DECLARE_FIELDS( ZFluxT, zConvFlux_, zDiffFlux_  )
-  DECLARE_VECTOR_OF_FIELDS(FieldT, srcTerms_);
+  DECLARE_FIELDS( XFluxT, xConvFlux_, xDiffFlux_ )
+  DECLARE_FIELDS( YFluxT, yConvFlux_, yDiffFlux_ )
+  DECLARE_FIELDS( ZFluxT, zConvFlux_, zDiffFlux_ )
+  DECLARE_VECTOR_OF_FIELDS( FieldT, srcTerms_ )
 
   ScalarRHS( const FieldTagInfo& fieldTags,
              const Expr::TagList srcTags,

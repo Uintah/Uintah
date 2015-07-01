@@ -21,6 +21,7 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
  */
+// *** AXISYMMETRIC CPTI HAS NOT ACTUALLY BEEN IMPLEMENTED YET ***
 #include <Core/Grid/axiCptiInterpolator.h>
 #include <Core/Grid/Patch.h>
 #include <Core/Grid/Level.h>
