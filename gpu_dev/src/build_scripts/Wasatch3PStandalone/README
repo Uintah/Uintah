@@ -22,8 +22,8 @@ And uses: 'git pull' to update code.
 
 To git the original files:
 
-git clone git://software.crsim.utah.edu/SpatialOpt.git
-git clone git://software.crsim.utah.edu/ExprLib.git
+git clone https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOpt.git
+git clone https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git
 etc.
 
 ------------------

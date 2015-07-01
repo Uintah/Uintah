@@ -153,9 +153,7 @@ namespace Uintah{
         return d_radiometer;
       }
 
-      bool getBool_solveBoundaryFlux(){
-        return d_solveBoundaryFlux;
-      }
+
 
     //______________________________________________________________________
     private:

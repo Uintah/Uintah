@@ -8,6 +8,7 @@
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
 #include <CCA/Components/Arches/ParticleModels/CQMOMSourceWrapper.h>
+#include <Core/Containers/StaticArray.h>
 
 using namespace std;
 using namespace Uintah;
@@ -483,9 +484,6 @@ CQMOMEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, int t
       tsk->requires(Task::NewDW, d_fieldLabels->d_wVelocitySPBCLabel, Ghost::AroundCells, 1);
 #endif
     }
-//    tsk->modifies(d_FconvXLabel);
-//    tsk->modifies(d_FconvYLabel);
-//    tsk->modifies(d_FconvZLabel);
     tsk->modifies(d_FconvLabel);
   }
   
@@ -776,23 +774,23 @@ CQMOMEqn::buildXConvection( const ProcessorGroup* pc,
       IntVector c = *iter;
       phiTemp[c] = phi[c]; //store phi in phiTemp, to reset it later after constructing all the fluxes
     } //cell loop
-    
-    vector<constCCVarWrapper> cqmomWeights;
-    vector<constCCVarWrapper> cqmomAbscissas;
  
+    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
+    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
+    
+    int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
-      cqmomWeights.push_back(tempWrapper);
+      new_dw->get( cqmomWeights[i], tempLabel, matlIndex, patch, gac, 2 );
+      i++;
     }
-        
+    
+    i = 0;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
-      cqmomAbscissas.push_back(tempWrapper);
-     }
+      new_dw->get( cqmomAbscissas[i], tempLabel, matlIndex, patch, gac, 2 );
+      i++;
+    }
     
 #ifdef cqmom_transport_dbg
     std::cout << "Transport of " << d_eqnName << " in x-dir" << std::endl;
@@ -876,21 +874,21 @@ CQMOMEqn::buildYConvection( const ProcessorGroup* pc,
     new_dw->getModifiable(FconvY, d_FconvYLabel, matlIndex, patch);
     FconvY.initialize(0.0);
     
-    vector<constCCVarWrapper> cqmomWeights;
-    vector<constCCVarWrapper> cqmomAbscissas;
+    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
+    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
     
+    int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
-      cqmomWeights.push_back(tempWrapper);
+      new_dw->get( cqmomWeights[i], tempLabel, matlIndex, patch, gac, 2 );
+      i++;
     }
     
+    i = 0;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
-      cqmomAbscissas.push_back(tempWrapper);
+      new_dw->get( cqmomAbscissas[i], tempLabel, matlIndex, patch, gac, 2 );
+      i++;
     }
     
 #ifdef cqmom_transport_dbg
@@ -974,21 +972,21 @@ CQMOMEqn::buildZConvection( const ProcessorGroup* pc,
     new_dw->getModifiable(FconvZ, d_FconvZLabel, matlIndex, patch);
     FconvZ.initialize(0.0);
     
-    vector<constCCVarWrapper> cqmomWeights;
-    vector<constCCVarWrapper> cqmomAbscissas;
+    StaticArray <constCCVariable<double> > cqmomWeights ( nNodes );
+    StaticArray <constCCVariable<double> > cqmomAbscissas (nNodes * M);
     
+    int i = 0;
     for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
       const VarLabel* tempLabel = iW->second;
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
-      cqmomWeights.push_back(tempWrapper);
+      new_dw->get( cqmomWeights[i], tempLabel, matlIndex, patch, gac, 2 );
+      i++;
     }
     
+    i = 0;
     for (ArchesLabel::AbscissaMap::iterator iA = d_fieldLabels->CQMOMAbscissas.begin(); iA != d_fieldLabels->CQMOMAbscissas.end(); ++iA) {
       const VarLabel* tempLabel = iA->second;
-      constCCVarWrapper tempWrapper;
-      new_dw->get( tempWrapper.data, tempLabel, matlIndex, patch, gac, 2 );
-      cqmomAbscissas.push_back(tempWrapper);
+      new_dw->get( cqmomAbscissas[i], tempLabel, matlIndex, patch, gac, 2 );
+      i++;
     }
     
 #ifdef cqmom_transport_dbg
