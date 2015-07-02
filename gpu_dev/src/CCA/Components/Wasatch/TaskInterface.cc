@@ -139,6 +139,8 @@ namespace Wasatch{
                   const Uintah::MaterialSubset* const,
                   Uintah::DataWarehouse* const,
                   Uintah::DataWarehouse* const,
+                  void* old_TaskGpuDW,
+                  void* new_TaskGpuDW,
                   void* stream,  // for GPU tasks, this is the associated stream
                   int deviceID,
                   const int rkStage );
@@ -610,6 +612,8 @@ namespace Wasatch{
                             const Uintah::MaterialSubset* const materials,
                             Uintah::DataWarehouse* const oldDW,
                             Uintah::DataWarehouse* const newDW,
+                            void* old_TaskGpuDW,
+                            void* new_TaskGpuDW,
                             void* stream,
                             int deviceID,
                             const int rkStage )
