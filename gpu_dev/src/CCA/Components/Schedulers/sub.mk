@@ -35,7 +35,6 @@ SRCS += \
         $(SRCDIR)/DynamicMPIScheduler.cc      \
         $(SRCDIR)/GPUGridVariableInfo.cc      \
         $(SRCDIR)/GPUGridVariableGhosts.cc    \
-        $(SRCDIR)/GPUUtilities.cc             \
         $(SRCDIR)/IncorrectAllocation.cc      \
         $(SRCDIR)/MemoryLog.cc                \
         $(SRCDIR)/MessageLog.cc               \
