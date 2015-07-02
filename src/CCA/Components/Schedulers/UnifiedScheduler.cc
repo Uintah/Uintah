@@ -40,8 +40,6 @@
 #include <Core/Thread/Time.h>
 
 #ifdef HAVE_CUDA
-#include <CCA/Components/Schedulers/GPUUtilities.h>
-
 #include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #include <Core/Grid/Variables/GPUGridVariable.h>
 #include <Core/Grid/Variables/GPUStencil7.h>
