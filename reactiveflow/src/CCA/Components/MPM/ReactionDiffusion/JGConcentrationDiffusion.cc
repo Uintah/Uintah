@@ -58,7 +58,6 @@ void JGConcentrationDiffusion::scheduleComputeFlux(Task* task, const MPMMaterial
   task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
   task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,    matlset, gan, 2*NGN);
 
-  task->computes(d_rdlb->pConcGradientLabel, matlset);
   task->computes(d_rdlb->pFluxLabel,         matlset);
 }
 

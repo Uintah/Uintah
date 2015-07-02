@@ -11,20 +11,20 @@
      <maxTime>4</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
-     <delt_max>1.0e-4</delt_max>
+     <delt_max>1.0e-7</delt_max>
+     <max_Timesteps>44000</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <filebase>nano_pillar2.uda</filebase>
-    <outputTimestepInterval>5</outputTimestepInterval>
+    <filebase>nano_pillar2_2d.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
     <save label="p.mass"/>
     <save label="p.volume"/>
-    <save label="p.concentration" />
-    <save label="p.hydroStress" />
     <save label="p.scalefactor" />
+    <save label="p.concentration" />
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
@@ -43,10 +43,10 @@
   <MaterialProperties>
        <MPM>
          <material name="electrolyte">
-           <density>1000</density> <!-- kg/m^3 -->
+           <density>1000</density> <!-- micrograms/mm^3 -->
            <constitutive_model type="water"> 
-             <bulk_modulus>15000</bulk_modulus> <!-- Pa -->
-             <viscosity>.8</viscosity>
+             <bulk_modulus>1.5e3</bulk_modulus> <!-- micrograms/mm microsecond^2 -->
+             <viscosity>.8</viscosity> <!-- micrograms / mm microsecond -->
              <gamma>7.0</gamma>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
@@ -59,12 +59,11 @@
              <difference>
                <box label = "boxE">
                  <min>[0.0, 0.0, 0.0]</min>
-                 <!--<max>[1.0e-6, 1.0e-6, 0.75e-6]</max>-->
-                 <max>[1.0e-3, 1.0e-3, 1.5e-3]</max>
+                 <max>[1.0e-3, 1.0e-3, 1.5e-3]</max> <!-- units in mm -->
                </box>
                <cylinder label = "pillar_out">
-                 <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom>
-                 <top>[0.5e-3, 0.5e-3, 1.25e-3]</top>
+                 <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom> <!-- units in mm -->
+                 <top>[0.5e-3, 0.5e-3, 1.25e-3]</top> <!-- units in mm -->
                  <radius>.25e-3</radius>
                </cylinder>
              </difference>
@@ -76,21 +75,20 @@
          </material>
 
          <material name="pillar">
-           <density>2330</density> <!-- kg/m^3 -->
+           <density>2330</density> <!-- micrograms/mm^3 -->
            <constitutive_model type="gao_elastic"> 
-             <bulk_modulus>      6.5e6    </bulk_modulus>  <!-- Pa -->
-             <shear_modulus>     3.9e6    </shear_modulus> <!-- Pa -->
+             <bulk_modulus>      6.5e4    </bulk_modulus>  <!-- micrograms/mm microsecond^2 -->
+             <shear_modulus>     3.9e4    </shear_modulus> <!-- micrograms/mm microsecond^2 -->
              <alpha>             1.0         </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
            <diffusion_model type = "gao_diffusion">
-             <diffusivity>        1e-16    </diffusivity> <!-- m^2/s -->
-             <!--<partial_atomic_vol> 3.3  </partial_atomic_vol> --><!-- m^3/% Atoms -->
-             <partial_atomic_vol> 1e-16  </partial_atomic_vol><!-- m^3/% Atoms -->
+             <diffusivity>        1e-16    </diffusivity> <!-- mm^2/microsecond -->
+             <partial_atomic_vol> 1e-21  </partial_atomic_vol><!-- mm^3/% Atoms -->
              <max_concentration>  1.0      </max_concentration> <!-- #-->
              <operating_temp>     300      </operating_temp> <!-- Kelvin -->
-             <boltzmann_const>    1.38e-23 </boltzmann_const> <!-- m^2 kg / K s^2 -->
+             <boltzmann_const>    1.38e-20 </boltzmann_const> <!-- mm^2 micrograms / K microsecond^2 -->
            </diffusion_model>
            <geom_object>
              <cylinder label = "pillar_out"/>
@@ -113,49 +111,34 @@
   <Grid>
     <BoundaryConditions>
       <Face side = "x-">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "x+">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "y-">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "Neumann">
-                              <value> 0.0  </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
       </Face>                  
       <Face side = "y+">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+        <BCType id = "1" label = "Velocity"     var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Neumann">
                               <value> 0.0  </value>
-        </BCType>
-      </Face>
-      <Face side = "z-">
-        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
-                              <value> 1.0  </value>
         </BCType>
       </Face>                  
       <Face side = "z+">
-        <BCType id = "all" label = "Velocity"     var = "Neumann">
-                              <value> [0.,0.,0.] </value>
-        </BCType>
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 1.0  </value>
         </BCType>
@@ -165,7 +148,7 @@
       <Box label="1">
         <lower>[0.0,    4.75e-4,    0.0]   </lower>
         <upper>[1.0e-3, 5.25e-4, 1.5e-3]</upper>
-        <resolution>[20, 1, 30]        </resolution>
+        <resolution>[10, 1, 20]        </resolution>
         <extraCells>[1, 1, 1]          </extraCells>
         <patches>[1,1,1]               </patches>
       </Box>

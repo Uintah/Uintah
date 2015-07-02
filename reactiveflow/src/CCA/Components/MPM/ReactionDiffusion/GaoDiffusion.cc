@@ -69,7 +69,6 @@ void GaoDiffusion::scheduleComputeFlux(Task* task, const MPMMaterial* matl,
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
   task->requires(Task::NewDW, d_rdlb->gHydrostaticStressLabel, matlset, gan, 2*NGN);
 
-  task->computes(d_rdlb->pConcGradientLabel, matlset);
   task->computes(d_rdlb->pFluxLabel,         matlset);
 
 }
