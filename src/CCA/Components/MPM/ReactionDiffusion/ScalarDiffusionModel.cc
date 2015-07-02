@@ -85,6 +85,7 @@ void ScalarDiffusionModel::addInitialComputesAndRequires(Task* task,
   const MaterialSubset* matlset = matl->thisMaterial();
   task->computes(d_rdlb->pConcentrationLabel, matlset);
   task->computes(d_rdlb->pConcPreviousLabel,  matlset);
+  task->computes(d_rdlb->pConcGradientLabel,  matlset);
 }
 
 void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
@@ -95,13 +96,16 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
 
   ParticleVariable<double>  pConcentration;
   ParticleVariable<double>  pConcPrevious;
+  ParticleVariable<Vector>  pConcGradient;
 
   new_dw->allocateAndPut(pConcentration,  d_rdlb->pConcentrationLabel, pset);
   new_dw->allocateAndPut(pConcPrevious,   d_rdlb->pConcPreviousLabel,  pset);
+  new_dw->allocateAndPut(pConcGradient,   d_rdlb->pConcGradientLabel,  pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
     pConcentration[*iter] = 0.0;
     pConcPrevious[*iter]  = 0.0;
+    pConcGradient[*iter]  = Vector(0.0, 0.0, 0.0);
   }
 }
 
@@ -110,9 +114,11 @@ void ScalarDiffusionModel::addParticleState(std::vector<const VarLabel*>& from,
 {
   from.push_back(d_rdlb->pConcentrationLabel);
   from.push_back(d_rdlb->pConcPreviousLabel);
+  from.push_back(d_rdlb->pConcGradientLabel);
 
   to.push_back(d_rdlb->pConcentrationLabel_preReloc);
   to.push_back(d_rdlb->pConcPreviousLabel_preReloc);
+  to.push_back(d_rdlb->pConcGradientLabel_preReloc);
 }
 
 void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
@@ -129,6 +135,7 @@ void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel, matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pStressLabel,             matlset, gan, NGP);
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,    matlset, gan, NGP);
+  task->requires(Task::OldDW, d_rdlb->pConcGradientLabel,     matlset, gan, NGP);
   task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
 
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
@@ -156,6 +163,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
   constParticleVariable<Matrix3> pFOld;
   constParticleVariable<Matrix3> pStress;
   constNCVariable<double>       gmass;
+  constParticleVariable<Vector> pConcGrad;
 
   int dwi = matl->getDWIndex();
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP,
@@ -167,6 +175,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
   old_dw->get(psize,          d_lb->pSizeLabel,               pset);
   old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel, pset);
   old_dw->get(pStress,        d_lb->pStressLabel,             pset);
+  old_dw->get(pConcGrad,      d_rdlb->pConcGradientLabel,     pset);
 
   new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
@@ -194,12 +203,16 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
     phydrostress = one_third*pStress[idx].Trace();
 
+		double pconc_ext = pConcentration[idx];
     IntVector node;
     for(int k = 0; k < n8or27; k++) {
       node = ni[k];
       if(patch->containsNode(node)) {
+        Point gpos = patch->getNodePosition(node);
+        Vector distance = px[idx] - gpos;
+        pconc_ext = pConcentration[idx] - Dot(pConcGrad[idx],distance);
+        gconcentration[node] += pconc_ext * pmass[idx] * S[k];
         ghydrostaticstress[node] += phydrostress * pmass[idx] * S[k];
-        gconcentration[node] += pConcentration[idx] * pmass[idx] * S[k];
       }
     }
   }
@@ -367,9 +380,11 @@ void ScalarDiffusionModel::scheduleInterpolateToParticlesAndUpdate(Task* task,
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gnone);
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,           gnone);
   task->requires(Task::NewDW, d_rdlb->gConcentrationRateLabel,       gac,NGN);
+  task->requires(Task::NewDW, d_rdlb->gConcentrationStarLabel,       gac,NGN);
 
   task->computes(d_rdlb->pConcentrationLabel_preReloc, matlset);
   task->computes(d_rdlb->pConcPreviousLabel_preReloc,  matlset);
+  task->computes(d_rdlb->pConcGradientLabel_preReloc,  matlset);
 }
 
 void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
@@ -383,15 +398,20 @@ void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
   vector<IntVector> ni(interpolator->size());
   vector<double> S(interpolator->size());
+  vector<Vector> d_S(interpolator->size());
+  Vector dx = patch->dCell();
+  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
   constParticleVariable<Point>   px;
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> pFOld;
   constParticleVariable<double>  pConcentration;
   constNCVariable<double>        gConcentrationRate;
+  constNCVariable<double>        gConcentrationStar;
   
   ParticleVariable<double> pConcentrationNew;
   ParticleVariable<double> pConcPreviousNew;
+  ParticleVariable<Vector> pConcGradNew;
   
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
   
@@ -404,19 +424,25 @@ void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
   
   old_dw->get(pConcentration,     d_rdlb->pConcentrationLabel,     pset);
   new_dw->get(gConcentrationRate, d_rdlb->gConcentrationRateLabel, dwi, patch, gac, NGP);
+  new_dw->get(gConcentrationStar, d_rdlb->gConcentrationStarLabel, dwi, patch, gac, NGP);
 
-  new_dw->allocateAndPut(pConcentrationNew,  d_rdlb->pConcentrationLabel_preReloc, pset);
-  new_dw->allocateAndPut(pConcPreviousNew,   d_rdlb->pConcPreviousLabel_preReloc,  pset);
+  new_dw->allocateAndPut(pConcentrationNew, d_rdlb->pConcentrationLabel_preReloc, pset);
+  new_dw->allocateAndPut(pConcPreviousNew,  d_rdlb->pConcPreviousLabel_preReloc,  pset);
+  new_dw->allocateAndPut(pConcGradNew,      d_rdlb->pConcGradientLabel_preReloc,  pset);
 
   for(ParticleSubset::iterator iter = pset->begin();
         iter != pset->end(); iter++){
 
     particleIndex idx = *iter;
-    interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
+    interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pFOld[idx]);
     double concRate = 0.0;
+		pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
     for (int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concRate += gConcentrationRate[node]   * S[k];
+      for(int j = 0; j < 3; j++){
+        pConcGradNew[idx][j] += gConcentrationStar[ni[k]] * d_S[k][j] * oodx[j];
+      }
     }
 
     pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
