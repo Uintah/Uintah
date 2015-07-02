@@ -420,8 +420,8 @@ void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
     }
 
     pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
-    pConcentrationNew[idx] = min(pConcentrationNew[idx],max_concentration);
-    pConcentrationNew[idx] = max(pConcentrationNew[idx],min_concentration);
+    //pConcentrationNew[idx] = min(pConcentrationNew[idx],max_concentration);
+    //pConcentrationNew[idx] = max(pConcentrationNew[idx],min_concentration);
     pConcPreviousNew[idx]  = pConcentration[idx];
   }
   delete interpolator;

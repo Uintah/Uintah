@@ -28,8 +28,8 @@
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
-		<save label="maxHydroStress1" />
-		<save label="minHydroStress1" />
+    <save label="maxHydroStress1" />
+    <save label="minHydroStress1" />
   </DataArchiver>
 
   <MPM>
@@ -159,7 +159,7 @@
         <upper>[1.0e-3, 1.0e-3, 2.0e-3]</upper>
         <resolution>[10, 10, 15]   </resolution>
         <extraCells>[1,1,1]      </extraCells>
-        <patches>[1,2,2]         </patches>
+        <patches>[2,2,2]         </patches>
       </Box>
     </Level>
   </Grid>
