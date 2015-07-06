@@ -191,7 +191,7 @@ CQMOM_Convection::sched_solveCQMOMConvection( const LevelP& level, SchedulerP& s
   Task* tsk = scinew Task(taskname, this, &CQMOM_Convection::solveCQMOMConvection);
   
   
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
   
   //requires updated weights and abscissas
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -243,8 +243,8 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
     
-    constCCVariable<int> cellType;
-    old_dw->get(cellType, d_fieldLabels->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    constCCVariable<double> volFrac;
+    old_dw->get(volFrac, d_fieldLabels->d_volFractionLabel, matlIndex, patch, gac, 1);
     
     //allocate convective terms
     vector<CCVariable<double>* > Fconv;
@@ -330,14 +330,14 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::vector<cqFaceData1D> faceWeights (nNodes);
       
         for ( int i = 0; i < nNodes; i++ ) {
-          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], cellType, epW );
+          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], volFrac, epW );
         }
       
         for ( int i = 0; i < nNodes * M; i++ ) {
           if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], cellType, epW );
+            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], volFrac, epW );
           } else {
-            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], cellType, epW );
+            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], volFrac, epW );
           }
         }
         
@@ -346,8 +346,12 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
       std::cout << "____________________________" << std::endl;
 #endif
         for ( int i = 0; i < nMoments; i++ ) {
-          gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-          (*(FconvX[i]))[c] = getFlux( area, gPhi, c, cellType );
+          if (volFrac[c] == 1.0 ) {
+            gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+          } else {
+            gPhi.plus = 0.0; gPhi.minus = 0.0;
+          }
+          (*(FconvX[i]))[c] = getFlux( area, gPhi, c, volFrac );
         }
       }
       
@@ -363,14 +367,14 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::vector<cqFaceData1D> faceWeights (nNodes);
         
         for ( int i = 0; i < nNodes; i++ ) {
-          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], cellType, epW );
+          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], volFrac, epW );
         }
         
         for ( int i = 0; i < nNodes * M; i++ ) {
           if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], cellType, epW );
+            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], volFrac, epW );
           } else {
-            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], cellType, epW );
+            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], volFrac, epW );
           }
         }
 #ifdef cqmom_transport_dbg
@@ -378,8 +382,12 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::cout << "____________________________" << std::endl;
 #endif
         for ( int i = 0; i < nMoments; i++ ) {
-          gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-          (*(FconvY[i]))[c] = getFlux( area, gPhi, c, cellType );
+          if (volFrac[c] == 1.0 ) {
+            gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+          } else {
+            gPhi.plus = 0.0; gPhi.minus = 0.0;
+          }
+          (*(FconvY[i]))[c] = getFlux( area, gPhi, c, volFrac );
         }
       }
      
@@ -395,14 +403,14 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::vector<cqFaceData1D> faceWeights (nNodes);
         
         for ( int i = 0; i < nNodes; i++ ) {
-          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], cellType, epW );
+          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], volFrac, epW );
         }
         
         for ( int i = 0; i < nNodes * M; i++ ) {
           if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], cellType, epW );
+            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], volFrac, epW );
           } else {
-            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], cellType, epW );
+            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], volFrac, epW );
           }
         }
 #ifdef cqmom_transport_dbg
@@ -410,8 +418,12 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::cout << "____________________________" << std::endl;
 #endif
         for ( int i = 0; i < nMoments; i++ ) {
-          gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-          (*(FconvZ[i]))[c] = getFlux( area, gPhi, c, cellType );
+          if (volFrac[c] == 1.0 ) {
+            gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+          } else {
+            gPhi.plus = 0.0; gPhi.minus = 0.0;
+          }
+          (*(FconvZ[i]))[c] = getFlux( area, gPhi, c, volFrac );
         }
       }
 
@@ -454,20 +466,24 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
           std::vector<cqFaceData1D> faceWeights (nNodes);
 
           for ( int i = 0; i < nNodes; i++ ) {
-            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], cellType, epW, faceIsBoundary );
+            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], volFrac, epW, faceIsBoundary );
           }
           
           for ( int i = 0; i < nNodes * M; i++ ) {
             if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
             } else {
-              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
             }
           }
 
           for ( int i = 0; i < nMoments; i++ ) {
-            gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-            (*(FconvX[i]))[c] = getFlux( area,  gPhi, c, cellType );
+            if (volFrac[c] == 1.0 ) {
+              gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+            } else {
+              gPhi.plus = 0.0; gPhi.minus = 0.0;
+            }
+            (*(FconvX[i]))[c] = getFlux( area,  gPhi, c, volFrac );
           }
         }
         
@@ -484,20 +500,24 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
           std::vector<cqFaceData1D> faceWeights (nNodes);
 
           for ( int i = 0; i < nNodes; i++ ) {
-            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], cellType, epW, faceIsBoundary );
+            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], volFrac, epW, faceIsBoundary );
           }
           
           for ( int i = 0; i < nNodes * M; i++ ) {
             if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
             } else {
-              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
             }
           }
 
           for ( int i = 0; i < nMoments; i++ ) {
-            gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-            (*(FconvY[i]))[c] = getFlux( area,  gPhi, c, cellType );
+            if (volFrac[c] == 1.0 ) {
+              gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+            } else {
+              gPhi.plus = 0.0; gPhi.minus = 0.0;
+            }
+            (*(FconvY[i]))[c] = getFlux( area,  gPhi, c, volFrac );
           }
         }
         
@@ -514,20 +534,24 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
           std::vector<cqFaceData1D> faceWeights (nNodes);
 
           for ( int i = 0; i < nNodes; i++ ) {
-            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], cellType, epW, faceIsBoundary );
+            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], volFrac, epW, faceIsBoundary );
           }
           
           for ( int i = 0; i < nNodes * M; i++ ) {
             if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
             } else {
-              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
             }
           }
 
           for ( int i = 0; i < nMoments; i++ ) {
-            gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-            (*(FconvZ[i]))[c] = getFlux( area,  gPhi, c, cellType );
+            if (volFrac[c] == 1.0 ) {
+              gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+            } else {
+              gPhi.plus = 0.0; gPhi.minus = 0.0;
+            }
+            (*(FconvZ[i]))[c] = getFlux( area,  gPhi, c, volFrac );
           }
         }
         
