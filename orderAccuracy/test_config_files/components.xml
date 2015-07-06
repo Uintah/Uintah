@@ -1,9 +1,9 @@
 <config>  
  <!-- spaces are not allowed in component names-->
- <!--<component>Arches</component>-->
- <!--<component>Arches/RMCRT</component>-->
+ <!--<component>Arches</component> -->
+ <component>Arches/RMCRT</component>
  <!--<component>ICE</component> -->
- <component>Examples</component>
+ <!-- <component>Examples</component>-->
  <!--<component>MPM</component> -->
  <!--<component>MPMICE</component>-->
  <!--<component>MPMICE/Propagation_burning</component>-->

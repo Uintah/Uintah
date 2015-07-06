@@ -5,25 +5,6 @@
   /usr/local/home/harman/Builds/Fresh/NB/src/scripts/ /usr/local/home/harman/Builds/Fresh/NB/src/StandAlone/inputs
 </symbolicLinks>
 
- <!--Radiation Benchmarks-->
-<test>
-  <name>sineWave</name>
-  <ups>RMCRT_sineWave.ups</ups>
-  <tst>nRaySineWave.tst</tst>
-</test>
-
-<test>
-  <name>expHotSpot</name>
-  <ups>RMCRT_hotspot.ups</ups>
-  <tst>nRayHotSpot.tst</tst>
-</test>
-
-<test>
-  <name>expColdWall</name>
-  <ups>RMCRT_xkexp.ups</ups>
-  <tst>nRayColdWall.tst</tst>
-</test>
-
 <test>
   <name>MMS_dt</name>
   <ups>almgrenMMS.ups</ups>

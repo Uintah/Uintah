@@ -55,33 +55,10 @@
         <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType id="0" var="ForcedDirichlet"  label="abskg">
+          <value> 1.0 </value>
         </BCType>
         <BCType id="0" var="WallBC"  label="x-wall">  
-          <value>0.0</value>
-        </BCType>
-        <BCType id="0" var="Neumann" label="mixture_fraction"> 
-          <value>0.0</value>
-        </BCType>
-        <BCType id="0" var="Neumann" label="heat_loss"> 
-          <value>0.0</value>
-        </BCType>
-        <BCType id="0" var="Neumann" label="scalar_var"> 
-          <value>0.0</value>
-        </BCType>
-        <BCType id="0" var="Neumann" label="enthalpy"> 
-          <value>0.0</value>
-        </BCType>
-      </Face>
-      <Face rectangle="x-" lower="0.00 0.48 0.48 " upper="0.00 0.52 0.52">
-        <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
-          <value>1000.0</value>
-        </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
-        </BCType>
-        <BCType id="0" var="OutletBC"  label="the outlet"> 
           <value>0.0</value>
         </BCType>
         <BCType id="0" var="Neumann" label="mixture_fraction"> 
@@ -101,8 +78,8 @@
         <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType id="0" var="ForcedDirichlet"  label="abskg">
+          <value> 1.0 </value>
         </BCType>
         <BCType id="0" var="OutletBC"  label="the outlet"> 
           <value>0.0</value>
@@ -125,8 +102,8 @@
         <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType id="0" var="ForcedDirichlet"  label="abskg">
+          <value> 1.0 </value>
         </BCType>
         <BCType id="0" var="WallBC"  label="y-pressure">  
           <value>0.0</value>
@@ -148,8 +125,8 @@
         <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType id="0" var="ForcedDirichlet"  label="abskg">
+          <value> 1.0 </value>
         </BCType>
         <BCType id="0" var="WallBC"  label="y+pressure">  
           <value>0.0</value>
@@ -171,8 +148,8 @@
         <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType id="0" var="ForcedDirichlet"  label="abskg">
+          <value> 1.0 </value>
         </BCType>
         <BCType id="0" var="WallBC"  label="z-pressure">  
           <value>0.0</value>
@@ -194,8 +171,8 @@
         <BCType id="0" var="Dirichlet" label="radiation_temperature"> 
           <value>0.0</value>
         </BCType>
-        <BCType id="0"  label= "abskg"              var="ForcedDirichlet">
-                            <value> 1.0 </value>
+        <BCType id="0" var="ForcedDirichlet"  label="abskg">
+          <value> 1.0 </value>
         </BCType>
         <BCType id="0" var="WallBC"  label="z+pressure">  
           <value>0.0</value>
@@ -259,7 +236,7 @@
         </Eqn>
 
         <Sources>
-            <src label="divQ" type="rmcrt_radiation">
+          <src label="divQ" type="rmcrt_radiation">
             <calc_frequency>1</calc_frequency>
             <abskg label = "abskg" /> 
             <RMCRT>
@@ -297,7 +274,7 @@
           </initialization>
           <calculator type="special">
             <abskg label="gas_abskg"/>
-           <expressionNumber>1</expressionNumber>
+            <expressionNumber>1</expressionNumber>
           </calculator>
         </model>
         <model type="empirical_soot" label="soot">
@@ -324,7 +301,7 @@
 
    <Properties>
         <ClassicTable>
-          <inputfile>/home/derek/codes/uintah4/trunk/src/orderAccuracy/test_config_files/Arches/kexp.mix.gz</inputfile>
+          <inputfile>inputs/ARCHES/RMCRT/kexp.mix.gz</inputfile>
           <single_iv iv_label="mixture_fraction"/>
           <reference_state iv="1.0"/>
         </ClassicTable>
