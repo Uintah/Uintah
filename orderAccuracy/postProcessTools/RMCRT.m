@@ -15,7 +15,7 @@ addpath("./")
 %______________________________________________________________________
 %______________________________________________________________________
 %   B E N C H M A R K   1
-function [divQ_exact] = benchMark1(x_CC)
+function [divQ_exact] = benchMark1(x_CC,pDir)
   printf("BenchMark 1");
   
   x_exact = 0:(1/40):1;
@@ -40,7 +40,7 @@ endfunction
 
 %______________________________________________________________________
 %    B E N C H M A R K   2    
-function [DivQ] = benchMark2(x_CC)
+function [DivQ] = benchMark2(x_CC,pDir)
   printf("BenchMark 2\n");
 
   [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
@@ -95,7 +95,7 @@ endfunction
 
 %______________________________________________________________________
 %   B E N C H M A R K   3
-function [ExactSol] = benchMark3(x_CC)
+function [ExactSol] = benchMark3(x_CC,pDir)
   printf("BenchMark 3");
   
   load bench3Exact.txt;
@@ -135,7 +135,7 @@ endfunction
 
 %______________________________________________________________________
 %   B E N C H M A R K   4
-function [ExactSol] = benchMark4(x_CC)
+function [ExactSol] = benchMark4(x_CC,pDir)
   printf("BenchMark 4");
   
   load b4divQCenterExact.txt;
@@ -175,6 +175,78 @@ endfunction
 
 %______________________________________________________________________
 
+%______________________________________________________________________
+%______________________________________________________________________
+%   B E N C H M A R K   5 -> (1+ sine(x))*T^4 
+function [divQ_exact] = benchMark5(x_CC,pDir)
+  printf("BenchMark sine");
+  
+ if pDir ==1 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/sinDivQx.dat;
+ divQ=sinDivQx;
+ elseif pDir ==2 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/sinDivQy.dat;
+ divQ=sinDivQy;
+ elseif pDir ==3 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/sinDivQz.dat;
+ divQ=sinDivQz;
+ end
+
+ ExactSol=divQ(:,2);
+ x_exact=divQ(:,1);
+
+  %Do a pchip interpolation to any resolution
+  divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
+%______________________________________________________________________
+%______________________________________________________________________
+%   B E N C H M A R K   6 -> (a*x+b)*T^4 and k*exp(c*x+d)
+function [divQ_exact] = benchMark6(x_CC,pDir)
+  printf("BenchMark 1");
+  
+ if pDir ==1 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/kexpDivQx.dat;
+ divQ=kexpDivQx;
+ elseif pDir ==2 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/kexpDivQy.dat;
+ divQ=kexpDivQy;
+ elseif pDir ==3 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/kexpDivQz.dat;
+ divQ=kexpDivQz;
+ end
+
+ ExactSol=divQ(:,2);
+ x_exact=divQ(:,1);
+
+  %Do a pchip interpolation to any resolution
+  divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
+%______________________________________________________________________
+%______________________________________________________________________
+%   B E N C H M A R K   7 -> (a*x+b)*T^4 and k*exp(c*x+d) with small hot spot
+
+function [divQ_exact] = benchMark7(x_CC,pDir)
+  printf("BenchMark 1");
+ if pDir ==1 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/hotspotDivQx.dat;
+ divQ=hotspotDivQx;
+ elseif pDir ==2 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/hotspotDivQy.dat;
+ divQ=hotspotDivQy;
+ elseif pDir ==3 
+ load ~/codes/uintah4/trunk/opt/StandAlone/orderAccuracy2/postProcessTools/hotspotDivQz.dat;
+ divQ=hotspotDivQz;
+ end
+
+ ExactSol=divQ(:,2);
+ x_exact=divQ(:,1);
+
+  %Do a pchip interpolation to any resolution
+  divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
 
 function Usage
   printf('RMCRT.m <options>\n') 
@@ -309,13 +381,7 @@ x_CC     = divQ_sim(:,pDir);         % This is actually x_CC or y_CC or z_CC
 
 %__________________________________
 % compute the exact solution
-if (benchmark == 1)
-  [divQ_exact] = benchMark1(x_CC);
-elseif (benchmark == 2 )
-  [divQ_exact] = benchMark2(x_CC);
-elseif (benchmark == 3 )
-  [divQ_exact] = benchMark3(x_CC);
-end
+eval([ ' [divQ_exact] = benchMark' int2str(benchmark) '(x_CC,pDir);'])
 
 %______________________________
 % compute the L2 norm

@@ -258,7 +258,7 @@
           <!-- Radiation Properties -->
           <!-- NOTE: The property label (ie, the total abs coeff) cannot be abskg OR abskp as these names are used as defaults by the calculator -->
           <calculator                   spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, burns_christon, radprops, hottel_sarofim'"
+                                        attribute1="type REQUIRED STRING 'constant, special, burns_christon, radprops, hottel_sarofim'"
                                         need_applies_to="type radiation_properties">
 
             <abskg                        spec="REQUIRED NO_DATA"
@@ -269,6 +269,7 @@
             <min                          spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
             <max                          spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
             <!-- RadiationProperties: constant -->
+            <expressionNumber             spec="REQUIRED INTEGER" need_applies_to="type special" />
             <abskg_value                  spec="REQUIRED DOUBLE" need_applies_to="type constant" />
             <!-- RadiationProperties: rad props -->
             <grey_gas                     spec="OPTIONAL NO_DATA" need_applies_to="type radprops">

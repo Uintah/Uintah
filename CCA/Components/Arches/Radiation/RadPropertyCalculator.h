@@ -118,6 +118,27 @@ namespace Uintah {
       }; 
       //______________________________________________________________________
       //
+      class specialProperties : public PropertyCalculatorBase  { 
+
+        public: 
+          specialProperties();
+          ~specialProperties();
+          
+          bool problemSetup( const ProblemSpecP& db ); 
+          void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
+
+          std::vector<std::string> get_sp(){
+            std::vector<std::string> void_vec; 
+            return void_vec; 
+          }
+
+        private: 
+          double _expressionNumber; 
+
+
+      }; 
+      //______________________________________________________________________
+      //
       class  BurnsChriston : public PropertyCalculatorBase  { 
 
         public: 
