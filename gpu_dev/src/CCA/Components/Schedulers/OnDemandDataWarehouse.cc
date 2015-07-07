@@ -214,6 +214,7 @@ OnDemandDataWarehouse::clear()
 
 #ifdef HAVE_CUDA
   if (Uintah::Parallel::usingDevice()) {
+    //clear out the host side GPU Datawarehouses.  This does NOT touch the task DWs.
     for (size_t i = 0; i < d_gpuDWs.size(); i++) {
       d_gpuDWs[i]->clear();
       //because it was created using placement new, we have to deallocate this way instead of through delete.

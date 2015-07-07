@@ -22,19 +22,17 @@ public:
             int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
-            bool validOnDevice,
             Ghost::GhostType gtype,
             int numGhostCells,
             int whichGPU);
 
+  //For PerPatch vars
   DeviceGridVariableInfo(Variable* var,
             size_t sizeOfDataType,
-            size_t varMemSize,
             int matlIndx,
             int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
-            bool validOnDevice,
             int whichGPU);
 
   Variable* var;
@@ -46,7 +44,6 @@ public:
   int levelIndx;
   const Patch* patchPointer;
   const Task::Dependency* dep;
-  bool validOnDevice;
   Ghost::GhostType gtype;
   int numGhostCells;
   int whichGPU;
@@ -56,6 +53,8 @@ public:
 class DeviceGridVariables {
 public:
   DeviceGridVariables();
+
+  //For grid vars
   void add(const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
@@ -65,22 +64,27 @@ public:
             IntVector offset,
             Variable* var,
             const Task::Dependency* dep,
-            bool validOnDevice,
             Ghost::GhostType gtype,
             int numGhostCells,
             int whichGPU);
 
+  //For PerPatch vars.  They don't use ghost cells
   void add(const Patch* patchPointer,
+            int matlIndx,
+            int levelIndx,
+            size_t varMemSize,
+            size_t sizeOfDataType,
+            Variable* var,
+            const Task::Dependency* dep,
+            int whichGPU);
+
+  //For task vars.
+  void addTaskGpuDWVar(const Patch* patchPointer,
               int matlIndx,
               int levelIndx,
-              size_t sizeOfDataType,
               size_t varMemSize,
-              Variable* var,
               const Task::Dependency* dep,
-              bool validOnDevice,
               int whichGPU);
-
-
 
   size_t getTotalSize();
 

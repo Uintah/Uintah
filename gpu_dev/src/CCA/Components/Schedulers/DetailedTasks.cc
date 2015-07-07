@@ -290,8 +290,8 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
-  TaskGPUDataWarehouses[0] = NULL;
-  TaskGPUDataWarehouses[1] = NULL;
+  TaskGpuDataWarehouses[0] = NULL;
+  TaskGpuDataWarehouses[1] = NULL;
   setCUDAStream(NULL);
 #endif
 }
@@ -342,7 +342,7 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
   if (task->usesDevice()) {
     cudaError_t retVal;
     OnDemandDataWarehouse::uintahSetCudaDevice(getDeviceNum());
-    task->doit(event, pg, patches, matls, dws, getTaskGPUDataWarehouse(Task::OldDW), getTaskGPUDataWarehouse(Task::NewDW), getCUDAStream(), deviceNum_);
+    task->doit(event, pg, patches, matls, dws, getTaskGpuDataWarehouse(Task::OldDW), getTaskGpuDataWarehouse(Task::NewDW), getCUDAStream(), deviceNum_);
   }
   else {
     task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
@@ -1627,12 +1627,30 @@ bool DetailedTask::checkAllCUDAStreamsDone()
   return true;
 }
 
-void DetailedTask::setTaskGPUDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
-  TaskGPUDataWarehouses[DW] = TaskDW;
+void DetailedTask::setTaskGpuDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
+  TaskGpuDataWarehouses[DW] = TaskDW;
 }
 
-GPUDataWarehouse* DetailedTask::getTaskGPUDataWarehouse(Task::WhichDW DW) {
-  return TaskGPUDataWarehouses[DW];
+GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(Task::WhichDW DW) {
+  return TaskGpuDataWarehouses[DW];
+}
+
+void DetailedTask::deleteTaskGpuDataWarehouses() {
+  for (int i = 0; i < 2; i++) {
+    if (TaskGpuDataWarehouses[i] != NULL) {
+      //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
+      //of the things in the GPU.  The host side GPU DWs is reponsible for
+      //deallocating all the GPU resources.  The only thing we do want to clean
+      //up is that this GPUDW lives on the GPU.
+      TaskGpuDataWarehouses[i]->deleteSelfOnDevice();
+
+      void * getPlacementNewBuffer = TaskGpuDataWarehouses[i]->getPlacementNewBuffer();
+
+      TaskGpuDataWarehouses[i]->~GPUDataWarehouse();
+      free(getPlacementNewBuffer);
+      TaskGpuDataWarehouses[i] = NULL;
+    }
+  }
 }
 
 #endif // HAVE_CUDA
