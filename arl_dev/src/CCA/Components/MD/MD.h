@@ -110,15 +110,19 @@ namespace Uintah {
        */
       virtual ~MD();
 
+
+      virtual void preGridProblemSetup(const ProblemSpecP&      params,
+                                             GridP&             grid,
+                                             SimulationStateP&  simState);
       /**
        * @brief
        * @param
        * @return
        */
-      virtual void problemSetup(const ProblemSpecP& params,
-                                const ProblemSpecP& restart_prob_spec,
-                                GridP& grid,
-                                SimulationStateP&);
+      virtual void problemSetup(const ProblemSpecP&     params,
+                                const ProblemSpecP&     restart_prob_spec,
+                                      GridP&            grid,
+                                      SimulationStateP& simState);
 
       /**
        * @brief

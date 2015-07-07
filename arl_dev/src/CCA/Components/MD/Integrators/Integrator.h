@@ -16,6 +16,8 @@
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 
+#include <Core/Grid/Variables/PerPatch.h>
+
 namespace Uintah {
 
   enum interactionModel { Deterministic, Stochastic, Mixed };

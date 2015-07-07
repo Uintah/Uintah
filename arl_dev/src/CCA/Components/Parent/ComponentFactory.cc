@@ -28,6 +28,7 @@
 #include <CCA/Components/Examples/DOSweep.h>
 #include <CCA/Components/Examples/RMCRT_Test.h>
 #include <CCA/Components/Examples/LJPotentialTest.h>
+#include <CCA/Components/Examples/RetrievalTest.h>
 #include <CCA/Components/Examples/ParticleTest1.h>
 #include <CCA/Components/Examples/Poisson1.h>
 #include <CCA/Components/Examples/Poisson2.h>
@@ -241,6 +242,10 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   }
   if (sim_comp == "ljpotentialtest" || sim_comp == "LJPOTENTIALTEST") {
     return scinew LJPotentialTest(world);
+  }
+  if (sim_comp == "retrievaltest" || sim_comp == "RETRIEVALTEST")
+  {
+    return scinew RetrievalTest(world);
   }
 
 #ifndef NO_MODELS_RADIATION

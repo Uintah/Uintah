@@ -1,0 +1,32 @@
+Periodic boundary conditions are enforced by:
+1.  Taking each patch on the grid
+2.  Building a patch list of adjacent patches
+  a)  If PBC is enabled, adjacency is looked for by not only checking against
+      real patches, but also checking against virtual patches constructed by
+      adding an offset to real patches and determining if there is overlap
+      between the target patch and the (offset) virtual patch.  If there is,
+      this represents a virtual patch representing the transition across a PBC
+      edge.
+  b)  This task is accomplished during gridding/regridding via
+      Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
+      
+      NOTE:  This gets called in the following places:
+      Grid.cc -
+        Grid::parseLevelFromFile(...) (restart?)
+        SimulationController::gridSetup()
+          ->Grid::problemSetup(...)       (non-restart)
+          
+          SOLUTION:  
+          
+          1.)  Implement preGridProblemSetup in MD component to parse
+          the necessary patch/cutoff information for building proper virtual
+          patch list
+          2.)  add (fix, default?) Grid::finalizeLevel(bool,bool,bool) to
+          accept a vector which tells you how many patch vectors you need
+          periodicity over.
+          3.)  Will need some way to pass into  Grid::problemSetup the
+          appropriate vector to understand layering for PBC.  This can
+          default to the PBC (1,1,1) vector, but we will need to change
+          the scheduler and anything else that calls level->finalizeLevel
+          to access and pass through this variable.  Need Alan's help to
+          minimize intrusive fingerprints here.

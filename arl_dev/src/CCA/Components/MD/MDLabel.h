@@ -158,6 +158,13 @@ namespace Uintah {
       const VarLabel* rOOPStress;
   };
 
+  class integratorLabels {
+    public:
+      integratorLabels();
+     ~integratorLabels();
+
+     const VarLabel* fPatchFirstIntegration;
+  };
   class MDLabel {
     public:
       MDLabel();
@@ -169,6 +176,7 @@ namespace Uintah {
       electrostaticLabels*   electrostatic;
       valenceLabels*         valence;
       SPME_dependencies*     SPME_dep;
+      integratorLabels*      integrator;
   };
 
   /**

@@ -68,6 +68,12 @@ public:
     value_[1]=static_cast<int>(p.y());
     value_[2]=static_cast<int>(p.z());
   }
+  inline explicit IntVector(const int& i)
+  {
+    value_[0]=i;
+    value_[1]=i;
+    value_[2]=i;
+  }
 
   // Creates an IntVector from a string that looks like "[1, 2, 3]".
   static IntVector fromString( const std::string & source ); 
