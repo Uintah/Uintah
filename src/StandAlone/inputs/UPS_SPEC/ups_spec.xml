@@ -365,7 +365,7 @@
     <SimulationComponent          spec="REQUIRED NO_DATA"
                                     attribute1="type REQUIRED STRING 'arches, burger, dosweep, ice, impm, mpm, mpmarches, fvmdiffusion,
                                                                       mpmf, mpmice, amrmpm, wasatch, md, reduce_uda,
-                                                                      advectslabs, unifiedschedulertest, poissongpu1, ljpotentialtest,
+                                                                      advectslabs, unifiedschedulertest, poissongpu1, ljpotentialtest, retrievaltest,
                                                                       poisson1, poisson2, poisson3, poisson4, benchmark, rigidmpmice, reduce_uda, 
                                                                       rmpmice, smpm, smpmice, switcher, wave, solvertest, RMCRT_Test particletest'" >
                                   <!-- The 'type' above is used in CCA/Components/Parent/ComponentFactory.cc -->
@@ -971,6 +971,17 @@
     <R12                      spec="REQUIRED DOUBLE" />
     <R6                       spec="REQUIRED DOUBLE" />
   </LJPotentialTest>
+  
+  <!-- Data retrieval across multiple patches Test Component -->
+  <RetrievalTest			  spec="OPTIONAL NO_DATA" >
+    <numGhostCells            spec="REQUIRED INTEGER"/>
+    <outputFile               spec="REQUIRED STRING" />
+  </RetrievalTest                                     >
+  
+  <!-- Retrieval Test Component -->
+  <RetrievalTest              spec="OPTIONAL NO_DATA">
+    <numGhostCells              spec="REQUIRED INTEGER"/>
+  </RetrievalTest>
   
   <!--  Wave  Component -->
   <Wave                       spec="OPTIONAL NO_DATA" >

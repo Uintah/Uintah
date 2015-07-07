@@ -44,6 +44,7 @@
 #include <Core/Util/XMLUtils.h>
 
 #include <iostream>
+#include <iomanip>
 #include <cstdio>
 
 #include <stdlib.h>
@@ -143,7 +144,12 @@ Vector::normal() const
 
 ostream& operator<<( ostream& os, const Vector& v )
 {
-  os << '[' << v.x() << ' ' << v.y() << ' ' << v.z() << ']';
+  int width=23;
+  int precision=17;
+  os << " [ "
+     << std::setw(width) << std::setprecision(precision) << std::right << std::fixed << v.x() << ' '
+     << std::setw(width) << std::setprecision(precision) << std::right << std::fixed << v.y() << ' '
+     << std::setw(width) << std::setprecision(precision) << std::right << std::fixed << v.z() << " ] ";
   return os;
 }
 

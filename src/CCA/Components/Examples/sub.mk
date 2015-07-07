@@ -47,7 +47,8 @@ SRCS += \
         $(SRCDIR)/RegionDB.cc          \
         $(SRCDIR)/RegridderTest.cc     \
         $(SRCDIR)/SolverTest1.cc       \
-        $(SRCDIR)/Wave.cc              
+        $(SRCDIR)/Wave.cc              \
+        $(SRCDIR)/RetrievalTest.cc
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
   SRCS += $(SRCDIR)/RMCRT_Test.cc       

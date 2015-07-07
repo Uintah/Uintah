@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+
+<Uintah_specification>
+
+   <Meta>
+       <title>Retrieval Range Test</title>
+   </Meta>
+
+   <SimulationComponent type="retrievaltest" />
+
+   <!--____________________________________________________________________-->
+   <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
+   <!--____________________________________________________________________-->
+
+   <Time>
+       <maxTime>1.0</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>0.1</delt_max>
+       <delt_init>0.001</delt_init>
+       <max_Timesteps>2</max_Timesteps>
+       <timestep_multiplier>1</timestep_multiplier>
+
+   </Time>
+   
+   
+    <!--____________________________________________________________________-->
+    <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
+    <!--____________________________________________________________________-->
+    
+   <DataArchiver>
+       <filebase>retrievaltest.uda</filebase>
+       <outputInterval>1</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.loc"/>
+       <save label = "n.loc"/>
+       <save label = "c.loc"/>
+       <checkpoint cycle = "2" interval = "1"/>
+   </DataArchiver>
+
+    <!--____________________________________________________________________-->
+    <!--   L O A D    B A L A N C E R    O P T I O N S                      -->
+    <!--____________________________________________________________________-->
+    
+   <LoadBalancer type="DLB">
+     <timestepInterval>2</timestepInterval>
+     <dynamicAlgorithm>patchFactorParticles</dynamicAlgorithm>
+   </LoadBalancer>
+
+    <!--____________________________________________________________________-->
+    <!--   R E T R I E V A L    T E S T    O P T I O N S                    -->
+    <!--____________________________________________________________________-->
+
+    <RetrievalTest>
+      <numGhostCells>3</numGhostCells>
+    </RetrievalTest>
+
+
+    <!--____________________________________________________________________-->
+    <!--   G R I D     S P E C I F C A T I O N                              -->
+    <!--____________________________________________________________________-->
+    
+    <Grid>
+       <Level>
+           <Box label = "1">
+              <lower>[0,0,0]</lower>
+              <upper>[30,30,30]</upper>
+              <resolution>[10,10,10]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
+    </Grid>
+
+</Uintah_specification>
+

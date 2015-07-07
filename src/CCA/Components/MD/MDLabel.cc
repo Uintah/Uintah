@@ -222,8 +222,6 @@ SPME_dependencies::SPME_dependencies() {
   dInitializeQ              =   VarLabel::create("dep_SPME_initQ", SoleVariable<int>::getTypeDescription());
   dTransformRealToFourier   =   VarLabel::create("dep_SPME_XFormRtoF", SoleVariable<int>::getTypeDescription());
   dTransformFourierToReal   =   VarLabel::create("dep_SPME_XFormFtoR", SoleVariable<int>::getTypeDescription());
-
-
 }
 
 SPME_dependencies::~SPME_dependencies() {
@@ -235,6 +233,14 @@ SPME_dependencies::~SPME_dependencies() {
     VarLabel::destroy(dDistributeNodeLocalQ);
 }
 
+integratorLabels::integratorLabels() {
+  fPatchFirstIntegration  =   VarLabel::create("patchFirstIntegration", PerPatch<bool>::getTypeDescription());
+}
+
+integratorLabels::~integratorLabels() {
+  VarLabel::destroy(fPatchFirstIntegration);
+}
+
 MDLabel::MDLabel() {
 
   global        = scinew globalLabels();
@@ -242,6 +248,7 @@ MDLabel::MDLabel() {
   electrostatic = scinew electrostaticLabels();
   valence       = scinew valenceLabels();
   SPME_dep      = scinew SPME_dependencies();
+  integrator    = scinew integratorLabels();
 }
 
 MDLabel::~MDLabel() {

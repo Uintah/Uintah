@@ -24,6 +24,8 @@
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 
+#include <Core/Thread/Mutex.h>
+
 #include <fstream>
 #include <iomanip>
 
@@ -31,6 +33,7 @@
 using namespace Uintah;
 
 const std::string TwoBodyDeterministic::nonbondedType = "TwoBodyDeterministic";
+SCIRun::Mutex debugLock("Two body potential debug lock");
 
 TwoBodyDeterministic::TwoBodyDeterministic(double _nbRadius,
                                            int _nbGhost)
@@ -135,17 +138,17 @@ void TwoBodyDeterministic::setup(const ProcessorGroup*  pg,
 void TwoBodyDeterministic::addCalculateRequirements(Task* task,
                                                     MDLabel* label) const {
 
-  int CUTOFF_CELLS = this->requiredGhostCells();
-  proc0cout << "Registering for " << CUTOFF_CELLS << " ghost cells required." << std::endl;
+  proc0cout << "Registering for " << d_nonbondedGhostCells
+            << " ghost cells required." << std::endl;
   task->requires(Task::OldDW,
                  label->global->pX,
                  Ghost::AroundCells,
-                 CUTOFF_CELLS);
+                 d_nonbondedGhostCells);
 
   task->requires(Task::OldDW,
                  label->global->pID,
                  Ghost::AroundCells,
-                 CUTOFF_CELLS);
+                 d_nonbondedGhostCells);
 
 }
 
@@ -192,10 +195,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
   size_t numPatches     = patches->size();
   size_t numAtomTypes   = processorAtomTypes->size();
 
-//  int timestep = simState->getCurrentTopLevelTimeStep();
-//  std::fstream debugOut;
-//  std::string debugName = "source445.txt";
-//  debugOut.open(debugName.c_str(),std::fstream::out | std::fstream::app);
+  int timestep = simState->getCurrentTopLevelTimeStep();
 
   SCIRun::Vector atomOffsetVector(0.0);
   for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
@@ -237,6 +237,11 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
         numPairsInteracting[sourceAtom] = 0;
       }
 
+//      std::ostringstream fileOut;
+//      fileOut << "pairForce.txt_" << std::left << Uintah::Parallel::getMPIRank();
+//      std::fstream debugOut;
+//      debugOut.open(fileOut.str().c_str(), std::fstream::out | std::fstream::app);
+
       // (Internal + ghost) patch material loop
       for (size_t targetIndex = 0; targetIndex < numAtomTypes; ++targetIndex)
       {
@@ -244,8 +249,8 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
         int             targetAtomType = processorAtomTypes->get(targetIndex);
         ParticleSubset* targetAtomSet;
         targetAtomSet = oldDW->getParticleSubset(targetAtomType,
-                                                 currPatch
-                                                 ,Ghost::AroundCells,
+                                                 currPatch,
+                                                 Ghost::AroundCells,
                                                  d_nonbondedGhostCells,
                                                  label->global->pX);
         size_t numTargetAtoms = targetAtomSet->numParticles();
@@ -266,46 +271,32 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
 
         for (size_t sourceAtom = 0; sourceAtom < numSourceAtoms; ++sourceAtom)
         { // Loop over atoms in local patch
+//          if ((sourceID[sourceAtom] == 1) && (timestep == 1 )) {
+//          debugLock.lock();
+//          debugOut << "Source: " << sourceID[sourceAtom] << " on processor "
+//                   << Uintah::Parallel::getMPIRank() << " during timestep "
+//                   << timestep
+//                   << " at " << sourceX[sourceAtom].asVector()
+//                   << " sees: " << std::endl;
+//          debugLock.unlock();
+//          }
           for (size_t targetAtom = 0; targetAtom < numTargetAtoms; ++targetAtom)
           { // Loop over local plus nearby atoms
             if (sourceID[sourceAtom] != targetID[targetAtom])
             { // Ensure we're not working with the same particle
               atomOffsetVector = targetX[targetAtom] - sourceX[sourceAtom];
 
-//              if (sourceID[sourceAtom] == 445 && targetID[targetAtom] == 7947)
-////              if ( targetID[targetAtom] == 7947)
-////                if (sourceID[sourceAtom] == 445)
-//              {
-//                std::cerr << "Patch:  " << patchIndex
-//                          << " dCell: " << currPatch->dCell() << " || "
-//                          << " Source: " << sourceID[sourceAtom] << " - "
-//                          << sourceX[sourceAtom]
-//                          << " Range: "  << currPatch->getCellLowIndex() << " - "
-//                          << currPatch->getCellHighIndex()
-//                          << " O "
-//                          << " Target: " << targetID[targetAtom] << " - "
-//                          << targetX[targetAtom] << " : "
-//                          << " Range: " << currPatch->getExtraCellLowIndex() << " - "
-//                          << currPatch->getExtraCellHighIndex()
-//                          << " Distance: "
-//                          << atomOffsetVector.length2() << " < " << cutoff2
-//                          << std::endl;
-//              }
-
               if (atomOffsetVector.length2() <= cutoff2)
               { // Interaction is within range
                 numPairsInteracting[sourceAtom]++;
-//                if ((sourceID[sourceAtom] == 445) && (timestep <= 1))
+//                if ((sourceID[sourceAtom] == 3476) && (timestep > 1))
 //                {
-//                  debugOut << " t: " << std::setw(2) << std::left
-//                           << timestep
-//                           << " S: " << std::setw(6) << std::right
-//                           << sourceID[sourceAtom]
-//                           << " T: " << std::setw(6) << std::right
-//                           << targetID[targetAtom]
-//                           << " TLoc: " << targetX[targetAtom]
-//                           << " Dist: " << atomOffsetVector.length()
-//                           << std::endl;
+//                  if (numPairsInteracting[sourceAtom]%10 == 0)
+//                  {
+//                    debugOut << std::endl << "\t";
+//                  }
+//                  debugOut << std::setw(6) << std::right << numPairsInteracting[sourceAtom] << ":"
+//                           << std::setw(6) << std::left << targetID[targetAtom] << " ";
 //                }
                 SCIRun::Vector  tempForce;
                 double          tempEnergy;
@@ -317,11 +308,32 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
                 stressTensor_patchLocal +=  OuterProduct(atomOffsetVector,
                                                          tempForce);
 
+//                if ((sourceID[sourceAtom] == 1) && (timestep <= 1))
+//                {
+//                  debugLock.lock();
+//                  debugOut << " t: " << std::setw(2) << std::left << std::fixed
+//                           << timestep
+//                           << " T: " << std::setw(6) << std::left << std::fixed
+//                           << targetID[targetAtom]
+//                           << " TLoc: " << targetX[targetAtom].asVector()
+//                           << " Dist: " << std::setw(22) << std::right << std::fixed << atomOffsetVector.length()
+//                           << " Force: " << tempForce
+//                           << " Energy: " << std::setw(22) << std::right << std::fixed << tempEnergy
+//                           << " Total Force: " << pForce[sourceAtom]
+//                           << std::endl;
+//                  debugLock.unlock();
+//                }
               }
             }  // IDs not the same
           } // Loop over target Atoms
+//          debugLock.lock();
+//          if ((sourceID[sourceAtom] == 3476) && (timestep > 1))
+//          {
+//            debugOut << std::endl;
+//          }
         }  // Loop over source Atoms
       }  // Loop over target materials
+//      debugOut.close();
     }  // Loop over source materials
   }  // Loop over patches
 //  debugOut.close();

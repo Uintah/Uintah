@@ -152,6 +152,26 @@ namespace Uintah{
                           const SimulationStateP*   simState,
                           const MDLabel*            label);
 
+      void firstIntegratePatch(const Patch*             patch,
+                               const int                atomType,
+                                     DataWarehouse*     oldDW,
+                                     DataWarehouse*     newDW,
+                               const SimulationStateP*  simState,
+                               const MDLabel*           label,
+                                     double&            kineticEnergy,
+                                     double&            totalMass,
+                                     SCIRun::Vector&    totalMomentum);
+
+      void integratePatch(const Patch*             patch,
+                          const int                atomType,
+                                DataWarehouse*     oldDW,
+                                DataWarehouse*     newDW,
+                          const SimulationStateP*  simState,
+                          const MDLabel*           label,
+                                double&            kineticEnergy,
+                                double&            totalMass,
+                                SCIRun::Vector&    totalMomentum);
+
       const VarLabel*   dt_label;
       const std::string d_integratorType;
 

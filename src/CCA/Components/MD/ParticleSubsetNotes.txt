@@ -1,0 +1,10 @@
+1: 1 x 8 = 8
+oooooooo
+2: 36 x 2 = 72
+oooooooooooooooooooooooooooooooooooo
+4: 54 x 4 = 216
+oooooooooooooooooooooooooooooooooooooooooooooooooooooo
+8: 27 x 8 = 216
+ooooooooooooooooooooooooooo
+
+Total:  8 + 72 + 216 + 216 = 512
