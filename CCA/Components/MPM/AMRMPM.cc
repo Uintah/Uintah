@@ -3744,7 +3744,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       new_dw->allocateTemporary(pvgradtmp,pset);
       // copy data from old variables for particle IDs and the position vector
       for( unsigned int pp=0; pp<oldNumPar; ++pp ){
-        pidstmp[pp]  = pids[p];
+        pidstmp[pp]  = pids[pp];
         pxtmp[pp]    = px[pp];
         pvoltmp[pp]  = pvolume[pp];
         pveltmp[pp]  = pvelocity[pp];
