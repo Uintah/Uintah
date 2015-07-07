@@ -52,7 +52,7 @@ namespace Uintah {
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx /* = 0 */)
+GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx)
 {
 #ifdef __CUDA_ARCH__
   //device code
@@ -95,7 +95,7 @@ GPUDataWarehouse::getLevel(const GPUGridVariableBase& var, char const* label, in
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx /* = 0 */)
+GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx)
 {
 #ifdef __CUDA_ARCH__
   GPUDataWarehouse::dataItem* item = getItem(label, patchID, matlIndx, levelIndx);
@@ -123,7 +123,7 @@ GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, in
 //______________________________________________________________________
 //
 HOST_DEVICE void
-GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx /* = 0 */)
+GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, int patchID, int matlIndx, int levelIndx)
 {
 #ifdef __CUDA_ARCH__
   //device code
@@ -1266,6 +1266,19 @@ GPUDataWarehouse::clear()
   contiguousArrays.clear();
 
   varLock.writeUnlock();
+
+  init();
+
+#endif
+}
+
+
+HOST_DEVICE void
+GPUDataWarehouse::deleteSelfOnDevice()
+{
+#ifdef __CUDA_ARCH__
+  //no meaning in device method
+#else
   if ( d_device_copy ) {
     if(d_debug){
       printf("Delete GPUDW on-device copy at %p on device %d \n",  d_device_copy, d_device_id);
@@ -1274,13 +1287,8 @@ GPUDataWarehouse::clear()
     CUDA_RT_SAFE_CALL(cudaFree( d_device_copy ));
 
   }
-
-  init();
-
 #endif
 }
-
-
 
 HOST_DEVICE void
 GPUDataWarehouse::resetdVarDB()

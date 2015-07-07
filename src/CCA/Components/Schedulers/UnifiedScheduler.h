@@ -142,16 +142,31 @@ class UnifiedScheduler : public MPIScheduler  {
 
 #ifdef HAVE_CUDA
 
-    void findIntAndExtGpuDependencies(DeviceGhostCells& ghostVars, DetailedTask* task, int iteration, int t_id);
+    void findIntAndExtGpuDependencies(DeviceGridVariables& deviceVars,
+        DeviceGridVariables& taskVars,
+        DeviceGhostCells& ghostVars,
+        DetailedTask* task,
+        int iteration,
+        int t_id);
 
-    void prepareGpuDependencies(DeviceGhostCells& ghostVars, DetailedTask* task, DependencyBatch* batch, const VarLabel* pos_var,
-                                OnDemandDataWarehouse* dw, OnDemandDataWarehouse* old_dw, const DetailedDep* dep,
-                                LoadBalancer* lb, DeviceGhostCells::Destination dest);
+    void prepareGpuDependencies(DeviceGridVariables& deviceVars,
+        DeviceGridVariables& taskVars,
+        DeviceGhostCells& ghostVars,
+        DetailedTask* task,
+        DependencyBatch* batch,
+        const VarLabel* pos_var,
+        OnDemandDataWarehouse* dw,
+        OnDemandDataWarehouse* old_dw,
+        const DetailedDep* dep,
+        LoadBalancer* lb,
+        DeviceGhostCells::Destination dest);
 
     void copyGpuInternalDependencies(DetailedTask * task, int iteration, int t_id);
 
-    void createTaskDWs(DetailedTask * task, const DeviceGridVariables& taskVars,
-                       const DeviceGhostCells& ghostVars, const int device_id);
+    void createTaskGpuDWs(DetailedTask * task,
+        const DeviceGridVariables& taskVars,
+        const DeviceGhostCells& ghostVars,
+        const int device_id);
 
 
     void gpuInitialize( bool reset=false );
@@ -159,6 +174,8 @@ class UnifiedScheduler : public MPIScheduler  {
     void performInternalGhostCellCopies(DetailedTask* dtask);
 
     void initiateH2DCopies(DetailedTask* dtask);
+
+    void prepareGhostCellsIntoTaskDW(DetailedTask* dtask, DeviceGhostCells& ghostVars);
 
     void markDeviceRequiresDataAsValid(DetailedTask* dtask);
 

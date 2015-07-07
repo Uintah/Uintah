@@ -33,7 +33,6 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
-            bool validOnDevice,
             Ghost::GhostType gtype,
             int numGhostCells,
             int whichGPU) {
@@ -46,7 +45,6 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
   this->levelIndx = levelIndx;
   this->patchPointer = patchPointer;
   this->dep = dep;
-  this->validOnDevice = validOnDevice;
   this->gtype = gtype;
   this->numGhostCells = numGhostCells;
   this->whichGPU = whichGPU;
@@ -54,21 +52,18 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             size_t sizeOfDataType,
-            size_t varMemSize,
             int matlIndx,
             int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
-            bool validOnDevice,
             int whichGPU) {
   this->var = var;
   this->sizeOfDataType = sizeOfDataType;
-  this->varMemSize = varMemSize;
+  this->varMemSize = 0;
   this->matlIndx = matlIndx;
   this->levelIndx = levelIndx;
   this->patchPointer = patchPointer;
   this->dep = dep;
-  this->validOnDevice = validOnDevice;
   this->whichGPU = whichGPU;
 }
 
@@ -92,17 +87,22 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           IntVector offset,
           Variable* var,
           const Task::Dependency* dep,
-          bool validOnDevice,
           Ghost::GhostType gtype,
           int numGhostCells,
           int whichGPU) {
+
+  totalVars[dep->mapDataWarehouse()] += 1;
+
+  //contiguous array calculations
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-  totalVars[dep->mapDataWarehouse()] += 1;
-  DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, validOnDevice, gtype, numGhostCells, whichGPU);
+  DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
   vars.push_back(tmp);
 }
 
+//For adding perPach vars, they don't have ghost cells.
+//They also don't need to indicate the region they are valid (the patch
+//handles that).
 void DeviceGridVariables::add(const Patch* patchPointer,
           int matlIndx,
           int levelIndx,
@@ -110,16 +110,32 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           size_t sizeOfDataType,
           Variable* var,
           const Task::Dependency* dep,
-          bool validOnDevice,
           int whichGPU) {
 
+  totalVars[dep->mapDataWarehouse()] += 1;
+
+  //contiguous array calculations
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-  totalVars[dep->mapDataWarehouse()] += 1;
-  DeviceGridVariableInfo tmp(var, sizeOfDataType, varMemSize, matlIndx, levelIndx, patchPointer, dep, validOnDevice,  whichGPU);
+  DeviceGridVariableInfo tmp(var, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
   vars.push_back(tmp);
 }
 
+//For adding taskVars, which are snapshots of the host-side GPU DW
+void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
+          int matlIndx,
+          int levelIndx,
+          size_t sizeOfDataType,
+          const Task::Dependency* dep,
+          int whichGPU) {
+
+  totalVars[dep->mapDataWarehouse()] += 1;
+  IntVector tempSizeVector(0,0,0);
+  //The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?  Should contiguous arrays be
+  //organized by task???
+  DeviceGridVariableInfo tmp(NULL, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+  vars.push_back(tmp);
+}
 
 
 size_t DeviceGridVariables::getTotalSize() {

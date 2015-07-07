@@ -40,10 +40,11 @@
 #include <vector>
 #include <Core/Thread/CrowdMonitor.h>
 
-#define MAX_VARDB_ITEMS       10000000
+#define MAX_VARDB_ITEMS       10000000  //Due to how it's allocated, it will never use up this much space.
+                                        //Only a very small fraction of it.
 #define MAX_MATERIALSDB_ITEMS 20
-#define MAX_LEVELDB_ITEMS     20
-#define MAX_NAME_LENGTH       32 //How big a particular label can be.
+#define MAX_LEVELDB_ITEMS     20        //TODO: Is this needed?
+#define MAX_NAME_LENGTH       32        //How big a particular label can be.
 
 #define LEVEL_PATCH_ID = -99999999; //A sentinel value used for a patch ID when we're storing a
                                     //region of patches for a level instead of a regular patch.
@@ -310,6 +311,7 @@ public:
   HOST_DEVICE void init_device(size_t objectSizeInBytes );
   HOST_DEVICE void syncto_device(void *cuda_stream);
   HOST_DEVICE void clear();
+  HOST_DEVICE void deleteSelfOnDevice();
   HOST_DEVICE GPUDataWarehouse* getdevice_ptr(){return d_device_copy;};
   HOST_DEVICE void setDebug(bool s){d_debug=s;}
   HOST_DEVICE cudaError_t copyDataHostToDevice(char const* indexID, void *cuda_stream);
