@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include "Extrapolant.h"
-#include "OperatorTypes.h"
+#include <CCA/Components/Wasatch/Operators/Extrapolant.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 #include <cmath>
 #include <sstream>
