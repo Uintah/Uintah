@@ -1,7 +1,7 @@
 <config>
 <postProcessCmd_path></postProcessCmd_path>
 
-<symbolicLinks></symbolicLinks>
+<symbolicLinks>../../../../inputs/</symbolicLinks>  <!-- needed for tables -->
 
 
  <!--Radiation Benchmarks-->
@@ -26,14 +26,14 @@
 <!-- Ray convergence test using Burns & Christon benchmark -->
 <test>
   <name>RMCRT_OA_Ray</name>
-  <ups>rmcrt_test.ups</ups>
+  <ups>rmcrt_bm1_1L.ups</ups>
   <tst>ray.tst</tst>
 </test>
 
 <!-- Grid convergence test using Burns & Christon benchmark -->
 <test>
   <name>RMCRT_OA_dx</name>
-  <ups>rmcrt_test.ups</ups>
+  <ups>rmcrt_bm1_1L.ups</ups>
   <tst>dx.tst</tst>
 </test>
 </config>

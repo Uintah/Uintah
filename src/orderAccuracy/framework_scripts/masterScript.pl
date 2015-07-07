@@ -105,9 +105,9 @@ my $extraScripts_path = $xml->{scripts_path}[0];
 #__________________________________
 # add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
-my $syspath ="/usr/bin/:/usr/sbin:/bin";
+#my $syspath ="/usr/bin/:/usr/sbin:/bin";
 
-$ENV{"PATH"} = "$syspath:$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$here_path:.";
+$ENV{"PATH"} = "$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$here_path:.";
 
 # bulletproofing
 print "----------------------   \n";
