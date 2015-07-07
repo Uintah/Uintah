@@ -2639,11 +2639,13 @@ The input file specification is as follows:
 \chapter{Order of Accuracy}
 \label{chap:OA}
 
-Order of accuracy is an extremely powerful framework that has been built to run a series of tests where multiple parameters are varied. The framework was originally built to easily do an order of accuracy analysis when resoultion was varied for a specific simulation. Since then it has been used for a variety of other tasks. The framework allows multiple tests to be easily repeated autonomously, proving to be extremely usefull for man studies.
+Order of accuracy is an extremely powerful framework that has been built to run a series of tests where multiple parameters are varied. The framework was originally built to easily do an order of accuracy analysis when cell resolution was varied for a specific simulation. Since then it has been used for a variety of other tasks. The framework allows multiple tests to be easily repeated autonomously, proving to be extremely usefull in parametric studies.
 
 \section{Using The Framework}
 
-The first step in using the framework, is to set up the tests you wish to run. All the assets this framework uses are located inside $\TT{/src/orderAccuracy/}$. $\TT{framwork\_scripts}$ contains all the scripts the framework uses to run, $\TT{postProcessTools}$ contains all the post processing scripts the study will use, and $\TT{test\_config\_files}$ contains all the studies which the framework can run. The framework has the ability to run any of .tst files located here. \\
+\iffalse
+The first step in using the framework, is to set up the tests you wish to run. All the scripts this framework uses are located inside $\TT{/src/orderAccuracy/framwork\_scripts}$ contains all the scripts the framework uses to run, $\TT{postProcessTools}$ contains all the post processing scripts the study will use, and $\TT{test\_config\_files}$ contains all the studies which the framework can run. The framework has the ability to run any of .tst files located here. \\
+\fi
 
 To run a study using the order of accuracy tools, edit the $\TT{components.xml}$ inside of $\TT{test\_config\_files}$. All of the components (ICE MPM MPMICE Arches Wasatch) should be commented out, un-comment any component you wish to use. Next go into the directory for whichever component you un-commented. In this directory are all the available tests for that component and symbolic links to all the associated input files. To run these studies, edit $\TT{whatToRun.xml}$ and un-comment any simulations you would like to run.
 
@@ -2652,17 +2654,15 @@ Once all of the above steps have been done, you can follow these steps to run yo
 
 \item cd to /opt/StandAlone or /dbg/StandAlone
 \item Create a symbolic link to orderAccuracy \\
-\TT{ln -s /src/orderAccuracy}
-\item Set a readlink to the orderAccuracy directory using the following command \\
-\TT{set OA = `readlink -f orderAccuracy/`}
+\TT{make link\_orderAccuracy}
 \item Run the following command to run your study
 \begin{verbatim}
-orderAccuracy/framework_scripts/masterScript.pl $OA
+orderAccuracy/runTests
 \end{verbatim}
 
 \end{enumerate}
 
-This will create a directory called $\TT{order\_of\_accuracy}$ which will contain all the studies you have run. WARNING - if you re-run any studies the framework with write over this directory, completely destroying anything that was previously there, so it is suggested to quickly move any data out of this directory.
+This will create a directory called $\TT{order\_of\_accuracy}$ which will contain all the studies you have run.
 
 \section{Tests}
 
@@ -2739,8 +2739,8 @@ Items put in this section will modify only this simulation.
 Title of the current test. Many names used for files and directories will be based off this title.
 \item $\textless$sus\_cmd$\textgreater$ \\
 This is the sus command line you would normally give to run an input file, the input and output files are put in automatically and can be omitted.
-\item $\textless$postProcess\_cmd$\textgreater$ \\
-This line is used to feed the current tests uda and output file into a post processing script. The post processing scripts have their own inputs, and can be modified when the scripts are created. The one thing all compare scripts share as an input is -uda $\textless$uda name$\textgreater$ and -o $\textless$output file$\textgreater$ as these are automatically fed into the compare script by the framework, and must be included with all new post processing scripts.
+\item $\textless$postProcess\_cmd$\textgreater$ : \\
+Optional:  This line is used to feed the current tests uda and output file into a post processing script. The post processing scripts have their own inputs, and can be modified when the scripts are created. The one thing all compare scripts share as an input is -uda $\textless$uda name$\textgreater$ and -o $\textless$output file$\textgreater$ as these are automatically fed into the compare script by the framework, and must be included with all new post processing scripts.
 \item $\textless$x$\textgreater$\\
 this sets the x label for the gnuplot script
 \end{itemize}
