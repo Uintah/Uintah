@@ -73,9 +73,9 @@ ifeq ($(HAVE_CUDA),yes)
 	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cc
-  cp $< $@
+	cp $< $@
 
   $(OBJTOP_ABS)/$(SRCDIR)/Extrapolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/Extrapolant.cc
-  cp $< $@
+	cp $< $@
 
 endif
