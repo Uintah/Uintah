@@ -456,6 +456,7 @@ OnDemandDataWarehouse::createGPUGridVariable(size_t sizeOfDataType)
       break;
     }
     default : {
+      printf("it's zero?\n");
       SCI_THROW(InternalError("createGPUGridVariable, unsupported GPUGridVariable type: ", __FILE__, __LINE__));
     }
   }
