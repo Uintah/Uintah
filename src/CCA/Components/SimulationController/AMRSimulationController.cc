@@ -722,7 +722,11 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   
   if(d_restarting){
   
-    d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::restart); 
+    d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::restart);
+    // tsaad & bisaac: At this point, during a restart, a grid does NOT have knowledge of the boundary conditions.
+    // (See other comments in SimulationController.cc for why that is the case). Here, and given a
+    // legitimate load balancer, we can assign the BCs to the grid in an efficient manner.
+    grid->assignBCS( d_grid_ps, d_lb );
   
     grid->performConsistencyCheck();
   
