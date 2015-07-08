@@ -238,7 +238,7 @@ namespace Uintah {
 
       //! The ups is for the assignBCS that needs to happen if we are reading the simulation grid from the uda,
       //! and thus is only necessary on a true restart.
-      GridP queryGrid( int index, const ProblemSpecP & ups = NULL );
+      GridP queryGrid( int index, const ProblemSpecP & ups = NULL, bool assignBCs = true );
 
       //////////
       // Does a variable exist on a patch at this timestep?
