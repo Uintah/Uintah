@@ -22,6 +22,7 @@
  * IN THE SOFTWARE.
  */
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
+
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
@@ -91,13 +92,22 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           int numGhostCells,
           int whichGPU) {
 
-  totalVars[dep->mapDataWarehouse()] += 1;
+  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
+  if (vars.find(lpmld) == vars.end()) {
+    totalVars[dep->mapDataWarehouse()] += 1;
 
-  //contiguous array calculations
-  totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-  DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
-  vars.push_back(tmp);
+    //contiguous array calculations
+    totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+    totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+    DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
+    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
+  } else {
+    //Don't add the same device var twice.
+    printf("ERROR:\n This preparation queue already added a variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
+    exit(-1);
+  }
+
+
 }
 
 //For adding perPach vars, they don't have ghost cells.
@@ -111,14 +121,20 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           Variable* var,
           const Task::Dependency* dep,
           int whichGPU) {
+  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
+  if (vars.find(lpmld) == vars.end()) {
+    totalVars[dep->mapDataWarehouse()] += 1;
 
-  totalVars[dep->mapDataWarehouse()] += 1;
-
-  //contiguous array calculations
-  totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-  DeviceGridVariableInfo tmp(var, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
-  vars.push_back(tmp);
+    //contiguous array calculations
+    totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+    totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+    DeviceGridVariableInfo tmp(var, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
+  } else {
+    //Don't add the same device var twice.
+    printf("ERROR:\n This preparation queue already added a variable for label %s patch %d matl %d level %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx);
+    exit(-1);
+  }
 }
 
 //For adding taskVars, which are snapshots of the host-side GPU DW
@@ -128,13 +144,18 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
           size_t sizeOfDataType,
           const Task::Dependency* dep,
           int whichGPU) {
-
-  totalVars[dep->mapDataWarehouse()] += 1;
-  IntVector tempSizeVector(0,0,0);
-  //The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?  Should contiguous arrays be
-  //organized by task???
-  DeviceGridVariableInfo tmp(NULL, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
-  vars.push_back(tmp);
+  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
+  if (vars.find(lpmld) == vars.end()) {
+    totalVars[dep->mapDataWarehouse()] += 1;
+    //The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?  Should contiguous arrays be
+    //organized by task???
+    DeviceGridVariableInfo tmp(NULL, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
+  } else {
+    //This is fine, in corner cases or especially periodic boundary conditions this can happen
+    //we just don't reinsert the duplicate.
+    //printf("This preparation queue already added a variable for label %s patch %d matl %d level %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx);
+  }
 }
 
 
@@ -148,52 +169,6 @@ size_t DeviceGridVariables::getSizeForDataWarehouse(int dwIndex) {
 
 unsigned int DeviceGridVariables::numItems() {
   return vars.size();
-}
-
-
-int DeviceGridVariables::getMatlIndx(int index) {
-  return vars.at(index).matlIndx;
-}
-
-int DeviceGridVariables::getLevelIndx(int index) {
-  return vars.at(index).levelIndx;
-}
-
-const Patch* DeviceGridVariables::getPatchPointer(int index) {
-  return vars.at(index).patchPointer;
-}
-IntVector DeviceGridVariables::getSizeVector(int index) {
-  return vars.at(index).sizeVector;
-}
-IntVector DeviceGridVariables::getOffset(int index) {
-    return vars.at(index).offset;
-}
-
-Variable* DeviceGridVariables::getVar(int index) {
-  return vars.at(index).var;
-}
-const Task::Dependency* DeviceGridVariables::getDependency(int index) {
-  return vars.at(index).dep;
-}
-
-size_t DeviceGridVariables::getSizeOfDataType(int index) {
-  return vars.at(index).sizeOfDataType;
-}
-
-size_t DeviceGridVariables::getVarMemSize(int index) {
-  return vars.at(index).varMemSize;
-}
-
-Ghost::GhostType DeviceGridVariables::getGhostType(int index) {
-  return vars.at(index).gtype;
-}
-
-int DeviceGridVariables::getNumGhostCells(int index) {
-  return vars.at(index).numGhostCells;
-}
-
-int DeviceGridVariables::getWhichGPU(int index) {
-  return vars.at(index).whichGPU;
 }
 
 unsigned int DeviceGridVariables::getTotalVars(int DWIndex) const {

@@ -5,7 +5,9 @@
 #include <Core/Grid/Variables/GridVariableBase.h>
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Grid/Task.h>
+#include <CCA/Components/Schedulers/GPUDataWarehouse.h>
 #include <vector>
+#include <map>
 
 using namespace std;
 using namespace Uintah;
@@ -13,6 +15,39 @@ using namespace Uintah;
 
 class DeviceGridVariableInfo {
 public:
+
+  struct LabelPatchMatlLevelDw {
+    std::string     label;
+    int        patchID;
+    int        matlIndx;
+    int        levelIndx;
+    int        dataWarehouse;
+    LabelPatchMatlLevelDw(const char * label, int patchID, int matlIndx, int levelIndx, int dataWarehouse) {
+      this->label = label;
+      this->patchID = patchID;
+      this->matlIndx = matlIndx;
+      this->levelIndx = levelIndx;
+      this->dataWarehouse = dataWarehouse;
+    }
+    //This so it can be used in an STL map
+    bool operator<(const LabelPatchMatlLevelDw& right) const {
+      if (this->label < right.label) {
+        return true;
+      } else if (this->label == right.label && (this->patchID < right.patchID)) {
+        return true;
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx < right.matlIndx)) {
+        return true;
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx < right.levelIndx)) {
+        return true;
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx == right.levelIndx) && (this->dataWarehouse < right.dataWarehouse)) {
+        return true;
+      } else {
+        return false;
+      }
+
+    }
+
+  };
   DeviceGridVariableInfo(Variable* var,
             IntVector sizeVector,
             size_t sizeOfDataType,
@@ -92,39 +127,30 @@ public:
 
   unsigned int numItems();
 
-  int getMatlIndx(int index);
-
-  int getLevelIndx(int index);
-
-  const Patch* getPatchPointer(int index);
-
-  IntVector getSizeVector(int index);
-
-  IntVector getOffset(int index);
-
-  Variable* getVar(int index);
-
-  const Task::Dependency* getDependency(int index);
-
-  size_t getSizeOfDataType(int index);
-
-  size_t getVarMemSize(int index);
-
-  Ghost::GhostType getGhostType(int index);
-
-  int getNumGhostCells(int index);
-
-  int getWhichGPU(int index);
-
   unsigned int getTotalVars(int DWIndex) const;
   unsigned int getTotalMaterials(int DWIndex) const;
   unsigned int getTotalLevels(int DWIndex) const;
+
+  std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>& getMap() {
+    return vars;
+  }
+
 
 
 private:
   size_t totalSize;
   size_t totalSizeForDataWarehouse[Task::TotalDWs];
-  vector< DeviceGridVariableInfo > vars;
+
+  std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo> vars; //This map acts essentially contains objects
+                        //which are first queued up, and then processed in a group.  These DeviceGridVariableInfo objects
+                        //can 1) Tell the host-side GPU DW what variables need to be created on the GPU and what copies need
+                        //to be made host to deivce.  2) Tell a task GPU DW which variables it needs to know about from
+                        //the host-side GPU DW (this task GPU DW gets sent into the GPU).  Or 3) Tells a task GPU DW
+                        //the ghost cell copies that need to occur within a GPU.
+                        //For #2/#3, it is possible in corner cases or periodic boundary conditions that a source
+                        //variable will be used multiple times to extract ghost cell info from.  So we need to verify
+                        //if that variable is already in our map prior to inserting it.
+
   unsigned int totalVars[Task::TotalDWs];
   unsigned int totalMaterials[Task::TotalDWs];
   unsigned int totalLevels[Task::TotalDWs];

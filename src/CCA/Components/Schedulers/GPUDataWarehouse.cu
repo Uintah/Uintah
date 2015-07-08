@@ -312,7 +312,9 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
   }
 
   if (varPointers.find(lpml) == varPointers.end()) {
-    printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d in this DW %p\n",label, label, patchID, matlIndx, levelIndx, d_device_id, this);
+    if (d_debug){
+      printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d in this DW %p\n",label, label, patchID, matlIndx, levelIndx, d_device_id, this);
+    }
     varPointers.insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
   } else {
     printf("ERROR:\nGPUDataWarehouse::put( %s )  This gpudw database already has a variable for label %s patch %d matl %d level %d on device %d in GPUDW at %p\n",label, label, patchID, matlIndx, levelIndx, d_device_id, d_device_copy);
@@ -764,7 +766,9 @@ GPUDataWarehouse::put(GPUReductionVariableBase &var, size_t sizeOfDataType, char
     }
 
   if (varPointers.find(lpml) == varPointers.end()) {
-    printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d in this DW %p\n",label, label, patchID, matlIndx, levelIndx, d_device_id, this);
+    if (d_debug){
+      printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d in this DW %p\n",label, label, patchID, matlIndx, levelIndx, d_device_id, this);
+    }
     varPointers.insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
   } else {
     printf("ERROR:\nGPUDataWarehouse::put( %s )  This gpudw database already has a variable for label %s patch %d matl %d level %d on device %d in GPUDW at %p\n",label, label, patchID, matlIndx, levelIndx, d_device_id, d_device_copy);
@@ -841,7 +845,9 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
 
 
   if (varPointers.find(lpml) == varPointers.end()) {
-    //printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d on device %d\n",label, label, patchID, matlIndx, d_device_id);
+    if (d_debug){
+      printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d on device %d\n",label, label, patchID, matlIndx, d_device_id);
+    }
     varPointers.insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
   } else {
     printf("ERROR:\nGPUDataWarehouse::put( %s )  This gpudw database already has a variable for label %s patch %d matl %d level %d on device %d in GPUDW at %p\n",label, label, patchID, matlIndx, levelIndx, d_device_id, d_device_copy);
@@ -1739,6 +1745,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
          if (x < ghostCellSize.x && y < ghostCellSize.y && z < ghostCellSize.z) {
 
            //offset them to their true array coordinates, not relative simulation cell coordinates
+           //When using virtual addresses, the virtual offset is always applied to the source, but the destination is correct.
            int x_source_real = x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x - d_varDB[i].var_offset.x;
            int y_source_real = y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y - d_varDB[i].var_offset.y;
            int z_source_real = z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z - d_varDB[i].var_offset.z;
