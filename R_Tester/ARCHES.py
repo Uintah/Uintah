@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from os import symlink,environ
+from os import symlink,environ, system
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
@@ -305,6 +305,11 @@ if __name__ == "__main__":
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "ARCHES")
+  
+  # cleanup modified files
+  command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
+  system( command )
+  
   exit( result )
 
 
