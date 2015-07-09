@@ -627,7 +627,7 @@ void DWDatabase<DomainType>::print(std::ostream& out, int rank) const
     if (vars[keyiter->second]) {
       const VarLabelMatl<DomainType>& vlm = keyiter->first;
       const DomainType*  dom = vlm.domain_;
-      out << rank << " Name: " << vlm.label_->getName() << "  domain ptr: " << dom  << " ID: " << dom->getID() << "  matl:" << vlm.matlIndex_<< '\n';
+      out << rank << " Name: " << vlm.label_->getName() << "  domain: " << *dom << "  matl:" << vlm.matlIndex_<< '\n';
     }
   }
 }
