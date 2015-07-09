@@ -2993,7 +2993,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
           break;
         default: {
           cerrLock.lock();
-          cerr << "This variable's type is not supported." << endl;
+          cerr << "Variable " << it->second.dep->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
           cerrLock.unlock();
         }
         }
@@ -3235,7 +3235,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
         break;
       default: {
         cerrLock.lock();
-        cerr << "This variable's type is not supported." << endl;
+        cerr << "Variable " << it->second.dep->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
         cerrLock.unlock();
       }
       }
@@ -3734,7 +3734,7 @@ bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
           }
           default: {
             cerrLock.lock();
-            cerr << "This variable's type is not supported." << endl;
+            cerr << "Variable " << dependantVar->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
             cerrLock.unlock();
           }
           }
@@ -3922,7 +3922,7 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
         }
         default: {
           cerrLock.lock();
-          cerr << "This variable's type is not supported." << endl;
+	  cerr << "Variable " << comp->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
           cerrLock.unlock();
         }
         }
