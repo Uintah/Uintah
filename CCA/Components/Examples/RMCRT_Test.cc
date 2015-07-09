@@ -566,7 +566,8 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
         ostringstream msg;
         msg << "\n RMCRT:ERROR: the benchmark problem selected is only valid on the domain \n";
         msg << valid_length << ".  Your domain is " << L_BB << endl;
-        throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
+        proc0cout << msg.str() << endl;
+        //throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
 
       IntVector pLow, pHigh;
