@@ -158,7 +158,7 @@ if test "$MACHINE" = "Baja"; then
      echo "Error: hostname did not return baja*... Goodbye."
      exit
   fi
-  COMP=gcc4.9.1
+  COMP=gcc4.9.2
   NAME2="Baja"
   INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
   BOOST_LOC=/usr
