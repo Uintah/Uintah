@@ -292,9 +292,6 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
   double     start    = Time::currentSeconds();
   TimeData & timedata = getTimeData( index );
 
-  timedata.d_patchInfo.clear();
-  timedata.d_matlInfo.clear();
-
   FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
 
   if( fp == NULL ) {
@@ -328,6 +325,9 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool a
     ProblemSpecP grid_ps = ups->findBlock( "Grid" );
     grid->assignBCS( grid_ps, NULL );
   }
+
+  timedata.d_patchInfo.clear();
+  timedata.d_matlInfo.clear();
 
   for( int levelIndex = 0; levelIndex < grid->numLevels(); levelIndex++ ) {
 
