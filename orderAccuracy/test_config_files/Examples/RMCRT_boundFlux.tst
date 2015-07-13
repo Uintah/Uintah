@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <!--______________________________________________________________________ -->
 <!--  This parametric study compares the boundary fluxes against a pre computed 'gold standard' -->
 <!--  First run the input file with large number of boundary flux rays.                          -->
