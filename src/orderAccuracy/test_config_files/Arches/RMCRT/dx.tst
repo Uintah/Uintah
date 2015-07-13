@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
 <upsFile>rmcrt_bm1_1L.ups</upsFile>
 <gnuplot>
