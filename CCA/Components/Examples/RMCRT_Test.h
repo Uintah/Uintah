@@ -165,6 +165,7 @@ WARNING
     int      d_flow_cell;
     int      d_whichAlgo;
     int      d_benchmark;
+    int      d_pDir;             // principle direction used for 1D benchmark tests
 
     enum Algorithm{ dataOnion,            
                     coarseLevel, 
