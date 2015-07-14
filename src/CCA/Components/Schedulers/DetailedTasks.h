@@ -320,11 +320,11 @@ namespace Uintah {
 
     void setCUDAStream(int deviceNum, cudaStream_t* s);
 
-    bool checkCUDAStreamDone();
+    bool checkCUDAStreamDone() const;
 
-    bool checkCUDAStreamDone(int deviceNum);
+    bool checkCUDAStreamDone(int deviceNum) const;
 
-    bool checkAllCUDAStreamsDone();
+    bool checkAllCUDAStreamsDone() const;
 
     GPUDataWarehouse* TaskGpuDataWarehouses[2];
 

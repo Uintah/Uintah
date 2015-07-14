@@ -1583,17 +1583,18 @@ void DetailedTask::setCUDAStream(int deviceNum, cudaStream_t* s)
   }
 };
 
-bool DetailedTask::checkCUDAStreamDone()
+bool DetailedTask::checkCUDAStreamDone() const
 {
   return checkCUDAStreamDone(0);
 }
 
-bool DetailedTask::checkCUDAStreamDone(int deviceNum_)
+bool DetailedTask::checkCUDAStreamDone(int deviceNum_) const
 {
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
   OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum_);
-  retVal = cudaStreamQuery(*(d_cudaStreams[deviceNum_]));
+  std::map<int, cudaStream_t*>::const_iterator it= d_cudaStreams.find(deviceNum_);
+  retVal = cudaStreamQuery(*(it->second));
   if (retVal == cudaSuccess) {
 //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
     return true;
@@ -1612,13 +1613,13 @@ bool DetailedTask::checkCUDAStreamDone(int deviceNum_)
   }
 }
 
-bool DetailedTask::checkAllCUDAStreamsDone()
+bool DetailedTask::checkAllCUDAStreamsDone() const
 {
 
   // sets the CUDA context, for the call to cudaEventQuery()
   bool retVal = false;
 
-  for (std::map<int ,cudaStream_t*>::iterator it=d_cudaStreams.begin(); it!=d_cudaStreams.end(); ++it){
+  for (std::map<int ,cudaStream_t*>::const_iterator it=d_cudaStreams.begin(); it!=d_cudaStreams.end(); ++it){
     retVal = checkCUDAStreamDone(it->first);
     if (retVal == false) {
       return retVal;
@@ -1628,6 +1629,7 @@ bool DetailedTask::checkAllCUDAStreamsDone()
 }
 
 void DetailedTask::setTaskGpuDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
+  printf("Setting TaskGpuDataWarehouse[%d]\n", (int)DW);
   TaskGpuDataWarehouses[DW] = TaskDW;
 }
 
@@ -1638,6 +1640,7 @@ GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(Task::WhichDW DW) {
 void DetailedTask::deleteTaskGpuDataWarehouses() {
   for (int i = 0; i < 2; i++) {
     if (TaskGpuDataWarehouses[i] != NULL) {
+      printf("Reclaiming TaskGpuDataWarehouse[%d]\n", i);
       //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
       //of the things in the GPU.  The host side GPU DWs is reponsible for
       //deallocating all the GPU resources.  The only thing we do want to clean
