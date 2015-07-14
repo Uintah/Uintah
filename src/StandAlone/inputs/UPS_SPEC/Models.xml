@@ -12,7 +12,6 @@
       <nDivQRays              spec="OPTIONAL INTEGER 'positive'"/>
       <Threshold              spec="OPTIONAL DOUBLE  'positive'"/>
       <StefanBoltzmann        spec="OPTIONAL DOUBLE  'positive'"/>
-      <benchmark              spec="OPTIONAL INTEGER 'positive'"/>
       <solveBoundaryFlux      spec="OPTIONAL BOOLEAN"/>
       <CCRays                 spec="OPTIONAL BOOLEAN"/>
       <VRViewAngle            spec="OPTIONAL DOUBLE 'positive'"/>

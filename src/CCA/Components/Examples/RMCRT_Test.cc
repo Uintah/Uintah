@@ -74,8 +74,9 @@ RMCRT_Test::RMCRT_Test ( const ProcessorGroup* myworld ): UintahParallelComponen
   d_initColor = -9;
   d_initAbskg = -9;
   d_whichAlgo = singleLevel;
-  d_wall_cell = 8; //<----HARD CODED WALL CELL
-  d_flow_cell = -1; //<----HARD CODED FLOW CELL
+  d_wall_cell = 8;    //<----HARD CODED WALL CELL
+  d_flow_cell = -1;   //<----HARD CODED FLOW CELL
+  d_pDir      = -9;   // used for initializing benchmark problems 
 
   d_RMCRT = 0;
   d_old_uda = 0;
@@ -122,18 +123,29 @@ void RMCRT_Test::problemSetup(const ProblemSpecP& prob_spec,
   // Read in component specific variables
   ProblemSpecP me = prob_spec;
   me->getWithDefault( "calc_frequency",  d_radCalc_freq, 1 );
+  me->require(        "Temperature",     d_initColor);
+  me->require(        "abskg",           d_initAbskg);
   me->getWithDefault( "benchmark" ,      d_benchmark,  0 );
-
-  me->require("Temperature",  d_initColor);
-  me->require("abskg",        d_initAbskg);
-
+  
+  ProblemSpecP bm_ps = me->findBlock("benchmark");
+  if (bm_ps){
+    bm_ps->getAttribute("dir", d_pDir);
+  }
+ 
   // bulletproofing
-  if ( d_benchmark > 5 || d_benchmark < 0  ){
+  if ( d_benchmark > 7 || d_benchmark < 0  ){
      ostringstream warn;
-     warn << "ERROR:  Benchmark value ("<< d_benchmark <<") not set correctly." << endl;
-     warn << "Specify a value of 1 through 5 to run a benchmark case, or 0 otherwise." << endl;
+     warn << "RMCRT:ERROR:  Benchmark ("<< d_benchmark <<") only valid options are 1-7" << endl;
      throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
   }
+
+  if ( (d_benchmark == 6 || d_benchmark == 7 )  && (d_pDir > 2 || d_pDir < 0) ){
+     ostringstream warn;
+     warn << "RMCRT:ERROR:  Benchmark ("<< d_benchmark <<") requires the "
+          << "attribute 'dir' to be specified (0,1,2)" << endl;
+     throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }  
+  
 
   //__________________________________
   //  RMCRT variables
@@ -606,6 +618,58 @@ void RMCRT_Test::initialize (const ProcessorGroup*,
     if( d_benchmark == 5 ) {  // Siegel isotropic scattering for specific abskg and sigma_scat
       abskg.initialize( 2.0 );
     }
+
+    //__________________________________
+    // sinusoidal temperature
+    //  abskg = 5
+    //  T = ( ( 1 + sin(4.5 * 2Pi * x) ) * 1000^4 )^ 0.25
+    if (d_benchmark == 6 ){
+      if (patch->getID() == 0 ){
+        proc0cout << "__________________________________\n"
+                  << "      RMCRT:Initialization (6)\n"
+                  << "      abskg = 5\n"
+                  << "       T = ( ( 1 + sin(4.5 * 2Pi * x) ) * 1000^4 )^ 0.25 \n"
+                  << "__________________________________\n";
+      }
+      
+      abskg.initialize( 5.0 );
+      
+      double twoPI = 2 * M_PI;
+      
+      for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+        IntVector c = *iter;
+        Point p = patch->cellPosition( c );
+        double x = p(d_pDir);
+        double tmp = 1e7 * (1.0 + sin(4.5 * twoPI * x ));
+        
+        color[c] = pow( tmp, 0.25 ); 
+      }   
+    }
+    //__________________________________
+    // Varying abskg & temperature
+    //    abksg = 5.0 * exp ( -2 * x - 0.1)
+    //    T     = ( 2*1000^4 * x + 1000^4)^0.25
+    if (d_benchmark == 7 ){
+      if (patch->getID() == 0 ){
+        proc0cout << "__________________________________\n"
+                  << "      RMCRT:Initialization (7)\n"
+                  << "      abskg = 5.0 * exp ( -2 * x - 0.1)\n"
+                  << "       T = ( 2*1000^4 * x + 1000^4)^0.25 \n"
+                  << "__________________________________\n";
+      }
+      
+      for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
+        IntVector c = *iter;
+        Point p = patch->cellPosition( c );
+        double x = p(d_pDir);
+        
+        abskg[c] = 5.0 * exp ( -2 * x - 0.1);
+        
+        double tmp = 1.0e7 * (2.0 * x + 1.0);
+        color[c] = pow( tmp, 0.25 ); 
+      }   
+    } 
+    
 
     d_RMCRT->setBC<double, double>( color,  d_colorLabel->getName(),     patch, matl );
     d_RMCRT->setBC<double, double>( abskg,  d_compAbskgLabel->getName(), patch, matl );
