@@ -102,6 +102,8 @@ void DeviceGridVariables::add(const Patch* patchPointer,
     DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
     vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   } else {
+
+    //Merge sizeVector into what we've got.
     //Don't add the same device var twice.
     printf("ERROR:\n This preparation queue already added a variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
     exit(-1);
@@ -158,6 +160,35 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
   }
 }
 
+//When preparing ghost cells, we have need to allocate space on the host and
+//hold onto this space until the ghost cell data gets to the host. This
+//allows us to retrieve that host variable.
+Variable* DeviceGridVariables::getVariable(const VarLabel* label,
+          const Patch* patch,
+          const int matlIndx,
+          const int levelIndx,
+          const int dataWarehouseIndex) const {
+  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), patch->getID(), matlIndx, levelIndx, dataWarehouseIndex);
+  if (vars.find(lpmld) != vars.end()) {
+    return vars.find(lpmld)->second.var;
+  } else {
+    return NULL;
+  }
+}
+
+DeviceGridVariableInfo DeviceGridVariables::getItem(const VarLabel* label,
+    const Patch* patch,
+    const int matlIndx,
+    const int levelIndx,
+    const int dataWarehouseIndex) const {
+  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), patch->getID(), matlIndx, levelIndx, dataWarehouseIndex);
+  if (vars.find(lpmld) != vars.end()) {
+    return vars.find(lpmld)->second;
+  } else {
+    printf("Error: DeviceGridVariables::getItem(), item not found\n");
+    throw(-1);
+  }
+}
 
 size_t DeviceGridVariables::getTotalSize() {
   return totalSize;

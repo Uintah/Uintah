@@ -794,7 +794,7 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
       GridVariableBase* var;
       var = dynamic_cast<GridVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
 #ifdef HAVE_CUDA
-
+      /*
       //Overall goal here is to determine which data needed for ghost cells come from the GPU
       //Then copy that data from the GPU to the CPU, and store it in the CPU's datawarehouse.
       //Then it can be treated within the rest of the engine, sending it out.
@@ -873,7 +873,12 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
         //send it all
         tempGhostvar->getMPIBuffer(buffer, dep->low, dep->high);
         buffer.addSendlist(tempGhostvar->getRefCounted());
+        */
+        //Data comes from a CPU. Do it the normal way
+
+      if (false) {
       } else {
+
 #endif
         //Data comes from a CPU. Do it the normal way
       var->getMPIBuffer( buffer, dep->low, dep->high );
@@ -2110,7 +2115,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
 
     // put the variable in the database
     printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
-     
+    printf("Putting %s, matl %d, patch %d into the database\n", label->getName().c_str(), matlIndex, patch->getID());
     d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true);
   }
   else {

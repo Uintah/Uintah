@@ -46,8 +46,8 @@ public:
       }
 
     }
-
   };
+
   DeviceGridVariableInfo(Variable* var,
             IntVector sizeVector,
             size_t sizeOfDataType,
@@ -121,6 +121,18 @@ public:
               const Task::Dependency* dep,
               int whichGPU);
 
+  Variable* getVariable(const VarLabel* label,
+          const Patch* patch,
+          const int matlIndx,
+          const int levelIndx,
+          const int dataWarehouseIndex) const;
+
+  DeviceGridVariableInfo getItem(const VarLabel* label,
+          const Patch* patch,
+          const int matlIndx,
+          const int levelIndx,
+          const int dataWarehouseIndex) const;
+
   size_t getTotalSize();
 
   size_t getSizeForDataWarehouse(int dwIndex);
@@ -159,6 +171,8 @@ private:
 
 class GpuUtilities {
 public:
+
+
   static void assignPatchesToGpus(const GridP& grid);
   static int getGpuIndexForPatch(const Patch* patch);
 

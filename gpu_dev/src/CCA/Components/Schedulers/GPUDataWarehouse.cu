@@ -1914,7 +1914,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
       d_varDB[i].var_ptr = d_varDB[index].var_ptr;
       d_varDB[i].sizeOfDataType = d_varDB[index].sizeOfDataType;
     } else {
-      printf("ERROR:\nGPUDataWarehouse::putGhostCell, label %s, source patch ID %d, matlIndx %d, levelIndex %d not found in variable database\n", label, sourcePatchID, matlIndx, levelIndx);
+      printf("ERROR:\nGPUDataWarehouse::putGhostCell, label %s, source patch ID %d, matlIndx %d, levelIndex %d not found in GPU DW variable database\n", label, sourcePatchID, matlIndx, levelIndx);
       exit(-1);
     }
   }
@@ -1923,7 +1923,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   if (varPointers.find(lpml_dest) != varPointers.end()) {
     d_varDB[i].ghostItem.dest_varDB_index = varPointers[lpml_dest].varDB_index;
   } else {;
-    printf("ERROR:\nGPUDataWarehouse::putGhostCell, label: %s destination patch ID %d, matlIndx %d, levelIndex %d not found in variable database-c", label, destPatchID, matlIndx, levelIndx);
+    printf("ERROR:\nGPUDataWarehouse::putGhostCell, label: %s destination patch ID %d, matlIndx %d, levelIndex %d not found in GPU DW variable database\n", label, destPatchID, matlIndx, levelIndx);
     exit(-1);
   }
   d_dirty=true;

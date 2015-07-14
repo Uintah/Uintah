@@ -142,6 +142,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
 #ifdef HAVE_CUDA
 
+    void assignDevicesAndStreams(DeviceGhostCells& ghostVars, DetailedTask* task);
+
     void findIntAndExtGpuDependencies(DeviceGridVariables& deviceVars,
         DeviceGridVariables& taskVars,
         DeviceGhostCells& ghostVars,
@@ -171,9 +173,19 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void gpuInitialize( bool reset=false );
 
+    void syncTaskGpuDWs(DetailedTask* dtask);
+
     void performInternalGhostCellCopies(DetailedTask* dtask);
 
+    void copyAllExtGpuDependenciesToHost(const DetailedTask* dtask,
+        const DeviceGridVariables& deviceVars,
+        const DeviceGhostCells& ghostVars);
+
     void initiateH2DCopies(DetailedTask* dtask);
+
+    void prepareDeviceVars(DetailedTask* dtask, DeviceGridVariables& deviceVars);
+
+    void prepareTaskVarsIntoTaskDW(DetailedTask* dtask, DeviceGridVariables& taskVars);
 
     void prepareGhostCellsIntoTaskDW(DetailedTask* dtask, DeviceGhostCells& ghostVars);
 
