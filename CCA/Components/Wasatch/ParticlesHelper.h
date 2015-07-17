@@ -49,6 +49,7 @@
 #include <CCA/Ports/Scheduler.h>
 #include <Core/Grid/Task.h>
 #include <Core/Grid/Material.h>
+#include <Core/Grid/SimulationState.h>
 
 #ifndef PIDOFFSET
 #define PIDOFFSET 1000000000000ul
@@ -172,7 +173,7 @@ namespace Uintah {
 
     /*
      *  \brief Parse the particle spec and create the position varlabels. This is an essential step
-     that MUST be called during Wasatch::ProblemSetup
+     that MUST be called during Component::ProblemSetup
      */
     void problem_setup(Uintah::ProblemSpecP uintahSpec,
                        Uintah::ProblemSpecP particleEqsSpec,
