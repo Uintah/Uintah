@@ -52,6 +52,16 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   //  define the material index
   int archIndex = 0;                // HARDWIRED
   _matl = _sharedState->getArchesMaterial(archIndex)->getDWIndex();
+  
+  
+  const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
+  _radFluxE_Label = VarLabel::create("radiationFluxE",  CC_double);
+  _radFluxW_Label = VarLabel::create("radiationFluxW",  CC_double);
+  _radFluxN_Label = VarLabel::create("radiationFluxN",  CC_double);
+  _radFluxS_Label = VarLabel::create("radiationFluxS",  CC_double);
+  _radFluxT_Label = VarLabel::create("radiationFluxT",  CC_double);
+  _radFluxB_Label = VarLabel::create("radiationFluxB",  CC_double);
+  
 }
 //______________________________________________________________________
 //
@@ -59,6 +69,13 @@ RMCRT_Radiation::~RMCRT_Radiation()
 {
   // source label is destroyed in the base class
   delete _RMCRT; 
+  
+  VarLabel::destroy(_radFluxE_Label);
+  VarLabel::destroy(_radFluxW_Label);
+  VarLabel::destroy(_radFluxN_Label);
+  VarLabel::destroy(_radFluxS_Label);
+  VarLabel::destroy(_radFluxT_Label);
+  VarLabel::destroy(_radFluxB_Label);
 }
 //---------------------------------------------------------------------------
 // Method: Problem Setup
@@ -273,6 +290,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW celltype_dw = Task::NewDW;
     bool modifies_divQ  = false;
     _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq);
+    
+    // convert boundaryFlux<Stencil7> -> 6 doubles
+    sched_stencilToDBLs( fineLevel, sched );
   }
   
   //______________________________________________________________________
@@ -314,6 +334,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
       const PatchSet* patches = level->eachPatch();
       _RMCRT->sched_Refine_Q (sched,  patches, _sharedState->allArchesMaterials() , _radiation_calc_freq);
     }
+    
+    // convert boundaryFlux<Stencil7> -> 6 doubles
+    sched_stencilToDBLs( fineLevel, sched );
   }
   
   //______________________________________________________________________
@@ -335,6 +358,9 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW celltype_dw = Task::NewDW;                                                                       
 
     _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq ); 
+    
+    // convert boundaryFlux<Stencil7> -> 6 doubles
+    sched_stencilToDBLs( level, sched );
   }
 }
 
@@ -585,3 +611,72 @@ void RMCRT_Radiation::setBoundaryConditions< float >( const ProcessorGroup*,
                                                       Task::WhichDW ,
                                                       const int ,
                                                       const bool );
+                                                      
+//______________________________________________________________________
+//
+//______________________________________________________________________
+void
+RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level, 
+                                      SchedulerP& sched )
+{
+
+  if( level->getID() != _archesLevelIndex){
+    throw InternalError("RMCRT_Radiation::sched_stencilToDBLs.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
+  }
+
+  if(_RMCRT->d_solveBoundaryFlux) {
+    Task* tsk = scinew Task( "RMCRT_Radiation::stencilToDBLs", this, &RMCRT_Radiation::stencilToDBLs );
+    printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
+
+    //  only schedule task on arches level
+    tsk->requires(Task::NewDW, VarLabel::find("RMCRTboundFlux"), _gn, 0);
+
+    tsk->computes( _radFluxE_Label );
+    tsk->computes( _radFluxW_Label );
+    tsk->computes( _radFluxN_Label );
+    tsk->computes( _radFluxS_Label );
+    tsk->computes( _radFluxT_Label );
+    tsk->computes( _radFluxB_Label );
+    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+  }
+}
+
+//______________________________________________________________________
+//
+void 
+RMCRT_Radiation::stencilToDBLs( const ProcessorGroup*,
+                             const PatchSubset* patches, 
+                             const MaterialSubset*, 
+                             DataWarehouse* , 
+                             DataWarehouse* new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::stencilToDBLs");
+
+    constCCVariable<Stencil7>  boundaryFlux;
+    new_dw->get( boundaryFlux,     VarLabel::find("RMCRTboundFlux"), _matl, patch, _gn, 0 ); 
+
+    CCVariable<double> East, West;
+    CCVariable<double> North, South;
+    CCVariable<double> Top, Bot;
+    new_dw->allocateAndPut( East,  _radFluxE_Label, _matl, patch );
+    new_dw->allocateAndPut( West,  _radFluxW_Label, _matl, patch );
+    new_dw->allocateAndPut( North, _radFluxN_Label, _matl, patch );
+    new_dw->allocateAndPut( South, _radFluxS_Label, _matl, patch );
+    new_dw->allocateAndPut( Top,   _radFluxT_Label, _matl, patch );
+    new_dw->allocateAndPut( Bot,   _radFluxB_Label, _matl, patch );
+
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      const Stencil7& me = boundaryFlux[c];
+      East[c]  = me.e;
+      West[c]  = me.w;
+      North[c] = me.n;         // THIS MAPPING MUST BE VERIFIED
+      South[c] = me.s;
+      Top[c]   = me.t;
+      Bot[c]   = me.b;
+    }
+  }
+}

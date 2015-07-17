@@ -152,8 +152,10 @@ namespace Uintah{
       Radiometer* getRadiometer(){
         return d_radiometer;
       }
-
-
+      
+      //__________________________________
+      //  public variables
+      bool d_solveBoundaryFlux;              // 
 
     //______________________________________________________________________
     private:
@@ -164,7 +166,6 @@ namespace Uintah{
       int    d_orderOfInterpolation;         // Order of interpolation for interior fine patch
       IntVector d_halo;                      // number of cells surrounding a coarse patch on coarser levels
 
-      bool d_solveBoundaryFlux;
       bool d_solveDivQ;
       bool d_CCRays;
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
