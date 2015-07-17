@@ -68,7 +68,7 @@ static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
   // The outputput of RMCRT
-  d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
+  d_boundFluxLabel       = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
   d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
