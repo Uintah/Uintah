@@ -188,66 +188,29 @@ Variable::emit( OutputContext& oc, const IntVector& l,
 #if HAVE_PIDX
 void
 Variable::emit(PIDXOutputContext& pc,
-                const IntVector& l,
-                const IntVector& h, const string& compressionModeHint,
-		 double* pidx_buffer
-	      )
+	       const IntVector& l,
+	       const IntVector& h, const string& compressionModeHint,
+               double* pidx_buffer
+	       )
 {
-
-  // cout << "Start of PIDX emit" << endl;
+  // cout << "Start of PIDX emit" << endl;                                                                                                                                      
   ProblemSpecP dummy;
 
   std::ostringstream outstream;
   emitNormal(outstream, l, h, dummy,false);
 
   string writeoutString = outstream.str();
-  //double *pidx_buffer;
 
-  const char* writebuffer = (writeoutString).c_str();
-  unsigned long writebufferSize = (writeoutString).size();
+  const char* writebuffer = writeoutString.c_str();
+  unsigned long writebufferSize = writeoutString.size();
 
-  //cout << "write buffer size = " << writebufferSize/8 << " Name: " << var_name << endl;
- 
+  //cout << "write buffer size = " << writebufferSize << endl;// << " Name: " << var_name << endl;                                                                             
   int i,zeroCount=0, nonZeroCount=0;
   if(writebufferSize>0) {
-
-    //pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));
-    memcpy(pidx_buffer, writebuffer, (writebufferSize/8)*sizeof(double));
-    
-    //printf("PIDX : %f %f %f %f %f %f %f\n", pidx_buffer[0], pidx_buffer[1], pidx_buffer[2], pidx_buffer[3], pidx_buffer[4], pidx_buffer[5], pidx_buffer[6]);
-    //printf("UINTAH : %f %f %f %f %f %f %f\n", (double)writebuffer[0], (double)writebuffer[1], (double)writebuffer[2], (double)writebuffer[3], (double)writebuffer[4], (double)writebuffer[5], (double)writebuffer[6]);
-    
-//     for(i = 0 ; i < writebufferSize/8 ; i++)
-//     {
-// 	if((double)pidx_buffer[i] == 0.0)
-// 	  zeroCount++;
-// 	else
-// 	  nonZeroCount++;
-// 	printf("Element = %16.16f\n", (double)pidx_buffer[i]);
-//     }
-    //printf("Zero Count = %d and Non Zero Count %d\n", zeroCount, nonZeroCount);
-    
-
-    //    cout << "offsets: " << offset[0] << " " << offset[1] << " " << offset[2] << " "
-    //         << offset[3] << " " << offset[4] << endl;
-    //    cout << "count: " << count[0] << " " << count[1] << " " << count[2] << " "
-    //         << count[3] << " " << count[4] << endl;
-    //pidx_buffer = (double*)writebuffer;
-       //for (unsigned long i = 0; i< writebufferSize/8; i++) {
-	 // pidx_buffer[i] = (double)writebuffer[i];
-    //cout << "pidx_buffer[ " << i << "] = " << (double)pidx_buffer[i]/*writebuffer[0]*/ << endl;
-        //}
-
-
-    //pc.variable[vc][mc] = PIDX_variable_global_define(pc.idx_ptr, var_name, /*sample_per_variable_buffer[vc]*/ 1, MPI_DOUBLE);
-    //PIDX_variable_local_add(pc.idx_ptr, pc.variable[vc][mc], (int*) offset, (int*) count);
-    //PIDX_variable_local_layout(pc.idx_ptr, pc.variable[vc][mc], (double*)pidx_buffer, MPI_DOUBLE);
-    //printf("Address [1] : %p\n", pidx_buffer);
-     
+    //pidx_buffer = (double *) malloc((writebufferSize/8)*sizeof(double));                                                                                                     
+    memcpy(pidx_buffer, writebuffer, writebufferSize);
   }
-
 }
-
 #endif
 
 string*
