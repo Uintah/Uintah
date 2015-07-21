@@ -108,13 +108,13 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   }
 
   if( RT_flags.modifies_divQ ){
-    new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
-    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
-    new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
+    new_gdw->getModifiable( divQ,         "divQ",           patch.ID, matl );
+    new_gdw->getModifiable( boundFlux,    "RMCRTboundFlux", patch.ID, matl );
+    new_gdw->getModifiable( radiationVolQ,"radiationVolq",  patch.ID, matl );
   }else{
-    new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
-    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
-    new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
+    new_gdw->get( divQ,         "divQ",           patch.ID, matl );         // these should be allocateAndPut() calls
+    new_gdw->get( boundFlux,    "RMCRTboundFlux", patch.ID, matl );
+    new_gdw->get( radiationVolQ,"radiationVolq",  patch.ID, matl );
 
 
     // Extra Cell Loop
@@ -397,9 +397,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     new_gdw->getModifiable( boundFlux,    "boundFlux",     finePatch.ID, matl, fineL );
     new_gdw->getModifiable( radiationVolQ,"radiationVolq", finePatch.ID, matl, fineL );
   }else{
-    new_gdw->get( divQ,         "divQ",          finePatch.ID, matl, fineL );         // these should be allocateAntPut() calls
-    new_gdw->get( boundFlux,    "boundFlux",     finePatch.ID, matl, fineL );
-    new_gdw->get( radiationVolQ,"radiationVolq", finePatch.ID, matl, fineL );
+    new_gdw->get( divQ,         "divQ",           finePatch.ID, matl, fineL );         // these should be allocateAntPut() calls
+    new_gdw->get( boundFlux,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
+    new_gdw->get( radiationVolQ,"radiationVolq",  finePatch.ID, matl, fineL );
 
 
     //__________________________________
