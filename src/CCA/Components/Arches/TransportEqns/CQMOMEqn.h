@@ -76,7 +76,8 @@ namespace Uintah{
                            const PatchSubset* patches,
                            const MaterialSubset*,
                            DataWarehouse* old_dw,
-                           DataWarehouse* new_dw);
+                           DataWarehouse* new_dw,
+                           int timeSubStep);
     
     /** @brief Schedule the convection for x direction */
     void sched_buildXConvection( const LevelP& level,
@@ -217,8 +218,8 @@ namespace Uintah{
     double d_convWeightLimit;      //the minimum value for a calculated weight to be to actually compute convection, this helps limit bad abscissa
     
     Convection_CQMOM * d_cqmomConv; //class for cqmom-specific convection
-    
-    std::vector<CQMOMSourceWrapper* > d_sources;
+        
+    std::vector<const VarLabel *> d_sourceLabels; //list of needed source labels
   }; // class CQMOMEqn
 } // namespace Uintah
 

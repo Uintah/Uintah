@@ -383,7 +383,15 @@ SimulationController::gridSetup( void )
     grid->problemSetup(d_ups, d_myworld, d_doAMR);
   }
   else {
-    grid = d_archive->queryGrid( d_restartIndex, d_ups );
+    // tsaad & bisaac: At this point, and during a restart, there not legitimate load balancer. This means
+    // that the grid obtained from the data archiver will global domain BCs on every MPI Rank -
+    // i.e. every rank will have knowledge of ALL OTHER patches and their boundary conditions.
+    // This leads to a noticeable and unacceptable increase in memory usage especially when
+    // hundreds of boundaries (and boundary conditions) are present. That being said, we
+    // query the grid WITHOUT requiring boundary conditions. Once that is done, a legitimate load balancer
+    // will be created later on - after which we use said balancer and assign BCs to the grid.
+    // NOTE the "false" argument below.
+    grid = d_archive->queryGrid( d_restartIndex, d_ups, false );
   }
   if(grid->numLevels() == 0){
     throw InternalError("No problem (no levels in grid) specified.", __FILE__, __LINE__);
@@ -896,10 +904,10 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     char walltime[96];
     if (d_n > 3) {
       //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
-      sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
+      sprintf( walltime, ", elap T = %6.2lf (mean: %6.2lf), ", d_wallTime, mean );
     }
     else {
-      sprintf(walltime, ", elap T = %.2lf", d_wallTime);
+      sprintf( walltime, ", elap T = %6.2lf,                ", d_wallTime );
     }
     ostringstream message;
 
@@ -907,7 +915,7 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
             << " (timestep "  << timestep 
             << "), delT="     << delt
             << walltime;
-    message << ", Memory Use = ";
+    message << "Memory Use = ";
     if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
       message << ProcessInfo::toHumanUnits((unsigned long) avg_memuse);
       if(avg_highwater) {

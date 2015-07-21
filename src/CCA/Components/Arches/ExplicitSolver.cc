@@ -522,11 +522,19 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     if ( d_doCQMOM ) {
       bool doOperatorSplit;
       bool doPartVel;
+      bool doSourceTerms;
       
       doOperatorSplit = d_cqmomSolver->getOperatorSplitting();
       doPartVel = d_cqmomSolver->getPartVel();
+      doSourceTerms = d_cqmomSource->getAddSources();
       CQMOMEqnFactory::EqnMap& moment_eqns = cqmomFactory.retrieve_all_eqns();
       
+      if ( doSourceTerms ) {
+        if (curr_level == 0)
+          d_cqmomSource->sched_initializeVariables( level, sched );
+        d_cqmomSource->sched_buildSourceTerm( level, sched, curr_level );
+      }
+
       if (!doOperatorSplit) {
       //Evaluate CQMOM equations
         if (doPartVel) {
@@ -614,6 +622,20 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
     sched_getDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
+
+    //====== NEW TASK STUFF ============
+    //get the density predictor task and schedule it: 
+    const TaskFactoryBase::TypeToTaskMap& den_guess_tasks = i_property_models->second->retrieve_type_to_tasks(); 
+    TaskFactoryBase::TypeToTaskMap::const_iterator i_den_guess = den_guess_tasks.find("density_predictor");  
+    if ( i_den_guess != den_guess_tasks.end() ){ 
+      for ( std::vector<std::string>::const_iterator idg = i_den_guess->second.begin(); 
+            idg != i_den_guess->second.end(); idg++ ){ 
+        TaskInterface* tsk = i_property_models->second->retrieve_task(*idg); 
+        tsk->schedule_task(level, sched, matls, TaskInterface::STANDARD_TASK, curr_level); 
+      }
+    }
+    //======= END NEW TASK STUFF =======
+
 
     sched_checkDensityGuess(sched, patches, matls,
                                       d_timeIntegratorLabels[curr_level]);
@@ -1307,7 +1329,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
                           drhodt[idx]/vol; 
 
           //adding the mass sources to the residual
-          for (int iii=0; iii < d_mass_sources.size(); iii++){ 
+          for (unsigned int iii=0; iii < d_mass_sources.size(); iii++){ 
             residual[idx] -= mass_srcs[iii][idx]; 
           }
 

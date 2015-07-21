@@ -42,7 +42,7 @@ template< typename SrcT, typename TargetT >
 class NullExpression
  : public Expr::Expression<TargetT>
 {
-  DECLARE_VECTOR_OF_FIELDS(SrcT, f_);
+  DECLARE_VECTOR_OF_FIELDS( SrcT, f_ )
   /* declare operators associated with this expression here */
 
     NullExpression( const Expr::TagList& VarNameTags );

@@ -64,10 +64,6 @@ namespace Uintah {
     
     typedef std::vector<int> MomentVector;
     
-    struct constCCVarWrapper {
-      constCCVariable<double> data;
-    };
-    
     /** @brief Obtain parameters from input file and process */
     void problemSetup( const ProblemSpecP& params );
     
@@ -129,18 +125,18 @@ namespace Uintah {
       virtual ~Interpolator(){};
       
       virtual cqFaceData1D no_bc(const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<int>& cellType, const double epW) = 0;
+                                 constCCVariable<double>& volFrac, const double epW) = 0;
       virtual cqFaceData1D no_bc_weight(const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                         constCCVariable<int>& cellType, const double epW) = 0;
+                                         constCCVariable<double>& volFrac, const double epW) = 0;
       virtual cqFaceData1D no_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                         constCCVariable<int>& cellType, const double epW) = 0;
+                                         constCCVariable<double>& volFrac, const double epW) = 0;
       
       virtual cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                    constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+                                    constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
       virtual cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                           constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+                                           constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
       virtual cqFaceData1D with_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                            constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+                                            constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
       
     };
     
@@ -151,151 +147,157 @@ namespace Uintah {
       ~FirstOrderInterpolant(){};
       
       cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                          constCCVariable<int>& cellType, const double epW)
+                          constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c];
+          face_values.minus_left = phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c];
+          face_values.plus_right = phic;
         }
         
         return face_values;
       }
       
       cqFaceData1D no_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<int>& cellType, const double epW)
+                                 constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c]/epW;
+          face_values.minus_left = phic/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c]/epW;
+          face_values.plus_right = phic/epW;
         }
         
         return face_values;
       }
       
       cqFaceData1D no_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                  constCCVariable<int>& cellType, const double epW)
+                                  constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = -epW*phi[c];
+          face_values.minus_left = -epW*phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = -epW*phi[c];
+          face_values.plus_right = -epW*phic;
         }
         
         return face_values;
       }
       
       cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                            constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                            constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         //For first order treat boundary cells exactly how interior cells are treated
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c];
+          face_values.minus_left = phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c];
+          face_values.plus_right = phic;
         }
         
         return face_values;
       }
       
       cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                   constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) {  //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phi[c]/epW;
+          face_values.minus_left = phic/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phi[c]/epW;
+          face_values.plus_right = phic/epW;
         }
         
         return face_values;
       }
       
       cqFaceData1D with_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                    constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                    constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
         
-        face_values.minus_right =  phi[c];
-        face_values.plus_left  =  phi[c];
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = -epW*phi[c];
+          face_values.minus_left = -epW*phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = -epW*phi[c];
+          face_values.plus_right = -epW*phic;
         }
         
         return face_values;
@@ -309,7 +311,7 @@ namespace Uintah {
       ~SecondOrderInterpolant(){};
       
       cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                          constCCVariable<int>& cellType, const double epW)
+                          constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -318,29 +320,32 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxm] - phi[cxmm]);
-          nxp = (phi[c] - phi[cxm]);
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
+          nxm = (phicxm - phi[cxmm]);
+          nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
-          face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+          face_values.minus_left = phicxm + 1.0/2.0 * delN;
         } else {
           face_values.minus_left = face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxp] - phi[c]);
-          nxp = (phi[cxpp] - phi[cxp]);
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {  //check if wall is present
+          nxm = (phicxp - phic);
+          nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
-          face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+          face_values.plus_right = phicxp - 1.0/2.0 * delN;
         } else {
           face_values.plus_right = face_values.plus_left;
         }
@@ -358,7 +363,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<int>& cellType, const double epW)
+                                 constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -367,29 +372,32 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxm] - phi[cxmm]);
-          nxp = (phi[c] - phi[cxm]);
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
+          nxm = (phicxm - phi[cxmm]);
+          nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
-          face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+          face_values.minus_left = phicxm + 1.0/2.0 * delN;
         } else {
           face_values.minus_left = face_values.minus_right/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxp] - phi[c]);
-          nxp = (phi[cxpp] - phi[cxp]);
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
+          nxm = (phicxp - phic);
+          nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
-          face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+          face_values.plus_right = phicxp - 1.0/2.0 * delN;
         } else {
           face_values.plus_right = face_values.plus_left/epW;
         }
@@ -407,7 +415,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                  constCCVariable<int>& cellType, const double epW)
+                                  constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -416,29 +424,32 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxm] - phi[cxmm]);
-          nxp = (phi[c] - phi[cxm]);
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
+          nxm = (phicxm - phi[cxmm]);
+          nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
           face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
         } else {
           face_values.minus_left = -epW*face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
-          nxm = (phi[cxp] - phi[c]);
-          nxp = (phi[cxpp] - phi[cxp]);
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
+          nxm = (phicxp - phic);
+          nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
-          face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+          face_values.plus_right = phicxp - 1.0/2.0 * delN;
         } else {
           face_values.plus_right = -epW*face_values.plus_left;
         }
@@ -456,7 +467,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                            constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                            constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -465,36 +476,39 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) {  //check if wall is present
           if (isBoundary.minus ) {
-            face_values.minus_left = phi[cxm];
+            face_values.minus_left = phicxm;
           } else {
-            nxm = (phi[cxm] - phi[cxmm]);
-            nxp = (phi[c] - phi[cxm]);
+            nxm = (phicxm - phi[cxmm]);
+            nxp = (phic - phicxm);
             delN = minMod(nxm, nxp);
-            face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+            face_values.minus_left = phicxm + 1.0/2.0 * delN;
           }
         } else {
           face_values.minus_left = face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {  //check if wall is present
           if (isBoundary.plus ) {
-            face_values.plus_right = phi[cxp];
+            face_values.plus_right = phicxp;
           } else {
-            nxm = (phi[cxp] - phi[c]);
-            nxp = (phi[cxpp] - phi[cxp]);
+            nxm = (phicxp - phic);
+            nxp = (phi[cxpp] - phicxp);
             delN = minMod(nxm, nxp);
-            face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+            face_values.plus_right = phicxp - 1.0/2.0 * delN;
           }
         } else {
           face_values.plus_right = face_values.plus_left;
@@ -513,7 +527,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                   constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -522,36 +536,39 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.minus ) {
-            face_values.minus_left = phi[cxm];
+            face_values.minus_left = phicxm;
           } else {
-            nxm = (phi[cxm] - phi[cxmm]);
-            nxp = (phi[c] - phi[cxm]);
+            nxm = (phicxm - phi[cxmm]);
+            nxp = (phic - phicxm);
             delN = minMod(nxm, nxp);
-            face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+            face_values.minus_left = phicxm + 1.0/2.0 * delN;
           }
         } else {
           face_values.minus_left = face_values.minus_right/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.plus ) {
-            face_values.plus_right = phi[cxp];
+            face_values.plus_right = phicxp;
           } else {
-            nxm = (phi[cxp] - phi[c]);
-            nxp = (phi[cxpp] - phi[cxp]);
+            nxm = (phicxp - phic);
+            nxp = (phi[cxpp] - phicxp);
             delN = minMod(nxm, nxp);
-            face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+            face_values.plus_right = phicxp - 1.0/2.0 * delN;
           }
         } else {
           face_values.plus_right = face_values.plus_left/epW;
@@ -570,7 +587,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                    constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                    constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -579,36 +596,39 @@ namespace Uintah {
         IntVector cxm = c - coord;
         IntVector cxmm = c - coord - coord;
         
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
         //calculate the inside faces
         double delN;
-        double nxm = (phi[c] - phi[cxm]);
-        double nxp = (phi[cxp] - phi[c]);
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
         delN = minMod(nxm, nxp);
         
-        face_values.minus_right = phi[c] - 1.0/2.0 * delN;
-        face_values.plus_left = phi[c] + 1.0/2.0 * delN;
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.minus ) {
-            face_values.minus_left = phi[cxm];
+            face_values.minus_left = phicxm;
           } else {
-            nxm = (phi[cxm] - phi[cxmm]);
-            nxp = (phi[c] - phi[cxm]);
+            nxm = (phicxm - phi[cxmm]);
+            nxp = (phic - phicxm);
             delN = minMod(nxm, nxp);
-            face_values.minus_left = phi[cxm] + 1.0/2.0 * delN;
+            face_values.minus_left = phicxm + 1.0/2.0 * delN;
           }
         } else {
           face_values.minus_left = -epW*face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.plus ) {
-            face_values.plus_right = phi[cxp];
+            face_values.plus_right = phicxp;
           } else {
-            nxm = (phi[cxp] - phi[c]);
-            nxp = (phi[cxpp] - phi[cxp]);
+            nxm = (phicxp - phic);
+            nxp = (phi[cxpp] - phicxp);
             delN = minMod(nxm, nxp);
-            face_values.plus_right = phi[cxp] - 1.0/2.0 * delN;
+            face_values.plus_right = phicxp - 1.0/2.0 * delN;
           }
         } else {
           face_values.plus_right = -epW*face_values.plus_left;
@@ -826,13 +846,13 @@ namespace Uintah {
     // These functions assemble other terms
     // --------------------------------------------------------------------------
     /** @brief Computes the flux term of the cell based on summatino of face values */
-    inline double getFlux( const double area, cqFaceData1D GPhi, const IntVector c, constCCVariable<int>& cellType )
+    inline double getFlux( const double area, cqFaceData1D GPhi, const IntVector c, constCCVariable<double>& volFrac )
     {
       double F;
       
       //Not using the areafraction here allows for flux to come from an intrusion cell into the domain as
       //the particles bounce, but requires checking celltype to prevent flux into intrusion cells
-      if ( cellType[c] == -1 ) {
+      if ( volFrac[c] == 1.0 ) {
         return F = area * ( GPhi.plus - GPhi.minus );
       } else {
         return F = 0.0;
@@ -850,14 +870,18 @@ namespace Uintah {
         if (a[i + nNodes*velIndex].plus_left > 0.0 && w[i].plus_left > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].plus_left),momentIndex[m] );
+            for ( int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].plus_left;
+            }
           }
           hPlus += w[i].plus_left * a[i + nNodes*velIndex].plus_left * nodeVal; //add hplus
         }
         if ( a[i + nNodes*velIndex].plus_right < 0.0 && w[i].plus_right > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].plus_right),momentIndex[m] );
+            for (int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].plus_right;
+            }
           }
           hMinus += w[i].plus_right * a[i + nNodes*velIndex].plus_right * nodeVal; //add hminus
         }
@@ -870,14 +894,18 @@ namespace Uintah {
         if (a[i + nNodes*velIndex].minus_left > 0.0 && w[i].minus_left > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].minus_left),momentIndex[m] );
+            for (int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].minus_left;
+            }
           }
           hPlus += w[i].minus_left * a[i + nNodes*velIndex].minus_left * nodeVal; //add hplus
         }
         if ( a[i + nNodes*velIndex].minus_right < 0.0 && w[i].minus_right > weightLimit) {
           double nodeVal = 1.0;
           for (int m = 0 ; m < M ; m++) {
-            nodeVal *= pow( (a[i + nNodes*m].minus_right),momentIndex[m] );
+            for (int n = 0; n < momentIndex[m]; n++ ) {
+              nodeVal *= a[i + nNodes*m].minus_right;
+            }
           }
           hMinus += w[i].minus_right * a[i + nNodes*velIndex].minus_right * nodeVal; //add hminus
         }

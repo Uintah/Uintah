@@ -237,26 +237,14 @@ UnifiedScheduler::problemSetup( const ProblemSpecP&     prob_spec,
 #ifdef HAVE_CUDA
     if (Uintah::Parallel::usingDevice()) {
       cudaError_t retVal;
-      int availableDevices = numDevices_;
+      int availableDevices;
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&availableDevices));
       std::cout << "   Using " << numDevices_ << "/" << availableDevices << " available GPU(s)" << std::endl;
       
-      if (numDevices_ > 1){
-        std::ostringstream warn;
-        warn << "ERROR: The results computed using multiple GPUs != 1 GPU.\n";
-        warn << "        A GPU enable task will behave as if it's running when it isn't.\n";
-        warn << "        The computed quantities will be incorrect.\n\n";
-        warn << "        To use one GPU set: \n";
-        warn << "           SCI_DEBUG SingleDevice:+\n";
-        throw ProblemSetupException(warn.str(),__FILE__,__LINE__);
-      }
-      
-      if (numDevices_ == 1){  // we may want to output for all devices -Todd
-        cudaDeviceProp deviceProp;
-        int devID = 0;
-        CUDA_RT_SAFE_CALL(retVal = cudaGetDevice(&devID));
-        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&deviceProp, devID));
-        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n", devID, deviceProp.name, deviceProp.major, deviceProp.minor);
+      for (int device_id = 0; device_id < availableDevices; device_id++) {
+        cudaDeviceProp device_prop;
+        CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceProperties(&device_prop, device_id));
+        printf("   GPU Device %d: \"%s\" with compute capability %d.%d\n", device_id, device_prop.name, device_prop.major, device_prop.minor);
       }
     }
 #endif
@@ -741,6 +729,13 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
       sprintf(filename, "exectimes.%d.%d", d_myworld->size(), d_myworld->myrank());
       fout.open(filename);
 
+      // Report which timesteps TaskExecTime values have been accumulated over
+      fout << "Reported values are cumulative over 10 timesteps ("
+           << d_sharedState->getCurrentTopLevelTimeStep()-9
+           << " through "
+           << d_sharedState->getCurrentTopLevelTimeStep()
+           << ")" << std::endl;
+
       for (std::map<std::string, double>::iterator iter = exectimes.begin(); iter != exectimes.end(); iter++) {
         fout << std::fixed << d_myworld->myrank() << ": TaskExecTime(s): " << iter->second << " Task:" << iter->first << std::endl;
       }
@@ -789,12 +784,6 @@ UnifiedScheduler::execute( int tgnum     /* = 0 */,
 void
 UnifiedScheduler::runTasks( int thread_id )
 {
-  static volatile int s_once_per_proc = 0;  // Flag to control access to once_per_proc tasks.
-  static volatile int s_thread_state[MAX_THREADS] = {};
-  enum {WAKE = 0, SLEEP = 1};
-
-  bool ran_once_per_proc = false;
-  
   int me = d_myworld->myrank();
 
   while( numTasksDone < ntasks ) {
@@ -816,17 +805,7 @@ UnifiedScheduler::runTasks( int thread_id )
     //    Check if anything this thread can do concurrently.
     //    If so, then update the various scheduler counters.
     // ----------------------------------------------------------------------------------
-    do {
-      //Todo: Flag to control once per proc tasks.
-      if (s_once_per_proc) {
-        s_thread_state[thread_id] = SLEEP;
-        while (s_thread_state[thread_id] != WAKE) {
-          SCIRun::Thread::self()->yield();
-        }
-        s_thread_state[thread_id-1] = WAKE;
-      }
-    } while(!schedulerLock.tryLock());
-      
+    schedulerLock.lock();
     while (!havework) {
       /*
        * (1.1)
@@ -838,7 +817,6 @@ UnifiedScheduler::runTasks( int thread_id )
         readyTask = phaseSyncTask[currphase];
         havework = true;
         numTasksDone++;
-        // What is taskorder doing??? jas 5/19/15
         if (taskorder.active()) {
           if (me == d_myworld->size() / 2) {
             cerrLock.lock();
@@ -856,23 +834,6 @@ UnifiedScheduler::runTasks( int thread_id )
                     << phaseTasks[currphase] << std::endl;
             cerrLock.unlock();
           }
-        }
-        // Check for once per proc task.
-        if ( readyTask != NULL && readyTask->getTask()->getType() == Task::OncePerProc) {
-          s_once_per_proc = 1;
-          for (int i = 0; i < Uintah::Parallel::getNumThreads(); ++i) {
-            while ( i != thread_id && s_thread_state[i] != SLEEP) {
-              asm volatile("": : : "memory");
-            }
-          }
-          runTask(readyTask, currentIteration, thread_id, Task::CPU);
-          s_once_per_proc = 0;
-          for (int i = 0; i <  Uintah::Parallel::getNumThreads(); ++i) {
-            s_thread_state[i] = WAKE;
-          }
-          readyTask = NULL;
-          havework = false;
-          ran_once_per_proc = true;
         }
         break;
       }
@@ -931,26 +892,6 @@ UnifiedScheduler::runTasks( int thread_id )
 #ifdef HAVE_CUDA
         }
 #endif
-          // Check for once per proc task.
-          // If once per proc task set flag and wait and execute.
-          // Set readyTask = NULL
-          // havework = false
-          if ( readyTask != NULL && readyTask->getTask()->getType() == Task::OncePerProc) {
-            s_once_per_proc = 1;
-            for (int i = 0; i < Uintah::Parallel::getNumThreads(); ++i) {
-              while (i != thread_id && s_thread_state[i] != SLEEP) {
-                asm volatile("": : : "memory");
-              }
-            }
-            runTask(readyTask, currentIteration, thread_id, Task::CPU);
-            s_once_per_proc = 0;
-            for (int i = 0; i <  Uintah::Parallel::getNumThreads(); ++i) {
-              s_thread_state[i] = WAKE;
-            }
-            readyTask = NULL;
-            havework = false;
-            ran_once_per_proc = true;
-          }
           break;
         }
       }
@@ -1122,8 +1063,6 @@ UnifiedScheduler::runTasks( int thread_id )
     }
     else if (pendingMPIMsgs > 0) {
       processMPIRecvs(TEST);
-    }
-    else if (ran_once_per_proc) {
     }
     else {
       // This can only happen when all tasks have finished.

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from os import symlink,environ
+from os import symlink,environ, system
 from sys import argv,exit,platform
 from helpers.runSusTests import runSusTests, inputs_root, generatingGoldStandards
 from helpers.modUPS import modUPS
@@ -53,7 +53,7 @@ NIGHTLYTESTS = [
    ("rmcrt_bm1_1L"                      , "RMCRT/rmcrt_bm1_1L.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
    ("rmcrt_bm1_DO"                      , "RMCRT/rmcrt_bm1_DO.ups"                                  , 8   , "Linux" , ["exactComparison"])   , 
    ("rmcrt_bm1_ML"                      , "RMCRT/rmcrt_bm1_ML.ups"                                  , 1.1 , "Linux" , ["exactComparison"])   , 
-   ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "Linux" , ["exactComparison"     , "no_restart"]) , 
+#   ("methane_rmcrt"                     , "RMCRT/methane_rmcrt.ups"                                 , 8   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("dqmom_test_1"                      , "DQMOM_regression/dqmom_test_1.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("dqmom_test_2"                      , "DQMOM_regression/dqmom_test_2.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("dqmom_test_3"                      , "DQMOM_regression/dqmom_test_3.ups"                       , 1.1 , "Linux" , ["exactComparison"])   , 
@@ -305,6 +305,11 @@ if __name__ == "__main__":
   TESTS = getTestList( environ['WHICH_TESTS'] )
 
   result = runSusTests(argv, TESTS, "ARCHES")
+  
+  # cleanup modified files
+  command = "/bin/rm -rf %s/tmp > /dev/null 2>&1 " % (the_dir)
+  system( command )
+  
   exit( result )
 
 

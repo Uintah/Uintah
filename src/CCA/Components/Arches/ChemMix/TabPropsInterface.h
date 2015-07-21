@@ -47,7 +47,7 @@
  * @details
  * This class provides and interface to TabProps formatted tables.  See the
  * TabProps project here:
- * https://software.crsim.utah.edu/trac/wiki/TabProps
+ * https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
  * to get more information regarding TabProps and the its tabluar format.
 
 This code checks for the following tags/attributes in the input file:

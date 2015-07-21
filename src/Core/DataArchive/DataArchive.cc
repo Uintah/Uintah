@@ -278,7 +278,7 @@ DataArchive::queryPatchwiseProcessor( const Patch * patch, const int index )
 }
 
 GridP
-DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */ )
+DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */, bool assignBCs )
 {
   // The following variable along with d_cell_scale is necessary to allow the 
   // UdaScale module work.  Small domains are a problem for the SCIRun widgets
@@ -291,9 +291,6 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */ )
 
   double     start    = Time::currentSeconds();
   TimeData & timedata = getTimeData( index );
-
-  timedata.d_patchInfo.clear();
-  timedata.d_matlInfo.clear();
 
   FILE * fp = fopen( timedata.d_ts_path_and_filename.c_str(), "r" );
 
@@ -323,11 +320,14 @@ DataArchive::queryGrid( int index, const ProblemSpecP & ups /* = NULL */ )
     old_cell_scale = d_cell_scale;
   }
 
-  if( ups ) { // 'ups' is non-null only for restarts.
+  if( ups && assignBCs) { // 'ups' is non-null only for restarts.
 
     ProblemSpecP grid_ps = ups->findBlock( "Grid" );
     grid->assignBCS( grid_ps, NULL );
   }
+
+  timedata.d_patchInfo.clear();
+  timedata.d_matlInfo.clear();
 
   for( int levelIndex = 0; levelIndex < grid->numLevels(); levelIndex++ ) {
 
@@ -498,10 +498,6 @@ DataArchive::query(       Variable     & var,
   string    data_filename;
   int       patchid;
 
-  if( Parallel::getMPIRank() == 1000 ) {
-    cout << "patch is " << patch << "\n";
-  }
-
   if (patch) {
     // we need to use the real_patch (in case of periodic boundaries) to get the data, but we need the
     // passed in patch to allocate the patch to the proper virtual region... (see var.allocate below)
@@ -580,12 +576,6 @@ DataArchive::query(       Variable     & var,
   }
   InputContext ic( fd, data_filename.c_str(), dfi->start );
   double       starttime = Time::currentSeconds();
-
-  if( Parallel::getMPIRank() == 1000 ) {
-    if( patch ) { cout << "reading in data for patch: " << patch->getID() << "\n"; }
-    else { cout << "no patch at this point\n"; }
-    cout << "data file is : " << data_filename << "\n";
-  }
 
   var.read( ic, dfi->end, timedata.d_swapBytes, timedata.d_nBytes, varinfo.compression );
 

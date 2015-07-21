@@ -541,7 +541,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     //vander solve (x,w,q) -> vandersolve sum x_i^k w_i = q_k
     // q contians known moments, x_i contains abscissas, w_i are conditional moments (unknown)
       int n = x1.size();
-      for (int ii = 0; ii < x1.size(); ii++ ) {
+      for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
         if (w1[ii] == 0.0 ) {
           n--;
         }
@@ -663,7 +663,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       if ( !useLapack ) {
       //feed into vandermonde
         int n = x1.size();
-        for (int ii = 0; ii < x1.size(); ii++ ) {
+        for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
           if (w1[ii] == 0.0 ) {
             n--;
           }
@@ -750,7 +750,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
       
       if ( !useLapack ) {
         int n = xTemp.size();
-        for (int ii = 0; ii < xTemp.size(); ii++ ) {
+        for ( unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
           if (wTemp[ii] == 0.0 ) {
             n--;
           }
@@ -878,7 +878,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         
         if (!useLapack) {
           int n = x1.size();
-          for (int ii = 0; ii < x1.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
             if (w1[ii] == 0.0 ) {
               n--;
             }
@@ -967,7 +967,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         //now solve the vandermonde matrix for some Omega values
         if (!useLapack) {
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1042,7 +1042,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
         
         if ( !useLapack ) {
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1198,7 +1198,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
           
           int n = x1.size();
-          for (int ii = 0; ii < x1.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < x1.size(); ii++ ) {
             if (w1[ii] == 0.0 ) {
               n--;
             }
@@ -1237,7 +1237,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
 
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1279,7 +1279,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
           
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }
@@ -1317,7 +1317,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
           }
           
           int n = xTemp.size();
-          for (int ii = 0; ii < xTemp.size(); ii++ ) {
+          for (unsigned int ii = 0; ii < xTemp.size(); ii++ ) {
             if (wTemp[ii] == 0.0 ) {
               n--;
             }

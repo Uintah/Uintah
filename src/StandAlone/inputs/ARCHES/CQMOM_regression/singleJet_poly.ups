@@ -673,7 +673,7 @@
       </ParticleModels>
 
 
-      <CQMOM type="unweighted" partvel="true">
+      <CQMOM partvel="true">
         <!-- base information-->
         <UseLapack> false </UseLapack>
         <NumberInternalCoordinates> 4 </NumberInternalCoordinates>

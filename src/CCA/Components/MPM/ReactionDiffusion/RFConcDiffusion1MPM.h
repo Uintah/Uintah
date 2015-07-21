@@ -54,11 +54,13 @@ namespace Uintah {
     virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
                              DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+#if 0
     virtual void scheduleComputeDivergence(Task* task, const MPMMaterial* matl, 
-		                                       const PatchSet* patch) const;
+		                           const PatchSet* patch) const;
 
     virtual void computeDivergence(const Patch* patch, const MPMMaterial* matl,
-                                   DataWarehouse* old_dw, DataWarehouse* new_dw);
+                                  DataWarehouse* old_dw, DataWarehouse* new_dw);
+#endif
 
   private:
     double init_potential;

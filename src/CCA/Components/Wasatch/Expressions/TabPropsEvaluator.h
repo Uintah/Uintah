@@ -47,7 +47,7 @@ template< typename FieldT >
 class TabPropsEvaluator
  : public Expr::Expression<FieldT>
 {
-  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, indepVars_)
   const InterpT& evaluator_;
 
   TabPropsEvaluator( const InterpT& interp,

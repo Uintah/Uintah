@@ -17,7 +17,7 @@
 /**
  * @class CQMOMSourceWrapper
  * @author Alex Abboud
- * @date August 2014
+ * @date August 2014, revised June 2015
  *
  * @brief Construct the source terms for moment equations in CQMOM, the moment forumlation the growth term for
  *        $\f m_{i,j,k} $\f of the $\f 1^{st} \f$ internal coordiante appears as $\f \int \int \int d/d_{r_1} G(r_1)
@@ -27,7 +27,8 @@
  *        \f$ i \sum_\alpha^N \omega_k r_{1,\alpha}^{i-1} r_{2,\alpha}^j r_{3,\alpha}^k \f$
  *        This forumla only holds if G(r_1) is of form dr_1/dt
  *
- *
+ *        The refactor of this source term wrapper will be scheduled by explicit solver and not the CQMOM eqns
+ *        Only one soruce term object will exist, and it will calculate all of the source terms for every moment eqn
  */
 
 namespace Uintah{
@@ -37,9 +38,11 @@ namespace Uintah{
 
   public:
     
-    CQMOMSourceWrapper( ArchesLabel* fieldLabels, std::string sourceName, std::vector<int> momentIndex, int nIC );
+    CQMOMSourceWrapper( ArchesLabel* fieldLabels );
     
     ~CQMOMSourceWrapper();
+    
+    typedef std::vector<int> MomentVector;
     
     /** @brief return instance of this */
     static CQMOMSourceWrapper& self();
@@ -71,33 +74,29 @@ namespace Uintah{
     // --------------------------------------
     // Access functions:
     
-    /** @brief Return the VarLabel for this equation's source term. */
-    inline const VarLabel* getSourceLabel(){ return d_modelLabel; };
-    
-    /** @brief return the moment index vector of this equation */
-    inline const std::vector<int> getMomentIndex(){ return d_momentIndex; };
+    /** @brief Return the bool for if soruce terms are on. */
+    inline const bool getAddSources(){ return d_addSources; };
     
   private:
     
     ArchesLabel* d_fieldLabels;
-    const VarLabel * d_modelLabel;        //var label for the source of this model
-    std::vector<int> d_momentIndex;        // moment index for this transport equation, needed for convective and source closure
-    std::vector<int> N_i;                // vector of number of quadrature nodes in each dimension
     
-    const VarLabel * d_momentLabel;       //Label for the moment of this transport equation
-    int M;                               //number of internal coordiantes
-    int _N;                              //total number of nodes
-    int _nIC;
+    bool d_addSources;                          //bool if source terms found
     
-    std::string sourceName;
+    std::vector<int> N_i;                       //vector of number of quadrature nodes in each dimension
+    std::vector<int> nIC;                       //vector of indexes for source term IC
+    std::vector<MomentVector> momentIndexes;    //List of all moment indexes
     
-    std::vector<const VarLabel *> d_nodeSources;
-    std::string model_name;
-    struct constCCVarWrapper {
-      constCCVariable<double> data;
-    };
+    int M;                                      //number of internal coordiantes
+    int _N;                                     //total number of nodes
+    int nMoments;                               //total number of moments
+    int nSources;                               //total number of source terms
     
-  }; // class CQMOMEqn
+    std::vector<const VarLabel*> d_sourceLabels;  //labels for all source terms for all the moments
+    const VarLabel* volfrac_label;                //volfrac label
+    std::vector<const VarLabel *> d_nodeSources;  //list of all node source for all models
+    
+  }; // class CQMOMWrapper
 } // namespace Uintah
 
 #endif

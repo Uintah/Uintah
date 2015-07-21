@@ -100,7 +100,6 @@ namespace Uintah {
     ~CQMOMEqnFactory();
     
     bool doing_CQMOM_;
-    std::string which_cmqom_;
     
   }; // class CQMOMEqnFactory 
 } // end namespace Uintah

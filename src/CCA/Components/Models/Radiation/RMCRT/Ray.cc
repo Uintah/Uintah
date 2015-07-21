@@ -68,7 +68,7 @@ static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
   // The outputput of RMCRT
-  d_boundFluxLabel       = VarLabel::create( "boundFlux",        CCVariable<Stencil7>::getTypeDescription() );
+  d_boundFluxLabel       = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
   d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
   d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
   d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
@@ -309,7 +309,7 @@ Ray::problemSetup( const ProblemSpecP& prob_spec,
 // Increase the printf buffer size only once!  
 #ifdef HAVE_CUDA
   #ifdef CUDA_PRINTF
-  if( Parallel::usingDevice() ){
+  if( Parallel::usingDevice() && Parallel::getMPIRank() == 0){
     size_t size;
     CUDA_RT_SAFE_CALL( cudaDeviceGetLimit(&size,cudaLimitPrintfFifoSize) );
     CUDA_RT_SAFE_CALL( cudaDeviceSetLimit(cudaLimitPrintfFifoSize, 10*size ) );
@@ -639,7 +639,7 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
       //__________________________________
       //  Compute divQ
-      divQ[origin] = 4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
+      divQ[origin] = -4.0 * M_PI * abskg[origin] * ( sigmaT4OverPi[origin] - (sumI/d_nDivQRays) );
 
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
       radiationVolq[origin] = 4.0 * M_PI * abskg[origin] *  (sumI/d_nDivQRays) ;
@@ -760,6 +760,8 @@ Ray::sched_rayTrace_dataOnion( const LevelP& level,
     tsk->requires(abskg_dw,    d_abskgLabel,    allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
     tsk->requires(sigma_dw,    d_sigmaT4Label,  allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
     tsk->requires(celltype_dw, d_cellTypeLabel, allPatches, Task::CoarseLevel,l,allMatls, ND, gac, SHRT_MAX);
+    proc0cout << "WARNING: RMCRT High communication costs on level:" << l 
+              << ".  Variables from every patch on this level are communicated to every patch on the finest level."<< endl;
   }
 
   if( modifies_divQ ){
@@ -957,7 +959,7 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
       //__________________________________
       //  Compute divQ
-      divQ_fine[origin] = 4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/d_nDivQRays) );
+      divQ_fine[origin] = -4.0 * M_PI * abskg_fine[origin] * ( sigmaT4OverPi_fine[origin] - (sumI/d_nDivQRays) );
 
       // radiationVolq is the incident energy per cell (W/m^3) and is necessary when particle heat transfer models (i.e. Shaddix) are used
       radiationVolq_fine[origin] = 4.0 * M_PI * abskg_fine[origin] *  (sumI/d_nDivQRays) ;

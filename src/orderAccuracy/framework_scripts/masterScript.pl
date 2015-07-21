@@ -60,14 +60,14 @@ for(@modules) {
 
 my $simple = XML::Simple->new(ForceArray=>1, suppressempty => "");
 
-if( $#ARGV == -1){
-  print "\n\nmasterScript.pl <path to orderAccuracy directory> \n";
-  print "Now exiting\n \n";
-  exit;
-}
+
+# Find the path to orderAccuracy scripts and prune /framework_scripts off 
+# the end if snecessary
+my $me = `dirname $0 |xargs readlink -f --no-newline`;
+$me =~ s/\/framework_scripts//;
 
 # Define the paths
-my $base_path             = $ARGV[0];    # path to orderAccuracy scripts
+my $base_path             = $me;    # path to orderAccuracy scripts
 my $config_files_path     = $base_path . "/test_config_files";  # configurations files
 my $scripts_path          = $base_path . "/framework_scripts";  # framework scripts
 my $postProcessCmd_path   = $base_path . "/postProcessTools";   # postProcessing 
@@ -105,9 +105,9 @@ my $extraScripts_path = $xml->{scripts_path}[0];
 #__________________________________
 # add compare_path:sus_path and framework_scripts to the path
 my $orgPath = $ENV{"PATH"};
-my $syspath ="/usr/bin/:/usr/sbin:/bin";
+#my $syspath ="/usr/bin/:/usr/sbin:/bin";
 
-$ENV{"PATH"} = "$syspath:$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$here_path:.";
+$ENV{"PATH"} = "$orgPath:$postProcessCmd_path:$sus_path:$scripts_path:$extraScripts_path:$here_path:.";
 
 # bulletproofing
 print "----------------------   \n";

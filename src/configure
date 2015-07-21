@@ -34018,7 +34018,7 @@ $as_echo "$as_me: WARNING: Looking for PETSc arch: $PETSC_ARCH" >&2;}
           fi
         fi
 
-        if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+        if [[ $CC = *mpigcc* && $IS_BGQ = yes ]]; then
            msg="Updating CFLAGS with PETSc required flags due to using xlC compiled PETSC with gcc compiler..."
            add_important_warning "$msg"
            #CFLAGS="  $CFLAGS   -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED(why)= "
@@ -34981,10 +34981,11 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 # Vulcan with the gcc compilers... And the compilicated CFLAGS will not
 # pass through configure into configVars.mk correctly... sigh.
 #
-if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+# Note, the above "[[[" turns into the desired "[[" once passed through autoconf...
+#
+if [[ $CC = *mpigcc* && $IS_BGQ = yes ]]; then
    CXXFLAGS=$ORIG_CXXFLAGS
 fi
-
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
@@ -37332,12 +37333,19 @@ int main(int argc, char **argv) {
 }
 EOF
 
+##-----------------------------------------------------------------------------
+## Static linking of the cudart_static lib is not working on Titan due
+## to the current CUDA Toolkit version, 5.5. Once Titan is upgraded to
+## CUDA 6.5, we can then use cudart_static in static builds
+##-----------------------------------------------------------------------------
 # use different set of libs if doing a static build
-if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-	_cudart_lib="cudart_static dl pthread rt"
-else
-	_cudart_lib="cudart"
-fi
+#if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+#	_cudart_lib="cudart_static dl pthread rt"
+#else
+#	_cudart_lib="cudart"
+#fi
+
+  _cudart_lib="cudart"
 
 
 ## arguments mean:
@@ -37474,8 +37482,11 @@ fi
 NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
+#  * don't pass c++11 flag, CUDA <=6.0 doesn't support it and we don't use it yet in any Uintah CUDA code
 for i in $CXXFLAGS; do
-  NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+  if test "$i" != "-std=c++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+  fi
 done
 
 if test "$debug" != "no"; then

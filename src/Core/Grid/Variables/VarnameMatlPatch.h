@@ -64,42 +64,60 @@ struct VarnameMatlPatch {
   VarnameMatlPatch(const VarnameMatlPatch& copy)
     : name_(copy.name_), matlIndex_(copy.matlIndex_), patchid_(copy.patchid_), hash_(copy.hash_)
   {}
+  //__________________________________
+  //
   VarnameMatlPatch& operator=(const VarnameMatlPatch& copy)
   {
-    name_=copy.name_; matlIndex_=copy.matlIndex_; patchid_=copy.patchid_; hash_=copy.hash_;
+    name_      = copy.name_; 
+    matlIndex_ = copy.matlIndex_; 
+    patchid_   = copy.patchid_; 
+    hash_      = copy.hash_;
     return *this;
   }
   
+  //__________________________________
+  //
   bool operator<(const VarnameMatlPatch& other) const
   {
     if (name_ == other.name_) {
-      if (matlIndex_ == other.matlIndex_)
+      if (matlIndex_ == other.matlIndex_){
         return patchid_ < other.patchid_;
-      else
+      }else{
         return matlIndex_ < other.matlIndex_;
+      }
     }
     else {
       return name_ < name_;
     }
   }
- 
+  
+  //__________________________________
+  //
   bool operator==(const VarnameMatlPatch& other) const
   {
-    return name_ == other.name_ && patchid_ == other.patchid_ && matlIndex_ == other.matlIndex_;
+    bool test = (name_ == other.name_ && patchid_ == other.patchid_ && matlIndex_ == other.matlIndex_);
+    return test;
   }
-
+  
+  //__________________________________
+  //
   unsigned int string_hash(const char* p) const {
     unsigned int sum=0;
-    while(*p)
+    while(*p){
       sum = sum*7 + (unsigned char)*p++;
+    }
     return sum;
   }
-
+  
+  //__________________________________
+  //
   int hash(int hash_size) const
   {
     return hash_ % hash_size;
   }
-
+  
+  //______________________________________________________________________
+  //
   std::string name_;
   int matlIndex_;
   int patchid_;    

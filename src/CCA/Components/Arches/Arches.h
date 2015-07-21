@@ -114,6 +114,7 @@ namespace Uintah {
   class DQMOM;
   class CQMOM;
   class CQMOM_Convection;
+  class CQMOMSourceWrapper;
   class RadPropertyCalculator; 
   class ArchesParticlesHelper; 
 
@@ -351,6 +352,7 @@ private:
   bool d_usePartVel;
   CQMOM* d_cqmomSolver;
   CQMOM_Convection* d_cqmomConvect;
+  CQMOMSourceWrapper* d_cqmomSource;
 
   bool d_doingRestart;
   bool d_newBC_on_Restart;

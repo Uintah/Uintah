@@ -133,10 +133,6 @@ ShunnMoinMMSMF::computeSource( const ProcessorGroup* pc,
 
       double s0 = cos(pi*_w*time); 
       double s1 = sin(pi*_w*time); 
-      double s2 = cos(pi*_k*x); 
-      double s3 = sin(pi*_k*x); 
-      double s4 = cos(pi*_k*y); 
-      double s5 = sin(pi*_k*y); 
       double s6 = sin(pi*_k*(x-_uf*time)); 
       double s7 = sin(pi*_k*(y-_vf*time)); 
       double s8 = cos(pi*_k*(x-_uf*time)); 
