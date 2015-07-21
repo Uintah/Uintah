@@ -29,7 +29,7 @@ public:
       this->levelIndx = levelIndx;
       this->dataWarehouse = dataWarehouse;
     }
-    //This so it can be used in an STL map
+    //This is so it can be used in an STL map
     bool operator<(const LabelPatchMatlLevelDw& right) const {
       if (this->label < right.label) {
         return true;
@@ -48,7 +48,11 @@ public:
     }
   };
 
+  DeviceGridVariableInfo() {}
+
   DeviceGridVariableInfo(Variable* var,
+            bool copyHostDataToDevice,
+            bool foreign,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -63,6 +67,7 @@ public:
 
   //For PerPatch vars
   DeviceGridVariableInfo(Variable* var,
+            bool copyHostDataToDevice,
             size_t sizeOfDataType,
             int matlIndx,
             int levelIndx,
@@ -70,7 +75,7 @@ public:
             const Task::Dependency* dep,
             int whichGPU);
 
-  Variable* var;
+
   IntVector sizeVector;
   size_t sizeOfDataType;
   size_t varMemSize;
@@ -82,6 +87,9 @@ public:
   Ghost::GhostType gtype;
   int numGhostCells;
   int whichGPU;
+  Variable* var;
+  bool copyHostDataToDevice;
+  bool foreign;
 };
 
 
@@ -97,11 +105,13 @@ public:
             size_t sizeOfDataType,
             size_t varMemSize,
             IntVector offset,
-            Variable* var,
             const Task::Dependency* dep,
             Ghost::GhostType gtype,
             int numGhostCells,
-            int whichGPU);
+            int whichGPU,
+            Variable* var,
+            bool copyHostDataToDevice,
+            bool foreign);
 
   //For PerPatch vars.  They don't use ghost cells
   void add(const Patch* patchPointer,
@@ -109,9 +119,10 @@ public:
             int levelIndx,
             size_t varMemSize,
             size_t sizeOfDataType,
-            Variable* var,
             const Task::Dependency* dep,
-            int whichGPU);
+            int whichGPU,
+            Variable* var,
+            bool copyHostDataToDevice);
 
   //For task vars.
   void addTaskGpuDWVar(const Patch* patchPointer,
@@ -121,13 +132,8 @@ public:
               const Task::Dependency* dep,
               int whichGPU);
 
-  Variable* getVariable(const VarLabel* label,
-          const Patch* patch,
-          const int matlIndx,
-          const int levelIndx,
-          const int dataWarehouseIndex) const;
 
-  DeviceGridVariableInfo getItem(const VarLabel* label,
+  DeviceGridVariableInfo getItem( const VarLabel* label,
           const Patch* patch,
           const int matlIndx,
           const int levelIndx,

@@ -355,15 +355,35 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
 
   //first check if this patch/var/matl is in the process of loading in.
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    //Space for this var already exists.  Use that and return.
-    if (d_debug){
-      printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level on device %d.  Reusing it.\n", label, label, patchID, matlIndx, levelIndx, d_device_id);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.find(lpml);
+  if (it != varPointers.end()) {
+    if (   it->second.device_offset.x == low.x
+        && it->second.device_offset.y == low.y
+        && it->second.device_offset.z == low.z
+        && it->second.device_size.x == (high.x-low.x)
+        && it->second.device_size.y == (high.y-low.y)
+        && it->second.device_size.z == (high.z-low.z)) {
+      //Space for this var already exists.  Use that and return.
+      if (d_debug){
+        printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level %d on device %d.  Reusing it.  It's at offset (%d, %d, %d) size (%d, %d, %d)\n",
+            label, label, patchID, matlIndx, levelIndx, d_device_id,
+            it->second.device_offset.x, it->second.device_offset.y, it->second.device_offset.z,
+            it->second.device_size.x, it->second.device_size.y, it->second.device_size.z);
 
+      }
+      var.setArray3(varPointers[lpml].device_offset, varPointers[lpml].device_size, varPointers[lpml].device_ptr);
+      varLock.writeUnlock();
+      return;
+    } else {
+      printf("ERROR: GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level %d on device %d at %p.  But the coordinates and/or sizes didn't match.  This gpudw has offset (%d, %d, %d) size (%d, %d, %d).  AllocateAndPut() was called to create offset (%d, %d, %d) size (%d, %d, %d)\n",
+            label, label, patchID, matlIndx, levelIndx, d_device_id, it->second.device_ptr,
+            it->second.device_offset.x, it->second.device_offset.y, it->second.device_offset.z,
+            it->second.device_size.x, it->second.device_size.y, it->second.device_size.z,
+            low.x, low.y, low.z,
+            high.x-low.x, high.y-low.y, high.z-low.z);
+      exit(-1);
     }
-    var.setArray3(varPointers[lpml].device_offset, varPointers[lpml].device_size, varPointers[lpml].device_ptr);
-    varLock.writeUnlock();
-    return;
+
   }
 
   //It's not in the database, so create it.
@@ -878,7 +898,6 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
     //Space for this patch already exists.  Use that and return.
     if (d_debug){
       printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level on device %d.  Reusing it.\n", label, label, patchID, matlIndx, levelIndx, d_device_id);
-
     }
     var.setData(varPointers[lpml].device_ptr);
     varLock.writeUnlock();
@@ -1102,19 +1121,22 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlIndx, int level
   printf("GPUDataWarehouse::remove() should not be called on device.\n");
   return false;
 #else
-  //It seems there are few, if any, use case scenarios for calling remove.
+  //It seems there are few scenarios for calling remove.
   //Avoid calling this unless you are absolutely sure what you are doing
   bool retVal = false;
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
   varLock.writeLock();
+
   if (varPointers.find(lpml) != varPointers.end()) {
-    //int i = varPointers[lpm].varDB_index;
-    //d_varDB[i].label[0] = '\0'; //leave a hole in the flat array, not deleted.
+    int i = varPointers[lpml].varDB_index;
+    d_varDB[i].label[0] = '\0'; //leave a hole in the flat array, not deleted.
     varPointers.erase(lpml);
     retVal = true;
     d_dirty=true;
   }
-
+  if (d_debug){
+    printf("GPUDataWarehouse::remove( %s ). Removed a variable for label %s patch %d matl %d level %d.\n", label, label, patchID, matlIndx, levelIndx);
+  }
   varLock.writeUnlock();
   return retVal;
 #endif
@@ -1758,9 +1780,27 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
 
            int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
 
+           /*if (threadID == 0) {
+              printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d).  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
+                  d_varDB[i].ghostItem.sharedLowCoordinates.x,
+                  d_varDB[i].ghostItem.sharedLowCoordinates.y,
+                  d_varDB[i].ghostItem.sharedLowCoordinates.z,
+                  sourceOffset,
+                  destOffset,
+                  d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+                  d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+                  d_varDB[destIndex].var_offset.x, d_varDB[destIndex].var_offset.y, d_varDB[destIndex].var_offset.z,
+                  d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z);
+            }*/
+
            //copy all 8 bytes of a double in one shot
            if (d_varDB[i].sizeOfDataType == sizeof(double)) {
              *((double*)(d_varDB[destIndex].var_ptr) + destOffset) = *((double*)(d_varDB[i].var_ptr) + sourceOffset);
+             /*if (threadID == 0) {
+               printf("At (%d, %d, %d), copying between (%d, %d, %d), Thread %d the value d_varDB[%d].var_ptr at destoffset %d is %e from %d sourceOffset %d\n",
+                   x, y, z, d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
+                 threadID, destIndex, destOffset, *((double*)(d_varDB[destIndex].var_ptr) + destOffset), i, sourceOffset);
+             }*/
            }
            //or copy all 4 bytes of an int in one shot.
            else if (d_varDB[i].sizeOfDataType == sizeof(int)) {
@@ -1889,14 +1929,14 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   d_varDB[i].ghostItem.sharedLowCoordinates = sharedLowCoordinates;
   d_varDB[i].ghostItem.sharedHighCoordinates = sharedHighCoordinates;
   d_varDB[i].ghostItem.virtualOffset = virtualOffset;
-  if (d_debug){
-    printf("Placed into the ghostCellDB in index %d from %d to %d has shared coordinates (%d, %d, %d), (%d, %d, %d)\n", i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z);
-  }
   if (sourceIsInTempGhostCells) {
     d_varDB[i].var_offset = var_offset;
     d_varDB[i].var_size = var_size;
     d_varDB[i].var_ptr = data_ptr;
     d_varDB[i].sizeOfDataType = sizeOfDataType;
+    if (d_debug){
+        printf("Placed into d_varDB at index %d from patch %d to patch %d has shared coordinates (%d, %d, %d), (%d, %d, %d)\n", i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z);
+    }
   } else {
     //look up the source index and the destination index for these
     labelPatchMatlLevel lpml_source(label, sourcePatchID, matlIndx, levelIndx);
@@ -1913,6 +1953,15 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
       d_varDB[i].var_size = d_varDB[index].var_size;
       d_varDB[i].var_ptr = d_varDB[index].var_ptr;
       d_varDB[i].sizeOfDataType = d_varDB[index].sizeOfDataType;
+      if (d_debug){
+        printf("Placed into d_varDB at index %d from patch %d to patch %d has shared coordinates (%d, %d, %d), (%d, %d, %d), from low/offset (%d, %d, %d) size (%d, %d, %d)  virtualOffset(%d, %d, %d)\n",
+            i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y,
+            sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z,
+            d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+            d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+            d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z);
+      }
+
     } else {
       printf("ERROR:\nGPUDataWarehouse::putGhostCell, label %s, source patch ID %d, matlIndx %d, levelIndex %d not found in GPU DW variable database\n", label, sourcePatchID, matlIndx, levelIndx);
       exit(-1);
@@ -1922,6 +1971,13 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   labelPatchMatlLevel lpml_dest(label, destPatchID, matlIndx, levelIndx);
   if (varPointers.find(lpml_dest) != varPointers.end()) {
     d_varDB[i].ghostItem.dest_varDB_index = varPointers[lpml_dest].varDB_index;
+    //if (d_debug){
+    //  int destIndex = d_varDB[i].ghostItem.dest_varDB_index;
+    //  printf("The destination ghost cell copy is at d_varDB at index %d with size (%d, %d, %d), offset (%d, %d, %d)\n",
+    //      destIndex,
+    //      d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z,
+    //      d_varDB[destIndex].var_offset.x, d_varDB[destIndex].var_offset.y, d_varDB[destIndex].var_offset.z);
+    //}
   } else {;
     printf("ERROR:\nGPUDataWarehouse::putGhostCell, label: %s destination patch ID %d, matlIndx %d, levelIndex %d not found in GPU DW variable database\n", label, destPatchID, matlIndx, levelIndx);
     exit(-1);

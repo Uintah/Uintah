@@ -2115,7 +2115,6 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
 
     // put the variable in the database
     printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
-    printf("Putting %s, matl %d, patch %d into the database\n", label->getName().c_str(), matlIndex, patch->getID());
     d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true);
   }
   else {

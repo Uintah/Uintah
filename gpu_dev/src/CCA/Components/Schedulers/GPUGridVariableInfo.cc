@@ -26,6 +26,8 @@
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
+            bool copyHostDataToDevice,
+            bool foreign,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -38,6 +40,8 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             int numGhostCells,
             int whichGPU) {
   this->var = var;
+  this->copyHostDataToDevice = copyHostDataToDevice;
+  this->foreign = foreign;
   this->sizeVector = sizeVector;
   this->sizeOfDataType = sizeOfDataType;
   this->varMemSize = varMemSize;
@@ -52,6 +56,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
 }
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
+            bool copyHostDataToDevice,
             size_t sizeOfDataType,
             int matlIndx,
             int levelIndx,
@@ -59,6 +64,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             const Task::Dependency* dep,
             int whichGPU) {
   this->var = var;
+  this->copyHostDataToDevice = copyHostDataToDevice;
   this->sizeOfDataType = sizeOfDataType;
   this->varMemSize = 0;
   this->matlIndx = matlIndx;
@@ -66,6 +72,8 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
   this->patchPointer = patchPointer;
   this->dep = dep;
   this->whichGPU = whichGPU;
+  this->foreign = false;
+  this->copyHostDataToDevice = true;
 }
 
 
@@ -86,11 +94,13 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           size_t varMemSize,
           size_t sizeOfDataType,
           IntVector offset,
-          Variable* var,
           const Task::Dependency* dep,
           Ghost::GhostType gtype,
           int numGhostCells,
-          int whichGPU) {
+          int whichGPU,
+          Variable* var,
+          bool copyHostDataToDevice,
+          bool foreign) {
 
   DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   if (vars.find(lpmld) == vars.end()) {
@@ -99,7 +109,7 @@ void DeviceGridVariables::add(const Patch* patchPointer,
     //contiguous array calculations
     totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
     totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-    DeviceGridVariableInfo tmp(var, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
+    DeviceGridVariableInfo tmp(var, copyHostDataToDevice, foreign, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
     vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   } else {
 
@@ -120,9 +130,10 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           int levelIndx,
           size_t varMemSize,
           size_t sizeOfDataType,
-          Variable* var,
           const Task::Dependency* dep,
-          int whichGPU) {
+          int whichGPU,
+          Variable* var,
+          bool copyHostDataToDevice) {
   DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   if (vars.find(lpmld) == vars.end()) {
     totalVars[dep->mapDataWarehouse()] += 1;
@@ -130,7 +141,7 @@ void DeviceGridVariables::add(const Patch* patchPointer,
     //contiguous array calculations
     totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
     totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-    DeviceGridVariableInfo tmp(var, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    DeviceGridVariableInfo tmp(var, copyHostDataToDevice, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
     vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   } else {
     //Don't add the same device var twice.
@@ -149,9 +160,9 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
   DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   if (vars.find(lpmld) == vars.end()) {
     totalVars[dep->mapDataWarehouse()] += 1;
-    //The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?  Should contiguous arrays be
+    //TODO: The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?  Should contiguous arrays be
     //organized by task???
-    DeviceGridVariableInfo tmp(NULL, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    DeviceGridVariableInfo tmp(NULL, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
     vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   } else {
     //This is fine, in corner cases or especially periodic boundary conditions this can happen
@@ -160,23 +171,9 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
   }
 }
 
-//When preparing ghost cells, we have need to allocate space on the host and
-//hold onto this space until the ghost cell data gets to the host. This
-//allows us to retrieve that host variable.
-Variable* DeviceGridVariables::getVariable(const VarLabel* label,
-          const Patch* patch,
-          const int matlIndx,
-          const int levelIndx,
-          const int dataWarehouseIndex) const {
-  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), patch->getID(), matlIndx, levelIndx, dataWarehouseIndex);
-  if (vars.find(lpmld) != vars.end()) {
-    return vars.find(lpmld)->second.var;
-  } else {
-    return NULL;
-  }
-}
 
-DeviceGridVariableInfo DeviceGridVariables::getItem(const VarLabel* label,
+DeviceGridVariableInfo DeviceGridVariables::getItem(
+    const VarLabel* label,
     const Patch* patch,
     const int matlIndx,
     const int levelIndx,
