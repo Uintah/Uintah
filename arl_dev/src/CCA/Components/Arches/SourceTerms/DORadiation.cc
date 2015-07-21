@@ -255,7 +255,6 @@ DORadiation::computeSource( const ProcessorGroup* pc,
                 old_DW_isMissingIntensities=true;
               }
               else{
-                bool old_DW_isMissingIntensities=1;
                 new_dw->transferFrom(old_dw,_IntensityLabels[ix],  patches, matls);
                 break;
               }

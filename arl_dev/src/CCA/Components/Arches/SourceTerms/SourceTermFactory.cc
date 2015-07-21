@@ -9,6 +9,10 @@
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_rhoYs.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_nd.h>
+#include <CCA/Components/Arches/SourceTerms/SootMassBalance.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_Tar.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
@@ -255,6 +259,22 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
       } else if (src_type == "bowman_nox") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
         SourceTermBase::Builder* srcBuilder = scinew BowmanNOx::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "BrownSootFormation_rhoYs") {
+        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_rhoYs::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "BrownSootFormation_nd") {
+        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_nd::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "BrownSootFormation_Tar") {
+        SourceTermBase::Builder* srcBuilder = scinew BrownSootFormation_Tar::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "SootMassBalance") {
+        SourceTermBase::Builder* srcBuilder = scinew SootMassBalance::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "mms1"){

@@ -355,6 +355,8 @@ ifneq ($(IS_OSX),yes)
 	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
 endif
 	rm -f $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+	@( find CCA/Components -name "*.$(OBJEXT)" -exec rm -f {} \;)
+	@( find CCA/Components -name "*.d" -exec rm -f {} \;)	
 	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
 	  do if test -d $$fname; then rm -rf $$fname; fi; done
 	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))

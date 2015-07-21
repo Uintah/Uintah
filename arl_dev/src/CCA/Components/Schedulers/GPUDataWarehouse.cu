@@ -449,19 +449,35 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   __syncthreads();
 
   while (i < d_numVarItems) {
-    int strmatch = 0;
-    char* s2 = &(d_varDB[i].label[0]);
-    while (!(strmatch = *(unsigned char *)s1 - *(unsigned char *)s2) && *s2) {  //strcmp
-      ++s1, ++s2;
-    }
+  
+    // match patchID.      Must find patch before doing label comparison.  If the order is reversed
+    //                     the label will be found but for the wrong patch  You encounter this issue only when 
+    //                     using lots of threads & patches             
+    if( d_varDB[i].domainID == patchID ){
 
-    if (strmatch == 0 && d_varDB[i].domainID == patchID && d_varDB[i].matlIndx == matlIndx && d_varDB[i].levelIndx == levelIndx) {
-      index = i;
+      // match label name
+      int strmatch = 0;
+      char* s2 = &(d_varDB[i].label[0]);
+      
+      while (!(strmatch = *(unsigned char *)s1 - *(unsigned char *)s2) && *s2) {  //strcmp
+        ++s1;
+        ++s2;
+      }
+
+      if (strmatch == 0 && d_varDB[i].matlIndx == matlIndx && d_varDB[i].levelIndx == levelIndx) {
+        //printf( "       %i.%i \t strmatch: %-2i, label: %s (%s)\t, domain: %i (%i)\t, matl:%i (%i), level:%i (%i)\n", 
+        //                  threadID, blockID, strmatch, d_varDB[i].label, label, d_varDB[i].domainID, patchID, d_varDB[i].matlIndx, 
+        //                  matlIndx, d_varDB[i].levelIndx, levelIndx );
+
+        index = i;
+        break;
+      }
     }
-    i = i + numThreads;
+    i++;
   }
   //sync before return;
-  __syncthreads();
+
+__syncthreads();
 
   if (index == -1) {
     return NULL;
@@ -524,16 +540,26 @@ GPUDataWarehouse::getLevelItem(char const* label, int matlIndx, int levelIndx)
   __syncthreads();
 
   while (i < d_numLevelItems) {
-    int strmatch = 0;
-    char* s2 = &(d_levelDB[i].label[0]);
-    while (!(strmatch = *(unsigned char *)s1 - *(unsigned char *)s2) && *s2) {  //strcmp
-      ++s1, ++s2;
-    }
+    
+    // match levelID.      Must find level before doing label comparison.  If the order is reversed
+    //                     the label will be found but possibly for the wrong level.  You encounter this issue only when using 
+    //                     lots of threads & patches
+    if( d_levelDB[i].levelIndx == levelIndx ){
+    
+      // match label
+      int strmatch = 0;
+      char* s2 = &(d_levelDB[i].label[0]);
+      while (!(strmatch = *(unsigned char *)s1 - *(unsigned char *)s2) && *s2) {  //strcmp
+        ++s1; 
+        ++s2;
+      }
 
-    if (strmatch == 0 &&  d_levelDB[i].levelIndx == levelIndx && d_levelDB[i].matlIndx == matlIndx) {
-      index = i;
+      if (strmatch == 0 && d_levelDB[i].matlIndx == matlIndx) {
+        index = i;
+      }
+    
     }
-    i = i + numThreads;
+    i++;
   }
   //sync before return;
   __syncthreads();

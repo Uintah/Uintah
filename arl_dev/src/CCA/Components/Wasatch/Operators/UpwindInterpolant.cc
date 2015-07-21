@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include "UpwindInterpolant.h"
-#include "OperatorTypes.h"
+#include <CCA/Components/Wasatch/Operators/UpwindInterpolant.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 
 #include <spatialops/NeboStencilBuilder.h>

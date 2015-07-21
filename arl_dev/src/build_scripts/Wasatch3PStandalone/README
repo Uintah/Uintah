@@ -22,8 +22,12 @@ And uses: 'git pull' to update code.
 
 To git the original files:
 
-git clone git://software.crsim.utah.edu/SpatialOpt.git
-git clone git://software.crsim.utah.edu/ExprLib.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/SpatialOps.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/ExprLib.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/TabProps.git
+env GIT_SSL_NO_VERIFY=true git clone --depth 1 https://software.crsim.utah.edu:8443/James_Research_Group/RadProps.git
+
+
 etc.
 
 ------------------

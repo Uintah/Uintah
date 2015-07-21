@@ -451,9 +451,6 @@ namespace Wasatch {
       const int nx = h.x() - l.x();
       const int ny = h.y() - l.y();
       const int nz = h.z() - l.z();
-      const int oneDx = (nx == 1) ? 0 : 1;
-      const int oneDy = (ny == 1) ? 0 : 1;
-      const int oneDz = (nz == 1) ? 0 : 1;
 
       const SCIRun::IntVector refCellip1 = refCell + IntVector(1,0,0);
       const SCIRun::IntVector refCelljp1 = refCell + IntVector(0,1,0);

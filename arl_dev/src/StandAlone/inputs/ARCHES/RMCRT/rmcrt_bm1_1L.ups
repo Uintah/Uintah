@@ -32,7 +32,7 @@
     <save label="radiation_temperature"/>
     <save label="sigmaT4"/>
     <save label="cellType"/>
-    <save label="boundFlux" />
+    <save label="RMCRTboundFlux" />
 
     <checkpoint cycle = "2" timestepInterval = "2"/>
   </DataArchiver>

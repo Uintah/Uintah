@@ -63,6 +63,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 
   if ( calculator_type == "constant" ){ 
     _calc = scinew RadPropertyCalculator::ConstantProperties(); 
+  } else if ( calculator_type == "special" ){ 
+    _calc = scinew RadPropertyCalculator::specialProperties(); 
   } else if ( calculator_type == "burns_christon" ){ 
     _calc = scinew RadPropertyCalculator::BurnsChriston(); 
   } else if ( calculator_type == "hottel_sarofim"){
@@ -373,7 +375,7 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
     //sum in the particle contribution if needed
     if ( _particlesOn  ){ 
       // Create containers to be passed to function that populates abskp
-      DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
+      //DQMOMEqnFactory& dqmom_eqn_factory = DQMOMEqnFactory::self(); // DQMOM singleton object
       CCCV pWeight;      // particle weights
       CCCV pSize;        // particle sizes
       CCCV pTemperature; // particle Temperatures

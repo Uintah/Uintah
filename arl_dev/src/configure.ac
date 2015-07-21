@@ -3462,7 +3462,7 @@ else
           fi
         fi
 
-        if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+        if [[[ $CC = *mpigcc* && $IS_BGQ = yes ]]]; then
            msg="Updating CFLAGS with PETSc required flags due to using xlC compiled PETSC with gcc compiler..."
            add_important_warning "$msg"
            #CFLAGS="  $CFLAGS   -DPETSC_RESTRICT=__restrict__ -DPETSC_DEPRECATED(why)= "
@@ -3544,10 +3544,11 @@ AC_LANG([C])
 # Vulcan with the gcc compilers... And the compilicated CFLAGS will not
 # pass through configure into configVars.mk correctly... sigh.
 #
-if test $CC = mpigcc -a "$IS_BGQ" = "yes"; then
+# Note, the above "[[[" turns into the desired "[[" once passed through autoconf...
+#
+if [[[ $CC = *mpigcc* && $IS_BGQ = yes ]]]; then
    CXXFLAGS=$ORIG_CXXFLAGS
 fi
-
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
@@ -3887,12 +3888,19 @@ int main(int argc, char **argv) {
 }
 EOF
 
+##-----------------------------------------------------------------------------
+## Static linking of the cudart_static lib is not working on Titan due
+## to the current CUDA Toolkit version, 5.5. Once Titan is upgraded to
+## CUDA 6.5, we can then use cudart_static in static builds
+##-----------------------------------------------------------------------------
 # use different set of libs if doing a static build
-if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-	_cudart_lib="cudart_static dl pthread rt"
-else
-	_cudart_lib="cudart"
-fi
+#if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+#	_cudart_lib="cudart_static dl pthread rt"
+#else
+#	_cudart_lib="cudart"
+#fi
+
+  _cudart_lib="cudart"
 
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA libraries and headers,

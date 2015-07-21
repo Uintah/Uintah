@@ -806,8 +806,11 @@ fi
 NVCC_CXXFLAGS="-arch=sm_$cuda_gencode "
 
 # set up the -Xcompiler flag so that NVCC can pass CXXFLAGS to host C++ comiler
+#  * don't pass c++11 flag, CUDA <=6.0 doesn't support it and we don't use it yet in any Uintah CUDA code
 for i in $CXXFLAGS; do
-  NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+  if test "$i" != "-std=c++11"; then
+    NVCC_CXXFLAGS="$NVCC_CXXFLAGS -Xcompiler $i"
+  fi
 done
 
 if test "$debug" != "no"; then

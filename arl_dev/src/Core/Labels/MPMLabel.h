@@ -104,10 +104,12 @@ namespace Uintah {
       const VarLabel* pLocalizedMPMLabel_preReloc;
       const VarLabel* pRefinedLabel;
       const VarLabel* pRefinedLabel_preReloc;
-
+      const VarLabel* pConcentrationLabel;
+      const VarLabel* pConcentrationLabel_preReloc;
+      const VarLabel* pConcPreviousLabel;
+      const VarLabel* pConcPreviousLabel_preReloc;
       const VarLabel* pFiberDirLabel;
       const VarLabel* pFiberDirLabel_preReloc;
-
       const VarLabel* pScaleFactorLabel;
       const VarLabel* pScaleFactorLabel_preReloc;
       
@@ -133,6 +135,11 @@ namespace Uintah {
       const VarLabel* gHeatFluxLabel;
       const VarLabel* gExternalHeatRateLabel;
       const VarLabel* gExternalHeatFluxLabel;
+      const VarLabel* gConcentrationLabel;
+      const VarLabel* gConcentrationNoBCLabel;
+      const VarLabel* gConcentrationRateLabel;
+      const VarLabel* gConcentrationStarLabel;
+      const VarLabel* gHydrostaticStressLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;
@@ -290,39 +297,6 @@ namespace Uintah {
       const VarLabel* czIDLabel_preReloc; 
       const VarLabel* pCellNACZIDLabel;
 
-      // For Reactive Flow
-      const VarLabel* pConcentrationGradientLabel;
-      const VarLabel* pConcentrationLabel;
-      const VarLabel* pConcentrationLabel_preReloc;
-      const VarLabel* pConcentrationCurrentLabel;
-      const VarLabel* pConcentrationPreviousLabel;
-      const VarLabel* pConcentrationPreviousLabel_preReloc;
-      const VarLabel* pdCdtLabel;
-      const VarLabel* pdCdtLabel_preReloc;
-      const VarLabel* pExternalDiffusionRateLabel;
-      const VarLabel* pExternalDiffusionRateLabel_preReloc;
-      const VarLabel* pExternalConcentrationFluxLabel;
-      const VarLabel* pExternalConcentrationFluxLabel_preReloc;
-      const VarLabel* gConcentrationRateLabel;
-      const VarLabel* gConcentrationLabel;
-      const VarLabel* gConcentrationNoBCLabel;
-      const VarLabel* gConcentrationStarLabel;
-      const VarLabel* gdCdtLabel;
-      const VarLabel* gConcentrationFluxLabel;
-      const VarLabel* gExternalDiffusionRateLabel;
-      const VarLabel* gExternalConcentrationFluxLabel;
-      const VarLabel* GConcentrationLabel;
-      const VarLabel* GConcentrationNoBCLabel;
-      const VarLabel* GExternalDiffusionRateLabel;
-      const VarLabel* GConcentrationContactDiffusionRateLabel;
-      const VarLabel* GdCdtLabel;
-      const VarLabel* GConcentrationRateLabel;
-      const VarLabel* GConcentrationStarLabel;
-      const VarLabel* dCdt_NCLabel;
-
-      const VarLabel* gConcentrationContactDiffusionRateLabel;
-      const VarLabel* gDetDeformationGradLabel;
-      const VarLabel* gMeanStressLabel;
     };
 } // End namespace Uintah
 

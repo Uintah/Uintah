@@ -3,6 +3,7 @@
 //Specific models: 
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
+#include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
 
 using namespace Uintah; 
 
@@ -149,12 +150,21 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         }
 
+      } else if ( type == "density_predictor" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 ); 
+        register_task( name, tsk ); 
+
+
       } else { 
 
         throw InvalidValue("Error: Property model not recognized.",__FILE__,__LINE__); 
 
       }
 
+      //put the tasks in a type->(task names) map
+      TypeToTaskMap::iterator iter = _type_to_tasks.find(type);
+      iter->second.push_back(name);
 
     }
   }

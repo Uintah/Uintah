@@ -197,6 +197,9 @@ MomentumDragSrc::sched_initialize( const LevelP& level, SchedulerP& sched )
   sched->addTask(tsk, level->eachPatch(), _shared_state->allArchesMaterials());
   
 }
+//---------------------------------------------------------------------------
+// Method: initialization
+//---------------------------------------------------------------------------
 void
 MomentumDragSrc::initialize( const ProcessorGroup* pc,
                             const PatchSubset* patches,
@@ -211,11 +214,11 @@ MomentumDragSrc::initialize( const ProcessorGroup* pc,
     int archIndex = 0;
     int matlIndex = _shared_state->getArchesMaterial(archIndex)->getDWIndex();
     
-    CCVariable<double> src;
+    CCVariable<Vector> src;
     
     new_dw->allocateAndPut( src, _src_label, matlIndex, patch );
     
-    src.initialize(0.0);
+    src.initialize(Vector(0.0,0.0,0.0));
     
     for (std::vector<const VarLabel*>::iterator iter = _extra_local_labels.begin(); iter != _extra_local_labels.end(); iter++){
       CCVariable<double> tempVar; 

@@ -65,7 +65,7 @@ class QMOM : public Expr::Expression<FieldT>
 //  typedef std::vector<const FieldT*> FieldTVec;
 //  FieldTVec knownMoments_;
   const Expr::TagList knownMomentsTagList_;
-  DECLARE_VECTOR_OF_FIELDS(FieldT, knownMoments_);
+  DECLARE_VECTOR_OF_FIELDS(FieldT, knownMoments_)
 
   const int nMoments_;
 

@@ -77,14 +77,16 @@ namespace Uintah {
 
   ostream& operator<<(ostream& out, const Uintah::MaterialSet& ms)
   {
-    if(&ms == 0)
+    if( &ms == 0 ) {
       out << "(null Materials)";
+    }
     else {
       out << "Matls: {";
-      for(int i=0;i< ms.size();i++){
+      for( int i = 0; i < ms.size(); i++ ) {
         const MaterialSubset* mss = ms.getSubset(i);
-        if(i != 0)
+        if( i != 0 ) {
           out << ", ";
+        }
         out << *mss;
       }
       out << "}";

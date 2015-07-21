@@ -165,11 +165,11 @@ static void account_bin(Allocator* a, AllocBin* bin, FILE* out,
         bytes_fragmented+=a->obj_maxsize(p)-p->reqsize;
         if(out){
 #  ifdef USE_TAG_LINENUM
-            fprintf(out, "%p: "UCONV" bytes (%s:%d)\n",
+            fprintf(out, "%p: " UCONV " bytes (%s:%d)\n",
                     (char*)p+sizeof(Tag)+sizeof(Sentinel),
                     (SIZET)p->reqsize, p->tag, p->linenum);
 #  else
-            fprintf(out, "%p: "UCONV" bytes (%s)\n",
+            fprintf(out, "%p: " UCONV " bytes (%s)\n",
                     (char*)p+sizeof(Tag)+sizeof(Sentinel),
                     (SIZET)p->reqsize, p->tag);
 #  endif
@@ -243,30 +243,30 @@ shutdown()
       fprintf(a->stats_out, "None\n");
 
     fprintf(a->stats_out, "statistics:\n");
-    fprintf(a->stats_out, "alloc:\t\t\t"UCONV" calls\n",(SIZET)a->nalloc);
-    fprintf(a->stats_out, "alloc:\t\t\t"UCONV" bytes\n", (SIZET)a->sizealloc);
-    fprintf(a->stats_out, "free:\t\t\t"UCONV" calls\n", (SIZET)a->nfree);
-    fprintf(a->stats_out, "free:\t\t\t"UCONV" bytes\n", (SIZET)a->sizefree);
-    fprintf(a->stats_out, "fillbin:\t\t"UCONV" calls\n", (SIZET)a->nfillbin);
-    fprintf(a->stats_out, "mmap:\t\t\t"UCONV" calls\n", (SIZET)a->nmmap);
-    fprintf(a->stats_out, "mmap:\t\t\t"UCONV" bytes\n", (SIZET)a->sizemmap);
-    fprintf(a->stats_out, "munmap:\t\t\t"UCONV" calls\n", (SIZET)a->nmunmap);
-    fprintf(a->stats_out, "munmap:\t\t\t"UCONV" bytes\n", (SIZET)a->sizemunmap);
-    fprintf(a->stats_out, "highwater alloc:\t"UCONV" bytes\n",
+    fprintf(a->stats_out, "alloc:\t\t\t" UCONV " calls\n",(SIZET)a->nalloc);
+    fprintf(a->stats_out, "alloc:\t\t\t" UCONV " bytes\n", (SIZET)a->sizealloc);
+    fprintf(a->stats_out, "free:\t\t\t" UCONV " calls\n", (SIZET)a->nfree);
+    fprintf(a->stats_out, "free:\t\t\t" UCONV " bytes\n", (SIZET)a->sizefree);
+    fprintf(a->stats_out, "fillbin:\t\t" UCONV " calls\n", (SIZET)a->nfillbin);
+    fprintf(a->stats_out, "mmap:\t\t\t" UCONV " calls\n", (SIZET)a->nmmap);
+    fprintf(a->stats_out, "mmap:\t\t\t" UCONV " bytes\n", (SIZET)a->sizemmap);
+    fprintf(a->stats_out, "munmap:\t\t\t" UCONV " calls\n", (SIZET)a->nmunmap);
+    fprintf(a->stats_out, "munmap:\t\t\t" UCONV " bytes\n", (SIZET)a->sizemunmap);
+    fprintf(a->stats_out, "highwater alloc:\t" UCONV " bytes\n",
             (SIZET)a->highwater_alloc);
-    fprintf(a->stats_out, "highwater mmap:\t\t"UCONV" bytes\n",
+    fprintf(a->stats_out, "highwater mmap:\t\t" UCONV " bytes\n",
             (SIZET)a->highwater_mmap);
     fprintf(a->stats_out, "\n");
     fprintf(a->stats_out, "breakdown of total bytes:\n");
-    fprintf(a->stats_out, "in use:\t\t\t"UCONV" bytes\n", (SIZET)bytes_inuse);
-    fprintf(a->stats_out, "free:\t\t\t"UCONV" bytes\n", (SIZET)bytes_free);
-    fprintf(a->stats_out, "fragmentation:\t\t"UCONV" bytes\n",
+    fprintf(a->stats_out, "in use:\t\t\t" UCONV " bytes\n", (SIZET)bytes_inuse);
+    fprintf(a->stats_out, "free:\t\t\t" UCONV " bytes\n", (SIZET)bytes_free);
+    fprintf(a->stats_out, "fragmentation:\t\t" UCONV " bytes\n",
             (SIZET)bytes_fragmented);
-    fprintf(a->stats_out, "left in mmap hunks:\t"UCONV"\n", (SIZET)bytes_inhunks);
-    fprintf(a->stats_out, "per object overhead:\t"UCONV" bytes\n",
+    fprintf(a->stats_out, "left in mmap hunks:\t" UCONV "\n", (SIZET)bytes_inhunks);
+    fprintf(a->stats_out, "per object overhead:\t" UCONV " bytes\n",
             (SIZET)bytes_overhead);
     fprintf(a->stats_out, "\n");
-    fprintf(a->stats_out, ""UCONV" bytes missing ("UCONV" memory objects)\n",
+    fprintf(a->stats_out, "" UCONV " bytes missing (" UCONV " memory objects)\n",
             (SIZET)a->sizealloc-(SIZET)a->sizefree, (SIZET)a->nalloc-(SIZET)a->nfree);
 
     a->unlock();
@@ -607,8 +607,8 @@ void* Allocator::alloc(size_t size, const char* tag, int linenum)
   AllocBin* obj_bin=get_bin(size);
 #  ifndef DEBUG
   if(obj_bin->maxsize < size || size < obj_bin->minsize){
-    fprintf(stderr, "maxsize: "UCONV"\n", (SIZET)obj_bin->maxsize);
-    fprintf(stderr, "size: "UCONV"\n", (SIZET)size);
+    fprintf(stderr, "maxsize: " UCONV "\n", (SIZET)obj_bin->maxsize);
+    fprintf(stderr, "size: " UCONV "\n", (SIZET)size);
     AllocError("Bins messed up...");
   }
 #  endif
@@ -677,9 +677,9 @@ void* Allocator::alloc(size_t size, const char* tag, int linenum)
 
   if(trace_out)
 #  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "A %p "UCONV" (%s:%d)\n", d, (SIZET)size, tag, linenum);
+    fprintf(trace_out, "A %p " UCONV " (%s:%d)\n", d, (SIZET)size, tag, linenum);
 #  else
-  fprintf(trace_out, "A %p "UCONV" (%s)\n", d, (SIZET)size, tag);
+  fprintf(trace_out, "A %p " UCONV " (%s)\n", d, (SIZET)size, tag);
 #  endif
 
   if(do_shutdown)
@@ -838,9 +838,9 @@ void* Allocator::alloc_big(size_t size, const char* tag, int linenum)
 
   if(trace_out)
 #  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "A %p "UCONV" (%s:%d)\n",d, (SIZET)size, tag, linenum);
+    fprintf(trace_out, "A %p " UCONV " (%s:%d)\n",d, (SIZET)size, tag, linenum);
 #  else
-  fprintf(trace_out, "A %p "UCONV" (%s)\n",d, (SIZET)size, tag);
+  fprintf(trace_out, "A %p " UCONV " (%s)\n",d, (SIZET)size, tag);
 #  endif
 
   if(do_shutdown)
@@ -888,10 +888,10 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     }
     if(trace_out)
 #  ifdef USE_TAG_LINENUM
-      fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s:%d)\n", dobj,
+      fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s:%d)\n", dobj,
               (SIZET)oldsize, dobj, (SIZET)newsize, oldobj->tag, oldobj->linenum);
 #  else
-    fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj,
+    fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s)\n", dobj,
             (SIZET)oldsize, dobj, (SIZET)newsize, oldobj->tag);
 #  endif
 
@@ -907,10 +907,10 @@ void* Allocator::realloc(void* dobj, size_t newsize)
   free(dobj);
   if(trace_out)
 #  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s:%d)\n", dobj,
+    fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s:%d)\n", dobj,
             (SIZET)oldsize, nobj, (SIZET)newsize, oldobj->tag, oldobj->linenum);
 #  else
-  fprintf(trace_out, "R %p "UCONV" %p "UCONV" (%s)\n", dobj,
+  fprintf(trace_out, "R %p " UCONV " %p " UCONV " (%s)\n", dobj,
           (SIZET)oldsize, nobj, (SIZET)newsize, oldobj->tag);
 #  endif
 
@@ -969,9 +969,9 @@ void Allocator::free(void* dobj)
   // Make sure that it is still intact...
   if(trace_out)
 #  ifdef USE_TAG_LINENUM
-    fprintf(trace_out, "F %p "UCONV" (%s:%d)\n", dobj, (SIZET)obj->reqsize, obj->tag, obj->linenum);
+    fprintf(trace_out, "F %p " UCONV " (%s:%d)\n", dobj, (SIZET)obj->reqsize, obj->tag, obj->linenum);
 #  else
-  fprintf(trace_out, "F %p "UCONV" (%s)\n", dobj, (SIZET)obj->reqsize, obj->tag);
+  fprintf(trace_out, "F %p " UCONV " (%s)\n", dobj, (SIZET)obj->reqsize, obj->tag);
 #  endif
 
   if(!lazy)
@@ -1239,7 +1239,7 @@ void Allocator::get_hunk(size_t reqsize, OSHunk*& ret_hunk, void*& ret_p)
   ret_p=hunk->curr;
   hunk->curr=(void*)((char*)hunk->curr+reqsize);
   if(default_allocator && default_allocator->trace_out)
-    fprintf(default_allocator->trace_out, "H %p %p "UCONV"\n", hunk, ret_p, (SIZET)reqsize);
+    fprintf(default_allocator->trace_out, "H %p %p " UCONV "\n", hunk, ret_p, (SIZET)reqsize);
   ret_hunk=hunk;
 }
 
@@ -1256,13 +1256,13 @@ void PrintTag(void* dobj)
 #  else
   fprintf(stderr, "tag %p: allocated by: %s\n", obj, obj->tag);
 #  endif
-  fprintf(stderr, "requested object size: "UCONV" bytes\n", (SIZET)obj->reqsize);
-  fprintf(stderr, "maximum bin size: "UCONV" bytes\n", (SIZET)obj->bin->maxsize);
-  fprintf(stderr, "range of object: %p - "UCONV"\n", dobj,
+  fprintf(stderr, "requested object size: " UCONV " bytes\n", (SIZET)obj->reqsize);
+  fprintf(stderr, "maximum bin size: " UCONV " bytes\n", (SIZET)obj->bin->maxsize);
+  fprintf(stderr, "range of object: %p - " UCONV "\n", dobj,
           (SIZET)dobj+(SIZET)obj->reqsize);
   fprintf(stderr, "range of object with overhead and sentinels: %p - %p\n",
           obj, obj+OVERHEAD);
-  fprintf(stderr, "range of hunk: "UCONV" - "UCONV"\n", (SIZET)obj->hunk->data, (SIZET)obj->hunk->data+obj->hunk->len);
+  fprintf(stderr, "range of hunk: " UCONV " - " UCONV "\n", (SIZET)obj->hunk->data, (SIZET)obj->hunk->data+obj->hunk->len);
   fprintf(stderr, "pre-sentinels: %x %x\n",
           sent1->first_word, sent1->second_word);
   if(sent1->first_word == SENT_VAL_FREE && sent1->second_word == SENT_VAL_FREE){
@@ -1435,10 +1435,10 @@ static void dump_bin(Allocator*, AllocBin* bin, FILE* fp)
 {
   for(Tag* p=bin->inuse;p!=0;p=p->next){
 #  ifdef USE_TAG_LINENUM
-    fprintf(fp, "%p "UCONV" %s:%d\n", (p+sizeof(Tag)+sizeof(Sentinel)),
+    fprintf(fp, "%p " UCONV " %s:%d\n", (p+sizeof(Tag)+sizeof(Sentinel)),
             (SIZET)p->reqsize, p->tag, p->linenum);
 #  else
-    fprintf(fp, "%p "UCONV" %s\n", (p+sizeof(Tag)+sizeof(Sentinel)),
+    fprintf(fp, "%p " UCONV " %s\n", (p+sizeof(Tag)+sizeof(Sentinel)),
             (SIZET)p->reqsize, p->tag);
 #  endif
   }

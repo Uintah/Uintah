@@ -27,74 +27,76 @@
 //#define AG_HACK  
 
 
-#include <TauProfilerForSCIRun.h>
-
-#include <Core/Grid/Level.h>
-#include <Core/Util/Handle.h>
-#include <Core/Grid/Grid.h>
-#include <Core/Grid/Patch.h>
+#include <Core/Exceptions/InvalidGrid.h>
+#include <Core/Exceptions/ProblemSetupException.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Grid/BoundaryConditions/BoundCondReader.h>
 #include <Core/Grid/Box.h>
+#include <Core/Grid/Grid.h>
+#include <Core/Grid/Level.h>
+#include <Core/Grid/Patch.h>
 #include <Core/Grid/PatchBVH/PatchBVH.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
+#include <Core/OS/ProcessInfo.h> // For Memory Check
 #include <Core/Parallel/Parallel.h>
 #include <Core/Parallel/ProcessorGroup.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
-#include <Core/Exceptions/InvalidGrid.h>
-#include <Core/Exceptions/ProblemSetupException.h>
-#include <Core/Grid/BoundaryConditions/BoundCondReader.h>
-
-#include <Core/Geometry/BBox.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Util/DebugStream.h>
-#include <Core/Util/FancyAssert.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
+#include <Core/Util/DebugStream.h>
+#include <Core/Util/FancyAssert.h>
+#include <Core/Util/Handle.h>
 #include <Core/Util/ProgressiveWarning.h>
 
 #include <TauProfilerForSCIRun.h>
 
-#include <iostream>
 #include <algorithm>
-#include <map>
 #include <cmath>
+#include <iostream>
+#include <map>
 
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-
 static AtomicCounter ids("Level ID counter",0);
-static Mutex ids_init("ID init");
+static Mutex         ids_init("ID init");
 
-static DebugStream bcout("BCTypes", false);
-static DebugStream rgtimes("RGTimes",false);
+static DebugStream   bcout("BCTypes", false);
+static DebugStream   rgtimes("RGTimes",false);
 //______________________________________________________________________
 //
-Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, 
-             int index, IntVector refinementRatio, int id /*=-1*/)
-   : grid(grid), d_anchor(anchor), d_dcell(dcell), 
-     d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
-     d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
-     d_index(index),
-     d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
-     d_refinementRatio(refinementRatio),
-     d_cachelock("Level Cache Lock")
+Level::Level(       Grid      * grid,
+              const Point     & anchor,
+              const Vector    & dcell, 
+                    int         index,
+                    IntVector   refinementRatio,
+                    int         id /* = -1 */ ) :
+  d_grid(grid), d_anchor(anchor), d_dcell(dcell), 
+  d_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
+  d_int_spatial_range(Point(DBL_MAX,DBL_MAX,DBL_MAX),Point(DBL_MIN,DBL_MIN,DBL_MIN)),
+  d_index(index),
+  d_patchDistribution(-1,-1,-1), d_periodicBoundaries(0, 0, 0), d_id(id),
+  d_refinementRatio(refinementRatio),
+  d_cachelock("Level Cache Lock")
 {
-  d_stretched = false;
-  d_each_patch    =0;
-  d_all_patches   =0;
-  d_bvh = NULL;
-  d_finalized=false;
-  d_extraCells = IntVector(0,0,0);
-  d_totalCells = 0;
+  d_stretched   = false;
+  d_each_patch  = 0;
+  d_all_patches = 0;
+  d_bvh         = NULL;
+  d_finalized   = false;
+  d_extraCells  = IntVector(0,0,0);
+  d_totalCells  = 0;
 
-  if(d_id == -1){
+  if( d_id == -1 ) {
     d_id = ids++;
-  } else if(d_id >= ids) {
+  }
+  else if(d_id >= ids) {
     ids.set(d_id+1);
-}
+  }
 }
 //______________________________________________________________________
 //
@@ -170,50 +172,55 @@ Level::const_patchIterator Level::allPatchesEnd() const
 }
 //______________________________________________________________________
 //
-Patch* Level::addPatch(const IntVector& lowIndex, 
-                       const IntVector& highIndex,
-                       const IntVector& inLowIndex, 
-                       const IntVector& inHighIndex,
-                       Grid* grid)
+
+Patch*
+Level::addPatch( const IntVector & lowIndex, 
+                 const IntVector & highIndex,
+                 const IntVector & inLowIndex, 
+                 const IntVector & inHighIndex,
+                       Grid      * grid )
 {
-    Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
-                            inHighIndex,getIndex());
-    r->setGrid(grid);
-    d_realPatches.push_back(r);
-    d_virtualAndRealPatches.push_back(r);
+  Patch* r = scinew Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex() );
+  r->setGrid(grid);
+  d_realPatches.push_back(r);
+  d_virtualAndRealPatches.push_back(r);
 
-    d_int_spatial_range.extend(r->getBox().lower());
-    d_int_spatial_range.extend(r->getBox().upper());
+  d_int_spatial_range.extend(r->getBox().lower());
+  d_int_spatial_range.extend(r->getBox().upper());
 
-    d_spatial_range.extend(r->getExtraBox().lower());
-    d_spatial_range.extend(r->getExtraBox().upper());
-    return r;
+  d_spatial_range.extend(r->getExtraBox().lower());
+  d_spatial_range.extend(r->getExtraBox().upper());
+  return r;
+}
+
+//______________________________________________________________________
+//
+
+Patch*
+Level::addPatch( const IntVector & lowIndex, 
+                 const IntVector & highIndex,
+                 const IntVector & inLowIndex, 
+                 const IntVector & inHighIndex,
+                       Grid      * grid,
+                       int         ID )
+{
+  Patch* r = scinew Patch( this, lowIndex,highIndex,inLowIndex, inHighIndex, getIndex(), ID );
+  r->setGrid(grid);
+  d_realPatches.push_back(r);
+  d_virtualAndRealPatches.push_back(r);
+
+  d_int_spatial_range.extend(r->getBox().lower());
+  d_int_spatial_range.extend(r->getBox().upper());
+
+  d_spatial_range.extend(r->getExtraBox().lower());
+  d_spatial_range.extend(r->getExtraBox().upper());
+  return r;
 }
 //______________________________________________________________________
 //
-Patch* Level::addPatch(const IntVector& lowIndex, 
-                       const IntVector& highIndex,
-                       const IntVector& inLowIndex, 
-                       const IntVector& inHighIndex,
-                       Grid* grid,
-                       int ID)
-{
-    Patch* r = scinew Patch(this, lowIndex,highIndex,inLowIndex, 
-                            inHighIndex,getIndex(),ID);
-    r->setGrid(grid);
-    d_realPatches.push_back(r);
-    d_virtualAndRealPatches.push_back(r);
 
-    d_int_spatial_range.extend(r->getBox().lower());
-    d_int_spatial_range.extend(r->getBox().upper());
-
-    d_spatial_range.extend(r->getExtraBox().lower());
-    d_spatial_range.extend(r->getExtraBox().upper());
-    return r;
-}
-//______________________________________________________________________
-//
-const Patch* Level::getPatchFromPoint(const Point& p, const bool includeExtraCells) const
+const Patch*
+Level::getPatchFromPoint( const Point& p, const bool includeExtraCells ) const
 {
   selectType patch;
   IntVector c=getCellIndex(p);
@@ -229,11 +236,12 @@ const Patch* Level::getPatchFromPoint(const Point& p, const bool includeExtraCel
 }
 //______________________________________________________________________
 //
-const Patch* Level::getPatchFromIndex(const IntVector& c, const bool includeExtraCells) const
+const Patch*
+Level::getPatchFromIndex( const IntVector& c, const bool includeExtraCells ) const
 {
   selectType patch;
   
-  //point is within the bounding box so query the bvh
+  // Point is within the bounding box so query the bvh.
   d_bvh->query(c,c+IntVector(1,1,1), patch,includeExtraCells);
 
   if(patch.size()==0){
@@ -245,13 +253,18 @@ const Patch* Level::getPatchFromIndex(const IntVector& c, const bool includeExtr
 }
 //______________________________________________________________________
 //
-int Level::numPatches() const
+
+int
+Level::numPatches() const
 {
   return (int)d_realPatches.size();
 }
+
 //______________________________________________________________________
 //
-void Level::performConsistencyCheck() const
+
+void
+Level::performConsistencyCheck() const
 {
   if(!d_finalized) {
      SCI_THROW(InvalidGrid("Consistency check cannot be performed until Level is finalized",__FILE__,__LINE__));
@@ -283,8 +296,9 @@ void Level::performConsistencyCheck() const
 
 //______________________________________________________________________
 //
-void Level::findNodeIndexRange(IntVector& lowIndex,
-                               IntVector& highIndex) const
+void
+Level::findNodeIndexRange( IntVector & lowIndex,
+                           IntVector & highIndex ) const
 {
   Vector l=(d_spatial_range.min()-d_anchor)/d_dcell;
   Vector h=(d_spatial_range.max()-d_anchor)/d_dcell+Vector(1,1,1);
@@ -337,72 +351,92 @@ long Level::totalCells() const
 
 //______________________________________________________________________
 //
-void Level::setExtraCells(const IntVector& ec)
+
+void
+Level::setExtraCells( const IntVector & ec )
 {
   d_extraCells = ec;
 }
 
 //______________________________________________________________________
 //
-GridP Level::getGrid() const
+
+GridP
+Level::getGrid() const
 {
-   return grid;
+   return d_grid;
 }
 
 //______________________________________________________________________
 //
-const LevelP& Level::getRelativeLevel(int offset) const
+
+const LevelP &
+Level::getRelativeLevel( int offset ) const
 {
-  return grid->getLevel(d_index + offset);
+  return d_grid->getLevel(d_index + offset);
 }
 
 //______________________________________________________________________
 //
-Point Level::getNodePosition(const IntVector& v) const
+Point
+Level::getNodePosition( const IntVector & v ) const
 {
-  if(d_stretched)
+  if( d_stretched ) {
     return Point(d_facePosition[0][v.x()], d_facePosition[1][v.y()], d_facePosition[2][v.z()]);
-  else
-   return d_anchor+d_dcell*v;
+  }
+  else {
+    return d_anchor+d_dcell*v;
+  }
 }
 
 //______________________________________________________________________
 //
-Point Level::getCellPosition(const IntVector& v) const
+
+Point
+Level::getCellPosition( const IntVector & v ) const
 {
-  if(d_stretched)
+  if( d_stretched ) {
     return Point((d_facePosition[0][v.x()]+d_facePosition[0][v.x()+1])*0.5,
                  (d_facePosition[1][v.y()]+d_facePosition[1][v.y()+1])*0.5,
                  (d_facePosition[2][v.z()]+d_facePosition[2][v.z()+1])*0.5);
-  else
+  }
+  else {
     return d_anchor+d_dcell*v+d_dcell*0.5;
+  }
 }
 
 //______________________________________________________________________
 //
-static int binary_search(double x, const OffsetArray1<double>& faces, int low, int high)
+
+static
+int
+binary_search( double x, const OffsetArray1<double>& faces, int low, int high )
 {
   while(high-low > 1) {
     int m = (low + high)/2;
     if(x < faces[m]){
       high = m;
-     } else {
+     }
+    else {
       low = m;
-  }
+    }
   }
   return low;
 }
 
 //______________________________________________________________________
 //
-IntVector Level::getCellIndex(const Point& p) const
+
+IntVector
+Level::getCellIndex( const Point & p ) const
 {
-  if(d_stretched){
+  if( d_stretched ) {
     int x = binary_search(p.x(), d_facePosition[0], d_facePosition[0].low(), d_facePosition[0].high());
     int y = binary_search(p.y(), d_facePosition[1], d_facePosition[1].low(), d_facePosition[1].high());
     int z = binary_search(p.z(), d_facePosition[2], d_facePosition[2].low(), d_facePosition[2].high());
     return IntVector(x, y, z);
-  } else {
+  }
+  else {
     Vector v((p-d_anchor)/d_dcell);
     return IntVector(RoundDown(v.x()), RoundDown(v.y()), RoundDown(v.z()));
   }
@@ -410,7 +444,9 @@ IntVector Level::getCellIndex(const Point& p) const
 
 //______________________________________________________________________
 //
-Point Level::positionToIndex(const Point& p) const
+
+Point
+Level::positionToIndex( const Point & p ) const
 {
   if(d_stretched){
     int x = binary_search(p.x(), d_facePosition[0], d_facePosition[0].low(), d_facePosition[0].high());
@@ -608,12 +644,13 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   BBox bbox;
   
   if (d_index > 0){
-    grid->getLevel(0)->getInteriorSpatialRange(bbox);
-  }else{
+    d_grid->getLevel(0)->getInteriorSpatialRange(bbox);
+  }
+  else {
     getInteriorSpatialRange(bbox);
   }
 
-  Box domain(bbox.min(), bbox.max());
+  Box    domain(bbox.min(), bbox.max());
   Vector vextent = positionToIndex(bbox.max()) - positionToIndex(bbox.min());
   IntVector extent((int)rint(vextent.x()), (int)rint(vextent.y()), (int)rint(vextent.z()));
 
@@ -939,12 +976,13 @@ Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
   BoundCondReader reader;
 
   reader.read( bc_ps, grid_ps, this );
-    
+
   for( patchIterator iter = d_virtualAndRealPatches.begin(); iter != d_virtualAndRealPatches.end(); iter++ ){
     Patch* patch = *iter;
     
     // If we have a lb, then only apply bcs this processors patches.
     if(lb==0 || lb->getPatchwiseProcessorAssignment(patch)==Parallel::getMPIRank()) {
+
       patch->initializeBoundaryConditions();
 
       for(Patch::FaceType face_side = Patch::startFace; face_side <= Patch::endFace; face_side=Patch::nextFace(face_side)) {
@@ -956,17 +994,22 @@ Level::assignBCS( const ProblemSpecP & grid_ps, LoadBalancer * lb )
     }
   } //end of patch iterator
 }
+
 //______________________________________________________________________
 //
-Box Level::getBox(const IntVector& l, 
-                  const IntVector& h) const
+
+Box
+Level::getBox( const IntVector & l, 
+	       const IntVector & h ) const
 {
-   return Box(getNodePosition(l), getNodePosition(h));
+  return Box(getNodePosition(l), getNodePosition(h));
 }
 
 //______________________________________________________________________
 //
-const PatchSet* Level::eachPatch() const
+
+const PatchSet*
+Level::eachPatch() const
 {
   ASSERT(d_each_patch != 0);
   return d_each_patch;
@@ -974,7 +1017,9 @@ const PatchSet* Level::eachPatch() const
 
 //______________________________________________________________________
 //
-const PatchSet* Level::allPatches() const
+
+const PatchSet*
+Level::allPatches() const
 {
   ASSERT(d_all_patches != 0);
   return d_all_patches;
@@ -982,7 +1027,9 @@ const PatchSet* Level::allPatches() const
 
 //______________________________________________________________________
 //
-const Patch* Level::selectPatchForCellIndex( const IntVector& idx) const
+
+const Patch*
+Level::selectPatchForCellIndex( const IntVector & idx ) const
 {
   selectType pv;
   IntVector i(1,1,1);
@@ -1004,20 +1051,24 @@ const Patch* Level::selectPatchForCellIndex( const IntVector& idx) const
 
 //______________________________________________________________________
 //
-const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
+
+const Patch*
+Level::selectPatchForNodeIndex( const IntVector & idx ) const
 {
   selectType pv;
-  IntVector i(1,1,1);
-  selectPatches(idx - i,idx + i,pv,false,false);
+  IntVector  i(1,1,1);
+
+  selectPatches( idx - i,idx + i, pv, false, false );
 
   if( pv.size() == 0 ){
     return 0;
-  } else {
+  }
+  else {
     selectType::iterator it;
     for( it = pv.begin(); it != pv.end(); it++) {
       if( (*it)->containsNode(idx) ) {
         return *it;
-  }
+      }
     }
   }
   return 0;
@@ -1025,45 +1076,53 @@ const Patch* Level::selectPatchForNodeIndex( const IntVector& idx) const
 
 //______________________________________________________________________
 //
-const LevelP& Level::getCoarserLevel() const
+
+const LevelP&
+Level::getCoarserLevel() const
 {
-  return getRelativeLevel(-1);
+  return getRelativeLevel( -1 );
 }
 
 //______________________________________________________________________
 //
-const LevelP& Level::getFinerLevel() const
+
+const LevelP&
+Level::getFinerLevel() const
 {
-  return getRelativeLevel(1);
+  return getRelativeLevel( 1 );
 }
 
 //______________________________________________________________________
 //
-bool Level::hasCoarserLevel() const
+
+bool
+Level::hasCoarserLevel() const
 {
   return getIndex() > 0;
 }
 
 //______________________________________________________________________
 //
-bool Level::hasFinerLevel() const
+
+bool
+Level::hasFinerLevel() const
 {
-  return getIndex() < grid->numLevels()-1;
+  return getIndex() < ( d_grid->numLevels() - 1 );
 }
 
 //______________________________________________________________________
 //
-IntVector Level::mapCellToCoarser(const IntVector& idx, int level_offset) const
+
+IntVector
+Level::mapCellToCoarser( const IntVector & idx, int level_offset ) const
 { 
   IntVector refinementRatio = d_refinementRatio;
-  while (--level_offset){
-    refinementRatio =  refinementRatio * grid->getLevel(d_index-level_offset)->d_refinementRatio; 
+  while( --level_offset ) {
+    refinementRatio =  refinementRatio * d_grid->getLevel(d_index-level_offset)->d_refinementRatio; 
   }
   IntVector ratio = idx/refinementRatio;
 
-  // If the fine cell index is negative
-  // you must add an offset to get the right
-  // coarse cell. -Todd
+  // If the fine cell index is negative you must add an offset to get the right coarse cell. -Todd
   IntVector offset(0,0,0);
   if (idx.x()< 0 && refinementRatio.x() > 1){
     offset.x((int)fmod((double)idx.x(),(double)refinementRatio.x()));
@@ -1081,10 +1140,12 @@ IntVector Level::mapCellToCoarser(const IntVector& idx, int level_offset) const
 
 //______________________________________________________________________
 //
-IntVector Level::mapCellToFiner(const IntVector& idx) const
+
+IntVector
+Level::mapCellToFiner( const IntVector & idx ) const
 {
-  IntVector r_ratio = grid->getLevel(d_index+1)->d_refinementRatio;
-  IntVector fineCell = idx*r_ratio;
+  IntVector r_ratio  = d_grid->getLevel(d_index+1)->d_refinementRatio;
+  IntVector fineCell = idx * r_ratio;
  
   IntVector offset(0,0,0);
   if (idx.x()< 0 && r_ratio.x() > 1){
@@ -1111,9 +1172,11 @@ IntVector Level::mapCellToFiner(const IntVector& idx) const
 //  Fine Node Index    40   41   42   43   44      
 //                            
 //  What is returned   10   10   10   10   11
-IntVector Level::mapNodeToCoarser(const IntVector& idx) const
+
+IntVector
+Level::mapNodeToCoarser( const IntVector & idx ) const
 {
-  return (idx+d_refinementRatio-IntVector(1,1,1))/d_refinementRatio;
+  return ( idx + d_refinementRatio - IntVector(1,1,1) ) / d_refinementRatio;
 }
 
 //______________________________________________________________________
@@ -1127,33 +1190,41 @@ IntVector Level::mapNodeToCoarser(const IntVector& idx) const
 //  Fine Node Index    40   41   42   43   44      
 //                            
 //  What is returned   40                  44
-IntVector Level::mapNodeToFiner(const IntVector& idx) const
+
+IntVector
+Level::mapNodeToFiner( const IntVector & idx ) const
 {
-  return idx*grid->getLevel(d_index+1)->d_refinementRatio;
+  return idx * d_grid->getLevel(d_index+1)->d_refinementRatio;
 }
 
 //______________________________________________________________________
 //
 // Stretched grid stuff
-void Level::getCellWidths(Grid::Axis axis, OffsetArray1<double>& widths) const
+
+void
+Level::getCellWidths( Grid::Axis axis, OffsetArray1<double>& widths ) const
 {
   const OffsetArray1<double>& faces = d_facePosition[axis];
   widths.resize(faces.low(), faces.high()-1);
   for(int i=faces.low(); i < faces.high()-1; i++) {
     widths[i] = faces[i+1] - faces[i];
-}
+  }
 }
     
 //______________________________________________________________________
 //
-void Level::getFacePositions(Grid::Axis axis, OffsetArray1<double>& faces) const
+
+void
+Level::getFacePositions( Grid::Axis axis, OffsetArray1<double> & faces ) const
 {
   faces = d_facePosition[axis];
 }
       
 //______________________________________________________________________
 //
-void Level::setStretched(Grid::Axis axis, const OffsetArray1<double>& faces)
+
+void
+Level::setStretched( Grid::Axis axis, const OffsetArray1<double> & faces )
 {
   d_facePosition[axis] = faces;
   d_stretched = true;
@@ -1161,12 +1232,17 @@ void Level::setStretched(Grid::Axis axis, const OffsetArray1<double>& faces)
 
 //______________________________________________________________________
 //
-int Level::getRefinementRatioMaxDim() const {
-  return Max(Max(d_refinementRatio.x(), d_refinementRatio.y()), d_refinementRatio.z());
+
+int
+Level::getRefinementRatioMaxDim() const
+{
+  return Max( Max(d_refinementRatio.x(), d_refinementRatio.y()), d_refinementRatio.z() );
 }
 //______________________________________________________________________
 //
+
 namespace Uintah {
+
   const Level* getLevel(const PatchSubset* subset)
   {
     ASSERT(subset->size()>0);
@@ -1198,4 +1274,19 @@ namespace Uintah {
     ASSERT(set->size()>0);
     return getLevel(set->getSubset(0));
   }
-}
+  
+//______________________________________________________________________
+//    We may need to put coutLocks around this?
+  ostream& operator<<(ostream& out, const Level& level)
+  {
+    IntVector lo, hi;
+    level.findCellIndexRange(lo,hi);
+    
+    out << "(Level " << level.getIndex()
+        << ", numPatches: " << level.numPatches()
+        << ", cellIndexRange: " << lo << ", " << hi 
+        << ", " << *(level.allPatches()) << ")";
+    return out;
+  }
+} // end namespace Uintah
+

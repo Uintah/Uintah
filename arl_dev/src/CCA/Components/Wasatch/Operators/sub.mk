@@ -36,8 +36,10 @@ SRCDIR   := CCA/Components/Wasatch/Operators
 # WARNING: If you add a file to the list of CUDA_SRCS, you must add a
 # corresponding rule at the end of this file!
 #
-CUDA_ENABLED_SRCS =       \
-        FluxLimiterInterpolant
+CUDA_ENABLED_SRCS =         \
+        UpwindInterpolant   \
+        FluxLimiterInterpolant  \
+        Extrapolant
      
 ifeq ($(HAVE_CUDA),yes)
 
@@ -56,9 +58,7 @@ else
 endif
 
 SRCS +=                                 \
-        $(SRCDIR)/Extrapolant.cc        \
-        $(SRCDIR)/Operators.cc          \
-        $(SRCDIR)/UpwindInterpolant.cc  
+        $(SRCDIR)/Operators.cc
         
 ########################################################################
 #
@@ -71,5 +71,11 @@ ifeq ($(HAVE_CUDA),yes)
 
   $(OBJTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/FluxLimiterInterpolant.cc
 	cp $< $@
-        
+
+  $(OBJTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/UpwindInterpolant.cc
+	cp $< $@
+
+  $(OBJTOP_ABS)/$(SRCDIR)/Extrapolant.cu : $(SRCTOP_ABS)/$(SRCDIR)/Extrapolant.cc
+	cp $< $@
+
 endif
