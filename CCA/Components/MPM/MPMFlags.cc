@@ -220,6 +220,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   mpm_flag_ps->get("DoExplicitHeatConduction", d_doExplicitHeatConduction);
   mpm_flag_ps->get("DoPressureStabilization", d_doPressureStabilization);
   mpm_flag_ps->get("DoThermalExpansion", d_doThermalExpansion);
+  mpm_flag_ps->get("UseGradientEnhancedVelocityProjection", d_GEVelProj);
   mpm_flag_ps->get("do_grid_reset",      d_doGridReset);
   mpm_flag_ps->get("minimum_particle_mass",    d_min_part_mass);
   mpm_flag_ps->get("minimum_subcycles_for_F",  d_min_subcycles_for_F);
@@ -417,6 +418,7 @@ MPMFlags::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement("computeNodalHeatFlux",d_computeNodalHeatFlux);
   ps->appendElement("computeScaleFactor",  d_computeScaleFactor);
   ps->appendElement("DoThermalExpansion", d_doThermalExpansion);
+  ps->appendElement("UseGradientEnhancedVelocityProjection", d_GEVelProj);
   ps->appendElement("do_grid_reset",      d_doGridReset);
   ps->appendElement("minimum_particle_mass",    d_min_part_mass);
   ps->appendElement("minimum_subcycles_for_F",  d_min_subcycles_for_F);
