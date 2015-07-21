@@ -1629,7 +1629,6 @@ bool DetailedTask::checkAllCUDAStreamsDone() const
 }
 
 void DetailedTask::setTaskGpuDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
-  printf("Setting TaskGpuDataWarehouse[%d]\n", (int)DW);
   TaskGpuDataWarehouses[DW] = TaskDW;
 }
 
@@ -1640,7 +1639,6 @@ GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(Task::WhichDW DW) {
 void DetailedTask::deleteTaskGpuDataWarehouses() {
   for (int i = 0; i < 2; i++) {
     if (TaskGpuDataWarehouses[i] != NULL) {
-      printf("Reclaiming TaskGpuDataWarehouse[%d]\n", i);
       //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
       //of the things in the GPU.  The host side GPU DWs is reponsible for
       //deallocating all the GPU resources.  The only thing we do want to clean

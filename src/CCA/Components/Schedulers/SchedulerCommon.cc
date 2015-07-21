@@ -968,7 +968,7 @@ void
 SchedulerCommon::advanceDataWarehouse( const GridP& grid,
                                              bool initialization /*=false*/ )
 {
-  schedulercommon_dbg << "advanceDataWarehouse, numDWs = " << dws.size() << '\n';
+  schedulercommon_dbg << d_myworld->myrank() << " advanceDataWarehouse, numDWs = " << dws.size() << '\n';
   ASSERT(dws.size() >= 2);
   // The last becomes last old, and the rest are new
   dws[numOldDWs - 1] = dws[dws.size() - 1];
