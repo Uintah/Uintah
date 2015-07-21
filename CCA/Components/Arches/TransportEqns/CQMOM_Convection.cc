@@ -27,9 +27,10 @@ d_fieldLabels(fieldLabels)
 
 CQMOM_Convection::~CQMOM_Convection()
 {
-  //NOTE:destory extra var labels if needed
-  if ( partVel )
+  if ( partVel ) {
     delete _opr;
+    VarLabel::destroy(d_wallIntegerLabel);
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
