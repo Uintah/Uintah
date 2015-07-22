@@ -390,7 +390,9 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
             epVec[0] = epW; epVec[1] = 1.0; epVec[2] = epW;
           }
           for ( int i = 0; i < nNodes; i++ ) {
-            _opr->wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+            int tempIndex;
+            tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+            _opr->wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
                           volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
                           faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec);
             for (int m = 0; m < M; m++ ) {
@@ -467,7 +469,9 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
             epVec[0] = 1.0; epVec[1] = epW; epVec[2] = epW;
           }
           for ( int i = 0; i < nNodes; i++ ) {
-            _opr->wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+            int tempIndex;
+            tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+            _opr->wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
                           volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
                           faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec );
             for (int m = 0; m < M; m++ ) {
@@ -675,7 +679,9 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
               epVec[0] = epW; epVec[1] = 1.0; epVec[2] = epW;
             }
             for ( int i = 0; i < nNodes; i++ ) {
-              _opr->bc_wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+              int tempIndex;
+              tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+              _opr->bc_wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
                                volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
                                faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec, faceIsBoundary);
               for (int m = 0; m < M; m++ ) {
@@ -749,7 +755,9 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
               epVec[0] = 1.0; epVec[1] = epW; epVec[2] = epW;
             }
             for ( int i = 0; i < nNodes; i++ ) {
-              _opr->bc_wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+              int tempIndex;
+              tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+              _opr->bc_wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
                               volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
                               faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec, faceIsBoundary);
               for (int m = 0; m < M; m++ ) {
