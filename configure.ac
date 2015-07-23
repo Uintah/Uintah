@@ -3793,19 +3793,12 @@ int main(int argc, char **argv) {
 }
 EOF
 
-##-----------------------------------------------------------------------------
-## Static linking of the cudart_static lib is not working on Titan due
-## to the current CUDA Toolkit version, 5.5. Once Titan is upgraded to
-## CUDA 6.5, we can then use cudart_static in static builds
-##-----------------------------------------------------------------------------
-# use different set of libs if doing a static build
-#if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-#	_cudart_lib="cudart_static dl pthread rt"
-#else
-#	_cudart_lib="cudart"
-#fi
-
-  _cudart_lib="cudart"
+# for a static build, use the static CUDA runtime lib
+if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+	_cudart_lib="cudart_static dl pthread rt"
+else
+	_cudart_lib="cudart"
+fi
 
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA libraries and headers,
