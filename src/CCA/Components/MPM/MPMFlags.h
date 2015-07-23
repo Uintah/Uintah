@@ -94,7 +94,6 @@ namespace Uintah {
     bool        d_doTransientImplicitHeatConduction;
     bool        d_doExplicitHeatConduction;
     bool        d_doPressureStabilization;
-    bool        d_doDefGradAveraging;      //Average deformation gradients within a cell
     bool        d_computeNodalHeatFlux;  // compute the auxilary nodal heat flux
     bool        d_computeScaleFactor;    // compute the scale factor for viz 
     bool        d_doGridReset;   // Default is true, standard MPM
@@ -118,10 +117,6 @@ namespace Uintah {
     std::string    d_scalarDiffusion_type;  // for diffusion component found in ReactiveFlow
     //********** End Reactive Flow Section *********************
     
-    bool		d_computeNodalConcentrationFlux;	// compute the auxiliary nodal concentration flux
-    bool        d_doImplicitConcentrationDiffusion;
-    bool        d_doExplicitConcentrationDiffusion;
-
     // flags for turning on/off the reduction variable calculations
     struct reductionVars{
      bool mass;

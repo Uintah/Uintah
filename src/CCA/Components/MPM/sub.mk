@@ -60,7 +60,6 @@ SUBDIRS := \
 	$(SRCDIR)/ParticleCreator   \
 	$(SRCDIR)/CohesiveZone      \
 	$(SRCDIR)/HeatConduction    \
-	$(SRCDIR)/ReactiveFlow    \
 	$(SRCDIR)/MMS               \
 	$(SRCDIR)/ReactionDiffusion
 

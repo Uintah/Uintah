@@ -52,7 +52,6 @@ class CZMaterial;
 class ArchesMaterial; 
 class WasatchMaterial;
 class MDMaterial;
-class FVMMaterial;
 class SimpleMaterial;
 class Level;
 
@@ -127,8 +126,6 @@ public:
   void registerWasatchMaterial(WasatchMaterial*,unsigned int index);
   void registerMDMaterial(MDMaterial*);
   void registerMDMaterial(MDMaterial*,unsigned int index);
-  void registerFVMMaterial(FVMMaterial*);
-  void registerFVMMaterial(FVMMaterial*,unsigned int index);
 
   int getNumMatls() const {
     return (int)matls.size();
@@ -150,9 +147,6 @@ public:
   }
   int getNumMDMatls() const {
     return (int)md_matls.size();
-  }
-  int getNumFVMMatls() const {
-    return (int)fvm_matls.size();
   }
   MaterialSubset* getAllInOneMatl() {
     return allInOneMatl;
@@ -178,9 +172,6 @@ public:
   MDMaterial* getMDMaterial(int idx) const {
     return md_matls[idx];
   }
-  FVMMaterial* getFVMMaterial(int idx) const {
-    return fvm_matls[idx];
-  }
 
   inline void setParticleGhostLayer(Ghost::GhostType type, int ngc) {
     particle_ghost_type = type;
@@ -199,7 +190,6 @@ public:
   const MaterialSet* allICEMaterials() const;
   const MaterialSet* allWasatchMaterials() const;
   const MaterialSet* allMDMaterials() const;
-  const MaterialSet* allFVMMaterials() const;
   const MaterialSet* allMaterials() const;
   const MaterialSet* originalAllMaterials() const;
   const MaterialSubset* refineFlagMaterials() const;
@@ -310,7 +300,6 @@ private:
   std::vector<ICEMaterial*>     ice_matls;
   std::vector<WasatchMaterial*> wasatch_matls;
   std::vector<MDMaterial*>      md_matls;
-  std::vector<FVMMaterial*>     fvm_matls;
   std::vector<SimpleMaterial*>  simple_matls;
 
   //! for carry over vars in Switcher
@@ -333,7 +322,6 @@ private:
   MaterialSet    * all_wasatch_matls;  
   MaterialSet    * all_arches_matls;
   MaterialSet    * all_md_matls;
-  MaterialSet    * all_fvm_matls;
   MaterialSet    * all_matls;
 
   // keep track of the original materials if you switch

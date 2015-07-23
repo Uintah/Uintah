@@ -74,7 +74,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
 
   d_artificialDampCoeff = 0.0;
   d_forceIncrementFactor = 1.0;
-  d_interpolator = scinew LinearInterpolator(); 
+  d_interpolator = new LinearInterpolator();
   d_do_contact_friction = false;
   d_addFrictionWork = 0.0;  // don't do frictional heating by default
 
@@ -99,7 +99,7 @@ MPMFlags::MPMFlags(const ProcessorGroup* myworld)
   d_use_momentum_form = false;
   d_myworld = myworld;
   
-  d_reductionVars = scinew reductionVars();
+  d_reductionVars = new reductionVars();
   d_reductionVars->mass             = false;
   d_reductionVars->momentum         = false;
   d_reductionVars->thermalEnergy    = false;
@@ -273,12 +273,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
       if(labelName["label"] == "g.HeatFlux"){
         d_computeNodalHeatFlux = true;
       }
-
-      // for ConcentrationDiffusion, set to true if g.ConcentrationFlux
-
-      if(labelName["labal"] == "g.ConcentrationFlux"){
-    	  d_computeNodalConcentrationFlux = true;
-      }
       if(labelName["label"] == "p.scalefactor"){
         d_computeScaleFactor = true;
       }
@@ -301,26 +295,25 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
   }
   // restart problem spec
   mpm_flag_ps->get("computeNodalHeatFlux",d_computeNodalHeatFlux);
-  mpm_flag_ps->get("computeNodalConcentrationFlux",d_computeNodalConcentrationFlux);
   mpm_flag_ps->get("computeScaleFactor",  d_computeScaleFactor);
   
   delete d_interpolator;
 
   if(d_interpolator_type=="linear"){
     if(d_axisymmetric){
-      d_interpolator = scinew AxiLinearInterpolator();
+      d_interpolator = new AxiLinearInterpolator();
     } else{
-      d_interpolator = scinew LinearInterpolator();
+      d_interpolator = new LinearInterpolator();
     }
   } else if(d_interpolator_type=="gimp"){
     if(d_axisymmetric){
-      d_interpolator = scinew AxiGIMPInterpolator();
+      d_interpolator = new AxiGIMPInterpolator();
     } else{
-      d_interpolator = scinew GIMPInterpolator();
+      d_interpolator = new GIMPInterpolator();
     }
   } else if(d_interpolator_type=="3rdorderBS"){
     if(!d_axisymmetric){
-      d_interpolator = scinew TOBSplineInterpolator();
+      d_interpolator = new TOBSplineInterpolator();
     } else{
       ostringstream warn;
       warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
@@ -329,7 +322,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     }
   } else if(d_interpolator_type=="4thorderBS"){
     if(!d_axisymmetric){
-      d_interpolator = scinew BSplineInterpolator();
+      d_interpolator = new BSplineInterpolator();
     } else{
       ostringstream warn;
       warn << "ERROR:MPM: invalid interpolation type ("<<d_interpolator_type << ")"
@@ -338,16 +331,16 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps, Output* dataArchive)
     }
   } else if(d_interpolator_type=="cpdi"){
     if(d_axisymmetric){
-      d_interpolator = scinew axiCpdiInterpolator();
+      d_interpolator = new axiCpdiInterpolator();
     } else{
-      d_interpolator = scinew cpdiInterpolator();
+      d_interpolator = new cpdiInterpolator();
       d_interpolator->setLcrit(d_cpdi_lcrit);
     }
   } else if(d_interpolator_type=="cpti"){
     if(d_axisymmetric){
-      d_interpolator = scinew axiCptiInterpolator();
+      d_interpolator = new axiCptiInterpolator();
     } else{
-      d_interpolator = scinew cptiInterpolator();
+      d_interpolator = new cptiInterpolator();
       d_interpolator->setLcrit(d_cpdi_lcrit);
     }
   }
