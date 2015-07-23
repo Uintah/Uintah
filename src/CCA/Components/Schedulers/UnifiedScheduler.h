@@ -161,7 +161,7 @@ class UnifiedScheduler : public MPIScheduler  {
         OnDemandDataWarehouse* old_dw,
         const DetailedDep* dep,
         LoadBalancer* lb,
-        DeviceGhostCells::Destination dest);
+        GpuUtilities::DeviceVarDestination dest);
 
     void copyGpuInternalDependencies(DetailedTask * task, int iteration, int t_id);
 

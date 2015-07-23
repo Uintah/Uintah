@@ -28,6 +28,7 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
     const Patch* destPatchPointer,
     int matlIndx,
     int levelIndx,
+    bool destForeign,
     IntVector low,
     IntVector high,
     int xstride,
@@ -37,12 +38,13 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
     int fromResource,  //fromNode
     int toResource,    //toNode, needed when preparing contiguous arrays to send off host for MPI
     Task::WhichDW dwIndex,
-    DeviceGhostCells::Destination dest) {
+    GpuUtilities::DeviceVarDestination dest) {
   this->label = label;
   this->sourcePatchPointer = sourcePatchPointer;
   this->destPatchPointer = destPatchPointer;
   this->matlIndx = matlIndx;
   this->levelIndx = levelIndx;
+  this->destForeign = destForeign,
   this->low = low;
   this->high = high;
   this->xstride = xstride;
@@ -66,6 +68,7 @@ void DeviceGhostCells::add(const VarLabel* label,
           const Patch* destPatchPointer,
           int matlIndx,
           int levelIndx,
+          bool destForeign,
           IntVector low,
           IntVector high,
           int xstride,
@@ -75,12 +78,12 @@ void DeviceGhostCells::add(const VarLabel* label,
           int fromResource,  //fromNode
           int toResource,
           Task::WhichDW dwIndex,
-          Destination dest) {   //toNode, needed when preparing contiguous arrays to send off host for MPI
+          GpuUtilities::DeviceVarDestination dest) {   //toNode, needed when preparing contiguous arrays to send off host for MPI
 
   //DeviceGhostCellsInfo::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), destPatchPointer->getID(), matlIndx, levelIndx, dwIndex);
   //if (vars.find(lpmld) == vars.end()) {
       totalGhostCellCopies[dwIndex] += 1;
-      DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx,
+      DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx, destForeign,
                                  low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
                                  fromResource, toResource, dwIndex, dest);
   //    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGhostCellsInfo>::value_type( lpmld, tmp ) );
@@ -125,6 +128,10 @@ int DeviceGhostCells::getLevelIndx(int index) const {
   return vars.at(index).levelIndx;
 }
 
+bool DeviceGhostCells::getDestForeign(int index) const {
+  return vars.at(index).destForeign;
+}
+
 const Patch* DeviceGhostCells::getSourcePatchPointer(int index) const {
   return vars.at(index).sourcePatchPointer;
 }
@@ -160,7 +167,7 @@ unsigned int DeviceGhostCells::getNumGhostCellCopies(Task::WhichDW dwIndex) cons
   return totalGhostCellCopies[dwIndex];
 }
 
-DeviceGhostCells::Destination DeviceGhostCells::getDestination(int index) const {
+GpuUtilities::DeviceVarDestination DeviceGhostCells::getDestination(int index) const {
   return vars.at(index).dest;
 }
 
