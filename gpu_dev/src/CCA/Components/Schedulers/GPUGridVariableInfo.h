@@ -12,46 +12,65 @@
 using namespace std;
 using namespace Uintah;
 
-
-class DeviceGridVariableInfo {
+class GpuUtilities {
 public:
-
-  struct LabelPatchMatlLevelDw {
+  struct LabelPatchMatlLevelForeignDw {
     std::string     label;
     int        patchID;
     int        matlIndx;
     int        levelIndx;
+    bool       foreign;
     int        dataWarehouse;
-    LabelPatchMatlLevelDw(const char * label, int patchID, int matlIndx, int levelIndx, int dataWarehouse) {
+    LabelPatchMatlLevelForeignDw(const char * label, int patchID, int matlIndx, int levelIndx, bool foreign, int dataWarehouse) {
       this->label = label;
       this->patchID = patchID;
       this->matlIndx = matlIndx;
       this->levelIndx = levelIndx;
+      this->foreign = foreign;
       this->dataWarehouse = dataWarehouse;
     }
     //This is so it can be used in an STL map
-    bool operator<(const LabelPatchMatlLevelDw& right) const {
+    bool operator<(const LabelPatchMatlLevelForeignDw& right) const {
       if (this->label < right.label) {
         return true;
       } else if (this->label == right.label && (this->patchID < right.patchID)) {
         return true;
       } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx < right.matlIndx)) {
         return true;
-      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx < right.levelIndx)) {
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx < right.levelIndx)) {
         return true;
-      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx == right.levelIndx) && (this->dataWarehouse < right.dataWarehouse)) {
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx == right.levelIndx) && (this->foreign < foreign)) {
+        return true;
+      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx == right.levelIndx) && (this->foreign == foreign) && (this->dataWarehouse < right.dataWarehouse)) {
         return true;
       } else {
         return false;
       }
-
     }
   };
+
+  enum DeviceVarDestination {
+    sameDeviceSameMpiRank = 0,
+    anotherDeviceSameMpiRank = 1,
+    anotherMpiRank = 2,
+    unknown = 3
+  };
+
+  static void assignPatchesToGpus(const GridP& grid);
+  static int getGpuIndexForPatch(const Patch* patch);
+
+};
+
+class DeviceGridVariableInfo {
+public:
 
   DeviceGridVariableInfo() {}
 
   DeviceGridVariableInfo(Variable* var,
-            bool copyHostDataToDevice,
+            GpuUtilities::DeviceVarDestination dest,
             bool foreign,
             IntVector sizeVector,
             size_t sizeOfDataType,
@@ -67,7 +86,7 @@ public:
 
   //For PerPatch vars
   DeviceGridVariableInfo(Variable* var,
-            bool copyHostDataToDevice,
+            GpuUtilities::DeviceVarDestination dest,
             size_t sizeOfDataType,
             int matlIndx,
             int levelIndx,
@@ -75,6 +94,20 @@ public:
             const Task::Dependency* dep,
             int whichGPU);
 
+  bool operator==(DeviceGridVariableInfo& rhs) {
+    return (this->sizeVector == rhs.sizeVector
+            && this->sizeOfDataType == rhs.sizeOfDataType
+            && this->varMemSize == rhs.varMemSize
+            && this->offset == rhs.offset
+            && this->matlIndx == rhs.matlIndx
+            && this->levelIndx == rhs.levelIndx
+            && this->patchPointer == rhs.patchPointer
+            && this->gtype == rhs.gtype
+            && this->numGhostCells == rhs.numGhostCells
+            && this->whichGPU == rhs.whichGPU
+            && this->dest == rhs.dest
+            && this->foreign == rhs.foreign);
+  }
 
   IntVector sizeVector;
   size_t sizeOfDataType;
@@ -82,14 +115,14 @@ public:
   IntVector offset;
   int matlIndx;
   int levelIndx;
+  bool foreign;
   const Patch* patchPointer;
   const Task::Dependency* dep;
   Ghost::GhostType gtype;
   int numGhostCells;
   int whichGPU;
   Variable* var;
-  bool copyHostDataToDevice;
-  bool foreign;
+  GpuUtilities::DeviceVarDestination dest;
 };
 
 
@@ -101,6 +134,7 @@ public:
   void add(const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
+            bool foreign,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -110,8 +144,7 @@ public:
             int numGhostCells,
             int whichGPU,
             Variable* var,
-            bool copyHostDataToDevice,
-            bool foreign);
+            GpuUtilities::DeviceVarDestination dest);
 
   //For PerPatch vars.  They don't use ghost cells
   void add(const Patch* patchPointer,
@@ -122,12 +155,22 @@ public:
             const Task::Dependency* dep,
             int whichGPU,
             Variable* var,
-            bool copyHostDataToDevice);
+            GpuUtilities::DeviceVarDestination dest);
+
+  bool alreadyExists(const VarLabel* label,
+            const Patch* patchPointer,
+            int matlIndx,
+            int levelIndx,
+            bool foreign,
+            IntVector low,
+            IntVector high,
+            int dataWarehouse);
 
   //For task vars.
   void addTaskGpuDWVar(const Patch* patchPointer,
               int matlIndx,
               int levelIndx,
+              bool foreign,
               size_t varMemSize,
               const Task::Dependency* dep,
               int whichGPU);
@@ -137,6 +180,7 @@ public:
           const Patch* patch,
           const int matlIndx,
           const int levelIndx,
+          const bool foreign,
           const int dataWarehouseIndex) const;
 
   size_t getTotalSize();
@@ -149,7 +193,7 @@ public:
   unsigned int getTotalMaterials(int DWIndex) const;
   unsigned int getTotalLevels(int DWIndex) const;
 
-  std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>& getMap() {
+  std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo>& getMap() {
     return vars;
   }
 
@@ -159,7 +203,7 @@ private:
   size_t totalSize;
   size_t totalSizeForDataWarehouse[Task::TotalDWs];
 
-  std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo> vars; //This map acts essentially contains objects
+  std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo> vars; //This map acts essentially contains objects
                         //which are first queued up, and then processed in a group.  These DeviceGridVariableInfo objects
                         //can 1) Tell the host-side GPU DW what variables need to be created on the GPU and what copies need
                         //to be made host to deivce.  2) Tell a task GPU DW which variables it needs to know about from
@@ -175,14 +219,7 @@ private:
 
 };
 
-class GpuUtilities {
-public:
 
-
-  static void assignPatchesToGpus(const GridP& grid);
-  static int getGpuIndexForPatch(const Patch* patch);
-
-};
 
 static std::map<const Patch *, int> patchAcceleratorLocation;
 static unsigned int currentAcceleratorCounter;

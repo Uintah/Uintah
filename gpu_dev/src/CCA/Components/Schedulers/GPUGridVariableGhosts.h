@@ -17,44 +17,6 @@ class DeviceGhostCellsInfo;
 class DeviceGhostCells {
 public:
 
-  enum Destination {
-    sameDeviceSameMpiRank = 0,
-    anotherDeviceSameMpiRank = 1,
-    anotherMpiRank = 2
-  };
-
-  struct LabelPatchMatlLevelDw {
-    std::string     label;
-    int        patchID;
-    int        matlIndx;
-    int        levelIndx;
-    int        dataWarehouse;
-    LabelPatchMatlLevelDw(const char * label, int patchID, int matlIndx, int levelIndx, int dataWarehouse) {
-      this->label = label;
-      this->patchID = patchID;
-      this->matlIndx = matlIndx;
-      this->levelIndx = levelIndx;
-      this->dataWarehouse = dataWarehouse;
-    }
-    //This so it can be used in an STL map
-    bool operator<(const LabelPatchMatlLevelDw& right) const {
-      if (this->label < right.label) {
-        return true;
-      } else if (this->label == right.label && (this->patchID < right.patchID)) {
-        return true;
-      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx < right.matlIndx)) {
-        return true;
-      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx < right.levelIndx)) {
-        return true;
-      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx) && (this->levelIndx == right.levelIndx) && (this->dataWarehouse < right.dataWarehouse)) {
-        return true;
-      } else {
-        return false;
-      }
-
-    }
-  };
-
   DeviceGhostCells();
 
   void add(const VarLabel* label,
@@ -62,6 +24,7 @@ public:
       const Patch* destPatchPointer,
       int matlIndx,
       int levelIndx,
+      bool destForeign,
       IntVector low,
       IntVector high,
       int xstride,
@@ -71,7 +34,7 @@ public:
       int fromResource,  //fromNode
       int toResource,
       Task::WhichDW dwIndex,
-      Destination dest);    //toNode, needed when preparing contiguous arrays to send off host for MPI
+      GpuUtilities::DeviceVarDestination dest);    //toNode, needed when preparing contiguous arrays to send off host for MPI
 
   set<int>& getDestinationDevices();
 
@@ -84,6 +47,8 @@ public:
   int getMatlIndx(int index) const;
 
   int getLevelIndx(int index) const;
+
+  bool getDestForeign(int index) const;
 
   const Patch* getSourcePatchPointer(int index) const;
 
@@ -103,7 +68,7 @@ public:
 
   unsigned int getNumGhostCellCopies(Task::WhichDW dwIndex) const;
 
-  Destination getDestination(int index) const;
+  GpuUtilities::DeviceVarDestination getDestination(int index) const;
 
 private:
   //std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo> vars;
@@ -120,6 +85,7 @@ public:
       const Patch* destPatchPointer,
       int matlIndx,
       int levelIndx,
+      bool destForeign,
       IntVector low,
       IntVector high,
       int xstride,
@@ -129,12 +95,14 @@ public:
       int fromResource,  //fromNode
       int toResource,    //toNode, needed when preparing contiguous arrays to send off host for MPI
       Task::WhichDW dwIndex,
-      DeviceGhostCells::Destination dest);
+      GpuUtilities::DeviceVarDestination dest);
+
   const VarLabel* label;
   const Patch* sourcePatchPointer;
   const Patch* destPatchPointer;
   int matlIndx;
   int levelIndx;
+  bool destForeign;
   IntVector low;
   IntVector high;
   int xstride;
@@ -144,7 +112,7 @@ public:
   int fromResource;  //fromNode
   int toResource;    //toNode, needed when preparing contiguous arrays to send off host for MPI
   Task::WhichDW dwIndex;
-  DeviceGhostCells::Destination dest;
+  GpuUtilities::DeviceVarDestination dest;
 };
 
 

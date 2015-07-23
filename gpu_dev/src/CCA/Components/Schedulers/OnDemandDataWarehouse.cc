@@ -484,7 +484,7 @@ OnDemandDataWarehouse::createGPUPerPatch(size_t sizeOfDataType)
 }
 
 void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask, int numDevices) {
-
+/*
   //TODO: Needs level support
   bool * GpuDwModified = new bool[numDevices];
 
@@ -697,6 +697,7 @@ void OnDemandDataWarehouse::copyGPUGhostCellsBetweenDevices(DetailedTask* dtask,
   delete[] GpuDwModified;
   delete[] streams;
   delete[] tempGhostCellsAllDevices;
+*/
 }
 
 #endif
@@ -793,99 +794,8 @@ OnDemandDataWarehouse::sendMPI(       DependencyBatch*       batch,
       }
       GridVariableBase* var;
       var = dynamic_cast<GridVariableBase*>( d_varDB.get( label, matlIndex, patch ) );
-#ifdef HAVE_CUDA
-      /*
-      //Overall goal here is to determine which data needed for ghost cells come from the GPU
-      //Then copy that data from the GPU to the CPU, and store it in the CPU's datawarehouse.
-      //Then it can be treated within the rest of the engine, sending it out.
-      //This does not worry about how ghost cells are managing by the receiving task.
-      //That is currently handled in the unified scheduler which will leave  the data on the CPU
-      //if it's a CPU task or copy it into the GPU if it's a GPU task.
-      //This code does *not* currently handle direct GPU to GPU communication.
-
-
-
-      bool fromGPU = false;
-      bool toGPU = false;
-      //figure out if the patch data is on the GPU or the CPU.
-      //There are at least four scenarios here, GPU->GPU, GPU->CPU, CPU->GPU, and CPU->CPU
-      //Unhandled scenario:  A task needs ghost cell data in the CPU *and* GPU.  Seems rare.
-
-      int index = GpuUtilities::getGpuIndexForPatch(patch);
-      GPUDataWarehouse* gpudw = NULL;
-      if (index != -1) {
-        gpudw = getGPUDW(index);
-        //TODO: Remove entirely, they should be copied out of the GPU and handled in the regular MPI code
-        if (!gpudw->getValidOnCPU(label->d_name.c_str(), patch->getID(), matlIndex, 0) &&
-             gpudw->getValidOnGPU(label->d_name.c_str(), patch->getID(), matlIndex, 0)) {
-          //If we have record of it on the GPU, make an assumption that the data is on the GPU.
-          fromGPU = true;
-        }
-      } else {
-        //error
-      }
-
-
-      DetailedTask* frontTask = batch->toTasks.front();
-      if (frontTask->getTask()->usesDevice()) {
-        //The above tells us that it going to a GPU.
-        //For now, when the receiving end calls getGridVar, it will piece together
-        //the ghost cells, and move it into the GPU if needed.
-        //Therefore, we don't at this moment need to know if it's going to a GPU.
-        //But in the future, if we can manage direct GPU->GPU communication avoiding
-        //the CPU then this is important to know
-        toGPU = true;
-      }
-      printf("fromGPU is %d and toGPU is %d\n", fromGPU, toGPU);
-      if (fromGPU) {
-        //TODO: Replace all of this.
-
-        //Create a host var to hold the GPU ghost cells.
-        GridVariableBase* tempGhostvar = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
-        tempGhostvar->allocate(dep->low, dep->high);
-        //Previously we made sure the ghost cell data is a contiguous array on the GPU.
-        //Here we will copy that data from the GPU to the CPU.
-        //Note: In order to make *GPU context aware* MPI work, the receiving end will have had to prepare
-        //space in GPU memory to receive such ghost cell data, *and* that address information
-        //will have to be known among the sending processes.  So for now, do it the slower, manual way.
-        IntVector host_low, host_high, host_offset, host_size, host_strides;
-        var->getSizes(host_low, host_high, host_offset, host_size, host_strides);
-        gpudw->copyTempGhostCellsToHostVar(tempGhostvar->getBasePointer(),
-                                       make_int3(dep->low.x(), dep->low.y(), dep->low.z()),
-                                       make_int3(dep->high.x(), dep->high.y(), dep->high.z()),
-                                       label->d_name.c_str(),
-                                       patch->getID(),
-                                       matlIndex,
-                                       0);
-        //Test data:
-        //double* tmp = (double*)tempGhostvar->getBasePointer();
-        //for (int i = 0; i < 101 * 101; i++) {
-        //   tmp[i] = (double)i;
-        //}
-
-        //I only need this var to live long enough to have the MPI_Send complete, then
-        //it cleans it up for us.
-        //Will setting it to foreign properly accomplish this?
-        tempGhostvar->setForeign();
-        d_lock.writeLock();
-        d_varDB.putForeign(label, matlIndex, patch, tempGhostvar, d_scheduler->isCopyDataTimestep()); //put new var in data warehouse
-        d_lock.writeUnlock();
-        //send it all
-        tempGhostvar->getMPIBuffer(buffer, dep->low, dep->high);
-        buffer.addSendlist(tempGhostvar->getRefCounted());
-        */
-        //Data comes from a CPU. Do it the normal way
-
-      if (false) {
-      } else {
-
-#endif
-        //Data comes from a CPU. Do it the normal way
       var->getMPIBuffer( buffer, dep->low, dep->high );
       buffer.addSendlist( var->getRefCounted() );
-#ifdef HAVE_CUDA
-      }
-#endif
     }
       break;
     default :

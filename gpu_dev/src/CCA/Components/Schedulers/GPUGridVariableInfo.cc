@@ -26,7 +26,7 @@
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
-            bool copyHostDataToDevice,
+            GpuUtilities::DeviceVarDestination dest,
             bool foreign,
             IntVector sizeVector,
             size_t sizeOfDataType,
@@ -40,7 +40,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             int numGhostCells,
             int whichGPU) {
   this->var = var;
-  this->copyHostDataToDevice = copyHostDataToDevice;
+  this->dest = dest;
   this->foreign = foreign;
   this->sizeVector = sizeVector;
   this->sizeOfDataType = sizeOfDataType;
@@ -56,7 +56,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
 }
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
-            bool copyHostDataToDevice,
+            GpuUtilities::DeviceVarDestination dest,
             size_t sizeOfDataType,
             int matlIndx,
             int levelIndx,
@@ -64,7 +64,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             const Task::Dependency* dep,
             int whichGPU) {
   this->var = var;
-  this->copyHostDataToDevice = copyHostDataToDevice;
+  this->dest = dest;
   this->sizeOfDataType = sizeOfDataType;
   this->varMemSize = 0;
   this->matlIndx = matlIndx;
@@ -72,8 +72,9 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
   this->patchPointer = patchPointer;
   this->dep = dep;
   this->whichGPU = whichGPU;
+  this->numGhostCells = 0;
   this->foreign = false;
-  this->copyHostDataToDevice = true;
+  this->dest = GpuUtilities::sameDeviceSameMpiRank;
 }
 
 
@@ -90,6 +91,7 @@ DeviceGridVariables::DeviceGridVariables() {
 void DeviceGridVariables::add(const Patch* patchPointer,
           int matlIndx,
           int levelIndx,
+          bool foreign,
           IntVector sizeVector,
           size_t varMemSize,
           size_t sizeOfDataType,
@@ -99,26 +101,26 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           int numGhostCells,
           int whichGPU,
           Variable* var,
-          bool copyHostDataToDevice,
-          bool foreign) {
+          GpuUtilities::DeviceVarDestination dest) {
 
-  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
-  if (vars.find(lpmld) == vars.end()) {
+  GpuUtilities::LabelPatchMatlLevelForeignDw lpmlfd(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, foreign, dep->mapDataWarehouse());
+  std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo>::iterator it = vars.find(lpmlfd);
+  DeviceGridVariableInfo tmp(var, dest, foreign, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
+
+  if (it == vars.end()) {
     totalVars[dep->mapDataWarehouse()] += 1;
 
     //contiguous array calculations
     totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
     totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-    DeviceGridVariableInfo tmp(var, copyHostDataToDevice, foreign, sizeVector, sizeOfDataType, varMemSize, offset, matlIndx, levelIndx, patchPointer, dep, gtype, numGhostCells, whichGPU);
-    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
-  } else {
-
+    vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo>::value_type( lpmlfd, tmp ) );
+  } else if (!(it->second == tmp)) {
     //Merge sizeVector into what we've got.
-    //Don't add the same device var twice.
-    printf("ERROR:\n This preparation queue already added a variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
-    exit(-1);
-  }
+     //Don't add the same device var twice.
+     printf("ERROR:\n This preparation queue already added a variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
+     exit(-1);
 
+  } //else { This deviceVars is the exact same, so just let it get reused.
 
 }
 
@@ -133,16 +135,16 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           const Task::Dependency* dep,
           int whichGPU,
           Variable* var,
-          bool copyHostDataToDevice) {
-  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
-  if (vars.find(lpmld) == vars.end()) {
+          GpuUtilities::DeviceVarDestination dest) {
+  GpuUtilities::LabelPatchMatlLevelForeignDw lpmlfd(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, false, dep->mapDataWarehouse());
+  if (vars.find(lpmlfd) == vars.end()) {
     totalVars[dep->mapDataWarehouse()] += 1;
 
     //contiguous array calculations
     totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
     totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-    DeviceGridVariableInfo tmp(var, copyHostDataToDevice, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
-    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
+    DeviceGridVariableInfo tmp(var, dest, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo>::value_type( lpmlfd, tmp ) );
   } else {
     //Don't add the same device var twice.
     printf("ERROR:\n This preparation queue already added a variable for label %s patch %d matl %d level %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx);
@@ -150,20 +152,41 @@ void DeviceGridVariables::add(const Patch* patchPointer,
   }
 }
 
+bool DeviceGridVariables::alreadyExists(const VarLabel* label,
+                                       const Patch* patchPointer,
+                                       int matlIndx,
+                                       int levelIndx,
+                                       bool foreign,
+                                       IntVector low,
+                                       IntVector size,
+                                       int dataWarehouse) {
+  GpuUtilities::LabelPatchMatlLevelForeignDw lpmlfd(label->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, foreign, dataWarehouse);
+  std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo>::iterator it = vars.find(lpmlfd);
+  if (it == vars.end()) {
+    return false;
+  } else if (it->second.offset == low && it->second.sizeVector == size) {
+    return true;
+  } else {
+    return false;
+  }
+
+}
+
 //For adding taskVars, which are snapshots of the host-side GPU DW
 void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
           int matlIndx,
           int levelIndx,
+          bool foreign,
           size_t sizeOfDataType,
           const Task::Dependency* dep,
           int whichGPU) {
-  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
-  if (vars.find(lpmld) == vars.end()) {
+  GpuUtilities::LabelPatchMatlLevelForeignDw lpmlfd(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, foreign, dep->mapDataWarehouse());
+  if (vars.find(lpmlfd) == vars.end()) {
     totalVars[dep->mapDataWarehouse()] += 1;
     //TODO: The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?  Should contiguous arrays be
     //organized by task???
-    DeviceGridVariableInfo tmp(NULL, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
-    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
+    DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
+    vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo>::value_type( lpmlfd, tmp ) );
   } else {
     //This is fine, in corner cases or especially periodic boundary conditions this can happen
     //we just don't reinsert the duplicate.
@@ -177,10 +200,11 @@ DeviceGridVariableInfo DeviceGridVariables::getItem(
     const Patch* patch,
     const int matlIndx,
     const int levelIndx,
+    const bool foreign,
     const int dataWarehouseIndex) const {
-  DeviceGridVariableInfo::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), patch->getID(), matlIndx, levelIndx, dataWarehouseIndex);
-  if (vars.find(lpmld) != vars.end()) {
-    return vars.find(lpmld)->second;
+  GpuUtilities::LabelPatchMatlLevelForeignDw lpmlfd(label->getName().c_str(), patch->getID(), matlIndx, levelIndx, foreign, dataWarehouseIndex);
+  if (vars.find(lpmlfd) != vars.end()) {
+    return vars.find(lpmlfd)->second;
   } else {
     printf("Error: DeviceGridVariables::getItem(), item not found\n");
     throw(-1);
