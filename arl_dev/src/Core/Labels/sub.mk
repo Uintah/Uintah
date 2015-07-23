@@ -33,10 +33,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Labels
 
 SRCS     += \
-	$(SRCDIR)/ICELabel.cc \
-	$(SRCDIR)/MPMLabel.cc \
-	$(SRCDIR)/MPMICELabel.cc \
-	$(SRCDIR)/FVMLabel.cc 
+	$(SRCDIR)/ICELabel.cc     \
+	$(SRCDIR)/MPMLabel.cc     \
+	$(SRCDIR)/MPMICELabel.cc 
 
 PSELIBS := \
 	Core/Exceptions \

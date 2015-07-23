@@ -43,7 +43,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Gaussian.h>
 #include <Core/Math/Weibull.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <fstream>
 #include <iostream>
 
@@ -505,7 +505,7 @@ void UCNH::outputProblemSpec(ProblemSpecP& ps, bool output_cm_tag)
 
 UCNH* UCNH::clone()
 {
-  return scinew UCNH(*this);
+  return new UCNH(*this);
 }
 
 UCNH::~UCNH()
@@ -634,12 +634,10 @@ void UCNH::initializeCMData(const Patch* patch,
   else {
     //initSharedDataForExplicit(patch, matl, new_dw);
     ParticleVariable<double>  pdTdt;
-    ParticleVariable<double>  pdCdt;
     ParticleVariable<Matrix3> pDefGrad;
     ParticleVariable<Matrix3> pStress;
 
     new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,               pset);
-    new_dw->allocateAndPut(pdCdt,       lb->pdCdtLabel,               pset);
     new_dw->allocateAndPut(pDefGrad,    lb->pDeformationMeasureLabel, pset);
     new_dw->allocateAndPut(pStress,     lb->pStressLabel,             pset);
 
@@ -649,7 +647,6 @@ void UCNH::initializeCMData(const Patch* patch,
       for(; iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pdTdt[idx] = 0.0;
-        pdCdt[idx] = 0.0;
         pDefGrad[idx] = Identity;
         pStress[idx] = zero;
       }
@@ -662,7 +659,6 @@ void UCNH::initializeCMData(const Patch* patch,
       for(;iter != pset->end(); iter++){
         particleIndex idx = *iter;
         pdTdt[idx] = 0.0;
-        pdCdt[idx] = 0.0;
         pDefGrad[idx] = Matrix3(diag, 0.,0.,0.,diag,0.,0.,0.,diag);
         pStress[idx] = sigInit;
       }
@@ -689,7 +685,7 @@ void UCNH::initializeCMData(const Patch* patch,
       int patch_div_32 = patchID/32;
       patchID = patchID%32;
       unsigned int unique_seed = ((d_yield.seed+patch_div_32+1) << patchID);
-      MusilRNG* randGen = scinew MusilRNG(unique_seed);
+      MusilRNG* randGen = new MusilRNG(unique_seed);
       //cout << "   seed = " << unique_seed << " first rand = " << (*randGen)() << endl;
       for(;iterPlas != pset->end(); iterPlas++){
         pPlasticStrain[*iterPlas] = d_initialData.Alpha;
@@ -775,7 +771,7 @@ void UCNH::initializeCMData(const Patch* patch,
       int patch_div_32 = patchID/32;
       patchID = patchID%32;
       unsigned int unique_seed = ((d_epsf.seed+patch_div_32+1) << patchID);
-      MusilRNG* randGen = scinew MusilRNG(unique_seed);
+      MusilRNG* randGen = new MusilRNG(unique_seed);
       for(;iter != pset->end();iter++){
         pLocalized[*iter]     = 0;
         pTimeOfLoc[*iter]     = -1.e99;;
@@ -1113,7 +1109,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double>       pFailureStrain_new, pDamage_new;
     ParticleVariable<double>       pdTdt,p_q;
     ParticleVariable<Matrix3>      pStress,bElBar_new;
-    ParticleVariable<double>       pdCdt;
     
     // Plasticity gets
     if(d_usePlasticity) {
@@ -1168,7 +1163,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(bElBar_new,  bElBarLabel_preReloc,      pset);
     new_dw->allocateAndPut(pStress,     lb->pStressLabel_preReloc, pset);
     new_dw->allocateAndPut(pdTdt,       lb->pdTdtLabel,            pset);
-    new_dw->allocateAndPut(pdCdt,       lb->pdCdtLabel_preReloc,   pset);
     new_dw->allocateAndPut(p_q,         lb->p_qLabel_preReloc,     pset);
 
     ParticleSubset::iterator iter = pset->begin();
@@ -1177,7 +1171,6 @@ void UCNH::computeStressTensor(const PatchSubset* patches,
       
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
-      pdCdt[idx] = 0.0;
 
       pDefGradInc = pDefGrad_new[idx]*pDefGrad[idx].Inverse();
       Jinc    = pDefGradInc.Determinant();
@@ -1872,7 +1865,6 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
   ParticleVariable<double>       pFailureStrain_new, pDamage_new;
   ParticleVariable<double>       pVolume_new, pdTdt, pPlasticStrain_new;
   ParticleVariable<Matrix3>      pDefGrad_new, pBeBar_new, pStress_new;
-  ParticleVariable<double>       pdCdt;
 
   // Local variables 
   Matrix3 dispGrad(0.0), tauDev(0.0), defGradInc(0.0);
@@ -1934,8 +1926,6 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
                            lb->pVolumeDeformedLabel,              pset);
     new_dw->allocateAndPut(pdTdt, 
                            lb->pdTdtLabel,                        pset);
-    new_dw->allocateAndPut(pdCdt,
-                               lb->pdCdtLabel_preReloc,               pset);
     new_dw->allocateAndPut(pDefGrad_new,
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pBeBar_new, 
@@ -1948,7 +1938,6 @@ void UCNH::computeStressTensorImplicit(const PatchSubset* patches,
         particleIndex idx = *iter;
         // Assign zero internal heating by default - modify if necessary.
         pdTdt[idx]        = 0.0;
-        pdCdt[idx]        = 0.0;
         pStress_new[idx]  = Matrix3(0.0);
         pDefGrad_new[idx] = Identity;
         pVolume_new[idx]  = pMass[idx]/rho_orig;
@@ -2883,7 +2872,7 @@ static MPI_Datatype makeMPI_CMData()
   {
     static TypeDescription* td = 0;
     if(!td){
-      td = scinew TypeDescription(TypeDescription::Other,
+      td = new TypeDescription(TypeDescription::Other,
                                   "UCNH::double", 
                                   true, &makeMPI_CMData);
     }

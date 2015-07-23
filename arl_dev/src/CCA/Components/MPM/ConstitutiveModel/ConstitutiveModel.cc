@@ -35,7 +35,7 @@
 #include <Core/Labels/MPMLabel.h>
 #include <Core/Math/FastMatrix.h>
 #include <Core/Exceptions/InvalidValue.h>
-#include <Core/Malloc/Allocator.h>
+
 #include <cmath>
 #include <iostream>
 
@@ -48,7 +48,7 @@ using namespace std;
 
 ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 {
-  lb = scinew MPMLabel();
+  lb = new MPMLabel();
   flag = Mflag;
   if(flag->d_8or27==8){
     NGN=1;
@@ -59,7 +59,7 @@ ConstitutiveModel::ConstitutiveModel(MPMFlags* Mflag)
 
 ConstitutiveModel::ConstitutiveModel(const ConstitutiveModel* cm)
 {
-  lb = scinew MPMLabel();
+  lb = new MPMLabel();
   flag = cm->flag;
   NGN = cm->NGN;
   NGP = cm->NGP;
@@ -156,7 +156,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
   task->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc, 
                                                             matlset, gnone);
   task->requires(Task::NewDW, lb->pVelGradLabel_preReloc,   matlset, gnone);
-  task->requires(Task::OldDW, lb->pConcentrationLabel,      matlset, gnone);
   if (flag->d_fracture) {
     task->requires(Task::NewDW, lb->pgCodeLabel,            matlset, gnone); 
     task->requires(Task::NewDW, lb->GVelocityStarLabel,     matlset, gac, NGN);
@@ -164,7 +163,6 @@ ConstitutiveModel::addSharedCRForExplicit(Task* task,
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pdTdtLabel,                        matlset);
-  task->computes(lb->pdCdtLabel_preReloc,               matlset);
   //task->computes(lb->p_qLabel_preReloc,                 matlset);
 }
 
@@ -202,10 +200,8 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
                                           const MPMMaterial* matl)
 {
   ParticleVariable<double>  pIntHeatRate_new,p_q;
-  ParticleVariable<double>  pIntDiffusionRate_new;
   ParticleVariable<Matrix3> pStress_new;
   new_dw->allocateAndPut(pIntHeatRate_new, lb->pdTdtLabel,             pset);
-  new_dw->allocateAndPut(pIntDiffusionRate_new, lb->pdCdtLabel_preReloc,    pset);
   new_dw->allocateAndPut(pStress_new,   lb->pStressLabel_preReloc,     pset);
   new_dw->allocateAndPut(p_q,           lb->p_qLabel_preReloc,         pset);
 
@@ -213,7 +209,6 @@ ConstitutiveModel::carryForwardSharedData(ParticleSubset* pset,
   for(; iter != pset->end(); iter++){
     particleIndex idx = *iter;
     pIntHeatRate_new[idx] = 0.0;
-    pIntDiffusionRate_new[idx] = 0.0;
     pStress_new[idx]=Matrix3(0.0);
     p_q[idx]=0.;
   }

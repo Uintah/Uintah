@@ -47,7 +47,6 @@
 #include <CCA/Components/MPM/ShellMPM.h>
 #include <CCA/Components/MPMICE/MPMICE.h>
 #include <CCA/Components/MD/MD.h>
-#include <CCA/Components/FVM/FVMDiffusion.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
 #include <CCA/Components/ReduceUda/UdaReducer.h>
@@ -142,14 +141,6 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
 #else
   turned_off_options += "ICE ";
-#endif
-
-#ifndef NO_FVM
-  if (sim_comp == "fvmdiffusion" || sim_comp == "FVMDIFFUSION") {
-    return scinew FVMDiffusion(world);
-  }
-#else
-  turned_off_options += "FVM ";
 #endif
 
 #if !defined(NO_MPM) && !defined(NO_ICE)

@@ -62,10 +62,6 @@ ifeq ($(BUILD_MD),yes)
   MD      := $(SRCDIR)/MD
 endif
 
-ifeq ($(BUILD_FVM),yes)
-  FVM      := $(SRCDIR)/FVM
-endif
-
 SUBDIRS := \
         $(MPM)                         \
         $(ICE)                         \
@@ -75,7 +71,6 @@ SUBDIRS := \
         $(WASATCH)                     \
         $(SRCDIR)/DataArchiver         \
         $(SRCDIR)/Examples             \
-		$(FVM)                         \
         $(SRCDIR)/LoadBalancers        \
         $(SRCDIR)/Models               \
         $(SRCDIR)/OnTheFlyAnalysis     \

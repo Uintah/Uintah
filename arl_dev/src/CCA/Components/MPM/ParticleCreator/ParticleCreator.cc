@@ -55,7 +55,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
                                  MPMFlags* flags)
 :d_lock("Particle Creator lock")
 {
-  d_lb = scinew MPMLabel();
+  d_lb = new MPMLabel();
   d_useLoadCurves = flags->d_useLoadCurves;
   d_with_color = flags->d_with_color;
   d_artificial_viscosity = flags->d_artificial_viscosity;
@@ -109,7 +109,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece.get_rep());
     vector<double>* volumes       = 0;
     vector<double>* temperatures  = 0;
-    vector<double>* concentrations = 0;
     vector<double>* colors        = 0;
 //  vector<double>* concentrations= 0;
     vector<Vector>* pforces       = 0;
@@ -120,7 +119,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     if (sgp){
       volumes      = sgp->getVolume();
       temperatures = sgp->getTemperature();
-      concentrations = sgp->getConcentration();
       pforces      = sgp->getForces();
       pfiberdirs   = sgp->getFiberDirs();
       pvelocities  = sgp->getVelocity();  // gcd adds and new change name
@@ -141,12 +139,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<double>::const_iterator tempiter;
     if (temperatures) {
       if (!temperatures->empty()) tempiter = vars.d_object_temps[*obj].begin();
-    }
-
-    // For getting particle concentrations (if they exist)
-    vector<double>::const_iterator concentrationiter;
-    if (concentrations) {
-          if (!concentrations->empty()) concentrationiter = vars.d_object_concentrations[*obj].begin();
     }
 
     // For getting particle external forces (if they exist)
@@ -201,13 +193,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (!temperatures->empty()) {
           pvars.ptemperature[pidx] = *tempiter;
           ++tempiter;
-        }
-      }
-
-      if (concentrations) {
-        if (!concentrations->empty()) {
-          pvars.pconcentration[pidx] = *concentrationiter;
-          ++concentrationiter;
         }
       }
 
@@ -367,22 +352,19 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
 {
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
                                                         patch);
-  new_dw->allocateAndPut(pvars.position,       d_lb->pXLabel,             subset);
-  new_dw->allocateAndPut(pvars.pvelocity,      d_lb->pVelocityLabel,      subset); 
-  new_dw->allocateAndPut(pvars.pexternalforce, d_lb->pExternalForceLabel, subset);
-  new_dw->allocateAndPut(pvars.pmass,          d_lb->pMassLabel,          subset);
-  new_dw->allocateAndPut(pvars.pvolume,        d_lb->pVolumeLabel,        subset);
-  new_dw->allocateAndPut(pvars.ptemperature,   d_lb->pTemperatureLabel,   subset);
-  new_dw->allocateAndPut(pvars.pparticleID,    d_lb->pParticleIDLabel,    subset);
-  new_dw->allocateAndPut(pvars.psize,          d_lb->pSizeLabel,          subset);
-  new_dw->allocateAndPut(pvars.plocalized,     d_lb->pLocalizedMPMLabel,  subset);
-  new_dw->allocateAndPut(pvars.prefined,       d_lb->pRefinedLabel,       subset);
-  new_dw->allocateAndPut(pvars.pfiberdir,      d_lb->pFiberDirLabel,      subset); 
-  new_dw->allocateAndPut(pvars.ptempPrevious,  d_lb->pTempPreviousLabel,  subset);
-  new_dw->allocateAndPut(pvars.pdisp,          d_lb->pDispLabel,          subset);
-  new_dw->allocateAndPut(pvars.pconcentration, d_lb->pConcentrationLabel, subset);
-  new_dw->allocateAndPut(pvars.pconcentrationPrevious,  d_lb->pConcentrationPreviousLabel,  subset);
-  
+  new_dw->allocateAndPut(pvars.position,      d_lb->pXLabel,            subset);
+  new_dw->allocateAndPut(pvars.pvelocity,     d_lb->pVelocityLabel,     subset);
+  new_dw->allocateAndPut(pvars.pexternalforce,d_lb->pExternalForceLabel,subset);
+  new_dw->allocateAndPut(pvars.pmass,         d_lb->pMassLabel,         subset);
+  new_dw->allocateAndPut(pvars.pvolume,       d_lb->pVolumeLabel,       subset);
+  new_dw->allocateAndPut(pvars.ptemperature,  d_lb->pTemperatureLabel,  subset);
+  new_dw->allocateAndPut(pvars.pparticleID,   d_lb->pParticleIDLabel,   subset);
+  new_dw->allocateAndPut(pvars.psize,         d_lb->pSizeLabel,         subset);
+  new_dw->allocateAndPut(pvars.plocalized,    d_lb->pLocalizedMPMLabel, subset);
+  new_dw->allocateAndPut(pvars.prefined,      d_lb->pRefinedLabel,      subset);
+  new_dw->allocateAndPut(pvars.pfiberdir,     d_lb->pFiberDirLabel,     subset);
+  new_dw->allocateAndPut(pvars.ptempPrevious, d_lb->pTempPreviousLabel, subset);
+  new_dw->allocateAndPut(pvars.pdisp,         d_lb->pDispLabel,         subset);
   if(d_flags->d_integrator_type=="explicit"){
     new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
   }
@@ -548,7 +530,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
 */
 
   pvars.ptemperature[i] = (*obj)->getInitialData_double("temperature");
-  pvars.pconcentration[i] = (*obj)->getInitialData_double("concentration");
   pvars.plocalized[i]   = 0;
 
   // AMR stuff
@@ -612,7 +593,6 @@ ParticleCreator::initializeParticle(const Patch* patch,
   }
   
   pvars.ptempPrevious[i]  = pvars.ptemperature[i];
-  pvars.pconcentrationPrevious[i]  = pvars.pconcentration[i];
 
   Vector pExtForce(0,0,0);
   applyForceBC(dxpp, p, pvars.pmass[i], pExtForce);
@@ -667,7 +647,6 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<Point>* points      = sgp->getPoints();
     vector<double>* vols       = sgp->getVolume();
     vector<double>* temps      = sgp->getTemperature();
-    vector<double>* concentrations      = sgp->getConcentration();
     vector<double>* colors     = sgp->getColors();
     vector<Vector>* pforces    = sgp->getForces();
     vector<Vector>* pfiberdirs = sgp->getFiberDirs();
@@ -711,10 +690,6 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
           if (!temps->empty()) {
             double temp = temps->at(ii); 
             vars.d_object_temps[obj].push_back(temp);
-          }
-          if (!concentrations->empty()) {
-            double concentration = concentrations->at(ii);
-            vars.d_object_concentrations[obj].push_back(concentration);
           }
           if (!pforces->empty()) {
             Vector pforce = pforces->at(ii); 
@@ -783,13 +758,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   particle_state.push_back(d_lb->pTempPreviousLabel);
   particle_state_preReloc.push_back(d_lb->pTempPreviousLabel_preReloc);
 
-  // for Reactive Flow
-  particle_state.push_back(d_lb->pConcentrationLabel);
-  particle_state_preReloc.push_back(d_lb->pConcentrationLabel_preReloc);
-
-  particle_state.push_back(d_lb->pConcentrationPreviousLabel);
-  particle_state_preReloc.push_back(d_lb->pConcentrationPreviousLabel_preReloc);
-
   particle_state.push_back(d_lb->pParticleIDLabel);
   particle_state_preReloc.push_back(d_lb->pParticleIDLabel_preReloc);
   
@@ -822,9 +790,6 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
 
   particle_state.push_back(d_lb->pStressLabel);
   particle_state_preReloc.push_back(d_lb->pStressLabel_preReloc);
-
-  particle_state.push_back(d_lb->pdCdtLabel);
-  particle_state_preReloc.push_back(d_lb->pdCdtLabel_preReloc);
 
   particle_state.push_back(d_lb->pLocalizedMPMLabel);
   particle_state_preReloc.push_back(d_lb->pLocalizedMPMLabel_preReloc);

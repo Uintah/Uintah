@@ -639,13 +639,6 @@ SCI_ARG_ENABLE(ice,
   [BUILD_ICE="no"
    DEF_ICE=["#define NO_ICE"]])
 
-SCI_ARG_ENABLE(fvm,
-  AC_HELP_STRING(--enable-fvm,
-                 Turn on the Finite Volume component.),
-  [BUILD_FVM="yes"],
-  [BUILD_FVM="no"
-   DEF_FVM=["#define NO_FVM"]])
-
 SCI_ARG_ENABLE(mpm,
   AC_HELP_STRING(--enable-mpm,
                  Turn on the Mpm component.),
@@ -673,13 +666,11 @@ SCI_ARG_ENABLE(all_components,
   [use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
-   BUILD_FVM="yes"
    BUILD_MPM="yes"
    BUILD_MD="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_ICE=
-   DEF_FVM=
    DEF_MPM=
    DEF_MD=
    DEF_WASATCH=
@@ -696,7 +687,6 @@ DEF_MODELS_RADIATION=
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
-           "$enable_fvm"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_md"               = "yes" -o  \
@@ -705,7 +695,6 @@ if test "$use_all_components" = "yes" -a          \
 fi
 if test "$BUILD_ARCHES"  != "yes"              -a   \
         "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_FVM"     != "yes"              -a   \
         "$BUILD_MPM"     != "yes"              -a   \
         "$BUILD_MD"      != "yes"              -a   \
         "$BUILD_WASATCH" != "yes"; then
@@ -1182,21 +1171,23 @@ fi
 if test "$USE_ARCHES" != ""; then
    AC_MSG_ERROR( USE_ARCHES is deprecated.  Please use --enable-arches. )
 fi
+
 if test "$USE_ICE" != ""; then
    AC_MSG_ERROR( USE_ICE is deprecated.  Please use --enable-ice. )
 fi
-if test "$USE_FVM" != ""; then
-   AC_MSG_ERROR( USE_FVM is deprecated.  Please use --enable-fvm. )
-fi
+
 if test "$USE_MODELS_RADIATION" != ""; then
    AC_MSG_ERROR( USE_MODELS_RADIATION is deprecated.  Models/Radiation will be turned on automatically if Arches or Wasatch are enabled. )
 fi
+
 if test "$USE_MPM" != ""; then
    AC_MSG_ERROR( USE_MPM is deprecated.  Please use --enable-mpm. )
 fi
+
 if test "$USE_MD" != ""; then
    AC_MSG_ERROR( USE_MD is deprecated.  Please use --enable-md. )
 fi
+
 if test "$USE_WASATCH" != ""; then
    AC_MSG_ERROR( USE_WASATCH is deprecated.  Please use --enable-wasatch. )
 fi
@@ -1214,7 +1205,6 @@ fi
 
 AC_SUBST(BUILD_ARCHES)
 AC_SUBST(BUILD_ICE)
-AC_SUBST(BUILD_FVM)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_MD)
@@ -1222,7 +1212,6 @@ AC_SUBST(BUILD_WASATCH)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
-AC_SUBST(DEF_FVM)
 AC_SUBST(DEF_MPM)
 AC_SUBST(DEF_MD)
 AC_SUBST(DEF_NO_FORTRAN)

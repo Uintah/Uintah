@@ -52,7 +52,6 @@ PSELIBS := \
         $(ARCHES)                          \
         $(MPMARCHES)                       \
         $(ICE)                             \
-        $(FVM)                             \
         $(MPM)                             \
         $(MPMICE)                          \
         $(MD)                              \

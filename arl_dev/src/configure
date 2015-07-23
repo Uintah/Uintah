@@ -852,14 +852,12 @@ DEF_MODELS_RADIATION
 DEF_NO_FORTRAN
 DEF_MD
 DEF_MPM
-DEF_FVM
 DEF_ICE
 DEF_ARCHES
 BUILD_WASATCH
 BUILD_MD
 BUILD_MPM
 BUILD_MODELS_RADIATION
-BUILD_FVM
 BUILD_ICE
 BUILD_ARCHES
 OGL_ERR_MACRO
@@ -1011,7 +1009,6 @@ enable_throw_level
 enable_rpath
 enable_arches
 enable_ice
-enable_fvm
 enable_mpm
 enable_md
 enable_wasatch
@@ -1684,7 +1681,6 @@ Optional Features:
 --enable-rpath          Set a default runtime library search path
 --enable-arches         Turn on the Arches component - and Radiation Model.
 --enable-ice            Turn on the Ice component.
---enable-fvm            Turn on the Finite Volume component.
 --enable-mpm            Turn on the Mpm component.
 --enable-md             Turn on the MD component.
 --enable-wasatch        Turn on the Wasatch component.
@@ -4083,18 +4079,6 @@ fi
 
 
 
-  # Check whether --enable-fvm was given.
-if test "${enable_fvm+set}" = set; then :
-  enableval=$enable_fvm; BUILD_FVM="yes"
-else
-  BUILD_FVM="no"
-   DEF_FVM="#define NO_FVM"
-fi
-
-  sci_arg_enable_list="$sci_arg_enable_list --enable-fvm --disable-fvm"
-
-
-
   # Check whether --enable-mpm was given.
 if test "${enable_mpm+set}" = set; then :
   enableval=$enable_mpm; BUILD_MPM="yes"
@@ -4136,13 +4120,11 @@ if test "${enable_all_components+set}" = set; then :
   enableval=$enable_all_components; use_all_components="yes"
    BUILD_ARCHES="yes"
    BUILD_ICE="yes"
-   BUILD_FVM="yes"
    BUILD_MPM="yes"
    BUILD_MD="yes"
    BUILD_WASATCH="yes"
    DEF_ARCHES=
    DEF_ICE=
-   DEF_FVM=
    DEF_MPM=
    DEF_MD=
    DEF_WASATCH=
@@ -4164,7 +4146,6 @@ DEF_MODELS_RADIATION=
 if test "$use_all_components" = "yes" -a          \
         \( "$enable_arches"           = "yes" -o  \
            "$enable_ice"              = "yes" -o  \
-           "$enable_fvm"              = "yes" -o  \
            "$enable_models_radiation" = "yes" -o  \
            "$enable_mpm"              = "yes" -o  \
            "$enable_md"               = "yes" -o  \
@@ -4173,7 +4154,6 @@ if test "$use_all_components" = "yes" -a          \
 fi
 if test "$BUILD_ARCHES"  != "yes"              -a   \
         "$BUILD_ICE"     != "yes"              -a   \
-        "$BUILD_FVM"     != "yes"              -a   \
         "$BUILD_MPM"     != "yes"              -a   \
         "$BUILD_MD"      != "yes"              -a   \
         "$BUILD_WASATCH" != "yes"; then
@@ -6735,21 +6715,23 @@ fi
 if test "$USE_ARCHES" != ""; then
    as_fn_error $? "USE_ARCHES is deprecated.  Please use --enable-arches. " "$LINENO" 5
 fi
+
 if test "$USE_ICE" != ""; then
    as_fn_error $? "USE_ICE is deprecated.  Please use --enable-ice. " "$LINENO" 5
 fi
-if test "$USE_FVM" != ""; then
-   as_fn_error $? "USE_FVM is deprecated.  Please use --enable-fvm. " "$LINENO" 5
-fi
+
 if test "$USE_MODELS_RADIATION" != ""; then
    as_fn_error $? "USE_MODELS_RADIATION is deprecated.  Models/Radiation will be turned on automatically if Arches or Wasatch are enabled. " "$LINENO" 5
 fi
+
 if test "$USE_MPM" != ""; then
    as_fn_error $? "USE_MPM is deprecated.  Please use --enable-mpm. " "$LINENO" 5
 fi
+
 if test "$USE_MD" != ""; then
    as_fn_error $? "USE_MD is deprecated.  Please use --enable-md. " "$LINENO" 5
 fi
+
 if test "$USE_WASATCH" != ""; then
    as_fn_error $? "USE_WASATCH is deprecated.  Please use --enable-wasatch. " "$LINENO" 5
 fi
@@ -6764,8 +6746,6 @@ if test "$with_fortran" = no; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
-
-
 
 
 
