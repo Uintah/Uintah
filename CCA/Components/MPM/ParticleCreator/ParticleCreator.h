@@ -26,7 +26,6 @@
 #define __PARTICLE_CREATOR_H__
 
 #include <Core/Thread/CrowdMonitor.h>
-
 #include <Core/GeometryPiece/GeometryPiece.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <Core/Grid/Variables/ParticleVariable.h>
@@ -94,7 +93,7 @@ namespace Uintah {
     ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol,perosion;
     ParticleVariable<double> pcolor,ptempPrevious,p_q;
     ParticleVariable<long64> pparticleID;
-    ParticleVariable<Vector> pdisp;
+    ParticleVariable<Vector> pdisp,pTempGrad;
     ParticleVariable<Vector> pfiberdir; 
     ParticleVariable<int> pLoadCurveID;
     ParticleVariable<int> plocalized;
