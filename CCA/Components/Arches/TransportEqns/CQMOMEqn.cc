@@ -169,6 +169,11 @@ CQMOMEqn::problemSetup(const ProblemSpecP& inputdb)
       m_db->get("IC",ic_name);
       m = 0;
       
+      if ( ic_name == "none" ) {
+        //this is for particle models that are not sources (i.e density)
+        continue;
+      }
+      
       for ( ProblemSpecP db_name = cqmom_db->findBlock("InternalCoordinate");
            db_name != 0; db_name = db_name->findNextBlock("InternalCoordinate") ) {
         std::string var_name;

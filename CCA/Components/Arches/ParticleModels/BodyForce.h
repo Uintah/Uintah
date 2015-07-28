@@ -93,8 +93,6 @@ namespace Uintah{
     
     const int _N;                 //<<< The number of "environments"
     double _g;
-    double _rho;
-    bool constDensity;
     Vector gravity;
     
     const std::string get_name(const int i, const std::string base_name){
@@ -137,15 +135,7 @@ namespace Uintah{
   template <typename IT, typename DT>
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    std::string tempType;
-    db->findBlock("particle_density")->getAttribute("type",tempType);
-    if ( tempType == "constant" ) {
-      db->findBlock("particle_density")->require("constant",_rho);
-      constDensity = true;
-    } else {
-      db->require("density_label",_base_density_name);
-      constDensity = false;
-    }
+    db->require("particle_density_label",_base_density_name);
 
     db->require("direction",_direction);
     _gas_density_name = "densityCP";
@@ -211,10 +201,8 @@ namespace Uintah{
       register_variable( name, _D_type, COMPUTES, 0, NEWDW, variable_registry, time_substep );
       
       //independent variables
-      if ( !constDensity ) {
-        const std::string density_name = get_name( i, _base_density_name );
-        register_variable( density_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
-      }
+      const std::string density_name = get_name( i, _base_density_name );
+      register_variable( density_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
     }
 
     register_variable( _gas_density_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
@@ -235,21 +223,13 @@ namespace Uintah{
     for ( int i = 0; i < _N; i++ ){
       
       const std::string name = get_name(i, _base_var_name);
-      DTptr model_value = tsk_info->get_so_field<DT>(name);
-      ITptr rhoP;
-    
+      const std::string density_name = get_name( i, _base_density_name );
       
-      if (!constDensity ) {
-        const std::string density_name = get_name( i, _base_density_name );
-        rhoP = tsk_info->get_const_so_field<IT>(density_name);
-      }
+      DTptr model_value = tsk_info->get_so_field<DT>(name);
+      ITptr rhoP = tsk_info->get_const_so_field<IT>(density_name);
       
       //compute a rate term
-      if ( !constDensity  ) {
-        *model_value <<= _g * ( *rhoP  - (*interp)(*rhoG) ) / (*rhoP);
-      } else {
-        *model_value <<= _g * ( _rho - (*interp)(*rhoG) ) / _rho;
-      }
+      *model_value <<= _g * ( *rhoP  - (*interp)(*rhoG) ) / (*rhoP);
 
     }
   }
