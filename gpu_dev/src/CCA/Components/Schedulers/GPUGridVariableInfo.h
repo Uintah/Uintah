@@ -14,23 +14,21 @@ using namespace Uintah;
 
 class GpuUtilities {
 public:
-  struct LabelPatchMatlLevelForeignDw {
+  struct LabelPatchMatlLevelDw {
     std::string     label;
     int        patchID;
     int        matlIndx;
     int        levelIndx;
-    bool       foreign;
     int        dataWarehouse;
-    LabelPatchMatlLevelForeignDw(const char * label, int patchID, int matlIndx, int levelIndx, bool foreign, int dataWarehouse) {
+    LabelPatchMatlLevelDw(const char * label, int patchID, int matlIndx, int levelIndx, int dataWarehouse) {
       this->label = label;
       this->patchID = patchID;
       this->matlIndx = matlIndx;
       this->levelIndx = levelIndx;
-      this->foreign = foreign;
       this->dataWarehouse = dataWarehouse;
     }
     //This is so it can be used in an STL map
-    bool operator<(const LabelPatchMatlLevelForeignDw& right) const {
+    bool operator<(const LabelPatchMatlLevelDw& right) const {
       if (this->label < right.label) {
         return true;
       } else if (this->label == right.label && (this->patchID < right.patchID)) {
@@ -41,10 +39,7 @@ public:
                  && (this->levelIndx < right.levelIndx)) {
         return true;
       } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
-                 && (this->levelIndx == right.levelIndx) && (this->foreign < foreign)) {
-        return true;
-      } else if (this->label == right.label && (this->patchID == right.patchID) && (this->matlIndx == right.matlIndx)
-                 && (this->levelIndx == right.levelIndx) && (this->foreign == foreign) && (this->dataWarehouse < right.dataWarehouse)) {
+                 && (this->levelIndx == right.levelIndx) && (this->dataWarehouse < right.dataWarehouse)) {
         return true;
       } else {
         return false;
@@ -71,7 +66,7 @@ public:
 
   DeviceGridVariableInfo(Variable* var,
             GpuUtilities::DeviceVarDestination dest,
-            bool foreign,
+            bool staging,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -87,6 +82,7 @@ public:
   //For PerPatch vars
   DeviceGridVariableInfo(Variable* var,
             GpuUtilities::DeviceVarDestination dest,
+            bool staging,
             size_t sizeOfDataType,
             int matlIndx,
             int levelIndx,
@@ -106,7 +102,7 @@ public:
             && this->numGhostCells == rhs.numGhostCells
             && this->whichGPU == rhs.whichGPU
             && this->dest == rhs.dest
-            && this->foreign == rhs.foreign);
+            && this->staging == rhs.staging);
   }
 
   IntVector sizeVector;
@@ -115,7 +111,7 @@ public:
   IntVector offset;
   int matlIndx;
   int levelIndx;
-  bool foreign;
+  bool staging;
   const Patch* patchPointer;
   const Task::Dependency* dep;
   Ghost::GhostType gtype;
@@ -134,7 +130,7 @@ public:
   void add(const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
-            bool foreign,
+            bool staging,
             IntVector sizeVector,
             size_t sizeOfDataType,
             size_t varMemSize,
@@ -161,26 +157,35 @@ public:
             const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
-            bool foreign,
+            bool staging,
             IntVector low,
             IntVector high,
             int dataWarehouse);
 
-  //For task vars.
+  //For regular task vars.
   void addTaskGpuDWVar(const Patch* patchPointer,
               int matlIndx,
               int levelIndx,
-              bool foreign,
               size_t varMemSize,
               const Task::Dependency* dep,
               int whichGPU);
 
+  //For staging contiguous arrays
+  void addTaskGpuDWStagingVar(const Patch* patchPointer,
+            int matlIndx,
+            int levelIndx,
+            IntVector sizeVector,
+            IntVector offset,
+            size_t sizeOfDataType,
+            const Task::Dependency* dep,
+            int whichGPU);
 
-  DeviceGridVariableInfo getItem( const VarLabel* label,
+  DeviceGridVariableInfo getStagingItem( const VarLabel* label,
           const Patch* patch,
           const int matlIndx,
           const int levelIndx,
-          const bool foreign,
+          const IntVector low,
+          const IntVector size,
           const int dataWarehouseIndex) const;
 
   size_t getTotalSize();
@@ -193,7 +198,7 @@ public:
   unsigned int getTotalMaterials(int DWIndex) const;
   unsigned int getTotalLevels(int DWIndex) const;
 
-  std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo>& getMap() {
+  std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>& getMap() {
     return vars;
   }
 
@@ -203,15 +208,13 @@ private:
   size_t totalSize;
   size_t totalSizeForDataWarehouse[Task::TotalDWs];
 
-  std::map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo> vars; //This map acts essentially contains objects
+  std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> vars; //This multimap acts essentially contains objects
                         //which are first queued up, and then processed in a group.  These DeviceGridVariableInfo objects
                         //can 1) Tell the host-side GPU DW what variables need to be created on the GPU and what copies need
                         //to be made host to deivce.  2) Tell a task GPU DW which variables it needs to know about from
                         //the host-side GPU DW (this task GPU DW gets sent into the GPU).  Or 3) Tells a task GPU DW
                         //the ghost cell copies that need to occur within a GPU.
-                        //For #2/#3, it is possible in corner cases or periodic boundary conditions that a source
-                        //variable will be used multiple times to extract ghost cell info from.  So we need to verify
-                        //if that variable is already in our map prior to inserting it.
+                        //TODO: For #2/#3, it is that ghost cell copies could be duplicated or within one another.  If so...handle this...
 
   unsigned int totalVars[Task::TotalDWs];
   unsigned int totalMaterials[Task::TotalDWs];

@@ -181,7 +181,7 @@ class UnifiedScheduler : public MPIScheduler  {
         const DeviceGridVariables& deviceVars,
         const DeviceGhostCells& ghostVars);
 
-    void clearForeignGpuVars(DeviceGridVariables& deviceVars);
+    //void clearForeignGpuVars(DeviceGridVariables& deviceVars);
 
     void initiateH2DCopies(DetailedTask* dtask);
 
@@ -197,7 +197,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void markHostRequiresDataAsValid(DetailedTask* dtask);
 
-    bool initiateD2H(DetailedTask* dtask);
+    void initiateD2H(DetailedTask* dtask);
 
     void copyAllDataD2H(DetailedTask* dtask);
 

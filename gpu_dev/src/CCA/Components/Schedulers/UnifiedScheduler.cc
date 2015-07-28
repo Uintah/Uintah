@@ -55,11 +55,11 @@ using namespace std;
 using namespace Uintah;
 
 // sync cout/cerr so they are readable when output by multiple threads
-extern SCIRun::Mutex coutLock;
+//extern SCIRun::Mutex coutLock;
 extern SCIRun::Mutex cerrLock;
 
 extern DebugStream taskdbg;
-extern DebugStream mpidbg;
+//extern DebugStream mpidbg;
 extern DebugStream waitout;
 extern DebugStream execout;
 extern DebugStream taskorder;
@@ -414,6 +414,7 @@ void UnifiedScheduler::runTask(DetailedTask* task, int iteration,
                                     //all important pointer info from the host-side GPU DW)
       DeviceGhostCells ghostVars;  //Holds ghost cell meta data copy information
 
+      //TODO: Don't make every task run through this
       findIntAndExtGpuDependencies(deviceVars, taskVars, ghostVars, task, iteration, thread_id);
       //The ghost cell destinations indicate which devices we're using,
       //and which ones we'll need streams for.
@@ -437,7 +438,7 @@ void UnifiedScheduler::runTask(DetailedTask* task, int iteration,
       //But soon, after this task is done, we are likely going to receive a different region of that patch
       //from a neighboring on-node GPU or neighboring MPI rank.  So we need to remove this foreign variable
       //now so it can be used again.
-      clearForeignGpuVars(deviceVars);
+      //clearForeignGpuVars(deviceVars);
     }
 #endif
     if (Uintah::Parallel::usingMPI()) {
@@ -899,8 +900,6 @@ void UnifiedScheduler::runTasks(int thread_id) {
     bool gpuRunReady = false;
     bool gpuFinalizeDevicePreparation = false;
     bool gpuPending = false;
-    bool gpuDataCopyPending = false;
-    bool gpuDataCopyReady = false;
     bool cpuRunReady = false;
 
 #endif
@@ -1374,17 +1373,18 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
   //GPU -> CPU same node (handled in initateH2D)
   //GPU -> same GPU same node (handled in initateH2D)
 
+
   if (dep->isNonDataDependency()) {
     return;
   }
+
+  bool fromGPU = false;
+  bool toGPU = false;
   const VarLabel* label = dep->req->var;
   const Patch* fromPatch = dep->fromPatch;
   const int matlIndx = dep->matl;
   const Level* level = fromPatch->getLevel();
   const int levelID = level->getID();
-
-  bool fromGPU;
-  bool toGPU;
 
   //TODO: Ask Alan about everything in the dep object.
   //The toTasks (will there be more than one?)
@@ -1408,8 +1408,8 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
     //For now, assume that task will only work on one device
     const int toDeviceIndex = GpuUtilities::getGpuIndexForPatch(toTask->getPatches()->get(0));
 
-    const size_t elementSize = OnDemandDataWarehouse::getTypeDescriptionSize(
-        dep->req->var->typeDescription()->getSubType()->getType());
+    //const size_t elementSize = OnDemandDataWarehouse::getTypeDescriptionSize(
+    //    dep->req->var->typeDescription()->getSubType()->getType());
 
     //printf("In OnDemandDataWarehouse::prepareGPUDependencies from patch %d to patch %d, from task %p to task %p\n", fromPatch->getID(), toTask->getPatches()->get(0)->getID(), task, toTask);
 
@@ -1521,24 +1521,26 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
         //TODO: Make Taskvars not pass in two extra parameters.
         //make the temp array in the GPU
 
-        //This is somewhat hacky.  We can't have duplicate variables with the same
-        //patch/label/matl/level/datawarehouseindex tuple.  But we want to have the GPU DataWarehouse
-        //store the this temporary ghost cell region.  So indicate that it is being stored in the
-        //patch it is going to.  This will allow us later to invoked a kernel to which can copy
-        //the ghost cell region from a patch to an array to the "other patch", so that array can
-        //then be copied to another on-node GPU or another MPI rank.  By keeping this variable
-        //in the "other patch", it allows us to reuse much of the existing GPU DW code.
-        deviceVars.add(toPatch, matlIndx, levelID, true, host_size,
+        //To copy off the GPU, we want all data to be contiguous.  For ghost cells, we only need
+        //a portion of the data.  But we still need this array to exist uniquely in the gpu dw
+        //uniquely as a label/patch/matl/level tuple.  If we had the original var and a portion of
+        //the data then we have two instances of this tuple.  The cleanest approach seems to be to
+        //add one more item onto the tuple, a foreign bool.  If it's the regular variable,
+        //foreign = false.  If the var is a contiguous array for staging it to go to another memory
+        //space, then foreign = true.  (This also solves a handful of messy issues where multiple
+        //source regions are copying to a single destination patch, such as a corner case.  Instead
+        //of trying to prepare a contiguous array in the destination patch, we prepare the contiguous
+        //arrays in the source patches.)
+        deviceVars.add(fromPatch, matlIndx, levelID, true, host_size,
             tempGhostVar->getDataSize(), elementDataSize, host_offset,
              dep->req, Ghost::None, 0, fromDeviceIndex, tempGhostVar, dest);
       //}
-      //let this Task GPU DW know about it.
-      taskVars.addTaskGpuDWVar(toPatch, matlIndx, levelID, true, elementDataSize,
+      //let this Task GPU DW know about this destination array
+      taskVars.addTaskGpuDWStagingVar(fromPatch, matlIndx, levelID, host_offset, host_size, elementDataSize,
           dep->req, fromDeviceIndex);
 
       //let this Task GPU DW know about the source location.
-      taskVars.addTaskGpuDWVar(fromPatch, matlIndx, levelID, false, elementDataSize,
-          dep->req, fromDeviceIndex);
+      taskVars.addTaskGpuDWVar(fromPatch, matlIndx, levelID, elementDataSize, dep->req, fromDeviceIndex);
 
       //TODO: If we were doing a GPU->another GPU same device transfer, we should not create the host array but instead create a
       //destination array.
@@ -1565,9 +1567,10 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
             << endl;
       }
 
-      //we always write this to a "foreign" staging variable.
+      //we always write this to a "foreign" staging variable. We are going to
+      //copying it from the foreign = false var to the foreign = true var.
       IntVector temp(0,0,0);
-      ghostVars.add(dep->req->var, fromPatch, toPatch,
+      ghostVars.add(dep->req->var, fromPatch, fromPatch,
           matlIndx, levelID, true, dep->low, dep->high,
           OnDemandDataWarehouse::getTypeDescriptionSize(
               dep->req->var->typeDescription()->getSubType()->getType()), temp,
@@ -2629,7 +2632,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
             if (exists && existsCorrectSize && validOnGpu) {
               //This requires variable already exists on the GPU.  Queue it to be added
               //to this tasks's TaskDW.
-              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID, false,
+              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID,
                   elementDataSize, curDependency,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)));
 
@@ -2754,7 +2757,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                         curDependency, Ghost::None, 0, destDeviceNum,
                         srcvar, GpuUtilities::sameDeviceSameMpiRank);
                     //This task needs to know of this ghost cell as well.
-                    taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID, false,
+                    taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID,
                         ghost_host_strides.x(), curDependency, destDeviceNum);
                   } else {
                     if (gpu_stats.active()) {
@@ -2780,8 +2783,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                       iter->validNeighbor->getSizes(ghost_host_low,
                           ghost_host_high, ghost_host_offset, ghost_host_size,
                           ghost_host_strides);
-                      //In a corner case or a periodic boundary condition case, the same source patch could be added multiple times.
-                      taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID, false,
+                      taskVars.addTaskGpuDWVar(sourcePatch, matlID, levelID,
                           ghost_host_strides.x(), curDependency, destDeviceNum);
                     }
 
@@ -2883,7 +2885,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                     curDependency, curDependency->gtype, curDependency->numGhostCells,
                     GpuUtilities::getGpuIndexForPatch(patches->get(i)),
                     gridVar, GpuUtilities::sameDeviceSameMpiRank);
-                taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID, false,
+                taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID,
                     host_strides.x(), curDependency,
                     GpuUtilities::getGpuIndexForPatch(patches->get(i)));
               } else if (type == TypeDescription::PerPatch) {
@@ -2894,7 +2896,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                     elementDataSize, curDependency,
                     GpuUtilities::getGpuIndexForPatch(patches->get(i)),
                     patchVar, GpuUtilities::sameDeviceSameMpiRank);
-                taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID, false,
+                taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID,
                     elementDataSize, curDependency,
                     GpuUtilities::getGpuIndexForPatch(patches->get(i)));
               } else {
@@ -2935,7 +2937,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                   memSize, elementDataSize, curDependency,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)),
                   NULL, GpuUtilities::sameDeviceSameMpiRank);
-              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID, false,
+              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID,
                   elementDataSize, curDependency,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)));
             } else if (type == TypeDescription::CCVariable
@@ -2981,7 +2983,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                   curDependency->gtype, curDependency->numGhostCells,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)),
                   NULL, GpuUtilities::anotherDeviceSameMpiRank);
-              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID, false,
+              taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID,
                   elementDataSize, curDependency,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)));
             } else {
@@ -3032,9 +3034,9 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
 
     //Get all data in the GPU, and store it on the GPU Data Warehouse on the host, as only it
     //is responsible for management of data.  So this processes the previously collected deviceVars.
-    map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo> & varMap =
+    multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap =
         deviceVars.getMap();
-    for (map<GpuUtilities::LabelPatchMatlLevelForeignDw,
+    for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
         DeviceGridVariableInfo>::iterator it = varMap.begin();
         it != varMap.end(); ++it) {
       int dwIndex = it->second.dep->mapDataWarehouse();
@@ -3051,7 +3053,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
             it->second.sizeOfDataType);
         dws[dwIndex]->getGPUDW(it->second.whichGPU)->allocateAndPut(*patchVar,
             it->second.dep->var->getName().c_str(), it->first.patchID,
-            it->first.matlIndx, it->first.levelIndx, it->first.foreign,
+            it->first.matlIndx, it->first.levelIndx, it->second.staging,
             it->second.sizeOfDataType);
         device_ptr = patchVar->getVoidPointer();
         delete patchVar;
@@ -3072,7 +3074,7 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
                 it->second.sizeOfDataType);
         dws[dwIndex]->getGPUDW(it->second.whichGPU)->allocateAndPut(
             *device_var, it->second.dep->var->getName().c_str(),
-            it->first.patchID, it->first.matlIndx, it->first.levelIndx, it->first.foreign,
+            it->first.patchID, it->first.matlIndx, it->first.levelIndx, it->second.staging,
             make_int3(low.x(), low.y(), low.z()),
             make_int3(high.x(), high.y(), high.z()),
             it->second.sizeOfDataType,
@@ -3299,10 +3301,10 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
     DeviceGridVariables& taskVars) {
   //Copy all task variables metadata into the Task GPU DW.
   //All necessary metadata information must already exist in the host-side GPU DWs.
-  map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo> & taskVarMap =
+  multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & taskVarMap =
       taskVars.getMap();
-  for (map<GpuUtilities::LabelPatchMatlLevelForeignDw,
-      DeviceGridVariableInfo>::iterator it = taskVarMap.begin();
+  for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
+      DeviceGridVariableInfo>::const_iterator it = taskVarMap.begin();
       it != taskVarMap.end(); ++it) {
     int dwIndex = it->second.dep->mapDataWarehouse();
     switch (it->second.dep->var->typeDescription()->getType()) {
@@ -3313,14 +3315,12 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
       int patchID = it->first.patchID;
       int matlIndx = it->first.matlIndx;
       int levelIndx = it->first.levelIndx;
-      bool foreign = it->first.foreign;
-      gpudw->get(*patchVar, it->second.dep->var->getName().c_str(), patchID,
-          matlIndx, levelIndx);
+      gpudw->get(*patchVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
       dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(*patchVar,
           OnDemandDataWarehouse::getTypeDescriptionSize(
               it->second.dep->var->typeDescription()->getSubType()->getType()),
           it->second.dep->var->getName().c_str(), patchID, matlIndx,
-          levelIndx, foreign, 0);
+          levelIndx, 0);
       delete patchVar;
     }
       break;
@@ -3337,14 +3337,21 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
       int patchID = it->first.patchID;
       int matlIndx = it->first.matlIndx;
       int levelIndx = it->first.levelIndx;
-      bool foreign = it->first.foreign;
-      gpudw->get(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID,
-          matlIndx, levelIndx);
+      if (it->second.staging) {
+        gpudw->getStagingVar(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx,
+            make_int3(it->second.offset.x(), it->second.offset.y(), it->second.offset.z()),
+            make_int3(it->second.sizeVector.x(), it->second.sizeVector.y(), it->second.sizeVector.z()));
+      } else {
+        gpudw->get(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
+      }
+      //TODO: Because maps are unordered, is it possible a staging var could be inserted before the regular
+      //var exists?  If so, then just loop twice, once when all staging is false, then loop again when all
+      //staging is true
       dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(
           *gpuGridVar,
           OnDemandDataWarehouse::getTypeDescriptionSize(
               it->second.dep->var->typeDescription()->getSubType()->getType()),
-          it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx, foreign,
+          it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx, it->second.staging,
           (GPUDataWarehouse::GhostType) (it->second.dep->gtype),
           it->second.dep->numGhostCells);
       delete gpuGridVar;
@@ -3373,8 +3380,6 @@ void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask,
     //and call a kernel to copy those coordinates.
 
     int dwIndex = ghostVars.getDwIndex(i);
-    int sourceDeviceNum = ghostVars.getSourceDeviceNum(i);
-    int destDeviceNum = ghostVars.getDestDeviceNum(i);
 
     //We can copy it manually internally within the device via a kernel.
     //This apparently goes faster overall
@@ -3457,9 +3462,6 @@ void UnifiedScheduler::markDeviceComputesDataAsValid(DetailedTask* dtask) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::markDeviceComputesDataAsValid"); TAU_PROFILE("UnifiedScheduler::markDeviceComputesDataAsValid()", " ", TAU_USER);
 
-  void* host_ptr = NULL;    // host base pointer to raw data
-  void* device_ptr = NULL;    // host base pointer to raw data
-  size_t host_bytes = 0;    // raw byte count to copy to the device
   //The only thing we need to process is the requires.
   const Task* task = dtask->getTask();
   for (const Task::Dependency* comp = task->getComputes(); comp != 0; comp =
@@ -3501,9 +3503,6 @@ void UnifiedScheduler::markHostRequiresDataAsValid(DetailedTask* dtask) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::markHostRequiresDataAsValid"); TAU_PROFILE("UnifiedScheduler::markHostRequiresDataAsValid()", " ", TAU_USER);
 
-  void* host_ptr = NULL;    // host base pointer to raw data
-  void* device_ptr = NULL;    // host base pointer to raw data
-  size_t host_bytes = 0;    // raw byte count to copy to the device
   //The only thing we need to process is the requires.
   const Task* task = dtask->getTask();
   for (const Task::Dependency* dependantVar = task->getRequires();
@@ -3541,7 +3540,7 @@ void UnifiedScheduler::markHostRequiresDataAsValid(DetailedTask* dtask) {
   }
 }
 
-bool UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
+void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
   //Request that all contiguous device arrays from the device be sent to their contiguous host array counterparts.
   //We only copy back the data needed for an upcoming task.  If data isn't needed, it can stay on the device and
   //potentially even die on the device
@@ -4126,19 +4125,19 @@ void UnifiedScheduler::processD2HCopies(DetailedTask* dtask) {
             case sizeof(int): {
               GPUGridVariable<int> device_var;
               dw->getGPUDW()->copyHostContiguousToHost(device_var, gridVar,
-                  comp->var->getName().c_str(), patchID, matlID, levelID, false);
+                  comp->var->getName().c_str(), patchID, matlID, levelID);
               break;
             }
             case sizeof(double): {
               GPUGridVariable<double> device_var;
               dw->getGPUDW()->copyHostContiguousToHost(device_var, gridVar,
-                  comp->var->getName().c_str(), patchID, matlID, levelID, false);
+                  comp->var->getName().c_str(), patchID, matlID, levelID);
               break;
             }
             case sizeof(GPUStencil7): {
               GPUGridVariable<GPUStencil7> device_var;
               dw->getGPUDW()->copyHostContiguousToHost(device_var, gridVar,
-                  comp->var->getName().c_str(), patchID, matlID, levelID, false);
+                  comp->var->getName().c_str(), patchID, matlID, levelID);
               break;
             }
             }
@@ -4638,12 +4637,13 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
     const DeviceGhostCells& ghostVars) {
 
   bool copiesExist = false;
-  //If we put it in ghostVars, then we copied it to an array on the GPU.  Go through the ones that indicate
-  //they are going to another MPI rank.  Copy them out to the host.  To make the engine cleaner for now,
-  //we'll then do a host-to-host copy step into the variable.  In the future, to be more efficient, we should skip the
+
+  //If we put it in ghostVars, then we copied it to an array on the GPU (D2D).  Go through the ones that indicate
+  //they are going to another MPI rank.  Copy them out to the host (D2H).  To make the engine cleaner for now,
+  //we'll then do a H2H copy step into the variable.  In the future, to be more efficient, we could skip the
   //host to host copy and instead have sendMPI() send the array we get from the device instead.  To be even more efficient
   //than that, if everything is pinned, unified addressing set up, and CUDA aware MPI used, then we could pull
-  //everything out via MPI that way and avoid the D2H copy and the H2H copy.
+  //everything out via MPI that way and avoid the manual D2H copy and the H2H copy.
   for (unsigned int i = 0; i < ghostVars.numItems(); i++) {
 
     //TODO: Needs a particle section
@@ -4655,13 +4655,18 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
       int3 device_offset;
       int3 device_size;
 
+
       //We created a temporary host variable for this earlier,
-      //and the deviceVars collection knows about it.  (We also created it in the "open" destination patch).
-      DeviceGridVariableInfo item = deviceVars.getItem(ghostVars.getLabel(i),
-                 ghostVars.getDestPatchPointer(i),
+      //and the deviceVars collection knows about it.  It's set as a foreign var.
+      IntVector ghostLow = ghostVars.getLow(i);
+      IntVector ghostHigh = ghostVars.getHigh(i);
+      IntVector ghostSize(ghostHigh.x() - ghostLow.x(), ghostHigh.y() - ghostLow.y(), ghostHigh.z() - ghostLow.z());
+      DeviceGridVariableInfo item = deviceVars.getStagingItem(ghostVars.getLabel(i),
+                 ghostVars.getSourcePatchPointer(i),
                  ghostVars.getMatlIndx(i),
                  ghostVars.getLevelIndx(i),
-                 true,
+                 ghostLow,
+                 ghostSize,
                  (const int)ghostVars.getDwIndex(i));
       GridVariableBase* tempGhostVar = (GridVariableBase*)item.var;
 
@@ -4679,7 +4684,13 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
         OnDemandDataWarehouseP dw = dws[(int)ghostVars.getDwIndex(i)];
         GPUDataWarehouse* gpudw = dw->getGPUDW(ghostVars.getSourceDeviceNum(i));
 
-        gpudw->get(*device_var, ghostVars.getLabel(i)->getName().c_str(), ghostVars.getDestPatchPointer(i)->getID(), ghostVars.getMatlIndx(i));
+        gpudw->getStagingVar(*device_var,
+                   ghostVars.getLabel(i)->getName().c_str(),
+                   ghostVars.getSourcePatchPointer(i)->getID(),
+                   ghostVars.getMatlIndx(i),
+                   ghostVars.getLevelIndx(i),
+                   make_int3(ghostLow.x(),ghostLow.y(), ghostLow.z()),
+                   make_int3(ghostSize.x(), ghostSize.y(), ghostSize.z()));
         device_var->getArray3(device_offset, device_size, device_ptr);
 
         // if offset and size is equal to CPU DW, directly copy back to CPU var memory;
@@ -4710,7 +4721,18 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
           CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
                   cudaMemcpyDeviceToHost, *stream));
+          /*cudaDeviceSynchronize();
+          double * dst = new double[tempGhostVar->getDataSize()/sizeof(double)];
+          tempGhostVar->copyOut(dst);
+
+          for (int i = 0; i < tempGhostVar->getDataSize()/sizeof(double); i++) {
+            printf("At tempGhostVar[%d], value is %1.6lf\n",i, dst[i]);
+          }*/
+
           copiesExist = true;
+        } else {
+          cerr << "unifiedSCheduler::copyAllExtGpuDependenciesToHost() - Error - The host and device variable sizes did not match.  Cannot copy D2H." <<endl;
+          SCI_THROW(InternalError("Error - The host and device variable sizes did not match.  Cannot copy D2H", __FILE__, __LINE__));
         }
 
       //}
@@ -4738,11 +4760,12 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
         //We created a temporary host variable for this earlier,
         //and the deviceVars collection knows about it.
-        DeviceGridVariableInfo item = deviceVars.getItem(ghostVars.getLabel(i),
-            ghostVars.getDestPatchPointer(i),
+        DeviceGridVariableInfo item = deviceVars.getStagingItem(ghostVars.getLabel(i),
+            ghostVars.getSourcePatchPointer(i),
             ghostVars.getMatlIndx(i),
             ghostVars.getLevelIndx(i),
-            true,
+            ghostVars.getLow(i),
+            ghostVars.getHigh(i),
             (const int)ghostVars.getDwIndex(i));
 
         GridVariableBase* tempGhostVar = (GridVariableBase*)item.var;
@@ -4784,15 +4807,8 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
             item.dep->numGhostCells);
         //printf("grid vars sizes are %d, %d, %d to %d, %d, %d at data dize is %d\n", gridVar->getLow().x(), gridVar->getLow().y(), gridVar->getLow().z(), gridVar->getHigh().x(), gridVar->getHigh().y(),gridVar->getHigh().z(), gridVar->getDataSize());
         gridVar->copyPatch(tempGhostVar, ghostVars.getLow(i), ghostVars.getHigh(i) );
+
         dw->refinalize();
-
-
-        //double * dst = new double[tempGhostVar->getDataSize()/sizeof(double)];
-        //tempGhostVar->copyOut(dst);
-
-        //for (int i = 0; i < tempGhostVar->getDataSize()/sizeof(double); i++) {
-        //  printf("At phi_data[%d], value is %1.6lf\n",i, dst[i]);
-        //}
 
 
         //let go of our reference counters.
@@ -4803,12 +4819,13 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
   }
 }
 
+/*
 void UnifiedScheduler::clearForeignGpuVars( DeviceGridVariables& deviceVars){
-  map<GpuUtilities::LabelPatchMatlLevelForeignDw, DeviceGridVariableInfo> & varMap = deviceVars.getMap();
-  for (map<GpuUtilities::LabelPatchMatlLevelForeignDw,
+  multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap = deviceVars.getMap();
+  for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
          DeviceGridVariableInfo>::iterator it = varMap.begin();
          it != varMap.end(); ++it) {
-    if (it->first.foreign) {
+    if (it->first.staging) {
 
       int dwIndex = it->second.dep->mapDataWarehouse();
       dws[dwIndex]->getGPUDW(it->second.whichGPU)->remove(
@@ -4820,6 +4837,7 @@ void UnifiedScheduler::clearForeignGpuVars( DeviceGridVariables& deviceVars){
     }
   }
 }
+*/
 #endif
 
 //______________________________________________________________________
