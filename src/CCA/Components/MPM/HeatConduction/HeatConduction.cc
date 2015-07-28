@@ -78,8 +78,8 @@ void HeatConduction::scheduleComputeInternalHeatRate(SchedulerP& sched,
   t->requires(Task::OldDW, d_lb->pSizeLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pMassLabel,                      gan, NGP);
   t->requires(Task::OldDW, d_lb->pVolumeLabel,                    gan, NGP);
+  t->requires(Task::OldDW, d_lb->pTemperatureGradientLabel,       gan, NGP);
   t->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,        gan, NGP);
-  t->requires(Task::NewDW, d_lb->gTemperatureLabel,               gan, 2*NGN);
   t->requires(Task::NewDW, d_lb->gMassLabel,                      gnone);
   t->computes(d_lb->gdTdtLabel);
 
@@ -184,7 +184,6 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
     oodx[1] = 1.0/dx.y();
     oodx[2] = 1.0/dx.z();
 
-    Ghost::GhostType  gac   = Ghost::AroundCells;
     Ghost::GhostType  gnone = Ghost::None;
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -197,10 +196,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       double Cv = mpm_matl->getSpecificHeat();
       
       constParticleVariable<Point>  px;
-      constParticleVariable<double> pvol,pMass;
-      constParticleVariable<Matrix3> psize;
-      constParticleVariable<Matrix3> deformationGradient;
-      ParticleVariable<Vector>      pTemperatureGradient;
+      constParticleVariable<double> pvol;
+      constParticleVariable<Matrix3> psize, deformationGradient;
+      constParticleVariable<Vector>  pTempGrad;
       constNCVariable<double>       gTemperature,gMass;
       NCVariable<double>            gdTdt;
 
@@ -210,43 +208,13 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
 
       old_dw->get(px,           d_lb->pXLabel,                         pset);
       old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
-      old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
       old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
       old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
-      new_dw->get(gTemperature, d_lb->gTemperatureLabel, dwi, patch, gac,2*NGN);
+      old_dw->get(pTempGrad,    d_lb->pTemperatureGradientLabel,       pset);
       new_dw->get(gMass,        d_lb->gMassLabel,        dwi, patch, gnone, 0);
       new_dw->allocateAndPut(gdTdt, d_lb->gdTdtLabel,    dwi, patch);
-      new_dw->allocateTemporary(pTemperatureGradient, pset);
   
       gdTdt.initialize(0.);
-
-      // Compute the temperature gradient at each particle and project
-      // the particle plastic work temperature rate to the grid
-      for (ParticleSubset::iterator iter = pset->begin();
-           iter != pset->end(); iter++){
-        particleIndex idx = *iter;
-
-        // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
-
-        pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
-        for (int k = 0; k < d_flag->d_8or27; k++){
-          for (int j = 0; j<3; j++) {
-            pTemperatureGradient[idx][j] += 
-                  gTemperature[ni[k]] * d_S[k][j] * oodx[j];
-    
-            if (cout_heat.active()) {
-              cout_heat << "   node = " << ni[k]
-                        << " gTemp = " << gTemperature[ni[k]]
-                        << " idx = " << idx
-                        << " pTempGrad = " << pTemperatureGradient[idx][j]
-                        << endl;
-            }
-          }
-          // Project the mass weighted particle plastic work temperature
-          // rate to the grid
-        } // Loop over local nodes
-      } // Loop over particles
 
       // Compute rate of temperature change at the grid due to conduction
       // and plastic work
@@ -255,11 +223,12 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
         particleIndex idx = *iter;
   
         // Get the node indices that surround the cell
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                                  deformationGradient[idx]);
 
         // Calculate k/(rho*Cv)
         double alpha = kappa*pvol[idx]/Cv; 
-        Vector dT_dx = pTemperatureGradient[idx];
+        Vector dT_dx = pTempGrad[idx];
         double Tdot_cond = 0.0;
         IntVector node(0,0,0);
 
@@ -363,7 +332,8 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
         pdTdx[idx] = Vector(0,0,0);
         
-        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],
+                                                  deformationGradient[idx]);
 
         for (int k = 0; k < d_flag->d_8or27; k++){
           for (int j = 0; j<3; j++) {
