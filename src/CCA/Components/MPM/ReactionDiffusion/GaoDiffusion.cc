@@ -144,8 +144,8 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
     chem_potential = -diffusivity;
     mech_potential = mech_val * (1 - pConcentration[idx]/max_concentration) * pConcentration[idx];
 
-    pFlux[idx] = chem_potential*pConcGradient[idx] + mech_potential*pHydroStressGradient[idx];
-    //cout << "id: " << idx << " CG: " << pConcentrationGradient[idx] << ", PF: " << pPotentialFlux[idx] << endl;
+    pFlux[idx] = chem_potential*pConcGradient[idx]; //+ mech_potential*pHydroStressGradient[idx];
+    //cout << "id: " << idx << " CG: " << pConcGradient[idx] << ", PF: " << pFlux[idx] << endl;
   } //End of Particle Loop
 
 	delete interpolator;
