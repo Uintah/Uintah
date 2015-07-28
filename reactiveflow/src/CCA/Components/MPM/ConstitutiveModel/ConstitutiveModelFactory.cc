@@ -45,6 +45,7 @@
 #include <CCA/Components/MPM/ConstitutiveModel/ReactiveFlow2.h>
 #include <CCA/Components/MPM/ConstitutiveModel/ReactiveFlow3.h>
 #include <CCA/Components/MPM/ConstitutiveModel/GaoElastic.h>
+#include <CCA/Components/MPM/ConstitutiveModel/RFElasticPlastic.h>
 
 #include <CCA/Components/MPM/ConstitutiveModel/Kayenta.h>
 #include <CCA/Components/MPM/ConstitutiveModel/Diamm.h>
@@ -251,6 +252,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "gao_elastic")
     return(scinew GaoElastic(child,flags));
+
+  else if (mat_type ==  "rf_elastic_plastic")
+    return(scinew RFElasticPlastic(child,flags));
 
   else
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

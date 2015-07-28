@@ -483,7 +483,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
 
       // Rotate the total rate of deformation tensor back to the 
       // material configuration
-      tensorD = (tensorR.Transpose())*(tensorD*tensorR);
+      //--tensorD = (tensorR.Transpose())*(tensorD*tensorR);
 
 			// Remove stress free concentration dependent component
 			tensorD = tensorD - one * alpha * (conc_rate/3);
@@ -499,7 +499,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       // Rotate the Cauchy stress back to the 
       // material configuration and calculate the deviatoric part
       sigma = pStress[idx];
-      sigma = (tensorR.Transpose())*(sigma*tensorR);
+      //--sigma = (tensorR.Transpose())*(sigma*tensorR);
 
       //double pressure = sigma.Trace()/3.0; 
       //tensorS = sigma - one * pressure;
@@ -552,6 +552,8 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       // Calculate the total stress
       //sigma = tensorS + tensorHy;
       sigma = sigma + (2*shear*tensorEta + one*bulk*dTrace) * delT;
+      //sigma = sigma + (2*shear*(.9*(1-concentration) + .1)*tensorEta + one*bulk*(.9*(1-concentration) + .1)*dTrace) * delT;
+      //sigma = sigma + (2*shear*(.9*(1+concentration) + .1)*tensorEta + one*bulk*(.9*(1+concentration) + .1)*dTrace) * delT;
 
       //-----------------------------------------------------------------------
       // Stage 4:
@@ -568,7 +570,7 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
       // Compute polar decomposition of new F (F = RU)
       tensorF_new.polarDecompositionRMB(tensorU, tensorR);
 
-      sigma = (tensorR*sigma)*(tensorR.Transpose());
+      //---sigma = (tensorR*sigma)*(tensorR.Transpose());
 
       // Update the kinematic variables
       pRotation_new[idx] = tensorR;

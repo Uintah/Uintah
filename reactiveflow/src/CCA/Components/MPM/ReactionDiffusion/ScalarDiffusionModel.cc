@@ -210,7 +210,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
       if(patch->containsNode(node)) {
         Point gpos = patch->getNodePosition(node);
         Vector distance = px[idx] - gpos;
-        pconc_ext = pConcentration[idx] - Dot(pConcGrad[idx],distance);
+        //pconc_ext = pConcentration[idx] - Dot(pConcGrad[idx],distance);
         gconcentration[node] += pconc_ext * pmass[idx] * S[k];
         ghydrostaticstress[node] += phydrostress * pmass[idx] * S[k];
       }

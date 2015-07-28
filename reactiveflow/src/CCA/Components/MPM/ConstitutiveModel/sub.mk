@@ -67,7 +67,8 @@ SRCS   += \
         $(SRCDIR)/ReactiveFlow.cc               \
         $(SRCDIR)/ReactiveFlow2.cc              \
         $(SRCDIR)/ReactiveFlow3.cc              \
-        $(SRCDIR)/GaoElastic.cc
+        $(SRCDIR)/GaoElastic.cc                 \
+        $(SRCDIR)/RFElasticPlastic.cc
 
 ifneq ($(NO_FORTRAN),yes)
   SRCS   += \
