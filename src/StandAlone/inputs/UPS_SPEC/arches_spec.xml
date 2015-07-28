@@ -1005,23 +1005,10 @@
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
 
             <!-- drag model -->
-            <particle_density           spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, node_specific'"
-                                        need_applies_to="type drag, gravity"> <!-- use a constant density for all particles, or use a model for each-->
-              <constant                 spec="REQUIRED DOUBLE"
-                                        need_applies_to="type constant"/>
-              <density_label            spec="REQUIRED STRING"
-                                        need_applies_to="type node_specific"/> <!-- base density label -->
-            </particle_density>
-
-            <diameter                   spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, node_specific"
-                                        need_applies_to="type drag"> <!-- use a constant diameter for all particles, or use a model for each-->
-              <constant                 spec="REQUIRED DOUBLE"
-                                        need_applies_to="type constant"/>
-              <diameter_label           spec="REQUIRED STRING"
-                                        need_applies_to="type node_specific"/> <!-- base radius label -->
-            </diameter>
+            <particle_density_label     spec="REQUIRED STRING"
+                                        need_applies_to="type drag, gravity"/> <!-- base density label -->
+            <particle_diameter_label    spec="REQUIRED STRING"
+                                        need_applies_to="type drag"/>          <!-- base diameter label -->
 
             <direction                  spec="REQUIRED STRING 'x,y,z'"
                                         need_applies_to="type drag"/>         <!-- apply this source to which velocity -->

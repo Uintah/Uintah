@@ -113,11 +113,6 @@ namespace Uintah{
     const int _N;                 //<<< The number of "environments"
     
     double _visc;
-    double _rho;
-    double _d;
-    
-    bool constDensity;
-    bool constDiameter;
     
     const std::string get_name(const int i, const std::string base_name){
       std::stringstream out;
@@ -155,24 +150,8 @@ namespace Uintah{
     db->getWithDefault("v_velocity_label",_base_v_velocity_name,"none");
     db->getWithDefault("w_velocity_label",_base_w_velocity_name,"none");
     
-    std::string tempType;
-    db->findBlock("particle_density")->getAttribute("type",tempType);
-    if ( tempType == "constant" ) {
-      db->findBlock("particle_density")->require("constant",_rho);
-      constDensity = true;
-    } else {
-      db->findBlock("particle_density")->require("density_label",_base_density_name);
-      constDensity = false;
-    }
-    
-    db->findBlock("diameter")->getAttribute("type",tempType);
-    if ( tempType == "constant" ) {
-      db->findBlock("diameter")->require("constant",_d);
-      constDiameter = true;
-    } else {
-      db->findBlock("diameter")->require("diameter_label",_base_diameter_name);
-      constDiameter = false;
-    }
+    db->require("particle_density_label",_base_density_name);
+    db->require("particle_diameter_label",_base_diameter_name);
     
     db->require("direction",_direction);
 
@@ -256,15 +235,11 @@ namespace Uintah{
       register_variable( gas_name, _D_type, COMPUTES, 0, NEWDW, variable_registry, time_substep );
       
       //independent variables
-      if ( !constDiameter ) {
-        const std::string diameter_name = get_name( i, _base_diameter_name );
-        register_variable( diameter_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
-      }
-  
-      if ( !constDensity ) {
-        const std::string density_name = get_name( i, _base_density_name );
-        register_variable( density_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
-      }
+      const std::string diameter_name = get_name( i, _base_diameter_name );
+      register_variable( diameter_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
+
+      const std::string density_name = get_name( i, _base_density_name );
+      register_variable( density_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
       
       const std::string weight_name = get_name( i, "w" );
       register_variable( weight_name, _I_type, REQUIRES, 0, LATEST, variable_registry, time_substep );
@@ -327,9 +302,14 @@ namespace Uintah{
       ITptr partVelU = tsk_info->get_const_so_field<IT>(u_vel_name);
       ITptr partVelV;
       ITptr partVelW;
-      ITptr density;
-      ITptr diameter;
       
+      const std::string density_name = get_name( i, _base_density_name );
+      ITptr density = tsk_info->get_const_so_field<IT>(density_name);
+   
+      const std::string diameter_name = get_name( i, _base_diameter_name );
+      ITptr diameter = tsk_info->get_const_so_field<IT>(diameter_name);
+      
+      //fidn particle velocity maginitue with ifs on V/W to allow for simple 1/2D testing
       *partVelMag <<= *partVelU * *partVelU;
       if ( _base_v_velocity_name != "none") {
         const std::string v_vel_name = get_name( i, _base_v_velocity_name );
@@ -343,30 +323,11 @@ namespace Uintah{
       }
       *partVelMag <<= sqrt( *partVelMag );
 
-      if (!constDensity && !constDiameter) {
-        const std::string density_name = get_name( i, _base_density_name );
-        density = tsk_info->get_const_so_field<IT>(density_name);
-        const std::string diameter_name = get_name( i, _base_diameter_name );
-        diameter = tsk_info->get_const_so_field<IT>(diameter_name);
-        *tauP <<= (*density) * (*diameter) * (*diameter) / (18.0 * _visc);
-        *Re <<= abs( *gasVelMag - *partVelMag ) * (*diameter) * (*interp)(*rhoG) / _visc ;
-      } else if ( !constDensity && constDiameter ) {
-        const std::string density_name = get_name( i, _base_density_name );
-        density = tsk_info->get_const_so_field<IT>(density_name);
-        *tauP <<= (*density) * _d * _d / (18.0 * _visc);
-        *Re <<= abs( *gasVelMag - *partVelMag ) * _d * (*interp)(*rhoG) / _visc;
-      } else if ( constDensity && !constDiameter ) {
-        const std::string diameter_name = get_name( i, _base_diameter_name );
-        diameter = tsk_info->get_const_so_field<IT>(diameter_name);
-        *tauP <<= _rho * (*diameter) * (*diameter) / (18.0 * _visc);
-        *Re <<= abs( *gasVelMag - *partVelMag ) * (*diameter) * (*interp)(*rhoG) / _visc;
-      } else {
-        *tauP <<= _rho * _d * _d / (18.0 * _visc);
-        *Re <<= abs( *gasVelMag - *partVelMag ) * _d * (*interp)(*rhoG) / _visc;
-      }
-      
+      *tauP <<= (*density) * (*diameter) * (*diameter) / (18.0 * _visc); //particle relaxatino time
+      *Re <<= abs( *gasVelMag - *partVelMag ) * (*diameter) * (*interp)(*rhoG) / _visc ; //Reynolds number
+
       *fDrag <<= cond( *Re < 994.0, 1.0 + 0.15 * pow( (*Re), 0.687) )
-                     ( 0.0183* (*Re) );
+                     ( 0.0183* (*Re) ); //drag coefficient
       //an alternative drag law in case its needed later
       //*fDrag <<= 1.0 + 0.15 * pow( (*Re), 0.687 ) + 0.0175* (*Re) / ( 1.0 + 4.25e4 * pow( (*Re), -1.16) ); //valid over all Re
       
@@ -385,18 +346,9 @@ namespace Uintah{
       const std::string w_name = get_name( i, "w" );
       ITptr weight = tsk_info->get_const_so_field<IT>(w_name);
       
-      if (!constDensity && !constDiameter) {
-        *gas_model_value <<= cond( *diameter!=0.0, - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter) )
-                                 (0.0);
-      } else if (!constDensity && constDiameter ) {
-        *gas_model_value <<= - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
-      } else if (constDensity && !constDiameter ) {
-        *gas_model_value <<= cond( *diameter!=0.0, - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter) )
-                                 (0.0);
-      } else {
-        *gas_model_value <<= - *model_value * *weight * _rho / (*interp)(*rhoG) * PI/6.0 * _d * _d * _d;
-      }
-      
+      *gas_model_value <<= cond( *diameter!=0.0, - *model_value * *weight * *density / (*interp)(*rhoG) * PI/6.0 * (*diameter) * (*diameter) * (*diameter) )
+                               (0.0);
+
     }
   }
 }
