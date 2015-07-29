@@ -44,6 +44,7 @@
 #include <vector>
 
 namespace Uintah {
+  class ReactionDiffusionLabel;
   class RFElasticPlastic : public ConstitutiveModel {
   private:
     // Create datatype for storing model parameters
@@ -72,6 +73,7 @@ namespace Uintah {
     // copy constructor
     // RFElasticPlastic(const RFElasticPlastic &cm);
     RFElasticPlastic& operator=(const RFElasticPlastic &cm);
+    ReactionDiffusionLabel* d_rdlb;
 
   public:
     // constructors

@@ -23,6 +23,7 @@
  */
 
 #include <CCA/Components/MPM/ConstitutiveModel/RFElasticPlastic.h>
+#include <CCA/Components/MPM/ReactionDiffusion/ReactionDiffusionLabel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Grid/Patch.h>
 #include <CCA/Ports/DataWarehouse.h>
@@ -55,6 +56,7 @@ RFElasticPlastic::RFElasticPlastic(ProblemSpecP& ps,MPMFlags* Mflag)
   // Thermal expansion coefficient 
   d_initialData.alpha=0.0;
   ps->get("alpha",d_initialData.alpha); // for thermal stress 
+  d_rdlb = scinew ReactionDiffusionLabel();
 
 }
 
@@ -63,10 +65,12 @@ RFElasticPlastic::RFElasticPlastic(const RFElasticPlastic* cm) : ConstitutiveMod
   d_initialData.G = cm->d_initialData.G;
   d_initialData.K = cm->d_initialData.K;
   d_initialData.alpha = cm->d_initialData.alpha; // for diffusion induced stress
+  d_rdlb = scinew ReactionDiffusionLabel();
 }
 
 RFElasticPlastic::~RFElasticPlastic()
 {
+  delete d_rdlb;
 }
 
 
@@ -166,6 +170,8 @@ void RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<Matrix3> pstress;
     constParticleVariable<double> pmass, ptemperature, pTempPrevious;
     constParticleVariable<double> pvolume_new;
+    constParticleVariable<double> pConcentration;
+    constParticleVariable<double> pConc_prenew;
     constParticleVariable<Vector> pvelocity;
     constParticleVariable<Matrix3> velGrad, pDefGrad_new;
 
@@ -178,6 +184,9 @@ void RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
     old_dw->get(ptemperature,       lb->pTemperatureLabel,        pset);
     // for thermal stress
     old_dw->get(pTempPrevious,      lb->pTempPreviousLabel,       pset); 
+
+    old_dw->get(pConcentration,     d_rdlb->pConcentrationLabel,  pset);
+    old_dw->get(pConc_prenew,       d_rdlb->pConcPreviousLabel,   pset);
 
     new_dw->get(pvolume_new,        lb->pVolumeLabel_preReloc,    pset);
     new_dw->get(velGrad,            lb->pVelGradLabel_preReloc,   pset);
@@ -202,12 +211,12 @@ void RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
       // Rate of particle temperature change for thermal stress
-      double ptempRate=(ptemperature[idx]-pTempPrevious[idx])/delT;
+      double pconcRate=(pConcentration[idx]-pConc_prenew[idx])/delT;
 
       // Calculate rate of deformation D, and deviatoric rate DPrime,
       // including effect of thermal strain
       Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())
-                * 0.5-Identity*alpha*ptempRate;
+                * 0.5-Identity*alpha*pconcRate;
       double DTrace = D.Trace();
       Matrix3 DPrime = D - Identity*onethird*DTrace;
 
@@ -601,6 +610,8 @@ void RFElasticPlastic::addComputesAndRequires(Task* task,
   Ghost::GhostType gnone = Ghost::None;
   // for thermal stress
   task->requires(Task::OldDW, lb->pTempPreviousLabel, matlset, gnone); 
+  task->requires(Task::OldDW, d_rdlb->pConcPreviousLabel, matlset, gnone); 
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel, matlset, gnone); 
 }
 
 void 

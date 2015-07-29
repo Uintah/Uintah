@@ -10,6 +10,7 @@
     <operating_temp              spec="OPTIONAL DOUBLE" />
     <max_concentration           spec="OPTIONAL DOUBLE" />
 		<partial_atomic_vol          spec="OPTIONAL DOUBLE" />
+		<tuning1                     spec="OPTIONAL DOUBLE" />
   
   </diffusion_model>
 
