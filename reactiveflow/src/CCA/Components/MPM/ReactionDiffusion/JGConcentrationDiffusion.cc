@@ -92,10 +92,10 @@ void JGConcentrationDiffusion::computeFlux(const Patch* patch, const MPMMaterial
   //ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, d_lb->pXLabel);
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-  old_dw->get(px,           d_lb->pXLabel,                         pset);
-  old_dw->get(pvol,         d_lb->pVolumeLabel,                    pset);
-  old_dw->get(pMass,        d_lb->pMassLabel,                      pset);
-  old_dw->get(psize,        d_lb->pSizeLabel,                      pset);
+  old_dw->get(px,                  d_lb->pXLabel,                  pset);
+  old_dw->get(pvol,                d_lb->pVolumeLabel,             pset);
+  old_dw->get(pMass,               d_lb->pMassLabel,               pset);
+  old_dw->get(psize,               d_lb->pSizeLabel,               pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
 
   new_dw->get(gConcentration,      d_rdlb->gConcentrationLabel, dwi, patch, gac,2*NGN);
