@@ -3776,6 +3776,8 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         plaltmp[pp]  = plal[pp];
         ploctmp[pp]  = ploc[pp];
         pvgradtmp[pp]= pvelgrad[pp];
+
+        cout << "pids_orig = " << pidstmp[pp] << endl;
       }
 
       Vector dx = patch->dCell();
@@ -3839,6 +3841,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           }
 //          cout << "new_index = " << new_index << endl;
           pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
+        cout << "pids_new = " << pidstmp[new_index] << endl;
           pxtmp[new_index]      = new_part_pos[i];
           pvoltmp[new_index]    = .125*pvolume[idx];
           pmasstmp[new_index]   = .125*pmass[idx];
