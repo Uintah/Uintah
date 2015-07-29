@@ -306,55 +306,55 @@ evaluate()
   switch( indepVars_.size() ){
     case 1:{
       if( doDerivative_ ){
-        Functor1D::set_evaluator( &evaluator_ );
-        result <<= SpatialOps::apply_pointwise<Functor1D>( indepVars_[0]->field_ref() );
-      }
-      else{
         DerFunctor1D::set_evaluator( &evaluator_, derIndex_ );
         result <<= SpatialOps::apply_pointwise<DerFunctor1D>( indepVars_[0]->field_ref() );
+      }
+      else{
+        Functor1D::set_evaluator( &evaluator_ );
+        result <<= SpatialOps::apply_pointwise<Functor1D>( indepVars_[0]->field_ref() );
       }
       break;
     }
     case 2:{
       if( doDerivative_ ){
-        Functor2D::set_evaluator( &evaluator_ );
+        DerFunctor2D::set_evaluator( &evaluator_, derIndex_ );
         result <<= SpatialOps::apply_pointwise<Functor2D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
       }
       else{
-        DerFunctor2D::set_evaluator( &evaluator_, derIndex_ );
+        Functor2D::set_evaluator( &evaluator_ );
         result <<= SpatialOps::apply_pointwise<Functor2D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
       }
       break;
     }
     case 3:{
       if( doDerivative_ ){
-        Functor3D::set_evaluator( &evaluator_ );
+        DerFunctor3D::set_evaluator( &evaluator_, derIndex_ );
         result <<= SpatialOps::apply_pointwise<Functor3D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref() );
       }
       else{
-        DerFunctor3D::set_evaluator( &evaluator_, derIndex_ );
+        Functor3D::set_evaluator( &evaluator_ );
         result <<= SpatialOps::apply_pointwise<Functor3D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref() );
       }
       break;
     }
     case 4:{
       if( doDerivative_ ){
-        Functor4D::set_evaluator( &evaluator_ );
+        DerFunctor4D::set_evaluator( &evaluator_, derIndex_ );
         result <<= SpatialOps::apply_pointwise<Functor4D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref() );
       }
       else{
-        DerFunctor4D::set_evaluator( &evaluator_, derIndex_ );
+        Functor4D::set_evaluator( &evaluator_ );
         result <<= SpatialOps::apply_pointwise<Functor4D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref() );
       }
       break;
     }
     case 5:{
       if( doDerivative_ ){
-        Functor5D::set_evaluator( &evaluator_ );
-        result <<= SpatialOps::apply_pointwise<Functor5D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref(), indepVars_[4]->field_ref() );
+        DerFunctor5D::set_evaluator( &evaluator_, derIndex_ );
+        result <<= SpatialOps::apply_pointwise<Functor5D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref(), indepVars_[4]->field_ref() ); 
       }
       else{
-        DerFunctor5D::set_evaluator( &evaluator_, derIndex_ );
+        Functor5D::set_evaluator( &evaluator_ );
         result <<= SpatialOps::apply_pointwise<Functor5D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref(), indepVars_[4]->field_ref() );
       }
       break;
