@@ -348,7 +348,8 @@ void HeatConduction::computeNodalHeatFlux(const ProcessorGroup*,
         particleIndex idx = *iter;
 
         // Get the node indices that surround the cell
-        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],deformationGradient[idx]);
+        interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],
+                                         deformationGradient[idx]);
                                                             
         Vector pdTdx_massWt = pdTdx[idx] * pMass[idx];
         

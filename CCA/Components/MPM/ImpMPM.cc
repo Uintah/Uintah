@@ -364,6 +364,7 @@ void ImpMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pTemperatureLabel);
   t->computes(lb->pTempPreviousLabel);
+  t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
@@ -1470,7 +1471,8 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,one_matl,
               Ghost::AroundCells,1);
-  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,        Ghost::None);
+  t->requires(Task::NewDW, lb->pDeformationMeasureLabel_preReloc,  Ghost::None);
+  t->requires(Task::OldDW, lb->pTemperatureGradientLabel,          Ghost::None);
 
 
   t->computes(lb->pVelocityLabel_preReloc);
@@ -1485,6 +1487,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pSizeLabel_preReloc);
   t->computes(lb->pTempPreviousLabel_preReloc);
   t->computes(lb->pLocalizedMPMLabel_preReloc);
+  t->computes(lb->pTemperatureGradientLabel_preReloc);
 
   if(flags->d_artificial_viscosity){
     t->requires(Task::OldDW, lb->p_qLabel,               Ghost::None);
@@ -3562,9 +3565,9 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       constParticleVariable<Point> px;
       ParticleVariable<Point> pxnew,pxx;
       constParticleVariable<Vector> pvelocity, pacceleration;
-      constParticleVariable<Vector> pDispOld;
+      constParticleVariable<Vector> pDispOld,pTempGrad;
       constParticleVariable<Matrix3> psize;
-      ParticleVariable<Vector> pvelnew,paccNew,pDisp;
+      ParticleVariable<Vector> pvelnew,paccNew,pDisp,pTempGradNew;
       ParticleVariable<Matrix3> psizeNew;
       constParticleVariable<double> pmass, pvolume,pTempOld,pq;
       ParticleVariable<double> pmassNew,pvolumeNew,pTemp,pqNew;
@@ -3587,6 +3590,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       old_dw->get(pvelocity,             lb->pVelocityLabel,             pset);
       old_dw->get(pacceleration,         lb->pAccelerationLabel,         pset);
       old_dw->get(pTempOld,              lb->pTemperatureLabel,          pset);
+      old_dw->get(pTempGrad,             lb->pTemperatureGradientLabel,  pset);
       old_dw->get(pDispOld,              lb->pDispLabel,                 pset);
       new_dw->allocateAndPut(pvelnew,    lb->pVelocityLabel_preReloc,    pset);
       new_dw->allocateAndPut(paccNew,    lb->pAccelerationLabel_preReloc,pset);
@@ -3595,6 +3599,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pmassNew,   lb->pMassLabel_preReloc,        pset);
       new_dw->allocateAndPut(pvolumeNew, lb->pVolumeLabel_preReloc,      pset);
       new_dw->allocateAndPut(pTemp,      lb->pTemperatureLabel_preReloc, pset);
+      new_dw->allocateAndPut(pTempGradNew,lb->pTemperatureGradientLabel_preReloc, pset);
       new_dw->allocateAndPut(pDisp,      lb->pDispLabel_preReloc,        pset);
       new_dw->get(pDeformationMeasure, lb->pDeformationMeasureLabel_preReloc, pset);
 
@@ -3613,6 +3618,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         new_dw->allocateAndPut(pqNew,      lb->p_qLabel_preReloc,        pset);
         pqNew.copyData(pq);
       }
+      pTempGradNew.copyData(pTempGrad);
 
       ParticleVariable<int> isLocalized;
       new_dw->allocateAndPut(isLocalized, lb->pLocalizedMPMLabel_preReloc,pset);
