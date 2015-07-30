@@ -630,10 +630,10 @@ Ray::rayTrace( const ProcessorGroup* pg,
 
         Vector direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
 
-        Vector ray_location;
-        rayLocation( mTwister, origin, DyDx,  DzDx, d_CCRays, ray_location);
+        Vector rayOrigin;
+        ray_Origin( mTwister, origin, DyDx,  DzDx, d_CCRays, rayOrigin);
 
-        updateSumI< T >( direction_vector, ray_location, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI< T >( direction_vector, rayOrigin, origin, Dx,  sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
       }  // Ray loop
 
@@ -946,11 +946,11 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
         //dbg2 << "===== iRay: " << iRay << endl;
         Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
 
-        Vector ray_location;
+        Vector rayOrigin;
         int my_L = maxLevels - 1;
-        rayLocation( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, ray_location);
+        ray_Origin( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, rayOrigin);
 
-        updateSumI_ML< T >( ray_direction, ray_location, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
+        updateSumI_ML< T >( ray_direction, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
                        nRaySteps, sumI, mTwister);
 

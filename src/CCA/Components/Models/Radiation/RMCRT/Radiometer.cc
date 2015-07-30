@@ -543,9 +543,9 @@ Radiometer::radiometerFlux( const Patch* patch,
       // ray loop
       for (int iRay=0; iRay < d_nRadRays; iRay++){
 
-        Vector ray_location;
+        Vector rayOrigin;
         bool useCCRays = true;
-        rayLocation(mTwister, c, DyDx, DzDx, useCCRays, ray_location);
+        ray_Origin(mTwister, c, DyDx, DzDx, useCCRays, rayOrigin);
 
 
         double cosVRTheta;
@@ -553,7 +553,7 @@ Radiometer::radiometerFlux( const Patch* patch,
         rayDirection_VR( mTwister, c, iRay, d_VR, DyDx, DzDx, direction_vector, cosVRTheta);
 
         // get the intensity for this ray
-        updateSumI< T >( direction_vector, ray_location, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
+        updateSumI< T >( direction_vector, rayOrigin, c, Dx, sigmaT4OverPi, abskg, celltype, size, sumI, mTwister);
 
         sumProjI += cosVRTheta * (sumI - sumI_prev); // must subtract sumI_prev, since sumI accumulates intensity
                                                      // from all the rays up to that point

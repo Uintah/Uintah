@@ -121,12 +121,12 @@ namespace Uintah{
       
       //__________________________________
       //
-      void rayLocation( MTRand& mTwister,
+      void ray_Origin( MTRand& mTwister,
                        const IntVector origin,
                        const double DyDx, 
                        const double DzDx,
                        const bool useCCRays,
-                       Vector& location);
+                       Vector& rayOrigin);
 
       //__________________________________
       //
