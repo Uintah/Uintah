@@ -1599,6 +1599,7 @@ void SerialMPM::scheduleRefine(const PatchSet* patches,
   t->computes(lb->pdTdtLabel);
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pVelGradLabel);
+  t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pParticleIDLabel);
   t->computes(lb->pDeformationMeasureLabel);
@@ -4918,7 +4919,7 @@ SerialMPM::refine(const ProcessorGroup*,
         // Create arrays for the particle data
         ParticleVariable<Point>  px;
         ParticleVariable<double> pmass, pvolume, pTemperature;
-        ParticleVariable<Vector> pvelocity, pexternalforce, pdisp;
+        ParticleVariable<Vector> pvelocity, pexternalforce, pdisp,pTempGrad;
         ParticleVariable<Matrix3> psize, pVelGrad;
         ParticleVariable<double> pTempPrev,p_q;
         ParticleVariable<int>    pLoadCurve,pLoc;
@@ -4931,6 +4932,8 @@ SerialMPM::refine(const ProcessorGroup*,
         new_dw->allocateAndPut(pvolume,        lb->pVolumeLabel,        pset);
         new_dw->allocateAndPut(pvelocity,      lb->pVelocityLabel,      pset);
         new_dw->allocateAndPut(pVelGrad,       lb->pVelGradLabel,       pset);
+        new_dw->allocateAndPut(pTempGrad,      lb->pTemperatureGradientLabel,
+                                                                        pset);
         new_dw->allocateAndPut(pTemperature,   lb->pTemperatureLabel,   pset);
         new_dw->allocateAndPut(pTempPrev,      lb->pTempPreviousLabel,  pset);
         new_dw->allocateAndPut(pexternalforce, lb->pExternalForceLabel, pset);
