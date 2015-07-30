@@ -198,6 +198,12 @@ public:
             Variable* var,
             GpuUtilities::DeviceVarDestination dest);
 
+  bool varAlreadyExists(const VarLabel* label,
+            const Patch* patchPointer,
+            int matlIndx,
+            int levelIndx,
+            int dataWarehouse);
+
   bool stagingVarAlreadyExists(const VarLabel* label,
             const Patch* patchPointer,
             int matlIndx,
