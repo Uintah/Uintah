@@ -47,6 +47,51 @@ public:
     }
   };
 
+  struct GhostVarsTuple {
+    string     label;
+    int             matlIndx;
+    int             levelIndx;
+    int             dataWarehouse;
+    IntVector       sharedLowCoordinates;
+    IntVector       sharedHighCoordinates;
+
+    GhostVarsTuple(string label, int matlIndx, int levelIndx, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates) {
+      this->label = label;
+      this->matlIndx = matlIndx;
+      this->levelIndx = levelIndx;
+      this->dataWarehouse = dataWarehouse;
+      this->sharedLowCoordinates = sharedLowCoordinates;
+      this->sharedHighCoordinates = sharedHighCoordinates;
+    }
+    //This is so it can be used in an STL map
+    bool operator<(const GhostVarsTuple& right) const {
+      if (this->label < right.label) {
+        return true;
+      } else if (this->label == right.label && (this->matlIndx < right.matlIndx)) {
+        return true;
+      } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx < right.levelIndx)) {
+        return true;
+      } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx == right.levelIndx) && (this->dataWarehouse < right.dataWarehouse)) {
+        return true;
+      } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+          && (this->levelIndx == right.levelIndx) && (this->dataWarehouse == right.dataWarehouse)
+          && (this->sharedLowCoordinates < right.sharedLowCoordinates)) {
+        return true;
+      } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+          && (this->levelIndx == right.levelIndx) && (this->dataWarehouse == right.dataWarehouse)
+          && (this->sharedLowCoordinates == right.sharedLowCoordinates)
+          && (this->sharedHighCoordinates < right.sharedHighCoordinates)) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+  };
+
+
+
   enum DeviceVarDestination {
     sameDeviceSameMpiRank = 0,
     anotherDeviceSameMpiRank = 1,
@@ -153,11 +198,10 @@ public:
             Variable* var,
             GpuUtilities::DeviceVarDestination dest);
 
-  bool alreadyExists(const VarLabel* label,
+  bool stagingVarAlreadyExists(const VarLabel* label,
             const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
-            bool staging,
             IntVector low,
             IntVector high,
             int dataWarehouse);
@@ -180,7 +224,7 @@ public:
             const Task::Dependency* dep,
             int whichGPU);
 
-  DeviceGridVariableInfo getStagingItem( const VarLabel* label,
+  DeviceGridVariableInfo getStagingItem( const string& label,
           const Patch* patch,
           const int matlIndx,
           const int levelIndx,

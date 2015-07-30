@@ -24,7 +24,7 @@ public:
       const Patch* destPatchPointer,
       int matlIndx,
       int levelIndx,
-      bool destForeign,
+      bool destStaging,
       IntVector low,
       IntVector high,
       int xstride,
@@ -39,7 +39,7 @@ public:
   set<int>& getDestinationDevices();
 
   unsigned int numItems() const;
-
+/*
   const VarLabel* getLabel(int index) const;
 
   char const * getLabelName(int index) const;
@@ -48,7 +48,7 @@ public:
 
   int getLevelIndx(int index) const;
 
-  bool getDestForeign(int index) const;
+  bool getdestStaging(int index) const;
 
   const Patch* getSourcePatchPointer(int index) const;
 
@@ -65,15 +65,19 @@ public:
   IntVector getVirtualOffset(int index) const;
 
   Task::WhichDW getDwIndex(int index) const;
-
+*/
   unsigned int getNumGhostCellCopies(Task::WhichDW dwIndex) const;
 
-  GpuUtilities::DeviceVarDestination getDestination(int index) const;
+  //GpuUtilities::DeviceVarDestination getDestination(int index) const;
+  const std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>& getMap() const {
+    return ghostVars;
+  }
 
 private:
   //std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo> vars;
 
-  vector< DeviceGhostCellsInfo > vars;
+  //vector< DeviceGhostCellsInfo > vars;
+  map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> ghostVars;
   std::set< int > destinationDevices;
   unsigned int totalGhostCellCopies[Task::TotalDWs];
 };
@@ -85,7 +89,7 @@ public:
       const Patch* destPatchPointer,
       int matlIndx,
       int levelIndx,
-      bool destForeign,
+      bool destStaging,
       IntVector low,
       IntVector high,
       int xstride,
@@ -102,7 +106,7 @@ public:
   const Patch* destPatchPointer;
   int matlIndx;
   int levelIndx;
-  bool destForeign;
+  bool destStaging;
   IntVector low;
   IntVector high;
   int xstride;
