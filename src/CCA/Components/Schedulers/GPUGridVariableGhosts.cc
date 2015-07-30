@@ -28,7 +28,7 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
     const Patch* destPatchPointer,
     int matlIndx,
     int levelIndx,
-    bool destForeign,
+    bool destStaging,
     IntVector low,
     IntVector high,
     int xstride,
@@ -44,7 +44,7 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
   this->destPatchPointer = destPatchPointer;
   this->matlIndx = matlIndx;
   this->levelIndx = levelIndx;
-  this->destForeign = destForeign,
+  this->destStaging = destStaging,
   this->low = low;
   this->high = high;
   this->xstride = xstride;
@@ -68,7 +68,7 @@ void DeviceGhostCells::add(const VarLabel* label,
           const Patch* destPatchPointer,
           int matlIndx,
           int levelIndx,
-          bool destForeign,
+          bool destStaging,
           IntVector low,
           IntVector high,
           int xstride,
@@ -80,10 +80,32 @@ void DeviceGhostCells::add(const VarLabel* label,
           Task::WhichDW dwIndex,
           GpuUtilities::DeviceVarDestination dest) {   //toNode, needed when preparing contiguous arrays to send off host for MPI
 
+  //unlike grid variables, we should only have one instance of label/patch/matl/level/dw for patch variables.
+  GpuUtilities::GhostVarsTuple gvt(label->getName(), matlIndx, levelIndx, (int)dwIndex, low, high);
+  if (ghostVars.find(gvt) == ghostVars.end()) {
+    totalGhostCellCopies[dwIndex] += 1;
+    int deviceID = GpuUtilities::getGpuIndexForPatch(destPatchPointer);
+    if (destinationDevices.find(deviceID) == destinationDevices.end()) {
+      destinationDevices.insert(deviceID);
+    }
+    DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx, destStaging,
+                               low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
+                               fromResource, toResource, dwIndex, dest);
+    ghostVars.insert( std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::value_type( gvt, tmp ) );
+  } else {
+    //Don't add the same device var twice.
+    printf("ERROR:\n This preparation queue for ghost cell copies already added this exact copy for label %s matl %d level %d dw %d\n",label->getName().c_str(), matlIndx, levelIndx, (int)dwIndex);
+    SCI_THROW(InternalError("Preparation queue already contained same exact variable for: -" + label->getName(), __FILE__, __LINE__));
+  }
+
+
+
+
+  /*
   //DeviceGhostCellsInfo::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), destPatchPointer->getID(), matlIndx, levelIndx, dwIndex);
   //if (vars.find(lpmld) == vars.end()) {
       totalGhostCellCopies[dwIndex] += 1;
-      DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx, destForeign,
+      DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx, destStaging,
                                  low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
                                  fromResource, toResource, dwIndex, dest);
   //    vars.insert( std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGhostCellsInfo>::value_type( lpmld, tmp ) );
@@ -102,17 +124,39 @@ void DeviceGhostCells::add(const VarLabel* label,
   }
 
   vars.push_back(tmp);
-
+  */
 }
+/*
+DeviceGhostCellsInfo DeviceGhostCells::getItem(
+    const VarLabel* label,
+    const Patch* patch,
+    const int matlIndx,
+    const int levelIndx,
+    const IntVector low,
+    const IntVector size,
+    const int dataWarehouseIndex) const {
+  GpuUtilities::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), patch->getID(), matlIndx, levelIndx, dataWarehouseIndex);
+  std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::const_iterator it = vars.find(lpmld);
+  while (it != vars.end()) {
+     if (it->second.staging == true && it->second.offset == low && it->second.sizeVector == size) {
+       return it->second;
+     }
+     ++it;
+   }
 
+  printf("Error: DeviceGridVariables::getStagingItem(), item not found for offset (%d, %d, %d) size (%d, %d, %d).\n",
+      low.x(), low.y(), low.z(), size.x(), size.y(), size.z());
+  SCI_THROW(InternalError("Error: DeviceGridVariables::getStagingItem(), item not found for: -" + label->getName(), __FILE__, __LINE__));
+}
+*/
 set<int>& DeviceGhostCells::getDestinationDevices() {
   return destinationDevices;
 }
 
 unsigned int DeviceGhostCells::numItems() const {
-  return vars.size();
+  return ghostVars.size();
 }
-
+/*
 const VarLabel* DeviceGhostCells::getLabel(int index) const {
   return vars.at(index).label;
 }
@@ -128,8 +172,8 @@ int DeviceGhostCells::getLevelIndx(int index) const {
   return vars.at(index).levelIndx;
 }
 
-bool DeviceGhostCells::getDestForeign(int index) const {
-  return vars.at(index).destForeign;
+bool DeviceGhostCells::getdestStaging(int index) const {
+  return vars.at(index).destStaging;
 }
 
 const Patch* DeviceGhostCells::getSourcePatchPointer(int index) const {
@@ -162,13 +206,14 @@ IntVector DeviceGhostCells::getVirtualOffset(int index) const {
 Task::WhichDW DeviceGhostCells::getDwIndex(int index) const {
   return vars.at(index).dwIndex;
 }
-
+*/
 unsigned int DeviceGhostCells::getNumGhostCellCopies(Task::WhichDW dwIndex) const {
   return totalGhostCellCopies[dwIndex];
 }
 
+/*
 GpuUtilities::DeviceVarDestination DeviceGhostCells::getDestination(int index) const {
   return vars.at(index).dest;
-}
+}*/
 
 
