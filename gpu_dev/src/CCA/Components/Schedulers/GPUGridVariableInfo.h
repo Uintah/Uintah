@@ -174,8 +174,8 @@ public:
   void addTaskGpuDWStagingVar(const Patch* patchPointer,
             int matlIndx,
             int levelIndx,
-            IntVector sizeVector,
             IntVector offset,
+            IntVector sizeVector,
             size_t sizeOfDataType,
             const Task::Dependency* dep,
             int whichGPU);

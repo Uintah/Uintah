@@ -101,7 +101,9 @@ GPUDataWarehouse::getStagingVar(const GPUGridVariableBase& var, char const* labe
     if (staging_it != it->second.stagingVars.end()) {
       var.setArray3(offset, size, staging_it->second.device_ptr);
     } else {
-      printError("Didn't find a staging variable from the device.", "getStagingVar", label, patchID, matlIndx, levelIndx);
+      printf("%s() - Didn't find a staging variable from the device for label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d).", "getStagingVar", label, patchID, matlIndx, levelIndx,
+          offset.x, offset.y, offset.z, size.x, size.y, size.z);
+      exit(-1);
     }
   } else {
     printError("Didn't find a staging variable from the device.", "getStagingVar", label, patchID, matlIndx, levelIndx);
@@ -438,6 +440,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
       varLock.writeUnlock();
       return;
     }
+    ++it;
   }
 
   //It's not in the database, so create it.
@@ -1286,7 +1289,7 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
     //threads will only access their own data, not data copied in by other cpu threada via streams.
 
     //This approach does NOT require CUDA pinned memory.
-    unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
+    //unsigned int sizeToCopy = sizeof(GPUDataWarehouse);
     cudaStream_t* ptr = (cudaStream_t*)(cuda_stream);
 
     CUDA_RT_SAFE_CALL (cudaMemcpyAsync( d_device_copy, this, objectSizeInBytes, cudaMemcpyHostToDevice, *ptr));
@@ -1337,15 +1340,16 @@ GPUDataWarehouse::clear()
           printf("cuda Free for staging var for %s at device ptr %p on device %d\n" , varIter->first.label.c_str(), stagingIter->second.device_ptr, d_device_id );
         }
         CUDA_RT_SAFE_CALL(cudaFree(stagingIter->second.device_ptr));
-        stagingIter->second.device_ptr == NULL;
+        //stagingIter->second.device_ptr == NULL;
       }
+      varIter->second.stagingVars.clear();
 
       //clear out the regular vars
       if (d_debug){
         printf("cuda Free for %s at device ptr %p on device %d\n" , varIter->first.label.c_str(), varIter->second.device_ptr, d_device_id );
       }
       CUDA_RT_SAFE_CALL(cudaFree(varIter->second.device_ptr));
-      varIter->second.device_ptr == NULL;
+      //varIter->second.device_ptr == NULL;
     }
   }
 
@@ -2082,7 +2086,9 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
       if (staging_it != it->second.stagingVars.end()) {
         d_varDB[i].ghostItem.dest_varDB_index = staging_it->second.varDB_index;
       } else {
-        printf("\nERROR:\nGPUDataWarehouse::putGhostCell() didn't find a staging variable from the device.\n");
+        printf("\nERROR:\nGPUDataWarehouse::putGhostCell() didn't find a staging variable from the device for offset (%d, %d, %d) and size (%d, %d, %d).\n",
+            sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z,
+            sv.device_size.x, sv.device_size.y, sv.device_size.z);
         exit(-1);
       }
 

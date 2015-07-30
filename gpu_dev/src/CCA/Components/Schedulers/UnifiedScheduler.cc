@@ -3303,67 +3303,76 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
   //All necessary metadata information must already exist in the host-side GPU DWs.
   multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & taskVarMap =
       taskVars.getMap();
-  for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
-      DeviceGridVariableInfo>::const_iterator it = taskVarMap.begin();
-      it != taskVarMap.end(); ++it) {
-    int dwIndex = it->second.dep->mapDataWarehouse();
-    switch (it->second.dep->var->typeDescription()->getType()) {
-    case TypeDescription::PerPatch: {
-      GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(
-          it->second.sizeOfDataType);
-      GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(it->second.whichGPU);
-      int patchID = it->first.patchID;
-      int matlIndx = it->first.matlIndx;
-      int levelIndx = it->first.levelIndx;
-      gpudw->get(*patchVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
-      dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(*patchVar,
-          OnDemandDataWarehouse::getTypeDescriptionSize(
-              it->second.dep->var->typeDescription()->getSubType()->getType()),
-          it->second.dep->var->getName().c_str(), patchID, matlIndx,
-          levelIndx, 0);
-      delete patchVar;
-    }
-      break;
-    case TypeDescription::CCVariable:
-    case TypeDescription::NCVariable:
-    case TypeDescription::SFCXVariable:
-    case TypeDescription::SFCYVariable:
-    case TypeDescription::SFCZVariable: {
 
-      GPUGridVariableBase* gpuGridVar =
-          OnDemandDataWarehouse::createGPUGridVariable(
+  //Because maps are unordered, it is possible a staging var could be inserted before the regular
+  //var exists.  So  just loop twice, once when all staging is false, then loop again when all
+  //staging is true
+  bool isStaging = false;
+
+  for (int i = 0; i < 2; i++) {
+    for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
+        DeviceGridVariableInfo>::const_iterator it = taskVarMap.begin();
+        it != taskVarMap.end(); ++it) {
+      if (it->second.staging == isStaging) {
+        int dwIndex = it->second.dep->mapDataWarehouse();
+        switch (it->second.dep->var->typeDescription()->getType()) {
+        case TypeDescription::PerPatch: {
+          GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(
               it->second.sizeOfDataType);
-      GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(it->second.whichGPU);
-      int patchID = it->first.patchID;
-      int matlIndx = it->first.matlIndx;
-      int levelIndx = it->first.levelIndx;
-      if (it->second.staging) {
-        gpudw->getStagingVar(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx,
-            make_int3(it->second.offset.x(), it->second.offset.y(), it->second.offset.z()),
-            make_int3(it->second.sizeVector.x(), it->second.sizeVector.y(), it->second.sizeVector.z()));
-      } else {
-        gpudw->get(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
+          GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(it->second.whichGPU);
+          int patchID = it->first.patchID;
+          int matlIndx = it->first.matlIndx;
+          int levelIndx = it->first.levelIndx;
+          gpudw->get(*patchVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
+          dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(*patchVar,
+              OnDemandDataWarehouse::getTypeDescriptionSize(
+                  it->second.dep->var->typeDescription()->getSubType()->getType()),
+              it->second.dep->var->getName().c_str(), patchID, matlIndx,
+              levelIndx, 0);
+          delete patchVar;
+        }
+          break;
+        case TypeDescription::CCVariable:
+        case TypeDescription::NCVariable:
+        case TypeDescription::SFCXVariable:
+        case TypeDescription::SFCYVariable:
+        case TypeDescription::SFCZVariable: {
+
+          GPUGridVariableBase* gpuGridVar =
+              OnDemandDataWarehouse::createGPUGridVariable(
+                  it->second.sizeOfDataType);
+          GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(it->second.whichGPU);
+          int patchID = it->first.patchID;
+          int matlIndx = it->first.matlIndx;
+          int levelIndx = it->first.levelIndx;
+          if (it->second.staging) {
+            printf("calling getStagingVar from prepareTaskVarsIntoTaskDW()\n");
+            gpudw->getStagingVar(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx,
+                make_int3(it->second.offset.x(), it->second.offset.y(), it->second.offset.z()),
+                make_int3(it->second.sizeVector.x(), it->second.sizeVector.y(), it->second.sizeVector.z()));
+          } else {
+            gpudw->get(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
+          }
+          dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(
+              *gpuGridVar,
+              OnDemandDataWarehouse::getTypeDescriptionSize(
+                  it->second.dep->var->typeDescription()->getSubType()->getType()),
+              it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx, it->second.staging,
+              (GPUDataWarehouse::GhostType) (it->second.dep->gtype),
+              it->second.dep->numGhostCells);
+          delete gpuGridVar;
+        }
+          break;
+        default: {
+          cerrLock.lock();
+          cerr << "Variable " << it->second.dep->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
+          cerrLock.unlock();
+        }
+        }
       }
-      //TODO: Because maps are unordered, is it possible a staging var could be inserted before the regular
-      //var exists?  If so, then just loop twice, once when all staging is false, then loop again when all
-      //staging is true
-      dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(
-          *gpuGridVar,
-          OnDemandDataWarehouse::getTypeDescriptionSize(
-              it->second.dep->var->typeDescription()->getSubType()->getType()),
-          it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx, it->second.staging,
-          (GPUDataWarehouse::GhostType) (it->second.dep->gtype),
-          it->second.dep->numGhostCells);
-      delete gpuGridVar;
     }
-      break;
-    default: {
-      cerrLock.lock();
-      cerr << "Variable " << it->second.dep->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
-      cerrLock.unlock();
-    }
-    }
-  } //end if task dw preparation
+    isStaging = !isStaging;
+  }
 }
 
 void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask,
@@ -3417,9 +3426,6 @@ void UnifiedScheduler::markDeviceRequiresDataAsValid(DetailedTask* dtask) {
 
   MALLOC_TRACE_TAG_SCOPE("UnifiedScheduler::markDeviceRequiresDataAsValid"); TAU_PROFILE("UnifiedScheduler::markDeviceRequiresDataAsValid()", " ", TAU_USER);
 
-  void* host_ptr = NULL;    // host base pointer to raw data
-  void* device_ptr = NULL;    // host base pointer to raw data
-  size_t host_bytes = 0;    // raw byte count to copy to the device
   //The only thing we need to process is the requires.
   const Task* task = dtask->getTask();
   for (const Task::Dependency* dependantVar = task->getRequires();
@@ -4683,7 +4689,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
         GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(host_strides.x());
         OnDemandDataWarehouseP dw = dws[(int)ghostVars.getDwIndex(i)];
         GPUDataWarehouse* gpudw = dw->getGPUDW(ghostVars.getSourceDeviceNum(i));
-
+        printf("calling getStagingVar from copyAllExtGpuDependenciesToHost()\n");
         gpudw->getStagingVar(*device_var,
                    ghostVars.getLabel(i)->getName().c_str(),
                    ghostVars.getSourcePatchPointer(i)->getID(),
@@ -4760,12 +4766,16 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
         //We created a temporary host variable for this earlier,
         //and the deviceVars collection knows about it.
+        IntVector ghostLow = ghostVars.getLow(i);
+        IntVector ghostHigh = ghostVars.getHigh(i);
+        IntVector ghostSize(ghostHigh.x() - ghostLow.x(), ghostHigh.y() - ghostLow.y(), ghostHigh.z() - ghostLow.z());
+
         DeviceGridVariableInfo item = deviceVars.getStagingItem(ghostVars.getLabel(i),
             ghostVars.getSourcePatchPointer(i),
             ghostVars.getMatlIndx(i),
             ghostVars.getLevelIndx(i),
-            ghostVars.getLow(i),
-            ghostVars.getHigh(i),
+            ghostLow,
+            ghostSize,
             (const int)ghostVars.getDwIndex(i));
 
         GridVariableBase* tempGhostVar = (GridVariableBase*)item.var;

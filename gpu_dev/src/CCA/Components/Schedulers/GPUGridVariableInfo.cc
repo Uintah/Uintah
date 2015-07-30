@@ -194,6 +194,7 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
       printf("ERROR:\n This preparation queue already added this exact variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
       SCI_THROW(InternalError("Preparation queue already contained same exact variable for: -" + dep->var->getName(), __FILE__, __LINE__));
     }
+    ++it;
   }
   totalVars[dep->mapDataWarehouse()] += 1;
   //TODO: The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?
@@ -208,35 +209,42 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
 void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
           int matlIndx,
           int levelIndx,
-          IntVector sizeVector,
           IntVector offset,
+          IntVector sizeVector,
           size_t sizeOfDataType,
           const Task::Dependency* dep,
           int whichGPU) {
   GpuUtilities::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it = vars.find(lpmld);
 
-  if (it == vars.end()) {
+ /* if (it == vars.end()) {
 
     //We should have found something...
     printf("ERROR:\n This preparation queue needs a non-staging var before adding a staging var for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
-    SCI_THROW(InternalError("This preparation queue needs a non-staging var before adding a staging var for: -" + dep->var->getName(), __FILE__, __LINE__));
-  }
-  do {
+    SCI_THROW(InternalError("This preparation queue needs a non-staging var before adding a staging var for: " + dep->var->getName(), __FILE__, __LINE__));
+  }*/
+  //Since this is a queue, we aren't likely to have the parent variable of the staging var,
+  //as that likely went into the regular host-side gpudw as a computes in the last timestep.
+
+  //Just make sure we haven't already added this exact staging variable.
+  while (it != vars.end()){
     if (it->second.staging == true && it->second.sizeVector == sizeVector && it->second.offset == offset) {
       //Don't add the same device var twice.
       printf("ERROR:\n This preparation queue already added this exact variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
-      SCI_THROW(InternalError("Preparation queue already contained same exact variable for: -" + dep->var->getName(), __FILE__, __LINE__));
+      SCI_THROW(InternalError("Preparation queue already contained same exact variable for: " + dep->var->getName(), __FILE__, __LINE__));
     }
-  } while (it != vars.end());
+    ++it;
+  }
 
     totalVars[dep->mapDataWarehouse()] += 1;
 
     size_t varMemSize = sizeVector.x() * sizeVector.y() * sizeVector.z() * sizeOfDataType;
     DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, true, sizeVector, sizeOfDataType, varMemSize , offset, matlIndx, levelIndx, patchPointer, dep, Ghost::None, 0, whichGPU);
     vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
-    printf("Added into preparation queue a variable for label %s patch %d matl %d level %d staging: true totalVars is: %d\n",
-            dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, totalVars[dep->mapDataWarehouse()]);
+    printf("Added into preparation queue a variable for label %s patch %d matl %d level %d staging: true offset (%d, %d, %d) size (%d, %d, %d) totalVars is: %d\n",
+            dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx,
+            offset.x(), offset.y(), offset.z(), sizeVector.x(), sizeVector.y(), sizeVector.z(),
+            totalVars[dep->mapDataWarehouse()]);
 
 }
 
@@ -259,7 +267,8 @@ DeviceGridVariableInfo DeviceGridVariables::getStagingItem(
      ++it;
    }
 
-  printf("Error: DeviceGridVariables::getStagingItem(), item not found\n");
+  printf("Error: DeviceGridVariables::getStagingItem(), item not found for offset (%d, %d, %d) size (%d, %d, %d).\n",
+      low.x(), low.y(), low.z(), size.x(), size.y(), size.z());
   SCI_THROW(InternalError("Error: DeviceGridVariables::getStagingItem(), item not found for: -" + label->getName(), __FILE__, __LINE__));
 }
 
