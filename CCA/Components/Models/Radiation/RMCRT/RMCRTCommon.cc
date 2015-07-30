@@ -346,21 +346,21 @@ RMCRTCommon::findRayDirection(MTRand& mTwister,
 //  Compute the physical location of the ray
 //______________________________________________________________________
 void
-RMCRTCommon::rayLocation( MTRand& mTwister,
+RMCRTCommon::ray_Origin( MTRand& mTwister,
                          const IntVector origin,
                          const double DyDx,
                          const double DzDx,
                          const bool useCCRays,
-                         Vector& location)
+                         Vector& rayOrigin)
 {
   if( useCCRays == false ){
-    location[0] =   origin[0] +  mTwister.rand() ;             // FIX ME!!! This is not the physical location of the ray.
-    location[1] =   origin[1] +  mTwister.rand() * DyDx ;      // this is index space.
-    location[2] =   origin[2] +  mTwister.rand() * DzDx ;
+    rayOrigin[0] =   origin[0] +  mTwister.rand() ;             // FIX ME!!! This is not the physical location of the ray.
+    rayOrigin[1] =   origin[1] +  mTwister.rand() * DyDx ;      // this is index space.
+    rayOrigin[2] =   origin[2] +  mTwister.rand() * DzDx ;
   }else{
-    location[0] =   origin[0] +  0.5 ;
-    location[1] =   origin[1] +  0.5 * DyDx ;
-    location[2] =   origin[2] +  0.5 * DzDx ;
+    rayOrigin[0] =   origin[0] +  0.5 ;
+    rayOrigin[1] =   origin[1] +  0.5 * DyDx ;
+    rayOrigin[2] =   origin[2] +  0.5 * DzDx ;
   }
 }
 
