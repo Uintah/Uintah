@@ -1498,8 +1498,6 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
       //We're going to copy the ghost vars from the source variable (already in the GPU) to a destination
       //array (not yet in the GPU).  So make sure there is a destination.
 
-      //TODO: Doesn't yet work if two local patches are sending ghost cells to one remote patch (i.e. a corner case)
-
       //See if we're already planning on making this exact copy.  If so, don't do it again.
       IntVector host_low, host_high, host_offset, host_size;
       host_low = dep->low;
@@ -1511,7 +1509,13 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
       //If this staging var already exists, then assume the full ghost cell copying information
       //has already been set up previously.  (Duplicate dependencies show up by this point, so
       //just ignore the duplicate).
-      if (!(deviceVars.stagingVarAlreadyExists(dep->req->var, toPatch, matlIndx, levelID, host_low, host_size, dep->req->mapDataWarehouse()))) {
+
+      //NOTE: On the CPU, a ghost cell face may be sent from patch A to patch B, while a ghost cell
+      //edge/line may be sent from patch A to patch C, and the line of data for C is wholly within
+      //the face data for B.
+      //For the sake of preparing for cuda aware MPI, we still want to create two staging vars here,
+      //a contiguous face for B, and a contiguous edge/line for C.
+      if (!(deviceVars.stagingVarAlreadyExists(dep->req->var, fromPatch, matlIndx, levelID, host_low, host_size, dep->req->mapDataWarehouse()))) {
 
         //TODO: Clean this up var up
         //make the temp array on the host
@@ -1524,25 +1528,20 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
         //TODO: Make Taskvars not pass in two extra parameters.
         //make the temp array in the GPU
 
-        //To copy off the GPU, we want all data to be contiguous.  For ghost cells, we only need
-        //a portion of the data.  But we still need this array to exist uniquely in the gpu dw
-        //uniquely as a label/patch/matl/level tuple.  If we had the original var and a portion of
-        //the data then we have two instances of this tuple.  The cleanest approach seems to be to
-        //add one more item onto the tuple, a foreign bool.  If it's the regular variable,
-        //foreign = false.  If the var is a contiguous array for staging it to go to another memory
-        //space, then foreign = true.  (This also solves a handful of messy issues where multiple
-        //source regions are copying to a single destination patch, such as a corner case.  Instead
-        //of trying to prepare a contiguous array in the destination patch, we prepare the contiguous
-        //arrays in the source patches.)
+        //Indicate we want a staging array in the device.
         deviceVars.add(fromPatch, matlIndx, levelID, true, host_size,
             tempGhostVar->getDataSize(), elementDataSize, host_offset,
              dep->req, Ghost::None, 0, fromDeviceIndex, tempGhostVar, dest);
-        //let this Task GPU DW know about this destination array
+        //let this Task GPU DW know about this staging array
         taskVars.addTaskGpuDWStagingVar(fromPatch, matlIndx, levelID, host_offset, host_size, elementDataSize,
             dep->req, fromDeviceIndex);
 
-        //let this Task GPU DW know about the source location.
-        taskVars.addTaskGpuDWVar(fromPatch, matlIndx, levelID, elementDataSize, dep->req, fromDeviceIndex);
+        //See NOTE: above.  Scenarios occur in which the same source region is listed to send to two different patches.
+        //This task doesn't need to know about the same source twice.
+        if (!(taskVars.varAlreadyExists(dep->req->var, fromPatch, matlIndx, levelID, dep->req->mapDataWarehouse()))) {
+          //let this Task GPU DW know about the source location.
+          taskVars.addTaskGpuDWVar(fromPatch, matlIndx, levelID, elementDataSize, dep->req, fromDeviceIndex);
+        }
 
         //TODO: If we were doing a GPU->another GPU same device transfer, we should not create the host array but instead create a
         //destination array.
@@ -4731,13 +4730,13 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
           CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
                   cudaMemcpyDeviceToHost, *stream));
-          /*cudaDeviceSynchronize();
+          cudaDeviceSynchronize();
           double * dst = new double[tempGhostVar->getDataSize()/sizeof(double)];
           tempGhostVar->copyOut(dst);
 
           for (int i = 0; i < tempGhostVar->getDataSize()/sizeof(double); i++) {
-            printf("At tempGhostVar[%d], value is %1.6lf\n",i, dst[i]);
-          }*/
+            printf("for patch %d at tempGhostVar[%d], value is %1.6lf\n",it->second.sourcePatchPointer->getID(),i, dst[i]);
+          }
 
           copiesExist = true;
         } else {

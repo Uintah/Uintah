@@ -1877,8 +1877,8 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
 
            int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
 
-           /*if (threadID == 0) {
-              printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
+           //if (threadID == 0) {
+              /*printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
                   d_varDB[i].ghostItem.sharedLowCoordinates.x,
                   d_varDB[i].ghostItem.sharedLowCoordinates.y,
                   d_varDB[i].ghostItem.sharedLowCoordinates.z,
@@ -1889,16 +1889,16 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
                   d_varDB[i].var_ptr,
                   d_varDB[destIndex].var_offset.x, d_varDB[destIndex].var_offset.y, d_varDB[destIndex].var_offset.z,
                   d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z);
-            }*/
+           */ //}
 
            //copy all 8 bytes of a double in one shot
            if (d_varDB[i].sizeOfDataType == sizeof(double)) {
              *((double*)(d_varDB[destIndex].var_ptr) + destOffset) = *((double*)(d_varDB[i].var_ptr) + sourceOffset);
-             /*if (threadID == 0) {
+             //if (threadID == 0) {
                printf("At (%d, %d, %d), copying between (%d, %d, %d), Thread %d the value d_varDB[%d].var_ptr at destoffset %d is %e from d_varDB index %d and from sourceOffset %d\n",
                    x, y, z, d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
                  threadID, destIndex, destOffset, *((double*)(d_varDB[destIndex].var_ptr) + destOffset), i, sourceOffset);
-             }*/
+             //}
            }
            //or copy all 4 bytes of an int in one shot.
            else if (d_varDB[i].sizeOfDataType == sizeof(int)) {

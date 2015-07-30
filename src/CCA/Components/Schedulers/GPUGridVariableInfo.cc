@@ -167,6 +167,25 @@ void DeviceGridVariables::add(const Patch* patchPointer,
   }
 }
 
+
+bool DeviceGridVariables::varAlreadyExists(const VarLabel* label,
+                                       const Patch* patchPointer,
+                                       int matlIndx,
+                                       int levelIndx,
+                                       int dataWarehouse) {
+
+  GpuUtilities::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dataWarehouse);
+  std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it = vars.find(lpmld);
+  while (it != vars.end()) {
+    if (it->second.staging == false) {
+      return true;
+    }
+    ++it;
+  }
+  return false;
+
+}
+
 bool DeviceGridVariables::stagingVarAlreadyExists(const VarLabel* label,
                                        const Patch* patchPointer,
                                        int matlIndx,
@@ -178,21 +197,12 @@ bool DeviceGridVariables::stagingVarAlreadyExists(const VarLabel* label,
   GpuUtilities::LabelPatchMatlLevelDw lpmld(label->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dataWarehouse);
   std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it = vars.find(lpmld);
   while (it != vars.end()) {
-    printf("Is it this one? patch %d, matl %d level %d staging %s, dw %d low (%d, %d, %d,) size (%d, %d, %d)\n",
-        patchPointer->getID(), matlIndx, levelIndx, it->second.staging ? "true" : "false", dataWarehouse,
-        it->second.offset.x(), it->second.offset.y(), it->second.offset.z(),
-        it->second.sizeVector.x(), it->second.sizeVector.y(), it->second.sizeVector.z()   );
     if (it->second.staging == true && it->second.offset == low && it->second.sizeVector == size) {
       return true;
     }
     ++it;
   }
-  printf("Gasp! Nothing! For label %s, patch %d, matl %d level %d staging true, dw %d low (%d, %d, %d,) size (%d, %d, %d)\n",
-      label->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dataWarehouse,
-      low.x(), low.y(), low.z(),
-      size.x(), size.y(), size.z()  );
   return false;
-
 
 }
 
