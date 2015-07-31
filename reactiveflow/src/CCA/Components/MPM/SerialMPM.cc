@@ -402,7 +402,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     scheduleInitializePressureBCs(level, sched);
   }
 
-
   // dataAnalysis 
   if(d_analysisModules.size() != 0){
     vector<AnalysisModule*>::iterator iter;

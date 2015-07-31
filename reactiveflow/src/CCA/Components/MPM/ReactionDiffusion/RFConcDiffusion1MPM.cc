@@ -57,9 +57,12 @@ void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* mat
   task->requires(Task::OldDW, d_lb->pMassLabel,                matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pXLabel,                   matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pLoadCurveIDLabel,         matlset, gan, NGP);
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
+
   task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
   task->requires(Task::NewDW, d_rdlb->gConcentrationLabel,     matlset, gan, 2*NGN);
-  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
 
   task->computes(d_rdlb->pFluxLabel,  matlset);
 }
@@ -89,6 +92,7 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> deformationGradient;
   constParticleVariable<double>  pConcentration;
+  constParticleVariable<int>     pLoadCurveID;
 
   constNCVariable<double>        gConcentration,gMass;
 
@@ -102,6 +106,7 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
   old_dw->get(psize,               d_lb->pSizeLabel,               pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
+  old_dw->get(pLoadCurveID,        d_lb->pLoadCurveIDLabel,        pset);
   old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
 
   new_dw->get(gConcentration,     d_rdlb->gConcentrationLabel,     dwi, patch, gac,2*NGN);
@@ -125,9 +130,24 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
       }
 	  }
 
-    Diff = diffusivity*(1/(1-pConcentration[idx]) - 2*omega*pConcentration[idx]);
+    //Diff = diffusivity*(1/(1-pConcentration[idx]) - 2*omega*pConcentration[idx]);
+    Diff = diffusivity;
 
     pFlux[idx] = Diff*pConcGradient[idx];
+
+    // this is a hack that uses LoadCurveID to identify boundary particles
+    // works with nano_pillar3_2D_FBC 
+    if(pLoadCurveID[idx] == 1){
+      pFlux[idx][0] = Diff;
+      pFlux[idx][1] = 0.0;
+      pFlux[idx][2] = 0.0;
+    }
+    if(pLoadCurveID[idx] == 2){
+      pFlux[idx][0] = -Diff;
+      pFlux[idx][1] = 0.0;
+      pFlux[idx][2] = 0.0;
+    }
+    
     //cout << "id: " << idx << " CG: " << pConcentrationGradient[idx] << ", PF: " << pPotentialFlux[idx] << endl;
   } //End of Particle Loop
 

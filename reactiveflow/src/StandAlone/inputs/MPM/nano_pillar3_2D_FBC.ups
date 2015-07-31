@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<Uintah_specification>
+
+  <Meta>
+    <title>Nano Pillar Example 1</title>
+  </Meta>
+
+  <SimulationComponent type="mpm" />
+
+  <Time>
+     <maxTime>4</maxTime>
+     <initTime>0.0</initTime>
+     <delt_min>1.0e-16</delt_min>
+     <delt_max>1.0e-7</delt_max>
+     <max_Timesteps>44000</max_Timesteps>
+     <timestep_multiplier>0.4</timestep_multiplier>
+  </Time>
+
+  <DataArchiver>
+    <filebase>nano_pillar3_2D_FBC.uda</filebase>
+    <outputTimestepInterval>10</outputTimestepInterval>
+    <save label="p.x"/>
+    <save label="p.particleID"/>
+    <save label="p.velocity"/>
+    <save label="p.mass"/>
+    <save label="p.volume"/>
+    <save label="p.scalefactor" />
+    <save label="p.concentration" />
+    <save label="p.stress" />
+    <save label="g.mass"/>
+    <save label="g.concentration" />
+    <save label="g.velocity"/>
+    <!--<save label="maxHydroStress1" />-->
+    <!--<save label="minHydroStress1" />-->
+  </DataArchiver>
+
+  <MPM>
+      <time_integrator>explicit</time_integrator>
+      <interpolator>linear</interpolator>
+      <use_load_curves> true </use_load_curves>
+      <scalar_diffusion>explicit</scalar_diffusion>
+  </MPM>
+
+  <PhysicalConstants>
+    <gravity>[0.0, 0.0, 0.0]</gravity>
+  </PhysicalConstants>
+
+  <MaterialProperties>
+     <MPM>
+       <material name="pillar">
+         <density>2330</density> <!-- micrograms/mm^3 -->
+         <constitutive_model type="rf_elastic_plastic"> 
+           <!--<K>      0.0   </K>-->  <!-- micrograms/mm microsecond^2 -->
+           <K>      6.5e4   </K>  <!-- micrograms/mm microsecond^2 -->
+           <!--<G>      0.0   </G>-->  <!-- micrograms/mm microsecond^2 -->
+           <G>      3.0e4   </G>  <!-- micrograms/mm microsecond^2 -->
+           <alpha>  0.5     </alpha>
+         </constitutive_model>
+         <thermal_conductivity>0.0</thermal_conductivity>
+         <specific_heat>5</specific_heat>
+	 <!--
+         <diffusion_model type = "gao_diffusion">
+	   <diffusivity>        2e-5    </diffusivity>
+	   <partial_atomic_vol> 1e-21  </partial_atomic_vol>
+           <max_concentration>  1.0      </max_concentration>
+	   <operating_temp>     300      </operating_temp>
+	   <boltzmann_const>    1.38e-20 </boltzmann_const>
+	   <init_conc> 0.0 </init_conc>
+         </diffusion_model>
+         -->
+	 <diffusion_model type = "rf1">
+	   <diffusivity>  2e-5   </diffusivity>
+           <max_concentration>  1.0      </max_concentration>
+	   <init_conc> 0.0  </init_conc>
+           <tuning1>   1.95 </tuning1>
+         </diffusion_model>
+         <geom_object>
+           <box label = "pillar">
+             <min>[0.0,    0.0,      0.0]</min> <!-- units in mm -->
+             <max>[0.5e-3, 0.125e-3, 0.05e-3]</max> <!-- units in mm -->
+           </box>
+           <res>[2,2,2]</res>
+           <velocity>[0.0,0.0,0.0]</velocity>
+           <temperature>0</temperature>
+           <concentration> 0 </concentration>
+         </geom_object>
+       </material>
+       <contact>
+         <type>null</type>
+         <materials>[0,1] </materials>
+       </contact>
+       <diffusion_interface>
+         <type>paired</type>
+       </diffusion_interface>
+     </MPM>
+   </MaterialProperties>
+
+   <PhysicalBC>
+     <MPM>
+       <pressure>
+         <geom_object>
+           <box label = "x-">
+             <min>[0.00e-3, 0.000e-3, 0.0]</min>
+             <max>[0.01e-3, 0.125e-3, 0.05e-3]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+       <pressure>
+         <geom_object>
+           <box label = "x+">
+             <min>[0.49e-3, 0.0e-3,   0.0]</min>
+             <max>[0.50e-3, 0.125e-3, 0.05e-3]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>2</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+     </MPM>
+   </PhysicalBC>
+
+  <Grid>
+    <BoundaryConditions>
+      <Face side = "x-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "x+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+      <Face side = "y-">
+        <BCType id = "all" label = "Velocity"     var = "Dirichlet">
+                              <value> [0.,0.,0.] </value>
+        </BCType>
+        <BCType id = "all" label = "SD-Type"  var = "Neumann">
+                              <value> 0.0  </value>
+        </BCType>
+      </Face>                  
+      <Face side = "y+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z-">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>                  
+      <Face side = "z+">
+        <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
+      </Face>
+    </BoundaryConditions>
+    <Level>
+      <Box label="1">
+        <lower>[-0.1e-3, 0.0,      0.0]</lower> <!-- units in mm -->
+        <upper>[0.6e-3,  0.225e-3, 0.05e-3]</upper> <!-- units in mm -->
+        <resolution>[40, 13, 1]        </resolution>
+        <extraCells>[0, 0, 0]          </extraCells>
+        <patches>[1,1,1]               </patches>
+      </Box>
+    </Level>
+  </Grid>
+
+</Uintah_specification>

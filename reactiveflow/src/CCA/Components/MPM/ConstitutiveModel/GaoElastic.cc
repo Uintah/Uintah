@@ -551,7 +551,8 @@ GaoElastic::computeStressTensor(const PatchSubset* patches,
    
       // Calculate the total stress
       //sigma = tensorS + tensorHy;
-      sigma = sigma + (2*shear*tensorEta + one*bulk*dTrace) * delT;
+      sigma = sigma + (2*shear*(.9*(1-concentration) + .1)*tensorEta + one*bulk*(.9*(1-concentration) + .1)*dTrace) * delT;
+      //sigma = sigma + (2*shear*tensorEta + one*bulk*dTrace) * delT;
       //sigma = sigma + (2*shear*(.9*(1-concentration) + .1)*tensorEta + one*bulk*(.9*(1-concentration) + .1)*dTrace) * delT;
       //sigma = sigma + (2*shear*(.9*(1+concentration) + .1)*tensorEta + one*bulk*(.9*(1+concentration) + .1)*dTrace) * delT;
 
