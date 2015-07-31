@@ -38,9 +38,13 @@ SRCDIR := CCA/Components/Wasatch
 # WARNING: If you add a file to the list of CUDA_SRCS, you must add a
 # corresponding rule at the end of this file!
 #
-CUDA_ENABLED_SRCS =       \
-	TimeStepper           \
+
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
+  # If only building Arches required files, then we don't need these...
+  CUDA_ENABLED_SRCS =  \
+	TimeStepper    \
 	Wasatch
+endif
 
 ifeq ($(HAVE_CUDA),yes)
 
@@ -58,22 +62,30 @@ else
 
 endif
 
+# Only list of src files needed for Arches support here!
 SRCS +=                                              \
-        $(SRCDIR)/BCHelperTools.cc                   \
         $(SRCDIR)/ConvectiveInterpolationMethods.cc  \
+        $(SRCDIR)/FieldAdaptor.cc                    \
+        $(SRCDIR)/ParticlesHelper.cc                 
+
+# All other src files for Wastach should be listed here:
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
+  SRCS +=                                            \
+        $(SRCDIR)/BCHelper.cc                        \
+        $(SRCDIR)/BCHelperTools.cc                   \
+        $(SRCDIR)/CoordinateHelper.cc                \
         $(SRCDIR)/FieldAdaptor.cc                    \
         $(SRCDIR)/GraphHelperTools.cc                \
         $(SRCDIR)/OldVariable.cc                     \
         $(SRCDIR)/ParseTools.cc                      \
+        $(SRCDIR)/ParticlesHelper.cc                 \
         $(SRCDIR)/Properties.cc                      \
         $(SRCDIR)/ReductionHelper.cc                 \
-        $(SRCDIR)/ParticlesHelper.cc                 \
-        $(SRCDIR)/WasatchParticlesHelper.cc          \
         $(SRCDIR)/TagNames.cc                        \
         $(SRCDIR)/TaskInterface.cc                   \
-        $(SRCDIR)/BCHelper.cc                        \
-        $(SRCDIR)/CoordinateHelper.cc                \
-        $(SRCDIR)/VardenParameters.cc
+        $(SRCDIR)/VardenParameters.cc                \
+        $(SRCDIR)/WasatchParticlesHelper.cc          
+endif
 
 PSELIBS :=                        \
         CCA/Components/Schedulers \
@@ -97,13 +109,19 @@ LIBS := $(Z_LIBRARY) $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)    \
         $(BOOST_LIBRARY) $(LAPACK_LIBRARY) $(BLAS_LIBRARY)
 
 INCLUDES := $(INCLUDES) $(SPATIALOPS_INCLUDE) $(EXPRLIB_INCLUDE)    \
-            $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE) \
+            $(TABPROPS_INCLUDE) $(RADPROPS_INCLUDE)                 \
             $(BOOST_INCLUDE) $(LAPACK_INCLUDE)
 
-SUBDIRS :=                      \
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
+  SUBDIRS :=                    \
         $(SRCDIR)/Operators     \
         $(SRCDIR)/Expressions   \
         $(SRCDIR)/Transport
+else
+  # Minimum list of subdirs necessary to build to support ARCHES.
+  SUBDIRS :=                    \
+        $(SRCDIR)/Operators     
+endif
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 

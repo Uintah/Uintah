@@ -686,10 +686,9 @@ if test "$BUILD_ARCHES"  != "yes"              -a   \
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
+BUILD_WASATCH_FOR_ARCHES=no
 if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
-  BUILD_WASATCH=yes
-  msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
-  add_important_warning "$msg"
+  BUILD_WASATCH_FOR_ARCHES=yes
 fi
 
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
@@ -1173,6 +1172,7 @@ AC_SUBST(BUILD_ICE)
 AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_WASATCH)
+AC_SUBST(BUILD_WASATCH_FOR_ARCHES)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
