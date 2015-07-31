@@ -848,6 +848,7 @@ DEF_NO_FORTRAN
 DEF_MPM
 DEF_ICE
 DEF_ARCHES
+BUILD_WASATCH_FOR_ARCHES
 BUILD_WASATCH
 BUILD_MPM
 BUILD_MODELS_RADIATION
@@ -4119,10 +4120,9 @@ if test "$BUILD_ARCHES"  != "yes"              -a   \
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
+BUILD_WASATCH_FOR_ARCHES=no
 if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
-  BUILD_WASATCH=yes
-  msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
-  add_important_warning "$msg"
+  BUILD_WASATCH_FOR_ARCHES=yes
 fi
 
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
@@ -6685,6 +6685,7 @@ if test "$with_fortran" = no; then
 fi
 
 # NO_FORTRAN is used in configVars.mk[.in] and DEF_NO_FORTRAN is used in uintah_testdefs.h.in
+
 
 
 

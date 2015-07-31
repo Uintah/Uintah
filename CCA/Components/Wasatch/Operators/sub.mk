@@ -36,11 +36,14 @@ SRCDIR   := CCA/Components/Wasatch/Operators
 # WARNING: If you add a file to the list of CUDA_SRCS, you must add a
 # corresponding rule at the end of this file!
 #
-CUDA_ENABLED_SRCS =         \
-        UpwindInterpolant   \
-        FluxLimiterInterpolant  \
-        Extrapolant
-     
+CUDA_ENABLED_SRCS =             \
+        UpwindInterpolant       \
+        FluxLimiterInterpolant  
+
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
+  CUDA_ENABLED_SRCS += Extrapolant
+endif
+
 ifeq ($(HAVE_CUDA),yes)
 
    # CUDA enabled files, listed here (and with a rule at the end of
@@ -57,9 +60,11 @@ else
 
 endif
 
-SRCS +=                                 \
+ifeq ($(BUILD_WASATCH_FOR_ARCHES),no)
+  SRCS += \
         $(SRCDIR)/Operators.cc
-        
+endif
+
 ########################################################################
 #
 # Rules to copy CUDA enabled source (.cc) files to the binary build tree
