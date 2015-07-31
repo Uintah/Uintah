@@ -46,6 +46,7 @@ ScalarDiffusionModel::ScalarDiffusionModel(ProblemSpecP& ps, SimulationStateP& s
 
   ps->require("diffusivity", diffusivity);
   ps->require("max_concentration", max_concentration);
+  ps->require("init_conc", init_concentration);
 	min_concentration = 0;
 
   if(d_Mflag->d_8or27==8){
@@ -103,7 +104,7 @@ void ScalarDiffusionModel::initializeSDMData(const Patch* patch,
   new_dw->allocateAndPut(pConcGradient,   d_rdlb->pConcGradientLabel,  pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-    pConcentration[*iter] = 0.0;
+    pConcentration[*iter] = init_concentration;
     pConcPrevious[*iter]  = 0.0;
     pConcGradient[*iter]  = Vector(0.0, 0.0, 0.0);
   }

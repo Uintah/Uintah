@@ -119,8 +119,8 @@
       </Face>
       <Face side = "x-">
         <BCType id = "all" label = "Velocity"     var = "Dirichlet">
-				                      <value>[0.0, 0.0, 0.0]</value>
-				</BCType>
+          <value>[0.0, 0.0, 0.0]</value>
+	 </BCType>
         <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
                               <value> 0.0  </value>
         </BCType>

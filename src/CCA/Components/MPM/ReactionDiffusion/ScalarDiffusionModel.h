@@ -113,6 +113,7 @@ namespace Uintah {
     double diffusivity;
     double max_concentration;
     double min_concentration;
+    double init_concentration;
   };
   
 } // end namespace Uintah

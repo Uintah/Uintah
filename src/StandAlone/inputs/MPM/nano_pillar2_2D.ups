@@ -2,7 +2,7 @@
 <Uintah_specification>
 
   <Meta>
-    <title>Nano Pillar Example 2</title>
+    <title>Nano Pillar Example 1</title>
   </Meta>
 
   <SimulationComponent type="mpm" />
@@ -16,7 +16,7 @@
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
   <DataArchiver>
-    <filebase>nano_pillar3_2D.uda</filebase>
+    <filebase>nano_pillar2_2d.uda</filebase>
     <outputTimestepInterval>10</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
@@ -28,6 +28,8 @@
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
+    <save label="maxHydroStress1" />
+    <save label="minHydroStress1" />
   </DataArchiver>
 
   <MPM>
@@ -56,14 +58,14 @@
              <max_concentration>  1.0      </max_concentration> <!-- #-->
            </diffusion_model>
            <geom_object>
-             <difference>
+           <difference>
                <box label = "boxE">
                  <min>[0.0, 0.0, 0.0]</min>
-                 <max>[1.0e-3, 1.0e-3, 0.5e-3]</max> <!-- units in mm -->
+                 <max>[1.0e-3, 1.0e-3, 1.5e-3]</max> <!-- units in mm -->
                </box>
                <cylinder label = "pillar_out">
                  <bottom>[0.5e-3, 0.5e-3, 0.0]</bottom> <!-- units in mm -->
-                 <top>[0.5e-3, 0.5e-3, .125e-3]</top> <!-- units in mm -->
+                 <top>[0.5e-3, 0.5e-3, 1.25e-3]</top> <!-- units in mm -->
                  <radius>.25e-3</radius>
                </cylinder>
              </difference>
@@ -76,17 +78,19 @@
 
          <material name="pillar">
            <density>2330</density> <!-- micrograms/mm^3 -->
-           <constitutive_model type="rf_elastic_plastic"> 
-             <K>     6.5e4    </K>  <!-- micrograms/mm microsecond^2 -->
-             <G>     3.0e4    </G>  <!-- micrograms/mm microsecond^2 -->
-             <alpha> .6       </alpha>
+           <constitutive_model type="gao_elastic"> 
+             <bulk_modulus>      6.5e4    </bulk_modulus>  <!-- micrograms/mm microsecond^2 -->
+             <shear_modulus>     3.9e4    </shear_modulus> <!-- micrograms/mm microsecond^2 -->
+             <alpha>             1.0         </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
-           <diffusion_model type = "rf1">
-             <diffusivity>        1e-6    </diffusivity> <!-- mm^2/microsecond -->
-             <tuning1>            1e-21   </tuning1>
+           <diffusion_model type = "gao_diffusion">
+             <diffusivity>        1e-16    </diffusivity> <!-- mm^2/microsecond -->
+             <partial_atomic_vol> 1e-21  </partial_atomic_vol><!-- mm^3/% Atoms -->
              <max_concentration>  1.0      </max_concentration> <!-- #-->
+             <operating_temp>     300      </operating_temp> <!-- Kelvin -->
+             <boltzmann_const>    1.38e-20 </boltzmann_const> <!-- mm^2 micrograms / K microsecond^2 -->
            </diffusion_model>
            <geom_object>
              <cylinder label = "pillar_out"/>
@@ -110,14 +114,14 @@
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "Neumann">
-                              <value> 0.0  </value>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "all" label = "Symmetric"     var = "symmetry"> </BCType>
-        <BCType id = "all" label = "SD-Type"  var = "Neumann">
-                              <value> 0.0  </value>
+        <BCType id = "all" label = "SD-Type"  var = "Dirichlet">
+                              <value> 1.0  </value>
         </BCType>
       </Face>
       <Face side = "y-">
@@ -144,10 +148,10 @@
     </BoundaryConditions>
     <Level>
       <Box label="1">
-        <lower>[0.0,    4.75e-4,    0.0]   </lower>
-        <upper>[1.0e-3, 5.25e-4, 0.5e-3]</upper>
-        <resolution>[24, 1, 12]        </resolution>
-        <extraCells>[0, 0, 0]          </extraCells>
+        <lower>[0.0, 4.75e-4, 0.0]   </lower>
+        <upper>[1.0e-3, 5.25e-4, 1.5e-3]</upper>
+        <resolution>[10, 1, 20]        </resolution>
+        <extraCells>[1, 1, 1]          </extraCells>
         <patches>[1,1,1]               </patches>
       </Box>
     </Level>
