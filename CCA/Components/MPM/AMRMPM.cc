@@ -346,6 +346,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pVelGradLabel);
+  t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pLastLevelLabel);
@@ -3777,7 +3778,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         ploctmp[pp]  = ploc[pp];
         pvgradtmp[pp]= pvelgrad[pp];
 
-        cout << "pids_orig = " << pidstmp[pp] << endl;
+//        cout << "pids_orig = " << pidstmp[pp] << endl;
       }
 
       Vector dx = patch->dCell();
