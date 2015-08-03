@@ -49,7 +49,6 @@ class BackRealSurface;
 class LeftRealSurface;
 class RightRealSurface;
 
-using namespace std;
 
 class ray{
 

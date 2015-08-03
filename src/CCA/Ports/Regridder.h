@@ -34,7 +34,6 @@
 #include <CCA/Ports/SchedulerP.h>
 #include <vector>
 
-using SCIRun::IntVector;
 
 namespace Uintah {
 
@@ -114,7 +113,7 @@ WARNING
 
     virtual bool useDynamicDilation() = 0;
 
-    virtual std::vector<IntVector> getMinPatchSize() = 0;
+    virtual std::vector<SCIRun::IntVector> getMinPatchSize() = 0;
   private:
     Regridder(const Regridder&);
     Regridder& operator=(const Regridder&);
