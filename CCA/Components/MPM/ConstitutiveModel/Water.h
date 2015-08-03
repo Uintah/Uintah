@@ -55,6 +55,9 @@ namespace Uintah {
       double d_Gamma;
     };
 
+    const VarLabel* pLocalizedLabel;
+    const VarLabel* pLocalizedLabel_preReloc;
+
   protected:
 
     CMData d_initialData;
@@ -79,6 +82,10 @@ namespace Uintah {
 
     // clone
     Water* clone();
+
+    virtual void addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet* patches) const;
     
     // compute stable timestep for this patch
     virtual void computeStableTimestep(const Patch* patch,
@@ -111,6 +118,16 @@ namespace Uintah {
                                         const PatchSet* patches,
                                         const bool recursion) const;
 
+    virtual void addRequiresDamageParameter(Task* task,
+                                            const MPMMaterial* matl,
+                                            const PatchSet* patches) const;
+
+
+    virtual void getDamageParameter(const Patch* patch,
+                                    ParticleVariable<int>& damage, int dwi,
+                                    DataWarehouse* old_dw,
+                                    DataWarehouse* new_dw);
+
     virtual double computeRhoMicroCM(double pressure,
                                      const double p_ref,
                                      const MPMMaterial* matl,
@@ -127,6 +144,8 @@ namespace Uintah {
 
     virtual void addParticleState(std::vector<const VarLabel*>& from,
                                   std::vector<const VarLabel*>& to);
+
+    void initializeLocalMPMLabels();
 
   };
 } // End namespace Uintah
