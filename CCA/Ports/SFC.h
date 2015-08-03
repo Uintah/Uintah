@@ -1126,7 +1126,7 @@ void SFC<LOCS>::Parallel()
             Parallel3<DIM,BITS>();
             break;
     default:
-            throw SCIRun::InternalError("Invalid Merge Mode",__FILE__,__LINE__);
+      throw SCIRun::InternalError("Invalid Merge Mode",__FILE__,__LINE__);
   }
 }
 

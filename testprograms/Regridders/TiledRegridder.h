@@ -3,11 +3,12 @@
 #include <Core/Grid/Region.h>
 #include <vector>
 
+using SCIRun::IntVector;
 
 class TiledRegridder
 {
   public:
- TiledRegridder(SCIRun::IntVector patch_size,SCIRun::IntVector rr) : rr(rr),mps(patch_size)
+ TiledRegridder(IntVector patch_size,IntVector rr) : rr(rr),mps(patch_size)
     {
     };
 
@@ -15,8 +16,8 @@ class TiledRegridder
 
 
   private:
-  SCIRun::IntVector rr;
-  SCIRun::IntVector mps;
+  IntVector rr;
+  IntVector mps;
 };
 
 
@@ -30,29 +31,29 @@ void TiledRegridder::regrid(const std::vector<Uintah::Region> &cp, const std::ve
     //compute patch extents
     //compute possible tile index's
     
-    SCIRun::IntVector tileLow(cp[patch].getLow()*rr/mps);
-    SCIRun::IntVector tileHigh(cp[patch].getHigh()*rr/mps);
+    IntVector tileLow(cp[patch].getLow()*rr/mps);
+    IntVector tileHigh(cp[patch].getHigh()*rr/mps);
 
     //cout << "Tiles: " << tileLow << " " << tileHigh << endl; 
     //cout << "window: " << (*flags[patch]).getWindow()->getLowIndex() << " " << (*flags[patch]).getWindow()->getHighIndex()  << endl;
 
     for (Uintah::CellIterator ti(tileLow,tileHigh); !ti.done(); ti++)
     {
-      SCIRun::IntVector i=*ti;
-      SCIRun::IntVector searchLow(
+      IntVector i=*ti;
+      IntVector searchLow(
             static_cast<int>(i[0]*inv_factor[0]),
             static_cast<int>(i[1]*inv_factor[1]),
             static_cast<int>(i[2]*inv_factor[2])
           );
 
-      SCIRun::IntVector searchHigh(
+      IntVector searchHigh(
             static_cast<int>(searchLow[0]+inv_factor[0]),
             static_cast<int>(searchLow[1]+inv_factor[1]),
             static_cast<int>(searchLow[2]+inv_factor[2])
           );
-      SCIRun::IntVector plow=searchLow*rr;
+      IntVector plow=searchLow*rr;
       
-      SCIRun::IntVector phigh=searchHigh*rr;
+      IntVector phigh=searchHigh*rr;
       //cout << "  Coarse Search: " << searchLow << " " << searchHigh << endl;
       for(Uintah::CellIterator c_it(searchLow,searchHigh);!c_it.done();c_it++)
       {

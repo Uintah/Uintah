@@ -874,7 +874,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     mid = (high + low) / 2;
     pread(fd, &group_start_index, nByteMode,
 	  start + mid * header_item_size + nByteMode);
-    if (needConversion && swapBytes) swapbytes(group_start_index);
+    if (needConversion && swapBytes) SCIRun::swapbytes(group_start_index);
     
     if (index < group_start_index)
       high = mid; // counts mid out
@@ -908,7 +908,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
     // the group is a run
     lseek(fd, start + data_start, SEEK_SET);
     ::read(fd, &item, sizeof(T));
-    if (needConversion && swapBytes) swapbytes(item);
+    if (needConversion && swapBytes) SCIRun::swapbytes(item);
     typename Sequencer::SequenceRule rule;
     if (Sequencer::needRule()) {
       if (data_end - data_start == sizeof(T))
@@ -916,7 +916,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
 	rule = Sequencer::defaultSequenceRule;
       else {
 	::read(fd, &rule, ruleStorageSize(false));
-	if (needConversion && swapBytes) swapbytes(rule);
+	if (needConversion && swapBytes) SCIRun::swapbytes(rule);
       }
     }
     // rule should be unused below if needRule is false
@@ -925,7 +925,7 @@ T RunLengthEncoder<T, Sequencer>::seekPriv(int fd, unsigned long index,
   else {
     // the group is not a run
     pread(fd, &item, sizeof(T), start + data_start + group_index * sizeof(T));
-    if (needConversion && swapBytes) swapbytes(item);
+    if (needConversion && swapBytes) SCIRun::swapbytes(item);
     return item;
   }
 }

@@ -31,7 +31,6 @@ class RMCRTRRSD;
 class RMCRTRRSDStratified;
 class RMCRTnoInterpolation;
 
-using namespace std;
 namespace Uintah {
 
   class RMCRTFactory {
