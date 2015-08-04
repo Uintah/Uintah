@@ -104,6 +104,8 @@ class UnifiedScheduler : public MPIScheduler  {
 
     static const int bufferPadding = 32;
 
+    static std::string myRankThread();
+
   private:
 
     // Disable copy and assignment
@@ -114,9 +116,6 @@ class UnifiedScheduler : public MPIScheduler  {
 
     int  pendingMPIRecvs();
     
-    std::string myRankThread();
-    
-
     ConditionVariable          d_nextsignal;           // conditional wait mutex
     Mutex                      d_nextmutex;            // next mutex
     Mutex                      schedulerLock;          // scheduler lock (acquire and release quickly)

@@ -79,37 +79,27 @@ unifiedSchedulerTestKernel( int                patchID,
 
   // These outer cells don't get computed, just preserved across iterations
   // newphi(i,j,k) = phi(i,j,k)
-  if(i >= patchNodeLowIndex.x && j >= patchNodeLowIndex.y && i <= patchNodeHighIndex.x && j <= patchNodeHighIndex.y ) {
+  if(i >= patchNodeLowIndex.x && j >= patchNodeLowIndex.y && i < patchNodeHighIndex.x && j < patchNodeHighIndex.y ) {
     if ((domainLow.x - patchNodeLowIndex.x == 1 && i == patchNodeLowIndex.x) ||  /*left face*/
         (domainLow.y - patchNodeLowIndex.y == 1 && j == patchNodeLowIndex.y) ||  /*bottom face*/
         (patchNodeHighIndex.x - domainHigh.x == 1 && i == patchNodeHighIndex.x - 1) ||  /*right face*/
         (patchNodeHighIndex.y - domainHigh.y == 1 && j == patchNodeHighIndex.y - 1)) {  /*top face*/
 
       for (int k = domainLow.z; k < domainHigh.z; k++) {
-        if (i > 11) {
-          printf("WHOOOOAAAA!\n");
-        }
         newphi(i,j,k) = phi(i,j,k);
         //if (i == 0 && j == 1 && k == 9) {
-          printf("gpu - border - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,k,newphi(i,j,k), &newphi(i,j,k));
+        //  printf("gpu - border1 - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,k,newphi(i,j,k), &newphi(i,j,k));
         //}
       }
-
     }
 
     if (domainLow.z - patchNodeLowIndex.z == 1){
-      if (i > 11) {
-        printf("WHOOOOAAAA!\n");
-      }
       newphi(i,j,patchNodeLowIndex.z) = phi(i,j,patchNodeLowIndex.z);
-      printf("gpu - border - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,patchNodeLowIndex.z,newphi(i,j,patchNodeLowIndex.z),&newphi(i,j,patchNodeLowIndex.z));
+      //printf("gpu - border2 - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,patchNodeLowIndex.z,newphi(i,j,patchNodeLowIndex.z),&newphi(i,j,patchNodeLowIndex.z));
     }
     if (patchNodeHighIndex.z - domainHigh.z == 1) {
-      if (i > 11) {
-        printf("WHOOOOAAAA!\n");
-      }
-      newphi(i,j,patchNodeHighIndex.z - 1) = phi(i,j,patchNodeHighIndex.z - 1);
-      printf("gpu - border - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,patchNodeLowIndex.z-1,newphi(i,j,patchNodeLowIndex.z-1),&newphi(i,j,patchNodeLowIndex.z-1));
+      newphi(i,j,patchNodeHighIndex.z-1) = phi(i,j,patchNodeHighIndex.z-1);
+      //printf("gpu - border3 - newphi(%d, %d, %d) is %1.6lf at ptr %p\n", i,j,patchNodeHighIndex.z-1,newphi(i,j,patchNodeHighIndex.z-1),&newphi(i,j,patchNodeHighIndex.z-1));
     }
   }
   __syncthreads();
@@ -126,7 +116,7 @@ unifiedSchedulerTestKernel( int                patchID,
                    + phi(i, j, k-1)
                    + phi(i, j, k+1));
       //if (i == 1 && j == 1 && k == 1) {
-              printf("gpu - newphi(%d, %d, %d) is %1.6lf ptr %p from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), &newphi(i,j,k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));
+      //        printf("gpu - newphi(%d, %d, %d) is %1.6lf ptr %p from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), &newphi(i,j,k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));
       //}
       //if (i == 1 && j == 1 && k == domainLow.z) {
       //        printf("gpu - newphi(%d, %d, %d) is %1.6lf from %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf %1.6lf\n", i, j, k, newphi(i, j, k), phi(i-1, j, k), phi(i+1, j, k), phi(i, j-1, k), phi(i, j+1, k), phi(i, j, k-1), phi(i, j, k+1));
