@@ -24,6 +24,9 @@
 #include <CCA/Components/Schedulers/GPUGridVariableInfo.h>
 
 #include <CCA/Components/Schedulers/UnifiedScheduler.h>
+extern DebugStream gpu_stats;
+
+extern SCIRun::Mutex cerrLock;
 
 DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             GpuUtilities::DeviceVarDestination dest,
@@ -128,11 +131,23 @@ void DeviceGridVariables::add(const Patch* patchPointer,
   totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
-
-  printf("DeviceGridVariables() - Added into preparation queue for a host-side GPU datawarehouse a variable for label %s patch %d matl %d level %d staging: %s offset (%d, %d, %d) size (%d, %d, %d) totalVars is: %d\n",
-              dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, staging ? "true" : "false",
-              offset.x(), offset.y(), offset.z(), sizeVector.x(), sizeVector.y(), sizeVector.z(),
-              totalVars[dep->mapDataWarehouse()]);
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats << UnifiedScheduler::myRankThread()
+          << " DeviceGridVariables:add() - "
+          << "Added into preparation queue for a host-side GPU datawarehouse a variable for label "
+          << dep->var->getName()
+          << " patch " << patchPointer->getID()
+          << " matl " << matlIndx
+          << " level " << levelIndx
+          << " staging " << std::boolalpha << staging
+          << " offset (" << offset.x() << ", " << offset.y() << ", " << offset.z() << ")"
+          << " size (" << sizeVector.x() << ", " << sizeVector.y() << ", " << sizeVector.z() << ")"
+          << " totalVars is: " << totalVars[dep->mapDataWarehouse()] << endl;
+    }
+    cerrLock.unlock();
+  }
 
   //TODO: Do we bother refining it if one copy is wholly inside another one?
 }
@@ -229,8 +244,25 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
   //Should contiguous arrays be organized by task???
   DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
   vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
-  printf("addTaskGpuDWVar() - Added into preparation queue a for task datawarehouse a variable for label %s patch %d matl %d level %d staging: false, totalVars is: %d\n",
-          dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, totalVars[dep->mapDataWarehouse()]);
+  if (gpu_stats.active()) {
+    cerrLock.lock();
+    {
+      gpu_stats << UnifiedScheduler::myRankThread()
+          << " DeviceGridVariables::addTaskGpuDWVar() - "
+          << "Added into preparation queue for a task datawarehouse for a variable for label "
+          << dep->var->getName()
+          << " patch " << patchPointer->getID()
+          << " matl " << matlIndx
+          << " level " << levelIndx
+          << " staging false"
+          << " totalVars is: " << totalVars[dep->mapDataWarehouse()] << endl;
+    }
+    cerrLock.unlock();
+  }
+
+
+  //printf("addTaskGpuDWVar() - Added into preparation queue a for task datawarehouse a variable for label %s patch %d matl %d level %d staging: false, totalVars is: %d\n",
+  //        dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, totalVars[dep->mapDataWarehouse()]);
 }
 
 //For adding staging taskVars, which are snapshots of the host-side GPU DW.
@@ -269,11 +301,23 @@ void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
     size_t varMemSize = sizeVector.x() * sizeVector.y() * sizeVector.z() * sizeOfDataType;
     DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, true, sizeVector, sizeOfDataType, varMemSize , offset, matlIndx, levelIndx, patchPointer, dep, Ghost::None, 0, whichGPU);
     vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
-    printf("addTaskGpuDWStagingVar() - Added into preparation queue  for a task datawarehouse a variable for label %s patch %d matl %d level %d staging: true offset (%d, %d, %d) size (%d, %d, %d) totalVars is: %d\n",
-            dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx,
-            offset.x(), offset.y(), offset.z(), sizeVector.x(), sizeVector.y(), sizeVector.z(),
-            totalVars[dep->mapDataWarehouse()]);
-
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " DeviceGridVariables::addTaskGpuDWStagingVar() - "
+            << "Added into preparation queue for a task datawarehouse for a variable for label "
+            << dep->var->getName()
+            << " patch " << patchPointer->getID()
+            << " matl " << matlIndx
+            << " level " << levelIndx
+            << " staging true"
+            << " offset (" << offset.x() << ", " << offset.y() << ", " << offset.z() << ")"
+            << " size (" << sizeVector.x() << ", " << sizeVector.y() << ", " << sizeVector.z() << ")"
+            << " totalVars is: " << totalVars[dep->mapDataWarehouse()] << endl;
+      }
+      cerrLock.unlock();
+    }
 }
 
 

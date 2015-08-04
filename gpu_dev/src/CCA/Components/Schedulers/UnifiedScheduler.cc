@@ -77,7 +77,7 @@ static DebugStream unified_threaddbg("Unified_ThreadDBG", false);
 static DebugStream unified_compactaffinity("Unified_CompactAffinity", true);
 
 #ifdef HAVE_CUDA
-static DebugStream gpu_stats("Unified_GPUStats", false);
+DebugStream gpu_stats("Unified_GPUStats", false);
 DebugStream use_single_device("Unified_SingleDevice", false);
 DebugStream simulate_multiple_gpus("SimulateMultipleGPUs", false);
 DebugStream gpudbg("GPUDataWarehouse", false);
@@ -3349,7 +3349,6 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
           int matlIndx = it->first.matlIndx;
           int levelIndx = it->first.levelIndx;
           if (it->second.staging) {
-            printf("calling getStagingVar from prepareTaskVarsIntoTaskDW()\n");
             gpudw->getStagingVar(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx,
                 make_int3(it->second.offset.x(), it->second.offset.y(), it->second.offset.z()),
                 make_int3(it->second.sizeVector.x(), it->second.sizeVector.y(), it->second.sizeVector.z()));
@@ -4692,7 +4691,6 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
         GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(host_strides.x());
         OnDemandDataWarehouseP dw = dws[it->first.dataWarehouse];
         GPUDataWarehouse* gpudw = dw->getGPUDW(it->second.sourceDeviceNum);
-        printf("calling getStagingVar from copyAllExtGpuDependenciesToHost()\n");
         gpudw->getStagingVar(*device_var,
                    it->first.label.c_str(),
                    it->second.sourcePatchPointer->getID(),
@@ -4730,14 +4728,14 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
 
           CUDA_RT_SAFE_CALL(cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
                   cudaMemcpyDeviceToHost, *stream));
-          cudaDeviceSynchronize();
+          /*cudaDeviceSynchronize();
           double * dst = new double[tempGhostVar->getDataSize()/sizeof(double)];
           tempGhostVar->copyOut(dst);
-
           for (int i = 0; i < tempGhostVar->getDataSize()/sizeof(double); i++) {
             printf("for patch %d at tempGhostVar[%d], value is %1.6lf\n",it->second.sourcePatchPointer->getID(),i, dst[i]);
           }
-
+          delete[] dst;
+          */
           copiesExist = true;
         } else {
           cerr << "unifiedSCheduler::copyAllExtGpuDependenciesToHost() - Error - The host and device variable sizes did not match.  Cannot copy D2H." <<endl;
@@ -4817,14 +4815,58 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
         //Since we are writing to an old data warehouse (from device to host), we need to
         //temporarily unfinalize it.
         dw->unfinalize();
-        dw->allocateAndPut(*gridVar, item.dep->var, it->first.matlIndx,
-            it->second.sourcePatchPointer, item.dep->gtype,
-            item.dep->numGhostCells);
-        //printf("grid vars sizes are %d, %d, %d to %d, %d, %d at data dize is %d\n", gridVar->getLow().x(), gridVar->getLow().y(), gridVar->getLow().z(), gridVar->getHigh().x(), gridVar->getHigh().y(),gridVar->getHigh().z(), gridVar->getDataSize());
+        if (!dw->exists(item.dep->var, it->first.matlIndx, it->second.sourcePatchPointer)) {
+          dw->allocateAndPut(*gridVar, item.dep->var, it->first.matlIndx,
+              it->second.sourcePatchPointer, item.dep->gtype,
+              item.dep->numGhostCells);
+        } else {
+          //Get a const variable in a non-constant way.
+          //This assumes the variable has already been resized properly, which is why ghost cells are set to zero.
+          //TODO: Check sizes anyway just to be safe.
+          dw->getModifiable(*gridVar, item.dep->var, it->first.matlIndx, it->second.sourcePatchPointer, Ghost::None, 0);
+
+        }
+        //Do a host-to-host copy to bring the device data now on the host into the host-side variable so
+        //that sendMPI can easily find the data as if no GPU were involved at all.
         gridVar->copyPatch(tempGhostVar, ghostLow, ghostHigh );
 
         dw->refinalize();
 
+
+        /*
+        If there's ever a need to manually verify what was copied host-to-host, use this code below.
+
+        if (it->second.sourcePatchPointer->getID() == 1) {
+
+          //double *phi_data = (double*)phi.getWindow()->getData()->getPointer();
+          double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
+          tempGhostVar->copyOut(phi_data);
+
+          IntVector l = ghostLow;
+          IntVector h = ghostHigh;
+          int zhigh = h.z();
+          int yhigh = h.y();
+          int xhigh = h.x();
+          int ghostLayers = 1;
+          int ystride = yhigh + ghostLayers;
+          int xstride = xhigh + ghostLayers;
+
+          printf("copyallext - Going to copy data between (%d, %d, %d) and (%d, %d, %d)\n", l.x(), l.y(), l.z(), h.x(), h.y(), h.z());
+
+
+          for (int k = l.z(); k < zhigh; k++) {
+            for (int j = l.y(); j < yhigh; j++) {
+              for (int i = l.x(); i < xhigh; i++) {
+                //cout << "(x,y,z): " << k << "," << j << "," << i << endl;
+                // For an array of [ A ][ B ][ C ], we can index it thus:
+                // (a * B * C) + (b * C) + (c * 1)
+                int idx = i + (j * xstride) + (k * xstride * ystride);
+
+                printf("copyallext - phi(%d, %d, %d) is %1.6lf ptr %p\n", i, j, k, phi_data[idx], phi_data + idx);
+              }
+            }
+          }
+        }*/
 
         //let go of our reference counters.
         delete gridVar;
