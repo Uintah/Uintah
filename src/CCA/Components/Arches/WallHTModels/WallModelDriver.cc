@@ -69,19 +69,19 @@ WallModelDriver::problemSetup( const ProblemSpecP& input_db )
       string type; 
       src_db->getAttribute("type", type); 
       
-      if ( type == "do_radiation" ){ 
+      //if ( type == "do_radiation" ){   // temporary-hack (to allow rmcrt to interface with coal models)
         
         src_db->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
         found_radiation_model = true; 
         _rad_type = DORADIATION; 
         
-      } else if ( type == "rmcrt_radiation" ) { 
+      //} else if ( type == "rmcrt_radiation" ) { 
         
-        src_db->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
-        found_radiation_model = true; 
-        _rad_type = RMCRT; 
+        //src_db->getWithDefault("calc_frequency", _calc_freq,3);;  //default matches the default of the radiation solvers
+        //found_radiation_model = true; 
+        //_rad_type = RMCRT; 
         
-      } 
+      //} 
     }
     
   } else { 
