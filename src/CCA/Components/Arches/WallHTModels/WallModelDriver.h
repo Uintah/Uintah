@@ -77,7 +77,6 @@ namespace Uintah{
       std::string _T_label_name;         ///< Temperature label name
       SimulationStateP& _shared_state; 
       int _matl_index;                   ///< Material index
-      RAD_MODEL_TYPE _rad_type;          ///< Type of radiation model 
 
       // Net heat flux var labels: 
       const VarLabel* _T_copy_label; 
@@ -131,42 +130,35 @@ namespace Uintah{
           result = false; 
           offender = "CCVelocity";
         }
-        if ( _rad_type == DORADIATION){
-          if ( _HF_E_label == 0 ){ 
-            result = false; 
-            offender = "heat_flux_e"; 
-          } 
-          if ( _HF_W_label == 0 ){ 
-            result = false; 
-            offender = "heat_flux_w"; 
-          } 
-          if ( _HF_N_label == 0 ){ 
-            result = false; 
-            offender = "heat_flux_n"; 
-          } 
-          if ( _HF_S_label == 0 ){ 
-            result = false; 
-            offender = "heat_flux_s"; 
-          } 
-          if ( _HF_T_label == 0 ){ 
-            result = false; 
-            offender = "heat_flux_t"; 
-          } 
-          if ( _HF_B_label == 0 ){ 
-            result = false; 
-            offender = "heat_flux_b"; 
-          } 
-        } else { 
-          if ( _Total_HF_label == 0 ){
-            result = false; 
-            offender = "total_heat_flux";
-          }
-        }
+        if ( _HF_E_label == 0 ){ 
+          result = false; 
+          offender = "heat_flux_e"; 
+        } 
+        if ( _HF_W_label == 0 ){ 
+          result = false; 
+          offender = "heat_flux_w"; 
+        } 
+        if ( _HF_N_label == 0 ){ 
+          result = false; 
+          offender = "heat_flux_n"; 
+        } 
+        if ( _HF_S_label == 0 ){ 
+          result = false; 
+          offender = "heat_flux_s"; 
+        } 
+        if ( _HF_T_label == 0 ){ 
+          result = false; 
+          offender = "heat_flux_t"; 
+        } 
+        if ( _HF_B_label == 0 ){ 
+          result = false; 
+          offender = "heat_flux_b"; 
+        } 
 
         cout_wmd_dbg << " WallModelDriver:: The missing varlabel = " << offender << std::endl;
 
         return result; 
-        
+
       } 
 
       //-----------------------------------------------------------------
