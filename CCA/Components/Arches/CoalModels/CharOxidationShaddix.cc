@@ -182,6 +182,46 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     }
   }
 
+  // Ensure the following species are populated from table
+  // (this is expensive and should be avoided, if a species isn't needed)
+  d_fieldLabels->add_species("temperature");
+  d_fieldLabels->add_species("O2");
+  d_fieldLabels->add_species("CO2");
+  d_fieldLabels->add_species("H2O");
+  d_fieldLabels->add_species("N2");
+  d_fieldLabels->add_species("mixture_molecular_weight");
+
+}
+
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of special variables unique to model
+//---------------------------------------------------------------------------
+void 
+CharOxidationShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+
+}
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+CharOxidationShaddix::initVars( const ProcessorGroup * pc, 
+                              const PatchSubset    * patches, 
+                              const MaterialSubset * matls, 
+                              DataWarehouse        * old_dw, 
+                              DataWarehouse        * new_dw )
+{
+}
+
+//---------------------------------------------------------------------------
+// Method: Schedule the calculation of the Model 
+//---------------------------------------------------------------------------
+void 
+CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
+{
+
   // get gas phase temperature label 
   if (VarLabel::find("temperature")) {
     _gas_temperature_varlabel = VarLabel::find("temperature");
@@ -219,35 +259,6 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     throw InvalidValue("ERROR: CharOxidationShaddix: problemSetup(): can't find gas phase mixture_molecular_weight.",__FILE__,__LINE__);
   }
 
-}
-
-
-//---------------------------------------------------------------------------
-// Method: Schedule the initialization of special variables unique to model
-//---------------------------------------------------------------------------
-void 
-CharOxidationShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
-{
-}
-
-//-------------------------------------------------------------------------
-// Method: Initialize special variables unique to the model
-//-------------------------------------------------------------------------
-void
-CharOxidationShaddix::initVars( const ProcessorGroup * pc, 
-                              const PatchSubset    * patches, 
-                              const MaterialSubset * matls, 
-                              DataWarehouse        * old_dw, 
-                              DataWarehouse        * new_dw )
-{
-}
-
-//---------------------------------------------------------------------------
-// Method: Schedule the calculation of the Model 
-//---------------------------------------------------------------------------
-void 
-CharOxidationShaddix::sched_computeModel( const LevelP& level, SchedulerP& sched, int timeSubStep )
-{
   std::string taskname = "CharOxidationShaddix::sched_computeModel";
   Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::computeModel, timeSubStep );
 
