@@ -342,6 +342,8 @@ RMCRTCommon::findRayDirection(MTRand& mTwister,
 
   return direction_vector;
 }
+
+
 //______________________________________________________________________
 //  Compute the physical location of the ray
 //______________________________________________________________________
@@ -693,6 +695,29 @@ RMCRTCommon::isDbgCell( const IntVector me)
   return false;
 }
 
+//______________________________________________________________________
+//  Populate vector with integers which have been randomly shuffled. 
+//  This is sampling without replacement and can be used to in a  
+//  Latin-Hyper-Cube sampling scheme.  The algorithm used is the 
+//  fisher-yates shuffle.
+//______________________________________________________________________
+void
+RMCRTCommon::randVector( vector <int> &int_array,MTRand& mTwister ){
+   int rand_int;
+   int temp;
+   int max= int_array.size();
+
+   for (int i=0; i<max; i++){   // populate sequential array from 0 to max-1
+     int_array[i] = i;
+   }
+
+   for (int i=max-1; i>0; i--){  // fisher-yates shuffle starting with max-1
+     rand_int =  mTwister.randInt(i);
+     temp = int_array[i];
+     int_array[i]=int_array[rand_int];
+     int_array[rand_int]=temp;
+   }
+}
 
 //______________________________________________________________________
 //
