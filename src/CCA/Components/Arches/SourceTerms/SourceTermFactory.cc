@@ -26,6 +26,7 @@
 #include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSCont.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -139,12 +140,12 @@ void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
   }
 }
 
-void SourceTermFactory::extraSetup( GridP& grid, BoundaryCondition* bc )
+void SourceTermFactory::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
 { 
   for ( std::vector<SourceContainer>::iterator iter = _active_sources.begin();iter != _active_sources.end(); iter++ ){ 
 
     SourceTermBase& src  = this->retrieve_source_term( iter->name ); 
-    src.extraSetup( grid, bc ); 
+    src.extraSetup( grid, bc, prop); 
 
   }
 }

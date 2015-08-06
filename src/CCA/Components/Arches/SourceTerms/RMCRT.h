@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
-
+#include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -55,7 +55,7 @@ public:
 
   void problemSetup(const ProblemSpecP& db );
 
-  void extraSetup( GridP& grid, BoundaryCondition* bc );
+  void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop );
 
   void sched_computeSource( const LevelP& level,
                             SchedulerP& sched,
@@ -156,6 +156,7 @@ private:
   ArchesLabel*    _labels;
   MPMArchesLabel* _MAlab;
   BoundaryCondition* _boundaryCondition;
+  Properties* d_props;
   const ProcessorGroup* _my_world;
   SimulationStateP      _sharedState;
   ProblemSpecP          _ps;              // needed for extraSetup()

@@ -149,7 +149,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
 void 
-RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc )
+RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
 { 
 
   _boundaryCondition = bc; 
