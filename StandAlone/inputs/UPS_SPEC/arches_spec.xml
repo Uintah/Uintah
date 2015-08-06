@@ -1294,13 +1294,8 @@
             <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor. -->
             <!-- E/R: activiation temperature. Unit for westbrook/dryer model are in kelvin -->
             <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature. Use same units as listed in Turns. -->
-            <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y -->
-            <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y -->
             <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m -->
             <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n -->
-            <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of C_xH_y when f=1 -->
-            <stoich_fuel_O2_massratio   spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Stoichiometric mass fuel/mass air for the slow step -->
-            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- Name of the C*H mass fraction from the table -->
 
             <!-- Use one set of the following two options: -->
             <!-- set 1. -->
@@ -1324,6 +1319,12 @@
               <upper                    spec="REQUIRED NO_DATA"
                                         attribute1="slope REQUIRED DOUBLE"
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the upper flammability limit -->
+              <temperature_dependence   spec="OPTIONAL NO_DATA" > <!-- this tag can be added if you want the flammability limits to change as a function of T -->
+                <lower                  spec="REQUIRED NO_DATA"
+                                        attribute1="slope REQUIRED DOUBLE"/> <!-- defines the slope of temperature dependence for the lower flammability limit -->
+                <upper                  spec="REQUIRED NO_DATA"
+                                        attribute1="slope REQUIRED DOUBLE"/> <!-- defines the slope of temperature dependence for the upper flammability limit -->
+              </temperature_dependence>
 
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) -->

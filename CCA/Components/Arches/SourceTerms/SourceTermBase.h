@@ -36,6 +36,7 @@
 namespace Uintah {
 
 class BoundaryCondition; 
+class Properties; 
 
 class SourceTermBase{ 
 
@@ -70,7 +71,7 @@ public:
   virtual void sched_initialize( const LevelP& level, SchedulerP& sched ) = 0;
 
   /** @brief Work to be performed after properties are setup */ 
-  virtual void extraSetup( GridP& grid, BoundaryCondition* bc ){ }
+  virtual void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop ){ }
 
   /** @brief Returns the source label **/ 
   inline const VarLabel* getSrcLabel(){
