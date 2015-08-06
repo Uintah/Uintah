@@ -135,6 +135,12 @@ namespace Uintah{
                                const IntVector& = IntVector(-9,-9,-9),
                                const int iRay = -9);
 
+      //__________________________________
+      /** @brief populates a vector of integers with a stochastic array without replacement from 0 to n-1 */
+      void randVector( std::vector <int> &int_array,
+                       MTRand& mTwister);
+
+
       //______________________________________________________________________
       //    Carry Foward tasks
       // transfer a variable from old_dw -> new_dw for convience */   
