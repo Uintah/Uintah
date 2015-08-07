@@ -139,6 +139,7 @@ void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
   task->requires(Task::OldDW, d_rdlb->pConcGradientLabel,     matlset, gan, NGP);
   task->requires(Task::NewDW, d_lb->gMassLabel,               matlset, gnone);
 
+  task->computes(d_rdlb->pHydroStressLabel,        matlset);
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
@@ -180,7 +181,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
 
   new_dw->get(gmass,          d_lb->gMassLabel,        dwi, patch, gnone, 0);
 
-  double phydrostress;
+  ParticleVariable<double> phydrostress;
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> ghydrostaticstress;
@@ -191,6 +192,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
 	                       dwi,  patch);
   new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
 	                       dwi,  patch);
+  new_dw->allocateAndPut(phydrostress, d_rdlb->pHydroStressLabel, pset);
 
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
@@ -202,7 +204,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
     particleIndex idx = *iter;
 
     interpolator->findCellAndWeights(px[idx],ni,S,psize[idx],pFOld[idx]);
-    phydrostress = one_third*pStress[idx].Trace();
+    phydrostress[idx] = one_third*pStress[idx].Trace();
 
 		double pconc_ext = pConcentration[idx];
     IntVector node;
@@ -213,7 +215,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
         Vector distance = px[idx] - gpos;
         //pconc_ext = pConcentration[idx] - Dot(pConcGrad[idx],distance);
         gconcentration[node] += pconc_ext * pmass[idx] * S[k];
-        ghydrostaticstress[node] += phydrostress * pmass[idx] * S[k];
+        ghydrostaticstress[node] += phydrostress[idx] * pmass[idx] * S[k];
       }
     }
   }

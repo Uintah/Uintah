@@ -12,7 +12,7 @@
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e-7</delt_max>
-     <max_Timesteps>44000</max_Timesteps>
+     <max_Timesteps>721</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
   <DataArchiver>
@@ -28,6 +28,7 @@
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
+    <save label="p.hydroStress"/>
     <!--<save label="maxHydroStress1" />-->
     <!--<save label="minHydroStress1" />-->
   </DataArchiver>
@@ -55,7 +56,7 @@
            <specific_heat>5</specific_heat>
            <diffusion_model type = "jg">
              <diffusivity>       2e-3   </diffusivity>
-	     <!--<diffusivity>       0.0  </diffusivity>-->
+	         <!--<diffusivity>       0.0  </diffusivity>-->
              <max_concentration>  1.0      </max_concentration> <!-- #-->
 	     <init_conc> 0.0 </init_conc>
            </diffusion_model>
@@ -81,30 +82,31 @@
          <material name="pillar">
            <density>2330</density> <!-- micrograms/mm^3 -->
            <constitutive_model type="rf_elastic_plastic"> 
-             <!--<K>      0.0   </K>-->  <!-- micrograms/mm microsecond^2 -->
-             <K>      6.5e4   </K>  <!-- micrograms/mm microsecond^2 -->
-	     <!--<G>      0.0   </G>-->  <!-- micrograms/mm microsecond^2 -->
-             <G>      3.0e4   </G>  <!-- micrograms/mm microsecond^2 -->
+             <!--<K>      0.0   </K>-->
+             <K>      6.5e4   </K>
+	     	 <!--<G>      0.0   </G>-->
+             <G>      3.0e4   </G> 
              <alpha>  0.5     </alpha>
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
-	   <!--
+	       <!--
            <diffusion_model type = "gao_diffusion">
-	     <diffusivity>        2e-5    </diffusivity>
-	     <partial_atomic_vol> 1e-21  </partial_atomic_vol>
+	         <diffusivity>        2e-4    </diffusivity>
+	         <partial_atomic_vol> 14.2e-21  </partial_atomic_vol>
              <max_concentration>  1.0      </max_concentration>
-	     <operating_temp>     300      </operating_temp>
-	     <boltzmann_const>    1.38e-20 </boltzmann_const>
-	     <init_conc> 0.0 </init_conc>
+	         <operating_temp>     300      </operating_temp>
+	         <boltzmann_const>    1.38e-20 </boltzmann_const>
+	         <init_conc> 0.0 </init_conc>
            </diffusion_model>
            -->
-	   <diffusion_model type = "rf1">
-	     <diffusivity>  2e-5   </diffusivity>
+	       <diffusion_model type = "rf1">
+	         <diffusivity>  2e-3   </diffusivity>
              <max_concentration>  1.0      </max_concentration>
-	     <init_conc> 0.0 </init_conc>
+             <init_conc> 0.0 </init_conc>
              <tuning1>      1.95   </tuning1>
            </diffusion_model>
+           
            <geom_object>
              <cylinder label = "pillar_out"/>
              <res>[2,2,2]</res>
