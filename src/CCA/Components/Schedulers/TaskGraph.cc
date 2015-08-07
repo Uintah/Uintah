@@ -46,7 +46,6 @@
 #include <TauProfilerForSCIRun.h>
 
 #include <sci_defs/config_defs.h>
-#include <sci_algorithm.h>
 
 #include <fstream>
 #include <iostream>
@@ -54,6 +53,7 @@
 #include <set>
 #include <cstring>
 #include <sstream>
+#include <algorithm>
 #include <unistd.h>
 
 using namespace Uintah;
