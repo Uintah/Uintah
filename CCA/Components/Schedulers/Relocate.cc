@@ -29,10 +29,10 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/ProgressiveWarning.h>
-#include <sci_algorithm.h>
 
 #include <map>
 #include <set>
+#include <algorithm>
 
 #define RELOCATE_TAG            0x3fff
 
