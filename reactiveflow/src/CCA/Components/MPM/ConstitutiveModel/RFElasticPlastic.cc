@@ -201,7 +201,9 @@ void RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
     double G    = d_initialData.G;
     double bulk = d_initialData.K;
-    double alpha = d_initialData.alpha;   // for thermal stress    
+    double alpha = d_initialData.alpha;   // for thermal stress
+    double G_new;
+    double bulk_new;
 
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
@@ -211,24 +213,36 @@ void RFElasticPlastic::computeStressTensor(const PatchSubset* patches,
       pdTdt[idx] = 0.0;
 
       // Rate of particle temperature change for thermal stress
-      double pconcRate=(pConcentration[idx]-pConc_prenew[idx])/delT;
+      double pconcRate = (pConcentration[idx]-pConc_prenew[idx])/delT;
 
-      // Calculate rate of deformation D, and deviatoric rate DPrime,
-      // including effect of thermal strain
-      Matrix3 D = (velGrad[idx] + velGrad[idx].Transpose())
-                * 0.5-Identity*alpha*pconcRate;
+      // Calculate rate of deformation D
+      Matrix3 D = 0.5*(velGrad[idx] + velGrad[idx].Transpose());
+
+      // Remove Concentration dependent portion of rate of strain
+      D -= Identity*alpha*pconcRate;
+
+			// Remove deviatoric portion of rate of strain
       double DTrace = D.Trace();
       Matrix3 DPrime = D - Identity*onethird*DTrace;
 
       // get the volumetric part of the deformation
       double J = pDefGrad_new[idx].Determinant();
+      /*
+      Matrix3 dev_Stress = pstress[idx] - Identity*onethird*pstress[idx].Trace();
+      double stress_vm = sqrt(1.5*dev_Stress.NormSquared());
+      */
 
       double rho_cur = rho_orig/J;
       c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
        
       // This is the (updated) Cauchy stress
-      pstress_new[idx] = pstress[idx] + 
-                         (DPrime*2.*G + Identity*bulk*DTrace)*delT;
+      //G_new = G*(.1 + .9*(1-pConcentration[idx]));
+      //bulk_new = bulk*(.1 + .9*(1-pConcentration[idx]));
+
+      G_new = G;
+      bulk_new = bulk;
+
+      pstress_new[idx] = pstress[idx] + (DPrime*2.*G_new + Identity*bulk_new*DTrace)*delT;
 
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;

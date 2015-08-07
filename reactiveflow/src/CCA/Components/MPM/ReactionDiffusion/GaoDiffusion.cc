@@ -143,6 +143,7 @@ void GaoDiffusion::computeFlux(const Patch* patch, const MPMMaterial* matl,
 
     chem_potential = diffusivity;
     mech_potential = mech_val * (1 - pConcentration[idx]/max_concentration) * pConcentration[idx];
+    //cout << "id: " << idx << " Diffusivity: " << chem_potential << " Mech_val: " << mech_potential << endl;
 
     pFlux[idx] = chem_potential*pConcGradient[idx] + mech_potential*pHydroStressGradient[idx];
     //cout << "id: " << idx << " CG: " << pConcGradient[idx] << ", PF: " << pFlux[idx] << endl;
