@@ -418,14 +418,13 @@ namespace Uintah{
       ConstFieldContainerMap _const_var_map;
       UintahParticleMap _particle_map;
       ConstUintahParticleMap _const_particle_map;
-      VariableRegistry _variable_reg;
-      VariableRegistry _const_variable_reg;
       const Wasatch::AllocInfo& _wasatch_ainfo;
       const Patch* _patch;
 
       const int _matl_index;
       DataWarehouse* _old_dw;
       DataWarehouse* _new_dw;
+      VariableRegistry _variable_reg;
 
       /** @brief From the vector of VariableInformation, return a single set of information based
                  variable's name. **/

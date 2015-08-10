@@ -322,6 +322,8 @@ protected:
     template <typename T>
     struct RegisterNewVariableHelper{
 
+      RegisterNewVariableHelper(){};
+
       void create_variable( const std::string name, std::vector<const VarLabel*>& local_labels ){
         const VarLabel* test = NULL;
         test = VarLabel::find( name );
@@ -346,8 +348,9 @@ protected:
     template <typename T>
     void register_new_variable(const std::string name){
 
-      RegisterNewVariableHelper<T>* helper;
+      RegisterNewVariableHelper<T>* helper = scinew RegisterNewVariableHelper<T>();
       helper->create_variable( name, _local_labels );
+      delete helper;
 
     };
 
