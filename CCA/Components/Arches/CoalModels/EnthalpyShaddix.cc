@@ -236,7 +236,7 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
     yelem[3]=coal.O/total_rc; // O daf
     yelem[4]=coal.S/total_rc; // S daf
     db_coal->require("diameter_distribution", _sizes);
-    double coal_daf = coal.C + coal.H + coal.O + coal.N + coal.S; //dry ash free coal
+    //double coal_daf = coal.C + coal.H + coal.O + coal.N + coal.S; //dry ash free coal
     double coal_dry = coal.C + coal.H + coal.O + coal.N + coal.S + coal.ASH + coal.CHAR; //moisture free coal
     //double raw_coal_mf = coal_daf / coal_dry;
     //double char_mf = coal.CHAR / coal_dry;
