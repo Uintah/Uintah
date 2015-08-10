@@ -14,7 +14,7 @@ namespace Uintah{
 
 public:
 
-    typedef std::vector<VariableInformation> VIVec;
+    typedef std::vector<ArchesFieldContainer::VariableInformation> VIVec;
 
     VariableStats( std::string task_name, int matl_index, SimulationStateP& shared_state );
     ~VariableStats();

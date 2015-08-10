@@ -7,17 +7,17 @@
 
 using namespace Uintah;
 using namespace SpatialOps;
-using SpatialOps::operator *; 
+using SpatialOps::operator *;
 
-RandParticleLoc::RandParticleLoc( std::string task_name, int matl_index ) : 
-TaskInterface( task_name, matl_index ) { 
+RandParticleLoc::RandParticleLoc( std::string task_name, int matl_index ) :
+TaskInterface( task_name, matl_index ) {
 }
 
-RandParticleLoc::~RandParticleLoc(){ 
+RandParticleLoc::~RandParticleLoc(){
 }
 
-void 
-RandParticleLoc::problemSetup( ProblemSpecP& db ){ 
+void
+RandParticleLoc::problemSetup( ProblemSpecP& db ){
 
   ProblemSpecP db_ppos = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("LagrangianParticles")->findBlock("ParticlePosition");
   db_ppos->getAttribute("x",_px_name);
@@ -26,8 +26,8 @@ RandParticleLoc::problemSetup( ProblemSpecP& db ){
 
 }
 
-void 
-RandParticleLoc::create_local_labels(){ 
+void
+RandParticleLoc::create_local_labels(){
 }
 
 
@@ -37,33 +37,33 @@ RandParticleLoc::create_local_labels(){
 //------------------------------------------------
 //
 
-void 
-RandParticleLoc::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
+void
+RandParticleLoc::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-  register_variable( _px_name, PARTICLE, COMPUTES, 0, NEWDW,  variable_registry );
-  register_variable( _py_name, PARTICLE, COMPUTES, 0, NEWDW,  variable_registry );
-  register_variable( _pz_name, PARTICLE, COMPUTES, 0, NEWDW,  variable_registry );
+  register_variable_new( _px_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
+  register_variable_new( _py_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
+  register_variable_new( _pz_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
 
 }
 
-void 
-RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                        SpatialOps::OperatorDatabase& opr ){ 
+void
+RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                        SpatialOps::OperatorDatabase& opr ){
 
 
   using namespace SpatialOps;
-  using SpatialOps::operator *; 
+  using SpatialOps::operator *;
 
 
-  typedef SpatialOps::SpatFldPtr<ParticleField> Pptr; 
+  typedef SpatialOps::SpatFldPtr<ParticleField> Pptr;
 
-  Pptr px = tsk_info->get_particle_field(_px_name); 
-  Pptr py = tsk_info->get_particle_field(_py_name); 
-  Pptr pz = tsk_info->get_particle_field(_pz_name); 
+  Pptr px = tsk_info->get_particle_field(_px_name);
+  Pptr py = tsk_info->get_particle_field(_py_name);
+  Pptr pz = tsk_info->get_particle_field(_pz_name);
 
   //this is a poor man's random particle initialization...
 
-  ParticleField& varx = *px; 
+  ParticleField& varx = *px;
 
   ParticleField::iterator iterx = varx.begin();
   const ParticleField::iterator iterx_end = varx.end();
@@ -71,7 +71,7 @@ RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
     *iterx = ((double)std::rand()/RAND_MAX);
   }
 
-  ParticleField& vary = *py; 
+  ParticleField& vary = *py;
 
   ParticleField::iterator itery = vary.begin();
   const ParticleField::iterator itery_end = vary.end();
@@ -79,7 +79,7 @@ RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
     *itery = ((double)std::rand()/RAND_MAX);
   }
 
-  ParticleField& varz = *pz; 
+  ParticleField& varz = *pz;
 
   ParticleField::iterator iterz = varz.begin();
   const ParticleField::iterator iterz_end = varz.end();
@@ -93,13 +93,13 @@ RandParticleLoc::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info
 //------------- TIMESTEP INIT --------------------
 //------------------------------------------------
 //
-void 
-RandParticleLoc::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
+void
+RandParticleLoc::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 }
 
-void 
-RandParticleLoc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                          SpatialOps::OperatorDatabase& opr ){ 
+void
+RandParticleLoc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                          SpatialOps::OperatorDatabase& opr ){
 
 }
 
@@ -110,22 +110,22 @@ RandParticleLoc::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_i
 //------------------------------------------------
 //
 
-//Register all variables both local and those needed from elsewhere that are required for this task. 
-void 
-RandParticleLoc::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+//Register all variables both local and those needed from elsewhere that are required for this task.
+void
+RandParticleLoc::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-  //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  //register_variable( "a_sample_variable", CC_DOUBLE, COMPUTES,       0, NEWDW,  variable_registry, time_substep );
+  //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
+  //register_variable_new( "a_sample_variable", ArchesFieldContainer::COMPUTES,       0, ArchesFieldContainer::NEWDW,  variable_registry, time_substep );
 
 }
 
-//This is the work for the task.  First, get the variables. Second, do the work! 
-void 
-RandParticleLoc::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+//This is the work for the task.  First, get the variables. Second, do the work!
+void
+RandParticleLoc::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                   SpatialOps::OperatorDatabase& opr ){
 
   using namespace SpatialOps;
-  using SpatialOps::operator *; 
+  using SpatialOps::operator *;
 
   //SurfZP const w      = tsk_info->get_so_field<SurfZ>("wVelocitySPBC" );
 

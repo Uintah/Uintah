@@ -9,6 +9,10 @@
 using namespace Uintah;
 namespace so = SpatialOps;
 
+typedef ArchesFieldContainer::WHICH_DW WHICH_DW;
+typedef ArchesFieldContainer::VAR_DEPEND VAR_DEPEND;
+typedef ArchesFieldContainer::VariableRegistry VariableRegistry;
+
 TaskInterface::TaskInterface( std::string task_name, int matl_index ) :
   _task_name(task_name),
   _matl_index(matl_index)
@@ -27,54 +31,50 @@ TaskInterface::~TaskInterface()
 //
 //====================================================================================
 void
-TaskInterface::register_variable( std::string name,
-                                  VAR_TYPE type,
+TaskInterface::register_variable_new( std::string name,
                                   VAR_DEPEND dep,
                                   int nGhost,
                                   WHICH_DW dw,
-                                  std::vector<VariableInformation>& variable_registry,
+                                  VariableRegistry& variable_registry,
                                   const int time_substep ){
 
-  register_variable_work( name, type, dep, nGhost, dw, variable_registry, time_substep );
+  register_variable_work_new( name, dep, nGhost, dw, variable_registry, time_substep );
 
 }
 
 void
-TaskInterface::register_variable( std::string name,
-                                  VAR_TYPE type,
+TaskInterface::register_variable_new( std::string name,
                                   VAR_DEPEND dep,
                                   int nGhost,
                                   WHICH_DW dw,
-                                  std::vector<VariableInformation>& variable_registry ){
+                                  VariableRegistry& variable_registry ){
 
-  register_variable_work( name, type, dep, nGhost, dw, variable_registry, 0 );
+  register_variable_work_new( name, dep, nGhost, dw, variable_registry, 0 );
 
 }
 
 void
-TaskInterface::register_variable( std::string name,
-                                  VAR_TYPE type,
+TaskInterface::register_variable_new( std::string name,
                                   VAR_DEPEND dep,
-                                  std::vector<VariableInformation>& variable_registry ){
+                                  VariableRegistry& variable_registry ){
 
-  WHICH_DW dw = NEWDW;
+  WHICH_DW dw = ArchesFieldContainer::NEWDW;
   int nGhost = 0;
 
-  register_variable_work( name, type, dep, nGhost, dw, variable_registry, 0 );
+  register_variable_work_new( name, dep, nGhost, dw, variable_registry, 0 );
 
 }
 
 void
-TaskInterface::register_variable( std::string name,
-                                  VAR_TYPE type,
+TaskInterface::register_variable_new( std::string name,
                                   VAR_DEPEND dep,
-                                  std::vector<VariableInformation>& variable_registry,
+                                  VariableRegistry& variable_registry,
                                   const int timesubstep ){
 
-  WHICH_DW dw = NEWDW;
+  WHICH_DW dw = ArchesFieldContainer::NEWDW;
   int nGhost = 0;
 
-  register_variable_work( name, type, dep, nGhost, dw, variable_registry, timesubstep );
+  register_variable_work_new( name, dep, nGhost, dw, variable_registry, timesubstep );
 
 }
 
@@ -82,37 +82,40 @@ TaskInterface::register_variable( std::string name,
 //
 //====================================================================================
 void
-TaskInterface::register_variable_work( std::string name,
-                                       VAR_TYPE type,
+TaskInterface::register_variable_work_new( std::string name,
                                        VAR_DEPEND dep,
                                        int nGhost,
                                        WHICH_DW dw,
-                                       std::vector<VariableInformation>& variable_registry,
+                                       VariableRegistry& variable_registry,
                                        const int time_substep ){
 
-  VariableInformation info;
+  ArchesFieldContainer::VariableInformation info;
 
   info.name   = name;
   info.depend = dep;
   info.dw     = dw;
-  info.type   = type;
   info.nGhost = nGhost;
   info.dw_inquire = false;
   info.local = false;
 
+  info.is_constant = false;
+  if ( dep == ArchesFieldContainer::REQUIRES ){
+    info.is_constant = true;
+  }
+
   switch (dw) {
 
-  case OLDDW:
+  case ArchesFieldContainer::OLDDW:
 
     info.uintah_task_dw = Task::OldDW;
     break;
 
-  case NEWDW:
+  case ArchesFieldContainer::NEWDW:
 
     info.uintah_task_dw = Task::NewDW;
     break;
 
-  case LATEST:
+  case ArchesFieldContainer::LATEST:
 
     info.dw_inquire = true;
     break;
@@ -125,508 +128,60 @@ TaskInterface::register_variable_work( std::string name,
   }
 
   //check for conflicts:
-  if ( (dep == COMPUTES && dw == OLDDW) ||
-       (dep == LOCAL_COMPUTES && dw == OLDDW) ) {
-    throw InvalidValue("Arches Task Error: Cannot COMPUTE (COMPUTES) a variable from OldDW for variable: "+name, __FILE__, __LINE__);
+  if (dep == ArchesFieldContainer::COMPUTES && dw == ArchesFieldContainer::OLDDW) {
+    throw InvalidValue("Arches Task Error: Cannot COMPUTE (ArchesFieldContainer::COMPUTES) a variable from OldDW for variable: "+name, __FILE__, __LINE__);
   }
 
-  if ( (dep == MODIFIES && dw == OLDDW) ) {
+  if ( (dep == ArchesFieldContainer::MODIFIES && dw == ArchesFieldContainer::OLDDW) ) {
     throw InvalidValue("Arches Task Error: Cannot MODIFY a variable from OldDW for variable: "+name, __FILE__, __LINE__);
   }
 
-  if ( dep == COMPUTES ||
-       dep == LOCAL_COMPUTES ) {
+  if ( dep == ArchesFieldContainer::COMPUTES ){
 
     if ( nGhost > 0 ) {
 
-      std::cout << "Arches Task Warning: Variable COMPUTE (COMPUTES) found that is requesting ghosts for: "+name+" Nghosts set to zero!" << std::endl;
+      std::cout << "Arches Task Warning: Variable COMPUTE (ArchesFieldContainer::COMPUTES) found that is requesting ghosts for: "+name+" Nghosts set to zero!" << std::endl;
       info.nGhost = 0;
 
     }
   }
 
-  //create new varlabels if needed
-  //NOTE: We aren't going to check here
-  //to make sure that other variables are
-  //created somewhere else.  That check
-  //will be done later.
-  if ( dep == LOCAL_COMPUTES ) {
+  const VarLabel* the_label = NULL;
+  the_label = VarLabel::find( name );
 
+  if ( the_label == NULL ){
+    throw InvalidValue("Error: The variable named: "+name+" does not exist.",__FILE__,__LINE__);
+  } else {
+    info.label = the_label;
+  }
 
-    const VarLabel* test = NULL;
-    test = VarLabel::find( name );
+  const Uintah::TypeDescription* type_desc = the_label->typeDescription();
 
-    if ( test == NULL && time_substep == 0 ) {
+  if ( dep == ArchesFieldContainer::REQUIRES ) {
 
-      if ( type == CC_INT ) {
-        info.label = VarLabel::create( name, CCVariable<int>::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == CC_DOUBLE ) {
-        info.label = VarLabel::create( name, CCVariable<double>::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == CC_VEC ) {
-        info.label = VarLabel::create( name, CCVariable<Vector>::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == FACEX ) {
-        info.label = VarLabel::create( name, SFCXVariable<double>::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == FACEY ) {
-        info.label = VarLabel::create( name, SFCYVariable<double>::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == FACEZ ) {
-        info.label = VarLabel::create( name, SFCZVariable<double>::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == SUM ) {
-        info.label = VarLabel::create( name, sum_vartype::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == MAX ) {
-        info.label = VarLabel::create( name, max_vartype::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == MIN ) {
-        info.label = VarLabel::create( name, min_vartype::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      } else if ( type == PARTICLE ) {
-        info.label = VarLabel::create( name, ParticleVariable<double>::getTypeDescription() );
-        info.local = true;
-        _local_labels.push_back(info.label);
-      }
-
-      info.depend = COMPUTES;
-      dep = COMPUTES;
-
-    } else if ( test != NULL && time_substep > 0 ) {
-
-      //because computing happens on time_substep = 0
-      //checking for duplicate labels occurred upstream
-      info.depend = MODIFIES;
-      dep = MODIFIES;
-
+    if ( nGhost == 0 ){
+      info.ghost_type = Ghost::None;
     } else {
-
-      throw InvalidValue("Arches Task Error: Trying to create a local variable, "+name+", that already exists for Arches Task: "+_task_name, __FILE__, __LINE__);
-
-    }
-
-  }
-
-  if ( dep == REQUIRES ) {
-
-    if ( type == CC_INT ) {
-      if ( nGhost == 0 ) {
-        info.ghost_type = Ghost::None;
+      if ( type_desc == CCVariable<int>::getTypeDescription() ) {
+          info.ghost_type = Ghost::AroundCells;
+      } else if ( type_desc == CCVariable<double>::getTypeDescription() ) {
+          info.ghost_type = Ghost::AroundCells;
+      } else if ( type_desc == CCVariable<Vector>::getTypeDescription() ) {
+          info.ghost_type = Ghost::AroundCells;
+      } else if ( type_desc == SFCXVariable<double>::getTypeDescription() ) {
+          info.ghost_type = Ghost::AroundFaces;
+      } else if ( type_desc == SFCYVariable<double>::getTypeDescription() ) {
+          info.ghost_type = Ghost::AroundFaces;
+      } else if ( type_desc == SFCZVariable<double>::getTypeDescription() ) {
+          info.ghost_type = Ghost::AroundFaces;
       } else {
-        info.ghost_type = Ghost::AroundCells;
-      }
-    } else if ( type == CC_DOUBLE ) {
-      if ( nGhost == 0 ) {
-        info.ghost_type = Ghost::None;
-      } else {
-        info.ghost_type = Ghost::AroundCells;
-      }
-    } else if ( type == CC_VEC ) {
-      if ( nGhost == 0 ) {
-        info.ghost_type = Ghost::None;
-      } else {
-        info.ghost_type = Ghost::AroundCells;
-      }
-    } else if ( type == FACEX ) {
-      if ( nGhost == 0 ) {
-        info.ghost_type = Ghost::None;
-      } else {
-        info.ghost_type = Ghost::AroundFaces;
-      }
-    } else if ( type == FACEY ) {
-      if ( nGhost == 0 ) {
-        info.ghost_type = Ghost::None;
-      } else {
-        info.ghost_type = Ghost::AroundFaces;
-      }
-    } else if ( type == FACEZ ) {
-      if ( nGhost == 0 ) {
-        info.ghost_type = Ghost::None;
-      } else {
-        info.ghost_type = Ghost::AroundFaces;
+        throw InvalidValue("Error: No coverage yet for this type of variable.", __FILE__,__LINE__);
       }
     }
   }
 
-  //label will be matched later.
-  //info.label = NULL;
-
-  //load the variable on the registry:
   variable_registry.push_back( info );
 
-}
-
-//====================================================================================
-//
-//====================================================================================
-void
-TaskInterface::resolve_labels( std::vector<VariableInformation>& variable_registry ){
-
-  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){
-
-    ivar.label = VarLabel::find( ivar.name );
-
-    if ( ivar.label == NULL ) {
-      throw InvalidValue("Arches Task Error: Cannot resolve variable label for task execution: "+ivar.name, __FILE__, __LINE__);
-    }
-  }
-}
-
-//====================================================================================
-//
-//====================================================================================
-template <class T>
-void TaskInterface::resolve_field_requires( DataWarehouse* old_dw,
-                                            DataWarehouse* new_dw,
-                                            T* field,
-                                            VariableInformation& info,
-                                            const Patch* patch,
-                                            const int time_substep ){
-
-  if ( info.dw_inquire ) {
-    if ( time_substep > 0 ) {
-      new_dw->get( *field, info.label, _matl_index, patch, info.ghost_type, info.nGhost );
-    } else {
-      old_dw->get( *field, info.label, _matl_index, patch, info.ghost_type, info.nGhost );
-    }
-  } else {
-    if ( info.dw == OLDDW ) {
-      old_dw->get( *field, info.label, _matl_index, patch, info.ghost_type, info.nGhost );
-    } else {
-      new_dw->get( *field, info.label, _matl_index, patch, info.ghost_type, info.nGhost );
-    }
-  }
-
-}
-
-//====================================================================================
-//
-//====================================================================================
-template <class T>
-void TaskInterface::resolve_field_modifycompute( DataWarehouse* old_dw, DataWarehouse* new_dw,
-                                                 T* field, VariableInformation& info,
-                                                 const Patch* patch, const int time_substep ){
-
-  switch(info.depend) {
-
-  case COMPUTES:
-
-    new_dw->allocateAndPut( field, info.label, _matl_index, patch );
-    break;
-
-  case MODIFIES:
-
-    new_dw->getModifiable( field, info.label, _matl_index, patch );
-    break;
-
-  default:
-
-    throw InvalidValue("Arches Task Error: Cannot resolve DW dependency for variable: "+info.name, __FILE__, __LINE__);
-
-  }
-
-}
-
-//====================================================================================
-//
-//====================================================================================
-void TaskInterface::resolve_fields( DataWarehouse* old_dw,
-                                    DataWarehouse* new_dw,
-                                    const Patch* patch,
-                                    ArchesFieldContainer* field_container,
-                                    ArchesTaskInfoManager* f_collector,
-                                    const bool doing_init ){
-
-
-  std::vector<VariableInformation>& variable_registry = f_collector->get_variable_reg();
-
-  int time_substep = f_collector->get_time_substep();
-
-  //loop through all the fields and do the allocates, modifies, and gets
-  //stuff the resultant fields into a map for later reference.
-  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){
-
-    switch ( ivar.type ) {
-
-    case CC_INT:
-      if ( ivar.depend == REQUIRES ) {
-
-        constCCVariable<int>* var = scinew constCCVariable<int>;
-        resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep );
-        ArchesFieldContainer::ConstFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_INT);
-        icontain.set_ghosts(ivar.nGhost);
-        field_container->add_const_variable(ivar.name, icontain);
-
-
-      } else if ( ivar.depend == MODIFIES ) {
-
-        CCVariable<int>* var = scinew CCVariable<int>;
-        new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_INT);
-        field_container->add_variable(ivar.name, icontain);
-
-      } else {
-
-        CCVariable<int>* var = scinew CCVariable<int>;
-        new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_INT);
-        field_container->add_variable(ivar.name, icontain);
-
-      }
-      break;
-
-    case CC_DOUBLE:
-
-      if ( ivar.depend == REQUIRES ) {
-
-        constCCVariable<double>* var = scinew constCCVariable<double>;
-        resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep );
-        ArchesFieldContainer::ConstFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_DOUBLE);
-        icontain.set_ghosts(ivar.nGhost);
-        field_container->add_const_variable(ivar.name, icontain);
-
-      } else if ( ivar.depend == MODIFIES ) {
-
-        CCVariable<double>* var = scinew CCVariable<double>;
-        new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_DOUBLE);
-        field_container->add_variable(ivar.name, icontain);
-
-      } else {
-
-        CCVariable<double>* var = scinew CCVariable<double>;
-        new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_DOUBLE);
-        field_container->add_variable(ivar.name, icontain);
-
-      }
-      break;
-
-    case CC_VEC:
-
-      if ( ivar.depend == REQUIRES ) {
-
-        constCCVariable<Vector>* var = scinew constCCVariable<Vector>;
-        resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep );
-        ArchesFieldContainer::ConstFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_VEC);
-        icontain.set_ghosts(ivar.nGhost);
-        field_container->add_const_variable(ivar.name, icontain);
-
-      } else if ( ivar.depend == MODIFIES ) {
-
-        CCVariable<Vector>* var = scinew CCVariable<Vector>;
-        new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_VEC);
-        field_container->add_variable(ivar.name, icontain);
-
-      } else {
-
-        CCVariable<Vector>* var = scinew CCVariable<Vector>;
-        new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::CC_VEC);
-        field_container->add_variable(ivar.name, icontain);
-
-      }
-      break;
-
-    case FACEX:
-
-      if ( ivar.depend == REQUIRES ) {
-
-        constSFCXVariable<double>* var = scinew constSFCXVariable<double>;
-        resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep );
-        ArchesFieldContainer::ConstFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEX);
-        icontain.set_ghosts(ivar.nGhost);
-        field_container->add_const_variable(ivar.name, icontain);
-
-      } else if ( ivar.depend == MODIFIES ) {
-
-        SFCXVariable<double>* var = scinew SFCXVariable<double>;
-        new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEX);
-        field_container->add_variable(ivar.name, icontain);
-
-      } else {
-
-        SFCXVariable<double>* var = scinew SFCXVariable<double>;
-        new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEX);
-        field_container->add_variable(ivar.name, icontain);
-
-      }
-      break;
-
-    case FACEY:
-
-      if ( ivar.depend == REQUIRES ) {
-
-        constSFCYVariable<double>* var = scinew constSFCYVariable<double>;
-        resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep );
-        ArchesFieldContainer::ConstFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEY);
-        icontain.set_ghosts(ivar.nGhost);
-        field_container->add_const_variable(ivar.name, icontain);
-
-      } else if ( ivar.depend == MODIFIES ) {
-
-        SFCYVariable<double>* var = scinew SFCYVariable<double>;
-        new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEY);
-        field_container->add_variable(ivar.name, icontain);
-
-      } else {
-
-        SFCYVariable<double>* var = scinew SFCYVariable<double>;
-        new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEY);
-        field_container->add_variable(ivar.name, icontain);
-
-      }
-      break;
-
-    case FACEZ:
-
-      if ( ivar.depend == REQUIRES ) {
-
-        constSFCZVariable<double>* var = scinew constSFCZVariable<double>;
-        resolve_field_requires( old_dw, new_dw, var, ivar, patch, time_substep );
-        ArchesFieldContainer::ConstFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEZ);
-        icontain.set_ghosts(ivar.nGhost);
-        field_container->add_const_variable(ivar.name, icontain);
-
-      } else if ( ivar.depend == MODIFIES ) {
-
-        SFCZVariable<double>* var = scinew SFCZVariable<double>;
-        new_dw->getModifiable( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEZ);
-        field_container->add_variable(ivar.name, icontain);
-
-      } else {
-
-        SFCZVariable<double>* var = scinew SFCZVariable<double>;
-        new_dw->allocateAndPut( *var, ivar.label, _matl_index, patch );
-        ArchesFieldContainer::FieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::FACEZ);
-        field_container->add_variable(ivar.name, icontain);
-
-      }
-      break;
-
-    case PARTICLE:
-
-      if ( ivar.depend == REQUIRES ) {
-
-        constParticleVariable<double>* var = scinew constParticleVariable<double>;
-
-        if ( ivar.dw_inquire ) {
-          if ( time_substep > 0 ) {
-            ParticleSubset* subset = new_dw->getParticleSubset( _matl_index, patch );
-            new_dw->get( *var, ivar.label, subset );
-          } else {
-            ParticleSubset* subset = old_dw->getParticleSubset( _matl_index, patch );
-            old_dw->get( *var, ivar.label, subset );
-          }
-        } else {
-          if ( ivar.dw == OLDDW ) {
-            ParticleSubset* subset = old_dw->getParticleSubset( _matl_index, patch );
-            old_dw->get( *var, ivar.label, subset );
-          } else {
-            ParticleSubset* subset = new_dw->getParticleSubset( _matl_index, patch );
-            new_dw->get( *var, ivar.label, subset );
-          }
-        }
-
-        ArchesFieldContainer::ConstParticleFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::PARTICLE);
-        icontain.set_ghosts(ivar.nGhost);
-        field_container->add_const_particle_variable(ivar.name, icontain);
-
-      } else if ( ivar.depend == MODIFIES ) {
-
-        //not sure what to do here about the particleSubset...
-        //for now grabbing only from old:
-        ParticleSubset* subset = old_dw->getParticleSubset( _matl_index, patch );
-        ParticleVariable<double>* var = scinew ParticleVariable<double>;
-        new_dw->getModifiable( *var, ivar.label, subset );
-        ArchesFieldContainer::ParticleFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::PARTICLE);
-        icontain.set_ghosts(0);
-        field_container->add_particle_variable(ivar.name, icontain);
-
-      } else {
-
-        //not sure what to do here about the particleSubset...
-        //for now grabbing only from old except for the case of initialization:
-        ParticleSubset* subset;
-        if ( doing_init ) {
-          subset = new_dw->getParticleSubset( _matl_index, patch );
-        } else {
-          subset = old_dw->getParticleSubset( _matl_index, patch );
-        }
-        ParticleVariable<double>* var = scinew ParticleVariable<double>;
-        new_dw->allocateAndPut( *var, ivar.label, subset );
-        ArchesFieldContainer::ParticleFieldContainer icontain;
-        icontain.set_field(var);
-        icontain.set_field_type(ArchesFieldContainer::PARTICLE);
-        icontain.set_ghosts(0);
-        field_container->add_particle_variable(ivar.name, icontain);
-
-      }
-      break;
-
-    default:
-      throw InvalidValue("Arches Task Error: Cannot resolve DW dependency for variable: "+ivar.name, __FILE__, __LINE__);
-      break;
-
-    }
-  }
 }
 
 //====================================================================================
@@ -638,11 +193,9 @@ void TaskInterface::schedule_task( const LevelP& level,
                                    TASK_TYPE task_type,
                                    int time_substep ){
 
-  std::vector<VariableInformation> variable_registry;
+  VariableRegistry variable_registry;
 
   register_timestep_eval( variable_registry, time_substep );
-
-  resolve_labels( variable_registry );
 
   Task* tsk;
 
@@ -654,37 +207,36 @@ void TaskInterface::schedule_task( const LevelP& level,
     throw InvalidValue("Error: Task type not recognized.",__FILE__,__LINE__);
 
   int counter = 0;
-
-  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){
+  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
 
     counter++;
 
     switch(ivar.depend) {
 
-    case COMPUTES:
+    case ArchesFieldContainer::COMPUTES:
       if ( time_substep == 0 ) {
         tsk->computes( ivar.label );   //only compute on the zero time substep
       } else {
         tsk->modifies( ivar.label );
-        ivar.dw = NEWDW;
+        ivar.dw = ArchesFieldContainer::NEWDW;
         ivar.uintah_task_dw = Task::NewDW;
-        ivar.depend = MODIFIES;
+        ivar.depend = ArchesFieldContainer::MODIFIES;
       }
       break;
-    case MODIFIES:
+    case ArchesFieldContainer::MODIFIES:
       tsk->modifies( ivar.label );
       break;
-    case REQUIRES:
+    case ArchesFieldContainer::REQUIRES:
       if ( ivar.dw_inquire ) {
         if ( time_substep > 0 ) {
-          ivar.dw = NEWDW;
+          ivar.dw = ArchesFieldContainer::NEWDW;
           ivar.uintah_task_dw = Task::NewDW;
         } else {
-          ivar.dw = OLDDW;
+          ivar.dw = ArchesFieldContainer::OLDDW;
           ivar.uintah_task_dw = Task::OldDW;
         }
       } else {
-        if ( ivar.dw == OLDDW ) {
+        if ( ivar.dw == ArchesFieldContainer::OLDDW ) {
           ivar.uintah_task_dw = Task::OldDW;
         } else {
           ivar.uintah_task_dw = Task::NewDW;
@@ -717,15 +269,13 @@ void TaskInterface::schedule_init( const LevelP& level,
                                    const MaterialSet* matls,
                                    const bool is_restart ){
 
-  std::vector<VariableInformation> variable_registry;
+  VariableRegistry variable_registry;
 
   if ( is_restart ) {
     register_restart_initialize( variable_registry );
   } else {
     register_initialize( variable_registry );
   }
-
-  resolve_labels( variable_registry );
 
   Task* tsk;
   if ( is_restart ) {
@@ -736,24 +286,24 @@ void TaskInterface::schedule_init( const LevelP& level,
 
   int counter = 0;
 
-  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){
+  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
 
     counter++;
 
-    if ( ivar.dw == OLDDW ) {
-      throw InvalidValue("Arches Task Error: Cannot use OLDDW for initialization task: "+_task_name, __FILE__, __LINE__);
+    if ( ivar.dw == ArchesFieldContainer::OLDDW ) {
+      throw InvalidValue("Arches Task Error: Cannot use ArchesFieldContainer::OLDDW for initialization task: "+_task_name, __FILE__, __LINE__);
     }
 
     switch(ivar.depend) {
 
-    case COMPUTES:
+    case ArchesFieldContainer::COMPUTES:
       tsk->computes( ivar.label );
       break;
-    case MODIFIES:
+    case ArchesFieldContainer::MODIFIES:
       tsk->modifies( ivar.label );
       break;
-    case REQUIRES:
-      ivar.dw = NEWDW;
+    case ArchesFieldContainer::REQUIRES:
+      ivar.dw = ArchesFieldContainer::NEWDW;
       ivar.uintah_task_dw = Task::NewDW;
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
@@ -778,34 +328,32 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
                                             SchedulerP& sched,
                                             const MaterialSet* matls ){
 
-  std::vector<VariableInformation> variable_registry;
+  VariableRegistry variable_registry;
 
   register_timestep_init( variable_registry );
-
-  resolve_labels( variable_registry );
 
   Task* tsk = scinew Task( _task_name+"_timestep_initialize", this, &TaskInterface::do_timestep_init, variable_registry );
 
   int counter = 0;
 
-  BOOST_FOREACH( VariableInformation &ivar, variable_registry ){
+  BOOST_FOREACH( ArchesFieldContainer::VariableInformation &ivar, variable_registry ){
 
     counter++;
 
     switch(ivar.depend) {
 
-    case COMPUTES:
+    case ArchesFieldContainer::COMPUTES:
       tsk->computes( ivar.label );   //only compute on the zero time substep
       break;
-    case MODIFIES:
+    case ArchesFieldContainer::MODIFIES:
       tsk->modifies( ivar.label );
       break;
-    case REQUIRES:
+    case ArchesFieldContainer::REQUIRES:
       if ( ivar.dw_inquire ) {
-        ivar.dw = OLDDW;
+        ivar.dw = ArchesFieldContainer::OLDDW;
         ivar.uintah_task_dw = Task::OldDW;
       } else {
-        if ( ivar.dw == OLDDW ) {
+        if ( ivar.dw == ArchesFieldContainer::OLDDW ) {
           ivar.uintah_task_dw = Task::OldDW;
         } else {
           ivar.uintah_task_dw = Task::NewDW;
@@ -825,7 +373,6 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
   else
     delete tsk;
 
-
 }
 
 //====================================================================================
@@ -836,7 +383,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
                              const MaterialSubset* matls,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
-                             std::vector<VariableInformation> variable_registry,
+                             VariableRegistry variable_registry,
                              int time_substep ){
 
   for (int p = 0; p < patches->size(); p++) {
@@ -845,7 +392,7 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -856,9 +403,6 @@ void TaskInterface::do_task( const ProcessorGroup* pc,
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
-
-    //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false );
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -880,7 +424,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
                             const MaterialSubset* matls,
                             DataWarehouse* old_dw,
                             DataWarehouse* new_dw,
-                            std::vector<VariableInformation> variable_registry,
+                            VariableRegistry variable_registry,
                             int time_substep ){
 
   for (int p = 0; p < patches->size(); p++) {
@@ -889,7 +433,7 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -900,9 +444,6 @@ void TaskInterface::do_bcs( const ProcessorGroup* pc,
     info.time_substep = time_substep;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
-
-    //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false );
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -924,7 +465,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
                              const MaterialSubset* matls,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
-                             std::vector<VariableInformation> variable_registry ){
+                             VariableRegistry variable_registry ){
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -932,7 +473,7 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw);
 
     SchedToTaskInfo info;
 
@@ -941,9 +482,6 @@ void TaskInterface::do_init( const ProcessorGroup* pc,
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
-
-    //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, true );
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -965,7 +503,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
                                      const MaterialSubset* matls,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw,
-                                     std::vector<VariableInformation> variable_registry ){
+                                     VariableRegistry variable_registry ){
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -973,7 +511,7 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
 
@@ -982,9 +520,6 @@ void TaskInterface::do_restart_init( const ProcessorGroup* pc,
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
-
-    //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, true );
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
@@ -1006,7 +541,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
                                       const MaterialSubset* matls,
                                       DataWarehouse* old_dw,
                                       DataWarehouse* new_dw,
-                                      std::vector<VariableInformation> variable_registry ){
+                                      VariableRegistry variable_registry ){
 
   for (int p = 0; p < patches->size(); p++) {
 
@@ -1014,7 +549,7 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
 
     const Wasatch::AllocInfo ainfo( old_dw, new_dw, _matl_index, patch, pc );
 
-    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch);
+    ArchesFieldContainer* field_container = scinew ArchesFieldContainer(ainfo, patch, _matl_index, variable_registry, old_dw, new_dw );
 
     SchedToTaskInfo info;
 
@@ -1023,9 +558,6 @@ void TaskInterface::do_timestep_init( const ProcessorGroup* pc,
     info.time_substep = 0;
 
     ArchesTaskInfoManager* tsk_info_mngr = scinew ArchesTaskInfoManager(variable_registry, patch, info);
-
-    //doing DW gets...
-    resolve_fields( old_dw, new_dw, patch, field_container, tsk_info_mngr, false );
 
     //this makes the "getting" of the grid variables easier from the user side (ie, only need a string name )
     tsk_info_mngr->set_field_container( field_container );
