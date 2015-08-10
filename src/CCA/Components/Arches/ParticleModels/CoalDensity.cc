@@ -167,7 +167,9 @@ CoalDensity::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 //
 
 void
-CoalDensity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
+CoalDensity::register_timestep_eval(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const int time_substep ){
 
   for ( int i = 0; i < _Nenv; i++ ){
 
@@ -175,12 +177,13 @@ CoalDensity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable( char_name, ArchesFieldContainer::REQUIRES, 0                    , ArchesFieldContainer::LATEST, variable_registry );
-    register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0                    , ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( char_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST,
+      variable_registry );
+    register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST,
+      variable_registry );
     register_variable( rho_name , ArchesFieldContainer::COMPUTES, variable_registry );
 
   }
-
 }
 
 void

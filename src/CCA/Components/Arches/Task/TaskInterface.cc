@@ -95,11 +95,10 @@ TaskInterface::register_variable_work( std::string name,
   info.depend = dep;
   info.dw     = dw;
   info.nGhost = nGhost;
-  info.dw_inquire = false;
   info.local = false;
 
   info.is_constant = false;
-  if ( dep == ArchesFieldContainer::REQUIRES ) {
+  if ( dep == ArchesFieldContainer::REQUIRES ){
     info.is_constant = true;
   }
 
@@ -117,7 +116,13 @@ TaskInterface::register_variable_work( std::string name,
 
   case ArchesFieldContainer::LATEST:
 
-    info.dw_inquire = true;
+    if ( time_substep == 0 ){
+      info.dw = ArchesFieldContainer::OLDDW;
+      info.uintah_task_dw = Task::OldDW;
+    } else {
+      info.dw = ArchesFieldContainer::NEWDW;
+      info.uintah_task_dw = Task::NewDW;
+    }
     break;
 
   default:
@@ -136,7 +141,7 @@ TaskInterface::register_variable_work( std::string name,
     throw InvalidValue("Arches Task Error: Cannot MODIFY a variable from OldDW for variable: "+name, __FILE__, __LINE__);
   }
 
-  if ( dep == ArchesFieldContainer::COMPUTES ) {
+  if ( dep == ArchesFieldContainer::COMPUTES ){
 
     if ( nGhost > 0 ) {
 
@@ -149,7 +154,7 @@ TaskInterface::register_variable_work( std::string name,
   const VarLabel* the_label = NULL;
   the_label = VarLabel::find( name );
 
-  if ( the_label == NULL ) {
+  if ( the_label == NULL ){
     throw InvalidValue("Error: The variable named: "+name+" does not exist.",__FILE__,__LINE__);
   } else {
     info.label = the_label;
@@ -159,21 +164,21 @@ TaskInterface::register_variable_work( std::string name,
 
   if ( dep == ArchesFieldContainer::REQUIRES ) {
 
-    if ( nGhost == 0 ) {
+    if ( nGhost == 0 ){
       info.ghost_type = Ghost::None;
     } else {
       if ( type_desc == CCVariable<int>::getTypeDescription() ) {
-        info.ghost_type = Ghost::AroundCells;
+          info.ghost_type = Ghost::AroundCells;
       } else if ( type_desc == CCVariable<double>::getTypeDescription() ) {
-        info.ghost_type = Ghost::AroundCells;
+          info.ghost_type = Ghost::AroundCells;
       } else if ( type_desc == CCVariable<Vector>::getTypeDescription() ) {
-        info.ghost_type = Ghost::AroundCells;
+          info.ghost_type = Ghost::AroundCells;
       } else if ( type_desc == SFCXVariable<double>::getTypeDescription() ) {
-        info.ghost_type = Ghost::AroundFaces;
+          info.ghost_type = Ghost::AroundFaces;
       } else if ( type_desc == SFCYVariable<double>::getTypeDescription() ) {
-        info.ghost_type = Ghost::AroundFaces;
+          info.ghost_type = Ghost::AroundFaces;
       } else if ( type_desc == SFCZVariable<double>::getTypeDescription() ) {
-        info.ghost_type = Ghost::AroundFaces;
+          info.ghost_type = Ghost::AroundFaces;
       } else {
         throw InvalidValue("Error: No coverage yet for this type of variable.", __FILE__,__LINE__);
       }
@@ -212,36 +217,17 @@ void TaskInterface::schedule_task( const LevelP& level,
     counter++;
 
     switch(ivar.depend) {
-
     case ArchesFieldContainer::COMPUTES:
       if ( time_substep == 0 ) {
         tsk->computes( ivar.label );   //only compute on the zero time substep
       } else {
         tsk->modifies( ivar.label );
-        ivar.dw = ArchesFieldContainer::NEWDW;
-        ivar.uintah_task_dw = Task::NewDW;
-        ivar.depend = ArchesFieldContainer::MODIFIES;
       }
       break;
     case ArchesFieldContainer::MODIFIES:
       tsk->modifies( ivar.label );
       break;
     case ArchesFieldContainer::REQUIRES:
-      if ( ivar.dw_inquire ) {
-        if ( time_substep > 0 ) {
-          ivar.dw = ArchesFieldContainer::NEWDW;
-          ivar.uintah_task_dw = Task::NewDW;
-        } else {
-          ivar.dw = ArchesFieldContainer::OLDDW;
-          ivar.uintah_task_dw = Task::OldDW;
-        }
-      } else {
-        if ( ivar.dw == ArchesFieldContainer::OLDDW ) {
-          ivar.uintah_task_dw = Task::OldDW;
-        } else {
-          ivar.uintah_task_dw = Task::NewDW;
-        }
-      }
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
@@ -290,10 +276,6 @@ void TaskInterface::schedule_init( const LevelP& level,
 
     counter++;
 
-    if ( ivar.dw == ArchesFieldContainer::OLDDW ) {
-      throw InvalidValue("Arches Task Error: Cannot use ArchesFieldContainer::OLDDW for initialization task: "+_task_name, __FILE__, __LINE__);
-    }
-
     switch(ivar.depend) {
 
     case ArchesFieldContainer::COMPUTES:
@@ -303,8 +285,6 @@ void TaskInterface::schedule_init( const LevelP& level,
       tsk->modifies( ivar.label );
       break;
     case ArchesFieldContainer::REQUIRES:
-      ivar.dw = ArchesFieldContainer::NEWDW;
-      ivar.uintah_task_dw = Task::NewDW;
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
@@ -349,16 +329,6 @@ void TaskInterface::schedule_timestep_init( const LevelP& level,
       tsk->modifies( ivar.label );
       break;
     case ArchesFieldContainer::REQUIRES:
-      if ( ivar.dw_inquire ) {
-        ivar.dw = ArchesFieldContainer::OLDDW;
-        ivar.uintah_task_dw = Task::OldDW;
-      } else {
-        if ( ivar.dw == ArchesFieldContainer::OLDDW ) {
-          ivar.uintah_task_dw = Task::OldDW;
-        } else {
-          ivar.uintah_task_dw = Task::NewDW;
-        }
-      }
       tsk->requires( ivar.uintah_task_dw, ivar.label, ivar.ghost_type, ivar.nGhost );
       break;
     default:
