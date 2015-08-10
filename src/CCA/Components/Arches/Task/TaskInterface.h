@@ -252,35 +252,35 @@ protected:
         /** @brief Return a CONST UINTAH field **/
         template <typename T>
         T* get_const_uintah_field( const std::string name ){
-          return _field_container->get_const_field_new<T>(name);
+          return _field_container->get_const_field<T>(name);
         }
 
         /** @brief Return a UINTAH field **/
         template <typename T>
         T* get_uintah_field( const std::string name ){
-          return _field_container->get_field_new<T>(name);
+          return _field_container->get_field<T>(name);
         }
 
         /** @brief Return a SPATIAL field **/
         template <typename T>
         SpatialOps::SpatFldPtr<T> get_so_field( const std::string name ){
-          return _field_container->get_so_field_new<T>(name);
+          return _field_container->get_so_field<T>(name);
         }
 
         /** @brief Return a CONST SPATIAL field **/
         template <typename T>
         SpatialOps::SpatFldPtr<T> get_const_so_field( const std::string name ){
-          return _field_container->get_const_so_field_new<T>(name);
+          return _field_container->get_const_so_field<T>(name);
         }
 
         /** @brief Return a SPATIAL OPS PARTICLE FIELD **/
         SpatialOps::SpatFldPtr<ParticleField> get_particle_field( const std::string name ){
-          return _field_container->get_so_particle_field_new(name);
+          return _field_container->get_so_particle_field(name);
         }
 
         /** @brief Return a CONST SPATIAL OPS PARTICLE FIELD **/
         SpatialOps::SpatFldPtr<ParticleField> get_const_particle_field( const std::string name ){
-          return _field_container->get_const_so_particle_field_new(name);
+          return _field_container->get_const_so_particle_field(name);
         }
 
       private:
