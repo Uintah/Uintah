@@ -19,9 +19,9 @@ GridInfo::problemSetup( ProblemSpecP& db ){
 void
 GridInfo::create_local_labels(){
 
-  register_new_variable_new<CCVariable<double> >( "gridX" );
-  register_new_variable_new<CCVariable<double> >( "gridY" );
-  register_new_variable_new<CCVariable<double> >( "gridZ" );
+  register_new_variable<CCVariable<double> >( "gridX" );
+  register_new_variable<CCVariable<double> >( "gridY" );
+  register_new_variable<CCVariable<double> >( "gridZ" );
 
 }
 
@@ -35,9 +35,9 @@ void
 GridInfo::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable_new( "gridX" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new( "gridY" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new( "gridZ" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( "gridX" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( "gridY" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( "gridZ" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
 }
 
@@ -71,13 +71,13 @@ GridInfo::register_timestep_init( std::vector<ArchesFieldContainer::VariableInfo
 
   //carry forward the old values
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable_new( "gridX" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new( "gridY" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new( "gridZ" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( "gridX" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( "gridY" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( "gridZ" , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
-  register_variable_new( "gridX" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable_new( "gridY" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable_new( "gridZ" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( "gridX" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( "gridY" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( "gridZ" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
 
 }
 

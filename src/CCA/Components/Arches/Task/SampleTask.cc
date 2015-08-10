@@ -35,8 +35,8 @@ SampleTask::problemSetup( ProblemSpecP& db ){
 void
 SampleTask::create_local_labels(){
 
-  register_new_variable_new<CCVariable<double> >( "a_sample_variable" );
-  register_new_variable_new<CCVariable<double> >( "a_result_variable" );
+  register_new_variable<CCVariable<double> >( "a_sample_variable" );
+  register_new_variable<CCVariable<double> >( "a_result_variable" );
 
 }
 
@@ -66,8 +66,8 @@ void
 SampleTask::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable_new( "a_sample_variable", ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( "a_result_variable", ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "a_sample_variable", ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "a_result_variable", ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
 
@@ -98,12 +98,12 @@ void
 SampleTask::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable_new( "a_sample_variable", ArchesFieldContainer::COMPUTES,       0, ArchesFieldContainer::NEWDW,  variable_registry, time_substep );
-  register_variable_new( "a_result_variable", ArchesFieldContainer::COMPUTES,       0, ArchesFieldContainer::NEWDW,  variable_registry, time_substep );
-  register_variable_new( "density",           ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable_new( "uVelocitySPBC",     ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable_new( "vVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-  register_variable_new( "wVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( "a_sample_variable", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+  register_variable( "a_result_variable", ArchesFieldContainer::COMPUTES, variable_registry, time_substep );
+  register_variable( "density",           ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( "uVelocitySPBC",     ArchesFieldContainer::REQUIRES,       1, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( "vVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+  register_variable( "wVelocitySPBC",     ArchesFieldContainer::REQUIRES,       2, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
 }
 

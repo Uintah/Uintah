@@ -69,8 +69,8 @@ CoalMassClip::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
     const std::string char_name  = ParticleHelper::append_env( _char_base, i );
     const std::string rc_name    = ParticleHelper::append_env( _raw_coal_base, i );
 
-    register_variable_new( char_name , ArchesFieldContainer::MODIFIES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable_new( rc_name   , ArchesFieldContainer::MODIFIES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( char_name , ArchesFieldContainer::MODIFIES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( rc_name   , ArchesFieldContainer::MODIFIES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
   }
 

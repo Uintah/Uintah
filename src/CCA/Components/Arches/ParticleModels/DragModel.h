@@ -163,10 +163,10 @@ namespace Uintah{
     for ( int i = 0; i < _N; i++ ){
 
       const std::string name = get_name(i, _base_var_name);
-      register_new_variable_new<DT>( name );
+      register_new_variable<DT>( name );
 
       const std::string gas_name = get_name(i, _base_gas_var_name);
-      register_new_variable_new<DT>( gas_name );
+      register_new_variable<DT>( gas_name );
 
     }
   }
@@ -177,10 +177,10 @@ namespace Uintah{
 
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
       const std::string gas_name = get_name(i, _base_gas_var_name);
-      register_variable_new( gas_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( gas_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
     }
   }
 
@@ -220,38 +220,38 @@ namespace Uintah{
     for ( int i = 0; i < _N; i++ ){
       //dependent variables(s) or model values
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       const std::string gas_name = get_name(i, _base_gas_var_name);
-      register_variable_new( gas_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( gas_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       //independent variables
       const std::string diameter_name = get_name( i, _base_diameter_name );
-      register_variable_new( diameter_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( diameter_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
       const std::string density_name = get_name( i, _base_density_name );
-      register_variable_new( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
       const std::string weight_name = get_name( i, "w" );
-      register_variable_new( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
       const std::string velocity_name = get_name( i, _base_u_velocity_name );
-      register_variable_new( velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
       //using if statements on v/w particle velocities to allow testing in 1&2D
       if ( _base_v_velocity_name != "none" ) {
         const std::string velocity_name = get_name( i, _base_v_velocity_name );
-        register_variable_new( velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+        register_variable( velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
       }
       if (_base_w_velocity_name != "none" ) {
         const std::string velocity_name = get_name( i, _base_w_velocity_name );
-        register_variable_new( velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+        register_variable( velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
       }
     }
 
-    register_variable_new( _gas_u_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable_new( _gas_v_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable_new( _gas_w_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable_new( _gas_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _gas_u_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _gas_v_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _gas_w_velocity_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _gas_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   }
 
   template <typename IT, typename DT>

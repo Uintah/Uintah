@@ -95,7 +95,7 @@ private:
     for ( int i = 0; i < _N; i++ ){
 
       const std::string name = get_name(i, _base_var_name);
-      register_new_variable_new<IT>( name );
+      register_new_variable<IT>( name );
 
     }
 
@@ -131,7 +131,7 @@ private:
     for ( int i = 0; i < _N; i++ ){
 
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
     }
 
@@ -175,21 +175,21 @@ private:
 
       //dependent variables(s) or model values
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       //independent variable
       //const std::string temperature_name = get_name( i, _temperature_var_name );
-      //register_variable_new( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      //register_variable( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
       //const std::string conc_name = get_name( i, _conc_var_name );
-      //register_variable_new( conc_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      //register_variable( conc_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
     }
 
     //temp: remove this after testing:
     //and uncomment the statements above.
-    register_variable_new( _temperature_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
-    register_variable_new( _conc_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _temperature_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _conc_var_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     //end temp:
 
   }

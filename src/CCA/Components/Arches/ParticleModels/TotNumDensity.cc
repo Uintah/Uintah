@@ -35,7 +35,7 @@ TotNumDensity::problemSetup( ProblemSpecP& db ){
 void
 TotNumDensity::create_local_labels(){
 
-  register_new_variable_new<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( _task_name );
 
 }
 
@@ -48,11 +48,11 @@ TotNumDensity::create_local_labels(){
 void
 TotNumDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-  register_variable_new( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string weight_name  = ParticleHelper::append_env( "w", i);
-    register_variable_new( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
 
 }
@@ -93,11 +93,11 @@ TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 void
 TotNumDensity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-  register_variable_new( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int i = 0; i < _Nenv; i++ ){
     const std::string weight_name  = ParticleHelper::append_env( "w", i);
-    register_variable_new( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
   }
 
 }

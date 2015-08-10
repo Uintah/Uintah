@@ -93,9 +93,9 @@ UpdateParticleSize::register_timestep_eval(
   std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
   const int time_substep ){
 
-  register_variable_new( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
-  register_variable_new( _size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
+  register_variable( _size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
       variable_registry );
 
 }

@@ -88,7 +88,7 @@ CoalDensity::create_local_labels(){
   for ( int i = 0; i < _Nenv; i++ ){
 
     const std::string rho_name = get_env_name( i, _task_name );
-    register_new_variable_new<CCVariable<double> >( rho_name );
+    register_new_variable<CCVariable<double> >( rho_name );
 
   }
 }
@@ -108,9 +108,9 @@ CoalDensity::register_initialize( std::vector<ArchesFieldContainer::VariableInfo
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable_new( char_name , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable_new( rc_name   , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable_new( rho_name  , ArchesFieldContainer::COMPUTES , variable_registry );
+    register_variable( char_name , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0                    , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( rho_name  , ArchesFieldContainer::COMPUTES , variable_registry );
 
   }
 
@@ -175,9 +175,9 @@ CoalDensity::register_timestep_eval( std::vector<ArchesFieldContainer::VariableI
     const std::string char_name = get_env_name( i, _char_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable_new( char_name, ArchesFieldContainer::REQUIRES, 0                    , ArchesFieldContainer::LATEST, variable_registry );
-    register_variable_new( rc_name  , ArchesFieldContainer::REQUIRES, 0                    , ArchesFieldContainer::LATEST, variable_registry );
-    register_variable_new( rho_name , ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( char_name, ArchesFieldContainer::REQUIRES, 0                    , ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0                    , ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( rho_name , ArchesFieldContainer::COMPUTES, variable_registry );
 
   }
 

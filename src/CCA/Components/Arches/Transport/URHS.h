@@ -124,11 +124,11 @@ private:
   template <typename UT>
   void URHS<UT>::create_local_labels(){
 
-    register_new_variable_new<UT>( _rhs_name   );
-    register_new_variable_new<UT>( _u_name     );
-    register_new_variable_new<UT>( _rhou_name  );
-    register_new_variable_new<UT>( _Fconv_name );
-    register_new_variable_new<UT>( _Tau_name );
+    register_new_variable<UT>( _rhs_name   );
+    register_new_variable<UT>( _u_name     );
+    register_new_variable<UT>( _rhou_name  );
+    register_new_variable<UT>( _Fconv_name );
+    register_new_variable<UT>( _Tau_name );
 
   }
 
@@ -200,9 +200,9 @@ private:
   template <typename UT>
   void URHS<UT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-    register_variable_new( _rhs_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable_new( _u_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable_new( _rhou_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( _rhs_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( _u_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( _rhou_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
   }
 
@@ -229,13 +229,13 @@ private:
   template <typename UT>
   void URHS<UT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry){
 
-    register_variable_new( _u_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable_new( _u_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-    register_variable_new( _rhou_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable_new( _rhou_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-    register_variable_new( _Fconv_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable_new( _Tau_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
-    register_variable_new( "density", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( _u_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( _u_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( _rhou_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( _rhou_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( _Fconv_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( _Tau_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( "density", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
 
   }
 
@@ -270,14 +270,14 @@ private:
   template <typename UT>
   void URHS<UT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-    register_variable_new( _rhs_name   ,ArchesFieldContainer::COMPUTES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
-    register_variable_new( _Fconv_name ,ArchesFieldContainer::MODIFIES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
-    register_variable_new( _Tau_name   ,ArchesFieldContainer::MODIFIES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
-    register_variable_new( _rhou_name  ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
-    register_variable_new( _u_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
-    register_variable_new( _v_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
-    register_variable_new( _w_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
-    register_variable_new( "density"   ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::LATEST ,variable_registry );
+    register_variable( _rhs_name   ,ArchesFieldContainer::COMPUTES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable( _Fconv_name ,ArchesFieldContainer::MODIFIES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable( _Tau_name   ,ArchesFieldContainer::MODIFIES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable( _rhou_name  ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable( _u_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable( _v_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable( _w_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable( "density"   ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::LATEST ,variable_registry );
 
   }
 

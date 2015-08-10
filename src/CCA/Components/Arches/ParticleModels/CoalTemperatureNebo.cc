@@ -100,9 +100,9 @@ CoalTemperatureNebo::create_local_labels(){
   for ( int i = 0; i < _Nenv; i++ ){
 
     const std::string temperature_name = get_env_name( i, _task_name );
-    register_new_variable_new<CCVariable<double> >( temperature_name );
+    register_new_variable<CCVariable<double> >( temperature_name );
     const std::string dTdt_name = get_env_name( i, _dTdt_base_name );
-    register_new_variable_new<CCVariable<double> >( dTdt_name );
+    register_new_variable<CCVariable<double> >( dTdt_name );
 
   }
 }
@@ -125,11 +125,11 @@ CoalTemperatureNebo::register_initialize( std::vector<ArchesFieldContainer::Vari
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
 
-    register_variable_new( char_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable_new( enthalpy_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable_new( rc_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-    register_variable_new( temperature_name  , ArchesFieldContainer::COMPUTES , variable_registry );
-    register_variable_new( dTdt_name  , ArchesFieldContainer::COMPUTES , variable_registry );
+    register_variable( char_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( enthalpy_name , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    register_variable( temperature_name  , ArchesFieldContainer::COMPUTES , variable_registry );
+    register_variable( dTdt_name  , ArchesFieldContainer::COMPUTES , variable_registry );
 
   }
 
@@ -170,8 +170,8 @@ CoalTemperatureNebo::register_timestep_init( std::vector<ArchesFieldContainer::V
     const std::string temperature_name  = get_env_name( i, _task_name );
     const std::string temperatureold_name  = get_env_name( i, _task_name );
 
-    register_variable_new( temperature_name , ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable_new( temperatureold_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( temperature_name , ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( temperatureold_name , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
 
   }
 
@@ -214,12 +214,12 @@ CoalTemperatureNebo::register_timestep_eval( std::vector<ArchesFieldContainer::V
     const std::string enthalpy_name = get_env_name( i, _enthalpy_base_name );
     const std::string rc_name   = get_env_name( i, _rawcoal_base_name );
 
-    register_variable_new( char_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
-    register_variable_new( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-    register_variable_new( enthalpy_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
-    register_variable_new( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
-    register_variable_new( temperature_name , ArchesFieldContainer::MODIFIES, variable_registry );
-    register_variable_new( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( char_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( temperature_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable( enthalpy_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
+    register_variable( temperature_name , ArchesFieldContainer::MODIFIES, variable_registry );
+    register_variable( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
 
   }
 

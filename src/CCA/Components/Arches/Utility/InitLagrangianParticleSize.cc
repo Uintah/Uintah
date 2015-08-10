@@ -49,7 +49,7 @@ InitLagrangianParticleSize::problemSetup( ProblemSpecP& db ){
 void
 InitLagrangianParticleSize::create_local_labels(){
 
-  register_new_variable_new< ParticleVariable<double> >( _size_label );
+  register_new_variable< ParticleVariable<double> >( _size_label );
 
 }
 
@@ -63,7 +63,7 @@ InitLagrangianParticleSize::create_local_labels(){
 void
 InitLagrangianParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-  register_variable_new( _size_label, ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable( _size_label, ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
 }
 

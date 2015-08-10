@@ -165,7 +165,7 @@ public:
 protected:
 
     /** @brief Inteface to register_variable_work -- this function is overloaded. **/
-    void register_variable_new( std::string name,
+    void register_variable( std::string name,
                             ArchesFieldContainer::VAR_DEPEND dep,
                             int nGhost,
                             ArchesFieldContainer::WHICH_DW dw,
@@ -173,7 +173,7 @@ protected:
                             const int time_substep );
 
     /** @brief Inteface to register_variable_work -- this function is overloaded. **/
-    void register_variable_new( std::string name,
+    void register_variable( std::string name,
                             ArchesFieldContainer::VAR_DEPEND dep,
                             int nGhost,
                             ArchesFieldContainer::WHICH_DW dw,
@@ -181,20 +181,20 @@ protected:
 
     /** @brief Inteface to register_variable_work -- this function is overloaded.
      *         This version assumes NewDW and zero ghosts. **/
-    void register_variable_new( std::string name,
+    void register_variable( std::string name,
                             ArchesFieldContainer::VAR_DEPEND dep,
                             std::vector<ArchesFieldContainer::VariableInformation>& var_reg );
 
     /** @brief Inteface to register_variable_work -- this function is overloaded.
      *         This version assumes NewDW and zero ghosts. **/
-    void register_variable_new( std::string name,
+    void register_variable( std::string name,
                             ArchesFieldContainer::VAR_DEPEND dep,
                             std::vector<ArchesFieldContainer::VariableInformation>& var_reg,
                             const int timesubstep );
 
     /** @brief Builds a struct for each variable containing all pertinent uintah
      * DW information **/
-     void register_variable_work_new( std::string name,
+     void register_variable_work( std::string name,
                                        ArchesFieldContainer::VAR_DEPEND dep,
                                        int nGhost,
                                        ArchesFieldContainer::WHICH_DW dw,
@@ -344,7 +344,7 @@ protected:
 
     /** @brief Register a local varlabel for this task **/
     template <typename T>
-    void register_new_variable_new(const std::string name){
+    void register_new_variable(const std::string name){
 
       RegisterNewVariableHelper<T>* helper;
       helper->create_variable( name, _local_labels );
