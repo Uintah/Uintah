@@ -109,7 +109,7 @@ namespace Uintah{
   void BodyForce<IT,DT>::create_local_labels(){
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      register_new_variable_new<DT>(name );
+      register_new_variable<DT>(name );
     }
   }
 
@@ -151,7 +151,7 @@ namespace Uintah{
 
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
     }
   }
@@ -189,14 +189,14 @@ namespace Uintah{
     for ( int i = 0; i < _N; i++ ){
       //dependent variables(s) or model values
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
       //independent variables
       const std::string density_name = get_name( i, _base_density_name );
-      register_variable_new( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+      register_variable( density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
     }
 
-    register_variable_new( _gas_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( _gas_density_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
   }
 
   template <typename IT, typename DT>

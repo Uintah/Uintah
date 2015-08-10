@@ -57,7 +57,7 @@ DensityPredictor::problemSetup( ProblemSpecP& db ){
 
 void
 DensityPredictor::create_local_labels(){
-  register_new_variable_new<CCVariable<double> >( "new_densityGuess" );
+  register_new_variable<CCVariable<double> >( "new_densityGuess" );
 }
 
 //
@@ -69,7 +69,7 @@ DensityPredictor::create_local_labels(){
 void
 DensityPredictor::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-  register_variable_new( "new_densityGuess", ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "new_densityGuess", ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
 
@@ -99,22 +99,22 @@ DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 void
 DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-  register_variable_new( "new_densityGuess"  , ArchesFieldContainer::COMPUTES,  variable_registry, time_substep );
-  register_variable_new( "densityGuess"  , ArchesFieldContainer::MODIFIES,  variable_registry, time_substep );
-  register_variable_new( "densityCP"     , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-  register_variable_new( "volFraction"   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( "uVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( "vVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( "wVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( "sm_cont" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( "new_densityGuess"  , ArchesFieldContainer::COMPUTES,  variable_registry, time_substep );
+  register_variable( "densityGuess"  , ArchesFieldContainer::MODIFIES,  variable_registry, time_substep );
+  register_variable( "densityCP"     , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( "volFraction"   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "uVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "vVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "wVelocitySPBC" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "sm_cont" , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
   if ( !_use_exact_guess ){
     //typedef std::vector<std::string> SVec;
     //for (SVec::iterator i = _mass_sources.begin(); i != _mass_sources.end(); i++ ){
-      //register_variable_new( *i , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+      //register_variable( *i , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
     //}
   }
   if ( _use_exact_guess )
-    register_variable_new( _f_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+    register_variable( _f_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
 
 }
 

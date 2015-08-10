@@ -118,11 +118,11 @@ ScalarRHS::problemSetup( ProblemSpecP& db ){
 void
 ScalarRHS::create_local_labels(){
 
-  register_new_variable_new<CCVariable<double> >( _rhs_name );
-  register_new_variable_new<CCVariable<double> >( _task_name );
-  register_new_variable_new<CCVariable<double> >( _D_name );
-  register_new_variable_new<CCVariable<double> >( _Fconv_name );
-  register_new_variable_new<CCVariable<double> >( _Fdiff_name );
+  register_new_variable<CCVariable<double> >( _rhs_name );
+  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( _D_name );
+  register_new_variable<CCVariable<double> >( _Fconv_name );
+  register_new_variable<CCVariable<double> >( _Fdiff_name );
 
 }
 
@@ -136,11 +136,11 @@ void
 ScalarRHS::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
   //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-  register_variable_new(  _rhs_name   , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new(  _task_name  , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new(  _D_name     , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new(  _Fconv_name , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
-  register_variable_new(  _Fdiff_name , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable(  _rhs_name   , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable(  _task_name  , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable(  _D_name     , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable(  _Fconv_name , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+  register_variable(  _Fdiff_name , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
 
 }
 
@@ -171,10 +171,10 @@ ScalarRHS::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 //
 void
 ScalarRHS::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-  register_variable_new( _D_name     , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry  );
-  register_variable_new( _D_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
-  register_variable_new( _task_name  , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry  );
-  register_variable_new( _task_name  , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
+  register_variable( _D_name     , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry  );
+  register_variable( _D_name     , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry );
+  register_variable( _task_name  , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW , variable_registry  );
+  register_variable( _task_name  , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::OLDDW , variable_registry  );
 }
 
 void
@@ -205,24 +205,24 @@ void
 ScalarRHS::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
 //  //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
-  register_variable_new( _rhs_name        , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-  register_variable_new( _D_name          , ArchesFieldContainer::REQUIRES,  1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-  register_variable_new( _task_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( _Fconv_name      , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-  register_variable_new( _Fdiff_name      , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
-  register_variable_new( "uVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( "vVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( "wVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-  register_variable_new( "areaFractionFX" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
-  register_variable_new( "areaFractionFY" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
-  register_variable_new( "areaFractionFZ" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
-  register_variable_new( "volFraction"    , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
-  register_variable_new( "density"        , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
-//  //register_variable_new( "areaFraction"   , ArchesFieldContainer::REQUIRES , 2 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( _rhs_name        , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( _D_name          , ArchesFieldContainer::REQUIRES,  1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( _task_name       , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( _Fconv_name      , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( _Fdiff_name      , ArchesFieldContainer::COMPUTES , 0 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
+  register_variable( "uVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "vVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "wVelocitySPBC"  , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+  register_variable( "areaFractionFX" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
+  register_variable( "areaFractionFY" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
+  register_variable( "areaFractionFZ" , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
+  register_variable( "volFraction"    , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::OLDDW  , variable_registry , time_substep );
+  register_variable( "density"        , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
+//  //register_variable( "areaFraction"   , ArchesFieldContainer::REQUIRES , 2 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
 //
 //  typedef std::vector<SourceInfo> VS;
 //  for (VS::iterator i = _source_info.begin(); i != _source_info.end(); i++){
-//    register_variable_new( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+//    register_variable( i->name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 //  }
 
 }

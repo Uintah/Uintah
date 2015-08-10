@@ -40,9 +40,9 @@ RandParticleLoc::create_local_labels(){
 void
 RandParticleLoc::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-  register_variable_new( _px_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
-  register_variable_new( _py_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
-  register_variable_new( _pz_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
+  register_variable( _px_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
+  register_variable( _py_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
+  register_variable( _pz_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW,  variable_registry );
 
 }
 
@@ -115,7 +115,7 @@ void
 RandParticleLoc::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
   //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
-  //register_variable_new( "a_sample_variable", ArchesFieldContainer::COMPUTES,       0, ArchesFieldContainer::NEWDW,  variable_registry, time_substep );
+  //register_variable( "a_sample_variable", ArchesFieldContainer::COMPUTES,       0, ArchesFieldContainer::NEWDW,  variable_registry, time_substep );
 
 }
 

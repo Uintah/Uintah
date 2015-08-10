@@ -31,42 +31,42 @@ TaskInterface::~TaskInterface()
 //
 //====================================================================================
 void
-TaskInterface::register_variable_new( std::string name,
+TaskInterface::register_variable( std::string name,
                                   VAR_DEPEND dep,
                                   int nGhost,
                                   WHICH_DW dw,
                                   VariableRegistry& variable_registry,
                                   const int time_substep ){
 
-  register_variable_work_new( name, dep, nGhost, dw, variable_registry, time_substep );
+  register_variable_work( name, dep, nGhost, dw, variable_registry, time_substep );
 
 }
 
 void
-TaskInterface::register_variable_new( std::string name,
+TaskInterface::register_variable( std::string name,
                                   VAR_DEPEND dep,
                                   int nGhost,
                                   WHICH_DW dw,
                                   VariableRegistry& variable_registry ){
 
-  register_variable_work_new( name, dep, nGhost, dw, variable_registry, 0 );
+  register_variable_work( name, dep, nGhost, dw, variable_registry, 0 );
 
 }
 
 void
-TaskInterface::register_variable_new( std::string name,
+TaskInterface::register_variable( std::string name,
                                   VAR_DEPEND dep,
                                   VariableRegistry& variable_registry ){
 
   WHICH_DW dw = ArchesFieldContainer::NEWDW;
   int nGhost = 0;
 
-  register_variable_work_new( name, dep, nGhost, dw, variable_registry, 0 );
+  register_variable_work( name, dep, nGhost, dw, variable_registry, 0 );
 
 }
 
 void
-TaskInterface::register_variable_new( std::string name,
+TaskInterface::register_variable( std::string name,
                                   VAR_DEPEND dep,
                                   VariableRegistry& variable_registry,
                                   const int timesubstep ){
@@ -74,7 +74,7 @@ TaskInterface::register_variable_new( std::string name,
   WHICH_DW dw = ArchesFieldContainer::NEWDW;
   int nGhost = 0;
 
-  register_variable_work_new( name, dep, nGhost, dw, variable_registry, timesubstep );
+  register_variable_work( name, dep, nGhost, dw, variable_registry, timesubstep );
 
 }
 
@@ -82,7 +82,7 @@ TaskInterface::register_variable_new( std::string name,
 //
 //====================================================================================
 void
-TaskInterface::register_variable_work_new( std::string name,
+TaskInterface::register_variable_work( std::string name,
                                        VAR_DEPEND dep,
                                        int nGhost,
                                        WHICH_DW dw,
@@ -99,7 +99,7 @@ TaskInterface::register_variable_work_new( std::string name,
   info.local = false;
 
   info.is_constant = false;
-  if ( dep == ArchesFieldContainer::REQUIRES ){
+  if ( dep == ArchesFieldContainer::REQUIRES ) {
     info.is_constant = true;
   }
 
@@ -136,7 +136,7 @@ TaskInterface::register_variable_work_new( std::string name,
     throw InvalidValue("Arches Task Error: Cannot MODIFY a variable from OldDW for variable: "+name, __FILE__, __LINE__);
   }
 
-  if ( dep == ArchesFieldContainer::COMPUTES ){
+  if ( dep == ArchesFieldContainer::COMPUTES ) {
 
     if ( nGhost > 0 ) {
 
@@ -149,7 +149,7 @@ TaskInterface::register_variable_work_new( std::string name,
   const VarLabel* the_label = NULL;
   the_label = VarLabel::find( name );
 
-  if ( the_label == NULL ){
+  if ( the_label == NULL ) {
     throw InvalidValue("Error: The variable named: "+name+" does not exist.",__FILE__,__LINE__);
   } else {
     info.label = the_label;
@@ -159,21 +159,21 @@ TaskInterface::register_variable_work_new( std::string name,
 
   if ( dep == ArchesFieldContainer::REQUIRES ) {
 
-    if ( nGhost == 0 ){
+    if ( nGhost == 0 ) {
       info.ghost_type = Ghost::None;
     } else {
       if ( type_desc == CCVariable<int>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundCells;
+        info.ghost_type = Ghost::AroundCells;
       } else if ( type_desc == CCVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundCells;
+        info.ghost_type = Ghost::AroundCells;
       } else if ( type_desc == CCVariable<Vector>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundCells;
+        info.ghost_type = Ghost::AroundCells;
       } else if ( type_desc == SFCXVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundFaces;
+        info.ghost_type = Ghost::AroundFaces;
       } else if ( type_desc == SFCYVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundFaces;
+        info.ghost_type = Ghost::AroundFaces;
       } else if ( type_desc == SFCZVariable<double>::getTypeDescription() ) {
-          info.ghost_type = Ghost::AroundFaces;
+        info.ghost_type = Ghost::AroundFaces;
       } else {
         throw InvalidValue("Error: No coverage yet for this type of variable.", __FILE__,__LINE__);
       }

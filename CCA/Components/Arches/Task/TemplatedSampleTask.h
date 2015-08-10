@@ -86,7 +86,7 @@ private:
   template <typename T>
   void TemplatedSampleTask<T>::create_local_labels(){
 
-    register_new_variable_new<T>( "templated_variable" );
+    register_new_variable<T>( "templated_variable" );
 
   }
 
@@ -95,7 +95,7 @@ private:
   void TemplatedSampleTask<T>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-    register_variable_new( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
   }
 
@@ -118,7 +118,7 @@ private:
   void TemplatedSampleTask<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
     //FUNCITON CALL     STRING NAME(VL)     TYPE       DEPENDENCY    GHOST DW     VR
-    register_variable_new( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    register_variable( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
 
   }
 

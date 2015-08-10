@@ -41,12 +41,12 @@ WallHFVariable::problemSetup( ProblemSpecP& db ){
 void
 WallHFVariable::create_local_labels(){
 
-  register_new_variable_new<CCVariable<double> >( _flux_x );
-  register_new_variable_new<CCVariable<double> >( _flux_y );
-  register_new_variable_new<CCVariable<double> >( _flux_z );
-  register_new_variable_new<CCVariable<double> >( _net_power );
-  register_new_variable_new<CCVariable<double> >( _task_name );
-  register_new_variable_new<CCVariable<double> >( _area );
+  register_new_variable<CCVariable<double> >( _flux_x );
+  register_new_variable<CCVariable<double> >( _flux_y );
+  register_new_variable<CCVariable<double> >( _flux_z );
+  register_new_variable<CCVariable<double> >( _net_power );
+  register_new_variable<CCVariable<double> >( _task_name );
+  register_new_variable<CCVariable<double> >( _area );
 
 }
 
@@ -59,12 +59,12 @@ WallHFVariable::create_local_labels(){
 void
 WallHFVariable::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-  register_variable_new( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _area, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _area, ArchesFieldContainer::COMPUTES, variable_registry );
 
 }
 
@@ -98,12 +98,12 @@ WallHFVariable::register_restart_initialize( std::vector<ArchesFieldContainer::V
 
   if ( _new_variables ) {
 
-    register_variable_new( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable_new( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable_new( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable_new( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable_new( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-    register_variable_new( _area, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+    register_variable( _area, ArchesFieldContainer::COMPUTES, variable_registry );
 
   }
 
@@ -143,26 +143,26 @@ WallHFVariable::restart_initialize( const Patch* patch, ArchesTaskInfoManager* t
 void
 WallHFVariable::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-  register_variable_new( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( _area, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable_new( "radiationFluxE", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( "radiationFluxW", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( "radiationFluxN", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( "radiationFluxS", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( "radiationFluxT", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( "radiationFluxB", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( "radiation_temperature", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( _flux_x, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( _flux_y, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( _flux_z, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( _net_power, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
-  register_variable_new( _area, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _flux_x, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _flux_y, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _flux_z, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _net_power, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( _area, ArchesFieldContainer::COMPUTES, variable_registry );
+  register_variable( "radiationFluxE", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "radiationFluxW", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "radiationFluxN", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "radiationFluxS", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "radiationFluxT", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "radiationFluxB", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "volFraction", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( "radiation_temperature", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _flux_x, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _flux_y, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _flux_z, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _net_power, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _task_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+  register_variable( _area, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
 
 }
 

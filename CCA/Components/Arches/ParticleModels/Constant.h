@@ -100,7 +100,7 @@ namespace Uintah{
   void Constant<T>::create_local_labels(){
     for ( int i = 0; i < _N; i++ ){
       const std::string name = get_name(i, _base_var_name);
-      register_new_variable_new<T>(name);
+      register_new_variable<T>(name);
     }
   }
 
@@ -128,7 +128,7 @@ namespace Uintah{
     for ( int i = 0; i < _N; i++ ){
 
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+      register_variable( name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
     }
   }
@@ -157,7 +157,7 @@ namespace Uintah{
 
       //dependent variables(s) or model values
       const std::string name = get_name(i, _base_var_name);
-      register_variable_new( name, ArchesFieldContainer::COMPUTES, variable_registry );
+      register_variable( name, ArchesFieldContainer::COMPUTES, variable_registry );
 
     }
   }

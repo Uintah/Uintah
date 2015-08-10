@@ -108,14 +108,14 @@ private:
   void FEUpdate<T>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
     //FUNCITON CALL     STRING NAME(VL)     DEPENDENCY    GHOST DW     VR
-    //register_variable_new( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+    //register_variable( "templated_variable", ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     typedef std::vector<std::string> SV;
     for ( SV::iterator i = _eqn_names.begin(); i != _eqn_names.end(); i++){
-      register_variable_new( *i, ArchesFieldContainer::MODIFIES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( *i, ArchesFieldContainer::MODIFIES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
       std::string rhs_name = *i + "_RHS";
-      register_variable_new( rhs_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
+      register_variable( rhs_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry, time_substep );
     }
-    register_variable_new( "density", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
+    register_variable( "density", ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry, time_substep );
 
   }
 
