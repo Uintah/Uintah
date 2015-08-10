@@ -45,7 +45,7 @@ namespace Uintah{
         VAR_DEPEND  depend;
         WHICH_DW    dw;
         int         nGhost;
-        bool        dw_inquire;
+        //bool        dw_inquire;
         const VarLabel* label;
         Task::WhichDW uintah_task_dw;
         Ghost::GhostType ghost_type;
