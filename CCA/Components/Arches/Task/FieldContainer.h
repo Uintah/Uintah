@@ -231,7 +231,7 @@ namespace Uintah{
 
       /** @brief Get a modifiable uintah variable **/
       template <typename T>
-      inline T* get_const_field_new( const std::string name ){
+      inline T* get_const_field( const std::string name ){
 
         ConstFieldContainerMap::iterator icheck = _const_var_map.find( name );
         if ( icheck != _const_var_map.end() ){
@@ -257,7 +257,7 @@ namespace Uintah{
 
       /** @brief Get a const uintah variable **/
       template <typename T>
-      inline T* get_field_new( const std::string name ){
+      inline T* get_field( const std::string name ){
 
         FieldContainerMap::iterator icheck = _nonconst_var_map.find( name );
         if ( icheck != _nonconst_var_map.end() ){
@@ -286,7 +286,7 @@ namespace Uintah{
       //SPATIAL OPS VARIABLE TASK ACCESS:
       // @brief Get a NON-CONSTANT spatialOps representation of the Uintah field.
       template <class ST>
-      SpatialOps::SpatFldPtr<ST> get_so_field_new(const std::string name){
+      SpatialOps::SpatFldPtr<ST> get_so_field(const std::string name){
 
         typedef typename Wasatch::SelectUintahFieldType<ST>::type MY_TYPE;
         FieldContainerMap::iterator icheck = _nonconst_var_map.find( name );
@@ -316,7 +316,7 @@ namespace Uintah{
 
       // @brief Get a NON-CONSTANT spatialOps representation of the Uintah field.
       template <class ST>
-      SpatialOps::SpatFldPtr<ST> get_const_so_field_new(const std::string name){
+      SpatialOps::SpatFldPtr<ST> get_const_so_field(const std::string name){
 
         typedef typename Wasatch::SelectUintahFieldType<ST>::const_type MY_TYPE;
         VariableInformation ivar = get_variable_information( name, true );
@@ -346,7 +346,7 @@ namespace Uintah{
       }
 
       // @brief Get a particle field spatialOps representation of the Uintah field.
-      SpatialOps::SpatFldPtr<ParticleField> get_so_particle_field_new( const std::string name ){
+      SpatialOps::SpatFldPtr<ParticleField> get_so_particle_field( const std::string name ){
 
         VariableInformation ivar = get_variable_information( name, false );
         UintahParticleMap::iterator icheck = _particle_map.find(name);
@@ -383,7 +383,7 @@ namespace Uintah{
       }
 
       // @brief Get a CONSTANT particle field spatialOps representation of the Uintah field.
-      SpatialOps::SpatFldPtr<ParticleField> get_const_so_particle_field_new(
+      SpatialOps::SpatFldPtr<ParticleField> get_const_so_particle_field(
         const std::string name ){
 
         VariableInformation ivar = get_variable_information( name, true );
