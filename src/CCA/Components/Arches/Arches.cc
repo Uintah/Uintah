@@ -960,7 +960,7 @@ Arches::scheduleInitialize(const LevelP& level,
   }
 
   //Setup BC areas
-  d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
+  d_boundaryCondition->sched_computeBCArea( sched, level, matls );
 
   //For debugging
   //d_boundaryCondition->printBCInfo();
