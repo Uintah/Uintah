@@ -43,13 +43,13 @@ public:
 
 protected:
 
-    void register_initialize( std::vector<VariableInformation>& variable_registry );
+    void register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_init( std::vector<VariableInformation>& variable_registry );
+    void register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry );
 
-    void register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep );
+    void register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
 
-    void register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep );
+    void register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep );
 
     void compute_bcs( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                       SpatialOps::OperatorDatabase& opr );
@@ -115,9 +115,6 @@ private:
 
     bool _do_conv;
 
-    VAR_TYPE _U_type;
-    VAR_TYPE _V_type;
-    VAR_TYPE _W_type;
     Wasatch::ConvInterpMethods _limiter_type;
 
   }; //class URHS
@@ -127,11 +124,11 @@ private:
   template <typename UT>
   void URHS<UT>::create_local_labels(){
 
-    register_new_variable( _rhs_name   , _U_type );
-    register_new_variable( _u_name     , _U_type );
-    register_new_variable( _rhou_name  , _U_type );
-    register_new_variable( _Fconv_name , _U_type );
-    register_new_variable( _Tau_name , _U_type );
+    register_new_variable_new<UT>( _rhs_name   );
+    register_new_variable_new<UT>( _u_name     );
+    register_new_variable_new<UT>( _rhou_name  );
+    register_new_variable_new<UT>( _Fconv_name );
+    register_new_variable_new<UT>( _Tau_name );
 
   }
 
@@ -145,14 +142,6 @@ private:
     _rhou_name = task_name;
     _Fconv_name = task_name +"_Fconv";
     _Tau_name = task_name +"_Tauij";
-
-    //set the type:
-    VarTypeHelper<UT> uhelper;
-    _U_type = uhelper.get_vartype();
-    VarTypeHelper<typename MomentumHelper<UT>::VT > vhelper;
-    _V_type = vhelper.get_vartype();
-    VarTypeHelper<typename MomentumHelper<UT>::WT > whelper;
-    _W_type = whelper.get_vartype();
 
   }
 
@@ -209,11 +198,11 @@ private:
 
   //------t=0 initialize-----------------
   template <typename UT>
-  void URHS<UT>::register_initialize( std::vector<VariableInformation>& variable_registry ){
+  void URHS<UT>::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
-    register_variable( _rhs_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
-    register_variable( _u_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
-    register_variable( _rhou_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
+    register_variable_new( _rhs_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable_new( _u_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable_new( _rhou_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
 
   }
 
@@ -238,15 +227,15 @@ private:
 
   //------timestep initialization---------------
   template <typename UT>
-  void URHS<UT>::register_timestep_init( std::vector<VariableInformation>& variable_registry){
+  void URHS<UT>::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry){
 
-    register_variable( _u_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
-    register_variable( _u_name, _U_type, REQUIRES, 0, OLDDW, variable_registry );
-    register_variable( _rhou_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
-    register_variable( _rhou_name, _U_type, REQUIRES, 0, OLDDW, variable_registry );
-    register_variable( _Fconv_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
-    register_variable( _Tau_name, _U_type, COMPUTES, 0, NEWDW, variable_registry );
-    register_variable( "density", CC_DOUBLE, REQUIRES, 1, OLDDW, variable_registry );
+    register_variable_new( _u_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable_new( _u_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable_new( _rhou_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable_new( _rhou_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW, variable_registry );
+    register_variable_new( _Fconv_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable_new( _Tau_name, ArchesFieldContainer::COMPUTES, 0, ArchesFieldContainer::NEWDW, variable_registry );
+    register_variable_new( "density", ArchesFieldContainer::REQUIRES, 1, ArchesFieldContainer::OLDDW, variable_registry );
 
   }
 
@@ -279,16 +268,16 @@ private:
 
   //-------timestep work------------------------
   template <typename UT>
-  void URHS<UT>::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){
+  void URHS<UT>::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-    register_variable( _rhs_name   ,_U_type   ,COMPUTES ,0 ,NEWDW  ,variable_registry );
-    register_variable( _Fconv_name ,_U_type   ,MODIFIES ,0 ,NEWDW  ,variable_registry );
-    register_variable( _Tau_name   ,_U_type   ,MODIFIES ,0 ,NEWDW  ,variable_registry );
-    register_variable( _rhou_name  ,_U_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
-    register_variable( _u_name     ,_U_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
-    register_variable( _v_name     ,_V_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
-    register_variable( _w_name     ,_W_type   ,REQUIRES ,1 ,NEWDW  ,variable_registry );
-    register_variable( "density"   ,CC_DOUBLE ,REQUIRES ,1 ,LATEST ,variable_registry );
+    register_variable_new( _rhs_name   ,ArchesFieldContainer::COMPUTES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable_new( _Fconv_name ,ArchesFieldContainer::MODIFIES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable_new( _Tau_name   ,ArchesFieldContainer::MODIFIES ,0 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable_new( _rhou_name  ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable_new( _u_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable_new( _v_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable_new( _w_name     ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::NEWDW  ,variable_registry );
+    register_variable_new( "density"   ,ArchesFieldContainer::REQUIRES ,1 ,ArchesFieldContainer::LATEST ,variable_registry );
 
   }
 
@@ -353,7 +342,7 @@ private:
 
   //------BCs------------------------------------
   template <typename UT>
-  void URHS<UT>::register_compute_bcs( std::vector<VariableInformation>& variable_registry, const int time_substep ){
+  void URHS<UT>::register_compute_bcs( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
   }
 
   template <typename UT>

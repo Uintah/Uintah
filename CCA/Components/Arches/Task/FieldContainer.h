@@ -9,7 +9,7 @@
 #include <Core/Exceptions/InvalidValue.h>
 #include <CCA/Components/Wasatch/FieldAdaptor.h>
 
-//===============================================================
+//==================================================================================================
 
 /**
 * @class  Field Interface for Uintah variables
@@ -18,101 +18,138 @@
 *
 * @brief Holds fields for use during task execution
 *        Also deletes them when the task is finished.
+*        This class should remain as lightweight as possible.
+*
+* @TODO This class is somewhat large. Perhaps the struct definitions should be moved outside this
+*       class?
 *
 **/
 
-//===============================================================
+//==================================================================================================
 namespace Uintah{
+
   class ArchesFieldContainer{
 
     public:
 
-      enum FC_VAR_TYPE { CC_INT, CC_DOUBLE, CC_VEC, FACEX, FACEY, FACEZ, SUM, MAX, MIN, PARTICLE };
+      enum VAR_DEPEND { COMPUTES, MODIFIES, REQUIRES };
+      enum WHICH_DW { OLDDW, NEWDW, LATEST };
 
-      ArchesFieldContainer( const Wasatch::AllocInfo& alloc_info, const Patch* patch );
+      /** @brief The variable registry information. Each task variable has one of these.
+                 It is constructed at schedule time and used to retrieve the Uintah
+                 grid varaible during the task callback. **/
+      struct VariableInformation {
 
+        std::string name;
+        //VAR_TYPE    type;
+        VAR_DEPEND  depend;
+        WHICH_DW    dw;
+        int         nGhost;
+        bool        dw_inquire;
+        const VarLabel* label;
+        Task::WhichDW uintah_task_dw;
+        Ghost::GhostType ghost_type;
+        bool        local;
+        bool        is_constant;
+
+      };
+
+      typedef std::vector<VariableInformation > VariableRegistry;
+
+      ArchesFieldContainer( const Wasatch::AllocInfo& alloc_info,
+                            const Patch* patch,
+                            const int matl_index,
+                            const VariableRegistry variable_registry,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw );
+
+      /** @brief A local struct for dealing with the Uintah grid variable. This is
+                 used to delete the grid variable. **/
       struct FieldContainer{
 
         public:
           void set_field( GridVariableBase* field ){ _field = field; }
-
-          void set_field_type( FC_VAR_TYPE type ){ _my_type = type; }
-
-         // void set_ghosts( int n_ghosts ){_n_ghosts = n_ghosts; }
+          void set_label( const VarLabel* label ){ _label = label; }
 
           template <class T>
+          inline
           T* get_field(){ return dynamic_cast<T*>(_field); }
-
-          FC_VAR_TYPE get_type(){ return _my_type; }
 
           int get_n_ghost(){ return 0; } //Not allowing for ghosts currently on modifiable fields
 
+          const VarLabel* get_label(){ return _label; }
+
         private:
+          const VarLabel* _label;
           GridVariableBase* _field;
-          FC_VAR_TYPE _my_type;
           int _n_ghosts;
 
       };
 
+      /** @brief A local struct for dealing with the Uintah grid variable. This is
+                 used to delete the grid variable. **/
       struct ConstFieldContainer{
 
         public:
           void set_field( constVariableBase<GridVariableBase>* field ){ _field = field; }
-
-          void set_field_type( FC_VAR_TYPE type ){ _my_type = type; }
+          void set_label( const VarLabel* label ){ _label = label; }
 
           void set_ghosts( int n_ghosts ){_n_ghosts = n_ghosts; }
 
           template <class T>
+          inline
           T* get_field(){ return dynamic_cast<T*>(_field); }
 
-          FC_VAR_TYPE get_type(){ return _my_type; }
+          //Not allowing for ghosts currently on modifiable fields
+          int get_n_ghost(){ return _n_ghosts; }
 
-          int get_n_ghost(){ return _n_ghosts; } //Not allowing for ghosts currently on modifiable fields
+          const VarLabel* get_label(){ return _label; }
 
         private:
           constVariableBase<GridVariableBase>* _field;
-          FC_VAR_TYPE _my_type;
+          const VarLabel* _label;
           int _n_ghosts;
 
       };
 
+      /** @brief A local struct for dealing with the Uintah grid variable. This is
+                 used to delete the grid variable. **/
       struct ParticleFieldContainer{
 
         public:
           void set_field( ParticleVariable<double>* field ){ _field = field; }
-
-          void set_field_type(FC_VAR_TYPE type=PARTICLE){ _my_type = type; }
+          void set_label( const VarLabel* label ){ _label = label; }
 
           void set_ghosts( int n_ghosts ){ _n_ghosts = n_ghosts; }
 
-          ParticleVariable<double>* get_field(){ return _field; }
-
-          FC_VAR_TYPE get_type(){ return _my_type; }
+          inline ParticleVariable<double>* get_field(){ return _field; }
 
           int get_n_ghost(){ return _n_ghosts; }
+
+          const VarLabel* get_label(){ return _label; }
 
         private:
 
           //this is specialized now...is there a point to specializing it?
           ParticleVariable<double>* _field;
-          FC_VAR_TYPE _my_type;
+          const VarLabel* _label;
           int _n_ghosts;
 
       };
 
+      /** @brief A local struct for dealing with the Uintah grid variable. This is
+                 used to delete the grid variable. **/
       struct ConstParticleFieldContainer{
 
         public:
           void set_field( constParticleVariable<double>* field ){ _field = field; }
-
-          void set_field_type(FC_VAR_TYPE type=PARTICLE){ _my_type = type; }
+          void set_label( const VarLabel* label ){ _label = label; }
 
           void set_ghosts( int n_ghosts ){ _n_ghosts = n_ghosts; }
 
-          constParticleVariable<double>* get_field(){ return _field; }
+          inline constParticleVariable<double>* get_field(){ return _field; }
 
-          FC_VAR_TYPE get_type(){ return _my_type; }
+          const VarLabel* get_label(){ return _label; }
 
           int get_n_ghost(){ return _n_ghosts; }
 
@@ -120,7 +157,7 @@ namespace Uintah{
 
           //this is specialized now...is there a point to specializing it?
           constParticleVariable<double>* _field;
-          FC_VAR_TYPE _my_type;
+          const VarLabel* _label;
           int _n_ghosts;
 
       };
@@ -131,59 +168,8 @@ namespace Uintah{
       typedef std::map<std::string, ConstParticleFieldContainer > ConstUintahParticleMap;
 
       ~ArchesFieldContainer(){
-
         //delete the fields
-        for ( FieldContainerMap::iterator iter = _nonconst_var_map.begin();
-              iter != _nonconst_var_map.end(); iter++ ){
-          if ( iter->second.get_type() == ArchesFieldContainer::CC_DOUBLE ){
-            CCVariable<double>* var = iter->second.get_field<CCVariable<double> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::CC_INT){
-            CCVariable<int>* var = iter->second.get_field<CCVariable<int> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::CC_VEC){
-            CCVariable<Vector>* var = iter->second.get_field<CCVariable<Vector> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::FACEX){
-            SFCXVariable<double>* var = iter->second.get_field<SFCXVariable<double> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::FACEY){
-            SFCYVariable<double>* var = iter->second.get_field<SFCYVariable<double> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::FACEZ){
-            SFCZVariable<double>* var = iter->second.get_field<SFCZVariable<double> >();
-            delete var;
-          }
-        }
-        for ( ConstFieldContainerMap::iterator iter = _const_var_map.begin();
-              iter != _const_var_map.end(); iter++ ){
-          if ( iter->second.get_type() == ArchesFieldContainer::CC_DOUBLE ){
-            constCCVariable<double>* var = iter->second.get_field<constCCVariable<double> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::CC_INT){
-            constCCVariable<int>* var = iter->second.get_field<constCCVariable<int> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::CC_VEC){
-            constCCVariable<Vector>* var = iter->second.get_field<constCCVariable<Vector> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::FACEX){
-            constSFCXVariable<double>* var = iter->second.get_field<constSFCXVariable<double> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::FACEY){
-            constSFCYVariable<double>* var = iter->second.get_field<constSFCYVariable<double> >();
-            delete var;
-          } else if ( iter->second.get_type() == ArchesFieldContainer::FACEZ){
-            constSFCZVariable<double>* var = iter->second.get_field<constSFCZVariable<double> >();
-            delete var;
-          }
-        }
-
-        for ( UintahParticleMap::iterator iter = _particle_map.begin(); iter != _particle_map.end(); iter++ ){
-          delete iter->second.get_field();
-        }
-        for ( ConstUintahParticleMap::iterator iter = _const_particle_map.begin(); iter != _const_particle_map.end(); iter++ ){
-          delete iter->second.get_field();
-        }
+        delete_fields();
       }
 
       /** @brief Add a variable to the non-const variable map **/
@@ -192,7 +178,10 @@ namespace Uintah{
         if ( iter == _nonconst_var_map.end() ){
           _nonconst_var_map.insert(std::make_pair(name, container));
         } else {
-          throw InvalidValue("Error: Trying to add a variable to non_const field map which is already present: "+name, __FILE__,__LINE__);
+          std::stringstream msg;
+          msg << "Error: Trying to add a variable to non_cont field map that is already present: "
+            << name << " Check for duplicate request in task." << std::endl;
+          throw InvalidValue(msg.str(), __FILE__,__LINE__);
         }
       }
 
@@ -202,7 +191,10 @@ namespace Uintah{
         if ( iter == _const_var_map.end() ){
           _const_var_map.insert(std::make_pair(name, container));
         } else {
-          throw InvalidValue("Error: Trying to add a variable to const field map which is already present: "+name, __FILE__,__LINE__);
+          std::stringstream msg;
+          msg << "Error: Trying to add a variable to cont field map that is already present: "
+            << name << " Check for duplicate request in task." << std::endl;
+          throw InvalidValue(msg.str(), __FILE__,__LINE__);
         }
       }
 
@@ -213,7 +205,10 @@ namespace Uintah{
         if ( iter == _particle_map.end() ){
           _particle_map.insert(std::make_pair(name, container));
         } else {
-          throw InvalidValue("Error: Trying to add a particle variable to particle map which is already present: "+name, __FILE__,__LINE__);
+          std::stringstream msg;
+          msg << "Error: Trying to add particle variable to cont field map that is already present: "
+            << name << " Check for duplicate request in task." << std::endl;
+          throw InvalidValue(msg.str(), __FILE__,__LINE__);
         }
       }
 
@@ -224,105 +219,198 @@ namespace Uintah{
         if ( iter == _const_particle_map.end() ){
           _const_particle_map.insert(std::make_pair(name, container));
         } else {
-          throw InvalidValue("Error: Trying to add a const particle variable to particle map which is already present: "+name, __FILE__,__LINE__);
+          std::stringstream msg;
+          msg << "Error: Trying to add const particle variable to cont field map that is " <<
+          "already present: "<< name << " Check for duplicate request in task." << std::endl;
+          throw InvalidValue(msg.str(), __FILE__,__LINE__);
         }
       }
 
+      //--------------------------------------------------------------------------------------------
       //UINTAH VARIABLE TASK ACCESS:
 
       /** @brief Get a modifiable uintah variable **/
       template <typename T>
-      inline T* get_const_field( const std::string name ){
-        ConstFieldContainerMap::iterator iter = _const_var_map.find(name);
-        if ( iter != _const_var_map.end() )
-          return iter->second.get_field<T>();
-        throw InvalidValue("Error: Cannot locate const uintah field: "+name, __FILE__, __LINE__);
+      inline T* get_const_field_new( const std::string name ){
+
+        ConstFieldContainerMap::iterator icheck = _const_var_map.find( name );
+        if ( icheck != _const_var_map.end() ){
+          return icheck->second.get_field<T>();
+        }
+
+        VariableInformation ivar = get_variable_information( name, true );
+        T* field = scinew T;
+        if ( ivar.dw == OLDDW ){
+          _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+        } else {
+          _new_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+        }
+
+        ConstFieldContainer icontain;
+        icontain.set_field(field);
+        icontain.set_label(ivar.label);
+        this->add_const_variable(name, icontain);
+
+        return field;
+
       }
 
       /** @brief Get a const uintah variable **/
       template <typename T>
-      inline T* get_field( const std::string name ){
-        FieldContainerMap::iterator iter = _nonconst_var_map.find(name);
-        if ( iter != _nonconst_var_map.end() )
-          return iter->second.get_field<T>();
-        throw InvalidValue("Error: Cannot locate uintah field: "+name, __FILE__, __LINE__);
+      inline T* get_field_new( const std::string name ){
+
+        FieldContainerMap::iterator icheck = _nonconst_var_map.find( name );
+        if ( icheck != _nonconst_var_map.end() ){
+          return icheck->second.get_field<T>();
+        }
+
+        VariableInformation ivar = get_variable_information( name, false );
+
+        T* field = scinew T;
+
+        if ( ivar.depend == MODIFIES ){
+          _new_dw->getModifiable( *field, ivar.label, _matl_index, _patch );
+        } else {
+          _new_dw->allocateAndPut( *field, ivar.label, _matl_index, _patch );
+        }
+
+        FieldContainer icontain;
+        icontain.set_field(field);
+        icontain.set_label(ivar.label);
+        this->add_variable(name, icontain);
+
+        return field;
+
       }
 
       //SPATIAL OPS VARIABLE TASK ACCESS:
-
       // @brief Get a NON-CONSTANT spatialOps representation of the Uintah field.
       template <class ST>
-      SpatialOps::SpatFldPtr<ST> get_so_field(const std::string name){
-        //return new_retrieve_so_field<ST,FieldContainerMap>( name, _nonconst_var_map, _patch, this->_wasatch_ainfo );
-        FieldContainerMap::iterator iter = _nonconst_var_map.find( name );
+      SpatialOps::SpatFldPtr<ST> get_so_field_new(const std::string name){
 
-        if ( iter != _nonconst_var_map.end() ){
-          typedef typename Wasatch::SelectUintahFieldType<ST>::type MY_TYPE;
-          MY_TYPE* var = iter->second.template get_field<MY_TYPE>();
-          int nGhost = iter->second.get_n_ghost();
-          return Wasatch::wrap_uintah_field_as_spatialops<ST>( *var, this->_wasatch_ainfo, nGhost );
+        typedef typename Wasatch::SelectUintahFieldType<ST>::type MY_TYPE;
+        FieldContainerMap::iterator icheck = _nonconst_var_map.find( name );
+        VariableInformation ivar = get_variable_information( name, false );
+
+        if ( icheck != _nonconst_var_map.end() ){
+           return Wasatch::wrap_uintah_field_as_spatialops<ST>(
+             *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, 0 );
         }
 
-        std::ostringstream msg;
-        msg << "Arches Task Error: Cannot resolve Uintah variable: "<<name << "\n (being accessed as NON-CONST)" << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        MY_TYPE* field = scinew MY_TYPE;
+
+        if ( ivar.depend == MODIFIES ){
+          _new_dw->getModifiable( *field, ivar.label, _matl_index, _patch );
+        } else {
+          _new_dw->allocateAndPut( *field, ivar.label, _matl_index, _patch );
+        }
+
+        FieldContainer icontain;
+        icontain.set_field(field);
+        icontain.set_label(ivar.label);
+        this->add_variable(name, icontain);
+
+        return Wasatch::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, 0 );
 
       }
 
-      // @brief Get a CONSTANT spatialOps representation of the Uintah field.
+      // @brief Get a NON-CONSTANT spatialOps representation of the Uintah field.
       template <class ST>
-      SpatialOps::SpatFldPtr<ST> get_const_so_field(const std::string name){
-        //return new_retrieve_const_so_field<ST, ConstFieldContainerMap>( name, _const_var_map, _patch, this->_wasatch_ainfo );
-        ConstFieldContainerMap::iterator iter = _const_var_map.find(name);
+      SpatialOps::SpatFldPtr<ST> get_const_so_field_new(const std::string name){
 
-        if ( iter != _const_var_map.end() ) {
-          typedef typename Wasatch::SelectUintahFieldType<ST>::const_type MY_TYPE;
-          MY_TYPE* var = iter->second.template get_field<MY_TYPE>();
-          int nGhost = iter->second.get_n_ghost();
-          return Wasatch::wrap_uintah_field_as_spatialops<ST>( *var, this->_wasatch_ainfo, nGhost );
+        typedef typename Wasatch::SelectUintahFieldType<ST>::const_type MY_TYPE;
+        VariableInformation ivar = get_variable_information( name, true );
+        ConstFieldContainerMap::iterator icheck = _const_var_map.find( name );
+        int nGhost = ivar.nGhost;
+
+        if ( icheck != _const_var_map.end() ){
+           return Wasatch::wrap_uintah_field_as_spatialops<ST>(
+             *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, nGhost );
         }
 
-        std::ostringstream msg;
-        msg << "Arches Task Error: Cannot resolve Uintah variable: "<<name << "\n (being accessed as CONST)" << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        MY_TYPE* field = scinew MY_TYPE;
+
+        if ( ivar.dw == OLDDW ){
+          _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, nGhost );
+        } else {
+          _new_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, nGhost );
+        }
+
+        ConstFieldContainer icontain;
+        icontain.set_field(field);
+        icontain.set_label(ivar.label);
+        this->add_const_variable(name, icontain);
+
+        return Wasatch::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, nGhost );
 
       }
 
       // @brief Get a particle field spatialOps representation of the Uintah field.
-      SpatialOps::SpatFldPtr<ParticleField> get_so_particle_field( const std::string name ){
+      SpatialOps::SpatFldPtr<ParticleField> get_so_particle_field_new( const std::string name ){
 
-        UintahParticleMap::iterator iter = _particle_map.find(name);
+        VariableInformation ivar = get_variable_information( name, false );
+        UintahParticleMap::iterator icheck = _particle_map.find(name);
 
-        if ( iter != _particle_map.end() ) {
-
-          ParticleVariable<double>* pvar = iter->second.get_field();
-          int nGhost = iter->second.get_n_ghost();
-          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>( *pvar, this->_wasatch_ainfo, nGhost );
-
+        if ( icheck != _particle_map.end() ){
+          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(
+            *(icheck->second.get_field()),this->_wasatch_ainfo, ivar.nGhost );
         }
 
-        std::ostringstream msg;
-        msg << " Arches Task Error: Cannot resolve particle variable: "<< name << "\n" << "(being accessed as non-const)" << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        /// \TODO Resolve the old_dw vs. new_dw for the particle subset. What does Tony say?
+        ParticleSubset* subset;
+        ParticleVariable<double>* pvar = scinew ParticleVariable<double>;
+
+        if ( _new_dw->haveParticleSubset(_matl_index, _patch) ){
+          subset = _new_dw->getParticleSubset( _matl_index, _patch );
+        } else {
+          subset = _old_dw->getParticleSubset( _matl_index, _patch );
+        }
+
+        if ( ivar.depend == MODIFIES ){
+          _new_dw->getModifiable( *pvar, ivar.label, subset );
+        } else {
+          _new_dw->allocateAndPut( *pvar, ivar.label, subset );
+        }
+
+        ParticleFieldContainer icontain;
+        icontain.set_field(pvar);
+        icontain.set_label(ivar.label);
+        this->add_particle_variable(name, icontain);
+
+        return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
+          this->_wasatch_ainfo, ivar.nGhost );
 
       }
 
       // @brief Get a CONSTANT particle field spatialOps representation of the Uintah field.
-      SpatialOps::SpatFldPtr<ParticleField> get_const_so_particle_field( const std::string name ){
+      SpatialOps::SpatFldPtr<ParticleField> get_const_so_particle_field_new(
+        const std::string name ){
 
-        ConstUintahParticleMap::iterator iter = _const_particle_map.find(name);
+        VariableInformation ivar = get_variable_information( name, true );
+        ConstUintahParticleMap::iterator icheck = _const_particle_map.find(name);
 
-        if ( iter != _const_particle_map.end() ) {
-
-          constParticleVariable<double>* pvar = iter->second.get_field();
-          int nGhost = iter->second.get_n_ghost();
-          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>( *pvar, this->_wasatch_ainfo, nGhost );
-
+        if ( icheck != _const_particle_map.end() ){
+          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(
+            *(icheck->second.get_field()), this->_wasatch_ainfo, ivar.nGhost );
         }
 
-        std::ostringstream msg;
-        msg << " Arches Task Error: Cannot resolve particle variable: "<< name << "\n" << "(being accessed as const)" << std::endl;
-        throw InvalidValue(msg.str(), __FILE__, __LINE__);
+        constParticleVariable<double>* pvar = scinew constParticleVariable<double>;
+
+        if ( ivar.dw == OLDDW ){
+          ParticleSubset* subset = _old_dw->getParticleSubset( _matl_index, _patch );
+          _old_dw->get( *pvar, ivar.label, subset );
+        } else {
+          ParticleSubset* subset = _new_dw->getParticleSubset( _matl_index, _patch );
+          _new_dw->get( *pvar, ivar.label, subset );
+        }
+
+        ConstParticleFieldContainer icontain;
+        icontain.set_field(pvar);
+        icontain.set_label(ivar.label);
+        this->add_const_particle_variable(name, icontain);
+
+        return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
+          this->_wasatch_ainfo, ivar.nGhost );
 
       }
 
@@ -332,8 +420,102 @@ namespace Uintah{
       ConstFieldContainerMap _const_var_map;
       UintahParticleMap _particle_map;
       ConstUintahParticleMap _const_particle_map;
+      VariableRegistry _variable_reg;
+      VariableRegistry _const_variable_reg;
       const Wasatch::AllocInfo& _wasatch_ainfo;
       const Patch* _patch;
+
+      const int _matl_index;
+      DataWarehouse* _old_dw;
+      DataWarehouse* _new_dw;
+
+      /** @brief From the vector of VariableInformation, return a single set of information based
+                 variable's name. **/
+      VariableInformation get_variable_information( const std::string name, const bool is_constant ){
+
+        VariableRegistry::iterator i = _variable_reg.begin();
+        for (; i!=_variable_reg.end(); i++){
+          if ( i->name == name ){
+            if ( i->is_constant == is_constant ){
+              return *i;
+            }
+          }
+        }
+
+        std::stringstream msg;
+        msg << "Error: variable with name" << name << " not found in the registry." <<
+        " Did you register it?" << std::endl;
+        throw InvalidValue( msg.str(), __FILE__, __LINE__ );
+
+      }
+
+      /** @brief Delete all fields held in the local containers. **/
+      void delete_fields(){
+
+        for ( FieldContainerMap::iterator iter = _nonconst_var_map.begin();
+              iter != _nonconst_var_map.end(); iter++ ){
+
+          const VarLabel* lab = iter->second.get_label();
+          const Uintah::TypeDescription* type = lab->typeDescription();
+
+          if ( type == CCVariable<int>::getTypeDescription() ){
+            delete iter->second.get_field<CCVariable<int> >();
+          } else if ( type == CCVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<CCVariable<double> >();
+          } else if ( type == CCVariable<Vector>::getTypeDescription() ){
+            delete iter->second.get_field<CCVariable<Vector> >();
+          } else if ( type == SFCXVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<SFCXVariable<double> >();
+          } else if ( type == SFCYVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<SFCYVariable<double> >();
+          } else if ( type == SFCZVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<SFCZVariable<double> >();
+          } else {
+            std::stringstream msg;
+            msg << "Error: Trying to delete a variable" <<
+            " with unsupported type." << std::endl;
+            throw InvalidValue(msg.str(),__FILE__,__LINE__);
+          }
+
+        }
+
+        for ( ConstFieldContainerMap::iterator iter = _const_var_map.begin();
+              iter != _const_var_map.end(); iter++ ){
+
+          const VarLabel* lab = iter->second.get_label();
+          const Uintah::TypeDescription* type = lab->typeDescription();
+
+          if ( type == CCVariable<int>::getTypeDescription() ){
+            delete iter->second.get_field<constCCVariable<int> >();
+          } else if ( type == CCVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<constCCVariable<double> >();
+          } else if ( type == CCVariable<Vector>::getTypeDescription() ){
+            delete iter->second.get_field<constCCVariable<Vector> >();
+          } else if ( type == SFCXVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<constSFCXVariable<double> >();
+          } else if ( type == SFCYVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<constSFCYVariable<double> >();
+          } else if ( type == SFCZVariable<double>::getTypeDescription() ){
+            delete iter->second.get_field<constSFCZVariable<double> >();
+          } else {
+            std::stringstream msg;
+            msg << "Error: Trying to delete a variable" <<
+            " with unsupported type." << std::endl;
+            throw InvalidValue(msg.str(), __FILE__, __LINE__);
+          }
+
+        }
+
+        for ( UintahParticleMap::iterator iter = _particle_map.begin();
+        iter != _particle_map.end(); iter++ ){
+          delete iter->second.get_field();
+        }
+        for ( ConstUintahParticleMap::iterator iter = _const_particle_map.begin();
+        iter != _const_particle_map.end(); iter++ ){
+          delete iter->second.get_field();
+        }
+
+      }
 
   };
 }
