@@ -269,6 +269,15 @@ EnthalpyShaddix::problemSetup(const ProblemSpecP& params, int qn)
 void 
 EnthalpyShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
+  string taskname = "EnthalpyShaddix::initVars"; 
+  Task* tsk = scinew Task(taskname, this, &EnthalpyShaddix::initVars);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel); 
+  tsk->computes(d_qconvLabel);
+  tsk->computes(d_qradLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
 //-------------------------------------------------------------------------
@@ -281,6 +290,27 @@ EnthalpyShaddix::initVars( const ProcessorGroup * pc,
                               DataWarehouse        * old_dw, 
                               DataWarehouse        * new_dw )
 {
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> heat_rate;
+    CCVariable<double> gas_heat_rate; 
+    CCVariable<double> qconv;
+    CCVariable<double> qrad;
+    
+    new_dw->allocateAndPut( heat_rate, d_modelLabel, matlIndex, patch );
+    heat_rate.initialize(0.0);
+    new_dw->allocateAndPut( gas_heat_rate, d_gasLabel, matlIndex, patch );
+    gas_heat_rate.initialize(0.0);
+    new_dw->allocateAndPut( qconv, d_qconvLabel, matlIndex, patch );
+    qconv.initialize(0.0);
+    new_dw->allocateAndPut( qrad, d_qradLabel, matlIndex, patch );
+    qrad.initialize(0.0);
+
+  }
 }
 
 //---------------------------------------------------------------------------

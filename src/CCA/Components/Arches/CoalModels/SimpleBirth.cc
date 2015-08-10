@@ -121,6 +121,13 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
 void 
 SimpleBirth::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
+  string taskname = "SimpleBirth::initVars"; 
+  Task* tsk = scinew Task(taskname, this, &SimpleBirth::initVars);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
 //-------------------------------------------------------------------------
@@ -133,6 +140,20 @@ SimpleBirth::initVars( const ProcessorGroup * pc,
                             DataWarehouse        * old_dw, 
                             DataWarehouse        * new_dw )
 {
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> model; 
+    CCVariable<double> gas_source;
+    
+    new_dw->allocateAndPut( model, d_modelLabel, matlIndex, patch );
+    model.initialize(0.0);
+    new_dw->allocateAndPut( gas_source, d_gasLabel, matlIndex, patch );
+    gas_source.initialize(0.0);
+  }
 }
 
 
