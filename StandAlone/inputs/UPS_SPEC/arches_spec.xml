@@ -38,12 +38,6 @@
                                         need_applies_to="type density_predictor"/> <!-- for the cold flow model, use the exact solution for
                                                                                         the density-f relationship rather than the guess -->
 
-          <!-- For variable_stats, the variable_type is the type for the variable which you are time averaging.
-               If no variable type is specified there is an attempt to determine the variable type automatically. 
-               Only one variable type is permitted per instantiation of variable_stats. -->
-          <variable_type                spec="OPTIONAL STRING 'svol, xvol, yvol, zvol, NA'"
-                                        need_applies_to="type variable_stats"/> <!-- NA is not a type, it is used for restarts if no variable_type was specified. -->
-
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
                                         need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps).
                                                                                              Otherwise it just copies old fluxes forward. Default = 1. -->

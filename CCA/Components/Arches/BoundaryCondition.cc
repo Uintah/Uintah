@@ -2377,8 +2377,8 @@ BoundaryCondition::sched_computeBCArea( SchedulerP& sched,
   level->findInteriorCellIndexRange(lo,hi);
 
   // cell type initialization
-  Task* tsk = scinew Task("BoundaryCondition::computeBCArea__NEW",
-                          this, &BoundaryCondition::computeBCArea__NEW, lo, hi);
+  Task* tsk = scinew Task("BoundaryCondition::computeBCArea",
+                          this, &BoundaryCondition::computeBCArea, lo, hi);
 
   for ( BCInfoMap::iterator bc_iter = d_bc_information.begin();
         bc_iter != d_bc_information.end(); bc_iter++) {
