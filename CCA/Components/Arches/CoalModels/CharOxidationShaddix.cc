@@ -153,6 +153,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
     // Enthalpy of formation (J/mol)
     _HF_CO2 = Shaddix_char_coefficients[7];
     _HF_CO  = Shaddix_char_coefficients[8];
+  
   } else { 
     throw ProblemSetupException("Error: Shaddix_char_coefficients missing in <CoalProperties>.", __FILE__, __LINE__); 
   }
@@ -200,7 +201,16 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 void 
 CharOxidationShaddix::sched_initVars( const LevelP& level, SchedulerP& sched )
 {
+  string taskname = "CharOxidationShaddix::initVars"; 
+  Task* tsk = scinew Task(taskname, this, &CharOxidationShaddix::initVars);
 
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel);
+  tsk->computes(d_particletempLabel);
+  tsk->computes(d_surfacerateLabel);
+  tsk->computes(d_PO2surfLabel);
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 }
 
 //-------------------------------------------------------------------------
@@ -213,6 +223,31 @@ CharOxidationShaddix::initVars( const ProcessorGroup * pc,
                               DataWarehouse        * old_dw, 
                               DataWarehouse        * new_dw )
 {
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> char_rate;
+    CCVariable<double> gas_char_rate; 
+    CCVariable<double> particle_temp_rate;
+    CCVariable<double> surface_rate;
+    CCVariable<double> PO2surf_;
+    
+    new_dw->allocateAndPut( char_rate, d_modelLabel, matlIndex, patch );
+    char_rate.initialize(0.0);
+    new_dw->allocateAndPut( gas_char_rate, d_gasLabel, matlIndex, patch );
+    gas_char_rate.initialize(0.0);
+    new_dw->allocateAndPut( particle_temp_rate, d_particletempLabel, matlIndex, patch );
+    particle_temp_rate.initialize(0.0);
+    new_dw->allocateAndPut(surface_rate, d_surfacerateLabel, matlIndex, patch );
+    surface_rate.initialize(0.0);
+    new_dw->allocateAndPut(PO2surf_, d_PO2surfLabel, matlIndex, patch );
+    PO2surf_.initialize(0.0);
+
+
+  }
 }
 
 //---------------------------------------------------------------------------
@@ -450,8 +485,8 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
     
 
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-      IntVector c = *iter; 
-   
+      IntVector c = *iter;
+ 
       if (weight[d_quadNode][c]/_weight_scaling_constant < _weight_small) {
         char_production_rate_ = 0.0;
         char_rate[c] = 0.0;
@@ -571,6 +606,7 @@ CharOxidationShaddix::computeModel( const ProcessorGroup * pc,
               )/ weightph )
               *_char_scaling_constant*_weight_scaling_constant, 0.0); // equation assumes RC_scaling=Char_scaling
         }
+
 
         max_char_reaction_rate_ = min( max_char_reaction_rate_ ,max_char_reaction_rate_O2_ );
         char_reaction_rate_ = min(_pi*(pow(lengthph,2.0))*_WC*q , max_char_reaction_rate_); // kg/(s.#)    

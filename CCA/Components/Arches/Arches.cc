@@ -1813,7 +1813,6 @@ Arches::sched_weightedAbsInit( const LevelP& level,
       const VarLabel* tempVar = eqn->getTransportEqnLabel();
       const VarLabel* tempVar_icv = eqn->getUnscaledLabel();
       const VarLabel* tempSource = eqn->getSourceLabel();
-
       tsk->computes( tempVar );
       tsk->computes( tempVar_icv );
       tsk->computes( tempSource );
@@ -1826,24 +1825,9 @@ Arches::sched_weightedAbsInit( const LevelP& level,
   // Particle Velocities
 
   // Models
+  // initialize all of the computed variables for the coal models
   CoalModelFactory& modelFactory = CoalModelFactory::self();
-  CoalModelFactory::ModelMap models = modelFactory.retrieve_all_models();
-  for ( CoalModelFactory::ModelMap::iterator imodel=models.begin(); imodel != models.end(); imodel++){
-    ModelBase* model = imodel->second;
-    const VarLabel* modelLabel = model->getModelLabel();
-    const VarLabel* gasmodelLabel = model->getGasSourceLabel();
-
-    tsk->computes( modelLabel );
-    tsk->computes( gasmodelLabel );
-
-    vector<const VarLabel*> extraLocalLabels = model->getExtraLocalLabels();
-    for (vector<const VarLabel*>::iterator iexmodel = extraLocalLabels.begin(); iexmodel != extraLocalLabels.end(); iexmodel++){
-      tsk->computes( *iexmodel );
-    }
-
-    model->sched_initVars( level, sched );
-
-  }
+  modelFactory.sched_init_all_models( level, sched );
 
   tsk->requires( Task::NewDW, d_lab->d_volFractionLabel, Ghost::None );
 
@@ -1927,36 +1911,6 @@ Arches::weightedAbsInit( const ProcessorGroup* ,
         eqn->computeBCs( patch, eqn_name, phi );
 
       }
-    }
-
-     // --- PARTICLE VELS
-
-
-    // --- MODELS VALUES
-    CoalModelFactory& modelFactory = CoalModelFactory::self();
-    CoalModelFactory::ModelMap models = modelFactory.retrieve_all_models();
-    for ( CoalModelFactory::ModelMap::iterator imodel=models.begin();
-          imodel != models.end(); imodel++){
-
-      ModelBase* model = imodel->second;
-      const VarLabel* modelLabel = model->getModelLabel();
-      CCVariable<double> model_value;
-      new_dw->allocateAndPut( model_value, modelLabel, matlIndex, patch );
-      model_value.initialize(0.0);
-
-      const VarLabel* gasModelLabel = model->getGasSourceLabel();
-      CCVariable<double> gas_source;
-      new_dw->allocateAndPut( gas_source, gasModelLabel, matlIndex, patch );
-      gas_source.initialize(0.0);
-
-
-      vector<const VarLabel*> extraLocalLabels = model->getExtraLocalLabels();
-      for (vector<const VarLabel*>::iterator iexmodel = extraLocalLabels.begin(); iexmodel != extraLocalLabels.end(); iexmodel++){
-        CCVariable<double> extraVar;
-        new_dw->allocateAndPut( extraVar, *iexmodel, matlIndex, patch );
-        extraVar.initialize(0.0);
-      }
-
     }
   }
   proc0cout << endl;
