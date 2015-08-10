@@ -1531,7 +1531,7 @@ Arches::scheduleTimeAdvance( const LevelP& level,
 
     const MaterialSet* matls = d_sharedState->allArchesMaterials();
 
-    d_boundaryCondition->sched_computeBCArea__NEW( sched, level, matls );
+    d_boundaryCondition->sched_computeBCArea( sched, level, matls );
     d_boundaryCondition->sched_setupBCInletVelocities__NEW( sched, level, matls, d_doingRestart );
 
     EqnFactory& eqnFactory = EqnFactory::self();
