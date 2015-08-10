@@ -543,7 +543,7 @@ void VariableStats::register_timestep_eval( VIVec& variable_registry, const int 
     register_variable( "uVelocitySPBC" , FACEX     , REQUIRES , 0 , NEWDW , variable_registry );
     register_variable( "vVelocitySPBC" , FACEY     , REQUIRES , 0 , NEWDW , variable_registry );
     register_variable( "wVelocitySPBC" , FACEZ     , REQUIRES , 0 , NEWDW , variable_registry );
-    register_variable( _rho_name        , CC_DOUBLE , REQUIRES , 1 , NEWDW , variable_registry );
+    register_variable( _rho_name       , CC_DOUBLE , REQUIRES , 1 , NEWDW , variable_registry );
 
     std::vector<FluxInfo>::iterator ii = _flux_sum_info.begin();
     for (;ii!=_flux_sum_info.end();ii++){
