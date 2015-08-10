@@ -147,7 +147,7 @@ LOCALTESTS = [
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("coal_channel_FOWY"                 , "Coal/coal_channel_FOWY.ups"                              , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
-   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"]), 
+   ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "All" , ["exactComparison"]), 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "All"  , ["exactComparison"]) , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
