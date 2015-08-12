@@ -42,22 +42,6 @@ SampleTask::create_local_labels(){
 
 //
 //------------------------------------------------
-//------------- TIMESTEP INIT --------------------
-//------------------------------------------------
-//
-void
-SampleTask::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
-}
-
-void
-SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
-                          SpatialOps::OperatorDatabase& opr ){
-
-}
-
-
-//
-//------------------------------------------------
 //-------------- INITIALIZATION ------------------
 //------------------------------------------------
 //
@@ -86,6 +70,22 @@ SampleTask::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
   *result <<= 2.1;
 
 }
+//
+//------------------------------------------------
+//------------- TIMESTEP INIT --------------------
+//------------------------------------------------
+//
+void
+SampleTask::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+}
+
+void
+SampleTask::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                          SpatialOps::OperatorDatabase& opr ){
+
+}
+
+
 
 //
 //------------------------------------------------
