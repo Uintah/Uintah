@@ -44,7 +44,7 @@ namespace Uintah {
   class VarLabel;
   class SolverParameters {
   public:
-    SolverParameters() : useStencil4(false), solveOnExtraCells(false), residualNormalizationFactor(1), 
+    SolverParameters() : useStencil4(false), symmetric(true), solveOnExtraCells(false), residualNormalizationFactor(1),
                         restartableTimestep(false), outputFileName("NULL") {}
     
     void setSolveOnExtraCells(bool s) {
@@ -62,7 +62,15 @@ namespace Uintah {
     bool getUseStencil4() const {
       return useStencil4;
     }
+
+    void setSymmetric(bool s) {
+      symmetric = s;
+    }
     
+    bool getSymmetric() const {
+      return symmetric;
+    }
+
     void setResidualNormalizationFactor(double s) {
       residualNormalizationFactor = s;
     }
@@ -99,6 +107,7 @@ namespace Uintah {
 
   private:
     bool        useStencil4;
+    bool        symmetric;
     bool        solveOnExtraCells;
     double      residualNormalizationFactor;
     bool        restartableTimestep;
