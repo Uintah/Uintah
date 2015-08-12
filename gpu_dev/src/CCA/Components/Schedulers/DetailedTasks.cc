@@ -1773,7 +1773,7 @@ operator<<(       std::ostream& out,
     }
 #ifdef HAVE_CUDA
     if( task.getCUDAStream() ){
-      out << std::hex << " using CUDA stream " << task.getCUDAStream();
+      out << std::hex << " using CUDA stream " << task.getCUDAStream() << std::dec;
     }
 #endif
     

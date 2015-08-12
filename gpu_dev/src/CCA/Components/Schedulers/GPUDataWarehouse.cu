@@ -47,6 +47,10 @@ using namespace std;
 
 #include <Core/Util/GPU.h>
 
+extern DebugStream gpu_stats;
+
+extern SCIRun::Mutex cerrLock;
+
 namespace Uintah {
 
 //______________________________________________________________________
@@ -72,6 +76,7 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int pat
     var.setArray3(vp.device_offset, vp.device_size, vp.device_ptr);
   }
   else {
+    printf("I'm at GPUDW %p\n", this);
     printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
   varLock.readUnlock();
@@ -100,8 +105,10 @@ GPUDataWarehouse::getStagingVar(const GPUGridVariableBase& var, char const* labe
     std::map<stagingVar, stagingVarInfo>::iterator staging_it = it->second.stagingVars.find(sv);
     if (staging_it != it->second.stagingVars.end()) {
       var.setArray3(offset, size, staging_it->second.device_ptr);
+
     } else {
-      printf("%s() - Didn't find a staging variable from the device for label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d).", "getStagingVar", label, patchID, matlIndx, levelIndx,
+      printf("GPUDataWarehouse::getStagingVar() - Didn't find a staging variable from the device for label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d).",
+          label, patchID, matlIndx, levelIndx,
           offset.x, offset.y, offset.z, size.x, size.y, size.z);
       exit(-1);
     }
@@ -294,10 +301,68 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.find(lpml);
 
   if (staging == true && it == varPointers.end()) {
-    printf("ERROR: GPUDataWarehouse::put( %s ). This gpudw database is trying to input a staging variable without a non-staging variable at the same label/patch/matl/level for label %s patch %d matl %d level %d on device %d at %p.\n",
-         label, label, patchID, matlIndx, levelIndx, d_device_id, it->second.device_ptr);
+    //We need to input a staging variable, but there isn't a regular non-staging variable at the same label/patch/matl/level.
+    //So go ahead and make an empty placeholder regular non-staging variable entry.
+    //non staging vars create a new varPointers entry
+    allVarPointersInfo vp;
+
+    vp.varDB_index = -1; //no need for a d_varDB array entry.
+    vp.device_ptr = NULL;
+    int3 temp;
+    temp.x = 0;
+    temp.y = 0;
+    temp.z = 0;
+    vp.device_offset = temp;
+    vp.device_size = temp;
+    vp.sizeOfDataType = 0;
+    vp.gtype = None;
+    vp.numGhostCells = 0;
+    vp.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
+    vp.validOnCPU = false; //We don't know here if the data is in host memory.
+    vp.host_contiguousArrayPtr = NULL;
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " GPUDataWarehouse::put( " << label << " ) - "
+            << " Put an EMPTY PLACEHOLDER regular non-staging variable in the host-side varPointers map for label " << label
+            << " patch " << patchID
+            << " matl " << matlIndx
+            << " level " << levelIndx
+            << " on device " << d_device_id
+            << " into GPUDW at " << this
+            << endl;
+      }
+      cerrLock.unlock();
+    }
+    //insert it and get a new iterator back.
+    varPointers.insert(std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
+    it = varPointers.find(lpml);
+
+/*
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " ERROR: GPUDataWarehouse::put( " << label << " ) - "
+            << "This gpudw database is trying to input a staging variable without a non-staging variable at the same label/patch/matl/level for label "
+            << label
+            << " patch " << patchID
+            << " matl " << matlIndx
+            << " level " << levelIndx
+            << " on device " << d_device_id
+            << " into GPUDW at " << this
+            << endl;
+      }
+      cerrLock.unlock();
+    }
+
+
+    //printf("ERROR: GPUDataWarehouse::put( %s ). This gpudw database is trying to input a staging variable without a non-staging variable at the same label/patch/matl/level for label %s patch %d matl %d level %d on device %d at %p.\n",
+    //     label, label, patchID, matlIndx, levelIndx, d_device_id, it->second.device_ptr);
     varLock.writeUnlock();
     exit(-1);
+    */
   }
 
 
@@ -327,9 +392,28 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
     d_varDB[i].var_ptr = var_ptr;
 
     d_dirty=true;
-    if (d_debug){
-      printf("host put \"%s\" (patch: %d) material %d, location %p into GPUDW %p into d_varDB index %d on device %d, size [%d,%d,%d]\n", label, patchID, matlIndx, d_varDB[i].var_ptr, d_device_copy, i, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " GPUDataWarehouse::put( " << label << " ) - "
+            << " Put into d_varDB label " << label
+            << " patch " << patchID
+            << " matl " << matlIndx
+            << " level " << levelIndx
+            << " into address " << d_varDB[i].var_ptr
+            << " into  d_varDB index " << i
+            << " on device " << d_device_id
+            << " into GPUDW at " << this
+            << " size [" << d_varDB[i].var_size.x << ", " << d_varDB[i].var_size.y << ", " << d_varDB[i].var_size.z << "]"
+            << " offset [" << d_varDB[i].var_offset.x << ", " << d_varDB[i].var_offset.y << ", " << d_varDB[i].var_offset.z << "]"
+            << endl;
+      }
+      cerrLock.unlock();
     }
+    //if (d_debug){
+    //  printf("host put \"%s\" (patch: %d) material %d, location %p into GPUDW %p into d_varDB index %d on device %d, size [%d,%d,%d]\n", label, patchID, matlIndx, d_varDB[i].var_ptr, d_device_copy, i, d_device_id, d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z);
+    //}
 
   }
 
@@ -341,25 +425,54 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
     sv.device_offset = var_offset;
     sv.device_size = var_size;
     std::map<stagingVar, stagingVarInfo>::iterator staging_it = it->second.stagingVars.find(sv);
+    //Often foreign vars are grouped together so that instead of sending a two variables from
+    //one host to another, it will group them together into one variable if they're contiguous
+    //so on this host, we'll see a similar thing, the needed neighbor for two dependencies
+    //being the same foreign variable.
     if (staging_it != it->second.stagingVars.end()) {
-      printf("ERROR: GPUDataWarehouse::put( %s ). This staging variable already exists with the same offset and size for label %s patch %d matl %d level %d.\n",
+      printf("GPUDataWarehouse::put( %s ). This staging variable already exists with the same offset and size for label %s patch %d matl %d level %d.  Reusing it.\n",
               label, label, patchID, matlIndx, levelIndx);
+
       varLock.writeUnlock();
-      exit(-1);
+
+      return;
 
     }
     stagingVarInfo svi;
     svi.device_ptr = var_ptr;
     svi.host_contiguousArrayPtr = host_ptr;
     svi.varDB_index = d_varDB_index;
-    if (d_debug){
-      printf("GPUDataWarehouse::put( %s ) Put a staging variable for label %s patch %d matl %d level %d with offset (%d, %d, %d) and size (%d, %d, %d) on device %d in this DW %p\n",
-          label, label, patchID, matlIndx, levelIndx,
-          var_offset.x, var_offset.y, var_offset.z,
-          var_size.x, var_size.y, var_size.z, d_device_id, this);
-    }
 
-    it->second.stagingVars.insert( std::map<stagingVar, stagingVarInfo>::value_type( sv, svi ) );
+    //if (d_debug){
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << UnifiedScheduler::myRankThread()
+              << " GPUDataWarehouse::put( " << label << " ) - "
+              << " Put a staging variable in the host-side varPointers map for label " << label
+              << " patch " << patchID
+              << " matl " << matlIndx
+              << " level " << levelIndx
+              << " with offset (" << var_offset.x << ", " << var_offset.y << ", " << var_offset.z << ")"
+              << " and size (" << var_size.x << ", " << var_size.y << ", " << var_size.z << ")"
+              << " on device " << d_device_id
+              << " into GPUDW at " << this
+              << endl;
+        }
+        cerrLock.unlock();
+      }
+
+      //printf("GPUDataWarehouse::put( %s ) Put a staging variable for label %s patch %d matl %d level %d with offset (%d, %d, %d) and size (%d, %d, %d) on device %d in this DW %p\n",
+      //    label, label, patchID, matlIndx, levelIndx,
+      //    var_offset.x, var_offset.y, var_offset.z,
+      //    var_size.x, var_size.y, var_size.z, d_device_id, this);
+    //}
+
+    std::pair<stagingVar, stagingVarInfo> p = make_pair( sv, svi );
+    //std::map<stagingVar, stagingVarInfo>::value_type( sv, svi )
+
+    it->second.stagingVars.insert( p  );
+
   } else {
     //non staging vars create a new varPointers entry
     allVarPointersInfo vp;
@@ -374,10 +487,25 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
     vp.validOnGPU = false; //We've created a variable, but we haven't yet put data into it.
     vp.validOnCPU = false; //We don't know here if the data is in host memory.
     vp.host_contiguousArrayPtr = host_ptr;
-    if (d_debug){
-      printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d in this DW %p\n",
-          label, label, patchID, matlIndx, levelIndx, d_device_id, this);
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " GPUDataWarehouse::put( " << label << " ) - "
+            << " Put a regular non-staging variable in the host-side varPointers map for label " << label
+            << " patch " << patchID
+            << " matl " << matlIndx
+            << " level " << levelIndx
+            << " on device " << d_device_id
+            << " into GPUDW at " << this
+            << endl;
+      }
+      cerrLock.unlock();
     }
+    //if (d_debug){
+    //  printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d in this GPUDW at %p\n",
+    //      label, label, patchID, matlIndx, levelIndx, d_device_id, this);
+    //}
     varPointers.insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
   }
   varLock.writeUnlock();
@@ -418,32 +546,32 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.find(lpml);
 
-  if (it == varPointers.end() && staging == true) {
+  /*if (it == varPointers.end() && staging == true) {
     printf("ERROR: GPUDataWarehouse::allocateAndPut( %s ). This gpudw database is trying to input a staging variable without a non-staging variable at the same label/patch/matl/level for label %s patch %d matl %d level %d on device %d at %p.\n",
          label, label, patchID, matlIndx, levelIndx, d_device_id, it->second.device_ptr);
     varLock.writeUnlock();
     exit(-1);
-  }
-  while (it != varPointers.end()) {
-    if (   it->second.device_offset.x == low.x
-        && it->second.device_offset.y == low.y
-        && it->second.device_offset.z == low.z
-        && it->second.device_size.x == (high.x-low.x)
-        && it->second.device_size.y == (high.y-low.y)
-        && it->second.device_size.z == (high.z-low.z)) {
-      //Space for this var already exists.  Use that and return.
-      if (d_debug){
-        printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level %d staging %s on device %d.  Reusing it.  It's at offset (%d, %d, %d) size (%d, %d, %d)\n",
-            label, label, patchID, matlIndx, levelIndx, staging ? "true" : "false", d_device_id,
-            it->second.device_offset.x, it->second.device_offset.y, it->second.device_offset.z,
-            it->second.device_size.x, it->second.device_size.y, it->second.device_size.z);
-      }
-      var.setArray3(varPointers[lpml].device_offset, varPointers[lpml].device_size, varPointers[lpml].device_ptr);
-      varLock.writeUnlock();
-      return;
+  } else */
+  if (it != varPointers.end() && it->second.device_offset.x == low.x
+      && it->second.device_offset.y == low.y
+      && it->second.device_offset.z == low.z
+      && it->second.device_size.x == (high.x-low.x)
+      && it->second.device_size.y == (high.y-low.y)
+      && it->second.device_size.z == (high.z-low.z)
+      && it->second.device_ptr != NULL ) {
+    //Space for this var already exists.  Use that and return.
+    if (d_debug){
+      printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level %d staging %s on device %d.  Reusing it.  It's at offset (%d, %d, %d) size (%d, %d, %d)\n",
+          label, label, patchID, matlIndx, levelIndx, staging ? "true" : "false", d_device_id,
+          it->second.device_offset.x, it->second.device_offset.y, it->second.device_offset.z,
+          it->second.device_size.x, it->second.device_size.y, it->second.device_size.z);
     }
-    ++it;
-  }
+    var.setArray3(varPointers[lpml].device_offset, varPointers[lpml].device_size, varPointers[lpml].device_ptr);
+    varLock.writeUnlock();
+
+    return;
+  }  //else if it's a staging variable, then the sizes should be different from
+     //what we have, so we'll allocate space and put it in this database.
 
   //It's not in the database, so create it.
   int3 size   = make_int3(high.x-low.x, high.y-low.y, high.z-low.z);
@@ -455,6 +583,24 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
   CUDA_RT_SAFE_CALL( cudaMalloc(&addr, var.getMemSize()) );
   
+  if (gpu_stats.active()) {
+       cerrLock.lock();
+       {
+         gpu_stats << UnifiedScheduler::myRankThread()
+             << " GPUDataWarehouse::allocateAndPut( " << label << " ) - "
+             << " cudaMalloc for " << label
+             << " patch " << patchID
+             << " matl " << matlIndx
+             << " level " << levelIndx
+             << " staging " << staging
+             << " memsize " << var.getMemSize()
+             << " from low (" << low.x << ", " << low.y << ", " << low.z << ")"
+             << " and high (" << high.x << ", " << high.y << ", " << high.z << ")"
+             << endl;
+       }
+       cerrLock.unlock();
+     }
+
   if (d_debug) {
     printf("In allocateAndPut(), cudaMalloc for %s patch %d material %d level %d staging %s, size %ld from (%d,%d,%d) to (%d,%d,%d) on thread %d ",
             label, patchID, matlIndx, levelIndx, staging ? "true" : "false", var.getMemSize(),
@@ -1902,12 +2048,30 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
            if (d_varDB[i].sizeOfDataType == sizeof(double)) {
              *((double*)(d_varDB[destIndex].var_ptr) + destOffset) = *((double*)(d_varDB[i].var_ptr) + sourceOffset);
              //if (threadID == 0) {
-             //  printf("Thread %d - At (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index %d ptr %p sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer %p.\n",
-             //      threadID, x, y, z,
-             //      d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
-             //      d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
-             //      i, d_varDB[i].var_ptr, sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
-             //      destIndex, d_varDB[destIndex].var_ptr, destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
+               if (d_varDB[i].ghostItem.sharedLowCoordinates.x == 4
+                   && d_varDB[i].ghostItem.sharedLowCoordinates.y == -1
+                    && d_varDB[i].ghostItem.sharedLowCoordinates.z == -1
+                   && d_varDB[i].ghostItem.sharedHighCoordinates.x == 5
+                   && d_varDB[i].ghostItem.sharedHighCoordinates.y == 0
+                   && d_varDB[i].ghostItem.sharedHighCoordinates.z == 0 ) {
+                 printf("XXXXXX Copying this data for %s %1.16lf for 4, -1, -1 to 5, 0, 0 to %p\n",  d_varDB[destIndex].label, *((double*)(d_varDB[i].var_ptr) + sourceOffset), (double*)(d_varDB[destIndex].var_ptr) + destOffset);
+               }
+             //}
+
+             //if (threadID == 0) {
+               printf("Thread %d - At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index %d (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer %p.\n",
+                   threadID, x, y, z, x_source_real, y_source_real, z_source_real,
+                   d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
+                   d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
+                   i,
+                   x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
+                   y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y,
+                   z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z,
+                   d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+                   d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z,
+                   d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+                   sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
+                   destIndex, d_varDB[destIndex].var_ptr, destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
 
              //}
            }
@@ -2026,9 +2190,10 @@ GPUDataWarehouse::ghostCellCopiesNeeded()
 }
 
 HOST_DEVICE void
-GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPatchID, int matlIndx, int levelIndx, bool deststaging,
-                               int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset,
-                               bool sourceIsInTempGhostCells, void * data_ptr, int3 var_offset, int3 var_size, int sizeOfDataType) {
+GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPatchID, int matlIndx, int levelIndx,
+                               bool sourceStaging, bool deststaging,
+                               int3 varOffset, int3 varSize,
+                               int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset) {
 #ifdef __CUDA_ARCH__
   printf("ERROR:\nGPUDataWarehouse::putGhostCell( %s )  Not implemented for GPU\n",label);
 #else
@@ -2036,52 +2201,71 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   //one chunk of data to the destination.  This covers a GPU -> same GPU copy scenario.
   varLock.readLock();
   int i = d_numVarDBItems;
+  int index = -1;
   d_numVarDBItems++;
   numGhostCellCopiesNeeded++;
   d_varDB[i].ghostItem.sharedLowCoordinates = sharedLowCoordinates;
   d_varDB[i].ghostItem.sharedHighCoordinates = sharedHighCoordinates;
   d_varDB[i].ghostItem.virtualOffset = virtualOffset;
-  if (sourceIsInTempGhostCells) {
-    d_varDB[i].var_offset = var_offset;
-    d_varDB[i].var_size = var_size;
-    d_varDB[i].var_ptr = data_ptr;
-    d_varDB[i].sizeOfDataType = sizeOfDataType;
-    if (d_debug){
-        printf("Placed into d_varDB at index %d from patch %d to patch %d has shared coordinates (%d, %d, %d), (%d, %d, %d)\n", i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z);
+
+  //look up the source index and the destination index for these.
+  //it may be an entire variable (in which case staging is false)
+  //or it may be a staging variable.
+  labelPatchMatlLevel lpml_source(label, sourcePatchID, matlIndx, levelIndx);
+  if (!sourceStaging) {
+
+    if (varPointers.find(lpml_source) != varPointers.end()) {
+      index = varPointers[lpml_source].varDB_index;
     }
   } else {
-    //look up the source index and the destination index for these.
-    //it must be a simulation variable used, therefore staging is false.
-    labelPatchMatlLevel lpml_source(label, sourcePatchID, matlIndx, levelIndx);
-    if (varPointers.find(lpml_source) != varPointers.end()) {
-      int index = varPointers[lpml_source].varDB_index;
-      //printf("The found index %d for var %s patch %d matl %d\n", index, label, sourcePatchID, matlIndx);
-      //if (d_varDB[index].varItem.validOnGPU == false) {
-        //Steps prior to this point should have checked for this scenario.
-        //This is just a failsafe.
-      //  printf("ERROR:\nGPUDataWarehouse::putGhostCell, attempting to use: label %s, source patch ID %d, materialID %d, it exists but the data is not valid.\n", label, sourcePatchID, matlIndx);
-      //  exit(-1);
-      //}
-      d_varDB[i].var_offset = d_varDB[index].var_offset;
-      d_varDB[i].var_size = d_varDB[index].var_size;
-      d_varDB[i].var_ptr = d_varDB[index].var_ptr;
-      d_varDB[i].sizeOfDataType = d_varDB[index].sizeOfDataType;
-      if (d_debug){
-        printf("Placed into d_varDB at index %d from patch %d to patch %d has shared coordinates (%d, %d, %d), (%d, %d, %d), from low/offset (%d, %d, %d) size (%d, %d, %d)  virtualOffset(%d, %d, %d)\n",
-            i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y,
-            sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z,
-            d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
-            d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
-            d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z);
-      }
+    stagingVar sv;
+    sv.device_offset = varOffset;
+    sv.device_size = varSize;
+
+    std::map<stagingVar, stagingVarInfo>::iterator staging_it = varPointers[lpml_source].stagingVars.find(sv);
+    if (staging_it != varPointers[lpml_source].stagingVars.end()) {
+      index = staging_it->second.varDB_index;
 
     } else {
-      printf("ERROR:\nGPUDataWarehouse::putGhostCell, label %s, source patch ID %d, matlIndx %d, levelIndex %d staging %s not found in GPU DW %p\n",
-          label, sourcePatchID, matlIndx, levelIndx, "false", this);
-      varLock.readUnlock();
+      printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d).\n",
+                    label, label, sourcePatchID, matlIndx, levelIndx,
+                    sv.device_offset.x, sv.device_offset.y, sv.device_offset.z,
+                    sv.device_size.x, sv.device_size.y, sv.device_size.z);
+      varLock.writeUnlock();
       exit(-1);
     }
+    //Find the d_varDB entry for this specific one.
+
+
   }
+
+  if (index == -1) {
+    printf("ERROR:\nGPUDataWarehouse::putGhostCell, label %s, source patch ID %d, matlIndx %d, levelIndex %d staging %s not found in GPU DW %p\n",
+        label, sourcePatchID, matlIndx, levelIndx, "false", this);
+    varLock.readUnlock();
+    exit(-1);
+  }
+
+  //printf("The found index %d for var %s patch %d matl %d\n", index, label, sourcePatchID, matlIndx);
+  //if (d_varDB[index].varItem.validOnGPU == false) {
+    //Steps prior to this point should have checked for this scenario.
+    //This is just a failsafe.
+  //  printf("ERROR:\nGPUDataWarehouse::putGhostCell, attempting to use: label %s, source patch ID %d, materialID %d, it exists but the data is not valid.\n", label, sourcePatchID, matlIndx);
+  //  exit(-1);
+  //}
+  d_varDB[i].var_offset = d_varDB[index].var_offset;
+  d_varDB[i].var_size = d_varDB[index].var_size;
+  d_varDB[i].var_ptr = d_varDB[index].var_ptr;
+  d_varDB[i].sizeOfDataType = d_varDB[index].sizeOfDataType;
+  if (d_debug){
+    printf("Placed into d_varDB at index %d from patch %d to patch %d has shared coordinates (%d, %d, %d), (%d, %d, %d), from low/offset (%d, %d, %d) size (%d, %d, %d)  virtualOffset(%d, %d, %d)\n",
+        i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y,
+        sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z,
+        d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+        d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+        d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z);
+  }
+
 
   //Find where we are sending the ghost cell data to
   labelPatchMatlLevel lpml_dest(label, destPatchID, matlIndx, levelIndx);
