@@ -1095,6 +1095,15 @@ Arches::scheduleRestartInitialize(const LevelP& level,
     i->second->schedule_init(level, sched, matls, is_restart );
   }
 
+  //__________________________________
+  //  initialize src terms
+  SourceTermFactory& srcFactory = SourceTermFactory::self();
+  SourceTermFactory::SourceMap& sources = srcFactory.retrieve_all_sources();
+  for (SourceTermFactory::SourceMap::iterator isrc=sources.begin(); isrc !=sources.end(); isrc++){
+    SourceTermBase* src = isrc->second;
+    src->sched_RestartInitialize(level, sched);
+  }
+
 }
 
 void
