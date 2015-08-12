@@ -430,8 +430,23 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
     //so on this host, we'll see a similar thing, the needed neighbor for two dependencies
     //being the same foreign variable.
     if (staging_it != it->second.stagingVars.end()) {
-      printf("GPUDataWarehouse::put( %s ). This staging variable already exists with the same offset and size for label %s patch %d matl %d level %d.  Reusing it.\n",
-              label, label, patchID, matlIndx, levelIndx);
+      if (gpu_stats.active()) {
+         cerrLock.lock();
+         {
+           gpu_stats << UnifiedScheduler::myRankThread()
+               << " GPUDataWarehouse::put( " << label << " ) - "
+               << " This staging variable already exists.  No need to add another.  For label " << label
+               << " patch " << patchID
+               << " matl " << matlIndx
+               << " level " << levelIndx
+               << " with offset (" << var_offset.x << ", " << var_offset.y << ", " << var_offset.z << ")"
+               << " and size (" << var_size.x << ", " << var_size.y << ", " << var_size.z << ")"
+               << " on device " << d_device_id
+               << " into GPUDW at " << this
+               << endl;
+         }
+         cerrLock.unlock();
+       }
 
       varLock.writeUnlock();
 
@@ -2048,31 +2063,30 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
            if (d_varDB[i].sizeOfDataType == sizeof(double)) {
              *((double*)(d_varDB[destIndex].var_ptr) + destOffset) = *((double*)(d_varDB[i].var_ptr) + sourceOffset);
              //if (threadID == 0) {
-               if (d_varDB[i].ghostItem.sharedLowCoordinates.x == 4
-                   && d_varDB[i].ghostItem.sharedLowCoordinates.y == -1
-                    && d_varDB[i].ghostItem.sharedLowCoordinates.z == -1
-                   && d_varDB[i].ghostItem.sharedHighCoordinates.x == 5
-                   && d_varDB[i].ghostItem.sharedHighCoordinates.y == 0
-                   && d_varDB[i].ghostItem.sharedHighCoordinates.z == 0 ) {
-                 printf("XXXXXX Copying this data for %s %1.16lf for 4, -1, -1 to 5, 0, 0 to %p\n",  d_varDB[destIndex].label, *((double*)(d_varDB[i].var_ptr) + sourceOffset), (double*)(d_varDB[destIndex].var_ptr) + destOffset);
-               }
+             //  if (d_varDB[i].ghostItem.sharedLowCoordinates.x == 4
+             //      && d_varDB[i].ghostItem.sharedLowCoordinates.y == -1
+             //       && d_varDB[i].ghostItem.sharedLowCoordinates.z == -1
+             //      && d_varDB[i].ghostItem.sharedHighCoordinates.x == 5
+             //      && d_varDB[i].ghostItem.sharedHighCoordinates.y == 0
+             //      && d_varDB[i].ghostItem.sharedHighCoordinates.z == 0 ) {
+             //    printf(" Copying this data for %s %1.16lf for 4, -1, -1 to 5, 0, 0 to %p\n",  d_varDB[destIndex].label, *((double*)(d_varDB[i].var_ptr) + sourceOffset), (double*)(d_varDB[destIndex].var_ptr) + destOffset);
+             //  }
              //}
 
              //if (threadID == 0) {
-               printf("Thread %d - At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index %d (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer %p.\n",
-                   threadID, x, y, z, x_source_real, y_source_real, z_source_real,
-                   d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
-                   d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
-                   i,
-                   x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
-                   y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y,
-                   z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z,
-                   d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
-                   d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z,
-                   d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
-                   sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
-                   destIndex, d_varDB[destIndex].var_ptr, destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
-
+             //  printf("Thread %d - At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index %d (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer %p.\n",
+             //      threadID, x, y, z, x_source_real, y_source_real, z_source_real,
+             //      d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
+             //      d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
+             //      i,
+             //      x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
+             //      y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y,
+             //      z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z,
+             //      d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+             //      d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z,
+             //      d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+             //      sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
+             //      destIndex, d_varDB[destIndex].var_ptr, destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
              //}
            }
            //or copy all 4 bytes of an int in one shot.

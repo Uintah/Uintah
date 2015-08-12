@@ -3959,11 +3959,11 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                     CUDA_RT_SAFE_CALL(retVal);
                   }
 
-                  if (dependantVar->var->getName() == "phi1") {
-                    cudaDeviceSynchronize();
-                    double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
-                    gridVar->copyOut(phi_data);
-                    printf("Just got data for %s from device address %p data is %1.6lf\n", dependantVar->var->getName().c_str(), device_ptr, phi_data[0]);
+                  //if (dependantVar->var->getName() == "phi1") {
+                    //cudaDeviceSynchronize();
+                    //double * phi_data = new double[gridVar->getDataSize()/sizeof(double)];
+                    //gridVar->copyOut(phi_data);
+                    //printf("Just got data for %s from device address %p data is %1.6lf\n", dependantVar->var->getName().c_str(), device_ptr, phi_data[0]);
                     /*int zhigh = host_high.z();
                     int yhigh = host_high.y();
                     int xhigh = host_high.x();
@@ -3984,7 +3984,7 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                         }
                       }
                     }*/
-                  }
+                  //}
                 }
               }
               d2hComputesLock_.writeUnlock();
@@ -5042,7 +5042,6 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
           //Get a const variable in a non-constant way.
           //This assumes the variable has already been resized properly, which is why ghost cells are set to zero.
           //TODO: Check sizes anyway just to be safe.
-          printf("Reusing copy var on host for %s\n", item.dep->var->getName().c_str());
           dw->getModifiable(*gridVar, item.dep->var, it->first.matlIndx, it->second.sourcePatchPointer, Ghost::None, 0);
 
         }
