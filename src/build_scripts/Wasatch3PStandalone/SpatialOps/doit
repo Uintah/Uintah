@@ -35,7 +35,8 @@ if test $? == 0; then
   echo "After compilation time: `date`"
   echo ""
   echo "SpatialOps: Updating installation permissions for ${INSTALL_HERE}..."
-  chmod -R go+rX ${INSTALL_HERE}
+  chmod    go+rX ${INSTALL_HERE}/../..
+  chmod -R go+rX ${INSTALL_HERE}/../../${THELIB}
 fi
 
 echo "End time: `date`"
