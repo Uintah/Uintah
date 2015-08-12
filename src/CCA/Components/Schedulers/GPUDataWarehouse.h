@@ -379,9 +379,10 @@ public:
   HOST_DEVICE void putMaterials(std::vector< std::string > materials);
   HOST_DEVICE materialType getMaterial(int i) const;
   HOST_DEVICE int getNumMaterials() const;
-  HOST_DEVICE void putGhostCell(char const* label, int sourcePatchID, int destPatchID, int matlIndx, int levelIndx, bool deststaging,
-                                int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset,
-                                bool sourceIsInTempGhostCells, void * data_ptr, int3 var_offset, int3 var_size, int sizeOfDataType);
+  HOST_DEVICE void putGhostCell(char const* label, int sourcePatchID, int destPatchID, int matlIndx, int levelIndx,
+                                bool sourceStaging, bool deststaging,
+                                int3 varOffset, int3 varSize,
+                                int3 sharedLowCoordinates, int3 sharedHighCoordinates, int3 virtualOffset);
   HOST_DEVICE bool getValidOnGPU(char const* label, int patchID, int matlIndx, int levelIndx);
   HOST_DEVICE void setValidOnGPU(char const* label, int patchID, int matlIndx, int levelInd);
   HOST_DEVICE bool getValidOnCPU(char const* label, int patchID, int matlIndx, int levelIndx);

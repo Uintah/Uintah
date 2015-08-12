@@ -28,7 +28,10 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
     const Patch* destPatchPointer,
     int matlIndx,
     int levelIndx,
+    bool sourceStaging,
     bool destStaging,
+    IntVector varOffset,
+    IntVector varSize,
     IntVector low,
     IntVector high,
     int xstride,
@@ -44,7 +47,10 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
   this->destPatchPointer = destPatchPointer;
   this->matlIndx = matlIndx;
   this->levelIndx = levelIndx;
+  this->sourceStaging = sourceStaging,
   this->destStaging = destStaging,
+  this->varOffset = varOffset,
+  this->varSize = varSize,
   this->low = low;
   this->high = high;
   this->xstride = xstride;
@@ -68,7 +74,10 @@ void DeviceGhostCells::add(const VarLabel* label,
           const Patch* destPatchPointer,
           int matlIndx,
           int levelIndx,
+          bool sourceStaging,
           bool destStaging,
+          IntVector varOffset,
+          IntVector varSize,
           IntVector low,
           IntVector high,
           int xstride,
@@ -88,8 +97,8 @@ void DeviceGhostCells::add(const VarLabel* label,
     if (destinationDevices.find(deviceID) == destinationDevices.end()) {
       destinationDevices.insert(deviceID);
     }
-    DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx, destStaging,
-                               low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
+    DeviceGhostCellsInfo tmp(label, sourcePatchPointer, destPatchPointer, matlIndx, levelIndx, sourceStaging, destStaging,
+                               varOffset, varSize, low, high, xstride, virtualOffset, sourceDeviceNum, destDeviceNum,
                                fromResource, toResource, dwIndex, dest);
     ghostVars.insert( std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::value_type( gvt, tmp ) );
   } else {

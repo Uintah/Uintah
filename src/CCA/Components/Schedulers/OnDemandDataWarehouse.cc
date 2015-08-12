@@ -1039,7 +1039,7 @@ OnDemandDataWarehouse::recvMPI(       DependencyBatch*       batch,
       //add the var to the dependency batch and set it as invalid.  The variable is now invalid because there is outstanding MPI pointing to the variable.
       batch->addVar( var );
       d_varDB.putForeign( label, matlIndex, patch, var, d_scheduler->isCopyDataTimestep() );  //put new var in data warehouse
-
+      printf("%d.%d Got buffer for %s patch %d for low (%d, %d, %d) high (%d, %d, %d)\n", Uintah::Parallel::getMPIRank(), Thread::self()->myid(), label->getName().c_str(), patch->getID(), dep->low.x(), dep->low.y(), dep->low.z(), dep->high.x(), dep->high.y(), dep->high.z());
       var->getMPIBuffer( buffer, dep->low, dep->high );
     }
       break;
@@ -2025,6 +2025,7 @@ OnDemandDataWarehouse::allocateAndPut(       GridVariableBase& var,
 
     // put the variable in the database
     printDebuggingPutInfo( label, matlIndex, patch, __LINE__ );
+    printf("Putting in %s for matl %d patch %d for this datawarehouse %p\n", label->getName().c_str(), matlIndex, patch->getID(), this);
     d_varDB.put(label, matlIndex, patch, var.clone(), d_scheduler->isCopyDataTimestep(), true);
   }
   else {
@@ -3055,6 +3056,7 @@ void OnDemandDataWarehouse::getValidNeighbors(const VarLabel* label,
       temp.neighborPatch = neighbor;
       temp.low = low;
       temp.high = high;
+      printf("Found a valid neighbor at %d low (%d, %d, %d) high (%d, %d, %d)\n", temp.neighborPatch->getID(), low.x(), low.y(), low.z(), high.x(), high.y(), high.z());
       validNeighbors.push_back(temp);
 
       //GridVariableBase* srcvar = var.cloneType();
@@ -3092,6 +3094,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
   ASSERTEQ(basis, Patch::translateTypeToBasis(var.virtualGetTypeDescription()->getType(), true));
 
   if (!d_varDB.exists(label, matlIndex, patch)) {
+    printf("Couldn't find it for this datawarehouse %p\n", this);
     std::cout << d_myworld->myrank() << " unable to find variable '" << label->getName() << " on patch: " << patch->getID() << " matl: "
               << matlIndex << std::endl;
     SCI_THROW(UnknownVariable(label->getName(), getID(), patch, matlIndex, "", __FILE__, __LINE__));
@@ -3113,7 +3116,21 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
     }
     // if this assertion fails, then it is having problems getting the
     // correct window of the data.
-    USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
+    //USE_IF_ASSERTS_ON(bool no_realloc =) var.rewindow(low, high);
+    IntVector templow = var.getLow();
+    IntVector temphigh = var.getHigh();
+
+    bool no_realloc = var.rewindow(low, high);
+    if (no_realloc) {
+      printf("No rewindow for label %s patch %d low (%d, %d, %d) and high (%d, %d, %d) and var's pointer is %p\n",
+          label->getName().c_str(), patch->getID(), low.x(), low.y(), low.z(), high.x(), high.y(), high.z(), var.getBasePointer());
+    } else {
+      printf("Uhh...we reallocated  for label %s patch %d. templow is (%d, %d, %d), temphigh is (%d, %d, %d), low is (%d, %d, %d), high is (%d, %d, %d)\n",
+          label->getName().c_str(), patch->getID(),
+          templow.x(), templow.y(), templow.z(), temphigh.x(), temphigh.y(), temphigh.z(),
+          low.x(), low.y(), low.z(), high.x(), high.y(), high.z());
+    }
+
     ASSERT(no_realloc);
   }
   else {
@@ -3133,6 +3150,7 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
 
     IntVector oldLow = var.getLow(), oldHigh = var.getHigh();
     if (!var.rewindow(lowIndex, highIndex)) {
+      printf("No rewindow for label %s patch %d\n", label->getName().c_str(), patch->getID());
       // reallocation needed
       // Ignore this if this is the initialization dw in its old state.
       // The reason for this is that during initialization it doesn't
@@ -3156,6 +3174,8 @@ OnDemandDataWarehouse::getGridVar(       GridVariableBase& var,
          warn << errmsg.str() << '\n';
          }*/
       }
+    } else {
+      printf("rewindow for label %s patch %d to support low (%d, %d, %d), high (%d, %d, %d)\n", label->getName().c_str(), patch->getID(), lowIndex.x(), lowIndex.y(), lowIndex.z(), highIndex.x(), highIndex.y(), highIndex.z());
     }
 
     vector<ValidNeighbors> validNeighbors;

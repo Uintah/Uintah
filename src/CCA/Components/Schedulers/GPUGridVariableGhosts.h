@@ -24,7 +24,10 @@ public:
       const Patch* destPatchPointer,
       int matlIndx,
       int levelIndx,
+      bool sourceStaging,
       bool destStaging,
+      IntVector varOffset,
+      IntVector varSize,
       IntVector low,
       IntVector high,
       int xstride,
@@ -89,7 +92,10 @@ public:
       const Patch* destPatchPointer,
       int matlIndx,
       int levelIndx,
+      bool sourceStaging,
       bool destStaging,
+      IntVector varOffset,
+      IntVector varSize,
       IntVector low,
       IntVector high,
       int xstride,
@@ -106,9 +112,12 @@ public:
   const Patch* destPatchPointer;
   int matlIndx;
   int levelIndx;
+  bool sourceStaging;
   bool destStaging;
-  IntVector low;
-  IntVector high;
+  IntVector varOffset;  //The low coordinate of the actual variable
+  IntVector varSize;    //The size of the actual variable
+  IntVector low;        //The low coordinate within the variable we're copying
+  IntVector high;       //the high coordinate within the region of the variable we're copying
   int xstride;
   IntVector virtualOffset;
   int sourceDeviceNum;
