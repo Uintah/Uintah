@@ -115,19 +115,41 @@ void DeviceGridVariables::add(const Patch* patchPointer,
   for (std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it=ret.first; it!=ret.second; ++it) {
 
     if (it->second == tmp) {
-      //Don't add the same device var twice.
-      printf("ERROR:\n %s DeviceGridVariables::add() - This preparation queue for a host-side GPU datawarehouse already added this exact variable for label %s patch %d matl %d level %d staging %s offset(%d, %d, %d) size (%d, %d, %d) dw %d.  The found label was %s patch %d offset was (%d, %d, %d).\n",
-          UnifiedScheduler::myRankThread().c_str(),
-          dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx,
-          staging ? "true" : "false",
-          offset.x(), offset.y(), offset.z(),
-          sizeVector.x(), sizeVector.y(), sizeVector.z(),
-          dep->mapDataWarehouse(),
-          it->first.label.c_str(),
-          it->first.patchID,
-          it->second.offset.x(), it->second.offset.y(), it->second.offset.z());
+      if (staging) {
+        if (gpu_stats.active()) {
+          cerrLock.lock();
+          {
+            gpu_stats << UnifiedScheduler::myRankThread()
+                << " DeviceGridVariables::add() - "
+                << " This preparation queue for a host-side GPU datawarehouse already added this exact staging variable.  No need to add it again.  For label "
+                << dep->var->getName()
+                << " patch " << patchPointer->getID()
+                << " matl " << matlIndx
+                << " level " << levelIndx
+                << " offset (" << offset.x() << ", " << offset.y() << ", " << offset.z() << ")"
+                << " size (" << sizeVector.x() << ", " << sizeVector.y() << ", " << sizeVector.z() << ")"
+                << endl;
+          }
+          cerrLock.unlock();
+        }
 
-      SCI_THROW(InternalError("Preparation queue already contained same exact variable for: -" + dep->var->getName(), __FILE__, __LINE__));
+        return;
+
+      } else {
+        //Don't add the same device var twice.
+        printf("ERROR:\n %s DeviceGridVariables::add() - This preparation queue for a host-side GPU datawarehouse already added this exact non-staging variable for label %s patch %d matl %d level %d staging %s offset(%d, %d, %d) size (%d, %d, %d) dw %d.  The found label was %s patch %d offset was (%d, %d, %d).\n",
+            UnifiedScheduler::myRankThread().c_str(),
+            dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx,
+            staging ? "true" : "false",
+            offset.x(), offset.y(), offset.z(),
+            sizeVector.x(), sizeVector.y(), sizeVector.z(),
+            dep->mapDataWarehouse(),
+            it->first.label.c_str(),
+            it->first.patchID,
+            it->second.offset.x(), it->second.offset.y(), it->second.offset.z());
+
+        SCI_THROW(InternalError("Preparation queue already contained same exact variable for: -" + dep->var->getName(), __FILE__, __LINE__));
+      }
     }
   }
 
@@ -200,7 +222,6 @@ bool DeviceGridVariables::varAlreadyExists(const VarLabel* label,
   ret = vars.equal_range(lpmld);
   for (std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it=ret.first; it!=ret.second; ++it) {
     if (it->second.staging == false) {
-      printf("Found a copy for %s\n", it->first.label.c_str());
       return true;
     }
   }
@@ -295,8 +316,27 @@ void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
   for (std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator it=ret.first; it!=ret.second; ++it) {
     if (it->second.staging == true && it->second.sizeVector == sizeVector && it->second.offset == offset) {
       //Don't add the same device var twice.
-      printf("ERROR:\n addTaskGpuDWStagingVar() - This preparation queue for a task datawarehouse already added this exact variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
-      SCI_THROW(InternalError("addTaskGpuDWStagingVar() - Preparation queue for a task datawarehouse already contained same exact variable for: " + dep->var->getName(), __FILE__, __LINE__));
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << UnifiedScheduler::myRankThread()
+              << " DeviceGridVariables::addTaskGpuDWStagingVar() - "
+              << " This preparation queue for a task datawarehouse already added this exact staging variable.  No need to add it again.  For label "
+              << dep->var->getName()
+              << " patch " << patchPointer->getID()
+              << " matl " << matlIndx
+              << " level " << levelIndx
+              << " offset (" << offset.x() << ", " << offset.y() << ", " << offset.z() << ")"
+              << " size (" << sizeVector.x() << ", " << sizeVector.y() << ", " << sizeVector.z() << ")"
+              << endl;
+        }
+        cerrLock.unlock();
+      }
+      //printf("ERROR:\n addTaskGpuDWStagingVar() - This preparation queue for a task datawarehouse already added this exact variable for label %s patch %d matl %d level %d dw %d\n",dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
+      //SCI_THROW(InternalError("addTaskGpuDWStagingVar() - Preparation queue for a task datawarehouse already contained same exact variable for: " + dep->var->getName(), __FILE__, __LINE__));
+
+      return;
+
     }
   }
 
