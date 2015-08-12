@@ -253,6 +253,35 @@ namespace Uintah{
 
       }
 
+      /** @brief Get a modifiable uintah variable with specified DW **/
+      template <typename T>
+      inline T* get_const_field( const std::string name, WHICH_DW which_dw ){
+
+        std::ostringstream dw_value;
+        dw_value << which_dw;
+
+        ConstFieldContainerMap::iterator icheck = _const_var_map.find( name+"_"+dw_value.str() );
+        if ( icheck != _const_var_map.end() ){
+          return icheck->second.get_field<T>();
+        }
+
+        VariableInformation ivar = get_variable_information( name, true, which_dw );
+        T* field = scinew T;
+        if ( ivar.dw == OLDDW ){
+          _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+        } else {
+          _new_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, ivar.nGhost );
+        }
+
+        ConstFieldContainer icontain;
+        icontain.set_field(field);
+        icontain.set_label(ivar.label);
+        this->add_const_variable(name+"_"+dw_value.str(), icontain);
+
+        return field;
+
+      }
+
       /** @brief Get a const uintah variable **/
       template <typename T>
       inline T* get_field( const std::string name ){
@@ -343,6 +372,40 @@ namespace Uintah{
 
       }
 
+      // @brief Get a NON-CONSTANT spatialOps representation of the Uintah field with DW specified
+      template <class ST>
+      SpatialOps::SpatFldPtr<ST> get_const_so_field(const std::string name, WHICH_DW which_dw ){
+
+        std::ostringstream dw_value;
+        dw_value << which_dw;
+
+        typedef typename Wasatch::SelectUintahFieldType<ST>::const_type MY_TYPE;
+        VariableInformation ivar = get_variable_information( name, true, which_dw );
+        ConstFieldContainerMap::iterator icheck = _const_var_map.find( name+"_"+dw_value.str() );
+        int nGhost = ivar.nGhost;
+
+        if ( icheck != _const_var_map.end() ){
+           return Wasatch::wrap_uintah_field_as_spatialops<ST>(
+             *(icheck->second.get_field<MY_TYPE>()), this->_wasatch_ainfo, nGhost );
+        }
+
+        MY_TYPE* field = scinew MY_TYPE;
+
+        if ( ivar.dw == OLDDW ){
+          _old_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, nGhost );
+        } else {
+          _new_dw->get( *field, ivar.label, _matl_index, _patch, ivar.ghost_type, nGhost );
+        }
+
+        ConstFieldContainer icontain;
+        icontain.set_field(field);
+        icontain.set_label(ivar.label);
+        this->add_const_variable(name+"_"+dw_value.str(), icontain);
+
+        return Wasatch::wrap_uintah_field_as_spatialops<ST>( *field, this->_wasatch_ainfo, nGhost );
+
+      }
+
       // @brief Get a particle field spatialOps representation of the Uintah field.
       SpatialOps::SpatFldPtr<ParticleField> get_so_particle_field( const std::string name ){
 
@@ -412,6 +475,42 @@ namespace Uintah{
 
       }
 
+      // @brief Get a CONSTANT particle field spatialOps representation of the Uintah field with
+      //        specified DW
+      SpatialOps::SpatFldPtr<ParticleField> get_const_so_particle_field(
+        const std::string name, WHICH_DW which_dw ){
+
+        std::ostringstream dw_value;
+        dw_value << which_dw;
+
+        ConstUintahParticleMap::iterator icheck = _const_particle_map.find(name+"_"+dw_value.str());
+        VariableInformation ivar = get_variable_information( name, true, which_dw );
+
+        if ( icheck != _const_particle_map.end() ){
+          return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(
+            *(icheck->second.get_field()), this->_wasatch_ainfo, ivar.nGhost );
+        }
+
+        constParticleVariable<double>* pvar = scinew constParticleVariable<double>;
+
+        if ( ivar.dw == OLDDW ){
+          ParticleSubset* subset = _old_dw->getParticleSubset( _matl_index, _patch );
+          _old_dw->get( *pvar, ivar.label, subset );
+        } else {
+          ParticleSubset* subset = _new_dw->getParticleSubset( _matl_index, _patch );
+          _new_dw->get( *pvar, ivar.label, subset );
+        }
+
+        ConstParticleFieldContainer icontain;
+        icontain.set_field(pvar);
+        icontain.set_label(ivar.label);
+        this->add_const_particle_variable(name+"_"+dw_value.str(), icontain);
+
+        return Wasatch::wrap_uintah_field_as_spatialops<ParticleField>(*pvar,
+          this->_wasatch_ainfo, ivar.nGhost );
+
+      }
+
     private:
 
       FieldContainerMap _nonconst_var_map;
@@ -435,6 +534,29 @@ namespace Uintah{
           if ( i->name == name ){
             if ( i->is_constant == is_constant ){
               return *i;
+            }
+          }
+        }
+
+        std::stringstream msg;
+        msg << "Error: variable with name" << name << " not found in the registry." <<
+        " Did you register it?" << std::endl;
+        throw InvalidValue( msg.str(), __FILE__, __LINE__ );
+
+      }
+
+      /** @brief From the vector of VariableInformation, return a single set of information based
+                 variable's name with specified DW. **/
+      VariableInformation get_variable_information( const std::string name, const bool is_constant,
+      WHICH_DW which_dw ){
+
+        VariableRegistry::iterator i = _variable_reg.begin();
+        for (; i!=_variable_reg.end(); i++){
+          if ( i->name == name ){
+            if ( i->is_constant == is_constant ){
+              if ( i->dw == which_dw ){
+                return *i;
+              }
             }
           }
         }
