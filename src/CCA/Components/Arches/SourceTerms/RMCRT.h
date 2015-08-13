@@ -71,6 +71,9 @@ public:
   void sched_initialize( const LevelP& level,
                          SchedulerP& sched );
 
+  void sched_RestartInitialize( const LevelP& level,
+                                SchedulerP& sched );
+
   void initialize( const ProcessorGroup* pc,
                    const PatchSubset* patches,
                    const MaterialSubset* matls,
@@ -113,6 +116,13 @@ public:
   //______________________________________________________________________
   //
 private:
+    
+    // 
+    void restartInitializeHack( const ProcessorGroup* , const PatchSubset* , 
+                                   const MaterialSubset* , DataWarehouse*, DataWarehouse*);
+
+
+
      //______________________________________________________________________
      //   Boundary Conditions
     void  sched_setBoundaryConditions( const LevelP& level,
@@ -137,6 +147,17 @@ private:
                               SchedulerP& sched );
 
     void stencilToDBLs( const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw );
+                        
+    //__________________________________
+    //  move  6 CCVariable<double> -> CCVariable<stencil7>
+    void sched_DBLsToStencil( const LevelP& level,
+                              SchedulerP& sched );
+
+    void DBLsToStencil( const ProcessorGroup* pc,
                         const PatchSubset* patches,
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,

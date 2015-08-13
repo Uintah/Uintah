@@ -65,6 +65,9 @@ MaterialSet* RMCRTCommon::d_matlSet = 0;
 const VarLabel* RMCRTCommon::d_sigmaT4Label;
 const VarLabel* RMCRTCommon::d_abskgLabel;
 const VarLabel* RMCRTCommon::d_divQLabel;
+const VarLabel* RMCRTCommon::d_boundFluxLabel;
+const VarLabel* RMCRTCommon::d_radiationVolqLabel;
+
 const VarLabel* RMCRTCommon::d_compAbskgLabel;
 const VarLabel* RMCRTCommon::d_compTempLabel;
 const VarLabel* RMCRTCommon::d_cellTypeLabel;
@@ -85,6 +88,9 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
     proc0cout << "__________________________________ USING FLOAT VERSION OF RMCRT" << endl;
   }
 
+  d_boundFluxLabel     = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
+  d_radiationVolqLabel = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
+
   d_gac     = Ghost::AroundCells;
   d_gn      = Ghost::None;
   d_flowCell = -1; //<----HARD CODED FLOW CELL
@@ -97,6 +103,9 @@ RMCRTCommon::RMCRTCommon( TypeDescription::Type FLT_DBL )
 RMCRTCommon::~RMCRTCommon()
 {
   VarLabel::destroy( d_sigmaT4Label );
+  VarLabel::destroy( d_boundFluxLabel );
+  VarLabel::destroy( d_radiationVolqLabel );
+
   if (RMCRTCommon::d_FLT_DBL == TypeDescription::float_type){
     VarLabel::destroy( d_abskgLabel );
   }
@@ -238,8 +247,26 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
 
   printSchedule(level,dbg,taskname);
 
+  //__________________________________
+  // Be careful if you modify this.  This additional logic
+  // is needed when restarting from an uda that
+  // was previously run without RMCRT.  It's further
+  // complicated when the calc_frequency >1  If you change
+  // it then test by restarting from an uda that was
+  // previously run with Arches + DO with calc_frequency > 1.
+  // If you touch this be prepared for tangled logic web.
+  bool exists0 = false;
+  DataWarehouse* dw0 = sched->get_dw(0);
+  if(dw0){
+    const Patch* firstPatch = level->getPatch( 0 );
+    exists0 = dw0->exists( d_sigmaT4Label, d_matl, firstPatch );
+  }
+
+  if( exists0 ){
+    tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
+  }
+
   tsk->requires( temp_dw, d_compTempLabel,    d_gn, 0 );
-  tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
   tsk->computes(d_sigmaT4Label);
 
   sched->addTask( tsk, level->eachPatch(), d_matlSet );
@@ -696,9 +723,9 @@ RMCRTCommon::isDbgCell( const IntVector me)
 }
 
 //______________________________________________________________________
-//  Populate vector with integers which have been randomly shuffled. 
-//  This is sampling without replacement and can be used to in a  
-//  Latin-Hyper-Cube sampling scheme.  The algorithm used is the 
+//  Populate vector with integers which have been randomly shuffled.
+//  This is sampling without replacement and can be used to in a
+//  Latin-Hyper-Cube sampling scheme.  The algorithm used is the
 //  fisher-yates shuffle.
 //______________________________________________________________________
 void
