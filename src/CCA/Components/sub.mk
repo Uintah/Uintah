@@ -36,9 +36,21 @@ SRCDIR  := CCA/Components
 # do not modify...
 #
 
-ifeq ($(BUILD_WASATCH),yes)
+
+###################################
+# We need to add Wasatch to the list of sub-dirs if
+# a) building the Watach component, or
+# b) building the arches component.
+# We have to have the following two separate 'ifeq's because gmake does not support and/or/not... sigh.
+#
+ifeq ($(BUILD_WASATCH)$(BUILD_WASATCH_FOR_ARCHES),yesno)
   WASATCH := $(SRCDIR)/Wasatch
 endif
+ifeq ($(BUILD_WASATCH)$(BUILD_WASATCH_FOR_ARCHES),noyes)
+  WASATCH := $(SRCDIR)/Wasatch
+endif
+#
+###################################
 
 ifeq ($(BUILD_MPM),yes)
   MPM      := $(SRCDIR)/MPM

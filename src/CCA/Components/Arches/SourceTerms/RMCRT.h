@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermBase.h>
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
-
+#include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Models/Radiation/RMCRT/Ray.h>
 #include <Core/Grid/SimulationStateP.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -55,7 +55,7 @@ public:
 
   void problemSetup(const ProblemSpecP& db );
 
-  void extraSetup( GridP& grid, BoundaryCondition* bc );
+  void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop );
 
   void sched_computeSource( const LevelP& level,
                             SchedulerP& sched,
@@ -70,6 +70,9 @@ public:
 
   void sched_initialize( const LevelP& level,
                          SchedulerP& sched );
+
+  void sched_RestartInitialize( const LevelP& level,
+                                SchedulerP& sched );
 
   void initialize( const ProcessorGroup* pc,
                    const PatchSubset* patches,
@@ -113,6 +116,13 @@ public:
   //______________________________________________________________________
   //
 private:
+    
+    // 
+    void restartInitializeHack( const ProcessorGroup* , const PatchSubset* , 
+                                   const MaterialSubset* , DataWarehouse*, DataWarehouse*);
+
+
+
      //______________________________________________________________________
      //   Boundary Conditions
     void  sched_setBoundaryConditions( const LevelP& level,
@@ -141,6 +151,17 @@ private:
                         const MaterialSubset* matls,
                         DataWarehouse* old_dw,
                         DataWarehouse* new_dw );
+                        
+    //__________________________________
+    //  move  6 CCVariable<double> -> CCVariable<stencil7>
+    void sched_DBLsToStencil( const LevelP& level,
+                              SchedulerP& sched );
+
+    void DBLsToStencil( const ProcessorGroup* pc,
+                        const PatchSubset* patches,
+                        const MaterialSubset* matls,
+                        DataWarehouse* old_dw,
+                        DataWarehouse* new_dw );
 
   //__________________________________
   //
@@ -156,6 +177,7 @@ private:
   ArchesLabel*    _labels;
   MPMArchesLabel* _MAlab;
   BoundaryCondition* _boundaryCondition;
+  Properties* d_props;
   const ProcessorGroup* _my_world;
   SimulationStateP      _sharedState;
   ProblemSpecP          _ps;              // needed for extraSetup()

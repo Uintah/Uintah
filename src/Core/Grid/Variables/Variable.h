@@ -40,6 +40,9 @@ namespace Uintah {
   class TypeDescription;
   class InputContext;
   class OutputContext;
+#if HAVE_PIDX
+  class PIDXOutputContext;
+#endif
   class PIDXOutputContext;
   class Patch;
   class RefCounted;

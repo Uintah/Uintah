@@ -108,13 +108,13 @@ __global__ void rayTraceKernel( dim3 dimGrid,
   }
 
   if( RT_flags.modifies_divQ ){
-    new_gdw->getModifiable( divQ,         "divQ",          patch.ID, matl );
-    new_gdw->getModifiable( boundFlux,    "boundFlux",     patch.ID, matl );
-    new_gdw->getModifiable( radiationVolQ,"radiationVolq", patch.ID, matl );
+    new_gdw->getModifiable( divQ,         "divQ",           patch.ID, matl );
+    new_gdw->getModifiable( boundFlux,    "RMCRTboundFlux", patch.ID, matl );
+    new_gdw->getModifiable( radiationVolQ,"radiationVolq",  patch.ID, matl );
   }else{
-    new_gdw->get( divQ,         "divQ",          patch.ID, matl );         // these should be allocateAntPut() calls
-    new_gdw->get( boundFlux,    "boundFlux",     patch.ID, matl );
-    new_gdw->get( radiationVolQ,"radiationVolq", patch.ID, matl );
+    new_gdw->get( divQ,         "divQ",           patch.ID, matl );         // these should be allocateAndPut() calls
+    new_gdw->get( boundFlux,    "RMCRTboundFlux", patch.ID, matl );
+    new_gdw->get( radiationVolQ,"radiationVolq",  patch.ID, matl );
 
 
     // Extra Cell Loop
@@ -277,9 +277,9 @@ __global__ void rayTraceKernel( dim3 dimGrid,
 
           GPUVector direction_vector = findRayDirectionDevice( randNumStates );
 
-          GPUVector ray_location = rayLocationDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
+          GPUVector rayOrigin = rayOriginDevice( randNumStates, origin, DyDx,  DzDx, RT_flags.CCRays );
 
-          updateSumIDevice< T >( direction_vector, ray_location, origin, patch.dx,  sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
+          updateSumIDevice< T >( direction_vector, rayOrigin, origin, patch.dx,  sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
         } //Ray loop
 
         //__________________________________
@@ -397,9 +397,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
     new_gdw->getModifiable( boundFlux,    "boundFlux",     finePatch.ID, matl, fineL );
     new_gdw->getModifiable( radiationVolQ,"radiationVolq", finePatch.ID, matl, fineL );
   }else{
-    new_gdw->get( divQ,         "divQ",          finePatch.ID, matl, fineL );         // these should be allocateAntPut() calls
-    new_gdw->get( boundFlux,    "boundFlux",     finePatch.ID, matl, fineL );
-    new_gdw->get( radiationVolQ,"radiationVolq", finePatch.ID, matl, fineL );
+    new_gdw->get( divQ,         "divQ",           finePatch.ID, matl, fineL );         // these should be allocateAntPut() calls
+    new_gdw->get( boundFlux,    "RMCRTboundFlux", finePatch.ID, matl, fineL );
+    new_gdw->get( radiationVolQ,"radiationVolq",  finePatch.ID, matl, fineL );
 
 
     //__________________________________
@@ -460,9 +460,9 @@ __global__ void rayTraceDataOnionKernel( dim3 dimGrid,
 
           GPUVector ray_direction = findRayDirectionDevice( randNumStates );
 
-          GPUVector ray_location = rayLocationDevice( randNumStates, origin, d_levels[fineL].DyDx, d_levels[fineL].DzDx , RT_flags.CCRays );
+          GPUVector rayOrigin = rayOriginDevice( randNumStates, origin, d_levels[fineL].DyDx, d_levels[fineL].DzDx , RT_flags.CCRays );
 
-          updateSumI_MLDevice<T>(ray_direction, ray_location, origin, gridP, 
+          updateSumI_MLDevice<T>(ray_direction, rayOrigin, origin, gridP, 
                                  fineLevel_ROI_Lo, fineLevel_ROI_Hi,
                                  regionLo, regionHi,
                                  sigmaT4OverPi, abskg, cellType, sumI, randNumStates, RT_flags);
@@ -542,24 +542,24 @@ __device__ void rayDirection_cellFaceDevice( curandState* randNumStates,
 
 //______________________________________________________________________
 //
-__device__ GPUVector rayLocationDevice( curandState* randNumStates,
+__device__ GPUVector rayOriginDevice( curandState* randNumStates,
                                         const GPUIntVector origin,
                                         const double DyDx,
                                         const double DzDx,
                                         const bool useCCRays )
 {
-  GPUVector location;
+  GPUVector rayOrigin;
   if (useCCRays == false) {
-    location.x = (double)origin.x + randDevice(randNumStates);
-    location.y = (double)origin.y + randDevice(randNumStates) * DyDx;
-    location.z = (double)origin.z + randDevice(randNumStates) * DzDx;
+    rayOrigin.x = (double)origin.x + randDevice(randNumStates);
+    rayOrigin.y = (double)origin.y + randDevice(randNumStates) * DyDx;
+    rayOrigin.z = (double)origin.z + randDevice(randNumStates) * DzDx;
   }
   else {
-    location.x = origin.x + 0.5;
-    location.y = origin.y + 0.5 * DyDx;
-    location.z = origin.z + 0.5 * DzDx;
+    rayOrigin.x = origin.x + 0.5;
+    rayOrigin.y = origin.y + 0.5 * DyDx;
+    rayOrigin.z = origin.z + 0.5 * DzDx;
   }
-  return location;
+  return rayOrigin;
 }
 
 //______________________________________________________________________

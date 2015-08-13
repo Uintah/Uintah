@@ -208,11 +208,11 @@ if test "$MACHINE" = "titan"; then
      echo "Error: hostname did not return titan*... Goodbye."
      exit
   fi
-  CC=gcc
-  CXX=g++
-  COMP=gcc-4.8.2
+  CC=/opt/cray/craype/2.4.0/bin/cc
+  CXX=/opt/cray/craype/2.4.0/bin/CC
+  COMP=cc-4.8.2
   NAME2="titan"
-  INSTALL_BASE=/autofs/nccs-svm1_home1/$USER/Wasatch3P
+  INSTALL_BASE=/ccs/proj/csc188/utah/thirdparty-install/titan/Wasatch3P
   BOOST_LOC=$BOOST_ROOT
 else
   echo ""

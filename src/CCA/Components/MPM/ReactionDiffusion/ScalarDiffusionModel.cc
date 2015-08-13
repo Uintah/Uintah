@@ -390,9 +390,6 @@ void ScalarDiffusionModel::scheduleComputeDivergence_CFI(Task* t,
     t->requires(Task::NewDW, d_rdlb->pFluxLabel,  allPatches, Task::CoarseLevel,allMatls, ND, gac, npc);
 
     t->modifies(d_lb->gConcentrationRateLabel, matlset);
-#if 0
-#endif
-//    t->modifies(d_rdlb->gConcentrationStarLabel);
 }
 
 void ScalarDiffusionModel::computeDivergence_CFI(const PatchSubset* finePatches,

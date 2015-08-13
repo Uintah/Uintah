@@ -368,6 +368,8 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   if(d_flags->d_integrator_type=="explicit"){
     new_dw->allocateAndPut(pvars.pvelGrad,    d_lb->pVelGradLabel,      subset);
   }
+  new_dw->allocateAndPut(pvars.pTempGrad,   d_lb->pTemperatureGradientLabel,
+                                                                        subset);
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pvars.pLoadCurveID,d_lb->pLoadCurveIDLabel,  subset);
   }
@@ -477,7 +479,6 @@ void ParticleCreator::createPoints(const Patch* patch, GeometryObject* obj,
 
 }
 
-
 void 
 ParticleCreator::initializeParticle(const Patch* patch,
                                     vector<GeometryObject*>::const_iterator obj,
@@ -563,8 +564,9 @@ ParticleCreator::initializeParticle(const Patch* patch,
    
     pvars.pvelocity[i]  = (*obj)->getInitialData_Vector("velocity");
     if(d_flags->d_integrator_type=="explicit"){
-      pvars.pvelGrad[i] = Matrix3(0.0);
+      pvars.pvelGrad[i]  = Matrix3(0.0);
     }
+    pvars.pTempGrad[i] = Vector(0.0);
   
     double vol_frac_CC = 1.0;
     try {
@@ -781,6 +783,11 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl)
   if(d_flags->d_integrator_type=="explicit"){
     particle_state.push_back(d_lb->pVelGradLabel);
     particle_state_preReloc.push_back(d_lb->pVelGradLabel_preReloc);
+  }
+
+  if(!d_flags->d_AMR){
+    particle_state.push_back(d_lb->pTemperatureGradientLabel);
+    particle_state_preReloc.push_back(d_lb->pTemperatureGradientLabel_preReloc);
   }
 
   if (d_flags->d_refineParticles) {

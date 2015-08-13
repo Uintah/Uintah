@@ -486,17 +486,19 @@ protected:
                                            const PatchSet*,
                                            const MaterialSet*);
 
+#if 0
   virtual void scheduleInterpolateToParticlesAndUpdateMom1(SchedulerP&, 
                                                            const PatchSet*,
                                                            const MaterialSet*);
 
-  virtual void scheduleInterpolateParticleVelToGridMom(SchedulerP&, 
-                                                       const PatchSet*,
-                                                       const MaterialSet*);
-
   virtual void scheduleInterpolateToParticlesAndUpdateMom2(SchedulerP&, 
                                                            const PatchSet*,
                                                            const MaterialSet*);
+#endif
+
+  virtual void scheduleInterpolateParticleVelToGridMom(SchedulerP&, 
+                                                       const PatchSet*,
+                                                       const MaterialSet*);
 
   virtual void scheduleInsertParticles(SchedulerP&, 
                                        const PatchSet*,

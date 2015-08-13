@@ -9,51 +9,51 @@
 
 
 using namespace std;
-using namespace Uintah; 
+using namespace Uintah;
 static DebugStream dbg("RMCRT", false);
 
 /*______________________________________________________________________
           TO DO:
- 
+
  - Allow the user to select between double or float RMCRT, see _FLT_DBL
- 
+
  ______________________________________________________________________*/
 
-RMCRT_Radiation::RMCRT_Radiation( std::string src_name, 
-                                  ArchesLabel* labels, 
+RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
+                                  ArchesLabel* labels,
                                   MPMArchesLabel* MAlab,
-                                  vector<std::string> req_label_names, 
-                                  const ProcessorGroup* my_world, 
-                                  std::string type ) 
-: SourceTermBase( src_name, 
-                  labels->d_sharedState, 
-                  req_label_names, type ), 
+                                  vector<std::string> req_label_names,
+                                  const ProcessorGroup* my_world,
+                                  std::string type )
+: SourceTermBase( src_name,
+                  labels->d_sharedState,
+                  req_label_names, type ),
   _labels( labels ),
-  _MAlab(MAlab), 
+  _MAlab(MAlab),
   _my_world(my_world)
-{  
+{
 
-  _src_label = VarLabel::create( src_name,  CCVariable<double>::getTypeDescription() ); 
-  
+  _src_label = VarLabel::create( src_name,  CCVariable<double>::getTypeDescription() );
+
   _FLT_DBL = TypeDescription::double_type;        // HARDWIRED: double;
-  
-   _RMCRT = scinew Ray( _FLT_DBL );          
-  
-  //Declare the source type: 
+
+   _RMCRT = scinew Ray( _FLT_DBL );
+
+  //Declare the source type:
   _source_grid_type = CC_SRC; // or FX_SRC, or FY_SRC, or FZ_SRC, or CCVECTOR_SRC
-  _archesLevelIndex = -9;                         
-  _sharedState      = labels->d_sharedState;      
-  
+  _archesLevelIndex = -9;
+  _sharedState      = labels->d_sharedState;
+
   _gac = Ghost::AroundCells;
-  _gn  = Ghost::None; 
+  _gn  = Ghost::None;
   _whichAlgo = singleLevel;
-  
+
   //__________________________________
   //  define the material index
   int archIndex = 0;                // HARDWIRED
   _matl = _sharedState->getArchesMaterial(archIndex)->getDWIndex();
-  
-  
+
+
   const TypeDescription* CC_double = CCVariable<double>::getTypeDescription();
   _radFluxE_Label = VarLabel::create("radiationFluxE",  CC_double);
   _radFluxW_Label = VarLabel::create("radiationFluxW",  CC_double);
@@ -61,15 +61,15 @@ RMCRT_Radiation::RMCRT_Radiation( std::string src_name,
   _radFluxS_Label = VarLabel::create("radiationFluxS",  CC_double);
   _radFluxT_Label = VarLabel::create("radiationFluxT",  CC_double);
   _radFluxB_Label = VarLabel::create("radiationFluxB",  CC_double);
-  
+
 }
 //______________________________________________________________________
 //
 RMCRT_Radiation::~RMCRT_Radiation()
 {
   // source label is destroyed in the base class
-  delete _RMCRT; 
-  
+  delete _RMCRT;
+
   VarLabel::destroy(_radFluxE_Label);
   VarLabel::destroy(_radFluxW_Label);
   VarLabel::destroy(_radFluxN_Label);
@@ -80,19 +80,19 @@ RMCRT_Radiation::~RMCRT_Radiation()
 //---------------------------------------------------------------------------
 // Method: Problem Setup
 //---------------------------------------------------------------------------
-void 
+void
 RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 {
 
-  _ps = inputdb; 
-  _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 ); 
-  _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk, false );  
-  
+  _ps = inputdb;
+  _ps->getWithDefault( "calc_frequency",       _radiation_calc_freq, 3 );
+  _ps->getWithDefault( "calc_on_all_RKsteps",  _all_rk, false );
+
   _T_label_name = "radiation_temperature";                        // HARDWIRED
-  
-  if ( _ps->findBlock("abskg")){ 
-    _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name); 
-  } else { 
+
+  if ( _ps->findBlock("abskg")){
+    _ps->findBlock("abskg")->getAttribute("label", _abskg_label_name);
+  } else {
     throw ProblemSetupException("Error: RMCRT - The absorption coefficient is not defined.",__FILE__,__LINE__);
   }
 
@@ -101,11 +101,11 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
   if(_all_rk){
     throw ProblemSetupException("ERROR:  RMCRT_radiation only works if calc_on_all_RKstes = false", __FILE__, __LINE__);
   }
-  
+
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
   if (!rmcrt_ps){
     throw ProblemSetupException("ERROR:  RMCRT_radiation, the xml tag <RMCRT> was not found", __FILE__, __LINE__);
-  }  
+  }
 
 
   _RMCRT->setBC_onOff( false );
@@ -119,7 +119,7 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
     alg_ps->getAttribute("type", type);
 
     if (type == "dataOnion" ) {                   // DATA ONION
-    
+
       _whichAlgo = dataOnion;
       _RMCRT->setBC_onOff( true );
 
@@ -129,14 +129,14 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
         ostringstream msg;
         msg << "\n ERROR: You must add \n"
             << " <useLockStep> true </useLockStep> \n"
-            << " inside of the <AMR> section. \n"; 
+            << " inside of the <AMR> section. \n";
         throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
       }
     } else if ( type == "RMCRT_coarseLevel" ) {   // 2 LEVEL
-      
+
       _whichAlgo = coarseLevel;
       _RMCRT->setBC_onOff( true );
-      
+
     } else if ( type == "singleLevel" ) {         // 1 LEVEL
       _whichAlgo = singleLevel;
 
@@ -148,52 +148,52 @@ RMCRT_Radiation::problemSetup( const ProblemSpecP& inputdb )
 //  We need this additiional call to problemSetup
 //  so the reaction models can create the  VarLabel
 //______________________________________________________________________
-void 
-RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc )
-{ 
+void
+RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
+{
 
-  _boundaryCondition = bc; 
+  _boundaryCondition = bc;
 
   // determing the temperature label
-  _tempLabel = VarLabel::find(_T_label_name); 
+  _tempLabel = VarLabel::find(_T_label_name);
   proc0cout << "RMCRT: temperature label name: " << _tempLabel->getName() << endl;
 
-  if ( _tempLabel == 0 ){ 
-    throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__); 
-  } 
+  if ( _tempLabel == 0 ){
+    throw ProblemSetupException("Error: No temperature label found.",__FILE__,__LINE__);
+  }
 
-  _abskgLabel = VarLabel::find(_abskg_label_name); 
+  _abskgLabel = VarLabel::find(_abskg_label_name);
   if ( _abskgLabel == 0 ){
     throw InvalidValue("Error: For RMCRT Radiation source term -- Could not find the abskg label.", __FILE__, __LINE__);
   }
-  
+
   // create RMCRT and register the labels
-  _RMCRT->registerVarLabels(_matl, 
+  _RMCRT->registerVarLabels(_matl,
                             _abskgLabel,
                             _tempLabel,
-                            _labels->d_cellTypeLabel, 
+                            _labels->d_cellTypeLabel,
                             _src_label);
 
   // read in RMCRT problem spec
   ProblemSpecP rmcrt_ps = _ps->findBlock("RMCRT");
-  
+
   _RMCRT->problemSetup( _ps, rmcrt_ps, grid, _sharedState);
-  
+
 //  _RMCRT->BC_bulletproofing( rmcrt_ps );
-  
+
   //__________________________________
-  //  Bulletproofing: 
+  //  Bulletproofing:
   // dx must get smaller as level-index increases
   // Arches is always computed on the finest level
   int maxLevels = grid->numLevels();
   _archesLevelIndex = maxLevels - 1;
-  
+
   if( maxLevels > 1) {
     Vector dx_prev = grid->getLevel(0)->dCell();
-    
+
     for (int L = 1; L < maxLevels; L++) {
       Vector dx = grid->getLevel(L)->dCell();
-      
+
       Vector ratio = dx/dx_prev;
       if( ratio.x() > 1 || ratio.y() > 1 || ratio.z() > 1){
         ostringstream warn;
@@ -212,17 +212,17 @@ RMCRT_Radiation::extraSetup( GridP& grid, BoundaryCondition* bc )
 //  See: CCA/Components/Models/Radiation/RMCRT/Ray.cc
 //       for the actual tasks that are scheduled.
 //---------------------------------------------------------------------------
-void 
-RMCRT_Radiation::sched_computeSource( const LevelP& level, 
-                                      SchedulerP& sched, 
+void
+RMCRT_Radiation::sched_computeSource( const LevelP& level,
+                                      SchedulerP& sched,
                                       int timeSubStep )
-{ 
+{
   GridP grid = level->getGrid();
 
   // only sched on RK step 0 and on arches level
-  if ( timeSubStep != 0  || level->getIndex() != _archesLevelIndex) {  
+  if ( timeSubStep != 0  || level->getIndex() != _archesLevelIndex) {
     return;
-  } 
+  }
 
   int maxLevels = grid->numLevels();
 
@@ -239,48 +239,48 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
   } else {
     modifies_divQ  = true;
   }
-  
-  
+
+
   //__________________________________
   //  carryForward cellType on NON arches level
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& level = grid->getLevel(l);
-    if( level->getIndex() != _archesLevelIndex ){  
+    if( level->getIndex() != _archesLevelIndex ){
       _RMCRT->sched_CarryForward_Var ( level,  sched, _labels->d_cellTypeLabel );
     }
   }
-  
-  
+
+
   //______________________________________________________________________
   //   D A T A   O N I O N   A P P R O A C H
   if( _whichAlgo == dataOnion ){
     const LevelP& fineLevel = grid->getLevel(_archesLevelIndex);
     Task::WhichDW temp_dw  = Task::OldDW;
     Task::WhichDW abskg_dw = Task::NewDW;
-    
+
     // modify Radiative properties on the finest level
     // convert abskg:dbl -> abskg:flt if needed
     _RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw, _radiation_calc_freq );
-    
+
      // compute sigmaT4 on the finest level
     _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
- 
+
     sched_setBoundaryConditions( fineLevel, sched, temp_dw, _radiation_calc_freq );
-        
-    // coarsen data to the coarser levels.  
+
+    // coarsen data to the coarser levels.
     // do it in reverse order
     Task::WhichDW notUsed = Task::OldDW;
     const bool backoutTemp = true;
-    
+
     for (int l = maxLevels - 2; l >= 0; l--) {
       const LevelP& level = grid->getLevel(l);
       const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
-      
+
       _RMCRT->sched_CoarsenAll( level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq );
       sched_setBoundaryConditions( level, sched, notUsed, _radiation_calc_freq, backoutTemp );
     }
-    
+
     //__________________________________
     //  compute the extents of the rmcrt region of interest
     //  on the finest level
@@ -290,11 +290,11 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW celltype_dw = Task::NewDW;
     bool modifies_divQ  = false;
     _RMCRT->sched_rayTrace_dataOnion(fineLevel, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq);
-    
+
     // convert boundaryFlux<Stencil7> -> 6 doubles
     sched_stencilToDBLs( fineLevel, sched );
   }
-  
+
   //______________________________________________________________________
   //   2 - L E V E L   A P P R O A C H
   //  RMCRT is performed on the coarse level
@@ -306,39 +306,39 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 
     // convert abskg:dbl -> abskg:flt if needed
     _RMCRT->sched_DoubleToFloat( fineLevel,sched, abskg_dw, _radiation_calc_freq );
-    
+
     // compute sigmaT4 on the finest level
     _RMCRT->sched_sigmaT4( fineLevel,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
-    
+
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);;
       const bool modifies_abskg   = false;
       const bool modifies_sigmaT4 = false;
       const bool backoutTemp      = true;
-      
+
       _RMCRT->sched_CoarsenAll (level, sched, modifies_abskg, modifies_sigmaT4, _radiation_calc_freq);
-      
+
       if( level->hasFinerLevel() ){
         Task::WhichDW sigmaT4_dw  = Task::NewDW;
         Task::WhichDW celltype_dw = Task::NewDW;
-        
+
         sched_setBoundaryConditions( level, sched, temp_dw, _radiation_calc_freq, backoutTemp);
-        
+
         _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
       }
     }
 
-    // push divQ  to the coarser levels 
+    // push divQ  to the coarser levels
     for (int l = 0; l < maxLevels; l++) {
       const LevelP& level = grid->getLevel(l);
       const PatchSet* patches = level->eachPatch();
       _RMCRT->sched_Refine_Q (sched,  patches, _sharedState->allArchesMaterials() , _radiation_calc_freq);
     }
-    
+
     // convert boundaryFlux<Stencil7> -> 6 doubles
     sched_stencilToDBLs( fineLevel, sched );
   }
-  
+
   //______________________________________________________________________
   //   1 - L E V E L   A P P R O A C H
   //  RMCRT is performed on the same level as CFD
@@ -347,18 +347,18 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
     Task::WhichDW temp_dw  = Task::OldDW;
     Task::WhichDW abskg_dw = Task::NewDW;
     includeExtraCells = true;
-    
+
     // convert abskg:dbl -> abskg:flt if needed
     _RMCRT->sched_DoubleToFloat( level,sched, abskg_dw, _radiation_calc_freq );
-          
+
     // compute sigmaT4 on the CFD level
     _RMCRT->sched_sigmaT4( level,  sched, temp_dw, _radiation_calc_freq, includeExtraCells );
-                                                                           
-    Task::WhichDW sigmaT4_dw  = Task::NewDW;                                                                       
-    Task::WhichDW celltype_dw = Task::NewDW;                                                                       
 
-    _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq ); 
-    
+    Task::WhichDW sigmaT4_dw  = Task::NewDW;
+    Task::WhichDW celltype_dw = Task::NewDW;
+
+    _RMCRT->sched_rayTrace(level, sched, abskg_dw, sigmaT4_dw, celltype_dw, modifies_divQ, _radiation_calc_freq );
+
     // convert boundaryFlux<Stencil7> -> 6 doubles
     sched_stencilToDBLs( level, sched );
   }
@@ -369,7 +369,7 @@ RMCRT_Radiation::sched_computeSource( const LevelP& level,
 // This will only be called on the Archeslevel
 //---------------------------------------------------------------------------
 void
-RMCRT_Radiation::sched_initialize( const LevelP& level, 
+RMCRT_Radiation::sched_initialize( const LevelP& level,
                                    SchedulerP& sched )
 {
   GridP grid = level->getGrid();
@@ -379,11 +379,11 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
   //  Additional bulletproofing, this belongs in problem setup
   if (_whichAlgo == dataOnion && maxLevels == 1){
     throw ProblemSetupException("ERROR:  RMCRT_radiation, there must be more than 1 level if you're using the Data Onion algorithm", __FILE__, __LINE__);
-  }  
-  
-  
+  }
+
+
   //__________________________________
-    
+
   for (int l = 0; l < maxLevels; l++) {
     const LevelP& myLevel = grid->getLevel(l);
 
@@ -403,7 +403,7 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
     }
     sched->addTask( tsk, myLevel->eachPatch(), _sharedState->allArchesMaterials() );
   }
-  
+
   //__________________________________
   //  initialize cellType on NON arches level
   for (int l = 0; l < maxLevels; l++) {
@@ -416,11 +416,11 @@ RMCRT_Radiation::sched_initialize( const LevelP& level,
 
 //______________________________________________________________________
 //
-void 
+void
 RMCRT_Radiation::initialize( const ProcessorGroup*,
-                             const PatchSubset* patches, 
-                             const MaterialSubset*, 
-                             DataWarehouse* , 
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse* ,
                              DataWarehouse* new_dw )
 {
   const Level* level = getLevel(patches);
@@ -432,11 +432,11 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
 
     if( level->getIndex() == _archesLevelIndex ){
       CCVariable<double> src;
-      new_dw->allocateAndPut( src, _src_label, _matl, patch ); 
-      src.initialize(0.0); 
+      new_dw->allocateAndPut( src, _src_label, _matl, patch );
+      src.initialize(0.0);
 
       CCVariable<double> radVolq;
-      new_dw->allocateAndPut( radVolq,VarLabel::find("radiationVolq"), _matl, patch ); 
+      new_dw->allocateAndPut( radVolq,VarLabel::find("radiationVolq"), _matl, patch );
       radVolq.initialize(0.0);  // needed for coal
     } else {
       CCVariable<double> abskg;
@@ -445,16 +445,73 @@ RMCRT_Radiation::initialize( const ProcessorGroup*,
     }
   }
 }
-
 //______________________________________________________________________
-// STUB  
+// Method: Schedule initialization
+// This will only be called on the Archeslevel
 //______________________________________________________________________
 void
-RMCRT_Radiation::computeSource( const ProcessorGroup* , 
-                            const PatchSubset* patches, 
-                            const MaterialSubset* matls, 
-                            DataWarehouse* old_dw, 
-                            DataWarehouse* new_dw, 
+RMCRT_Radiation::sched_RestartInitialize( const LevelP& level,
+                                           SchedulerP& sched )
+{
+  GridP grid = level->getGrid();
+
+  DataWarehouse* new_dw = sched->getLastDW();
+
+  const LevelP& archesLevel = grid->getLevel(_archesLevelIndex);
+
+  const Patch* firstPatch = archesLevel->getPatch( 0 );
+
+  //__________________________________
+  //  As the name implies this is a hack
+  //  Only schedule radFlux*_Label are in the checkpoint uda
+  if( new_dw->exists( _radFluxE_Label, _matl, firstPatch ) ) {
+
+    Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this,
+                           &RMCRT_Radiation::restartInitializeHack);
+    t1->computes( _tempLabel );
+    t1->computes( _radFluxE_Label );
+    t1->computes( _radFluxW_Label );
+    t1->computes( _radFluxN_Label );   // Before you can require something from the new_dw
+    t1->computes( _radFluxS_Label );   // there must be a compute() for that variable.
+    t1->computes( _radFluxT_Label );
+    t1->computes( _radFluxB_Label );
+    sched->addTask(t1, archesLevel->eachPatch(), _sharedState->allArchesMaterials());
+
+    //__________________________________
+    //  convert flux from 6 doubles -> CCVarible
+    sched_DBLsToStencil( archesLevel, sched );
+  }
+
+  //__________________________________
+  // compute sigmaT4 if it doesn't already exist
+  // on the arches level
+  if( !new_dw->exists( _RMCRT->d_sigmaT4Label, _matl, firstPatch) ){
+    bool includeExtraCells = true;
+    _RMCRT->sched_sigmaT4( archesLevel,  sched, Task::NewDW, 1, includeExtraCells );
+  }
+
+}
+//______________________________________________________________________
+// HACK
+//______________________________________________________________________
+void
+RMCRT_Radiation::restartInitializeHack( const ProcessorGroup* , const PatchSubset*,
+                                        const MaterialSubset*, DataWarehouse*, DataWarehouse*)
+{
+  // This task is used to "fake" out the taskgraph createDetailedDependency() logic
+  // Before you can require something from the new_dw there must be a compute() for that
+  // variable.
+}
+
+//______________________________________________________________________
+// STUB
+//______________________________________________________________________
+void
+RMCRT_Radiation::computeSource( const ProcessorGroup* ,
+                            const PatchSubset* patches,
+                            const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw,
                             int timeSubStep ){
   // see sched_computeSource & CCA/Components/Models/Radiation/RMCRT/Ray.cc
   // for the actual tasks
@@ -592,7 +649,7 @@ void RMCRT_Radiation::setBoundaryConditions( const ProcessorGroup* pc,
 //______________________________________________________________________
 // Explicit template instantiations:
 
-template 
+template
 void RMCRT_Radiation::setBoundaryConditions< double >( const ProcessorGroup*,
                                                        const PatchSubset* ,
                                                        const MaterialSubset*,
@@ -602,7 +659,7 @@ void RMCRT_Radiation::setBoundaryConditions< double >( const ProcessorGroup*,
                                                        const int ,
                                                        const bool );
 
-template 
+template
 void RMCRT_Radiation::setBoundaryConditions< float >( const ProcessorGroup*,
                                                       const PatchSubset* ,
                                                       const MaterialSubset*,
@@ -611,12 +668,12 @@ void RMCRT_Radiation::setBoundaryConditions< float >( const ProcessorGroup*,
                                                       Task::WhichDW ,
                                                       const int ,
                                                       const bool );
-                                                      
+
 //______________________________________________________________________
-//
+//    Conversion doubls -> stencil tasks
 //______________________________________________________________________
 void
-RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level, 
+RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
                                       SchedulerP& sched )
 {
 
@@ -625,7 +682,9 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
   }
 
   if(_RMCRT->d_solveBoundaryFlux) {
-    Task* tsk = scinew Task( "RMCRT_Radiation::stencilToDBLs", this, &RMCRT_Radiation::stencilToDBLs );
+    Task* tsk = scinew Task( "RMCRT_Radiation::stencilToDBLs", this, 
+                             &RMCRT_Radiation::stencilToDBLs );
+                             
     printSchedule( level, dbg, "RMCRT_Radiation::sched_stencilToDBLs" );
 
     //  only schedule task on arches level
@@ -643,11 +702,11 @@ RMCRT_Radiation::sched_stencilToDBLs( const LevelP& level,
 
 //______________________________________________________________________
 //
-void 
+void
 RMCRT_Radiation::stencilToDBLs( const ProcessorGroup*,
-                             const PatchSubset* patches, 
-                             const MaterialSubset*, 
-                             DataWarehouse* , 
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse* ,
                              DataWarehouse* new_dw )
 {
   for (int p=0; p < patches->size(); p++){
@@ -656,7 +715,7 @@ RMCRT_Radiation::stencilToDBLs( const ProcessorGroup*,
     printTask(patches,patch,dbg,"Doing RMCRT_Radiation::stencilToDBLs");
 
     constCCVariable<Stencil7>  boundaryFlux;
-    new_dw->get( boundaryFlux,     VarLabel::find("RMCRTboundFlux"), _matl, patch, _gn, 0 ); 
+    new_dw->get( boundaryFlux,     VarLabel::find("RMCRTboundFlux"), _matl, patch, _gn, 0 );
 
     CCVariable<double> East, West;
     CCVariable<double> North, South;
@@ -677,6 +736,74 @@ RMCRT_Radiation::stencilToDBLs( const ProcessorGroup*,
       South[c] = me.s;
       Top[c]   = me.t;
       Bot[c]   = me.b;
+    }
+  }
+}
+//______________________________________________________________________
+//
+void
+RMCRT_Radiation::sched_DBLsToStencil( const LevelP& level,
+                                      SchedulerP& sched )
+{
+
+  if( level->getID() != _archesLevelIndex){
+    throw InternalError("RMCRT_Radiation::sched_stencilToDBLs.  You cannot schedule this task on a non-arches level", __FILE__, __LINE__);
+  }
+
+  if(_RMCRT->d_solveBoundaryFlux) {
+    Task* tsk = scinew Task( "RMCRT_Radiation::DBLsToStencil", this, &RMCRT_Radiation::DBLsToStencil );
+    printSchedule( level, dbg, "RMCRT_Radiation::sched_DBLsToStencil" );
+
+    //  only schedule task on arches level
+    tsk->requires(Task::NewDW, _radFluxE_Label, _gn, 0);
+    tsk->requires(Task::NewDW, _radFluxW_Label, _gn, 0);
+    tsk->requires(Task::NewDW, _radFluxN_Label, _gn, 0);
+    tsk->requires(Task::NewDW, _radFluxS_Label, _gn, 0);
+    tsk->requires(Task::NewDW, _radFluxT_Label, _gn, 0);
+    tsk->requires(Task::NewDW, _radFluxB_Label, _gn, 0);
+
+    tsk->computes( _RMCRT->d_boundFluxLabel );
+    sched->addTask( tsk, level->eachPatch(), _sharedState->allArchesMaterials() );
+  }
+}
+
+//______________________________________________________________________
+//
+void
+RMCRT_Radiation::DBLsToStencil( const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* ,
+                                DataWarehouse* new_dw )
+{
+  for (int p=0; p < patches->size(); p++){
+
+    const Patch* patch = patches->get(p);
+    printTask(patches,patch,dbg,"Doing RMCRT_Radiation::DBLsToStencil");
+
+    CCVariable<Stencil7>  boundaryFlux;
+    new_dw->allocateAndPut( boundaryFlux, _RMCRT->d_boundFluxLabel, _matl, patch );
+
+    constCCVariable<double> East, West;
+    constCCVariable<double> North, South;
+    constCCVariable<double> Top, Bot;
+
+    new_dw->get( East,  _radFluxE_Label, _matl, patch, _gn, 0 );
+    new_dw->get( West,  _radFluxW_Label, _matl, patch, _gn, 0 );
+    new_dw->get( North, _radFluxN_Label, _matl, patch, _gn, 0 );
+    new_dw->get( South, _radFluxS_Label, _matl, patch, _gn, 0 );
+    new_dw->get( Top,   _radFluxT_Label, _matl, patch, _gn, 0 );
+    new_dw->get( Bot,   _radFluxB_Label, _matl, patch, _gn, 0 );
+
+    for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
+      IntVector c = *iter;
+      Stencil7& me = boundaryFlux[c];
+      me.e = East[c];
+      me.w = West[c];
+      me.n = North[c];         // THIS MAPPING MUST BE VERIFIED
+      me.s = South[c];
+      me.t = Top[c];
+      me.b = Bot[c];
     }
   }
 }

@@ -540,6 +540,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
         if (doPartVel) {
           if (curr_level == 0 )
             d_cqmomConvect->sched_initializeVariables( level, sched );
+          d_cqmomConvect->sched_initializeWalls( level, sched, curr_level );
           d_cqmomConvect->sched_solveCQMOMConvection( level, sched, curr_level);
         }
         

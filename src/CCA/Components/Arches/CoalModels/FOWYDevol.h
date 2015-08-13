@@ -68,7 +68,15 @@ public:
   /** @brief Interface for the inputfile and set constants */ 
   void problemSetup(const ProblemSpecP& db, int qn);
 
-  // No initVars() method because no special variables needed
+  /** @brief Schedule the initialization of some special/local variables */
+  void sched_initVars( const LevelP& level, SchedulerP& sched );
+
+  /** @brief  Actually initialize some special/local variables */
+  void initVars( const ProcessorGroup * pc, 
+                 const PatchSubset    * patches, 
+                 const MaterialSubset * matls, 
+                 DataWarehouse        * old_dw, 
+                 DataWarehouse        * new_dw );
 
   ////////////////////////////////////////////////
   // Model computation method

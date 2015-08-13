@@ -143,6 +143,11 @@ AMRSimulationController::run()
   d_scheduler->advanceDataWarehouse( currentGrid, true );
 
   d_scheduler->setInitTimestep( true );
+  
+  bool first = true;
+  if (d_restarting) {
+    d_scheduler->setRestartInitTimestep(first);
+  }
 
   double time;
 
@@ -192,7 +197,6 @@ AMRSimulationController::run()
   ////////////////////////////////////////////////////////////////////////////
   // The main time loop; here the specified problem is actually getting solved
    
-  bool   first = true;
   int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
   double delt = 0;
    
@@ -202,10 +206,7 @@ AMRSimulationController::run()
 
   d_scheduler->setInitTimestep(false);
 
-  // scheduler needs to know if it's doing the first timestep in a restart
-  if (d_restarting) {
-    d_scheduler->setRestartInitTimestep(first);
-  }
+
 
   while( ( time < d_timeinfo->maxTime ) &&
 	 ( iterations < d_timeinfo->maxTimestep ) && 

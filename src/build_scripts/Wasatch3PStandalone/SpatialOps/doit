@@ -35,7 +35,12 @@ if test $? == 0; then
   echo "After compilation time: `date`"
   echo ""
   echo "SpatialOps: Updating installation permissions for ${INSTALL_HERE}..."
-  chmod -R go+rX ${INSTALL_HERE}
+
+  # Update permissions on the build_DATE directory only:
+  chmod    go+rX ${INSTALL_HERE}/../..
+
+  # Update permissions on the actual library directory and everything below it.
+  chmod -R go+rX ${INSTALL_HERE}/..
 fi
 
 echo "End time: `date`"

@@ -185,6 +185,57 @@ FOWYDevol::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 }
+
+//---------------------------------------------------------------------------
+// Method: Schedule the initialization of special variables unique to model
+//---------------------------------------------------------------------------
+void 
+FOWYDevol::sched_initVars( const LevelP& level, SchedulerP& sched )
+{
+  string taskname = "FOWYDevol::initVars"; 
+  Task* tsk = scinew Task(taskname, this, &FOWYDevol::initVars);
+
+  tsk->computes(d_modelLabel);
+  tsk->computes(d_gasLabel);
+  tsk->computes(d_charLabel);
+  tsk->computes(_v_inf_label); 
+
+  sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
+}
+
+//-------------------------------------------------------------------------
+// Method: Initialize special variables unique to the model
+//-------------------------------------------------------------------------
+void
+FOWYDevol::initVars( const ProcessorGroup * pc, 
+                              const PatchSubset    * patches, 
+                              const MaterialSubset * matls, 
+                              DataWarehouse        * old_dw, 
+                              DataWarehouse        * new_dw )
+{
+  //patch loop
+  for (int p=0; p < patches->size(); p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<double> devol_rate;
+    CCVariable<double> gas_devol_rate; 
+    CCVariable<double> char_rate;
+    CCVariable<double> v_inf; 
+    
+    new_dw->allocateAndPut( devol_rate, d_modelLabel, matlIndex, patch );
+    devol_rate.initialize(0.0);
+    new_dw->allocateAndPut( gas_devol_rate, d_gasLabel, matlIndex, patch );
+    gas_devol_rate.initialize(0.0);
+    new_dw->allocateAndPut( char_rate, d_charLabel, matlIndex, patch );
+    char_rate.initialize(0.0);
+    new_dw->allocateAndPut( v_inf, _v_inf_label, matlIndex, patch );
+    v_inf.initialize(0.0);
+
+  }
+}
+
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the Model 
 //---------------------------------------------------------------------------
