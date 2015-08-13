@@ -411,7 +411,7 @@ void AMRMPM::scheduleComputeStableTimestep(const LevelP&,
                                               SchedulerP&)
 {
   // Nothing to do here - delt is computed as a by-product of the
-  // consitutive model
+  // constitutive model
 }
 //______________________________________________________________________
 //

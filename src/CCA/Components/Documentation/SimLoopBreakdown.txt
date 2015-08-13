@@ -1,47 +1,61 @@
 ******
 sus.cc
 ------
-create_sci_environment() (420)
-read in .ups file [ProblemSpecReader().readInputFile(...)] (570)
-assign world processorgroup (594)
-create simulation controller (596)
-create simulation component (619)
-recast component to interface (620) <-- This is the exposed set of methods for a component
+create_sci_environment() (472)
+read in .ups file [ProblemSpecReader().readInputFile(...)] (607)
+assign world processorgroup (644)
+create simulation controller (646)
+create regridder (654)
+create solver interface (662)
+create Uintah parallel component (673)
+recast parallel component to simulation interface (674) <-- This is the exposed set of methods for a component
 
-attach sim interface to the simulation controller (627)
-attach solver to the component (628)
-attach regridder to the component (629)
+attach sim interface to the simulation controller (681)
+attach solver to the component (682)
+attach regridder to the component (683)
 
-create loadbalancer (640)
-attach sim interface to the loadbalancer (641)
+create loadbalancer (694)
+attach sim interface to the loadbalancer (695)
 
-// Pointer incest fuckery here...
-create dataarchiver (649)
-register archiver with controller(651) and component (653)
-register loadbalancer with archiver (652)
-register sim interface with archiver (654)
+create dataarchiver (703)
+register archiver with controller(705) and component (707)
+register loadbalancer with archiver (706)
+register sim interface with archiver (708)
 
-create scheduler(659)
-register scheduler with controller (660), loadbalancer (661), and component (662)
+create scheduler(712)
+register scheduler with controller (714), loadbalancer (715), and component (716)
 
-call controller run method (687)
+call controller run method (741)
+
+delete everything and finalize MPI.... Thread::exitAll()
+
+
 
 ******************************
 AMRSimulationController::run()
 ------------------------------
-preGridSetup		(142)
-	create shared state 									(SimulationController.cc:270)
-	map output port to d_output 							(SimulationController:274)
-	create scheduler and map to d_scheduler 				(SimulationController:276-278)
+preGridSetup    (SimulationController.cc:286-310)
+	create shared state
+	map output port to d_output
+	create scheduler and map to d_scheduler
+	run problemSetup on d_scheduler and d_output
 
-gridSetup			(145)
-	grab simulattion controller instance 					(SimulationController.cc:359)
-    do simulation controllers preGridProblemSetup routine 	(SimulationController.cc:360)
-    do the grid's problem setup 							(SimulationController.cc:363)
+
+
+gridSetup        (SimulationController.cc:316:414)
+    deal with restarting if d_restarting==true
+    create DataArchive
+	grab simulation controller instance
+    do simulation interface (the component) preGridProblemSetup routine
+    (NOTE: MD and Wasatch the only components to Overrides Uintah::SimulationInterface::preGridProblemSetup via Uintah::SimulationInterface)
+    do the grid's problem setup
+   
     
 initialize scheduler(1,1)
 advanceDataWarehouse(currentGrid, true)
 setInitTimestep(true)
+
+
 
 postGridSetup		(155)
 	grab load balancer and do lbproblemSetup 				(SimulationController.cc:401)	
@@ -49,6 +63,8 @@ postGridSetup		(155)
  !!!finalize materials 										(SimulationController.cc:468)
 	initializeOutput 										(SimulationController.cc:472)
 	do restartSetup 										(SimulationController.cc:476)
+
+
 
 calcStartTime		(157)
 doInitialTimestep	(175)

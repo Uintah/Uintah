@@ -157,7 +157,7 @@ WARNING
     bool      parseLevelFromFile( FILE * fp, std::vector<int> & procMapForLevel );                // returns true if "</Level>" found.
     bool      parsePatchFromFile( FILE * fp, LevelP level, std::vector<int> & procMapForLevel );  // returns true if "</Patch>" found.
 
-    // The current (final) values of a,b,c, and norm for the partitian function.
+    // The current (final) values of a,b,c, and norm for the partition function.
     // Used to hold data between recursive calls.
     int    af_;
     int    bf_;
