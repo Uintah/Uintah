@@ -36,7 +36,6 @@ BrownSootFormation_rhoYs::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("mix_mol_weight_label", _mix_mol_weight_name,   "mixture_molecular_weight");
   db->getWithDefault("tar_label",            _tar_name,              "Tar");
-  db->getWithDefault("mixture_fraction_label", _mixture_fraction_name,     "mixture_fraction");
   db->getWithDefault("Ysoot_label",          _Ysoot_name,            "Ysoot");
   db->getWithDefault("Ns_label",             _Ns_name,               "Ns");
   db->getWithDefault("o2_label",             _o2_name,               "O2");
@@ -72,7 +71,6 @@ BrownSootFormation_rhoYs::sched_computeSource( const LevelP& level, SchedulerP& 
   // resolve some labels:
   const VarLabel* mix_mol_weight_label  = VarLabel::find( _mix_mol_weight_name);
   const VarLabel* tar_label             = VarLabel::find( _tar_name);
-  const VarLabel* mixture_fraction_label = VarLabel::find( _mixture_fraction_name);
   const VarLabel* Ysoot_label           = VarLabel::find( _Ysoot_name);
   const VarLabel* Ns_label              = VarLabel::find( _Ns_name);
   const VarLabel* o2_label              = VarLabel::find( _o2_name);
@@ -81,7 +79,6 @@ BrownSootFormation_rhoYs::sched_computeSource( const LevelP& level, SchedulerP& 
   const VarLabel* rho_label             = VarLabel::find( _rho_name);
   tsk->requires( which_dw, mix_mol_weight_label,               Ghost::None, 0 );
   tsk->requires( which_dw, tar_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, mixture_fraction_label,             Ghost::None, 0 );
   tsk->requires( which_dw, Ysoot_label,                        Ghost::None, 0 );
   tsk->requires( which_dw, Ns_label,                           Ghost::None, 0 );
   tsk->requires( which_dw, o2_label,                           Ghost::None, 0 );
@@ -116,23 +113,22 @@ BrownSootFormation_rhoYs::computeSource( const ProcessorGroup* pc,
 
     constCCVariable<double> mix_mol_weight;
     constCCVariable<double> Tar;
-    constCCVariable<double> mixture_fraction;
     constCCVariable<double> Ysoot;
     constCCVariable<double> Ns;
     constCCVariable<double> O2;
     constCCVariable<double> CO2; 
     constCCVariable<double> rho;
     constCCVariable<double> temperature;
+    constCCVariable<double> XCO2;
     const VarLabel* mix_mol_weight_label  = VarLabel::find( _mix_mol_weight_name);
     const VarLabel* tar_label             = VarLabel::find( _tar_name);
-    const VarLabel* mixture_fraction_label = VarLabel::find( _mixture_fraction_name);
     const VarLabel* Ysoot_label           = VarLabel::find( _Ysoot_name);
     const VarLabel* Ns_label              = VarLabel::find( _Ns_name);
     const VarLabel* o2_label              = VarLabel::find( _o2_name);
     const VarLabel* co2_label		  = VarLabel::find( _co2_name);
     const VarLabel* temperature_label     = VarLabel::find( _temperature_name);
     const VarLabel* rho_label             = VarLabel::find( _rho_name);    
-                                                                                       
+                                                                 
     DataWarehouse* which_dw;
     if ( timeSubStep == 0 ){
         which_dw = old_dw;
@@ -145,7 +141,6 @@ BrownSootFormation_rhoYs::computeSource( const ProcessorGroup* pc,
                                                                                        
     which_dw->get( mix_mol_weight , mix_mol_weight_label , matlIndex , patch , gn, 0 );
     which_dw->get( Tar         , tar_label            , matlIndex , patch , gn, 0 );
-    which_dw->get( mixture_fraction , mixture_fraction_label , matlIndex , patch , gn, 0 );
     which_dw->get( Ysoot          , Ysoot_label          , matlIndex , patch , gn, 0 );
     which_dw->get( Ns             , Ns_label             , matlIndex , patch , gn, 0 );
     which_dw->get( O2             , o2_label             , matlIndex , patch , gn, 0 );
@@ -156,31 +151,24 @@ BrownSootFormation_rhoYs::computeSource( const ProcessorGroup* pc,
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
         
       IntVector c = *iter;
-
-      double XO2 = 0.0;
-      double XCO2 = 0.0;
-      if (mix_mol_weight[c] > 1e-10){
-        double XO2 = O2[c] * 1.0 / (mix_mol_weight[c] * 32.0);
-	double XCO2 = CO2[c] * 1.0 / (mix_mol_weight[c] * 44.0);
-      }
+   
       double rhoYsoot = rho[c] * Ysoot[c];
       double nd = Ns[c] * rho[c];
       double rhoTar = Tar[c] * rho[c];
-
-      double throw_away;
+      
       double sys_pressure = 101325; //Pa
       coalSootRR(sys_pressure,
                  temperature[c],
-		 XCO2,
-                 XO2,
+		 CO2[c],
+		 O2[c],
+		 mix_mol_weight[c],
                  rhoTar,
                  rhoYsoot,
                  nd,
-                 throw_away,
                  rate[c]
                 );
        if (c==IntVector(75,75,75)){
-         cout << "Ys: " << temperature[c] << " " << rho[c] <<" " << XO2 << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
+         cout << "Ys: " << temperature[c] << " " << rho[c] <<" " << " " << rhoTar << " " << rhoYsoot << " " << nd << " " << rate[c] << endl; 
        }
 
     }
@@ -213,12 +201,12 @@ BrownSootFormation_rhoYs::computeSource( const ProcessorGroup* pc,
                                                                                 
 void BrownSootFormation_rhoYs::coalSootRR(const double P, 
                                           const double T,
-					  const double XCO2,
-                                          const double XO2,
+					  const double CO2,
+                                          const double O2,
+					  const double mix_weight,
                                           const double rhoYt,
                                           const double rhoYs,
-                                          const double nd,
-                                                double &Ns_source,
+                                          const double nd, 
                                                 double &Ysoot_source
                                          ) {
     
@@ -232,21 +220,18 @@ double Ags = 4.1536E9;	      ///< preexponential: soot gasification (1/s/atm^0.5
 double Egs = 148E6;           ///< Ea: soot gasification, J/kmol
     
 double Rgas = 8314.46;        ///< Gas constant: J/kmol*K
-double kb   = 1.3806488E-23;  ///< Boltzmann constant: kg*m2/s2*K
-double Na   = 6.02201413E26;  ///< Avogadro's number: #/kmol
-                                                                                           
-double MWo2 = 32.0;           ///< molecular weight o2  kg/kmol
-double MWt  = 350.0;          ///< molecular weight tar kg/kmol
-double MWc  = 12.011;         ///< molecular weight c   kg/kmol
-                                                                                           
 double rhos = 1950.;          ///< soot density kg/m3
-                                                                                           
-double Ca   = 3.0;            ///< collision frequency constant
-double Cmin = 9.0E4;          ///< # carbons per incipient particle
-                                                                                           
+                                                                                                                                                                     
 //-------------------------------------
-                                                                                           
-                                                                                           
+double XO2 = 0.0;
+double XCO2 = 0.0;
+if (mix_weight > 1e-10){
+	XO2 = O2 * 1.0 / (mix_weight * 32.0);
+        XCO2 = CO2 * 1.0 / (mix_weight * 44.0);
+}
+
+//-------------------------------------
+
 double SA   = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);  ///< m2/m3: pi*pow() = SA/part; pi*pow()*nd = SA/part*part/m3 = SA/Vol
                                                                                            
 //-------------------------------------
@@ -254,23 +239,15 @@ double SA   = M_PI*pow( abs(6./M_PI*rhoYs/rhos), 2./3. )*pow(abs(nd),1./3.);  //
 double rgs = rhos*pow(abs(XCO2),0.54)*Ags*exp(-Egs/Rgas/abs(T));	      ///< soot gasification rate kg/m3*s
 double ros = SA*P/101325.0*abs(XO2)/sqrt(abs(T))*Aos*exp(-Eos/Rgas/T);  ///< soot oxidation rate (kg/m3*s)
 double rfs = abs(rhoYt)*Afs*exp(-Efs/Rgas/T);                 ///< soot formation rate (kg/m3*s)
-double rfn = Na/MWc/Cmin*rfs;                                 ///< soot nucleation rate (#/m3*s)
-double ran = 2.0*Ca*pow(6.0*MWc/M_PI/rhos, 1.0/6.0) *         ///< Aggregation rate (#/m3*s)
-    pow(abs(6.0*kb*T/rhos),1.0/2.0) *
-    pow(abs(rhoYs/MWc), 1.0/6.0) *
-    pow(abs(nd),11.0/6.0);
                                                                                            
 //-------------------------------------
                                                                                            
-Ns_source  = rfn - ran;                                      ///< #/m3*s
 Ysoot_source = rfs - ros - rgs;                                      ///< kg/m3*s
                                                                                            
 return;
     
 }
-                                                                                       
-                                                                                       
-                                                                                       
+
 //---------------------------------------------------------------------------
 // Method: Schedule initialization
 //---------------------------------------------------------------------------
