@@ -49,6 +49,21 @@
   create a vector (isComputedVarLabels) that contains boundryFlux, VRFlux, radiationVolq
   and use it for scheduling.  Add logic to what is actually in that vector.
 
+Critical:
+  - How do you coarsen cell type and retain information?
+  - Memory issues.
+  - Fix getRegion() for L-shaped domains.
+
+
+Optimizations:
+  - Spatial scheduling, used by radiometer.  Only need to execute & communicate
+    variables on a subset of patches.
+  - Temporal scheduling:  To reduce task graph recompilations create two task graphs 
+    that can be swapped while runninng.
+  - Create a LevelDB.  Push an pull the communicated variables
+  - DO: Reconstruct the fine level using interpolation and coarse level values
+  - Investigate why floats are slow.
+  -  
 ______________________________________________________________________*/
 
 
@@ -67,11 +82,8 @@ static SCIRun::DebugStream dbg_BC("RAY_BC", false);
 //---------------------------------------------------------------------------
 Ray::Ray( const TypeDescription::Type FLT_DBL ) : RMCRTCommon( FLT_DBL)
 {
-  // The outputput of RMCRT
-  d_boundFluxLabel       = VarLabel::create( "RMCRTboundFlux",   CCVariable<Stencil7>::getTypeDescription() );
-  d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
-  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
-  d_radiationVolqLabel   = VarLabel::create( "radiationVolq",    CCVariable<double>::getTypeDescription() );
+//  d_boundFluxFiltLabel   = VarLabel::create( "boundFluxFilt",    CCVariable<Stencil7>::getTypeDescription() );
+//  d_divQFiltLabel        = VarLabel::create( "divQFilt",         CCVariable<double>::getTypeDescription() );
 
   // internal variables for RMCRT
   d_flaggedCellsLabel    = VarLabel::create( "flaggedCells",     CCVariable<int>::getTypeDescription() );
@@ -143,9 +155,9 @@ Ray::~Ray()
   VarLabel::destroy( d_ROI_LoCellLabel );
   VarLabel::destroy( d_ROI_HiCellLabel );
   VarLabel::destroy( d_boundFluxLabel );
-  VarLabel::destroy( d_divQFiltLabel );
-  VarLabel::destroy( d_boundFluxFiltLabel );
-  VarLabel::destroy( d_radiationVolqLabel );
+//  VarLabel::destroy( d_divQFiltLabel );
+//  VarLabel::destroy( d_boundFluxFiltLabel );
+
 
   if( d_radiometer) {
     delete d_radiometer;
@@ -2106,6 +2118,7 @@ void Ray::computeCellType( const ProcessorGroup*,
   }  // threshold while loop.
 }
 
+#if 0
 //---------------------------------------------------------------------------
 //
 //---------------------------------------------------------------------------
@@ -2201,7 +2214,7 @@ Ray::filter( const ProcessorGroup*,
     }
   }
 }
-
+#endif
 
 
 //______________________________________________________________________

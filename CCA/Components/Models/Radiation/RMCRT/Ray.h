@@ -194,16 +194,15 @@ namespace Uintah{
       std::map <int,IntVector> d_dirSignSwap;
       std::map <int,IntVector> d_locationIndexOrder;
       std::map <int,IntVector> d_locationShift;
-
-      const VarLabel* d_divQFiltLabel;
-      const VarLabel* d_boundFluxLabel;
-      const VarLabel* d_boundFluxFiltLabel;
-      const VarLabel* d_radiationVolqLabel;
+      
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
       const VarLabel* d_ROI_LoCellLabel;
       const VarLabel* d_ROI_HiCellLabel;
+
+      // const VarLabel* d_divQFiltLabel;
+      // const VarLabel* d_boundFluxFiltLabel;
 
       //__________________________________
       template<class T>

@@ -207,6 +207,8 @@ namespace Uintah{
       static const VarLabel* d_sigmaT4Label;
       static const VarLabel* d_abskgLabel;
       static const VarLabel* d_divQLabel;
+      static const VarLabel* d_boundFluxLabel;
+      static const VarLabel* d_radiationVolqLabel;
       
       // VarLabels passed to RMCRT by the component
       static const VarLabel* d_compTempLabel;       //  temperature
