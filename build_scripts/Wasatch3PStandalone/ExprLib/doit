@@ -31,6 +31,6 @@ if test $? == 0; then
 
   echo ""
   echo "ExprLib: Updating installation permissions for ${INSTALL_HERE}..."
-  chmod -R go+rX ${INSTALL_HERE}/../../${THELIB}
+  chmod -R go+rX ${INSTALL_HERE}/..
 fi
 

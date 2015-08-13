@@ -30,5 +30,5 @@ if test $? == 0; then
   echo ""
   echo "Updating permissions on ${INSTALL_HERE}..."
   echo ""
-  chmod -R go+rX ${INSTALL_HERE}/../../${THELIB}
+  chmod -R go+rX ${INSTALL_HERE}/..
 fi
