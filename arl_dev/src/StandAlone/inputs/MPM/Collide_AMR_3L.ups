@@ -66,6 +66,7 @@
      <withColor>             true      </withColor>
      <minimum_mass_for_acc>  1.0e-15   </minimum_mass_for_acc>
      <refine_particles>      true      </refine_particles>
+     <UseGradientEnhancedVelocityProjection>true</UseGradientEnhancedVelocityProjection>
    </MPM>
 
    <PhysicalConstants>

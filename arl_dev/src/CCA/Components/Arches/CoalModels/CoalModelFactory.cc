@@ -219,3 +219,23 @@ CoalModelFactory::sched_coalParticleCalculation( const LevelP& level,
 
 }
 
+void 
+CoalModelFactory::sched_init_all_models(const LevelP&  level, SchedulerP& sched ){ 
+
+  //birth models 
+  for ( ModelMap::iterator iModel = birth_models_.begin(); iModel != birth_models_.end(); iModel++){
+    iModel->second->sched_initVars(level, sched); 
+  }
+  //Devol models
+  for ( DevolModelMap::iterator iModel = devolmodels_.begin(); iModel != devolmodels_.end(); iModel++){
+    iModel->second->sched_initVars(level, sched); 
+  }
+  //Char models
+  for ( CharOxiModelMap::iterator iModel = charoximodels_.begin(); iModel != charoximodels_.end(); iModel++){
+    iModel->second->sched_initVars(level, sched); 
+  }
+  //everything else
+  for ( ModelMap::iterator iModel = models_.begin(); iModel != models_.end(); iModel++){
+    iModel->second->sched_initVars(level, sched); 
+  }
+} 

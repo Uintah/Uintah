@@ -704,10 +704,9 @@ if test "$BUILD_ARCHES"  != "yes"              -a   \
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
+BUILD_WASATCH_FOR_ARCHES=no
 if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
-  BUILD_WASATCH=yes
-  msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
-  add_important_warning "$msg"
+  BUILD_WASATCH_FOR_ARCHES=yes
 fi
 
 if test "$enable_sci_malloc" = "yes" -a "$with_malloc_trace" ; then
@@ -1209,6 +1208,7 @@ AC_SUBST(BUILD_MODELS_RADIATION)
 AC_SUBST(BUILD_MPM)
 AC_SUBST(BUILD_MD)
 AC_SUBST(BUILD_WASATCH)
+AC_SUBST(BUILD_WASATCH_FOR_ARCHES)
 
 AC_SUBST(DEF_ARCHES)
 AC_SUBST(DEF_ICE)
@@ -3884,19 +3884,12 @@ int main(int argc, char **argv) {
 }
 EOF
 
-##-----------------------------------------------------------------------------
-## Static linking of the cudart_static lib is not working on Titan due
-## to the current CUDA Toolkit version, 5.5. Once Titan is upgraded to
-## CUDA 6.5, we can then use cudart_static in static builds
-##-----------------------------------------------------------------------------
-# use different set of libs if doing a static build
-#if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-#	_cudart_lib="cudart_static dl pthread rt"
-#else
-#	_cudart_lib="cudart"
-#fi
-
-  _cudart_lib="cudart"
+# for a static build, use the static CUDA runtime lib
+if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+	_cudart_lib="cudart_static dl pthread rt"
+else
+	_cudart_lib="cudart"
+fi
 
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,
                              CUDA libraries and headers,

@@ -171,6 +171,7 @@ namespace Uintah{
       bool d_onOff_SetBCs;                  // switch for setting boundary conditions
       bool d_isDbgOn;
       bool d_applyFilter;                   // Allow for filtering of boundFlux and divQ results
+      std::string  d_rayDirSampleAlgo;       
 
       enum Algorithm{ dataOnion,            
                       coarseLevel, 
@@ -193,16 +194,15 @@ namespace Uintah{
       std::map <int,IntVector> d_dirSignSwap;
       std::map <int,IntVector> d_locationIndexOrder;
       std::map <int,IntVector> d_locationShift;
-
-      const VarLabel* d_divQFiltLabel;
-      const VarLabel* d_boundFluxLabel;
-      const VarLabel* d_boundFluxFiltLabel;
-      const VarLabel* d_radiationVolqLabel;
+      
       const VarLabel* d_mag_grad_abskgLabel;
       const VarLabel* d_mag_grad_sigmaT4Label;
       const VarLabel* d_flaggedCellsLabel;
       const VarLabel* d_ROI_LoCellLabel;
       const VarLabel* d_ROI_HiCellLabel;
+
+      // const VarLabel* d_divQFiltLabel;
+      // const VarLabel* d_boundFluxFiltLabel;
 
       //__________________________________
       template<class T>
@@ -328,6 +328,26 @@ namespace Uintah{
                                   const int iRay,
                                   Vector& directionVector,
                                   double& cosTheta );
+
+      //__________________________________
+      /** @brief Sample Rays for directional flux using LHC sampling */
+      void rayDirectionHyperCube_cellFace( MTRand& mTwister,
+                                           const IntVector& origin,
+                                           const IntVector& indexOrder,
+                                           const IntVector& signOrder,
+                                           const int iRay,
+                                           Vector& directionVector,
+                                           double& cosTheta, 
+                                           const int ibin,
+                                           const int jbin);
+      //__________________________________
+      /** @brief Sample Rays for flux divergence using LHC sampling */
+      Vector findRayDirectionHyperCube( MTRand& mTwister,
+                                        const bool isSeedRandom,
+                                        const IntVector& = IntVector(-9,-9,-9),
+                                        const int iRay = -9,
+                                        const int bin_i = 0,
+                                        const int bin_j = 0);
 
       /** @brief Determine if a flow cell is adjacent to a wall, and therefore has a boundary */
       bool has_a_boundary(const IntVector &c,

@@ -67,7 +67,6 @@ namespace Uintah {
     double      tolerance;          // Residual tolerance for solver
     int         maxiterations;      // Maximum # iterations allowed
     int         logging;            // Log Hypre solver (using Hypre options)
-    bool        symmetric;          // Is LHS matrix symmetric
     bool        restart;            // Allow solver to restart if not converged
     int         setupFrequency;     // Frequency for calling hypre setup calls
     int         relax_type;         // relaxation type

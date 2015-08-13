@@ -346,6 +346,7 @@ void AMRMPM::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   t->computes(lb->pDeformationMeasureLabel);
   t->computes(lb->pStressLabel);
   t->computes(lb->pVelGradLabel);
+  t->computes(lb->pTemperatureGradientLabel);
   t->computes(lb->pSizeLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pLastLevelLabel);
@@ -683,6 +684,9 @@ void AMRMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pMassLabel,               gan,NGP);
   t->requires(Task::OldDW, lb->pVolumeLabel,             gan,NGP);
   t->requires(Task::OldDW, lb->pVelocityLabel,           gan,NGP);
+  if (flags->d_GEVelProj) {
+    t->requires(Task::OldDW, lb->pVelGradLabel,          gan,NGP);
+  }
   t->requires(Task::OldDW, lb->pXLabel,                  gan,NGP);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,  gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,        gan,NGP);
@@ -1338,6 +1342,7 @@ void AMRMPM::scheduleRefine(const PatchSet* patches, SchedulerP& sched)
   t->computes(lb->pLocalizedMPMLabel);
   t->computes(lb->pRefinedLabel);
   t->computes(lb->pSizeLabel);
+  t->computes(lb->pVelGradLabel);
   t->computes(lb->pCellNAPIDLabel, d_one_matl);
 
   // Debugging Scalar
@@ -1759,6 +1764,7 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       constParticleVariable<Matrix3> pDeformationMeasure;
       constParticleVariable<double> pConcentration;
       constParticleVariable<Matrix3> pStress;
+      constParticleVariable<Matrix3> pVelGrad;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
@@ -1771,6 +1777,9 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->get(psize,                lb->pSizeLabel_preReloc,      pset);
       old_dw->get(pDeformationMeasure,  lb->pDeformationMeasureLabel, pset);
       new_dw->get(pexternalforce,       lb->pExtForceLabel_preReloc,  pset);
+      if (flags->d_GEVelProj){
+        old_dw->get(pVelGrad,           lb->pVelGradLabel,            pset);
+      }
       if(flags->d_doScalarDiffusion){
         old_dw->get(pConcentration,     lb->pConcentrationLabel,      pset);
         old_dw->get(pStress,            lb->pStressLabel,             pset);
@@ -1829,6 +1838,12 @@ void AMRMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         for(int k = 0; k < n8or27; k++) {
           node = ni[k];
           if(patch->containsNode(node)) {
+            if (flags->d_GEVelProj){
+              Point gpos = patch->getNodePosition(node);
+              Vector distance = px[idx] - gpos;
+              Vector pvel_ext = pvelocity[idx] - pVelGrad[idx]*distance;
+              pmom = pvel_ext*pmass[idx];
+            }
             gmass[node]          += pmass[idx]                     * S[k];
             gvelocity[node]      += pmom                           * S[k];
             gvolume[node]        += pvolume[idx]                   * S[k];
@@ -3762,6 +3777,8 @@ void AMRMPM::addParticles(const ProcessorGroup*,
         plaltmp[pp]  = plal[pp];
         ploctmp[pp]  = ploc[pp];
         pvgradtmp[pp]= pvelgrad[pp];
+
+//        cout << "pids_orig = " << pidstmp[pp] << endl;
       }
 
       Vector dx = patch->dCell();
@@ -3825,6 +3842,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
           }
 //          cout << "new_index = " << new_index << endl;
           pidstmp[new_index]    = (cellID | (long64) myCellNAPID);
+        cout << "pids_new = " << pidstmp[new_index] << endl;
           pxtmp[new_index]      = new_part_pos[i];
           pvoltmp[new_index]    = .125*pvolume[idx];
           pmasstmp[new_index]   = .125*pmass[idx];
@@ -4131,7 +4149,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         ParticleVariable<double> pTempPrev,pColor;
         ParticleVariable<int>    pLoadCurve,pLastLevel,pLocalized,pRefined;
         ParticleVariable<long64> pID;
-        ParticleVariable<Matrix3> pdeform, pstress;
+        ParticleVariable<Matrix3> pdeform, pstress, pVelGrad;
         
         new_dw->allocateAndPut(px,             lb->pXLabel,             pset);
         new_dw->allocateAndPut(pmass,          lb->pMassLabel,          pset);
@@ -4145,6 +4163,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
         new_dw->allocateAndPut(pLastLevel,     lb->pLastLevelLabel,     pset);
         new_dw->allocateAndPut(pLocalized,     lb->pLocalizedMPMLabel,  pset);
         new_dw->allocateAndPut(pRefined,       lb->pRefinedLabel,       pset);
+        new_dw->allocateAndPut(pVelGrad,       lb->pVelGradLabel,       pset);
         if (flags->d_useLoadCurves){
           new_dw->allocateAndPut(pLoadCurve,   lb->pLoadCurveIDLabel,   pset);
         }
