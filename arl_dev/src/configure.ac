@@ -3608,6 +3608,7 @@ AC_SUBST(TAU_MAKEFILE)
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
+
 if test "$sci_required_papi" = "yes"; then
  
   if test "$with_papi" = "yes"; then
@@ -3653,17 +3654,23 @@ sci_defs_files="$sci_defs_files include/sci_defs/papi_testdefs.h"
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
-if test "$sci_required_fftw" = "yes"; then
- 
-  if test "$with_fftw" = "yes"; then
-    _sci_optional=required
-  else
-    _sci_optional=specific
-    _sci_lib="$with_fftw"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
-    _sci_inc="$with_fftw/include"
-  fi
- 
+
+if test "$BUILD_MD"  = "yes"; then
+  _sci_optional=required
+
+  if test "$with_fftw"; then
+     # If --with-fftw has a parameter, then use it
+     _sci_lib="$with_fftw"
+     BASE_LIB_PATH(_sci_lib,$_sci_lib)
+     _sci_inc="$with_fftw/include"
+     _sci_optional=specific
+  fi  
+
+  if test "$with_fftw" = "built-in"; then
+    FFTW_LIB_FLAG="-lfftw3 -lfftw3_mpi -lfftw3_threads"
+    AC_MSG_RESULT( "Using built in fftw... no explicit linking will be done." )
+  fi  
+
   AC_LANG(C++)
   SCI_TRY_LINK(FFTW, FFTW libraries and headers,
                fftw3.h,
@@ -3684,7 +3691,7 @@ if test "$sci_required_fftw" = "yes"; then
   
   DEF_FFTW="#define HAVE_FFTW 1"
 
-fi #end sci_required_fftw
+fi #if test "$BUILD_MD"
 
 # these are all defined after the call to SCI_COMPILE_LINK_TEST
 AC_SUBST(HAVE_FFTW)

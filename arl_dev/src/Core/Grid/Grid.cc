@@ -527,7 +527,6 @@ Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
   while( !done ) { // Start at the very top of the file (most likely 'timestep.xml').
 
     string line = UintahXML::getLine( fp );
-    //proc0cout << "1) parsing: " << line << "\n";
 
     if( line == "<Grid>" ) {
       foundGrid = parseGridFromFile( fp, procMap );
@@ -541,18 +540,6 @@ Grid::readLevelsFromFile( FILE * fp, vector< vector<int> > & procMap )
   if( !foundGrid ) {
     throw InternalError( "Grid.cc: readLevelsFromFile: Did not find '<Grid>' in file.", __FILE__, __LINE__ );
   }
-
-
-  //      timedata.d_patchInfo.push_back(vector<PatchData>());
-  //      timedata.d_matlInfo.push_back(vector<bool>());
-
-  //          r->get("proc", pi.proc); // defaults to -1 if not available
-  //          timedata.d_patchInfo[levelIndex].push_back(pi);
-
-
-        // Ups only provided when queryGrid() is called for a restart.  The <Grid> is not necessary on non-restarts..
-  //ProblemSpecP grid_ps = ups->findBlock("Grid");
-  //    level->assignBCS( grid_ps, 0 );
 
 } // end readLevelsFromFile()
 
@@ -771,11 +758,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
 
       Vector spacing;
       bool have_levelspacing=false;
-
-      if(level_ps->get("spacing", spacing))
-        have_levelspacing=true;
       bool have_patchspacing=false;
-        
+
+      if(level_ps->get("spacing", spacing)) {
+        have_levelspacing=true;
+      }
 
       // first pass - find upper/lower corner, find resolution/spacing and extraCells
       IntVector extraCells(0, 0, 0);
@@ -792,18 +779,18 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         levelHighPoint=Max(upper, levelHighPoint);
         
         IntVector resolution;
-        if(box_ps->get("resolution", resolution)){
-           if(have_levelspacing){
+        if(box_ps->get("resolution", resolution)) {
+           if(have_levelspacing) {
               throw ProblemSetupException("Cannot specify level spacing and patch resolution", 
                                           __FILE__, __LINE__);
            } else {
               // all boxes on same level must have same spacing
               Vector newspacing = (upper-lower)/resolution;
-              if(have_patchspacing){
+              if(have_patchspacing) {
                 Vector diff = spacing-newspacing;
-                if(diff.length() > 1.e-14)
-                   throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent",
-                                               __FILE__, __LINE__);
+                if(diff.length() > 1.e-14) {
+                   throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent", __FILE__, __LINE__);
+                }
               } else {
                 spacing = newspacing;
               }
@@ -816,21 +803,21 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         extraCells = Max(ec, extraCells);
         
         // bulletproofing
-        if(have_levelspacing || have_patchspacing){
-          for(int dir = 0; dir<3; dir++){
+        if(have_levelspacing || have_patchspacing) {
+          for(int dir = 0; dir<3; dir++) {
             if ((upper(dir)-lower(dir)) <= 0.0) {
               ostringstream msg;
-              msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
-                 << " \n The computational domain " << lower<<", " << upper
-                 << " must have a positive distance in each coordinate direction  " << upper-lower << endl; 
+              msg << "\nComputational Domain Input Error: Level("<< levelIndex << ")"
+                  << " \n The computational domain " << lower<<", " << upper
+                  << " must have a positive distance in each coordinate direction  " << upper-lower << endl;
               throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
             }
           
-            if (spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0){
+            if (spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0) {
               ostringstream msg;
-              msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
-                 << " \n The spacing " << spacing 
-                 << " must be less than the upper - lower corner and positive " << upper << endl; 
+              msg << "\nComputational Domain Input Error: Level("<< levelIndex << ")"
+                  << " \n The spacing " << spacing
+                  << " must be less than the upper - lower corner and positive " << upper << endl;
               throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
             }
           }

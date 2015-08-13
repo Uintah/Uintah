@@ -71,13 +71,13 @@ using namespace std;
 using namespace SCIRun;
 using namespace Uintah;
 
-DebugStream amrout("AMR", false);
-static DebugStream dbg("AMRSimulationController", false);
-static DebugStream dbg_barrier("MPIBarriers",false);
-static DebugStream dbg_dwmem("LogDWMemory",false);
-static DebugStream gprofile("CPUProfiler",false);
-static DebugStream gheapprofile("HeapProfiler",false);
-static DebugStream gheapchecker("HeapChecker",false);
+DebugStream amrout(             "AMR",                     false);
+static DebugStream dbg(         "AMRSimulationController", false);
+static DebugStream dbg_barrier( "MPIBarriers",             false);
+static DebugStream dbg_dwmem(   "LogDWMemory",             false);
+static DebugStream gprofile(    "CPUProfiler",             false);
+static DebugStream gheapprofile("HeapProfiler",            false);
+static DebugStream gheapchecker("HeapChecker",             false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
                                                  bool doAMR, ProblemSpecP pspec) :
@@ -103,36 +103,36 @@ AMRSimulationController::run()
   MALLOC_TRACE_TAG_SCOPE("AMRSimulationController::run()");
 
 #ifdef USE_GPERFTOOLS
-  if (gprofile.active()){
+
+  // CPU profiler
+  if (gprofile.active()) {
     char gprofname[512];
     sprintf(gprofname, "cpuprof-rank%d", d_myworld->myrank());
     ProfilerStart(gprofname);
   }
-  if (gheapprofile.active()){
+
+  // Heap profiler
+  if (gheapprofile.active()) {
     char gheapprofname[512];
     sprintf(gheapprofname, "heapprof-rank%d", d_myworld->myrank());
     HeapProfilerStart(gheapprofname);
   }
 
-  HeapLeakChecker * heap_checker=NULL;
-  if (gheapchecker.active()){
-    if (!gheapprofile.active()){
+  // Heap checker
+  HeapLeakChecker* heap_checker=NULL;
+  if (gheapchecker.active()) {
+    if (!gheapprofile.active()) {
       char gheapchkname[512];
       sprintf(gheapchkname, "heapchk-rank%d", d_myworld->myrank());
       heap_checker= new HeapLeakChecker(gheapchkname);
     } else {
-      cout<< "HEAPCHECKER: Cannot start with heapprofiler" <<endl;
+      std::cout << "HEAPCHECKER: Cannot start with heapprofiler" << std::endl;
     }
   }
+
 #endif
 
-  bool log_dw_mem=false;
-
-  if( dbg_dwmem.active() ) {
-    log_dw_mem = true;
-  }
-
-  // Sets up sharedState, timeinfo, output, scheduler, lb.
+  // Sets up SimulationState (d_sharedState), output, scheduler, and timeinfo - also runs problemSetup for scheduler and output
   preGridSetup();
 
   // Create grid:
@@ -271,7 +271,7 @@ AMRSimulationController::run()
 
     // printSimulationStats( d_sharedState, delt, time );
 
-    if(log_dw_mem){
+    if(dbg_dwmem.active()){
       // Remember, this isn't logged if DISABLE_SCI_MALLOC is set
       // (So usually in optimized mode this will not be run.)
       d_scheduler->logMemoryUse();

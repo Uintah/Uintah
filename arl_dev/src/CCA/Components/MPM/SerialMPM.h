@@ -452,20 +452,6 @@ protected:
   virtual void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
                                           const MaterialSet*);
 
-  // Start Reaction Diffusion Methods
-  virtual void scheduleComputeInternalDiffusionRate(SchedulerP&, const PatchSet*,
-                                                   const MaterialSet*);
-
-  virtual void scheduleComputeNodalConcentrationFlux(SchedulerP&, const PatchSet*,
-                                                const MaterialSet*);
-
-  virtual void scheduleSolveDiffusionEquations(SchedulerP&, const PatchSet*,
-                                              const MaterialSet*);
-
-  virtual void scheduleIntegrateDiffusionRate(SchedulerP&, const PatchSet*,
-                                                  const MaterialSet*);
-  // End Reaction Diffusion Methods
-
   virtual void scheduleComputeAndIntegrateAcceleration(SchedulerP&,
                                                        const PatchSet*,
                                                        const MaterialSet*);
