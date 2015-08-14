@@ -388,12 +388,12 @@ main( int argc, char *argv[], char *env[] )
     else if (arg == "-move") {
       restartFromScratch = false;
       restartRemoveOldDir = true;
+    }
 #ifdef HAVE_CUDA
-    }
     else if(arg == "-gpu") {
-      Uintah::Parallel::setUsingDevice(true);
-#endif
+      Uintah::Parallel::setUsingDevice( true );
     }
+#endif
     else if (arg == "-t") {
       if (i < argc - 1) {
         restartTimestep = atoi(argv[++i]);

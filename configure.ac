@@ -1958,7 +1958,7 @@ fi
 
 AC_MSG_RESULT($M_LIB)
 
-SCI_TRY_LINK(M,Verifying math library and header,math.h,,$M_LIB,$M_LIB_DIR,,[
+SCI_TRY_LINK(M,math library and header,math.h,,$M_LIB,$M_LIB_DIR,,[
   double d = fabs(69.05);
 ],required)
 
@@ -3795,9 +3795,9 @@ EOF
 
 # for a static build, use the static CUDA runtime lib
 if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-	_cudart_lib="cudart_static dl pthread rt"
+   _cudart_lib="cudart_static dl pthread rt"
 else
-	_cudart_lib="cudart"
+   _cudart_lib="cudart"
 fi
 
   SCI_CUDA_COMPILE_LINK_TEST(CUDA,

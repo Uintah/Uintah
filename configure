@@ -8753,7 +8753,7 @@ if test 9 != 9; then
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Verifying math library and header (required)" >&5
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for math library and header (required) $CXXFLAGS ----  $CFLAGS" >&5
 $as_echo_n "checking for Verifying math library and header (required)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
@@ -36719,9 +36719,10 @@ EOF
 
 # for a static build, use the static CUDA runtime lib
 if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-	_cudart_lib="cudart_static dl pthread rt"
+   echo "using static cuda"
+   _cudart_lib="cudart_static dl pthread rt"
 else
-	_cudart_lib="cudart"
+   _cudart_lib="cudart"
 fi
 
 
