@@ -254,15 +254,12 @@ RMCRTCommon::sched_sigmaT4( const LevelP& level,
   // complicated when the calc_frequency >1  If you change
   // it then test by restarting from an uda that was
   // previously run with Arches + DO with calc_frequency > 1.
-  // If you touch this be prepared for tangled logic web.
-  bool exists0 = false;
-  DataWarehouse* dw0 = sched->get_dw(0);
-  if(dw0){
-    const Patch* firstPatch = level->getPatch( 0 );
-    exists0 = dw0->exists( d_sigmaT4Label, d_matl, firstPatch );
+  bool old_dwExists = false;
+  if( sched->get_dw(0) ){
+    old_dwExists = true;
   }
 
-  if( exists0 ){
+  if(old_dwExists){
     tsk->requires( Task::OldDW, d_sigmaT4Label, d_gn, 0 );
   }
 
