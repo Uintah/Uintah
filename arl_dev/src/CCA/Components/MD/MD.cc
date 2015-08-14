@@ -1024,17 +1024,14 @@ void MD::outputStatistics(const ProcessorGroup* pg,
   matrix_sum spmeFourierStressDipole;
 
   oldDW->get(nonbondedEnergy, d_label->nonbonded->rNonbondedEnergy);
-  oldDW->get(electrostaticInverseEnergy,
-              d_label->electrostatic->rElectrostaticInverseEnergy);
-  oldDW->get(electrostaticRealEnergy,
-              d_label->electrostatic->rElectrostaticRealEnergy);
+  oldDW->get(electrostaticInverseEnergy, d_label->electrostatic->rElectrostaticInverseEnergy);
+  oldDW->get(electrostaticRealEnergy, d_label->electrostatic->rElectrostaticRealEnergy);
   oldDW->get(kineticEnergy, d_label->global->rKineticEnergy);
+
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
-
-  double totalEnergy = nonbondedEnergy + kineticEnergy
-                      + electrostaticInverseEnergy + electrostaticRealEnergy;
-
+  double totalEnergy = nonbondedEnergy + kineticEnergy + electrostaticInverseEnergy + electrostaticRealEnergy;
   double potentialEnergy = nonbondedEnergy + electrostaticInverseEnergy + electrostaticRealEnergy;
+
   if (d_secondIntegration) {
     d_secondIntegration = false;
     d_PotentialBase = potentialEnergy;

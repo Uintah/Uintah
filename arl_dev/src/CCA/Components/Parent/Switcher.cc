@@ -279,6 +279,7 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
   Scheduler* sched              = dynamic_cast<Scheduler*>(               getPort("scheduler") );
   Output* dataArchiver          = dynamic_cast<Output*>(                  getPort("output") );
   ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") ); 
+
   comp->attachPort("scheduler", sched);
   comp->attachPort("output",    dataArchiver);
   comp->attachPort("modelmaker",modelmaker);
@@ -446,7 +447,7 @@ void Switcher::scheduleSwitchTest(const LevelP     & level,
 void Switcher::scheduleInitNewVars(const LevelP     & level,
                                          SchedulerP & sched)
 {
-  unsigned int nextComp_indx = d_componentIndex+1;
+  unsigned int nextComp_indx = d_componentIndex + 1;
   
   if( nextComp_indx >= d_numComponents ) {
     return;
@@ -462,18 +463,21 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
  
   for (unsigned i = 0; i < initVar->varLabels.size(); i++) {
     
-    VarLabel* label = initVar->varLabels[i]; 
-     
-    // Find the MaterialSet for this variable
-    // and put that set in the global structure
+    VarLabel* label = initVar->varLabels[i];
+
+    // Find the MaterialSet for this variable and put that set in the global structure
     const MaterialSet* matls;
 
     std::string nextComp_matls = initVar->matlSetNames[i];
-    if (     nextComp_matls == "ice_matls" ){
+
+    if (nextComp_matls == "ice_matls") {
       matls = d_sharedState->allICEMaterials();
     }
-    else if (nextComp_matls == "mpm_matls" ) {
+    else if (nextComp_matls == "mpm_matls") {
       matls = d_sharedState->allMPMMaterials();
+    }
+    else if (nextComp_matls == "md_matls") {
+      matls = d_sharedState->allMDMaterials();
     }
     else if (nextComp_matls == "all_matls") {
       matls = d_sharedState->allMaterials();
@@ -489,7 +493,12 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
     
     const MaterialSubset* matl_ss = matls->getUnion();
     
-    t->computes(label, matl_ss);
+    if (label->typeDescription()->getType() == TypeDescription::ReductionVariable) {
+      t->computes(label);
+    }
+    else {
+      t->computes(label, matl_ss);
+    }
   }
 
   d_initVars[nextComp_indx]->matls = matlSet;
@@ -585,7 +594,7 @@ void Switcher::switchTest(const ProcessorGroup *,
 }
 
 //______________________________________________________________________
-//  This only get executed if a switching components has been called for.
+//  This only gets executed if a switching component has been called for.
 void Switcher::initNewVars(const ProcessorGroup *,
                            const PatchSubset    * patches,
                            const MaterialSubset * matls,
@@ -596,12 +605,13 @@ void Switcher::initNewVars(const ProcessorGroup *,
   new_dw->get(switch_condition, d_sharedState->get_switch_label(), 0);
 
 
-  if (!switch_condition)
+  if (!switch_condition) {
     return; 
-
+  }
     
   proc0cout << "__________________________________" << std::endl;
-  proc0cout << "initNewVars \t\t\t\tSwitcher"<< std::endl;
+  proc0cout << "initNewVars \t\t\t\tSwitcher"       << std::endl;
+
   //__________________________________
   // loop over the init vars, initialize them and put them in the new_dw
   initVars* initVar  = d_initVars.find(d_componentIndex+1)->second;
@@ -710,6 +720,16 @@ void Switcher::initNewVars(const ProcessorGroup *,
 
                 break;
               }
+              case TypeDescription::long64_type : {
+                ParticleVariable<long64> q;
+                new_dw->allocateAndPut(q, l, pset);
+
+                for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++) {
+                  q[*iter] = 0;
+                }
+
+                break;
+              }
               case TypeDescription::double_type : {
                 ParticleVariable<double> q;
                 new_dw->allocateAndPut(q, l, pset);
@@ -738,6 +758,17 @@ void Switcher::initNewVars(const ProcessorGroup *,
               }
               default :
                 throw InternalError("ERROR:Switcher::initNewVars Unknown particle type", __FILE__, __LINE__);
+            }
+            break;
+          }
+          case TypeDescription::ReductionVariable : {
+            switch ( l->typeDescription()->getSubType()->getType() ) {
+              case Uintah::TypeDescription::double_type : {
+                ReductionVariable<double, Reductions::Max<double> > var_d;
+                new_dw->put(var_d, l);
+              }
+              default :
+                throw InternalError("ERROR:Switcher::initNewVars Unknown ReductionVariable type", __FILE__, __LINE__);
             }
             break;
           }
@@ -775,8 +806,7 @@ void Switcher::carryOverVars(const ProcessorGroup *,
 
           switch (label->typeDescription()->getSubType()->getType()) {
             case Uintah::TypeDescription::double_type : {
-              ReductionVariable<double, Reductions::Max<double> > var_d;
-              old_dw->get(var_d, label);
+              ReductionVariable<double, Reductions::Sum<double> > var_d;
               new_dw->put(var_d, label);
             }
               break;
