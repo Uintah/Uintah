@@ -223,7 +223,7 @@ namespace Wasatch{
       const bool isNormal = is_normal_to_boundary(direction_, myBndSpec.face);
       
       const Uintah::BCGeomBase::ParticleBndSpec pBndSpec = myBndSpec.particleBndSpec;
-      if( pBndSpec.hasParticlesBoundary() ){
+      if( pBndSpec.hasParticleBC() ){
 
         switch (pBndSpec.bndType) {
           case Uintah::BCGeomBase::ParticleBndSpec::WALL:

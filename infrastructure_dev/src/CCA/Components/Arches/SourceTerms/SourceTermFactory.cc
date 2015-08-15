@@ -9,6 +9,10 @@
 #include <CCA/Components/Arches/SourceTerms/CoalGasMomentum.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <CCA/Components/Arches/SourceTerms/BowmanNOx.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_rhoYs.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_nd.h>
+#include <CCA/Components/Arches/SourceTerms/SootMassBalance.h>
+#include <CCA/Components/Arches/SourceTerms/BrownSootFormation_Tar.h>
 #include <CCA/Components/Arches/SourceTerms/Inject.h>
 #include <CCA/Components/Arches/SourceTerms/IntrusionInlet.h>
 #include <CCA/Components/Arches/SourceTerms/DORadiation.h>
@@ -22,6 +26,7 @@
 #include <CCA/Components/Arches/SourceTerms/ShunnMoinMMSCont.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/BoundaryCondition.h>
+#include <CCA/Components/Arches/Properties.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
@@ -135,12 +140,12 @@ void SourceTermFactory::commonSrcProblemSetup( const ProblemSpecP& db )
   }
 }
 
-void SourceTermFactory::extraSetup( GridP& grid, BoundaryCondition* bc )
+void SourceTermFactory::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
 { 
   for ( std::vector<SourceContainer>::iterator iter = _active_sources.begin();iter != _active_sources.end(); iter++ ){ 
 
     SourceTermBase& src  = this->retrieve_source_term( iter->name ); 
-    src.extraSetup( grid, bc ); 
+    src.extraSetup( grid, bc, prop); 
 
   }
 }
@@ -255,6 +260,22 @@ void SourceTermFactory::registerUDSources(ProblemSpecP& db, ArchesLabel* lab, Bo
       } else if (src_type == "bowman_nox") {
         // Computes a global reaction rate for a hydrocarbon (see Turns, eqn 5.1,5.2)
         SourceTermBase::Builder* srcBuilder = new BowmanNOx::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "BrownSootFormation_rhoYs") {
+        SourceTermBase::Builder* srcBuilder = new BrownSootFormation_rhoYs::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "BrownSootFormation_nd") {
+        SourceTermBase::Builder* srcBuilder = new BrownSootFormation_nd::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "BrownSootFormation_Tar") {
+        SourceTermBase::Builder* srcBuilder = new BrownSootFormation_Tar::Builder(src_name, required_varLabels, lab);
+        factory.register_source_term( src_name, srcBuilder );
+
+      } else if (src_type == "SootMassBalance") {
+        SourceTermBase::Builder* srcBuilder = new SootMassBalance::Builder(src_name, required_varLabels, lab);
         factory.register_source_term( src_name, srcBuilder );
 
       } else if (src_type == "mms1"){

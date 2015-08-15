@@ -131,7 +131,7 @@ private:
   double _char_scaling_constant;   ///< Scaling factor for char internal coordinate
   double _weight_scaling_constant;   ///< Scaling factor for weight 
   double _weight_small;   ///< small weight 
-
+  
 }; // end CharOxidationShaddix
 } // end namespace Uintah
 #endif

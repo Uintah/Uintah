@@ -22,8 +22,8 @@
  * IN THE SOFTWARE.
  */
 
-#include "Extrapolant.h"
-#include "OperatorTypes.h"
+#include <CCA/Components/Wasatch/Operators/Extrapolant.h>
+#include <CCA/Components/Wasatch/Operators/OperatorTypes.h>
 
 #include <cmath>
 #include <sstream>
@@ -56,14 +56,14 @@ template< typename FieldT >
 void
 Extrapolant<FieldT>::
 apply_to_field( FieldT& src,
-                const double min,
-                const double max,
+                const double minVal,
+                const double maxVal,
                 const bool skipBCs )
 {
   // extrapolate from interior cells:
   using namespace SpatialOps;
 
-  bool doMinMaxCheck = (min > DBLMIN || max < DBLMAX);
+  bool doMinMaxCheck = (minVal > DBLMIN || maxVal < DBLMAX);
   const MemoryWindow& ws = src.window_with_ghost();
     
   int pm[2]={1,-1}; // plus or minus face
@@ -91,9 +91,7 @@ apply_to_field( FieldT& src,
       const FieldT s2( ws2, src );
 
       if( doMinMaxCheck ){
-        d <<= cond( (2.0 * s1 - s2) < min, min )
-                  ( (2.0 * s1 - s2) > max, max )
-                  (  2.0 * s1 - s2 );
+        d <<= max( min( 2.0*s1 - s2, maxVal), minVal);
       }
       else{
         d <<= 2.0 * s1 - s2;

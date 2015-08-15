@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
 <start>
-<upsFile>rmcrt_test.ups</upsFile>
+<upsFile>rmcrt_bm1_1L.ups</upsFile>
 <gnuplot>
   <script>plotScript_dx.gp</script>s
   <title> RMCRT Order-Of-Accuracy \\n Burns and Christon Benchmark \\n 1 timestep (100 Rays per cell), Random Seed</title>
@@ -10,7 +11,7 @@
 <AllTests>
   <replace_lines>
     <max_Timesteps>1</max_Timesteps>
-    <NoOfRays>  100  </NoOfRays>
+    <nDivQRays>  100  </nDivQRays>
     <randomSeed> true </randomSeed>
   </replace_lines>
 </AllTests>
@@ -64,6 +65,7 @@
        <resolution>   [50,50,50]          </resolution>
     </replace_lines>
 </Test>
+<!--
 <Test>
     <Title>60</Title>
     <sus_cmd> mpirun -np 1 sus </sus_cmd>
@@ -109,5 +111,5 @@
        <resolution>   [100,100,100]          </resolution>
     </replace_lines>
 </Test>
-
+-->
 </start>

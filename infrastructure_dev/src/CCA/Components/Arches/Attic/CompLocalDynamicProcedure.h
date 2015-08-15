@@ -64,7 +64,6 @@ WARNING
 #include <CCA/Components/Arches/Arches.h>
 #include <CCA/Components/Arches/TurbulenceModel.h>
 #include <iostream>
-using namespace std;
 
 namespace Uintah {
 class PhysicalConstants;

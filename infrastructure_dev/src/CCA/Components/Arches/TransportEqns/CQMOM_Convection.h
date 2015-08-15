@@ -43,6 +43,14 @@
  *        [w_\alpha/\epsilon_w -\epsilon_w * U_\alpha V_\alpha W_\alpha]_{interior} \f$ where \f$ \epsilon_w \f$ is the
  *        particle-wall restituion coefficient, with default value set to 1 as an elastic wall collision
  *
+ *        For walls that are stair-stepped an assumption is made such that the flow cell next to the wall contains a
+ *        digonal wall instead, and a rebound vector is calculated in that cell as 
+ *        \f$ \bf{r} = -(2/3 (\bf{n} \cdot \bf{v} )\bf{n} - \bf{v} )\f$ for 3D staggered and
+ *        \f$ \bf{r} = -( (\bf{n} \cdot \bf{v} )\bf{n} - \bf{v} )\f$ for 2D staggered v = incident vector, n = wall normal
+ *        NOTE: These forumla assume constant grid spacing \f$ \Delta x = \Delta y = \Delta z \f$ coefficients would
+ *        need to change to support non-uniform mesh, but cases are rarely run that way, if it is needed in the future then
+ *        \f$ \bf{r} = -(2 (\bf{n} \cdot \bf{v} )\bf{n} - \bf{v} )\f$ for all walls where n is normalized to |n|=1
+ *
  *        The first and second order convection schemes can be found in Vikas et. al. 2011
  *
  *        This is a refactor of previous code to turn it into a Uintah task which calculates the convection for
@@ -90,6 +98,18 @@ namespace Uintah {
                               DataWarehouse * old_dw,
                               DataWarehouse * new_dw );
     
+    /** @brief schedule initialization of a variable to determien wall status */
+    void sched_initializeWalls( const LevelP& level,
+                                SchedulerP& sched,
+                                int timesubstep);
+    
+    /** @brief actualyl calculate variable for wall status */
+    void initializeWalls( const ProcessorGroup *,
+                          const PatchSubset * patches,
+                          const MaterialSubset *,
+                          DataWarehouse * old_dw,
+                          DataWarehouse * new_dw);
+    
     //---------------------------------------------------------------------------
     // Custom Data Managers
     // --------------------------------------------------------------------------
@@ -124,30 +144,207 @@ namespace Uintah {
       Interpolator(){};
       virtual ~Interpolator(){};
       
+      //only flow cells touching
+      virtual cqFaceData1D no_wall( const IntVector c, const IntVector coord, constCCVariable<double>& phi, constCCVariable<int>& wallInt ) = 0;
+      virtual cqFaceData1D bc_no_wall( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const cqFaceBoundaryBool isBoundary) = 0;
+      
+      //handle 2D wall
+      virtual void wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                           constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                           cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                           const int wVelIndex, const std::vector<double>& epVec) = 0;
+      virtual void bc_wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                              constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                              cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                              const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary) = 0;
+      
+      //handle 3D wall
+      virtual void wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                           constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                           cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas) = 0;
+      virtual void bc_wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                              constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                              cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                              const cqFaceBoundaryBool isBoundary) = 0;
+      
+      //these all handle 1D wall - (more functions, but simpler ones)
       virtual cqFaceData1D no_bc(const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<int>& cellType, const double epW) = 0;
+                                 constCCVariable<double>& volFrac, const double epW) = 0;
       virtual cqFaceData1D no_bc_weight(const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                         constCCVariable<int>& cellType, const double epW) = 0;
+                                         constCCVariable<double>& volFrac, const double epW) = 0;
       virtual cqFaceData1D no_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                         constCCVariable<int>& cellType, const double epW) = 0;
+                                         constCCVariable<double>& volFrac, const double epW) = 0;
       
       virtual cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                    constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+                                    constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
       virtual cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                           constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+                                           constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
       virtual cqFaceData1D with_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                            constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+                                            constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+    protected:
+      double dotProd ( const std::vector<double>& n, const std::vector <double>& v ) {
+        double dotProd = 0;
+        for ( unsigned int i = 0; i < n.size(); i++ ) {
+          dotProd += n[i] * v[i];
+        }
+        return dotProd;
+      }
+      
+      std::vector<double> scalarMult ( const std::vector<double>& n, const double& scalar) {
+        std::vector<double> mult( n.size() );
+        for ( unsigned int i = 0; i < n.size(); i++ ) {
+          mult[i] = scalar * n[i];
+        }
+        return mult;
+      }
       
     };
     
-    //NOTE: Wall = 8, intrusion = 10, flow = -1
     class FirstOrderInterpolant : public Interpolator {
     public:
       FirstOrderInterpolant(){};
       ~FirstOrderInterpolant(){};
       
-      cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                          constCCVariable<int>& cellType, const double epW)
+      //3D corner walls
+      void wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                   constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas)
+      {
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        
+        faceWeight.minus_right = w[c]; faceWeight.plus_left = w[c];
+        uVelFaceAbscissas.minus_right = uVel[c]; uVelFaceAbscissas.plus_left = uVel[c];
+        vVelFaceAbscissas.minus_right = vVel[c]; vVelFaceAbscissas.plus_left = vVel[c];
+        wVelFaceAbscissas.minus_right = wVel[c]; wVelFaceAbscissas.plus_left = wVel[c];
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          faceWeight.minus_left = w[cxm];
+          uVelFaceAbscissas.minus_left = uVel[cxm];
+          vVelFaceAbscissas.minus_left = vVel[cxm];
+          wVelFaceAbscissas.minus_left = wVel[cxm];
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          faceWeight.plus_right = w[cxp];
+          uVelFaceAbscissas.plus_right = uVel[cxp];
+          vVelFaceAbscissas.plus_right = vVel[cxp];
+          wVelFaceAbscissas.plus_right = wVel[cxp];
+        } else { //calculate reboudn vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+      
+      //2D corner walls
+      void wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                   constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                   const int wVelIndex, const std::vector<double>& epVec)
+      {
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        
+        faceWeight.minus_right = w[c]; faceWeight.plus_left = w[c];
+        uVelFaceAbscissas.minus_right = uVel[c]; uVelFaceAbscissas.plus_left = uVel[c];
+        vVelFaceAbscissas.minus_right = vVel[c]; vVelFaceAbscissas.plus_left = vVel[c];
+        if (wVelIndex > -1) {
+          wVelFaceAbscissas.minus_right = wVel[c];
+          wVelFaceAbscissas.plus_left = wVel[c];
+        }
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          faceWeight.minus_left = w[cxm];
+          uVelFaceAbscissas.minus_left = uVel[cxm];
+          vVelFaceAbscissas.minus_left = vVel[cxm];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.minus_left = wVel[cxm];
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          faceWeight.plus_right = w[cxp];
+          uVelFaceAbscissas.plus_right = uVel[cxp];
+          vVelFaceAbscissas.plus_right = vVel[cxp];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.plus_right = wVel[cxp];
+        } else { //calculate reboudn vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+
+      //simplest form when no wall cells touching
+      cqFaceData1D no_wall( const IntVector c, const IntVector coord, constCCVariable<double>& phi, constCCVariable<int>& wallInt )
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -157,13 +354,31 @@ namespace Uintah {
         face_values.minus_right =  phic;
         face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        face_values.minus_left = phi[cxm];
+        face_values.plus_right = phi[cxp];
+
+        return face_values;
+      }
+      
+      //breakdown of flat walls for each IC
+      cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
+                          constCCVariable<double>& volFrac, const double epW)
+      {
+        CQMOM_Convection::cqFaceData1D face_values;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
+        
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.minus_left = phi[cxm];
         } else {
           face_values.minus_left = phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
           face_values.plus_right = phic;
@@ -173,7 +388,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<int>& cellType, const double epW)
+                                 constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -183,13 +398,13 @@ namespace Uintah {
         face_values.minus_right =  phic;
         face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
           face_values.minus_left = phic/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
           face_values.plus_right = phic/epW;
@@ -199,7 +414,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                  constCCVariable<int>& cellType, const double epW)
+                                  constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -209,13 +424,13 @@ namespace Uintah {
         face_values.minus_right =  phic;
         face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
           face_values.minus_left = -epW*phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
           face_values.plus_right = -epW*phic;
@@ -224,8 +439,164 @@ namespace Uintah {
         return face_values;
       }
       
+      //3D corner walls
+      void bc_wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                      constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                      cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                      const cqFaceBoundaryBool isBoundary )
+      {
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        
+        faceWeight.minus_right = w[c]; faceWeight.plus_left = w[c];
+        uVelFaceAbscissas.minus_right = uVel[c]; uVelFaceAbscissas.plus_left = uVel[c];
+        vVelFaceAbscissas.minus_right = vVel[c]; vVelFaceAbscissas.plus_left = vVel[c];
+        wVelFaceAbscissas.minus_right = wVel[c]; wVelFaceAbscissas.plus_left = wVel[c];
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          faceWeight.minus_left = w[cxm];
+          uVelFaceAbscissas.minus_left = uVel[cxm];
+          vVelFaceAbscissas.minus_left = vVel[cxm];
+          wVelFaceAbscissas.minus_left = wVel[cxm];
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          faceWeight.plus_right = w[cxp];
+          uVelFaceAbscissas.plus_right = uVel[cxp];
+          vVelFaceAbscissas.plus_right = vVel[cxp];
+          wVelFaceAbscissas.plus_right = wVel[cxp];
+        } else { //calculate reboudn vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+      
+      //2D corner walls
+      void bc_wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                      constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                      cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                      const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary )
+      {
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        
+        faceWeight.minus_right = w[c]; faceWeight.plus_left = w[c];
+        uVelFaceAbscissas.minus_right = uVel[c]; uVelFaceAbscissas.plus_left = uVel[c];
+        vVelFaceAbscissas.minus_right = vVel[c]; vVelFaceAbscissas.plus_left = vVel[c];
+        if (wVelIndex > -1) {
+          wVelFaceAbscissas.minus_right = wVel[c];
+          wVelFaceAbscissas.plus_left = wVel[c];
+        }
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          faceWeight.minus_left = w[cxm];
+          uVelFaceAbscissas.minus_left = uVel[cxm];
+          vVelFaceAbscissas.minus_left = vVel[cxm];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.minus_left = wVel[cxm];
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          faceWeight.plus_right = w[cxp];
+          uVelFaceAbscissas.plus_right = uVel[cxp];
+          vVelFaceAbscissas.plus_right = vVel[cxp];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.plus_right = wVel[cxp];
+        } else { //calculate reboudn vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+
+      //simplest form no walls touching this cell
+      cqFaceData1D bc_no_wall( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const cqFaceBoundaryBool isBoundary )
+      {
+        CQMOM_Convection::cqFaceData1D face_values;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        
+        double phic = phi[c];
+        face_values.minus_right =  phic;
+        face_values.plus_left  =  phic;
+        
+        face_values.minus_left = phi[cxm];
+        face_values.plus_right = phi[cxp];
+        
+        return face_values;
+      }
+      
       cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                            constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                            constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         //For first order treat boundary cells exactly how interior cells are treated
         CQMOM_Convection::cqFaceData1D face_values;
@@ -236,13 +607,13 @@ namespace Uintah {
         face_values.minus_right =  phic;
         face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
           face_values.minus_left = phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
           face_values.plus_right = phic;
@@ -252,7 +623,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                   constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -262,13 +633,13 @@ namespace Uintah {
         face_values.minus_right =  phic;
         face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) {  //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
           face_values.minus_left = phic/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
           face_values.plus_right = phic/epW;
@@ -278,7 +649,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                    constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                    constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -288,13 +659,13 @@ namespace Uintah {
         face_values.minus_right =  phic;
         face_values.plus_left  =  phic;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if this is a flow cell has a wall touching it
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
           face_values.minus_left = -epW*phic;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
           face_values.plus_right = -epW*phic;
@@ -309,9 +680,305 @@ namespace Uintah {
     public:
       SecondOrderInterpolant(){};
       ~SecondOrderInterpolant(){};
+
+      //3D corner walls
+      //NOTE: 2nd order scheme with walls has some numerical issues that can occur even in simple cases, clipping of velocities in CQMOM xml should be turned on
+      void wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                   constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas)
+      {
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        double wc = w[c], wcxm = w[cxm], wcxp = w[cxp];
+        double uVelc = uVel[c], uVelcxm = uVel[cxm], uVelcxp = uVel[cxp];
+        double vVelc = vVel[c], vVelcxm = vVel[cxm], vVelcxp = vVel[cxp];
+        double wVelc = wVel[c], wVelcxm = wVel[cxm], wVelcxp = wVel[cxp];
+        
+        //calculate the inside faces
+        double nxm = wc - wcxm;
+        double nxp = wcxp - wc;
+        double delN = minMod(nxm, nxp);
+        faceWeight.minus_right = wc - 1.0/2.0 * delN; faceWeight.plus_left = wc + 1.0/2.0 * delN;
+        
+        nxm = uVelc - uVelcxm;
+        nxp = uVelcxp - uVelc;
+        delN = minMod(nxm, nxp);
+        uVelFaceAbscissas.minus_right = uVelc - 1.0/2.0 * delN; uVelFaceAbscissas.plus_left = uVelc + 1.0/2.0 * delN;
+        
+        nxm = vVelc - vVelcxm;
+        nxp = vVelcxp - vVelc;
+        delN = minMod(nxm, nxp);
+        vVelFaceAbscissas.minus_right = vVelc - 1.0/2.0 * delN; vVelFaceAbscissas.plus_left = vVelc + 1.0/2.0 * delN;
+        
+        nxm = wVelc - wVelcxm;
+        nxp = wVelcxp - wVelc;
+        delN = minMod(nxm, nxp);
+        wVelFaceAbscissas.minus_right = wVelc - 1.0/2.0 * delN; wVelFaceAbscissas.plus_left = wVelc + 1.0/2.0 * delN;
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          
+          nxm = wcxm - w[cxmm];
+          nxp = wc - wcxm;
+          delN = minMod(nxm, nxp);
+          faceWeight.minus_left = wcxm + 1.0/2.0 * delN;
+          
+          nxm = uVelcxm - uVel[cxmm];
+          nxp = uVelc - uVelcxm;
+          delN = minMod(nxm, nxp);
+          uVelFaceAbscissas.minus_left = uVelcxm + 1.0/2.0 * delN;
+          
+          nxm = vVelcxm - vVel[cxmm];
+          nxp = vVelc - vVelcxm;
+          delN = minMod(nxm, nxp);
+          vVelFaceAbscissas.minus_left = vVelcxm + 1.0/2.0 * delN;
+          
+          nxm = wVelcxm - wVel[cxmm];
+          nxp = wVelc - wVelcxm;
+          delN = minMod(nxm, nxp);
+          wVelFaceAbscissas.minus_left = wVelcxm + 1.0/2.0 * delN;
+          
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          
+          nxm = wcxp - wc;
+          nxp = w[cxpp] - wcxp;
+          delN = minMod(nxm, nxp);
+          faceWeight.plus_right = wcxp - 1.0/2.0 * delN;
+          
+          nxm = uVelcxp - uVelc;
+          nxp = uVel[cxpp] - uVelcxp;
+          delN = minMod(nxm, nxp);
+          uVelFaceAbscissas.plus_right = uVelcxp - 1.0/2.0 * delN;
+          
+          nxm = vVelcxp - vVelc;
+          nxp = vVel[cxpp] - vVelcxp;
+          delN = minMod(nxm, nxp);
+          vVelFaceAbscissas.plus_right = vVelcxp - 1.0/2.0 * delN;
+          
+          nxm = wVelcxp - wVelc;
+          nxp = wVel[cxpp] - wVelcxp;
+          delN = minMod(nxm, nxp);
+          wVelFaceAbscissas.plus_right = wVelcxp - 1.0/2.0 * delN;
+          
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+
+      //2D corner walls
+      void wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                   constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                   const int wVelIndex, const std::vector<double>& epVec)
+      {
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        double wc = w[c], wcxm = w[cxm], wcxp = w[cxp];
+        double uVelc = uVel[c], uVelcxm = uVel[cxm], uVelcxp = uVel[cxp];
+        double vVelc = vVel[c], vVelcxm = vVel[cxm], vVelcxp = vVel[cxp];
+        double wVelc, wVelcxm, wVelcxp;
+        if (wVelIndex > -1 ) {
+          wVelc = wVel[c];
+          wVelcxm = wVel[cxm];
+          wVelcxp = wVel[cxp];
+        }
+        
+        //calculate the inside faces
+        double nxm = wc - wcxm;
+        double nxp = wcxp - wc;
+        double delN = minMod(nxm, nxp);
+        faceWeight.minus_right = wc - 1.0/2.0 * delN; faceWeight.plus_left = wc + 1.0/2.0 * delN;
+        
+        nxm = uVelc - uVelcxm;
+        nxp = uVelcxp - uVelc;
+        delN = minMod(nxm, nxp);
+        uVelFaceAbscissas.minus_right = uVelc - 1.0/2.0 * delN; uVelFaceAbscissas.plus_left = uVelc + 1.0/2.0 * delN;
+        
+        nxm = vVelc - vVelcxm;
+        nxp = vVelcxp - vVelc;
+        delN = minMod(nxm, nxp);
+        vVelFaceAbscissas.minus_right = vVelc - 1.0/2.0 * delN; vVelFaceAbscissas.plus_left = vVelc + 1.0/2.0 * delN;
+        
+        if (wVelIndex > -1) {
+          nxm = wVelc - wVelcxm;
+          nxp = wVelcxp - wVelc;
+          delN = minMod(nxm, nxp);
+          wVelFaceAbscissas.minus_right = wVelc - 1.0/2.0 * delN; wVelFaceAbscissas.plus_left = wVelc + 1.0/2.0 * delN;
+        }
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          
+          nxm = wcxm - w[cxmm];
+          nxp = wc - wcxm;
+          delN = minMod(nxm, nxp);
+          faceWeight.minus_left = wcxm + 1.0/2.0 * delN;
+          
+          nxm = uVelcxm - uVel[cxmm];
+          nxp = uVelc - uVelcxm;
+          delN = minMod(nxm, nxp);
+          uVelFaceAbscissas.minus_left = uVelcxm + 1.0/2.0 * delN;
+          
+          nxm = vVelcxm - vVel[cxmm];
+          nxp = vVelc - vVelcxm;
+          delN = minMod(nxm, nxp);
+          vVelFaceAbscissas.minus_left = vVelcxm + 1.0/2.0 * delN;
+          
+          if (wVelIndex > -1) {
+            nxm = wVelcxm - wVel[cxmm];
+            nxp = wVelc - wVelcxm;
+            delN = minMod(nxm, nxp);
+            wVelFaceAbscissas.minus_left = wVelcxm + 1.0/2.0 * delN;
+          }
+
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          
+          nxm = wcxp - wc;
+          nxp = w[cxpp] - wcxp;
+          delN = minMod(nxm, nxp);
+          faceWeight.plus_right = wcxp - 1.0/2.0 * delN;
+          
+          nxm = uVelcxp - uVelc;
+          nxp = uVel[cxpp] - uVelcxp;
+          delN = minMod(nxm, nxp);
+          uVelFaceAbscissas.plus_right = uVelcxp - 1.0/2.0 * delN;
+          
+          nxm = vVelcxp - vVelc;
+          nxp = vVel[cxpp] - vVelcxp;
+          delN = minMod(nxm, nxp);
+          vVelFaceAbscissas.plus_right = vVelcxp - 1.0/2.0 * delN;
+          
+          if (wVelIndex > -1) {
+            nxm = wVelcxp - wVelc;
+            nxp = wVel[cxpp] - wVelcxp;
+            delN = minMod(nxm, nxp);
+            wVelFaceAbscissas.plus_right = wVelcxp - 1.0/2.0 * delN;
+          }
+          
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+
+      //simplest form when no wall cells touching
+      cqFaceData1D no_wall( const IntVector c, const IntVector coord, constCCVariable<double>& phi, constCCVariable<int>& wallInt )
+      {
+        CQMOM_Convection::cqFaceData1D face_values;
+        
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
+        //calculate the inside faces
+        double delN;
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
+        delN = minMod(nxm, nxp);
       
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
+       
+        //calculate outside faces
+        nxm = (phicxm - phi[cxmm]);
+        nxp = (phic - phicxm);
+        delN = minMod(nxm, nxp);
+        face_values.minus_left = phicxm + 1.0/2.0 * delN;
+
+        nxm = (phicxp - phic);
+        nxp = (phi[cxpp] - phicxp);
+        delN = minMod(nxm, nxp);
+        face_values.plus_right = phicxp - 1.0/2.0 * delN;
+        
+        return face_values;
+      }
+      
+      //functions to deal with flat wall
       cqFaceData1D no_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                          constCCVariable<int>& cellType, const double epW)
+                          constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -332,7 +999,7 @@ namespace Uintah {
         face_values.minus_right = phic - 1.0/2.0 * delN;
         face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           nxm = (phicxm - phi[cxmm]);
           nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
@@ -341,7 +1008,7 @@ namespace Uintah {
           face_values.minus_left = face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) {  //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {  //check if wall is present
           nxm = (phicxp - phic);
           nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
@@ -363,7 +1030,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<int>& cellType, const double epW)
+                                 constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -384,7 +1051,7 @@ namespace Uintah {
         face_values.minus_right = phic - 1.0/2.0 * delN;
         face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           nxm = (phicxm - phi[cxmm]);
           nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
@@ -393,7 +1060,7 @@ namespace Uintah {
           face_values.minus_left = face_values.minus_right/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           nxm = (phicxp - phic);
           nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
@@ -415,7 +1082,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                  constCCVariable<int>& cellType, const double epW)
+                                  constCCVariable<double>& volFrac, const double epW)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -436,7 +1103,7 @@ namespace Uintah {
         face_values.minus_right = phic - 1.0/2.0 * delN;
         face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           nxm = (phicxm - phi[cxmm]);
           nxp = (phic - phicxm);
           delN = minMod(nxm, nxp);
@@ -445,7 +1112,7 @@ namespace Uintah {
           face_values.minus_left = -epW*face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           nxm = (phicxp - phic);
           nxp = (phi[cxpp] - phicxp);
           delN = minMod(nxm, nxp);
@@ -466,8 +1133,293 @@ namespace Uintah {
         return face_values;
       }
       
-      cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                            constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+      //3D corner walls
+      void bc_wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                      constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                      cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                      const cqFaceBoundaryBool isBoundary)
+      {
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        double wc = w[c], wcxm = w[cxm], wcxp = w[cxp];
+        double uVelc = uVel[c], uVelcxm = uVel[cxm], uVelcxp = uVel[cxp];
+        double vVelc = vVel[c], vVelcxm = vVel[cxm], vVelcxp = uVel[cxp];
+        double wVelc = wVel[c], wVelcxm = wVel[cxm], wVelcxp = uVel[cxp];
+        
+        //calculate the inside faces
+        double nxm = wc - wcxm;
+        double nxp = wcxp - wc;
+        double delN = minMod(nxm, nxp);
+        faceWeight.minus_right = wc - 1.0/2.0 * delN; faceWeight.plus_left = wc + 1.0/2.0 * delN;
+        
+        nxm = uVelc - uVelcxm;
+        nxp = uVelcxp - uVelc;
+        delN = minMod(nxm, nxp);
+        uVelFaceAbscissas.minus_right = uVelc - 1.0/2.0 * delN; uVelFaceAbscissas.plus_left = uVelc + 1.0/2.0 * delN;
+        
+        nxm = vVelc - vVelcxm;
+        nxp = vVelcxp - vVelc;
+        delN = minMod(nxm, nxp);
+        vVelFaceAbscissas.minus_right = vVelc - 1.0/2.0 * delN; vVelFaceAbscissas.plus_left = vVelc + 1.0/2.0 * delN;
+        
+        nxm = wVelc - wVelcxm;
+        nxp = wVelcxp - wVelc;
+        delN = minMod(nxm, nxp);
+        wVelFaceAbscissas.minus_right = wVelc - 1.0/2.0 * delN; wVelFaceAbscissas.plus_left = wVelc + 1.0/2.0 * delN;
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          if ( isBoundary.minus ) {
+            faceWeight.minus_left = wcxm;
+            uVelFaceAbscissas.minus_left = uVelcxm;
+            vVelFaceAbscissas.minus_left = vVelcxm;
+            wVelFaceAbscissas.minus_left = wVelcxm;
+          } else {
+            nxm = wcxm - w[cxmm];
+            nxp = wc - wcxm;
+            delN = minMod(nxm, nxp);
+            faceWeight.minus_left = wcxm + 1.0/2.0 * delN;
+           
+            nxm = uVelcxm - uVel[cxmm];
+            nxp = uVelc - uVelcxm;
+            delN = minMod(nxm, nxp);
+            uVelFaceAbscissas.minus_left = uVelcxm + 1.0/2.0 * delN;
+          
+            nxm = vVelcxm - vVel[cxmm];
+            nxp = vVelc - vVelcxm;
+            delN = minMod(nxm, nxp);
+            vVelFaceAbscissas.minus_left = vVelcxm + 1.0/2.0 * delN;
+          
+            nxm = wVelcxm - wVel[cxmm];
+            nxp = wVelc - wVelcxm;
+            delN = minMod(nxm, nxp);
+            wVelFaceAbscissas.minus_left = wVelcxm + 1.0/2.0 * delN;
+          }
+          
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          if ( isBoundary.plus ) {
+            faceWeight.plus_right = wcxp;
+            uVelFaceAbscissas.plus_right = uVelcxp;
+            vVelFaceAbscissas.plus_right = vVelcxp;
+            wVelFaceAbscissas.plus_right = wVelcxp;
+          } else {
+            nxm = wcxp - wc;
+            nxp = w[cxpp] - wcxp;
+            delN = minMod(nxm, nxp);
+            faceWeight.plus_right = wcxp - 1.0/2.0 * delN;
+          
+            nxm = uVelcxp - uVelc;
+            nxp = uVel[cxpp] - uVelcxp;
+            delN = minMod(nxm, nxp);
+            uVelFaceAbscissas.plus_right = uVelcxp - 1.0/2.0 * delN;
+          
+            nxm = vVelcxp - vVelc;
+            nxp = vVel[cxpp] - vVelcxp;
+            delN = minMod(nxm, nxp);
+            vVelFaceAbscissas.plus_right = vVelcxp - 1.0/2.0 * delN;
+          
+            nxm = wVelcxp - wVelc;
+            nxp = wVel[cxpp] - wVelcxp;
+            delN = minMod(nxm, nxp);
+            wVelFaceAbscissas.plus_right = wVelcxp - 1.0/2.0 * delN;
+          }
+          
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c]; incident[2] = wVel[c];
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot*2.0/3.0 );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          rebound[0] = temp[0] * -1.0 * epW;
+          rebound[1] = temp[1] * -1.0 * epW;
+          rebound[2] = temp[2] * -1.0 * epW;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+
+      //2D corner walls
+      void bc_wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
+                      constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
+                      cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                      const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary)
+      {
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        double wc = w[c], wcxm = w[cxm], wcxp = w[cxp];
+        double uVelc = uVel[c], uVelcxm = uVel[cxm], uVelcxp = uVel[cxp];
+        double vVelc = vVel[c], vVelcxm = vVel[cxm], vVelcxp = uVel[cxp];
+        double wVelc, wVelcxm, wVelcxp;
+        if (wVelIndex > -1) {
+          wVelc = wVel[c];
+          wVelcxm = wVel[cxm];
+          wVelcxp = uVel[cxp];
+        }
+        
+        //calculate the inside faces
+        double nxm = wc - wcxm;
+        double nxp = wcxp - wc;
+        double delN = minMod(nxm, nxp);
+        faceWeight.minus_right = wc - 1.0/2.0 * delN; faceWeight.plus_left = wc + 1.0/2.0 * delN;
+        
+        nxm = uVelc - uVelcxm;
+        nxp = uVelcxp - uVelc;
+        delN = minMod(nxm, nxp);
+        uVelFaceAbscissas.minus_right = uVelc - 1.0/2.0 * delN; uVelFaceAbscissas.plus_left = uVelc + 1.0/2.0 * delN;
+        
+        nxm = vVelc - vVelcxm;
+        nxp = vVelcxp - vVelc;
+        delN = minMod(nxm, nxp);
+        vVelFaceAbscissas.minus_right = vVelc - 1.0/2.0 * delN; vVelFaceAbscissas.plus_left = vVelc + 1.0/2.0 * delN;
+        
+        if (wVelIndex > -1) {
+          nxm = wVelc - wVelcxm;
+          nxp = wVelcxp - wVelc;
+          delN = minMod(nxm, nxp);
+          wVelFaceAbscissas.minus_right = wVelc - 1.0/2.0 * delN; wVelFaceAbscissas.plus_left = wVelc + 1.0/2.0 * delN;
+        }
+        
+        if ( volFrac[cxm] == 1.0 ) {
+          if ( isBoundary.minus ) {
+            faceWeight.minus_left = wcxm;
+            uVelFaceAbscissas.minus_left = uVelcxm;
+            vVelFaceAbscissas.minus_left = vVelcxm;
+            if (wVelIndex > -1)
+              wVelFaceAbscissas.minus_left = wVelcxm;
+          } else {
+            nxm = wcxm - w[cxmm];
+            nxp = wc - wcxm;
+            delN = minMod(nxm, nxp);
+            faceWeight.minus_left = wcxm + 1.0/2.0 * delN;
+          
+            nxm = uVelcxm - uVel[cxmm];
+            nxp = uVelc - uVelcxm;
+            delN = minMod(nxm, nxp);
+            uVelFaceAbscissas.minus_left = uVelcxm + 1.0/2.0 * delN;
+          
+            nxm = vVelcxm - vVel[cxmm];
+            nxp = vVelc - vVelcxm;
+            delN = minMod(nxm, nxp);
+            vVelFaceAbscissas.minus_left = vVelcxm + 1.0/2.0 * delN;
+          
+            if (wVelIndex > -1) {
+              nxm = wVelcxm - wVel[cxmm];
+              nxp = wVelc - wVelcxm;
+              delN = minMod(nxm, nxp);
+              wVelFaceAbscissas.minus_left = wVelcxm + 1.0/2.0 * delN;
+            }
+          }
+          
+        } else { //calculate rebound vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.minus_left = w[c]/epW;
+          uVelFaceAbscissas.minus_left = rebound[0];
+          vVelFaceAbscissas.minus_left = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.minus_left = rebound[2];
+        }
+        
+        if ( volFrac[cxp] == 1.0 ) {
+          if ( isBoundary.plus ) {
+            faceWeight.plus_right = wcxp;
+            uVelFaceAbscissas.plus_right = uVelcxp;
+            vVelFaceAbscissas.plus_right = vVelcxp;
+            if (wVelIndex > -1)
+              wVelFaceAbscissas.plus_right = wVelcxp;
+          } else {
+            nxm = wcxp - wc;
+            nxp = w[cxpp] - wcxp;
+            delN = minMod(nxm, nxp);
+            faceWeight.plus_right = wcxp - 1.0/2.0 * delN;
+          
+            nxm = uVelcxp - uVelc;
+            nxp = uVel[cxpp] - uVelcxp;
+            delN = minMod(nxm, nxp);
+            uVelFaceAbscissas.plus_right = uVelcxp - 1.0/2.0 * delN;
+          
+            nxm = vVelcxp - vVelc;
+            nxp = vVel[cxpp] - vVelcxp;
+            delN = minMod(nxm, nxp);
+            vVelFaceAbscissas.plus_right = vVelcxp - 1.0/2.0 * delN;
+          
+            if (wVelIndex > -1) {
+              nxm = wVelcxp - wVelc;
+              nxp = wVel[cxpp] - wVelcxp;
+              delN = minMod(nxm, nxp);
+              wVelFaceAbscissas.plus_right = wVelcxp - 1.0/2.0 * delN;
+            }
+          }
+          
+        } else { //calculate reboudn vector
+          std::vector<double> rebound (3);
+          std::vector<double> incident (3);
+          std::vector<double> temp (3);
+          incident[0] = uVel[c]; incident[1] = vVel[c];
+          //check for wvel index to allow testign in 2D x-y space easily
+          incident[2] = (wVelIndex > -1 ) ? wVel[c] : 0.0;
+          
+          double dot = dotProd( wallNorm, incident );
+          temp = scalarMult( wallNorm, dot );
+          temp[0] -= incident[0]; temp[1] -= incident[1]; temp[2] -= incident[2];
+          temp[0] *= epVec[0]; temp[1] *= epVec[1]; temp[2] *= epVec[2];
+          rebound[0] = temp[0] * -1.0;
+          rebound[1] = temp[1] * -1.0;
+          rebound[2] = temp[2] * -1.0;
+          
+          faceWeight.plus_right = w[c]/epW;
+          uVelFaceAbscissas.plus_right = rebound[0];
+          vVelFaceAbscissas.plus_right = rebound[1];
+          if (wVelIndex > -1)
+            wVelFaceAbscissas.plus_right = rebound[2];
+        }
+      }
+
+      //simplest form when no wall cells touching
+      cqFaceData1D bc_no_wall( const IntVector c, const IntVector coord, constCCVariable<double>& phi, const cqFaceBoundaryBool isBoundary )
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -488,7 +1440,51 @@ namespace Uintah {
         face_values.minus_right = phic - 1.0/2.0 * delN;
         face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( isBoundary.minus ) {
+          face_values.minus_left = phicxm;
+        } else {
+          nxm = (phicxm - phi[cxmm]);
+          nxp = (phic - phicxm);
+          delN = minMod(nxm, nxp);
+          face_values.minus_left = phicxm + 1.0/2.0 * delN;
+        }
+        
+        if ( isBoundary.plus ) {
+          face_values.plus_right = phicxp;
+        } else {
+          nxm = (phicxp - phic);
+          nxp = (phi[cxpp] - phicxp);
+          delN = minMod(nxm, nxp);
+          face_values.plus_right = phicxp - 1.0/2.0 * delN;
+        }
+        
+        return face_values;
+      }
+      
+      //functions to handle flat wall
+      cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
+                            constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
+      {
+        CQMOM_Convection::cqFaceData1D face_values;
+        
+        IntVector cxpp = c + coord + coord;
+        IntVector cxp = c + coord;
+        IntVector cxm = c - coord;
+        IntVector cxmm = c - coord - coord;
+        
+        double phic = phi[c];
+        double phicxm = phi[cxm];
+        double phicxp = phi[cxp];
+        //calculate the inside faces
+        double delN;
+        double nxm = (phic - phicxm);
+        double nxp = (phicxp - phic);
+        delN = minMod(nxm, nxp);
+        
+        face_values.minus_right = phic - 1.0/2.0 * delN;
+        face_values.plus_left = phic + 1.0/2.0 * delN;
+        
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) {  //check if wall is present
           if (isBoundary.minus ) {
             face_values.minus_left = phicxm;
           } else {
@@ -501,7 +1497,7 @@ namespace Uintah {
           face_values.minus_left = face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {  //check if wall is present
           if (isBoundary.plus ) {
             face_values.plus_right = phicxp;
           } else {
@@ -527,7 +1523,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                   constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -548,7 +1544,7 @@ namespace Uintah {
         face_values.minus_right = phic - 1.0/2.0 * delN;
         face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.minus ) {
             face_values.minus_left = phicxm;
           } else {
@@ -561,7 +1557,7 @@ namespace Uintah {
           face_values.minus_left = face_values.minus_right/epW;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.plus ) {
             face_values.plus_right = phicxp;
           } else {
@@ -587,7 +1583,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                    constCCVariable<int>& cellType, const double epW, const cqFaceBoundaryBool isBoundary)
+                                    constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -608,7 +1604,7 @@ namespace Uintah {
         face_values.minus_right = phic - 1.0/2.0 * delN;
         face_values.plus_left = phic + 1.0/2.0 * delN;
         
-        if ( (cellType[cxm] != 8 && cellType[cxm] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.minus ) {
             face_values.minus_left = phicxm;
           } else {
@@ -621,7 +1617,7 @@ namespace Uintah {
           face_values.minus_left = -epW*face_values.minus_right;
         }
         
-        if ( (cellType[cxp] != 8 && cellType[cxp] != 10) || cellType[c] != -1 ) { //check if wall is present
+        if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
           if (isBoundary.plus ) {
             face_values.plus_right = phicxp;
           } else {
@@ -703,6 +1699,7 @@ namespace Uintah {
     std::vector<const VarLabel *> xConvLabels;
     std::vector<const VarLabel *> yConvLabels;
     std::vector<const VarLabel *> zConvLabels;
+    const VarLabel * d_wallIntegerLabel;
 
     std::string d_convScheme; //first or second order convection
     
@@ -846,13 +1843,13 @@ namespace Uintah {
     // These functions assemble other terms
     // --------------------------------------------------------------------------
     /** @brief Computes the flux term of the cell based on summatino of face values */
-    inline double getFlux( const double area, cqFaceData1D GPhi, const IntVector c, constCCVariable<int>& cellType )
+    inline double getFlux( const double area, cqFaceData1D GPhi, const IntVector c, constCCVariable<double>& volFrac )
     {
       double F;
       
       //Not using the areafraction here allows for flux to come from an intrusion cell into the domain as
       //the particles bounce, but requires checking celltype to prevent flux into intrusion cells
-      if ( cellType[c] == -1 ) {
+      if ( volFrac[c] == 1.0 ) {
         return F = area * ( GPhi.plus - GPhi.minus );
       } else {
         return F = 0.0;

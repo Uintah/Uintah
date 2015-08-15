@@ -35,7 +35,6 @@ BrownSootFormation_Tar::problemSetup(const ProblemSpecP& inputdb)
 
   db->getWithDefault("mix_mol_weight_label", _mix_mol_weight_name,   "mixture_molecular_weight");
   db->getWithDefault("tar_label",            _tar_name,              "Tar");
-  db->getWithDefault("mixture_fraction_label", _mixture_fraction_name,     "mixture_fraction");
   db->getWithDefault("Ysoot_label",          _Ysoot_name,            "Ysoot");
   db->getWithDefault("Ns_label",             _Ns_name,               "Ns");
   db->getWithDefault("o2_label",             _o2_name,               "O2");
@@ -69,7 +68,6 @@ BrownSootFormation_Tar::sched_computeSource( const LevelP& level, SchedulerP& sc
   // resolve some labels:
   const VarLabel* mix_mol_weight_label  = VarLabel::find( _mix_mol_weight_name);
   const VarLabel* tar_label             = VarLabel::find( _tar_name);
-  const VarLabel* mixture_fraction_label = VarLabel::find( _mixture_fraction_name);
   const VarLabel* Ysoot_label           = VarLabel::find( _Ysoot_name);
   const VarLabel* Ns_label              = VarLabel::find( _Ns_name);
   const VarLabel* o2_label              = VarLabel::find( _o2_name);
@@ -77,7 +75,6 @@ BrownSootFormation_Tar::sched_computeSource( const LevelP& level, SchedulerP& sc
   const VarLabel* rho_label             = VarLabel::find( _rho_name);
   tsk->requires( which_dw, mix_mol_weight_label,               Ghost::None, 0 );
   tsk->requires( which_dw, tar_label,                          Ghost::None, 0 );
-  tsk->requires( which_dw, mixture_fraction_label,             Ghost::None, 0 );
   tsk->requires( which_dw, Ysoot_label,                        Ghost::None, 0 );
   tsk->requires( which_dw, Ns_label,                           Ghost::None, 0 );
   tsk->requires( which_dw, o2_label,                           Ghost::None, 0 );
@@ -111,7 +108,6 @@ BrownSootFormation_Tar::computeSource( const ProcessorGroup* pc,
 
     constCCVariable<double> mix_mol_weight;
     constCCVariable<double> Tar;
-    constCCVariable<double> mixture_fraction;
     constCCVariable<double> Ysoot;
     constCCVariable<double> Ns;
     constCCVariable<double> O2; 
@@ -119,7 +115,6 @@ BrownSootFormation_Tar::computeSource( const ProcessorGroup* pc,
     constCCVariable<double> temperature;
     const VarLabel* mix_mol_weight_label  = VarLabel::find( _mix_mol_weight_name);
     const VarLabel* tar_label             = VarLabel::find( _tar_name);
-    const VarLabel* mixture_fraction_label = VarLabel::find( _mixture_fraction_name);
     const VarLabel* Ysoot_label           = VarLabel::find( _Ysoot_name);
     const VarLabel* Ns_label              = VarLabel::find( _Ns_name);
     const VarLabel* o2_label              = VarLabel::find( _o2_name);
@@ -138,7 +133,6 @@ BrownSootFormation_Tar::computeSource( const ProcessorGroup* pc,
                                                                                        
     which_dw->get( mix_mol_weight , mix_mol_weight_label , matlIndex , patch , gn, 0 );
     which_dw->get( Tar         , tar_label            , matlIndex , patch , gn, 0 );
-    which_dw->get( mixture_fraction , mixture_fraction_label , matlIndex , patch , gn, 0 );
     which_dw->get( Ysoot          , Ysoot_label          , matlIndex , patch , gn, 0 );
     which_dw->get( Ns             , Ns_label             , matlIndex , patch , gn, 0 );
     which_dw->get( O2             , o2_label             , matlIndex , patch , gn, 0 );
@@ -150,7 +144,6 @@ BrownSootFormation_Tar::computeSource( const ProcessorGroup* pc,
       IntVector c = *iter;
 
       double rhoYO2 = O2[c] * rho[c];
-      //double Tar = 0.3 * mixture_fraction[c];
       double rhoTar = Tar[c] * rho[c];
 
       double sys_pressure = 101325; //Pa
@@ -206,12 +199,6 @@ double Aot = 6.77E6;          ///< preexponential: tar oxidation (m3/kg*s)
 double Eot = 52.3E6;          ///< Ea: soot formation, J/kmol
      
 double Rgas = 8314.46;        ///< Gas constant: J/kmol*K
-double kb   = 1.3806488E-23;  ///< Boltzmann constant: kg*m2/s2*K
-double Na   = 6.02201413E26;  ///< Avogadro's number: #/kmol
-                                                                                           
-double MWo2 = 32.0;           ///< molecular weight o2  kg/kmol
-double MWt  = 350.0;          ///< molecular weight tar kg/kmol
-double MWc  = 12.011;         ///< molecular weight c   kg/kmol
                                                                                            
 //-------------------------------------
                                                                                            

@@ -32,9 +32,7 @@
 #include <vector>
 
 namespace Uintah {
-  using SCIRun::Point;
-  using SCIRun::IntVector;
-
+  
 class CrackGeometry
 {
   public:

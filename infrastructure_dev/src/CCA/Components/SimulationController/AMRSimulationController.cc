@@ -137,6 +137,11 @@ AMRSimulationController::run()
   d_scheduler->advanceDataWarehouse( currentGrid, true );
 
   d_scheduler->setInitTimestep( true );
+  
+  bool first = true;
+  if (d_restarting) {
+    d_scheduler->setRestartInitTimestep(first);
+  }
 
   double time;
 
@@ -184,7 +189,6 @@ AMRSimulationController::run()
   ////////////////////////////////////////////////////////////////////////////
   // The main time loop; here the specified problem is actually getting solved
 
-  bool   first = true;
   int    iterations = d_sharedState->getCurrentTopLevelTimeStep();
   double delt = 0;
 
@@ -194,10 +198,7 @@ AMRSimulationController::run()
 
   d_scheduler->setInitTimestep(false);
 
-  // scheduler needs to know if it's doing the first timestep in a restart
-  if (d_restarting) {
-    d_scheduler->setRestartInitTimestep(first);
-  }
+
 
    // main timestepping loop
    while( ( time < d_timeinfo->maxTime ) &&
@@ -692,6 +693,10 @@ AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   if(d_restarting){
 
     d_lb->possiblyDynamicallyReallocate(grid, LoadBalancer::restart);
+    // tsaad & bisaac: At this point, during a restart, a grid does NOT have knowledge of the boundary conditions.
+    // (See other comments in SimulationController.cc for why that is the case). Here, and given a
+    // legitimate load balancer, we can assign the BCs to the grid in an efficient manner.
+    grid->assignBCS( d_grid_ps, d_lb );
 
     grid->performConsistencyCheck();
 

@@ -21,28 +21,24 @@
 #  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 #  IN THE SOFTWARE.
 # 
-# 
-# 
-# 
-# 
 # Makefile fragment for programs.
 
-OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS))) \
-	   $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS))) \
-	   $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
-	   $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS))) \
-	   $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS))) \
-	   $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS))) \
-	   $(patsubst %.l,%.$(OBJEXT),$(filter %.l,$(SRCS))) \
-	   $(patsubst %.y,%.$(OBJEXT),$(filter %.y,$(SRCS)))
+OBJS := $(patsubst %.c,%.$(OBJEXT),$(filter %.c,$(SRCS)))     \
+        $(patsubst %.cc,%.$(OBJEXT),$(filter %.cc,$(SRCS)))   \
+        $(patsubst %.cxx,%.$(OBJEXT),$(filter %.cxx,$(SRCS))) \
+        $(patsubst %.cu,%.$(OBJEXT),$(filter %.cu,$(SRCS)))   \
+        $(patsubst %.s,%.$(OBJEXT),$(filter %.s,$(SRCS)))     \
+        $(patsubst %.F,%.$(OBJEXT),$(filter %.F,$(SRCS)))     \
+        $(patsubst %.l,%.$(OBJEXT),$(filter %.l,$(SRCS)))     \
+        $(patsubst %.y,%.$(OBJEXT),$(filter %.y,$(SRCS)))
 
 # We always link against the internal Dataflow malloc
 ifneq ($(IS_WIN),yes)
-PSELIBS := $(PSELIBS) $(MALLOCLIB)
+  PSELIBS := $(PSELIBS) $(MALLOCLIB)
 endif
 
 ifneq ($(REPOSITORY_FLAGS),)
-REPOSITORIES_$(PROGRAM) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository_$(notdir $(PROGRAM)) $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
+  REPOSITORIES_$(PROGRAM) := $(REPOSITORY_FLAGS) $(SRCDIR)/ptrepository_$(notdir $(PROGRAM)) $(patsubst %,$(REPOSITORY_FLAGS) %/ptrepository, $(PSELIBS))
 endif
 
 # The libraries are specified like Core/Thread but get
@@ -78,7 +74,6 @@ else
 	$(CXX) $(PROGRAM_LDFLAGS) $(SCI_THIRDPARTY_LIBRARY) $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.$(OBJEXT),$^) $(patsubst $(LIBDIR)/lib%.$(SO_OR_A_FILE),-l%,$(filter %.$(SO_OR_A_FILE),$^)) $(REPOSITORIES_$@) $($@_LIBS)
 endif
 
-
 #  These will get removed on make clean
 CLEANOBJS := $(CLEANOBJS) $(OBJS)
 CLEANPROGS := $(CLEANPROGS) $(PROGRAM)
@@ -86,13 +81,12 @@ ifneq ($(REPOSITORY_FLAGS),)
   ALL_LIB_ASSOCIATIONS := $(ALL_LIB_ASSOCIATIONS) $(patsubst %,$(SRCDIR)/ptrepository_$(notdir $(PROGRAM)):%,$(OBJS))
 endif
 
-
 # Try to prevent user error
 SRCS := INVALID_SRCS.cc
 
 ifneq ($(GENHDRS),)
-ALLGEN := $(ALLGEN) $(GENHDRS)
-$(OBJS): $(GENHDRS)
-GENHDRS :=
+  ALLGEN := $(ALLGEN) $(GENHDRS)
+  $(OBJS): $(GENHDRS)
+  GENHDRS :=
 endif
 

@@ -62,7 +62,7 @@ namespace Uintah {
      *  \brief  Struct that holds information about particle boundary conditions
      */
     struct ParticleBndSpec {
-
+      
       /*
        *  \brief Particle boundary type wall or inlet
        */
@@ -77,26 +77,26 @@ namespace Uintah {
         ELASTIC, INELASTIC, PARTIALLYELASTIC
       };
       
-      // constructor
+      // Default constructor
       ParticleBndSpec()
       {
         ParticleBndSpec(ParticleBndSpec::NOTSET, ParticleBndSpec::ELASTIC, 0.0, 0.0);
       }
 
-      // constructor
+      // Constructor
       ParticleBndSpec(ParticleBndTypeEnum bndTypet, ParticleWallTypeEnum wallTypet, const double restitution, const double pPerSec)
       {
-        bndType = bndTypet;
-        wallType = wallTypet;
+        bndType         = bndTypet;
+        wallType        = wallTypet;
         restitutionCoef = restitution;
         particlesPerSec = pPerSec;
       }
       
-      // constructor
+      // Copy constructor
       ParticleBndSpec(const ParticleBndSpec& rhs)
       {
-        bndType = rhs.bndType;
-        wallType = rhs.wallType;
+        bndType         = rhs.bndType;
+        wallType        = rhs.wallType;
         restitutionCoef = rhs.restitutionCoef;
         particlesPerSec = rhs.particlesPerSec;
       }
@@ -104,7 +104,7 @@ namespace Uintah {
       /*
        *  \brief Checks whether a particle boundary condition has been specified on this BCGeometry
        */
-      bool hasParticlesBoundary() const
+      bool hasParticleBC() const
       {
         return( bndType != ParticleBndSpec::NOTSET );
       }
@@ -146,7 +146,7 @@ namespace Uintah {
 
     void getNodeFaceIterator(Iterator& b_ptr);
 
-    bool hasIterator(){return (d_cells.size() > 0 || d_nodes.size() > 0);}
+    bool hasIterator(){return (d_cells.size() > 0);}
 
     /// Determine if a point is inside the geometry where the boundary
     /// condition is applied.
@@ -184,7 +184,7 @@ namespace Uintah {
     // Particle-related functionality
     ParticleBndSpec getParticleBndSpec(){return d_particleBndSpec;}
     void setParticleBndSpec(const ParticleBndSpec pBndSpec){ d_particleBndSpec = pBndSpec; }
-    bool hasParticlesBoundary(){ return d_particleBndSpec.hasParticlesBoundary(); }
+    bool hasParticleBC(){ return d_particleBndSpec.hasParticleBC(); }
 
     double surfaceArea(){ return d_surfaceArea; }
     Point getOrigin() { return d_origin;}

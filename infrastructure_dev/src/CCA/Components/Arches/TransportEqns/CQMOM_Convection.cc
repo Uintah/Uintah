@@ -27,9 +27,10 @@ d_fieldLabels(fieldLabels)
 
 CQMOM_Convection::~CQMOM_Convection()
 {
-  //NOTE:destory extra var labels if needed
-  if ( partVel )
+  if ( partVel ) {
     delete _opr;
+    VarLabel::destroy(d_wallIntegerLabel);
+  }
 }
 //---------------------------------------------------------------------------
 // Method: Problem setup
@@ -122,6 +123,10 @@ CQMOM_Convection::problemSetup(const ProblemSpecP& params)
   } else {
     throw InvalidValue("Error: Convection scheme not recognized. Check UPS file and try again.", __FILE__, __LINE__);
   }
+  
+  //var label for handling walls
+  string varname = "wallInteger";
+  d_wallIntegerLabel = VarLabel::create(varname, CCVariable<int>::getTypeDescription() );
 }
 
 //---------------------------------------------------------------------------
@@ -191,7 +196,7 @@ CQMOM_Convection::sched_solveCQMOMConvection( const LevelP& level, SchedulerP& s
   Task* tsk = new Task(taskname, this, &CQMOM_Convection::solveCQMOMConvection);
   
   
-  tsk->requires(Task::OldDW, d_fieldLabels->d_cellTypeLabel, Ghost::AroundCells, 1);
+  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
   
   //requires updated weights and abscissas
   for (ArchesLabel::WeightMap::iterator iW = d_fieldLabels->CQMOMWeights.begin(); iW != d_fieldLabels->CQMOMWeights.end(); ++iW) {
@@ -210,6 +215,8 @@ CQMOM_Convection::sched_solveCQMOMConvection( const LevelP& level, SchedulerP& s
       tsk->requires( Task::NewDW, tempLabel, Ghost::AroundCells, 2 );
     }
   }
+  
+  tsk->requires( Task::NewDW, d_wallIntegerLabel, Ghost::AroundCells, 1);
   
   //computes convection terms
   for ( int i = 0; i < nMoments; i++ ) {
@@ -243,8 +250,10 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
     int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
     Vector Dx = patch->dCell();
     
-    constCCVariable<int> cellType;
-    old_dw->get(cellType, d_fieldLabels->d_cellTypeLabel, matlIndex, patch, gac, 1);
+    constCCVariable<double> volFrac;
+    old_dw->get(volFrac, d_fieldLabels->d_volFractionLabel, matlIndex, patch, gac, 1);
+    constCCVariable<int> wallInt;
+    new_dw->get( wallInt, d_wallIntegerLabel, matlIndex, patch, gac, 1);
     
     //allocate convective terms
     vector<CCVariable<double>* > Fconv;
@@ -316,6 +325,37 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
       double area;
       int currVelIndex;
       
+      //Base on the WallInt variable set the wall normal vector
+      std::vector<double> wallNorm (3,0.0);
+      
+      if ( wallInt[c] > 30 && wallInt[c] < 40) { //3 wall cells
+        if ( wallInt[c] == 31 ) {
+          wallNorm[0] = 1.0; wallNorm[1] = 1.0; wallNorm[2] = 1.0;
+        } else if ( wallInt[c] == 32 ) {
+          wallNorm[0] = 1.0; wallNorm[1] = 1.0; wallNorm[2] = -1.0;
+        } else if ( wallInt[c] == 33 ) {
+          wallNorm[0] = 1.0; wallNorm[1] = -1.0; wallNorm[2] = 1.0;
+        } else if ( wallInt[c] == 34 ) {
+          wallNorm[0] = -1.0; wallNorm[1] = 1.0; wallNorm[2] = 1.0;
+        }
+      }
+      
+      if (wallInt[c] > 20 && wallInt[c] < 30 ) { //2 cells
+        if ( wallInt[c] == 21 ) {
+          wallNorm[0] = 1.0; wallNorm[1] = 1.0;
+        } else if ( wallInt[c] == 22 ) {
+          wallNorm[0] = 1.0; wallNorm[1] = -1.0;
+        } else if ( wallInt[c] == 23 ) {
+          wallNorm[0] = 1.0; wallNorm[2] = 1.0;
+        } else if ( wallInt[c] == 24 ) {
+          wallNorm[0] = 1.0; wallNorm[2] = -1.0;
+        } else if ( wallInt[c] == 25 ) {
+          wallNorm[1] = 1.0; wallNorm[2] = 1.0;
+        } else if ( wallInt[c] == 26 ) {
+          wallNorm[1] = -1.0; wallNorm[2] = 1.0;
+        }
+      }
+      
       cqFaceData1D gPhi;
       
       if ( uVelIndex > -1 ) {
@@ -329,15 +369,58 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::vector<cqFaceData1D> faceAbscissas (aSize);
         std::vector<cqFaceData1D> faceWeights (nNodes);
       
-        for ( int i = 0; i < nNodes; i++ ) {
-          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], cellType, epW );
-        }
-      
-        for ( int i = 0; i < nNodes * M; i++ ) {
-          if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], cellType, epW );
+        //Use a different function for each type of near-wall cell based on number of wall cells touching it
+        if ( wallInt[c] >= 31 && wallInt[c] <= 34 ) { //3D wall
+          for ( int i = 0; i < nNodes; i++ ) {
+            _opr->wall3D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                          volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                          faceAbscissas[i + nNodes*wVelIndex]);
+            for (int m = 0; m < M; m++ ) {
+              if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                faceAbscissas[i + nNodes*m] = _opr->no_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW );
+              }
+            }
+          }
+          
+        } else if ( wallInt[c] >= 21 && wallInt[c] <= 24 ) { //2D wall with x-component
+          std::vector<double> epVec (3);
+          if (wallInt[c] == 21 || wallInt[c] == 22 ) {
+            epVec[0] = epW; epVec[1] = epW; epVec[2] = 1.0;
           } else {
-            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], cellType, epW );
+            epVec[0] = epW; epVec[1] = 1.0; epVec[2] = epW;
+          }
+          for ( int i = 0; i < nNodes; i++ ) {
+            int tempIndex;
+            tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+            _opr->wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
+                          volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                          faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec);
+            for (int m = 0; m < M; m++ ) {
+              if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                faceAbscissas[i + nNodes*m] = _opr->no_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW );
+              }
+            }
+          }
+          
+        } else if ( wallInt[c] == 11 || wallInt[c] == 12 ) { //flat x-wall
+          for ( int i = 0; i < nNodes; i++ ) {
+            faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], volFrac, epW );
+          }
+          
+          for ( int i = 0; i < nNodes * M; i++ ) {
+            if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+              faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], volFrac, epW );
+            } else {
+              faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], volFrac, epW );
+            }
+          }
+          
+        } else { // wallint = 0 (no wall) or 99 (possible bad case to handle later)
+          for ( int i = 0; i < nNodes; i++ ) {
+            faceWeights[i] = _opr->no_wall(c, coord, weights[i], wallInt );
+            for ( int m = 0; m < M; m++ ) {
+              faceAbscissas[i + m*nNodes] = _opr->no_wall(c, coord, abscissas[i + m*nNodes], wallInt );
+            }
           }
         }
         
@@ -346,8 +429,12 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
       std::cout << "____________________________" << std::endl;
 #endif
         for ( int i = 0; i < nMoments; i++ ) {
-          gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-          (*(FconvX[i]))[c] = getFlux( area, gPhi, c, cellType );
+          if (volFrac[c] == 1.0 ) {
+            gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+          } else {
+            gPhi.plus = 0.0; gPhi.minus = 0.0;
+          }
+          (*(FconvX[i]))[c] = getFlux( area, gPhi, c, volFrac );
         }
       }
       
@@ -362,15 +449,57 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::vector<cqFaceData1D> faceAbscissas (aSize);
         std::vector<cqFaceData1D> faceWeights (nNodes);
         
-        for ( int i = 0; i < nNodes; i++ ) {
-          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], cellType, epW );
-        }
-        
-        for ( int i = 0; i < nNodes * M; i++ ) {
-          if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], cellType, epW );
+        if ( wallInt[c] >= 31 && wallInt[c] <= 34 ) { //3D wall
+          for ( int i = 0; i < nNodes; i++ ) {
+            _opr->wall3D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                           volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                          faceAbscissas[i + nNodes*wVelIndex]);
+            for (int m = 0; m < M; m++ ) {
+              if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                faceAbscissas[i + nNodes*m] = _opr->no_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW );
+              }
+            }
+          }
+          
+        } else if ( wallInt[c] == 21 || wallInt[c] == 22 || wallInt[c] == 25 || wallInt[c] == 26 ) { //2D wall with y-component
+          std::vector<double> epVec (3);
+          if (wallInt[c] == 21 || wallInt[c] == 22 ) {
+            epVec[0] = epW; epVec[1] = epW; epVec[2] = 1.0;
           } else {
-            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], cellType, epW );
+            epVec[0] = 1.0; epVec[1] = epW; epVec[2] = epW;
+          }
+          for ( int i = 0; i < nNodes; i++ ) {
+            int tempIndex;
+            tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+            _opr->wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
+                          volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                          faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec );
+            for (int m = 0; m < M; m++ ) {
+              if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                faceAbscissas[i + nNodes*m] = _opr->no_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW );
+              }
+            }
+          }
+          
+        } else if ( wallInt[c] == 13 || wallInt[c] == 14 ) { //flat y-wall
+          for ( int i = 0; i < nNodes; i++ ) {
+            faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], volFrac, epW );
+          }
+        
+          for ( int i = 0; i < nNodes * M; i++ ) {
+            if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+              faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], volFrac, epW );
+            } else {
+              faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], volFrac, epW );
+            }
+          }
+        
+        } else { // wallint = 0 (no wall) or 99 (possible bad case to handle later)
+          for ( int i = 0; i < nNodes; i++ ) {
+            faceWeights[i] = _opr->no_wall(c, coord, weights[i], wallInt );
+            for ( int m = 0; m < M; m++ ) {
+              faceAbscissas[i + m*nNodes] = _opr->no_wall(c, coord, abscissas[i + m*nNodes], wallInt);
+            }
           }
         }
 #ifdef cqmom_transport_dbg
@@ -378,13 +507,17 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::cout << "____________________________" << std::endl;
 #endif
         for ( int i = 0; i < nMoments; i++ ) {
-          gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-          (*(FconvY[i]))[c] = getFlux( area, gPhi, c, cellType );
+          if (volFrac[c] == 1.0 ) {
+            gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+          } else {
+            gPhi.plus = 0.0; gPhi.minus = 0.0;
+          }
+          (*(FconvY[i]))[c] = getFlux( area, gPhi, c, volFrac );
         }
       }
      
       if (wVelIndex > -1 ) {
-        // do Y convection
+        // do Z convection
         //----------------------------------------
         IntVector coord = IntVector(0,0,1);
         area = Dx.x() * Dx.y();
@@ -394,15 +527,55 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::vector<cqFaceData1D> faceAbscissas (aSize);
         std::vector<cqFaceData1D> faceWeights (nNodes);
         
-        for ( int i = 0; i < nNodes; i++ ) {
-          faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], cellType, epW );
-        }
-        
-        for ( int i = 0; i < nNodes * M; i++ ) {
-          if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-            faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], cellType, epW );
-          } else {
-            faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], cellType, epW );
+        if ( wallInt[c] >= 31 && wallInt[c] <= 34 ) { //3D wall
+          for ( int i = 0; i < nNodes; i++ ) {
+            _opr->wall3D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                          volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                          faceAbscissas[i + nNodes*wVelIndex]);
+            for (int m = 0; m < M; m++ ) {
+              if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                faceAbscissas[i + nNodes*m] = _opr->no_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW );
+              }
+            }
+          }
+          
+        } else if ( wallInt[c] >= 23 && wallInt[c] <= 26 ) { //2D wall with z-component
+          for ( int i = 0; i < nNodes; i++ ) {
+            std::vector<double> epVec (3);
+            if (wallInt[c] == 23 || wallInt[c] == 24 ) {
+              epVec[0] = epW; epVec[1] = 1.0; epVec[2] = epW;
+            } else {
+              epVec[0] = 1.0; epVec[1] = epW; epVec[2] = epW;
+            }
+            _opr->wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                          volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                          faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec);
+            for (int m = 0; m < M; m++ ) {
+              if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                faceAbscissas[i + nNodes*m] = _opr->no_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW );
+              }
+            }
+          }
+          
+        } else if ( wallInt[c] == 15 || wallInt[c] == 16 ) { //flat z-wall
+          for ( int i = 0; i < nNodes; i++ ) {
+            faceWeights[i] = _opr->no_bc_weight( c, coord, weights[i], volFrac, epW );
+          }
+          
+          for ( int i = 0; i < nNodes * M; i++ ) {
+            if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+              faceAbscissas[i] = _opr->no_bc_normVel( c, coord, abscissas[i], volFrac, epW );
+            } else {
+              faceAbscissas[i] = _opr->no_bc( c, coord, abscissas[i], volFrac, epW );
+            }
+          }
+          
+        } else { // wallint = 0 (no wall) or 99 (possible bad case to handle later)
+          for ( int i = 0; i < nNodes; i++ ) {
+            faceWeights[i] = _opr->no_wall(c, coord, weights[i], wallInt );
+            for ( int m = 0; m < M; m++ ) {
+              faceAbscissas[i + m*nNodes] = _opr->no_wall(c, coord, abscissas[i + m*nNodes], wallInt );
+            }
           }
         }
 #ifdef cqmom_transport_dbg
@@ -410,8 +583,12 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         std::cout << "____________________________" << std::endl;
 #endif
         for ( int i = 0; i < nMoments; i++ ) {
-          gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-          (*(FconvZ[i]))[c] = getFlux( area, gPhi, c, cellType );
+          if (volFrac[c] == 1.0 ) {
+            gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+          } else {
+            gPhi.plus = 0.0; gPhi.minus = 0.0;
+          }
+          (*(FconvZ[i]))[c] = getFlux( area, gPhi, c, volFrac );
         }
       }
 
@@ -440,6 +617,35 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
         cqFaceData1D gPhi;
         double area;
         int currVelIndex;
+        std::vector<double> wallNorm (3,0.0);
+        
+        if ( wallInt[c] > 30 && wallInt[c] < 40) { //3 wall cells
+          if ( wallInt[c] == 31 ) {
+            wallNorm[0] = 1.0; wallNorm[1] = 1.0; wallNorm[2] = 1.0;
+          } else if ( wallInt[c] == 32 ) {
+            wallNorm[0] = 1.0; wallNorm[1] = 1.0; wallNorm[2] = -1.0;
+          } else if ( wallInt[c] == 33 ) {
+            wallNorm[0] = 1.0; wallNorm[1] = -1.0; wallNorm[2] = 1.0;
+          } else if ( wallInt[c] == 34 ) {
+            wallNorm[0] = -1.0; wallNorm[1] = 1.0; wallNorm[2] = 1.0;
+          }
+        }
+        
+        if (wallInt[c] > 20 && wallInt[c] < 30 ) { //2 cells
+          if ( wallInt[c] == 21 ) {
+            wallNorm[0] = 1.0; wallNorm[1] = 1.0;
+          } else if ( wallInt[c] == 22 ) {
+            wallNorm[0] = 1.0; wallNorm[1] = -1.0;
+          } else if ( wallInt[c] == 23 ) {
+            wallNorm[0] = 1.0; wallNorm[2] = 1.0;
+          } else if ( wallInt[c] == 24 ) {
+            wallNorm[0] = 1.0; wallNorm[2] = -1.0;
+          } else if ( wallInt[c] == 25 ) {
+            wallNorm[1] = 1.0; wallNorm[2] = 1.0;
+          } else if ( wallInt[c] == 26 ) {
+            wallNorm[1] = -1.0; wallNorm[2] = 1.0;
+          }
+        }
         
         // do X convection
         // --------------------------------
@@ -453,21 +659,67 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
           std::vector<cqFaceData1D> faceAbscissas (aSize);
           std::vector<cqFaceData1D> faceWeights (nNodes);
 
-          for ( int i = 0; i < nNodes; i++ ) {
-            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], cellType, epW, faceIsBoundary );
-          }
-          
-          for ( int i = 0; i < nNodes * M; i++ ) {
-            if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+          if ( wallInt[c] >= 31 && wallInt[c] <= 34 ) { //3D wall
+            for ( int i = 0; i < nNodes; i++ ) {
+              _opr->bc_wall3D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                               volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                               faceAbscissas[i + nNodes*wVelIndex], faceIsBoundary);
+              for (int m = 0; m < M; m++ ) {
+                if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                  faceAbscissas[i + nNodes*m] = _opr->with_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW, faceIsBoundary );
+                }
+              }
+            }
+            
+          } else if ( wallInt[c] >= 21 && wallInt[c] <= 24 ) { //2D wall with x-component
+            std::vector<double> epVec (3);
+            if (wallInt[c] == 21 || wallInt[c] == 22 ) {
+              epVec[0] = epW; epVec[1] = epW; epVec[2] = 1.0;
             } else {
-              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              epVec[0] = epW; epVec[1] = 1.0; epVec[2] = epW;
+            }
+            for ( int i = 0; i < nNodes; i++ ) {
+              int tempIndex;
+              tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+              _opr->bc_wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
+                               volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                               faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec, faceIsBoundary);
+              for (int m = 0; m < M; m++ ) {
+                if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                  faceAbscissas[i + nNodes*m] = _opr->with_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW, faceIsBoundary );
+                }
+              }
+            }
+            
+          } else if ( wallInt[c] == 11 || wallInt[c] == 12 ) { //flat x-wall
+            for ( int i = 0; i < nNodes; i++ ) {
+              faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], volFrac, epW, faceIsBoundary );
+            }
+            
+            for ( int i = 0; i < nNodes * M; i++ ) {
+              if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+                faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
+              } else {
+                faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
+              }
+            }
+            
+          } else { // wallint = 0 (no wall) or 99 (possible bad case to handle later)
+            for ( int i = 0; i < nNodes; i++ ) {
+              faceWeights[i] = _opr->bc_no_wall(c, coord, weights[i], faceIsBoundary );
+              for ( int m = 0; m < M; m++ ) {
+                faceAbscissas[i + m*nNodes] = _opr->bc_no_wall(c, coord, abscissas[i + m*nNodes], faceIsBoundary);
+              }
             }
           }
 
           for ( int i = 0; i < nMoments; i++ ) {
-            gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-            (*(FconvX[i]))[c] = getFlux( area,  gPhi, c, cellType );
+            if (volFrac[c] == 1.0 ) {
+              gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+            } else {
+              gPhi.plus = 0.0; gPhi.minus = 0.0;
+            }
+            (*(FconvX[i]))[c] = getFlux( area,  gPhi, c, volFrac );
           }
         }
         
@@ -483,21 +735,67 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
           std::vector<cqFaceData1D> faceAbscissas (aSize);
           std::vector<cqFaceData1D> faceWeights (nNodes);
 
-          for ( int i = 0; i < nNodes; i++ ) {
-            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], cellType, epW, faceIsBoundary );
-          }
-          
-          for ( int i = 0; i < nNodes * M; i++ ) {
-            if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+          if ( wallInt[c] >= 31 && wallInt[c] <= 34 ) { //3D wall
+            for ( int i = 0; i < nNodes; i++ ) {
+              _opr->bc_wall3D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                              volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                              faceAbscissas[i + nNodes*wVelIndex], faceIsBoundary);
+              for (int m = 0; m < M; m++ ) {
+                if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                  faceAbscissas[i + nNodes*m] = _opr->with_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW, faceIsBoundary );
+                }
+              }
+            }
+            
+          } else if ( wallInt[c] == 21 || wallInt[c] == 22 || wallInt[c] == 25 || wallInt[c] == 26) { //2D wall with y-component
+            std::vector<double> epVec (3);
+            if (wallInt[c] == 21 || wallInt[c] == 22 ) {
+              epVec[0] = epW; epVec[1] = epW; epVec[2] = 1.0;
             } else {
-              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              epVec[0] = 1.0; epVec[1] = epW; epVec[2] = epW;
+            }
+            for ( int i = 0; i < nNodes; i++ ) {
+              int tempIndex;
+              tempIndex = (wVelIndex > -1 ) ? wVelIndex : 0;
+              _opr->bc_wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*tempIndex],
+                              volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                              faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec, faceIsBoundary);
+              for (int m = 0; m < M; m++ ) {
+                if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                  faceAbscissas[i + nNodes*m] = _opr->with_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW, faceIsBoundary );
+                }
+              }
+            }
+            
+          } else if ( wallInt[c] == 13 || wallInt[c] == 14 ) { //flat y-wall
+            for ( int i = 0; i < nNodes; i++ ) {
+              faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], volFrac, epW, faceIsBoundary );
+            }
+            
+            for ( int i = 0; i < nNodes * M; i++ ) {
+              if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+                faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
+              } else {
+                faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
+              }
+            }
+            
+          } else { // wallint = 0 (no wall) or 99 (possible bad case to handle later)
+            for ( int i = 0; i < nNodes; i++ ) {
+              faceWeights[i] = _opr->bc_no_wall(c, coord, weights[i], faceIsBoundary );
+              for ( int m = 0; m < M; m++ ) {
+                faceAbscissas[i + m*nNodes] = _opr->bc_no_wall(c, coord, abscissas[i + m*nNodes], faceIsBoundary);
+              }
             }
           }
 
           for ( int i = 0; i < nMoments; i++ ) {
-            gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-            (*(FconvY[i]))[c] = getFlux( area,  gPhi, c, cellType );
+            if (volFrac[c] == 1.0 ) {
+              gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+            } else {
+              gPhi.plus = 0.0; gPhi.minus = 0.0;
+            }
+            (*(FconvY[i]))[c] = getFlux( area,  gPhi, c, volFrac );
           }
         }
         
@@ -513,21 +811,65 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
           std::vector<cqFaceData1D> faceAbscissas (aSize);
           std::vector<cqFaceData1D> faceWeights (nNodes);
 
-          for ( int i = 0; i < nNodes; i++ ) {
-            faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], cellType, epW, faceIsBoundary );
-          }
-          
-          for ( int i = 0; i < nNodes * M; i++ ) {
-            if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
-              faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+          if ( wallInt[c] >= 31 && wallInt[c] <= 34 ) { //3D wall
+            for ( int i = 0; i < nNodes; i++ ) {
+              _opr->bc_wall3D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                              volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                              faceAbscissas[i + nNodes*wVelIndex], faceIsBoundary);
+              for (int m = 0; m < M; m++ ) {
+                if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                  faceAbscissas[i + nNodes*m] = _opr->with_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW, faceIsBoundary );
+                }
+              }
+            }
+            
+          } else if ( wallInt[c] >= 23 && wallInt[c] <= 26 ) { //2D wall with z-component
+            std::vector<double> epVec (3);
+            if (wallInt[c] == 21 || wallInt[c] == 22 ) {
+              epVec[0] = epW; epVec[1] = 1.0; epVec[2] = epW;
             } else {
-              faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], cellType, epW, faceIsBoundary );
+              epVec[0] = 1.0; epVec[1] = epW; epVec[2] = epW;
+            }
+            for ( int i = 0; i < nNodes; i++ ) {
+              _opr->bc_wall2D( c, coord, weights[i], abscissas[i + nNodes*uVelIndex], abscissas[i + nNodes*vVelIndex], abscissas[i + nNodes*wVelIndex],
+                              volFrac, epW, wallNorm, faceWeights[i], faceAbscissas[i + nNodes*uVelIndex], faceAbscissas[i +nNodes*vVelIndex],
+                              faceAbscissas[i + nNodes*wVelIndex], wVelIndex, epVec, faceIsBoundary);
+              for (int m = 0; m < M; m++ ) {
+                if ( m != uVelIndex && m != vVelIndex && m != wVelIndex ) { //scalar IC
+                  faceAbscissas[i + nNodes*m] = _opr->with_bc( c, coord, abscissas[i + nNodes*m], volFrac, epW, faceIsBoundary );
+                }
+              }
+            }
+            
+          } else if ( wallInt[c] == 15 || wallInt[c] == 16 ) { //flat z-wall
+            for ( int i = 0; i < nNodes; i++ ) {
+              faceWeights[i] = _opr->with_bc_weight( c, coord, weights[i], volFrac, epW, faceIsBoundary );
+            }
+            
+            for ( int i = 0; i < nNodes * M; i++ ) {
+              if ( i >= (currVelIndex*nNodes) && i < (currVelIndex+1)*nNodes ) { //check if wall is in this direction of velocity convection
+                faceAbscissas[i] = _opr->with_bc_normVel( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
+              } else {
+                faceAbscissas[i] = _opr->with_bc( c, coord, abscissas[i], volFrac, epW, faceIsBoundary );
+              }
+            }
+            
+          } else { // wallint = 0 (no wall) or 99 (possible bad case to handle later)
+            for ( int i = 0; i < nNodes; i++ ) {
+              faceWeights[i] = _opr->bc_no_wall(c, coord, weights[i], faceIsBoundary );
+              for ( int m = 0; m < M; m++ ) {
+                faceAbscissas[i + m*nNodes] = _opr->bc_no_wall(c, coord, abscissas[i + m*nNodes], faceIsBoundary);
+              }
             }
           }
 
           for ( int i = 0; i < nMoments; i++ ) {
-            gPhi     = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
-            (*(FconvZ[i]))[c] = getFlux( area,  gPhi, c, cellType );
+            if (volFrac[c] == 1.0 ) {
+              gPhi = sumNodes( faceWeights, faceAbscissas, nNodes, M, currVelIndex, momentIndexes[i], convWeightLimit );
+            } else {
+              gPhi.plus = 0.0; gPhi.minus = 0.0;
+            }
+            (*(FconvZ[i]))[c] = getFlux( area,  gPhi, c, volFrac );
           }
         }
         
@@ -548,3 +890,166 @@ CQMOM_Convection::solveCQMOMConvection( const ProcessorGroup* pc,
   } //patch loop
 }
 
+//---------------------------------------------------------------------------
+// Method: Schedule calculating the number of wall cells touching each flow cell
+//---------------------------------------------------------------------------
+void
+CQMOM_Convection::sched_initializeWalls( const LevelP& level, SchedulerP& sched, int timeSubStep)
+{
+  string taskname = "CQMOM_Convection::intializeWalls";
+  Task* tsk = new Task(taskname, this, &CQMOM_Convection::initializeWalls);
+  
+  tsk->requires(Task::OldDW, d_fieldLabels->d_volFractionLabel, Ghost::AroundCells, 1);
+  
+  if (timeSubStep == 0) {
+    tsk->computes(d_wallIntegerLabel);
+  } else {
+    tsk->modifies(d_wallIntegerLabel);
+  }
+  
+  sched->addTask(tsk, level->eachPatch(), d_fieldLabels->d_sharedState->allArchesMaterials());
+}
+
+//---------------------------------------------------------------------------
+// Method: Actually build the transport equation.
+//---------------------------------------------------------------------------
+void
+CQMOM_Convection::initializeWalls( const ProcessorGroup* pc,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* matls,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw )
+{
+  for (int p=0; p < patches->size(); p++) {
+    
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_fieldLabels->d_sharedState->getArchesMaterial(archIndex)->getDWIndex();
+    Vector Dx = patch->dCell();
+    
+    constCCVariable<double> vf;
+    old_dw->get(vf, d_fieldLabels->d_volFractionLabel, matlIndex, patch, gac, 1);
+    CCVariable<int> wallInt;
+    
+    if ( new_dw->exists(d_wallIntegerLabel, matlIndex, patch) ) {
+      new_dw->getModifiable(wallInt, d_wallIntegerLabel, matlIndex, patch);
+    } else {
+      new_dw->allocateAndPut(wallInt, d_wallIntegerLabel, matlIndex, patch);
+    }
+    
+    //set a CC variable to denote number of wall cells touching a flow cell near a wall
+    //first integer digit denotes number of cells touchign, and the 2nd digit is the case
+    //i.e 11-16 flat 1D wall, 21-26 2D angle wall, 31-34 3D angle wall
+    for (CellIterator citer=patch->getCellIterator(); !citer.done(); citer++){
+      IntVector c = *citer;
+      IntVector cxm = c - IntVector(1, 0, 0);
+      IntVector cxp = c + IntVector(1, 0, 0);
+      IntVector cym = c - IntVector(0, 1, 0);
+      IntVector cyp = c + IntVector(0, 1, 0);
+      IntVector czm = c - IntVector(0, 0, 1);
+      IntVector czp = c + IntVector(0, 0, 1);
+      if ( vf[c] == 0.0 ) {
+        wallInt[c] = 0;
+      } else {
+        if ( vf[cxm] == 1.0 && vf[cxp] == 1.0 && vf[cym] == 1.0 && vf[cyp] == 1.0 && vf[czm] == 1.0 && vf[czp] == 1.0 ) {
+          wallInt[c] = 0; //no wall touching this flow cell
+          
+          //PlaceHolder if these "teeth" type cells cause issues later
+//        } else if ( vf[cxm] == 0.0 && vf[cym] == 0.0 && vf[czm] == 0.0 && vf[czp] == 0.0 ) { //check 4 wall cells corner
+//          wallInt[c] = 401;
+//        } else if ( vf[cxm] == 0.0 && vf[cyp] == 0.0 && vf[czm] == 0.0 && vf[czp] == 0.0 ) {
+//          wallInt[c] = 402;
+//        } else if ( vf[cxp] == 0.0 && vf[cym] == 0.0 && vf[czm] == 0.0 && vf[czp] == 0.0 ) {
+//          wallInt[c] = 403;
+//        } else if ( vf[cxp] == 0.0 && vf[cyp] == 0.0 && vf[czm] == 0.0 && vf[czp] == 0.0 ) {
+//          wallInt[c] = 404;
+//        } else if ( vf[cxm] == 0.0 && vf[cym] == 0.0 && vf[cyp] == 0.0 && vf[czm] == 0.0 ) {
+//          wallInt[c] = 405;
+//        } else if ( vf[cxm] == 0.0 && vf[cym] == 0.0 && vf[cyp] == 0.0 && vf[czp] == 0.0 ) {
+//          wallInt[c] = 406;
+//        } else if ( vf[cxp] == 0.0 && vf[cym] == 0.0 && vf[cyp] == 0.0 && vf[czm] == 0.0 ) {
+//          wallInt[c] = 407;
+//        } else if ( vf[cxp] == 0.0 && vf[cym] == 0.0 && vf[cyp] == 0.0 && vf[czp] == 0.0 ) {
+//          wallInt[c] = 408;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 && vf[cym] == 0.0 && vf[czm] == 0.0 ) {
+//          wallInt[c] = 409;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 && vf[cym] == 0.0 && vf[czp] == 0.0 ) {
+//          wallInt[c] = 410;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 && vf[cyp] == 0.0 && vf[czm] == 0.0 ) {
+//          wallInt[c] = 411;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 && vf[cyp] == 0.0 && vf[czp] == 0.0 ) {
+//          wallInt[c] = 412;
+//          
+//        } else if ( vf[cxm] == 0.0 && vf[cym] == 0.0 & vf[cyp] == 0.0) { //check for 3 wall cell "teeth"
+//          wallInt[c] = 301;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 & vf[cym] == 0.0) {
+//          wallInt[c] = 302;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 & vf[cyp] == 0.0) {
+//          wallInt[c] = 303;
+//        } else if ( vf[cxp] == 0.0 && vf[cym] == 0.0 & vf[cyp] == 0.0) {
+//          wallInt[c] = 304;
+//        } else if ( vf[cxm] == 0.0 && vf[czm] == 0.0 & vf[czp] == 0.0) {
+//          wallInt[c] = 305;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 & vf[czm] == 0.0) {
+//          wallInt[c] = 306;
+//        } else if ( vf[cxm] == 0.0 && vf[cxp] == 0.0 & vf[czp] == 0.0) {
+//          wallInt[c] = 307;
+//        } else if ( vf[cxp] == 0.0 && vf[czm] == 0.0 & vf[czp] == 0.0) {
+//          wallInt[c] = 308;
+//        } else if ( vf[cym] == 0.0 && vf[czm] == 0.0 & vf[czp] == 0.0) {
+//          wallInt[c] = 309;
+//        } else if ( vf[cym] == 0.0 && vf[cyp] == 0.0 & vf[czm] == 0.0) {
+//          wallInt[c] = 310;
+//        } else if ( vf[cym] == 0.0 && vf[cyp] == 0.0 & vf[czp] == 0.0) {
+//          wallInt[c] = 311;
+//        } else if ( vf[cyp] == 0.0 && vf[czm] == 0.0 & vf[czp] == 0.0) {
+//          wallInt[c] = 312;
+        
+        //check for 3 wall cell corners
+        } else if ( (vf[cxm] == 0.0 && vf[cym] == 0.0 && vf[czm] == 0.0) || (vf[cxp] == 0.0 && vf[cyp] == 0.0 && vf[czp] == 0.0) ) {
+          wallInt[c] = 31;
+        } else if ( (vf[cxm] == 0.0 && vf[cym] == 0.0 && vf[czp] == 0.0) || ( vf[cxp] == 0.0 && vf[cyp] == 0.0 && vf[czm] == 0.0) ) {
+          wallInt[c] = 32;
+        } else if ( (vf[cxm] == 0.0 && vf[cyp] == 0.0 && vf[czm] == 0.0) || ( vf[cxp] == 0.0 && vf[cym] == 0.0 && vf[czp] == 0.0 ) ) {
+          wallInt[c] = 33;
+        } else if ( (vf[cxm] == 0.0 && vf[cyp] == 0.0 && vf[czp] == 0.0) || ( vf[cxp] == 0.0 && vf[cym] == 0.0 && vf[czm] == 0.0 ) ) {
+          wallInt[c] = 34;
+        
+        //check for 2 wall cell corners
+        } else if ( (vf[cxm] == 0.0 && vf[cym] == 0.0) || ( vf[cxp] == 0.0 && vf[cyp] == 0.0 ) ) {
+          wallInt[c] = 21;
+        } else if ( (vf[cxm] == 0.0 && vf[cyp] == 0.0) || ( vf[cxp] == 0.0 && vf[cym] == 0.0 ) ) {
+          wallInt[c] = 22;
+        } else if ( (vf[cxm] == 0.0 && vf[czm] == 0.0) || ( vf[cxp] == 0.0 && vf[czp] == 0.0 ) ) {
+          wallInt[c] = 23;
+        } else if ( (vf[cxm] == 0.0 && vf[czp] == 0.0) || ( vf[cxp] == 0.0 && vf[czm] == 0.0 ) ) {
+          wallInt[c] = 24;
+        } else if ( (vf[cym] == 0.0 && vf[czm] == 0.0) || ( vf[cyp] == 0.0 && vf[czp] == 0.0 ) ) {
+          wallInt[c] = 25;
+        } else if ( (vf[cym] == 0.0 && vf[czp] == 0.0) || ( vf[cyp] == 0.0 && vf[czm] == 0.0 ) ) {
+          wallInt[c] = 26;
+          
+        //check for flat wall
+        } else if ( vf[cxm] == 0.0 ) {
+          wallInt[c] = 11;
+        } else if ( vf[cxp] == 0.0 ) {
+          wallInt[c] = 12;
+        } else if ( vf[cym] == 0.0 ) {
+          wallInt[c] = 13;
+        } else if ( vf[cyp] == 0.0 ) {
+          wallInt[c] = 14;
+        } else if ( vf[czm] == 0.0 ) {
+          wallInt[c] = 15;
+        } else if ( vf[czp] == 0.0 ) {
+          wallInt[c] = 16;
+        
+        } else {
+          wallInt[c] = 99;  //all un set cases, add more in future if problems arise
+        }
+
+      }
+    } //cell loop
+  }
+}

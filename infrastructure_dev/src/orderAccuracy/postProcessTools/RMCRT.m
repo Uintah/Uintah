@@ -1,11 +1,12 @@
 #! /usr/bin/env octaveWrap
 %_________________________________
 % This octave file plots the radiative flux divergence (deldotq)
-% of a 2D center slice of a 3D domainprofile and computes
+% of a 2D center slice of a 3D domain profile and computes
 % the L2norm of the  divergence of q
 % 
 %
 % Example usage:
+%       RMCRT.m -bm <1-5>  -L <Level> -o "out_x" -uda <uda> -pDir <1,2,3> -plot <y/n>
 %_________________________________
 clear all;
 close all;
@@ -15,7 +16,7 @@ addpath("./")
 %______________________________________________________________________
 %______________________________________________________________________
 %   B E N C H M A R K   1
-function [divQ_exact] = benchMark1(x_CC)
+function [divQ_exact] = benchMark1(x_CC,pDir)
   printf("BenchMark 1");
   
   x_exact = 0:(1/40):1;
@@ -40,7 +41,7 @@ endfunction
 
 %______________________________________________________________________
 %    B E N C H M A R K   2    
-function [DivQ] = benchMark2(x_CC)
+function [DivQ] = benchMark2(x_CC,pDir)
   printf("BenchMark 2\n");
 
   [s,r1] = unix('grep -m1 -w "Total Number of Cells" tmp |cut -d":" -f2 | tr -d "[]int"');
@@ -95,7 +96,7 @@ endfunction
 
 %______________________________________________________________________
 %   B E N C H M A R K   3
-function [ExactSol] = benchMark3(x_CC)
+function [ExactSol] = benchMark3(x_CC,pDir)
   printf("BenchMark 3");
   
   load bench3Exact.txt;
@@ -135,7 +136,7 @@ endfunction
 
 %______________________________________________________________________
 %   B E N C H M A R K   4
-function [ExactSol] = benchMark4(x_CC)
+function [ExactSol] = benchMark4(x_CC,pDir)
   printf("BenchMark 4");
   
   load b4divQCenterExact.txt;
@@ -175,6 +176,86 @@ endfunction
 
 %______________________________________________________________________
 
+%______________________________________________________________________
+%______________________________________________________________________
+%   B E N C H M A R K   5 -> (1+ sine(x))*T^4 
+function [divQ_exact] = benchMark5(x_CC,pDir)
+  printf("BenchMark sine\n");
+  [rc, TOOLSPATH] = unix ('printenv --null TOOLSPATH');
+  
+  if pDir == 1
+    data = sprintf('%s/sinDivQx.dat',TOOLSPATH)
+    divQ = load(data);
+  elseif pDir == 2 
+    data = sprintf('%s/sinDivQy.dat',TOOLSPATH)
+    divQ = load(data);
+  elseif pDir == 3 
+    data = sprintf('%s/sinDivQz.dat',TOOLSPATH)
+    divQ = load(data);
+ end
+ 
+ ExactSol = divQ(:,2);
+ x_exact  = divQ(:,1);
+
+ %Do a pchip interpolation to any resolution
+ divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
+%______________________________________________________________________
+%______________________________________________________________________
+%   B E N C H M A R K   6 -> (a*x+b)*T^4 and k*exp(c*x+d)
+function [divQ_exact] = benchMark6(x_CC,pDir)
+  printf("BenchMark 6\n");
+  
+  [rc, TOOLSPATH] = unix ('printenv --null TOOLSPATH');
+  
+  if pDir ==1 
+    data = sprintf('%s/kexpDivQx.dat',TOOLSPATH)
+    divQ = load(data);
+  elseif pDir ==2 
+    data = sprintf('%s/kexpDivQy.dat',TOOLSPATH)
+    divQ = load(data);
+  elseif pDir ==3 
+    data = sprintf('%s/kexpDivQz.dat',TOOLSPATH)
+    divQ = load(data);
+  end
+
+  ExactSol = divQ(:,2);
+  x_exact  = divQ(:,1);
+
+  %Do a pchip interpolation to any resolution
+  divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
+%______________________________________________________________________
+%______________________________________________________________________
+%   B E N C H M A R K   7 -> (a*x+b)*T^4 and k*exp(c*x+d) with small hot spot
+
+function [divQ_exact] = benchMark7(x_CC,pDir)
+  printf("BenchMark 7\n");
+  
+  [rc, TOOLSPATH] = unix ('printenv --null TOOLSPATH');
+  
+  if pDir ==1 
+    data = sprintf('%s/hotspotDivQx.dat',TOOLSPATH)
+    divQ = load(data);    
+  elseif pDir ==2 
+    data = sprintf('%s/hotspotDivQy.dat',TOOLSPATH)
+    divQ = load(data);
+  elseif pDir ==3 
+    data = sprintf('%s/hotspotDivQz.dat',TOOLSPATH)
+    divQ = load(data);
+  end
+
+  ExactSol = divQ(:,2);
+  x_exact  = divQ(:,1);
+
+  %Do a pchip interpolation to any resolution
+  divQ_exact = interp1(x_exact, ExactSol, x_CC, 'pchip');
+  
+endfunction
+%______________________________________________________________________
+%______________________________________________________________________
 
 function Usage
   printf('RMCRT.m <options>\n') 
@@ -256,7 +337,6 @@ if( s0 ~=0 || s1 ~= 0 )
   quit(-1);
 end
 
-
 %________________________________
 % extract the physical time
 c0 = sprintf('puda -timesteps %s | grep : | cut -f 2 -d":" > tmp 2>&1',uda);
@@ -295,10 +375,10 @@ if(pDir == 1)
   dir = "X";
 elseif(pDir == 2)
   startEnd = sprintf('-istart %i   %i   %i  -iend   %i  %i   %i',xHalf, 0,      zHalf, xHalf, resolution(yDir)-1, zHalf);
-  dir = "Y"
+  dir = "Y";
 elseif(pDir == 3)
   startEnd = sprintf('-istart %i  %i    %i  -iend   %i  %i   %i',xHalf, yHalf,   0,    xHalf, yHalf, resolution(zDir)-1);
-  dir = "Z"
+  dir = "Z";
 end
 
 c1 = sprintf('lineextract -v %s -l %i -cellCoords -timestep %i %s -o divQ.dat -m %i -uda %s >/dev/null 2>&1','divQ',level,ts-1,startEnd,mat,uda);
@@ -309,13 +389,7 @@ x_CC     = divQ_sim(:,pDir);         % This is actually x_CC or y_CC or z_CC
 
 %__________________________________
 % compute the exact solution
-if (benchmark == 1)
-  [divQ_exact] = benchMark1(x_CC);
-elseif (benchmark == 2 )
-  [divQ_exact] = benchMark2(x_CC);
-elseif (benchmark == 3 )
-  [divQ_exact] = benchMark3(x_CC);
-end
+eval([ ' [divQ_exact] = benchMark' int2str(benchmark) '(x_CC,pDir);']);
 
 %______________________________
 % compute the L2 norm
@@ -350,6 +424,8 @@ if (strcmp(makePlot,"true"))
   ylabel('|divQ - divQ_{exact}|'); 
   xlabel(dir);
   grid on;
+pause
+
 
   unix('/bin/rm divQ.ps > /dev/null 2>&1');
   %print('divQ.ps','-dps', '-FTimes-Roman:14');

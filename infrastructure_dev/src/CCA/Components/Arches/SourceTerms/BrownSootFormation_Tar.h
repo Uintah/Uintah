@@ -96,7 +96,6 @@ private:
   
   std::string _mix_mol_weight_name; ///< string name for the average molecular weight (from table)
   std::string _tar_name;            ///< string name for tar (from table)
-  std::string _mixture_fraction_name; ///< string name for mass fraction (from table)
   std::string _Ysoot_name;          ///< string name for Ysoot
   std::string _Ns_name;             ///< string name for Ns (#/kg)
   std::string _o2_name;             ///< string name for o2  (from table)

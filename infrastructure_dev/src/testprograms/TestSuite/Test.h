@@ -39,6 +39,7 @@
 
 class Test
 {
+
 public:
   Test(const std::string name);
 
