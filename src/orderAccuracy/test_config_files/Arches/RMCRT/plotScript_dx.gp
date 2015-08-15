@@ -1,4 +1,4 @@
-set term png
+set terminal png font "Times-Roman,11" size 1024,768
 set output "orderAccuracy.png"
 
 # uncomment below for post script output

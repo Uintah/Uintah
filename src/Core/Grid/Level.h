@@ -252,6 +252,8 @@ public:
   inline IntVector getRefinementRatio() const { return d_refinementRatio; }
   int getRefinementRatioMaxDim() const;
 
+
+  friend std::ostream& operator<<(std::ostream& out, const Uintah::Level& level);
 private:
 
   Level(const Level&);

@@ -129,8 +129,6 @@ Pressure::schedule_solver( const Uintah::LevelP& level,
                            const Uintah::MaterialSet* const materials,
                            const int RKStage )
 {
-  IntVector periodic_vector = level->getPeriodicBoundaries();
-  const bool isPeriodic =periodic_vector.x() == 1 && periodic_vector.y() == 1 && periodic_vector.z() ==1;
   if (enforceSolvability_) {
     solver_.scheduleEnforceSolvability<Wasatch::SelectUintahFieldType<SVolField>::type >(level, sched, materials, prhsLabel_, RKStage);
   }

@@ -250,6 +250,9 @@ class SchedulerCommon : public Scheduler, public UintahParallelComponent {
 
     void setRestartInitTimestep( bool isRestartInitTimestep ) { d_isRestartInitTimestep = isRestartInitTimestep; }
 
+    virtual bool isRestartInitTimestep() { return d_isRestartInitTimestep; }
+
+
     typedef std::map<VarLabelMatl<Level>, Task*> ReductionTasksMap;
     ReductionTasksMap reductionTasks;
 

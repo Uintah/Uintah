@@ -38,12 +38,6 @@
                                         need_applies_to="type density_predictor"/> <!-- for the cold flow model, use the exact solution for
                                                                                         the density-f relationship rather than the guess -->
 
-          <!-- For variable_stats, the variable_type is the type for the variable which you are time averaging.
-               There is an attempt to determine the variable type automatically. This flag should only be used
-               is that determination fails. -->
-          <variable_type                spec="OPTIONAL STRING 'svol, xvol, yvol, zvol'"
-                                        need_applies_to="type variable_stats"/>
-
           <frequency                    spec="OPTIONAL INTEGER 'positive'"
                                         need_applies_to="type wall_heatflux_variable"/> <!-- How often should the fluxes be computed (frequency = every N timesteps).
                                                                                              Otherwise it just copies old fluxes forward. Default = 1. -->
@@ -258,7 +252,7 @@
           <!-- Radiation Properties -->
           <!-- NOTE: The property label (ie, the total abs coeff) cannot be abskg OR abskp as these names are used as defaults by the calculator -->
           <calculator                   spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, burns_christon, radprops, hottel_sarofim'"
+                                        attribute1="type REQUIRED STRING 'constant, special, burns_christon, radprops, hottel_sarofim'"
                                         need_applies_to="type radiation_properties">
 
             <abskg                        spec="REQUIRED NO_DATA"
@@ -269,6 +263,7 @@
             <min                          spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
             <max                          spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
             <!-- RadiationProperties: constant -->
+            <expressionNumber             spec="REQUIRED INTEGER" need_applies_to="type special" />
             <abskg_value                  spec="REQUIRED DOUBLE" need_applies_to="type constant" />
             <!-- RadiationProperties: rad props -->
             <grey_gas                     spec="OPTIONAL NO_DATA" need_applies_to="type radprops">
@@ -1004,23 +999,10 @@
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
 
             <!-- drag model -->
-            <particle_density           spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, node_specific'"
-                                        need_applies_to="type drag, gravity"> <!-- use a constant density for all particles, or use a model for each-->
-              <constant                 spec="REQUIRED DOUBLE"
-                                        need_applies_to="type constant"/>
-              <density_label            spec="REQUIRED STRING"
-                                        need_applies_to="type node_specific"/> <!-- base density label -->
-            </particle_density>
-
-            <diameter                   spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, node_specific"
-                                        need_applies_to="type drag"> <!-- use a constant diameter for all particles, or use a model for each-->
-              <constant                 spec="REQUIRED DOUBLE"
-                                        need_applies_to="type constant"/>
-              <diameter_label           spec="REQUIRED STRING"
-                                        need_applies_to="type node_specific"/> <!-- base radius label -->
-            </diameter>
+            <particle_density_label     spec="REQUIRED STRING"
+                                        need_applies_to="type drag, gravity"/> <!-- base density label -->
+            <particle_diameter_label    spec="REQUIRED STRING"
+                                        need_applies_to="type drag"/>          <!-- base diameter label -->
 
             <direction                  spec="REQUIRED STRING 'x,y,z'"
                                         need_applies_to="type drag"/>         <!-- apply this source to which velocity -->
@@ -1279,6 +1261,7 @@
               <allowReflect              spec="OPTIONAL BOOLEAN"/>
               <solveDivQ                 spec="OPTIONAL BOOLEAN"/>
               <applyFilter               spec="OPTIONAL BOOLEAN"/>
+              <rayDirSampleAlgo          spec="OPTIONAL STRING"/>
               <ignore_BC_bulletproofing  spec="OPTIONAL BOOLEAN"/>
 
               <algorithm                spec="OPTIONAL NO_DATA" attribute1="type REQUIRED STRING 'dataOnion RMCRT_coarseLevel singleLevel'">
@@ -1305,13 +1288,8 @@
             <A                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Pre-exponential factor. -->
             <!-- E/R: activiation temperature. Unit for westbrook/dryer model are in kelvin -->
             <E_R                        spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- Activation temperature. Use same units as listed in Turns. -->
-            <X                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y -->
-            <Y                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- C_xH_y -->
             <m                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [C_xH_y]^m -->
             <n                          spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- [O_2]^n -->
-            <fuel_mass_fraction         spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Mass fraction of C_xH_y when f=1 -->
-            <stoich_fuel_O2_massratio   spec="REQUIRED DOUBLE" need_applies_to="type westbrook_dryer"/> <!-- Stoichiometric mass fuel/mass air for the slow step -->
-            <cstar_fraction_label       spec="REQUIRED STRING" need_applies_to="type westbrook_dryer"/> <!-- Name of the C*H mass fraction from the table -->
 
             <!-- Use one set of the following two options: -->
             <!-- set 1. -->
@@ -1335,6 +1313,12 @@
               <upper                    spec="REQUIRED NO_DATA"
                                         attribute1="slope REQUIRED DOUBLE"
                                         attribute2="intercept REQUIRED DOUBLE"/> <!-- Defines the line for the upper flammability limit -->
+              <temperature_dependence   spec="OPTIONAL NO_DATA" > <!-- this tag can be added if you want the flammability limits to change as a function of T -->
+                <lower                  spec="REQUIRED NO_DATA"
+                                        attribute1="slope REQUIRED DOUBLE"/> <!-- defines the slope of temperature dependence for the lower flammability limit -->
+                <upper                  spec="REQUIRED NO_DATA"
+                                        attribute1="slope REQUIRED DOUBLE"/> <!-- defines the slope of temperature dependence for the upper flammability limit -->
+              </temperature_dependence>
 
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) -->

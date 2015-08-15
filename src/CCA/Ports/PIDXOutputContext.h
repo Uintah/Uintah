@@ -27,17 +27,8 @@
 
 #include <sci_defs/pidx_defs.h>
 #if HAVE_PIDX
-
-#include <iostream>
-#include <stdio.h>
-#include <getopt.h>
-#include <string.h>
-#include <assert.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdlib.h>
 #include <PIDX.h>
+#include <mpi.h>
 #include <string>
 
 namespace Uintah {
@@ -75,24 +66,16 @@ public:
   PIDXOutputContext();
   ~PIDXOutputContext();
 
-  void initialize(std::string filename, unsigned int timeStep, int globalExtent[5] ,MPI_Comm comm, int amr_levels, int** refinement_ratio);
+  void initialize(std::string filename, unsigned int timeStep, int globalExtent[3], MPI_Comm comm);
+  
   std::string filename;
   unsigned int timestep;
-  int total_dimension;
-  int fd;
-  int global_dimension[5];
-  PIDX_file idx_ptr;
+  PIDX_file file;
   MPI_Comm comm;
-  int amr_levels;
-  int** refinement_ratio;
-  
-  /* added from test_pidx_writer.c */
   PIDX_variable **variable;
-
-  //   private:
-  //       OutputContext(const OutputContext&);
-  //       OutputContext& operator=(const OutputContext&);
       
+  PIDX_access access;
+
    };
 } // End namespace Uintah
 

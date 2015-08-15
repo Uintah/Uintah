@@ -123,9 +123,50 @@ void RadPropertyCalculator::ConstantProperties::compute_abskg( const Patch* patc
                                                               RadCalcSpeciesList species, constCCVariable<double>& mixT, 
                                                               CCVariable<double>& abskg ){ 
   abskg.initialize(_abskg_value); 
-
 }
 
+RadPropertyCalculator::specialProperties::specialProperties() {
+
+};
+
+RadPropertyCalculator::specialProperties::~specialProperties() {};
+
+bool RadPropertyCalculator::specialProperties::problemSetup( const ProblemSpecP& db ) {
+        
+  ProblemSpecP db_prop = db; 
+  db_prop->getWithDefault("expressionNumber",_expressionNumber,1); 
+
+  if ( db_prop->findBlock("abskg") ){ 
+    db_prop->findBlock("abskg")->getAttribute("label",_abskg_name); 
+  } else { 
+    _abskg_name = "abskg"; 
+  }
+
+
+  //Create the particle absorption coeff as a <PropertyModel>
+
+  const VarLabel* test_label = VarLabel::find(_abskg_name); 
+  if ( test_label == 0 ){ 
+    _abskg_label = VarLabel::create(_abskg_name, CCVariable<double>::getTypeDescription() ); 
+  } else { 
+    throw ProblemSetupException("Error: Abskg label already used for constant properties: "+_abskg_name,__FILE__, __LINE__);
+  }
+
+  bool property_on = true; 
+
+  return property_on; 
+}
+
+void RadPropertyCalculator::specialProperties::compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, 
+                                                              RadCalcSpeciesList species, constCCVariable<double>& mixT, 
+                                                              CCVariable<double>& abskg ){ 
+  if (_expressionNumber == 1){
+    for (CellIterator iter = patch->getCellIterator(); !iter.done(); ++iter){ 
+      IntVector c = *iter; 
+      abskg[c]=5.0*exp((pow(mixT[c]/1000.0,4.0)-1.0)/2.0*(-2.0)-0.1);
+    }
+  }
+}
 
 
 //--------------------------------------------------

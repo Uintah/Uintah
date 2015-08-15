@@ -316,23 +316,12 @@ evaluate()
   using namespace SpatialOps;
 
   FieldT& f = this->value();
-  
-  if( (this->vecGhostPts_) && (this->vecInteriorPts_) ){
-    std::vector<SpatialOps::IntVec>::const_iterator ig = (this->vecGhostPts_)->begin();    // ig is the ghost local ijk index
-    std::vector<SpatialOps::IntVec>::const_iterator ii = (this->vecInteriorPts_)->begin(); // ii is the interior local ijk index
-    for( ; ig != (this->vecGhostPts_)->end(); ++ig, ++ii ){
-      f(*ii) = bcValue_ ;
-      f(*ig) = bcValue_ ;
-    }
-  }
 
-// tsaad: Keep the code below - once convert supports converting between the same field types,
-// we can use the code below and run fully on GPU.
-//  if (this->spatialMask_) {
-//    FieldT& lhs =  this->value();
-//    masked_assign(*this->spatialMask_, lhs, bcValue_);
-//    masked_assign(convert<FieldT>(*this->spatialMask_, this->shiftSide_), lhs, bcValue_);
-//  }
+  if (this->spatialMask_) {
+    FieldT& lhs =  this->value();
+    masked_assign(*this->spatialMask_, lhs, bcValue_);
+    masked_assign(convert<FieldT>(*this->spatialMask_, this->shiftSide_), lhs, bcValue_);
+  }
 }
 
 // ###################################################################

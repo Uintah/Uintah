@@ -235,7 +235,7 @@ namespace Uintah {
         //__________________________________
         // Create the stencil
         HYPRE_StructStencil stencil;
-        if(params->symmetric){
+        if(params->getSymmetric()){
           
           HYPRE_StructStencilCreate(3, 4, &stencil);
           int offsets[4][3] = {{0,0,0},
@@ -250,7 +250,7 @@ namespace Uintah {
           
           HYPRE_StructStencilCreate(3, 7, &stencil);
           int offsets[7][3] = {{0,0,0},
-                               {-1,0,0}, {1,0,0},
+                               {1,0,0}, {-1,0,0},
                                {0,1,0}, {0,-1,0},
                                {0,0,1}, {0,0,-1}};
                                
@@ -265,21 +265,21 @@ namespace Uintah {
 
         if (timestep == 1 || restart) {
           HYPRE_StructMatrixCreate(pg->getComm(), grid, stencil, HA);
-          HYPRE_StructMatrixSetSymmetric(*HA, params->symmetric);
+          HYPRE_StructMatrixSetSymmetric(*HA, params->getSymmetric());
           int ghost[] = {1,1,1,1,1,1};
           HYPRE_StructMatrixSetNumGhost(*HA, ghost);
           HYPRE_StructMatrixInitialize(*HA);
         } else if (do_setup) {
           HYPRE_StructMatrixDestroy(*HA);
           HYPRE_StructMatrixCreate(pg->getComm(), grid, stencil, HA);
-          HYPRE_StructMatrixSetSymmetric(*HA, params->symmetric);
+          HYPRE_StructMatrixSetSymmetric(*HA, params->getSymmetric());
           int ghost[] = {1,1,1,1,1,1};
           HYPRE_StructMatrixSetNumGhost(*HA, ghost);
           HYPRE_StructMatrixInitialize(*HA);
         }
 
 #if 0
-        HYPRE_StructMatrixSetSymmetric(HA, params->symmetric);
+        HYPRE_StructMatrixSetSymmetric(HA, params->getSymmetric());
         int ghost[] = {1,1,1,1,1,1};
         HYPRE_StructMatrixSetNumGhost(HA, ghost);
 
@@ -312,7 +312,7 @@ namespace Uintah {
             
             //__________________________________
             // Feed it to Hypre
-            if(params->symmetric){
+            if(params->getSymmetric()){
               
               double* values = new double[(h.x()-l.x())*4];
               int stencil_indices[] = {0,1,2,3};
@@ -374,20 +374,35 @@ namespace Uintah {
               }
               delete[] values;
             } else {
+              double* values = new double[(h.x()-l.x())*7];
               int stencil_indices[] = {0,1,2,3,4,5,6};
               
               for(int z=l.z();z<h.z();z++){
                 for(int y=l.y();y<h.y();y++){
                   
-                  const double* values = &A[IntVector(l.x(), y, z)].p;
+                  const Stencil7* AA = &A[IntVector(l.x(), y, z)];
+                  double* p = values;
+                  
+                  for(int x=l.x();x<h.x();x++){
+                    *p++ = AA->p;
+                    *p++ = AA->e;
+                    *p++ = AA->w;
+                    *p++ = AA->n;
+                    *p++ = AA->s;
+                    *p++ = AA->t;
+                    *p++ = AA->b;
+                    AA++;
+                  }
+
                   IntVector ll(l.x(), y, z);
                   IntVector hh(h.x()-1, y, z);
                   HYPRE_StructMatrixSetBoxValues(*HA,
                                                  ll.get_pointer(), hh.get_pointer(),
                                                  7, stencil_indices,
-                                                 const_cast<double*>(values));
+                                                 values);
                 }  // y loop
               } // z loop
+              delete[] values;
             }
           }
           HYPRE_StructMatrixAssemble(*HA);
@@ -1184,7 +1199,6 @@ namespace Uintah {
       p->setupFrequency = 1;
       p->relax_type = 1;
     }
-    p->symmetric = true;
     p->restart   = true;
     return p;
   }

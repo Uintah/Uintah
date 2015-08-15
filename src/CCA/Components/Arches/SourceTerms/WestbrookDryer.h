@@ -6,7 +6,7 @@
 #include <CCA/Components/Arches/SourceTerms/SourceTermFactory.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <CCA/Components/Arches/Directives.h>
-
+#include <CCA/Components/Arches/Properties.h>
 /** 
 * @class  Westbrook and Dryer Hydrocarbon Chemistry Model
 * @author Jeremy Thornock
@@ -84,6 +84,8 @@ public:
                    DataWarehouse* old_dw, 
                    DataWarehouse* new_dw );
 
+  void extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop );
+
   class Builder
     : public SourceTermBase::Builder { 
 
@@ -108,7 +110,7 @@ public:
 
   }; // Builder
 
-  inline double getRate( double T, double CxHy, double O2, double diluent, double f_tot_fuel, double den, double dt, double vol ) {
+  inline double getRate( double T, double Fp, double O2, double diluent, double f_tot_fuel, double den, double dt, double vol ) {
 
     double rate = 0.0; 
     bool compute_rate = false; 
@@ -121,31 +123,38 @@ public:
     } else if ( _use_flam_limits ){ 
 
       // USING FLAMMABILITY LIMITS:
-      // vol percent:
-      //double dil_vol = diluent * 1.0/mix_mw * 1.0/_diluent_mw * 100; 
-      double fuel_low  = _flam_low_m * diluent + _flam_low_b; 
-      double fuel_high = _flam_up_m  * diluent + _flam_up_b; 
-
+      // mass percent:
+      double fuel_low =0.0;
+      double fuel_high =0.0;
+      if ( _use_flam_limits_T_dependence){
+        // these equations are from the report "Flammability Characteristics of Combustible Gases
+        //  and Vapors", Zabetakis 1965. 
+        fuel_low  = std::max(0.0,_flam_low_m * diluent + _flam_low_b*(1-_flam_T_low_m*(T-298.15))); 
+        fuel_high = std::min(1.0,_flam_up_m  * diluent + _flam_up_b*(1+_flam_T_up_m*(T-298.15))); 
+      } else {
+        fuel_low  = _flam_low_m * diluent + _flam_low_b; 
+        fuel_high = _flam_up_m  * diluent + _flam_up_b; 
+      }
       double loc_fuel = f_tot_fuel*d_MF_HC_f1; 
-
+      
       //using a premix concept here which is why we need the 
-      //total mixture fraction and not C*.  but, since the fuel
-      //may contain some inert, we must multiply by the 
-      //d_MF_HC_f1 variable to get only the hydrocarbon. 
+      //total mixture fraction (fp + eta) and not only fp. The fuel
+      //may contain some inert, so we must multiply by the 
+      //d_MF_HC_f1 variable to get only the hydrocarbon.
       if ( loc_fuel > fuel_low && loc_fuel < fuel_high ) { 
         compute_rate = true; 
       } 
 
     } 
 
-    if ( O2 > 0.0 && CxHy > 0.0 && compute_rate ) { 
+    if ( O2 > 0.0 && Fp > 0.0 && compute_rate ) { 
 
       double small = 1e-16; 
 
       double c_O2 = O2 * 1.0/d_MW_O2 * den * 1.0e-3; //gmol/cm^3
 
-      double c_HC = CxHy * 1.0/d_MW_HC * den * 1.0e-3; //gmol/cm^3 
-
+      double c_HC = Fp*d_MF_HC_f1 * 1.0/d_fuel_MW * den * 1.0e-3; //gmol/cm^3 
+      
       double my_exp = -1.0 * d_ER / T; 
 
       double p_HC = 0.0; 
@@ -155,29 +164,33 @@ public:
 
       rate = d_A * exp( my_exp ) * p_HC * pow(c_O2, d_n); // gmol/cm^3/s
 
-      rate *= 1.0e3 * d_MW_HC; 
+      rate *= 1.0e3 * d_fuel_MW; // kg/m^3/s
 
-      // check the rate based on local O2 and CxHy
-      rate = std::min( den / dt * std::min( O2 * _stoich_massratio , CxHy ), rate ); 
+      // check if the rate is oxygen or fuel limited based on available O2 given stoichimetry
+      // with the reactable fuel or available burnable fuel.
+      rate = std::min( den / dt * std::min( O2 * _stoich_massratio * d_MF_HC_f1 , Fp * d_MF_HC_f1 ), rate );
+      // Even though the inert fraction in the fuel isn't "reacting"
+      // It is being converted from inert in Fp to inert in eta, so the
+      // rate for eta is corrected here to incorporate the conversion of the 
+      // inert from Fp to eta.
       rate /= d_MF_HC_f1; 
-
+       
       // check for nan
       if ( rate != rate ){ 
         rate = 0.0; 
       } 
     }
-
     return rate; 
 
   };
 
 private:
 
+  double d_fuel_MW;       ///< molucular weight of reactive fuel in the fuel stream - this is found in the table
   double d_A;        ///< Pre-exponential fractor
   double d_ER;       ///< Activation temperature (E/R)
   double d_m;        ///< [C_xH_y]^m 
   double d_n;        ///< [O_2]^n
-  double d_MW_HC;    ///< Molecular weight of the hydrocarbon
   double d_MW_O2;    ///< Molecular weight of O2 (hard set) 
   double d_MF_HC_f1; ///< Mass fraction of hydrocarbon with f=1
   double d_R;        ///< Universal gas constant ( R [=] J/mol/K )
@@ -185,18 +198,17 @@ private:
   double d_T_clip;   ///< Temperature limit on the rate. Below this value, the rate turns off. 
   bool   _use_T_clip;      ///< Use clip or not
   bool   _use_flam_limits; ///< Use flamibility limits or not
+  bool   _use_flam_limits_T_dependence; ///< Add temperature dependence to the flamibility limits
   bool   _const_diluent;   ///< Indicates a constant diluent as specified in the input file
   bool   _using_xi; 
   double _flam_low_m; ///< Lower flammability slope as defined by y=mx+b; 
   double _flam_low_b; ///< Lower flammability intercept
   double _flam_up_m;  ///< Upper flammability slope
   double _flam_up_b;  ///< Upper flammability intercept
+  double _flam_T_low_m; ///< Lower flammability slope for temperature dependence 
+  double _flam_T_up_m; ///< Lower flammability slope for temperature dependence
   double _diluent_mw; ///< molecular weight of the duluent
   double _const_diluent_mass_fraction;  ///< use a constant diluent mass fraction everywhere 
-
-
-  int d_X;           ///< C_xH_Y
-  int d_Y;           ///< C_xH_y
 
   const VarLabel* d_WDstrippingLabel; ///< kg C stripped / kg C available for old timestep*
   const VarLabel* d_WDextentLabel;    ///< kg C reacted  / kg C available for old timestep*
@@ -204,7 +216,6 @@ private:
   const VarLabel* d_WDverLabel; 
   // * but stored in the new_Dw
 
-  std::string d_cstar_label; 
   std::string d_cstar_strip_label; 
   std::string d_eta_label; 
   std::string d_xi_label; 
@@ -218,7 +229,6 @@ private:
   const VarLabel* _temperatureLabel; 
   const VarLabel* _mixMWLabel;       
   const VarLabel* _denLabel;         
-  const VarLabel* _CstarMassFracLabel;  
   const VarLabel* _EtaLabel; 
   const VarLabel* _FpLabel; 
   const VarLabel* _XiLabel; 
@@ -233,6 +243,7 @@ private:
   double _stoich_massratio;                      ///< mass fuel/mass o2
 
   ArchesLabel* _field_labels;
+  Properties* _properties; 
 
 }; // end WestbrookDryer
 } // end namespace Uintah

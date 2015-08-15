@@ -106,6 +106,7 @@ namespace Uintah {
     bool        d_exactDeformation; //Set steps exactly to match times in prescribed deformation file
     bool        d_insertParticles;  // Activate particles according to color
     std::string d_insertParticlesFile; // File containing activation plan
+    bool        d_GEVelProj;        // Use the velocity gradient in projecting particle velocity to grid
 
     bool        d_with_ice;
     bool        d_with_arches;

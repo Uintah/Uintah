@@ -332,7 +332,7 @@ public:
 
     SpatialOps::IntVec bcMinus, bcPlus;
     Wasatch::get_bc_logicals( patch, bcMinus, bcPlus );
-    const SCIRun::IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
+    const IntVector gs = patch->getCellHighIndex(0) - patch->getCellLowIndex(0);
     const SpatialOps::IntVec glob( gs[0] + nGhost*2 + (bcPlus[0] ? T::Location::BCExtra::X : 0),
                                    gs[1] + nGhost*2 + (bcPlus[1] ? T::Location::BCExtra::Y : 0),
                                    gs[2] + nGhost*2 + (bcPlus[2] ? T::Location::BCExtra::Z : 0) );

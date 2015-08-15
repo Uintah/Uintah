@@ -39,3 +39,9 @@ SourceTermBase::set_stage( const int stage )
 
   }
 }
+
+void 
+SourceTermBase::sched_RestartInitialize( const LevelP& level, SchedulerP& sched )
+{
+  // empty
+}

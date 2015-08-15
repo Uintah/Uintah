@@ -47,7 +47,6 @@ namespace Uintah {
       const VarLabel* heatRate_CCLabel;
 
       //non PermanentParticleState
-      const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pPressureLabel;
       const VarLabel* pScratchVecLabel;
       const VarLabel* pScratchLabel;
@@ -112,6 +111,8 @@ namespace Uintah {
       const VarLabel* pFiberDirLabel_preReloc;
       const VarLabel* pScaleFactorLabel;
       const VarLabel* pScaleFactorLabel_preReloc;
+      const VarLabel* pTemperatureGradientLabel; //for heat conduction
+      const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
       
       const VarLabel* gLambdaDotLabel;
       const VarLabel* gColorLabel;

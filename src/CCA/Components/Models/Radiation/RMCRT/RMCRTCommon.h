@@ -121,12 +121,12 @@ namespace Uintah{
       
       //__________________________________
       //
-      void rayLocation( MTRand& mTwister,
+      void ray_Origin( MTRand& mTwister,
                        const IntVector origin,
                        const double DyDx, 
                        const double DzDx,
                        const bool useCCRays,
-                       Vector& location);
+                       Vector& rayOrigin);
 
       //__________________________________
       //
@@ -134,6 +134,12 @@ namespace Uintah{
                                const bool isSeedRandom,
                                const IntVector& = IntVector(-9,-9,-9),
                                const int iRay = -9);
+
+      //__________________________________
+      /** @brief populates a vector of integers with a stochastic array without replacement from 0 to n-1 */
+      void randVector( std::vector <int> &int_array,
+                       MTRand& mTwister);
+
 
       //______________________________________________________________________
       //    Carry Foward tasks
@@ -201,6 +207,8 @@ namespace Uintah{
       static const VarLabel* d_sigmaT4Label;
       static const VarLabel* d_abskgLabel;
       static const VarLabel* d_divQLabel;
+      static const VarLabel* d_boundFluxLabel;
+      static const VarLabel* d_radiationVolqLabel;
       
       // VarLabels passed to RMCRT by the component
       static const VarLabel* d_compTempLabel;       //  temperature

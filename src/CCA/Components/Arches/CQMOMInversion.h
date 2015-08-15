@@ -44,6 +44,8 @@ extern "C"{
 
 //uncomment to debug matricies
 //#define cqmom_dbg
+
+
 //-------------------------------------------------------
 
 /**
@@ -67,11 +69,16 @@ extern "C"{
  **************************/
 // solves sum_0^{n-1} x_i^k w_i = q_k for w_i
 // x, q input, w output
-void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, const std::vector<double> &q, const int n)
+void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w,
+                        const std::vector<double> &q, const int n)
 {
+  using std::vector;
+  using std::cout;
+  using std::endl;
+  
 //  int n = q.size();
   double b,s,t,xx;
-  std::vector<double> c (n,0.0);
+  vector<double> c (n,0.0);
   
   if (n == 1) {
     w[0] = q[0];
@@ -108,7 +115,8 @@ void vandermondeSolve ( const std::vector<double> &x, std::vector<double> &w, co
 /***************************
  N-D Wheeler alogrithm
  ****************************/
-void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w, std::vector<double>& x)
+void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w,
+                      std::vector<double>& x)
 {
 
   using namespace std; 
@@ -128,9 +136,9 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
     return;
   }
   
-  std::vector<double> a (nEnv, 0.0);
-  std::vector<double> b (nEnv, 0.0);
-  std::vector< std::vector<double> > sig (2*nEnv+1, std::vector<double> (2*nEnv+1,0.0) );
+  vector<double> a (nEnv, 0.0);
+  vector<double> b (nEnv, 0.0);
+  vector< vector<double> > sig (2*nEnv+1, vector<double> (2*nEnv+1,0.0) );
   
   for ( int i = 1; i<(2*nEnv+1); i++) {
     sig[1][i] = moments[i-1];
@@ -164,7 +172,7 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   //check the b vector for realizable space
   for ( int i = 0; i<nEnv; i++ ) {
     if (b[i] < 0) {
-      stringstream err_msg;
+      std::stringstream err_msg;
       err_msg << "ERROR: Arches: CQMOMInversion: Negative b vector encountered. Moment set: " << endl;
       for (int i = 0; i<nMom; i++) {
         err_msg << "m[" << i << "]=" << moments[i] << endl;
@@ -175,7 +183,7 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   }
   
 #ifdef cqmom_dbg
-  std::vector< std::vector<double> > z (nEnv, std::vector<double> (nEnv, 0.0) );
+  vector< vector<double> > z (nEnv, vector<double> (nEnv, 0.0) );
   
   for ( int i = 0; i<(nEnv-1); i++) {
     z[i][i] = a[i];
@@ -192,7 +200,7 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   }
 #endif
 
-  std::vector<double> z_(nEnv*nEnv,0.0);
+  vector<double> z_(nEnv*nEnv,0.0);
   for (int i = 0; i<(nEnv-1); i++) {
     z_[i*nEnv + i] = a[i];
     z_[i*nEnv + i + 1] = sqrt( b[i+1] );
@@ -200,13 +208,13 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   }
   z_[nEnv*nEnv-1] = a[nEnv-1];
 
-  std::vector<double> eigenVal (nEnv, 0.0);
+  vector<double> eigenVal (nEnv, 0.0);
   //_____________
   //solve eigenvalue problem with external package NOTE:try timing based on work definition?
   int  lda = nEnv, info, lwork;
   double wkopt;
   double* work;
-  //  std::vector<double> work_;
+  //  vector<double> work_;
   lwork = -1;
   char jobz='V';
   char matType = 'U';
@@ -220,7 +228,7 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
   bool status = ( info>0 || info<0 )? false : true;
   
   if (!status) {
-    stringstream err_msg;
+    std::stringstream err_msg;
     err_msg << "ERROR: Arches: CQMOMInversion: Solving Eigenvalue problem failed. Moment set: " << endl;
     for (int i = 0; i<nMom; i++) {
       err_msg << "m[" << i << "]=" << moments[i] << endl;
@@ -241,9 +249,13 @@ void wheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w
 /***************************
  N-D Adaptive Wheeler alogrithm
  ****************************/
-void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w, std::vector<double>& x,
-                              const double& rMin, const double& eAbs)
+void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<double>& w,
+                              std::vector<double>& x,const double& rMin, const double& eAbs)
 {
+  using std::vector;
+  using std::cout;
+  using std::endl;
+  
   int nEnvMax = moments.size()/2;
   int nEnvOut = moments.size()/2;
   
@@ -272,9 +284,9 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
       continue;
     }
   
-    std::vector<double> a (nEnvOut, 0.0);
-    std::vector<double> b (nEnvOut, 0.0);
-    std::vector< std::vector<double> > sig (2*nEnvOut+1, std::vector<double> (2*nEnvOut+1,0.0) );
+    vector<double> a (nEnvOut, 0.0);
+    vector<double> b (nEnvOut, 0.0);
+    vector< vector<double> > sig (2*nEnvOut+1, vector<double> (2*nEnvOut+1,0.0) );
   
     for ( int i = 1; i<(2*nEnvOut+1); i++) {
       sig[1][i] = moments[i-1];
@@ -337,7 +349,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
       continue;
   
 #ifdef cqmom_dbg
-    std::vector< std::vector<double> > z (nEnvOut, std::vector<double> (nEnvOut, 0.0) );
+    vector< vector<double> > z (nEnvOut, vector<double> (nEnvOut, 0.0) );
     for ( int i = 0; i<(nEnvOut-1); i++) {
       z[i][i] = a[i];
       z[i][i+1] = sqrt( b[i+1] );
@@ -353,7 +365,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     }
 #endif
   
-    std::vector<double> z_(nEnvOut*nEnvOut,0.0);
+    vector<double> z_(nEnvOut*nEnvOut,0.0);
     for (int i = 0; i<(nEnvOut-1); i++) {
       z_[i*nEnvOut + i] = a[i];
       z_[i*nEnvOut + i + 1] = sqrt( b[i+1] );
@@ -361,7 +373,7 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     }
     z_[nEnvOut*nEnvOut-1] = a[nEnvOut-1];
   
-    std::vector<double> eigenVal (nEnvOut, 0.0);
+    vector<double> eigenVal (nEnvOut, 0.0);
     //_____________
     //solve eigenvalue problem with external package
     int  lda = nEnvOut, info, lwork;
@@ -394,8 +406,8 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
     
     //____________
     //Check that the minimum spacing and weight ratios are met
-    std::vector<double> dab (nEnvOut);
-    std::vector<double> mab (nEnvOut);
+    vector<double> dab (nEnvOut);
+    vector<double> mab (nEnvOut);
     double mindab, maxmab;
     
     double minTest;
@@ -464,10 +476,17 @@ void adaptiveWheelerAlgorithm(const std::vector<double>& moments, std::vector<do
 /***************************
  CQMOMInversion Function
  ****************************/
-void CQMOMInversion( const std::vector<double>& moments, const int& M, const std::vector<int>& N_i, const std::vector<int>& maxInd,
-                     std::vector<double> & weights, std::vector<std::vector<double> >& abscissas, const bool& adapt, const bool& useLapack,
+void CQMOMInversion( const std::vector<double>& moments, const int& M,
+                     const std::vector<int>& N_i, const std::vector<int>& maxInd,
+                     std::vector<double> & weights,
+                     std::vector<std::vector<double> >& abscissas,
+                     const bool& adapt, const bool& useLapack,
                     const double& rMin, const double& eAbs)
 {
+  using std::vector;
+  using std::cout;
+  using std::endl;
+  
   //This is the actual cqmom inversion fucntion
   //moments should be a a flat array numerically ordered
   //insert 0s for unused moments to keep spacing right
@@ -491,12 +510,12 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   }
 #endif
   
-  std::vector<double> tempMom ( N_i[0]*2,0.0);
+  vector<double> tempMom ( N_i[0]*2,0.0);
   for (unsigned int i = 0; i<tempMom.size(); i++ ) {
     tempMom[i] = moments[i];
   }
-  std::vector<double> x1 ( N_i[0], 0.0 );
-  std::vector<double> w1 ( N_i[0], 0.0 );
+  vector<double> x1 ( N_i[0], 0.0 );
+  vector<double> w1 ( N_i[0], 0.0 );
 
   if (!adapt) {
     wheelerAlgorithm( tempMom, w1, x1);
@@ -519,9 +538,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     return;
   }
   
-  std::vector<double> vanderMom (N_i[0], 0.0);    //moment matrix to solve conditionals
-  std::vector<double> condMomStar(N_i[0], 0.0);   //temporary conditional moments
-  std::vector< std::vector<double> > condMom (N_i[0], std::vector<double> (2*N_i[1], 1.0) ); //initialized to 1.0 to handle all 0th moments
+  vector<double> vanderMom (N_i[0], 0.0);    //moment matrix to solve conditionals
+  vector<double> condMomStar(N_i[0], 0.0);   //temporary conditional moments
+  vector< vector<double> > condMom (N_i[0], vector<double> (2*N_i[1], 1.0) ); //initialized to 1.0 to handle all 0th moments
   //loop over each k_2 1,...,2N2-1
   // 0th moment for all conditional = 1
   
@@ -590,10 +609,10 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
 #endif
   }
   
-  std::vector<double> tempX (N_i[1], 0.0);
-  std::vector<double> tempW (N_i[1], 0.0);
-  std::vector< std::vector<double> > x2 (N_i[0], std::vector<double> (N_i[1], 0.0) );
-  std::vector< std::vector<double> > w2 (N_i[0], std::vector<double> (N_i[1], 0.0) );
+  vector<double> tempX (N_i[1], 0.0);
+  vector<double> tempW (N_i[1], 0.0);
+  vector< vector<double> > x2 (N_i[0], vector<double> (N_i[1], 0.0) );
+  vector< vector<double> > w2 (N_i[0], vector<double> (N_i[1], 0.0) );
   tempMom.resize(2*N_i[1]);
   
   for (int i = 0; i<N_i[0]; i++) {
@@ -644,8 +663,8 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
   //start the 3D quadrature method
   vanderMom.resize(N_i[0]);
-  std::vector< std::vector< std::vector<double> > > Zeta (N_i[0], std::vector<std::vector<double> > (N_i[1], std::vector<double> (2*N_i[2],0.0)) );
-  std::vector<double> tempStar (N_i[0],0.0);
+  vector< vector< vector<double> > > Zeta (N_i[0], vector<vector<double> > (N_i[1], vector<double> (2*N_i[2],0.0)) );
+  vector<double> tempStar (N_i[0],0.0);
 
   for (int k3 = 1; k3<2*N_i[2]; k3++) {
     for (int k2 = 0; k2<N_i[1]; k2++) { //loop thorugh all combinations of k_2/k_3 for zeta values
@@ -719,11 +738,11 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     }
   }
   
-  std::vector< std::vector<double> > condMom3 (N_i[1], std::vector<double> (2*N_i[2], 1.0) );
-  std::vector<double> xTemp (N_i[1], 0.0);
-  std::vector<double> wTemp (N_i[1], 0.0);
-  std::vector<std::vector< std::vector<double> > > x3 (N_i[0], std::vector<std::vector<double> > (N_i[1], std::vector<double> (N_i[2],0.0)) );
-  std::vector<std::vector< std::vector<double> > > w3 (N_i[0], std::vector<std::vector<double> > (N_i[1], std::vector<double> (N_i[2],0.0)) );
+  vector< vector<double> > condMom3 (N_i[1], vector<double> (2*N_i[2], 1.0) );
+  vector<double> xTemp (N_i[1], 0.0);
+  vector<double> wTemp (N_i[1], 0.0);
+  vector<vector< vector<double> > > x3 (N_i[0], vector<vector<double> > (N_i[1], vector<double> (N_i[2],0.0)) );
+  vector<vector< vector<double> > > w3 (N_i[0], vector<vector<double> > (N_i[1], vector<double> (N_i[2],0.0)) );
   
   condMomStar.resize(N_i[1]);
   vanderMom.resize(N_i[1]);
@@ -858,9 +877,9 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   //start the 4D quadrature
   vanderMom.resize(N_i[0]);
   tempStar.resize(N_i[0]);
-  std::vector< std::vector< std::vector< std::vector<double> > > > x4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( N_i[3], 0.0) ) ) );
-  std::vector< std::vector< std::vector< std::vector<double> > > > w4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( N_i[3], 0.0) ) ) );
-  std::vector< std::vector< std::vector< std::vector<double> > > > Zeta2 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3], 0.0) ) ) );
+  vector< vector< vector< vector<double> > > > x4 (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( N_i[3], 0.0) ) ) );
+  vector< vector< vector< vector<double> > > > w4 (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( N_i[3], 0.0) ) ) );
+  vector< vector< vector< vector<double> > > > Zeta2 (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( 2*N_i[3], 0.0) ) ) );
   
   //first solve for all the zeta values using raw moments
   // V1 R1 [zeta] = [moments]
@@ -938,7 +957,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
   //next use these zeta values to solve for the new temporary variable omega
   //V2 R2 [omega] = [zeta] for each node of M=1
-  std::vector< std::vector< std::vector< std::vector<double> > > > Omega (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3], 0.0) ) ) );
+  vector< vector< vector< vector<double> > > > Omega (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( 2*N_i[3], 0.0) ) ) );
   xTemp.resize(N_i[1]);
   wTemp.resize(N_i[1]);
   vanderMom.resize(N_i[1]);
@@ -1025,7 +1044,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   condMomStar.resize(N_i[2]);
   //now use omega values to solve for the actual conditional moment values
   // V3 R3 *[cond mom] = [omega] for each M=2 node
-  std::vector< std::vector< std::vector< std::vector<double> > > > condMom4 (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( 2*N_i[3], 1.0) ) ) );
+  vector< vector< vector< vector<double> > > > condMom4 (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( 2*N_i[3], 1.0) ) ) );
   for (int k1 = 0; k1< N_i[0]; k1++) {
     for (int k2 = 0; k2 < N_i[1]; k2++) { //loop over every x2 node
       //fill in V3 R3 for this x2 node
@@ -1166,7 +1185,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
   
   //with this limitation, only the conditional means of the systme need to be calculated, since all the conditional
   //moments are normalized to 1, the weights are unchanged
-  std::vector< std::vector< std::vector< std::vector<double> > > > xN (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( N_i[3], 0.0) ) ) );
+  vector< vector< vector< vector<double> > > > xN (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( N_i[3], 0.0) ) ) );
   for (int m = 5; m <= M; m++) {
     //all the steps in the 4D quadrature need to be repeated, but with  different moment sets based on m
     //NOTE: leaving out lapack solve for now to keep code clean, add it back in later
@@ -1262,7 +1281,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     vanderMom.resize(N_i[2]);
     tempStar.resize(N_i[2]);
     condMomStar.resize(N_i[2]);
-    std::vector< std::vector< std::vector< std::vector<double> > > > Y (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( N_i[3], 1.0) ) ) );
+    vector< vector< vector< vector<double> > > > Y (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( N_i[3], 1.0) ) ) );
     
     for (int k1 = 0; k1< N_i[0]; k1++) {
       for (int k2 = 0; k2 < N_i[1]; k2++) { //loop over every x2 node
@@ -1302,7 +1321,7 @@ void CQMOMInversion( const std::vector<double>& moments, const int& M, const std
     vanderMom.resize(N_i[3]);
     tempStar.resize(N_i[3]);
     condMomStar.resize(N_i[3]);
-    std::vector< std::vector< std::vector< std::vector<double> > > > conditionals (N_i[0], std::vector< std::vector< std::vector<double> > > (N_i[1], std::vector<std::vector<double> > (N_i[2], std::vector<double>( N_i[3], 1.0) ) ) );
+    vector< vector< vector< vector<double> > > > conditionals (N_i[0], vector< vector< vector<double> > > (N_i[1], vector<vector<double> > (N_i[2], vector<double>( N_i[3], 1.0) ) ) );
     for (int k1 = 0; k1< N_i[0]; k1++) {
       for (int k2 = 0; k2 < N_i[1]; k2++) {
         for (int k3 = 0; k3 < N_i[2]; k3++) { //loop each x3

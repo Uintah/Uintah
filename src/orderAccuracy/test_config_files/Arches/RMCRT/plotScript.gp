@@ -1,4 +1,4 @@
-set term png
+set terminal png font "Times-Roman,11" size 1024,768
 set output "orderAccuracy.png"
 
 # uncomment below for post script output
@@ -20,19 +20,19 @@ set grid xtics ytics
 # generate the x_curvefit
 f1(x) = a1*x**b1               # define the function to be fit
 a1 = 0.1; b1 = -2.2 
-FIT_LIMIT=1e-6
+FIT_LIMIT=1e-3
 fit f1(x) 'L2norm.dat' using 1:2 via a1, b1
 
 # generate the y_curvefit
 f2(x) = a2*x**b2                # define the function to be fit
 a2 = 0.1; b2 = -2.2      
-FIT_LIMIT=1e-6  
+FIT_LIMIT=1e-3  
 fit f2(x) 'L2norm.dat' using 1:3 via a2, b2
 
 # generate the z_curvefit
 f3(x) = a3*x**b3                # define the function to be fit
 a3 = 0.1; b3 = -2.2      
-FIT_LIMIT=1e-6  
+FIT_LIMIT=1e-3  
 fit f3(x) 'L2norm.dat' using 1:4 via a3, b3
 
 

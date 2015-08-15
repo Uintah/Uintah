@@ -162,6 +162,8 @@ public:
     b_labelSet = true;
   }
 
+  void sched_init_all_models(const LevelP&  level, SchedulerP& sched );
+
 private:
 
   typedef std::map< std::string, ModelBuilder* > BuildMap;

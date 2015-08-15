@@ -803,13 +803,17 @@ main( int argc, char** argv )
     //__________________________________
     // bulletproofing
     if( var_index == -1 ) {
+      cerr << "\n";
       cerr << "Variable \"" << variable_name << "\" was not found.\n";
-      cerr << "If a variable name was not specified try -var [name].\n";
+      cerr << "If you did not specify the variable name, use: --variable [name].\n";
+      cerr << "\n";
       cerr << "Possible variable names are:\n";
       for( unsigned int index = 0; index < vars.size(); index++ ) {
         cout << "vars[" << index << "] = " << vars[ index ] << "\n";
       }
-      cerr << "Aborting!!\n";
+      cerr << "\n";
+      cerr << "Exiting!!\n\n";
+      cerr << "\n";
       exit(-1);
     }
 

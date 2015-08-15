@@ -41,13 +41,11 @@
 
 #include "ParticlesHelper.h"
 
-//-- Wasatch includes --//
-#include <CCA/Components/Wasatch/Wasatch.h>
-
 //-- Uintah Includes --//
 #include <Core/Grid/Box.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <Core/Grid/Variables/ParticleVariable.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Grid/BoundaryConditions/BCDataArray.h>
 #include <Core/Containers/StaticArray.h>
@@ -367,7 +365,7 @@ namespace Uintah {
         const Point low  = patch->getBox().lower();
         const Point high = patch->getBox().upper();;
         
-        // Wasatch particle positions
+        // Component particle positions
         ParticleVariable<double> px;
         ParticleVariable<double> py;
         ParticleVariable<double> pz;
@@ -458,7 +456,7 @@ namespace Uintah {
   
   //--------------------------------------------------------------------
   
-  // this task will sync particle position with wasatch computed values
+  // this task will sync particle position with component computed values
   void ParticlesHelper::schedule_transfer_particle_ids(const Uintah::LevelP& level,
                                                        Uintah::SchedulerP& sched)
   {
@@ -495,7 +493,7 @@ namespace Uintah {
   
   //--------------------------------------------------------------------
 
-  // this task will sync particle position with wasatch computed values
+  // this task will sync particle position with component computed values
   void ParticlesHelper::schedule_sync_particle_position( const Uintah::LevelP& level,
                                                          Uintah::SchedulerP& sched,
                                                          const bool initialization )
@@ -533,7 +531,7 @@ namespace Uintah {
         
         ParticleVariable<Point> ppos; // Uintah particle position
         
-        // Wasatch particle positions
+        // component particle positions
         constParticleVariable<double> px;
         constParticleVariable<double> py;
         constParticleVariable<double> pz;
@@ -737,7 +735,7 @@ namespace Uintah {
               }
             }
             update_boundary_particles_vector( childBndParticles, bndName, patchID );
-          } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
+          } // boundary child loop (note, a boundary child is what we think of as a boundary condition
         } // boundary faces loop
       } // patch loop
     } // patch subset loop
@@ -817,7 +815,7 @@ namespace Uintah {
                 // for every child, allocate a new vector for boundary particles. this vector will
                 // be referenced by the boundary condition expressions/tasks.
                 allocate_boundary_particles_vector(bndName, patchID );
-              } // boundary child loop (note, a boundary child is what Wasatch thinks of as a boundary condition
+              } // boundary child loop (note, a boundary child is what we think of as a boundary condition
             } // boundary faces loop
           } // patch loop
         } // patch subset loop
@@ -901,7 +899,7 @@ namespace Uintah {
             }
             
             const Uintah::BCGeomBase::ParticleBndSpec& pBndSpec = thisGeom->getParticleBndSpec();
-            if( pBndSpec.hasParticlesBoundary() ){
+            if( pBndSpec.hasParticleBC() ){
               if( pBndSpec.bndType == Uintah::BCGeomBase::ParticleBndSpec::INLET ){
                 // This is a particle inlet. get the number of boundary particles per second
                 const double pPerSec = pBndSpec.particlesPerSec;
@@ -1020,7 +1018,7 @@ namespace Uintah {
                 Uintah::BCData bcData;
                 thisGeom->getBCData(bcData);
                 
-                // loop over needs bc data
+                // loop over the particle variables for which a BC has been specified
                 for( size_t ivar=0; ivar < needsBC_.size(); ++ivar ){
                   const std::string varName = needsBC_[ivar];
                   const Uintah::BoundCondBase* bndCondBase = bcData.getBCValues(varName);
@@ -1031,7 +1029,7 @@ namespace Uintah {
                     const double doubleVal = new_bc->getValue();
                     // right now, we only support constant boundary conditions
                     for( unsigned int j=0; j<newNParticles; ++j, ++p ){
-                      //                      pvar[p] = ((double) rand()/RAND_MAX)*(doubleVal*1.2 - doubleVal*0.8) + doubleVal*0.8;
+                      // pvar[p] = ((double) rand()/RAND_MAX)*(doubleVal*1.2 - doubleVal*0.8) + doubleVal*0.8;
                       pvar[p] = doubleVal;
                     }
                   }
@@ -1040,13 +1038,13 @@ namespace Uintah {
                            varName != pZLabel_->getName() )
                   {
                     // for all particle variables that do not have bcs specified in the input file, initialize them to zero
-                    for( unsigned int j=0; j<newNParticles; ++j, ++p ){
+                    for( unsigned int j=0; j<newNParticles; ++j, ++p ) {
                       pvar[p] = 0.0;
                     }
                   }
                 }
                 
-                // put back temporary data
+                // put the temporary data back in the original variables
                 new_dw->put(pidstmp, pIDLabel_, true);
                 new_dw->put(ppostmp, pPosLabel_, true);
                 for( size_t ivar=0; ivar < needsBCLabels.size(); ++ivar ){

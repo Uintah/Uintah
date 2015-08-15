@@ -1,11 +1,13 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <Uintah_Include>   
-  <include href="Models.xml"  section="Models/RMCRT" />
+
+<!-- This is for the RMCRT_test component -->
   
   <calc_frequency           spec="OPTIONAL INTEGER 'positive'"/>
   <Temperature              spec="OPTIONAL DOUBLE  'positive'"/> 
   <abskg                    spec="OPTIONAL DOUBLE  'positive'"/>
-  <benchmark                spec="OPTIONAL INTEGER 'positive'"/>
+  <benchmark                spec="OPTIONAL INTEGER 'positive'"
+                                attribute1="dir  OPTIONAL INTEGER"/>
   
   <Intrusion                spec="OPTIONAL NO_DATA">
     <geom_object/>
@@ -19,5 +21,8 @@
     <matl_index             spec="OPTIONAL INTEGER 'positive'"/>
     <timestep               spec="OPTIONAL INTEGER 'positive'"/>
   </initalizeUsingUda>
+  
+  <!-- All of the options for driving the different RMCRT algorithm options -->
+  <include href="Models.xml"  section="Models/RMCRT" />
 
 </Uintah_Include>

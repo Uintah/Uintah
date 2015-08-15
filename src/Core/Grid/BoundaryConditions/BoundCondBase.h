@@ -91,10 +91,10 @@ WARNING
     BoundCondValueTypeEnum getValueType() const { return d_value_type; }
     
   protected:
-    std::string d_variable;          // Pressure, Density, etc
-    std::string d_type;              // Dirichlet, Neumann, etc
-    std::string d_face_label;   // holds the user specified name of the bc face: left-wall, ox-inlet,...
-    BoundCondValueTypeEnum d_value_type;        // int, double, string, vector, unknown
+    std::string d_variable;              // Pressure, Density, etc
+    std::string d_type;                  // Dirichlet, Neumann, etc
+    std::string d_face_label;            // holds the user specified name of the bc face: left-wall, ox-inlet,...
+    BoundCondValueTypeEnum d_value_type; // int, double, string, vector, unknown
   };
 } // End namespace Uintah
 

@@ -279,10 +279,7 @@ namespace Wasatch {
   template void Wasatch::OldVariable::add_variable<T>(const Category, const Expr::Tag&, const bool retainName);
 
 #define INSTANTIATE_VARIANTS( VOL )                            \
-  INSTANTIATE( VOL )                                           \
-  INSTANTIATE( SpatialOps::FaceTypes<VOL>::XFace ) \
-  INSTANTIATE( SpatialOps::FaceTypes<VOL>::YFace ) \
-  INSTANTIATE( SpatialOps::FaceTypes<VOL>::ZFace )
+  INSTANTIATE( VOL )
 
 INSTANTIATE_VARIANTS( SVolField )
 INSTANTIATE_VARIANTS( XVolField )

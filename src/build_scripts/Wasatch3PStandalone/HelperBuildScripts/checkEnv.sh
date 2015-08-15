@@ -17,7 +17,7 @@ if test "$MACHINE" = ""; then
    echo "  At Utah: Ember, Ash, or Baja"
    echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
-   echo
+   echo "  At ORNL: titan"
    exit
 fi
 
@@ -158,7 +158,7 @@ if test "$MACHINE" = "Baja"; then
      echo "Error: hostname did not return baja*... Goodbye."
      exit
   fi
-  COMP=gcc4.9.1
+  COMP=gcc4.9.2
   NAME2="Baja"
   INSTALL_BASE=/home/dav/thirdparty-install/$NAME2/Wasatch3P
   BOOST_LOC=/usr
@@ -202,10 +202,24 @@ if test "$MACHINE" = "Syrah"; then
   INSTALL_BASE=/usr/gapps/uintah/Thirdparty-install/syrah/Wasatch3P
   BOOST_LOC=/usr/gapps/uintah/Thirdparty-install/syrah/Boost/v1_55_0/mpigcc4.7.7-mvapich2.gnu.1.7
 else
+if test "$MACHINE" = "titan"; then
+  
+  if [[ $host != titan* ]]; then
+     echo "Error: hostname did not return titan*... Goodbye."
+     exit
+  fi
+  CC=/opt/cray/craype/2.4.0/bin/cc
+  CXX=/opt/cray/craype/2.4.0/bin/CC
+  COMP=cc-4.8.2
+  NAME2="titan"
+  INSTALL_BASE=/ccs/proj/csc188/utah/thirdparty-install/titan/Wasatch3P
+  BOOST_LOC=$BOOST_ROOT
+else
   echo ""
   echo "$MACHINE not supported yet... add it."
   echo ""
   exit
+fi
 fi
 fi
 fi

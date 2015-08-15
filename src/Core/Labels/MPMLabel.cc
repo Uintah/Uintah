@@ -66,9 +66,6 @@ MPMLabel::MPMLabel()
   pTempCurrentLabel = VarLabel::create( "p.tempCurrent",
                         ParticleVariable<double>::getTypeDescription() ); 
     
-  pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
-			ParticleVariable<Vector>::getTypeDescription() );
-
   pXXLabel  = VarLabel::create( "p.xx",
 			ParticleVariable<Point>::getTypeDescription() );
                      
@@ -240,6 +237,12 @@ MPMLabel::MPMLabel()
 
   pParticleIDLabel_preReloc = VarLabel::create("p.particleID+",
 			ParticleVariable<long64>::getTypeDescription() );
+
+  pTemperatureGradientLabel = VarLabel::create( "p.temperatureGradient",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  pTemperatureGradientLabel_preReloc =VarLabel::create("p.temperatureGradient+",
+			ParticleVariable<Vector>::getTypeDescription() );
 
   // Node Centered Variables
   
@@ -710,7 +713,6 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(heatRate_CCLabel);
   //non PermanentParticleState
   VarLabel::destroy(pVolumeDeformedLabel);
-  VarLabel::destroy(pTemperatureGradientLabel);
   VarLabel::destroy(pTempCurrentLabel); // for thermal stress
   VarLabel::destroy(pXXLabel);
 
@@ -772,6 +774,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pFiberDirLabel);
   VarLabel::destroy(p_qLabel);
   VarLabel::destroy(p_qLabel_preReloc);
+  VarLabel::destroy(pTemperatureGradientLabel);
+  VarLabel::destroy(pTemperatureGradientLabel_preReloc);
   VarLabel::destroy(pPartitionUnityLabel);
 
   VarLabel::destroy(gAccelerationLabel);

@@ -838,6 +838,7 @@ DEF_NO_FORTRAN
 DEF_MPM
 DEF_ICE
 DEF_ARCHES
+BUILD_WASATCH_FOR_ARCHES
 BUILD_WASATCH
 BUILD_MPM
 BUILD_MODELS_RADIATION
@@ -4001,10 +4002,9 @@ if test "$BUILD_ARCHES"  != "yes"              -a   \
   add_important_warning "-------------------------------------------------------------------------"
 fi
 
+BUILD_WASATCH_FOR_ARCHES=no
 if test "$BUILD_ARCHES" = "yes" -a "$BUILD_WASATCH" != "yes"; then
-  BUILD_WASATCH=yes
-  msg="Arches requires Wasatch to be built... Turning on Wasatch!!!"
-  add_important_warning "$msg"
+  BUILD_WASATCH_FOR_ARCHES=yes
 fi
 
 if test "$enable_rpath" = "no"; then
@@ -6524,6 +6524,7 @@ fi
 
 
 
+
 if test "$BUILD_ARCHES" = no -a "$with_fortran" = "no"; then
   sci_required_fortran=no
 else
@@ -8476,7 +8477,7 @@ $as_echo "$M_LIB" >&6; }
 
 
 ##
-## SCI_TRY_LINK (M):  Verifying math library and header
+## SCI_TRY_LINK (M):  math library and header
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -8508,7 +8509,7 @@ $as_echo "$M_LIB" >&6; }
 ## Here are the specific values for this invocation:
 ##
 ## arg 1 : M
-## arg 2 : Verifying math library and header
+## arg 2 : math library and header
 ## arg 3 : math.h
 ## arg 4 :
 ## arg 5 : $M_LIB
@@ -8528,12 +8529,12 @@ $as_echo "$M_LIB" >&6; }
 ##      HAVE_M_H         => yes or no
 
 if test 9 != 9; then
-     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for Verifying math library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Wrong number of parameters (9) for SCI-TRY-LINK for math library and header.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for Verifying math library and header (required)" >&5
-$as_echo_n "checking for Verifying math library and header (required)... " >&6; }
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for math library and header (required)" >&5
+$as_echo_n "checking for math library and header (required)... " >&6; }
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -8543,7 +8544,7 @@ _sci_includes=
 
 if test "required" != "optional" -a "required" != "required" -a "required" != "specific"; then
      echo
-     as_fn_error $? "Last parameter of SCI-TRY-LINK for Verifying math library and header must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
+     as_fn_error $? "Last parameter of SCI-TRY-LINK for math library and header must be: optional or required or specific.  (You had required.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." "$LINENO" 5
 fi
 
 # If  (the -I paths) is blank, do nothing, else do the for statement.
@@ -8875,7 +8876,7 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (M):  Verifying math library and header
+## END of SCI_TRY_LINK (M):  math library and header
 ##
 
 
@@ -35579,18 +35580,12 @@ int main(int argc, char **argv) {
 }
 EOF
 
-##-----------------------------------------------------------------------------
-## Static linking of the cudart_static lib is not working on Titan, even
-## with CUDA 6.5
-##-----------------------------------------------------------------------------
-# use different set of libs if doing a static build
-#if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
-# _cudart_lib="cudart_static dl pthread rt"
-#else
-# _cudart_lib="cudart"
-#fi
-
-  _cudart_lib="cudart"
+# for a static build, use the static CUDA runtime lib
+if test "$static" != "no" -o "$SO_OR_ARCHIVE_EXTENSION" = "a"; then
+   _cudart_lib="cudart_static dl pthread rt"
+else
+   _cudart_lib="cudart"
+fi
 
 
 ## arguments mean:

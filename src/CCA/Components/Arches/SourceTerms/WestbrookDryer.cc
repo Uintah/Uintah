@@ -3,6 +3,7 @@
 #include <Core/Grid/SimulationState.h>
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/VarTypes.h>
+#include <CCA/Components/Arches/ChemMix/MixingRxnModel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Components/Arches/SourceTerms/WestbrookDryer.h>
 #include <Core/Exceptions/ParameterNotFound.h>
@@ -53,17 +54,12 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   // Defaults to methane.
   db->getWithDefault("A",d_A, 1.3e8);     // Pre-exponential factor 
   db->getWithDefault("E_R",d_ER, 24.4e3); // Activation Temperature 
-  db->getWithDefault("X", d_X, 1);        // C_xH_y
-  db->getWithDefault("Y", d_Y, 4);        // C_xH_y
   db->getWithDefault("m", d_m, -0.3);     // [C_xH_y]^m 
   db->getWithDefault("n", d_n, 1.3 );     // [O_2]^n 
-  db->require("fuel_mass_fraction", d_MF_HC_f1);                // Mass fraction of C_xH_y when f=1
-  db->require("stoich_fuel_O2_massratio", _stoich_massratio);  // kg fuel/kg ox for clipping the rate 
 
   // labels: 
   db->getWithDefault("temperature_label", d_T_label, "temperature");          // The name of the mixture fraction label
   db->getWithDefault("density_label", d_rho_label, "density");                // The name of the density label 
-  db->require("cstar_fraction_label", d_cstar_label);                         // The name of the C* mixture fraction label
   
   _using_xi = false; 
   if ( db->findBlock("xi_label") ){ 
@@ -94,6 +90,12 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
 
       db->findBlock("flammability_limit")->findBlock("diluent")->getAttribute("label",_diluent_label_name); 
 
+    }
+    _use_flam_limits_T_dependence = false; 
+    if ( db->findBlock("flammability_limit")->findBlock("temperature_dependence") ){ 
+      _use_flam_limits_T_dependence = true; 
+      db->findBlock("flammability_limit")->findBlock("temperature_dependence")->findBlock("lower")->getAttribute("slope", _flam_T_low_m);
+      db->findBlock("flammability_limit")->findBlock("temperature_dependence")->findBlock("upper")->getAttribute("slope", _flam_T_up_m);
     }
 
     db->findBlock("flammability_limit")->findBlock("lower")->getAttribute("slope", _flam_low_m);
@@ -131,8 +133,23 @@ WestbrookDryer::problemSetup(const ProblemSpecP& inputdb)
   d_R     = 8.314472; 
   d_Press = 101325; 
 
-  d_MW_HC = 12.0*d_X + 1.0*d_Y; // compute the molecular weight from input information
-
+}
+//---------------------------------------------------------------------------
+// Method: extra setup. We are using this function to get the fuel and oxidizer MW and the stoichiometric fuel to air ratio from the table. 
+//---------------------------------------------------------------------------
+void 
+WestbrookDryer::extraSetup( GridP& grid, BoundaryCondition* bc, Properties* prop )
+{
+  _properties = prop;
+  MixingRxnModel* mixingTable = _properties->getMixRxnModel();
+  const std::string key_stoich_massratio= "ST_fuel_O2_ratio"; 
+  _stoich_massratio = mixingTable->getDoubleTableConstant(key_stoich_massratio); 
+  const std::string key_fuel_mass_frac= "MF_fuel"; 
+  d_MF_HC_f1 = mixingTable->getDoubleTableConstant(key_fuel_mass_frac); 
+  if ( _use_flam_limits ){
+    const std::string key_fuel_MW = "MW_r_fuel"; 
+    d_fuel_MW = mixingTable->getDoubleTableConstant(key_fuel_MW); 
+  } 
 }
 //---------------------------------------------------------------------------
 // Method: Schedule the calculation of the source term 
@@ -145,11 +162,6 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
 
   _temperatureLabel   = VarLabel::find( d_T_label );
   _denLabel           = VarLabel::find( d_rho_label );
-  _CstarMassFracLabel = VarLabel::find( d_cstar_label );
-
-  if ( _CstarMassFracLabel == 0 ){ 
-    throw ProblemSetupException( "Error: Could not locate the C* mass fraction label.", __FILE__, __LINE__);
-  } 
 
   if ( _using_xi ){ 
 
@@ -192,7 +204,6 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->computes(d_WDextentLabel); 
 
     tsk->requires( Task::OldDW, _temperatureLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::OldDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
     if ( _using_xi ){ 
       tsk->requires( Task::OldDW, _XiLabel, Ghost::None, 0 ); 
     } else { 
@@ -212,7 +223,6 @@ WestbrookDryer::sched_computeSource( const LevelP& level, SchedulerP& sched, int
     tsk->modifies(d_WDextentLabel);   
 
     tsk->requires( Task::NewDW, _temperatureLabel, Ghost::None, 0 ); 
-    tsk->requires( Task::NewDW, _CstarMassFracLabel,  Ghost::None, 0 ); 
     if ( _using_xi ){ 
       tsk->requires( Task::NewDW, _XiLabel, Ghost::None, 0 ); 
     } else { 
@@ -264,7 +274,6 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
     CCVariable<double> E; // extent of reaction 
     constCCVariable<double> T;      // temperature 
     constCCVariable<double> den;    // mixture density
-    constCCVariable<double> Cstar;  // mass fraction of the hydrocarbon
     constCCVariable<double> Eta;    // mass fraction of eta
     constCCVariable<double> Fp;     // mass fraction of fp
     constCCVariable<double> Xi;     // total mixture fraction 
@@ -280,7 +289,6 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       E.initialize(0.0); 
       
       new_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
-      new_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
       new_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
 
       if ( _using_xi ){ 
@@ -306,7 +314,6 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       old_dw->get( T     , _temperatureLabel   , matlIndex , patch , Ghost::None , 0 );
       old_dw->get( den   , _denLabel           , matlIndex , patch , Ghost::None , 0 );
-      old_dw->get( Cstar , _CstarMassFracLabel , matlIndex , patch , Ghost::None , 0 );
       if ( _using_xi ){ 
         old_dw->get( Xi , _XiLabel, matlIndex, patch, Ghost::None, 0 ); 
       } else { 
@@ -331,7 +338,8 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
 
       double f = 0.0;
       if ( _using_xi ) {
-        f = Xi[c]; 
+        f = Xi[c];
+        throw InvalidValue("Error: Using xi has not been implemented. Contact Jeremy Thornock.",__FILE__,__LINE__);
       } else { 
         f = Fp[c] + Eta[c];
       }
@@ -339,10 +347,13 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       // Step 1: Compute stripping fraction and extent 
       double tiny = 1.0e-16;
       S[c] = 0.0; 
-      double hc_wo_rxn = f * d_MF_HC_f1;
-
-      if ( Cstar[c] > tiny ) 
-        S[c] = Cstar[c] / hc_wo_rxn; 
+      // Here the stripping factor should be:
+      //       unreacted fuel                fp * d_MW_HC_f1
+      // ____________________________ = _________________________                  
+      // unreated fuel + reacted fuel   ( fp * eta ) * d_MW_HC_f1
+      //
+      if ( Fp[c] > tiny ) 
+        S[c] = Fp[c] / f; 
 
       E[c] = 1.0 - S[c]; 
 
@@ -351,14 +362,14 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
       if ( _use_T_clip ){ 
 
         double fake_diluent = 0.0; 
-        rate = getRate( T[c], Cstar[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
+        rate = getRate( T[c], Fp[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
 
       } else { 
 
         if ( _const_diluent ){ 
-          rate = getRate( T[c], Cstar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
+          rate = getRate( T[c], Fp[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
         } else { 
-          rate = getRate( T[c], Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
+          rate = getRate( T[c], Fp[c], O2[c], diluent[c], f, den[c], dt, vol ); 
         } 
 
       } 
@@ -379,12 +390,12 @@ WestbrookDryer::computeSource( const ProcessorGroup* pc,
             if ( g_piece->inside(P) && total_time > _start_time_hot_spot && total_time < _stop_time_hot_spot ){ 
               if ( _use_T_clip ){ 
                 double fake_diluent = 0.0; 
-                rate = getRate( _T_hot_spot, Cstar[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
+                rate = getRate( _T_hot_spot, Fp[c], O2[c], fake_diluent, f, den[c], dt, vol ); 
               } else { 
                 if ( _const_diluent ){ 
-                  rate = getRate( _T_hot_spot, Cstar[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
+                  rate = getRate( _T_hot_spot, Fp[c], O2[c], _const_diluent_mass_fraction, f, den[c], dt, vol ); 
                 } else { 
-                  rate = getRate( _T_hot_spot, Cstar[c], O2[c], diluent[c], f, den[c], dt, vol ); 
+                  rate = getRate( _T_hot_spot, Fp[c], O2[c], diluent[c], f, den[c], dt, vol ); 
                 } 
               } 
 

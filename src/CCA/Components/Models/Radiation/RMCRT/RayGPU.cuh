@@ -552,11 +552,11 @@ __device__ void rayDirection_cellFaceDevice(curandState* randNumStates,
                             
 //______________________________________________________________________
 //
-__device__ GPUVector rayLocationDevice(curandState* randNumStates,
-                                       const GPUIntVector origin,
-                                       const double DyDx,
-                                       const double DzDx,
-                                       const bool useCCRays);
+__device__ GPUVector rayOriginDevice(curandState* randNumStates,
+                                     const GPUIntVector origin,
+                                     const double DyDx,
+                                     const double DzDx,
+                                     const bool useCCRays);
                                       
 
 __device__ void rayLocation_cellFaceDevice(curandState* randNumStates,

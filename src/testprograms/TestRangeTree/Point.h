@@ -53,9 +53,11 @@ public:
       (d_vals[2] - p2.d_vals[2]) * (d_vals[2] - p2.d_vals[2]); }
   
   int distanceL1(const Point& p2) const
-  { return (int)std::abs(d_vals[0] - p2.d_vals[0])
-      + (int)std::abs(d_vals[1] - p2.d_vals[1])
-      + (int)std::abs(d_vals[2] - p2.d_vals[2]); }
+  {
+    using std::abs;
+    return (int)abs(d_vals[0] - p2.d_vals[0])
+      + (int)abs(d_vals[1] - p2.d_vals[1])
+      + (int)abs(d_vals[2] - p2.d_vals[2]); }
     
   int getId() const
   { return d_id; }

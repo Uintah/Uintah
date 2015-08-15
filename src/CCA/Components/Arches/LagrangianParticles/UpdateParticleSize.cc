@@ -8,17 +8,17 @@
 
 using namespace Uintah;
 using namespace SpatialOps;
-using SpatialOps::operator *; 
+using SpatialOps::operator *;
 
-UpdateParticleSize::UpdateParticleSize( std::string task_name, int matl_index ) : 
-TaskInterface( task_name, matl_index ) { 
+UpdateParticleSize::UpdateParticleSize( std::string task_name, int matl_index ) :
+TaskInterface( task_name, matl_index ) {
 }
 
-UpdateParticleSize::~UpdateParticleSize(){ 
+UpdateParticleSize::~UpdateParticleSize(){
 }
 
-void 
-UpdateParticleSize::problemSetup( ProblemSpecP& db ){ 
+void
+UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 
   ProblemSpecP db_ppos = db->findBlock("ParticlePosition");
   db_ppos->getAttribute("x",_px_name);
@@ -31,10 +31,10 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
   db_vel->getAttribute("w",_w_name);
 
   //parse and add the size variable here
-  ProblemSpecP db_size = db->findBlock("ParticleSize"); 
-  db_size->getAttribute("label",_size_name); 
-  Uintah::ArchesParticlesHelper::mark_for_relocation(_size_name); 
-  Uintah::ArchesParticlesHelper::needs_boundary_condition(_size_name); 
+  ProblemSpecP db_size = db->findBlock("ParticleSize");
+  db_size->getAttribute("label",_size_name);
+  Uintah::ArchesParticlesHelper::mark_for_relocation(_size_name);
+  Uintah::ArchesParticlesHelper::needs_boundary_condition(_size_name);
 
   //potentially remove later when Tony updates the particle helper class
   Uintah::ArchesParticlesHelper::needs_boundary_condition(_px_name);
@@ -49,18 +49,18 @@ UpdateParticleSize::problemSetup( ProblemSpecP& db ){
 //------------------------------------------------
 //
 
-void 
-UpdateParticleSize::register_initialize( std::vector<VariableInformation>& variable_registry ){ 
+void
+UpdateParticleSize::register_initialize( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 
 }
 
-void 
-UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                        SpatialOps::OperatorDatabase& opr ){ 
+void
+UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                        SpatialOps::OperatorDatabase& opr ){
 
 
   using namespace SpatialOps;
-  using SpatialOps::operator *; 
+  using SpatialOps::operator *;
 
 
 }
@@ -71,13 +71,14 @@ UpdateParticleSize::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_i
 //------------- TIMESTEP INIT --------------------
 //------------------------------------------------
 //
-void 
-UpdateParticleSize::register_timestep_init( std::vector<VariableInformation>& variable_registry ){ 
+void
+UpdateParticleSize::register_timestep_init(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
 }
 
-void 
-UpdateParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
-                          SpatialOps::OperatorDatabase& opr ){ 
+void
+UpdateParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                          SpatialOps::OperatorDatabase& opr ){
 }
 
 
@@ -87,28 +88,31 @@ UpdateParticleSize::timestep_init( const Patch* patch, ArchesTaskInfoManager* ts
 //------------------------------------------------
 //
 
-void 
-UpdateParticleSize::register_timestep_eval( std::vector<VariableInformation>& variable_registry, const int time_substep ){ 
+void
+UpdateParticleSize::register_timestep_eval(
+  std::vector<ArchesFieldContainer::VariableInformation>& variable_registry,
+  const int time_substep ){
 
-  register_variable( _size_name, PARTICLE, COMPUTES, 0, NEWDW,  variable_registry );
+  register_variable( _size_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
-  register_variable( _size_name, PARTICLE, REQUIRES, 0, OLDDW,  variable_registry );
+  register_variable( _size_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::OLDDW,
+      variable_registry );
 
 }
 
-//This is the work for the task.  First, get the variables. Second, do the work! 
-void 
-UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info, 
+//This is the work for the task.  First, get the variables. Second, do the work!
+void
+UpdateParticleSize::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                   SpatialOps::OperatorDatabase& opr ){
 
   using namespace SpatialOps;
-  using SpatialOps::operator *; 
-  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr; 
+  using SpatialOps::operator *;
+  typedef SpatialOps::SpatFldPtr<Particle::ParticleField> Pptr;
 
-  Pptr pd = tsk_info->get_particle_field( _size_name ); 
+  Pptr pd = tsk_info->get_particle_field( _size_name );
 
-  Pptr old_pd = tsk_info->get_const_particle_field( _size_name ); 
+  Pptr old_pd = tsk_info->get_const_particle_field( _size_name );
 
-  *pd <<= *old_pd; 
+  *pd <<= *old_pd;
 
 }

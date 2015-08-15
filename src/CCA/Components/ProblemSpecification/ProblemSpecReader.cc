@@ -65,8 +65,8 @@ namespace Uintah {
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 
-static DebugStream dbg( "ProblemSpecReader", false );
-static DebugStream inc_dbg( "ProblemSpecReaderIncludes", false );
+static SCIRun::DebugStream dbg( "ProblemSpecReader", false );
+static SCIRun::DebugStream inc_dbg( "ProblemSpecReaderIncludes", false );
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Utility Functions:
@@ -285,9 +285,9 @@ struct AttributeAndTagBase :  public RefCounted {
     vector<char> separators;
     separators.push_back( ',' );
     separators.push_back( ' ' );
-    validValues_ = split_string( validValues, separators );
+    validValues_ = SCIRun::split_string( validValues, separators );
     for( unsigned int pos = 0; pos < validValues_.size(); pos++ ) {
-      collapse( validValues_[ pos ] );
+      SCIRun::collapse( validValues_[ pos ] );
     }
   }
 
@@ -620,7 +620,7 @@ AttributeAndTagBase::validateVector( const string & text ) const
 {
   // remove " " from text
   string cleanText = text;
-  replace_substring(cleanText, " ","");
+  SCIRun::replace_substring(cleanText, " ","");
 
   int numCommas = count_substrs( cleanText, "," );
   if( numCommas != 2 ) {
@@ -649,7 +649,7 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   vector<char> separators;
   separators.push_back( '\'' );
 
-  vector<string> specs = split_string( specStr, separators );
+  vector<string> specs = SCIRun::split_string( specStr, separators );
 
   if( specs.size() < 1 || specs.size() > 2 ) {
     throw ProblemSetupException( "Error in getNeedAndTypeAndValidValues()...", __FILE__, __LINE__ );
@@ -658,7 +658,7 @@ getNeedAndTypeAndValidValues( const string & specStr, need_e & need, type_e & ty
   separators.clear();
   separators.push_back( ' ' );
   separators.push_back( '\t' );
-  vector<string> needType = split_string( specs[0], separators );
+  vector<string> needType = SCIRun::split_string( specs[0], separators );
 
   if( needType.size() == 1 ) {
     // Only the 'need' is provided... grab it, and drop out.
@@ -700,7 +700,7 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
   vector<char> separators;
   separators.push_back( '\'' ); // Split by "'"s (single quotes).
 
-  vector<string> specs = split_string( specStr, separators );
+  vector<string> specs = SCIRun::split_string( specStr, separators );
 
   if( specs.size() < 1 || specs.size() > 2 ) {
     ostringstream errorMsg;
@@ -712,7 +712,7 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
   separators.clear();
   separators.push_back( ' ' );
   separators.push_back( '\t' );
-  vector<string> labelNeedType = split_string( specs[0], separators );
+  vector<string> labelNeedType = SCIRun::split_string( specs[0], separators );
 
   if( labelNeedType.size() != 3 ) {
     throw ProblemSetupException( "Error: label/need/type did not parse correctly...", __FILE__, __LINE__ );
@@ -725,7 +725,7 @@ getLabelAndNeedAndTypeAndValidValues( const string & specStr, string & label,
   if( specs.size() == 2 ) {
     if( type == NO_DATA ) {
       throw ProblemSetupException( "Error: type of Tag specified as NO_DATA, yet has a validValues '" +
-                                   concatStrings( specs ) +"' component...", __FILE__, __LINE__ );
+                                   SCIRun::concatStrings( specs ) +"' component...", __FILE__, __LINE__ );
     }
     validValues = specs[1];
   }
@@ -764,7 +764,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
 
   //  string name = to_char_ptr( xmlTag->name );
   string name = (const char *)( xmlTag->name );
-  collapse( name );
+  SCIRun::collapse( name );
 
   dbg << "Parse node: " << name << "\n";
 
@@ -938,7 +938,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
           separators.push_back( ')' );
           separators.push_back( ' ' );
 
-          strings = split_string( attrStr, separators );
+          strings = SCIRun::split_string( attrStr, separators );
 
           ChildRequirement * chreq = new ChildRequirement();
 
@@ -988,7 +988,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
           separators.push_back( ',' );
           separators.push_back( ' ' );
 
-          strings = split_string( attrStr, separators );
+          strings = SCIRun::split_string( attrStr, separators );
 
           if( strings.size() <= 1 ) {
             throw ProblemSetupException( string( "ERROR in parsing '" ) + attrStr + "'.  Not enough values for 'need_applies_to' field.\n" +
@@ -1033,7 +1033,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
           dbg << "here: " << newTag->needAppliesTo_.validValues_.size() << "\n";
 
           dbg << "need_applies_to: " << newTag->needAppliesTo_.parentAttributeName_ << " for "
-               << concatStrings( newTag->needAppliesTo_.validValues_ ) << "\n";
+              << SCIRun::concatStrings( newTag->needAppliesTo_.validValues_ ) << "\n";
         }
         else {
           throw ProblemSetupException( "Invalid attribute (" + attrName + ").", __FILE__, __LINE__ );
@@ -1047,7 +1047,7 @@ Tag::parseXmlTag( const xmlNode * xmlTag )
     if( child->type == XML_ELEMENT_NODE ) {
 
       string node = (const char *)( child->name );
-      collapse( node );
+      SCIRun::collapse( node );
 
       newTag->parseXmlTag( child );
     }
@@ -1306,7 +1306,7 @@ AttributeAndTagBase::validateText( const string & text, xmlNode * node ) const
   case STRING:
     if( !validateString( text ) ) {
       throw ProblemSetupException( "Invalid string value for " + classType + ": " + completeName + ". '" +
-                                   text + "' not found in this list:\n" + concatStrings( validValues_ ) + "\n" +
+                                   text + "' not found in this list:\n" + SCIRun::concatStrings( validValues_ ) + "\n" +
                                    getErrorInfo( node ) + "\n\n Are you using quotation marks around the string when you shouldn't be?",
                                    __FILE__, __LINE__ );
     }
@@ -1997,7 +1997,7 @@ ProblemSpecReader::readInputFile( const string & filename, const vector<int> & p
 	    vector<char>   separators;
 	    separators.push_back( '<' );
 	    separators.push_back( '>' );
-	    vector<string> pieces = split_string( proc, separators );
+	    vector<string> pieces = SCIRun::split_string( proc, separators );
 	    string         num_str = pieces[3];
 
 	    int            num = atoi( num_str.c_str() );
@@ -2108,7 +2108,7 @@ ProblemSpecReader::resolveIncludes( xmlNode * child, xmlNode * parent, int depth
             vector<string> sections;
             vector<char>   separators;
             separators.push_back( '/' );
-            sections = split_string( section, separators );
+            sections = SCIRun::split_string( section, separators );
             for( unsigned int pos = 0; pos < sections.size(); pos++ ) {
               bool done = false;
               while( !done ) {
