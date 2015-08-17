@@ -27,21 +27,16 @@
 
 #include <Core/Parallel/UintahParallelComponent.h>
 
-#include <CCA/Ports/SimulationInterface.h>
-#include <CCA/Ports/Output.h>
-
 #include <CCA/Components/MD/MDLabel.h>
 #include <CCA/Components/MD/MDSystem.h>
-
 #include <CCA/Components/MD/Nonbonded/Nonbonded.h>
-
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
-
 #include <CCA/Components/MD/Forcefields/Forcefield.h>
-
 #include <CCA/Components/MD/Integrators/Integrator.h>
-
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
+#include <CCA/Ports/Output.h>
+#include <CCA/Ports/SimulationInterface.h>
+#include <CCA/Ports/SwitchingCriteria.h>
 
 #include <vector>
 #include <fstream>
@@ -267,30 +262,33 @@ namespace Uintah {
                                         const MaterialSet*  matls,
                                         const LevelP&       level);
 
+      void scheduleSwitchTest( const LevelP&   level,
+                                     SchedulerP& sched );
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleInterpolateParticlesToGrid(SchedulerP&,
-                                              const PatchSet*,
-                                              const MaterialSet*);
 
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
-                                                   const PatchSet* patches,
-                                                   const MaterialSet* matls);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      void scheduleInterpolateParticlesToGrid(SchedulerP&,
+//                                              const PatchSet*,
+//                                              const MaterialSet*);
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
+//      void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
+//                                                   const PatchSet* patches,
+//                                                   const MaterialSet* matls);
+//
+//      /**
+//       * @brief
+//       * @param
+//       * @return
+//       */
 //      void scheduleUpdatePosition(SchedulerP& sched,
 //                                  const PatchSet* patches,
 //                                  const MaterialSet* matls,
@@ -300,6 +298,7 @@ namespace Uintah {
 //                                     const PatchSet*    patches,
 //                                     const MaterialSet* atomTypes,
 //                                     const LevelP&      level);
+
 
     private:
 
@@ -477,22 +476,27 @@ namespace Uintah {
                 (p.z() >= l.z() && p.z() < h.z()));
       }
 
+
     private:
-// Member pointers inherited from Uintah
-      Output*           d_dataArchiver;     //!< Handle to the Uintah data archiver
-      MDLabel*          d_label;            //!< Variable labels for the per-particle Uintah MD variables
-      SimulationStateP  d_sharedState;      //!< Shared simulation state (global)
-      ProblemSpecP      d_problemSpec;      //!< Problem spec since we need to parse our coordinates, and it's either storing this pointer or the whole parsed coordinate set
-      ProblemSpecP      d_restartSpec;
 
-// Member pointers constructed specifically for this component
-      Electrostatics*   d_electrostatics;   //!< The simulation Electrostatics model instance
-      Nonbonded*        d_nonbonded;              //!< The simulation Nonbonded instance
-      Integrator*       d_integrator;       //!< MD style integrator object
+      // Member pointers inherited from Uintah
+      Output*            d_dataArchiver;     //!< Handle to the Uintah data archiver
+      MDLabel*           d_label;            //!< Variable labels for the per-particle Uintah MD variables
+      SimulationStateP   d_sharedState;      //!< Shared simulation state (global)
+      ProblemSpecP       d_problemSpec;      //!< Problem spec since we need to parse our coordinates, and it's either storing this pointer or the whole parsed coordinate set
+      ProblemSpecP       d_restartSpec;
 
-      Forcefield*       d_forcefield;       //!< Currently employed MD forcefield
-      MDSystem*         d_system;           //!< The global MD system
-      CoordinateSystem* d_coordinate;       //!< Interface to abstract coordinte system
+      // Member pointers constructed specifically for this component
+      Electrostatics*    d_electrostatics;   //!< The simulation Electrostatics model instance
+      Nonbonded*         d_nonbonded;              //!< The simulation Nonbonded instance
+      Integrator*        d_integrator;       //!< MD style integrator object
+
+      Forcefield*        d_forcefield;       //!< Currently employed MD forcefield
+      MDSystem*          d_system;           //!< The global MD system
+      CoordinateSystem*  d_coordinate;       //!< Interface to abstract coordinate system
+
+      // For switching between MD and MPM
+      SwitchingCriteria* d_switchCriteria;
 
 
       //  Does this need to exist here?  Can it be stuffed in the electrostatics object?
@@ -512,11 +516,11 @@ namespace Uintah {
 
       double d_referenceEnergy;
       double d_baseTimeStep;
-      bool d_referenceStored;
+      bool   d_referenceStored;
 
 
-      bool d_firstIntegration;
-      bool d_secondIntegration;
+      bool   d_firstIntegration;
+      bool   d_secondIntegration;
       double d_KineticBase;
       double d_PotentialBase;
   };

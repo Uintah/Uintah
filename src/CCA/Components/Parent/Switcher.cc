@@ -629,12 +629,12 @@ void Switcher::initNewVars(const ProcessorGroup *,
     int relative_indx   = L_indx - numLevels;
     int init_Levels     = initVar->levels[i];
     
-    proc0cout << "    varName: " << l->getName() << " \t\t matls " << initVar->matlSetNames[i] << " level " << init_Levels << std::endl;
+    proc0cout << "\t varName: " << l->getName() << "\t\t matls: " << initVar->matlSetNames[i] << "\t\t level: " << init_Levels << std::endl;
     
     bool onThisLevel = false;
 
-    if (init_Levels == L_indx     ||   // user can specify: a level,
-        init_Levels == ALL_LEVELS  ||   // nothing,
+    if (init_Levels == L_indx     ||     // user can specify: a level,
+        init_Levels == ALL_LEVELS  ||    // nothing,
         init_Levels == relative_indx) {  // or a relative indx, -1, -2
       onThisLevel = true;
     }

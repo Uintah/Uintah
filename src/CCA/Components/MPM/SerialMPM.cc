@@ -127,10 +127,9 @@ SerialMPM::~SerialMPM()
   delete heatConductionModel;
   MPMPhysicalBCFactory::clean();
 
-  if(d_analysisModules.size() != 0){
+  if(d_analysisModules.size() != 0) {
     vector<AnalysisModule*>::iterator iter;
-    for( iter  = d_analysisModules.begin();
-         iter != d_analysisModules.end(); iter++){
+    for( iter  = d_analysisModules.begin(); iter != d_analysisModules.end(); iter++) {
       delete *iter;
     }
   }
@@ -138,8 +137,6 @@ SerialMPM::~SerialMPM()
   if(d_switchCriteria) {
     delete d_switchCriteria;
   }
-
-
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,

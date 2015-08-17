@@ -342,6 +342,13 @@ void MD::problemSetup(const ProblemSpecP&   params,
     mdFlowDebug << flowLocation
                 << "END" << std::endl;
   }
+
+  // Create the switching criteria port
+  d_switchCriteria = dynamic_cast<SwitchingCriteria*>(getPort("switch_criteria"));
+
+  if (d_switchCriteria) {
+    d_switchCriteria->problemSetup(restart_prob_spec, restart_prob_spec, d_sharedState);
+  }
 }
 
 void MD::scheduleInitialize(const LevelP&       level,
@@ -732,10 +739,18 @@ void MD::scheduleIntegratorFinalize(      SchedulerP&  sched,
   }
 }
 
-void MD::scheduleElectrostaticsInitialize(      SchedulerP& sched,
-                                          const PatchSet* perProcPatches,
+void MD::scheduleSwitchTest(const LevelP&     level,
+                                         SchedulerP& sched)
+{
+  if (d_switchCriteria) {
+    d_switchCriteria->scheduleSwitchTest(level, sched);
+  }
+}
+
+void MD::scheduleElectrostaticsInitialize(      SchedulerP&  sched,
+                                          const PatchSet*    perProcPatches,
                                           const MaterialSet* matls,
-                                          const LevelP& level)
+                                          const LevelP&      level)
 {
   const std::string flowLocation = "MD::scheduleElectrostaticsInitialize | ";
   printSchedule(perProcPatches, md_cout, flowLocation);
