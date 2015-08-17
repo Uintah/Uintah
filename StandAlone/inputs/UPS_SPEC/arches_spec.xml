@@ -999,19 +999,8 @@
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
 
             <!-- drag model -->
-            <particle_density_label     spec="REQUIRED STRING"
-                                        need_applies_to="type drag, gravity"/> <!-- base density label -->
-            <particle_diameter_label    spec="REQUIRED STRING"
-                                        need_applies_to="type drag"/>          <!-- base diameter label -->
-
             <direction                  spec="REQUIRED STRING 'x,y,z'"
-                                        need_applies_to="type drag"/>         <!-- apply this source to which velocity -->
-            <u_velocity_label           spec="REQUIRED STRING"
-                                        need_applies_to="type drag"/>         <!-- base u velocity label for IC -->
-            <v_velocity_label           spec="OPTIONAL STRING"
-                                        need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
-            <w_velocity_label           spec="OPTIONAL STRING"
-                                        need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
+                                        need_applies_to="type drag, gravity"/>     <!-- apply this source to which direction -->
 
             <!-- constant property model: set a constant/environment -->
             <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
