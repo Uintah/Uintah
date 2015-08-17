@@ -14,10 +14,12 @@ fi
 echo
 if test "$MACHINE" = ""; then
    echo "Please set the env var MACHINE to:"
+   echo ""
    echo "  At Utah: Ember, Ash, or Baja"
    echo "  At LLNL: Vulcan, Cab, Surface, or Syrah"
    echo "  At LANL: Mustang, Mapache, or Wolf"
    echo "  At ORNL: titan"
+   echo ""
    exit
 fi
 
