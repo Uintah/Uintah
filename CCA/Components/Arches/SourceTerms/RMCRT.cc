@@ -458,36 +458,47 @@ RMCRT_Radiation::sched_RestartInitialize( const LevelP& level,
   DataWarehouse* new_dw = sched->getLastDW();
 
   const LevelP& archesLevel = grid->getLevel(_archesLevelIndex);
-
-  const Patch* firstPatch = archesLevel->getPatch( 0 );
-
-  //__________________________________
-  //  As the name implies this is a hack
-  //  Only schedule radFlux*_Label are in the checkpoint uda
-  if( new_dw->exists( _radFluxE_Label, _matl, firstPatch ) ) {
-
+  
+  // Find the first patch, on the arches level, that this mpi rank owns.
+  const Uintah::PatchSet* const ps = sched->getLoadBalancer()->getPerProcessorPatchSet(archesLevel);
+  const PatchSubset* myPatches = ps->getSubset( _my_world->myrank() );
+  const Patch* firstPatch = myPatches->get(0);
+  
+  
+  if( level == archesLevel){
+    printSchedule(level,dbg,"RMCRT_Radiation::sched_RestartInitialize");
+    //__________________________________
+    //  As the name implies this is a hack
     Task* t1 = scinew Task("RMCRT_Radiation::restartInitializeHack", this,
                            &RMCRT_Radiation::restartInitializeHack);
-    t1->computes( _tempLabel );
-    t1->computes( _radFluxE_Label );
-    t1->computes( _radFluxW_Label );
-    t1->computes( _radFluxN_Label );   // Before you can require something from the new_dw
-    t1->computes( _radFluxS_Label );   // there must be a compute() for that variable.
-    t1->computes( _radFluxT_Label );
-    t1->computes( _radFluxB_Label );
+        
+    //  Only schedule if radFlux*_Label are in the checkpoint uda                   
+    if( new_dw->exists( _radFluxE_Label, _matl, firstPatch ) ) {
+      printSchedule(level,dbg,"RMCRT_Radiation::sched_restartInitializeHack");
+      
+      t1->computes( _radFluxE_Label );
+      t1->computes( _radFluxW_Label );
+      t1->computes( _radFluxN_Label );   // Before you can require something from the new_dw
+      t1->computes( _radFluxS_Label );   // there must be a compute() for that variable.
+      t1->computes( _radFluxT_Label );
+      t1->computes( _radFluxB_Label );
+    }
+    t1->computes( _tempLabel );          // needed by sched_sigmaT4
     sched->addTask(t1, archesLevel->eachPatch(), _sharedState->allArchesMaterials());
-
+    
     //__________________________________
     //  convert flux from 6 doubles -> CCVarible
-    sched_DBLsToStencil( archesLevel, sched );
-  }
-
-  //__________________________________
-  // compute sigmaT4 if it doesn't already exist
-  // on the arches level
-  if( !new_dw->exists( _RMCRT->d_sigmaT4Label, _matl, firstPatch) ){
-    bool includeExtraCells = true;
-    _RMCRT->sched_sigmaT4( archesLevel,  sched, Task::NewDW, 1, includeExtraCells );
+    if( new_dw->exists( _radFluxE_Label, _matl, firstPatch ) ) {
+      sched_DBLsToStencil( archesLevel, sched );
+    }
+    
+    //__________________________________
+    // compute sigmaT4 if it doesn't already exist
+    // on the arches level    
+    if( !new_dw->exists( _RMCRT->d_sigmaT4Label, _matl, firstPatch) ){
+      bool includeExtraCells = true;
+      _RMCRT->sched_sigmaT4( archesLevel,  sched, Task::NewDW, 1, includeExtraCells );
+    }
   }
 
 }
