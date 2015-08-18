@@ -451,7 +451,7 @@ void lucretiusAtomMap::outputStatistics() const {
     for (size_t idx=0; idx < typeLabel.size(); ++idx) {
       proc0cout << "Stored " << std::setw(5) << std::right << numPerType[idx] << " atoms with the label: \"" << typeLabel[idx] << "\"" << std::endl;
     }
-    proc0cout << "Total atoms added: " << totalAtomCount << std::endl;
+    proc0cout << "Total atoms added: " << totalAtomCount << "\n" << std::endl;
   }
 
 }

@@ -31,9 +31,8 @@
 #include <Core/Parallel/Parallel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 
-#include <string>
 #include <iostream>
-
+#include <string>
 
 using namespace Uintah;
 
