@@ -109,7 +109,7 @@ WARNING
 
 
    particleIndex createParticles(
-                        CCVariable<short int>& cellNAPID,
+                        CCVariable<int>& cellNAPID,
                         const Patch*,
                         DataWarehouse* new_dw);
 

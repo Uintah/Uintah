@@ -777,7 +777,7 @@ ElasticPlasticHP::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pPorosity,          pPorosityLabel,          pset);
     old_dw->get(pEnergy,            pEnergyLabel,            pset);
     old_dw->get(pLocalized,         pLocalizedLabel,         pset);
-    old_dw->get(pRotation,    pRotationLabel,               pset);
+    old_dw->get(pRotation,          pRotationLabel,          pset);
 
     // Get the particle IDs, useful in case a simulation goes belly up
     constParticleVariable<long64> pParticleID; 
