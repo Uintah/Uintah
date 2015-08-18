@@ -12,7 +12,7 @@
   
       <subcomponent>
           <SimulationComponent type="mpm" />
-          <input_file>inputs/MPM/4disks_2d.1mat.ups</input_file>
+          <input_file>inputs/MPM/4disks_2d.ups</input_file>
           <SwitchCriteria type = "Timestep">
             <timestep> 10 </timestep>
           </SwitchCriteria>
@@ -21,14 +21,9 @@
       <subcomponent>
           <SimulationComponent type="md" />
           <input_file>lj_hcp_1Component.ups</input_file>
-          <init var = "e_nb"        matls = "md_matls" levels = "0"/>
-          <init var = "e_elec_inv"  matls = "md_matls" levels = "0"/>
-          <init var = "e_elec_real" matls = "md_matls" levels = "0"/>
-          <init var = "e_kin"       matls = "md_matls" levels = "0"/>
-          <init var = "p.ID"        matls = "md_matls" levels = "0"/>
       </subcomponent>
         
-  </SimulationComponent>
+  </SimulationComponent>  
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
