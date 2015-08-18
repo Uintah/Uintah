@@ -1888,7 +1888,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
     
     printTask(patches, patch,cout_doing,"Doing actuallyInitialize");
 
-    CCVariable<short int> cellNAPID;
+    CCVariable<int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
 
@@ -3499,6 +3499,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
          if(flags->d_axisymmetric){
            cout << "Fix the pTempGradient calc for axisymmetry" << endl;
          }
+         // Get the node indices that surround the cell
           for (int k = 0; k < flags->d_8or27; k++){
             for (int j = 0; j<3; j++) {
               pTempGrad[idx][j] += gTempStar[ni[k]] * d_S[k][j]*oodx[j];
@@ -4388,8 +4389,8 @@ void SerialMPM::addParticles(const ProcessorGroup*,
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     //Carry forward CellNAPID
-    constCCVariable<short int> NAPID;
-    CCVariable<short int> NAPID_new;
+    constCCVariable<int> NAPID;
+    CCVariable<int> NAPID_new;
     Ghost::GhostType  gnone = Ghost::None;
     old_dw->get(NAPID,               lb->pCellNAPIDLabel,    0,patch,gnone,0);
     new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
@@ -4532,7 +4533,7 @@ void SerialMPM::addParticles(const ProcessorGroup*,
                           ((long64)c.y() << 32) |
                           ((long64)c.z() << 48);
 
-          short int& myCellNAPID = NAPID_new[c];
+          int& myCellNAPID = NAPID_new[c];
           int new_index;
           if(i==0){
              new_index=idx;
