@@ -6,6 +6,7 @@ SRCS += \
 				$(SRCDIR)/WallHFVariable.cc \
 				$(SRCDIR)/VariableStats.cc \
 				$(SRCDIR)/DensityPredictor.cc \
+				$(SRCDIR)/CO.cc \
         $(SRCDIR)/PropertyModelFactoryV2.cc 
 
 
