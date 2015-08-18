@@ -869,10 +869,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
   //Property Models before starting over
   std::vector<std::string> final_prop_tasks 
     = i_property_models->second->retrieve_task_subset("final_property_models"); 
+  int counter = 0;
   for ( std::vector<std::string>::iterator itsk = final_prop_tasks.begin(); itsk != final_prop_tasks.end(); itsk++ ){ 
     TaskInterface* tsk = i_property_models->second->retrieve_task(*itsk); 
     //passing in curr_level > 0 because we are at the end of the time step
-    tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 ); 
+    if ( counter == 0 )
+      tsk->schedule_task( level, sched, matls, TaskInterface::STANDARD_TASK, 1 ); 
+    counter ++; 
   }
 
   if ( d_printTotalKE ){ 

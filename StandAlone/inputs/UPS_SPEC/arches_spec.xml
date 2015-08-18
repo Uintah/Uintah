@@ -22,7 +22,8 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable,
                                                                           variable_stats,
-                                                                          density_predictor'">
+                                                                          density_predictor,
+                                                                          CO'">
 
           <!-- Wall heat flux variable:
                 This model produces a few variables, all stored in the first wall/intrusion cell exposed to the gas
@@ -80,7 +81,38 @@
           <density                      spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type variable_stats"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
-
+          <!-- for CO / equilibrium model -->
+          <CO_defect_label              spec="REQUIRED STRING"
+                                        need_applies_to="type CO"/> <!-- Name of the CO defect -->
+          <CO_rate_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- Name of the arrenhius rate -->
+          <A                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- pre exponential factor kmole/m3/s-->
+          <Ea                           spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- activation energy kcal/mole -->
+          <a                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- molar CO conc. exponent -->
+          <b                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- molar H2O conc. exponent -->
+          <c                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- molar O2 conc. exponent -->
+          <density_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- gas density label (table) -->
+          <temperature_label            spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- gas temperature label (table) -->
+          <CO_label                     spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- CO label (table) -->
+          <H2O_label                    spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- H2O label (table) -->
+          <O2_label                     spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- O2 label (table) -->
+          <MW_label                     spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- inv MW label (table) -->
+          <conv_scheme                  spec="REQUIRED STRING"
+                                        need_applies_to="type CO"/> <!-- get the convection scheme for RHS calculation -->
+          <Pr                           spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- get prandtl number for RHS term -->
+                                    
         </model>
       </PropertyModelsV2>
 

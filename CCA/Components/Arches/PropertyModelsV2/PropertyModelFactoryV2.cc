@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/PropertyModelsV2/WallHFVariable.h>
 #include <CCA/Components/Arches/PropertyModelsV2/VariableStats.h>
 #include <CCA/Components/Arches/PropertyModelsV2/DensityPredictor.h>
+#include <CCA/Components/Arches/PropertyModelsV2/CO.h>
 
 using namespace Uintah;
 
@@ -60,6 +61,13 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
         TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
+
+
+      } else if ( type == "CO" ) {
+
+        TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0, _shared_state );
+        register_task( name, tsk );
+        _finalize_property_tasks.push_back( name ); 
 
 
       } else {
