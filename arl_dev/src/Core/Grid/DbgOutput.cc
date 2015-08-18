@@ -35,6 +35,7 @@ void printSchedule( const PatchSet      * patches,
                     const string        & where )
 {
   if (dbg.active()){
+    dbg << "Rank-";
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << left;
     dbg.width(50);
@@ -49,6 +50,7 @@ void printSchedule( const LevelP        & level,
                     const string        & where )
 {
   if (dbg.active()){
+    dbg << "Rank-";
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << left;
     dbg.width(50);
@@ -64,6 +66,7 @@ void printTask(const PatchSubset* patches,
                const string& where)
 {
   if (dbg.active()){
+    dbg << "Rank-";
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << left;
     dbg.width(50);
@@ -79,6 +82,7 @@ void printTask(const PatchSubset* patches,
                const string& where)
 {
   if (dbg.active()){
+    dbg << "Rank-";
     dbg << Uintah::Parallel::getMPIRank() << " ";
     dbg << left;
     dbg.width(50);
@@ -94,6 +98,7 @@ void printTask(const Patch* patch,
                const string& where)
 {
   if (dbg.active()){
+    dbg << "Rank-";
     dbg << Uintah::Parallel::getMPIRank()  << " ";
     dbg << left;
     dbg.width(50);
@@ -109,6 +114,7 @@ void printTask(SCIRun::DebugStream& dbg,
                const string& where)
 {
   if (dbg.active()){
+    dbg << "Rank-";
     dbg << Uintah::Parallel::getMPIRank()  << " ";
     dbg << left;
     dbg.width(50);

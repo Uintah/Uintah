@@ -248,7 +248,7 @@ Switcher::Switcher( const ProcessorGroup * myworld,
 Switcher::~Switcher()
 {
 
-  dbg << d_myworld->myrank() << " Switcher::~Switcher" << std::endl;
+  dbg << "Rank-" << d_myworld->myrank() << " Switcher::~Switcher" << std::endl;
 
   for (unsigned i = 0; i < d_carryOverVarMatls.size(); i++) {
     if (d_carryOverVarMatls[i] && d_carryOverVarMatls[i]->removeReference()) {

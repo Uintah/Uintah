@@ -99,6 +99,7 @@ MD::MD(const ProcessorGroup* myworld) :
   d_firstIntegration = true;
   d_secondIntegration = false;
   d_KineticBase = d_PotentialBase = d_referenceEnergy = 0.0;
+  d_switchCriteria = NULL;
 
 //  d_isoKineticMult = 1.0;
 }

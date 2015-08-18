@@ -59,11 +59,11 @@
 
 namespace Uintah {
 
-  static DebugStream md_dbg("MDDebug", false);
-  static DebugStream md_cout("MDCout", false);
-  static DebugStream particleDebug("MDParticleVariableDebug", false);
-  static DebugStream electrostaticDebug("MDElectrostaticDebug", false);
-  static DebugStream mdFlowDebug("MDLogicFlowDebug", false);
+  static DebugStream md_dbg("            MDDebug",                 false);
+  static DebugStream md_cout("           MDCout",                  false);
+  static DebugStream particleDebug("     MDParticleVariableDebug", false);
+  static DebugStream electrostaticDebug("MDElectrostaticDebug",    false);
+  static DebugStream mdFlowDebug("       MDLogicFlowDebug",        false);
 
   class SimpleMaterial;
   class SPME;
@@ -114,190 +114,193 @@ namespace Uintah {
        * @param
        * @return
        */
-      virtual void problemSetup(const ProblemSpecP&     params,
-                                const ProblemSpecP&     restart_prob_spec,
-                                      GridP&            grid,
-                                      SimulationStateP& simState);
+      virtual void problemSetup( const ProblemSpecP&     params,
+                                 const ProblemSpecP&     restart_prob_spec,
+                                       GridP&            grid,
+                                       SimulationStateP& simState );
 
       /**
        * @brief
        * @param
        * @return
        */
-      virtual void scheduleInitialize(const LevelP& level,
-                                      SchedulerP& sched);
+      virtual void scheduleInitialize( const LevelP&     level,
+                                             SchedulerP& sched );
 
       /**
        * @brief
        * @param
        * @return
        */
-      virtual void scheduleRestartInitialize(const LevelP& level,
-                                             SchedulerP& sched);
+      virtual void scheduleRestartInitialize( const LevelP&     level,
+                                                    SchedulerP& sched );
 
       /**
        * @brief
        * @param
        * @return
        */
-      virtual void scheduleComputeStableTimestep(const LevelP& level,
-                                                 SchedulerP&);
+      virtual void scheduleComputeStableTimestep( const LevelP& level,
+                                                        SchedulerP& );
 
       /**
        * @brief
        * @param
        * @return
        */
-      virtual void scheduleTimeAdvance(const LevelP& level,
-                                       SchedulerP&);
+      virtual void scheduleTimeAdvance( const LevelP& level,
+                                              SchedulerP& );
+
 
     protected:
-      void scheduleOutputStatistics(      SchedulerP&   sched,
-                                    const PatchSet*     patches,
-                                    const MaterialSet*  atomTypes,
-                                    const LevelP&       level);
-
-      void scheduleKineticCalculations(      SchedulerP&    sched,
-                                       const PatchSet*      perProcPatches,
-                                       const MaterialSet*   atomTypes,
-                                       const LevelP&        level);
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleNonbondedInitialize(SchedulerP& sched,
-                                       const PatchSet* perProcPatches,
+      void scheduleOutputStatistics(       SchedulerP&   sched,
+                                     const PatchSet*     patches,
+                                     const MaterialSet*  atomTypes,
+                                     const LevelP&       level );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleKineticCalculations(       SchedulerP&    sched,
+                                        const PatchSet*      perProcPatches,
+                                        const MaterialSet*   atomTypes,
+                                        const LevelP&        level );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleNonbondedInitialize(       SchedulerP&  sched,
+                                        const PatchSet*    perProcPatches,
+                                        const MaterialSet* matls,
+                                        const LevelP&      level );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleNonbondedSetup(       SchedulerP&  sched,
+                                   const PatchSet*    patches,
+                                   const MaterialSet* matls,
+                                   const LevelP&      level );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleNonbondedCalculate(       SchedulerP&  sched,
+                                       const PatchSet*    patches,
                                        const MaterialSet* matls,
-                                       const LevelP& level);
+                                       const LevelP&      level );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleNonbondedSetup(SchedulerP& sched,
-                                  const PatchSet* patches,
-                                  const MaterialSet* matls,
-                                  const LevelP& level);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleNonbondedCalculate(SchedulerP& sched,
-                                      const PatchSet* patches,
+      void scheduleNonbondedFinalize(       SchedulerP&  sched,
+                                      const PatchSet*    patches,
                                       const MaterialSet* matls,
-                                      const LevelP& level);
+                                      const LevelP&      level );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleNonbondedFinalize(SchedulerP& sched,
-                                     const PatchSet* patches,
-                                     const MaterialSet* matls,
-                                     const LevelP& level);
+      void scheduleElectrostaticsInitialize(       SchedulerP&  sched,
+                                             const PatchSet*    perProcPatches,
+                                             const MaterialSet* matls,
+                                             const LevelP&      level );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleElectrostaticsInitialize(SchedulerP& sched,
-                                            const PatchSet* perProcPatches,
+      void scheduleElectrostaticsSetup(       SchedulerP&  sched,
+                                        const PatchSet*    patches,
+                                        const MaterialSet* matls,
+                                        const LevelP&      level );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleElectrostaticsCalculate(       SchedulerP&  sched,
+                                            const PatchSet*    perProcPatches,
                                             const MaterialSet* matls,
-                                            const LevelP& level);
+                                            const LevelP&      level );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleElectrostaticsSetup(SchedulerP& sched,
-                                       const PatchSet* patches,
-                                       const MaterialSet* matls,
-                                       const LevelP& level);
-
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void scheduleElectrostaticsCalculate(SchedulerP& sched,
-                                           const PatchSet* perProcPatches,
+      void scheduleElectrostaticsFinalize(       SchedulerP&  sched,
+                                           const PatchSet*    patches,
                                            const MaterialSet* matls,
-                                           const LevelP& level);
+                                           const LevelP&      level );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void scheduleElectrostaticsFinalize(SchedulerP& sched,
-                                          const PatchSet* patches,
-                                          const MaterialSet* matls,
-                                          const LevelP& level);
+      void scheduleIntegratorInitialize(       SchedulerP&   sched,
+                                         const PatchSet*     patches,
+                                         const MaterialSet*  matls,
+                                         const LevelP&       level );
 
-      void scheduleIntegratorInitialize(      SchedulerP&   sched,
-                                        const PatchSet*     patches,
-                                        const MaterialSet*  matls,
-                                        const LevelP&       level);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleIntegratorSetup(       SchedulerP&   sched,
+                                    const PatchSet*     patches,
+                                    const MaterialSet*  matls,
+                                    const LevelP&       level );
 
-      void scheduleIntegratorSetup(           SchedulerP&   sched,
-                                        const PatchSet*     patches,
-                                        const MaterialSet*  matls,
-                                        const LevelP&       level);
-
+      /**
+       * @brief
+       * @param
+       * @return
+       */
       void scheduleIntegratorCalculate(       SchedulerP&   sched,
                                         const PatchSet*     patches,
                                         const MaterialSet*  matls,
-                                        const LevelP&       level);
+                                        const LevelP&       level );
 
+      /**
+       * @brief
+       * @param
+       * @return
+       */
       void scheduleIntegratorFinalize(        SchedulerP&   sched,
                                         const PatchSet*     patches,
                                         const MaterialSet*  matls,
-                                        const LevelP&       level);
+                                        const LevelP&       level );
 
-      void scheduleSwitchTest( const LevelP&   level,
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void scheduleSwitchTest( const LevelP&     level,
                                      SchedulerP& sched );
-
-
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      void scheduleInterpolateParticlesToGrid(SchedulerP&,
-//                                              const PatchSet*,
-//                                              const MaterialSet*);
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      void scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
-//                                                   const PatchSet* patches,
-//                                                   const MaterialSet* matls);
-//
-//      /**
-//       * @brief
-//       * @param
-//       * @return
-//       */
-//      void scheduleUpdatePosition(SchedulerP& sched,
-//                                  const PatchSet* patches,
-//                                  const MaterialSet* matls,
-//                                  const LevelP& level);
-//
-//      void scheduleNewUpdatePosition(      SchedulerP&  sched,
-//                                     const PatchSet*    patches,
-//                                     const MaterialSet* atomTypes,
-//                                     const LevelP&      level);
 
 
     private:
@@ -307,169 +310,203 @@ namespace Uintah {
        * @param
        * @return
        */
-      void initialize(const ProcessorGroup* pg,
-                      const PatchSubset* patches,
-                      const MaterialSubset* matls,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw);
-
-      void outputStatistics(const ProcessorGroup* pg,
-                            const PatchSubset*    patches,
-                            const MaterialSubset* atomTypes,
-                                  DataWarehouse*  oldDW,
-                                  DataWarehouse*  newDW);
+      void initialize( const ProcessorGroup* pg,
+                       const PatchSubset*    patches,
+                       const MaterialSubset* matls,
+                             DataWarehouse*  old_dw,
+                             DataWarehouse*  new_dw );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void computeStableTimestep(const ProcessorGroup* pg,
-                                 const PatchSubset* patches,
-                                 const MaterialSubset* matls,
-                                 DataWarehouse* old_dw,
-                                 DataWarehouse* new_dw);
+      void outputStatistics( const ProcessorGroup* pg,
+                             const PatchSubset*    patches,
+                             const MaterialSubset* atomTypes,
+                                   DataWarehouse*  oldDW,
+                                   DataWarehouse*  newDW );
 
-      void calculateKineticEnergy(const ProcessorGroup* pg,
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void computeStableTimestep( const ProcessorGroup* pg,
                                   const PatchSubset*    patches,
-                                  const MaterialSubset* atomTypes,
-                                        DataWarehouse*  oldDW,
-                                        DataWarehouse*  newDW);
-      /**
-       * @brief
-       * @param
-       * @return
-       */
-      void nonbondedInitialize(const ProcessorGroup*    pg,
-                               const PatchSubset*       patches,
-                               const MaterialSubset*    matls,
-                               DataWarehouse*           oldDW,
-                               DataWarehouse*           newDW);
+                                  const MaterialSubset* matls,
+                                        DataWarehouse*  old_dw,
+                                        DataWarehouse*  new_dw );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void nonbondedSetup(const ProcessorGroup*     pg,
-                          const PatchSubset*        patches,
-                          const MaterialSubset*     matls,
-                          DataWarehouse*            oldDW,
-                          DataWarehouse*            newDW);
+      void calculateKineticEnergy( const ProcessorGroup* pg,
+                                   const PatchSubset*    patches,
+                                   const MaterialSubset* atomTypes,
+                                         DataWarehouse*  oldDW,
+                                         DataWarehouse*  newDW );
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void nonbondedInitialize( const ProcessorGroup* pg,
+                                const PatchSubset*    patches,
+                                const MaterialSubset* matls,
+                                      DataWarehouse*  oldDW,
+                                      DataWarehouse*  newDW );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void nonbondedCalculate(const ProcessorGroup* pg,
-                              const PatchSubset*    patches,
-                              const MaterialSubset* matls,
-                              DataWarehouse*        oldDW,
-                              DataWarehouse*        newDW);
+      void nonbondedSetup( const ProcessorGroup* pg,
+                           const PatchSubset*    patches,
+                           const MaterialSubset* matls,
+                                 DataWarehouse*  oldDW,
+                                 DataWarehouse*  newDW );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void nonbondedFinalize(const ProcessorGroup*  pg,
-                             const PatchSubset*     patches,
-                             const MaterialSubset*  matls,
-                             DataWarehouse*         oldDW,
-                             DataWarehouse*         newDW);
+      void nonbondedCalculate( const ProcessorGroup* pg,
+                               const PatchSubset*    patches,
+                               const MaterialSubset* matls,
+                                     DataWarehouse*  oldDW,
+                                     DataWarehouse*  newDW );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsInitialize(const ProcessorGroup*   pg,
-                                    const PatchSubset*      patches,
-                                    const MaterialSubset*   matls,
-                                    DataWarehouse*          oldDW,
-                                    DataWarehouse*          newDW);
+      void nonbondedFinalize( const ProcessorGroup*  pg,
+                              const PatchSubset*     patches,
+                              const MaterialSubset*  matls,
+                                    DataWarehouse*   oldDW,
+                                    DataWarehouse*   newDW );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsSetup(const ProcessorGroup*    pg,
-                               const PatchSubset*       patches,
-                               const MaterialSubset*    matls,
-                               DataWarehouse*           oldDW,
-                               DataWarehouse*           newDW);
+      void electrostaticsInitialize( const ProcessorGroup* pg,
+                                     const PatchSubset*    patches,
+                                     const MaterialSubset* matls,
+                                           DataWarehouse*  oldDW,
+                                           DataWarehouse*  newDW );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsCalculate(const ProcessorGroup*    pg,
-                                   const PatchSubset*       perprocPatches,
-                                   const MaterialSubset*    matls,
-                                   DataWarehouse*           parentOldDW,
-                                   DataWarehouse*           parentNewDW,
-                                   const LevelP             level);
+      void electrostaticsSetup( const ProcessorGroup* pg,
+                                const PatchSubset*    patches,
+                                const MaterialSubset* matls,
+                                      DataWarehouse*  oldDW,
+                                      DataWarehouse*  newDW );
 
       /**
        * @brief
        * @param
        * @return
        */
-      void electrostaticsFinalize(const ProcessorGroup*     pg,
-                                  const PatchSubset*        patches,
-                                  const MaterialSubset*     matls,
-                                  DataWarehouse*            oldDW,
-                                  DataWarehouse*            newDW);
+      void electrostaticsCalculate( const ProcessorGroup* pg,
+                                    const PatchSubset*    perprocPatches,
+                                    const MaterialSubset* matls,
+                                         DataWarehouse*   parentOldDW,
+                                         DataWarehouse*   parentNewDW,
+                                    const LevelP          level );
 
-      void newUpdatePosition(const ProcessorGroup*  pg,
-                             const PatchSubset*     patches,
-                             const MaterialSubset*  atomTypes,
-                                   DataWarehouse*   oldDW,
-                                   DataWarehouse*   newDW);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void electrostaticsFinalize( const ProcessorGroup* pg,
+                                   const PatchSubset*    patches,
+                                   const MaterialSubset* matls,
+                                         DataWarehouse*  oldDW,
+                                         DataWarehouse*  newDW) ;
 
-      void integratorInitialize(const ProcessorGroup*   pg,
-                                const PatchSubset*      patches,
-                                const MaterialSubset*   atomTypes,
-                                      DataWarehouse*    oldDW,
-                                      DataWarehouse*    newDW);
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void newUpdatePosition( const ProcessorGroup*  pg,
+                              const PatchSubset*     patches,
+                              const MaterialSubset*  atomTypes,
+                                    DataWarehouse*   oldDW,
+                                    DataWarehouse*   newDW );
 
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void integratorInitialize( const ProcessorGroup*   pg,
+                                 const PatchSubset*      patches,
+                                 const MaterialSubset*   atomTypes,
+                                       DataWarehouse*    oldDW,
+                                       DataWarehouse*    newDW );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
       void integratorSetup(     const ProcessorGroup*   pg,
                                 const PatchSubset*      patches,
                                 const MaterialSubset*   atomTypes,
                                       DataWarehouse*    oldDW,
-                                      DataWarehouse*    newDW);
-
-      void integratorCalculate( const ProcessorGroup*   pg,
-                                const PatchSubset*      patches,
-                                const MaterialSubset*   atomTypes,
-                                      DataWarehouse*    oldDW,
-                                      DataWarehouse*    newDW);
-
-      void integratorFinalize(  const ProcessorGroup*   pg,
-                                const PatchSubset*      patches,
-                                const MaterialSubset*   atomTypes,
-                                      DataWarehouse*    oldDW,
-                                      DataWarehouse*    newDW);
+                                      DataWarehouse*    newDW );
 
       /**
        * @brief
        * @param
        * @return
        */
-//      void updatePosition(const ProcessorGroup* pg,
-//                          const PatchSubset* patches,
-//                          const MaterialSubset* matls,
-//                          DataWarehouse* old_dw,
-//                          DataWarehouse* new_dw);
+      void integratorCalculate( const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   atomTypes,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW );
 
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      void integratorFinalize(  const ProcessorGroup*   pg,
+                                const PatchSubset*      patches,
+                                const MaterialSubset*   atomTypes,
+                                      DataWarehouse*    oldDW,
+                                      DataWarehouse*    newDW );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
        void createBasePermanentParticleState();
 
-      inline bool containsAtom(const IntVector& l,
-                               const IntVector& h,
-                               const IntVector& p) const
+       /**
+        * @brief
+        * @param
+        * @return
+        */
+      inline bool containsAtom( const IntVector& l,
+                                const IntVector& h,
+                                const IntVector& p ) const
       {
         return ((p.x() >= l.x() && p.x() < h.x()) &&
                 (p.y() >= l.y() && p.y() < h.y()) &&
@@ -495,15 +532,14 @@ namespace Uintah {
       MDSystem*          d_system;           //!< The global MD system
       CoordinateSystem*  d_coordinate;       //!< Interface to abstract coordinate system
 
-      // For switching between MD and MPM
-      SwitchingCriteria* d_switchCriteria;
+      SwitchingCriteria* d_switchCriteria;   //!< Used for switching between MD and MPM - switchFlag
 
 
       //  Does this need to exist here?  Can it be stuffed in the electrostatics object?
       SchedulerP        d_electrostaticSubscheduler;    //!< Subscheduler for SPME::calculate() convergence loop
       bool              d_recompileSubscheduler;        //!< Whether or not the subscheduler taskgraph needs recompilation
 
-      double            delt;                         //!< Simulation delta T
+      double            delt;                           //!< Simulation delta T
 
       std::vector<const VarLabel*> d_particleState;            //!< Atom (particle) state prior to relocation
       std::vector<const VarLabel*> d_particleState_preReloc;   //!< For atom (particle) relocation
