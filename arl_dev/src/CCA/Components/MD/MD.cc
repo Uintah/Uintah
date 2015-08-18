@@ -173,8 +173,7 @@ void MD::problemSetup(const ProblemSpecP&   params,
   }
 
   // Initialize base scheduler and attach the position variable
-  dynamic_cast<Scheduler*> (getPort("scheduler"))
-                            ->setPositionVar(d_label->global->pX);
+  dynamic_cast<Scheduler*> (getPort("scheduler"))->setPositionVar(d_label->global->pX);
 
 //------> Set up components inherent to MD
   // create the coordinate system interface
@@ -184,15 +183,17 @@ void MD::problemSetup(const ProblemSpecP&   params,
   // Parse the forcefield
   Forcefield* tempFF = ForcefieldFactory::create(params, shared_state);
 
-  switch(tempFF->getInteractionClass()) { // Set generic interface based on FF type
-    case(TwoBody):
-        d_forcefield=dynamic_cast<TwoBodyForcefield*> (tempFF);
-        break;
-    case(ThreeBody):
-    case(NBody):
-    default:
-        throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
+  switch ( tempFF->getInteractionClass() ) {  // Set generic interface based on FF type
+    case (TwoBody) : {
+      d_forcefield = dynamic_cast<TwoBodyForcefield*>(tempFF);
+      break;
     }
+    case (ThreeBody) :
+    case (NBody) :
+    default : {
+      throw InternalError("MD:  Attempted to instantiate a forcefield type which is not yet implemented", __FILE__, __LINE__);
+    }
+  }
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -210,6 +211,7 @@ void MD::problemSetup(const ProblemSpecP&   params,
                                                          d_sharedState->get_delt_label());
 
   d_integrator = tempIntegrator;
+
 //  switch(tempIntegrator->getInteractionModel()) { // Set generic interface based on integrator type
 //    case(Deterministic):
 //      d_Integrator=dynamic_cast<DeterministicIntegrator*> (tempIntegrator);
@@ -295,18 +297,17 @@ void MD::problemSetup(const ProblemSpecP&   params,
 // Register the general labels that all MD simulations will use
    createBasePermanentParticleState();
    // And then add the labels that each created subcomponent will require
-   d_integratorInterface
-    ->registerRequiredParticleStates(d_particleState,
-                                     d_particleState_preReloc,
-                                     d_label);
-   d_electrostaticInterface
-     ->registerRequiredParticleStates(d_particleState,
-                                      d_particleState_preReloc,
-                                      d_label);
-   d_nonbondedInterface
-     ->registerRequiredParticleStates(d_particleState,
-                                      d_particleState_preReloc,
-                                      d_label);
+   d_integratorInterface->registerRequiredParticleStates(d_particleState,
+                                                         d_particleState_preReloc,
+                                                         d_label);
+
+   d_electrostaticInterface->registerRequiredParticleStates(d_particleState,
+                                                            d_particleState_preReloc,
+                                                            d_label);
+
+   d_nonbondedInterface->registerRequiredParticleStates(d_particleState,
+                                                        d_particleState_preReloc,
+                                                        d_label);
 
    // We must wait to register our atom (material) types until the
    // subcomponents have provided the per-particle labels
@@ -315,19 +316,15 @@ void MD::problemSetup(const ProblemSpecP&   params,
    size_t stateSize, preRelocSize;
    stateSize = d_particleState.size();
    preRelocSize = d_particleState_preReloc.size();
-   if (stateSize != preRelocSize)
-   {
-     std::cerr
-       << "ERROR:  Mismatch in number of per particle variable labels."
-       << std::endl;
-   }
+  if (stateSize != preRelocSize) {
+    std::cerr << "ERROR:  Mismatch in number of per particle variable labels." << std::endl;
+  }
 
    if (particleDebug.active()) {
      particleDebug << particleLocation
                    << "  Registered particle variables: "
                    << std::endl;
-     for (size_t index = 0; index < stateSize; ++index)
-     {
+     for (size_t index = 0; index < stateSize; ++index) {
        particleDebug << particleLocation
                      << "  " << d_particleState[index]->getName() << "/"
                      << d_particleState_preReloc[index]->getName()
@@ -369,8 +366,7 @@ void MD::scheduleInitialize(const LevelP&       level,
   // Get list of MD materials for scheduling
   const MaterialSet*    materials       =   d_sharedState->allMDMaterials();
   LoadBalancer*         loadBal         =   sched->getLoadBalancer();
-  const PatchSet*       perProcPatches  =
-                            loadBal->getPerProcessorPatchSet(level);
+  const PatchSet*       perProcPatches  =   loadBal->getPerProcessorPatchSet(level);
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
 
@@ -418,20 +414,19 @@ void MD::scheduleComputeStableTimestep(const LevelP& level,
                                        SchedulerP& sched)
 {
   const std::string flowLocation = "MD::scheduleComputeStableTimestep | ";
+
   printSchedule(level, md_cout, flowLocation);
 
   Task* task = scinew Task("MD::computeStableTimestep", this, &MD::computeStableTimestep);
 
-  task->computes(d_sharedState->get_delt_label(),
-                 level.get_rep());
+  task->computes(d_sharedState->get_delt_label(), level.get_rep());
+
   task->setType(Task::OncePerProc);
 
   LoadBalancer* loadBal = sched->getLoadBalancer();
   const PatchSet* perProcPatches = loadBal->getPerProcessorPatchSet(level);
 
-  sched->addTask(task,
-                 perProcPatches,
-                 d_sharedState->allMaterials());
+  sched->addTask(task, perProcPatches, d_sharedState->allMaterials());
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -1198,19 +1193,16 @@ void MD::initialize(const ProcessorGroup*   pg,
   inverseExtentVector[1]=1.0/static_cast<double> (totalSystemExtent[1]);
   inverseExtentVector[2]=1.0/static_cast<double> (totalSystemExtent[2]);
 
-  SCIRun::Vector cellDimensions =
-                     d_coordinate->getUnitCell()*inverseExtentVector;
+  SCIRun::Vector cellDimensions = d_coordinate->getUnitCell()*inverseExtentVector;
 
   // Loop through each patch
   size_t numPatches             =   perProcPatches->size();
   size_t numAtomTypes           =   matls->size();
 
   // Input coordinates from problem spec
-  atomMap* parsedCoordinates    =
-               atomFactory::create(d_problemSpec, d_sharedState, d_forcefield);
-
-  size_t numTypesParsed         =   parsedCoordinates->getNumberAtomTypes();
-  size_t numMaterialTypes       =   d_sharedState->getNumMDMatls();
+  atomMap* parsedCoordinates    =  atomFactory::create(d_problemSpec, d_sharedState, d_forcefield);
+  size_t numTypesParsed         =  parsedCoordinates->getNumberAtomTypes();
+  size_t numMaterialTypes       =  d_sharedState->getNumMDMatls();
 
   if (numTypesParsed > numMaterialTypes) {
     std::stringstream errorOut;
@@ -1224,15 +1216,13 @@ void MD::initialize(const ProcessorGroup*   pg,
   d_system->registerAtomTypes(parsedCoordinates, d_sharedState);
 
   for (size_t matlIndex = 0; matlIndex < numAtomTypes; ++matlIndex) {
-    std::string materialLabel   =
-                    d_sharedState->getMDMaterial(matlIndex)->getMaterialLabel();
+    std::string materialLabel = d_sharedState->getMDMaterial(matlIndex)->getMaterialLabel();
+    std::vector<atomData*>* currAtomList = parsedCoordinates->getAtomList(materialLabel);
+    size_t numAtoms                      = currAtomList->size();
 
-    std::vector<atomData*>* currAtomList    =
-                                parsedCoordinates->getAtomList(materialLabel);
-
-    size_t numAtoms                         =   currAtomList->size();
 //    d_system->registerAtomCount(numAtoms,matlIndex);
   }
+
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
                 << "  Constructed atom map."
@@ -1257,14 +1247,15 @@ void MD::initialize(const ProcessorGroup*   pg,
     SCIRun::Vector  atomTypeCumulativeVelocity  = MDConstants::V_ZERO;
     Uintah::Matrix3 atomTypeStressTensor        = MDConstants::M3_0;
     for (size_t localType = 0; localType < numAtomTypes; ++localType) {
+
       // Loop over materials
       size_t        globalID    = matls->get(localType);
       MDMaterial*   atomType    = d_sharedState->getMDMaterial(globalID);
       std::string   typeLabel   = atomType->getMaterialLabel();
+
       // Match coordinates to material and extract coordinate list
-      std::vector<atomData*>* currAtomList =
-                                  parsedCoordinates->getAtomList(typeLabel);
-      size_t numAtomsOfType     = parsedCoordinates->getAtomListSize(typeLabel);
+      std::vector<atomData*>* currAtomList = parsedCoordinates->getAtomList(typeLabel);
+      size_t numAtomsOfType                = parsedCoordinates->getAtomListSize(typeLabel);
 
       std::vector<Point>            localAtomCoordinates;
       std::vector<size_t>           localAtomID;
@@ -1272,6 +1263,7 @@ void MD::initialize(const ProcessorGroup*   pg,
 
       double atomMass = atomType->getMass();
       for (size_t atomIndex = 0; atomIndex < numAtomsOfType; ++atomIndex) {
+
         // Loop over all atoms of material
         atomData*   currAtom        = (*currAtomList)[atomIndex];
         Point       currPosition    = currAtom->getPosition();

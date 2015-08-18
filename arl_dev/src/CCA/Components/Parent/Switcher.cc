@@ -265,59 +265,74 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
                               GridP            & grid,
                               SimulationStateP & sharedState )
 {  
-  dbg << "Doing ProblemSetup \t\t\t\tSwitcher"<< std::endl;
-  if (restart_prob_spec){
-    readSwitcherState(restart_prob_spec,sharedState);
+  if (dbg.active()) {
+    dbg << "Doing ProblemSetup \t\t\t\tSwitcher" << std::endl;
+  }
+
+  if (restart_prob_spec) {
+    readSwitcherState(restart_prob_spec, sharedState);
   }
   
-  proc0cout << "\n------------ Switching to component (" << d_componentIndex <<") \n";
-  proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
-  
   d_sharedState = sharedState;
-  d_sim =                         dynamic_cast<SimulationInterface*>(     getPort("sim",d_componentIndex) );
-  UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>( getPort("sim",d_componentIndex) );
-  Scheduler* sched              = dynamic_cast<Scheduler*>(               getPort("scheduler") );
-  Output* dataArchiver          = dynamic_cast<Output*>(                  getPort("output") );
-  ModelMaker* modelmaker        = dynamic_cast<ModelMaker*>(              getPort("modelmaker") ); 
 
-  comp->attachPort("scheduler", sched);
-  comp->attachPort("output",    dataArchiver);
-  comp->attachPort("modelmaker",modelmaker);
+  Scheduler* sched       = NULL;
+  Output* dataArchiver   = NULL;
+  ModelMaker* modelmaker = NULL;
 
-  //__________________________________
-  //Read the ups file for the first subcomponent   
-  ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);  
-  
-  dataArchiver->problemSetup( subCompUps, d_sharedState.get_rep() );
-  
-  d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState );
-  
+  // Call problemSetup() for all subcomponents.
+  unsigned int old_component_index = d_componentIndex;
+  proc0cout << "\n-----------------------------------\n";
+  for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
+
+    proc0cout << "\n  Reading input file: " << d_in_file[d_componentIndex] << " - for component: " << d_componentIndex << "\n";
+
+    d_sim                         = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
+    UintahParallelComponent* comp = dynamic_cast<UintahParallelComponent*>(getPort("sim", d_componentIndex));
+
+    sched        = dynamic_cast<Scheduler*>(getPort("scheduler"));
+    dataArchiver = dynamic_cast<Output*>(getPort("output"));
+    modelmaker   = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
+
+    comp->attachPort("scheduler", sched);
+    comp->attachPort("output", dataArchiver);
+    comp->attachPort("modelmaker", modelmaker);
+
+    //__________________________________
+    //Read the ups file for the first subcomponent
+    ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
+
+    d_sim->problemSetup(subCompUps, restart_prob_spec, grid, sharedState);
+  }
+
+  d_componentIndex = old_component_index;
+  ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
+
+  // read in <Time> block from ups file
+  d_sharedState->d_simTime->problemSetup(subCompUps);
+  dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
 
   // read in the grid adaptivity flag from the ups file
   Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
   if (regridder) {
-    regridder->switchInitialize( subCompUps );
+    regridder->switchInitialize(subCompUps);
   }
-  
-  
-  // read in <Time> block from ups file
-  d_sharedState->d_simTime->problemSetup( subCompUps );    
-    
+
   //__________________________________
   // init Variables:
   //   - determine the label from the string names
   //   - determine the MaterialSet from the string matlSetName
   //   - store this info to be used later
   std::map<int, initVars*>::iterator it;
+  proc0cout << "\n-----------------------------------\n";
   for (it = d_initVars.begin(); it != d_initVars.end(); it++) {
 
     int comp = it->first;
-    proc0cout << " init Variables:  component: " << comp << std::endl;
+    proc0cout << "  init Variables:  component: " << comp << std::endl;
     initVars* tmp = it->second;
 
     // Find the varLabel   
-    std::vector<std::string>& varNames = tmp->varNames;
-    std::vector<VarLabel*> varLabels = tmp->varLabels;
+    std::vector<std::string>& varNames  = tmp->varNames;
+    std::vector<VarLabel*>    varLabels = tmp->varLabels;
 
     for (unsigned j = 0; j < varNames.size(); j++) {
 
@@ -360,8 +375,22 @@ Switcher::problemSetup( const ProblemSpecP     & /*params*/,
 void Switcher::scheduleInitialize(const LevelP     & level,
                                         SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleInitialize");
-  d_sim->scheduleInitialize(level,sched);
+  printSchedule(level, dbg, "Switcher::scheduleInitialize");
+
+  // Call scheduleInitialize() for all subcomponents.
+  proc0cout << "\n-----------------------------------\n";
+
+  unsigned int old_component_index = d_componentIndex;
+  for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
+
+    proc0cout << "  Scheduling initialization for component: " << d_componentIndex << "\n";
+
+    d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
+    d_sim->scheduleInitialize(level, sched);
+  }
+
+  proc0cout << "-----------------------------------\n\n";
+  d_componentIndex = old_component_index;
 }
 
 //______________________________________________________________________
@@ -372,13 +401,28 @@ void Switcher::scheduleRestartInitialize(const LevelP     & level,
   printSchedule(level,dbg,"Switcher::scheduleRestartInitialize");
   d_sim->scheduleRestartInitialize(level,sched);
 }
+
 //______________________________________________________________________
 //
 void Switcher::scheduleComputeStableTimestep(const LevelP     & level,
                                                    SchedulerP & sched)
 {
   printSchedule(level,dbg,"Switcher::scheduleComputeStableTimestep");
-  d_sim->scheduleComputeStableTimestep(level,sched);
+
+  // Call scheduleComputeStableTimestep() for all subcomponents.
+  proc0cout << "\n-----------------------------------\n";
+
+  unsigned int old_component_index = d_componentIndex;
+  for (d_componentIndex = 0; d_componentIndex < d_numComponents; ++d_componentIndex) {
+
+    proc0cout << "  Scheduling ComputeStableTimestep for component: " << d_componentIndex << "\n";
+
+    d_sim = dynamic_cast<SimulationInterface*>(getPort("sim", d_componentIndex));
+    d_sim->scheduleComputeStableTimestep(level,sched);
+  }
+
+  proc0cout << "-----------------------------------\n\n";
+  d_componentIndex = old_component_index;
 }
 
 //______________________________________________________________________
@@ -509,70 +553,67 @@ void Switcher::scheduleInitNewVars(const LevelP     & level,
 
 //______________________________________________________________________
 //
-//
 void Switcher::scheduleCarryOverVars(const LevelP     & level,
                                            SchedulerP & sched)
 {
-  printSchedule(level,dbg,"Switcher::scheduleCarryOverVars");
+  printSchedule(level, dbg, "Switcher::scheduleCarryOverVars");
   int L_indx = level->getIndex();
-  
+
   if (d_computedVars.size() == 0) {
     // get the set of computed vars like this, because by scheduling a carry-over var, we add to the compute list
     d_computedVars = sched->getComputedVars();
   }
 
-  if ( d_doSwitching[L_indx] || d_restarting ) {
+  if (d_doSwitching[L_indx] || d_restarting) {
     // clear and reset carry-over db
-    if ( L_indx >= (int) d_doCarryOverVarPerLevel.size() ) {
-      d_doCarryOverVarPerLevel.resize( L_indx+1 );
+    if (L_indx >= (int)d_doCarryOverVarPerLevel.size()) {
+      d_doCarryOverVarPerLevel.resize(L_indx + 1);
     }
     d_doCarryOverVarPerLevel[L_indx].clear();
 
-    // rebuild carry-over database
-
-    // mark each var as carry over if it's not in the computed list
+    // rebuild carry-over database - mark each var as carry over if it's not in the computed list
     for (unsigned i = 0; i < d_carryOverVarLabels.size(); i++) {
+
+      bool do_on_this_level = !d_carryOverFinestLevelOnly[i] || L_indx == level->getGrid()->numLevels() - 1;
+      bool no_computes      = d_computedVars.find(d_carryOverVarLabels[i]) == d_computedVars.end();
+      bool trueFalse        = ( do_on_this_level && no_computes );
       
-      bool do_on_this_level = !d_carryOverFinestLevelOnly[i] || L_indx == level->getGrid()->numLevels()-1;
-      
-      bool no_computes      = d_computedVars.find( d_carryOverVarLabels[i] ) == d_computedVars.end();
-      
-      bool trueFalse = ( do_on_this_level && no_computes );
-      d_doCarryOverVarPerLevel[L_indx].push_back( trueFalse );
+      d_doCarryOverVarPerLevel[L_indx].push_back(trueFalse);
     }
   }
-  
+
   //__________________________________
   //
-  Task* t = scinew Task("Switcher::carryOverVars",this, 
-                       & Switcher::carryOverVars);
-                        
+  Task* t = scinew Task("Switcher::carryOverVars", this, &Switcher::carryOverVars);
+
   // schedule the vars to be carried over (if this happens before a switch, don't do it)
-  if ( L_indx < (int) d_doCarryOverVarPerLevel.size() ) {
-    
-    for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) { 
-    
-      if ( d_doCarryOverVarPerLevel[L_indx][i] ) {
-      
-        VarLabel* var         = d_carryOverVarLabels[i];
+  if (L_indx < (int)d_doCarryOverVarPerLevel.size()) {
+
+    for (unsigned int i = 0; i < d_carryOverVarLabels.size(); i++) {
+
+      if (d_doCarryOverVarPerLevel[L_indx][i]) {
+
+        VarLabel* var = d_carryOverVarLabels[i];
         MaterialSubset* matls = d_carryOverVarMatls[i];
-      
+
         t->requires(Task::OldDW, var, matls, Ghost::None, 0);
         t->computes(var, matls);
-     
-        if(UintahParallelComponent::d_myworld->myrank() == 0) {
+
+        if (UintahParallelComponent::d_myworld->myrank() == 0) {
           if (matls) {
-            std::cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx << std::endl;
+            std::cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tmatls: " << *matls << " on level " << L_indx
+                      << std::endl;
           }
           else {
             std::cout << d_myworld->myrank() << "  Carry over " << *var << "\t\tAll matls on level " << L_indx << "\n";
           }
         }
       }
-    }  
+    }
   }
-  sched->addTask(t,level->eachPatch(),d_sharedState->originalAllMaterials());
+  sched->addTask(t, level->eachPatch(), d_sharedState->originalAllMaterials());
 }
+
 //______________________________________________________________________
 //  Set the flag if switch criteria has been satisfied.
 void Switcher::switchTest(const ProcessorGroup *,
@@ -780,6 +821,7 @@ void Switcher::initNewVars(const ProcessorGroup *,
   }  // varlabel loop
   proc0cout << "__________________________________" << std::endl;
 }
+
 //______________________________________________________________________
 //
 void Switcher::carryOverVars(const ProcessorGroup *,
@@ -870,18 +912,22 @@ Switcher::needRecompile(       double   time,
     proc0cout << "\n__________________________________ Switching to component (" << d_componentIndex << ") \n";
     proc0cout << "  Reading input file: " << d_in_file[d_componentIndex] << "\n";
 
+    // TODO - remove this if doing problemSetup() for all subcomponents up front works out.
     // read in the problemSpec on next subcomponent
-    ProblemSpecP restart_prob_spec = 0;
     ProblemSpecP subCompUps = ProblemSpecReader().readInputFile(d_in_file[d_componentIndex]);
 
     // read in <Time> block from ups file
     d_sharedState->d_simTime->problemSetup(subCompUps);
 
+    // TODO - remove this if doing problemSetup() for all subcomponents up front works out.
     // execute the subcomponent ProblemSetup
+    ProblemSpecP restart_prob_spec = 0;
     d_sim->problemSetup(subCompUps, restart_prob_spec, const_cast<GridP&>(grid), d_sharedState);
 
     // read in <DataArchiver> section
     dataArchiver->problemSetup(subCompUps, d_sharedState.get_rep());
+
+    // TODO - this has been commented out for ages - can we delete this line?
     //   dataArchiver->initializeOutput(subCompUps);
 
     // we need this to get the "ICE surrounding matl"
@@ -904,6 +950,7 @@ Switcher::needRecompile(       double   time,
 
   return retval;
 }
+
 //______________________________________________________________________
 //
 void
@@ -914,6 +961,7 @@ Switcher::outputProblemSpec(ProblemSpecP& ps)
   ps->appendElement( "switcherCarryOverMatls", d_sharedState->originalAllMaterials()->getUnion()->size());
   d_sim->outputProblemSpec( ps );
 }
+
 //______________________________________________________________________
 //
 void
