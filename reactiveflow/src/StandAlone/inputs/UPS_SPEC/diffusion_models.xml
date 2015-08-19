@@ -11,7 +11,8 @@
     <max_concentration           spec="OPTIONAL DOUBLE" />
     <partial_atomic_vol          spec="OPTIONAL DOUBLE" />
     <init_conc                   spec="OPTIONAL DOUBLE" />
-		<tuning1                     spec="OPTIONAL DOUBLE" />
+    <tuning1                     spec="OPTIONAL DOUBLE" />
+    <ramp_time                   spec="OPTIONAL DOUBLE" />
   
   </diffusion_model>
 
