@@ -1647,6 +1647,7 @@
         <OperatorSplitting              spec="OPTIONAL BOOLEAN"/> <!-- turn on operator splitting for convective fluxes -->
         <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>  <!-- determines how much energy is lost in wall collision default = 1 - elastic-->
         <ConvectionWeightLimit          spec="OPTIONAL DOUBLE"/>  <!-- minimum value of the weight for the quadrature node to actually do convection, scale this value up for higher number densities of population balance-->
+        <DepositionLabel                spec="OPTIONAL STRING"/>  <!-- base label name for wall deposition, probability of sticking -->
 
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"
