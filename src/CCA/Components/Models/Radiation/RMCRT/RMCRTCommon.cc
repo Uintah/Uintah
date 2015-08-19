@@ -723,7 +723,7 @@ RMCRTCommon::isDbgCell( const IntVector me)
 //  Populate vector with integers which have been randomly shuffled.
 //  This is sampling without replacement and can be used to in a
 //  Latin-Hyper-Cube sampling scheme.  The algorithm used is the
-//  fisher-yates shuffle.
+//  modern fisher-yates shuffle.
 //______________________________________________________________________
 void
 RMCRTCommon::randVector( vector <int> &int_array,MTRand& mTwister ){
