@@ -11,8 +11,8 @@
      <maxTime>4</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
-     <delt_max>1.0e-7</delt_max>
-     <max_Timesteps>721</max_Timesteps>
+     <delt_max>1.0e-8</delt_max>
+     <max_Timesteps>720</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
   <DataArchiver>
@@ -90,22 +90,22 @@
            </constitutive_model>
            <thermal_conductivity>0.0</thermal_conductivity>
            <specific_heat>5</specific_heat>
-           <diffusion_model type = "gao_diffusion">
-	           <diffusivity>        2e-16    </diffusivity>
-	           <partial_atomic_vol> 14.2e-23  </partial_atomic_vol>
-             <max_concentration>  1.0      </max_concentration>
-	           <operating_temp>     300      </operating_temp>
-	           <boltzmann_const>    1.38e-20 </boltzmann_const>
-	           <init_conc> 0.0 </init_conc>
-           </diffusion_model>
            <!--
+           <diffusion_model type = "gao_diffusion">
+             <diffusivity>        2e-16    </diffusivity>
+             <partial_atomic_vol> 14.2e-23  </partial_atomic_vol>
+             <max_concentration>  1.0      </max_concentration>
+             <operating_temp>     300      </operating_temp>
+             <boltzmann_const>    1.38e-20 </boltzmann_const>
+             <init_conc> 0.0 </init_conc>
+           </diffusion_model>
+           -->
            <diffusion_model type = "rf1">
-	         <diffusivity>  2e-3   </diffusivity>
+             <diffusivity>  2e-3   </diffusivity>
              <max_concentration>  1.0      </max_concentration>
              <init_conc> 0.0 </init_conc>
              <tuning1>      1.95   </tuning1>
            </diffusion_model>
-           -->
            
            <geom_object>
              <cylinder label = "pillar_out"/>
@@ -165,7 +165,7 @@
       <Box label="1">
         <lower>[0.0, 4.75e-4, 0.0]   </lower>
         <upper>[1.0e-3, 5.25e-4, 0.375e-3]</upper>
-        <resolution>[40, 1, 15]        </resolution>
+        <resolution>[60, 1, 30]        </resolution>
         <extraCells>[0, 0, 0]          </extraCells>
         <patches>[1,1,1]               </patches>
       </Box>

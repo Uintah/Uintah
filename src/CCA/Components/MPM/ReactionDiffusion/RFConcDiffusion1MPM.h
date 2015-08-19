@@ -54,8 +54,15 @@ namespace Uintah {
     virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
                              DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+    virtual void scheduleInterpolateToParticlesAndUpdate(Task* task, const MPMMaterial* matl, 
+		                                                     const PatchSet* patch) const;
+
+    virtual void interpolateToParticlesAndUpdate(const Patch* patch, const MPMMaterial* matl,
+                                                 DataWarehouse* old_dw, DataWarehouse* new_dw);
+
   private:
 		double omega;
+    double ramp_time;
 
     RFConcDiffusion1MPM(const RFConcDiffusion1MPM&);
     RFConcDiffusion1MPM& operator=(const RFConcDiffusion1MPM&);

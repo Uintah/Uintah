@@ -12,7 +12,7 @@
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e-7</delt_max>
-     <max_Timesteps>44000</max_Timesteps>
+     <max_Timesteps>700</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
@@ -73,6 +73,7 @@
            <max_concentration>  1.0      </max_concentration>
 	   <init_conc> 0.0  </init_conc>
            <tuning1>   1.95 </tuning1>
+	   <ramp_time> 1.0e-3 </ramp_time>
          </diffusion_model>
          <geom_object>
            <box label = "pillar">
@@ -100,8 +101,8 @@
        <pressure>
          <geom_object>
            <box label = "x-">
-             <min>[0.00e-3, 0.000e-3, 0.0]</min>
-             <max>[0.01e-3, 0.125e-3, 0.05e-3]</max>
+             <min>[0.000e-3, 0.000e-3, 0.0]</min>
+             <max>[0.001e-3, 0.125e-3, 0.05e-3]</max>
            </box>
          </geom_object>
          <load_curve>
@@ -115,8 +116,8 @@
        <pressure>
          <geom_object>
            <box label = "x+">
-             <min>[0.49e-3, 0.0e-3,   0.0]</min>
-             <max>[0.50e-3, 0.125e-3, 0.05e-3]</max>
+             <min>[0.499e-3, 0.0e-3,   0.0]</min>
+             <max>[0.500e-3, 0.125e-3, 0.05e-3]</max>
            </box>
          </geom_object>
          <load_curve>
@@ -127,6 +128,22 @@
            </time_point>
          </load_curve>
        </pressure>
+       <pressure>
+         <geom_object>
+           <box label = "y+">
+             <min>[0.0e-3, 0.122e-3, 0.0]</min>
+             <max>[0.5e-3, 0.125e-3, 0.05e-3]</max>
+           </box>
+         </geom_object>
+         <load_curve>
+           <id>1</id>
+           <time_point>
+             <time> 0 </time>
+             <load> 0 </load>
+           </time_point>
+         </load_curve>
+       </pressure>
+
      </MPM>
    </PhysicalBC>
 

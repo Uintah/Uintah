@@ -40,6 +40,7 @@ RFConcDiffusion1MPM::RFConcDiffusion1MPM(ProblemSpecP& ps, SimulationStateP& sS,
   ScalarDiffusionModel(ps, sS, Mflag, diff_type) {
 
   ps->require("tuning1", omega);
+  ps->require("ramp_time", ramp_time);
 }
 
 RFConcDiffusion1MPM::~RFConcDiffusion1MPM() {
@@ -154,3 +155,114 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
 
 	delete interpolator;
 }
+
+void RFConcDiffusion1MPM::scheduleInterpolateToParticlesAndUpdate(Task* task,
+                                                           const MPMMaterial* matl,     
+                                                           const PatchSet* patch) const
+{
+  Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gnone = Ghost::None;
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  task->requires(Task::OldDW, d_sharedState->get_delt_label());
+  task->requires(Task::OldDW, d_lb->pXLabel,                    gnone);
+  task->requires(Task::OldDW, d_lb->pSizeLabel,                 gnone);
+  task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,   gnone);
+  task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,      gnone);
+  task->requires(Task::OldDW, d_lb->pLoadCurveIDLabel,          gnone);
+  task->requires(Task::NewDW, d_rdlb->gConcentrationRateLabel,  gac,NGN);
+  task->requires(Task::NewDW, d_rdlb->gConcentrationStarLabel,  gac,NGN);
+
+  task->computes(d_rdlb->pConcentrationLabel_preReloc, matlset);
+  task->computes(d_rdlb->pConcPreviousLabel_preReloc,  matlset);
+  task->computes(d_rdlb->pConcGradientLabel_preReloc,  matlset);
+}
+
+void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
+                                                           const MPMMaterial* matl,
+                                                           DataWarehouse* old_dw,
+                                                           DataWarehouse* new_dw)
+{
+  Ghost::GhostType  gac   = Ghost::AroundCells;
+  int dwi = matl->getDWIndex();
+
+  double run_time = d_sharedState->getElapsedTime();
+  double boundary_conc;
+
+  if(run_time < ramp_time){
+    boundary_conc = run_time/ramp_time;
+  }else{
+    boundary_conc = 1.0;
+  }
+
+  ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
+  vector<IntVector> ni(interpolator->size());
+  vector<double> S(interpolator->size());
+  vector<Vector> d_S(interpolator->size());
+  Vector dx = patch->dCell();
+  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+
+  constParticleVariable<Point>   px;
+  constParticleVariable<Matrix3> psize;
+  constParticleVariable<Matrix3> pFOld;
+  constParticleVariable<double>  pConcentration;
+  constParticleVariable<int>     pLoadCurveID;
+  constNCVariable<double>        gConcentrationRate;
+  constNCVariable<double>        gConcentrationStar;
+  
+  ParticleVariable<double> pConcentrationNew;
+  ParticleVariable<double> pConcPreviousNew;
+  ParticleVariable<Vector> pConcGradNew;
+  
+  ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+  
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label(), patch->getLevel() );
+  
+  old_dw->get(px,             d_lb->pXLabel,                   pset);
+  old_dw->get(psize,          d_lb->pSizeLabel,                pset);
+  old_dw->get(pFOld,          d_lb->pDeformationMeasureLabel,  pset);
+  old_dw->get(pLoadCurveID,   d_lb->pLoadCurveIDLabel,         pset);
+  
+  old_dw->get(pConcentration,     d_rdlb->pConcentrationLabel,     pset);
+  new_dw->get(gConcentrationRate, d_rdlb->gConcentrationRateLabel, dwi, patch, gac, NGP);
+  new_dw->get(gConcentrationStar, d_rdlb->gConcentrationStarLabel, dwi, patch, gac, NGP);
+
+  new_dw->allocateAndPut(pConcentrationNew, d_rdlb->pConcentrationLabel_preReloc, pset);
+  new_dw->allocateAndPut(pConcPreviousNew,  d_rdlb->pConcPreviousLabel_preReloc,  pset);
+  new_dw->allocateAndPut(pConcGradNew,      d_rdlb->pConcGradientLabel_preReloc,  pset);
+
+  for(ParticleSubset::iterator iter = pset->begin();
+        iter != pset->end(); iter++){
+
+    particleIndex idx = *iter;
+    interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pFOld[idx]);
+    double concRate = 0.0;
+		pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
+    for (int k = 0; k < d_Mflag->d_8or27; k++) {
+      IntVector node = ni[k];
+      concRate += gConcentrationRate[node]   * S[k];
+      for(int j = 0; j < 3; j++){
+        pConcGradNew[idx][j] += gConcentrationStar[ni[k]] * d_S[k][j] * oodx[j];
+      }
+    }
+
+    pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+
+    // this is a hack that uses LoadCurveID to identify boundary particles
+    // works with nano_pillar3_2D_FBC
+    if(pLoadCurveID[idx] == 1){
+      pConcentrationNew[idx] = boundary_conc;
+    }
+    if(pLoadCurveID[idx] == 2){
+      pConcentrationNew[idx] = boundary_conc;
+    }
+    if(pLoadCurveID[idx] == 3){
+      pConcentrationNew[idx] = boundary_conc;
+    }
+
+    pConcPreviousNew[idx]  = pConcentration[idx];
+  }
+  delete interpolator;
+}
+
