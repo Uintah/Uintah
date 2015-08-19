@@ -152,33 +152,34 @@ namespace Uintah {
       virtual void wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                            constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                            cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                           const int wVelIndex, const std::vector<double>& epVec) = 0;
+                           const int wVelIndex, const std::vector<double>& epVec, const double fStick) = 0;
       virtual void bc_wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                               constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                               cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                              const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary) = 0;
+                              const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary, const double fStick) = 0;
       
       //handle 3D wall
       virtual void wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                            constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
-                           cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas) = 0;
+                           cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                           const double fStick ) = 0;
       virtual void bc_wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                               constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                               cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                              const cqFaceBoundaryBool isBoundary) = 0;
+                              const cqFaceBoundaryBool isBoundary, const double fStick) = 0;
       
       //these all handle 1D wall - (more functions, but simpler ones)
       virtual cqFaceData1D no_bc(const IntVector c, const IntVector coord, constCCVariable<double>& phi,
                                  constCCVariable<double>& volFrac, const double epW) = 0;
       virtual cqFaceData1D no_bc_weight(const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                         constCCVariable<double>& volFrac, const double epW) = 0;
+                                         constCCVariable<double>& volFrac, const double epW, const double fStick) = 0;
       virtual cqFaceData1D no_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
                                          constCCVariable<double>& volFrac, const double epW) = 0;
       
       virtual cqFaceData1D with_bc( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
                                     constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
       virtual cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                           constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
+                                           constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary, const double fStick) = 0;
       virtual cqFaceData1D with_bc_normVel( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
                                             constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary) = 0;
     protected:
@@ -208,7 +209,8 @@ namespace Uintah {
       //3D corner walls
       void wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                    constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
-                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas)
+                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                   const double fStick)
       {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
@@ -236,7 +238,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           wVelFaceAbscissas.minus_left = rebound[2];
@@ -260,7 +262,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           wVelFaceAbscissas.plus_right = rebound[2];
@@ -271,7 +273,7 @@ namespace Uintah {
       void wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                    constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                    cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                   const int wVelIndex, const std::vector<double>& epVec)
+                   const int wVelIndex, const std::vector<double>& epVec, const double fStick)
       {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
@@ -306,7 +308,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           if (wVelIndex > -1)
@@ -335,7 +337,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           if (wVelIndex > -1)
@@ -388,7 +390,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<double>& volFrac, const double epW)
+                                 constCCVariable<double>& volFrac, const double epW, const double fStick)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -401,13 +403,13 @@ namespace Uintah {
         if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) { //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phic/epW;
+          face_values.minus_left = (1.0 - fStick) * phic/epW;
         }
         
         if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phic/epW;
+          face_values.plus_right = (1.0 - fStick) * phic/epW;
         }
         
         return face_values;
@@ -443,7 +445,7 @@ namespace Uintah {
       void bc_wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                       constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                       cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                      const cqFaceBoundaryBool isBoundary )
+                      const cqFaceBoundaryBool isBoundary, const double fStick )
       {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
@@ -471,7 +473,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           wVelFaceAbscissas.minus_left = rebound[2];
@@ -495,7 +497,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           wVelFaceAbscissas.plus_right = rebound[2];
@@ -506,7 +508,7 @@ namespace Uintah {
       void bc_wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                       constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                       cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                      const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary )
+                      const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary, const double fStick )
       {
         IntVector cxp = c + coord;
         IntVector cxm = c - coord;
@@ -541,7 +543,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           if (wVelIndex > -1)
@@ -570,7 +572,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           if (wVelIndex > -1)
@@ -623,7 +625,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
+                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary, const double fStick)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         IntVector cxp = c + coord;
@@ -636,13 +638,13 @@ namespace Uintah {
         if ( volFrac[cxm] == 1.0 || volFrac[c] == 0.0 ) {  //check if this is a flow cell has a wall touching it
           face_values.minus_left = phi[cxm];
         } else {
-          face_values.minus_left = phic/epW;
+          face_values.minus_left = (1.0 - fStick) * phic/epW;
         }
         
         if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) {
           face_values.plus_right = phi[cxp];
         } else {
-          face_values.plus_right = phic/epW;
+          face_values.plus_right = (1.0 - fStick) * phic/epW;
         }
         
         return face_values;
@@ -685,7 +687,8 @@ namespace Uintah {
       //NOTE: 2nd order scheme with walls has some numerical issues that can occur even in simple cases, clipping of velocities in CQMOM xml should be turned on
       void wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                    constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
-                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas)
+                   cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
+                   const double fStick)
       {
         IntVector cxpp = c + coord + coord;
         IntVector cxp = c + coord;
@@ -753,7 +756,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = ( 1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           wVelFaceAbscissas.minus_left = rebound[2];
@@ -794,7 +797,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           wVelFaceAbscissas.plus_right = rebound[2];
@@ -805,7 +808,7 @@ namespace Uintah {
       void wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                    constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                    cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                   const int wVelIndex, const std::vector<double>& epVec)
+                   const int wVelIndex, const std::vector<double>& epVec, const double fStick)
       {
         IntVector cxpp = c + coord + coord;
         IntVector cxp = c + coord;
@@ -885,7 +888,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           if (wVelIndex > -1)
@@ -932,7 +935,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           if (wVelIndex > -1)
@@ -1030,7 +1033,7 @@ namespace Uintah {
       }
       
       cqFaceData1D no_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                 constCCVariable<double>& volFrac, const double epW)
+                                 constCCVariable<double>& volFrac, const double epW, const double fStick)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -1057,7 +1060,7 @@ namespace Uintah {
           delN = minMod(nxm, nxp);
           face_values.minus_left = phicxm + 1.0/2.0 * delN;
         } else {
-          face_values.minus_left = face_values.minus_right/epW;
+          face_values.minus_left = (1.0 - fStick) * face_values.minus_right/epW;
         }
         
         if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
@@ -1066,7 +1069,7 @@ namespace Uintah {
           delN = minMod(nxm, nxp);
           face_values.plus_right = phicxp - 1.0/2.0 * delN;
         } else {
-          face_values.plus_right = face_values.plus_left/epW;
+          face_values.plus_right = (1.0 - fStick) * face_values.plus_left/epW;
         }
         
 #ifdef cqmom_transport_dbg
@@ -1137,7 +1140,7 @@ namespace Uintah {
       void bc_wall3D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                       constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                       cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                      const cqFaceBoundaryBool isBoundary)
+                      const cqFaceBoundaryBool isBoundary, const double fStick)
       {
         IntVector cxpp = c + coord + coord;
         IntVector cxp = c + coord;
@@ -1211,7 +1214,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           wVelFaceAbscissas.minus_left = rebound[2];
@@ -1258,7 +1261,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0 * epW;
           rebound[2] = temp[2] * -1.0 * epW;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           wVelFaceAbscissas.plus_right = rebound[2];
@@ -1269,7 +1272,7 @@ namespace Uintah {
       void bc_wall2D( const IntVector c, const IntVector coord, constCCVariable<double>& w, constCCVariable<double>& uVel, constCCVariable<double>& vVel,
                       constCCVariable<double>& wVel, constCCVariable<double>& volFrac, const double epW, const std::vector<double>& wallNorm,
                       cqFaceData1D& faceWeight, cqFaceData1D& uVelFaceAbscissas, cqFaceData1D& vVelFaceAbscissas, cqFaceData1D& wVelFaceAbscissas,
-                      const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary)
+                      const int wVelIndex, const std::vector<double>& epVec, const cqFaceBoundaryBool isBoundary, const double fStick)
       {
         IntVector cxpp = c + coord + coord;
         IntVector cxp = c + coord;
@@ -1356,7 +1359,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.minus_left = w[c]/epW;
+          faceWeight.minus_left = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.minus_left = rebound[0];
           vVelFaceAbscissas.minus_left = rebound[1];
           if (wVelIndex > -1)
@@ -1410,7 +1413,7 @@ namespace Uintah {
           rebound[1] = temp[1] * -1.0;
           rebound[2] = temp[2] * -1.0;
           
-          faceWeight.plus_right = w[c]/epW;
+          faceWeight.plus_right = (1.0 - fStick) * w[c]/epW;
           uVelFaceAbscissas.plus_right = rebound[0];
           vVelFaceAbscissas.plus_right = rebound[1];
           if (wVelIndex > -1)
@@ -1523,7 +1526,7 @@ namespace Uintah {
       }
       
       cqFaceData1D with_bc_weight( const IntVector c, const IntVector coord, constCCVariable<double>& phi,
-                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary)
+                                   constCCVariable<double>& volFrac, const double epW, const cqFaceBoundaryBool isBoundary, const double fStick)
       {
         CQMOM_Convection::cqFaceData1D face_values;
         
@@ -1554,7 +1557,7 @@ namespace Uintah {
             face_values.minus_left = phicxm + 1.0/2.0 * delN;
           }
         } else {
-          face_values.minus_left = face_values.minus_right/epW;
+          face_values.minus_left = (1.0 - fStick) * face_values.minus_right/epW;
         }
         
         if ( volFrac[cxp] == 1.0 || volFrac[c] == 0.0 ) { //check if wall is present
@@ -1567,7 +1570,7 @@ namespace Uintah {
             face_values.plus_right = phicxp - 1.0/2.0 * delN;
           }
         } else {
-          face_values.plus_right = face_values.plus_left/epW;
+          face_values.plus_right = (1.0 - fStick) * face_values.plus_left/epW;
         }
         
 #ifdef cqmom_transport_dbg
@@ -1694,11 +1697,13 @@ namespace Uintah {
     double epW;
     double convWeightLimit;
     bool partVel;
+    bool d_deposition;
     
     std::vector<const VarLabel *> convLabels;
     std::vector<const VarLabel *> xConvLabels;
     std::vector<const VarLabel *> yConvLabels;
     std::vector<const VarLabel *> zConvLabels;
+    std::vector<const VarLabel *> fStickLabels;
     const VarLabel * d_wallIntegerLabel;
 
     std::string d_convScheme; //first or second order convection
