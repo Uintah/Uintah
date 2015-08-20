@@ -1343,7 +1343,7 @@
 
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) -->
-            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bownman_nox"/> <!-- N2 label, default=N2-->
+            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- n2 label (default = N2) -->
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer,
                                                                                      bowman_nox,
                                                                                      BrownSootFormation_rhoYs,
