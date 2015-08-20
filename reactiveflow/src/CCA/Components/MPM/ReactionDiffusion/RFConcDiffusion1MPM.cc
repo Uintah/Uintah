@@ -238,16 +238,19 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
     particleIndex idx = *iter;
     interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pFOld[idx]);
     double concRate = 0.0;
+		double concentration = 0.0;
 		pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
     for (int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concRate += gConcentrationRate[node]   * S[k];
+      concentration += gConcentrationStar[node]   * S[k];
       for(int j = 0; j < 3; j++){
         pConcGradNew[idx][j] += gConcentrationStar[ni[k]] * d_S[k][j] * oodx[j];
       }
     }
 
-    pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+    //pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+    pConcentrationNew[idx] = concentration;
 
     // this is a hack that uses LoadCurveID to identify boundary particles
     // works with nano_pillar3_2D_FBC

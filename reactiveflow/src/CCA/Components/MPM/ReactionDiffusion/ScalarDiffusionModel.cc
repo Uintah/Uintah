@@ -248,7 +248,7 @@ void ScalarDiffusionModel::computeFlux(const Patch* patch, const MPMMaterial* ma
 
 void ScalarDiffusionModel::scheduleComputeDivergence(Task* task, 
                                                      const MPMMaterial* matl, 
-		                                     const PatchSet* patch) const
+                                                     const PatchSet* patch) const
 {
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
@@ -269,10 +269,8 @@ void ScalarDiffusionModel::scheduleComputeDivergence(Task* task,
   task->computes(d_rdlb->gConcentrationStarLabel, matlset);
 }
 
-void ScalarDiffusionModel::computeDivergence(const Patch* patch,
-                                             const MPMMaterial* matl,
-                                             DataWarehouse* old_dw, 
-                                             DataWarehouse* new_dw)
+void ScalarDiffusionModel::computeDivergence(const Patch* patch, const MPMMaterial* matl,
+                                             DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
@@ -439,16 +437,19 @@ void ScalarDiffusionModel::interpolateToParticlesAndUpdate(const Patch* patch,
     particleIndex idx = *iter;
     interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pFOld[idx]);
     double concRate = 0.0;
+		double concentration = 0.0;
 		pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
     for (int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concRate += gConcentrationRate[node]   * S[k];
+      concentration += gConcentrationStar[node]   * S[k];
       for(int j = 0; j < 3; j++){
         pConcGradNew[idx][j] += gConcentrationStar[ni[k]] * d_S[k][j] * oodx[j];
       }
     }
 
-    pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+    //pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+    pConcentrationNew[idx] = concentration;
     //pConcentrationNew[idx] = min(pConcentrationNew[idx],max_concentration);
     //pConcentrationNew[idx] = max(pConcentrationNew[idx],min_concentration);
     pConcPreviousNew[idx]  = pConcentration[idx];

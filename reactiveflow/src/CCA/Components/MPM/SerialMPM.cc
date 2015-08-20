@@ -617,8 +617,9 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
     scheduleIntegrateTemperatureRate(     sched, patches, matls);
   }
 	if(flags->d_doScalarDiffusion){
-		scheduleComputeFlux(              sched, patches, matls);
-		scheduleComputeDivergence(        sched, patches, matls);
+		scheduleComputeFlux(         sched, patches, matls);
+		scheduleComputeDivergence(   sched, patches, matls);
+		//scheduleSDUpdateNodalValues( sched, patches, matls);
 	}
   if(!flags->d_use_momentum_form){
     scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
@@ -5056,7 +5057,6 @@ void SerialMPM::scheduleComputeDivergence(SchedulerP& sched, const PatchSet* pat
     return;
     
   printSchedule(patches,cout_doing,"MPM::scheduleComputeDivergence");
-  
 
   Task* t = scinew Task("MPM::computeDivergence", this,&SerialMPM::computeDivergence);
 
