@@ -141,11 +141,11 @@ TaskInterface::register_variable_work( std::string name,
     throw InvalidValue("Arches Task Error: Cannot MODIFY a variable from OldDW for variable: "+name, __FILE__, __LINE__);
   }
 
-  if ( dep == ArchesFieldContainer::COMPUTES ){
+  if ( dep == ArchesFieldContainer::COMPUTES || dep == ArchesFieldContainer::MODIFIES ){
 
     if ( nGhost > 0 ) {
 
-      std::cout << "Arches Task Warning: Variable COMPUTE (ArchesFieldContainer::COMPUTES) found that is requesting ghosts for: "+name+" Nghosts set to zero!" << std::endl;
+      std::cout << "Arches Task Warning: A variable COMPUTE/MODIFIES found that is requesting ghosts for: "+name+" Nghosts set to zero!" << std::endl;
       info.nGhost = 0;
 
     }
