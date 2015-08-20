@@ -11,14 +11,14 @@
      <maxTime>4</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
-     <delt_max>1.0e-7</delt_max>
-     <max_Timesteps>700</max_Timesteps>
+     <delt_max>1.0e-8</delt_max>
+     <max_Timesteps>7000</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
   <DataArchiver>
     <filebase>nano_pillar3_2D_FBC.uda</filebase>
-    <outputTimestepInterval>10</outputTimestepInterval>
+    <outputTimestepInterval>100</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
@@ -68,12 +68,12 @@
 	   <init_conc> 0.0 </init_conc>
          </diffusion_model>
          -->
-	 <diffusion_model type = "rf1">
-	   <diffusivity>  2e-5   </diffusivity>
+         <diffusion_model type = "rf1">
+           <diffusivity>  2e-3   </diffusivity>
            <max_concentration>  1.0      </max_concentration>
-	   <init_conc> 0.0  </init_conc>
+           <init_conc> 0.0  </init_conc>
            <tuning1>   1.95 </tuning1>
-	   <ramp_time> 1.0e-3 </ramp_time>
+           <ramp_time> 1.0e-3 </ramp_time>
          </diffusion_model>
          <geom_object>
            <box label = "pillar">
@@ -175,9 +175,9 @@
     </BoundaryConditions>
     <Level>
       <Box label="1">
-        <lower>[-0.1e-3, 0.0,      0.0]</lower> <!-- units in mm -->
-        <upper>[0.6e-3,  0.225e-3, 0.05e-3]</upper> <!-- units in mm -->
-        <resolution>[40, 13, 1]        </resolution>
+        <lower>[-0.25e-3, 0.0,      0.0]</lower> <!-- units in mm -->
+        <upper>[0.75e-3,  0.375e-3, 0.05e-3]</upper> <!-- units in mm -->
+        <resolution>[80, 30, 1]        </resolution>
         <extraCells>[0, 0, 0]          </extraCells>
         <patches>[1,1,1]               </patches>
       </Box>
