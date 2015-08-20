@@ -92,6 +92,36 @@ DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 
 //
 //------------------------------------------------
+//------TIMESTEP INITIALIZATION ------------------
+//------------------------------------------------
+//
+
+void
+DensityPredictor::register_timestep_init( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry ){
+
+  register_variable( "new_densityGuess", ArchesFieldContainer::COMPUTES, variable_registry );
+
+}
+
+void
+DensityPredictor::timestep_init( const Patch* patch, ArchesTaskInfoManager* tsk_info,
+                        SpatialOps::OperatorDatabase& opr ){
+
+
+  using namespace SpatialOps;
+  using SpatialOps::operator *;
+
+  typedef SpatialOps::SVolField     SVolF;
+  typedef SpatialOps::SpatFldPtr<SVolF> SVolFP;
+
+  SVolFP rho = tsk_info->get_so_field<SVolF>("new_densityGuess");
+
+  *rho <<= 0.0;
+
+}
+
+//
+//------------------------------------------------
 //------------- TIMESTEP WORK --------------------
 //------------------------------------------------
 //
@@ -99,7 +129,7 @@ DensityPredictor::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_inf
 void
 DensityPredictor::register_timestep_eval( std::vector<ArchesFieldContainer::VariableInformation>& variable_registry, const int time_substep ){
 
-  register_variable( "new_densityGuess"  , ArchesFieldContainer::COMPUTES,  variable_registry, time_substep );
+  register_variable( "new_densityGuess"  , ArchesFieldContainer::MODIFIES,  variable_registry, time_substep );
   register_variable( "densityGuess"  , ArchesFieldContainer::MODIFIES,  variable_registry, time_substep );
   register_variable( "densityCP"     , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::NEWDW  , variable_registry , time_substep );
   register_variable( "volFraction"   , ArchesFieldContainer::REQUIRES , 1 , ArchesFieldContainer::LATEST , variable_registry , time_substep );
