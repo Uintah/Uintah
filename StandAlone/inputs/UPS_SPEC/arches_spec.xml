@@ -112,6 +112,8 @@
                                         need_applies_to="type CO"/> <!-- get the convection scheme for RHS calculation -->
           <Pr                           spec="OPTIONAL DOUBLE"
                                         need_applies_to="type CO"/> <!-- get prandtl number for RHS term -->
+          <Tcrit                        spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- temperature cutoff for the resolved rate, default=1150 -->
 
         </model>
       </PropertyModelsV2>
