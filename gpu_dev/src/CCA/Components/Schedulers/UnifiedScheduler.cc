@@ -79,7 +79,7 @@ static DebugStream unified_compactaffinity("Unified_CompactAffinity", true);
 #ifdef HAVE_CUDA
 DebugStream gpu_stats("Unified_GPUStats", false);
 DebugStream use_single_device("Unified_SingleDevice", false);
-DebugStream simulate_multiple_gpus("SimulateMultipleGPUs", false);
+DebugStream simulate_multiple_gpus("GPUSimulateMultiple", false);
 DebugStream gpudbg("GPUDataWarehouse", false);
 #endif
 
@@ -102,6 +102,7 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
 
     // we need one of these for each GPU, as each device will have it's own CUDA context
     for (int i = 0; i < numDevices_; i++) {
+      printf("Creating stream for device %d\n", i);
       idleStreams.push_back(std::queue<cudaStream_t*>());
     }
 
@@ -117,6 +118,24 @@ UnifiedScheduler::UnifiedScheduler(const ProcessorGroup* myworld,
   int numThreads = Uintah::Parallel::getNumThreads();
   if (numThreads == -1) {
     numThreads = 1;
+  }
+  //get the true numDevices (in case we have the simulation turned on)
+  int numDevices;
+  CUDA_RT_SAFE_CALL(cudaGetDeviceCount(&numDevices));
+  int can_access = 0;
+  for (int i = 0; i < numDevices; i++) {
+    CUDA_RT_SAFE_CALL( cudaSetDevice(i) );
+    for (int j = 0; j < numDevices; j++) {
+      if (i != j) {
+        cudaDeviceCanAccessPeer(&can_access, i, j);
+        if (can_access) {
+          cudaDeviceEnablePeerAccess(j, 0);
+        } else {
+          printf("ERROR\n GPU device %d cannot access GPU device %d\n", i, j);
+          SCI_THROW( InternalError("Two GPU devices cannot talk to each other", __FILE__, __LINE__));
+        }
+      }
+    }
   }
 
 #endif
@@ -419,7 +438,7 @@ void UnifiedScheduler::runTask(DetailedTask* task, int iteration,
       //The ghost cell destinations indicate which devices we're using,
       //and which ones we'll need streams for.
       assignDevicesAndStreams(ghostVars, task);
-      createTaskGpuDWs(task, taskVars, ghostVars, 0); //TODO: Fix for multiple GPUs
+      createTaskGpuDWs(task, taskVars, ghostVars);
 
       //place everything in the GPU data warehouses
       prepareDeviceVars(task, deviceVars);
@@ -428,8 +447,9 @@ void UnifiedScheduler::runTask(DetailedTask* task, int iteration,
       syncTaskGpuDWs(task);  //TODO: Fix for multiple GPUs
 
       //get these ghost cells to contiguous arrays so they can be copied to host.
-      performInternalGhostCellCopies(task);
+      performInternalGhostCellCopies(task);  //TODO: Fix for multiple GPUs
 
+      copyAllGpuToGpuDependences(task, deviceVars, ghostVars);
       //copy all dependencies to arrays
       copyAllExtGpuDependenciesToHost(task, deviceVars, ghostVars);
 
@@ -452,7 +472,7 @@ void UnifiedScheduler::runTask(DetailedTask* task, int iteration,
     //Then also copy external dependencies to the CPU so the MPI engine can handle those.
     if (Uintah::Parallel::usingDevice()) {
       //copyGpuInternalDependencies(task, iteration, thread_id);
-      task->deleteTaskGpuDataWarehouses();  //TODO: Fix for multiple GPUs
+      task->deleteTaskGpuDataWarehouses();
     }
     reclaimCudaStreams(task);
 
@@ -974,7 +994,6 @@ void UnifiedScheduler::runTasks(int thread_id) {
            * gpuInitReady = true
            */
           if (readyTask->getTask()->usesDevice()) {
-            assignDevice(readyTask);
             gpuInitReady = true;
           } else {
 #endif
@@ -1080,29 +1099,19 @@ void UnifiedScheduler::runTasks(int thread_id) {
        *
        * gpuRunReady = true
        */
-      else if (usingDevice == true && dts->numInitiallyReadyDeviceTasks() > 0) {
-        //TODO: This should check both if statements.
-        //Suppose the numInitiallyReadyDeviceTasks has an item but
-        //copies are not complete.  Will this thread be stuck waiting in an
-        //infinite loop waiting for the copy to complete?  And since this loop
-        //is governed by a mutex, all other threads get stuck too?   This same
-        //possible problem exists twice more below.  BRP -  5/10/2015
-        //Further, suppose there are 1000 tasks in a node, each wanting to do
-        //an H2D copy to the GPU.  The way this is laid out we would do
-        //all 1000 H2Ds before we would start a compute.  This is not a
-        //good way to do it.  BRP - 7/9/2015
-        readyTask = dts->peekNextInitiallyReadyDeviceTask();
-        if (readyTask->checkCUDAStreamDone()) {
+      else if (usingDevice == true
+          && dts->numInitiallyReadyDeviceTasks() > 0
+          && dts->peekNextInitiallyReadyDeviceTask()->checkCUDAStreamDone()) {
 
-          // printf("Ghost cell copies done...\n");
-          // All of this task's h2d copies is complete, so add it to the completion
-          // pending GPU task queue and prepare to run.
-          readyTask = dts->getNextInitiallyReadyDeviceTask();
-          gpuRunReady = true;
-          havework = true;
+        // printf("Ghost cell copies done...\n");
+        // All of this task's h2d copies is complete, so add it to the completion
+        // pending GPU task queue and prepare to run.
+        readyTask = dts->getNextInitiallyReadyDeviceTask();
+        gpuRunReady = true;
+        havework = true;
 
-          break;
-        }
+        break;
+
       }
 
       /*
@@ -1114,17 +1123,17 @@ void UnifiedScheduler::runTasks(int thread_id) {
        *
        * cpuRunReady = true
        */
-      else if (usingDevice == true && dts->numInitiallyReadyHostTasks() > 0) {
-        readyTask = dts->peekNextInitiallyReadyHostTask();
-        if (readyTask->checkAllCUDAStreamsDone()) {
-          numTasksDone++; //If there's a GPU, then all host run tasks have to go through here.
-          // recycle this task's D2H copies streams and events
-          reclaimCudaStreams(readyTask);
-          readyTask = dts->getNextInitiallyReadyHostTask();
-          cpuRunReady = true;
-          havework = true;
-          break;
-        }
+      else if (usingDevice == true
+               && dts->numInitiallyReadyHostTasks() > 0
+               && dts->peekNextInitiallyReadyHostTask()->checkAllCUDAStreamsDone()) {
+
+        numTasksDone++; //If there's a GPU, then all host run tasks have to go through here.
+        // recycle this task's D2H copies streams and events
+        readyTask = dts->getNextInitiallyReadyHostTask();
+        reclaimCudaStreams(readyTask);
+        cpuRunReady = true;
+        havework = true;
+        break;
       }
       /*
        * (1.5)
@@ -1137,36 +1146,36 @@ void UnifiedScheduler::runTasks(int thread_id) {
        * gpuPending = true
        */
       else if (usingDevice == true
-          && dts->numCompletionPendingDeviceTasks() > 0) {
-        readyTask = dts->peekNextCompletionPendingDeviceTask();
-        if (readyTask->checkCUDAStreamDone()) {
-          readyTask = dts->getNextCompletionPendingDeviceTask();
-          havework = true;
-          gpuPending = true;
-          numTasksDone++;
-          if (taskorder.active()) {
-            if (d_myworld->myrank() == d_myworld->size() / 2) {
-              cerrLock.lock();
-              taskorder << myRankThread() << " Running task static order: "
-                  << readyTask->getStaticOrder() << " , scheduled order: "
-                  << numTasksDone << std::endl;
-              cerrLock.unlock();
-            }
+          && dts->numCompletionPendingDeviceTasks() > 0
+          && dts->peekNextCompletionPendingDeviceTask()->checkCUDAStreamDone()) {
+
+        readyTask = dts->getNextCompletionPendingDeviceTask();
+        havework = true;
+        gpuPending = true;
+        numTasksDone++;
+        if (taskorder.active()) {
+          if (d_myworld->myrank() == d_myworld->size() / 2) {
+            cerrLock.lock();
+            taskorder << myRankThread() << " Running task static order: "
+                << readyTask->getStaticOrder() << " , scheduled order: "
+                << numTasksDone << std::endl;
+            cerrLock.unlock();
           }
-          phaseTasksDone[readyTask->getTask()->d_phase]++;
-          while (phaseTasks[currphase] == phaseTasksDone[currphase]
-              && currphase + 1 < numPhases) {
-            currphase++;
-            if (taskdbg.active()) {
-              cerrLock.lock();
-              taskdbg << myRankThread() << " switched to task phase "
-                  << currphase << ", total phase " << currphase << " tasks = "
-                  << phaseTasks[currphase] << std::endl;
-              cerrLock.unlock();
-            }
-          }
-          break;
         }
+        phaseTasksDone[readyTask->getTask()->d_phase]++;
+        while (phaseTasks[currphase] == phaseTasksDone[currphase]
+            && currphase + 1 < numPhases) {
+          currphase++;
+          if (taskdbg.active()) {
+            cerrLock.lock();
+            taskdbg << myRankThread() << " switched to task phase "
+                << currphase << ", total phase " << currphase << " tasks = "
+                << phaseTasks[currphase] << std::endl;
+            cerrLock.unlock();
+          }
+        }
+        break;
+
       }
 #endif
       /*
@@ -1226,7 +1235,9 @@ void UnifiedScheduler::runTasks(int thread_id) {
         //Ghost cells from GPU same device to variable already on GPU -> Managed in initiateH2DCopies()?
 
         // initiate all asynchronous H2D memory copies for this task's requires
-        readyTask->setCUDAStream(getCudaStream(readyTask->getDeviceNum()));
+        //printf("%s task %s is going to run on device %d\n", myRankThread().c_str(), readyTask->getTask()->getName().c_str(), readyTask->getDeviceNum());
+        //Set all streams
+
         initiateH2DCopies(readyTask);
         syncTaskGpuDWs(readyTask);
 
@@ -1270,13 +1281,12 @@ void UnifiedScheduler::runTasks(int thread_id) {
       else {
         //prepare to run a CPU task.
 #ifdef HAVE_CUDA
-
         if (!cpuRunReady) {
           // Figure out which device this patch was assigned to.
           // If a task has multiple patches, then assume that all patches for this
           // task are on the same device, so the 0th patch will work.
           //TODO, bad assumption as output var task will work on multiple patches.
-          assignDevice(readyTask);
+          assignDevicesAndStreams(readyTask);
 
           //See if there are any copies needed from the GPU.
 
@@ -1402,10 +1412,12 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
   for (list<DetailedTask*>::const_iterator iter = dep->toTasks.begin();
       iter != dep->toTasks.end(); ++iter) {
     toTask = (*iter);
-    //cout << (*iter)->getPatches()->get(0)->getID() << endl;
-    const Patch* toPatch = toTask->getPatches()->get(0);
-    //const int toPatchID = toPatch->getID();
 
+    const Patch* toPatch = toTask->getPatches()->get(0);
+    if (toTask->getPatches()->size() > 1) {
+      printf("ERROR:\nUnifiedScheduler::prepareGpuDependencies() does not yet support a dependency that has multiple destination patches\n");
+      SCI_THROW( InternalError("UnifiedScheduler::prepareGpuDependencies() does not yet support a dependency that has multiple destination patches", __FILE__, __LINE__));
+    }
     const int fromresource = task->getAssignedResourceIndex();
     const int toresource = toTask->getAssignedResourceIndex();
 
@@ -1426,10 +1438,8 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
     GPUDataWarehouse* gpudw = NULL;
     if (fromDeviceIndex != -1) {
       gpudw = dw->getGPUDW(fromDeviceIndex);
-      if (!gpudw->getValidOnCPU(label->d_name.c_str(), fromPatch->getID(),
-          matlIndx, levelID)
-          && gpudw->getValidOnGPU(label->d_name.c_str(), fromPatch->getID(),
-              matlIndx, levelID)) {
+      if (!gpudw->getValidOnCPU(label->d_name.c_str(), fromPatch->getID(), matlIndx, levelID)
+          && gpudw->getValidOnGPU(label->d_name.c_str(), fromPatch->getID(), matlIndx, levelID)) {
         fromGPU = true;
       } else {
         //no need to prepare CPU -> other ghost cell copies here.
@@ -1521,26 +1531,25 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
       //For the sake of preparing for cuda aware MPI, we still want to create two staging vars here,
       //a contiguous face for B, and a contiguous edge/line for C.
       if (!(deviceVars.stagingVarAlreadyExists(dep->req->var, fromPatch, matlIndx, levelID, host_low, host_size, dep->req->mapDataWarehouse()))) {
-        //TODO: Clean this up var up
-        //make the temp array on the host
+
+
+        //TODO: This host var really should be created last minute only if it's copying data to host.  Not here.
         GridVariableBase* tempGhostVar = dynamic_cast<GridVariableBase*>(label->typeDescription()->createInstance());
         tempGhostVar->allocate(dep->low, dep->high);
 
         //tempGhostVar->getSizes(host_low, host_high, host_offset, host_size,
         //    host_strides);
 
-        //TODO: Make Taskvars not pass in two extra parameters.
-        //make the temp array in the GPU
-
         //Indicate we want a staging array in the device.
         deviceVars.add(fromPatch, matlIndx, levelID, true, host_size,
             tempGhostVar->getDataSize(), elementDataSize, host_offset,
              dep->req, Ghost::None, 0, fromDeviceIndex, tempGhostVar, dest);
         //let this Task GPU DW know about this staging array
-        taskVars.addTaskGpuDWStagingVar(fromPatch, matlIndx, levelID, host_offset, host_size, elementDataSize,
-            dep->req, fromDeviceIndex);
+        taskVars.addTaskGpuDWStagingVar(fromPatch, matlIndx, levelID, host_offset, host_size, elementDataSize, dep->req, fromDeviceIndex);
 
-        //See NOTE: above.  Scenarios occur in which the same source region is listed to send to two different patches.
+        //Now make sure the Task DW knows about the non-staging variable where the
+        //staging variable's data will come from.
+        //Scenarios occur in which the same source region is listed to send to two different patches.
         //This task doesn't need to know about the same source twice.
         if (!(taskVars.varAlreadyExists(dep->req->var, fromPatch, matlIndx, levelID, dep->req->mapDataWarehouse()))) {
           //let this Task GPU DW know about the source location.
@@ -1559,9 +1568,17 @@ void UnifiedScheduler::prepareGpuDependencies(DeviceGridVariables& deviceVars,
           }
         }
 
-        //TODO: If we were doing a GPU->another GPU same device transfer, we should not create the host array but instead create a
-        //destination array.
-        if (dest == GpuUtilities::anotherMpiRank) {
+        //Handle a GPU-another GPU same device transfer.  We have already queued up the staging array on
+        //source GPU.  Now queue up the staging array on the destination GPU.
+        if (dest == GpuUtilities::anotherDeviceSameMpiRank) {
+          //Indicate we want a staging array in the device.
+          //TODO: We don't need a host array, it's going GPU->GPU.  So get rid of tempGhostVar here.
+          deviceVars.add(toPatch, matlIndx, levelID, true, host_size,
+              tempGhostVar->getDataSize(), elementDataSize, host_offset,
+               dep->req, Ghost::None, 0, toDeviceIndex, tempGhostVar, dest);
+
+          //And the task should know of this staging array.
+          taskVars.addTaskGpuDWStagingVar(toPatch, matlIndx, levelID, host_offset, host_size, elementDataSize, dep->req, toDeviceIndex);
 
         }
 
@@ -2757,8 +2774,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                         gpu_stats << myRankThread()
                             << " InitiateH2D() - The CPU has ghost cells needed from patch "
                             << sourcePatch->getID() << " to "
-                            << patches->get(i)->getID() << " from device "
-                            << sourceDeviceNum << " to device " << destDeviceNum;
+                            << patches->get(i)->getID() << " within device " << destDeviceNum;
                         if (iter->validNeighbor->isForeign()) {
                           gpu_stats << ".  The ghost cell data's is foreign.  ";
                         } else {
@@ -2936,7 +2952,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                       ghost_host_offset, ghost_host_size,
                       iter->low, iter->high,
                       elementDataSize, virtualOffset,
-                      sourceDeviceNum, destDeviceNum, -1, -1,
+                      destDeviceNum, destDeviceNum, -1, -1,   /* we're copying within a device, so destDeviceNum -> destDeviceNum */
                       (Task::WhichDW) curDependency->mapDataWarehouse(),
                       GpuUtilities::sameDeviceSameMpiRank);
                   if (gpu_stats.active()) {
@@ -3056,7 +3072,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
               cerrLock.lock();
               {
                 gpu_stats << myRankThread()
-                    << " InitiateH2D() - The CPU is allocating space"
+                    << " InitiateH2D() - The CPU is allocating computes space"
                     << " for " << curDependency->var->getName()
                     << " patch " << patches->get(i)->getID()
                     << " material " << matlID
@@ -3115,7 +3131,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
               //Even though it's only on the device, we to create space for the var on the host.
               //This makes it easy in case we ever need to perform any D2Hs.
               //TODO: Is this even needed?  InitiateD2H seems to create the var when it's needed host side.
-              //SO wHat happens if we remove this?
+              //So what happens if we remove this?
               dw->allocateAndPut(*gridVar, curDependency->var, matlID,
                   patches->get(i), curDependency->gtype,
                   curDependency->numGhostCells);
@@ -3126,7 +3142,7 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
                   memSize, elementDataSize, low, curDependency,
                   curDependency->gtype, curDependency->numGhostCells,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)),
-                  NULL, GpuUtilities::anotherDeviceSameMpiRank);
+                  NULL, GpuUtilities::sameDeviceSameMpiRank);
               taskVars.addTaskGpuDWVar(patches->get(i), matlID, levelID,
                   elementDataSize, curDependency,
                   GpuUtilities::getGpuIndexForPatch(patches->get(i)));
@@ -3141,19 +3157,20 @@ void UnifiedScheduler::initiateH2DCopies(DetailedTask* dtask) {
   }
 
   // We've now gathered up all possible things that need to go on the device.  Copy it over.
-  if (taskVars.numItems() > 0 || ghostVars.numItems() > 0) {
 
-    //Create the data warehouses that will be for this task and sent
-    //to the GPU.  This starts by allocating and sizing them.
-    createTaskGpuDWs(dtask, taskVars, ghostVars, device_id);
+  //Create the data warehouses that will be for this task and sent
+  //to the GPU.  This starts by allocating and sizing them.
+  assignDevicesAndStreams(dtask);
 
-    prepareDeviceVars(dtask, deviceVars);
+  createTaskGpuDWs(dtask, taskVars, ghostVars);
 
-    prepareTaskVarsIntoTaskDW(dtask, taskVars);
+  prepareDeviceVars(dtask, deviceVars);
 
-    prepareGhostCellsIntoTaskDW(dtask, ghostVars);
+  prepareTaskVarsIntoTaskDW(dtask, taskVars);
+  printf("After prepareTaskVarsIntoTaskDW, calling syncTaskGpuDWs\n");
+  syncTaskGpuDWs(dtask);
+  prepareGhostCellsIntoTaskDW(dtask, ghostVars);
 
-  }
 }
 
 void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
@@ -3168,289 +3185,301 @@ void UnifiedScheduler::prepareDeviceVars(DetailedTask* dtask,
   //(to disable contiguous arrays, just set if (deviceVars.numItems() >= 0)
 
 
-  //Because maps are unordered, it is possible a staging var could be inserted before the regular
-  //var exists.  So  just loop twice, once when all staging is false, then loop again when all
-  //staging is true
-
   bool isStaging = false;
 
   string taskID = dtask->getName();
-
-  for (int i = 0; i < 2; i++) {
-    //Get all data in the GPU, and store it on the GPU Data Warehouse on the host, as only it
-    //is responsible for management of data.  So this processes the previously collected deviceVars.
-    multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap =
-        deviceVars.getMap();
-    for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
-        DeviceGridVariableInfo>::iterator it = varMap.begin();
-        it != varMap.end(); ++it) {
-      if (it->second.staging == isStaging) {
-
-        if (deviceVars.numItems() >= 0) {
-          //No contiguous arrays section
-
-          void* device_ptr = NULL;  // device base pointer to raw data
-
+  //std::set<unsigned int> deviceNums = dtask->getDeviceNums();
+  //for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums.begin(); deviceNums_it != deviceNums.end(); ++deviceNums_it) {
+    isStaging = false;
+    //Because maps are unordered, it is possible a staging var could be inserted before the regular
+    //var exists.  So  just loop twice, once when all staging is false, then loop again when all
+    //staging is true
+    for (int i = 0; i < 2; i++) {
+      //Get all data in the GPU, and store it on the GPU Data Warehouse on the host, as only it
+      //is responsible for management of data.  So this processes the previously collected deviceVars.
+      multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & varMap =
+          deviceVars.getMap();
+      for (multimap<GpuUtilities::LabelPatchMatlLevelDw,
+          DeviceGridVariableInfo>::iterator it = varMap.begin();
+          it != varMap.end(); ++it) {
+        if (it->second.staging == isStaging) {
           int dwIndex = it->second.dep->mapDataWarehouse();
-          IntVector offset = it->second.offset;
-          IntVector size = it->second.sizeVector;
-          IntVector low = offset;
-          IntVector high = offset + size;
+          if (deviceVars.getTotalVars(it->second.whichGPU, dwIndex) >= 0) {
+            //No contiguous arrays section
 
-          //Allocate the vars if needed.  If they've already been allocated, then
-          //this simply sets the var to reuse the existing pointer.
-          switch (it->second.dep->var->typeDescription()->getType()) {
-          case TypeDescription::PerPatch: {
-            GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(
-                it->second.sizeOfDataType);
-            dws[dwIndex]->getGPUDW(it->second.whichGPU)->allocateAndPut(*patchVar,
-                it->second.dep->var->getName().c_str(), it->first.patchID,
-                it->first.matlIndx, it->first.levelIndx, it->second.staging,
-                it->second.sizeOfDataType);
-            device_ptr = patchVar->getVoidPointer();
-            delete patchVar;
-          }
-            break;
-          case TypeDescription::CCVariable:
-          case TypeDescription::NCVariable:
-          case TypeDescription::SFCXVariable:
-          case TypeDescription::SFCYVariable:
-          case TypeDescription::SFCZVariable: {
-            GridVariableBase* tempGhostvar =
-                dynamic_cast<GridVariableBase*>(it->second.dep->var->typeDescription()->createInstance());
-            tempGhostvar->allocate(low, high);
-            delete tempGhostvar;
+            void* device_ptr = NULL;  // device base pointer to raw data
 
-            GPUGridVariableBase* device_var =
-                OnDemandDataWarehouse::createGPUGridVariable(
-                    it->second.sizeOfDataType);
-            dws[dwIndex]->getGPUDW(it->second.whichGPU)->allocateAndPut(
-                *device_var, it->second.dep->var->getName().c_str(),
-                it->first.patchID, it->first.matlIndx, it->first.levelIndx, it->second.staging,
-                make_int3(low.x(), low.y(), low.z()),
-                make_int3(high.x(), high.y(), high.z()),
-                it->second.sizeOfDataType,
-                (GPUDataWarehouse::GhostType) (it->second.gtype),
-                it->second.numGhostCells);
-            device_ptr = device_var->getVoidPointer();
-            delete device_var;
-          }
-            break;
-          default: {
-            cerrLock.lock();
-            cerr << "This variable's type is not supported." << endl;
-            cerrLock.unlock();
-          }
-          }
 
-          //If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
-          if (it->second.dep->deptype == Task::Requires) {
-            cudaStream_t stream = *(dtask->getCUDAStream(it->second.whichGPU));
-            OnDemandDataWarehouse::uintahSetCudaDevice(it->second.whichGPU);
+            IntVector offset = it->second.offset;
+            IntVector size = it->second.sizeVector;
+            IntVector low = offset;
+            IntVector high = offset + size;
+
+            //Allocate the vars if needed.  If they've already been allocated, then
+            //this simply sets the var to reuse the existing pointer.
             switch (it->second.dep->var->typeDescription()->getType()) {
             case TypeDescription::PerPatch: {
-              if (it->second.dest == GpuUtilities::sameDeviceSameMpiRank) {
-                CUDA_RT_SAFE_CALL(
-                    cudaMemcpyAsync(device_ptr,
-                        dynamic_cast<PerPatchBase*>(it->second.var)->getBasePointer(),
-                        it->second.varMemSize, cudaMemcpyHostToDevice, stream));
-                delete it->second.var;
-              }
-              }
+              GPUPerPatchBase* patchVar = OnDemandDataWarehouse::createGPUPerPatch(it->second.sizeOfDataType);
+              dws[dwIndex]->getGPUDW(it->second.whichGPU)->allocateAndPut(*patchVar,
+                  it->second.dep->var->getName().c_str(), it->first.patchID,
+                  it->first.matlIndx, it->first.levelIndx, it->second.staging,
+                  it->second.sizeOfDataType);
+              device_ptr = patchVar->getVoidPointer();
+              delete patchVar;
+            }
               break;
             case TypeDescription::CCVariable:
             case TypeDescription::NCVariable:
             case TypeDescription::SFCXVariable:
             case TypeDescription::SFCYVariable:
             case TypeDescription::SFCZVariable: {
-              if (it->second.dest == GpuUtilities::sameDeviceSameMpiRank) {
+              GridVariableBase* tempGhostvar =
+                  dynamic_cast<GridVariableBase*>(it->second.dep->var->typeDescription()->createInstance());
+              tempGhostvar->allocate(low, high);
+              delete tempGhostvar;
 
+              GPUGridVariableBase* device_var = OnDemandDataWarehouse::createGPUGridVariable(it->second.sizeOfDataType);
+              GPUDataWarehouse* gpudw = dws[dwIndex]->getGPUDW(it->second.whichGPU);
+              if (gpudw) {
+                gpudw->allocateAndPut(
+                    *device_var, it->second.dep->var->getName().c_str(),
+                    it->first.patchID, it->first.matlIndx, it->first.levelIndx, it->second.staging,
+                    make_int3(low.x(), low.y(), low.z()),
+                    make_int3(high.x(), high.y(), high.z()),
+                    it->second.sizeOfDataType,
+                    (GPUDataWarehouse::GhostType) (it->second.gtype),
+                    it->second.numGhostCells);
+              } else {
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   gpu_stats << myRankThread()
-                      << " prepareDeviceVars() - Copying into GPU #" << it->second.whichGPU
-                      << " data for variable " << it->first.label
-                      << " patch: " << it->first.patchID
-                      << " material: " << it->first.matlIndx
-                      << " level: " << it->first.levelIndx
-                      << " into REQUIRES GPUDW " << endl;
+                      << " prepareDeviceVars() - ERROR - No task data warehouse found for device #" << it->second.whichGPU
+                      << " and dwindex " <<  dwIndex << endl;
                   cerrLock.unlock();
                 }
-
-                CUDA_RT_SAFE_CALL(
-                    cudaMemcpyAsync(device_ptr,
-                        dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
-                        it->second.varMemSize, cudaMemcpyHostToDevice, stream));
-                //Now that this requires grid variable is copied onto the device,
-                //we no longer need to hold onto this particular reference of the host side
-                //version of it.  So go ahead and remove our reference to it.
-                delete it->second.var;
+                SCI_THROW(InternalError("No gpu data warehouse found\n",__FILE__, __LINE__));
               }
-              }
+              device_ptr = device_var->getVoidPointer();
+              delete device_var;
+            }
               break;
-            default:
-              {
-                cerrLock.lock();
-                cerr << "Variable " << it->second.dep->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
-                cerrLock.unlock();
-              }
+            default: {
+              cerrLock.lock();
+              cerr << "This variable's type is not supported." << endl;
+              cerrLock.unlock();
+            }
             }
 
-          }
+            //If it's a requires, copy the data on over.  If it's a computes, leave it as allocated but unused space.
+            if (it->second.dep->deptype == Task::Requires) {
+              cudaStream_t* stream = dtask->getCUDAStream(it->second.whichGPU);
+              //cudaStream_t stream = *(dtask->getCUDAStream(it->second.whichGPU));
+              OnDemandDataWarehouse::uintahSetCudaDevice(it->second.whichGPU);
+              switch (it->second.dep->var->typeDescription()->getType()) {
+              case TypeDescription::PerPatch: {
+                if (it->second.dest == GpuUtilities::sameDeviceSameMpiRank) {
+                  CUDA_RT_SAFE_CALL(
+                      cudaMemcpyAsync(device_ptr,
+                          dynamic_cast<PerPatchBase*>(it->second.var)->getBasePointer(),
+                          it->second.varMemSize, cudaMemcpyHostToDevice, *stream));
+                  delete it->second.var;
+                }
+                }
+                break;
+              case TypeDescription::CCVariable:
+              case TypeDescription::NCVariable:
+              case TypeDescription::SFCXVariable:
+              case TypeDescription::SFCYVariable:
+              case TypeDescription::SFCZVariable: {
+                if (it->second.dest == GpuUtilities::sameDeviceSameMpiRank) {
 
-          //TODO: Materials have to go on as well.  Should they go on contiguously?
-          //put materials on the datawarehouse
-          //for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
-          //  if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
-          //    dws[dwIndex]->getGPUDW()->putMaterials(materialsNames);
-          //  }
-          //}
+                  if (gpu_stats.active()) {
+                    cerrLock.lock();
+                    gpu_stats << myRankThread()
+                        << " prepareDeviceVars() - Copying into GPU #" << it->second.whichGPU
+                        << " data for variable " << it->first.label
+                        << " patch: " << it->first.patchID
+                        << " material: " << it->first.matlIndx
+                        << " level: " << it->first.levelIndx
+                        << " into REQUIRES GPUDW " << endl;
+                    cerrLock.unlock();
+                  }
 
-        } else {
+                  CUDA_RT_SAFE_CALL(
+                      cudaMemcpyAsync(device_ptr,
+                          dynamic_cast<GridVariableBase*>(it->second.var)->getBasePointer(),
+                          it->second.varMemSize, cudaMemcpyHostToDevice, *stream));
+                  //Now that this requires grid variable is copied onto the device,
+                  //we no longer need to hold onto this particular reference of the host side
+                  //version of it.  So go ahead and remove our reference to it.
+                  delete it->second.var;
+                }
+                }
+                break;
+              default:
+                {
+                  cerrLock.lock();
+                  cerr << "Variable " << it->second.dep->var->getName() << " is of a type that is not supported on GPUs yet." << endl;
+                  cerrLock.unlock();
+                }
+              }
 
-          /*
-           //Create a large array on the host.  We'll copy this one array over, instead of copying
-           //many little individual arrays for each label/material/patch.
-           //Those arrays can copy fast, but the API call overhead to prepare a copy is huge.
-           //So we're trying to reduce the amount of device API calls.
+            }
 
-           //This array will also contain blank space for computes variables.
+            //TODO: Materials have to go on as well.  Should they go on contiguously?
+            //put materials on the datawarehouse
+            //for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
+            //  if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
+            //    dws[dwIndex]->getGPUDW()->putMaterials(materialsNames);
+            //  }
+            //}
 
-           //TODO: Support perPatch variables here?
+          } else {
 
-           //Get a task ID.  All grid variables that are about to be placed in a device array belong to
-           //a task/patch/timestep tuple ID.  So we'll use this ID to let the GPU DW scheduler know which
-           //array to work with
-           //TODO: If there are two threads and two patches, they share the same TaskID.
-           string taskID = dtask->getName();
-           for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
-           if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
-           //create a contiguous array on the host and on the device for this datawarehouse.
-           //TODO: Make it work for multiple GPUS/multiple
-           dws[dwIndex]->getGPUDW()->allocate(taskID.c_str(), deviceVars.getSizeForDataWarehouse(dwIndex));
+            /*
+             //Create a large array on the host.  We'll copy this one array over, instead of copying
+             //many little individual arrays for each label/material/patch.
+             //Those arrays can copy fast, but the API call overhead to prepare a copy is huge.
+             //So we're trying to reduce the amount of device API calls.
 
-           if (gpu_stats.active()) {
-           cerrLock.lock();
-           {
-           gpu_stats << "Allocated buffer of size " << deviceVars.getSizeForDataWarehouse(dwIndex) << endl;
-           }
-           cerrLock.unlock();
-           }
+             //This array will also contain blank space for computes variables.
 
-           //put materials on the datawarehouse
-           dws[dwIndex]->getGPUDW()->putMaterials(materialsNames);
-           }
-           }
+             //TODO: Support perPatch variables here?
 
-           //first loop through all data that needs to be copied to the device.
-           for (unsigned int i = 0; i < deviceVars.numItems(); i++ ) {
-           if (deviceVars.getDependency(i)->deptype == Task::Requires) {
-           int dwIndex =  deviceVars.getDependency(i)->mapDataWarehouse();
-           OnDemandDataWarehouseP dw = dws[dwIndex];
-           const Task::Dependency* dep = deviceVars.getDependency(i);
-           IntVector offset = deviceVars.getOffset(i);
-           IntVector size = deviceVars.getSizeVector(i);
-           IntVector low = offset;
-           IntVector high = offset + size;
+             //Get a task ID.  All grid variables that are about to be placed in a device array belong to
+             //a task/patch/timestep tuple ID.  So we'll use this ID to let the GPU DW scheduler know which
+             //array to work with
+             //TODO: If there are two threads and two patches, they share the same TaskID.
+             string taskID = dtask->getName();
+             for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
+             if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
+             //create a contiguous array on the host and on the device for this datawarehouse.
+             //TODO: Make it work for multiple GPUS/multiple
+             dws[dwIndex]->getGPUDW()->allocate(taskID.c_str(), deviceVars.getSizeForDataWarehouse(dwIndex));
+
+             if (gpu_stats.active()) {
+             cerrLock.lock();
+             {
+             gpu_stats << "Allocated buffer of size " << deviceVars.getSizeForDataWarehouse(dwIndex) << endl;
+             }
+             cerrLock.unlock();
+             }
+
+             //put materials on the datawarehouse
+             dws[dwIndex]->getGPUDW()->putMaterials(materialsNames);
+             }
+             }
+
+             //first loop through all data that needs to be copied to the device.
+             for (unsigned int i = 0; i < deviceVars.numItems(); i++ ) {
+             if (deviceVars.getDependency(i)->deptype == Task::Requires) {
+             int dwIndex =  deviceVars.getDependency(i)->mapDataWarehouse();
+             OnDemandDataWarehouseP dw = dws[dwIndex];
+             const Task::Dependency* dep = deviceVars.getDependency(i);
+             IntVector offset = deviceVars.getOffset(i);
+             IntVector size = deviceVars.getSizeVector(i);
+             IntVector low = offset;
+             IntVector high = offset + size;
 
 
-           switch (deviceVars.getSizeOfDataType(i)) {
-           case sizeof(int) : {
-           GPUGridVariable<int> device_var;
-           dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
-           deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
-           make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+             switch (deviceVars.getSizeOfDataType(i)) {
+             case sizeof(int) : {
+             GPUGridVariable<int> device_var;
+             dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
+             deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
+             make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
 
-           break;
-           } case sizeof(double) : {
-           GPUGridVariable<double> device_var;
-           dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
-           deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
-           make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+             break;
+             } case sizeof(double) : {
+             GPUGridVariable<double> device_var;
+             dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
+             deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
+             make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
 
-           break;
-           } case sizeof(GPUStencil7) : {
-           GPUGridVariable<GPUStencil7> device_var;
-           dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
-           deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
-           make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
+             break;
+             } case sizeof(GPUStencil7) : {
+             GPUGridVariable<GPUStencil7> device_var;
+             dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
+             deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
+             make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), dynamic_cast<GridVariableBase*>(deviceVars.getVar(i)), true);
 
-           break;
-           } default : {
-           SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
-           }
-           }
+             break;
+             } default : {
+             SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
+             }
+             }
 
-           //Now that this requires grid variable is copied onto the device,
-           //we no longer need to hold onto this particular reference of the host side
-           //version of it.  So go ahead and remove our reference to it. (Note: this was removed
-           //as in some situations it was the last remaining reference to it, so it would remove it
-           //for good, but the data warehouse was not aware that it was gone and tried to delete
-           //it again when scrubbing.
-           delete deviceVars.getVar(i);
-           }
-           }
+             //Now that this requires grid variable is copied onto the device,
+             //we no longer need to hold onto this particular reference of the host side
+             //version of it.  So go ahead and remove our reference to it. (Note: this was removed
+             //as in some situations it was the last remaining reference to it, so it would remove it
+             //for good, but the data warehouse was not aware that it was gone and tried to delete
+             //it again when scrubbing.
+             delete deviceVars.getVar(i);
+             }
+             }
 
-           //now loop through the computes data where we just need to assign space (but not copy) on the device.
-           for (unsigned int i = 0; i < deviceVars.numItems(); i++ ) {
-           if (deviceVars.getDependency(i)->deptype != Task::Requires) {
-           int dwIndex =  deviceVars.getDependency(i)->mapDataWarehouse();
-           OnDemandDataWarehouseP dw = dws[dwIndex];
-           const Task::Dependency* dep = deviceVars.getDependency(i);
-           IntVector offset = deviceVars.getOffset(i);
-           IntVector size = deviceVars.getSizeVector(i);
-           IntVector low = offset;
-           IntVector high = offset + size;
-           switch (deviceVars.getSizeOfDataType(i)) {
-           case sizeof(int) : {
-           GPUGridVariable<int> device_var;
-           dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
-           deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
-           make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+             //now loop through the computes data where we just need to assign space (but not copy) on the device.
+             for (unsigned int i = 0; i < deviceVars.numItems(); i++ ) {
+             if (deviceVars.getDependency(i)->deptype != Task::Requires) {
+             int dwIndex =  deviceVars.getDependency(i)->mapDataWarehouse();
+             OnDemandDataWarehouseP dw = dws[dwIndex];
+             const Task::Dependency* dep = deviceVars.getDependency(i);
+             IntVector offset = deviceVars.getOffset(i);
+             IntVector size = deviceVars.getSizeVector(i);
+             IntVector low = offset;
+             IntVector high = offset + size;
+             switch (deviceVars.getSizeOfDataType(i)) {
+             case sizeof(int) : {
+             GPUGridVariable<int> device_var;
+             dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
+             deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
+             make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
 
-           break;
-           } case sizeof(double) : {
-           GPUGridVariable<double> device_var;
-           dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
-           deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
-           make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+             break;
+             } case sizeof(double) : {
+             GPUGridVariable<double> device_var;
+             dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
+             deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
+             make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
 
-           break;
-           } case sizeof(GPUStencil7) : {
-           GPUGridVariable<GPUStencil7> device_var;
-           dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
-           deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
-           make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
+             break;
+             } case sizeof(GPUStencil7) : {
+             GPUGridVariable<GPUStencil7> device_var;
+             dws[dwIndex]->getGPUDW()->putContiguous(device_var, taskID.c_str(), dep->var->getName().c_str(),
+             deviceVars.getPatchPointer(i)->getID(), deviceVars.getMatlIndx(i), 0,
+             make_int3(low.x(), low.y(), low.z()), make_int3(high.x(), high.y(), high.z()), deviceVars.getSizeOfDataType(i), NULL, false);
 
-           break;
-           } default : {
-           SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
-           }
-           }
-           //At this point, space is still allocated on the host side for this computes grid
-           //variable.  Do not delete deviceVars.getGridVar(i) yet, we want to leave a
-           //reference open and space open until we copy it back.  In processD2HCopies() we
-           //remove the reference to it, possibly deleting it if the reference count is zero.
-           }
-           }
+             break;
+             } default : {
+             SCI_THROW(InternalError("Unsupported GPUGridVariable type: " + dep->var->getName(), __FILE__, __LINE__));
+             }
+             }
+             //At this point, space is still allocated on the host side for this computes grid
+             //variable.  Do not delete deviceVars.getGridVar(i) yet, we want to leave a
+             //reference open and space open until we copy it back.  In processD2HCopies() we
+             //remove the reference to it, possibly deleting it if the reference count is zero.
+             }
+             }
 
-           for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
-           if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
-           //copy it to the device.  Any data warehouse that has requires should be doing copies here.
-           //copyDataHostToDevice knows how to copy only the initialized portion of the array, and not
-           //everything including the uninitialized garbage data in the array.
-           cudaError_t retVal = dws[dwIndex]->getGPUDW()->copyDataHostToDevice(taskID.c_str(), dtask->getCUDAStream());
-           if (retVal != cudaSuccess) {
-           SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
-           }
-           }
-           }
-           */
-        } //end if for contiguous or not if block > 0
+             for (int dwIndex = 0; dwIndex < (int)dws.size(); dwIndex++) {
+             if (deviceVars.getSizeForDataWarehouse(dwIndex) > 0) {
+             //copy it to the device.  Any data warehouse that has requires should be doing copies here.
+             //copyDataHostToDevice knows how to copy only the initialized portion of the array, and not
+             //everything including the uninitialized garbage data in the array.
+             cudaError_t retVal = dws[dwIndex]->getGPUDW()->copyDataHostToDevice(taskID.c_str(), dtask->getCUDAStream());
+             if (retVal != cudaSuccess) {
+             SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
+             }
+             }
+             }
+             */
+          } //end if for contiguous or not if block > 0
+        }
       }
+      isStaging = !isStaging;
     }
-    isStaging = !isStaging;
-  }
+  //}
 }
 
 
@@ -3458,8 +3487,8 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
     DeviceGridVariables& taskVars) {
   //Copy all task variables metadata into the Task GPU DW.
   //All necessary metadata information must already exist in the host-side GPU DWs.
-  multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & taskVarMap =
-      taskVars.getMap();
+
+  multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> & taskVarMap = taskVars.getMap();
 
   //Because maps are unordered, it is possible a staging var could be inserted before the regular
   //var exists.  So  just loop twice, once when all staging is false, then loop again when all
@@ -3481,9 +3510,9 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
           int matlIndx = it->first.matlIndx;
           int levelIndx = it->first.levelIndx;
           gpudw->get(*patchVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
-          dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(*patchVar,
-              OnDemandDataWarehouse::getTypeDescriptionSize(
-                  it->second.dep->var->typeDescription()->getSubType()->getType()),
+          dtask->getTaskGpuDataWarehouse(it->second.whichGPU, (Task::WhichDW) dwIndex)->put(
+              *patchVar,
+              OnDemandDataWarehouse::getTypeDescriptionSize(it->second.dep->var->typeDescription()->getSubType()->getType()),
               it->second.dep->var->getName().c_str(), patchID, matlIndx,
               levelIndx, 0);
           delete patchVar;
@@ -3519,13 +3548,25 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
             }
             gpudw->get(*gpuGridVar, it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx);
           }
-          dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->put(
-              *gpuGridVar,
-              OnDemandDataWarehouse::getTypeDescriptionSize(
-                  it->second.dep->var->typeDescription()->getSubType()->getType()),
-              it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx, it->second.staging,
-              (GPUDataWarehouse::GhostType) (it->second.dep->gtype),
-              it->second.dep->numGhostCells);
+          GPUDataWarehouse* taskgpudw = dtask->getTaskGpuDataWarehouse(it->second.whichGPU, (Task::WhichDW) dwIndex);
+          if (taskgpudw) {
+            taskgpudw->put(
+                *gpuGridVar,
+                OnDemandDataWarehouse::getTypeDescriptionSize(
+                    it->second.dep->var->typeDescription()->getSubType()->getType()),
+                it->second.dep->var->getName().c_str(), patchID, matlIndx, levelIndx, it->second.staging,
+                (GPUDataWarehouse::GhostType) (it->second.dep->gtype),
+                it->second.dep->numGhostCells);
+          } else {
+            if (gpu_stats.active()) {
+              cerrLock.lock();
+              gpu_stats << myRankThread()
+                  << " prepareTaskVarsIntoTaskDW() - ERROR - No task data warehouse found for device #" << it->second.whichGPU
+                  << " and dwindex " <<  dwIndex << endl;
+              cerrLock.unlock();
+            }
+            SCI_THROW(InternalError("No task data warehouse found\n",__FILE__, __LINE__));
+          }
           delete gpuGridVar;
         }
           break;
@@ -3539,6 +3580,7 @@ void UnifiedScheduler::prepareTaskVarsIntoTaskDW(DetailedTask* dtask,
     }
     isStaging = !isStaging;
   }
+
 }
 
 void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask,
@@ -3567,8 +3609,10 @@ void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask,
         gpu_stats << myRankThread()
             << " prepareGhostCellsIntoTaskDW() - Preparing ghost cell upcoming copy for " << it->first.label
             << " matl " << it->first.matlIndx << " level " << it->first.levelIndx
-            << "from patch " << it->second.sourcePatchPointer->getID() << " to patch "
+            << " from patch " << it->second.sourcePatchPointer->getID() << " to patch "
             << it->second.destPatchPointer->getID()
+            << " from device #" << it->second.sourceDeviceNum
+            << " to device #" << it->second.destDeviceNum
             << " in the Task GPU DW " << dwIndex << endl;
       }
       cerrLock.unlock();
@@ -3576,7 +3620,7 @@ void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask,
 
     //Add in an entry into this Task DW's d_varDB which isn't a var, but is instead
     //metadata describing how to copy ghost cells between two vars listed in d_varDB.
-    dtask->getTaskGpuDataWarehouse((Task::WhichDW) dwIndex)->putGhostCell(
+    dtask->getTaskGpuDataWarehouse(it->second.sourceDeviceNum, (Task::WhichDW) dwIndex)->putGhostCell(
         it->first.label.c_str(), it->second.sourcePatchPointer->getID(),
         it->second.destPatchPointer->getID(), it->first.matlIndx, it->first.levelIndx,
         it->second.sourceStaging, it->second.destStaging,
@@ -3586,7 +3630,7 @@ void UnifiedScheduler::prepareGhostCellsIntoTaskDW(DetailedTask* dtask,
         make_int3(ghost_high.x(), ghost_high.y(), ghost_high.z()),
         make_int3(virtualOffset.x(), virtualOffset.y(), virtualOffset.z()));
 
-  }  //end if ghost cell preparation
+  }
 }
 
 void UnifiedScheduler::markDeviceRequiresDataAsValid(DetailedTask* dtask) {
@@ -3922,6 +3966,15 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   //                    pinnedHostPtrs.insert(host_ptr);
                   //                  }
                   //                }
+                  int deviceNum = GpuUtilities::getGpuIndexForPatch(patches->get(i));
+                  cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
+
+                  //TODO: This should never set a CUDA stream.  Allocating streams should be
+                  //determined previously.
+                  if (stream == NULL) {
+                    stream = getCudaStream(deviceNum);
+                    dtask->setCUDAStream(deviceNum, stream);
+                  }
 
                   if (gpu_stats.active()) {
                     cerrLock.lock();
@@ -3931,21 +3984,13 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                           << std::dec << host_bytes << " to " << std::hex
                           << host_ptr << " from " << std::hex << device_ptr
                           << ", using stream " << std::hex
-                          << dtask->getCUDAStream() << std::dec << endl;
+                          << stream << std::dec << endl;
                     }
                     cerrLock.unlock();
                   }
                   cudaError_t retVal;
 
-                  //Since we know we need a stream, obtain one.
-                  //readyTask->setCUDAStream(getCudaStream(dtask->getDeviceNum()));
-                  int deviceNum = GpuUtilities::getGpuIndexForPatch(
-                      patches->get(i));
-                  cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
-                  if (stream == NULL) {
-                    stream = getCudaStream(deviceNum);
-                    dtask->setCUDAStream(deviceNum, stream);
-                  }
+
 
                   //printf("***InitiateD2H invoked***\n");
                   CUDA_RT_SAFE_CALL(
@@ -4011,6 +4056,18 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                   OnDemandDataWarehouse::createGPUPerPatch(host_bytes);
               device_ptr = gpuPerPatchVar->getVoidPointer();
 
+              //Since we know we need a stream, obtain one.
+              int deviceNum = GpuUtilities::getGpuIndexForPatch(
+                   patches->get(i));
+
+              cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
+              //TODO: This should never set a CUDA stream.  Allocating streams should be
+              //determined previously.
+              if (stream == NULL) {
+                stream = getCudaStream(deviceNum);
+                dtask->setCUDAStream(deviceNum, stream);
+              }
+
               if (gpu_stats.active()) {
                 cerrLock.lock();
                 {
@@ -4018,22 +4075,14 @@ void UnifiedScheduler::initiateD2H(DetailedTask* dtask) {
                       << dependantVar->var->getName() << "\", size = "
                       << std::dec << host_bytes << " to " << std::hex
                       << host_ptr << " from " << std::hex << device_ptr
-                      << ", using stream " << std::hex << dtask->getCUDAStream()
+                      << ", using stream " << std::hex << stream
                       << std::dec << endl;
                 }
                 cerrLock.unlock();
               }
               cudaError_t retVal;
 
-              //Since we know we need a stream, obtain one.
-              //readyTask->setCUDAStream(getCudaStream(dtask->getDeviceNum()));
-              int deviceNum = GpuUtilities::getGpuIndexForPatch(
-                  patches->get(i));
-              cudaStream_t* stream = dtask->getCUDAStream(deviceNum);
-              if (stream == NULL) {
-                stream = getCudaStream(deviceNum);
-                dtask->setCUDAStream(deviceNum, stream);
-              }
+
 
               CUDA_RT_SAFE_CALL(
                   retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
@@ -4208,7 +4257,7 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
                 //                    pinnedHostPtrs.insert(host_ptr);
                 //                  }
                 //                }
-
+                //TODO: Get the correct stream for multi-GPU scenarios.
                 if (gpu_stats.active()) {
                   cerrLock.lock();
                   {
@@ -4216,14 +4265,15 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
                         << "\", size = " << std::dec << host_bytes << " to "
                         << std::hex << host_ptr << " from " << std::hex
                         << device_ptr << ", using stream " << std::hex
-                        << dtask->getCUDAStream() << std::dec << endl;
+                        << dtask->getCUDAStream(0) << std::dec << endl;
                   }
                   cerrLock.unlock();
                 }
                 cudaError_t retVal;
-                CUDA_RT_SAFE_CALL(
-                    retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
-                        cudaMemcpyDeviceToHost, *dtask->getCUDAStream()));
+
+                //TODO: Get the correct stream for multi-GPU scenarios.
+                CUDA_RT_SAFE_CALL(retVal = cudaMemcpyAsync(host_ptr, device_ptr, host_bytes,
+                        cudaMemcpyDeviceToHost, *dtask->getCUDAStream(0)));
                 if (retVal == cudaErrorLaunchFailure) {
                   SCI_THROW(
                       InternalError("Detected CUDA kernel execution failure on Task: "+ dtask->getName(), __FILE__, __LINE__));
@@ -4249,14 +4299,16 @@ void UnifiedScheduler::copyAllDataD2H(DetailedTask* dtask) {
     }
   }
 
+  //TODO: Get the correct stream for multi-GPU scenarios.
   //Now do any contiguous data.
   cudaError_t retVal;
-  int device = dtask->getDeviceNum();
+  int device =  0; //dtask->getDeviceNum();
   OnDemandDataWarehouse::uintahSetCudaDevice(device);
 
   string taskID = dtask->getName();
+
   retVal = dws[dwmap[Task::NewDW]]->getGPUDW()->copyDataDeviceToHost(
-      taskID.c_str(), dtask->getCUDAStream());
+      taskID.c_str(), dtask->getCUDAStream(0));
   if (retVal != cudaSuccess) {
     printf("Error code is %d\n", retVal);
     SCI_THROW(
@@ -4376,6 +4428,9 @@ void UnifiedScheduler::createCudaStreams(int device, int numStreams /* = 1 */) {
   cudaError_t retVal;
 
   idleStreamsLock_.writeLock();
+  cerrLock.lock();
+   gpu_stats << myRankThread() << " locking createCudaStreams" << std::endl;
+  cerrLock.unlock();
   {
     OnDemandDataWarehouse::uintahSetCudaDevice(device);
     for (int j = 0; j < numStreams; j++) {
@@ -4391,9 +4446,11 @@ void UnifiedScheduler::createCudaStreams(int device, int numStreams /* = 1 */) {
         }
         cerrLock.unlock();
       }
-      cerrLock.unlock();
     }
   }
+  cerrLock.lock();
+   gpu_stats << myRankThread() << " unlocking createCudaStreams" << std::endl;
+  cerrLock.unlock();
   idleStreamsLock_.writeUnlock();
 }
 
@@ -4403,7 +4460,11 @@ void UnifiedScheduler::createCudaStreams(int device, int numStreams /* = 1 */) {
 void UnifiedScheduler::freeCudaStreams() {
   cudaError_t retVal;
 
+
   idleStreamsLock_.writeLock();
+  cerrLock.lock();
+   gpu_stats << myRankThread() << " locking freeCudaStreams" << std::endl;
+  cerrLock.unlock();
   {
     size_t numQueues = idleStreams.size();
 
@@ -4444,6 +4505,9 @@ void UnifiedScheduler::freeCudaStreams() {
       }
     }
   }
+  cerrLock.lock();
+   gpu_stats << myRankThread() << " unlocking freeCudaStreams " << std::endl;
+  cerrLock.unlock();
   idleStreamsLock_.writeUnlock();
 }
 
@@ -4456,6 +4520,9 @@ UnifiedScheduler::getCudaStream(int device) {
   cudaStream_t* stream;
 
   idleStreamsLock_.writeLock();
+  cerrLock.lock();
+   gpu_stats << myRankThread() << " locking getCudaStream " << std::endl;
+  cerrLock.unlock();
   {
     if (idleStreams[device].size() > 0) {
       stream = idleStreams[device].front();
@@ -4465,8 +4532,8 @@ UnifiedScheduler::getCudaStream(int device) {
         {
           gpu_stats << myRankThread() << " Issued CUDA stream " << std::hex
               << stream << " on device " << std::dec << device << std::endl;
-          cerrLock.unlock();
         }
+        cerrLock.unlock();
       }
     } else {  // shouldn't need any more than the queue capacity, but in case
       OnDemandDataWarehouse::uintahSetCudaDevice(device);
@@ -4485,20 +4552,34 @@ UnifiedScheduler::getCudaStream(int device) {
       }
     }
   }
+  cerrLock.lock();
+   gpu_stats << myRankThread() << " unlocking getCudaStream" << std::endl;
+  cerrLock.unlock();
   idleStreamsLock_.writeUnlock();
 
   return stream;
 }
 
 void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask) {
-  idleStreamsLock_.writeLock();
+
+
   // reclaim DetailedTask streams
-  std::set<int> deviceNums = dtask->getDeviceNums();
-  for (std::set<int>::iterator iter = deviceNums.begin();
+  std::set<unsigned int> deviceNums = dtask->getDeviceNums();
+  for (std::set<unsigned int>::iterator iter = deviceNums.begin();
       iter != deviceNums.end(); ++iter) {
     cudaStream_t* stream = dtask->getCUDAStream(*iter);
     if (stream != NULL) {
+
+      idleStreamsLock_.writeLock();
+       cerrLock.lock();
+        gpu_stats << myRankThread() << " locking reclaimCudaStreams" << std::endl;
+       cerrLock.unlock();
       idleStreams[*iter].push(stream);
+      cerrLock.lock();
+        gpu_stats << myRankThread() << " unlocking reclaimCudaStreams" << std::endl;
+       cerrLock.unlock();
+       idleStreamsLock_.writeUnlock();
+
       dtask->setCUDAStream(*iter, NULL);
     }
     if (gpu_stats.active()) {
@@ -4510,7 +4591,7 @@ void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask) {
       cerrLock.unlock();
     }
   }
-  idleStreamsLock_.writeUnlock();
+
 }
 
 /*
@@ -4530,76 +4611,81 @@ void UnifiedScheduler::reclaimCudaStreams(DetailedTask* dtask) {
  } */
 
 void UnifiedScheduler::createTaskGpuDWs(DetailedTask * task,
-    const DeviceGridVariables& taskVars, const DeviceGhostCells& ghostVars,
-    const int device_id) {
+    const DeviceGridVariables& taskVars, const DeviceGhostCells& ghostVars) {
   //Create GPU datawarehouses for this specific task only.  They will get copied into the GPU.
   //This is sizing these datawarehouses dynamically and doing it all in only one alloc per datawarehouse.
   //See the bottom of the GPUDataWarehouse.h for more information.
 
-  unsigned int numItemsInDW = taskVars.getTotalVars(Task::OldDW) + ghostVars.getNumGhostCellCopies(Task::OldDW);
-  if (numItemsInDW > 0) {
+  std::set<unsigned int> deviceNums = task->getDeviceNums();
+  for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums.begin(); deviceNums_it != deviceNums.end(); ++deviceNums_it) {
+    const unsigned int currentDevice = *deviceNums_it;
+    unsigned int numItemsInDW = taskVars.getTotalVars(currentDevice, Task::OldDW) + ghostVars.getNumGhostCellCopies(currentDevice, Task::OldDW);
+    if (numItemsInDW > 0) {
 
-    size_t objectSizeInBytes = sizeof(GPUDataWarehouse)
-        - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS
-        + sizeof(GPUDataWarehouse::dataItem) * numItemsInDW;
-    void *placementNewBuffer = malloc(objectSizeInBytes);
-    GPUDataWarehouse* old_taskGpuDW = new (placementNewBuffer) GPUDataWarehouse(
-        device_id, placementNewBuffer);
-    old_taskGpuDW->setDebug(gpudbg.active());
-    //GPUDataWarehouse* old_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
-    old_taskGpuDW->init_device(objectSizeInBytes);
-    task->setTaskGpuDataWarehouse(Task::OldDW, old_taskGpuDW);
+      size_t objectSizeInBytes = sizeof(GPUDataWarehouse)
+          - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS
+          + sizeof(GPUDataWarehouse::dataItem) * numItemsInDW;
+      //void *placementNewBuffer = malloc(objectSizeInBytes);
+      //GPUDataWarehouse* old_taskGpuDW = new (placementNewBuffer) GPUDataWarehouse( currentDevice, placementNewBuffer);
 
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << myRankThread()
-           << " UnifiedScheduler::createTaskGpuDWs() - Created an old Task GPU DW for task " <<  task->getTask()->getName()
-           << " at host address " << old_taskGpuDW
-           << " to contain " << taskVars.getTotalVars(Task::OldDW)
-           << " task variables and " << ghostVars.getNumGhostCellCopies(Task::OldDW)
-           << " ghost cell copies." << endl;
+      GPUDataWarehouse* old_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
+      old_taskGpuDW->init( currentDevice);
+      old_taskGpuDW->setDebug(gpudbg.active());
+      old_taskGpuDW->init_device(objectSizeInBytes);
+      task->setTaskGpuDataWarehouse(currentDevice, Task::OldDW, old_taskGpuDW);
+
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread()
+             << " UnifiedScheduler::createTaskGpuDWs() - Created an old Task GPU DW for task " <<  task->getName()
+             << " for device #" << currentDevice
+             << " at host address " << old_taskGpuDW
+             << " to contain " << taskVars.getTotalVars(currentDevice, Task::OldDW)
+             << " task variables and " << ghostVars.getNumGhostCellCopies(currentDevice, Task::OldDW)
+             << " ghost cell copies." << endl;
+        }
+        cerrLock.unlock();
       }
-      cerrLock.unlock();
+
     }
 
-  }
+    numItemsInDW = taskVars.getTotalVars(currentDevice, Task::NewDW) + ghostVars.getNumGhostCellCopies(currentDevice, Task::NewDW);
+    if (numItemsInDW > 0) {
 
-  numItemsInDW = taskVars.getTotalVars(Task::NewDW) + ghostVars.getNumGhostCellCopies(Task::NewDW);
-  if (numItemsInDW > 0) {
+      size_t objectSizeInBytes = sizeof(GPUDataWarehouse)
+          - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS
+          + sizeof(GPUDataWarehouse::dataItem) * numItemsInDW;
+      //void *placementNewBuffer = malloc(objectSizeInBytes);
+      //GPUDataWarehouse* new_taskGpuDW = new (placementNewBuffer) GPUDataWarehouse(currentDevice, placementNewBuffer);
+      GPUDataWarehouse* new_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
+      new_taskGpuDW->init(currentDevice);
+      new_taskGpuDW->setDebug(gpudbg.active());
+      new_taskGpuDW->init_device(objectSizeInBytes);
 
-    size_t objectSizeInBytes = sizeof(GPUDataWarehouse)
-        - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS
-        + sizeof(GPUDataWarehouse::dataItem) * numItemsInDW;
-    void *placementNewBuffer = malloc(objectSizeInBytes);
-    GPUDataWarehouse* new_taskGpuDW = new (placementNewBuffer) GPUDataWarehouse(
-        device_id, placementNewBuffer);
-    //GPUDataWarehouse* new_taskGpuDW = (GPUDataWarehouse *) malloc(objectSizeInBytes);
-    new_taskGpuDW->setDebug(gpudbg.active());
-    new_taskGpuDW->init_device(objectSizeInBytes);
-    task->setTaskGpuDataWarehouse(Task::NewDW, new_taskGpuDW);
+      printf("%s setting a task gpu dw at %p for device %d\n", myRankThread().c_str(), new_taskGpuDW, currentDevice);
+      task->setTaskGpuDataWarehouse(currentDevice, Task::NewDW, new_taskGpuDW);
 
-    if (gpu_stats.active()) {
-      cerrLock.lock();
-      {
-        gpu_stats << myRankThread()
-           << " UnifiedScheduler::createTaskGpuDWs() - Created a new Task GPU DW for task " <<  task->getTask()->getName()
-           << " at host address " << new_taskGpuDW
-           << " to contain " << taskVars.getTotalVars(Task::NewDW)
-           << " task variables and " << ghostVars.getNumGhostCellCopies(Task::NewDW)
-           << " ghost cell copies." << endl;
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread()
+             << " UnifiedScheduler::createTaskGpuDWs() - Created a new Task GPU DW for task " <<  task->getName()
+             << " for device #" << currentDevice
+             << " at host address " << new_taskGpuDW
+             << " to contain " << taskVars.getTotalVars(currentDevice, Task::NewDW)
+             << " task variables and " << ghostVars.getNumGhostCellCopies(currentDevice, Task::NewDW)
+             << " ghost cell copies." << endl;
+        }
+        cerrLock.unlock();
       }
-      cerrLock.unlock();
     }
+    //Determine the sizes of each GPU Datawarehouse.  We want these DWs sized as small as possible to
+    //minimize copy times to the GPU.
   }
-  //Determine the sizes of each GPU Datawarehouse.  We want these DWs sized as small as possible to
-  //minimize copy times to the GPU.
-
-
-
 }
 
-void UnifiedScheduler::assignDevice(DetailedTask* task) {
+void UnifiedScheduler::assignDevicesAndStreams(DetailedTask* task) {
 
   // Figure out which device this patch was assigned to.
   // If a task has multiple patches, then assign all.  Most tasks should
@@ -4611,22 +4697,24 @@ void UnifiedScheduler::assignDevice(DetailedTask* task) {
     int index = GpuUtilities::getGpuIndexForPatch(patch);
     if (index >= 0) {
       task->assignDevice(index);
+      task->setCUDAStream(index, getCudaStream(index));
     } else {
       cerrLock.lock();
       cerr << "Could not find the assigned GPU for this patch." << endl;
       cerrLock.unlock();
-      //For some reaosn, this patch wasn't assigned a GPU.  Give it the zeroth GPU.
+      //For some reason, this patch wasn't assigned a GPU.  Give it the zeroth GPU.
       //readyTask->assignDevice(0);
     }
   }
 }
 
-void UnifiedScheduler::assignDevicesAndStreams(DeviceGhostCells& ghostVars, DetailedTask* task) {
+
+void UnifiedScheduler::assignDevicesAndStreams(DeviceGhostCells& ghostVars, DetailedTask* dtask) {
   //Go through the ghostVars collection and look at the patch where all ghost cells are going.
-  set<int> & destinationDevices = ghostVars.getDestinationDevices();
-  for (set<int>::iterator iter=destinationDevices.begin(); iter != destinationDevices.end(); ++iter) {
-    task->assignDevice(*iter);
-    task->setCUDAStream(getCudaStream(*iter));
+  set<unsigned int> & destinationDevices = ghostVars.getDestinationDevices();
+  for (set<unsigned int>::iterator iter=destinationDevices.begin(); iter != destinationDevices.end(); ++iter) {
+    dtask->assignDevice(*iter);
+    dtask->setCUDAStream(*iter, dtask->getCUDAStream(*iter));
   }
 }
 
@@ -4715,6 +4803,7 @@ void UnifiedScheduler::findIntAndExtGpuDependencies(
     // so that the MPI engine can treat it normally.
     // That means this handles GPU->other node GPU and GPU->other node CPU.
     //
+
     for (DependencyBatch* batch = task->getComputes(); batch != 0;
         batch = batch->comp_next) {
       for (DetailedDep* req = batch->head; req != 0; req = req->next) {
@@ -4806,12 +4895,21 @@ void UnifiedScheduler::syncTaskGpuDWs(DetailedTask* dtask) {
 
   //For each GPU datawarehouse, see if there are ghost cells listed to be copied
   //if so, launch a kernel that copies them.
+  std::set<unsigned int> deviceNums = dtask->getDeviceNums();
+  GPUDataWarehouse *taskgpudw;
+  for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums.begin(); deviceNums_it != deviceNums.end(); ++deviceNums_it) {
+    const unsigned int currentDevice = *deviceNums_it;
 
-  if (dtask->getTaskGpuDataWarehouse(Task::OldDW) != NULL) {
-    dtask->getTaskGpuDataWarehouse(Task::OldDW)->syncto_device(dtask->getCUDAStream());
-  }
-  if (dtask->getTaskGpuDataWarehouse(Task::NewDW) != NULL) {
-    dtask->getTaskGpuDataWarehouse(Task::NewDW)->syncto_device(dtask->getCUDAStream());
+    taskgpudw = dtask->getTaskGpuDataWarehouse(currentDevice,Task::OldDW);
+    if (taskgpudw) {
+      taskgpudw->syncto_device(dtask->getCUDAStream(currentDevice));
+    }
+
+    taskgpudw = dtask->getTaskGpuDataWarehouse(currentDevice,Task::NewDW);
+    printf("%s got a task gpu dw at %p for device %d\n", myRankThread().c_str(), taskgpudw, currentDevice);
+    if (taskgpudw) {
+      taskgpudw->syncto_device(dtask->getCUDAStream(currentDevice));
+    }
   }
 }
 
@@ -4822,36 +4920,136 @@ void UnifiedScheduler::performInternalGhostCellCopies(DetailedTask* dtask) {
 
   //For each GPU datawarehouse, see if there are ghost cells listed to be copied
   //if so, launch a kernel that copies them.
+  std::set<unsigned int> deviceNums = dtask->getDeviceNums();
+  for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums.begin(); deviceNums_it != deviceNums.end(); ++deviceNums_it) {
+    const unsigned int currentDevice = *deviceNums_it;
+    if (dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW) != NULL
+        && dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW)->ghostCellCopiesNeeded()) {
+      dtask->getTaskGpuDataWarehouse(currentDevice, Task::OldDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCUDAStream(currentDevice));
+    } else {
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread()
+              << " No internal ghost cell copies needed for this task \""
+              << dtask->getName() << "\"\'s old DW"<< endl;
+        }
+        cerrLock.unlock();
+      }
+    }
+    if (dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW) != NULL
+        && dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW)->ghostCellCopiesNeeded()) {
+      dtask->getTaskGpuDataWarehouse(currentDevice, Task::NewDW)->copyGpuGhostCellsToGpuVarsInvoker(dtask->getCUDAStream(currentDevice));
+    } else {
+      if (gpu_stats.active()) {
+        cerrLock.lock();
+        {
+          gpu_stats << myRankThread()
+              << " No internal ghost cell copies needed for this task \""
+              << dtask->getName() << "\"\'s new DW"<< endl;
+        }
+        cerrLock.unlock();
+      }
+    }
+  }
+}
 
-  if (dtask->getTaskGpuDataWarehouse(Task::OldDW) != NULL
-      && dtask->getTaskGpuDataWarehouse(Task::OldDW)->ghostCellCopiesNeeded()) {
-    dtask->getTaskGpuDataWarehouse(Task::OldDW)->copyGpuGhostCellsToGpuVarsInvoker(
-        dtask->getCUDAStream());
-  } else {
+void UnifiedScheduler::copyAllGpuToGpuDependences(const DetailedTask* dtask,
+    const DeviceGridVariables& deviceVars,
+    const DeviceGhostCells& ghostVars) {
+  //Iterate through the ghostVars, find all whose destination is another GPU same MPI rank
+  //Get the destination device, the size
+  //And do a straight GPU to GPU copy.
+  const map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> & ghostVarMap = ghostVars.getMap();
+  for (map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>::const_iterator it=ghostVarMap.begin(); it!=ghostVarMap.end(); ++it) {
+    //TODO: Needs a particle section
+
+    IntVector ghostLow = it->first.sharedLowCoordinates;
+    IntVector ghostHigh = it->first.sharedHighCoordinates;
+    IntVector ghostSize(ghostHigh.x() - ghostLow.x(), ghostHigh.y() - ghostLow.y(), ghostHigh.z() - ghostLow.z());
+    int3 device_source_offset;
+    int3 device_source_size;
+
+    void *device_source_ptr;
+    size_t elementDataSize = it->second.xstride;
+    size_t memSize = ghostSize.x() * ghostSize.y() * ghostSize.z() * elementDataSize;
+    GPUGridVariableBase* device_source_var = OnDemandDataWarehouse::createGPUGridVariable(elementDataSize);
+    OnDemandDataWarehouseP dw = dws[it->first.dataWarehouse];
+    GPUDataWarehouse* gpudw = dw->getGPUDW(it->second.sourceDeviceNum);
+    gpudw->getStagingVar(*device_source_var,
+               it->first.label.c_str(),
+               it->second.sourcePatchPointer->getID(),
+               it->first.matlIndx,
+               it->first.levelIndx,
+               make_int3(ghostLow.x(),ghostLow.y(), ghostLow.z()),
+               make_int3(ghostSize.x(), ghostSize.y(), ghostSize.z()));
+    device_source_var->getArray3(device_source_offset, device_source_size, device_source_ptr);
+
+    int3 device_dest_offset;
+    int3 device_dest_size;
+    void *device_dest_ptr;
+    GPUGridVariableBase* device_dest_var = OnDemandDataWarehouse::createGPUGridVariable(elementDataSize);
+    gpudw->getStagingVar(*device_dest_var,
+                   it->first.label.c_str(),
+                   it->second.destPatchPointer->getID(),
+                   it->first.matlIndx,
+                   it->first.levelIndx,
+                   make_int3(ghostLow.x(),ghostLow.y(), ghostLow.z()),
+                   make_int3(ghostSize.x(), ghostSize.y(), ghostSize.z()));
+      device_dest_var->getArray3(device_dest_offset, device_dest_size, device_dest_ptr);
+
+
     if (gpu_stats.active()) {
       cerrLock.lock();
       {
         gpu_stats << myRankThread()
-            << " No internal ghost cell copies needed for this task \""
-            << dtask->getName() << "\"\'s old DW"<< endl;
+           << " GpuDependenciesToHost()  - \""
+           << "GPU to GPU peer transfer from GPU #"
+           << it->second.sourceDeviceNum << " to GPU #"
+           << it->second.destDeviceNum << " for label "
+           << it->first.label << " from patch "
+           << it->second.sourcePatchPointer->getID() << " to patch "
+           << it->second.destPatchPointer->getID() << " matl "
+           << it->first.matlIndx << " level "
+           << it->first.levelIndx << " size = "
+           << std::dec << memSize << " from ptr " << std::hex
+           << device_source_ptr << " to ptr " << std::hex << device_dest_ptr
+           << ", using stream " << std::hex
+           << dtask->getCUDAStream(it->second.sourceDeviceNum) << std::dec << endl;
       }
       cerrLock.unlock();
     }
-  }
-  if (dtask->getTaskGpuDataWarehouse(Task::NewDW) != NULL
-      && dtask->getTaskGpuDataWarehouse(Task::NewDW)->ghostCellCopiesNeeded()) {
-    dtask->getTaskGpuDataWarehouse(Task::NewDW)->copyGpuGhostCellsToGpuVarsInvoker(
-        dtask->getCUDAStream());
-  } else {
-    if (gpu_stats.active()) {
-          cerrLock.lock();
-          {
-            gpu_stats << myRankThread()
-                << " No internal ghost cell copies needed for this task \""
-                << dtask->getName() << "\"\'s new DW"<< endl;
-          }
-          cerrLock.unlock();
-        }
+
+    //We can run peer copies from the source or the device stream.  While running it
+    //from the device technically is said to be a bit slower, it's likely just
+    //to an extra event being created to manage blocking the destination stream.
+    //By putting it on the device we are able to not need a synchronize step after
+    //all the copies, because any upcoming API call will use the streams and be
+    //naturally queued anyway.  When a copy completes, anything placed in the
+    //destiantion stream can then process.
+    //Note: If we move to UVA, then we could just do a straight memcpy
+
+    cudaStream_t* stream = dtask->getCUDAStream(it->second.destDeviceNum);
+    OnDemandDataWarehouse::uintahSetCudaDevice(it->second.destDeviceNum);
+    if (it->second.dest == GpuUtilities::anotherDeviceSameMpiRank) {
+      if (simulate_multiple_gpus.active()) {
+         CUDA_RT_SAFE_CALL( cudaMemcpyPeerAsync  (device_dest_ptr,
+                     0,
+                     device_source_ptr,
+                     0,
+                     memSize,
+                     *stream) );
+
+       } else {
+
+         CUDA_RT_SAFE_CALL( cudaMemcpyPeerAsync  (device_dest_ptr,
+           it->second.destDeviceNum,
+           device_source_ptr,
+           it->second.sourceDeviceNum,
+           memSize,
+           *stream) );
+      }
+    }
   }
 }
 
@@ -4929,6 +5127,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
           //Since we know we need a stream, obtain one.
 
           cudaStream_t* stream = dtask->getCUDAStream(it->second.sourceDeviceNum);
+          OnDemandDataWarehouse::uintahSetCudaDevice(it->second.sourceDeviceNum);
 
           if (gpu_stats.active()) {
             cerrLock.lock();
@@ -4939,7 +5138,7 @@ void UnifiedScheduler::copyAllExtGpuDependenciesToHost(const DetailedTask* dtask
                   << std::dec << host_bytes << " to " << std::hex
                   << host_ptr << " from " << std::hex << device_ptr
                   << ", using stream " << std::hex
-                  << dtask->getCUDAStream() << std::dec << endl;
+                  << dtask->getCUDAStream(it->second.sourceDeviceNum) << std::dec << endl;
             }
             cerrLock.unlock();
           }

@@ -69,17 +69,17 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int pat
   }
 #else
   //host code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo vp = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo vp = varPointers->operator[](lpml);
     var.setArray3(vp.device_offset, vp.device_size, vp.device_ptr);
   }
   else {
     printf("I'm at GPUDW %p\n", this);
     printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -93,12 +93,12 @@ GPUDataWarehouse::getStagingVar(const GPUGridVariableBase& var, char const* labe
   printError("This method not defined for the device.", "getStagingVar", label, patchID, matlIndx, levelIndx);
 #else
   //host code
-  varLock.readLock();
+  varLock->readLock();
 
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.find(lpml);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
 
-  if (it != varPointers.end()) {
+  if (it != varPointers->end()) {
     stagingVar sv;
     sv.device_offset = offset;
     sv.device_size = size;
@@ -115,7 +115,7 @@ GPUDataWarehouse::getStagingVar(const GPUGridVariableBase& var, char const* labe
   } else {
     printError("Didn't find a staging variable from the device.", "getStagingVar", label, patchID, matlIndx, levelIndx);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -149,16 +149,16 @@ GPUDataWarehouse::get(const GPUReductionVariableBase& var, char const* label, in
   }
 #else
   //host code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo vp = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo vp = varPointers->operator[](lpml);
     var.setData(vp.device_ptr);
   }
   else {
     printGetError("GPUDataWarehouse::get(GPUReductionVariableBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -178,16 +178,16 @@ GPUDataWarehouse::get(const GPUPerPatchBase& var, char const* label, int patchID
   }
 #else
   //host code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo vp = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo vp = varPointers->operator[](lpml);
     var.setData(vp.device_ptr);
   }
   else {
     printGetError("GPUDataWarehouse::get(GPUPerPatchBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -207,16 +207,16 @@ GPUDataWarehouse::getModifiable(GPUGridVariableBase& var, char const* label, int
   }
 #else
   //host code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo vp = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo vp = varPointers->operator[](lpml);
     var.setArray3(vp.device_offset, vp.device_size, vp.device_ptr);
   }
   else {
     printGetError("GPUDataWarehouse::get(GPUGridVariableBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -237,16 +237,16 @@ GPUDataWarehouse::getModifiable(GPUReductionVariableBase& var, char const* label
   }
 #else
   //host code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo vp = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo vp = varPointers->operator[](lpml);
     var.setData(vp.device_ptr);
   }
   else {
     printGetError("GPUDataWarehouse::get(GPUReductionVariableBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -266,16 +266,16 @@ GPUDataWarehouse::getModifiable(GPUPerPatchBase& var, char const* label, int pat
   }
 #else
   //host code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo vp = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo vp = varPointers->operator[](lpml);
     var.setData(vp.device_ptr);
   }
   else {
     printGetError("GPUDataWarehouse::get(GPUPerPatchBase& var, ...)", label, levelIndx, patchID, matlIndx);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -289,18 +289,18 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
   printError("This method not allowed on the device.  All memory should be allocated host side", "put", label, patchID, matlIndx, levelIndx);
 #else
 
-  varLock.writeLock();
+  varLock->writeLock();
   if (d_numVarDBItems==MAX_VARDB_ITEMS) {
     printf("ERROR:  Out of GPUDataWarehouse space");
-    varLock.writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
+    varLock->writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
     exit(-1);
   }
 
   //Find this item.
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.find(lpml);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
 
-  if (staging == true && it == varPointers.end()) {
+  if (staging == true && it == varPointers->end()) {
     //We need to input a staging variable, but there isn't a regular non-staging variable at the same label/patch/matl/level.
     //So go ahead and make an empty placeholder regular non-staging variable entry.
     //non staging vars create a new varPointers entry
@@ -336,8 +336,8 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
       cerrLock.unlock();
     }
     //insert it and get a new iterator back.
-    varPointers.insert(std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
-    it = varPointers.find(lpml);
+    varPointers->insert(std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
+    it = varPointers->find(lpml);
 
 /*
     if (gpu_stats.active()) {
@@ -360,7 +360,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
 
     //printf("ERROR: GPUDataWarehouse::put( %s ). This gpudw database is trying to input a staging variable without a non-staging variable at the same label/patch/matl/level for label %s patch %d matl %d level %d on device %d at %p.\n",
     //     label, label, patchID, matlIndx, levelIndx, d_device_id, it->second.device_ptr);
-    varLock.writeUnlock();
+    varLock->writeUnlock();
     exit(-1);
     */
   }
@@ -448,7 +448,7 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
          cerrLock.unlock();
        }
 
-      varLock.writeUnlock();
+      varLock->writeUnlock();
 
       return;
 
@@ -521,9 +521,9 @@ GPUDataWarehouse::put(GPUGridVariableBase &var, size_t sizeOfDataType, char cons
     //  printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d in this GPUDW at %p\n",
     //      label, label, patchID, matlIndx, levelIndx, d_device_id, this);
     //}
-    varPointers.insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
+    varPointers->insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
   }
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 
 
 
@@ -555,19 +555,19 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
   //So allow duplicates if the data is read only, otherwise don't allow duplicates.
 
 
-  varLock.writeLock();
+  varLock->writeLock();
 
   //first check if we've already got this exact version of this variable already.
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.find(lpml);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
 
-  /*if (it == varPointers.end() && staging == true) {
+  /*if (it == varPointers->end() && staging == true) {
     printf("ERROR: GPUDataWarehouse::allocateAndPut( %s ). This gpudw database is trying to input a staging variable without a non-staging variable at the same label/patch/matl/level for label %s patch %d matl %d level %d on device %d at %p.\n",
          label, label, patchID, matlIndx, levelIndx, d_device_id, it->second.device_ptr);
-    varLock.writeUnlock();
+    varLock->writeUnlock();
     exit(-1);
   } else */
-  if (it != varPointers.end() && it->second.device_offset.x == low.x
+  if (it != varPointers->end() && it->second.device_offset.x == low.x
       && it->second.device_offset.y == low.y
       && it->second.device_offset.z == low.z
       && it->second.device_size.x == (high.x-low.x)
@@ -581,8 +581,8 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
           it->second.device_offset.x, it->second.device_offset.y, it->second.device_offset.z,
           it->second.device_size.x, it->second.device_size.y, it->second.device_size.z);
     }
-    var.setArray3(varPointers[lpml].device_offset, varPointers[lpml].device_size, varPointers[lpml].device_ptr);
-    varLock.writeUnlock();
+    var.setArray3(varPointers->operator[](lpml).device_offset, varPointers->operator[](lpml).device_size, varPointers->operator[](lpml).device_ptr);
+    varLock->writeUnlock();
 
     return;
   }  //else if it's a staging variable, then the sizes should be different from
@@ -623,7 +623,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
     printf(" at %p on device %d\n", addr, d_device_id);
   }
   var.setArray3(offset, size, addr);
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 
   //put performs its own locking
   put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx, staging, gtype, numGhostCells);
@@ -640,19 +640,19 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
   //Should not put from device side as all memory allocation should be done on CPU side through CUDAMalloc()
 #else
 
-  varLock.writeLock();
+  varLock->writeLock();
 
   //first check if this patch/var/matl is in the process of loading in.
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
+  if (varPointers->find(lpml) != varPointers->end()) {
     //Space for this patch already exists.  Use that and return.
     if (d_debug){
       printf("GPUDataWarehouse::putContiguous( %s ). This gpudw database has a variable for label %s patch %d matl %d level %d staging %s on device %d.  Reusing it.\n",
           label, label, patchID, matlIndx, levelIndx, staging ? "true" : "false", d_device_id);
 
     }
-    var.setArray3(varPointers[lpml].device_offset, varPointers[lpml].device_size, varPointers[lpml].device_ptr);
-    varLock.writeUnlock();
+    var.setArray3(varPointers->operator[](lpml).device_offset, varPointers->operator[](lpml).device_size, varPointers->operator[](lpml).device_ptr);
+    varLock->writeUnlock();
     return;
   }
 
@@ -660,9 +660,9 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
   int3 offset=low;
   void* device_ptr=NULL;
   var.setArray3(offset, size, device_ptr);
-  allocateLock.readLock();
-  contiguousArrayInfo *ca = &(contiguousArrays[indexID]);
-  allocateLock.readUnlock();
+  allocateLock->readLock();
+  contiguousArrayInfo *ca = &(contiguousArrays->operator[](indexID));
+  allocateLock->readUnlock();
   if ( (ca->allocatedDeviceMemory == NULL
        || ca->sizeOfAllocatedMemory - ca->assignedOffset < var.getMemSize())
       && stageOnHost) {
@@ -673,7 +673,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
           ca->assignedOffset,
           var.getMemSize(), label, patchID, matlIndx, levelIndx, staging ? "true" : "false");
     }
-    varLock.writeUnlock();
+    varLock->writeUnlock();
     exit(-1);
   } else {
 
@@ -716,7 +716,7 @@ GPUDataWarehouse::putContiguous(GPUGridVariableBase &var, const char* indexID, c
       //printf("Setting aside space %s %d %d from host location %p host contiguous array %p\n", label, patchID, matlIndx, host_ptr, host_contiguousArrayPtr);
     //}
 
-    varLock.writeUnlock();
+    varLock->writeUnlock();
 
     put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx, staging, None, 0, host_contiguousArrayPtr);
 
@@ -767,12 +767,12 @@ GPUDataWarehouse::allocate(const char* indexID, size_t size)
   //cudaHostRegister(h_ptr, size, cudaHostRegisterPortable);
 
   contiguousArrayInfo ca(d_ptr, h_ptr, size);
-  allocateLock.writeLock();
-  contiguousArrays.insert( std::map<const char *, contiguousArrayInfo>::value_type( indexID, ca ) );
-  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays.begin(); it != contiguousArrays.end(); ++it)
+  allocateLock->writeLock();
+  contiguousArrays->insert( std::map<const char *, contiguousArrayInfo>::value_type( indexID, ca ) );
+  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays->begin(); it != contiguousArrays->end(); ++it)
   //  printf("%s\n", it->first.c_str());
 
-  allocateLock.writeUnlock();
+  allocateLock->writeUnlock();
 #endif
 }
 
@@ -784,13 +784,13 @@ GPUDataWarehouse::copyDataHostToDevice(const char* indexID, void *cuda_stream) {
   cudaError_t retVal = cudaErrorUnknown;
   return retVal;
 #else
-  allocateLock.readLock();
-  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays.begin(); it != contiguousArrays.end(); ++it)
+  allocateLock->readLock();
+  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays->begin(); it != contiguousArrays->end(); ++it)
   //  printf("*** displaying %s\n", it->first.c_str());
-  contiguousArrayInfo *ca = &(contiguousArrays[indexID]);
+  contiguousArrayInfo *ca = &(contiguousArrays->operator[](indexID));
 
 
-  allocateLock.readUnlock();
+  allocateLock->readUnlock();
   //copy only the initialized data, not the whole thing.
   //printf("Copying to device %p from host %p amount %d\n", ca->allocatedDeviceMemory, ca->allocatedHostMemory, ca->copiedOffset);
   //cudaError_t retVal = cudaMemcpy(ca->allocatedDeviceMemory, ca->allocatedHostMemory,
@@ -813,18 +813,18 @@ GPUDataWarehouse::copyDataDeviceToHost(const char* indexID, void *cuda_stream) {
   return retval;
 #else
   //see if this datawarehouse has anything for this patchGroupID.
-  allocateLock.writeLock();
-  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays.begin(); it != contiguousArrays.end(); ++it)
+  allocateLock->writeLock();
+  //for (std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays->begin(); it != contiguousArrays->end(); ++it)
   //  printf("%s\n", it->first.c_str());
   std::string sIndex = indexID;
-  std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays.find(sIndex);
-  if ( it != contiguousArrays.end()) {
+  std::map<std::string, contiguousArrayInfo>::iterator it = contiguousArrays->find(sIndex);
+  if ( it != contiguousArrays->end()) {
     sIndex += " used";  //mark it as used so it doesn't match in any future find() queries for the next iteration step.
-    contiguousArrays[sIndex] = it->second; //put it back into the map with a new key.
+    contiguousArrays->operator[](sIndex) = it->second; //put it back into the map with a new key.
     contiguousArrayInfo ca = it->second;
-    contiguousArrays.erase(it);
+    contiguousArrays->erase(it);
 
-    allocateLock.writeUnlock();
+    allocateLock->writeUnlock();
     if (ca.sizeOfAllocatedMemory - ca.copiedOffset > 0) {
       //Previously we only copied into the device variables that were already initialized with data
       //But now we need to copy the computes data back to the host.
@@ -844,7 +844,7 @@ GPUDataWarehouse::copyDataDeviceToHost(const char* indexID, void *cuda_stream) {
       return retVal;
     }
   } else {
-    allocateLock.writeUnlock();
+    allocateLock->writeUnlock();
   }
 
   cudaError_t retVal = cudaSuccess;
@@ -859,13 +859,13 @@ GPUDataWarehouse::copyHostContiguousToHost(GPUGridVariableBase& device_var, Grid
   //Should not called from device side as all memory allocation should be done on CPU side through CUDAMalloc()
 #else
   //see if this datawarehouse has anything for this patchGroupID.
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo info = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo info = varPointers->operator[](lpml);
 
-    device_var.setArray3(varPointers[lpml].device_offset, varPointers[lpml].device_offset, info.device_ptr);
-    varLock.readUnlock();
+    device_var.setArray3(varPointers->operator[](lpml).device_offset, varPointers->operator[](lpml).device_offset, info.device_ptr);
+    varLock->readUnlock();
    // size_t size = device_var.getMemSize();
 
     //TODO: Instead of doing a memcpy, I bet the original host grid variable could just have its pointers updated
@@ -879,9 +879,9 @@ GPUDataWarehouse::copyHostContiguousToHost(GPUGridVariableBase& device_var, Grid
     remove(label, patchID, matlIndx, levelIndx);
 
   } else {
-    varLock.readUnlock();
+    varLock->readUnlock();
     printf("ERROR: host copyHostContiguoustoHost unknown variable on GPUDataWarehouse");
-    //for (std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it=varPointers.begin(); it!=varPointers.end(); ++it)
+    //for (std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it=varPointers->begin(); it!=varPointers->end(); ++it)
     //  printf("%s %d %d => %d \n", it->first.label, it->first.patchID, it->first.matlIndx, it->second.varDB_index);
     exit(-1);
   }
@@ -921,15 +921,15 @@ GPUDataWarehouse::getPointer(char const* label, int patchID, int matlIndx)
     return NULL;
   }
 #else
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpm(label, patchID, matlIndx);
-  if (varPointers.find(lpm) != varPointers.end()) {
+  if (varPointers->find(lpm) != varPointers->end()) {
     int i = varPointers[lpm].varDB_index;
-    varLock.readUnlock();
+    varLock->readUnlock();
     return d_varDB[i].var_ptr;
   } else {
     printf("ERROR: host get unknown variable on GPUDataWarehouse");
-    varLock.readUnlock();
+    varLock->readUnlock();
     exit(-1);
   }
 
@@ -960,10 +960,10 @@ GPUDataWarehouse::put(GPUReductionVariableBase &var, size_t sizeOfDataType, char
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc\n", label);
 #else
-  varLock.writeLock();
+  varLock->writeLock();
   if (d_numVarDBItems==MAX_VARDB_ITEMS) {
     printf("ERROR:  Out of GPUDataWarehouse space");
-    varLock.writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
+    varLock->writeUnlock();  // writeLock() is called from allocateAndPut(). This is the escape clause if things go bad
     exit(-1);
   }
 
@@ -1011,17 +1011,17 @@ GPUDataWarehouse::put(GPUReductionVariableBase &var, size_t sizeOfDataType, char
       vp.validOnCPU = false; //We don't know here if the data is on th
     }
 
-  if (varPointers.find(lpml) == varPointers.end()) {
+  if (varPointers->find(lpml) == varPointers->end()) {
     if (d_debug){
       printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d staging %s on device %d in this DW %p\n",
               label, label, patchID, matlIndx, levelIndx, staging ? "true" : "false", d_device_id, this);
     }
-    varPointers.insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
-    varLock.writeUnlock();
+    varPointers->insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
+    varLock->writeUnlock();
   } else {
     printf("ERROR:\nGPUDataWarehouse::put( %s )  This gpudw database already has a variable for label %s patch %d matl %d level %d staging %s on device %d in GPUDW at %p\n",
             label, label, patchID, matlIndx, levelIndx, staging ? "true" : "false", d_device_id, d_device_copy);
-    varLock.writeUnlock();
+    varLock->writeUnlock();
     exit(-1);
   }
 
@@ -1039,17 +1039,17 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
   printf("ERROR:\nGPUDataWarehouse::put( %s )  You cannot use this on the device.  All device memory should be allocated on the CPU with cudaMalloc\n", label);
 #else
 
-  varLock.writeLock();
+  varLock->writeLock();
   if (d_numVarDBItems==MAX_VARDB_ITEMS) {
     printf("ERROR:  out of GPUDataWarehouse space");
-    varLock.writeUnlock();
+    varLock->writeUnlock();
 
     exit(-1);
   }
 
   //first check if this patch/var/matl is in the process of loading in.
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  //for (std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.begin(); it != varPointers.end();  ++it) {
+  //for (std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->begin(); it != varPointers->end();  ++it) {
   //    printf("For label %s patch %d matl %d on device %d   I have an entry\n", (*it).first.label.c_str(), d_device_id, (*it).first.patchID, (*it).first.matlIndx);
   //}
 
@@ -1096,17 +1096,17 @@ GPUDataWarehouse::put(GPUPerPatchBase& var, size_t sizeOfDataType, char const* l
   }
 
 
-  if (varPointers.find(lpml) == varPointers.end()) {
+  if (varPointers->find(lpml) == varPointers->end()) {
     if (d_debug){
       printf("GPUDataWarehouse::put( %s ) Put a variable for label %s patch %d matl %d level %d on device %d\n",
           label, label, patchID, matlIndx, levelIndx, d_device_id);
     }
-    varPointers.insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
-    varLock.writeUnlock();
+    varPointers->insert( std::map<labelPatchMatlLevel, allVarPointersInfo>::value_type( lpml, vp ) );
+    varLock->writeUnlock();
   } else {
     printf("ERROR:\nGPUDataWarehouse::put( %s )  This gpudw database already has a variable for label %s patch %d matl %d level %d on device %d in GPUDW at %p\n",
         label, label, patchID, matlIndx, levelIndx, d_device_id, d_device_copy);
-    varLock.writeUnlock();
+    varLock->writeUnlock();
     exit(-1);
   }
 
@@ -1125,18 +1125,18 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
 #ifdef __CUDA_ARCH__  // need to limit output
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc()\n",label);
 #else
-  varLock.writeLock();
+  varLock->writeLock();
 
   //first check if this patch/var/matl is in the process of loading in.
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
+  if (varPointers->find(lpml) != varPointers->end()) {
     //Space for this patch already exists.  Use that and return.
     if (d_debug){
       printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level %d staging %s on device %d.  Reusing it.\n",
           label, label, patchID, matlIndx, levelIndx, staging ? "true" : "false", d_device_id);
     }
-    var.setData(varPointers[lpml].device_ptr);
-    varLock.writeUnlock();
+    var.setData(varPointers->operator[](lpml).device_ptr);
+    varLock->writeUnlock();
     return;
   }
 
@@ -1152,7 +1152,7 @@ GPUDataWarehouse::allocateAndPut(GPUReductionVariableBase& var, char const* labe
             label, patchID, matlIndx, levelIndx, staging ? "true" : "false", var.getMemSize(), SCIRun::Thread::self()->myid());
     printf(" at %p on device %d\n", addr, d_device_id);
   }
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 
   put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx);
 
@@ -1169,17 +1169,17 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
   printf("ERROR:\nGPUDataWarehouse::allocateAndPut( %s )  You cannot use this on the device.  All memory should be allocated on the CPU with cudaMalloc()\n",label);
 #else
 
-  varLock.writeLock();
+  varLock->writeLock();
   //first check if this patch/var/matl is in the process of loading in.
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
+  if (varPointers->find(lpml) != varPointers->end()) {
     //Space for this patch already exists.  Use that and return.
     if (d_debug){
       printf("GPUDataWarehouse::allocateAndPut( %s ). This gpudw database has a variable for label %s patch %d matl %d level %d staging %s on device %d.  Reusing it.\n",
           label, label, patchID, matlIndx, levelIndx, staging ? "true" : "false", d_device_id);
     }
-   var.setData(varPointers[lpml].device_ptr);
-   varLock.writeUnlock();
+   var.setData(varPointers->operator[](lpml).device_ptr);
+   varLock->writeUnlock();
    return;
   }
   //It's not in the database, so create it.
@@ -1196,7 +1196,7 @@ GPUDataWarehouse::allocateAndPut(GPUPerPatchBase& var, char const* label, int pa
     printf("In allocateAndPut(), cudaMalloc for \"%s\" patch %d size %ld\n", label, patchID, var.getMemSize());
     printf(" at %p on device %d\n", addr, d_device_id);
   }
-  varLock.writeUnlock();
+  varLock->writeUnlock();
   put(var, sizeOfDataType, label, patchID, matlIndx, levelIndx);
 
 #endif
@@ -1271,12 +1271,12 @@ GPUDataWarehouse::getItem(char const* label, int patchID, int matlIndx, int leve
   // cpu code
   /*labelPatchMatlLevel lpm(label, patchID, matlIndx);
   int i = 0;
-  varLock.readLock();
-  if (varPointers.find(lpm) != varPointers.end()) {
+  varLock->readLock();
+  if (varPointers->find(lpm) != varPointers->end()) {
     i = varPointers[lpm].varDB_index;
-    varLock.readUnlock();
+    varLock->readUnlock();
   } else {
-    varLock.readUnlock();
+    varLock->readUnlock();
     printf("ERROR:\nGPUDataWarehouse::getItem( %s ) host get unknown variable from GPUDataWarehouse\n",label);
     exit(-1);
   }
@@ -1306,9 +1306,9 @@ GPUDataWarehouse::exist(char const* label, int patchID, int matlIndx, int levelI
   return false;
 #else
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  varLock.readLock();
-  bool retVal = varPointers.find(lpml) != varPointers.end();
-  varLock.readUnlock();
+  varLock->readLock();
+  bool retVal = varPointers->find(lpml) != varPointers->end();
+  varLock->readUnlock();
   return retVal;
 #endif 
 }
@@ -1325,28 +1325,28 @@ GPUDataWarehouse::exist(char const* label, int patchID, int matlIndx, int levelI
   //check if we have matching label, patch, material, size and offsets.
   bool retVal = false;
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  varLock.readLock();
-  if (varPointers.find(lpml) != varPointers.end()) {
-    int3 device_offset = varPointers[lpml].device_offset;
-    int3 device_size = varPointers[lpml].device_size;
+  varLock->readLock();
+  if (varPointers->find(lpml) != varPointers->end()) {
+    int3 device_offset = varPointers->operator[](lpml).device_offset;
+    int3 device_size = varPointers->operator[](lpml).device_size;
     if (device_offset.x == host_offset.x && device_offset.y == host_offset.y && device_offset.z == host_offset.z
         && device_size.x == host_size.x && device_size.y == host_size.y && device_size.z == host_size.z) {
       retVal = true;
       //There is need sometimes to see if the variable exists, but not as part of a contiguous array
       if (skipContiguous) {
-        if (varPointers[lpml].host_contiguousArrayPtr != NULL) {
+        if (varPointers->operator[](lpml).host_contiguousArrayPtr != NULL) {
           //It exists as part of a contiguous array
           retVal = false;
         }
       } if (onlyContiguous) {
-        if (varPointers[lpml].host_contiguousArrayPtr == NULL) {
+        if (varPointers->operator[](lpml).host_contiguousArrayPtr == NULL) {
           //It exists as part of a contiguous array
           retVal = false;
         }
       }
     }
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
   return retVal;
 #endif
 }
@@ -1368,12 +1368,12 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlIndx, int level
   //Further, this doesn't erase any staging vars within a var.
   bool retVal = false;
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  varLock.writeLock();
+  varLock->writeLock();
 
-  if (varPointers.find(lpml) != varPointers.end()) {
-    int i = varPointers[lpml].varDB_index;
+  if (varPointers->find(lpml) != varPointers->end()) {
+    int i = varPointers->operator[](lpml).varDB_index;
     d_varDB[i].label[0] = '\0'; //leave a hole in the flat array, not deleted.
-    varPointers.erase(lpml);  //TODO: GPU Memory leak?
+    varPointers->erase(lpml);  //TODO: GPU Memory leak?
     retVal = true;
     d_dirty=true;
   }
@@ -1381,19 +1381,27 @@ GPUDataWarehouse::remove(char const* label, int patchID, int matlIndx, int level
     printf("GPUDataWarehouse::remove( %s ). Removed a variable for label %s patch %d matl %d level %d \n",
         label, label, patchID, matlIndx, levelIndx);
   }
-  varLock.writeUnlock();
+  varLock->writeUnlock();
   return retVal;
 #endif
 }
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
-GPUDataWarehouse::init()
+__host__ void
+GPUDataWarehouse::init(int id)
 {
 #ifdef __CUDA_ARCH__
   printf("GPUDataWarehouse::init() should not be called on the device.\n");
 #else
+
+  d_device_id = id;
+  objectSizeInBytes = 0;
+  //this->placementNewBuffer = placementNewBuffer;
+  allocateLock = new SCIRun::CrowdMonitor("allocate lock");
+  varLock = new SCIRun::CrowdMonitor("var lock");
+  varPointers = new std::map<labelPatchMatlLevel, allVarPointersInfo>;
+  contiguousArrays = new std::map<std::string, contiguousArrayInfo>;
   //other data members are initialized in the constructor
   d_numVarDBItems = 0;
   d_numMaterials = 0;
@@ -1410,6 +1418,20 @@ GPUDataWarehouse::init()
 
 //______________________________________________________________________
 //
+__host__ void
+GPUDataWarehouse::cleanup()
+{
+
+  delete allocateLock;
+  delete varLock;
+  delete varPointers;
+  delete contiguousArrays;
+
+}
+
+
+//______________________________________________________________________
+//
 HOST_DEVICE void
 GPUDataWarehouse::init_device(size_t objectSizeInBytes)
 {
@@ -1423,8 +1445,18 @@ GPUDataWarehouse::init_device(size_t objectSizeInBytes)
     CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
     d_device_copy = (GPUDataWarehouse*)temp;
     //cudaHostRegister(this, sizeof(GPUDataWarehouse), cudaHostRegisterPortable);
-    if (d_debug) {
-      printf("init_device() allocated %lu bytes at %p on device %u\n", objectSizeInBytes, d_device_copy, d_device_id);
+
+    if (gpu_stats.active()) {
+      cerrLock.lock();
+      {
+        gpu_stats << UnifiedScheduler::myRankThread()
+            << " GPUDataWarehouse::init_device() -"
+            << " allocated " << objectSizeInBytes
+            << " bytes at " <<  d_device_copy
+            << " on device " << d_device_id
+            << endl;
+      }
+      cerrLock.unlock();
     }
 
     d_dirty = true;
@@ -1445,7 +1477,7 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
     printf("ERROR:\nGPUDataWarehouse::syncto_device()\nNo device copy\n");
     exit(-1);
   }
-  varLock.writeLock();
+  varLock->writeLock();
 
   if (d_dirty){
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
@@ -1469,7 +1501,7 @@ GPUDataWarehouse::syncto_device(void *cuda_stream)
     d_dirty=false;
   }
 
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 
 #endif
 }
@@ -1497,9 +1529,9 @@ GPUDataWarehouse::clear()
 
 
   //delete any grid var that isn't part of a contiguous array
-  varLock.writeLock();
+  varLock->writeLock();
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator varIter;
-  for (varIter = varPointers.begin(); varIter != varPointers.end(); ++varIter) {
+  for (varIter = varPointers->begin(); varIter != varPointers->end(); ++varIter) {
     if (varIter->second.host_contiguousArrayPtr == NULL) {
       //clear out all the staging vars, if any
       std::map<stagingVar, stagingVarInfo>::iterator stagingIter;
@@ -1521,7 +1553,7 @@ GPUDataWarehouse::clear()
     }
   }
 
-  varPointers.clear();
+  varPointers->clear();
   if (d_debug){
     printf("Freeing zero or more tempGhostCells on device %d, cpu thread %d\n",d_device_id, SCIRun::Thread::self()->myid());
   }
@@ -1538,7 +1570,7 @@ GPUDataWarehouse::clear()
 
   //delete all the contiguous arrays
   std::map<std::string, contiguousArrayInfo>::iterator iter;
-  for (iter = contiguousArrays.begin(); iter != contiguousArrays.end(); ++iter) {
+  for (iter = contiguousArrays->begin(); iter != contiguousArrays->end(); ++iter) {
     if (d_debug){
       printf("cuda Free for %s at device ptr %p on device %d\n" , iter->first.c_str(), iter->second.allocatedDeviceMemory, d_device_id );
       printf("delete[] for %s at host ptr %p on device %d\n" , iter->first.c_str(), iter->second.allocatedHostMemory, d_device_id );
@@ -1548,11 +1580,11 @@ GPUDataWarehouse::clear()
     free(iter->second.allocatedHostMemory);
 
   }
-  contiguousArrays.clear();
+  contiguousArrays->clear();
 
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 
-  init();
+  init(d_device_id);
 
 #endif
 }
@@ -1632,7 +1664,7 @@ GPUDataWarehouse::putMaterials( std::vector< std::string > materials)
   //__________________________________
   //cpu code
 
-  varLock.writeLock();
+  varLock->writeLock();
   //see if a thread has already supplied this datawarehouse with the material data
   int numMaterials = materials.size();
 
@@ -1655,7 +1687,7 @@ GPUDataWarehouse::putMaterials( std::vector< std::string > materials)
 
   }
 
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 
 #endif
 }
@@ -1708,11 +1740,11 @@ GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner,
 
   labelPatchMatlLevel lpml(label, fromPatchID, matlIndx, levelIndx);
   allVarPointersInfo vp;
-  varLock.writeLock();
-  if (varPointers.find(lpml) != varPointers.end()) {
+  varLock->writeLock();
+  if (varPointers->find(lpml) != varPointers->end()) {
     vp = varPointers[lpml];
   } else {
-    varLock.writeUnlock();
+    varLock->writeUnlock();
 
     printf("ERROR:\nGPUDataWarehouse::prepareGhostCellForCopyingInvoker, label: %s source patch ID %d, materialID %d level %d staging %s not found in variable database",
         label, fromPatchID, matlIndx, levelIndx, staging ? "true" : "false");
@@ -1771,7 +1803,7 @@ GPUDataWarehouse::prepareGpuGhostCellIntoGpuArray(void* cpuDetailedTaskOwner,
     printf("GPUDataWarehouse::prepareGhostCellForCopyingInvoker, Creating a tempGhostCellInfo from %d to %d starting at (%d, %d, %d) from patch %d to patch %d with address %p and size %d on threadID %d\n", fromDeviceIndex, toDeviceIndex, ghostCellLow.x, ghostCellLow.y, ghostCellLow.z, fromPatchID, toPatchID, tgci.device_ptr,  ghostCellSize, SCIRun::Thread::self()->myid());
   }
   tempGhostCells.push_back( tgci );
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 #endif
 }
 */
@@ -1800,7 +1832,7 @@ GPUDataWarehouse::prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner
   //This ghost cell is only temporary.  Don't store it in the varDB, it should be moved and deleted very quickly.
   //Another reason not to store it in this object is the varPointers collection is a map, not a multimap.  We
   //do not want two entries for the same lebel/patch/matl tuple.
-  varLock.writeLock();
+  varLock->writeLock();
   tempGhostCellInfo tgci;
   tgci.label = label;
   tgci.patchID = fromPatchID;
@@ -1820,7 +1852,7 @@ GPUDataWarehouse::prepareGpuToGpuGhostCellDestination(void* cpuDetailedTaskOwner
     printf("GPUDataWarehouse::prepareGpuToGpuGhostCellDestination Creating a tempGhostCellInfo from %d to %d starting at (%d, %d, %d) with address %p and size %d on threadID %d\n", fromDeviceIndex, toDeviceIndex, ghostCellLow.x, ghostCellLow.y, ghostCellLow.z, data_ptr, ghostCellSize, SCIRun::Thread::self()->myid());
   }
   tempGhostCells.push_back( tgci );
-  varLock.writeUnlock();
+  varLock->writeUnlock();
 #endif
 }*/
 /*
@@ -1899,15 +1931,15 @@ GPUDataWarehouse::copyGhostCellsToHostVarInvoker(void* hostVarPointer, int3 ghos
 
   int index = 0;
   labelPatchMatlLevel lpm_source(label, patchID, matlIndx);
-  varLock.readLock();
-  if (varPointers.find(lpm_source) != varPointers.end()) {
+  varLock->readLock();
+  if (varPointers->find(lpm_source) != varPointers->end()) {
     index = varPointers[lpm_source].varDB_index;
 
   } else {
     printf("ERROR:\nGPUDataWarehouse::copyGhostCellsToHostVar, label: %s source patch ID %d, materialID %d not found in variable database", label, patchID, matlIndx);
     exit(-1);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 
   void *d_ghostCellData = NULL;
 
@@ -1944,7 +1976,7 @@ GPUDataWarehouse::copyTempGhostCellsToHostVar(void* hostVarPointer, int3 ghostCe
 
 
   labelPatchMatlLevel lpml_source(label, patchID, matlIndx, levelIndx);
-  varLock.readLock();
+  varLock->readLock();
   tempGhostCellInfo tgci;
   bool found = false;
   //Check to make sure we have *exactly* the ghost cell we want.  (Other
@@ -1971,7 +2003,7 @@ GPUDataWarehouse::copyTempGhostCellsToHostVar(void* hostVarPointer, int3 ghostCe
     printf("ERROR:\nGPUDataWarehouse::copyTempGhostCellsToHostVar, label: %s source patch ID %d, materialID %d not found in temporary ghost cell collection", label, patchID, matlIndx);
     exit(-1);
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 
   OnDemandDataWarehouse::uintahSetCudaDevice(d_device_id);
   //call a kernel which gets the copy process started.
@@ -2213,7 +2245,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
 #else
   //Add information describing a ghost cell that needs to be copied internally from
   //one chunk of data to the destination.  This covers a GPU -> same GPU copy scenario.
-  varLock.readLock();
+  varLock->readLock();
   int i = d_numVarDBItems;
   int index = -1;
   d_numVarDBItems++;
@@ -2228,16 +2260,16 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   labelPatchMatlLevel lpml_source(label, sourcePatchID, matlIndx, levelIndx);
   if (!sourceStaging) {
 
-    if (varPointers.find(lpml_source) != varPointers.end()) {
-      index = varPointers[lpml_source].varDB_index;
+    if (varPointers->find(lpml_source) != varPointers->end()) {
+      index = varPointers->operator[](lpml_source).varDB_index;
     }
   } else {
     stagingVar sv;
     sv.device_offset = varOffset;
     sv.device_size = varSize;
 
-    std::map<stagingVar, stagingVarInfo>::iterator staging_it = varPointers[lpml_source].stagingVars.find(sv);
-    if (staging_it != varPointers[lpml_source].stagingVars.end()) {
+    std::map<stagingVar, stagingVarInfo>::iterator staging_it = varPointers->operator[](lpml_source).stagingVars.find(sv);
+    if (staging_it != varPointers->operator[](lpml_source).stagingVars.end()) {
       index = staging_it->second.varDB_index;
 
     } else {
@@ -2245,7 +2277,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
                     label, label, sourcePatchID, matlIndx, levelIndx,
                     sv.device_offset.x, sv.device_offset.y, sv.device_offset.z,
                     sv.device_size.x, sv.device_size.y, sv.device_size.z);
-      varLock.writeUnlock();
+      varLock->writeUnlock();
       exit(-1);
     }
     //Find the d_varDB entry for this specific one.
@@ -2256,7 +2288,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   if (index == -1) {
     printf("ERROR:\nGPUDataWarehouse::putGhostCell, label %s, source patch ID %d, matlIndx %d, levelIndex %d staging %s not found in GPU DW %p\n",
         label, sourcePatchID, matlIndx, levelIndx, "false", this);
-    varLock.readUnlock();
+    varLock->readUnlock();
     exit(-1);
   }
 
@@ -2283,8 +2315,8 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
 
   //Find where we are sending the ghost cell data to
   labelPatchMatlLevel lpml_dest(label, destPatchID, matlIndx, levelIndx);
-  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers.find(lpml_dest);
-  if (it != varPointers.end()) {
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml_dest);
+  if (it != varPointers->end()) {
     if (deststaging) {
       //find the staging var inside this var.
       stagingVar sv;
@@ -2300,7 +2332,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
         printf("\nERROR:\nGPUDataWarehouse::putGhostCell() didn't find a staging variable from the device for offset (%d, %d, %d) and size (%d, %d, %d).\n",
             sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z,
             sv.device_size.x, sv.device_size.y, sv.device_size.z);
-        varLock.readUnlock();
+        varLock->readUnlock();
         exit(-1);
       }
 
@@ -2317,11 +2349,11 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   } else {
     printf("ERROR:\nGPUDataWarehouse::putGhostCell(), label: %s destination patch ID %d, matlIndx %d, levelIndex %d, staging %s not found in GPU DW variable database\n",
         label, destPatchID, matlIndx, levelIndx, deststaging ? "true" : "false");
-    varLock.readUnlock();
+    varLock->readUnlock();
     exit(-1);
   }
   d_dirty=true;
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }
 
@@ -2331,10 +2363,10 @@ GPUDataWarehouse::getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, i
 #ifdef __CUDA_ARCH__
   printf("ERROR:\nGPUDataWarehouse::getSizes()  Not implemented for GPU\n");
 #else
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    allVarPointersInfo info = varPointers[lpml];
+  if (varPointers->find(lpml) != varPointers->end()) {
+    allVarPointersInfo info = varPointers->operator[](lpml);
     low = info.device_offset;
     high.x = info.device_size.x - info.device_offset.x;
     high.y = info.device_size.y - info.device_offset.y;
@@ -2343,7 +2375,7 @@ GPUDataWarehouse::getSizes(int3& low, int3& high, int3& siz, GhostType& gtype, i
     gtype = info.gtype;
     numGhostCells = info.numGhostCells;
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 
 #endif
 }
@@ -2353,7 +2385,7 @@ HOST_DEVICE void GPUDataWarehouse::getTempGhostCells(void * dtask, std::vector<t
     printf("ERROR:\nGPUDataWarehouse::getTempGhostCells not implemented for GPU\n");
     exit(-1);
 #else
-  varLock.readLock();
+  varLock->readLock();
 
 
   for ( vector<tempGhostCellInfo>::iterator it = tempGhostCells.begin();
@@ -2364,7 +2396,7 @@ HOST_DEVICE void GPUDataWarehouse::getTempGhostCells(void * dtask, std::vector<t
       temp.push_back( (*it) );
     }
   }
-  varLock.readUnlock();
+  varLock->readUnlock();
 #endif
 }*/
 
@@ -2378,18 +2410,18 @@ GPUDataWarehouse::getValidOnGPU(char const* label, int patchID, int matlIndx, in
 #else
   //__________________________________
   //  cpu code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    bool retVal = varPointers[lpml].validOnGPU;
+  if (varPointers->find(lpml) != varPointers->end()) {
+    bool retVal = varPointers->operator[](lpml).validOnGPU;
     //allVarPointersInfo info = varPointers[lpm];
     //int i = info.varDB_index;
     //bool retVal = d_varDB[i].varItem.validOnGPU;
-    varLock.readUnlock();
+    varLock->readUnlock();
     return retVal;
 
   } else {
-    varLock.readUnlock();
+    varLock->readUnlock();
     return false;
   }
 #endif
@@ -2403,16 +2435,16 @@ GPUDataWarehouse::setValidOnGPU(char const* label, int patchID, int matlIndx, in
 #else
   //__________________________________
   //  cpu code
-  varLock.writeLock();
+  varLock->writeLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    varPointers[lpml].validOnGPU = true;
+  if (varPointers->find(lpml) != varPointers->end()) {
+    varPointers->operator[](lpml).validOnGPU = true;
     //allVarPointersInfo info = varPointers[lpm];
     //int i = info.varDB_index;
     //d_varDB[i].varItem.validOnGPU = true;
-    varLock.writeUnlock();
+    varLock->writeUnlock();
   } else {
-    varLock.writeUnlock();
+    varLock->writeUnlock();
     printf("host setValidOnGPU unknown variable %s on GPUDataWarehouse\n", label);
     exit(-1);
   }
@@ -2428,18 +2460,18 @@ GPUDataWarehouse::getValidOnCPU(char const* label, int patchID, int matlIndx, in
 #else
   //__________________________________
   //  CPU code
-  varLock.readLock();
+  varLock->readLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    bool retVal = varPointers[lpml].validOnCPU;
+  if (varPointers->find(lpml) != varPointers->end()) {
+    bool retVal = varPointers->operator[](lpml).validOnCPU;
     //allVarPointersInfo info = varPointers[lpm];
     //int i = info.varDB_index;
     //bool retVal = d_varDB[i].varItem.validOnCPU;
-    varLock.readUnlock();
+    varLock->readUnlock();
     return retVal;
 
   } else {
-    varLock.readUnlock();
+    varLock->readUnlock();
     return false;
   }
 #endif
@@ -2452,16 +2484,16 @@ GPUDataWarehouse::setValidOnCPU(char const* label, int patchID, int matlIndx, in
 #else
   //__________________________________
   //  CPU code
-  varLock.writeLock();
+  varLock->writeLock();
   labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
-  if (varPointers.find(lpml) != varPointers.end()) {
-    varPointers[lpml].validOnCPU = true;
+  if (varPointers->find(lpml) != varPointers->end()) {
+    varPointers->operator[](lpml).validOnCPU = true;
     //allVarPointersInfo info = varPointers[lpm];
     //int i = info.varDB_index;
     //d_varDB[i].varItem.validOnCPU = true;
-    varLock.writeUnlock();
+    varLock->writeUnlock();
   } else {
-    varLock.writeUnlock();
+    varLock->writeUnlock();
     printf("host setValidOnCPU unknown variable %s on GPUDataWarehouse\n", label);
     exit(-1);
   }

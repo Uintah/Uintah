@@ -102,7 +102,10 @@ class UnifiedScheduler : public MPIScheduler  {
 
     friend class UnifiedSchedulerWorker;
 
-    static const int bufferPadding = 32;
+    static const int bufferPadding = 128;  //32 threads can write floats out in one coalesced access.  (32 * 4 bytes = 128 bytes).
+                                           //TODO: Ideally, this number should be determined from the cuda arch during the
+                                           //CMAKE/configure step so that future programmers don't have to manually remember to
+                                           //update this value if it ever changes.
 
     static std::string myRankThread();
 
@@ -141,6 +144,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
 #ifdef HAVE_CUDA
 
+    void assignDevicesAndStreams(DetailedTask* task);
     void assignDevicesAndStreams(DeviceGhostCells& ghostVars, DetailedTask* task);
 
     void findIntAndExtGpuDependencies(DeviceGridVariables& deviceVars,
@@ -166,8 +170,7 @@ class UnifiedScheduler : public MPIScheduler  {
 
     void createTaskGpuDWs(DetailedTask * task,
         const DeviceGridVariables& taskVars,
-        const DeviceGhostCells& ghostVars,
-        const int device_id);
+        const DeviceGhostCells& ghostVars);
 
 
     void gpuInitialize( bool reset=false );
@@ -175,6 +178,9 @@ class UnifiedScheduler : public MPIScheduler  {
     void syncTaskGpuDWs(DetailedTask* dtask);
 
     void performInternalGhostCellCopies(DetailedTask* dtask);
+    void copyAllGpuToGpuDependences(const DetailedTask* dtask,
+        const DeviceGridVariables& deviceVars,
+        const DeviceGhostCells& ghostVars);
 
     void copyAllExtGpuDependenciesToHost(const DetailedTask* dtask,
         const DeviceGridVariables& deviceVars,
