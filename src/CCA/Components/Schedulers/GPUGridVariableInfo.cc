@@ -41,7 +41,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             const Task::Dependency* dep,
             Ghost::GhostType gtype,
             int numGhostCells,
-            int whichGPU) {
+            unsigned int whichGPU) {
   this->var = var;
   this->dest = dest;
   this->staging = staging;
@@ -66,7 +66,7 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
             int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
-            int whichGPU) {
+            unsigned int whichGPU) {
   this->var = var;
   this->dest = dest;
   this->sizeOfDataType = sizeOfDataType;
@@ -82,16 +82,8 @@ DeviceGridVariableInfo::DeviceGridVariableInfo(Variable* var,
 }
 
 
-DeviceGridVariables::DeviceGridVariables() {
-  totalSize = 0;
-  for (int i = 0; i < Task::TotalDWs; i++) {
-    totalSizeForDataWarehouse[i] = 0;
-    totalVars[i] = 0;
-    totalMaterials[i] = 0;
-    totalLevels[i] = 0;
+DeviceGridVariables::DeviceGridVariables() {}
 
-  }
-}
 void DeviceGridVariables::add(const Patch* patchPointer,
           int matlIndx,
           int levelIndx,
@@ -103,7 +95,7 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           const Task::Dependency* dep,
           Ghost::GhostType gtype,
           int numGhostCells,
-          int whichGPU,
+          unsigned int whichGPU,
           Variable* var,
           GpuUtilities::DeviceVarDestination dest) {
 
@@ -153,11 +145,29 @@ void DeviceGridVariables::add(const Patch* patchPointer,
     }
   }
 
-  totalVars[dep->mapDataWarehouse()] += 1;
+
+  unsigned int totalVars;
+  unsigned int entrySize = ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+  if (deviceInfoMap.find(whichGPU) == deviceInfoMap.end() ) {
+    DeviceInfo di;
+    di.totalVars[dep->mapDataWarehouse()] = 1;
+    totalVars = di.totalVars[dep->mapDataWarehouse()];
+    //contiguous array calculations
+    di.totalSize = entrySize;
+    di.totalSizeForDataWarehouse[dep->mapDataWarehouse()] = entrySize;
+    deviceInfoMap.insert(std::pair<unsigned int, DeviceInfo>(whichGPU, di));
+
+  } else {
+    DeviceInfo & di = deviceInfoMap[whichGPU];
+    di.totalVars[dep->mapDataWarehouse()] += 1;
+    totalVars = di.totalVars[dep->mapDataWarehouse()];
+    //contiguous array calculations
+    di.totalSize += entrySize;
+    di.totalSizeForDataWarehouse[dep->mapDataWarehouse()] += entrySize;
+
+  }
 
   //contiguous array calculations
-  totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-  totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
   vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   if (gpu_stats.active()) {
     cerrLock.lock();
@@ -172,7 +182,7 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           << " staging " << std::boolalpha << staging
           << " offset (" << offset.x() << ", " << offset.y() << ", " << offset.z() << ")"
           << " size (" << sizeVector.x() << ", " << sizeVector.y() << ", " << sizeVector.z() << ")"
-          << " totalVars is: " << totalVars[dep->mapDataWarehouse()] << endl;
+          << " totalVars is: " << totalVars << endl;
     }
     cerrLock.unlock();
   }
@@ -189,18 +199,33 @@ void DeviceGridVariables::add(const Patch* patchPointer,
           size_t varMemSize,
           size_t sizeOfDataType,
           const Task::Dependency* dep,
-          int whichGPU,
+          unsigned int whichGPU,
           Variable* var,
           GpuUtilities::DeviceVarDestination dest) {
 
   //unlike grid variables, we should only have one instance of label/patch/matl/level/dw for patch variables.
   GpuUtilities::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   if (vars.find(lpmld) == vars.end()) {
-    totalVars[dep->mapDataWarehouse()] += 1;
 
-    //contiguous array calculations
-    totalSize += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
-    totalSizeForDataWarehouse[dep->mapDataWarehouse()] += ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+
+    unsigned int entrySize = ((UnifiedScheduler::bufferPadding - varMemSize % UnifiedScheduler::bufferPadding) % UnifiedScheduler::bufferPadding) + varMemSize;
+    if (deviceInfoMap.find(whichGPU) == deviceInfoMap.end() ) {
+      DeviceInfo di;
+      di.totalVars[dep->mapDataWarehouse()] = 1;
+      //contiguous array calculations
+      di.totalSize = entrySize;
+      di.totalSizeForDataWarehouse[dep->mapDataWarehouse()] = entrySize;
+      deviceInfoMap.insert(std::pair<unsigned int, DeviceInfo>(whichGPU, di));
+
+    } else {
+      DeviceInfo & di = deviceInfoMap[whichGPU];
+      di.totalVars[dep->mapDataWarehouse()] += 1;
+      //contiguous array calculations
+      di.totalSize += entrySize;
+      di.totalSizeForDataWarehouse[dep->mapDataWarehouse()] += entrySize;
+
+    }
+
     DeviceGridVariableInfo tmp(var, dest, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
     vars.insert( std::map<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::value_type( lpmld, tmp ) );
   } else {
@@ -256,7 +281,7 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
           int levelIndx,
           size_t sizeOfDataType,
           const Task::Dependency* dep,
-          int whichGPU) {
+          unsigned int whichGPU) {
   GpuUtilities::LabelPatchMatlLevelDw lpmld(dep->var->getName().c_str(), patchPointer->getID(), matlIndx, levelIndx, dep->mapDataWarehouse());
   std::pair <std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator, std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>::iterator> ret;
   ret = vars.equal_range(lpmld);
@@ -267,7 +292,21 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
       SCI_THROW(InternalError("Preparation queue for a task datawarehouse already contained same exact variable for: -" + dep->var->getName(), __FILE__, __LINE__));
     }
   }
-  totalVars[dep->mapDataWarehouse()] += 1;
+
+  unsigned int totalVars;
+  if (deviceInfoMap.find(whichGPU) == deviceInfoMap.end() ) {
+     DeviceInfo di;
+     di.totalVars[dep->mapDataWarehouse()] = 1;
+     totalVars = 1;
+     deviceInfoMap.insert(std::pair<unsigned int, DeviceInfo>(whichGPU, di));
+
+   } else {
+     DeviceInfo & di = deviceInfoMap[whichGPU];
+     di.totalVars[dep->mapDataWarehouse()] += 1;
+     totalVars = di.totalVars[dep->mapDataWarehouse()];
+   }
+
+
   //TODO: The Task DW doesn't hold any pointers.  So what does that mean about contiguous arrays?
   //Should contiguous arrays be organized by task???
   DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, false, sizeOfDataType, matlIndx, levelIndx, patchPointer, dep, whichGPU);
@@ -283,7 +322,7 @@ void DeviceGridVariables::addTaskGpuDWVar(const Patch* patchPointer,
           << " matl " << matlIndx
           << " level " << levelIndx
           << " staging false"
-          << " totalVars is: " << totalVars[dep->mapDataWarehouse()] << endl;
+          << " totalVars is: " << totalVars << endl;
     }
     cerrLock.unlock();
   }
@@ -301,7 +340,7 @@ void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
           IntVector sizeVector,
           size_t sizeOfDataType,
           const Task::Dependency* dep,
-          int whichGPU) {
+          unsigned int whichGPU) {
 
   //Since this is a queue, we aren't likely to have the parent variable of the staging var,
   //as that likely went into the regular host-side gpudw as a computes in the last timestep.
@@ -340,7 +379,18 @@ void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
     }
   }
 
-  totalVars[dep->mapDataWarehouse()] += 1;
+  unsigned int totalVars;
+  if (deviceInfoMap.find(whichGPU) == deviceInfoMap.end() ) {
+     DeviceInfo di;
+     di.totalVars[dep->mapDataWarehouse()] = 1;
+     totalVars = 1;
+     deviceInfoMap.insert(std::pair<unsigned int, DeviceInfo>(whichGPU, di));
+
+   } else {
+     DeviceInfo & di = deviceInfoMap[whichGPU];
+     di.totalVars[dep->mapDataWarehouse()] += 1;
+     totalVars = di.totalVars[dep->mapDataWarehouse()];
+   }
 
   size_t varMemSize = sizeVector.x() * sizeVector.y() * sizeVector.z() * sizeOfDataType;
   DeviceGridVariableInfo tmp(NULL, GpuUtilities::unknown, true, sizeVector, sizeOfDataType, varMemSize , offset, matlIndx, levelIndx, patchPointer, dep, Ghost::None, 0, whichGPU);
@@ -358,7 +408,7 @@ void DeviceGridVariables::addTaskGpuDWStagingVar(const Patch* patchPointer,
           << " staging true"
           << " offset (" << offset.x() << ", " << offset.y() << ", " << offset.z() << ")"
           << " size (" << sizeVector.x() << ", " << sizeVector.y() << ", " << sizeVector.z() << ")"
-          << " totalVars is: " << totalVars[dep->mapDataWarehouse()] << endl;
+          << " totalVars is: " << totalVars << endl;
     }
     cerrLock.unlock();
   }
@@ -388,28 +438,45 @@ DeviceGridVariableInfo DeviceGridVariables::getStagingItem(
   SCI_THROW(InternalError("Error: DeviceGridVariables::getStagingItem(), item not found for: -" + label, __FILE__, __LINE__));
 }
 
-size_t DeviceGridVariables::getTotalSize() {
-  return totalSize;
+size_t DeviceGridVariables::getTotalSize(const unsigned int whichGPU) {
+
+  return deviceInfoMap[whichGPU].totalSize;
 }
 
-size_t DeviceGridVariables::getSizeForDataWarehouse(int dwIndex) {
-  return totalSizeForDataWarehouse[dwIndex];
+size_t DeviceGridVariables::getSizeForDataWarehouse(const unsigned int whichGPU, const int dwIndex) {
+  return deviceInfoMap[whichGPU].totalSizeForDataWarehouse[dwIndex];
 }
 
-unsigned int DeviceGridVariables::numItems() {
-  return vars.size();
+//unsigned int DeviceGridVariables::numItems() {
+//  return vars.size();
+//}
+
+unsigned int DeviceGridVariables::getTotalVars(const unsigned int whichGPU, const int DWIndex) const {
+  std::map<unsigned int, DeviceInfo>::const_iterator it;
+  it = deviceInfoMap.find(whichGPU);
+  if(it != deviceInfoMap.end()) {
+      return it->second.totalVars[DWIndex];
+  }
+  return 0;
+
 }
 
-unsigned int DeviceGridVariables::getTotalVars(int DWIndex) const {
-  return totalVars[DWIndex];
+unsigned int DeviceGridVariables::getTotalMaterials(const unsigned int whichGPU, const int DWIndex) const {
+  std::map<unsigned int, DeviceInfo>::const_iterator it;
+  it = deviceInfoMap.find(whichGPU);
+  if(it != deviceInfoMap.end()) {
+      return it->second.totalMaterials[DWIndex];
+  }
+  return 0;
 }
 
-unsigned int DeviceGridVariables::getTotalMaterials(int DWIndex) const {
-  return totalMaterials[DWIndex];
-}
-
-unsigned int DeviceGridVariables::getTotalLevels(int DWIndex) const {
-  return totalLevels[DWIndex];
+unsigned int DeviceGridVariables::getTotalLevels(const unsigned int whichGPU, const int DWIndex) const {
+  std::map<unsigned int, DeviceInfo>::const_iterator it;
+  it = deviceInfoMap.find(whichGPU);
+  if(it != deviceInfoMap.end()) {
+      return it->second.totalLevels[DWIndex];
+  }
+  return 0;
 }
 
 

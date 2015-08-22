@@ -122,7 +122,7 @@ public:
             const Task::Dependency* dep,
             Ghost::GhostType gtype,
             int numGhostCells,
-            int whichGPU);
+            unsigned int whichGPU);
 
   //For PerPatch vars
   DeviceGridVariableInfo(Variable* var,
@@ -133,7 +133,7 @@ public:
             int levelIndx,
             const Patch* patchPointer,
             const Task::Dependency* dep,
-            int whichGPU);
+            unsigned int whichGPU);
 
   bool operator==(DeviceGridVariableInfo& rhs) {
     return (this->sizeVector == rhs.sizeVector
@@ -161,11 +161,29 @@ public:
   const Task::Dependency* dep;
   Ghost::GhostType gtype;
   int numGhostCells;
-  int whichGPU;
+  unsigned int whichGPU;
   Variable* var;
   GpuUtilities::DeviceVarDestination dest;
 };
 
+class DeviceInfo {
+public:
+  DeviceInfo() {
+    totalSize = 0;
+    for (int i = 0; i < Task::TotalDWs; i++) {
+      totalSizeForDataWarehouse[i] = 0;
+      totalVars[i] = 0;
+      totalMaterials[i] = 0;
+      totalLevels[i] = 0;
+
+    }
+  }
+  size_t totalSize;
+  size_t totalSizeForDataWarehouse[Task::TotalDWs];
+  unsigned int totalVars[Task::TotalDWs];
+  unsigned int totalMaterials[Task::TotalDWs];
+  unsigned int totalLevels[Task::TotalDWs];
+};
 
 class DeviceGridVariables {
 public:
@@ -183,7 +201,7 @@ public:
             const Task::Dependency* dep,
             Ghost::GhostType gtype,
             int numGhostCells,
-            int whichGPU,
+            unsigned int whichGPU,
             Variable* var,
             GpuUtilities::DeviceVarDestination dest);
 
@@ -194,7 +212,7 @@ public:
             size_t varMemSize,
             size_t sizeOfDataType,
             const Task::Dependency* dep,
-            int whichGPU,
+            unsigned int whichGPU,
             Variable* var,
             GpuUtilities::DeviceVarDestination dest);
 
@@ -218,7 +236,7 @@ public:
               int levelIndx,
               size_t varMemSize,
               const Task::Dependency* dep,
-              int whichGPU);
+              unsigned int whichGPU);
 
   //For staging contiguous arrays
   void addTaskGpuDWStagingVar(const Patch* patchPointer,
@@ -228,7 +246,7 @@ public:
             IntVector sizeVector,
             size_t sizeOfDataType,
             const Task::Dependency* dep,
-            int whichGPU);
+            unsigned int whichGPU);
 
   DeviceGridVariableInfo getStagingItem( const string& label,
           const Patch* patch,
@@ -238,15 +256,15 @@ public:
           const IntVector size,
           const int dataWarehouseIndex) const;
 
-  size_t getTotalSize();
+  size_t getTotalSize(const unsigned int whichGPU);
 
-  size_t getSizeForDataWarehouse(int dwIndex);
+  size_t getSizeForDataWarehouse(const unsigned int whichGPU, const int dwIndex);
 
-  unsigned int numItems();
+  //unsigned int numItems();
 
-  unsigned int getTotalVars(int DWIndex) const;
-  unsigned int getTotalMaterials(int DWIndex) const;
-  unsigned int getTotalLevels(int DWIndex) const;
+  unsigned int getTotalVars(const unsigned int whichGPU, const int DWIndex) const;
+  unsigned int getTotalMaterials(const unsigned int whichGPU, const int DWIndex) const;
+  unsigned int getTotalLevels(const unsigned int whichGPU, const int DWIndex) const;
 
   std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo>& getMap() {
     return vars;
@@ -255,8 +273,7 @@ public:
 
 
 private:
-  size_t totalSize;
-  size_t totalSizeForDataWarehouse[Task::TotalDWs];
+
 
   std::multimap<GpuUtilities::LabelPatchMatlLevelDw, DeviceGridVariableInfo> vars; //This multimap acts essentially contains objects
                         //which are first queued up, and then processed in a group.  These DeviceGridVariableInfo objects
@@ -266,9 +283,13 @@ private:
                         //the ghost cell copies that need to occur within a GPU.
                         //TODO: For #2/#3, it is that ghost cell copies could be duplicated or within one another.  If so...handle this...
 
-  unsigned int totalVars[Task::TotalDWs];
-  unsigned int totalMaterials[Task::TotalDWs];
-  unsigned int totalLevels[Task::TotalDWs];
+  std::map <unsigned int, DeviceInfo> deviceInfoMap;
+  //size_t totalSize;
+  //size_t totalSizeForDataWarehouse[Task::TotalDWs];
+
+  //unsigned int totalVars[Task::TotalDWs];
+  //unsigned int totalMaterials[Task::TotalDWs];
+  //unsigned int totalLevels[Task::TotalDWs];
 
 };
 

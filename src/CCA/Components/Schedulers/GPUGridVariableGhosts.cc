@@ -63,11 +63,7 @@ DeviceGhostCellsInfo::DeviceGhostCellsInfo(const VarLabel* label,
   this->dest = dest;
 }
 
-DeviceGhostCells::DeviceGhostCells() {
-  for (int i = 0; i < Task::TotalDWs; i++) {
-    totalGhostCellCopies[i] = 0;
-  }
-}
+DeviceGhostCells::DeviceGhostCells() {}
 
 void DeviceGhostCells::add(const VarLabel* label,
           const Patch* sourcePatchPointer,
@@ -92,7 +88,26 @@ void DeviceGhostCells::add(const VarLabel* label,
   //unlike grid variables, we should only have one instance of label/patch/matl/level/dw for patch variables.
   GpuUtilities::GhostVarsTuple gvt(label->getName(), matlIndx, levelIndx, (int)dwIndex, low, high);
   if (ghostVars.find(gvt) == ghostVars.end()) {
-    totalGhostCellCopies[dwIndex] += 1;
+
+    if (totalGhostCellCopies.find(sourceDeviceNum) == totalGhostCellCopies.end() ) {
+
+      //initialize the array for number of copies per GPU datawarehouse.
+      DatawarehouseIds item;
+
+      for (int i = 0; i < Task::TotalDWs; i++) {
+        item.DwIds[i] = 0;
+      }
+
+      item.DwIds[dwIndex] = 1;
+
+      totalGhostCellCopies.insert(std::pair<unsigned int, DatawarehouseIds>(sourceDeviceNum, item));
+
+     } else {
+
+       totalGhostCellCopies[sourceDeviceNum].DwIds[dwIndex] += 1;
+
+     }
+
     int deviceID = GpuUtilities::getGpuIndexForPatch(destPatchPointer);
     if (destinationDevices.find(deviceID) == destinationDevices.end()) {
       destinationDevices.insert(deviceID);
@@ -158,71 +173,22 @@ DeviceGhostCellsInfo DeviceGhostCells::getItem(
   SCI_THROW(InternalError("Error: DeviceGridVariables::getStagingItem(), item not found for: -" + label->getName(), __FILE__, __LINE__));
 }
 */
-set<int>& DeviceGhostCells::getDestinationDevices() {
+set<unsigned int>& DeviceGhostCells::getDestinationDevices() {
   return destinationDevices;
 }
 
 unsigned int DeviceGhostCells::numItems() const {
   return ghostVars.size();
 }
-/*
-const VarLabel* DeviceGhostCells::getLabel(int index) const {
-  return vars.at(index).label;
-}
-char const * DeviceGhostCells::getLabelName(int index) const {
-  return vars.at(index).label->getName().c_str();
+unsigned int DeviceGhostCells::getNumGhostCellCopies(const unsigned int whichDevice, Task::WhichDW dwIndex) const {
+  std::map<unsigned int, DatawarehouseIds>::const_iterator it;
+  it = totalGhostCellCopies.find(whichDevice);
+  if(it != totalGhostCellCopies.end()) {
+      return it->second.DwIds[whichDevice];
+  }
+  return 0;
+
 }
 
-int DeviceGhostCells::getMatlIndx(int index) const {
-  return vars.at(index).matlIndx;
-}
-
-int DeviceGhostCells::getLevelIndx(int index) const {
-  return vars.at(index).levelIndx;
-}
-
-bool DeviceGhostCells::getdestStaging(int index) const {
-  return vars.at(index).destStaging;
-}
-
-const Patch* DeviceGhostCells::getSourcePatchPointer(int index) const {
-  return vars.at(index).sourcePatchPointer;
-}
-
-int DeviceGhostCells::getSourceDeviceNum(int index) const {
-  return vars.at(index).sourceDeviceNum;
-}
-
-const Patch* DeviceGhostCells::getDestPatchPointer(int index) const {
-  return vars.at(index).destPatchPointer;
-}
-
-int DeviceGhostCells::getDestDeviceNum(int index) const {
-  return vars.at(index).destDeviceNum;
-}
-
-IntVector DeviceGhostCells::getLow(int index) const {
-  return vars.at(index).low;
-}
-IntVector DeviceGhostCells::getHigh(int index) const {
-  return vars.at(index).high;
-}
-
-IntVector DeviceGhostCells::getVirtualOffset(int index) const {
-  return vars.at(index).virtualOffset;
-}
-
-Task::WhichDW DeviceGhostCells::getDwIndex(int index) const {
-  return vars.at(index).dwIndex;
-}
-*/
-unsigned int DeviceGhostCells::getNumGhostCellCopies(Task::WhichDW dwIndex) const {
-  return totalGhostCellCopies[dwIndex];
-}
-
-/*
-GpuUtilities::DeviceVarDestination DeviceGhostCells::getDestination(int index) const {
-  return vars.at(index).dest;
-}*/
 
 

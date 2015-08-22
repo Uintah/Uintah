@@ -155,12 +155,15 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( const ProcessorGroup* myworld,
 
       //Using "placement new" to create the object in the buffer.
       //GPUDataWarehouse* gpuDW = new GPUDataWarehouse();
-      void *placementNewBuffer = malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
-      //GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_ITEM);
-      GPUDataWarehouse* gpuDW = new (placementNewBuffer) GPUDataWarehouse(i, placementNewBuffer);
+      //void *placementNewBuffer = malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
+      //GPUDataWarehouse* gpuDW = new (placementNewBuffer) GPUDataWarehouse(i, placementNewBuffer);
+
+      GPUDataWarehouse* gpuDW = (GPUDataWarehouse*)malloc(sizeof(GPUDataWarehouse) - sizeof(GPUDataWarehouse::dataItem) * MAX_VARDB_ITEMS);
+      gpuDW->init(i);
       gpuDW->setDebug(gpudbg.active());
       d_gpuDWs.push_back(gpuDW);
     }
+
   }
 #endif
 }
@@ -218,9 +221,13 @@ OnDemandDataWarehouse::clear()
     for (size_t i = 0; i < d_gpuDWs.size(); i++) {
       d_gpuDWs[i]->clear();
       //because it was created using placement new, we have to deallocate this way instead of through delete.
-      void * getPlacementNewBuffer = d_gpuDWs[i]->getPlacementNewBuffer();
-      d_gpuDWs[i]->~GPUDataWarehouse();
-      free(getPlacementNewBuffer);
+      //d_gpuDWs[i]->~GPUDataWarehouse();
+
+      //void * getPlacementNewBuffer = d_gpuDWs[i]->getPlacementNewBuffer();
+      //free(getPlacementNewBuffer);
+      d_gpuDWs[i]->cleanup();
+      free(d_gpuDWs[i]);
+      d_gpuDWs[i] = NULL;
     }
   }
 #endif

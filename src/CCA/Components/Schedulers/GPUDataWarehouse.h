@@ -70,13 +70,8 @@ class GPUDataWarehouse {
 
 public:
 
-  GPUDataWarehouse(int id, void * placementNewBuffer): allocateLock("allocate lock"), varLock("var lock"){
-    d_device_id = id;
-    objectSizeInBytes = 0;
-    this->placementNewBuffer = placementNewBuffer;
-    init();
+  //GPUDataWarehouse(int id, void * placementNewBuffer) : allocateLock("allocate lock"), varLock("var lock"){ };
 
-  }
   virtual ~GPUDataWarehouse() {};
 
   enum GhostType {
@@ -506,11 +501,14 @@ public:
   HOST_DEVICE void* getPlacementNewBuffer();
   
   HOST_DEVICE bool init_device( int id );
+  __host__ void init(int id);
+  __host__ void cleanup();
+
+
   __device__ void print();
-  
 
 private:
-  HOST_DEVICE void init();
+
   HOST_DEVICE dataItem* getItem(char const* label, int patchID, int matlIndx, int levelIndx);
   HOST_DEVICE void resetdVarDB();
  // HOST_DEVICE void copyGpuGhostCellsToGpuVars();
@@ -525,9 +523,10 @@ private:
 
 
 
-  mutable SCIRun::CrowdMonitor allocateLock;
-  mutable SCIRun::CrowdMonitor varLock;
-
+  //mutable SCIRun::CrowdMonitor allocateLock;
+  //mutable SCIRun::CrowdMonitor varLock;
+  mutable SCIRun::CrowdMonitor *allocateLock;
+  mutable SCIRun::CrowdMonitor *varLock;
 
   materialItem       d_materialDB[MAX_MATERIALSDB_ITEMS];
   dataItem           d_levelDB[MAX_LEVELDB_ITEMS];
@@ -543,14 +542,14 @@ private:
                                                 //So we create a buffer, and keep track of the start of that buffer here.
 
   //These STL data structures being here do not pose a problem for the CUDA compiler
-  std::map<labelPatchMatlLevel, allVarPointersInfo> varPointers; //For the host side.  The variable database.
+  std::map<labelPatchMatlLevel, allVarPointersInfo> *varPointers; //For the host side.  The variable database.
                                                    //Holds the host ptr, the device ptr, and a staging
                                                    //contiguous host ptr var location.  This is not part
                                                    //of d_varDB because the device doesn't need to know about
                                                    //the host pointers.  Being a map makes this much faster.
 
 
-  std::map<std::string, contiguousArrayInfo> contiguousArrays;
+  std::map<std::string, contiguousArrayInfo> *contiguousArrays;
 
   //std::vector<tempGhostCellInfo> tempGhostCells; //For the host side.  Holds both ghost cell data and information about prepared ghosts cell.
                                                  //Data is loaded in here through prepareGPUDependencies, which checks ahead and

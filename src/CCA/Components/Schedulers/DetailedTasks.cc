@@ -290,8 +290,6 @@ DetailedTask::DetailedTask(       Task*           task,
   deviceExternallyReady_ = false;
   completed_             = false;
   deviceNum_             = -1;
-  TaskGpuDataWarehouses[0] = NULL;
-  TaskGpuDataWarehouses[1] = NULL;
   setCUDAStream(NULL);
 #endif
 }
@@ -340,9 +338,17 @@ DetailedTask::doit( const ProcessorGroup*                 pg,
 #ifdef HAVE_CUDA
   // determine if task will be executed on CPU or device, e.g. GPU or MIC
   if (task->usesDevice()) {
-    cudaError_t retVal;
-    OnDemandDataWarehouse::uintahSetCudaDevice(getDeviceNum());
-    task->doit(event, pg, patches, matls, dws, getTaskGpuDataWarehouse(Task::OldDW), getTaskGpuDataWarehouse(Task::NewDW), getCUDAStream(), deviceNum_);
+    //Run the GPU task.  Technically the engine has structure to run one task on multiple devices if
+    //that task had patches on multiple devices.  So run the task once per device.  As often as possible,
+    //we want to design tasks so each task runs on only once device, instead of a one to many relationship.
+    for (std::set<unsigned int>::const_iterator deviceNums_it = deviceNums_.begin(); deviceNums_it != deviceNums_.end(); ++deviceNums_it) {
+      const unsigned int currentDevice = *deviceNums_it;
+      OnDemandDataWarehouse::uintahSetCudaDevice(currentDevice);
+      task->doit(event, pg, patches, matls, dws,
+                 getTaskGpuDataWarehouse(currentDevice, Task::OldDW),
+                 getTaskGpuDataWarehouse(currentDevice, Task::NewDW),
+                 getCUDAStream(currentDevice), currentDevice);
+    }
   }
   else {
     task->doit(event, pg, patches, matls, dws, NULL, NULL, NULL, -1);
@@ -1536,31 +1542,32 @@ DetailedTask::addInternalDependency(       DetailedTask* prerequisiteTask,
 
 #ifdef HAVE_CUDA
 
-void DetailedTask::assignDevice( int device )
+void DetailedTask::assignDevice( unsigned int device )
 {
   deviceNum_ = device;
   deviceNums_.insert ( device );
 }
 
-int DetailedTask::getDeviceNum() const
-{
-  return deviceNum_;
-}
+//unsigned int DetailedTask::getDeviceNum() const
+//{
+//  return deviceNum_;
+//}
 
 //For tasks where there are multiple devices for the task (i.e. data archiver output tasks)
-std::set<int> DetailedTask::getDeviceNums() const
+std::set<unsigned int> DetailedTask::getDeviceNums() const
 {
   return deviceNums_;
 }
 
+/*
 cudaStream_t* DetailedTask::getCUDAStream() const
 {
   return getCUDAStream(0);
-}
+}*/
 
-cudaStream_t* DetailedTask::getCUDAStream(int deviceNum) const
+cudaStream_t* DetailedTask::getCUDAStream(unsigned int deviceNum) const
 {
-  std::map <int, cudaStream_t*>::const_iterator it;
+  std::map <unsigned int, cudaStream_t*>::const_iterator it;
   it = d_cudaStreams.find(deviceNum);
   if (it != d_cudaStreams.end()) {
     return it->second;
@@ -1574,26 +1581,46 @@ void DetailedTask::setCUDAStream(cudaStream_t* s)
   setCUDAStream(0, s);
 };
 
-void DetailedTask::setCUDAStream(int deviceNum, cudaStream_t* s)
+void DetailedTask::setCUDAStream(unsigned int deviceNum, cudaStream_t* s)
 {
   if (s == NULL) {
     d_cudaStreams.erase(deviceNum);
   } else {
-    d_cudaStreams.insert(std::pair<int, cudaStream_t*>(deviceNum,s));
+    d_cudaStreams.insert(std::pair<unsigned int, cudaStream_t*>(deviceNum,s));
   }
 };
 
+
 bool DetailedTask::checkCUDAStreamDone() const
 {
-  return checkCUDAStreamDone(0);
+  //Check all
+  cudaError_t retVal;
+  for (std::map<unsigned int, cudaStream_t*>::const_iterator it = d_cudaStreams.begin(); it != d_cudaStreams.end(); ++it) {
+    retVal = cudaStreamQuery(*(it->second));
+    if (retVal == cudaSuccess) {
+    //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
+      continue;
+    } else if (retVal == cudaErrorNotReady ) {
+      return false;
+    }
+    else if (retVal ==  cudaErrorLaunchFailure) {
+      SCI_THROW(InternalError("Detected CUDA kernel execution failure on Task:"+ getName() , __FILE__, __LINE__));
+      return false;
+    } else { //other error
+      CUDA_RT_SAFE_CALL (retVal);
+      return false;
+    }
+
+  }
+  return true;
 }
 
-bool DetailedTask::checkCUDAStreamDone(int deviceNum_) const
+bool DetailedTask::checkCUDAStreamDone(unsigned int deviceNum_) const
 {
   // sets the CUDA context, for the call to cudaEventQuery()
   cudaError_t retVal;
   OnDemandDataWarehouse::uintahSetCudaDevice(deviceNum_);
-  std::map<int, cudaStream_t*>::const_iterator it= d_cudaStreams.find(deviceNum_);
+  std::map<unsigned int, cudaStream_t*>::const_iterator it= d_cudaStreams.find(deviceNum_);
   retVal = cudaStreamQuery(*(it->second));
   if (retVal == cudaSuccess) {
 //  cout << "checking cuda stream " << d_cudaStream << "ready" << endl;
@@ -1619,7 +1646,7 @@ bool DetailedTask::checkAllCUDAStreamsDone() const
   // sets the CUDA context, for the call to cudaEventQuery()
   bool retVal = false;
 
-  for (std::map<int ,cudaStream_t*>::const_iterator it=d_cudaStreams.begin(); it!=d_cudaStreams.end(); ++it){
+  for (std::map<unsigned int ,cudaStream_t*>::const_iterator it=d_cudaStreams.begin(); it!=d_cudaStreams.end(); ++it){
     retVal = checkCUDAStreamDone(it->first);
     if (retVal == false) {
       return retVal;
@@ -1628,29 +1655,53 @@ bool DetailedTask::checkAllCUDAStreamsDone() const
   return true;
 }
 
-void DetailedTask::setTaskGpuDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
-  TaskGpuDataWarehouses[DW] = TaskDW;
+void DetailedTask::setTaskGpuDataWarehouse(const unsigned int whichDevice, Task::WhichDW DW, GPUDataWarehouse* TaskDW ) {
+
+  std::map<unsigned int, TaskGpuDataWarehouses>::iterator it;
+  it = TaskGpuDWs.find(whichDevice);
+  if (it != TaskGpuDWs.end()) {
+    it->second.TaskGpuDW[DW] = TaskDW;
+
+  } else {
+    TaskGpuDataWarehouses temp;
+    temp.TaskGpuDW[0] = NULL;
+    temp.TaskGpuDW[1] = NULL;
+    temp.TaskGpuDW[DW] = TaskDW;
+    TaskGpuDWs.insert(std::pair<unsigned int, TaskGpuDataWarehouses>(whichDevice, temp));
+  }
 }
 
-GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(Task::WhichDW DW) {
-  return TaskGpuDataWarehouses[DW];
+GPUDataWarehouse* DetailedTask::getTaskGpuDataWarehouse(const unsigned int whichDevice, Task::WhichDW DW) {
+  std::map<unsigned int, TaskGpuDataWarehouses>::iterator it;
+  it = TaskGpuDWs.find(whichDevice);
+  if (it != TaskGpuDWs.end()) {
+    return it->second.TaskGpuDW[DW];
+  }
+  return NULL;
+
 }
 
 void DetailedTask::deleteTaskGpuDataWarehouses() {
-  for (int i = 0; i < 2; i++) {
-    if (TaskGpuDataWarehouses[i] != NULL) {
-      //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
-      //of the things in the GPU.  The host side GPU DWs is reponsible for
-      //deallocating all the GPU resources.  The only thing we do want to clean
-      //up is that this GPUDW lives on the GPU.
-      TaskGpuDataWarehouses[i]->deleteSelfOnDevice();
+  for (std::map<unsigned int, TaskGpuDataWarehouses>::iterator it = TaskGpuDWs.begin(); it != TaskGpuDWs.end(); ++it) {
+    for (int i = 0; i < 2; i++) {
+        if (it->second.TaskGpuDW[i] != NULL) {
+          //Note: Do not call the clear() method.  The Task GPU DWs only contains a "snapshot"
+          //of the things in the GPU.  The host side GPU DWs is responsible for
+          //deallocating all the GPU resources.  The only thing we do want to clean
+          //up is that this GPUDW lives on the GPU.
+          printf("!!!!Deallocating %p\n", it->second.TaskGpuDW[i]);
+          it->second.TaskGpuDW[i]->deleteSelfOnDevice();
 
-      void * getPlacementNewBuffer = TaskGpuDataWarehouses[i]->getPlacementNewBuffer();
+          //void * getPlacementNewBuffer = it->second.TaskGpuDW[i]->getPlacementNewBuffer();
 
-      TaskGpuDataWarehouses[i]->~GPUDataWarehouse();
-      free(getPlacementNewBuffer);
-      TaskGpuDataWarehouses[i] = NULL;
-    }
+          //it->second.TaskGpuDW[i]->~GPUDataWarehouse();
+          //free(getPlacementNewBuffer);
+
+          it->second.TaskGpuDW[i]->cleanup();
+          free(it->second.TaskGpuDW[i]);
+          it->second.TaskGpuDW[i] = NULL;
+        }
+      }
   }
 }
 
@@ -1771,11 +1822,11 @@ operator<<(       std::ostream& out,
     else {
       out << task.getAssignedResourceIndex();
     }
-#ifdef HAVE_CUDA
-    if( task.getCUDAStream() ){
-      out << std::hex << " using CUDA stream " << task.getCUDAStream() << std::dec;
-    }
-#endif
+//#ifdef HAVE_CUDA
+//    if( task.getCUDAStream() ){
+//      out << std::hex << " using CUDA stream " << task.getCUDAStream() << std::dec;
+//    }
+//#endif
     
   }
   coutLock.unlock();

@@ -221,6 +221,12 @@ namespace Uintah {
 
   typedef FastHashTable<ScrubItem> ScrubCountTable;
 
+#ifdef HAVE_CUDA
+  struct TaskGpuDataWarehouses{
+    public:
+    GPUDataWarehouse* TaskGpuDW[2];
+  };
+#endif
   class DetailedTask {
 
   public:
@@ -303,37 +309,39 @@ namespace Uintah {
 
 #ifdef HAVE_CUDA
 
-    void assignDevice (int device);
+    void assignDevice (unsigned int device);
 
-    int getDeviceNum() const;
+    //unsigned int getDeviceNum() const;
 
-    //For tasks where there are multiple devices for the task (i.e. data archiver output tasks)
-    std::set<int> getDeviceNums() const;
+    //Most tasks will only run on one device.
+    //But some, such as the data archiver task or send old data could run on multiple devices.
+    //This is not a good idea.  A task should only run on one device.  But the capability for a task
+    //to run on multiple nodes exists.
+    std::set<unsigned int> getDeviceNums() const;
+    std::map<unsigned int, TaskGpuDataWarehouses> TaskGpuDWs;
 
-    cudaStream_t* getCUDAStream() const;
-
-    cudaStream_t* getCUDAStream(int deviceNum) const;
 
     //bool queryCUDAStreamCompletion();
 
     void setCUDAStream(cudaStream_t* s);
 
-    void setCUDAStream(int deviceNum, cudaStream_t* s);
+    void setCUDAStream(unsigned int deviceNum, cudaStream_t* s);
 
     bool checkCUDAStreamDone() const;
 
-    bool checkCUDAStreamDone(int deviceNum) const;
+    bool checkCUDAStreamDone(unsigned int deviceNum) const;
 
     bool checkAllCUDAStreamsDone() const;
 
-    GPUDataWarehouse* TaskGpuDataWarehouses[2];
 
-    void setTaskGpuDataWarehouse(Task::WhichDW DW, GPUDataWarehouse* TaskDW);
 
-    GPUDataWarehouse* getTaskGpuDataWarehouse(Task::WhichDW DW);
+    void setTaskGpuDataWarehouse(unsigned int deviceNum, Task::WhichDW DW, GPUDataWarehouse* TaskDW);
+
+    GPUDataWarehouse* getTaskGpuDataWarehouse(unsigned int deviceNum, Task::WhichDW DW);
 
     void deleteTaskGpuDataWarehouses();
 
+    cudaStream_t* getCUDAStream(unsigned int deviceNum) const;
 #endif
 
   protected:
@@ -390,10 +398,10 @@ namespace Uintah {
 #ifdef HAVE_CUDA
     bool deviceExternallyReady_;
     bool completed_;
-    int  deviceNum_;
-    std::set <int> deviceNums_;
+    unsigned int  deviceNum_;
+    std::set <unsigned int> deviceNums_;
     //cudaStream_t*   d_cudaStream;
-    std::map <int, cudaStream_t*> d_cudaStreams;
+    std::map <unsigned int, cudaStream_t*> d_cudaStreams;
 #endif
 
   }; // end class DetailedTask

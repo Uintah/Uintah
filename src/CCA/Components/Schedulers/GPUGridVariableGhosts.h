@@ -14,6 +14,10 @@ using namespace Uintah;
 class DeviceGhostCells;
 class DeviceGhostCellsInfo;
 
+struct DatawarehouseIds {
+  unsigned int DwIds[Task::TotalDWs];
+};
+
 class DeviceGhostCells {
 public:
 
@@ -39,50 +43,24 @@ public:
       Task::WhichDW dwIndex,
       GpuUtilities::DeviceVarDestination dest);    //toNode, needed when preparing contiguous arrays to send off host for MPI
 
-  set<int>& getDestinationDevices();
+  set<unsigned int>& getDestinationDevices();
 
   unsigned int numItems() const;
-/*
-  const VarLabel* getLabel(int index) const;
 
-  char const * getLabelName(int index) const;
+  unsigned int getNumGhostCellCopies(const unsigned int whichDevice, Task::WhichDW dwIndex) const;
 
-  int getMatlIndx(int index) const;
-
-  int getLevelIndx(int index) const;
-
-  bool getdestStaging(int index) const;
-
-  const Patch* getSourcePatchPointer(int index) const;
-
-  int getSourceDeviceNum(int index) const;
-
-  const Patch* getDestPatchPointer(int index) const;
-
-  int getDestDeviceNum(int index) const;
-
-  IntVector getLow(int index) const;
-
-  IntVector getHigh(int index) const;
-
-  IntVector getVirtualOffset(int index) const;
-
-  Task::WhichDW getDwIndex(int index) const;
-*/
-  unsigned int getNumGhostCellCopies(Task::WhichDW dwIndex) const;
-
-  //GpuUtilities::DeviceVarDestination getDestination(int index) const;
   const std::map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo>& getMap() const {
     return ghostVars;
   }
 
 private:
-  //std::map<DeviceGridVariableInfo::LabelPatchMatlLevelDw, DeviceGridVariableInfo> vars;
 
-  //vector< DeviceGhostCellsInfo > vars;
   map<GpuUtilities::GhostVarsTuple, DeviceGhostCellsInfo> ghostVars;
-  std::set< int > destinationDevices;
-  unsigned int totalGhostCellCopies[Task::TotalDWs];
+
+  std::set< unsigned int > destinationDevices;  //Which devices.
+
+  std::map <unsigned int, DatawarehouseIds> totalGhostCellCopies;  //Total per device.
+
 };
 
 class DeviceGhostCellsInfo {
