@@ -28,13 +28,15 @@
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
-
+//______________________________________________________________________
+//
 void
 CostProfiler::setMinPatchSize( const vector<IntVector> & min_patch_size )
 {
   d_profiler.setMinPatchSize(min_patch_size);
 }
-
+//______________________________________________________________________
+//
 void
 CostProfiler::addContribution( DetailedTask *task, double cost )
 {
@@ -52,7 +54,8 @@ CostProfiler::addContribution( DetailedTask *task, double cost )
 #endif
   d_profiler.addContribution( task->getPatches(), cost );
 }
-
+//______________________________________________________________________
+//
 void
 CostProfiler::outputError( const GridP currentGrid )
 {
@@ -64,7 +67,8 @@ CostProfiler::finalizeContributions( const GridP currentGrid )
 {
   d_profiler.finalizeContributions( currentGrid );  
 }
-
+//______________________________________________________________________
+//
 void
 CostProfiler::getWeights(const Grid* grid, vector<vector<int> > num_particles, vector<vector<double> >&costs)
 {
@@ -84,7 +88,8 @@ CostProfiler::getWeights(const Grid* grid, vector<vector<int> > num_particles, v
     d_profiler.getWeights(l,regions,costs[l]);
   }
 }
-
+//______________________________________________________________________
+//
 void
 CostProfiler::initializeWeights( const Grid * oldgrid, const Grid * newgrid )
 {

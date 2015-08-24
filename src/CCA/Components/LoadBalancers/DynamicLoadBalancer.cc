@@ -102,7 +102,8 @@ DynamicLoadBalancer::DynamicLoadBalancer( const ProcessorGroup * myworld ) :
   zz->Set_Param("TFLOPS_SPECIAL", "1"); 
 #endif
 }
-
+//______________________________________________________________________
+//
 DynamicLoadBalancer::~DynamicLoadBalancer()
 {
   if( d_costForecaster ) {
@@ -113,7 +114,8 @@ DynamicLoadBalancer::~DynamicLoadBalancer()
   delete zz;
 #endif
 }
-
+//______________________________________________________________________
+//
 void
 DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     * oldGrid,
                                                 const vector< vector<Region> > & newGridRegions,
@@ -263,7 +265,8 @@ DynamicLoadBalancer::collectParticlesForRegrid( const Grid                     *
   }
 
 }
-
+//______________________________________________________________________
+//
 void
 DynamicLoadBalancer::collectParticles( const Grid                  * grid,
                                              vector< vector<int> > & particles )
@@ -409,7 +412,8 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
     }
   }
 }
-
+//______________________________________________________________________
+//
 bool
 DynamicLoadBalancer::assignPatchesZoltanSFC( const GridP & grid, bool force )
 {
@@ -437,8 +441,8 @@ DynamicLoadBalancer::assignPatchesZoltanSFC( const GridP & grid, bool force )
     vector<double> positions;
     vector<double> my_costs;
     vector<int> my_gids;
-    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
-    {
+    
+    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
       const Patch* patch = *iter;
 
       //create positions vector
@@ -449,13 +453,13 @@ DynamicLoadBalancer::assignPatchesZoltanSFC( const GridP & grid, bool force )
     
       ASSERTRANGE(proc,0,d_myworld->size());
       
-      if(d_myworld->myrank()==proc)
-      {
+      if(d_myworld->myrank()==proc){
+      
         Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
         my_costs.push_back(patch_costs[l][patch->getLevelIndex()]);
         my_gids.push_back(patch->getLevelIndex());
-        for(int d=0;d<dim;d++)
-        {
+        
+        for(int d=0;d<dim;d++){
           positions.push_back(point[dimensions[d]]);
         }
       }
@@ -597,7 +601,8 @@ DynamicLoadBalancer::assignPatchesZoltanSFC( const GridP & grid, bool force )
   doing << d_myworld->myrank() << "   APF END\n";
   return doLoadBalancing;
 }
-  
+//______________________________________________________________________
+//  
 bool
 DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
 {
@@ -628,6 +633,7 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   vector<double> totalProcCosts(num_procs,0);
   vector<double> procCosts(num_procs,0);
   vector<double> previousProcCosts(num_procs,0);
+  
   double previous_total_cost=0;
   for(int l=0;l<grid->numLevels();l++){
 
@@ -648,9 +654,9 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
     start=Time::currentSeconds();
 
     //hard maximum cost for assigning a patch to a processor
-    double avgCost = (total_cost+previous_total_cost) / num_procs;
+    double avgCost     = (total_cost+previous_total_cost) / num_procs;
     double hardMaxCost = total_cost;    
-    double myMaxCost =hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*(double)d_myworld->myrank();
+    double myMaxCost   = hardMaxCost-(hardMaxCost-avgCost)/d_myworld->size()*(double)d_myworld->myrank();
     double myStoredMax=DBL_MAX;
     int minProcLoc = -1;
 
@@ -731,9 +737,10 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
           currentProc++;
 
           //if currentProc to large then load balance is invalid so break out
-          if(currentProc>=num_procs)
+          if(currentProc>=num_procs){
             break;
-
+          }
+          
           //assign patch to currentProc
           temp_assignment[level_offset+index] = currentProc;
 
@@ -745,9 +752,10 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
       }
 
       //check if last proc is the max
-      if(currentProc<num_procs && previousProcCosts[currentProc]+currentProcCosts[currentProc]>currentMaxCost)
+      if(currentProc<num_procs && previousProcCosts[currentProc]+currentProcCosts[currentProc]>currentMaxCost){
         currentMaxCost=previousProcCosts[currentProc]+currentProcCosts[currentProc];
-
+      }
+      
       //if the max was lowered and the assignments are valid
       if(currentMaxCost<myStoredMax && currentProc<num_procs)
       {
@@ -937,7 +945,8 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   
   return doLoadBalancing;
 }
-
+//______________________________________________________________________
+//
 bool
 DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_costs )
 {
@@ -1031,7 +1040,8 @@ DynamicLoadBalancer::thresholdExceeded( const vector< vector<double> >& patch_co
   }
 }
 
-
+//______________________________________________________________________
+//
 bool
 DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
 {
@@ -1075,7 +1085,8 @@ DynamicLoadBalancer::assignPatchesRandom( const GridP &, bool force )
   }
   return true;
 }
-
+//______________________________________________________________________
+//
 bool
 DynamicLoadBalancer::assignPatchesCyclic(const GridP&, bool force)
 {
@@ -1131,7 +1142,8 @@ DynamicLoadBalancer::needRecompile(       double /*time*/,
     return false;
   }
 } 
-
+//______________________________________________________________________
+//
 // If it is not a regrid the patch information is stored in grid, if it is during a regrid the patch information is stored in patches.
 void
 DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & costs )
@@ -1176,7 +1188,8 @@ DynamicLoadBalancer::getCosts( const Grid * grid, vector< vector<double> > & cos
     }
   }
 }
-
+//______________________________________________________________________
+//
 bool
 DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int state )
 {
@@ -1241,6 +1254,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
         d_oldAssignment = d_processorAssignment;
         d_oldAssignmentBasePatch = d_assignmentBasePatch;
       }
+      
       if (lb.active()) {
         // int num_procs = (int)d_myworld->size();
         int myrank = d_myworld->myrank();
@@ -1267,14 +1281,16 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
   d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
   return changed;
 }
-
+//______________________________________________________________________
+//
 void
 DynamicLoadBalancer::finalizeContributions( const GridP & grid )
 {
   d_costForecaster->finalizeContributions(grid);
 }
 
-
+//______________________________________________________________________
+//
 void
 DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  SimulationStateP & state )
 {
@@ -1296,14 +1312,13 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
       interval = 0.0; // default
     }
     p->getWithDefault("dynamicAlgorithm", dynamicAlgo, "patchFactor");
-    p->getWithDefault("cellCost", d_cellCost, 1);
-    p->getWithDefault("extraCellCost", d_extraCellCost, 1);
-    p->getWithDefault("particleCost", d_particleCost, 1.25);
-    p->getWithDefault("patchCost", d_patchCost, 16);
-    p->getWithDefault("gainThreshold", threshold, 0.05);
-    p->getWithDefault("doSpaceCurve", spaceCurve, true);
-
-    p->getWithDefault("hasParticles", d_collectParticles, false);
+    p->getWithDefault("cellCost",         d_cellCost, 1);
+    p->getWithDefault("extraCellCost",    d_extraCellCost, 1);
+    p->getWithDefault("particleCost",     d_particleCost, 1.25);
+    p->getWithDefault("patchCost",        d_patchCost, 16);
+    p->getWithDefault("gainThreshold",    threshold, 0.05);
+    p->getWithDefault("doSpaceCurve",     spaceCurve, true);
+    p->getWithDefault("hasParticles",     d_collectParticles, false);
     
     string costAlgo="ModelLS";
     p->get("costAlgorithm",costAlgo);
