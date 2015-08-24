@@ -609,8 +609,10 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   doing << d_myworld->myrank() << "   APF\n";
   vector<vector<double> > patch_costs;
   double time = Time::currentSeconds();
-  for(int i=0;i<5;i++)
+  
+  for(int i=0;i<5;i++){
     lbtimes[i]=0;
+  }
       
 
   double start=Time::currentSeconds();
@@ -635,6 +637,9 @@ DynamicLoadBalancer::assignPatchesFactor( const GridP & grid, bool force )
   vector<double> previousProcCosts(num_procs,0);
   
   double previous_total_cost=0;
+  
+  //__________________________________
+  //
   for(int l=0;l<grid->numLevels();l++){
 
     const LevelP& level = grid->getLevel(l);

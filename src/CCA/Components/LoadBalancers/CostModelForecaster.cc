@@ -58,7 +58,7 @@ CostModelForecaster::addContribution( DetailedTask *task, double cost )
   for(int p=0;p<patches->size();p++){
     const Patch* patch=patches->get(p);
 
-    d_execTimes[patch->getID()]+=patch->getNumExtraCells()*cost_per_cell;
+    d_execTimes[patch->getID()] +=patch->getNumExtraCells()*cost_per_cell;
   }
 }
 //______________________________________________________________________
@@ -82,6 +82,7 @@ void CostModelForecaster::outputError(const GridP grid)
   {
     LevelP level=grid->getLevel(l);
     size+=level->numPatches();
+    
     for(int p=0;p<level->numPatches();p++)
     {
       const Patch* patch=level->getPatch(p);
@@ -90,9 +91,12 @@ void CostModelForecaster::outputError(const GridP grid)
         continue;
       }
       
-      //cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()] << " cost: " << costs[l][p] << endl;
+
       double error = (d_execTimes[patch->getID()] - costs[l][p])/(d_execTimes[patch->getID()] + costs[l][p]);
-      
+
+//      cout << d_myworld->myrank() << " patch:" << patch->getID() << " exectTime: " << d_execTimes[patch->getID()] 
+//           << " cost: " << costs[l][p] << " error: " << error << endl;
+     
       IntVector low(patch->getCellLowIndex());
       IntVector high(patch->getCellHighIndex());
       
@@ -438,7 +442,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   //update coefficients using fading memory filter
   
   for(size_t f=0;f<fields.size();f++){
-    d_x[fields[f]]=x[f]*alpha+d_x[fields[f]]*(1-alpha);
+    d_x[fields[f]] = x[f]*alpha + d_x[fields[f]]*(1-alpha);
   }
   
   //update model coefficents
