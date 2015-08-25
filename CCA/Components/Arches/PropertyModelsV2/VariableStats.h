@@ -2,7 +2,6 @@
 #define Uintah_Component_Arches_VariableStats_h
 
 #include <CCA/Components/Arches/Task/TaskInterface.h>
-#include <Core/Grid/SimulationState.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/structured/FVStaggered.h>
@@ -16,7 +15,7 @@ public:
 
     typedef std::vector<ArchesFieldContainer::VariableInformation> VIVec;
 
-    VariableStats( std::string task_name, int matl_index, SimulationStateP& shared_state );
+    VariableStats( std::string task_name, int matl_index );
     ~VariableStats();
 
     void problemSetup( ProblemSpecP& db );
@@ -54,18 +53,17 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP& shared_state )
-        : _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
+      Builder( std::string task_name, int matl_index )
+        : _task_name(task_name), _matl_index(matl_index){}
       ~Builder(){}
 
       VariableStats* build()
-      { return scinew VariableStats( _task_name, _matl_index, _shared_state ); }
+      { return scinew VariableStats( _task_name, _matl_index ); }
 
       private:
 
       std::string _task_name;
       int _matl_index;
-      SimulationStateP _shared_state;
 
     };
 
@@ -99,7 +97,6 @@ private:
     std::vector<std::string> _z_flux_sqr_sum_names;
     std::vector<FluxInfo>    _flux_sum_info;
 
-    SimulationStateP _shared_state;
 
   }; //end class header
 }

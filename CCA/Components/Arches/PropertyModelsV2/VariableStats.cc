@@ -21,16 +21,13 @@ using namespace Uintah;
 
 //--------------------------------------------------------------------------------------------------
 VariableStats::VariableStats( std::string task_name,
-                              int matl_index,
-                              SimulationStateP& shared_state ) :
+                              int matl_index ) :
 TaskInterface( task_name, matl_index )
-{
-  _shared_state = shared_state;
-}
+{}
 
 //--------------------------------------------------------------------------------------------------
-VariableStats::~VariableStats(){
-}
+VariableStats::~VariableStats()
+{}
 
 //--------------------------------------------------------------------------------------------------
 void VariableStats::problemSetup( ProblemSpecP& db ){
