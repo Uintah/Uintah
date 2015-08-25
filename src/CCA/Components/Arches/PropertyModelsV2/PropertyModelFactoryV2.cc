@@ -53,9 +53,9 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "variable_stats" ){
 
-        TaskInterface::TaskBuilder* tsk = scinew VariableStats::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew VariableStats::Builder( name, 0 );
         register_task( name, tsk );
-        _finalize_property_tasks.push_back( name ); 
+        _finalize_property_tasks.push_back( name );
 
       } else if ( type == "density_predictor" ) {
 
@@ -65,10 +65,9 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       } else if ( type == "CO" ) {
 
-        TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0, _shared_state );
+        TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0 );
         register_task( name, tsk );
-        _finalize_property_tasks.push_back( name ); 
-
+        _finalize_property_tasks.push_back( name );
 
       } else {
 
