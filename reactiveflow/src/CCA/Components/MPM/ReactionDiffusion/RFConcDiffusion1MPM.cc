@@ -59,7 +59,7 @@ void RFConcDiffusion1MPM::scheduleComputeFlux(Task* task, const MPMMaterial* mat
   task->requires(Task::OldDW, d_lb->pVolumeLabel,              matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pDeformationMeasureLabel,  matlset, gan, NGP);
   task->requires(Task::OldDW, d_lb->pXLabel,                   matlset, gan, NGP);
-  //task->requires(Task::OldDW, d_lb->pLoadCurveIDLabel,         matlset, gan, NGP);
+  task->requires(Task::OldDW, d_lb->pLoadCurveIDLabel,         matlset, gan, NGP);
   task->requires(Task::OldDW, d_rdlb->pConcentrationLabel,     matlset, gan, NGP);
 
   task->requires(Task::NewDW, d_lb->gMassLabel,                matlset, gnone);
@@ -76,6 +76,19 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   Ghost::GhostType  gnone = Ghost::None;
 
+  //***** Hack *************
+	// This section is a hack to test particle boundary
+	// flux conditions
+  double run_time = d_sharedState->getElapsedTime();
+  double conc_flux;
+	int  time_step = d_sharedState->getCurrentTopLevelTimeStep();
+
+  if(run_time < ramp_time){
+    conc_flux = run_time/ramp_time;
+  }else{
+    conc_flux = 1.0;
+  }
+  //***** Hack *************
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
   vector<IntVector> ni(interpolator->size());
@@ -93,7 +106,7 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   constParticleVariable<Matrix3> psize;
   constParticleVariable<Matrix3> deformationGradient;
   constParticleVariable<double>  pConcentration;
-  //constParticleVariable<int>     pLoadCurveID;
+  constParticleVariable<int>     pLoadCurveID;
 
   constNCVariable<double>        gConcentration,gMass;
 
@@ -107,7 +120,7 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   old_dw->get(pMass,               d_lb->pMassLabel,               pset);
   old_dw->get(psize,               d_lb->pSizeLabel,               pset);
   old_dw->get(deformationGradient, d_lb->pDeformationMeasureLabel, pset);
-  //old_dw->get(pLoadCurveID,        d_lb->pLoadCurveIDLabel,        pset);
+  old_dw->get(pLoadCurveID,        d_lb->pLoadCurveIDLabel,        pset);
   old_dw->get(pConcentration,      d_rdlb->pConcentrationLabel,    pset);
 
   new_dw->get(gConcentration,     d_rdlb->gConcentrationLabel,     dwi, patch, gac,2*NGN);
@@ -136,20 +149,48 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
 
     pFlux[idx] = Diff*pConcGradient[idx];
 
+    //***** Hack *************
     // this is a hack that uses LoadCurveID to identify boundary particles
     // works with nano_pillar3_2D_FBC
-    /*
+		int max_step_count = 3;
     if(pLoadCurveID[idx] == 1){
-      pFlux[idx][0] = Diff;
-      pFlux[idx][1] = 0.0;
-      pFlux[idx][2] = 0.0;
+		  Vector bcJ;
+		  if(time_step <= max_step_count){
+        bcJ[0] = -1.0;
+        bcJ[1] = 0.0;
+        bcJ[2] = 0.0;
+		  }else{
+			  bcJ = pFlux[idx];
+				bcJ.normalize();
+			}
+			pFlux[idx] += -conc_flux*bcJ;
     }
     if(pLoadCurveID[idx] == 2){
-      pFlux[idx][0] = -Diff;
-      pFlux[idx][1] = 0.0;
-      pFlux[idx][2] = 0.0;
+		  Vector bcJ;
+		  if(time_step <= max_step_count){
+        bcJ[0] = 1.0;
+        bcJ[1] = 0.0;
+        bcJ[2] = 0.0;
+		  }else{
+			  bcJ = pFlux[idx];
+				bcJ.normalize();
+			}
+			pFlux[idx] += -conc_flux*bcJ;
     }
-    */
+    if(pLoadCurveID[idx] == 3){
+		  Vector bcJ;
+		  if(time_step <= max_step_count){
+        bcJ[0] = 0.0;
+        bcJ[1] = 1.0;
+        bcJ[2] = 0.0;
+		  }else{
+			  bcJ = pFlux[idx];
+				bcJ.normalize();
+			}
+			pFlux[idx] += -conc_flux*bcJ;
+		}
+    //***** Hack *************
+
     //cout << "id: " << idx << " CG: " << pConcentrationGradient[idx] << ", PF: " << pPotentialFlux[idx] << endl;
   } //End of Particle Loop
 
@@ -186,6 +227,10 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
   Ghost::GhostType  gac   = Ghost::AroundCells;
   int dwi = matl->getDWIndex();
 
+
+
+  // this is a hack that uses LoadCurveID to identify boundary particles
+  // works with nano_pillar3_2D_FBC
   double run_time = d_sharedState->getElapsedTime();
   double boundary_conc;
 
@@ -243,17 +288,18 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
     for (int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concRate += gConcentrationRate[node]   * S[k];
-      concentration += gConcentrationStar[node]   * S[k];
+      //concentration += gConcentrationStar[node]   * S[k];
       for(int j = 0; j < 3; j++){
         pConcGradNew[idx][j] += gConcentrationStar[ni[k]] * d_S[k][j] * oodx[j];
       }
     }
 
-    //pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
-    pConcentrationNew[idx] = concentration;
+    pConcentrationNew[idx] = pConcentration[idx] + concRate*delT;
+    //pConcentrationNew[idx] = concentration;
 
     // this is a hack that uses LoadCurveID to identify boundary particles
     // works with nano_pillar3_2D_FBC
+		/**
     if(pLoadCurveID[idx] == 1){
       pConcentrationNew[idx] = boundary_conc;
     }
@@ -263,6 +309,7 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
     if(pLoadCurveID[idx] == 3){
       pConcentrationNew[idx] = boundary_conc;
     }
+		**/
 
     pConcPreviousNew[idx]  = pConcentration[idx];
   }

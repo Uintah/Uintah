@@ -11,14 +11,14 @@
      <maxTime>4</maxTime>
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
-     <delt_max>1.0e-8</delt_max>
-     <max_Timesteps>7000</max_Timesteps>
+     <delt_max>1.0e-9</delt_max>
+     <max_Timesteps>10</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
   <DataArchiver>
     <filebase>nano_pillar3_2D_FBC.uda</filebase>
-    <outputTimestepInterval>100</outputTimestepInterval>
+    <outputTimestepInterval>1</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
@@ -27,6 +27,7 @@
     <save label="p.scalefactor" />
     <save label="p.concentration" />
     <save label="p.stress" />
+    <save label="p.loadCurveID" />
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
@@ -73,7 +74,7 @@
            <max_concentration>  1.0      </max_concentration>
            <init_conc> 0.0  </init_conc>
            <tuning1>   1.95 </tuning1>
-           <ramp_time> 1.0e-3 </ramp_time>
+           <ramp_time> 1.0e-4 </ramp_time>
          </diffusion_model>
          <geom_object>
            <box label = "pillar">
@@ -136,7 +137,7 @@
            </box>
          </geom_object>
          <load_curve>
-           <id>1</id>
+           <id>3</id>
            <time_point>
              <time> 0 </time>
              <load> 0 </load>
