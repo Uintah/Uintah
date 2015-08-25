@@ -130,38 +130,12 @@ CO::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 //--------------------------------------------------------------------------------------------------
 void CO::register_restart_initialize( VIVec& variable_registry ){
 
-  register_variable( _CO_model_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _defect_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _rate_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _CO_diff_name, ArchesFieldContainer::COMPUTES, variable_registry );
-  register_variable( _CO_conv_name, ArchesFieldContainer::COMPUTES, variable_registry );
-
 }
 
 //--------------------------------------------------------------------------------------------------
 void CO::restart_initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                                         SpatialOps::OperatorDatabase& opr ){
 
-  CCVariable<double>* vCO       = tsk_info->get_uintah_field<CCVariable<double> >( _CO_model_name );
-  CCVariable<double>* vCO_diff  = tsk_info->get_uintah_field<CCVariable<double> >( _CO_diff_name );
-  CCVariable<double>* vCO_conv  = tsk_info->get_uintah_field<CCVariable<double> >( _CO_conv_name );
-  CCVariable<double>* vd        = tsk_info->get_uintah_field<CCVariable<double> >( _defect_name );
-  CCVariable<double>* vrate     = tsk_info->get_uintah_field<CCVariable<double> >( _rate_name );
-  
-  CCVariable<double>& CO = *vCO;
-  CCVariable<double>& CO_diff = *vCO_diff;
-  CCVariable<double>& CO_conv = *vCO_conv;
-  CCVariable<double>& d = *vd;
-  CCVariable<double>& rate = *vrate;
-  
-  CO.initialize(0.0);
-  CO_diff.initialize(0.0);
-  CO_conv.initialize(0.0);
-  d.initialize(0.0);
-  rate.initialize(0.0);
-  
-  _boundary_condition->checkForBC( 0, patch , _CO_model_name);
-  _boundary_condition->setScalarValueBC( 0, patch, CO, _CO_model_name ); 
 }
 
 //--------------------------------------------------------------------------------------------------
