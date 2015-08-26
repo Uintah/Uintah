@@ -10,7 +10,7 @@ namespace Uintah{
 
 public: 
 
-    CoalTemperature( std::string task_name, int matl_index ); 
+    CoalTemperature( std::string task_name, int matl_index, const int N );
     ~CoalTemperature(); 
 
     void problemSetup( ProblemSpecP& db ); 
@@ -58,21 +58,23 @@ public:
 
       public: 
 
-      Builder( std::string task_name, int matl_index ) : _task_name(task_name), _matl_index(matl_index){}
+      Builder( std::string task_name, int matl_index, const int N ) : _task_name(task_name), _matl_index(matl_index), _Nenv(N){}
       ~Builder(){}
 
       CoalTemperature* build()
-      { return scinew CoalTemperature( _task_name, _matl_index ); }
+      { return scinew CoalTemperature( _task_name, _matl_index, _Nenv ); }
 
       private: 
 
       std::string _task_name; 
-      int _matl_index; 
+      int _matl_index;
+      int _Nenv;
 
     };
 
 private: 
 
+    bool _const_size;
     bool _scale_flag;
     int _Nenv; 
     double _value; 
@@ -85,7 +87,8 @@ private:
     double _Rgas; 
     double _RdC; 
     double _RdMW; 
-    double _MW_avg; 
+    double _MW_avg;
+    double _ash_mf;
     std::vector<double>  _weight_small; 
     std::vector<std::string>  _weightqn_name; 
 
@@ -95,7 +98,8 @@ private:
     std::vector<double> _sizes;
     std::vector<double> _denom; 
 
-    std::string _rawcoal_base_name; 
+    std::string _diameter_base_name;
+    std::string _rawcoal_base_name;
     std::string _char_base_name; 
     std::string _enthalpy_base_name; 
     std::string _weight_base_name; 
@@ -112,10 +116,6 @@ private:
       double ASH; 
       double H2O; 
     };
-
-
-
-
   
   };
 }
