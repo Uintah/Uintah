@@ -1039,6 +1039,10 @@
             <!-- constant property model: set a constant/environment -->
             <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
                                         need_applies_to="type constant"/>
+                                        
+            <!-- constant property model: set a constant/environment -->
+           <const_size                  spec="OPTIONAL BOOLEAN"
+                                        need_applies_to="type coal_temperature, coal_density"/>  <!-- defaults to true, so no change to DQMOM input files needed -->
         </model>
 
       </ParticleModels>
