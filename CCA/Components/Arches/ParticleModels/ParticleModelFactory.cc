@@ -177,7 +177,7 @@ ParticleModelFactory::register_all_tasks( ProblemSpecP& db )
   
       } else if ( type == "coal_density" ){ 
 
-        TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(task_name,0); 
+        TaskInterface::TaskBuilder* tsk = scinew CoalDensity::Builder(task_name,0,N); 
         register_task( task_name, tsk ); 
 
         _active_tasks.push_back(task_name); 
