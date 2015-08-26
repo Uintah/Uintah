@@ -62,7 +62,6 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
         TaskInterface::TaskBuilder* tsk = scinew DensityPredictor::Builder( name, 0 );
         register_task( name, tsk );
 
-
       } else if ( type == "CO" ) {
 
         TaskInterface::TaskBuilder* tsk = scinew CO::Builder( name, 0 );
