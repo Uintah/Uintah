@@ -11,7 +11,7 @@ namespace Uintah{
 
 public:
 
-    WallHFVariable( std::string task_name, int matl_index, SimulationStateP & shared_state );
+    WallHFVariable( std::string task_name, int matl_index, SimulationStateP shared_state );
     ~WallHFVariable();
 
     void problemSetup( ProblemSpecP& db );
@@ -49,7 +49,7 @@ public:
 
       public:
 
-      Builder( std::string task_name, int matl_index, SimulationStateP & shared_state )
+      Builder( std::string task_name, int matl_index, SimulationStateP shared_state )
         : _task_name(task_name), _matl_index(matl_index), _shared_state(shared_state){}
       ~Builder(){}
 
@@ -60,7 +60,7 @@ public:
 
       std::string _task_name;
       int _matl_index;
-      SimulationStateP & _shared_state;
+      SimulationStateP _shared_state;
 
     };
 
@@ -76,7 +76,7 @@ private:
 
     int _f;
 
-    SimulationStateP & _shared_state;
+    SimulationStateP _shared_state;
 
     bool _new_variables;
 
