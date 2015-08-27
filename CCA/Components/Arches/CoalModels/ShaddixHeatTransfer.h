@@ -30,33 +30,33 @@ namespace Uintah{
 
 class ShaddixHeatTransferBuilder: public ModelBuilder
 {
-public: 
+public:
   ShaddixHeatTransferBuilder( const std::string          & modelName,
                              const std::vector<std::string>  & reqICLabelNames,
                              const std::vector<std::string>  & reqScalarLabelNames,
                              ArchesLabel          * fieldLabels,
-                             SimulationStateP           & sharedState,
+                             SimulationStateP           sharedState,
                              int qn );
 
-  ~ShaddixHeatTransferBuilder(); 
+  ~ShaddixHeatTransferBuilder();
 
-  ModelBase* build(); 
+  ModelBase* build();
 
 private:
 
-}; 
+};
 
 // End Builder
 //---------------------------------------------------------------------------
 
 class ShaddixHeatTransfer: public HeatTransfer {
-public: 
+public:
 
   typedef std::map< std::string, CharOxidation*> CharOxiModelMap;
   typedef std::map< std::string, Devolatilization*> DevolModelMap;
 
-  ShaddixHeatTransfer( std::string modelName, 
-                SimulationStateP& shared_state, 
+  ShaddixHeatTransfer( std::string modelName,
+                SimulationStateP shared_state,
                 ArchesLabel* fieldLabels,
                 std::vector<std::string> reqICLabelNames,
                 std::vector<std::string> reqScalarLabelNames,
@@ -67,31 +67,31 @@ public:
   /////////////////////////////////////////
   // Initialization methods
 
-  /** @brief Interface for the inputfile and set constants */ 
+  /** @brief Interface for the inputfile and set constants */
   void problemSetup(const ProblemSpecP& db, int qn);
 
   /** @brief Schedule the initialization of some special/local variables */
   void sched_initVars( const LevelP& level, SchedulerP& sched );
 
   /** @brief  Actually initialize some special/local variables */
-  void initVars( const ProcessorGroup * pc, 
-                 const PatchSubset    * patches, 
-                 const MaterialSubset * matls, 
-                 DataWarehouse        * old_dw, 
+  void initVars( const ProcessorGroup * pc,
+                 const PatchSubset    * patches,
+                 const MaterialSubset * matls,
+                 DataWarehouse        * old_dw,
                  DataWarehouse        * new_dw );
 
   /////////////////////////////////////////////
   // Model computation methods
 
-  /** @brief Schedule the calculation of the source term */ 
-  void sched_computeModel( const LevelP& level, SchedulerP& sched, 
+  /** @brief Schedule the calculation of the source term */
+  void sched_computeModel( const LevelP& level, SchedulerP& sched,
                             int timeSubStep );
 
-  /** @brief Actually compute the source term */ 
-  void computeModel( const ProcessorGroup* pc, 
-                     const PatchSubset* patches, 
-                     const MaterialSubset* matls, 
-                     DataWarehouse* old_dw, 
+  /** @brief Actually compute the source term */
+  void computeModel( const ProcessorGroup* pc,
+                     const PatchSubset* patches,
+                     const MaterialSubset* matls,
+                     DataWarehouse* old_dw,
                      DataWarehouse* new_dw );
 
   // FIXME: add Glacier computation methods
@@ -130,8 +130,8 @@ public:
 
   /** @brief  Access function for thermal conductivity of particles */
   inline const VarLabel* getabskp(){
-    return d_abskp; };  
-  
+    return d_abskp; };
+
 private:
 
   //////////////////////////////////////////////////
@@ -149,8 +149,8 @@ private:
   /** @brief  Calculate heat capacity of particle */
   double heatcp(double Tp);
   double heatcph(double Tp);
- 
-  const VarLabel* d_charoxiTempLabel; 
+
+  const VarLabel* d_charoxiTempLabel;
   const VarLabel* d_surfacerateLabel;
   const VarLabel* d_chargasLabel;
   const VarLabel* d_devolgasLabel;
@@ -164,7 +164,7 @@ private:
   const VarLabel* d_volq_label;
   const VarLabel* d_abskg_label;
 
-  const VarLabel* d_gas_temperature_label; 
+  const VarLabel* d_gas_temperature_label;
   const VarLabel* d_gas_cp_label;             ///< Gas specific heat label
 
   double visc;
@@ -175,8 +175,8 @@ private:
   std::vector<double>  rawcoal_mass_init;    ///< Initial raw coal mass
   std::vector<double>  char_mass_init;        ///< Initial char mass
   std::vector<double>  ash_mass_init;        ///< Initial ash mass
-  std::vector<double>  as_received; // wt fraction of [C,H,O,N,S,char,ash,moisture] as received components 
-  double rhop;                  ///< Density of particle 
+  std::vector<double>  as_received; // wt fraction of [C,H,O,N,S,char,ash,moisture] as received components
+  double rhop;                  ///< Density of particle
   double total_rc;
   double total_dry;
   double rc_mass_frac;
