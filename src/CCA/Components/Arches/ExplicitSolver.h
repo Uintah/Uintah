@@ -44,7 +44,7 @@ GENERAL INFORMATION
 
    C-SAFE
 
-   
+
 
 KEYWORDS
 
@@ -65,7 +65,7 @@ WARNING
 #include <CCA/Components/Arches/ExplicitTimeInt.h>
 
 namespace Uintah {
-class TaskFactoryBase; 
+class TaskFactoryBase;
 class PressureSolver;
 class MomentumSolver;
 class ScalarSolver;
@@ -80,9 +80,9 @@ class DQMOM;
 class CQMOM;
 class CQMOM_Convection;
 class CQMOMSourceWrapper;
-class EfficiencyCalculator; 
-class WallModelDriver; 
-class RadPropertyCalculator; 
+class EfficiencyCalculator;
+class WallModelDriver;
+class RadPropertyCalculator;
 class ExplicitSolver: public NonlinearSolver {
 
 public:
@@ -93,17 +93,15 @@ public:
                  BoundaryCondition* bc,
                  TurbulenceModel* turbModel,
                  ScaleSimilarityModel* scaleSimilarityModel,
-                 PhysicalConstants* physConst, 
-                 RadPropertyCalculator* rad_properties, 
-                 std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map, 
+                 PhysicalConstants* physConst,
+                 RadPropertyCalculator* rad_properties,
+                 std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& boost_fac_map,
                  const ProcessorGroup* myworld,
                  SolverInterface* hypreSolver);
 
   virtual ~ExplicitSolver();
 
-  MomentumSolver* get_momentum_solver(){return d_momSolver;}
-  
-  /** @brief Input file interface. **/ 
+  /** @brief Input file interface. **/
   virtual void problemSetup(const ProblemSpecP& input_db,
                             SimulationStateP& state);
 
@@ -112,29 +110,29 @@ public:
                               SchedulerP& sched );
 
 
-  /** @brief Sets the initial guess for several variables **/ 
+  /** @brief Sets the initial guess for several variables **/
   void sched_setInitialGuess(SchedulerP&,
                              const PatchSet* patches,
                              const MaterialSet* matls);
 
-  /** @brief Check the momentum boundary conditions for errors (and do some other stuff too)**/ 
+  /** @brief Check the momentum boundary conditions for errors (and do some other stuff too)**/
   void checkMomBCs( SchedulerP&,
-                    const LevelP& level, 
+                    const LevelP& level,
                     const MaterialSet* matls);
 
-  /** @brief Interpolates face centered vars to cell centered **/ 
+  /** @brief Interpolates face centered vars to cell centered **/
   void sched_interpolateFromFCToCC(SchedulerP&,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
-                                   const TimeIntegratorLabel* timelabels, 
+                                   const TimeIntegratorLabel* timelabels,
                                    const int curr_level);
 
-  /** @brief Compute the kinetic energy of the system **/ 
-  void sched_computeKE( SchedulerP& sched, 
-                        const PatchSet* patches, 
-                        const MaterialSet* matls ); 
+  /** @brief Compute the kinetic energy of the system **/
+  void sched_computeKE( SchedulerP& sched,
+                        const PatchSet* patches,
+                        const MaterialSet* matls );
 
-  /** @brief Print the reduced kinetic energy values to the screen output **/  
+  /** @brief Print the reduced kinetic energy values to the screen output **/
   void sched_printTotalKE( SchedulerP& sched,
                            const PatchSet* patches,
                            const MaterialSet* matls );
@@ -176,9 +174,9 @@ public:
                                 const MaterialSet* matls,
                                 const TimeIntegratorLabel* timelabels);
 
-  /** @brief Set the initial condition on velocity on the interior **/ 
-  void sched_setInitVelCond( const LevelP& level, 
-                             SchedulerP& sched, 
+  /** @brief Set the initial condition on velocity on the interior **/
+  void sched_setInitVelCond( const LevelP& level,
+                             SchedulerP& sched,
                              const MaterialSet* matls );
 
   inline double recomputeTimestep(double current_dt) {
@@ -189,9 +187,6 @@ public:
     return true;
   }
 
-  inline double getAdiabaticAirEnthalpy() const{
-    return d_H_air;
-  }
   inline void setNumSourceBoundaries(int numSourceBoundaries){
     d_numSourceBoundaries = numSourceBoundaries;
   }
@@ -207,10 +202,10 @@ private:
                        DataWarehouse* new_dw);
 
   /** @brief Set the initial condition on velocity **/
-  void setInitVelCond( const ProcessorGroup* pc, 
-                       const PatchSubset* patches, 
-                       const MaterialSubset*, 
-                       DataWarehouse* old_dw, 
+  void setInitVelCond( const ProcessorGroup* pc,
+                       const PatchSubset* patches,
+                       const MaterialSubset*,
+                       DataWarehouse* old_dw,
                        DataWarehouse* new_dw );
 
 
@@ -220,7 +215,7 @@ private:
                              const MaterialSubset* matls,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw,
-                             const TimeIntegratorLabel* timelabels, 
+                             const TimeIntegratorLabel* timelabels,
                              const int curr_level);
 
   void computeVorticity(const ProcessorGroup* pc,
@@ -234,7 +229,7 @@ private:
                   const PatchSubset* patches,
                   const MaterialSubset*,
                   DataWarehouse*,
-                  DataWarehouse* new_dw ); 
+                  DataWarehouse* new_dw );
 
 
   void printTotalKE(const ProcessorGroup* ,
@@ -300,13 +295,13 @@ private:
 
   void setDQMOMSolver( DQMOM* dqmomSolver ) {
     d_dqmomSolver = dqmomSolver; };
-  
+
   void setCQMOMSolver( CQMOM* cqmomSolver ) {
     d_cqmomSolver = cqmomSolver; };
-  
+
   void setCQMOMConvect( CQMOM_Convection* cqmomConvect ) {
     d_cqmomConvect = cqmomConvect; };
-  
+
   void setCQMOMSource( CQMOMSourceWrapper* cqmomSource ) {
     d_cqmomSource = cqmomSource; };
 
@@ -327,7 +322,7 @@ private:
   ScaleSimilarityModel* d_scaleSimilarityModel;
   bool d_mixedModel;
 
-  MomentumSolver* d_momSolver;             ///< Momentum solver 
+  MomentumSolver* d_momSolver;             ///< Momentum solver
   PhysicalConstants* d_physicalConsts;     ///< Physical constants
   WallModelDriver* d_wall_ht_models;       ///< Heat transfer models for walls
 
@@ -340,7 +335,6 @@ private:
   int d_turbModelCalcFreq;
   bool d_turbModelRKsteps;
   int d_turbCounter;
-  double d_H_air;
   bool d_restart_on_negative_density_guess;
   bool d_noisyDensityGuess;
   std::string d_mms;
@@ -351,10 +345,10 @@ private:
 
   bool d_KE_fromFC;
   double d_maxDensityLag;
-  std::vector<std::string> d_mass_sources; 
-  bool d_solvability; 
+  std::vector<std::string> d_mass_sources;
+  bool d_solvability;
 
-  bool d_extra_table_lookup; 
+  bool d_extra_table_lookup;
 
   //linear mms
   double cu, cv, cw, cp, phi0;
@@ -362,12 +356,12 @@ private:
   double amp;
 
   int d_numSourceBoundaries;
-  
+
   //DQMOM
   bool d_doDQMOM;
   PartVel* d_partVel;
   DQMOM* d_dqmomSolver;
-  
+
   //CQMOM
   bool d_doCQMOM;
   CQMOM* d_cqmomSolver;
@@ -379,19 +373,17 @@ private:
   SolverInterface* d_hypreSolver;             // infrastructure hypre solver
 
   EfficiencyCalculator* d_eff_calculator;
-  RadPropertyCalculator* d_rad_prop_calc; 
+  RadPropertyCalculator* d_rad_prop_calc;
 
   //Diagnostics
-  bool d_printTotalKE; 
-  double d_ke_limit; 
+  bool d_printTotalKE;
+  double d_ke_limit;
 
-  //NEW TASK INTERFACE STUFF: 
-  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _boost_fac_map; 
+  //NEW TASK INTERFACE STUFF:
+  std::map<std::string, boost::shared_ptr<TaskFactoryBase> >& _boost_fac_map;
 
 }; // End class ExplicitSolver
 } // End namespace Uintah
 
 
 #endif
-
-
