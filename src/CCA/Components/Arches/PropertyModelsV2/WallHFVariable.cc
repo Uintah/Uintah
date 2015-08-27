@@ -8,15 +8,13 @@
 
 using namespace Uintah;
 
-WallHFVariable::WallHFVariable( std::string task_name, int matl_index, SimulationStateP& shared_state ) :
-  TaskInterface( task_name, matl_index ) {
+WallHFVariable::WallHFVariable( std::string task_name, int matl_index, SimulationStateP & shared_state ) :
+  TaskInterface( task_name, matl_index ), _shared_state(shared_state) {
 
   _flux_x = task_name + "_x";
   _flux_y = task_name + "_y";
   _flux_z = task_name + "_z";
   _net_power = task_name + "_power";
-
-  _shared_state = shared_state;
 
 }
 
