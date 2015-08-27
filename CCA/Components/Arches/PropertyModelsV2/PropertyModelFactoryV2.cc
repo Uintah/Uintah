@@ -8,7 +8,7 @@
 
 using namespace Uintah;
 
-PropertyModelFactoryV2::PropertyModelFactoryV2( SimulationStateP shared_state ) : _shared_state(shared_state)
+PropertyModelFactoryV2::PropertyModelFactoryV2( )
 {}
 
 PropertyModelFactoryV2::~PropertyModelFactoryV2()
@@ -69,9 +69,7 @@ PropertyModelFactoryV2::register_all_tasks( ProblemSpecP& db )
 
       }
 
-      //put the tasks in a type->(task names) map
-      TypeToTaskMap::iterator iter = _type_to_tasks.find(type);
-      iter->second.push_back(name);
+      assign_task_to_type_storage(name, type);
 
     }
   }

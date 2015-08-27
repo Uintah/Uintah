@@ -260,7 +260,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
   boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(d_sharedState));
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
 
   _boost_factory_map.clear();
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -277,6 +277,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 
     proc0cout << "   " << i->first << std::endl;
     i->second->register_all_tasks(db);
+    i->second->set_shared_state(d_sharedState); 
 
   }
   proc0cout << "\n Building Tasks For: " << std::endl;
