@@ -8,7 +8,7 @@
 
 using namespace Uintah;
 
-PropertyModelFactoryV2::PropertyModelFactoryV2( SimulationStateP & shared_state ) : _shared_state(shared_state)
+PropertyModelFactoryV2::PropertyModelFactoryV2( SimulationStateP shared_state ) : _shared_state(shared_state)
 {}
 
 PropertyModelFactoryV2::~PropertyModelFactoryV2()
