@@ -127,11 +127,15 @@ namespace Uintah{
         } else if ( method == CQMOM ){ 
 
           if ( arches_root->findBlock("CQMOM") ){ 
-            int N; 
-            arches_root->findBlock("CQMOM")->require("QuadratureNodes",N); 
+            int N = 1;
+            std::vector<int> N_i;
+            arches_root->findBlock("CQMOM")->require("QuadratureNodes",N_i);
+            for (unsigned int i = 0; i < N_i.size(); i++ ) {
+              N *= N_i[i];
+            }
             return N; 
           } else { 
-            throw ProblemSetupException("Error: DQMOM particle method not found.", __FILE__, __LINE__); 
+            throw ProblemSetupException("Error: CQMOM particle method not found.", __FILE__, __LINE__); 
           }
 
         } else if ( method == LAGRANGIAN ){ 
