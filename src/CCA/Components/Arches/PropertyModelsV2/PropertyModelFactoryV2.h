@@ -2,7 +2,6 @@
 #define UT_PropertyModelFactoryV2_h
 
 #include <CCA/Components/Arches/Task/TaskFactoryBase.h>
-#include <Core/Grid/SimulationState.h>
 #include <string>
 
 namespace Uintah{
@@ -11,7 +10,7 @@ namespace Uintah{
 
   public:
 
-    PropertyModelFactoryV2( SimulationStateP shared_state );
+    PropertyModelFactoryV2( );
     ~PropertyModelFactoryV2();
 
     void register_all_tasks( ProblemSpecP& db );
@@ -44,7 +43,6 @@ namespace Uintah{
 
   private:
 
-    SimulationStateP _shared_state;
     std::vector<std::string> _pre_update_property_tasks;  ///<Tasks that execute at the start of an RK step
     std::vector<std::string> _finalize_property_tasks;    ///<Tasks that execute at the end of the time step
     std::vector<std::string> _pre_table_post_iv_update;   ///<Tasks that execute after IV update and before table lookup
