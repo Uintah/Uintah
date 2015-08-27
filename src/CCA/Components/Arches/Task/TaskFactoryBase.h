@@ -62,7 +62,15 @@ namespace Uintah{
 
     /** @brief Insert a task with its type group **/
     void assign_task_to_type_storage( std::string name, std::string type ){
+
       TypeToTaskMap::iterator iter = _type_to_tasks.find(type);
+
+      if ( iter == _type_to_tasks.end() ){
+        std::vector<std::string> names;
+        names.push_back(name);
+        _type_to_tasks.insert(std::make_pair(type,names));
+        return;
+      }
 
       if ( std::find( iter->second.begin(), iter->second.end(), name ) != iter->second.end() ){
         throw InvalidValue("Error: Found a task with the same name as another task: "+name, __FILE__, __LINE__);
