@@ -42,6 +42,7 @@
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
+#include <CCA/Components/Arches/CoalModels/MaximumTemperature.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
@@ -2299,6 +2300,9 @@ void Arches::registerModels(ProblemSpecP& db)
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "MaximumTemperature" ) {
+          ModelBuilder* modelBuilder = scinew MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
           ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);

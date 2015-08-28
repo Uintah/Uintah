@@ -376,6 +376,7 @@
                                                                              uvel, vvel, wvel,
                                                                              enthalpy,
                                                                              temperature,
+                                                                             max_temperature,
                                                                              dTdt,
                                                                              total_number_density'"
                                            attribute2="label REQUIRED STRING"/>
@@ -1491,6 +1492,7 @@
                                                                           Drag,
                                                                           ShaddixHeatTransfer,
                                                                           EnthalpyShaddix,
+                                                                          MaximumTemperature,
                                                                           CharOxidationShaddix,
                                                                           SimpleBirth'">
 
