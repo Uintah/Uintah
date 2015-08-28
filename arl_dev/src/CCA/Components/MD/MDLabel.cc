@@ -39,16 +39,16 @@ using namespace Uintah;
 
 globalLabels::globalLabels() { // create variable labels used across all simulation aspects
   // Create for timestep n
-  pX            = VarLabel::create("p.x", ParticleVariable<Point>::getTypeDescription(),
+  pX            = VarLabel::create("p.x_MD", ParticleVariable<Point>::getTypeDescription(),
                                    IntVector(0,0,0), VarLabel::PositionVariable);
-  pV            = VarLabel::create("p.v", ParticleVariable<SCIRun::Vector>::getTypeDescription());
-  pID           = VarLabel::create("p.ID", ParticleVariable<long64>::getTypeDescription());
+  pV            = VarLabel::create("p.v_MD", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pID           = VarLabel::create("p.ID_MD", ParticleVariable<long64>::getTypeDescription());
 
   // Create for timestep n+1
-  pX_preReloc   = VarLabel::create("p.x+", ParticleVariable<Point>::getTypeDescription(),
+  pX_preReloc   = VarLabel::create("p.x_MD+", ParticleVariable<Point>::getTypeDescription(),
                                    IntVector(0,0,0), VarLabel::PositionVariable);
-  pV_preReloc   = VarLabel::create("p.v+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
-  pID_preReloc  = VarLabel::create("p.ID+", ParticleVariable<long64>::getTypeDescription());
+  pV_preReloc   = VarLabel::create("p.v_MD+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pID_preReloc  = VarLabel::create("p.ID_MD+", ParticleVariable<long64>::getTypeDescription());
 
   rKineticEnergy= VarLabel::create("e_kin", sum_vartype::getTypeDescription());
   rKineticStress= VarLabel::create("S_kin", matrix_sum::getTypeDescription());
@@ -78,11 +78,11 @@ nonbondedLabels::nonbondedLabels() { // create variable labels used in nonbonded
   dNonbondedDependency  = VarLabel::create("dep_nb", SoleVariable<double>::getTypeDescription());
 
   // Particle variables --> should not be necessary in the long run?
-  pF_nonbonded          = VarLabel::create("pF_nb", ParticleVariable<SCIRun::Vector>::getTypeDescription());
-  pF_nonbonded_preReloc = VarLabel::create("pF_nb+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pF_nonbonded          = VarLabel::create("pF_nb_MD", ParticleVariable<SCIRun::Vector>::getTypeDescription());
+  pF_nonbonded_preReloc = VarLabel::create("pF_nb_MD+", ParticleVariable<SCIRun::Vector>::getTypeDescription());
 
-  pNumPairsInCalc           = VarLabel::create("p.nn", ParticleVariable<long64>::getTypeDescription());
-  pNumPairsInCalc_preReloc  = VarLabel::create("p.nn+", ParticleVariable<long64>::getTypeDescription());
+  pNumPairsInCalc           = VarLabel::create("p.nn_MD", ParticleVariable<long64>::getTypeDescription());
+  pNumPairsInCalc_preReloc  = VarLabel::create("p.nn_MD+", ParticleVariable<long64>::getTypeDescription());
 
 
 

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/ShiftedCardinalBSpline.h>
 #include <CCA/Components/MD/MDUtil.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Util/FancyAssert.h>

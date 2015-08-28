@@ -262,7 +262,7 @@ void velocityVerlet::calculate( const ProcessorGroup*       pg,
                  currPatch);
       if (patchFirstIntegration)
       {
-        firstIntegratePatch(currPatch, currType,
+        firstIntegratePatch(currPatch, typeIndex,
                             oldDW, newDW, simState, label,
                             kineticEnergy, totalMass, totalMomentum);
         patchFirstIntegration = false;
@@ -270,7 +270,7 @@ void velocityVerlet::calculate( const ProcessorGroup*       pg,
       }
       else
       {
-        integratePatch(currPatch, currType,
+        integratePatch(currPatch, typeIndex,
                        oldDW, newDW, simState, label,
                        kineticEnergy, totalMass, totalMomentum);
       }
@@ -592,7 +592,7 @@ void velocityVerlet::firstIntegrate(const PatchSubset*          patches,
     for (int typeIndex = 0; typeIndex < numTypes; ++typeIndex)
     {
       int       atomType    =   atomTypes->get(typeIndex);
-      double    atomMass    =   (*simState)->getMDMaterial(atomType)->getMass();
+      double    atomMass    =   (*simState)->getMDMaterial(typeIndex)->getMass();
       double    massInv     =   1.0/atomMass;
 
       ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, currPatch);
@@ -674,7 +674,7 @@ void velocityVerlet::integrate(     const PatchSubset*          patches,
     for (int typeIndex = 0; typeIndex < numTypes; ++typeIndex)
     {
       int       atomType    =   atomTypes->get(typeIndex);
-      double    atomMass    =   (*simState)->getMDMaterial(atomType)->getMass();
+      double    atomMass    =   (*simState)->getMDMaterial(typeIndex)->getMass();
       double    massInv     =   1.0/atomMass;
 
       ParticleSubset* atomSet = oldDW->getParticleSubset(atomType, currPatch);

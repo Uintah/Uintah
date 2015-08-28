@@ -33,7 +33,7 @@
 #include <CCA/Components/MD/MDSystem.h>
 #include <CCA/Components/MD/MDUtil.h>
 #include <CCA/Components/MD/SimpleGrid.h>
-#include <CCA/Components/MD/Electrostatics/SPME/SPMEMapPoint.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPMEMapPoint.h>
 
 #include <complex>
 

@@ -34,7 +34,7 @@
 
 #include <CCA/Ports/Scheduler.h>
 
-#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPME.h>
 
 
 using namespace Uintah;
@@ -222,23 +222,26 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
     if (f_polarizable) {
       if (!do_thole)
       {
-        task = scinew Task("SPME::calculateRealspacePointDipole",
+        task = scinew Task("SPME::realspacePointDipole",
                            this,
                            &SPME::calculateRealspacePointDipole,
                            sharedState,
                            label,
                            coordSys,
-                           parentOldDW);
+                           parentOldDW
+                          );
+
       }
       else
       {
-        task = scinew Task("SPME::calculateRealspaceTholeDipole",
+        task = scinew Task("SPME::realspaceTholeDipole",
                            this,
                            &SPME::calculateRealspaceTholeDipole,
                            sharedState,
                            label,
                            coordSys,
-                           parentOldDW);
+                           parentOldDW
+                          );
       }
       // Also requires the last iteration's dipole guess, which does change
       // for the polarizability iteration
@@ -257,7 +260,8 @@ void SPME::scheduleCalculateRealspace(const ProcessorGroup*     pg,
                          sharedState,
                          label,
                          coordSys,
-                         parentOldDW);
+                         parentOldDW
+                        );
     }
 
     task->requires(Task::ParentOldDW,

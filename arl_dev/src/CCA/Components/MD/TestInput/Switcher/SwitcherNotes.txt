@@ -1,0 +1,27 @@
+Notes:
+8/26/2015:
+ JBH -- Debugging attempt to run 2-component switching
+ APH has added in direct calls for each component's initialize component
+     however, on calling MD::initialize, attempts are made to reference an MDMaterial
+     with an index higher than the maximum size of the MDMaterials
+     
+     Presumably something is screwing with the material sets passed into MD::Initialize
+     and mucking up the dereferencing.
+     
+     In looking into that, it was necessary to find the location that the const MaterialSet*
+     which is attached to he MD::Initialize task is recast to a const MaterialSubset* with
+     which MD::Initialize is actually invoked.  This would appear to happen in:
+     
+     SchedulerCommon::compile()
+     
+     Currently trying to understand how that works to determine if our material sets are getting
+     mangled between the two components.  (Clearly they are, but the question is how/why and
+     how to fix them.)
+     
+     Look at TaskGraph.cc::775 to track how the MDMaterialSet* somehow ends up with the wrong data
+     on becoming an MDMaterialSubset*.
+     
+     SIDE NOTE:  Look into lb->createNeighborhood (in TaskGraph::createDetailedTasks(...)
+                 for potential ability to solve problem with sampling patches > 1 patch away
+                 from current patch.
+                 

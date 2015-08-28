@@ -32,7 +32,7 @@
 
 #include <Core/Thread/Thread.h>
 
-#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPME.h>
 
 using namespace Uintah;
 // Called from SPME::calculate directly
@@ -211,107 +211,113 @@ void SPME::calculateRealspace(const ProcessorGroup*     pg,
                                     CoordinateSystem*   coordSys,
                                     DataWarehouse*      parentOldDW)
 {
-  size_t    numPatches      = patches->size();
-  size_t    numAtomTypes    = atomTypes->size();
-  double    cutoff2         = d_electrostaticRadius * d_electrostaticRadius;
+  EwaldRealspace::realspaceChargeOnly(pg, patches, atomTypes, subOldDW, subNewDW,
+                                      parentOldDW, simState, label,
+                                      d_ewaldBeta,
+                                      d_electrostaticRadius,
+                                      d_electrostaticGhostCells);
 
-  double    realElectrostaticEnergy = 0;
-  Matrix3   realElectrostaticStress = MDConstants::M3_0;
-  
-  // Method global vector to catch the distance offset and avoid lots of
-  // spurious temporary vector creations.
-  SCIRun::Vector offset;
-
-  // Step through all the patches on this thread
-  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
-  {
-    const Patch* patch = patches->get(patchIndex);
-    // step through the materials for the reference sites
-    for (size_t localIndex = 0; localIndex < numAtomTypes; ++localIndex) {
-
-      int               localType   = atomTypes->get(localIndex);
-      double            localCharge = (*simState)->getMDMaterial(localType)
-                                                   ->getCharge();
-      ParticleSubset*   localSet    = parentOldDW->getParticleSubset(localType,
-                                                                     patch);
-      size_t            numLocal = localSet->numParticles();
-
-      constParticleVariable<Point>  localX;
-      parentOldDW->get(localX,  label->global->pX,  localSet);
-
-      constParticleVariable<long64> localID;
-      parentOldDW->get(localID, label->global->pID, localSet);
-
-      ParticleVariable<SCIRun::Vector> localForce;
-      subNewDW->allocateAndPut(localForce,
-                               label->electrostatic->pF_electroReal_preReloc,
-                               localSet);
-
-//      // Zero out local patch's atoms' force.
-//      for (size_t localAtom = 0; localAtom < numLocalAtoms; ++localAtom)
+//  size_t    numPatches      = patches->size();
+//  size_t    numAtomTypes    = atomTypes->size();
+//  double    cutoff2         = d_electrostaticRadius * d_electrostaticRadius;
+//
+//  double    realElectrostaticEnergy = 0;
+//  Matrix3   realElectrostaticStress = MDConstants::M3_0;
+//
+//  // Method global vector to catch the distance offset and avoid lots of
+//  // spurious temporary vector creations.
+//  SCIRun::Vector offset;
+//
+//  // Step through all the patches on this thread
+//  for (size_t patchIndex = 0; patchIndex < numPatches; ++patchIndex)
+//  {
+//    const Patch* patch = patches->get(patchIndex);
+//    // step through the materials for the reference sites
+//    for (size_t localIndex = 0; localIndex < numAtomTypes; ++localIndex) {
+//
+//      int               localType   = atomTypes->get(localIndex);
+//      double            localCharge = (*simState)->getMDMaterial(localType)
+//                                                   ->getCharge();
+//      ParticleSubset*   localSet    = parentOldDW->getParticleSubset(localType,
+//                                                                     patch);
+//      size_t            numLocal = localSet->numParticles();
+//
+//      constParticleVariable<Point>  localX;
+//      parentOldDW->get(localX,  label->global->pX,  localSet);
+//
+//      constParticleVariable<long64> localID;
+//      parentOldDW->get(localID, label->global->pID, localSet);
+//
+//      ParticleVariable<SCIRun::Vector> localForce;
+//      subNewDW->allocateAndPut(localForce,
+//                               label->electrostatic->pF_electroReal_preReloc,
+//                               localSet);
+//
+////      // Zero out local patch's atoms' force.
+////      for (size_t localAtom = 0; localAtom < numLocalAtoms; ++localAtom)
+////      {
+////        localForce[localAtom] = MDConstants::V_ZERO;
+////      }
+//
+//      for (size_t neighborIndex = 0; neighborIndex < numAtomTypes; ++neighborIndex)
 //      {
-//        localForce[localAtom] = MDConstants::V_ZERO;
-//      }
-
-      for (size_t neighborIndex = 0; neighborIndex < numAtomTypes; ++neighborIndex)
-      {
-        int     neighborType    = atomTypes->get(neighborIndex);
-        double  neighborCharge  = (*simState)->getMDMaterial(neighborType)
-                                               ->getCharge();
-        ParticleSubset* neighborSet;
-        neighborSet = parentOldDW->getParticleSubset(neighborType,
-                                                     patch,
-                                                     Ghost::AroundCells,
-                                                     d_electrostaticGhostCells,
-                                                     label->global->pX);
-        size_t numNeighbor      = neighborSet->numParticles();
-
-        constParticleVariable<Point>  neighborX;
-        parentOldDW->get(neighborX,  label->global->pX,  neighborSet);
-
-        constParticleVariable<long64> neighborID;
-        parentOldDW->get(neighborID, label->global->pID, neighborSet);
-
-        // loop over the local atoms
-        for (size_t localAtom=0; localAtom < numLocal; ++localAtom)
-        {
-          localForce[localAtom]=MDConstants::V_ZERO;
-          // loop over the neighbors
-          for (size_t neighborAtom=0; neighborAtom < numNeighbor; ++neighborAtom)
-          { // Ensure i != j
-            if (localID[localAtom] != neighborID[neighborAtom])
-            {
-              offset = neighborX[neighborAtom] - localX[localAtom];
-//              coordSys->minimumImageDistance(localX[localAtom],
-//                                             neighborX[neighborAtom],
-//                                             offset);
-              double radius2 = offset.length2();
-              // only calculate if neighbor within spherical cutoff around 
-              // local atom
-              if (radius2 < cutoff2 ) {
-                double radius = sqrt(radius2);
-                double B0, B1, B2, B3;
-                generatePointScreeningMultipliers(radius, B0, B1, B2, B3);
-                double G0 = localCharge*neighborCharge;
-                realElectrostaticEnergy += (B0*G0);
-                SCIRun::Vector localForceVector = offset*(G0*B1);
-                localForce[localAtom] += localForceVector;
-                realElectrostaticStress += OuterProduct(offset,
-                                                        localForceVector);
-              } // Interaction within cutoff
-            } // If atoms are different
-          } // Loop over neighbors
-          localForce[localAtom] *= 1.0; // Insert dimensionalization constant here
-          realElectrostaticStress *= 1.0;
-        } // Loop over local atoms
-      } // Loop over neighbor materials
-    } // Loop over local materials
-  } // Loop over patches
-  // put updated values for reduction variables into the DW
-  subNewDW->put(sum_vartype(0.5 * realElectrostaticEnergy),
-                label->electrostatic->rElectrostaticRealEnergy);
-  subNewDW->put(matrix_sum(0.5 * realElectrostaticStress),
-                label->electrostatic->rElectrostaticRealStress);
+//        int     neighborType    = atomTypes->get(neighborIndex);
+//        double  neighborCharge  = (*simState)->getMDMaterial(neighborType)
+//                                               ->getCharge();
+//        ParticleSubset* neighborSet;
+//        neighborSet = parentOldDW->getParticleSubset(neighborType,
+//                                                     patch,
+//                                                     Ghost::AroundCells,
+//                                                     d_electrostaticGhostCells,
+//                                                     label->global->pX);
+//        size_t numNeighbor      = neighborSet->numParticles();
+//
+//        constParticleVariable<Point>  neighborX;
+//        parentOldDW->get(neighborX,  label->global->pX,  neighborSet);
+//
+//        constParticleVariable<long64> neighborID;
+//        parentOldDW->get(neighborID, label->global->pID, neighborSet);
+//
+//        // loop over the local atoms
+//        for (size_t localAtom=0; localAtom < numLocal; ++localAtom)
+//        {
+//          localForce[localAtom]=MDConstants::V_ZERO;
+//          // loop over the neighbors
+//          for (size_t neighborAtom=0; neighborAtom < numNeighbor; ++neighborAtom)
+//          { // Ensure i != j
+//            if (localID[localAtom] != neighborID[neighborAtom])
+//            {
+//              offset = neighborX[neighborAtom] - localX[localAtom];
+////              coordSys->minimumImageDistance(localX[localAtom],
+////                                             neighborX[neighborAtom],
+////                                             offset);
+//              double radius2 = offset.length2();
+//              // only calculate if neighbor within spherical cutoff around
+//              // local atom
+//              if (radius2 < cutoff2 ) {
+//                double radius = sqrt(radius2);
+//                double B0, B1, B2, B3;
+//                generatePointScreeningMultipliers(radius, B0, B1, B2, B3);
+//                double G0 = localCharge*neighborCharge;
+//                realElectrostaticEnergy += (B0*G0);
+//                SCIRun::Vector localForceVector = offset*(G0*B1);
+//                localForce[localAtom] += localForceVector;
+//                realElectrostaticStress += OuterProduct(offset,
+//                                                        localForceVector);
+//              } // Interaction within cutoff
+//            } // If atoms are different
+//          } // Loop over neighbors
+//          localForce[localAtom] *= 1.0; // Insert dimensionalization constant here
+//          realElectrostaticStress *= 1.0;
+//        } // Loop over local atoms
+//      } // Loop over neighbor materials
+//    } // Loop over local materials
+//  } // Loop over patches
+//  // put updated values for reduction variables into the DW
+//  subNewDW->put(sum_vartype(0.5 * realElectrostaticEnergy),
+//                label->electrostatic->rElectrostaticRealEnergy);
+//  subNewDW->put(matrix_sum(0.5 * realElectrostaticStress),
+//                label->electrostatic->rElectrostaticRealStress);
   return;
 } // End method
 
@@ -344,7 +350,7 @@ void SPME::calculatePreTransform(const ProcessorGroup*      pg,
     for (size_t currType = 0; currType < numAtomTypes; ++currType)
     {
       int       atomType    = atomTypes->get(currType);
-      double    atomCharge  = (*simState)->getMDMaterial(atomType)->getCharge();
+      double    atomCharge  = (*simState)->getMDMaterial(currType)->getCharge();
 
       ParticleSubset* atomSet = parentOldDW->getParticleSubset(atomType, patch);
 
@@ -382,7 +388,7 @@ void SPME::calculatePostTransform(const ProcessorGroup*   pg,
 
     for (size_t typeIndex = 0; typeIndex < numAtomTypes; ++typeIndex) {
       int       atomType    = atomTypes->get(typeIndex);
-      double    charge      = (*simState)->getMDMaterial(atomType)->getCharge();
+      double    charge      = (*simState)->getMDMaterial(typeIndex)->getCharge();
 
       ParticleSubset* particles = oldDW->getParticleSubset(atomType, patch);
 

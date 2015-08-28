@@ -32,7 +32,7 @@ SRCDIR	:= CCA/Components/MD/Electrostatics
 SRCS += $(SRCDIR)/Electrostatics.cc         \
         $(SRCDIR)/ElectrostaticsFactory.cc   
 
-SUBDIRS := $(SRCDIR)/SPME \
+SUBDIRS := $(SRCDIR)/Ewald \
            $(SRCDIR)/Null
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

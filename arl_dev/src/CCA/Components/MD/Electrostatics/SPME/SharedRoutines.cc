@@ -31,7 +31,7 @@
 
 #include <Core/Thread/Thread.h>
 
-#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPME.h>
 
 using namespace Uintah;
 //
@@ -182,9 +182,9 @@ void SPME::generateMPrimeChunk(std::vector<double>& mPrimeChunk,
 
 void SPME::calculateBGrid(SimpleGrid<double>&   BGrid) const
 {
-  size_t limit_Kx = d_kLimits.x();
-  size_t limit_Ky = d_kLimits.y();
-  size_t limit_Kz = d_kLimits.z();
+//  size_t limit_Kx = d_kLimits.x();
+//  size_t limit_Ky = d_kLimits.y();
+//  size_t limit_Kz = d_kLimits.z();
 
   IntVector gridExtent = BGrid.getExtents();
   IntVector gridOffset = BGrid.getOffset();
