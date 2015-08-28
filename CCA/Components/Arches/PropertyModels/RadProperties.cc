@@ -4,7 +4,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <Core/Containers/StaticArray.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 using namespace Uintah; 
 
@@ -132,13 +132,13 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
   if ( _particlesOn ){ 
 
     //only works for DQMOM currently....need to check to make sure it is working with CQMOM/Lagrangian
-    if ( !ParticleHelper::check_for_particle_method( db, ParticleHelper::DQMOM)){ 
+    if ( !ParticleTools::check_for_particle_method( db, ParticleTools::DQMOM)){ 
       throw InvalidValue("Error: Only DQMOM verified to be working with particles/radiation. ", __FILE__, __LINE__);
     }
 
-    _nQn_part = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM ); 
-    _base_temperature_label_name = ParticleHelper::parse_for_role_to_label( db, "temperature" );
-    _base_size_label_name        = ParticleHelper::parse_for_role_to_label( db, "size" );
+    _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM ); 
+    _base_temperature_label_name = ParticleTools::parse_for_role_to_label( db, "temperature" );
+    _base_size_label_name        = ParticleTools::parse_for_role_to_label( db, "size" );
 
   }
 
@@ -238,9 +238,9 @@ void RadProperties::sched_computeProp( const LevelP& level, SchedulerP& sched, i
     }
     for ( int i = 0; i < _nQn_part; i++ ){
 
-      std::string label_name_s = ParticleHelper::append_env( _base_size_label_name, i ); 
-      std::string label_name_t = ParticleHelper::append_env( _base_temperature_label_name, i ); 
-      std::string label_name_w = ParticleHelper::append_env( "w", i ); 
+      std::string label_name_s = ParticleTools::append_env( _base_size_label_name, i ); 
+      std::string label_name_t = ParticleTools::append_env( _base_temperature_label_name, i ); 
+      std::string label_name_w = ParticleTools::append_env( "w", i ); 
 
       // requires size
       const VarLabel* label_s = VarLabel::find( label_name_s );
@@ -392,9 +392,9 @@ void RadProperties::computeProp(const ProcessorGroup* pc,
 
       for ( int i = 0; i < _nQn_part; i++ ){
 
-        std::string label_name_s = ParticleHelper::append_env( _base_size_label_name, i ); 
-        std::string label_name_t = ParticleHelper::append_env( _base_temperature_label_name, i ); 
-        std::string label_name_w = ParticleHelper::append_env( "w", i ); 
+        std::string label_name_s = ParticleTools::append_env( _base_size_label_name, i ); 
+        std::string label_name_t = ParticleTools::append_env( _base_temperature_label_name, i ); 
+        std::string label_name_w = ParticleTools::append_env( "w", i ); 
 
         s_varlabels.push_back(VarLabel::find( label_name_s ));
         t_varlabels.push_back(VarLabel::find( label_name_t ) );

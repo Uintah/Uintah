@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/CoalModels/Devolatilization.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -80,19 +80,19 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
   
   // create raw coal mass var label 
-  std::string rcmass_root = ParticleHelper::parse_for_role_to_label(db, "raw_coal"); 
-  std::string rcmass_name = ParticleHelper::append_env( rcmass_root, d_quadNode ); 
-  std::string rcmassqn_name = ParticleHelper::append_qn_env(rcmass_root, d_quadNode ); 
+  std::string rcmass_root = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+  std::string rcmass_name = ParticleTools::append_env( rcmass_root, d_quadNode );
+  std::string rcmassqn_name = ParticleTools::append_qn_env(rcmass_root, d_quadNode );
   _rcmass_varlabel = VarLabel::find(rcmass_name);
-  std::string rc_weighted_scaled_name = ParticleHelper::append_qn_env( rcmass_root, d_quadNode ); 
+  std::string rc_weighted_scaled_name = ParticleTools::append_qn_env( rcmass_root, d_quadNode );
   _rcmass_weighted_scaled_varlabel = VarLabel::find(rc_weighted_scaled_name); 
  
   // check for char mass and get scaling constant
-  std::string char_root = ParticleHelper::parse_for_role_to_label(db, "char"); 
-  std::string char_name = ParticleHelper::append_env( char_root, d_quadNode ); 
-  std::string charqn_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
+  std::string char_root = ParticleTools::parse_for_role_to_label(db, "char");
+  std::string char_name = ParticleTools::append_env( char_root, d_quadNode );
+  std::string charqn_name = ParticleTools::append_qn_env( char_root, d_quadNode );
   _char_varlabel = VarLabel::find(char_name);
-  std::string char_weighted_scaled_name = ParticleHelper::append_qn_env( char_root, d_quadNode ); 
+  std::string char_weighted_scaled_name = ParticleTools::append_qn_env( char_root, d_quadNode );
   _charmass_weighted_scaled_varlabel = VarLabel::find(char_weighted_scaled_name); 
 
 
@@ -104,7 +104,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   //CHAR get the birth term if any: 
   const std::string char_birth_name = char_eqn.get_model_by_type( "SimpleBirth" ); 
-  std::string char_birth_qn_name = ParticleHelper::append_qn_env(char_birth_name, d_quadNode); 
+  std::string char_birth_qn_name = ParticleTools::append_qn_env(char_birth_name, d_quadNode); 
   if ( char_birth_name != "NULLSTRING" ){ 
     _char_birth_label = VarLabel::find( char_birth_qn_name ); 
   }
@@ -117,24 +117,24 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
 
   //RAW COAL get the birth term if any: 
   const std::string rawcoal_birth_name = rcmass_eqn.get_model_by_type( "SimpleBirth" ); 
-  std::string rawcoal_birth_qn_name = ParticleHelper::append_qn_env(rawcoal_birth_name, d_quadNode); 
+  std::string rawcoal_birth_qn_name = ParticleTools::append_qn_env(rawcoal_birth_name, d_quadNode);
   if ( rawcoal_birth_name != "NULLSTRING" ){ 
     _rawcoal_birth_label = VarLabel::find( rawcoal_birth_qn_name ); 
   }
 
   // check for particle temperature 
-  std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
-  std::string temperature_name = ParticleHelper::append_env( temperature_root, d_quadNode ); 
+  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature"); 
+  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
   if(_particle_temperature_varlabel == 0){
     throw ProblemSetupException("Error: Unable to find coal temperature label!!!! Looking for name: "+temperature_name, __FILE__, __LINE__); 
   }
  
   // check for length  
-  _nQn_part = ParticleHelper::get_num_env(db,ParticleHelper::DQMOM); 
-  std::string length_root = ParticleHelper::parse_for_role_to_label(db, "size"); 
+  _nQn_part = ParticleTools::get_num_env(db,ParticleTools::DQMOM); 
+  std::string length_root = ParticleTools::parse_for_role_to_label(db, "size"); 
   for (int i=0; i<_nQn_part;i++ ){ 
-    std::string length_name = ParticleHelper::append_env( length_root, i ); 
+    std::string length_name = ParticleTools::append_env( length_root, i ); 
     _length_varlabel.push_back(  VarLabel::find(length_name));
   }
   
@@ -159,9 +159,9 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   }
 
   // get weight scaling constant
-  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode); 
   for (int i=0; i<_nQn_part;i++ ){ 
-  std::string weight_name = ParticleHelper::append_env("w", i); 
+  std::string weight_name = ParticleTools::append_env("w", i); 
     _weight_varlabel.push_back( VarLabel::find(weight_name) ); 
   }
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
@@ -169,7 +169,7 @@ CharOxidationShaddix::problemSetup(const ProblemSpecP& params, int qn)
   _weight_small = weight_eqn.getSmallClipPlusTol();
   _weight_scaling_constant = weight_eqn.getScalingConstant(d_quadNode);
 
-  std::string number_density_name = ParticleHelper::parse_for_role_to_label(db, "total_number_density");
+  std::string number_density_name = ParticleTools::parse_for_role_to_label(db, "total_number_density");
   _number_density_varlabel = VarLabel::find(number_density_name); 
 
   // get Char source term label and devol lable from the devolatilization model

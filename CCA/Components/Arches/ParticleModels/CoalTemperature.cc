@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -90,16 +90,16 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
     }
 
-    _diameter_base_name = ParticleHelper::parse_for_role_to_label(db, "size");
-    _rawcoal_base_name = ParticleHelper::parse_for_role_to_label(db, "raw_coal");
-    _char_base_name = ParticleHelper::parse_for_role_to_label(db, "char");
-    _enthalpy_base_name = ParticleHelper::parse_for_role_to_label(db, "enthalpy");
+    _diameter_base_name = ParticleTools::parse_for_role_to_label(db, "size");
+    _rawcoal_base_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+    _char_base_name = ParticleTools::parse_for_role_to_label(db, "char");
+    _enthalpy_base_name = ParticleTools::parse_for_role_to_label(db, "enthalpy");
     _weight_base_name = "w";
-    _dTdt_base_name = ParticleHelper::parse_for_role_to_label(db, "dTdt");
+    _dTdt_base_name = ParticleTools::parse_for_role_to_label(db, "dTdt");
     _gas_temperature_name = "temperature";
 
     for ( unsigned int i = 0; i < _sizes.size(); i++ ){
-      std::string temp_name = ParticleHelper::append_qn_env("w", i);
+      std::string temp_name = ParticleTools::append_qn_env("w", i);
       _weightqn_name.push_back(temp_name);
     }
 

@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalDensity.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -73,9 +73,9 @@ CoalDensity::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
     }
 
-    _rawcoal_base_name = ParticleHelper::parse_for_role_to_label(db, "raw_coal");
-    _char_base_name    = ParticleHelper::parse_for_role_to_label(db, "char");
-    _diameter_base_name = ParticleHelper::parse_for_role_to_label(db, "size");
+    _rawcoal_base_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+    _char_base_name    = ParticleTools::parse_for_role_to_label(db, "char");
+    _diameter_base_name = ParticleTools::parse_for_role_to_label(db, "size");
 
   } else {
     throw ProblemSetupException("Error: <CoalProperties> required in UPS file to compute a coal density.", __FILE__, __LINE__);
