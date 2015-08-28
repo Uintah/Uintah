@@ -129,14 +129,18 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
   }
 
   _nQn_part = 0;
-  if ( _particlesOn ){ 
-
-    //only works for DQMOM currently....need to check to make sure it is working with CQMOM/Lagrangian
-    if ( !ParticleTools::check_for_particle_method( db, ParticleTools::DQMOM)){ 
-      throw InvalidValue("Error: Only DQMOM verified to be working with particles/radiation. ", __FILE__, __LINE__);
+  if ( _particlesOn ){
+    bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
+    bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
+    
+    if ( doing_dqmom ){
+      _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+    } else if ( doing_cqmom ){
+      _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
+    } else {
+      throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
     }
 
-    _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM ); 
     _base_temperature_label_name = ParticleTools::parse_for_role_to_label( db, "temperature" );
     _base_size_label_name        = ParticleTools::parse_for_role_to_label( db, "size" );
 
