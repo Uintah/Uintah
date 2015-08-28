@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/CoalModels/MaximumTemperature.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -71,9 +71,9 @@ MaximumTemperature::problemSetup(const ProblemSpecP& params, int qn)
   ProblemSpecP db_coal_props = params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
   
   // create max T var label and get scaling constant
-  std::string max_pT_root = ParticleHelper::parse_for_role_to_label(db, "max_temperature"); 
-  std::string max_pT_name = ParticleHelper::append_env( max_pT_root, d_quadNode ); 
-  std::string max_pTqn_name = ParticleHelper::append_qn_env( max_pT_root, d_quadNode ); 
+  std::string max_pT_root = ParticleTools::parse_for_role_to_label(db, "max_temperature"); 
+  std::string max_pT_name = ParticleTools::append_env( max_pT_root, d_quadNode ); 
+  std::string max_pTqn_name = ParticleTools::append_qn_env( max_pT_root, d_quadNode ); 
   _max_pT_varlabel = VarLabel::find(max_pT_name);
   _max_pT_weighted_scaled_varlabel = VarLabel::find(max_pTqn_name); 
   EqnBase& temp_max_pT_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(max_pTqn_name);
@@ -84,13 +84,13 @@ MaximumTemperature::problemSetup(const ProblemSpecP& params, int qn)
 
   
   // create particle temperature label
-  std::string temperature_root = ParticleHelper::parse_for_role_to_label(db, "temperature"); 
-  std::string temperature_name = ParticleHelper::append_env( temperature_root, d_quadNode ); 
+  std::string temperature_root = ParticleTools::parse_for_role_to_label(db, "temperature"); 
+  std::string temperature_name = ParticleTools::append_env( temperature_root, d_quadNode ); 
   _particle_temperature_varlabel = VarLabel::find(temperature_name);
  
   // get weight scaling constant
-  std::string weightqn_name = ParticleHelper::append_qn_env("w", d_quadNode); 
-  std::string weight_name = ParticleHelper::append_env("w", d_quadNode); 
+  std::string weightqn_name = ParticleTools::append_qn_env("w", d_quadNode); 
+  std::string weight_name = ParticleTools::append_env("w", d_quadNode); 
   _weight_scaled_varlabel = VarLabel::find(weightqn_name); 
   EqnBase& temp_weight_eqn = dqmom_eqn_factory.retrieve_scalar_eqn(weightqn_name);
   DQMOMEqn& weight_eqn = dynamic_cast<DQMOMEqn&>(temp_weight_eqn);
