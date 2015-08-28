@@ -66,6 +66,10 @@ namespace Uintah {
     const VarLabel* minHydroStressLabel1;
     const VarLabel* minHydroStressLabel2;
     const VarLabel* minHydroStressLabel3;
+
+		// Boundary Variables
+		const VarLabel* gMatBoundaryColorLabel;
+		const VarLabel* ccNumOfParticlesLabel;
   };
   
 } // end namespace Uintah

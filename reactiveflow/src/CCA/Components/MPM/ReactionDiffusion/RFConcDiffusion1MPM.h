@@ -54,6 +54,12 @@ namespace Uintah {
     virtual void computeFlux(const Patch* patch, const MPMMaterial* matl,
                              DataWarehouse* old_dw, DataWarehouse* new_dw);
 
+    virtual void scheduleComputeDivergence(Task* task, const MPMMaterial* matl, 
+		                                      const PatchSet* patch) const;
+
+    virtual void computeDivergence(const Patch* patch, const MPMMaterial* matl,
+                                  DataWarehouse* old_dw, DataWarehouse* new_dw);
+
     virtual void scheduleInterpolateToParticlesAndUpdate(Task* task, const MPMMaterial* matl, 
 		                                                     const PatchSet* patch) const;
 
