@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -84,13 +84,13 @@ SimpleBirth::problemSetup(const ProblemSpecP& inputdb, int qn)
       throw ProblemSetupException("Error: Must specify an abscissa label for this model.",__FILE__,__LINE__);
     }
 
-    std::string a_name = ParticleHelper::append_qn_env( _abscissa_name, d_quadNode ); 
+    std::string a_name = ParticleTools::append_qn_env( _abscissa_name, d_quadNode ); 
     EqnBase& a_eqn = dqmomFactory.retrieve_scalar_eqn( a_name ); 
     _a_scale = a_eqn.getScalingConstant(d_quadNode); 
 
   }
 
-  std::string w_name = ParticleHelper::append_qn_env( "w", d_quadNode ); 
+  std::string w_name = ParticleTools::append_qn_env( "w", d_quadNode ); 
   EqnBase& temp_eqn = dqmomFactory.retrieve_scalar_eqn(w_name);
   DQMOMEqn& eqn = dynamic_cast<DQMOMEqn&>(temp_eqn);
   double weight_clip = eqn.getSmallClip();
@@ -168,7 +168,7 @@ SimpleBirth::sched_computeModel( const LevelP& level, SchedulerP& sched, int tim
   Task* tsk = scinew Task(taskname, this, &SimpleBirth::computeModel, timeSubStep );
 
   if ( !_is_weight ){ 
-    std::string abscissa_name = ParticleHelper::append_env( _abscissa_name, d_quadNode ); 
+    std::string abscissa_name = ParticleTools::append_env( _abscissa_name, d_quadNode ); 
     _abscissa_label = VarLabel::find(abscissa_name); 
     if ( _abscissa_label == 0 )
       throw InvalidValue("Error: Abscissa not found: "+abscissa_name, __FILE__, __LINE__); 

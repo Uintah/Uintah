@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqnFactory.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
@@ -32,9 +32,9 @@ void PartVel::problemSetup(const ProblemSpecP& inputdb)
   ProblemSpecP db = inputdb; 
   ProblemSpecP dqmom_db = db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM");
 
-  _uname = ParticleHelper::parse_for_role_to_label(db, "uvel"); 
-  _vname = ParticleHelper::parse_for_role_to_label(db, "vvel"); 
-  _wname = ParticleHelper::parse_for_role_to_label(db, "wvel"); 
+  _uname = ParticleTools::parse_for_role_to_label(db, "uvel"); 
+  _vname = ParticleTools::parse_for_role_to_label(db, "vvel"); 
+  _wname = ParticleTools::parse_for_role_to_label(db, "wvel"); 
 
   std::string which_dqmom; 
   dqmom_db->getAttribute( "type", which_dqmom ); 
@@ -367,7 +367,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         // set boundary conditions now that the velocity field is set.  
-        name = ParticleHelper::append_qn_env("vel", iqn);
+        name = ParticleTools::append_qn_env("vel", iqn);
         if ( d_gasBC )  // assume gas vel =  part vel on boundary 
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
         else            // part vel set by user.  
@@ -419,7 +419,7 @@ void PartVel::ComputePartVel( const ProcessorGroup* pc,
         }
 
         // Now set boundary conditions after velocities are set.  
-        name = ParticleHelper::append_qn_env("vel", iqn);
+        name = ParticleTools::append_qn_env("vel", iqn);
         if ( d_gasBC ){  // assume gas vel =  part vel on boundary 
           d_boundaryCond->setVectorValueBC( 0, patch, partVel, gasVel, name );
         } else {           // part vel set by user.  
@@ -459,7 +459,7 @@ for (int p=0; p < patches->size(); p++){
     partVel.initialize(Vector(0.,0.,0.));
 
     // Now set boundary conditions after velocities are set.  
-    std::string name = ParticleHelper::append_qn_env("vel", iqn); 
+    std::string name = ParticleTools::append_qn_env("vel", iqn); 
     d_boundaryCond->setVectorValueBC( 0, patch, partVel, name ); 
     }
   }  
