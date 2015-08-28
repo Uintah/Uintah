@@ -10,6 +10,7 @@
 #include <Core/Grid/Variables/VarLabel.h>
 #include <Core/Grid/Variables/CCVariable.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #ifdef HAVE_RADPROPS
 #  include <radprops/AbsCoeffGas.h>
 #  include <radprops/RadiativeSpecies.h>
@@ -476,7 +477,18 @@ RadPropertyCalculator::coalOptics::coalOptics(const ProblemSpecP& db, bool scatt
   //---------------------------------------------------------//
   
   //-----------------All class objects of this type should do this---------------------//
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  ProblemSpecP input_db = db;
+  bool doing_dqmom = ParticleTools::check_for_particle_method(input_db,ParticleTools::DQMOM);
+  bool doing_cqmom = ParticleTools::check_for_particle_method(input_db,ParticleTools::CQMOM);
+  
+  if ( doing_dqmom ){
+    _nQn_part = ParticleTools::get_num_env( input_db, ParticleTools::DQMOM );
+  } else if ( doing_cqmom ){
+    _nQn_part = ParticleTools::get_num_env( input_db, ParticleTools::CQMOM );
+  } else {
+    throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+  }
+  
   if ( _nQn_part ==0){
     construction_success = false;
   }
@@ -811,9 +823,20 @@ RadPropertyCalculator::constantCIF::constantCIF(const ProblemSpecP& db, bool sca
     throw ProblemSetupException("Error: abskp name not found! This should be specified in the input file!",__FILE__, __LINE__);
   }
 
-
+  
   //-----------------All class objects of this type should do this---------------------//
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  ProblemSpecP input_db = db;
+  bool doing_dqmom = ParticleTools::check_for_particle_method(input_db,ParticleTools::DQMOM);
+  bool doing_cqmom = ParticleTools::check_for_particle_method(input_db,ParticleTools::CQMOM);
+  
+  if ( doing_dqmom ){
+    _nQn_part = ParticleTools::get_num_env( input_db, ParticleTools::DQMOM );
+  } else if ( doing_cqmom ){
+    _nQn_part = ParticleTools::get_num_env( input_db, ParticleTools::CQMOM );
+  } else {
+    throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+  }
+  
   if ( _nQn_part ==0){
     construction_success = false;
   }
@@ -1004,7 +1027,18 @@ RadPropertyCalculator::basic::basic(const ProblemSpecP& db, bool scatteringOn){
   }
 
   //-----------------All class objects of this type should do this---------------------//
-  db->findBlock("abskg")->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+  ProblemSpecP input_db = db;
+  bool doing_dqmom = ParticleTools::check_for_particle_method(input_db,ParticleTools::DQMOM);
+  bool doing_cqmom = ParticleTools::check_for_particle_method(input_db,ParticleTools::CQMOM);
+  
+  if ( doing_dqmom ){
+    _nQn_part = ParticleTools::get_num_env( input_db, ParticleTools::DQMOM );
+  } else if ( doing_cqmom ){
+    _nQn_part = ParticleTools::get_num_env( input_db, ParticleTools::CQMOM );
+  } else {
+    throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+  }
+  
   if ( _nQn_part ==0){
     construction_success = false;
   }
