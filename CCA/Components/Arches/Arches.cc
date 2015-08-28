@@ -276,8 +276,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
-    i->second->register_all_tasks(db);
     i->second->set_shared_state(d_sharedState); 
+    i->second->register_all_tasks(db);
 
   }
   proc0cout << "\n Building Tasks For: " << std::endl;
