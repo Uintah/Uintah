@@ -31,6 +31,7 @@
     <save label="g.mass"/>
     <save label="g.concentration" />
     <save label="g.velocity"/>
+		<save label="cc.NumOfParticles" />
     <!--<save label="maxHydroStress1" />-->
     <!--<save label="minHydroStress1" />-->
   </DataArchiver>

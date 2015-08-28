@@ -143,6 +143,7 @@ void ScalarDiffusionModel::scheduleInterpolateParticlesToGrid(Task* task,
   task->computes(d_rdlb->gConcentrationLabel,      matlset);
   task->computes(d_rdlb->gConcentrationNoBCLabel,  matlset);
   task->computes(d_rdlb->gHydrostaticStressLabel,  matlset);
+  task->computes(d_rdlb->ccNumOfParticlesLabel,      matlset);
 }
 
 void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
@@ -185,18 +186,22 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
   NCVariable<double> gconcentration;
   NCVariable<double> gconcentrationNoBC;
   NCVariable<double> ghydrostaticstress;
+  CCVariable<int>    ccnum_of_particles;
 
-  new_dw->allocateAndPut(gconcentration,      d_rdlb->gConcentrationLabel,
+  new_dw->allocateAndPut(gconcentration,     d_rdlb->gConcentrationLabel,
 	                       dwi,  patch);
-  new_dw->allocateAndPut(gconcentrationNoBC,  d_rdlb->gConcentrationNoBCLabel,
+  new_dw->allocateAndPut(gconcentrationNoBC, d_rdlb->gConcentrationNoBCLabel,
 	                       dwi,  patch);
-  new_dw->allocateAndPut(ghydrostaticstress,  d_rdlb->gHydrostaticStressLabel,
+  new_dw->allocateAndPut(ghydrostaticstress, d_rdlb->gHydrostaticStressLabel,
+	                       dwi,  patch);
+  new_dw->allocateAndPut(ccnum_of_particles, d_rdlb->ccNumOfParticlesLabel,
 	                       dwi,  patch);
   new_dw->allocateAndPut(phydrostress, d_rdlb->pHydroStressLabel, pset);
 
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
   ghydrostaticstress.initialize(0);
+	ccnum_of_particles.initialize(0);
 
   int n8or27 = d_Mflag->d_8or27;
   double one_third = 1./3.;
@@ -208,6 +213,11 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
 
 		double pconc_ext = pConcentration[idx];
     IntVector node;
+    IntVector cell;
+    if(patch->findCell(px[idx], cell)){
+      ccnum_of_particles[cell]++;
+    }
+
     for(int k = 0; k < n8or27; k++) {
       node = ni[k];
       if(patch->containsNode(node)) {

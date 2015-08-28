@@ -106,6 +106,14 @@ ReactionDiffusionLabel::ReactionDiffusionLabel() {
       min_vartype::getTypeDescription());
   minHydroStressLabel3 = VarLabel::create("minHydroStress3",
       min_vartype::getTypeDescription());
+
+  // Boundary Variables
+  gMatBoundaryColorLabel = VarLabel::create( "g.MatBoundaryColor",
+      NCVariable<int>::getTypeDescription());
+
+  ccNumOfParticlesLabel = VarLabel::create( "cc.NumOfParticles",
+      CCVariable<int>::getTypeDescription());
+
 }
 
 ReactionDiffusionLabel::~ReactionDiffusionLabel() {
@@ -141,4 +149,8 @@ ReactionDiffusionLabel::~ReactionDiffusionLabel() {
   VarLabel::destroy(minHydroStressLabel1);
   VarLabel::destroy(minHydroStressLabel2);
   VarLabel::destroy(minHydroStressLabel3);
+
+  // Boundary Variables
+  VarLabel::destroy(gMatBoundaryColorLabel);
+  VarLabel::destroy(ccNumOfParticlesLabel);
 }
