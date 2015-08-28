@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPMEPatch.h>
 #include <Core/Geometry/IntVector.h>
 
 #include <iostream>

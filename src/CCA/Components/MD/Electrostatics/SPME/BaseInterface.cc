@@ -35,7 +35,7 @@
 
 #include <CCA/Components/MD/MDUtil.h>
 
-#include <CCA/Components/MD/Electrostatics/SPME/SPME.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPME.h>
 
 #include <fstream>
 #include <iomanip>

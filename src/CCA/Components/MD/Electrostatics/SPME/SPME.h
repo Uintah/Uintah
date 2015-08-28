@@ -47,8 +47,9 @@
 
 #include <CCA/Components/MD/CoordinateSystems/CoordinateSystem.h>
 #include <CCA/Components/MD/Electrostatics/Electrostatics.h>
-#include <CCA/Components/MD/Electrostatics/SPME/SPMEPatch.h>
-#include <CCA/Components/MD/Electrostatics/SPME/ShiftedCardinalBSpline.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/Realspace.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPMEPatch.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/ShiftedCardinalBSpline.h>
 
 #include <sci_defs/fftw_defs.h>
 

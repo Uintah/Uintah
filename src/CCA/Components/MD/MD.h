@@ -51,12 +51,6 @@
                              )                                                 \
                           )
 
-//#define isPrincipleThread (   Uintah::Parallel::getMPIRank() == 0              \
-//                           &&(  (Uintah::Parallel::getNumThreads() <= 1)       \
-//                              ||  (SCIRun::Thread::self()->myid() == 0)        \
-//                             )                                                 \
-//                          )
-
 namespace Uintah {
 
   static DebugStream md_dbg("            MDDebug",                 false);

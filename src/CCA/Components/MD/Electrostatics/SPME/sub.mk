@@ -27,7 +27,7 @@
 # 
 # Makefile fragment for this subdirectory 
 
-SRCDIR	:= CCA/Components/MD/Electrostatics/SPME
+SRCDIR	:= CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME
 
 SRCS += $(SRCDIR)/SPMEMapPoint.cc				\
         $(SRCDIR)/SPMEPatch.cc					\

@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-#include <CCA/Components/MD/Electrostatics/SPME/SPMEMapPoint.h>
+#include <CCA/Components/MD/Electrostatics/Ewald/InverseSpace/SPME/SPMEMapPoint.h>
 
 using namespace Uintah;
 using namespace SCIRun;

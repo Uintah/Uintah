@@ -76,45 +76,45 @@ namespace Uintah {
        * @brief
        * @param
        */
-      virtual void initialize(const ProcessorGroup* pg,
-                              const PatchSubset*    patches,
-                              const MaterialSubset* materials,
-                              DataWarehouse*      /*old_dw*/,
-                              DataWarehouse*        new_dw,
-                              const SimulationStateP*     simState,
-                              MDSystem*             systemInfo,
-                              const MDLabel*        label,
-                              CoordinateSystem*     coordinateSys) = 0;
+      virtual void initialize(const ProcessorGroup*     pg,
+                              const PatchSubset*        patches,
+                              const MaterialSubset*     materials,
+                                    DataWarehouse*      /*old_dw*/,
+                                    DataWarehouse*      new_dw,
+                              const SimulationStateP*   simState,
+                                    MDSystem*           systemInfo,
+                              const MDLabel*            label,
+                                    CoordinateSystem*   coordinateSys) = 0;
 
       /**
        * @brief
        * @param
        */
-      virtual void setup(const ProcessorGroup*  pg,
-                         const PatchSubset*     patches,
-                         const MaterialSubset*  materials,
-                         DataWarehouse*         old_dw,
-                         DataWarehouse*         new_dw,
-                         const SimulationStateP*      simState,
-                         MDSystem*              systemInfo,
-                         const MDLabel*         label,
-                         CoordinateSystem*      coordSys) = 0;
+      virtual void setup(const ProcessorGroup*      pg,
+                         const PatchSubset*         patches,
+                         const MaterialSubset*      materials,
+                               DataWarehouse*       old_dw,
+                               DataWarehouse*       new_dw,
+                         const SimulationStateP*    simState,
+                               MDSystem*            systemInfo,
+                         const MDLabel*             label,
+                               CoordinateSystem*    coordSys) = 0;
 
       /**
        * @brief
        * @param
        */
-      virtual void calculate(const ProcessorGroup*  pg,
-                             const PatchSubset*     patches,
-                             const MaterialSubset*  materials,
-                             DataWarehouse*         old_dw,
-                             DataWarehouse*         new_dw,
-                             const SimulationStateP*      simState,
-                             MDSystem*              systemInfo,
-                             const MDLabel*         label,
-                             CoordinateSystem*      coordinateSys,
-                             SchedulerP&            subscheduler,
-                             const LevelP&          level) = 0;
+      virtual void calculate(const ProcessorGroup*      pg,
+                             const PatchSubset*         patches,
+                             const MaterialSubset*      materials,
+                                   DataWarehouse*       old_dw,
+                                   DataWarehouse*       new_dw,
+                             const SimulationStateP*    simState,
+                                   MDSystem*            systemInfo,
+                             const MDLabel*             label,
+                                   CoordinateSystem*    coordinateSys,
+                                   SchedulerP&          subscheduler,
+                             const LevelP&              level) = 0;
 
       /**
        * @brief
@@ -125,7 +125,7 @@ namespace Uintah {
                             const MaterialSubset*   materials,
                             DataWarehouse*          old_dw,
                             DataWarehouse*          new_dw,
-                            const SimulationStateP*       simState,
+                            const SimulationStateP* simState,
                             MDSystem*               systemInfo,
                             const MDLabel*          label,
                             CoordinateSystem*       coordinateSys) = 0;

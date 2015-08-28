@@ -370,6 +370,9 @@ void MD::scheduleInitialize(const LevelP&       level,
 
   Task* task = scinew Task("MD::initialize", this, &MD::initialize);
 
+  proc0cout << " Number of materials in MD::scheduleInitialize --> "
+            << materials->size() << std::endl;
+
   // Initialize will load position, velocity, and ID tags
   task->computes(d_label->global->pX);
   task->computes(d_label->global->pV);
@@ -477,7 +480,8 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
                                     d_label->global->pX,
                                     d_sharedState->d_particleState,
                                     d_label->global->pID,
-                                    atomTypes);
+                                    atomTypes,
+                                    1);
 
   if (mdFlowDebug.active()) {
     mdFlowDebug << flowLocation
@@ -1249,8 +1253,7 @@ void MD::initialize(const ProcessorGroup*   pg,
     for (size_t localType = 0; localType < numAtomTypes; ++localType) {
 
       // Loop over materials
-      size_t        globalID    = matls->get(localType);
-      MDMaterial*   atomType    = d_sharedState->getMDMaterial(globalID);
+      MDMaterial*   atomType    = d_sharedState->getMDMaterial(localType);
       std::string   typeLabel   = atomType->getMaterialLabel();
 
       // Match coordinates to material and extract coordinate list
@@ -1325,8 +1328,9 @@ void MD::initialize(const ProcessorGroup*   pg,
 
 
       // Create this patch's particle set for atoms of current material
-      size_t            numAtoms = localAtomCoordinates.size();
-      ParticleSubset*   currPset =
+      size_t            numAtoms    = localAtomCoordinates.size();
+      size_t            globalID    = matls->get(localType);  // Map to global material type for pset creation
+      ParticleSubset*   currPset    =
                         newDW->createParticleSubset(numAtoms,
                                                     globalID,
                                                     currPatch,
@@ -1339,7 +1343,7 @@ void MD::initialize(const ProcessorGroup*   pg,
                       << " of type label "
                       << "\""
                       << d_sharedState
-                           ->getMDMaterial(globalID)
+                           ->getMDMaterial(localType)
                              ->getMaterialLabel()
                       << "\""
                       << std::endl;
@@ -1453,7 +1457,7 @@ void MD::calculateKineticEnergy(const ProcessorGroup*   pg,
         atomTypeEnergy += currentVelocity.length2();
         atomTypeStress += OuterProduct(currentVelocity,currentVelocity);
       }
-      double mass    = d_sharedState->getMDMaterial(atomType)->getMass();
+      double mass    = d_sharedState->getMDMaterial(atomIndex)->getMass();
       kineticEnergy += atomTypeEnergy * mass;
       kineticStress += atomTypeStress * mass;
       cellMomentum   += atomTypeCumulativeVelocity *mass;

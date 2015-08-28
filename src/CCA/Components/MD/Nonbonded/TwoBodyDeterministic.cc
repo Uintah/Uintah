@@ -215,7 +215,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
       constParticleVariable<Point> sourceX;
       oldDW->get(sourceX, label->global->pX, sourceAtomSet);
     // Get material map label for source atom type
-      std::string sourceMaterialLabel = simState->getMDMaterial(sourceAtomType)
+      std::string sourceMaterialLabel = simState->getMDMaterial(sourceIndex)
                                                   ->getMapLabel();
       // Initialize force variable
       ParticleVariable<Vector> pForce;
@@ -261,7 +261,7 @@ void TwoBodyDeterministic::calculate(const ProcessorGroup*  pg,
         oldDW->get(targetX, label->global->pX, targetAtomSet);
         // Get material map label for source atom type
         std::string targetMaterialLabel =
-                        simState->getMDMaterial(targetAtomType)->getMapLabel();
+                        simState->getMDMaterial(targetIndex)->getMapLabel();
 
         // All the local and neighbor related variables have been set up,
         // get a potential and begin calculation
