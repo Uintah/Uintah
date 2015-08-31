@@ -8,6 +8,7 @@
 #include <Core/Grid/Variables/VarTypes.h>
 #include <Core/Exceptions/InvalidValue.h>
 #include <Core/Parallel/Parallel.h>
+#include <Core/Containers/StaticArray.h>
 #include <fstream>
 
 using namespace std;
@@ -138,6 +139,23 @@ ScalarEqn::problemSetup(const ProblemSpecP& inputdb)
 
     }
   }
+  
+  //extra src terms which only require a VarLabel
+  if ( db->findBlock("extra_src") ) {
+    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != 0; src_db = src_db->findNextBlock("extra_src")){
+      string srcname;
+      src_db->getAttribute("label", srcname );
+      
+      const VarLabel * tempLabel;
+      tempLabel = VarLabel::find( srcname );
+      extraSourceLabels.push_back( tempLabel );
+      
+      //note: varlabel must be registered prior to problem setup
+      if (tempLabel == 0 )
+        throw InvalidValue("Error: Cannot find the VarLabel for the source term: " + srcname, __FILE__, __LINE__);
+    }
+  }
+  nExtraSources = extraSourceLabels.size();
 
   //call common problemSetup
   commonProblemSetup( db ); 
@@ -337,6 +355,11 @@ ScalarEqn::sched_buildTransportEqn( const LevelP& level, SchedulerP& sched, cons
     tsk->requires( Task::NewDW, temp_src.getSrcLabel(), Ghost::None, 0 ); 
   }
   
+  //extra sources
+  for ( int i = 0; i < nExtraSources; i++ ) {
+    tsk->requires( Task::NewDW, extraSourceLabels[i], Ghost::None, 0 );
+  }
+  
   //-----OLD-----
   tsk->requires(Task::OldDW, d_fieldLabels->d_areaFractionLabel, Ghost::AroundCells, 2); 
 
@@ -439,6 +462,14 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       temp_var.sign = (*src_iter).weight; 
       sourceVars.push_back(temp_var); 
     }
+    
+    //put extra sources into static array
+    StaticArray <constCCVariable<double> > extraSources (nExtraSources);
+    for ( int i = 0; i < nExtraSources; i++ ) {
+      const VarLabel* tempLabel = extraSourceLabels[i];
+      new_dw->get( extraSources[i], tempLabel, matlIndex, patch, gn, 0);
+    }
+    
     RHS.initialize(0.0); 
     Fconv.initialize(0.0); 
     Fdiff.initialize(0.0);
@@ -471,6 +502,11 @@ ScalarEqn::buildTransportEqn( const ProcessorGroup* pc,
       //-----ADD SOURCES
       for (vector<constCCVarWrapper>::iterator siter = sourceVars.begin(); siter != sourceVars.end(); siter++){
         RHS[c] += siter->sign * (siter->data)[c] * vol; 
+      }
+      
+      //-----ADD Extra Sources
+      for ( int i = 0; i< nExtraSources; i++) {
+        RHS[c] += extraSources[i][c] * vol;
       }
     }
   }
