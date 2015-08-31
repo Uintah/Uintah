@@ -166,8 +166,8 @@ void ElectrostaticNull::finalize  (const ProcessorGroup*     pg,
 }
 
 void ElectrostaticNull::registerRequiredParticleStates(
-                                    LabelArray&         particleState,
-                                    LabelArray&         particleState_preReloc,
+                                    varLabelArray&         particleState,
+                                    varLabelArray&         particleState_preReloc,
                                     MDLabel*            label) const
 {
   particleState.push_back(label->electrostatic->pF_electroInverse);

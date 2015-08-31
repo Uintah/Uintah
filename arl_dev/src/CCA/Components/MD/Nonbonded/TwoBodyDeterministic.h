@@ -78,8 +78,8 @@ namespace Uintah {
       }
 
 // Inherited from MDSubcomponent
-      virtual void registerRequiredParticleStates(LabelArray&,
-                                                  LabelArray&,
+      virtual void registerRequiredParticleStates(varLabelArray&,
+                                                  varLabelArray&,
                                                   MDLabel*) const;
 
       virtual void addInitializeRequirements(Task*, MDLabel*) const;

@@ -49,6 +49,7 @@
 #include <CCA/Components/MD/MD.h>
 #include <CCA/Components/Parent/ComponentFactory.h>
 #include <CCA/Components/Parent/Switcher.h>
+#include <CCA/Components/Parent/Multiscale.h>
 #include <CCA/Components/ReduceUda/UdaReducer.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <Core/Parallel/Parallel.h>
@@ -256,6 +257,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR, uda);
   } 
+  if (sim_comp == "multiscale" || sim_comp == "MULTISCALE") {
+    return scinew Multiscale(world, ps, doAMR, uda);
+  }
   if (sim_comp == "reduce_uda") {
     return scinew UdaReducer(world, uda);
   }

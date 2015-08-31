@@ -62,8 +62,8 @@ namespace Uintah {
        return d_forcefieldNameString;
       }
 
-     virtual void registerAtomTypes(const LabelArray&   particleState,
-                                    const LabelArray&   particleState_preReloc,
+     virtual void registerAtomTypes(const varLabelArray&   particleState,
+                                    const varLabelArray&   particleState_preReloc,
                                     const MDLabel*      label,
                                     SimulationStateP&   simState) const;
 

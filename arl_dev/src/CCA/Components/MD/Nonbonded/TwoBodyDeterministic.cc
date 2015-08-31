@@ -363,8 +363,8 @@ void TwoBodyDeterministic::finalize(const ProcessorGroup*   pg,
   // Nothing to put here now
 }
 
-void TwoBodyDeterministic::registerRequiredParticleStates(LabelArray& particleState,
-                                                          LabelArray& particleState_preReloc,
+void TwoBodyDeterministic::registerRequiredParticleStates(varLabelArray& particleState,
+                                                          varLabelArray& particleState_preReloc,
                                                           MDLabel* d_label) const {
   //  We probably don't need these for relocation, but it may be easier to set
   //  them up that way than to do it any other way

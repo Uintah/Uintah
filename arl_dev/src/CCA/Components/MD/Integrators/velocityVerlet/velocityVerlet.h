@@ -87,8 +87,8 @@ namespace Uintah{
 
 // Methods inherited from MDSubcomponent
       virtual void registerRequiredParticleStates(
-                                         LabelArray& particleState,
-                                         LabelArray& particleState_preReloc,
+                                         varLabelArray& particleState,
+                                         varLabelArray& particleState_preReloc,
                                          MDLabel*    labels) const;
 
       virtual void addInitializeRequirements(Task*       task,
