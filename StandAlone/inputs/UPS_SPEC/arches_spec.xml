@@ -1091,6 +1091,8 @@
                                         attribute1="label REQUIRED STRING"> <!-- Pointer to sources defined elsewhere -->
             <weight                     spec="OPTIONAL DOUBLE"/>            <!-- Multiply by this weight when adding source to the RHS. Default is +1.0. -->
           </src>
+          <extra_src                    spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/> <!-- Use to point to VarLabels directly instead of SourceTermFactory srcs-->
           <D_mol                        spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/> <!-- [m^2/s] --> <!-- label pointing the molecular diffusivity -->
           <D_mol_constant               spec="OPTIONAL NO_DATA"
