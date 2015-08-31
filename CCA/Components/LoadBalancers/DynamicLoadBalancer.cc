@@ -1133,11 +1133,14 @@ DynamicLoadBalancer::needRecompile(       double /*time*/,
   }
 #endif
 
-//  if (dbg.active() && d_myworld->myrank() == 0)
-//    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
-
+  if (dbg.active() && d_myworld->myrank() == 0){
+    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " timestep: " << timestep 
+        << " LB:timestepInterval" << d_lbTimestepInterval << " time[s]: " << time << " LB:Interval" << d_lbInterval 
+        << " Last LB timestep: " << d_lastLbTimestep << " Last LB timestep: " << d_lastLbTime << endl;
+  }
+  
   // if it determines we need to re-load-balance, recompile
-  if (do_check && possiblyDynamicallyReallocate(grid, check)) {
+  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancer::check)) {
     doing << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
     return true;
   }
@@ -1212,8 +1215,8 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != restart) {
-    if (state != check) {
+  if (state != LoadBalancer::restart) {
+    if (state != LoadBalancer::check) {
       force = true;
       if (d_lbTimestepInterval != 0) {
         d_lastLbTimestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -1248,7 +1251,7 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
       dynamicAllocate=true;
     }
 
-    if (dynamicAllocate || state != check) {
+    if (dynamicAllocate || state != LoadBalancer::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       d_processorAssignment = d_tempAssignment;
@@ -1281,8 +1284,15 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
     }
   }
   d_tempAssignment.resize(0);
+  
+  int flag = LoadBalancer::check;
+  if ( changed || state == LoadBalancer::restart){
+    flag = LoadBalancer::regrid;
+  }
+  
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
-  LoadBalancerCommon::possiblyDynamicallyReallocate(grid, (changed || state == restart) ? regrid : check);
+  LoadBalancerCommon::possiblyDynamicallyReallocate(grid, flag);
+  
   d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
   return changed;
 }
