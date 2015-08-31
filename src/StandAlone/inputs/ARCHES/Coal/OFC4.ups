@@ -851,13 +851,13 @@
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
-          <value>5.81292726525</value>
+          <value>5.8129272652473993</value>
         </BCType>
         <BCType id="all" label="ux_qn1" var="Dirichlet">
-          <value>5.81292726525</value>
+          <value>5.8129272652473993</value>
         </BCType>
         <BCType id="all" label="ux_qn2" var="Dirichlet">
-          <value>5.81292726525</value>
+          <value>5.8129272652473993</value>
         </BCType>
         <BCType id="all" label="uz_qn0" var="Dirichlet">
           <value>0.0</value>
@@ -963,13 +963,13 @@
           <value>1.0</value>
         </BCType>
         <BCType id="all" label="ux_qn0" var="Dirichlet">
-          <value>5.81558028599e-15</value>
+          <value>5.8155802859863606e-15</value>
         </BCType>
         <BCType id="all" label="ux_qn1" var="Dirichlet">
-          <value>5.81558028599e-15</value>
+          <value>5.8155802859863606e-15</value>
         </BCType>
         <BCType id="all" label="ux_qn2" var="Dirichlet">
-          <value>5.81558028599e-15</value>
+          <value>5.8155802859863606e-15</value>
         </BCType>
         <BCType id="all" label="uz_qn0" var="Dirichlet">
           <value>0.0</value>
@@ -1093,13 +1093,13 @@
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="uy_qn0" var="Dirichlet">
-          <value>6.63687980307e-16</value>
+          <value>0.66368798030714615e-15</value>
         </BCType>
         <BCType id="all" label="uy_qn1" var="Dirichlet">
-          <value>6.63687980307e-16</value>
+          <value>0.66368798030714615e-15</value>
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
-          <value>6.63687980307e-16</value>
+          <value>0.66368798030714615e-15</value>
         </BCType>
         <BCType id="all" label="vel_qn0" var="Dirichlet">
           <value>[0, 0.66368798030714615, 0]</value>
@@ -1205,13 +1205,13 @@
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="uy_qn0" var="Dirichlet">
-          <value>7.58500548922e-16</value>
+          <value>0.75850054892245278e-15</value>
         </BCType>
         <BCType id="all" label="uy_qn1" var="Dirichlet">
-          <value>7.58500548922e-16</value>
+          <value>0.75850054892245278e-15</value>
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
-          <value>7.58500548922e-16</value>
+          <value>0.75850054892245278e-15</value>
         </BCType>
         <BCType id="all" label="vel_qn0" var="Dirichlet">
           <value>[0, 0.75850054892245278, 0]</value>
@@ -1317,13 +1317,13 @@
           <value>0.0</value>
         </BCType>
         <BCType id="all" label="uy_qn0" var="Dirichlet">
-          <value>7.58500548922e-16</value>
+          <value>0.75850054892245278e-15</value>
         </BCType>
         <BCType id="all" label="uy_qn1" var="Dirichlet">
-          <value>7.58500548922e-16</value>
+          <value>0.75850054892245278e-15</value>
         </BCType>
         <BCType id="all" label="uy_qn2" var="Dirichlet">
-          <value>7.58500548922e-16</value>
+          <value>0.75850054892245278e-15</value>
         </BCType>
         <BCType id="all" label="vel_qn0" var="Dirichlet">
           <value>[0, 0.75850054892245278, 0]</value>
@@ -1784,9 +1784,6 @@
         </LinearSolver>
         <number_quad_nodes>3</number_quad_nodes>
         <VelModel type="Dragforce">
-          <upper_limit_multiplier>2</upper_limit_multiplier>
-          <clip_low>0</clip_low>
-          <partvelBC_eq_gasvelBC>false</partvelBC_eq_gasvelBC>
         </VelModel>
         <Models>
           <model label="xdragforce" type="Drag">
