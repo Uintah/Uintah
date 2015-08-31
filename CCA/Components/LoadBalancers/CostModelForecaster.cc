@@ -334,7 +334,7 @@ void min_norm_least_sq(vector<vector<double> > &A, vector<double> &b, vector<dou
 }
 
 //______________________________________________________________________
-//
+//  See section 5.2.1.1 of Justin Luitjens Dissertation
 void
 CostModelForecaster::finalizeContributions( const GridP currentGrid )
 {
@@ -362,6 +362,8 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 
   int rows=patch_info.size();
 
+  //__________________________________
+  //  Forming linear system, Eq. 5.3
   vector<int> fields;
   for(int i=0;i<3;i++){
   
@@ -375,6 +377,7 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
       size_t j;
       
       for(j=0;j<patch_info.size();j++){
+      
         if(patch_info[j][i] != first_val){
         
           //cout << "patch_info[" << j << "][" << i <<"]:" << patch_info[j][i] << " first_val: " << first_val << endl;
@@ -384,11 +387,9 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
         }
       }
       
-      if(j == patch_info.size()){
-        //singular on this field, set its coefficent to 0
-        if(d_myworld->myrank()==0)
-          cout << "Removing profiling field '" << PatchInfo::type(i) << "' because it is singular\n";
-
+      //singular on this field, set its coefficent to 0
+      if(j == patch_info.size()){  
+        proc0cout << "Removing profiling field '" << PatchInfo::type(i) << "' because it is singular\n";
         d_x[i]=0;
       }
     }
@@ -427,8 +428,9 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
 #if 0
   if(d_myworld->myrank()==0){
     cout << " Coefficients: ";
-    for(int i=0;i<cols;i++)
-      cout << x[i] << " ";
+    for(int i=0;i<cols;i++){
+      cout << "x["<<i<<"]: "<< x[i]<< "\n";
+    }
     cout << endl;
   }
 #endif
@@ -438,9 +440,11 @@ CostModelForecaster::finalizeContributions( const GridP currentGrid )
   static int iter=0;
   iter++;
   
+  // Eq. 5.5 in Dissertation
   double alpha=2.0/(min(iter,d_timestepWindow)+1);
-  //update coefficients using fading memory filter
   
+  // Eq. 5.4
+  //update coefficients using fading memory filter
   for(size_t f=0;f<fields.size();f++){
     d_x[fields[f]] = x[f]*alpha + d_x[fields[f]]*(1-alpha);
   }
@@ -464,7 +468,7 @@ CostModelForecaster::getWeights(const Grid* grid, vector<vector<int> > num_parti
   
 ostream& operator<<(ostream& out, const CostModelForecaster::PatchInfo &pi)
 {
-  out << pi.num_cells << " " << pi.num_extraCells << " " << pi.num_particles << " " << pi.execTime ;
+  out << "NumCells: " << pi.num_cells << " NumExtraCells: " << pi.num_extraCells << " NumParticles: " << pi.num_particles << " ExecTime: " << pi.execTime ;
   return out;
 }
 }
