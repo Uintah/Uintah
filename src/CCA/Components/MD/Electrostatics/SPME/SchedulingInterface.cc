@@ -133,8 +133,8 @@ void SPME::addFinalizeComputes(Task* task, MDLabel* d_label) const
   // Empty
 }
 
-void SPME::registerRequiredParticleStates(LabelArray& particleState,
-                                          LabelArray& particleState_preReloc,
+void SPME::registerRequiredParticleStates(varLabelArray& particleState,
+                                          varLabelArray& particleState_preReloc,
                                           MDLabel* d_label) const {
 
   // We absolutely need per-particle information to implement polarizable SPME

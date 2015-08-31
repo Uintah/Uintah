@@ -114,8 +114,8 @@ void Ewald::addFinalizeComputes(Task* task, MDLabel* label) const
   // Empty
 };
 
-void Ewald::registerRequiredParticleStates(LabelArray& particleState,
-                                           LabelArray& particleState_preReloc,
+void Ewald::registerRequiredParticleStates(varLabelArray& particleState,
+                                           varLabelArray& particleState_preReloc,
                                            MDLabel*    label) const
 {
   if (f_polarizable) {

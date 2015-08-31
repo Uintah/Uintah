@@ -45,7 +45,6 @@
 
 namespace Uintah {
 
-  typedef std::vector<const VarLabel*>              LabelArray;
   typedef SimpleGrid<double>                        doubleGrid;
   typedef SimpleGrid<SCIRun::Vector>                vectorGrid;
   typedef SimpleGrid<Uintah::Matrix3>               matrixGrid;

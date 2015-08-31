@@ -8,7 +8,7 @@
   <!--____________________________________________________________________-->
   <!--         C O M P O N E N T   S W I T C H E R                        -->
   <!--____________________________________________________________________-->
-  <SimulationComponent type="switcher" >
+  <SimulationComponent type="multiscale" >
   
       <subcomponent>
           <SimulationComponent type="mpm" />
@@ -77,10 +77,10 @@
        </BoundaryConditions>
        <Level>
            <Box label = "1">
-              <lower>[-0.55, 0.00, -0.10]</lower>
-              <upper>[ 0.55, 0.05,  4.10]</upper>
-               <resolution>[22,1,84]</resolution>
-              <patches>[1,1,1]</patches>
+              <lower>[-0.0125, 0.00, -0.00]</lower>
+              <upper>[ 1.0125, 0.0125,  4.20]</upper>
+               <resolution>[82,1,336]</resolution>
+              <patches>[1,1,4]</patches>
            </Box>
        </Level>
     </Grid>

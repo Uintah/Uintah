@@ -28,6 +28,7 @@
 
 #include <string>
 #include <iosfwd>
+#include <vector>
 #include <Core/Util/RefCounted.h>
 #include <Core/Geometry/IntVector.h>
 
@@ -165,6 +166,8 @@ namespace Uintah {
     VarLabel( const VarLabel & );
     VarLabel & operator=( const VarLabel & );
   };
+
+  typedef std::vector<const VarLabel*>              varLabelArray;
 } // End namespace Uintah
 
 #endif

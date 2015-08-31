@@ -46,8 +46,8 @@ namespace Uintah {
     public:
       MDSubcomponent () { }
       virtual ~MDSubcomponent() { }
-      virtual void registerRequiredParticleStates(LabelArray&,
-                                                  LabelArray&,
+      virtual void registerRequiredParticleStates(varLabelArray&,
+                                                  varLabelArray&,
                                                   MDLabel*) const = 0;
       virtual void addInitializeRequirements(Task*, MDLabel*) const = 0;
       virtual void addInitializeComputes(Task*, MDLabel*) const = 0;

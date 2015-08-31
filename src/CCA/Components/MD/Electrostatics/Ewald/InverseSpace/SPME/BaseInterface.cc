@@ -403,7 +403,7 @@ void SPME::calculate(   const ProcessorGroup*   pg,
                         SchedulerP&             subscheduler,
                         const LevelP&           level)
 {
-  std::vector< LabelArray > polParticleVarList, polParticleVarList_preReloc;
+  std::vector< varLabelArray > polParticleVarList, polParticleVarList_preReloc;
 
   // Generate the spline coefficients for the loop calculation.  If we
   // incorporate the charge seperately we can reduce this step to only once

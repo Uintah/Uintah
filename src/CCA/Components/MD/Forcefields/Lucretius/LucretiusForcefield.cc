@@ -557,8 +557,8 @@ LucretiusForcefield::getNonbondedPotential(const std::string& label1,
 }
 
 void LucretiusForcefield::registerAtomTypes(
-    const LabelArray& states_IterationN,
-    const LabelArray& states_IterationNPlusOne,
+    const varLabelArray& states_IterationN,
+    const varLabelArray& states_IterationNPlusOne,
     const MDLabel* label,
     SimulationStateP& simState) const {
 
