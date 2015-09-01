@@ -12,13 +12,13 @@
      <initTime>0.0</initTime>
      <delt_min>1.0e-16</delt_min>
      <delt_max>1.0e-9</delt_max>
-     <max_Timesteps>10</max_Timesteps>
+     <max_Timesteps>1000</max_Timesteps>
      <timestep_multiplier>0.4</timestep_multiplier>
   </Time>
 
   <DataArchiver>
     <filebase>nano_pillar3_2D_FBC.uda</filebase>
-    <outputTimestepInterval>1</outputTimestepInterval>
+    <outputTimestepInterval>10</outputTimestepInterval>
     <save label="p.x"/>
     <save label="p.particleID"/>
     <save label="p.velocity"/>
@@ -30,8 +30,9 @@
     <save label="p.loadCurveID" />
     <save label="g.mass"/>
     <save label="g.concentration" />
+    <save label="g.MatBoundaryColor" />
     <save label="g.velocity"/>
-		<save label="cc.NumOfParticles" />
+    <save label="cc.NumOfParticles" />
     <!--<save label="maxHydroStress1" />-->
     <!--<save label="minHydroStress1" />-->
   </DataArchiver>
@@ -71,7 +72,7 @@
          </diffusion_model>
          -->
          <diffusion_model type = "rf1">
-           <diffusivity>  2e-3   </diffusivity>
+           <diffusivity>  2e-4   </diffusivity>
            <max_concentration>  1.0      </max_concentration>
            <init_conc> 0.0  </init_conc>
            <tuning1>   1.95 </tuning1>

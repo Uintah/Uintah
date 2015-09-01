@@ -201,7 +201,7 @@ void ScalarDiffusionModel::interpolateParticlesToGrid(const Patch* patch,
   gconcentration.initialize(0);
   gconcentrationNoBC.initialize(0);
   ghydrostaticstress.initialize(0);
-	ccnum_of_particles.initialize(0);
+  ccnum_of_particles.initialize(0);
 
   int n8or27 = d_Mflag->d_8or27;
   double one_third = 1./3.;

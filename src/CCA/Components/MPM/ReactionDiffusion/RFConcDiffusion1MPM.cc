@@ -77,19 +77,19 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
   Ghost::GhostType  gnone = Ghost::None;
 
   //***** Hack *************
-	// This section is a hack to test particle boundary
-	// flux conditions
-	/**
+  // This section is a hack to test particle boundary
+  // flux conditions
+  /**
   double run_time = d_sharedState->getElapsedTime();
   double conc_flux;
-	int  time_step = d_sharedState->getCurrentTopLevelTimeStep();
+  int  time_step = d_sharedState->getCurrentTopLevelTimeStep();
 
   if(run_time < ramp_time){
     conc_flux = run_time/ramp_time;
   }else{
     conc_flux = 1.0;
   }
-	**/
+  **/
   //***** Hack *************
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch);
@@ -144,7 +144,7 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
       for (int j = 0; j<3; j++) {
           pConcGradient[idx][j] += gConcentration[ni[k]] * d_S[k][j] * oodx[j];
       }
-	  }
+    }
 
     //Diff = diffusivity*(1/(1-pConcentration[idx]) - 2*omega*pConcentration[idx]);
     Diff = diffusivity;
@@ -154,51 +154,51 @@ void RFConcDiffusion1MPM::computeFlux(const Patch* patch, const MPMMaterial* mat
     //***** Hack *************
     // this is a hack that uses LoadCurveID to identify boundary particles
     // works with nano_pillar3_2D_FBC
-		/**
-		int max_step_count = 3;
+    /**
+    int max_step_count = 3;
     if(pLoadCurveID[idx] == 1){
-		  Vector bcJ;
-		  if(time_step <= max_step_count){
+      Vector bcJ;
+      if(time_step <= max_step_count){
         bcJ[0] = -1.0;
         bcJ[1] = 0.0;
         bcJ[2] = 0.0;
-		  }else{
-			  bcJ = pFlux[idx];
-				bcJ.normalize();
-			}
-			pFlux[idx] += -conc_flux*bcJ;
+      }else{
+        bcJ = pFlux[idx];
+        bcJ.normalize();
+      }
+      pFlux[idx] += -conc_flux*bcJ;
     }
     if(pLoadCurveID[idx] == 2){
-		  Vector bcJ;
-		  if(time_step <= max_step_count){
+      Vector bcJ;
+      if(time_step <= max_step_count){
         bcJ[0] = 1.0;
         bcJ[1] = 0.0;
         bcJ[2] = 0.0;
-		  }else{
-			  bcJ = pFlux[idx];
-				bcJ.normalize();
-			}
-			pFlux[idx] += -conc_flux*bcJ;
+      }else{
+        bcJ = pFlux[idx];
+        bcJ.normalize();
+      }
+      pFlux[idx] += -conc_flux*bcJ;
     }
     if(pLoadCurveID[idx] == 3){
-		  Vector bcJ;
-		  if(time_step <= max_step_count){
+      Vector bcJ;
+      if(time_step <= max_step_count){
         bcJ[0] = 0.0;
         bcJ[1] = 1.0;
         bcJ[2] = 0.0;
-		  }else{
-			  bcJ = pFlux[idx];
-				bcJ.normalize();
-			}
-			pFlux[idx] += -conc_flux*bcJ;
-		}
-		**/
+      }else{
+        bcJ = pFlux[idx];
+        bcJ.normalize();
+      }
+      pFlux[idx] += -conc_flux*bcJ;
+    }
+    **/
     //***** Hack *************
 
     //cout << "id: " << idx << " CG: " << pConcentrationGradient[idx] << ", PF: " << pPotentialFlux[idx] << endl;
   } //End of Particle Loop
 
-	delete interpolator;
+  delete interpolator;
 }
 
 void RFConcDiffusion1MPM::scheduleComputeDivergence(Task* task, 
@@ -207,7 +207,7 @@ void RFConcDiffusion1MPM::scheduleComputeDivergence(Task* task,
 {
   Ghost::GhostType gnone = Ghost::None;
   Ghost::GhostType gan   = Ghost::AroundNodes;
-	Ghost::GhostType gac   = Ghost::AroundCells;
+  Ghost::GhostType gac   = Ghost::AroundCells;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW, d_sharedState->get_delt_label());
   task->requires(Task::OldDW, d_lb->pXLabel,                  gan, NGP);
@@ -234,16 +234,30 @@ void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMateria
 {
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gan   = Ghost::AroundNodes;
-	Ghost::GhostType  gac   = Ghost::AroundCells;
+  Ghost::GhostType  gac   = Ghost::AroundCells;
   int dwi = matl->getDWIndex();
+
+  //***** Hack *************
+  // This section is a hack to test particle boundary
+  // flux conditions
+  double run_time = d_sharedState->getElapsedTime();
+  double bc_dCdt;
+  int  time_step = d_sharedState->getCurrentTopLevelTimeStep();
+
+  if(run_time < ramp_time){
+    bc_dCdt = 1000.0;
+  }else{
+    bc_dCdt = 0.0;
+  }
+  //***** Hack *************
 
   ParticleInterpolator* interpolator = d_Mflag->d_interpolator->clone(patch); 
   vector<IntVector> ni(interpolator->size());
   vector<double> S(interpolator->size());
   vector<Vector> d_S(interpolator->size());
-	
-  vector<IntVector> boundary_cells;
-	IntVector cell;
+  
+  vector<IntVector> boundary_nodes;
+  IntVector cell;
 
   Vector dx = patch->dCell();
   double oodx[3];
@@ -265,7 +279,9 @@ void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMateria
   NCVariable<double> gConcRate;
   NCVariable<double> gConcStar;
   NCVariable<double> gdCdt;
-	NCVariable<int>    gMatBoundaryColor;
+  NCVariable<double> temp_gdCdt;
+  NCVariable<double> temp_gMass;
+  NCVariable<int>    gMatBoundaryColor;
 
   ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGP, d_lb->pXLabel);
 
@@ -289,9 +305,13 @@ void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMateria
   new_dw->allocateAndPut(gConcStar,         d_rdlb->gConcentrationStarLabel, dwi,patch);
   new_dw->allocateAndPut(gMatBoundaryColor, d_rdlb->gMatBoundaryColorLabel,  dwi,patch);
 
-  new_dw->allocateTemporary(gdCdt,              patch);
+  new_dw->allocateTemporary(gdCdt,      patch);
+  new_dw->allocateTemporary(temp_gdCdt, patch);
+  new_dw->allocateTemporary(temp_gMass, patch);
 
   gdCdt.initialize(0.0);
+  temp_gdCdt.initialize(0.0);
+  temp_gMass.initialize(0.0);
   gConcStar.initialize(0.0);
   gConcRate.initialize(0.0);
   gMatBoundaryColor.initialize(0);
@@ -300,7 +320,7 @@ void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMateria
     particleIndex idx = *iter;
   
     // Get the node indices that surround the cell
-    interpolator->findCellAndShapeDerivatives(px[idx],ni,d_S,psize[idx],deformationGradient[idx]);
+    interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],deformationGradient[idx]);
 
     Vector J = pFlux[idx];
     double Cdot_cond = 0.0;
@@ -310,15 +330,19 @@ void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMateria
     for (int k = 0; k < d_Mflag->d_8or27; k++){
       node = ni[k];
       if(patch->containsNode(node)){
-          if(pLoadCurveID[idx] == 1){
-          }else if(pLoadCurveID[idx] == 2){
-          }else if(pLoadCurveID[idx] == 3){
-          }else {
-            Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
-            Cdot_cond = Dot(div, J)*pMass[idx];
-            gdCdt[node] -= Cdot_cond;
-          }
-        if(patch->findCell(px[idx], cell)){
+        if(pLoadCurveID[idx] == 1){
+          temp_gdCdt[node] += bc_dCdt * pMass[idx] * S[k];
+          temp_gMass[node] += pMass[idx] * S[k];
+        }else if(pLoadCurveID[idx] == 2){
+          temp_gdCdt[node] += bc_dCdt * pMass[idx] * S[k];
+          temp_gMass[node] += pMass[idx] * S[k];
+        }else if(pLoadCurveID[idx] == 3){
+          temp_gdCdt[node] += bc_dCdt * pMass[idx] * S[k];
+          temp_gMass[node] += pMass[idx] * S[k];
+        }else {
+          Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],d_S[k].z()*oodx[2]);
+          Cdot_cond = Dot(div, J)*pMass[idx];
+          gdCdt[node] -= Cdot_cond;
         }
       }
     }
@@ -327,7 +351,8 @@ void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMateria
   for(NodeIterator iter=patch->getExtraNodeIterator();
                    !iter.done();iter++){
     IntVector c = *iter; 
-    gdCdt[c]   /= gMass[c];
+    gdCdt[c]      /= gMass[c];
+    temp_gdCdt[c] /= temp_gMass[c];
   }
 
   MPMBoundCond bc;
@@ -340,13 +365,33 @@ void RFConcDiffusion1MPM::computeDivergence(const Patch* patch, const MPMMateria
 
   bc.setBoundaryCondition(patch, dwi,"SD-Type", gConcStar, d_Mflag->d_interpolator_type);
 
+  IntVector cells[8];
+  bool boundary_node;
   for(NodeIterator iter=patch->getExtraNodeIterator();
                        !iter.done();iter++){
     IntVector c = *iter;
-    gConcRate[c] = (gConcStar[c] - gConc_OldNoBC[c]) / delT;
+
+    if(temp_gdCdt[c] > 0){
+      patch->findCellsFromNode(c, cells);
+      boundary_node = false;
+      for(int k = 0; k < 8; k++){
+        if(cells[k].y() >= 0 && cells[k].z() >= 0 && cells[k].z() < 1){
+          if(ccNum_of_Particles[cells[k]] == 0){
+            boundary_node = true;
+          }
+        }
+      }
+      if(boundary_node){
+        gMatBoundaryColor[c] = 1;
+        gConcRate[c] = temp_gdCdt[c];
+      }else{
+        gConcRate[c] = (gConcStar[c] - gConc_OldNoBC[c]) / delT;
+      }
+    }else{
+      gConcRate[c] = (gConcStar[c] - gConc_OldNoBC[c]) / delT;
+    }
   }
 }
-
 
 void RFConcDiffusion1MPM::scheduleInterpolateToParticlesAndUpdate(Task* task,
                                                            const MPMMaterial* matl,     
@@ -377,8 +422,6 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
 {
   Ghost::GhostType  gac   = Ghost::AroundCells;
   int dwi = matl->getDWIndex();
-
-
 
   // this is a hack that uses LoadCurveID to identify boundary particles
   // works with nano_pillar3_2D_FBC
@@ -434,8 +477,8 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
     particleIndex idx = *iter;
     interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S,psize[idx],pFOld[idx]);
     double concRate = 0.0;
-		double concentration = 0.0;
-		pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
+    double concentration = 0.0;
+    pConcGradNew[idx] = Vector(0.0, 0.0, 0.0);
     for (int k = 0; k < d_Mflag->d_8or27; k++) {
       IntVector node = ni[k];
       concRate += gConcentrationRate[node]   * S[k];
@@ -450,7 +493,7 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
 
     // this is a hack that uses LoadCurveID to identify boundary particles
     // works with nano_pillar3_2D_FBC
-		/**
+    /**
     if(pLoadCurveID[idx] == 1){
       pConcentrationNew[idx] = boundary_conc;
     }
@@ -460,10 +503,9 @@ void RFConcDiffusion1MPM::interpolateToParticlesAndUpdate(const Patch* patch,
     if(pLoadCurveID[idx] == 3){
       pConcentrationNew[idx] = boundary_conc;
     }
-		**/
+    **/
 
     pConcPreviousNew[idx]  = pConcentration[idx];
   }
   delete interpolator;
 }
-
