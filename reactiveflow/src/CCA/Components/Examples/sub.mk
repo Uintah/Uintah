@@ -35,7 +35,7 @@ SRCS += \
         $(SRCDIR)/AMRWave.cc           \
         $(SRCDIR)/Benchmark.cc         \
         $(SRCDIR)/Burger.cc            \
-        $(SRCDIR)/DOSweep.cc            \
+        $(SRCDIR)/DOSweep.cc           \
         $(SRCDIR)/ExamplesLabel.cc     \
         $(SRCDIR)/Interpolator.cc      \
         $(SRCDIR)/ParticleTest1.cc     \
@@ -46,6 +46,7 @@ SRCS += \
         $(SRCDIR)/RegionDB.cc          \
         $(SRCDIR)/RegridderTest.cc     \
         $(SRCDIR)/SolverTest1.cc       \
+        $(SRCDIR)/EPConcSolver1.cc     \
         $(SRCDIR)/Wave.cc              
 
 ifeq ($(BUILD_MODELS_RADIATION),yes)
