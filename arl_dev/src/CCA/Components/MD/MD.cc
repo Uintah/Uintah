@@ -476,9 +476,9 @@ void MD::scheduleTimeAdvance(const LevelP&      level,
 
   sched->scheduleParticleRelocation(level,
                                     d_label->global->pX_preReloc,
-                                    d_sharedState->d_particleState_preReloc,
+                                    d_sharedState->d_cohesiveZoneState_preReloc,
                                     d_label->global->pX,
-                                    d_sharedState->d_particleState,
+                                    d_sharedState->d_cohesiveZoneState,
                                     d_label->global->pID,
                                     atomTypes,
                                     1);
