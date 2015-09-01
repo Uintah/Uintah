@@ -566,8 +566,8 @@ void LucretiusForcefield::registerAtomTypes(
 
   for (size_t atomType = 0; atomType < numberAtomTypes; ++atomType) {
     simState->registerMDMaterial(materialArray[atomType]);
-    simState->d_particleState.push_back(states_IterationN);
-    simState->d_particleState_preReloc.push_back(states_IterationNPlusOne);
+    simState->d_cohesiveZoneState.push_back(states_IterationN);
+    simState->d_cohesiveZoneState_preReloc.push_back(states_IterationNPlusOne);
     if (lucretiusDebug.active()) {
       lucretiusDebug << "MD::LucretiusForcefield |  "
                      << "Registered material " << atomType << " -> \""
