@@ -152,7 +152,7 @@ CoalDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                    ( *ratio * _rhop_o );
     } else {
       const std::string diameter_name  = get_env_name( i, _diameter_base_name );
-      SVolFP dp = tsk_info->get_so_field<SVolF>( diameter_name );
+      SVolFP dp = tsk_info->get_const_so_field<SVolF>( diameter_name );
       
       SpatialOps::SpatFldPtr<SVolF> initAsh = SpatialFieldStore::get<SVolF>( *rho );
       SpatialOps::SpatFldPtr<SVolF> massDry = SpatialFieldStore::get<SVolF>( *rho );
@@ -245,7 +245,7 @@ CoalDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
                    ( *ratio * _rhop_o );
     } else {
       const std::string diameter_name  = get_env_name( i, _diameter_base_name );
-      SVolFP dp = tsk_info->get_so_field<SVolF>( diameter_name );
+      SVolFP dp = tsk_info->get_const_so_field<SVolF>( diameter_name );
       
       SpatialOps::SpatFldPtr<SVolF> initAsh = SpatialFieldStore::get<SVolF>( *rho );
       SpatialOps::SpatFldPtr<SVolF> massDry = SpatialFieldStore::get<SVolF>( *rho );
