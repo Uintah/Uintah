@@ -835,6 +835,8 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
+          <extra_src                    spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
           <enforce_solvability          spec="OPTIONAL NO_DATA"/> <!-- For some problems, this parameter is required to solve the system (e.g., periodic, variable density ) -->
 
         <Parameters                     spec="OPTIONAL NO_DATA"
