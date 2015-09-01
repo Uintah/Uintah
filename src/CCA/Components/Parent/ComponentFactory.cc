@@ -34,6 +34,7 @@
 #include <CCA/Components/Examples/Poisson4.h>
 #include <CCA/Components/Examples/RegridderTest.h>
 #include <CCA/Components/Examples/SolverTest1.h>
+#include <CCA/Components/Examples/EPConcSolver1.h>
 #include <CCA/Components/Examples/Wave.h>
 #include <CCA/Components/ICE/AMRICE.h>
 #include <CCA/Components/ICE/ICE.h>
@@ -226,6 +227,9 @@ ComponentFactory::create( ProblemSpecP& ps, const ProcessorGroup* world,
   } 
   if (sim_comp == "solvertest" || sim_comp == "SOLVERTEST") {
     return scinew SolverTest1(world);
+  } 
+  if (sim_comp == "epconcsolver" || sim_comp == "EPCONCSOLVER") {
+    return scinew EPConcSolver1(world);
   } 
   if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR, uda);
