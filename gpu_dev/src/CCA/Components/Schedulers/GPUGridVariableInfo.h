@@ -51,15 +51,19 @@ public:
     string     label;
     int             matlIndx;
     int             levelIndx;
+    int             fromPatch;
+    int             toPatch;
     int             dataWarehouse;
     IntVector       sharedLowCoordinates;
     IntVector       sharedHighCoordinates;
 
-    GhostVarsTuple(string label, int matlIndx, int levelIndx, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates) {
+    GhostVarsTuple(string label, int matlIndx, int levelIndx, int fromPatch, int toPatch, int dataWarehouse, IntVector sharedLowCoordinates, IntVector sharedHighCoordinates) {
       this->label = label;
       this->matlIndx = matlIndx;
       this->levelIndx = levelIndx;
       this->dataWarehouse = dataWarehouse;
+      this->fromPatch = fromPatch;
+      this->toPatch = toPatch;
       this->sharedLowCoordinates = sharedLowCoordinates;
       this->sharedHighCoordinates = sharedHighCoordinates;
     }
@@ -73,14 +77,27 @@ public:
                  && (this->levelIndx < right.levelIndx)) {
         return true;
       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-                 && (this->levelIndx == right.levelIndx) && (this->dataWarehouse < right.dataWarehouse)) {
+                 && (this->levelIndx == right.levelIndx) && (this->fromPatch < right.fromPatch)) {
         return true;
       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-          && (this->levelIndx == right.levelIndx) && (this->dataWarehouse == right.dataWarehouse)
+                && (this->levelIndx == right.levelIndx)
+                && (this->fromPatch == right.fromPatch) && (this->toPatch < right.toPatch)) {
+        return true;
+      } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+                 && (this->levelIndx == right.levelIndx)
+                 && (this->fromPatch == right.fromPatch) && (this->toPatch == right.toPatch)
+                 && (this->dataWarehouse < right.dataWarehouse)) {
+        return true;
+      } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
+          && (this->levelIndx == right.levelIndx)
+          && (this->fromPatch == right.fromPatch) && (this->toPatch == right.toPatch)
+          && (this->dataWarehouse == right.dataWarehouse)
           && (this->sharedLowCoordinates < right.sharedLowCoordinates)) {
         return true;
       } else if (this->label == right.label && (this->matlIndx == right.matlIndx)
-          && (this->levelIndx == right.levelIndx) && (this->dataWarehouse == right.dataWarehouse)
+          && (this->levelIndx == right.levelIndx)
+          && (this->fromPatch == right.fromPatch) && (this->toPatch == right.toPatch)
+          && (this->dataWarehouse == right.dataWarehouse)
           && (this->sharedLowCoordinates == right.sharedLowCoordinates)
           && (this->sharedHighCoordinates < right.sharedHighCoordinates)) {
         return true;

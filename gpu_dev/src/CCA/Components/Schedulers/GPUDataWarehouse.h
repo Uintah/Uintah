@@ -307,6 +307,7 @@ public:
     get(var, label, patchID, matlIndx, 0);
   }
   HOST_DEVICE void getStagingVar(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
+  HOST_DEVICE bool stagingVarExists(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size);
 
 
   HOST_DEVICE void get(const GPUReductionVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx);
@@ -359,7 +360,7 @@ public:
   HOST_DEVICE bool existsLevelDB( char const* name, int matlIndx, int levelIndx);       // levelDB
   HOST_DEVICE bool removeLevelDB( char const* name, int matlIndx, int levelIndx);
   HOST_DEVICE bool remove(char const* label, int patchID, int matlIndx, int levelIndx);
-  HOST_DEVICE void init_device(size_t objectSizeInBytes );
+
   HOST_DEVICE void syncto_device(void *cuda_stream);
   HOST_DEVICE void clear();
   HOST_DEVICE void deleteSelfOnDevice();
@@ -500,7 +501,7 @@ public:
 
   HOST_DEVICE void* getPlacementNewBuffer();
   
-  HOST_DEVICE bool init_device( int id );
+  __host__ void init_device(size_t objectSizeInBytes, unsigned int maxdVarDBItems );
   __host__ void init(int id);
   __host__ void cleanup();
 
@@ -538,6 +539,7 @@ private:
   int                d_device_id;
   bool               d_debug;
   size_t             objectSizeInBytes;
+  unsigned int       maxdVarDBItems;            //How many items we can add to d_varDB before we run out of capacity.
   void *             placementNewBuffer;        //For task DWs, we want to seraliaze and size this object as small as possible.
                                                 //So we create a buffer, and keep track of the start of that buffer here.
 

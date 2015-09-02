@@ -86,7 +86,7 @@ void DeviceGhostCells::add(const VarLabel* label,
           GpuUtilities::DeviceVarDestination dest) {   //toNode, needed when preparing contiguous arrays to send off host for MPI
 
   //unlike grid variables, we should only have one instance of label/patch/matl/level/dw for patch variables.
-  GpuUtilities::GhostVarsTuple gvt(label->getName(), matlIndx, levelIndx, (int)dwIndex, low, high);
+  GpuUtilities::GhostVarsTuple gvt(label->getName(), matlIndx, levelIndx, sourcePatchPointer->getID(), destPatchPointer->getID(), (int)dwIndex, low, high);
   if (ghostVars.find(gvt) == ghostVars.end()) {
 
     if (totalGhostCellCopies.find(sourceDeviceNum) == totalGhostCellCopies.end() ) {
@@ -184,7 +184,7 @@ unsigned int DeviceGhostCells::getNumGhostCellCopies(const unsigned int whichDev
   std::map<unsigned int, DatawarehouseIds>::const_iterator it;
   it = totalGhostCellCopies.find(whichDevice);
   if(it != totalGhostCellCopies.end()) {
-      return it->second.DwIds[whichDevice];
+      return it->second.DwIds[(unsigned int)dwIndex];
   }
   return 0;
 
