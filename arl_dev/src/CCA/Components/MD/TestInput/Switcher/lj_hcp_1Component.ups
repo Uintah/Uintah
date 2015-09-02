@@ -32,9 +32,9 @@
        <filebase>lj_hcp_1component.uda</filebase>
        <outputInterval>1000</outputInterval>
        <!--outputInterval>1</outputInterval-->
-       <save label = "p.x"/>
-       <save label = "p.ID"/>
-       <save label = "p.v"/>
+       <save label = "p.x_MD"/>
+       <save label = "p.ID_MD"/>
+       <save label = "p.v_MD"/>
        <!--checkpoint cycle = "2" interval = "1"/-->
        <checkpoint cycle = "0" interval = "0"/>
    </DataArchiver>
