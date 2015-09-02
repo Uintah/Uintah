@@ -12,7 +12,7 @@
   
       <subcomponent>
           <SimulationComponent type="mpm" />
-          <input_file>inputs/MPM/4disks_2d.ups</input_file>
+          <input_file>mpm_4disks_2d.ups</input_file>
           <SwitchCriteria type = "Timestep">
             <timestep> 10 </timestep>
           </SwitchCriteria>
