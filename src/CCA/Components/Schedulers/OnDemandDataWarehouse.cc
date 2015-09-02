@@ -410,7 +410,7 @@ OnDemandDataWarehouse::getNumDevices() {
 
   if (Uintah::Parallel::usingDevice()) {
     if (simulate_multiple_gpus.active()) {
-      numDevices = 3;
+      numDevices = 2;
     } else if (!use_single_device.active()) {
       CUDA_RT_SAFE_CALL(retVal = cudaGetDeviceCount(&numDevices));
     } else {

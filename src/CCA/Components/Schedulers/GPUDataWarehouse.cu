@@ -85,6 +85,33 @@ GPUDataWarehouse::get(const GPUGridVariableBase& var, char const* label, int pat
 
 //______________________________________________________________________
 //
+HOST_DEVICE bool
+GPUDataWarehouse::stagingVarExists(char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size)
+{
+#ifdef __CUDA_ARCH__
+  //device code
+  printError("This method not defined for the device.", "stagingVarExists", label, patchID, matlIndx, levelIndx);
+#else
+  //host code
+  varLock->readLock();
+  bool retval = false;
+  labelPatchMatlLevel lpml(label, patchID, matlIndx, levelIndx);
+  std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml);
+
+  if (it != varPointers->end()) {
+    stagingVar sv;
+    sv.device_offset = offset;
+    sv.device_size = size;
+    std::map<stagingVar, stagingVarInfo>::iterator staging_it = it->second.stagingVars.find(sv);
+    retval = (staging_it != it->second.stagingVars.end());
+  }
+  varLock->readUnlock();
+  return retval;
+#endif
+}
+
+//______________________________________________________________________
+//
 HOST_DEVICE void
 GPUDataWarehouse::getStagingVar(const GPUGridVariableBase& var, char const* label, int patchID, int matlIndx, int levelIndx, int3 offset, int3 size)
 {
@@ -611,6 +638,7 @@ GPUDataWarehouse::allocateAndPut(GPUGridVariableBase &var, char const* label, in
              << " memsize " << var.getMemSize()
              << " from low (" << low.x << ", " << low.y << ", " << low.z << ")"
              << " and high (" << high.x << ", " << high.y << ", " << high.z << ")"
+             << " allocated at " << addr
              << endl;
        }
        cerrLock.unlock();
@@ -1397,6 +1425,7 @@ GPUDataWarehouse::init(int id)
 
   d_device_id = id;
   objectSizeInBytes = 0;
+  maxdVarDBItems = 0;
   //this->placementNewBuffer = placementNewBuffer;
   allocateLock = new SCIRun::CrowdMonitor("allocate lock");
   varLock = new SCIRun::CrowdMonitor("var lock");
@@ -1432,14 +1461,15 @@ GPUDataWarehouse::cleanup()
 
 //______________________________________________________________________
 //
-HOST_DEVICE void
-GPUDataWarehouse::init_device(size_t objectSizeInBytes)
+__host__ void
+GPUDataWarehouse::init_device(size_t objectSizeInBytes, unsigned int maxdVarDBItems)
 {
 #ifdef __CUDA_ARCH__
   printf("GPUDataWarehouse::init_device() should only be called by the framework\n");
 #else
 
     this->objectSizeInBytes = objectSizeInBytes;
+    this->maxdVarDBItems = maxdVarDBItems;
     OnDemandDataWarehouse::uintahSetCudaDevice( d_device_id );
     void* temp = NULL;
     CUDA_RT_SAFE_CALL(cudaMalloc(&temp, objectSizeInBytes));
@@ -2075,10 +2105,14 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
            int y_dest_real = y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[destIndex].var_offset.y;
            int z_dest_real = z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[destIndex].var_offset.z;
 
-           int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
 
+           int destOffset = x_dest_real + d_varDB[destIndex].var_size.x * (y_dest_real + z_dest_real * d_varDB[destIndex].var_size.y);
+           //printf("Computing destOffset from reals [%d, %d, %d] and sizes [%d, %d, %d] and got %d\n",
+           //    x_dest_real, y_dest_real,z_dest_real,
+           //    d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z,
+           //    destOffset);
            //if (threadID == 0) {
-              /*printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
+           /*   printf("Going to copy, between (%d, %d, %d) from offset %d to offset %d.  From starts at (%d, %d, %d) with size (%d, %d, %d) pointer %p.  To starts at (%d, %d, %d) with size (%d, %d, %d).\n",
                   d_varDB[i].ghostItem.sharedLowCoordinates.x,
                   d_varDB[i].ghostItem.sharedLowCoordinates.y,
                   d_varDB[i].ghostItem.sharedLowCoordinates.z,
@@ -2089,7 +2123,7 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
                   d_varDB[i].var_ptr,
                   d_varDB[destIndex].var_offset.x, d_varDB[destIndex].var_offset.y, d_varDB[destIndex].var_offset.z,
                   d_varDB[destIndex].var_size.x, d_varDB[destIndex].var_size.y, d_varDB[destIndex].var_size.z);
-           */ //}
+            *///}
 
            //copy all 8 bytes of a double in one shot
            if (d_varDB[i].sizeOfDataType == sizeof(double)) {
@@ -2104,22 +2138,26 @@ GPUDataWarehouse::copyGpuGhostCellsToGpuVars() {
              //    printf(" Copying this data for %s %1.16lf for 4, -1, -1 to 5, 0, 0 to %p\n",  d_varDB[destIndex].label, *((double*)(d_varDB[i].var_ptr) + sourceOffset), (double*)(d_varDB[destIndex].var_ptr) + destOffset);
              //  }
              //}
-
+             //printf("destoffset is %d\n", destOffset);
              //if (threadID == 0) {
-             //  printf("Thread %d - At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index %d (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer %p.\n",
+             //  printf("Thread %d - At (%d, %d, %d), real: (%d, %d, %d),  copying within region between (%d, %d, %d) and (%d, %d, %d).   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
              //      threadID, x, y, z, x_source_real, y_source_real, z_source_real,
-             //      d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
-             //      d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
-             //      i,
-             //      x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
-             //      y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y,
-             //      z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z,
-             //      d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
-             //      d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z,
-             //      d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
-             //      sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
-             //      destIndex, d_varDB[destIndex].var_ptr, destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
+             //      destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset);
              //}
+
+               printf("Thread %d - At (%d, %d, %d), real: (%d, %d, %d), copying within region between (%d, %d, %d) and (%d, %d, %d).  Source d_varDB index (%d, %d, %d) varSize (%d, %d, %d) virtualOffset(%d, %d, %d), varOffset(%d, %d, %d), sourceOffset %d actual pointer %p, value %e.   Dest d_varDB index %d ptr %p destOffset %d actual pointer. %p\n",
+                   threadID, x, y, z, x_source_real, y_source_real, z_source_real,
+                   d_varDB[i].ghostItem.sharedLowCoordinates.x, d_varDB[i].ghostItem.sharedLowCoordinates.y, d_varDB[i].ghostItem.sharedLowCoordinates.z,
+                   d_varDB[i].ghostItem.sharedHighCoordinates.x, d_varDB[i].ghostItem.sharedHighCoordinates.y, d_varDB[i].ghostItem.sharedHighCoordinates.z,
+                   x + d_varDB[i].ghostItem.sharedLowCoordinates.x - d_varDB[i].ghostItem.virtualOffset.x,
+                   y + d_varDB[i].ghostItem.sharedLowCoordinates.y - d_varDB[i].ghostItem.virtualOffset.y,
+                   z + d_varDB[i].ghostItem.sharedLowCoordinates.z - d_varDB[i].ghostItem.virtualOffset.z,
+                   d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+                   d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z,
+                   d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+                   sourceOffset, (double*)(d_varDB[i].var_ptr) + sourceOffset, *((double*)(d_varDB[i].var_ptr) + sourceOffset),
+                   destIndex, d_varDB[destIndex].var_ptr,  destOffset, (double*)(d_varDB[destIndex].var_ptr) + destOffset);
+
            }
            //or copy all 4 bytes of an int in one shot.
            else if (d_varDB[i].sizeOfDataType == sizeof(int)) {
@@ -2245,8 +2283,13 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
 #else
   //Add information describing a ghost cell that needs to be copied internally from
   //one chunk of data to the destination.  This covers a GPU -> same GPU copy scenario.
-  varLock->readLock();
+  varLock->writeLock();
   int i = d_numVarDBItems;
+  if (i > maxdVarDBItems) {
+    printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Exceeded maximum d_varDB entries.  Index is %d and max items is %d\n", i, maxdVarDBItems);
+    varLock->writeUnlock();
+    exit(-1);
+  }
   int index = -1;
   d_numVarDBItems++;
   numGhostCellCopiesNeeded++;
@@ -2264,19 +2307,23 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
       index = varPointers->operator[](lpml_source).varDB_index;
     }
   } else {
+    //If the source is staging, then the shared coordinates are also the ghost coordinates.
     stagingVar sv;
-    sv.device_offset = varOffset;
-    sv.device_size = varSize;
+    sv.device_offset = sharedLowCoordinates;
+    sv.device_size = make_int3(sharedHighCoordinates.x-sharedLowCoordinates.x,
+                               sharedHighCoordinates.y-sharedLowCoordinates.y,
+                               sharedHighCoordinates.z-sharedLowCoordinates.z);
 
     std::map<stagingVar, stagingVarInfo>::iterator staging_it = varPointers->operator[](lpml_source).stagingVars.find(sv);
     if (staging_it != varPointers->operator[](lpml_source).stagingVars.end()) {
       index = staging_it->second.varDB_index;
 
     } else {
-      printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d).\n",
-                    label, label, sourcePatchID, matlIndx, levelIndx,
-                    sv.device_offset.x, sv.device_offset.y, sv.device_offset.z,
-                    sv.device_size.x, sv.device_size.y, sv.device_size.z);
+      printf("ERROR: GPUDataWarehouse::putGhostCell( %s ). Size %d, No staging variable found label %s patch %d matl %d level %d offset (%d, %d, %d) size (%d, %d, %d) on DW at %p.\n",
+                    label, varPointers->operator[](lpml_source).stagingVars.size(), label, sourcePatchID, matlIndx, levelIndx,
+                    sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z,
+                    sv.device_size.x, sv.device_size.y, sv.device_size.z,
+                    this);
       varLock->writeUnlock();
       exit(-1);
     }
@@ -2288,7 +2335,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   if (index == -1) {
     printf("ERROR:\nGPUDataWarehouse::putGhostCell, label %s, source patch ID %d, matlIndx %d, levelIndex %d staging %s not found in GPU DW %p\n",
         label, sourcePatchID, matlIndx, levelIndx, "false", this);
-    varLock->readUnlock();
+    varLock->writeUnlock();
     exit(-1);
   }
 
@@ -2303,14 +2350,34 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   d_varDB[i].var_size = d_varDB[index].var_size;
   d_varDB[i].var_ptr = d_varDB[index].var_ptr;
   d_varDB[i].sizeOfDataType = d_varDB[index].sizeOfDataType;
-  if (d_debug){
-    printf("Placed into d_varDB at index %d from patch %d to patch %d has shared coordinates (%d, %d, %d), (%d, %d, %d), from low/offset (%d, %d, %d) size (%d, %d, %d)  virtualOffset(%d, %d, %d)\n",
-        i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y,
-        sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z,
-        d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
-        d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
-        d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z);
+  if (gpu_stats.active()) {
+   cerrLock.lock();
+   {
+     gpu_stats << UnifiedScheduler::myRankThread()
+         << " GPUDataWarehouse::putGhostCell() - "
+         << " Placed into d_varDB at index " << i << " of max index " << maxdVarDBItems - 1
+         << " from patch " << sourcePatchID << " to patch " << destPatchID
+         << " has shared coordinates (" << sharedLowCoordinates.x << ", " << sharedLowCoordinates.y << ", " << sharedLowCoordinates.z << "),"
+         << " (" << sharedHighCoordinates.x << ", " << sharedHighCoordinates.y << ", " << sharedHighCoordinates.z << "), "
+         << " from low/offset (" << d_varDB[i].var_offset.x << ", " << d_varDB[i].var_offset.y << ", " << d_varDB[i].var_offset.z << ") "
+         << " size (" << d_varDB[i].var_size.x << ", " << d_varDB[i].var_size.y << ", " << d_varDB[i].var_size.z << ") "
+         << " virtualOffset (" << d_varDB[i].ghostItem.virtualOffset.x << ", " << d_varDB[i].ghostItem.virtualOffset.y << ", " << d_varDB[i].ghostItem.virtualOffset.z << ") "
+         << " on device " << d_device_id
+         << " at GPUDW at " << this
+         << endl;
+   }
+   cerrLock.unlock();
   }
+
+  //if (d_debug){
+  //  printf("Placed into d_varDB at index %d from patch %d to patch %d has shared coordinates (%d, %d, %d), (%d, %d, %d), from low/offset (%d, %d, %d) size (%d, %d, %d)  virtualOffset(%d, %d, %d)\n",
+  //      i, sourcePatchID, destPatchID, sharedLowCoordinates.x, sharedLowCoordinates.y,
+  //      sharedLowCoordinates.z, sharedHighCoordinates.x, sharedHighCoordinates.y, sharedHighCoordinates.z,
+  //      d_varDB[i].var_offset.x, d_varDB[i].var_offset.y, d_varDB[i].var_offset.z,
+  //      d_varDB[i].var_size.x, d_varDB[i].var_size.y, d_varDB[i].var_size.z,
+  //      d_varDB[i].ghostItem.virtualOffset.x, d_varDB[i].ghostItem.virtualOffset.y, d_varDB[i].ghostItem.virtualOffset.z);
+  //}
+
 
 
   //Find where we are sending the ghost cell data to
@@ -2318,7 +2385,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   std::map<labelPatchMatlLevel, allVarPointersInfo>::iterator it = varPointers->find(lpml_dest);
   if (it != varPointers->end()) {
     if (deststaging) {
-      //find the staging var inside this var.
+      //If the destination is staging, then the shared coordinates are also the ghost coordinates.
       stagingVar sv;
       sv.device_offset = sharedLowCoordinates;
       sv.device_size = make_int3(sharedHighCoordinates.x-sharedLowCoordinates.x,
@@ -2332,7 +2399,7 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
         printf("\nERROR:\nGPUDataWarehouse::putGhostCell() didn't find a staging variable from the device for offset (%d, %d, %d) and size (%d, %d, %d).\n",
             sharedLowCoordinates.x, sharedLowCoordinates.y, sharedLowCoordinates.z,
             sv.device_size.x, sv.device_size.y, sv.device_size.z);
-        varLock->readUnlock();
+        varLock->writeUnlock();
         exit(-1);
       }
 
@@ -2349,11 +2416,12 @@ GPUDataWarehouse::putGhostCell(char const* label, int sourcePatchID, int destPat
   } else {
     printf("ERROR:\nGPUDataWarehouse::putGhostCell(), label: %s destination patch ID %d, matlIndx %d, levelIndex %d, staging %s not found in GPU DW variable database\n",
         label, destPatchID, matlIndx, levelIndx, deststaging ? "true" : "false");
-    varLock->readUnlock();
+    varLock->writeUnlock();
     exit(-1);
   }
+
   d_dirty=true;
-  varLock->readUnlock();
+  varLock->writeUnlock();
 #endif
 }
 
