@@ -87,20 +87,6 @@ DynamicLoadBalancer::DynamicLoadBalancer( const ProcessorGroup * myworld ) :
 
   d_assignmentBasePatch = -1;
   d_oldAssignmentBasePatch = -1;
-
-#if defined( HAVE_ZOLTAN )
-  float ver;
-  Zoltan_Initialize( 0, NULL, &ver );
-  zz = new Zoltan( d_myworld->getComm() );
-
-  if( zz == NULL ){
-    throw InternalError("Zoltan creation failed!", __FILE__, __LINE__);
-  }
-  //This parameter is to avoid using MPI_Comm_dup, MPI_Comm_split and MPI_Comm_free functions
-  //These functions may not work well in some mpi implementations (mvapich 1.0 on TACC Ranger) 
-  //and cause memory leek in Zoltan library. Maybe we can remove this line in the future.
-  zz->Set_Param("TFLOPS_SPECIAL", "1"); 
-#endif
 }
 //______________________________________________________________________
 //
@@ -110,9 +96,6 @@ DynamicLoadBalancer::~DynamicLoadBalancer()
     delete d_costForecaster;
     d_costForecaster = 0;
   }
-#if defined( HAVE_ZOLTAN )
-  delete zz;
-#endif
 }
 //______________________________________________________________________
 //
@@ -412,195 +395,7 @@ DynamicLoadBalancer::collectParticles( const Grid                  * grid,
     }
   }
 }
-//______________________________________________________________________
-//
-bool
-DynamicLoadBalancer::assignPatchesZoltanSFC( const GridP & grid, bool force )
-{
-  doing << d_myworld->myrank() << "   assignPatchesZoltanSFC\n";
-  double time = Time::currentSeconds();
 
-  // This will store a vector per level of costs for each patch:
-  vector< vector<double> > patch_costs;
-
-  int num_procs = d_myworld->size();
-
-  getCosts(grid.get_rep(), patch_costs);
-
-  int level_offset=0;
-  
-  int dim=d_sharedState->getNumDims();    //Number of dimensions
-  int *dimensions=d_sharedState->getActiveDims(); //dimensions will store the active dimensions up to the number of dimensions
-
-  for(int l=0;l<grid->numLevels();l++){
-
-    const LevelP& level = grid->getLevel(l);
-    int num_patches = level->numPatches();
-
-    //create the positions vector
-    vector<double> positions;
-    vector<double> my_costs;
-    vector<int> my_gids;
-    
-    for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
-      const Patch* patch = *iter;
-
-      //create positions vector
-      //place in long longs to avoid overflows with large numbers of patches and processors
-      long long pindex=patch->getLevelIndex();
-      long long num_procs=d_myworld->size();
-      long long proc = (pindex*num_procs)/(long long)level->numPatches();
-    
-      ASSERTRANGE(proc,0,d_myworld->size());
-      
-      if(d_myworld->myrank()==proc){
-      
-        Vector point=(patch->getCellLowIndex()+patch->getCellHighIndex()).asVector()/2.0;
-        my_costs.push_back(patch_costs[l][patch->getLevelIndex()]);
-        my_gids.push_back(patch->getLevelIndex());
-        
-        for(int d=0;d<dim;d++){
-          positions.push_back(point[dimensions[d]]);
-        }
-      }
-    }
-
-    // costs[l][p] gives you the cost of patch p on level l
-    // positions[p*3+d] gives you the location of patch p for the dimension d.
- //   std::cout << "rank " << d_myworld->myrank() << ": my_costs_size=" << my_costs.size() << ", costs_size=" << patch_costs[l].size() << "\n";
-
-#if defined( HAVE_ZOLTAN )
-
-    vector<void *> obj_data;
-    obj_data.push_back((void *) &(my_costs));
-    obj_data.push_back((void *) &(my_gids));
-    
-    /* General Zoltan parameters */
-    zz->Set_Param("DEBUG_LEVEL", "0");     // amount of debug messages desired
-    zz->Set_Param("LB_METHOD", d_zoltanAlgorithm.c_str());     // zoltan load balance algorithm
-    zz->Set_Param("IMBALANCE_TOL", d_zoltanIMBTol.c_str());    // imbalance result toleration
-    zz->Set_Param("NUM_GID_ENTRIES", "1"); // number of integers in a global ID
-    zz->Set_Param("NUM_LID_ENTRIES", "1"); // number of integers in a local ID
-    zz->Set_Param("OBJ_WEIGHT_DIM", "1");  // dimension of a vertex weight
-    zz->Set_Param("RETURN_LISTS", "ALL");  // return all lists in LB_Partition
-    
-    /* Balance Method parameters */
-    zz->Set_Param("KEEP_CUTS", "0");
-
-    /* Set Zoltan Functions */
-    zz->Set_Num_Obj_Fn(ZoltanFuncs::zoltan_get_number_of_objects, & (my_costs) );
-    zz->Set_Obj_List_Fn(ZoltanFuncs::zoltan_get_object_list, &(obj_data));
-    zz->Set_Num_Geom_Fn(ZoltanFuncs::zoltan_get_number_of_geometry, &dim);
-    zz->Set_Geom_Multi_Fn(ZoltanFuncs::zoltan_get_geometry_list, &(positions));
-
-
-    /* Perform Partition */
-    int changes;
-    int numGidEntries;
-    int numLidEntries;
-    int numImport;
-    ZOLTAN_ID_PTR importGlobalIds;
-    ZOLTAN_ID_PTR importLocalIds;
-    int *importProcs;
-    int *importToPart;
-    int numExport;
-    ZOLTAN_ID_PTR exportGlobalIds;
-    ZOLTAN_ID_PTR exportLocalIds;
-    int *exportProcs;
-    int *exportToPart;
-
-    int rc = zz->LB_Partition(changes, numGidEntries, numLidEntries,
-      numImport, importGlobalIds, importLocalIds, importProcs, importToPart,
-      numExport, exportGlobalIds, exportLocalIds, exportProcs, exportToPart);
-
-    if (rc != ZOLTAN_OK){
-      throw InternalError("Zoltan partition failed!", __FILE__, __LINE__);
-      return false;
-    }
-
-    //set assignment result array 
-    int nMyGids = my_gids.size();
-    int nGids   = num_patches;
-    int *gid_list = new int[nMyGids];
-    int *lid_list = new int[nMyGids];
-    
-    ZoltanFuncs::zoltan_get_object_list(&obj_data, nMyGids, nMyGids,
-      (ZOLTAN_ID_PTR)gid_list, (ZOLTAN_ID_PTR)lid_list, 0, NULL, &rc);
-    
-    int *gid_flags = new int[nGids];
-    int *gid_results = new int[nGids];
-    memset(gid_flags, 0, sizeof(int) * nGids);
-    for (int i=0; i<nMyGids; i++){
-      gid_flags[gid_list[i]] = d_myworld->myrank();    // my original vertices
-    }
-    for (int i=0; i<numImport; i++){
-       gid_flags[importGlobalIds[i]] = d_myworld->myrank();  // my imports
-    }
-    for (int i=0; i<numExport; i++){
-       gid_flags[exportGlobalIds[i]] = 0;  // my exports
-    }
-    
-
-    MPI_Allreduce(gid_flags, gid_results, nGids, MPI_INT, MPI_SUM, d_myworld->getComm());
-
-    // Code should set d_tempAssignment[level_offset+p] to be equal to the owner of the patch p...
-    for (int i=0; i<nGids; i++){
-       d_tempAssignment[level_offset+i] = gid_results[i];
-      // std::cout << "Proc "<< d_myworld->myrank() << ": Gid " << i << " assigned to proc " << gid_results[i] << "\n";
-    }
-
-    delete [] gid_results;
-    delete [] gid_flags;
-    delete [] gid_list;
-    delete [] lid_list;
-  
-    //mpi_communicator is d_myworld->getComm()
-    //mpi_rank is d_myworld->myrank()
-    //mpi_size is d_myworld->size()
-#endif
-
-    if(stats.active() && d_myworld->myrank()==0)
-    {
-      //calculate lb stats:
-      double totalCost=0;
-      vector<double> procCosts(num_procs,0);
-      for(int p=0;p<num_patches;p++)
-      {
-        totalCost+=patch_costs[l][p];
-        procCosts[d_tempAssignment[level_offset+p]]+=patch_costs[l][p];
-      }
-
-      double meanCost=totalCost/num_procs;
-      double minCost=procCosts[0];
-      double maxCost=procCosts[0];
-      //if(d_myworld->myrank()==0)
-      //  stats << "Level:" << l << " ProcCosts:";
-
-      for(int p=0;p<num_procs;p++)
-      {
-        if(minCost>procCosts[p])
-          minCost=procCosts[p];
-        else if(maxCost<procCosts[p])
-          maxCost=procCosts[p];
-
-       // if(d_myworld->myrank()==0)
-       //   stats << p << ":" << procCosts[p] << " ";
-      }
-      //if(d_myworld->myrank()==0)
-      //  stats << endl;
-
-      stats << "LoadBalance Stats level(" << l << "):"  << " Mean:" << meanCost << " Min:" << minCost << " Max:" << maxCost << " Imb:" << 1-meanCost/maxCost <<  endl;
-    }  
-
-    level_offset+=num_patches;
-  }
-  bool doLoadBalancing = force || thresholdExceeded(patch_costs);
-  time = Time::currentSeconds() - time;
-  if (d_myworld->myrank() == 0)
-    dbg << " Time to LB: " << time << endl;
-  doing << d_myworld->myrank() << "   APF END\n";
-  return doLoadBalancing;
-}
 //______________________________________________________________________
 //  
 bool
@@ -1243,7 +1038,6 @@ DynamicLoadBalancer::possiblyDynamicallyReallocate( const GridP & grid, int stat
         case patch_factor_lb:  dynamicAllocate = assignPatchesFactor(grid, force); break;
         case cyclic_lb:        dynamicAllocate = assignPatchesCyclic(grid, force); break;
         case random_lb:        dynamicAllocate = assignPatchesRandom(grid, force); break;
-        case zoltan_sfc_lb:    dynamicAllocate = assignPatchesZoltanSFC(grid, force); break;
       }
     }
     else  //regridder has called dynamic load balancer so we must dynamically Allocate
@@ -1383,14 +1177,6 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
     d_dynamicAlgorithm = patch_factor_lb;
     d_collectParticles = true;
   }
-#if defined( HAVE_ZOLTAN )
-  else if (dynamicAlgo == "Zoltan")
-  {
-    d_dynamicAlgorithm=zoltan_sfc_lb;
-    p->getWithDefault("zoltanAlgorithm",d_zoltanAlgorithm,"HSFC");
-    p->getWithDefault("zoltanIMBTol",d_zoltanIMBTol,"1.1");
-  }
-#endif
   else {
     if (d_myworld->myrank() == 0) {
       cout << "Invalid Load Balancer Algorithm: " << dynamicAlgo
@@ -1427,50 +1213,3 @@ DynamicLoadBalancer::problemSetup( ProblemSpecP & pspec, GridP & grid,  Simulati
     d_costForecaster->setMinPatchSize(mps);
   }
 }
-
-#if defined( HAVE_ZOLTAN )
-
-void
-ZoltanFuncs::zoltan_get_object_list( void *data, int sizeGID, int sizeLID,
-                                     ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID,
-                                     int wgt_dim, float *obj_wgts, int *ierr )
-{
-  vector<void *> * obj_data = (vector<void *> *) data;
-  vector<double> * obj_costs =  (vector<double> *) ((*obj_data)[0]);
-  vector<int> * obj_gids =  (vector<int> *)((*obj_data)[1]);
-  for (unsigned int i=0; i < obj_costs->size(); i++) {
-    globalID[i] = (*obj_gids)[i];
-    localID[i] = i;
-    if (wgt_dim) obj_wgts[i] = (float) (*obj_costs)[i];
-  }
-  *ierr = ZOLTAN_OK;
-}
-
-int
-ZoltanFuncs::zoltan_get_number_of_objects( void *data, int *ierr )
-{
-    vector<double> * obj_costs =  (vector<double> *)data;
-    *ierr = ZOLTAN_OK;
-    return obj_costs->size();
-}
-
-int
-ZoltanFuncs::zoltan_get_number_of_geometry( void *data, int *ierr )
-{
-    *ierr = ZOLTAN_OK;
-    return *static_cast<int*>(data);
-}
-
-void
-ZoltanFuncs::zoltan_get_geometry_list( void *data, int sizeGID, int sizeLID, int num_obj, 
-                                       ZOLTAN_ID_PTR globalID, ZOLTAN_ID_PTR localID, 
-                                       int num_dim, double *geom_vec, int *ierr )
-{
-  vector<double> * obj_pos =  (vector<double> *)data;
-  for( int i=0; i < (num_obj * num_dim); i++ ) {
-    geom_vec[i] = (*obj_pos)[i];
-  }
-  *ierr = ZOLTAN_OK;
-}
-
-#endif
