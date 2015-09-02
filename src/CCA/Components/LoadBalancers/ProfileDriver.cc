@@ -29,10 +29,6 @@
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
-//Allgatherv currently performs poorly on Kraken.
-//This hack changes the Allgatherv to an allgather
-//by padding the digits
-//#define AG_HACK
 
 static DebugStream stats("ProfileStats",false);
 static DebugStream stats2("ProfileStats2",false);
@@ -540,38 +536,8 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
     //gather the regions
     if(d_myworld->size()>1)
     {
-#ifdef AG_HACK
-      //compute maximum elements across all processors
-      int max_size=recvs[0];
-      for(int p=1;p<d_myworld->size();p++)
-        if(max_size<recvs[p])
-          max_size=recvs[p];
-
-      //create temporary vectors
-      vector<Region> new_regions_partial2(new_regions_partial), new_regions2;
-      new_regions_partial2.resize(max_size/sizeof(Region));
-      new_regions2.resize(new_regions_partial2.size()*d_myworld->size());
-
-      //gather regions
-      MPI_Allgather(&new_regions_partial2[0],max_size,MPI_BYTE,&new_regions2[0],max_size,MPI_BYTE,d_myworld->getComm());
-
-      //copy to original vectors
-      int j=0;
-      for(int p=0;p<d_myworld->size();p++)
-      {
-        int start=new_regions_partial2.size()*p;
-        int end=start+recvs[p]/sizeof(Region);
-        for(int i=start;i<end;i++)
-          new_regions[j++]=new_regions2[i];
-      }
-
-      //free memory
-      new_regions_partial2.clear();
-      new_regions2.clear();
-
-#else
-      MPI_Allgatherv(&new_regions_partial[0],recvs[d_myworld->myrank()],MPI_BYTE,&new_regions[0],&recvs[0],&displs[0],MPI_BYTE,d_myworld->getComm());
-#endif
+      MPI_Allgatherv(&new_regions_partial[0], recvs[d_myworld->myrank()], MPI_BYTE,
+                     &new_regions[0], &recvs[0], &displs[0], MPI_BYTE, d_myworld->getComm());
     }
     else
       new_regions.swap(new_regions_partial);
