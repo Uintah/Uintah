@@ -42,6 +42,7 @@
 #include <CCA/Components/Arches/CoalModels/YamamotoDevol.h>
 #include <CCA/Components/Arches/CoalModels/HeatTransfer.h>
 #include <CCA/Components/Arches/CoalModels/EnthalpyShaddix.h>
+#include <CCA/Components/Arches/CoalModels/MaximumTemperature.h>
 #include <CCA/Components/Arches/CoalModels/CharOxidationShaddix.h>
 #include <CCA/Components/Arches/CoalModels/DragModel.h>
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
@@ -260,7 +261,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   boost::shared_ptr<InitializeFactory> InitF(scinew InitializeFactory());
   boost::shared_ptr<ParticleModelFactory> PartModF(scinew ParticleModelFactory());
   boost::shared_ptr<LagrangianParticleFactory> LagF(scinew LagrangianParticleFactory());
-  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2(sharedState));
+  boost::shared_ptr<PropertyModelFactoryV2> PropModels(scinew PropertyModelFactoryV2());
 
   _boost_factory_map.clear();
   _boost_factory_map.insert(std::make_pair("utility_factory",UtilF));
@@ -276,6 +277,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   for ( BFM::iterator i = _boost_factory_map.begin(); i != _boost_factory_map.end(); i++ ) {
 
     proc0cout << "   " << i->first << std::endl;
+    i->second->set_shared_state(d_sharedState); 
     i->second->register_all_tasks(db);
 
   }
@@ -2298,6 +2300,9 @@ void Arches::registerModels(ProblemSpecP& db)
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "EnthalpyShaddix" ) {
           ModelBuilder* modelBuilder = scinew EnthalpyShaddixBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, d_props, iqn);
+          model_factory.register_model( temp_model_name, modelBuilder );
+        } else if ( model_type == "MaximumTemperature" ) {
+          ModelBuilder* modelBuilder = scinew MaximumTemperatureBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);
           model_factory.register_model( temp_model_name, modelBuilder );
         } else if ( model_type == "Drag" ) {
           ModelBuilder* modelBuilder = scinew DragModelBuilder(temp_model_name, requiredICVarLabels, requiredScalarVarLabels, d_lab, d_lab->d_sharedState, iqn);

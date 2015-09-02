@@ -44,7 +44,7 @@ namespace Uintah {
                                     MPMMaterial* matl,
                                     Point p, IntVector cell_idx,
                                     particleIndex i,
-                                    CCVariable<short int>& cellNAPI,
+                                    CCVariable<int>& cellNAPI,
                                     ParticleVars& pvars);
 
     virtual ParticleSubset* allocateVariables(particleIndex numParticles,

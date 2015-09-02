@@ -57,148 +57,102 @@ class TabPropsEvaluator
                      const Expr::Tag derVarName=Expr::Tag() );
 
   class Functor1D{
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
   public:
-    static void set_evaluator( const InterpT* eval ){
-      get_evaluator() = eval;
-    }
+    Functor1D( const InterpT& interp ) : eval_(interp){}
     double operator()( const double x ) const{
-      return get_evaluator()->value(&x);
+      return eval_.value(&x);
     }
   };
 
   class DerFunctor1D{
-    static int& get_dim(){ static int dim; return dim; }
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
+    const int dim_;
   public:
-    static void set_evaluator( const InterpT* eval, const int dim ){
-      get_evaluator() = eval;
-      get_dim() = dim;
-    }
+    DerFunctor1D( const InterpT& interp, const int dim ) : eval_( interp ), dim_(dim){}
     double operator()( const double x ) const{
-      return get_evaluator()->derivative(&x,get_dim());
+      return eval_.derivative(&x,dim_);
     }
   };
 
   class Functor2D{
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
   public:
-    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    Functor2D( const InterpT& interp ) : eval_( interp ) {}
     double operator()( const double x1, const double x2 ) const{
       double vals[2] = {x1,x2};
-      return get_evaluator()->value( vals );
+      return eval_.value( vals );
     }
   };
   class DerFunctor2D{
-    static int& get_dim(){ static int dim; return dim; }
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
+    const int dim_;
   public:
-    static void set_evaluator( const InterpT* eval, const int dim ){
-      get_evaluator() = eval;
-      get_dim() = dim;
-    }
+    DerFunctor2D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
     double operator()( const double x1, const double x2 ) const{
       double vals[2] = {x1,x2};
-      return get_evaluator()->derivative( vals, get_dim() );
+      return eval_.derivative( vals, dim_ );
     }
   };
 
   class Functor3D{
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
   public:
-    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    Functor3D( const InterpT& interp ) : eval_( interp ) {}
+
     double operator()( const double x1, const double x2, const double x3 ) const{
       double vals[3] = {x1,x2,x3};
-      return get_evaluator()->value( vals );
+      return eval_.value( vals );
     }
   };
   class DerFunctor3D{
-    static int& get_dim(){ static int dim; return dim; }
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
+    const int dim_;
   public:
-    static void set_evaluator( const InterpT* eval, const int dim ){
-      get_evaluator() = eval;
-      get_dim() = dim;
-    }
+    DerFunctor3D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
     double operator()( const double x1, const double x2, const double x3 ) const{
       double vals[3] = {x1,x2,x3};
-      return get_evaluator()->derivative( vals, get_dim() );
+      return eval_.derivative( vals, dim_ );
     }
   };
 
   class Functor4D{
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
   public:
-    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    Functor4D( const InterpT& interp ) : eval_( interp ) {}
     double operator()( const double x1, const double x2, const double x3, const double x4 ) const{
       double vals[4] = {x1,x2,x3,x4};
-      return get_evaluator()->value( vals );
+      return eval_.value( vals );
     }
   };
   class DerFunctor4D{
-    static int& get_dim(){ static int dim; return dim; }
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
+    const int dim_;
   public:
-    static void set_evaluator( const InterpT* eval, const int dim ){
-      get_evaluator() = eval;
-      get_dim() = dim;
-    }
+    DerFunctor4D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
     double operator()( const double x1, const double x2, const double x3, const double x4 ) const{
       double vals[4] = {x1,x2,x3,x4};
-      return get_evaluator()->derivative( vals, get_dim() );
+      return eval_.derivative( vals, dim_ );
     }
   };
 
   class Functor5D{
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
   public:
-    static void set_evaluator( const InterpT* eval ){ get_evaluator() = eval; }
+    Functor5D( const InterpT& interp ) : eval_( interp ) {}
     double operator()( const double x1, const double x2, const double x3, const double x4, const double x5 ) const{
       double vals[5] = {x1,x2,x3,x4,x5};
-      return get_evaluator()->value( vals );
+      return eval_.value( vals );
     }
   };
   class DerFunctor5D{
-    static int& get_dim(){ static int dim; return dim; }
-    static const InterpT*& get_evaluator(){
-      static const InterpT* eval = NULL;
-      return eval;
-    }
+    const InterpT& eval_;
+    const int dim_;
   public:
-    static void set_evaluator( const InterpT* eval, const int dim ){
-      get_evaluator() = eval;
-      get_dim() = dim;
-    }
+    DerFunctor5D( const InterpT& interp, const int dim ) : eval_( interp ), dim_( dim ){}
     double operator()( const double x1, const double x2, const double x3, const double x4, const double x5 ) const{
       double vals[5] = {x1,x2,x3,x4,x5};
-      return get_evaluator()->derivative( vals, get_dim() );
+      return eval_.derivative( vals, dim_ );
     }
   };
 
@@ -277,6 +231,8 @@ TabPropsEvaluator( const InterpT& interp,
                ? std::find( ivarNames.begin(), ivarNames.end(), derVarName ) - ivarNames.begin()
                    : ivarNames.size() )
 {
+  this->set_gpu_runnable( false ); // apply_pointwise is not GPU ready.
+
   if( doDerivative_ && derIndex_ == ivarNames.size() ){
     std::ostringstream msg;
     msg << __FILE__ << " : " << __LINE__
@@ -301,61 +257,81 @@ void
 TabPropsEvaluator<FieldT>::
 evaluate()
 {
+  using namespace SpatialOps;
   FieldT& result = this->value();
 
   switch( indepVars_.size() ){
     case 1:{
       if( doDerivative_ ){
-        DerFunctor1D::set_evaluator( &evaluator_, derIndex_ );
-        result <<= SpatialOps::apply_pointwise<DerFunctor1D>( indepVars_[0]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<DerFunctor1D>(evaluator_,derIndex_),
+                                                indepVars_[0]->field_ref() );
       }
       else{
-        Functor1D::set_evaluator( &evaluator_ );
-        result <<= SpatialOps::apply_pointwise<Functor1D>( indepVars_[0]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<Functor1D>(evaluator_),
+                                                indepVars_[0]->field_ref() );
       }
       break;
     }
     case 2:{
       if( doDerivative_ ){
-        DerFunctor2D::set_evaluator( &evaluator_, derIndex_ );
-        result <<= SpatialOps::apply_pointwise<Functor2D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<DerFunctor2D>(evaluator_,derIndex_),
+                                                indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
       }
       else{
-        Functor2D::set_evaluator( &evaluator_ );
-        result <<= SpatialOps::apply_pointwise<Functor2D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<Functor2D>(evaluator_),
+                                                indepVars_[0]->field_ref(),
+                                                indepVars_[1]->field_ref() );
       }
       break;
     }
     case 3:{
       if( doDerivative_ ){
-        DerFunctor3D::set_evaluator( &evaluator_, derIndex_ );
-        result <<= SpatialOps::apply_pointwise<Functor3D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<DerFunctor3D>(evaluator_,derIndex_),
+                                                indepVars_[0]->field_ref(),
+                                                indepVars_[1]->field_ref(),
+                                                indepVars_[2]->field_ref() );
       }
       else{
-        Functor3D::set_evaluator( &evaluator_ );
-        result <<= SpatialOps::apply_pointwise<Functor3D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<Functor3D>(evaluator_),
+                                                indepVars_[0]->field_ref(),
+                                                indepVars_[1]->field_ref(),
+                                                indepVars_[2]->field_ref() );
       }
       break;
     }
     case 4:{
       if( doDerivative_ ){
-        DerFunctor4D::set_evaluator( &evaluator_, derIndex_ );
-        result <<= SpatialOps::apply_pointwise<Functor4D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<DerFunctor4D>(evaluator_,derIndex_),
+                                                indepVars_[0]->field_ref(),
+                                                indepVars_[1]->field_ref(),
+                                                indepVars_[2]->field_ref(),
+                                                indepVars_[3]->field_ref() );
       }
       else{
-        Functor4D::set_evaluator( &evaluator_ );
-        result <<= SpatialOps::apply_pointwise<Functor4D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<Functor4D>(evaluator_),
+                                                indepVars_[0]->field_ref(),
+                                                indepVars_[1]->field_ref(),
+                                                indepVars_[2]->field_ref(),
+                                                indepVars_[3]->field_ref() );
       }
       break;
     }
     case 5:{
       if( doDerivative_ ){
-        DerFunctor5D::set_evaluator( &evaluator_, derIndex_ );
-        result <<= SpatialOps::apply_pointwise<Functor5D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref(), indepVars_[4]->field_ref() ); 
+        result <<= SpatialOps::apply_pointwise( factory<DerFunctor5D>(evaluator_,derIndex_),
+                                                indepVars_[0]->field_ref(),
+                                                indepVars_[1]->field_ref(),
+                                                indepVars_[2]->field_ref(),
+                                                indepVars_[3]->field_ref(),
+                                                indepVars_[4]->field_ref() );
       }
       else{
-        Functor5D::set_evaluator( &evaluator_ );
-        result <<= SpatialOps::apply_pointwise<Functor5D>( indepVars_[0]->field_ref(), indepVars_[1]->field_ref(), indepVars_[2]->field_ref(), indepVars_[3]->field_ref(), indepVars_[4]->field_ref() );
+        result <<= SpatialOps::apply_pointwise( factory<Functor5D>(evaluator_),
+                                                indepVars_[0]->field_ref(),
+                                                indepVars_[1]->field_ref(),
+                                                indepVars_[2]->field_ref(),
+                                                indepVars_[3]->field_ref(),
+                                                indepVars_[4]->field_ref() );
       }
       break;
     }

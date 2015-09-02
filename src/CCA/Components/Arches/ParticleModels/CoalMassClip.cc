@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalMassClip.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/ParticleModels/CoalHelper.h>
@@ -18,8 +18,8 @@ CoalMassClip::~CoalMassClip(){
 void
 CoalMassClip::problemSetup( ProblemSpecP& db ){
 
-  _raw_coal_base = ParticleHelper::parse_for_role_to_label(db, "raw_coal");
-  _char_base     = ParticleHelper::parse_for_role_to_label(db, "char");
+  _raw_coal_base = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+  _char_base     = ParticleTools::parse_for_role_to_label(db, "char");
 
 }
 
@@ -66,8 +66,8 @@ CoalMassClip::register_timestep_eval( std::vector<ArchesFieldContainer::Variable
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string char_name  = ParticleHelper::append_env( _char_base, i );
-    const std::string rc_name    = ParticleHelper::append_env( _raw_coal_base, i );
+    const std::string char_name  = ParticleTools::append_env( _char_base, i );
+    const std::string rc_name    = ParticleTools::append_env( _raw_coal_base, i );
 
     register_variable( char_name , ArchesFieldContainer::MODIFIES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( rc_name   , ArchesFieldContainer::MODIFIES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
@@ -87,8 +87,8 @@ CoalMassClip::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string char_name = ParticleHelper::append_env( _char_base, i );
-    const std::string rc_name   = ParticleHelper::append_env( _raw_coal_base, i );
+    const std::string char_name = ParticleTools::append_env( _char_base, i );
+    const std::string rc_name   = ParticleTools::append_env( _raw_coal_base, i );
 
     SVolFP coal_char   = tsk_info->get_so_field<SVolF>( char_name );
     SVolFP raw_coal    = tsk_info->get_so_field<SVolF>( rc_name );

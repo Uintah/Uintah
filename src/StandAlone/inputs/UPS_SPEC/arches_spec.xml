@@ -22,7 +22,8 @@
                                         attribute1="label REQUIRED STRING"
                                         attribute2="type REQUIRED STRING 'wall_heatflux_variable,
                                                                           variable_stats,
-                                                                          density_predictor'">
+                                                                          density_predictor,
+                                                                          CO'">
 
           <!-- Wall heat flux variable:
                 This model produces a few variables, all stored in the first wall/intrusion cell exposed to the gas
@@ -80,6 +81,39 @@
           <density                      spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"
                                         need_applies_to="type variable_stats"/> <!-- for flux averages, this specifies the density, if not specified then the fluxes wont work -->
+          <!-- for CO / equilibrium model -->
+          <CO_defect_label              spec="REQUIRED STRING"
+                                        need_applies_to="type CO"/> <!-- Name of the CO defect -->
+          <CO_rate_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- Name of the arrenhius rate -->
+          <A                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- pre exponential factor kmole/m3/s-->
+          <Ea                           spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- activation energy kcal/mole -->
+          <a                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- molar CO conc. exponent -->
+          <b                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- molar H2O conc. exponent -->
+          <c                            spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- molar O2 conc. exponent -->
+          <density_label                spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- gas density label (table) -->
+          <temperature_label            spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- gas temperature label (table) -->
+          <CO_label                     spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- CO label (table) -->
+          <H2O_label                    spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- H2O label (table) -->
+          <O2_label                     spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- O2 label (table) -->
+          <MW_label                     spec="OPTIONAL STRING"
+                                        need_applies_to="type CO"/> <!-- inv MW label (table) -->
+          <conv_scheme                  spec="REQUIRED STRING"
+                                        need_applies_to="type CO"/> <!-- get the convection scheme for RHS calculation -->
+          <Pr                           spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- get prandtl number for RHS term -->
+          <Tcrit                        spec="OPTIONAL DOUBLE"
+                                        need_applies_to="type CO"/> <!-- temperature cutoff for the resolved rate, default=1150 -->
 
         </model>
       </PropertyModelsV2>
@@ -342,6 +376,7 @@
                                                                              uvel, vvel, wvel,
                                                                              enthalpy,
                                                                              temperature,
+                                                                             max_temperature,
                                                                              dTdt,
                                                                              total_number_density'"
                                            attribute2="label REQUIRED STRING"/>
@@ -800,6 +835,8 @@
           <normalize_pressure           spec="OPTIONAL BOOLEAN" />
           <src                          spec="MULTIPLE NO_DATA"
                                         attribute1="label REQUIRED STRING"/>
+          <extra_src                    spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/>
           <enforce_solvability          spec="OPTIONAL NO_DATA"/> <!-- For some problems, this parameter is required to solve the system (e.g., periodic, variable density ) -->
 
         <Parameters                     spec="OPTIONAL NO_DATA"
@@ -999,23 +1036,16 @@
                                         need_applies_to="type simple_rate"/>       <!-- label for the "concentration" -->
 
             <!-- drag model -->
-            <particle_density_label     spec="REQUIRED STRING"
-                                        need_applies_to="type drag, gravity"/> <!-- base density label -->
-            <particle_diameter_label    spec="REQUIRED STRING"
-                                        need_applies_to="type drag"/>          <!-- base diameter label -->
-
             <direction                  spec="REQUIRED STRING 'x,y,z'"
-                                        need_applies_to="type drag"/>         <!-- apply this source to which velocity -->
-            <u_velocity_label           spec="REQUIRED STRING"
-                                        need_applies_to="type drag"/>         <!-- base u velocity label for IC -->
-            <v_velocity_label           spec="OPTIONAL STRING"
-                                        need_applies_to="type drag"/>         <!-- base v velocity label for IC -->
-            <w_velocity_label           spec="OPTIONAL STRING"
-                                        need_applies_to="type drag"/>         <!-- base w velocity label for IC -->
+                                        need_applies_to="type drag, gravity"/>     <!-- apply this source to which direction -->
 
             <!-- constant property model: set a constant/environment -->
             <constant                   spec="REQUIRED MULTIPLE_DOUBLES"
                                         need_applies_to="type constant"/>
+                                        
+            <!-- constant property model: set a constant/environment -->
+           <const_size                  spec="OPTIONAL BOOLEAN"
+                                        need_applies_to="type coal_temperature, coal_density"/>  <!-- defaults to true, so no change to DQMOM input files needed -->
         </model>
 
       </ParticleModels>
@@ -1063,6 +1093,8 @@
                                         attribute1="label REQUIRED STRING"> <!-- Pointer to sources defined elsewhere -->
             <weight                     spec="OPTIONAL DOUBLE"/>            <!-- Multiply by this weight when adding source to the RHS. Default is +1.0. -->
           </src>
+          <extra_src                    spec="MULTIPLE NO_DATA"
+                                        attribute1="label REQUIRED STRING"/> <!-- Use to point to VarLabels directly instead of SourceTermFactory srcs-->
           <D_mol                        spec="OPTIONAL NO_DATA"
                                         attribute1="label REQUIRED STRING"/> <!-- [m^2/s] --> <!-- label pointing the molecular diffusivity -->
           <D_mol_constant               spec="OPTIONAL NO_DATA"
@@ -1322,6 +1354,7 @@
 
             </flammability_limit>
             <o2_label                   spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer, bowman_nox"/> <!-- o2 label (default = O2) -->
+            <n2_label                   spec="OPTIONAL STRING" need_applies_to="type bowman_nox"/> <!-- n2 label (default = N2) -->
             <temperature_label          spec="OPTIONAL STRING" need_applies_to="type westbrook_dryer,
                                                                                      bowman_nox,
                                                                                      BrownSootFormation_rhoYs,
@@ -1463,6 +1496,7 @@
                                                                           Drag,
                                                                           ShaddixHeatTransfer,
                                                                           EnthalpyShaddix,
+                                                                          MaximumTemperature,
                                                                           CharOxidationShaddix,
                                                                           SimpleBirth'">
 
@@ -1626,6 +1660,7 @@
         <OperatorSplitting              spec="OPTIONAL BOOLEAN"/> <!-- turn on operator splitting for convective fluxes -->
         <RestitutionCoefficient         spec="OPTIONAL DOUBLE"/>  <!-- determines how much energy is lost in wall collision default = 1 - elastic-->
         <ConvectionWeightLimit          spec="OPTIONAL DOUBLE"/>  <!-- minimum value of the weight for the quadrature node to actually do convection, scale this value up for higher number densities of population balance-->
+        <DepositionLabel                spec="OPTIONAL STRING"/>  <!-- base label name for wall deposition, probability of sticking -->
 
         <!-- order these same as index moment order -->
         <InternalCoordinate             spec="MULTIPLE NO_DATA"

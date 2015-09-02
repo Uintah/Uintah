@@ -32,70 +32,70 @@
  */
 
 namespace Uintah{
-  
+
   class ArchesLabel;
   class CQMOMSourceWrapper {
 
   public:
-    
+
     CQMOMSourceWrapper( ArchesLabel* fieldLabels );
-    
+
     ~CQMOMSourceWrapper();
-    
+
     typedef std::vector<int> MomentVector;
-    
+
     /** @brief return instance of this */
     static CQMOMSourceWrapper& self();
-    
+
     /** @brief Set any parameters from input file, initialize any constants, etc.. */
     void problemSetup(const ProblemSpecP& inputdb);
-    
+
     /** @brief schedule creation of the source term for each moment equation */
     void sched_buildSourceTerm( const LevelP& level,
                                 SchedulerP& sched, int timeSubStep );
-    
+
     /** @brief Actual creation of the source term for each moment equation  */
     void buildSourceTerm( const ProcessorGroup*,
                           const PatchSubset* patches,
                           const MaterialSubset*,
                           DataWarehouse* old_dw,
                           DataWarehouse* new_dw);
-    
+
     /** @brief Schedule the initialization of the variables */
     void sched_initializeVariables( const LevelP& level, SchedulerP& sched );
-    
+
     /** @brief Actually initialize the variables at the begining of a time step */
     void initializeVariables( const ProcessorGroup* pc,
                               const PatchSubset* patches,
                               const MaterialSubset* matls,
                               DataWarehouse* old_dw,
                               DataWarehouse* new_dw );
-    
+
     // --------------------------------------
     // Access functions:
-    
+
     /** @brief Return the bool for if soruce terms are on. */
-    inline const bool getAddSources(){ return d_addSources; };
-    
+    inline bool getAddSources(){ return d_addSources; };
+
   private:
-    
+
     ArchesLabel* d_fieldLabels;
-    
+
     bool d_addSources;                          //bool if source terms found
-    
+
     std::vector<int> N_i;                       //vector of number of quadrature nodes in each dimension
     std::vector<int> nIC;                       //vector of indexes for source term IC
     std::vector<MomentVector> momentIndexes;    //List of all moment indexes
-    
+
     int M;                                      //number of internal coordiantes
     int _N;                                     //total number of nodes
     int nMoments;                               //total number of moments
     int nSources;                               //total number of source terms
-    
+
     std::vector<const VarLabel*> d_sourceLabels;  //labels for all source terms for all the moments
     const VarLabel* volfrac_label;                //volfrac label
     std::vector<const VarLabel *> d_nodeSources;  //list of all node source for all models
-    
+
   }; // class CQMOMWrapper
 } // namespace Uintah
 

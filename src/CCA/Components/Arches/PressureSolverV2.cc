@@ -49,6 +49,7 @@
 #include <Core/Parallel/UintahParallelComponent.h>
 #include <Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Containers/StaticArray.h>
 
 
 using namespace Uintah;
@@ -124,6 +125,24 @@ PressureSolver::problemSetup(ProblemSpecP& params,SimulationStateP& state)
       d_new_sources.push_back( srcname ); 
     }
   }
+  
+  //__________________________________
+  // allow for addition of mass source terms with VarLabels
+  if (db->findBlock("extra_src")){
+    for (ProblemSpecP src_db = db->findBlock("extra_src"); src_db != 0; src_db = src_db->findNextBlock("extra_src")){
+      string srcname;
+      src_db->getAttribute("label", srcname );
+      
+      const VarLabel * tempLabel;
+      tempLabel = VarLabel::find( srcname );
+      extraSourceLabels.push_back( tempLabel );
+      
+      //note: varlabel must be registered prior to problem setup
+      if (tempLabel == 0 )
+        throw InvalidValue("Error: Cannot find the VarLabel for the source term: " + srcname, __FILE__, __LINE__);
+    }
+  }
+  nExtraSources = extraSourceLabels.size();
 
   //__________________________________
   // bulletproofing
@@ -253,6 +272,11 @@ PressureSolver::sched_buildLinearMatrix(SchedulerP& sched,
     const VarLabel* srcLabel = src.getSrcLabel(); 
     tsk->requires( Task::NewDW, srcLabel, gn, 0 ); 
   }
+  
+  //extra sources
+  for ( int i = 0; i < nExtraSources; i++ ) {
+    tsk->requires( Task::NewDW, extraSourceLabels[i], gn, 0 );
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -334,7 +358,8 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_source->calculatePressureSourcePred(pc, patch, delta_t,
                                           &vars,
                                           &constVars);
-
+    Vector Dx = patch->dCell();
+    double volume = Dx.x()*Dx.y()*Dx.z();
     // Add other source terms to the pressure: 
     SourceTermFactory& factory = SourceTermFactory::self(); 
     for (vector<std::string>::iterator iter = d_new_sources.begin();
@@ -347,9 +372,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       // This may not be the most efficient way of adding the sources
       // to the RHS but in general we only expect 1 src to be added.
-      // If the numbers of sources grow (>2), we may need to redo this. 
-      Vector Dx = patch->dCell(); 
-      double volume = Dx.x()*Dx.y()*Dx.z(); 
+      // If the numbers of sources grow (>2), we may need to redo this.
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
 
@@ -358,8 +381,22 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
       }
     }
+    
+    //-----ADD Extra Sources
+    StaticArray <constCCVariable<double> > extraSources (nExtraSources);
+    for ( int i = 0; i < nExtraSources; i++ ) {
+      const VarLabel* tempLabel = extraSourceLabels[i];
+      new_dw->get( extraSources[i], tempLabel, d_indx, patch, gn, 0);
+    }
+    
+    for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+      for ( int i = 0; i < nExtraSources; i++) {
+        IntVector c = *iter;
+        vars.pressNonlinearSrc[c] += extraSources[i][c] / delta_t * volume;
+      }
+    }
 
-    // do multimaterial bc; this is done before 
+    // do multimaterial bc; this is done before
     // calculatePressDiagonal because unlike the outlet
     // boundaries in the explicit projection, we want to 
     // show the effect of AE, etc. in AP for the 

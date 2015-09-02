@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/TotNumDensity.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -19,13 +19,13 @@ TotNumDensity::problemSetup( ProblemSpecP& db ){
 
   //only working for DQMOM at the moment
 
-  bool doing_dqmom = ParticleHelper::check_for_particle_method(db,ParticleHelper::DQMOM);
-  bool doing_cqmom = ParticleHelper::check_for_particle_method(db,ParticleHelper::CQMOM);
+  bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
+  bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
 
   if ( doing_dqmom ){
-    _Nenv = ParticleHelper::get_num_env( db, ParticleHelper::DQMOM );
+    _Nenv = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
   } else if ( doing_cqmom ){
-    _Nenv = ParticleHelper::get_num_env( db, ParticleHelper::CQMOM );
+    _Nenv = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
   } else {
     throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
   }
@@ -51,7 +51,7 @@ TotNumDensity::register_initialize( std::vector<ArchesFieldContainer::VariableIn
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int i = 0; i < _Nenv; i++ ){
-    const std::string weight_name  = ParticleHelper::append_env( "w", i);
+    const std::string weight_name  = ParticleTools::append_env( "w", i);
     register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::NEWDW, variable_registry );
   }
 
@@ -73,7 +73,7 @@ TotNumDensity::initialize( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string weight_name  = ParticleHelper::append_env( "w", i);
+    const std::string weight_name  = ParticleTools::append_env( "w", i);
     SVolFP weight   = tsk_info->get_const_so_field<SVolF>( weight_name );
 
     *sum <<= *sum + *weight;
@@ -96,7 +96,7 @@ TotNumDensity::register_timestep_eval( std::vector<ArchesFieldContainer::Variabl
   register_variable( _task_name, ArchesFieldContainer::COMPUTES, variable_registry );
 
   for ( int i = 0; i < _Nenv; i++ ){
-    const std::string weight_name  = ParticleHelper::append_env( "w", i);
+    const std::string weight_name  = ParticleTools::append_env( "w", i);
     register_variable( weight_name, ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
   }
 
@@ -118,7 +118,7 @@ TotNumDensity::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
 
   for ( int i = 0; i < _Nenv; i++ ){
 
-    const std::string weight_name  = ParticleHelper::append_env( "w", i);
+    const std::string weight_name  = ParticleTools::append_env( "w", i);
     SVolFP weight   = tsk_info->get_const_so_field<SVolF>( weight_name );
 
     *sum <<= *sum + *weight;

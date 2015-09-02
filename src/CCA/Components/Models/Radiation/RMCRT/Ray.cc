@@ -960,10 +960,16 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
 
     //__________________________________
     //
+    
+    vector <int> rand_i( "LHC"== d_rayDirSampleAlgo ? d_nDivQRays : 0);  // only needed for LHC scheme
+
     for (CellIterator iter = finePatch->getCellIterator(); !iter.done(); iter++){
 
       IntVector origin = *iter;
 
+      if (d_rayDirSampleAlgo=="LHC"){   
+        randVector(rand_i,mTwister);
+      }
 /*`==========TESTING==========*/
 #if 0 
       if( isDbgCell(origin) && d_isDbgOn ){
@@ -985,13 +991,18 @@ Ray::rayTrace_dataOnion( const ProcessorGroup* pg,
       for (int iRay=0; iRay < d_nDivQRays; iRay++){
 
         //dbg2 << "===== iRay: " << iRay << endl;
-        Vector ray_direction = findRayDirection( mTwister,d_isSeedRandom, origin, iRay );
+        Vector direction_vector;
+        if (d_rayDirSampleAlgo=="LHC"){   
+          direction_vector =findRayDirectionHyperCube(mTwister, d_isSeedRandom, origin, iRay,rand_i[iRay],iRay );
+        }else{
+          direction_vector =findRayDirection(mTwister, d_isSeedRandom, origin, iRay );
+        }
 
         Vector rayOrigin;
         int my_L = maxLevels - 1;
         ray_Origin( mTwister, origin, DyDx[my_L],  DzDx[my_L], d_CCRays, rayOrigin);
 
-        updateSumI_ML< T >( ray_direction, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
+        updateSumI_ML< T >( direction_vector, rayOrigin, origin, Dx, domain_BB, maxLevels, fineLevel, DyDx,DzDx,
                        fineLevel_ROI_Lo, fineLevel_ROI_Hi, regionLo, regionHi, sigmaT4OverPi, abskg, cellType,
                        nRaySteps, sumI, mTwister);
 

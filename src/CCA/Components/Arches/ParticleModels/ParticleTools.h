@@ -1,19 +1,19 @@
-#ifndef Uintah_Component_Arches_ParticleHelper_h
-#define Uintah_Component_Arches_ParticleHelper_h
+#ifndef Uintah_Component_Arches_ParticleTools_h
+#define Uintah_Component_Arches_ParticleTools_h
 
 #include <Core/Exceptions/ProblemSetupException.h>
 
 namespace Uintah{ 
 
-  class ParticleHelper { 
+  class ParticleTools {
 
 
     public: 
 
       enum PARTICLE_METHOD {DQMOM, CQMOM, LAGRANGIAN}; 
 
-      ParticleHelper(){}
-      ~ParticleHelper(){}
+      ParticleTools(){}
+      ~ParticleTools(){}
 
       /** @brief Parse for a role -> label match in the EulerianParticles section **/
       inline static std::string parse_for_role_to_label( ProblemSpecP& db, const std::string role ){ 
@@ -127,11 +127,15 @@ namespace Uintah{
         } else if ( method == CQMOM ){ 
 
           if ( arches_root->findBlock("CQMOM") ){ 
-            int N; 
-            arches_root->findBlock("CQMOM")->require("QuadratureNodes",N); 
+            int N = 1;
+            std::vector<int> N_i;
+            arches_root->findBlock("CQMOM")->require("QuadratureNodes",N_i);
+            for (unsigned int i = 0; i < N_i.size(); i++ ) {
+              N *= N_i[i];
+            }
             return N; 
           } else { 
-            throw ProblemSetupException("Error: DQMOM particle method not found.", __FILE__, __LINE__); 
+            throw ProblemSetupException("Error: CQMOM particle method not found.", __FILE__, __LINE__); 
           }
 
         } else if ( method == LAGRANGIAN ){ 

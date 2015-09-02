@@ -31,6 +31,7 @@
 #include <CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <CCA/Ports/DataWarehouse.h>
 #include <CCA/Ports/Scheduler.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Exceptions/InvalidValue.h>
@@ -147,7 +148,18 @@ DORadiationModel::problemSetup( ProblemSpecP& params )
         _nQn_part = 0;
         break;
       }else{
-        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part ); 
+//        db->getRootNode()->findBlock("CFD")->findBlock("ARCHES")->findBlock("DQMOM")->require( "number_quad_nodes", _nQn_part );
+        bool doing_dqmom = ParticleTools::check_for_particle_method(db,ParticleTools::DQMOM);
+        bool doing_cqmom = ParticleTools::check_for_particle_method(db,ParticleTools::CQMOM);
+        
+        if ( doing_dqmom ){
+          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::DQMOM );
+        } else if ( doing_cqmom ){
+          _nQn_part = ParticleTools::get_num_env( db, ParticleTools::CQMOM );
+        } else {
+          throw ProblemSetupException("Error: This method only working for DQMOM/CQMOM.",__FILE__,__LINE__);
+        }
+        
         db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "part_temp_label", baseNameTemperature, "heat_pT" ); 
         db_model->findBlock("calculator")->findBlock("particles")->getWithDefault( "radiateAtGasTemp", _radiateAtGasTemp, true ); 
         db_model->findBlock("calculator")->findBlock("particles")->findBlock("abskp")->getAttribute("label",baseNameAbskp);

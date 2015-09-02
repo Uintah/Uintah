@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/structured/FVStaggered.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 
 #ifndef PI
 #define PI 3.141592653589793
@@ -137,12 +138,11 @@ namespace Uintah{
   template <typename IT, typename DT>
   void DragModel<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    db->getWithDefault("u_velocity_label",_base_u_velocity_name,"none");
-    db->getWithDefault("v_velocity_label",_base_v_velocity_name,"none");
-    db->getWithDefault("w_velocity_label",_base_w_velocity_name,"none");
-
-    db->require("particle_density_label",_base_density_name);
-    db->require("particle_diameter_label",_base_diameter_name);
+    _base_u_velocity_name = ParticleTools::parse_for_role_to_label(db, "uvel");
+    _base_v_velocity_name = ParticleTools::parse_for_role_to_label(db, "vvel");
+    _base_w_velocity_name = ParticleTools::parse_for_role_to_label(db, "wvel");
+    _base_diameter_name = ParticleTools::parse_for_role_to_label(db, "size");
+    _base_density_name = ParticleTools::parse_for_role_to_label(db, "density");
 
     db->require("direction",_direction);
 

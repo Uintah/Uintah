@@ -734,7 +734,7 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
 //    dbg << d_myworld->myrank() << " DLB::NeedRecompile: check=" << do_check << " ts: " << timestep << " " << d_lbTimestepInterval << " t " << time << " " << d_lbInterval << " last: " << d_lastLbTimestep << " " << d_lastLbTime << endl;
 
   // if it determines we need to re-load-balance, recompile
-  if (do_check && possiblyDynamicallyReallocate(grid, check)) {
+  if (do_check && possiblyDynamicallyReallocate(grid, LoadBalancer::check)) {
     doing << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
     return true;
   }
@@ -822,8 +822,8 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
 
   // don't do on a restart unless procs changed between runs.  For restarts, this is 
   // called mainly to update the perProc Patch sets (at the bottom)
-  if (state != restart) {
-    if (state != check) {
+  if (state != LoadBalancer::restart) {
+    if (state != LoadBalancer::check) {
       force = true;
       if (d_lbTimestepInterval != 0) {
         d_lastLbTimestep = d_sharedState->getCurrentTopLevelTimeStep();
@@ -853,7 +853,7 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
       dynamicAllocate=true;
     }
 
-    if (dynamicAllocate || state != check) {
+    if (dynamicAllocate || state != LoadBalancer::check) {
       //d_oldAssignment = d_processorAssignment;
       changed = true;
       d_processorAssignment = d_tempAssignment;
@@ -864,12 +864,14 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
         d_oldAssignment = d_processorAssignment;
         d_oldAssignmentBasePatch = d_assignmentBasePatch;
       }
+        
       if (lb.active()) {
         int myrank = d_myworld->myrank();
         if (myrank == 0) {
           LevelP curLevel = grid->getLevel(0);
           Level::const_patchIterator iter = curLevel->patchesBegin();
           lb << "  Changing the Load Balance\n";
+          
           for (size_t i = 0; i < d_processorAssignment.size(); i++) {
             lb << myrank << " patch " << i << " (real " << (*iter)->getID() << ") -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") patch size: "  << (*iter)->getNumExtraCells() << " low:" << (*iter)->getExtraCellLowIndex() << " high: " << (*iter)->getExtraCellHighIndex() <<"\n";
             IntVector range = ((*iter)->getExtraCellHighIndex() - (*iter)->getExtraCellLowIndex());
@@ -884,8 +886,15 @@ bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, int 
     }
   }
   d_tempAssignment.resize(0);
+  
+  // logic to setting flag
+  int flag = LoadBalancer::check;
+  if ( changed || state == LoadBalancer::restart){
+    flag = LoadBalancer::regrid;
+  }
+  
   // this must be called here (it creates the new per-proc patch sets) even if DLB does nothing.  Don't move or return earlier.
-  LoadBalancerCommon::possiblyDynamicallyReallocate(grid, (changed || state == restart) ? regrid : check);
+  LoadBalancerCommon::possiblyDynamicallyReallocate( grid, flag );
   d_sharedState->loadbalancerTime += Time::currentSeconds() - start;
   return changed;
 }

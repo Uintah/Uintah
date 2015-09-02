@@ -58,7 +58,7 @@ namespace Uintah {
 
 
     virtual particleIndex createParticles(MPMMaterial* matl,
-                                            CCVariable<short int>& cellNAPID,
+                                            CCVariable<int>& cellNAPID,
                                             const Patch*,DataWarehouse* new_dw,
                                             std::vector<GeometryObject*>&);
 
@@ -127,7 +127,7 @@ namespace Uintah {
                                     MPMMaterial* matl,
                                     Point p, IntVector cell_idx,
                                     particleIndex i,
-                                    CCVariable<short int>& cellNAPI,
+                                    CCVariable<int>& cellNAPI,
                                     ParticleVars& pvars);
     
     //////////////////////////////////////////////////////////////////////////

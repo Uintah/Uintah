@@ -53,14 +53,17 @@ public:
     Builder( const Expr::Tag& result,
             const Expr::Tag& xTag,
             const Expr::Tag& tTag,
+            const Expr::Tag& dtTag,
             const double D,
             const double rho0,
-            const double rho1 );
+            const double rho1,
+            const bool atNPlus1=false);
     ~Builder(){}
     Expr::ExpressionBase* build() const;
   private:
     const double d_, rho0_, rho1_;
-    const Expr::Tag xTag_, tTag_;
+    const bool atNPlus1_;
+    const Expr::Tag xTag_, tTag_, dtTag_;
   };
   
   void evaluate();
@@ -70,12 +73,15 @@ private:
   
   VarDen1DMMSMixFracSrc( const Expr::Tag& xTag,
                        const Expr::Tag& tTag,
+                        const Expr::Tag& dtTag,
                        const double D,
                        const double rho0,
-                       const double rho1 );
+                       const double rho1,
+                        const bool atNPlus1);
   const double d_, rho0_, rho1_;
+  const bool atNPlus1_;
   DECLARE_FIELD(FieldT, x_)
-  DECLARE_FIELD(TimeField, t_)
+  DECLARE_FIELDS(TimeField, t_, dt_)
 };
 
 /**
