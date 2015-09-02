@@ -82,6 +82,7 @@ NIGHTLYTESTS = [
    ("coal_RadPropsPlanck"               , "Coal/coal_RadPropsPlanck.ups"                            , 1.1 , "Linux" , ["exactComparison"])   , 
    ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "Linux" , ["exactComparison"])   , 
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "Linux" , ["exactComparison"])   , 
+   ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "Linux" , ["exactComparison"])   , 
    ("DOM16"                             , "DOM16.ups"                                               , 3   , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("DO_RadProps"                       , "DO_RadProps.ups"                                         , 1.1 , "Linux" , ["exactComparison"])   , 
    ("CQMOM_1x1"                         , "CQMOM_regression/CQMOM_1x1.ups"                          , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
@@ -95,6 +96,7 @@ NIGHTLYTESTS = [
    ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
+   ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) ,
    ("regridTestArches"                  , "regridTestArches"                                        , 8   , "Linux" , ["startFromCheckpoint" , "no_restart"]) , 
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "Linux" , ["exactComparison"     , "no_restart"]) , 
    ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
@@ -142,6 +144,7 @@ LOCALTESTS = [
    ("source_channel_varden"             , "verify_masssource/source_channel_varden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("heptane_pipe"                      , "heptane_pipe.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
+   ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("coal_table_pipe"                   , "coal_table_pipe.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
    ("pcoal_drag"                        , "Coal/pcoal_drag.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
@@ -161,6 +164,7 @@ LOCALTESTS = [
    ("singleJet_poly"                    , "CQMOM_regression/singleJet_poly.ups"                     , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("angledWall"                        , "CQMOM_regression/angledWall.ups"                         , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("angledWall3D"                      , "CQMOM_regression/angledWall3D.ups"                       , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
+   ("Constant_Deposition"               , "CQMOM_regression/Constant_Deposition.ups"                , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) ,
    ("channel_LagPart_inlet"             , "LagrangianParticles/channel_flow_x_lagrangian_inlet.ups" , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("OFC4"                               , "Coal/OFC4.ups"                                                , 3   , "All"  , ["exactComparison"   ]) , 
    
@@ -222,6 +226,7 @@ CQMOMTESTS = [
   ("singleJet_poly"              , "CQMOM_regression/singleJet_poly.ups"          , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("angledWall"                  , "CQMOM_regression/angledWall.ups"              , 1.1 , "All"  , ["exactComparison", "no_restart"]),
   ("angledWall3D"                , "CQMOM_regression/angledWall3D.ups"            , 1.1 , "All"  , ["exactComparison", "no_restart"]),
+  ("Constant_Deposition"         , "CQMOM_regression/Constant_Deposition.ups"     , 1.1 , "All"  , ["exactComparison", "no_restart"]),
 ]
 
 # NO RMCRT due to the segfault on the MAC
@@ -255,6 +260,7 @@ NORMCRT = [
    ("source_channel_varden"             , "verify_masssource/source_channel_varden.ups"             , 1.1 , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("heptane_pipe"                      , "heptane_pipe.ups"                                        , 1.1 , "All"  , ["exactComparison"]) , 
    ("methane_RCCE"                      , "methane_RCCE.ups"                                        , 1.1 , "All " , ["exactComparison"]) , 
+   ("channel_WD_CO"                     , "channel_WD_CO.ups"                                       , 1.1 , "All"  , ["exactComparison"]) , 
    ("coal_table_pipe"                   , "coal_table_pipe.ups"                                     , 1.1 , "All"  , ["exactComparison"]) , 
    ("scalar_var_1eqn"                   , "scalar_variance_1eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 
    ("scalar_var_2eqn"                   , "scalar_variance_2eqn.ups"                                , 4   , "All"  , ["exactComparison"   , "no_restart"]) , 

@@ -441,7 +441,7 @@ MPMLabel::MPMLabel()
 
   // for assigning particle ids
   pCellNAPIDLabel =
-    VarLabel::create("cellNAPID", CCVariable<short int>::getTypeDescription());
+    VarLabel::create("cellNAPID", CCVariable<int>::getTypeDescription());
 
   doMechLabel = VarLabel::create( "doMech", delt_vartype::getTypeDescription());
 

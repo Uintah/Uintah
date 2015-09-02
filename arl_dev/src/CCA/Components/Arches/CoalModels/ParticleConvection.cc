@@ -2,7 +2,7 @@
 #include <CCA/Components/Arches/TransportEqns/EqnFactory.h>
 #include <CCA/Components/Arches/TransportEqns/EqnBase.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/ArchesLabel.h>
 
 #include <Core/ProblemSpec/ProblemSpec.h>

@@ -1576,7 +1576,7 @@ void AMRMPM::actuallyInitialize(const ProcessorGroup*,
     
     printTask(patches, patch,cout_doing,"Doing AMRMPM::actuallyInitialize");
 
-    CCVariable<short int> cellNAPID;
+    CCVariable<int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
 
@@ -3633,8 +3633,8 @@ void AMRMPM::addParticles(const ProcessorGroup*,
     }
 
     //Carry forward CellNAPID
-    constCCVariable<short int> NAPID;
-    CCVariable<short int> NAPID_new;
+    constCCVariable<int> NAPID;
+    CCVariable<int> NAPID_new;
     Ghost::GhostType  gnone = Ghost::None;
     old_dw->get(NAPID,               lb->pCellNAPIDLabel,    0,patch,gnone,0);
     new_dw->allocateAndPut(NAPID_new,lb->pCellNAPIDLabel,    0,patch);
@@ -3784,9 +3784,9 @@ void AMRMPM::addParticles(const ProcessorGroup*,
       Vector dx = patch->dCell();
       int numRefPar=0;
       for( unsigned int idx=0; idx<oldNumPar; ++idx ){
-       IntVector c_orig;
-       patch->findCell(px[idx],c_orig);
        if(pref[idx]!=prefOld[idx]){
+        IntVector c_orig;
+        patch->findCell(px[idx],c_orig);
         vector<Point> new_part_pos;
 
         Matrix3 dsize = (pF[idx]*pSize[idx]*Matrix3(dx[0],0,0,
@@ -3833,7 +3833,7 @@ void AMRMPM::addParticles(const ProcessorGroup*,
                           ((long64)c_orig.y() << 32) |
                           ((long64)c_orig.z() << 48);
 
-          short int& myCellNAPID = NAPID_new[c_orig];
+          int& myCellNAPID = NAPID_new[c_orig];
           int new_index;
           if(i==0){
              new_index=idx;
@@ -4123,7 +4123,7 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     printTask(patches, patch,cout_doing,"Doing AMRMPM::refineGrid");
 
-    CCVariable<short int> cellNAPID;
+    CCVariable<int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
 
@@ -4174,7 +4174,6 @@ void AMRMPM::refineGrid(const ProcessorGroup*,
 
         mpm_matl->getConstitutiveModel()->initializeCMData(patch,
                                                            mpm_matl,new_dw);
-      } else {
       }
     }
   }

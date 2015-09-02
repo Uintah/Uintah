@@ -78,7 +78,12 @@ namespace Uintah {
 
   class CostModelForecaster : public CostModeler {
     public:
-      CostModelForecaster(const ProcessorGroup* myworld, DynamicLoadBalancer *lb, double patchCost, double cellCost, double extraCellCost, double particleCost ) : CostModeler(patchCost,cellCost,extraCellCost,particleCost), d_lb(lb), d_myworld(myworld)
+      CostModelForecaster(const ProcessorGroup* myworld, 
+                          DynamicLoadBalancer *lb, 
+                          double patchCost, 
+                          double cellCost, 
+                          double extraCellCost, 
+                          double particleCost ) : CostModeler(patchCost,cellCost,extraCellCost,particleCost), d_lb(lb), d_myworld(myworld)
         {
           d_x.push_back(cellCost);
           d_x.push_back(extraCellCost);
@@ -87,20 +92,28 @@ namespace Uintah {
 
           setTimestepWindow(20);
         };
+        
       void addContribution(DetailedTask *task, double cost);
+      
       //finalize the contributions for this timestep
       void finalizeContributions(const GridP currentGrid);
+      
       //output standard error metrics of the prediction
       void outputError(const GridP currentGrid);
+      
       //get the contributions for each patch, particles are ignored
       void getWeights(const Grid* grid, std::vector<std::vector<int> > num_particles, std::vector<std::vector<double> >&costs);
+      
       //sets the decay rate for the exponential average
       void setTimestepWindow(int window) { d_timestepWindow=window;}
       
       struct PatchInfo
       {
         PatchInfo(){};
-        PatchInfo(int np,int nc, int nec, double et) : num_particles(np), num_cells(nc), num_extraCells(nec), execTime(et)
+        PatchInfo(int np,
+                  int nc, 
+                  int nec, 
+                  double et) : num_particles(np), num_cells(nc), num_extraCells(nec), execTime(et)
         {}
         int num_particles;
         int num_cells;

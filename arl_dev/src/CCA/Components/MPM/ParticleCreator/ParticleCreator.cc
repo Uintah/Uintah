@@ -74,7 +74,7 @@ ParticleCreator::~ParticleCreator()
 
 particleIndex 
 ParticleCreator::createParticles(MPMMaterial* matl,
-                                 CCVariable<short int>& cellNAPID,
+                                 CCVariable<int>& cellNAPID,
                                  const Patch* patch,DataWarehouse* new_dw,
                                  vector<GeometryObject*>& d_geom_objs)
 {
@@ -486,7 +486,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
                                     Point p,
                                     IntVector cell_idx,
                                     particleIndex i,
-                                    CCVariable<short int>& cellNAPID,
+                                    CCVariable<int>& cellNAPID,
                                     ParticleVars& pvars)
 {
   IntVector ppc = (*obj)->getInitialData_IntVector("res");
@@ -610,7 +610,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
                   ((long64)cell_idx.y() << 32) | 
                   ((long64)cell_idx.z() << 48);
                   
-  short int& myCellNAPID = cellNAPID[cell_idx];
+  int& myCellNAPID = cellNAPID[cell_idx];
   pvars.pparticleID[i] = (cellID | (long64) myCellNAPID);
   ASSERT(myCellNAPID < 0x7fff);
   myCellNAPID++;

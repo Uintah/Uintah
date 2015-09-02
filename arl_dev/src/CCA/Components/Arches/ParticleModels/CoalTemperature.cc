@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalTemperature.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 #include <CCA/Components/Arches/TransportEqns/DQMOMEqn.h>
@@ -9,8 +9,8 @@
 using namespace Uintah;
 using namespace std;
 
-CoalTemperature::CoalTemperature( std::string task_name, int matl_index ) :
-TaskInterface( task_name, matl_index ) {
+CoalTemperature::CoalTemperature( std::string task_name, int matl_index, const int N ) :
+TaskInterface( task_name, matl_index ), _Nenv(N) {
 
   _pi = acos(-1.0);
   _Rgas = 8314.3; // J/K/kmol
@@ -24,7 +24,8 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
 
   const ProblemSpecP db_root = db->getRootNode();
   _scale_flag = false;
-
+  db->getWithDefault("const_size",_const_size,true);
+  
   if ( db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties") ){
 
     ProblemSpecP db_coal_props = db_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("Coal")->findBlock("Properties");
@@ -60,7 +61,7 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
       double coal_dry = coal.C + coal.H + coal.O + coal.N + coal.S + coal.ASH + coal.CHAR; //moisture free coal
       double raw_coal_mf = coal_daf / coal_dry;
       double char_mf = coal.CHAR / coal_dry;
-      double ash_mf = coal.ASH / coal_dry;
+      _ash_mf = coal.ASH / coal_dry;
 
       _MW_avg = (coal.C/coal_daf)/12.01 + (coal.H/coal_daf)/1.008 + (coal.O/coal_daf)/16 + (coal.N/coal_daf)/14.01 + (coal.S/coal_daf)/32.06;
       _MW_avg = 1/_MW_avg;
@@ -72,12 +73,12 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
       _init_ash.clear();
       _denom.clear();
 
-      _Nenv = _sizes.size();
+//      _Nenv = _sizes.size();
 
       for ( unsigned int i = 0; i < _sizes.size(); i++ ){
 
         double mass_dry = (_pi/6.0) * pow(_sizes[i],3) * _rhop_o;     // kg/particle
-        _init_ash.push_back(mass_dry  * ash_mf);                      // kg_ash/particle (initial)
+        _init_ash.push_back(mass_dry  * _ash_mf);                     // kg_ash/particle (initial)
         _init_char.push_back(mass_dry * char_mf);                     // kg_char/particle (initial)
         _init_rawcoal.push_back(mass_dry * raw_coal_mf);              // kg_ash/particle (initial)
         _denom.push_back( _init_ash[i] +
@@ -89,15 +90,16 @@ CoalTemperature::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
     }
 
-    _rawcoal_base_name = ParticleHelper::parse_for_role_to_label(db, "raw_coal");
-    _char_base_name = ParticleHelper::parse_for_role_to_label(db, "char");
-    _enthalpy_base_name = ParticleHelper::parse_for_role_to_label(db, "enthalpy");
+    _diameter_base_name = ParticleTools::parse_for_role_to_label(db, "size");
+    _rawcoal_base_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+    _char_base_name = ParticleTools::parse_for_role_to_label(db, "char");
+    _enthalpy_base_name = ParticleTools::parse_for_role_to_label(db, "enthalpy");
     _weight_base_name = "w";
-    _dTdt_base_name = ParticleHelper::parse_for_role_to_label(db, "dTdt");
+    _dTdt_base_name = ParticleTools::parse_for_role_to_label(db, "dTdt");
     _gas_temperature_name = "temperature";
 
     for ( unsigned int i = 0; i < _sizes.size(); i++ ){
-      std::string temp_name = ParticleHelper::append_qn_env("w", i);
+      std::string temp_name = ParticleTools::append_qn_env("w", i);
       _weightqn_name.push_back(temp_name);
     }
 
@@ -146,6 +148,11 @@ CoalTemperature::register_initialize( std::vector<ArchesFieldContainer::Variable
     register_variable( rc_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
     register_variable( temperature_name  , ArchesFieldContainer::COMPUTES , variable_registry );
     register_variable( dTdt_name  , ArchesFieldContainer::COMPUTES , variable_registry );
+    
+    if ( !_const_size ) {
+      const std::string diameter_name   = get_env_name( i, _diameter_base_name );
+      register_variable( diameter_name   , ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::NEWDW , variable_registry );
+    }
 
   }
 
@@ -250,6 +257,11 @@ CoalTemperature::register_timestep_eval( std::vector<ArchesFieldContainer::Varia
     register_variable( rc_name  , ArchesFieldContainer::REQUIRES, 0, ArchesFieldContainer::LATEST, variable_registry );
     register_variable( temperature_name , ArchesFieldContainer::MODIFIES, variable_registry );
     register_variable( dTdt_name , ArchesFieldContainer::COMPUTES, variable_registry );
+    
+    if ( !_const_size ) {
+      const std::string diameter_name   = get_env_name( i, _diameter_base_name );
+      register_variable( diameter_name, ArchesFieldContainer::REQUIRES , 0 , ArchesFieldContainer::LATEST , variable_registry );
+    }
 
   }
   const std::string gas_temperature_name   = _gas_temperature_name;
@@ -287,6 +299,13 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
     constCCVariable<double>& enthalpy = *venthalpy;
     constCCVariable<double>& weight = *vweight;
 
+    constCCVariable<double>* vdiameter;
+    if ( !_const_size ) {
+      const std::string diameter_name = get_env_name( i, _diameter_base_name );
+      vdiameter = tsk_info->get_const_uintah_field<constCCVariable<double> >(diameter_name);
+    }
+    constCCVariable<double>& diameter = *vdiameter;
+    
     for (CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
 
       IntVector c = *iter;
@@ -313,12 +332,25 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
       double pE = enthalpy[c];
       double wt = weight[c];
 
+      double massDry;
+      double initAsh;
+      double dp;
+      
       if (wt < _weight_small[i]){
         temperature[c]=gT; // gas temperature
         dTdt[c]=(pT-pT_olddw)/dt;
       } else {
         int max_iter=15;
         int iter =0;
+        
+        if ( !_const_size ) {
+          dp = diameter[c];
+          massDry = _pi/6.0 * pow( dp, 3.0 ) * _rhop_o;
+          initAsh = massDry * _ash_mf;
+        } else {
+          initAsh = _init_ash[i];
+        }
+        
         for ( ; iter < max_iter; iter++) {
           icount++;
           oldpT = pT;
@@ -326,14 +358,14 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
           Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
           Hc = _Hc0 + hint * _RdMW;
-          H = Hc * (RC + CH) + Ha * _init_ash[i];
+          H = Hc * (RC + CH) + Ha * initAsh;
           f1 = pE - H;
           // compute enthalpy given Tguess + delta
           pT = pT + delta;
           hint = -156.076 + 380/(-1 + exp(380 / pT)) + 3600/(-1 + exp(1800 / pT));
           Ha = -202849.0 + _Ha0 + pT * (593. + pT * 0.293);
           Hc = _Hc0 + hint * _RdMW;
-          H = Hc * (RC + CH) + Ha * _init_ash[i];
+          H = Hc * (RC + CH) + Ha * initAsh;
           f2 = pE - H;
           // correct temperature
           dT = f1 * delta / (f2-f1) + delta;
@@ -349,12 +381,12 @@ CoalTemperature::eval( const Patch* patch, ArchesTaskInfoManager* tsk_info,
           hint = -156.076 + 380/(-1 + exp(380 / pT_low)) + 3600/(-1 + exp(1800 / pT_low));
           Ha = -202849.0 + _Ha0 + pT_low * (593. + pT_low * 0.293);
           Hc = _Hc0 + hint * _RdMW;
-          double H_low = Hc * (RC + CH) + Ha * _init_ash[i];
+          double H_low = Hc * (RC + CH) + Ha * initAsh;
           double pT_high=3500;
           hint = -156.076 + 380/(-1 + exp(380 / pT_high)) + 3600/(-1 + exp(1800 / pT_high));
           Ha = -202849.0 + _Ha0 + pT_high * (593. + pT_high * 0.293);
           Hc = _Hc0 + hint * _RdMW;
-          double H_high = Hc * (RC + CH) + Ha * _init_ash[i];
+          double H_high = Hc * (RC + CH) + Ha * initAsh;
           if (pE < H_low){
             pT = 273.0;
           } else if (pE > H_high) {

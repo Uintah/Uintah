@@ -1,5 +1,5 @@
 #include <CCA/Components/Arches/ParticleModels/CoalTemperatureNebo.h>
-#include <CCA/Components/Arches/ParticleModels/ParticleHelper.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <Core/Exceptions/ProblemSetupException.h>
 
@@ -82,10 +82,10 @@ CoalTemperatureNebo::problemSetup( ProblemSpecP& db ){
       throw ProblemSetupException("Error: No <ultimate_analysis> found in input file.", __FILE__, __LINE__);
     }
 
-    _rawcoal_base_name = ParticleHelper::parse_for_role_to_label(db, "raw_coal");
-    _char_base_name = ParticleHelper::parse_for_role_to_label(db, "char");
-    _enthalpy_base_name = ParticleHelper::parse_for_role_to_label(db, "enthalpy");
-    _dTdt_base_name = ParticleHelper::parse_for_role_to_label(db, "dTdt");
+    _rawcoal_base_name = ParticleTools::parse_for_role_to_label(db, "raw_coal");
+    _char_base_name = ParticleTools::parse_for_role_to_label(db, "char");
+    _enthalpy_base_name = ParticleTools::parse_for_role_to_label(db, "enthalpy");
+    _dTdt_base_name = ParticleTools::parse_for_role_to_label(db, "dTdt");
 
   } else {
     throw ProblemSetupException("Error: <Coal> is missing the <Properties> section.", __FILE__, __LINE__);

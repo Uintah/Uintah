@@ -371,7 +371,7 @@ namespace Wasatch{
       valParams->getAttribute("rho1", rho1);
       const Expr::Tag xTag = parse_nametag( valParams->findBlock("Coordinate")->findBlock("NameTag") );
       typedef typename VarDen1DMMSMixFracSrc<SVolField>::Builder Builder;
-      builder = scinew Builder( tag, xTag, tagNames.time, D, rho0, rho1 );
+      builder = scinew Builder( tag, xTag, tagNames.time, tagNames.dt, D, rho0, rho1, false );
     }
     
     else if ( params->findBlock("ExponentialVortex") ) {

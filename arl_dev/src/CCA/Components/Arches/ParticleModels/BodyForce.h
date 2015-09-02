@@ -4,6 +4,7 @@
 #include <CCA/Components/Arches/Task/TaskInterface.h>
 #include <CCA/Components/Arches/Operators/Operators.h>
 #include <spatialops/structured/FVStaggered.h>
+#include <CCA/Components/Arches/ParticleModels/ParticleTools.h>
 #ifndef PI
 #define PI 3.1415926535897932384626433832795
 #endif
@@ -126,8 +127,8 @@ namespace Uintah{
   template <typename IT, typename DT>
   void BodyForce<IT, DT>::problemSetup( ProblemSpecP& db ){
 
-    db->require("particle_density_label",_base_density_name);
-
+    _base_density_name = ParticleTools::parse_for_role_to_label(db, "density");
+    
     db->require("direction",_direction);
     _gas_density_name = "densityCP";
     const ProblemSpecP params_root = db->getRootNode();
