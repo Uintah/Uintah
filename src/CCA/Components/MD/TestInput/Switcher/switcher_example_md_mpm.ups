@@ -20,7 +20,7 @@
         
       <subcomponent>
           <SimulationComponent type="md" />
-          <input_file>lj_hcp_1Component.ups</input_file>
+          <input_file>md_lj_hcp_1Component.ups</input_file>
       </subcomponent>
         
   </SimulationComponent>  
@@ -49,6 +49,7 @@
     <!--  This is the grid used by the first sub-component                  -->
     <!--____________________________________________________________________-->
     <Grid>
+    
        <BoundaryConditions>
               <Face side = "x-">
                    <BCType id = "all" var = "symmetry" label = "Symmetric">
@@ -75,13 +76,15 @@
               </BCType>
                 </Face>
        </BoundaryConditions>
+       
        <Level>
            <Box label = "1">
               <lower>[-0.55, 0.00, -0.10]</lower>
               <upper>[ 0.55, 0.05,  4.10]</upper>
-               <resolution>[22,1,84]</resolution>
+              <resolution>[22,1,84]</resolution>
               <patches>[1,1,1]</patches>
            </Box>
        </Level>
+       
     </Grid>
 </Uintah_specification>
