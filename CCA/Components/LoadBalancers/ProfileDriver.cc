@@ -158,7 +158,7 @@ void ProfileDriver::outputError(const GridP currentGrid)
       int proc=d_lb->getPatchwiseProcessorAssignment(patch);
       proc_costsm[proc] += measured_sum[l][p];
       proc_costsp[proc] += predicted_sum[l][p];
-      double error = (measured_sum[l][p]-predicted_sum[l][p])/(measured_sum[l][p]+predicted_sum[l][p]);
+      double error = (measured_sum[l][p] - predicted_sum[l][p])/(measured_sum[l][p] + predicted_sum[l][p]);
 
       if(fabs(error)>max_error){
         max_error=fabs(error);
@@ -175,6 +175,8 @@ void ProfileDriver::outputError(const GridP currentGrid)
       }
     }
 
+    //__________________________________
+    //  debugging output
     if(d_myworld->myrank()==0)
     {
       //calculate total cost for normalization
@@ -354,17 +356,17 @@ void ProfileDriver::finalizeContributions(const GridP currentGrid)
       {
         if(d_type==MEMORY)
         {
-          //update exponential average
+          //update exponential average      See Equation 5.4 of Justin's Dissertation
           data.weight = d_alpha * data.current + (1-d_alpha) * data.weight;
         }
-        else //TYPE IS KALMAN
+        else //TYPE IS KALMAN               See Eqs. 5.6 to 5.9
         {
           double m = data.p + d_phi;
           double k = m / ( m + d_r );
-
+          data.p = (1-k) * m;               //computing covariance
+          
           //cout << setprecision(12);
-          data.p = (1-k) * m;  //computing covariance
-        //cout << "m: " << m << " k:" << k << " p:" << data.p << endl;
+          //cout << "m: " << m << " k:" << k << " p:" << data.p << endl;
 
           data.weight = data.weight + k * (data.current - data.weight);
         }
@@ -564,13 +566,15 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
       cout << endl;
     }
 #endif
+
     int p=0;
     //initialize weights
     for(vector<Region>::iterator it=new_regions.begin();it!=new_regions.end();it++)
     {
       //add regions to my map
-      IntVector low=it->getLow()/d_minPatchSize[l];
-      IntVector high=it->getHigh()/d_minPatchSize[l];
+      IntVector low  = it->getLow()/d_minPatchSize[l];
+      IntVector high = it->getHigh()/d_minPatchSize[l];
+   
       //loop through datapoints
       for(CellIterator iter(low,high); !iter.done(); iter++)
       {
@@ -578,8 +582,9 @@ void ProfileDriver::initializeWeights(const Grid* oldgrid, const Grid* newgrid)
         map<IntVector,Contribution>::iterator it=costs[l].find(*iter);
 
         //erase any old data in map
-        if(it!=costs[l].end())
+        if(it!=costs[l].end()){
           costs[l].erase(it);
+        }
 
         if(p++%d_myworld->size()==d_myworld->myrank())  //distribute new regions accross processors
         {
