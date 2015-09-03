@@ -8,7 +8,7 @@
   <!--____________________________________________________________________-->
   <!--         C O M P O N E N T   S W I T C H E R                        -->
   <!--____________________________________________________________________-->
-  <SimulationComponent type="multiscale" >
+  <SimulationComponent type="switcher" >
   
       <subcomponent>
           <SimulationComponent type="mpm" />
