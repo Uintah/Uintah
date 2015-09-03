@@ -293,8 +293,16 @@ namespace Uintah {
        * @param
        * @return
        */
-      void scheduleSwitchTest( const LevelP&     level,
-                                     SchedulerP& sched );
+      virtual void scheduleSwitchTest( const LevelP&     level,
+                                             SchedulerP& sched );
+
+      /**
+       * @brief
+       * @param
+       * @return
+       */
+      virtual void switchInitialize(const LevelP&     level,
+                                          SchedulerP&  /*sched*/ );
 
 
     private:

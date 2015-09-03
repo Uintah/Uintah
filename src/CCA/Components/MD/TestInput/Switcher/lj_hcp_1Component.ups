@@ -20,29 +20,28 @@
        <delt_init>1.00</delt_init>
        <max_Timesteps>25000</max_Timesteps>
        <timestep_multiplier>1</timestep_multiplier>
-
    </Time>
-   
-   
+
+
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
-    
+
    <DataArchiver>
        <filebase>lj_hcp_1component.uda</filebase>
        <outputInterval>1000</outputInterval>
-       <!--outputInterval>1</outputInterval-->
+       <!--
        <save label = "p.x_MD"/>
        <save label = "p.ID_MD"/>
        <save label = "p.v_MD"/>
-       <!--checkpoint cycle = "2" interval = "1"/-->
-       <checkpoint cycle = "0" interval = "0"/>
+       <checkpoint cycle = "2" interval = "1"/>
+       -->
    </DataArchiver>
 
     <!--____________________________________________________________________-->
     <!--   L O A D - B A L A N C E R     O P T I O N S                      -->
     <!--____________________________________________________________________-->
-    
+
     <!--
    <LoadBalancer type="DLB">
      <timestepInterval>2</timestepInterval>
@@ -54,7 +53,7 @@
     <!--____________________________________________________________________-->
     <!--   S I M U LA T I O N     O P T I O N S                             -->
     <!--____________________________________________________________________-->
-    
+
    <MD>
      <Forcefield type="Lucretius">
        <coordinateFile>LJ_HCP_1Component.coords</coordinateFile>
@@ -89,7 +88,7 @@
     <!--____________________________________________________________________-->
     <!--   G R I D     S P E C I F I C A T I O N                            -->
     <!--____________________________________________________________________-->
-    
+
     <Grid>
        <Level>
            <Box label = "1">
