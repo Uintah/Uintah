@@ -22,9 +22,6 @@
     <outputInterval>0.01</outputInterval>
     <outputInitTimestep/>
 <!--    <save label="totalKineticEnergy"/>  FIXME, RT fails with this enabled-->
-    <save label="vel_qn0"/>
-    <save label="vel_qn1"/>
-    <!--<save label="vel_qn2"/>-->
     <save label="pressurePS"/>
     <save label="CCVelocity"/>
     <save label="uVelocitySPBC"/>
