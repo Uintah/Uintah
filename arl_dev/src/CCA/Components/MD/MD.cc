@@ -407,14 +407,20 @@ void MD::scheduleInitialize(const LevelP&       level,
   }
 }
 
-void MD::scheduleRestartInitialize(const LevelP& level,
-                                   SchedulerP& sched)
+void MD::scheduleRestartInitialize(const LevelP&     level,
+                                         SchedulerP& sched )
 {
   // Do nothing for now
 }
 
-void MD::scheduleComputeStableTimestep(const LevelP& level,
-                                       SchedulerP& sched)
+void MD::switchInitialize(const LevelP&     level,
+                                SchedulerP& sched )
+{
+    scheduleInitialize(level, sched);
+}
+
+void MD::scheduleComputeStableTimestep(const LevelP&     level,
+                                             SchedulerP& sched )
 {
   const std::string flowLocation = "MD::scheduleComputeStableTimestep | ";
 
