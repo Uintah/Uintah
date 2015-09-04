@@ -179,6 +179,30 @@ namespace Uintah {
           double d_opl;                              ///< optical length; 
       }; 
 
+      class GauthamWSGG : public PropertyCalculatorBase  { 
+
+        public: 
+           GauthamWSGG();
+          ~GauthamWSGG();
+          
+          bool problemSetup( const ProblemSpecP& db ); 
+          void compute_abskg( const Patch* patch, constCCVariable<double>& VolFractionBC, RadCalcSpeciesList species, constCCVariable<double>& mixT, CCVariable<double>& abskg );
+
+          std::vector<std::string> get_sp();
+
+        private: 
+
+          std::string _mixMolecWeight;         
+          std::vector<double> _sp_mw; 
+          std::vector<std::vector<double> > _K ;     ///< gas absorption coeeficient / mol fraction of gas mixture
+          std::vector<std::vector<double> > _C1;     ///< temperature dependence coefficient for weights (slope)
+          std::vector<std::vector<double> > _C2;     ///< temperature dependence coefficient for weights (intercept)
+          std::string _co2_name;                     ///< table name
+          std::string _h2o_name;                     ///< table name 
+          std::string _soot_name;                    ///< property name
+          double d_opl;                              ///< optical length; 
+      }; 
+
 #ifdef HAVE_RADPROPS
       //______________________________________________________________________
       //

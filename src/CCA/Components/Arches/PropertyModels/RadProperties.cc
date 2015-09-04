@@ -75,6 +75,8 @@ void RadProperties::problemSetup( const ProblemSpecP& inputdb )
 #else
     throw InvalidValue("Error: You haven't configured with the RadProps library (try configuring with --enable-wasatch_3p and --with-boost=DIR.)",__FILE__,__LINE__);
 #endif
+  } else if ( calculator_type == "GauthamWSGG"){
+    _calc = scinew RadPropertyCalculator::GauthamWSGG(); 
   } else { 
     throw InvalidValue("Error: Property calculator not recognized.",__FILE__, __LINE__); 
   } 

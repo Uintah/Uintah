@@ -286,13 +286,15 @@
           <!-- Radiation Properties -->
           <!-- NOTE: The property label (ie, the total abs coeff) cannot be abskg OR abskp as these names are used as defaults by the calculator -->
           <calculator                   spec="REQUIRED NO_DATA"
-                                        attribute1="type REQUIRED STRING 'constant, special, burns_christon, radprops, hottel_sarofim'"
+                                        attribute1="type REQUIRED STRING 'constant, special, burns_christon, radprops, hottel_sarofim, GauthamWSGG'"
                                         need_applies_to="type radiation_properties">
 
             <abskg                        spec="REQUIRED NO_DATA"
                                           attribute1="label REQUIRED STRING"/> <!-- the name you want to give the abskg (gas only) variable.  Default value is abskg. -->
             <temperature                  spec="OPTIONAL NO_DATA"
                                           attribute1="label REQUIRED STRING"/> <!-- The label (table) name of temperature -->
+
+            <mix_mol_w_label               spec="OPTIONAL STRING"/> <!-- default is "mixture_molecular_weight" -->
             <!-- RadiationProperties: burns christon -->
             <min                          spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
             <max                          spec="OPTIONAL VECTOR 'positive'" need_applies_to="type burns_christon" />
