@@ -2456,7 +2456,7 @@ void Arches::registerPropertyModels(ProblemSpecP& db)
       } else if ( prop_type == "radiation_properties" ) {
 
         //Radiation properties as computed through the RadPropertyCalculator
-        PropertyModelBase::Builder* the_builder = new RadProperties::Builder( prop_name, d_sharedState );
+        PropertyModelBase::Builder* the_builder = new RadProperties::Builder( prop_name, d_sharedState, d_lab );
         prop_factory.register_property_model( prop_name, the_builder );
 
       } else {

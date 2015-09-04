@@ -307,9 +307,6 @@ RadPropertyCalculator::GauthamWSGG::problemSetup( const ProblemSpecP& db ) {
     _sp_mw.push_back(1.0/44.0); // CO2
     _sp_mw.push_back(1.0/18.0); // H2O
 
-  //d_fieldLabels->add_species("CO2"); // This forces arches to pull these values from the table (we don't have the correct arches object pointer)
-  //d_fieldLabels->add_species("H2O");
-  //d_fieldLabels->add_species("mixture_molecular_weight");
 
 
 
