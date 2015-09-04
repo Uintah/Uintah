@@ -1465,23 +1465,7 @@
 
         <VelModel                       spec="MULTIPLE NO_DATA"
                                         attribute1="label OPTIONAL STRING"
-                                        attribute2="type REQUIRED STRING 'Balachandar,
-                                                                          Dragforce'">
-
-          <kinematic_viscosity          spec="OPTIONAL DOUBLE 'positive'"/>
-          <L                            spec="OPTIONAL DOUBLE 'positive'"/>
-          <rho_ratio                    spec="OPTIONAL DOUBLE 'positive'"/>
-          <regime                       spec="OPTIONAL INTEGER '1 3'"/>
-          <eta                          spec="OPTIONAL DOUBLE 'positive'"/>
-
-          <upper_limit_multiplier       spec="OPTIONAL DOUBLE"/>
-          <clip_low                     spec="OPTIONAL DOUBLE"/>
-          <partvelBC_eq_gasvelBC        spec="OPTIONAL BOOLEAN"/>
-          <min_vel_ratio                spec="OPTIONAL DOUBLE 'positive'"/>
-
-          <iter                         spec="OPTIONAL INTEGER 'positive'"/>
-          <tol                          spec="OPTIONAL DOUBLE  'positive'"/>
-
+                                        attribute2="type REQUIRED STRING 'Dragforce'">
         </VelModel>
 
         <Models                         spec="OPTIONAL NO_DATA">

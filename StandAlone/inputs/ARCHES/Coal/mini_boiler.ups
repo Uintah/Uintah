@@ -119,9 +119,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>298.0000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -146,9 +143,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -172,9 +166,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -230,9 +221,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>298.0000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -257,9 +245,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -283,9 +268,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -341,9 +323,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>298.0000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -368,9 +347,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -394,9 +370,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -452,9 +425,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>298.0000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -479,9 +449,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -505,9 +472,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -563,9 +527,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>298.0000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -590,9 +551,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -616,9 +574,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -674,9 +629,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>298.0000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -701,9 +653,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -727,9 +676,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0, 0.0, 0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
@@ -786,9 +732,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,11.7230,10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -813,9 +756,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,11.7230,10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -839,9 +779,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,11.7230,10.0833]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -899,9 +836,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,11.7230,10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -926,9 +860,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,11.7230,10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -952,9 +883,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,11.7230,10.0833]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -1012,9 +940,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-11.7230,-10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -1039,9 +964,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-11.7230,-10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -1065,9 +987,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-11.7230,-10.0833]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -1125,9 +1044,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-11.7230,-10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -1152,9 +1068,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-11.7230,-10.0833]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -1178,9 +1091,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-11.7230,-10.0833]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -1238,9 +1148,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-9.0394,12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -1265,9 +1172,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-9.0394,12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -1291,9 +1195,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-9.0394,12.7668]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -1351,9 +1252,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-9.0394,12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -1378,9 +1276,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-9.0394,12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -1404,9 +1299,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-9.0394,12.7668]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -1464,9 +1356,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,9.0394,-12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -1491,9 +1380,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,9.0394,-12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -1517,9 +1403,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,9.0394,-12.7668]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -1577,9 +1460,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,9.0394,-12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>16.7680</value>
         </BCType>
@@ -1604,9 +1484,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,9.0394,-12.7668]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>31.5838</value>
         </BCType>
@@ -1630,9 +1507,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-19.3486</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,9.0394,-12.7668]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582</value>
@@ -1690,9 +1564,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,16.7831,14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -1717,9 +1588,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,16.7831,14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -1743,9 +1611,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,16.7831,14.4357]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -1803,9 +1668,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,16.7831,14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -1830,9 +1692,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,16.7831,14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -1856,9 +1715,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,16.7831,14.4357]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -1916,9 +1772,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-16.7831,-14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -1943,9 +1796,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-16.7831,-14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -1969,9 +1819,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-16.7831,-14.4357]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2029,9 +1876,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-16.7831,-14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2056,9 +1900,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-16.7831,-14.4357]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2082,9 +1923,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-16.7831,-14.4357]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2142,9 +1980,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-12.9412,18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2169,9 +2004,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-12.9412,18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2195,9 +2027,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-12.9412,18.2776]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2255,9 +2084,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-12.9412,18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2282,9 +2108,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-12.9412,18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2308,9 +2131,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-12.9412,18.2776]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2368,9 +2188,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,12.9412,-18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2395,9 +2212,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,12.9412,-18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2421,9 +2235,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,12.9412,-18.2776]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2481,9 +2292,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,12.9412,-18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2508,9 +2316,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,12.9412,-18.2776]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2534,9 +2339,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,12.9412,-18.2776]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2594,9 +2396,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2621,9 +2420,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2647,9 +2443,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2707,9 +2500,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2734,9 +2524,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2760,9 +2547,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2820,9 +2604,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2847,9 +2628,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2873,9 +2651,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -2933,9 +2708,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -2960,9 +2732,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -2986,9 +2755,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3046,9 +2812,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3073,9 +2836,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3099,9 +2859,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3159,9 +2916,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3186,9 +2940,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3212,9 +2963,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3272,9 +3020,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3299,9 +3044,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3325,9 +3067,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3385,9 +3124,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3412,9 +3148,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3438,9 +3171,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3498,9 +3228,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3525,9 +3252,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3551,9 +3275,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3611,9 +3332,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3638,9 +3356,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3664,9 +3379,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,20.2471,17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3724,9 +3436,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3751,9 +3460,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3777,9 +3483,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3837,9 +3540,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3864,9 +3564,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -3890,9 +3587,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-20.2471,-17.4152]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -3950,9 +3644,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -3977,9 +3668,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4003,9 +3691,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4063,9 +3748,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4090,9 +3772,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4116,9 +3795,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-15.6123,22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4176,9 +3852,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4203,9 +3876,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4229,9 +3899,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4289,9 +3956,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4316,9 +3980,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4342,9 +4003,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,15.6123,-22.0500]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4402,9 +4060,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,6.0916,5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4429,9 +4084,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,6.0916,5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4455,9 +4107,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,6.0916,5.2396]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4515,9 +4164,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,6.0916,5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4542,9 +4188,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,6.0916,5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4568,9 +4211,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,6.0916,5.2396]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4628,9 +4268,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-6.0916,-5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4655,9 +4292,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-6.0916,-5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4681,9 +4315,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-6.0916,-5.2396]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4741,9 +4372,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-6.0916,-5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4768,9 +4396,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-6.0916,-5.2396]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4794,9 +4419,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-6.0916,-5.2396]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4854,9 +4476,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-4.6972,6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4881,9 +4500,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-4.6972,6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -4907,9 +4523,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-4.6972,6.6340]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -4967,9 +4580,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,-4.6972,6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -4994,9 +4604,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,-4.6972,6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -5020,9 +4627,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,-4.6972,6.6340]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -5080,9 +4684,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,4.6972,-6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -5107,9 +4708,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,4.6972,-6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -5133,9 +4731,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,4.6972,-6.6340]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -5193,9 +4788,6 @@
         <BCType id="all" label="Temperature" var="Dirichlet">
           <value>446.5000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Dirichlet">
-          <value>[0.0000,4.6972,-6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Dirichlet">
           <value>1.6768e-03</value>
         </BCType>
@@ -5220,9 +4812,6 @@
         <BCType id="all" label="pE_qn0" var="Dirichlet">
           <value>-3.6980e-04</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Dirichlet">
-          <value>[0.0000,4.6972,-6.6340]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Dirichlet">
           <value>3.1584e-03</value>
         </BCType>
@@ -5246,9 +4835,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Dirichlet">
           <value>-1.9349e-03</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Dirichlet">
-          <value>[0.0000,4.6972,-6.6340]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Dirichlet">
           <value>6.3582e-04</value>
@@ -5305,9 +4891,6 @@
         <BCType id="all" label="Temperature" var="Neumann">
           <value>298.0000</value>
         </BCType>
-        <BCType id="all" label="vel_qn0" var="Neumann">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -5332,9 +4915,6 @@
         <BCType id="all" label="pE_qn0" var="Neumann">
           <value>0.0</value>
         </BCType>
-        <BCType id="all" label="vel_qn1" var="Neumann">
-          <value>[0.0, 0.0, 0.0]</value>
-        </BCType>
         <BCType id="all" label="length_qn1" var="Neumann">
           <value>0.0</value>
         </BCType>
@@ -5358,9 +4938,6 @@
         </BCType>
         <BCType id="all" label="pE_qn1" var="Neumann">
           <value>0.0</value>
-        </BCType>
-        <BCType id="all" label="vel_qn2" var="Neumann">
-          <value>[0.0, 0.0, 0.0]</value>
         </BCType>
         <BCType id="all" label="length_qn2" var="Neumann">
           <value>0.0</value>
